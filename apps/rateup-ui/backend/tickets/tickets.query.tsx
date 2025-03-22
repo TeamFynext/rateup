@@ -20,6 +20,7 @@ import {
   fetchBoard,
   fetchBoards,
   fetchCardById,
+  fetchCardTeamMemberById,
   getTicket,
   getTickets,
   moveCard,
@@ -217,21 +218,19 @@ export const useCreateCommentMutation = (id) => {
   });
 };
 
-export function useBoardsQueries(teamId?: string) {
+export function useBoardsQueries() {
   return useQuery({
-    queryKey: ["boards", teamId === "all" ? undefined : teamId],
-    queryFn: () => fetchBoards(teamId === "all" ? undefined : teamId),
-    enabled: true, // Always enable the query regardless of teamId
+    queryKey: ["boards"],
+    queryFn: () => fetchBoards(),
   });
 }
 
-export function useBoardQueries(teamId?: string) {
+export function useBoardQueries() {
   const queryClient = useQueryClient();
 
   const boardsQuery = useQuery({
-    queryKey: ["boards", teamId],
-    queryFn: () => fetchBoards(teamId),
-    enabled: !!teamId,
+    queryKey: ["boards"],
+    queryFn: () => fetchBoards(),
   });
 
   const createBoardMutation = useMutation({
@@ -596,7 +595,15 @@ export function useCardById(cardId: string | undefined) {
   return useQuery({
     queryKey: ["card", cardId],
     queryFn: () => fetchCardById(cardId as string),
-    enabled: !!cardId, // Only run the query if cardId is provided
+    enabled: !!cardId,
+  });
+}
+
+export function useCardTeamMembersById(cardId: string | undefined) {
+  return useQuery({
+    queryKey: ["teamMembersByCardId", cardId],
+    queryFn: () => fetchCardTeamMemberById(cardId as string),
+    enabled: !!cardId,
   });
 }
 

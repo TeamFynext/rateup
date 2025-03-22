@@ -98,8 +98,19 @@ const TicketIssueEditor = ({
     selectedQ?.ticketIssue?.reqOptions || [],
   );
 
-  const updateTicketIssue = (ticketIssue: any) => {
-    selectedQ && setSelectedQ({ ...selectedQ, ticketIssue });
+  const updateTicketIssue = (ticketIssue: {
+    minRating?: number;
+    minOpinion?: number;
+    reqOptions?: Array<string>;
+    submissionTicket?: boolean;
+    selectedColumnId?: string;
+    selectedBoardId?: string;
+  }) => {
+    selectedQ &&
+      setSelectedQ({
+        ...selectedQ,
+        ticketIssue: { ...selectedQ.ticketIssue, ...ticketIssue },
+      });
   };
 
   useEffect(() => {
@@ -248,6 +259,7 @@ const TicketIssueEditor = ({
 
   const { primaryColor } = useMantineTheme();
   if (isPending) return <RateupLoader h={100} />;
+
   return (
     <Stack justify="space-between" style={{ height: "100%" }}>
       <Title order={3}>Automated Ticket Creation</Title>
@@ -494,14 +506,13 @@ const TicketIssueEditor = ({
                   data={boards}
                   onChange={(boardId) => {
                     setSelectedBoardId(boardId);
-                    if (boardId)
-                      setSelectedQ({
-                        ...selectedQ,
-                        ticketIssue: {
-                          ...selectedQ.ticketIssue,
-                          selectedBoardId: boardId,
-                        },
-                      });
+                    setSelectedQ({
+                      ...selectedQ,
+                      ticketIssue: {
+                        ...selectedQ.ticketIssue,
+                        selectedBoardId: boardId,
+                      },
+                    });
                   }}
                 />
                 {selectedBoardId && (
@@ -511,14 +522,13 @@ const TicketIssueEditor = ({
                     value={selectedQ?.ticketIssue?.selectedColumnId}
                     data={columns}
                     onChange={(columnId) => {
-                      if (columnId)
-                        setSelectedQ({
-                          ...selectedQ,
-                          ticketIssue: {
-                            ...selectedQ.ticketIssue,
-                            selectedColumnId: columnId,
-                          },
-                        });
+                      setSelectedQ({
+                        ...selectedQ,
+                        ticketIssue: {
+                          ...selectedQ.ticketIssue,
+                          selectedColumnId: columnId,
+                        },
+                      });
                     }}
                   />
                 )}

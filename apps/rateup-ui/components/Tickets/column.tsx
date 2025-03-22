@@ -498,7 +498,7 @@ export function Column({
             autoFocus
           />
 
-          {availableBoards && availableBoards.length > 0 && (
+          {/* {availableBoards && availableBoards.length > 0 && (
             <NativeSelect
               label="Board"
               value={selectedBoardId}
@@ -508,7 +508,7 @@ export function Column({
                 label: board.title,
               }))}
             />
-          )}
+          )} */}
 
           <Group justify="right" mt="md">
             <RateupButtonPrimary

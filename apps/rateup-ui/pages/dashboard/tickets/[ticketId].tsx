@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { NextRouter, useRouter } from "next/router";
 
 import {
@@ -6,10 +6,12 @@ import {
   Avatar,
   Badge,
   Box,
+  Button,
   Container,
   Grid,
   Group,
   Paper,
+  Popover,
   ScrollAreaAutosize,
   SimpleGrid,
   Stack,
@@ -17,40 +19,40 @@ import {
   Text,
   Timeline,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
   IconCalendar,
+  IconCheck,
   IconChevronLeft,
   IconFileDescription,
   IconHistory,
   IconListDetails,
   IconMessage,
   IconMessageCircle,
+  IconPlus,
   IconTrash,
   IconUser,
 } from "@tabler/icons-react";
-import dayjs from "dayjs";
 import parse from "html-react-parser";
 import { z } from "zod";
 
 import { QuestionType2 } from "@/types/enums";
 import {
   useCardById,
+  useCardTeamMembersById,
   useCreateCommentMutation,
   useDeleteCommentMutation,
   useUpdateCardMutation,
 } from "@/backend/tickets/tickets.query";
 import {
-  RateupButtonBlue,
-  RateupButtonPrimary,
-} from "@/components/Button/RateupButtons";
-import {
   ContainedDatePickerInput,
   ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import TicketTextEditor from "@/components/RichTextEditor/TicketTextEditor";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { getCellData } from "@/components/Survey/Response/WaResponses";
@@ -58,8 +60,9 @@ import SurveyResponsesView from "@/components/Tickets/SingleTicket/SurveyRespons
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
 import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
-import { formatToRelativeTime } from "@/utils/dateTime";
+import { formatDate, formatToRelativeTime } from "@/utils/dateTime";
 import { TicketPriority, TicketType } from "@/utils/enums/ticket";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import { TicketChat } from "../../../components/Tickets/TicketChat";
 import {
@@ -74,13 +77,6 @@ export default function CardDetailPage() {
   const router = useRouter();
   const { ticketId } = router.query as { ticketId: string };
   const { data: card, isPending, error } = useCardById(ticketId as string);
-
-  const memberOptions = card?.ticketColumn?.ticketBoard?.team?.members?.map(
-    (team) => ({
-      value: team?.user?.id,
-      label: team?.user?.name,
-    }),
-  );
 
   const questions = useMemo(() => {
     return card?.surveyResponse?.surveyTeamMap?.survey?.WaFlow?.json?.screens?.flatMap(
@@ -108,9 +104,7 @@ export default function CardDetailPage() {
     );
   }, [card]);
 
-  if (isPending) {
-    return <div>Loading ticket details...</div>;
-  }
+  if (isPending) return <RateupLoader h={"100%"} />;
 
   if (error) {
     return <div>Error loading ticket: {error.message}</div>;
@@ -123,13 +117,9 @@ export default function CardDetailPage() {
   return (
     <Container size={"xl"} h={"100%"}>
       <Grid h={"100%"} p={"xs"} display={"grid"}>
-        <Grid.Col span={8}>
+        <Grid.Col span={{ base: 12, md: 8 }}>
           <PaperLayout h={"100%"} p={"xs"} radius={"md"}>
-            <EditTicket
-              ticket={card}
-              memberOptions={memberOptions}
-              router={router}
-            />
+            <EditTicket ticket={card} router={router} ticketId={ticketId} />
             <Tabs defaultValue="comments" classNames={styles} mt={"xs"}>
               <Tabs.List>
                 <Tabs.Tab
@@ -160,7 +150,7 @@ export default function CardDetailPage() {
             </Tabs>
           </PaperLayout>
         </Grid.Col>
-        <Grid.Col span={4}>
+        <Grid.Col span={{ base: 12, md: 4 }}>
           <PaperLayout h={"100%"} p={"xs"} radius={"md"}>
             <Tabs
               defaultValue={
@@ -182,23 +172,23 @@ export default function CardDetailPage() {
                   Response Details
                 </Tabs.Tab>
                 <Tabs.Tab
+                  value="automation"
+                  leftSection={<IconMessage size={16} />}
+                  display={card.waAutomatedReplyMessageId ? "block" : "none"}
+                >
+                  Automation Response
+                </Tabs.Tab>
+                <Tabs.Tab
                   value="chat"
                   leftSection={<IconMessage size={16} />}
                   display={
-                    card.surveyResponseId &&
+                    card.type === TicketType.AUTOMATION ||
                     card.type === TicketType.FLOW_RESPONSE
                       ? "block"
                       : "none"
                   }
                 >
                   Customer Chat
-                </Tabs.Tab>
-                <Tabs.Tab
-                  value="automation"
-                  leftSection={<IconMessage size={16} />}
-                  display={card.waAutomatedReplyMessageId ? "block" : "none"}
-                >
-                  Automation Response
                 </Tabs.Tab>
               </Tabs.List>
 
@@ -209,8 +199,14 @@ export default function CardDetailPage() {
                   type={card.type}
                 />
               </Tabs.Panel>
-              <Tabs.Panel value="chat" h={"calc(100vh - 110px)"}>
-                <TicketChat contact={card?.surveyResponse?.Contact} />
+              <Tabs.Panel value="chat" h={"calc(100vh - 130px)"}>
+                <TicketChat
+                  contact={
+                    card.surveyResponseId
+                      ? card?.surveyResponse?.Contact
+                      : card?.waAutomatedReplyMessage?.contact
+                  }
+                />
               </Tabs.Panel>
               <Tabs.Panel value="automation">
                 <TicketAutomationResponse
@@ -358,7 +354,7 @@ const TicketActivity = ({ activities }: { activities: Array<Activity> }) => {
 const ticketSchema = z.object({
   id: z.string(),
   title: z.string().min(1, "Title is required"),
-  assignedToId: z.string().optional(),
+  assignedToIds: z.array(z.string()),
   priority: z.string().optional(),
   deadline: z
     .date({
@@ -373,26 +369,33 @@ export type TicketFormValues = z.infer<typeof ticketSchema>;
 
 const EditTicket = ({
   ticket,
-  memberOptions,
   router,
+  ticketId,
 }: {
   ticket: Card;
-  memberOptions: any[];
   router: NextRouter;
+  ticketId: string;
 }) => {
   const { translations } = useTranslations();
   const { mutate } = useUpdateCardMutation();
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "idle">(
     "idle",
   );
-  const initialValues = {
-    id: ticket.id,
-    title: ticket.title || "",
-    assignedToId: ticket.assignedToId || "",
-    priority: ticket.priority || "",
-    deadline: ticket.deadline ? new Date(ticket.deadline) : null,
-    description: ticket.description || "",
-  };
+  const { data: members = [], isPending: isMembersLoading } =
+    useCardTeamMembersById(ticketId);
+
+  const initialValues = useMemo(
+    () => ({
+      id: ticket.id,
+      title: ticket.title || "",
+      assignedToIds: ticket.assignees?.map((item) => item.assigneeId) || [],
+      priority: ticket.priority || "",
+      deadline: ticket.deadline ? new Date(ticket.deadline) : null,
+      description: ticket.description || "",
+    }),
+    [ticket],
+  );
+
   const form = useForm<TicketFormValues>({
     validate: zodResolver(ticketSchema),
     initialValues,
@@ -401,8 +404,8 @@ const EditTicket = ({
   const [debouncedFormValues] = useDebouncedValue(form.values, 800);
 
   useEffect(() => {
-    // Skip the initial render
-    if (debouncedFormValues === initialValues) return;
+    if (JSON.stringify(debouncedFormValues) === JSON.stringify(initialValues))
+      return;
 
     setSaveStatus("saving");
     mutate(debouncedFormValues, {
@@ -412,85 +415,201 @@ const EditTicket = ({
       },
       onError: () => setSaveStatus("idle"),
     });
-  }, [debouncedFormValues, mutate]);
+  }, [debouncedFormValues, initialValues, mutate]);
 
-  const handleDescriptionUpdate = (content: string) => {
-    form.setFieldValue("description", content);
-  };
+  const handleDescriptionUpdate = useCallback(
+    (content: string) => {
+      form.setFieldValue("description", content);
+    },
+    [form],
+  );
+
+  const toggleMember = useCallback(
+    (userId: string) => {
+      const currentMembers = form.values.assignedToIds || [];
+      const isSelected = currentMembers.includes(userId);
+
+      form.setFieldValue(
+        "assignedToIds",
+        isSelected
+          ? currentMembers.filter((id) => id !== userId)
+          : [...currentMembers, userId],
+      );
+    },
+    [form],
+  );
+
+  const visibleMembers = useMemo(() => {
+    return form.values.assignedToIds
+      ?.slice(0, 3)
+      .map((memberId) => members.find((u) => u.id === memberId))
+      .filter(Boolean);
+  }, [form.values.assignedToIds, members]);
+
+  const hiddenMembersCount = Math.max(
+    0,
+    (form.values.assignedToIds?.length || 0) - 3,
+  );
+
+  if (isMembersLoading)
+    return <RateupLoader aria-label="Loading ticket members" />;
 
   return (
-    <form>
+    <form aria-label="Edit ticket form">
       <Group justify="space-between">
-        <Group gap={"xs"}>
-          <ActionIcon
-            radius={"lg"}
-            variant="filled"
-            title="Go Back"
-            onClick={() => router.back()}
-          >
-            <IconChevronLeft />
-          </ActionIcon>
-          {[
-            { title: "Ticket Id", btnTitle: `#${ticket.ticketId}` },
-            {
-              title: "Created Date",
-              btnTitle: dayjs(ticket.createdAt).format("DD/MM/YYYY"),
-            },
-          ].map((ctx, i) => (
-            <Group key={i} gap={4}>
-              <Text size="sm"> {ctx.title}:</Text>
-              <Badge variant="light" radius={"xs"}>
-                {ctx.btnTitle}
-              </Badge>
-            </Group>
-          ))}
+        <Group gap="xs">
+          <Tooltip label="Go back">
+            <ActionIcon
+              radius="lg"
+              variant="filled"
+              onClick={() => router.back()}
+              aria-label="Go back"
+            >
+              <IconChevronLeft />
+            </ActionIcon>
+          </Tooltip>
+
+          <Group gap={4}>
+            <Text size="sm">Ticket Id:</Text>
+            <Badge variant="light" radius="xs">
+              #{ticket.ticketId}
+            </Badge>
+          </Group>
+
+          <Group gap={4}>
+            <Text size="sm">Created Date:</Text>
+            <Badge variant="light" radius="xs">
+              {formatDate(ticket.createdAt)}
+            </Badge>
+          </Group>
         </Group>
+
         {saveStatus !== "idle" && (
           <Badge
             color={saveStatus === "saved" ? "teal" : "blue"}
             variant="light"
             size="sm"
+            aria-live="polite"
           >
             {saveStatus === "saved" ? "Changes saved" : "Saving..."}
           </Badge>
         )}
       </Group>
-      <SimpleGrid cols={4}>
+
+      <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">
         <ContainedTextField
-          label={"Ticket Name"}
+          label="Ticket Name"
           placeholder={translations["Enter Ticket Name"]}
           required
           classNames={styles}
+          aria-required="true"
           {...form.getInputProps("title")}
         />
-        <ContainedSelection
-          allowDeselect={false}
-          data={memberOptions}
-          label={translations["Assign to"]}
-          style={{ minWidth: "32%" }}
-          placeholder={translations["Select a team staff to assign ticket to"]}
-          classNames={styles}
-          {...form.getInputProps("assignedToId")}
-        />
+
+        <div>
+          <Text className={styles.label}>Members</Text>
+          <Group gap="xs">
+            <Avatar.Group>
+              {visibleMembers?.map((user) => (
+                <Avatar
+                  key={user.id}
+                  color="initials"
+                  radius="xl"
+                  name={user?.name}
+                  src={getFileUrlFromKey(user.profilePhoto)}
+                  title={user?.name}
+                />
+              ))}
+              {hiddenMembersCount > 0 && (
+                <Avatar
+                  color="gray"
+                  radius="xl"
+                  title={`${hiddenMembersCount} more members`}
+                >
+                  +{hiddenMembersCount}
+                </Avatar>
+              )}
+            </Avatar.Group>
+
+            <Popover position="bottom" withArrow>
+              <Popover.Target>
+                <Tooltip label="Add or remove members">
+                  <Avatar
+                    color="gray"
+                    radius="xl"
+                    style={{ cursor: "pointer" }}
+                  >
+                    <IconPlus size={16} />
+                  </Avatar>
+                </Tooltip>
+              </Popover.Target>
+
+              <Popover.Dropdown p="xs" w={200}>
+                <ScrollAreaAutosize mah={200}>
+                  {members.length === 0 ? (
+                    <Text size="sm" c="dimmed" ta="center" py="md">
+                      No members available to add
+                    </Text>
+                  ) : (
+                    members.map((user) => {
+                      const isSelected = form.values?.assignedToIds?.includes(
+                        user.id,
+                      );
+                      return (
+                        <Button
+                          key={user.id}
+                          variant="subtle"
+                          fullWidth
+                          justify="space-between"
+                          onClick={() => toggleMember(user.id)}
+                          leftSection={
+                            <Group gap="xs" wrap="nowrap">
+                              <Avatar
+                                src={getFileUrlFromKey(user.profilePhoto)}
+                                size="sm"
+                                radius="xl"
+                                name={user.name}
+                                color="initials"
+                              />
+                              <Text size="sm">{user.name}</Text>
+                            </Group>
+                          }
+                          rightSection={
+                            isSelected ? <IconCheck size={16} /> : null
+                          }
+                          aria-pressed={isSelected}
+                          aria-label={`Toggle ${user.name}`}
+                        />
+                      );
+                    })
+                  )}
+                </ScrollAreaAutosize>
+              </Popover.Dropdown>
+            </Popover>
+          </Group>
+        </div>
+
         <ContainedSelection
           allowDeselect={false}
           data={Object.values(TicketPriority)}
           label={translations["Priority"]}
-          style={{ minWidth: "30%" }}
           placeholder={translations["Select priority for the ticket"]}
           classNames={styles}
           {...form.getInputProps("priority")}
         />
+
         <ContainedDatePickerInput
           label={translations["Deadline:"]}
           placeholder={translations["Select a deadline for the ticket"]}
-          rightSection={<IconCalendar />}
+          rightSection={<IconCalendar size={16} />}
           classNames={styles}
           minDate={new Date()}
+          clearable
           {...form.getInputProps("deadline")}
         />
       </SimpleGrid>
-      <Box>
+
+      <Box mt="md">
         <Text className={styles.label}>Description</Text>
         <TicketTextEditor
           content={form.values.description}
@@ -501,6 +620,7 @@ const EditTicket = ({
     </form>
   );
 };
+
 const TicketResponse = ({
   surveyResponse,
   questions,

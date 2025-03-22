@@ -1,25 +1,27 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 
-import { Flex, Group, Modal, Stack, Title } from "@mantine/core";
+import { Flex, Group, Modal, MultiSelect, Stack, Title } from "@mantine/core";
 
+import { useTeamsByUser } from "@/backend/team/team.query";
 import { useBoard, useBoardQueries } from "@/backend/tickets/tickets.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { BoardSidebar } from "@/components/Tickets/BoardSidebar";
+import useTranslations from "@/dictionaries/useTranslation";
 
 import { Board } from "../../../components/Tickets/board";
 
 export default function Page() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [newBoardData, setNewBoardData] = useState({ title: "", teamId: "" });
+  const [newBoardData, setNewBoardData] = useState({ title: "", teamIds: [] });
   const [editBoardData, setEditBoardData] = useState({
     id: "",
     title: "",
-    teamId: "",
+    teamIds: [],
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const router = useRouter();
@@ -27,23 +29,35 @@ export default function Page() {
   // Use Tanstack Query for boards data
   const { boards, isLoading, createBoard, updateBoard, deleteBoard } =
     useBoardQueries();
+  const { data: teamRes, isPending: teamsLoading } = useTeamsByUser();
+
+  const { translations } = useTranslations();
+
+  const teams = teamRes?.data;
+
+  const teamOptions = teams
+    ? teams.map((team) => ({
+        value: team.id,
+        label: team.name,
+      }))
+    : [];
 
   // Get board info for sidebar
   const boardInfos = boards.map((board) => ({
     id: board.id,
     title: board.title,
-    teamId: board.teamId,
+    teamIds: board.teams.map((team) => team.teamId),
   }));
 
   const handleCreateBoard = () => {
-    if (!newBoardData.title.trim() || !newBoardData.teamId) return;
+    if (!newBoardData.title.trim() || !newBoardData.teamIds?.length) return;
 
     createBoard({
       title: newBoardData.title,
-      teamId: newBoardData.teamId,
+      teamIds: newBoardData.teamIds,
     });
 
-    setNewBoardData({ title: "", teamId: "" });
+    setNewBoardData({ title: "", teamIds: [] });
     setIsCreateModalOpen(false);
   };
 
@@ -58,7 +72,7 @@ export default function Page() {
       setEditBoardData({
         id: board.id,
         title: board.title,
-        teamId: board.teamId,
+        teamIds: board.teamIds,
       });
 
       // Open the modal - ensure this happens after state is set
@@ -71,12 +85,12 @@ export default function Page() {
   };
 
   const handleSaveEditBoard = () => {
-    if (!editBoardData.title.trim() || !editBoardData.teamId) return;
+    if (!editBoardData.title.trim() || !editBoardData.teamIds?.length) return;
 
     updateBoard({
       id: editBoardData.id,
       title: editBoardData.title,
-      teamId: editBoardData.teamId,
+      teamIds: editBoardData.teamIds,
     });
 
     setIsEditModalOpen(false);
@@ -107,7 +121,7 @@ export default function Page() {
       />
       <ColumnListByBoardId
         selectedBoardId={selectedBoardId}
-        boardInfos={boardInfos}
+        // boardInfos={boardInfos}
       />
 
       {/* Create Board Modal */}
@@ -126,10 +140,14 @@ export default function Page() {
             }
             required
           />
-          <TeamSelector
-            label="Select Team"
-            value={newBoardData.teamId}
-            onChange={(teamId) => setNewBoardData({ ...newBoardData, teamId })}
+          <MultiSelect
+            radius="md"
+            placeholder={translations["Select teams"]}
+            data={teamOptions}
+            value={newBoardData.teamIds}
+            onChange={(teamIds) =>
+              setNewBoardData({ ...newBoardData, teamIds })
+            }
           />
           <Group justify="right" mt="md">
             <RateupButtonPrimary
@@ -162,11 +180,13 @@ export default function Page() {
             }
             required
           />
-          <TeamSelector
-            label="Select Team"
-            value={editBoardData.teamId}
-            onChange={(teamId) =>
-              setEditBoardData({ ...editBoardData, teamId })
+          <MultiSelect
+            radius="md"
+            placeholder={translations["Select teams"]}
+            data={teamOptions}
+            value={editBoardData.teamIds}
+            onChange={(teamIds) =>
+              setEditBoardData({ ...editBoardData, teamIds })
             }
           />
           <Group justify="right" mt="md">
@@ -188,13 +208,13 @@ const ColumnListByBoardId = ({
   boardInfos,
 }: {
   selectedBoardId: string;
-  boardInfos: { id: string; title: string; teamId: string }[];
+  boardInfos?: { id: string; title: string; teamId: string }[];
 }) => {
   // Get selected board data
   const { board: selectedBoard, isLoading: IsBoardDataLoading } = useBoard(
     selectedBoardId || "",
   );
-  if (IsBoardDataLoading) return <RateupLoader h={"100dvh"} />;
+  if (IsBoardDataLoading) return <RateupLoader h={"100dvh"} w={"100%"} />;
   if (!selectedBoard || !selectedBoardId)
     return (
       <Flex align="center" justify="center" h="100%" w={"100%"}>
@@ -204,7 +224,10 @@ const ColumnListByBoardId = ({
   return (
     <Stack style={{ flexGrow: 1, height: "100%", overflow: "hidden" }} p="md">
       <div style={{ overflowX: "auto", width: "100%", height: "100%" }}>
-        <Board initial={selectedBoard} availableBoards={boardInfos} />
+        <Board
+          initial={selectedBoard}
+          //  availableBoards={boardInfos}
+        />
       </div>
     </Stack>
   );
