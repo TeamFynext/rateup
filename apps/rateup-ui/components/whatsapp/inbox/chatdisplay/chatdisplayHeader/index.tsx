@@ -53,9 +53,11 @@ import classes from "./styles.module.css";
 
 interface WaInboxChatDisplayHeaderProps {
   contact: ContactsWithLastMessage;
+  smallScreen: boolean;
 }
 export default function WaInboxChatDisplayHeader({
   contact,
+  smallScreen,
 }: WaInboxChatDisplayHeaderProps) {
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   const { setSelectedContact } = useContactStore();
@@ -109,7 +111,12 @@ export default function WaInboxChatDisplayHeader({
   if (!contact) return null;
 
   return (
-    <div className={classes.wrapper}>
+    <div
+      className={classes.wrapper}
+      style={{
+        ...(smallScreen ? { padding: 10 } : {}),
+      }}
+    >
       <Group>
         {isMobile && (
           <ActionIcon
@@ -124,7 +131,7 @@ export default function WaInboxChatDisplayHeader({
 
         <Avatar
           color="var(--mantine-primary-color-6)"
-          size={!isMobile ? 65 : 35}
+          size={!isMobile && !smallScreen ? 65 : 35}
           name={contact.name}
         />
         <Stack className={classes.name_phone_wrapper}>
@@ -144,11 +151,13 @@ export default function WaInboxChatDisplayHeader({
               />
             )}
         </Stack>
-        <ContactEdit isMobile={isMobile} contact={contact} />
+        {!smallScreen && <ContactEdit isMobile={isMobile} contact={contact} />}
       </Group>
-      <WaInboxCountdownTimer
-        timeStamp={contact?.lastReceivedMessageTimeStamp}
-      />
+      {!smallScreen && (
+        <WaInboxCountdownTimer
+          timeStamp={contact?.lastReceivedMessageTimeStamp}
+        />
+      )}
 
       <Group gap={"lg"}>
         <Group gap="xs">
@@ -157,11 +166,11 @@ export default function WaInboxChatDisplayHeader({
               <IconUserShare />
             </ActionIcon>
           </Tooltip>
-          <Tooltip label={"Create Ticket"}>
-            <ActionIcon onClick={openCreateTicket}>
-              <IconTicket />
-            </ActionIcon>
-          </Tooltip>
+          {/* <Tooltip label={"Create Ticket"}>
+                <ActionIcon onClick={openCreateTicket}>
+                  <IconTicket />
+                </ActionIcon>
+              </Tooltip> */}
         </Group>
         {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
           <RateupButtonPrimary
@@ -173,6 +182,7 @@ export default function WaInboxChatDisplayHeader({
           />
         )}
       </Group>
+
       <CreateTicketModal
         closeTicketModal={closeCreateTicket}
         createTicketOpened={openedCreateTicket}

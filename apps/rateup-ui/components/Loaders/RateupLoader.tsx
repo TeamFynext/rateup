@@ -1,6 +1,6 @@
-import { Center, Loader } from "@mantine/core";
+import { Center, CenterProps, Loader } from "@mantine/core";
 
-export default function RateupLoader(props) {
+export default function RateupLoader(props: CenterProps) {
   return (
     <Center h="100%" {...props}>
       <Loader type="bars" />

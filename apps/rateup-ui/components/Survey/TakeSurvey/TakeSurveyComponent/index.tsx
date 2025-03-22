@@ -268,7 +268,16 @@ function TakeSurvey({
       openConfirmationResponsesModal();
     }
   }
-
+  function getColumnIdFromTickets(questions, responses) {
+    for (const question of questions) {
+      let ticketIssue = question?.ticketIssue;
+      if (!ticketIssue) continue;
+      const response = responses.find((r) => r.questionId === question.id);
+      if (!response) continue;
+      return ticketIssue.selectedColumnId;
+    }
+    return null;
+  }
   const finishSurvey = async (pageType = "") => {
     const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
     const shouldShowGoogleReview =
@@ -281,6 +290,10 @@ function TakeSurvey({
         responsesRef.current,
         selectedLanguage,
       );
+    let selectedColumnId = getColumnIdFromTickets(
+      survey?.questions,
+      responsesRef.current,
+    );
     // This If Condition is for survey preview in survey editor.
     if (isSurveyThemePreview) {
       shouldShowGoogleReview && !(pageType === PageType.ThankYou)
@@ -317,6 +330,7 @@ function TakeSurvey({
       tag: searchParams.get("tag"),
       shouldRaiseTicket,
       checkUniqueDevice,
+      selectedColumnId,
     })
       .then(() => {
         updateCompleted.mutate(surveyTeamMapId);

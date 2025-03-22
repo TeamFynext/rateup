@@ -115,6 +115,7 @@ export default function WaInboxChatDisplayFooter({
             disabled={isSessionExpired || !isChatAssignedToMe}
             leftSection={<PopoverEmojiPicker onEmojiClick={insertEmoji} />}
             flex={1}
+            placeholder={translations["Enter message here..."]}
             value={form.values.text.body}
             onChange={(e) =>
               form.setValues({
