@@ -172,23 +172,23 @@ export default function CardDetailPage() {
                   Response Details
                 </Tabs.Tab>
                 <Tabs.Tab
+                  value="automation"
+                  leftSection={<IconMessage size={16} />}
+                  display={card.waAutomatedReplyMessageId ? "block" : "none"}
+                >
+                  Automation Response
+                </Tabs.Tab>
+                <Tabs.Tab
                   value="chat"
                   leftSection={<IconMessage size={16} />}
                   display={
-                    card.surveyResponseId &&
+                    card.type === TicketType.AUTOMATION ||
                     card.type === TicketType.FLOW_RESPONSE
                       ? "block"
                       : "none"
                   }
                 >
                   Customer Chat
-                </Tabs.Tab>
-                <Tabs.Tab
-                  value="automation"
-                  leftSection={<IconMessage size={16} />}
-                  display={card.waAutomatedReplyMessageId ? "block" : "none"}
-                >
-                  Automation Response
                 </Tabs.Tab>
               </Tabs.List>
 
@@ -199,8 +199,14 @@ export default function CardDetailPage() {
                   type={card.type}
                 />
               </Tabs.Panel>
-              <Tabs.Panel value="chat" h={"calc(100vh - 110px)"}>
-                <TicketChat contact={card?.surveyResponse?.Contact} />
+              <Tabs.Panel value="chat" h={"calc(100vh - 130px)"}>
+                <TicketChat
+                  contact={
+                    card.surveyResponseId
+                      ? card?.surveyResponse?.Contact
+                      : card?.waAutomatedReplyMessage?.contact
+                  }
+                />
               </Tabs.Panel>
               <Tabs.Panel value="automation">
                 <TicketAutomationResponse

@@ -102,6 +102,11 @@ export type WaAutomatedReplyMessage = {
   waAutomatedReply: {
     name: string;
   };
+  contact: {
+    id: string;
+    name: string;
+    phone: string;
+  };
 };
 
 export interface Activity {
