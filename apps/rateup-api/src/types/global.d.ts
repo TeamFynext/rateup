@@ -401,6 +401,8 @@ declare global {
   type FlowTicket = {
     questionId: string;
     type: QuestionType2;
+    selectedColumnId?: string;
+    selectedBoardId?: string;
     condition: {
       minRating?: number;
       minOpinion?: number;

@@ -212,7 +212,8 @@ export async function createResponseHandler(
   }>,
   reply: FastifyReply,
 ) {
-  const { shouldRaiseTicket, checkUniqueDevice, ...data } = request.body;
+  const { shouldRaiseTicket, checkUniqueDevice, selectedColumnId, ...data } =
+    request.body;
   const ip = getIp(request);
 
   try {
@@ -221,6 +222,7 @@ export async function createResponseHandler(
       shouldRaiseTicket,
       checkUniqueDevice,
       ip,
+      selectedColumnId,
     );
     reply.code(201).send();
     const {

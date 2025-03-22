@@ -53,8 +53,7 @@ const updateTicketRequestSchema = z.object({
 });
 
 const createCommentRequestSchema = z.object({
-  ticketId: z.string(),
-  createdBy: z.string(),
+  ticketCardId: z.string(),
   msg: z.string(),
 });
 

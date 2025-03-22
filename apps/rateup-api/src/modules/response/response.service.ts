@@ -30,7 +30,6 @@ import dayjs from "dayjs";
 import { saveSheetIdToSurvey } from "../survey/survey.service";
 import { google } from "googleapis";
 import xlsx from "node-xlsx";
-import { autoGenerateTicket } from "../ticket/ticket.service";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { updateMonthlyStat } from "../stats/stats.service";
@@ -67,6 +66,7 @@ import {
 } from "../../utils/enumMap";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 import _ from "lodash";
+import { autoGenerateTicket } from "../ticket/ticketCard/card.service";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -673,6 +673,7 @@ export async function createResponse(
   shouldRaiseTicket = false,
   checkUniqueDevice = false,
   ip = null,
+  columnId?: string,
 ) {
   if (checkUniqueDevice) {
     const existingResponse = await prisma.surveyResponse.findFirst({
@@ -752,12 +753,13 @@ export async function createResponse(
       surveyResponse?.surveyTeamMap?.team.orgId,
     );
 
-  if (shouldRaiseTicket && input?.responses?.length > 0) {
+  if (shouldRaiseTicket && input?.responses?.length > 0 && columnId) {
     //generate ticket
     let generatedTicket = await autoGenerateTicket({
-      teamId: surveyResponse?.surveyTeamMap?.teamId,
-      responsePlatform: surveyResponse.platform,
+      ticketColumnId: columnId,
       surveyResponseId: surveyResponse.id,
+      type:
+        surveyResponse.platform === "WEB" ? "SURVEY_RESPONSE" : "FLOW_RESPONSE",
     });
   }
 
