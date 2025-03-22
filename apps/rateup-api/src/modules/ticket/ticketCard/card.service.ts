@@ -123,7 +123,7 @@ export async function getCards(ticketColumnId: string) {
 }
 
 export async function getCardById(id: string) {
-  return prisma.ticketCard.findUnique({
+  const ticketCard = await prisma.ticketCard.findUnique({
     where: { id },
     include: {
       assignees: {
@@ -191,6 +191,20 @@ export async function getCardById(id: string) {
       },
     },
   });
+  if (ticketCard.waAutomatedReplyMessageId) {
+    const contact = await prisma.contact.findFirst({
+      where: {
+        phone: ticketCard.waAutomatedReplyMessage?.phone,
+      },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+      },
+    });
+    (ticketCard.waAutomatedReplyMessage as any).contact = contact;
+  }
+  return ticketCard;
 }
 export async function getCardTeamMembersById(id: string) {
   const result = await prisma.$queryRaw<{ id: string; name: string }[]>`
