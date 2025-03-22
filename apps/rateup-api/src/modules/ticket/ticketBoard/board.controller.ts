@@ -10,14 +10,14 @@ import { createColumn } from "../ticketColumn/column.service";
 
 export async function createBoardHandler(
   request: FastifyRequest<{
-    Body: { title: string; teamId: string };
+    Body: { title: string; teamIds: Array<string> };
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { title, teamId } = request.body;
+    const { title, teamIds } = request.body;
     const userId = request.userId;
-    const board = await createBoard({ title, teamId, userId });
+    const board = await createBoard({ title, teamIds, userId });
     await createColumn({
       title: "To Do",
       ticketBoardId: board.id,
@@ -69,15 +69,15 @@ export async function getSingleBoardHandler(
 export async function updateBoardHandler(
   request: FastifyRequest<{
     Params: { id: string };
-    Body: { title?: string };
+    Body: { title?: string; teamIds?: Array<string> };
   }>,
   reply: FastifyReply,
 ) {
   try {
     const { id } = request.params;
-    const { title } = request.body;
+    const { title, teamIds } = request.body;
 
-    const updatedBoard = await updateBoard(id, { title });
+    const updatedBoard = await updateBoard(id, { title, teamIds });
 
     if (!updatedBoard) {
       return reply.code(404).send({ message: "Board not found" });

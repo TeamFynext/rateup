@@ -27,7 +27,7 @@ const createCardResponseSchema = z.object({
 const updateCardRequestSchema = z.object({
   id: z.string(),
   title: z.string().min(1, "Title is required"),
-  assignedToId: z.string().optional(),
+  assignedToIds: z.array(z.string().uuid()).optional(),
   priority: z.nativeEnum(TicketPriority).optional().nullable(),
   deadline: z
     .date({

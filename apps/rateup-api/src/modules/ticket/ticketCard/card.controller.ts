@@ -8,8 +8,10 @@ import {
   moveCard,
   getCardActivities,
   reorderCards,
+  getCardTeamMembersById,
 } from "./card.service";
 import { TicketType } from "@prisma/client";
+import { UpdateCardRequest } from "./card.schema";
 
 export async function createCardHandler(
   request: FastifyRequest<{
@@ -76,10 +78,31 @@ export async function getSingleCardHandler(
   }
 }
 
+export async function getSingleCardTeamMembersHandler(
+  request: FastifyRequest<{
+    Params: { id: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { id } = request.params;
+    const members = await getCardTeamMembersById(id);
+
+    if (!members) {
+      return reply.code(404).send({ message: "Members not found" });
+    }
+
+    return reply.code(200).send(members);
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error retrieving members" });
+  }
+}
+
 export async function updateCardHandler(
   request: FastifyRequest<{
     Params: { id: string };
-    Body: { title?: string; description?: string };
+    Body: UpdateCardRequest;
   }>,
   reply: FastifyReply,
 ) {

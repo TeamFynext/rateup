@@ -2,19 +2,27 @@ import prisma from "../../../utils/prisma";
 
 interface BoardInput {
   title: string;
-  teamId: string;
+  teamIds: Array<string>;
   userId: string;
 }
 
 interface BoardUpdateInput {
   title?: string;
+  teamIds?: Array<string>;
 }
 
 export async function createBoard(data: BoardInput) {
   return prisma.ticketBoard.create({
     data: {
       title: data.title,
-      teamId: data.teamId,
+      teams: {
+        createMany: {
+          skipDuplicates: true,
+          data: data.teamIds.map((teamId) => ({
+            teamId,
+          })),
+        },
+      },
     },
   });
 }
@@ -31,15 +39,19 @@ export async function getBoards(userId: string) {
   });
 
   const teamIds = teams.map((team) => team.teamId);
-
   return prisma.ticketBoard.findMany({
     where: {
-      teamId: {
-        in: teamIds,
+      teams: {
+        some: {
+          teamId: {
+            in: teamIds,
+          },
+        },
       },
     },
     include: {
       ticketColumns: true,
+      teams: true,
     },
     orderBy: {
       title: "asc",
@@ -65,6 +77,15 @@ export async function updateBoard(id: string, data: BoardUpdateInput) {
     where: { id },
     data: {
       title: data.title,
+      teams: {
+        deleteMany: {},
+        createMany: {
+          skipDuplicates: true,
+          data: data.teamIds.map((teamId) => ({
+            teamId,
+          })),
+        },
+      },
     },
   });
 }
@@ -78,14 +99,16 @@ export async function deleteBoard(id: string) {
 export async function isBoardMember(ticketBoardId: string, userId: string) {
   const board = await prisma.ticketBoard.findUnique({
     where: { id: ticketBoardId },
-    select: { teamId: true },
+    select: { teams: { select: { teamId: true } } },
   });
 
   if (!board) return false;
 
   const teamMember = await prisma.teamMember.findFirst({
     where: {
-      teamId: board.teamId,
+      teamId: {
+        in: board.teams.map((team) => team.teamId),
+      },
       userId: userId,
     },
   });
