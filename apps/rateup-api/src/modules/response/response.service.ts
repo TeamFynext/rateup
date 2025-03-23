@@ -15,11 +15,16 @@ import {
 import {
   ChoiceTypeQuestions,
   IntegratedApps,
+  LDResponse,
+  NPSWeightage,
   PageType,
   QuestionType,
   ResponseSummaryType,
+  SmileyResponse,
   SubscriptionFeaturePathName,
+  SurveyType,
   WaQuestions,
+  YNResponse,
 } from "../../types/enums";
 import dayjs from "dayjs";
 import { saveSheetIdToSurvey } from "../survey/survey.service";
@@ -50,13 +55,17 @@ import {
 import { sendWebhook } from "../../utils/webhook";
 import { getFileUrlFromKey } from "../../utils/upload/s3Upload";
 import {
+  barGraphQuestions,
+  barGraphQuestions2,
   LDResponseMap,
+  npsQuestionTypes,
+  npsQuestionTypes2,
   RatingScaleMap,
   SmileyResponseMap,
   YNResponseMap,
 } from "../../utils/enumMap";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
-import { PaginationQuery } from "../contact/contact.schema";
+import _ from "lodash";
 import { autoGenerateTicket } from "../ticket/ticketCard/card.service";
 
 dayjs.extend(utc);
@@ -1837,4 +1846,397 @@ export async function getSurveyResponseBySurveyId(
     },
   });
   return { totalCount, responses };
+}
+
+export async function getResponseAnalyticsForGraph(
+  surveyId,
+  teamMapIds = [],
+  dateRange = "",
+) {
+  let where = {
+    surveyTeamMap: {
+      surveyId,
+    },
+  };
+  if (teamMapIds.length)
+    where.surveyTeamMap["id"] = {
+      in: teamMapIds,
+    };
+  if (dateRange?.length) {
+    const [startDate, endDate] = dateRange?.split(",");
+    where["createdAt"] = {
+      gte: dayjs(startDate).startOf("day").toISOString(),
+      lte: dayjs(endDate).endOf("day").toISOString(),
+    };
+  }
+  const allResponse = await prisma.surveyResponse.findMany({
+    where,
+    select: {
+      responses: true,
+      language: true,
+      surveyTeamMap: {
+        select: {
+          survey: {
+            select: {
+              type: true,
+              questions: true,
+              WaFlow: {
+                select: {
+                  version: true,
+                  json: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  let result = {
+    nps: {},
+    choiceWise: {},
+  };
+  if (!allResponse.length) return result;
+  const isFlow = allResponse[0].surveyTeamMap.survey.type === SurveyType.WaFlow;
+  const version =
+    !isFlow || allResponse[0].surveyTeamMap.survey.WaFlow.version === 1;
+  const questions = version
+    ? allResponse[0].surveyTeamMap.survey.questions.filter((q) =>
+        barGraphQuestions.includes(q.type),
+      )
+    : (allResponse[0].surveyTeamMap.survey.WaFlow.json.screens.flatMap(
+        (screen) =>
+          screen.layout.children.filter(
+            (child) =>
+              barGraphQuestions2.includes(
+                (child as any).metaType as WaQuestions,
+              ) && child.name,
+          ),
+      ) as unknown as Question2[]);
+  const npsQuestionIds = version
+    ? questions
+        .filter(
+          (q) =>
+            npsQuestionTypes.includes(q.type as QuestionType) &&
+            (q as any).enableNpsAnalytics,
+        )
+        .map((q) => (q as any).id)
+    : questions
+        .filter(
+          (q) =>
+            npsQuestionTypes2.includes((q as any).metaType as WaQuestions) &&
+            (q as any).enableNpsAnalytics,
+        )
+        .map((q) => (q as any)?.id);
+  const barGraphQuestionIds = questions.map((q) => q.id);
+
+  const responses = _.groupBy(
+    allResponse
+      .flatMap((r) =>
+        r.responses.map((re) => ({ ...re, language: r.language })),
+      )
+      .filter((r) => !(r.type in PageType)),
+    (res) => res.questionId,
+  );
+
+  Object.entries(responses).forEach(([questionId, responses]) => {
+    let promoters = 0;
+    let detractors = 0;
+    let passives = 0;
+    let csat = 0;
+    const question = questions.find((q) => (q as any).id === questionId);
+    if (version) {
+      const type = responses[0].type;
+      const choices = (question as any)?.choices
+        ? (Object.values((question as any).choices)[0] as any[])?.map((c) =>
+            typeof c.value === "object" ? c.value.title : c.value,
+          )
+        : getChoicesForNpsQuestions(type);
+
+      function getChoiceIndex(language, resp) {
+        const choices = (question as any).choices
+          ? (question as any).choices[language].map((c) =>
+              typeof c.value === "object" ? c.value.title : c.value,
+            )
+          : getChoicesForNpsQuestions(type);
+        return choices.findIndex((c) => c === resp);
+      }
+      let choiceWiseCount;
+      const subQuestions =
+        type === QuestionType.MCQGrid
+          ? Object.values((question as Question)?.features)?.[0]?.questions
+          : [];
+      if (type !== QuestionType.MCQGrid)
+        choiceWiseCount = new Map(
+          choices.map((choice, index) => [
+            index,
+            {
+              count: 0,
+              choice,
+            },
+          ]),
+        );
+      else {
+        choiceWiseCount = new Map(
+          subQuestions.map((question, index) => [
+            index,
+            {
+              [question]: new Map(
+                choices.map((choice, index) => [
+                  index,
+                  {
+                    count: 0,
+                    choice,
+                  },
+                ]),
+              ),
+            },
+          ]),
+        );
+      }
+
+      responses.forEach((r) => {
+        const value = r.response[type];
+        if (npsQuestionIds.includes(questionId)) {
+          switch (type) {
+            case QuestionType.Rating:
+              if (value >= 4) {
+                promoters++;
+                csat++;
+              } else if (value == 3) passives++;
+              else detractors++;
+              break;
+            case QuestionType.Opinion:
+              if (value >= 9) {
+                promoters++;
+                csat++;
+              } else if (value >= 7) passives++;
+              else detractors++;
+              break;
+            case QuestionType.Smiley:
+              if (
+                [SmileyResponse.VeryHappy, SmileyResponse.Happy].includes(value)
+              ) {
+                promoters++;
+                csat++;
+              } else if (value === SmileyResponse.Neutral) passives++;
+              else detractors++;
+              break;
+            case QuestionType.LD:
+              if (value === LDResponse.Like) {
+                promoters++;
+                csat++;
+              } else detractors++;
+              break;
+            case QuestionType.YN:
+              if (value === YNResponse.Yes) {
+                promoters++;
+                csat++;
+              } else detractors++;
+              break;
+            case QuestionType.CustomNPS:
+              if (value?.weightage == NPSWeightage.PROMOTER) {
+                csat++;
+                promoters++;
+              }
+              if (value?.weightage == NPSWeightage.PASSIVE) passives++;
+              if (value?.weightage == NPSWeightage.DETRACTOR) detractors++;
+              break;
+          }
+        }
+        if (barGraphQuestionIds.includes(questionId)) {
+          if (type !== QuestionType.MCQGrid) {
+            const resp = Array.isArray(value)
+              ? value.map((v) => v.value)
+              : typeof value === "object"
+                ? [value.value]
+                : [value];
+            resp.forEach((res) => {
+              const choiceIndex = getChoiceIndex(r.language, res.toString());
+              const mapValue = choiceWiseCount.get(choiceIndex);
+              choiceWiseCount.set(choiceIndex, {
+                ...mapValue,
+                count: mapValue.count + 1,
+              });
+            });
+          } else {
+            subQuestions.forEach((subQ, index) => {
+              const resp = value[subQ].value;
+              const choiceIndex = getChoiceIndex(r.language, resp);
+              const mapValue = choiceWiseCount.get(index);
+              const choiceMapValue = mapValue[subQ].get(choiceIndex);
+              choiceWiseCount.get(index)[subQ].set(choiceIndex, {
+                ...choiceMapValue,
+                count: choiceMapValue.count + 1,
+              });
+            });
+          }
+        }
+      });
+
+      if (npsQuestionIds.includes(questionId)) {
+        const total = promoters + passives + detractors;
+        const nps = total ? ((promoters - detractors) / total) * 100 : null;
+        const csatScore = Math.round((csat / responses.length) * 100);
+        result.nps[questionId] = {
+          csatScore,
+          npsData: {
+            npsScore: nps,
+            passives,
+            detractors,
+            promoters,
+            total,
+          },
+          responseCount: responses.length,
+        };
+      }
+      if (barGraphQuestionIds.includes(questionId)) {
+        const data = Array.from(choiceWiseCount.values());
+        let subData;
+        if (type === QuestionType.MCQGrid) {
+          subData = data.reduce((acc, obj) => {
+            const key = Object.keys(obj)[0];
+            acc[key] = Array.from(obj[key].values());
+            return acc;
+          }, {});
+        }
+
+        result.choiceWise[questionId] = {
+          data: type !== QuestionType.MCQGrid ? data : [],
+          subData,
+          responseCount: responses.length,
+        };
+      }
+    } else {
+      const type = (question as Question2).metaType;
+      const choices = question["data-source"];
+      let choiceWiseCount = new Map(
+        choices.map((choice) => [
+          choice.id,
+          {
+            count: 0,
+            choice: choice.title,
+          },
+        ]),
+      );
+
+      responses.forEach((r) => {
+        const value = r.response as any;
+        if (npsQuestionIds.includes(questionId)) {
+          switch (type) {
+            case WaQuestions.Rating:
+              if (Number(value) >= 4) {
+                promoters++;
+                csat++;
+              } else if (Number(value) == 3) passives++;
+              else detractors++;
+              break;
+            case WaQuestions.Opinion:
+              if (Number(value) >= 9) {
+                promoters++;
+                csat++;
+              } else if (Number(value) >= 7) passives++;
+              else detractors++;
+              break;
+            case WaQuestions.Smiley:
+              if (["4", "5"].includes(value)) {
+                promoters++;
+                csat++;
+              } else if (value === "3") passives++;
+              else detractors++;
+              break;
+            case WaQuestions.LD:
+              if (value === "1") {
+                promoters++;
+                csat++;
+              } else detractors++;
+              break;
+            case WaQuestions.YN:
+              if (value === "1") {
+                promoters++;
+                csat++;
+              } else detractors++;
+              break;
+          }
+        }
+        if (barGraphQuestionIds.includes(questionId)) {
+          const resp = Array.isArray[value] ? value : [value];
+          resp.forEach((res) => {
+            const mapValue = choiceWiseCount.get(res) as {
+              count: number;
+              choice: string;
+            };
+            choiceWiseCount.set(res, {
+              ...mapValue,
+              count: mapValue.count + 1,
+            });
+          });
+        }
+      });
+      if (npsQuestionIds.includes(questionId)) {
+        const total = promoters + passives + detractors;
+        const nps = total ? ((promoters - detractors) / total) * 100 : null;
+        const csatScore = Math.round((csat / responses.length) * 100);
+        result.nps[questionId] = {
+          csatScore,
+          npsData: {
+            npsScore: nps,
+            passives,
+            detractors,
+            promoters,
+            total,
+          },
+          responseCount: responses.length,
+        };
+      }
+      if (barGraphQuestionIds.includes(questionId)) {
+        result.choiceWise[questionId] = {
+          data: Array.from(choiceWiseCount.values()),
+          responseCount: responses.length,
+        };
+      }
+    }
+  });
+  const resObj = { nps: {}, choiceWise: {} };
+  npsQuestionIds.forEach((id) => {
+    if (!Object.keys(result.nps).includes(id)) {
+      resObj["nps"][id] = {
+        npsData: null,
+        responseCount: 0,
+      };
+    } else {
+      resObj["nps"][id] = { ...result.nps[id] };
+    }
+  });
+  barGraphQuestionIds.forEach((id) => {
+    if (!Object.keys(result.choiceWise).includes(id)) {
+      resObj["choiceWise"][id] = {
+        data: [],
+        responseCount: 0,
+      };
+    } else {
+      resObj["choiceWise"][id] = { ...result.choiceWise[id] };
+    }
+  });
+  return resObj;
+}
+
+function getChoicesForNpsQuestions(type) {
+  let choices = [];
+  switch (type) {
+    case QuestionType.YN:
+      choices = Object.values(YNResponse);
+      break;
+    case QuestionType.LD:
+      choices = Object.values(LDResponse);
+      break;
+    case QuestionType.Opinion:
+      choices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => i.toString());
+      break;
+    case QuestionType.Rating:
+      choices = [1, 2, 3, 4, 5].map((i) => i.toString());
+      break;
+  }
+  return choices;
 }
