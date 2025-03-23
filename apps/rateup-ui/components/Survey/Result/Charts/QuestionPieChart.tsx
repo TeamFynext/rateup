@@ -177,18 +177,18 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
             <RingProgress
               sections={[
                 {
-                  value: Math.abs(data?.score),
-                  color: getNPSScoreColor(data?.score)?.color,
+                  value: Math.abs(data?.npsScore),
+                  color: getNPSScoreColor(data?.npsScore)?.color,
                 },
               ]}
               label={
                 <Text
-                  c={getNPSScoreColor(data?.score)?.color}
+                  c={getNPSScoreColor(data?.npsScore)?.color}
                   fw={500}
                   ta="center"
                   size="xl"
                 >
-                  {Math.round(data?.score)} %
+                  {Math.round(data?.npsScore)} %
                 </Text>
               }
             />

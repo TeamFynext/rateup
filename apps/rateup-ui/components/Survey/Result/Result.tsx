@@ -51,9 +51,7 @@ const Result = ({
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
-  const [activeTab, setActiveTab] = useState(
-    !flow ? ResultTab.OverView : ResultTab.Responses,
-  );
+  const [activeTab, setActiveTab] = useState(ResultTab.Responses);
   //end to end encryption logic for result page begins here
   const passwordModalOpenedCondition =
     (survey?.isEncrypted || !!survey?.publicKey) && !encryptionpassword;
@@ -63,8 +61,6 @@ const Result = ({
   //end to end encryption logic for result page ends here
   //.
   //.
-  const { data: waFlow, isPending } = useWaFlowFromDb(flow?.dbFlowId);
-
   const questions = useMemo(() => {
     return flow?.json?.screens?.flatMap((screen) =>
       screen.layout.children
@@ -92,7 +88,7 @@ const Result = ({
 
   return (
     <StyledTabs
-      defaultValue={flowId ? ResultTab.Responses : ResultTab.OverView}
+      defaultValue={ResultTab.Responses}
       placement="left"
       orientation="horizontal"
       styles={{
@@ -121,13 +117,11 @@ const Result = ({
       }}
       value={activeTab}
       onChange={(value) => setActiveTab(value as ResultTab)}
+      keepMounted={false}
     >
       <Box className={styles["result-page-tabs-container"]}>
         <ScrollArea offsetScrollbars={true}>
           <Tabs.List classNames={{ list: styles["result-page-tabs-list"] }}>
-            {!flowId && (
-              <Tabs.Tab value="overview">{translations["Overview"]}</Tabs.Tab>
-            )}
             <Tabs.Tab value="responses">{translations["Response"]}</Tabs.Tab>
             <Tabs.Tab value="analytics">{translations["Analytics"]}</Tabs.Tab>
             <Tabs.Tab value="comparison">{translations["Comparison"]}</Tabs.Tab>
@@ -135,13 +129,6 @@ const Result = ({
         </ScrollArea>
       </Box>
       <Box className={styles["panels-container"]}>
-        <Tabs.Panel value="overview">
-          <SurveyStats
-            survey={survey}
-            flowId={flowId}
-            translations={translations}
-          />
-        </Tabs.Panel>
         <Tabs.Panel value="responses">
           {version === 1 ? (
             <Responses
@@ -160,18 +147,14 @@ const Result = ({
           )}
         </Tabs.Panel>
         <Tabs.Panel value="analytics">
-          {version === 1 ? (
-            <ResultsOverview
-              surveyId={survey?.id}
-              aiResponseSummary={survey?.aiResponseSummary}
-            />
-          ) : (
-            <WaResultsOverviewV2
-              surveyId={survey?.id}
-              screens={waFlow?.json?.screens ?? []}
-              aiResponseSummary={survey?.aiResponseSummary}
-            />
-          )}
+          <ResultsOverview
+            surveyId={survey?.id}
+            aiResponseSummary={survey?.aiResponseSummary}
+            survey={survey}
+            flowId={flowId}
+            version={version}
+            flowQuestions={questions}
+          />
         </Tabs.Panel>
         <Tabs.Panel value="comparison">
           <ResultComparison surveyId={survey?.id} />

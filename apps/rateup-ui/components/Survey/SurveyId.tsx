@@ -58,12 +58,14 @@ export default function SurveyID() {
     error: surveyError,
     data: survey,
     refetch,
+    isRefetching,
   } = useSurvey(surveyId);
   const {
     isLoading,
     error,
     data: questions,
     refetch: refetchQuestions,
+    isRefetching: isRefetchingQ,
   } = useQuestions(surveyId);
 
   const { data: surveyVariables } = useGetSurveyVariables(surveyId, false);
@@ -208,7 +210,10 @@ export default function SurveyID() {
 
   if (error || surveyError) {
     return (
-      <ErrorComponent refetch={surveyError ? refetch : refetchQuestions} />
+      <ErrorComponent
+        refetch={surveyError ? refetch : refetchQuestions}
+        isRefetching={isRefetching || isRefetchingQ}
+      />
     );
   }
 

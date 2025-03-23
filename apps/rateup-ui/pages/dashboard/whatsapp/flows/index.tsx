@@ -44,7 +44,8 @@ function Flows() {
   const ComponentToBeRendered = () => {
     if (isPending || isPendingTeamsUser || waSettingsPending)
       return <FlowCardListSkeleton />;
-    if (isError) return <ErrorComponent refetch={refetch} />;
+    if (isError)
+      return <ErrorComponent refetch={refetch} isRefetching={isPending} />;
     if (!flows?.length)
       return <NothingFound text={translations["No Flows Available"]} />;
     let filteredMenus =
