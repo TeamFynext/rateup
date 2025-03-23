@@ -131,7 +131,7 @@ const ResultsOverview = ({
 
   return (
     <Stack className={styles["results-overview-root-div"]} p={3}>
-      <Flex gap={"xs"}>
+      <Flex gap={"xs"} direction={flowId ? "column" : "row"}>
         <SurveyResponseStats
           survey={survey}
           translations={translations}
