@@ -13,6 +13,7 @@ import dayjs from "dayjs";
 import { Range } from "react-date-range";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -79,16 +80,19 @@ const ResultsOverview = ({
     }
   }, [contentDivRef]);
 
-  const { data: responseAnalytics, isPending } = useResponseAnalytics(
-    surveyId,
-    {
-      teamMapIds: filterTeams,
-      dateRange: [
-        dayjs(ranges[0]?.startDate).toISOString(),
-        dayjs(ranges[0]?.endDate).toISOString(),
-      ],
-    },
-  );
+  const {
+    data: responseAnalytics,
+    isPending,
+    isError,
+    refetch,
+    isRefetching,
+  } = useResponseAnalytics(surveyId, {
+    teamMapIds: filterTeams,
+    dateRange: [
+      dayjs(ranges[0]?.startDate).toISOString(),
+      dayjs(ranges[0]?.endDate).toISOString(),
+    ],
+  });
 
   useEffect(() => {
     if (ranges.length === 0) {
@@ -161,6 +165,8 @@ const ResultsOverview = ({
       <Stack ref={contentDivRef}>
         {isPending || isQLoading ? (
           <RateupLoader />
+        ) : isError ? (
+          <ErrorComponent refetch={refetch} isRefetching={isRefetching} />
         ) : (
           !npsOverView.length &&
           !choiceWiseOverView.length && (
