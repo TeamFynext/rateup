@@ -29,6 +29,167 @@ enum LocationType {
 const maxZoom = 15;
 const minZoom = 2;
 
+export const SurveyResponseStats = ({
+  translations,
+  flowId = null,
+  survey,
+}) => {
+  const queryClient = useQueryClient();
+  const { filterTeams } = useContext(SurveyContext);
+
+  const {
+    data: responseCountData,
+    isLoading,
+    refetch: refetchCount,
+    isPending: isPendingCount,
+  } = useResponseCount(survey?.id);
+
+  const responseCount = useMemo(
+    () =>
+      filterTeams?.length
+        ? responseCountData?.teamWiseCount?.reduce((total, teamMap) => {
+            if (filterTeams.includes(teamMap.id)) total += teamMap.count;
+            return total;
+          }, 0)
+        : responseCountData?.all,
+    [responseCountData, filterTeams],
+  );
+  const { data: flowMetrics, isPending } = useWaFlowMetrics(
+    flowId,
+    !!flowId && responseCount > 250,
+  );
+  function returnSurveyStats() {
+    let filteredStats: Array<any>;
+    if (filterTeams?.length > 0) {
+      filteredStats = survey?.teams
+        ?.filter((team: STeam) => filterTeams?.includes(team?.mapId))
+        .map((team: STeam) => team?.surveyStats);
+    } else {
+      filteredStats = survey?.teams?.map((team: STeam) => team?.surveyStats);
+    }
+    return {
+      visited: filteredStats?.reduce(
+        (acc: number, curr: any) => acc + (curr ? curr?.visited : 0),
+        0,
+      ),
+      started: filteredStats?.reduce(
+        (acc: number, curr: any) => acc + (curr ? curr?.started : 0),
+        0,
+      ),
+      completed: filteredStats?.reduce(
+        (acc: number, curr: any) => acc + (curr ? curr?.completed : 0),
+        0,
+      ),
+    };
+  }
+  const surveyStatsCountArray = [];
+  if (flowMetrics) {
+    surveyStatsCountArray.push({
+      label: translations["Flow Visited"],
+      count: flowMetrics?.metric?.data_points?.[0]?.value ?? 0,
+    });
+  } else if (!flowId) {
+    surveyStatsCountArray.push(
+      {
+        label: translations["Visited"],
+        count: returnSurveyStats()?.visited ?? 0,
+      },
+      {
+        label: translations["Started"],
+        count: returnSurveyStats()?.started ?? 0,
+      },
+      {
+        label: translations["Completed"],
+        count: returnSurveyStats()?.completed ?? 0,
+      },
+    );
+  }
+  return (
+    <PaperLayout className={styles["user-stats-card-div"]} w={"fit-content"}>
+      <Stack gap={0}>
+        <Group>
+          <Heading subtitle={translations["User Stats"]} />
+          <Tooltip label={translations["Refresh stats"]}>
+            <RefreshButton
+              onClick={async () => {
+                await queryClient.invalidateQueries({
+                  queryKey: ["survey", survey?.id],
+                });
+                refetchCount();
+              }}
+              isLoading={isPendingCount || isLoading}
+            />
+          </Tooltip>
+        </Group>
+
+        <Stack>
+          <Text
+            className={styles["responses-text-p"]}
+            c="light-dark(var(--mantine-primary-color-filled),white)"
+          >
+            {responseCount ?? 0} &nbsp;
+            {responseCount > 1
+              ? translations["Responses"]
+              : translations["Response"]}
+          </Text>
+          {surveyStatsCountArray?.length === 0 ? (
+            <PaperLayout className={styles["stats-card"]}>
+              <Text fw="900">
+                {translations["Minimum 250+ response for metrics"]}
+              </Text>
+            </PaperLayout>
+          ) : (
+            surveyStatsCountArray?.map(({ count, label }) => (
+              <PaperLayout className={styles["stats-card"]} key={label}>
+                <Stack align={"center"}>
+                  <Text fs={"20px"} fw="900" size={"30px"}>
+                    {count}
+                  </Text>
+                  <Badge variant="light">{label}</Badge>
+                </Stack>
+              </PaperLayout>
+            ))
+          )}
+        </Stack>
+      </Stack>
+    </PaperLayout>
+  );
+};
+export const ResponseGraphBySurvey = ({ translations, surveyId }) => {
+  const { filterTeams } = useContext(SurveyContext);
+  const [timePeriod, setTimePeriod] = useState("daily");
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const {
+    data: graphResponse,
+    isLoading: isrLoading,
+    isRefetching,
+  } = useAllResponseForGraph(timePeriod, userTimeZone, surveyId, filterTeams);
+  const queryClient = useQueryClient();
+  return (
+    <OverallResponseGraph
+      className={styles["overall-responses-graph"]}
+      data={graphResponse}
+      timePeriod={timePeriod}
+      setTimePeriod={setTimePeriod}
+      translations={translations}
+      isLoading={isrLoading || isRefetching}
+      onRefresh={async () => {
+        await queryClient.invalidateQueries({
+          queryKey: [
+            [
+              "reponse",
+              "graph",
+              timePeriod,
+              userTimeZone,
+              surveyId,
+              filterTeams,
+            ],
+          ],
+        });
+      }}
+    />
+  );
+};
 const SurveyStats = ({ survey, flowId = null, translations }) => {
   const { surveyTeamMapId, filterTeams } = useContext(SurveyContext);
   const {

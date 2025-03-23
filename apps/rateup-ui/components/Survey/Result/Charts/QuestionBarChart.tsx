@@ -14,10 +14,12 @@ import {
 import useTranslations from "@/dictionaries/useTranslation";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
-import { QuestionType, QuestionType2 } from "../../../../types/enums";
+import {
+  QuestionType,
+  QuestionType2,
+  WaQuestions,
+} from "../../../../types/enums";
 import { getContent } from "../../../../utils";
-import { ChoiceTypeQuestions } from "../../../../utils/constants";
-import { stringToColour } from "../../../../utils/essential";
 import { getResponseArrayByQuestionType } from "../../../../utils/response";
 import Heading from "../../../styled/Heading/Heading";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
@@ -27,11 +29,9 @@ import WaSummary from "../WaSummary";
 interface QuestionBarChartProps {
   question: string;
   data: any[];
-  choices: any[];
-  questionType: QuestionType;
+  questionType: QuestionType | WaQuestions;
   no: number;
-  choicesInAllLang: Question["choices"];
-  mcqOtherFeature: any;
+  responseCount: number;
 }
 interface CustomTooltipProps {
   active?: boolean;
@@ -93,57 +93,12 @@ const getChoiceCountsforAll = (
 
 const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
   question,
-  choices,
   data,
   questionType,
   no,
-  choicesInAllLang,
-  mcqOtherFeature,
+  responseCount,
 }) => {
-  let choicesToUse = choices;
-  if (!choicesToUse) {
-    if (getResponseArrayByQuestionType(questionType)) {
-      choicesToUse = getResponseArrayByQuestionType(questionType);
-    }
-  }
-  const { selectedLanguage } = useContext(SelectedLanguageContext);
   const { translations } = useTranslations();
-  let choiceCounts = choicesToUse?.map((choice, index) => ({
-    name: choice?.value,
-    count: data?.filter((item) => {
-      const response = item?.response[questionType];
-      if (
-        ChoiceTypeQuestions.includes(questionType) ||
-        questionType === QuestionType.MCQGrid
-      ) {
-        if (selectedLanguage) {
-          return Array.isArray(response)
-            ? response?.some((r) => r.value === choice?.value)
-            : response?.value === choice?.value;
-        } else {
-          return getChoiceCountsforAll(response, choicesInAllLang, index);
-        }
-      } else {
-        return Array.isArray(response)
-          ? response.includes(choice?.value)
-          : response == choice?.value;
-      }
-    })?.length,
-    fill: choice?.color,
-  }));
-  if (mcqOtherFeature?.isEnabled) {
-    let otherValueCount = data?.filter((item) => {
-      const response = item?.response[questionType];
-      return Array.isArray(response)
-        ? response.some((r) => r?.other?.length)
-        : response?.other?.length;
-    })?.length;
-    choiceCounts.push({
-      name: mcqOtherFeature?.title,
-      count: otherValueCount,
-      fill: stringToColour(mcqOtherFeature?.title),
-    });
-  }
 
   return (
     <Stack miw={300}>
@@ -166,7 +121,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
           <PaperLayout miw={200} maw={230}>
             <Stack align="center" gap={10}>
               <Heading
-                title={`${data?.length}`}
+                title={`${responseCount}`}
                 titleprops={{ w: "fit-content" }}
               />
               <Text c={"dimmed"} fw={900} size="sm">
@@ -175,10 +130,9 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
             </Stack>
           </PaperLayout>
           <SurveySummaryNew
-            response={data}
+            totalResponses={responseCount}
             questionType={questionType}
-            choices={choices}
-            choiceCounts={choiceCounts}
+            choiceCounts={data}
           />
         </Stack>
         <Stack style={{ flex: 1 }} align="center">
@@ -186,7 +140,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
             <BarChart
               width={500}
               height={300}
-              data={choiceCounts}
+              data={data}
               margin={{
                 top: 20,
                 right: 30,
@@ -196,7 +150,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
               maxBarSize={50}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis dataKey="choice" />
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
               <Legend />

@@ -20,6 +20,7 @@ import {
   getLargeTextResponseSummaryByAI,
   getResponses,
   getResponsesBySurveyId,
+  getSurveyResponseAnalyics,
   getSurveyResponseCount,
   resetResponsesStats,
   syncResponseToGoogleSheet,
@@ -277,6 +278,17 @@ export const useResponseCount = (surveyId) => {
   return useQuery({
     queryFn: () => getSurveyResponseCount(surveyId),
     queryKey: ["responseCount", surveyId],
+    enabled: !!surveyId,
+  });
+};
+
+export const useResponseAnalytics = (surveyId, filter) => {
+  const filterQuery = Object.entries(filter)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
+  return useQuery({
+    queryFn: () => getSurveyResponseAnalyics(surveyId, filterQuery),
+    queryKey: ["responnseAnalytics", surveyId, filter],
     enabled: !!surveyId,
   });
 };

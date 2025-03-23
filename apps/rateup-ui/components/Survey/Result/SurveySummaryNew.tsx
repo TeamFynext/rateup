@@ -1,24 +1,18 @@
 import {
+  Badge,
   Group,
   Rating,
-  Text,
   ScrollArea,
-  Badge,
   SimpleGrid,
+  Text,
   Tooltip,
 } from "@mantine/core";
-import { IconThumbUpFilled, IconThumbDownFilled } from "@tabler/icons-react";
-import { QuestionType } from "../../../types/enums";
+import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
+
+import { QuestionType, WaQuestions } from "../../../types/enums";
 import { getResponseArrayByQuestionType } from "../../../utils/response";
 
-const SurveySummaryNew = ({
-  response,
-  questionType,
-  choices,
-  choiceCounts,
-}) => {
-  const totalResponses = response?.length;
-
+const SurveySummaryNew = ({ questionType, choiceCounts, totalResponses }) => {
   const responseArray = choiceCounts?.map((choice) => {
     const count = choice?.count;
     const percentage =
@@ -27,7 +21,7 @@ const SurveySummaryNew = ({
         : "0.00";
     const voteText = count > 1 ? "votes" : "vote";
     return {
-      response: choice?.name,
+      response: choice?.choice,
       count: count,
       percentage: percentage,
       voteText: voteText,
@@ -36,6 +30,7 @@ const SurveySummaryNew = ({
 
   switch (questionType) {
     case QuestionType.Opinion:
+    case WaQuestions.Opinion:
       return (
         <ScrollArea.Autosize mah={500} maw={450}>
           <SimpleGrid cols={2} verticalSpacing={"xs"}>
@@ -75,6 +70,9 @@ const SurveySummaryNew = ({
     case QuestionType.MSQ:
     case QuestionType.DDMS:
     case QuestionType.MCQGrid:
+    case WaQuestions.RadioButtonsGroup:
+    case WaQuestions.Dropdown:
+    case WaQuestions.CheckboxGroup:
       return (
         <ScrollArea.Autosize mah={500} maw={450}>
           <SimpleGrid cols={1}>
@@ -101,7 +99,8 @@ const SurveySummaryNew = ({
         <SimpleGrid cols={1} verticalSpacing={"xs"}>
           {getResponseArrayByQuestionType(questionType).map((item) => {
             const resObj = responseArray.find(
-              (res) => res?.response == item?.value,
+              (res, index) =>
+                res?.response == item?.value || index + 1 === item.value,
             );
             return (
               <Group key={item?.value}>
@@ -124,6 +123,7 @@ const SurveySummaryNew = ({
       );
 
     case QuestionType.LD:
+    case WaQuestions.LD:
       return (
         <SimpleGrid cols={1} verticalSpacing={"xs"}>
           {getResponseArrayByQuestionType(questionType)?.map((item) => {
@@ -173,6 +173,7 @@ const SurveySummaryNew = ({
       );
 
     case QuestionType.YN:
+    case WaQuestions.YN:
       return (
         <SimpleGrid cols={1} verticalSpacing={"xs"}>
           {getResponseArrayByQuestionType(questionType)?.map((item) => {

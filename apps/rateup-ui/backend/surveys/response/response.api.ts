@@ -124,3 +124,33 @@ export async function exportContactResponseToContacts(surveyId) {
 export async function getSurveyResponseCount(surveyId) {
   return (await axiosClient.get(`${RESPONSE_URL}/count/${surveyId}`)).data;
 }
+
+interface ResponseAnalytic {
+  nps: {
+    [questionId: string]: {
+      csatScore: number;
+      npsData: {
+        npsScore: number;
+        passives: number;
+        detractors: number;
+        promoters: number;
+        total: number;
+      };
+      responseCount: number;
+    };
+  };
+  choiceWise: {
+    [questionId: string]: {
+      data: { choice: string; count: number }[];
+      subData?: {
+        [question: string]: { choice: string; count: number }[];
+      };
+      responseCount: number;
+    };
+  };
+}
+export async function getSurveyResponseAnalyics(surveyId, filter = "") {
+  return (
+    await axiosClient.get(`${RESPONSE_URL}/analytics/${surveyId}?${filter}`)
+  ).data as ResponseAnalytic;
+}
