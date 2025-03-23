@@ -6,6 +6,7 @@ import {
   exportContactResponseToContactsHandler,
   generateResponseHandler,
   getAllResponsesHandler,
+  getResponseAnalyticsForGraphHandler,
   getResponsesHandler,
   getSurveyResponseBySurveyIdHandler,
   getSurveyResponseCountHandler,
@@ -113,4 +114,6 @@ export async function responseRoutes(server: FastifyInstance) {
     },
     summarizeResponseHandler,
   );
+
+  server.get("/analytics/:surveyId", getResponseAnalyticsForGraphHandler);
 }
