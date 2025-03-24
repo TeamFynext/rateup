@@ -54,10 +54,6 @@ export const SurveyResponseStats = ({
         : responseCountData?.all,
     [responseCountData, filterTeams],
   );
-  const { data: flowMetrics, isPending } = useWaFlowMetrics(
-    flowId,
-    !!flowId && responseCount > 250,
-  );
   function returnSurveyStats() {
     let filteredStats: Array<any>;
     if (filterTeams?.length > 0) {
@@ -83,27 +79,22 @@ export const SurveyResponseStats = ({
     };
   }
   const surveyStatsCountArray = [];
-  if (flowMetrics) {
-    surveyStatsCountArray.push({
-      label: translations["Flow Visited"],
-      count: flowMetrics?.metric?.data_points?.[0]?.value ?? 0,
-    });
-  } else if (!flowId) {
+  const surveyStats = returnSurveyStats();
+  if (surveyStats && !flowId)
     surveyStatsCountArray.push(
       {
         label: translations["Visited"],
-        count: returnSurveyStats()?.visited ?? 0,
+        count: surveyStats?.visited ?? 0,
       },
       {
         label: translations["Started"],
-        count: returnSurveyStats()?.started ?? 0,
+        count: surveyStats?.started ?? 0,
       },
       {
         label: translations["Completed"],
-        count: returnSurveyStats()?.completed ?? 0,
+        count: surveyStats?.completed ?? 0,
       },
     );
-  }
   return (
     <PaperLayout className={styles["user-stats-card-div"]} w={"fit-content"}>
       <Stack gap={0}>
@@ -132,24 +123,16 @@ export const SurveyResponseStats = ({
               ? translations["Responses"]
               : translations["Response"]}
           </Text>
-          {surveyStatsCountArray?.length === 0 ? (
-            <PaperLayout className={styles["stats-card"]}>
-              <Text fw="900">
-                {translations["Minimum 250+ response for metrics"]}
-              </Text>
+          {surveyStatsCountArray?.map(({ count, label }) => (
+            <PaperLayout className={styles["stats-card"]} key={label}>
+              <Stack align={"center"}>
+                <Text fs={"20px"} fw="900" size={"30px"}>
+                  {count}
+                </Text>
+                <Badge variant="light">{label}</Badge>
+              </Stack>
             </PaperLayout>
-          ) : (
-            surveyStatsCountArray?.map(({ count, label }) => (
-              <PaperLayout className={styles["stats-card"]} key={label}>
-                <Stack align={"center"}>
-                  <Text fs={"20px"} fw="900" size={"30px"}>
-                    {count}
-                  </Text>
-                  <Badge variant="light">{label}</Badge>
-                </Stack>
-              </PaperLayout>
-            ))
-          )}
+          ))}
         </Stack>
       </Stack>
     </PaperLayout>
