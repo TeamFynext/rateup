@@ -114,11 +114,7 @@ export const CalenderIconDateRangePicker = ({
   return (
     <>
       <Tooltip label={label}>
-        <ActionIcon
-          color="var(--tertiary-color)"
-          onClick={open}
-          variant={variant}
-        >
+        <ActionIcon onClick={open} variant={variant}>
           <IconCalendar />
         </ActionIcon>
       </Tooltip>

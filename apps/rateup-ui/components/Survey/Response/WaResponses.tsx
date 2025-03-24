@@ -467,7 +467,7 @@ const WaResponses = ({
       <ErrorComponent refetch={refetchResponse} isRefetching={isRefetching} />
     );
 
-  const responseCount = responseData?.totalCount ?? 0;
+  const responseCount = responseData?.totalCount;
   return (
     <Stack className={styles["responses-root-div"]}>
       <CreateTicketModal
@@ -596,27 +596,22 @@ const WaResponses = ({
           </Group>
         </Group>
       </Skeleton>
-
-      {responseCount > 0 ? (
-        <Box className={styles["responses-table-container"]}>
-          <TanstackTable
-            data={data ?? []}
-            columns={columns}
-            pagination={pagination}
-            setPagination={setPagination}
-            totalCount={responseCount}
-            isPending={isPending}
-          />
-          <DeleteModal
-            confirmDelete={confirmDelete}
-            translations={translations}
-            opened={opened}
-            close={close}
-          />
-        </Box>
-      ) : (
-        <NothingFound text={translations["No responses yet"]} />
-      )}
+      <Box className={styles["responses-table-container"]}>
+        <TanstackTable
+          data={data ?? []}
+          columns={columns}
+          pagination={pagination}
+          setPagination={setPagination}
+          totalCount={responseCount}
+          isPending={isPending}
+        />
+        <DeleteModal
+          confirmDelete={confirmDelete}
+          translations={translations}
+          opened={opened}
+          close={close}
+        />
+      </Box>
     </Stack>
   );
 };
