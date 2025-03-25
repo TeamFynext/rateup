@@ -23,6 +23,7 @@ import {
   updateSurveyVariableHandler,
   deleteSurveyVariableHandler,
   getSurveyResponseCountForGraphHandler,
+  getSurveyStatsHandler,
 } from "./survey.controller";
 import { $Sref } from "./survey.schema";
 import {
@@ -135,6 +136,8 @@ export async function surveyRoutes(server: FastifyInstance) {
     },
     getSurveyStatsBySurveyTeamMapIdHandler,
   );
+
+  server.get("/surveyStats/all/:surveyId", getSurveyStatsHandler);
 
   // delete survey by id
   server.delete(

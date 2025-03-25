@@ -7,6 +7,7 @@ import {
   generateResponseHandler,
   getAllResponsesHandler,
   getResponseAnalyticsForGraphHandler,
+  getResponseCountForCamparisonHandler,
   getResponsesHandler,
   getSurveyResponseBySurveyIdHandler,
   getSurveyResponseCountHandler,
@@ -116,4 +117,5 @@ export async function responseRoutes(server: FastifyInstance) {
   );
 
   server.get("/analytics/:surveyId", getResponseAnalyticsForGraphHandler);
+  server.get("/comparison/:surveyId", getResponseCountForCamparisonHandler);
 }

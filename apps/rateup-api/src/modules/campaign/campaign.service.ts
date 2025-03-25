@@ -422,20 +422,9 @@ export async function getCampaignFilterForFlows(surveyId: string) {
     select: {
       id: true,
       name: true,
-      campaignParticipants: {
-        select: {
-          contactId: true,
-        },
-      },
     },
   });
-  return result.map(({ name, id, campaignParticipants }) => ({
-    campaignName: name,
-    campaignId: id,
-    participantsContactIds: campaignParticipants.map(
-      ({ contactId }) => contactId,
-    ),
-  }));
+  return result;
 }
 
 export async function sendCampaignCronAction() {
