@@ -156,7 +156,7 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
   } = useResponsesBySurvey(survey?.id, {
     ...pagination,
     filterTeams,
-    tags: filterTags,
+    tags: columnFilters.find((f) => f.id === "tag")?.value ?? "",
     selectedLanguage: "",
     contactIds,
     ranges: [
