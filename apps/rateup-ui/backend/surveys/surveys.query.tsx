@@ -23,6 +23,7 @@ import {
   getSurveyResponseForGraph,
   getSurveys,
   getSurveysSummary,
+  getSurveyStats,
   getSurveyStatsBySurveyTeamMapId,
   getSurveyTemplates,
   getSurveyVariables,
@@ -519,6 +520,14 @@ export const useGetSurveyStatsBySurveyTeamMapId = (surveyTeamMapId: string) => {
     enabled: !!surveyTeamMapId,
     queryKey: ["surveyStats", surveyTeamMapId],
     queryFn: () => getSurveyStatsBySurveyTeamMapId(surveyTeamMapId),
+  });
+};
+
+export const useGetSurveyStats = (surveyId) => {
+  return useQuery({
+    queryFn: () => getSurveyStats(surveyId),
+    queryKey: ["SurveyStats", surveyId],
+    enabled: !!surveyId,
   });
 };
 

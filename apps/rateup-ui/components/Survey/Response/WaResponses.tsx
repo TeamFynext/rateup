@@ -15,7 +15,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
@@ -26,6 +26,7 @@ import {
   IconTicket,
   IconX,
 } from "@tabler/icons-react";
+import { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
@@ -130,26 +131,13 @@ const WaResponses = ({
   const [opened, { open, close }] = useDisclosure(false);
   const [openedExport, { toggle }] = useDisclosure(false);
   const [alertMsg, setAlertMsg] = useState("");
-  const initialDateRange = {
-    startDate: dayjs().subtract(10, "year").toDate(),
-    endDate: new Date(),
-    key: "selection",
-  };
-  const [ranges, setRange] = useState<Range[]>([initialDateRange]);
+  const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
   const router = useRouter();
   const dbFlowId = router.query.dbFlowId as string;
-  const [campaignFlowFilter, setCampaignFlowFilter] = useState([]);
-  const contactIds = useMemo(
-    () =>
-      campaignFlowFilter.length
-        ? new Set(
-            campaignFlowFilter.flatMap(
-              (campaign) => campaign.participantsContactIds,
-            ),
-          )
-        : [],
-    [campaignFlowFilter],
-  );
+  const { data: CFData } = useCampaignFilterForFlows(surveyId);
+  const [columnFilters, setColumnFilters] =
+    useDebouncedState<ColumnFiltersState>([], 200);
+  const [campaignIds, setSelectedCampaignIds] = useState([]);
   const {
     data: responseData,
     isLoading,
@@ -157,15 +145,20 @@ const WaResponses = ({
     error,
     refetch: refetchResponse,
   } = useResponsesBySurvey(survey?.id, {
-    ...pagination,
-    filterTeams,
-    tags: filterTags ? filterTags : "",
-    selectedLanguage: "",
-    contactIds,
-    ranges: [
-      dayjs(ranges[0]?.startDate).toISOString(),
-      dayjs(ranges[0]?.endDate).toISOString(),
-    ],
+    page: pagination.pageIndex,
+    limit: pagination.pageSize,
+    surveyTeamMapIds: filterTeams,
+    tags: columnFilters.find((f) => f.id === "tag")?.value || "",
+    language: "",
+    contactIds: [],
+    campaignIds,
+    dateRange:
+      !ranges.length || !ranges[0].startDate || !ranges[0].endDate
+        ? []
+        : [
+            ranges[0]?.startDate.toISOString(),
+            ranges[0]?.endDate.toISOString(),
+          ],
   });
   const hasContactQuestion = useMemo(
     () =>
@@ -188,7 +181,7 @@ const WaResponses = ({
 
   useEffect(() => {
     if (ranges.length === 0) {
-      setRange([initialDateRange]);
+      setRange([{ key: "selection" }]);
     }
   }, [ranges]);
 
@@ -197,8 +190,6 @@ const WaResponses = ({
   }
 
   const exportContactMutation = useExportContactResponses(surveyId);
-
-  const { data: CFData } = useCampaignFilterForFlows(surveyId);
 
   const downloadExcelResponse = useDownloadExcelResponse();
   const handleExportContacts = useCallback(() => {
@@ -220,7 +211,7 @@ const WaResponses = ({
       title: survey?.title,
       tz: dayjs.tz.guess(),
       filterTeams,
-      campaignIds: campaignFlowFilter?.map((data) => data.campaignId),
+      campaignIds: campaignIds,
       dbFlowId,
       columnFilters: [],
       ranges: ranges?.[0],
@@ -231,7 +222,7 @@ const WaResponses = ({
     surveyId,
     survey?.title,
     filterTeams,
-    campaignFlowFilter,
+    campaignIds,
     dbFlowId,
     ranges,
   ]);
@@ -495,14 +486,11 @@ const WaResponses = ({
             {CFData && CFData.length > 0 && (
               <ContainedMultiSelect
                 placeholder={translations["Filter By Campaign"]}
-                onChange={(value) =>
-                  setCampaignFlowFilter(
-                    CFData.filter((c) => value.includes(c.campaignId)),
-                  )
-                }
-                data={CFData.map(({ campaignName, campaignId }) => ({
-                  value: campaignId,
-                  label: campaignName,
+                value={campaignIds}
+                onChange={setSelectedCampaignIds}
+                data={CFData.map(({ id, name }) => ({
+                  value: id,
+                  label: name,
                 }))}
               />
             )}
@@ -604,6 +592,8 @@ const WaResponses = ({
           setPagination={setPagination}
           totalCount={responseCount}
           isPending={isPending}
+          columnFiltersE={columnFilters}
+          setColumnFiltersE={setColumnFilters}
         />
         <DeleteModal
           confirmDelete={confirmDelete}

@@ -54,9 +54,8 @@ export const sendCampaign = async (
 export const getCampaignFilterForFlows = async (surveyId: string) => {
   return (await axiosClient.get(`/campaign/flow/filter?surveyId=${surveyId}`))
     .data as {
-    campaignName: string;
-    campaignId: string;
-    participantsContactIds: string[];
+    id: string;
+    name: string;
   }[];
 };
 

@@ -33,7 +33,7 @@ export async function getResponsesBySurveyId(
   filter: string = "",
 ) {
   const res = await axiosClient.get(
-    `${RESPONSE_URL}/survey/${surveyId}${filter}`,
+    `${RESPONSE_URL}/survey/${surveyId}?${filter}`,
   );
   return res.data;
 }
@@ -153,4 +153,8 @@ export async function getSurveyResponseAnalyics(surveyId, filter = "") {
   return (
     await axiosClient.get(`${RESPONSE_URL}/analytics/${surveyId}?${filter}`)
   ).data as ResponseAnalytic;
+}
+
+export async function getResponseForComparison(surveyId) {
+  return (await axiosClient.get(`${RESPONSE_URL}/comparison/${surveyId}`)).data;
 }
