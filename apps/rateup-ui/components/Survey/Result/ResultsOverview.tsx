@@ -135,11 +135,13 @@ const ResultsOverview = ({
   return (
     <Stack className={styles["results-overview-root-div"]} p={3}>
       <Flex gap={"xs"} direction={flowId ? "column" : "row"}>
-        <SurveyResponseStats
-          translations={translations}
-          flowId={flowId}
-          surveyId={surveyId}
-        />
+        {!flowId && (
+          <SurveyResponseStats
+            translations={translations}
+            flowId={flowId}
+            surveyId={surveyId}
+          />
+        )}
         <div style={{ flex: 1 }}>
           <ResponseGraphBySurvey
             surveyId={surveyId}

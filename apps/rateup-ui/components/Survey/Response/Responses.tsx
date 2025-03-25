@@ -144,7 +144,7 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
     page: pagination.pageIndex,
     limit: pagination.pageSize,
     surveyTeamMapIds: filterTeams,
-    tags: filterTags,
+    tags: columnFilters.find((f) => f.id === "tag")?.value ?? "",
     language: "",
     contactIds: [],
     campaignIds,

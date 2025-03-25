@@ -68,7 +68,6 @@ function TanstackTable({
   ]);
   const [columnVisibility, setColumnVisibility] = React.useState({
     [DETAIL_BTN]: false,
-    ["tag"]: !!data?.find((item) => item?.tag),
   });
   const largeScreen = useMediaQuery("(min-width: 40em)") || true;
   const [filterVisibility, setFilterVisibility] = React.useState(false);
