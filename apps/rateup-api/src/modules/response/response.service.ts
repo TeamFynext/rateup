@@ -19,6 +19,7 @@ import {
   NPSWeightage,
   PageType,
   QuestionType,
+  QuestionType2,
   ResponseSummaryType,
   SmileyResponse,
   SubscriptionFeaturePathName,
@@ -41,7 +42,10 @@ import {
 } from "../question/question.service";
 import { FastifyRequest } from "fastify";
 import { getTextSummaryByAI } from "../chatbot/chatbot.service";
-import { UpdateQuestionInput } from "../question/question.schema";
+import {
+  questionSchema,
+  UpdateQuestionInput,
+} from "../question/question.schema";
 import {
   getIntegrationByName,
   initializeAuthClient,
@@ -67,6 +71,9 @@ import {
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 import _ from "lodash";
 import { autoGenerateTicket } from "../ticket/ticketCard/card.service";
+import { getCampaignParticipantsByCampaignId } from "../campaign/campaignParticipants/campaignParticipants.service";
+import { getTeamIdsByUserId } from "../team/team.service";
+import { BATCH_SIZE } from "../../utils/constants/constants";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -1756,12 +1763,16 @@ const getCellData = (response, question) => {
 };
 
 export async function getSurveyResponseCount(surveyId) {
-  const teamWiseCount = (await prisma.$queryRaw`SELECT st.id, 
+  const teamWiseCount =
+    (await prisma.$queryRaw`SELECT st.id,t.code as "teamCode", 
   COUNT(sr.id)::INTEGER
   FROM "SurveyTeamMap" st
-  LEFT JOIN "SurveyResponse" sr ON st.id = sr."surveyTeamMapId" WHERE st."surveyId"=${surveyId}::uuid 
-  GROUP BY st.id
-  ;`) as { id: string; count: number }[];
+  LEFT JOIN "SurveyResponse" sr ON st.id = sr."surveyTeamMapId" 
+  LEFT JOIN "Team" t ON t.id = st."teamId"
+  WHERE st."surveyId"=${surveyId}::uuid 
+  GROUP BY st.id, t.code
+  ;`) as { id: string; teamCode: string; count: number }[];
+
   return {
     all: teamWiseCount.reduce((total, teamMap) => (total += teamMap.count), 0),
     teamWiseCount,
@@ -1781,6 +1792,7 @@ export async function getSurveyResponseBySurveyId(
     tags,
     contactIds,
     dateRange,
+    campaignIds,
   } = filter;
   let where = {
     surveyTeamMap: {
@@ -1802,10 +1814,32 @@ export async function getSurveyResponseBySurveyId(
   if (language?.length) {
     where["language"] = language;
   }
-  if (contactIds?.length) {
-    where["contactId"] = {
-      in: contactIds?.split(","),
-    };
+  if (contactIds?.length || campaignIds?.length) {
+    let participants = [];
+    if (campaignIds?.length)
+      participants = await prisma.contact.findMany({
+        where: {
+          campaignParticipants: {
+            some: {
+              campaignId: {
+                in: campaignIds.split(","),
+              },
+            },
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+    const contacts = contactIds?.length ? contactIds.split(",") : [];
+    const allContactIds = new Set([
+      ...contacts,
+      ...participants?.map((p) => p.id),
+    ]);
+    if (allContactIds.size)
+      where["contactId"] = {
+        in: Array.from(allContactIds),
+      };
   }
   if (dateRange?.length) {
     const [startDate, endDate] = dateRange?.split(",");
@@ -1850,12 +1884,16 @@ export async function getSurveyResponseBySurveyId(
 
 export async function getResponseAnalyticsForGraph(
   surveyId,
+  teamIds,
   teamMapIds = [],
   dateRange = "",
 ) {
   let where = {
     surveyTeamMap: {
       surveyId,
+      teamId: {
+        in: teamIds,
+      },
     },
   };
   if (teamMapIds.length)
@@ -2312,4 +2350,210 @@ function getChoicesForNpsQuestions(type) {
       break;
   }
   return choices;
+}
+
+export async function getResponseCountForCamparison(surveyId, teamIds) {
+  const teamRes = await prisma.surveyTeamMap.findMany({
+    where: {
+      surveyId,
+      teamId: {
+        in: teamIds,
+      },
+    },
+    select: {
+      id: true,
+      team: {
+        select: {
+          code: true,
+        },
+      },
+      survey: {
+        select: {
+          WaFlow: {
+            select: {
+              json: true,
+              version: true,
+            },
+          },
+          questions: true,
+        },
+      },
+    },
+  });
+  const version1 =
+    !teamRes[0].survey.WaFlow || teamRes[0].survey.WaFlow.version === 1;
+  const questions = version1
+    ? teamRes[0].survey.questions.filter((q) =>
+        npsQuestionTypes.includes(q.type),
+      )
+    : teamRes[0].survey.WaFlow.json.screens.flatMap((screen) =>
+        screen.layout.children.filter(
+          (child) =>
+            npsQuestionTypes2.includes(
+              (child as any).metaType as WaQuestions,
+            ) && child.name,
+        ),
+      );
+
+  const data = questions.map((q) => ({
+    questionId: q.id,
+    type: version1 ? q.type : q.metaType,
+    responseObj: getResponseObjectByQuestionType(
+      version1 ? q.type : QuestionType2[q.metaType],
+      version1,
+    ),
+    data: [],
+  }));
+  for (const t of teamRes) {
+    const batchSize = 1000;
+    let skip = 0;
+    let hasMoreResponses = true;
+    while (hasMoreResponses) {
+      const responses = await prisma.surveyResponse.findMany({
+        where: {
+          surveyTeamMapId: t.id,
+        },
+        select: {
+          responses: true,
+        },
+        take: batchSize,
+        skip,
+      });
+      if (responses.length === 0) {
+        hasMoreResponses = false;
+        continue;
+      }
+      const formattedResponse = responses.flatMap((r) => r.responses);
+      formattedResponse.forEach((r) => {
+        let questionIndex = -1;
+        const q = data.find((d, index) => {
+          if (d.questionId === r.questionId) {
+            questionIndex = index;
+            return d;
+          }
+        });
+        if (questionIndex === -1) return;
+        const resp = version1 ? r.response[r.type] : r.response;
+        let currentResponseObj = { ...data[questionIndex].responseObj };
+        if (q.type === QuestionType.CustomNPS)
+          currentResponseObj[resp.weightage] =
+            currentResponseObj[resp.weightage] + 1;
+        else
+          currentResponseObj[resp.toString()] =
+            currentResponseObj[resp.toString()] + 1;
+        data[questionIndex].responseObj = currentResponseObj;
+      });
+      skip += batchSize;
+    }
+    data.forEach((d) => {
+      const resObj = version1
+        ? { ...d.responseObj }
+        : getFlowVersion2MappedObj(d.responseObj, d.type);
+      d.data = [...d.data, { teamCode: t.team.code, mapId: t.id, ...resObj }];
+      d.responseObj = getResponseObjectByQuestionType(d.type, version1);
+    });
+  }
+  return data.map((d) => ({ questionId: d.questionId, data: d.data }));
+}
+
+function getFlowVersion2MappedObj(responseObj, type) {
+  switch (type) {
+    case WaQuestions.LD:
+      return {
+        [LDResponse.Like]: responseObj["1"],
+        [LDResponse.Dislike]: responseObj["2"],
+      };
+    case WaQuestions.Smiley:
+      return {
+        [SmileyResponse.VerySad]: responseObj["1"],
+        [SmileyResponse.Sad]: responseObj["2"],
+        [SmileyResponse.Neutral]: responseObj["3"],
+        [SmileyResponse.Happy]: responseObj["4"],
+        [SmileyResponse.VeryHappy]: responseObj["5"],
+      };
+    case WaQuestions.YN:
+      return {
+        [YNResponse.Yes]: responseObj["1"],
+        [YNResponse.No]: responseObj["2"],
+      };
+    default:
+      return responseObj;
+  }
+}
+export function getResponseObjectByQuestionType(questionType, version) {
+  switch (questionType) {
+    case QuestionType.Rating: {
+      return {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+      };
+    }
+    case QuestionType.Opinion: {
+      return {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0,
+        "10": 0,
+      };
+    }
+    case QuestionType.Smiley: {
+      return version
+        ? {
+            [SmileyResponse.VeryHappy]: 0,
+            [SmileyResponse.Happy]: 0,
+            [SmileyResponse.Neutral]: 0,
+            [SmileyResponse.Sad]: 0,
+            [SmileyResponse.VerySad]: 0,
+          }
+        : {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+          };
+    }
+
+    case QuestionType.YN: {
+      return version
+        ? {
+            [YNResponse.Yes]: 0,
+            [YNResponse.No]: 0,
+          }
+        : {
+            "1": 0,
+            "2": 0,
+          };
+    }
+    case QuestionType.LD: {
+      return version
+        ? {
+            [LDResponse.Like]: 0,
+            [LDResponse.Dislike]: 0,
+          }
+        : {
+            "1": 0,
+            "2": 0,
+          };
+    }
+    case QuestionType.CustomNPS: {
+      return {
+        [NPSWeightage.PROMOTER]: 0,
+        [NPSWeightage.PASSIVE]: 0,
+        [NPSWeightage.DETRACTOR]: 0,
+      };
+    }
+    default: {
+      return null;
+    }
+  }
 }

@@ -18,6 +18,7 @@ import {
   getAllResponses,
   getResponseAnalyticsForGraph,
   getResponseBySurveyById,
+  getResponseCountForCamparison,
   getResponses,
   getResponseSummary,
   getSurveyList,
@@ -401,11 +402,29 @@ export async function getResponseAnalyticsForGraphHandler(
   try {
     const { teamMapIds, dateRange } = request.query;
     const surveyTeamMapIds = teamMapIds ? teamMapIds.split(",") : [];
-
+    const teamIds = await getTeamIdsByUserId(request.userId);
     const res = await getResponseAnalyticsForGraph(
       request.params.surveyId,
+      teamIds,
       surveyTeamMapIds,
       dateRange,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getResponseCountForCamparisonHandler(
+  request: FastifyRequest<{ Params: BySurveyIdParamsInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const teamIds = await getTeamIdsByUserId(request.userId);
+    const res = await getResponseCountForCamparison(
+      request.params.surveyId,
+      teamIds,
     );
     reply.code(200).send(res);
   } catch (e) {
