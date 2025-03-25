@@ -1,6 +1,15 @@
 import React, { useContext, useMemo, useState } from "react";
 
-import { Badge, Box, Grid, Group, Stack, Text, Tooltip } from "@mantine/core";
+import {
+  Badge,
+  Box,
+  Grid,
+  Group,
+  Skeleton,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { Bounds, Map, Marker, ZoomControl } from "pigeon-maps";
 
@@ -11,7 +20,10 @@ import {
   useResponseCount,
   useResponses,
 } from "../../../backend/surveys/response/response.query";
-import { useAllResponseForGraph } from "../../../backend/surveys/surveys.query";
+import {
+  useAllResponseForGraph,
+  useGetSurveyStats,
+} from "../../../backend/surveys/surveys.query";
 import { useWaFlowMetrics } from "../../../backend/whatsapp/flow/flow.query";
 import SurveyContext from "../../../context/SurveyContext";
 import { findCentroid } from "../../../utils/location";
@@ -32,17 +44,15 @@ const minZoom = 2;
 export const SurveyResponseStats = ({
   translations,
   flowId = null,
-  survey,
+  surveyId,
 }) => {
-  const queryClient = useQueryClient();
   const { filterTeams } = useContext(SurveyContext);
-
   const {
     data: responseCountData,
     isLoading,
     refetch: refetchCount,
     isPending: isPendingCount,
-  } = useResponseCount(survey?.id);
+  } = useResponseCount(surveyId);
 
   const responseCount = useMemo(
     () =>
@@ -54,47 +64,47 @@ export const SurveyResponseStats = ({
         : responseCountData?.all,
     [responseCountData, filterTeams],
   );
-  function returnSurveyStats() {
-    let filteredStats: Array<any>;
+  const {
+    data: surveyStats,
+    isPending: isStatsLoading,
+    refetch: refetchStats,
+  } = useGetSurveyStats(surveyId);
+  const surveyStatsCountArray = useMemo(() => {
+    let filteredStats = surveyStats ? [...surveyStats] : [];
+    if (flowId) return [];
     if (filterTeams?.length > 0) {
-      filteredStats = survey?.teams
-        ?.filter((team: STeam) => filterTeams?.includes(team?.mapId))
-        .map((team: STeam) => team?.surveyStats);
-    } else {
-      filteredStats = survey?.teams?.map((team: STeam) => team?.surveyStats);
+      filteredStats = surveyStats?.filter((team: STStats) =>
+        filterTeams?.includes(team?.surveyTeamMapId),
+      );
     }
-    return {
-      visited: filteredStats?.reduce(
-        (acc: number, curr: any) => acc + (curr ? curr?.visited : 0),
-        0,
-      ),
-      started: filteredStats?.reduce(
-        (acc: number, curr: any) => acc + (curr ? curr?.started : 0),
-        0,
-      ),
-      completed: filteredStats?.reduce(
-        (acc: number, curr: any) => acc + (curr ? curr?.completed : 0),
-        0,
-      ),
-    };
-  }
-  const surveyStatsCountArray = [];
-  const surveyStats = returnSurveyStats();
-  if (surveyStats && !flowId)
-    surveyStatsCountArray.push(
+    let totalStats = filteredStats?.reduce(
+      (
+        acc: { visited: number; completed: number; started: number },
+        curr: STStats,
+      ) => {
+        acc.visited += curr?.visited ?? 0;
+        acc.completed += curr?.completed ?? 0;
+        acc.started += curr?.started ?? 0;
+        return acc;
+      },
+      { visited: 0, completed: 0, started: 0 },
+    );
+    return [
       {
         label: translations["Visited"],
-        count: surveyStats?.visited ?? 0,
+        count: surveyStats ? totalStats?.visited : "NA",
       },
       {
         label: translations["Started"],
-        count: surveyStats?.started ?? 0,
+        count: surveyStats ? totalStats?.started : "NA",
       },
       {
         label: translations["Completed"],
-        count: surveyStats?.completed ?? 0,
+        count: surveyStats ? totalStats?.completed : "NA",
       },
-    );
+    ];
+  }, [surveyStats]);
+
   return (
     <PaperLayout className={styles["user-stats-card-div"]} w={"fit-content"}>
       <Stack gap={0}>
@@ -103,16 +113,13 @@ export const SurveyResponseStats = ({
           <Tooltip label={translations["Refresh stats"]}>
             <RefreshButton
               onClick={async () => {
-                await queryClient.invalidateQueries({
-                  queryKey: ["survey", survey?.id],
-                });
+                refetchStats();
                 refetchCount();
               }}
-              isLoading={isPendingCount || isLoading}
+              isLoading={isPendingCount || isLoading || isStatsLoading}
             />
           </Tooltip>
         </Group>
-
         <Stack>
           <Text
             className={styles["responses-text-p"]}
@@ -123,16 +130,19 @@ export const SurveyResponseStats = ({
               ? translations["Responses"]
               : translations["Response"]}
           </Text>
-          {surveyStatsCountArray?.map(({ count, label }) => (
-            <PaperLayout className={styles["stats-card"]} key={label}>
-              <Stack align={"center"}>
-                <Text fs={"20px"} fw="900" size={"30px"}>
-                  {count}
-                </Text>
-                <Badge variant="light">{label}</Badge>
-              </Stack>
-            </PaperLayout>
-          ))}
+          {surveyStatsCountArray.length > 0 &&
+            surveyStatsCountArray?.map(({ count, label }) => (
+              <PaperLayout className={styles["stats-card"]} key={label}>
+                <Stack align={"center"}>
+                  <Skeleton visible={isStatsLoading} w={"100%"}>
+                    <Text fs={"20px"} fw="900" size={"30px"} ta={"center"}>
+                      {count}
+                    </Text>
+                  </Skeleton>
+                  <Badge variant="light">{label}</Badge>
+                </Stack>
+              </PaperLayout>
+            ))}
         </Stack>
       </Stack>
     </PaperLayout>

@@ -18,6 +18,7 @@ import {
   generateResponse,
   getAllResponses,
   getLargeTextResponseSummaryByAI,
+  getResponseForComparison,
   getResponses,
   getResponsesBySurveyId,
   getSurveyResponseAnalyics,
@@ -58,8 +59,9 @@ export const useAllResponses = (surveyId: string) => {
 };
 
 export const useResponsesBySurvey = (surveyId, filter) => {
-  const filterQuery = `?page=${filter.pageIndex}
-  &limit=${filter.pageSize}&tags=${filter.tags}&language=${filter.selectedLanguage}&dateRange=${filter.ranges}&surveyTeamMapIds=${filter.filterTeams}`;
+  const filterQuery = Object.entries(filter)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
   return useQuery({
     queryFn: () => getResponsesBySurveyId(surveyId, filterQuery),
     queryKey: ["response", "survey", surveyId, filter],
@@ -282,13 +284,25 @@ export const useResponseCount = (surveyId) => {
   });
 };
 
-export const useResponseAnalytics = (surveyId, filter) => {
+type FilterAnalytics = {
+  teamMapIds?: string[];
+  dateRange?: string[];
+};
+export const useResponseAnalytics = (surveyId, filter: FilterAnalytics) => {
   const filterQuery = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
   return useQuery({
     queryFn: () => getSurveyResponseAnalyics(surveyId, filterQuery),
     queryKey: ["responnseAnalytics", surveyId, filter],
+    enabled: !!surveyId,
+  });
+};
+
+export const useResponseForComparison = (surveyId) => {
+  return useQuery({
+    queryFn: () => getResponseForComparison(surveyId),
+    queryKey: ["responseComparison", surveyId],
     enabled: !!surveyId,
   });
 };

@@ -16,6 +16,7 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
+import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
@@ -48,12 +49,7 @@ const ResultsOverview = ({
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
-  const initialDateRange = {
-    startDate: dayjs().subtract(10, "year").toDate(),
-    endDate: new Date(),
-    key: "selection",
-  };
-  const [ranges, setRange] = useState<Range[]>([initialDateRange]);
+  const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
   const {
     isLoading: isQLoading,
     error: QError,
@@ -88,15 +84,18 @@ const ResultsOverview = ({
     isRefetching,
   } = useResponseAnalytics(surveyId, {
     teamMapIds: filterTeams,
-    dateRange: [
-      dayjs(ranges[0]?.startDate).toISOString(),
-      dayjs(ranges[0]?.endDate).toISOString(),
-    ],
+    dateRange:
+      !ranges.length || !ranges[0].startDate || !ranges[0].endDate
+        ? []
+        : [
+            ranges[0]?.startDate.toISOString(),
+            ranges[0]?.endDate.toISOString(),
+          ],
   });
 
   useEffect(() => {
     if (ranges.length === 0) {
-      setRange([initialDateRange]);
+      setRange([{ key: "selction" }]);
     }
   }, [ranges]);
 
@@ -136,11 +135,13 @@ const ResultsOverview = ({
   return (
     <Stack className={styles["results-overview-root-div"]} p={3}>
       <Flex gap={"xs"} direction={flowId ? "column" : "row"}>
-        <SurveyResponseStats
-          survey={survey}
-          translations={translations}
-          flowId={flowId}
-        />
+        {!flowId && (
+          <SurveyResponseStats
+            translations={translations}
+            flowId={flowId}
+            surveyId={surveyId}
+          />
+        )}
         <div style={{ flex: 1 }}>
           <ResponseGraphBySurvey
             surveyId={surveyId}
@@ -156,10 +157,7 @@ const ResultsOverview = ({
             leftIcon={<IconTableExport size={"1rem"} />}
             title="Export to Pdf"
           />
-          <DateRangePickerButton
-            onChange={(r) => setRange(r ? [r["selection"]] : [])}
-            ranges={ranges}
-          />
+          <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
         </Flex>
       </PaperLayout>
       <Stack ref={contentDivRef}>

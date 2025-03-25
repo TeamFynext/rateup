@@ -246,7 +246,7 @@ export function getResponseObjectByQuestionType(questionType: QuestionType) {
 }
 
 export function getResponseArrayByQuestionType(
-  questionType: QuestionType,
+  questionType: QuestionType | WaQuestions,
 ): Array<{
   value: string | number;
   color: string;
@@ -262,7 +262,8 @@ export function getResponseArrayByQuestionType(
         { value: 5, color: "#52ba66" },
       ];
     }
-    case QuestionType.Opinion: {
+    case QuestionType.Opinion:
+    case WaQuestions.Opinion: {
       return [
         { value: 1, color: "#ff5c55" },
         { value: 2, color: "#ff8580" },
@@ -301,13 +302,15 @@ export function getResponseArrayByQuestionType(
         },
       ];
     }
-    case QuestionType.YN: {
+    case QuestionType.YN:
+    case WaQuestions.YN: {
       return [
         { value: YNResponse.No, color: "#ff5c55" },
         { value: YNResponse.Yes, color: "#52ba66" },
       ];
     }
-    case QuestionType.LD: {
+    case QuestionType.LD:
+    case WaQuestions.LD: {
       return [
         { value: LDResponse.Dislike, color: "#ff5c55" },
         { value: LDResponse.Like, color: "#52ba66" },

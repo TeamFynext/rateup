@@ -118,35 +118,22 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
   ] = useDisclosure(false);
   const [openedExport, { toggle }] = useDisclosure(false);
   const [alertMsg, setAlertMsg] = useState("");
-  const initialDateRange = {
-    startDate: dayjs().subtract(10, "year").toDate(),
-    endDate: new Date(),
-    key: "selection",
-  };
-  const [ranges, setRange] = useState<Range[]>([initialDateRange]);
+  const [ranges, setRange] = useState<Range[]>([
+    {
+      key: "selection",
+    },
+  ]);
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
   const router = useRouter();
-  //The below filtering should be done in the backend
   const [campaignFlowFilter, setCampaignFlowFilter] = useState<
     {
-      campaignId: string;
-      campaignName: string;
-      participantsContactIds: string[];
+      id: string;
+      name: string;
     }[]
   >([]);
+  const [campaignIds, setSelectedCampaignIds] = useState([]);
 
-  const contactIds = useMemo(
-    () =>
-      campaignFlowFilter.length
-        ? new Set(
-            campaignFlowFilter.flatMap(
-              (campaign) => campaign.participantsContactIds,
-            ),
-          )
-        : [],
-    [campaignFlowFilter],
-  );
   const {
     data: responseData,
     isLoading,
@@ -154,21 +141,23 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
     error,
     refetch: refetchResponse,
   } = useResponsesBySurvey(survey?.id, {
-    ...pagination,
-    filterTeams,
+    page: pagination.pageIndex,
+    limit: pagination.pageSize,
+    surveyTeamMapIds: filterTeams,
     tags: columnFilters.find((f) => f.id === "tag")?.value ?? "",
-    selectedLanguage: "",
-    contactIds,
-    ranges: [
-      dayjs(ranges[0]?.startDate).toISOString(),
-      dayjs(ranges[0]?.endDate).toISOString(),
-    ],
+    language: "",
+    contactIds: [],
+    campaignIds,
+    dateRange:
+      !ranges.length || !ranges[0]?.startDate || !ranges[0]?.endDate
+        ? []
+        : [ranges[0].startDate.toISOString(), ranges[0].endDate.toISOString()],
   });
   const responses = responseData?.responses;
 
   useEffect(() => {
     if (ranges.length === 0) {
-      setRange([initialDateRange]);
+      setRange([{ key: "selection" }]);
     }
   }, [ranges]);
 
@@ -220,7 +209,7 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
       title: survey?.title,
       tz: dayjs.tz.guess(),
       filterTeams,
-      campaignIds: campaignFlowFilter?.map((data) => data.campaignId),
+      campaignIds,
       columnFilters,
       ranges: ranges?.[0],
     });
@@ -357,14 +346,11 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
             {CFData && CFData.length > 0 && (
               <ContainedMultiSelect
                 placeholder={translations["Filter By Campaign"]}
-                onChange={(value) =>
-                  setCampaignFlowFilter(
-                    CFData.filter((c) => value.includes(c.campaignId)),
-                  )
-                }
-                data={CFData.map(({ campaignName, campaignId }) => ({
-                  value: campaignId,
-                  label: campaignName,
+                value={campaignIds}
+                onChange={setSelectedCampaignIds}
+                data={CFData.map(({ name, id }) => ({
+                  value: id,
+                  label: name,
                 }))}
               />
             )}

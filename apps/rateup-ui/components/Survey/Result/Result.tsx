@@ -157,7 +157,11 @@ const Result = ({
           />
         </Tabs.Panel>
         <Tabs.Panel value="comparison">
-          <ResultComparison surveyId={survey?.id} />
+          <ResultComparison
+            surveyId={survey?.id}
+            version={version}
+            flowQuestions={questions}
+          />
         </Tabs.Panel>
       </Box>
       <EncryptionPasswordModal
