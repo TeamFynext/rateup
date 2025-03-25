@@ -1808,7 +1808,7 @@ export async function getSurveyResponseBySurveyId(
     };
   if (tags?.length) {
     where["tag"] = {
-      in: tags?.split(","),
+      contains: tags,
     };
   }
   if (language?.length) {
@@ -2344,6 +2344,9 @@ function getChoicesForNpsQuestions(type) {
       break;
     case QuestionType.Rating:
       choices = [1, 2, 3, 4, 5].map((i) => i.toString());
+      break;
+    case QuestionType.Smiley:
+      choices = Object.values(SmileyResponse);
       break;
   }
   return choices;
