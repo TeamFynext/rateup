@@ -127,6 +127,7 @@ const responseFilterQuery = z.object({
   surveyTeamMapIds: z.string().optional(),
   contactIds: z.string().optional(),
   dateRange: z.string().optional(),
+  campaignIds: z.string().optional(),
 });
 
 export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({

@@ -213,7 +213,6 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
         },
         include: {
           team: true,
-          surveyStats: true,
         },
       },
       webSurveyTheme: true,
@@ -228,7 +227,6 @@ export async function getSurveyById(id: string, teamIds?: Array<string>) {
     const teamData = {
       id: team?.team?.id,
       name: team?.team?.name,
-      surveyStats: team?.surveyStats,
       mapId: team?.id,
       code: team.team.code,
       tags: team.team.tags,
@@ -506,6 +504,18 @@ export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
   });
   return surveyStats;
 }
+
+export async function getSurveyStats(surveyId) {
+  const surveyStats = await prisma.surveyStats.findMany({
+    where: {
+      surveyTeamMap: {
+        surveyId,
+      },
+    },
+  });
+  return surveyStats;
+}
+
 export async function getSurveyByTeamMapId(surveyTeamMapId: string) {
   const teamMap = await prisma.surveyTeamMap.findUnique({
     where: {

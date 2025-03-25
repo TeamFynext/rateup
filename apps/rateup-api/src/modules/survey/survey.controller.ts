@@ -31,6 +31,7 @@ import {
   updateSurveyVariable,
   deleteSurveyVariable,
   getSurveyResponseCountForGraph,
+  getSurveyStats,
 } from "./survey.service";
 import {
   CloneSurveyInput,
@@ -59,6 +60,8 @@ import {
   updateFlowInDb,
 } from "../whatsapp/flows/flow.service";
 import { log } from "../../utils/logger";
+import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema";
+import { ResponseFilterQuery } from "../response/response.schema";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -213,6 +216,21 @@ export async function getSurveyStatsBySurveyTeamMapIdHandler(
     }
   } catch (e) {
     reply.code(500);
+  }
+}
+
+export async function getSurveyStatsHandler(
+  request: FastifyRequest<{
+    Params: BySurveyIdParamsInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getSurveyStats(request.params.surveyId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }
 export async function getSurveysHandler(
