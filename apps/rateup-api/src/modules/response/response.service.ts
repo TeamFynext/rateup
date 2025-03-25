@@ -1796,7 +1796,7 @@ export async function getSurveyResponseBySurveyId(
     };
   if (tags?.length) {
     where["tag"] = {
-      in: tags?.split(","),
+      contains: tags,
     };
   }
   if (language?.length) {
