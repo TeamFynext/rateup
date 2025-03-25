@@ -235,6 +235,11 @@ export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
   return res.data as STStats;
 }
 
+export async function getSurveyStats(surveyId) {
+  return (await axiosClient.get(`${SURVEYURL}/surveyStats/all/${surveyId}`))
+    .data;
+}
+
 export async function getSurveyVariables(surveyId, isPublic) {
   return (
     await axiosClient.get(
