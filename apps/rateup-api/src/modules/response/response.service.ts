@@ -2307,6 +2307,9 @@ function getChoicesForNpsQuestions(type) {
     case QuestionType.Rating:
       choices = [1, 2, 3, 4, 5].map((i) => i.toString());
       break;
+    case QuestionType.Smiley:
+      choices = Object.values(SmileyResponse);
+      break;
   }
   return choices;
 }
