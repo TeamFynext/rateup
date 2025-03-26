@@ -1,4 +1,10 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -160,16 +166,13 @@ const WaResponses = ({
             ranges[0]?.endDate.toISOString(),
           ],
   });
-  const hasContactQuestion = useMemo(
+
+  const enableTicket = useMemo(
     () =>
-      responseData?.responses?.some((response) =>
-        response?.responses?.some((res) => QuestionType.Contact === res.type),
-      ),
-    [responseData?.responses],
+      survey?.enableTickets &&
+      hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    [subscription, survey],
   );
-  const enableTicket =
-    survey?.enableTickets &&
-    hasFeature(subscription, SubscriptionFeaturePathName.Ticket);
 
   const deleteResponse = useDeleteResponse(
     surveyId,
@@ -546,14 +549,6 @@ const WaResponses = ({
                       radius={"lg"}
                       leftIcon={<IconFileDownload stroke={1.5} />}
                     />
-                    {hasContactQuestion && (
-                      <RateupButtonSecondary
-                        onClick={handleExportContacts}
-                        title={translations["Export Contacts"]}
-                        radius={"lg"}
-                        leftIcon={<IconDatabaseImport stroke={1.5} />}
-                      />
-                    )}
                     <ConfirmationModal
                       opened={alertModalOpened}
                       onClose={alertModalClose}
@@ -606,7 +601,8 @@ const WaResponses = ({
   );
 };
 
-export default WaResponses;
+export default React.memo(WaResponses);
+
 const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
   const [verifyEmail, setVerifyEmail] = useState("");
   return (

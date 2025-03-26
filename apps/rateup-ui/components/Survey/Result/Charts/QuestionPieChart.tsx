@@ -1,3 +1,5 @@
+import React from "react";
+
 import {
   Badge,
   Flex,
@@ -222,32 +224,38 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
                 : `(${getCSATColor(csatScore)?.message})`}
             </Text>
           </Stack>
-          <ResponsiveContainer height={280} width={300}>
-            <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 40 }}>
-              <Pie
-                dataKey="value"
-                startAngle={180}
-                endAngle={0}
-                data={chartData}
-                cx={cx}
-                cy={cy}
-                innerRadius={iR}
-                outerRadius={oR}
-                fill="#8884d8"
-                stroke="#fff"
-              >
-                {chartData?.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry?.color} radius={10} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip total={data?.total} />} />
-              <Legend content={<CustomLegend total={data?.total} />} />
-            </PieChart>
-          </ResponsiveContainer>
+          <Stack w={300}>
+            <ResponsiveContainer height={280} width={"100%"}>
+              <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 40 }}>
+                <Pie
+                  dataKey="value"
+                  startAngle={180}
+                  endAngle={0}
+                  data={chartData}
+                  cx={cx}
+                  cy={cy}
+                  innerRadius={iR}
+                  outerRadius={oR}
+                  fill="#8884d8"
+                  stroke="#fff"
+                >
+                  {chartData?.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry?.color}
+                      radius={10}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip total={data?.total} />} />
+                <Legend content={<CustomLegend total={data?.total} />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </Stack>
         </Group>
       </Group>
     </Stack>
   );
 };
 
-export default QuestionPieChart;
+export default React.memo(QuestionPieChart);
