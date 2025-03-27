@@ -471,7 +471,7 @@ export default function Layout({ children, appProps }) {
         setActiveSubLink(navItem?.link);
       }
     });
-  }, [navLinks]);
+  }, [linksMapping, navLinks, tab]);
 
   const mainLinks = (
     <MainNavLinks
