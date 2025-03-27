@@ -194,4 +194,4 @@ function TanstackTable({
   );
 }
 
-export default TanstackTable;
+export default React.memo(TanstackTable);
