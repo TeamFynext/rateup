@@ -470,3 +470,9 @@
 .reactionNode {
   border-left: 4px solid #06b6d4;
 }
+
+.handle {
+  height: 15;
+  width: 15;
+  background: white;
+}

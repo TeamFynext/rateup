@@ -2,24 +2,30 @@ import { memo } from "react";
 
 import { Box, Paper, Stack, Text } from "@mantine/core";
 import { IconList } from "@tabler/icons-react";
-import type { NodeProps } from "@xyflow/react";
+import { Handle, Position, type NodeProps } from "@xyflow/react";
 
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
 
 import { ListNodeData } from "../../types/node-types";
 import BaseNode from "./base-node";
+import styles from "./node-styles.module.css";
 
 function ListNode(props: NodeProps & { data: ListNodeData }) {
   const { data } = props;
   return (
-    <BaseNode {...props} icon={<IconList size={16} />} color="#8bc34a">
+    <BaseNode
+      {...props}
+      icon={<IconList size={16} />}
+      color="#8bc34a"
+      disableRight
+    >
       <Stack gap="xs">
         {data.header && (
           <Box>
             <Text fz={"sm"} span>
               Header:
             </Text>{" "}
-            {parseJsonToReact(data.header)}
+            {data.header}
           </Box>
         )}
         {data.body && (
@@ -55,7 +61,7 @@ function ListNode(props: NodeProps & { data: ListNodeData }) {
                   <Text weight={600}>{section.title}</Text>
                   <Stack gap="xs" mt="xs">
                     {section.rows.map((row) => (
-                      <Box key={row.id}>
+                      <div key={row.id} className={styles.button}>
                         <Text size="sm" weight={500}>
                           {row.title}
                         </Text>
@@ -64,7 +70,17 @@ function ListNode(props: NodeProps & { data: ListNodeData }) {
                             {row.description}
                           </Text>
                         )}
-                      </Box>
+                        <Handle
+                          type="source"
+                          position={Position.Right}
+                          id={row?.id}
+                          className={styles.handle}
+                          style={{
+                            border: `3px solid #8bc34a`,
+                            zIndex: 12,
+                          }}
+                        />
+                      </div>
                     ))}
                   </Stack>
                 </Paper>

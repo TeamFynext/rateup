@@ -44,14 +44,21 @@ function BaseNode({
         type="target"
         position={Position.Left}
         id="left"
-        style={{ background: "#555" }}
+        className={styles.handle}
+        style={{
+          border: `3px solid ${color}`,
+        }}
       />
       {/* <Handle type="target" position={Position.Top} id="top" style={{ background: "#555" }} /> */}
       <Handle
         type="source"
         position={Position.Right}
         id="right"
-        style={{ background: "#555", display: disableRight ? "none" : "block" }}
+        className={styles.handle}
+        style={{
+          display: disableRight ? "none" : "block",
+          border: `3px solid ${color}`,
+        }}
       />
       {/* <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: "#555" }} /> */}
     </div>

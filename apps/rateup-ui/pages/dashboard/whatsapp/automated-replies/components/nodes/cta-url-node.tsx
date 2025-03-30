@@ -15,7 +15,7 @@ function CtaUrlNode(props: NodeProps & { data: CTAUrlNodeData }) {
   return (
     <BaseNode {...props} icon={<IconLink size={16} />} color="#10b981">
       <Stack gap="xs">
-        {data.header && <Text fw={500}>{parseJsonToReact(data.header)}</Text>}
+        {data.header && <Text fw={500}>{data.header}</Text>}
         {data.body && <Text size="sm">{parseJsonToReact(data.body)}</Text>}
         <Stack gap="xs">
           <Text size="sm" fw={500}>

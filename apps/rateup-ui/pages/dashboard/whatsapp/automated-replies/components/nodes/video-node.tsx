@@ -11,7 +11,7 @@ function VideoNode(props: NodeProps & { data: MediaNodeData }) {
   return (
     <BaseNode {...props} icon={<IconVideo size={16} />} color="#673ab7">
       <div className={styles.videoContent}>
-        {props.data.mediaUrl ? (
+        {props.data.link ? (
           <div className={styles.videoWrapper}>
             <div className={styles.videoPlaceholder}>
               <IconVideo size={24} />

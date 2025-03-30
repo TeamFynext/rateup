@@ -543,13 +543,7 @@ const DraggableComponent = ({
 
 export default DraggableComponent;
 
-export const TicketColumnSelector = ({
-  component,
-  setNodes,
-  id,
-  options,
-  index,
-}) => {
+const TicketColumnSelector = ({ component, setNodes, id, options, index }) => {
   const [selectedBoardId, setSelectedBoardId] = useState(
     component.boardId || null,
   );

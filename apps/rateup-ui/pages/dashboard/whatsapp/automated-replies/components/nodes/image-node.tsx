@@ -4,6 +4,9 @@ import { Image } from "@mantine/core";
 import { IconImageInPicture } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
+import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
+
 import { ImageNodeData } from "../../types/node-types";
 import BaseNode from "./base-node";
 import styles from "./node-styles.module.css";
@@ -20,11 +23,14 @@ function ImageNode(props: NodeProps & { data: ImageNodeData }) {
         {data.link ? (
           <div className={styles.imageWrapper}>
             <Image
-              src={data.link || "/placeholder.svg"}
-              alt={data.caption || "Image"}
+              src={getFileUrlFromKey(data.link) || "/placeholder.svg"}
+              alt={"Image"}
+              mah={500}
             />
             {data.caption && (
-              <div className={styles.caption}>{data.caption}</div>
+              <div className={styles.caption}>
+                {parseJsonToReact(data.caption)}
+              </div>
             )}
           </div>
         ) : (

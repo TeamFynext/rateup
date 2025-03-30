@@ -25,6 +25,7 @@ function WaTextEditor({
   placeholder = "Enter your text",
   label = "",
   max = 1024,
+  required = false,
 }) {
   const editor = useEditor({
     extensions: [
@@ -65,7 +66,15 @@ function WaTextEditor({
           "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))"
         }
       >
-        {label}
+        {label}{" "}
+        <span
+          style={{
+            color: "var(--mantine-color-red-6)",
+            fontWeight: 700,
+          }}
+        >
+          {required ? "*" : ""}
+        </span>
       </Text>
       <RichTextEditor editor={editor} className={className}>
         <RichTextEditor.Toolbar sticky tabIndex={-1}>

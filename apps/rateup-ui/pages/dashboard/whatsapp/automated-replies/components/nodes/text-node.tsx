@@ -3,6 +3,8 @@ import { memo } from "react";
 import { IconMessage } from "@tabler/icons-react";
 import { NodeProps } from "@xyflow/react";
 
+import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
+
 import { TextNodeData } from "../../types/node-types";
 import BaseNode from "./base-node";
 import styles from "./node-styles.module.css";
@@ -12,7 +14,9 @@ function TextNode(props: NodeProps & { data: TextNodeData }) {
   return (
     <BaseNode {...props} icon={<IconMessage size={16} />} color="#3f51b5">
       <div className={styles.textContent}>
-        {data.body ? data.body : "Double-click to edit message"}
+        {data.body
+          ? parseJsonToReact(data.body)
+          : "Double-click to edit message"}
       </div>
     </BaseNode>
   );

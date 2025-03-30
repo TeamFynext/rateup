@@ -19,6 +19,7 @@ import StartNode from "./start-node";
 import StickerNode from "./sticker-node";
 import TemplateNode from "./template-node";
 import TextNode from "./text-node";
+import ticketNode from "./ticket-node";
 import VideoNode from "./video-node";
 
 // Export all node types
@@ -49,4 +50,5 @@ export const nodeTypes = {
   addressNode: AddressNode,
   contactsNode: ContactsNode,
   flowNode: FlowNode,
+  ticketNode: ticketNode,
 };

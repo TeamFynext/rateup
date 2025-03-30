@@ -16,7 +16,7 @@ function DocumentNode(props: NodeProps & { data: DocumentNodeData }) {
       color="#795548"
     >
       <div className={styles.documentContent}>
-        {data.documentUrl ? (
+        {data.link ? (
           <div className={styles.documentWrapper}>
             <div className={styles.documentPlaceholder}>
               <IconFileDescription size={24} />

@@ -1,6 +1,11 @@
 import axios from "axios";
 
 import { fallbackImage } from "../constants";
+import {
+  showErrorToast,
+  showLoadingToast,
+  showSuccessToast,
+} from "../notifications";
 
 export const uploadFile = async (
   file,
@@ -11,6 +16,7 @@ export const uploadFile = async (
   formData.append("file", file);
   formData.append("metadata", JSON.stringify(data));
   try {
+    showLoadingToast("Uploading file...", "upload-file");
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/api/public/upload/${
         withThumbnails ? "fileWithThumb" : "file"
@@ -22,6 +28,7 @@ export const uploadFile = async (
         },
       },
     );
+    showSuccessToast("File uploaded successfully", "upload-file", null, true);
     return response?.data?.data?.key as string;
   } catch (error) {
     throw error?.response?.data?.message;
@@ -30,6 +37,7 @@ export const uploadFile = async (
 
 export const deleteUploadedFiles = async (data) => {
   try {
+    showLoadingToast("Deleting file...", "delete-file");
     const response = await axios.put(
       `${process.env.NEXT_PUBLIC_API_URL}/api/public/upload/file/delete`,
       data,
@@ -39,8 +47,15 @@ export const deleteUploadedFiles = async (data) => {
         },
       },
     );
+    showSuccessToast("File deleted successfully", "delete-file", null, true);
     return response?.data;
   } catch (error) {
+    showErrorToast(
+      error?.response?.data?.message || "Error deleting file",
+      "delete-file",
+      null,
+      true,
+    );
     return error?.data;
   }
 };

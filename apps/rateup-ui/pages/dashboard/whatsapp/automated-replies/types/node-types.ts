@@ -118,17 +118,13 @@ export interface CTAUrlNodeData extends BaseNodeData {
 }
 
 // Template Node
-export interface TemplateComponent {
-  type: string;
-  parameters: any[];
-}
-
 export interface TemplateNodeData extends BaseNodeData {
   template: {
     id: string;
     name?: string;
   };
   teamId?: string;
+  parameters?: any[];
 }
 
 // Reaction Node
@@ -162,40 +158,43 @@ export interface AddressNodeData extends BaseNodeData {
 
 // Contacts Node
 export interface ContactsNodeData extends BaseNodeData {
-  name?: {
-    formatted_name: string;
-    first_name?: string;
-    last_name?: string;
-    middle_name?: string;
-    prefix?: string;
-    suffix?: string;
-  };
-  org?: {
-    company?: string;
-    department?: string;
-    title?: string;
-  };
-  birthday?: string;
-  phones?: Array<{
-    phone: string;
-    type: "CELL" | "WORK" | "HOME" | "MAIN";
-  }>;
-  emails?: Array<{
-    email: string;
-    type: "WORK" | "HOME" | "OTHER";
-  }>;
-  addresses?: Array<{
-    street?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
-    country?: string;
-    country_code?: string;
-    type: "HOME" | "WORK" | "OTHER";
-  }>;
-  urls?: Array<{
-    url: string;
-    type: "WORK" | "HOME" | "PROFILE" | "OTHER";
+  contacts: Array<{
+    name?: {
+      formatted_name: string;
+      first_name?: string;
+      last_name?: string;
+      middle_name?: string;
+      prefix?: string;
+      suffix?: string;
+    };
+    org?: {
+      company?: string;
+      department?: string;
+      title?: string;
+    };
+    birthday?: string;
+    phones?: Array<{
+      phone: string;
+      type: "CELL" | "WORK" | "HOME" | "MAIN";
+      wa_id?: string;
+    }>;
+    emails?: Array<{
+      email: string;
+      type: "WORK" | "HOME" | "OTHER";
+    }>;
+    addresses?: Array<{
+      street?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+      country?: string;
+      country_code?: string;
+      type: "HOME" | "WORK" | "OTHER";
+    }>;
+    urls?: Array<{
+      url: string;
+      type: "WORK" | "HOME" | "PROFILE" | "OTHER";
+    }>;
   }>;
 }
 
@@ -208,10 +207,20 @@ export interface FlowNodeData extends BaseNodeData {
   };
 }
 
+export interface TicketNodeData extends BaseNodeData {
+  ticket: {
+    selectedBoardId: string;
+    selectedBoardName: string;
+    selectedBoardColumnId: string;
+    selectedBoardColumnName: string;
+  };
+}
+
 // Map of node types to their data types
 export type NodeTypeMap = {
   textNode: TextNodeData;
   quickReplyNode: QuickReplyNodeData;
+  documentNode: DocumentNodeData;
   imageNode: ImageNodeData;
   conditionalNode: ConditionalNodeData;
   textInputNode: InputNodeData;
@@ -222,7 +231,6 @@ export type NodeTypeMap = {
   delayNode: DelayNodeData;
   videoNode: MediaNodeData;
   audioNode: MediaNodeData;
-  documentNode: DocumentNodeData;
   startNode: StartNodeData;
   endNode: EndNodeData;
   buttonNode: ButtonNodeData;
@@ -236,6 +244,7 @@ export type NodeTypeMap = {
   addressNode: AddressNodeData;
   contactsNode: ContactsNodeData;
   flowNode: FlowNodeData;
+  ticketNode: TicketNodeData;
 };
 
 // Node type strings as a union type
@@ -245,12 +254,12 @@ export type NodeType = keyof NodeTypeMap;
 export type NodeData =
   | TextNodeData
   | QuickReplyNodeData
+  | DocumentNodeData
   | ImageNodeData
   | ConditionalNodeData
   | InputNodeData
   | DelayNodeData
   | MediaNodeData
-  | DocumentNodeData
   | StartNodeData
   | EndNodeData
   | ButtonNodeData
@@ -263,7 +272,8 @@ export type NodeData =
   | LocationRequestNodeData
   | AddressNodeData
   | ContactsNodeData
-  | FlowNodeData;
+  | FlowNodeData
+  | TicketNodeData;
 
 // Extended Node type with typed data
 export type TypedNode<T extends NodeType = NodeType> = Omit<
@@ -492,7 +502,7 @@ export function validateNodeData(node: TypedNode): {
       if (data.headerType) {
         if (
           data.headerType === "text" &&
-          (!data.header || data.header.trim() === "")
+          (!data.header || data.header === "")
         ) {
           return {
             valid: false,
@@ -704,71 +714,102 @@ export function validateNodeData(node: TypedNode): {
 
     case "contactsNode": {
       const data = node.data as NodeTypeMap["contactsNode"];
-      if (
-        !data.name ||
-        !data.name.formatted_name ||
-        data.name.formatted_name.trim() === ""
-      ) {
+      if (!data.contacts || data.contacts.length === 0) {
         return {
           valid: false,
-          message: `${node.data.label}: Full name (formatted_name) is required.`,
+          message: `${node.data.label}: At least one contact is required.`,
         };
       }
 
-      // Validate phone numbers
-      if (data.phones && data.phones.length > 0) {
-        const invalidPhone = data.phones.some(
-          (phone) => !phone.phone || phone.phone.trim() === "",
-        );
-        if (invalidPhone) {
+      // Validate each contact
+      for (const contact of data.contacts) {
+        if (
+          !contact.name ||
+          !contact.name.formatted_name ||
+          contact.name.formatted_name.trim() === ""
+        ) {
           return {
             valid: false,
-            message: `${node.data.label}: All phone numbers must have a value.`,
+            message: `${node.data.label}: Each contact must have a formatted name.`,
           };
+        }
+
+        if (!contact.name.first_name || contact.name.first_name.trim() === "") {
+          return {
+            valid: false,
+            message: `${node.data.label}: Each contact must have a first name.`,
+          };
+        }
+
+        // Validate phone numbers
+        if (contact.phones && contact.phones.length > 0) {
+          const invalidPhone = contact.phones.some(
+            (phone) => !phone.phone || phone.phone.trim() === "",
+          );
+          if (invalidPhone) {
+            return {
+              valid: false,
+              message: `${node.data.label}: All phone numbers must have a value.`,
+            };
+          }
+        }
+
+        // Validate email addresses
+        if (contact.emails && contact.emails.length > 0) {
+          const invalidEmail = contact.emails.some(
+            (email) => !email.email || email.email.trim() === "",
+          );
+          if (invalidEmail) {
+            return {
+              valid: false,
+              message: `${node.data.label}: All email addresses must have a value.`,
+            };
+          }
+        }
+
+        // Validate addresses
+        if (contact.addresses && contact.addresses.length > 0) {
+          const invalidAddress = contact.addresses.some(
+            (address) =>
+              !address.street ||
+              address.street.trim() === "" ||
+              !address.city ||
+              address.city.trim() === "",
+          );
+          if (invalidAddress) {
+            return {
+              valid: false,
+              message: `${node.data.label}: All addresses must have a street and city.`,
+            };
+          }
+        }
+
+        // Validate URLs
+        if (contact.urls && contact.urls.length > 0) {
+          const invalidUrl = contact.urls.some(
+            (url) => !url.url || url.url.trim() === "",
+          );
+          if (invalidUrl) {
+            return {
+              valid: false,
+              message: `${node.data.label}: All URLs must have a value.`,
+            };
+          }
         }
       }
+      break;
+    }
 
-      // Validate email addresses
-      if (data.emails && data.emails.length > 0) {
-        const invalidEmail = data.emails.some(
-          (email) => !email.email || email.email.trim() === "",
-        );
-        if (invalidEmail) {
-          return {
-            valid: false,
-            message: `${node.data.label}: All email addresses must have a value.`,
-          };
-        }
-      }
-
-      // Validate addresses
-      if (data.addresses && data.addresses.length > 0) {
-        const invalidAddress = data.addresses.some(
-          (address) =>
-            !address.street ||
-            address.street.trim() === "" ||
-            !address.city ||
-            address.city.trim() === "",
-        );
-        if (invalidAddress) {
-          return {
-            valid: false,
-            message: `${node.data.label}: All addresses must have a street and city.`,
-          };
-        }
-      }
-
-      // Validate URLs
-      if (data.urls && data.urls.length > 0) {
-        const invalidUrl = data.urls.some(
-          (url) => !url.url || url.url.trim() === "",
-        );
-        if (invalidUrl) {
-          return {
-            valid: false,
-            message: `${node.data.label}: All URLs must have a value.`,
-          };
-        }
+    case "ticketNode": {
+      const data = node.data as NodeTypeMap["ticketNode"];
+      if (
+        !data.ticket?.selectedBoardColumnId ||
+        data.ticket.selectedBoardColumnId.trim() === ""
+      ) {
+        return {
+          valid: false,
+          message: `${node.data.label}: Selected column ID is required.`,
+        };
       }
       break;
     }

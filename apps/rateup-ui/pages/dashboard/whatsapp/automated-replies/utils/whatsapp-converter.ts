@@ -344,6 +344,6 @@ function convertNodeToWhatsAppMessage(
     }
 
     default:
-      return null;
+      return node.data ?? "sfdsd";
   }
 }

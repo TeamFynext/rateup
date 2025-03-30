@@ -17,7 +17,7 @@ function AudioNode(props: NodeProps & { data: MediaNodeData }) {
       color="#ff5722"
     >
       <div className={styles.audioContent}>
-        {data.mediaUrl ? (
+        {data.link ? (
           <div className={styles.audioWrapper}>
             <div className={styles.audioPlaceholder}>
               <IconDeviceAudioTape size={24} />

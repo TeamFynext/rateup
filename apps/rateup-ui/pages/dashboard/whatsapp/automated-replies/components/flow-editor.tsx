@@ -24,6 +24,12 @@ import "@xyflow/react/dist/style.css";
 
 import { notifications } from "@mantine/notifications";
 
+import {
+  useUpdateWaAutomatedReplyMutation,
+  useWaAutomatedReplyById,
+} from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+
 import { TypedNode, validateNodeData } from "../types/node-types";
 import { getLayoutedElements } from "../utils/auto-layout";
 import { HistoryManager } from "../utils/history";
@@ -36,7 +42,11 @@ import { nodeTypes } from "./nodes";
 import Toolbar from "./toolbar";
 
 // This component is wrapped with ReactFlowProvider in the parent component
-function FlowEditorContent() {
+function FlowEditorContent({
+  waAutomatedReplyId,
+}: {
+  waAutomatedReplyId: string;
+}) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -47,6 +57,11 @@ function FlowEditorContent() {
   const [canRedo, setCanRedo] = useState(false);
   // Add a flag to track undo/redo operations
   const isUndoRedoOperationRef = useRef(false);
+  const { data: waAutomationData, isPending } =
+    useWaAutomatedReplyById(waAutomatedReplyId);
+
+  const updateWaAutomatedReplyMutation =
+    useUpdateWaAutomatedReplyMutation(waAutomatedReplyId);
 
   // Initialize history manager
   const historyManagerRef = useRef(new HistoryManager());
@@ -255,96 +270,6 @@ function FlowEditorContent() {
     },
     [nodes, edges, setNodes, reactFlowInstance],
   );
-
-  // Save flow to JSON
-  const saveFlow = useCallback(() => {
-    if (!reactFlowInstance) return;
-
-    // Validate before saving
-    if (!validateFlow(true)) {
-      return;
-    }
-
-    const flow = reactFlowInstance.toObject();
-
-    // Convert flow to WhatsApp API format
-    const whatsappFormat = convertFlowToWhatsAppFormat(flow);
-
-    // Save both the flow and the WhatsApp format
-    localStorage.setItem("whatsapp-flow", JSON.stringify(flow));
-    localStorage.setItem("whatsapp-api-format", JSON.stringify(whatsappFormat));
-
-    console.log("Flow saved:", flow);
-    console.log("WhatsApp API Format:", whatsappFormat);
-
-    notifications.show({
-      title: "Success",
-      message: "Flow saved successfully!",
-      color: "green",
-    });
-  }, [reactFlowInstance]);
-
-  // Load flow from JSON
-  const loadFlow = useCallback(() => {
-    const savedFlow = localStorage.getItem("whatsapp-flow");
-    if (savedFlow) {
-      const flow = JSON.parse(savedFlow);
-      setNodes(flow.nodes || []);
-      setEdges(flow.edges || []);
-
-      // Fit the view to show all nodes
-      setTimeout(() => {
-        if (reactFlowInstance) {
-          reactFlowInstance.fitView({ padding: 0.2 });
-        }
-      }, 50);
-
-      // Reset history with the loaded flow
-      historyManager.clear();
-      historyManager.saveState({
-        nodes: flow.nodes || [],
-        edges: flow.edges || [],
-      });
-      updateUndoRedoState();
-
-      notifications.show({
-        title: "Success",
-        message: "Flow loaded successfully!",
-        color: "green",
-      });
-    }
-  }, [
-    setNodes,
-    setEdges,
-    reactFlowInstance,
-    historyManager,
-    updateUndoRedoState,
-  ]);
-
-  // Export flow data
-  const exportFlow = useCallback(() => {
-    if (!reactFlowInstance) return;
-
-    // Validate before exporting
-    if (!validateFlow(true)) {
-      return;
-    }
-
-    const flow = reactFlowInstance.toObject();
-    const whatsappFormat = convertFlowToWhatsAppFormat(flow);
-
-    // Create a blob with the WhatsApp API format
-    const dataStr = JSON.stringify(whatsappFormat, null, 2);
-    const dataUri =
-      "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-
-    const exportFileDefaultName = "whatsapp-api-format.json";
-    const linkElement = document.createElement("a");
-    linkElement.setAttribute("href", dataUri);
-    linkElement.setAttribute("download", exportFileDefaultName);
-    linkElement.click();
-  }, [reactFlowInstance]);
-
   // Validate flow connections
   const validateFlow = useCallback(
     (silent: boolean = false) => {
@@ -460,6 +385,95 @@ function FlowEditorContent() {
     },
     [reactFlowInstance],
   );
+  // Save flow to JSON
+  const saveFlow = useCallback(() => {
+    if (!reactFlowInstance) return;
+
+    // Validate before saving
+    if (!validateFlow(false)) {
+      return;
+    }
+
+    const flow = reactFlowInstance.toObject();
+
+    // Convert flow to WhatsApp API format
+    const whatsappFormat = convertFlowToWhatsAppFormat(flow);
+    console.log("🚀 ~ saveFlow ~ flow:", flow);
+    // return
+    updateWaAutomatedReplyMutation.mutate({
+      ...waAutomationData,
+      matchData: {
+        ...waAutomationData.matchData,
+        json: flow,
+      },
+    });
+  }, [
+    reactFlowInstance,
+    updateWaAutomatedReplyMutation,
+    validateFlow,
+    waAutomationData,
+  ]);
+
+  // Load flow from JSON
+  const loadFlow = useCallback(() => {
+    const savedFlow = localStorage.getItem("whatsapp-flow");
+    if (savedFlow) {
+      const flow = JSON.parse(savedFlow);
+      setNodes(flow.nodes || []);
+      setEdges(flow.edges || []);
+
+      // Fit the view to show all nodes
+      setTimeout(() => {
+        if (reactFlowInstance) {
+          reactFlowInstance.fitView({ padding: 0.2 });
+        }
+      }, 50);
+
+      // Reset history with the loaded flow
+      historyManager.clear();
+      historyManager.saveState({
+        nodes: flow.nodes || [],
+        edges: flow.edges || [],
+      });
+      updateUndoRedoState();
+
+      notifications.show({
+        title: "Success",
+        message: "Flow loaded successfully!",
+        color: "green",
+      });
+    }
+  }, [
+    setNodes,
+    setEdges,
+    reactFlowInstance,
+    historyManager,
+    updateUndoRedoState,
+  ]);
+
+  // Export flow data
+  const exportFlow = useCallback(() => {
+    if (!reactFlowInstance) return;
+
+    // Validate before exporting
+    if (!validateFlow(true)) {
+      return;
+    }
+
+    const flow = reactFlowInstance.toObject();
+    const whatsappFormat = convertFlowToWhatsAppFormat(flow);
+
+    // Create a blob with the WhatsApp API format
+    const dataStr = JSON.stringify(whatsappFormat, null, 2);
+    const dataUri =
+      "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+
+    const exportFileDefaultName = "whatsapp-api-format.json";
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
+    linkElement.click();
+  }, [reactFlowInstance]);
 
   // Close the node editor
   const closeEditor = useCallback(() => {
@@ -469,10 +483,9 @@ function FlowEditorContent() {
 
   // Load saved flow on initial render
   useEffect(() => {
-    const savedFlow = localStorage.getItem("whatsapp-flow");
-    if (savedFlow) {
+    const flow = waAutomationData?.matchData?.json;
+    if (flow) {
       try {
-        const flow = JSON.parse(savedFlow);
         if (flow.nodes && flow.edges) {
           setNodes(flow.nodes);
           setEdges(flow.edges);
@@ -486,7 +499,13 @@ function FlowEditorContent() {
         console.error("Error loading saved flow:", error);
       }
     }
-  }, [setNodes, setEdges, historyManager, updateUndoRedoState]);
+  }, [
+    historyManager,
+    setEdges,
+    setNodes,
+    updateUndoRedoState,
+    waAutomationData?.matchData?.json,
+  ]);
 
   // Add keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -519,6 +538,8 @@ function FlowEditorContent() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleUndo, handleRedo]);
+
+  if (isPending) return <RateupLoader />;
 
   return (
     <div className={styles.flowEditorContainer}>
@@ -563,7 +584,6 @@ function FlowEditorContent() {
               onSave={saveFlow}
               onLoad={loadFlow}
               onExport={exportFlow}
-              onValidate={validateFlow}
               onAutoLayout={handleAutoLayout}
               onUndo={handleUndo}
               onRedo={handleRedo}
@@ -586,10 +606,14 @@ function FlowEditorContent() {
 }
 
 // Wrapper component that provides the ReactFlowProvider
-export default function FlowEditor() {
+export default function FlowEditor({
+  waAutomatedReplyId,
+}: {
+  waAutomatedReplyId: string;
+}) {
   return (
     <ReactFlowProvider>
-      <FlowEditorContent />
+      <FlowEditorContent waAutomatedReplyId={waAutomatedReplyId} />
     </ReactFlowProvider>
   );
 }

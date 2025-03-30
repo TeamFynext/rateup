@@ -59,7 +59,11 @@ function ButtonNode(props: NodeProps & { data: ButtonNodeData }) {
             type="source"
             position={Position.Right}
             id={button?.id}
-            style={{ zIndex: 12 }}
+            className={styles.handle}
+            style={{
+              border: `3px solid #00bcd4`,
+              zIndex: 12,
+            }}
           />
         </div>
       ))}

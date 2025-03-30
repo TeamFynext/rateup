@@ -20,7 +20,6 @@ interface ToolbarProps {
   onSave: () => void;
   onLoad: () => void;
   onExport: () => void;
-  onValidate: (s: boolean) => void;
   onAutoLayout: (direction: string) => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -32,7 +31,6 @@ export default function Toolbar({
   onSave,
   onLoad,
   onExport,
-  onValidate,
   onAutoLayout,
   onUndo,
   onRedo,
@@ -67,15 +65,6 @@ export default function Toolbar({
       >
         Export
       </Button> */}
-
-      <Button
-        variant="outline"
-        className={styles.toolbarButton}
-        leftSection={<IconChecklist size={16} />}
-        onClick={() => onValidate(false)}
-      >
-        Validate
-      </Button>
 
       <Menu position="bottom-start">
         <Menu.Target>

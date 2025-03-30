@@ -5,6 +5,7 @@ import { useCallback, useRef, useState, type DragEvent } from "react";
 import {
   addEdge,
   Background,
+  BackgroundVariant,
   ConnectionLineType,
   Controls,
   MarkerType,
@@ -138,7 +139,7 @@ export default function FlowBuilder() {
               }}
             >
               <Controls />
-              <Background variant="dots" gap={12} size={1} />
+              <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
             </ReactFlow>
           </div>
           <Sidebar />
