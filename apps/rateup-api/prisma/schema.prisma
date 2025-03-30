@@ -72,33 +72,33 @@ enum ContactGroupType {
 }
 
 model User {
-  id             String           @id @default(uuid()) @db.Uuid
-  createdAt      DateTime         @default(now())
-  email          String           @unique
-  name           String?
-  profilePhoto   String?
-  phone          String?
-  active         Boolean          @default(true)
-  gender         Gender?
-  recipeName     UserRecipes?
-  isPaused       Boolean?         @default(false)
-  pausedBy       String?
-  prefLanguage   String?          @default("English")
-  deletedAt      DateTime?
-  org            Org[]
-  orgMember      OrgMember[]
-  teamMember     TeamMember[]
-  surveys        Survey[]
-  Order          Order[]
-  assignedTicket Ticket[]         @relation("AssignedTicket")
-  createdTicket  Ticket[]         @relation("CreatedTicket")
-  TicketComment  TicketComment[]
-  linktree       Linktree[]
-  generateQr     GenerateQr[]
-  landingPage    LandingPage[]
-  WaMessage      WaMessage[]
-  waInboxAssign  WaInboxAssign[]
-  ticketActivity TicketActivity[]
+  id                  String               @id @default(uuid()) @db.Uuid
+  createdAt           DateTime             @default(now())
+  email               String               @unique
+  name                String?
+  profilePhoto        String?
+  phone               String?
+  active              Boolean              @default(true)
+  gender              Gender?
+  recipeName          UserRecipes?
+  isPaused            Boolean?             @default(false)
+  pausedBy            String?
+  prefLanguage        String?              @default("English")
+  deletedAt           DateTime?
+  org                 Org[]
+  orgMember           OrgMember[]
+  teamMember          TeamMember[]
+  surveys             Survey[]
+  Order               Order[]
+  assignedTicket      Ticket[]             @relation("AssignedTicket")
+  createdTicket       Ticket[]             @relation("CreatedTicket")
+  TicketComment       TicketComment[]
+  linktree            Linktree[]
+  generateQr          GenerateQr[]
+  landingPage         LandingPage[]
+  WaMessage           WaMessage[]
+  waInboxAssign       WaInboxAssign[]
+  ticketActivity      TicketActivity[]
   assignedTicketCards TicketCardAssignee[]
 }
 
@@ -1032,7 +1032,7 @@ model TicketComment {
 }
 
 model TicketBoard {
-  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title         String
   ticketColumns TicketColumn[]
   teams         TicketBoardTeam[]
@@ -1081,11 +1081,11 @@ model TicketCard {
 }
 
 model TicketCardAssignee {
-  card      TicketCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  cardId    String     @db.Uuid
-  assignee  User       @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
-  assigneeId String    @db.Uuid
-  createdAt DateTime   @default(now())
+  card       TicketCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  cardId     String     @db.Uuid
+  assignee   User       @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
+  assigneeId String     @db.Uuid
+  createdAt  DateTime   @default(now())
 
   @@id([cardId, assigneeId])
 }
@@ -1170,16 +1170,24 @@ model WaAutomatedReplyCommands {
   @@unique([command, orgId], name: "command_org_id_unique")
 }
 
+enum WaAutomationProgressStatus {
+  inProgress
+  paused
+  completed
+}
+
 model WaAutomatedReplyMessage {
-  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt          DateTime          @default(now())
-  message            String
+  id                 String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   phone              String
-  currentScreen      String
-  waAutomatedReplyId String?           @db.Uuid
-  waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
-  orgId              String            @db.Uuid
-  org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  currentNode        String
+  response           Json?
+  status             WaAutomationProgressStatus @default(inProgress)
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+  waAutomatedReplyId String?                    @db.Uuid
+  waAutomatedReply   WaAutomatedReply?          @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
+  orgId              String                     @db.Uuid
+  org                Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
   ticket             Ticket[]
   ticketCards        TicketCard[]
 }
