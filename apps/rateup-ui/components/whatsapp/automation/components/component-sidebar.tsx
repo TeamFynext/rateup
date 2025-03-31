@@ -7,7 +7,6 @@ import {
   IconClock,
   IconExternalLink,
   IconFile,
-  IconGitBranch,
   IconGitMerge,
   IconImageInPicture,
   IconLayout,
@@ -71,11 +70,11 @@ const categories = [
     name: "Flow Control",
     items: [
       { id: "flowNode", label: "Flow", icon: <IconGitMerge size={16} /> },
-      {
-        id: "conditionalNode",
-        label: "Condition",
-        icon: <IconGitBranch size={16} />,
-      },
+      // {
+      //   id: "conditionalNode",
+      //   label: "Condition",
+      //   icon: <IconGitBranch size={16} />,
+      // },
       { id: "delayNode", label: "Delay", icon: <IconClock size={16} /> },
       { id: "startNode", label: "Start", icon: <IconPlayCard size={16} /> },
       { id: "endNode", label: "End", icon: <IconX size={16} /> },

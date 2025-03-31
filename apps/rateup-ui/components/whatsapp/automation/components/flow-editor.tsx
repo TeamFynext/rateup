@@ -16,11 +16,12 @@ import {
   ReactFlowProvider,
   useEdgesState,
   useNodesState,
-  type Connection,
   type Node,
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
+
+import { useRouter } from "next/router";
 
 import { notifications } from "@mantine/notifications";
 
@@ -33,8 +34,8 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import { TypedNode, validateNodeData } from "../types/node-types";
 import { getLayoutedElements } from "../utils/auto-layout";
 import { HistoryManager } from "../utils/history";
-import { convertFlowToWhatsAppFormat } from "../utils/whatsapp-converter";
 import ComponentSidebar from "./component-sidebar";
+import CustomEdge from "./CustomEdge";
 import styles from "./flow-editor.module.css";
 import { initialEdges, initialNodes } from "./initial-data";
 import NodeEditor from "./node-editor";
@@ -44,21 +45,22 @@ import Toolbar from "./toolbar";
 // This component is wrapped with ReactFlowProvider in the parent component
 function FlowEditorContent({
   waAutomatedReplyId,
+  waAutomationData,
 }: {
   waAutomatedReplyId: string;
+  waAutomationData: any;
 }) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedNode, setSelectedNode] = useState<TypedNode | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+  const router = useRouter();
   // Add a flag to track undo/redo operations
   const isUndoRedoOperationRef = useRef(false);
-  const { data: waAutomationData, isPending } =
-    useWaAutomatedReplyById(waAutomatedReplyId);
 
   const updateWaAutomatedReplyMutation =
     useUpdateWaAutomatedReplyMutation(waAutomatedReplyId);
@@ -134,27 +136,13 @@ function FlowEditorContent({
 
   // Handle node selection
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
+    setSelectedNode(node as any);
     setIsEditorOpen(true);
   }, []);
 
   // Handle connection between nodes
-  const onConnect = useCallback(
-    (params: Connection) => {
-      // Create an edge with animation and custom styling
-      const newEdge = {
-        ...params,
-        animated: true,
-        style: { stroke: "#6366f1", strokeWidth: 2 },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: "#6366f1",
-        },
-      };
-      setEdges((eds) => addEdge(newEdge, eds));
-    },
-    [setEdges],
-  );
+  const onConnect = (params) =>
+    setEdges((eds) => addEdge({ ...params, type: "custom" }, eds));
 
   // Handle drag over for dropping components
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
@@ -270,6 +258,13 @@ function FlowEditorContent({
     },
     [nodes, edges, setNodes, reactFlowInstance],
   );
+  const handleTabSwitch = useCallback(
+    (tab: string) => {
+      router.push(`${waAutomatedReplyId}?tab=${tab}`);
+    },
+    [router, waAutomatedReplyId],
+  );
+
   // Validate flow connections
   const validateFlow = useCallback(
     (silent: boolean = false) => {
@@ -396,10 +391,6 @@ function FlowEditorContent({
 
     const flow = reactFlowInstance.toObject();
 
-    // Convert flow to WhatsApp API format
-    const whatsappFormat = convertFlowToWhatsAppFormat(flow);
-    console.log("🚀 ~ saveFlow ~ flow:", flow);
-    // return
     updateWaAutomatedReplyMutation.mutate({
       ...waAutomationData,
       matchData: {
@@ -461,12 +452,9 @@ function FlowEditorContent({
     }
 
     const flow = reactFlowInstance.toObject();
-    const whatsappFormat = convertFlowToWhatsAppFormat(flow);
 
-    // Create a blob with the WhatsApp API format
-    const dataStr = JSON.stringify(whatsappFormat, null, 2);
     const dataUri =
-      "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+      "data:application/json;charset=utf-8," + encodeURIComponent(flow);
 
     const exportFileDefaultName = "whatsapp-api-format.json";
     const linkElement = document.createElement("a");
@@ -539,8 +527,6 @@ function FlowEditorContent({
     };
   }, [handleUndo, handleRedo]);
 
-  if (isPending) return <RateupLoader />;
-
   return (
     <div className={styles.flowEditorContainer}>
       <div className={styles.flowWrapper} ref={reactFlowWrapper}>
@@ -567,6 +553,8 @@ function FlowEditorContent({
               color: "#6366f1",
             },
           }}
+          edgeTypes={{ custom: CustomEdge }}
+          proOptions={{ hideAttribution: true }}
         >
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
           <Controls />
@@ -589,6 +577,7 @@ function FlowEditorContent({
               onRedo={handleRedo}
               canUndo={canUndo}
               canRedo={canRedo}
+              handleTabSwitch={handleTabSwitch}
             />
           </Panel>
         </ReactFlow>
@@ -608,12 +597,17 @@ function FlowEditorContent({
 // Wrapper component that provides the ReactFlowProvider
 export default function FlowEditor({
   waAutomatedReplyId,
+  data,
 }: {
   waAutomatedReplyId: string;
+  data: any;
 }) {
   return (
     <ReactFlowProvider>
-      <FlowEditorContent waAutomatedReplyId={waAutomatedReplyId} />
+      <FlowEditorContent
+        waAutomatedReplyId={waAutomatedReplyId}
+        waAutomationData={data}
+      />
     </ReactFlowProvider>
   );
 }

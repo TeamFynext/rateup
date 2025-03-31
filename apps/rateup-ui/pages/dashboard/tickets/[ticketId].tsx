@@ -723,10 +723,10 @@ const TicketAutomationResponse = ({
             <IconMessageCircle size={20} color="gray" />
             <Box>
               <Text size="sm" fw={500} mb={2}>
-                Customer Message
+                Customer Response
               </Text>
               <Paper bg="var(--shade-of-blue)" p="xs" radius="sm" withBorder>
-                {response?.message || "No message content"}
+                {response?.response?.value || "No message content"}
               </Paper>
             </Box>
           </Group>
@@ -735,9 +735,9 @@ const TicketAutomationResponse = ({
             <IconListDetails size={20} color="gray" />
             <Box>
               <Text size="sm" fw={500} mb={2}>
-                Current Screen
+                Action
               </Text>
-              <Text>{response?.currentScreen || "Not specified"}</Text>
+              <Text>{response?.response?.action || "Not specified"}</Text>
             </Box>
           </Group>
         </Stack>

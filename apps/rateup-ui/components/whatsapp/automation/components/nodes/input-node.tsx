@@ -1,11 +1,13 @@
 import { memo } from "react";
 
+import { IconInputAi } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
 import BaseNode from "./base-node";
 import styles from "./node-styles.module.css";
 
-function InputNode({ data, id, selected, type }: NodeProps) {
+function InputNode(props: NodeProps) {
+  const { data, type } = props;
   // Determine input type from node type
   const nodeType = data.type || type;
   let inputType = "Text";
@@ -33,52 +35,15 @@ function InputNode({ data, id, selected, type }: NodeProps) {
       color = "#3f51b5";
   }
 
-  const icon = (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M4 7V4h16v3"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9 20h6"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12 4v16"
-        stroke="white"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-
   return (
-    <BaseNode
-      data={data}
-      title={`${inputType} Input`}
-      icon={icon}
-      color={color}
-    >
+    <BaseNode {...props} icon={<IconInputAi size={16} />} color={color}>
       <div className={styles.inputContent}>
-        <div className={styles.question}>
+        {/* <div className={styles.question}>
           {data.question || "Enter your question"}
         </div>
         {data.variableName && (
           <div className={styles.variable}>Variable: {data.variableName}</div>
-        )}
+        )} */}
       </div>
     </BaseNode>
   );

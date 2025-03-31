@@ -24,7 +24,6 @@ import {
 import dayjs from "dayjs";
 import { useImmer } from "use-immer";
 
-import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
@@ -72,8 +71,6 @@ export default function NodeEditor({
 }: NodeEditorProps) {
   const { data: templates, isLoading } = useWaTemplates();
   const { data: flows, isPending } = useWaFlowsFromDb();
-  const { translations } = useTranslations();
-  const { data: subscription } = useSubscription();
   const { data: boardData, isPending: isBoardsPending } = useBoardsQueries();
   const [nodeData, setNodeData] = useState<NodeData>(node.data);
 
@@ -187,13 +184,6 @@ export default function NodeEditor({
             handleInputChange={handleInputChange}
           />
         );
-      case "stickerNode":
-        return (
-          <StickerNodeEditor
-            nodeData={nodeData as NodeTypeMap["stickerNode"]}
-            handleInputChange={handleInputChange}
-          />
-        );
       case "ctaUrlNode":
         return (
           <CtaUrlNodeEditor
@@ -209,31 +199,10 @@ export default function NodeEditor({
             templates={templates}
           />
         );
-      case "reactionNode":
-        return (
-          <ReactionNodeEditor
-            nodeData={nodeData as NodeTypeMap["reactionNode"]}
-            handleInputChange={handleInputChange}
-          />
-        );
       case "locationNode":
         return (
           <LocationNodeEditor
             nodeData={nodeData as NodeTypeMap["locationNode"]}
-            handleInputChange={handleInputChange}
-          />
-        );
-      case "locationRequestNode":
-        return (
-          <LocationRequestNodeEditor
-            nodeData={nodeData as NodeTypeMap["locationRequestNode"]}
-            handleInputChange={handleInputChange}
-          />
-        );
-      case "addressNode":
-        return (
-          <AddressNodeEditor
-            nodeData={nodeData as NodeTypeMap["addressNode"]}
             handleInputChange={handleInputChange}
           />
         );
@@ -417,7 +386,8 @@ const DelayNodeEditor: React.FC<NodeComponentProps<"delayNode">> = ({
     <ContainedNumberInput
       label="Delay Time (seconds)"
       min={1}
-      value={typedData.delayTime?.toString() || "5"}
+      max={10}
+      value={typedData.delayTime?.toString()}
       onChange={(e) => handleInputChange("delayTime", e)}
       description="Time to wait before proceeding to the next node"
     />
@@ -985,26 +955,6 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
   );
 };
 
-// StickerNode Component
-const StickerNodeEditor: React.FC<NodeComponentProps<"stickerNode">> = ({
-  nodeData,
-  handleInputChange,
-}) => {
-  const typedData = nodeData;
-  return (
-    <div className={styles.editorSection}>
-      <label htmlFor="stickerId">Sticker ID</label>
-      <input
-        id="stickerId"
-        type="text"
-        value={typedData.stickerId || ""}
-        onChange={(e) => handleInputChange("stickerId", e.target.value)}
-        placeholder="Enter sticker ID..."
-      />
-    </div>
-  );
-};
-
 // CtaUrlNode Component
 const CtaUrlNodeEditor: React.FC<NodeComponentProps<"ctaUrlNode">> = ({
   nodeData,
@@ -1130,35 +1080,6 @@ const TemplateNodeEditor: React.FC<
   );
 };
 
-// ReactionNode Component
-const ReactionNodeEditor: React.FC<NodeComponentProps<"reactionNode">> = ({
-  nodeData,
-  handleInputChange,
-}) => {
-  const typedData = nodeData;
-  return (
-    <div className={styles.editorSection}>
-      <label htmlFor="emoji">Emoji</label>
-      <input
-        id="emoji"
-        type="text"
-        value={typedData.emoji || ""}
-        onChange={(e) => handleInputChange("emoji", e.target.value)}
-        placeholder="Enter emoji (e.g., 👍)..."
-      />
-
-      <label htmlFor="messageId">Message ID</label>
-      <input
-        id="messageId"
-        type="text"
-        value={typedData.messageId || ""}
-        onChange={(e) => handleInputChange("messageId", e.target.value)}
-        placeholder="Enter message ID to react to..."
-      />
-    </div>
-  );
-};
-
 // LocationNode Component
 const LocationNodeEditor: React.FC<NodeComponentProps<"locationNode">> = ({
   nodeData,
@@ -1211,90 +1132,6 @@ const LocationNodeEditor: React.FC<NodeComponentProps<"locationNode">> = ({
   );
 };
 
-// LocationRequestNode Component
-const LocationRequestNodeEditor: React.FC<
-  NodeComponentProps<"locationRequestNode">
-> = ({ nodeData, handleInputChange }) => {
-  const typedData = nodeData;
-  return (
-    <div className={styles.editorSection}>
-      <label htmlFor="message">Request Message</label>
-      <textarea
-        id="message"
-        value={typedData.message || ""}
-        onChange={(e) => handleInputChange("message", e.target.value)}
-        rows={3}
-        placeholder="Enter location request message..."
-      />
-    </div>
-  );
-};
-
-// AddressNode Component
-const AddressNodeEditor: React.FC<NodeComponentProps<"addressNode">> = ({
-  nodeData,
-  handleInputChange,
-}) => {
-  const typedData = nodeData;
-  return (
-    <div className={styles.editorSection}>
-      <label htmlFor="name">Name</label>
-      <input
-        id="name"
-        type="text"
-        value={typedData.name || ""}
-        onChange={(e) => handleInputChange("name", e.target.value)}
-        placeholder="Enter name..."
-      />
-
-      <label htmlFor="street">Street</label>
-      <input
-        id="street"
-        type="text"
-        value={typedData.street || ""}
-        onChange={(e) => handleInputChange("street", e.target.value)}
-        placeholder="Enter street..."
-      />
-
-      <label htmlFor="city">City</label>
-      <input
-        id="city"
-        type="text"
-        value={typedData.city || ""}
-        onChange={(e) => handleInputChange("city", e.target.value)}
-        placeholder="Enter city..."
-      />
-
-      <label htmlFor="state">State</label>
-      <input
-        id="state"
-        type="text"
-        value={typedData.state || ""}
-        onChange={(e) => handleInputChange("state", e.target.value)}
-        placeholder="Enter state..."
-      />
-
-      <label htmlFor="zip">ZIP Code</label>
-      <input
-        id="zip"
-        type="text"
-        value={typedData.zip || ""}
-        onChange={(e) => handleInputChange("zip", e.target.value)}
-        placeholder="Enter ZIP code..."
-      />
-
-      <label htmlFor="country">Country</label>
-      <input
-        id="country"
-        type="text"
-        value={typedData.country || ""}
-        onChange={(e) => handleInputChange("country", e.target.value)}
-        placeholder="Enter country..."
-      />
-    </div>
-  );
-};
-
 // ContactsNode Component
 const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
   nodeData,
@@ -1302,17 +1139,6 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
 }) => {
   const typedData = nodeData;
   const [activeContactIndex, setActiveContactIndex] = useState(0);
-
-  // Initialize contacts array if not present
-  useEffect(() => {
-    if (
-      !typedData.contacts ||
-      !Array.isArray(typedData.contacts) ||
-      typedData.contacts.length === 0
-    ) {
-      handleInputChange("contacts", [{}]);
-    }
-  }, []);
 
   const addNewContact = () => {
     if (!typedData.contacts || typedData.contacts.length >= 257) return;
@@ -1337,10 +1163,18 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
   const updateContactField = (index: number, path: string[], value: any) => {
     const newContacts = [...(typedData.contacts || [])];
 
+    // If newContacts[index] is undefined, initialize it as an empty object
+    if (!newContacts[index]) {
+      newContacts[index] = {};
+    }
+
     // Navigate to the nested property and update it
     let current = newContacts[index];
     for (let i = 0; i < path.length - 1; i++) {
-      if (!current[path[i]]) current[path[i]] = {};
+      if (!current[path[i]]) {
+        // Initialize as object or array based on next path segment
+        current[path[i]] = isNaN(Number(path[i + 1])) ? {} : [];
+      }
       current = current[path[i]];
     }
     current[path[path.length - 1]] = value;
@@ -1349,8 +1183,6 @@ const ContactsNodeEditor: React.FC<NodeComponentProps<"contactsNode">> = ({
   };
 
   const activeContact = typedData.contacts?.[activeContactIndex] || {};
-
-  if (!typedData.contacts) return <RateupLoader />;
 
   return (
     <Stack gap="xs">
@@ -2034,7 +1866,7 @@ const FlowNodeEditor: React.FC<
 > = ({ nodeData, handleInputChange, flows }) => {
   const typedData = nodeData;
   return (
-    <Group>
+    <Stack>
       <ContainedSelection
         data={
           flows?.map((t) => ({
@@ -2054,13 +1886,15 @@ const FlowNodeEditor: React.FC<
         }}
         flex={1}
       />
-      <TeamSelector
-        value={typedData.teamId}
-        onChange={(id) => {
-          handleInputChange("teamId", id);
-        }}
-        w={"100%"}
-      />
-    </Group>
+      {typedData?.flow?.id && (
+        <TeamSelector
+          value={typedData.teamId}
+          onChange={(id) => {
+            handleInputChange("teamId", id);
+          }}
+          w={"100%"}
+        />
+      )}
+    </Stack>
   );
 };

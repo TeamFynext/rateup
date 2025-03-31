@@ -1,6 +1,6 @@
 import { memo } from "react";
 
-import { Badge, Group, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import { IconPhone } from "@tabler/icons-react";
 import { NodeProps } from "@xyflow/react";
 

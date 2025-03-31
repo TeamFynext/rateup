@@ -2,15 +2,16 @@
 
 import { Button, Menu } from "@mantine/core";
 import {
+  IconAdjustmentsPlus,
   IconArrowBackUp,
   IconArrowForwardUp,
   IconArrowLeft,
   IconArrowUp,
-  IconChecklist,
   IconChevronDown,
   IconDeviceFloppy,
-  IconDownload,
-  IconFileExport,
+  IconReport,
+  IconSettings,
+  IconShare,
   IconTable,
 } from "@tabler/icons-react";
 
@@ -25,6 +26,7 @@ interface ToolbarProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  handleTabSwitch: (tab: string) => void;
 }
 
 export default function Toolbar({
@@ -36,6 +38,7 @@ export default function Toolbar({
   onRedo,
   canUndo,
   canRedo,
+  handleTabSwitch,
 }: ToolbarProps) {
   return (
     <div className={styles.toolbar}>
@@ -113,6 +116,40 @@ export default function Toolbar({
       >
         Redo
       </Button>
+
+      <Menu position="bottom-start">
+        <Menu.Target>
+          <Button
+            variant="outline"
+            className={styles.toolbarButton}
+            leftSection={<IconAdjustmentsPlus size={16} />}
+            rightSection={<IconChevronDown size={12} />}
+          >
+            More
+          </Button>
+        </Menu.Target>
+
+        <Menu.Dropdown>
+          <Menu.Item
+            leftSection={<IconSettings size={16} />}
+            onClick={() => handleTabSwitch("settings")}
+          >
+            Settings
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconShare size={16} />}
+            onClick={() => handleTabSwitch("share")}
+          >
+            Share
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconReport size={16} />}
+            onClick={() => handleTabSwitch("result")}
+          >
+            Result
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
     </div>
   );
 }

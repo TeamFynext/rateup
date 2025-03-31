@@ -1,7 +1,10 @@
 import { memo } from "react";
 import type React from "react";
 
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { ActionIcon } from "@mantine/core";
+import { useHover } from "@mantine/hooks";
+import { IconTrash } from "@tabler/icons-react";
+import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 
 import styles from "./node-styles.module.css";
 
@@ -19,9 +22,14 @@ function BaseNode({
   children,
   disableRight = false,
   selected,
+  id,
 }: BaseNodeProps) {
+  const { hovered, ref } = useHover();
+  const { deleteElements } = useReactFlow();
+
   return (
     <div
+      ref={ref}
       className={`${styles.node}`}
       style={{
         borderLeft: `4px solid ${color}`,
@@ -30,6 +38,26 @@ function BaseNode({
         backgroundColor: `${color}40`,
       }}
     >
+      {hovered && (
+        <ActionIcon
+          color="red"
+          // variant="subtle"
+          size="sm"
+          onClick={(event) => {
+            event.stopPropagation();
+            deleteElements({ nodes: [{ id }] });
+          }}
+          style={{
+            position: "absolute",
+            top: "8px",
+            right: "8px",
+            zIndex: 10,
+          }}
+          aria-label="Delete node"
+        >
+          <IconTrash size={16} />
+        </ActionIcon>
+      )}
       <div className={styles.content}>
         <div className={styles.header}>
           <div className={styles.icon}>{icon}</div>
@@ -39,7 +67,6 @@ function BaseNode({
         <div className={styles.details}>{children}</div>
       </div>
 
-      {/* Connection handles on all sides */}
       <Handle
         type="target"
         position={Position.Left}
@@ -49,7 +76,6 @@ function BaseNode({
           border: `3px solid ${color}`,
         }}
       />
-      {/* <Handle type="target" position={Position.Top} id="top" style={{ background: "#555" }} /> */}
       <Handle
         type="source"
         position={Position.Right}
@@ -60,7 +86,6 @@ function BaseNode({
           border: `3px solid ${color}`,
         }}
       />
-      {/* <Handle type="source" position={Position.Bottom} id="bottom" style={{ background: "#555" }} /> */}
     </div>
   );
 }
