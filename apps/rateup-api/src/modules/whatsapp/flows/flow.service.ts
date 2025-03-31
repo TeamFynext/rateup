@@ -1007,7 +1007,7 @@ export async function handleStaticFlowReply(
   await saveResponses(session);
 
   // Log flow submission using the utility function
-  await logFlowCompletion({
+  const automationLog = await logFlowCompletion({
     phone: session.phone,
     orgId,
     flowId: dbFlowId,
@@ -1043,6 +1043,7 @@ export async function handleStaticFlowReply(
       automation,
       progress.currentNode,
       orgId,
+      automationLog?.id,
     );
   await deleteSession(session.orgId, session.phone);
 }

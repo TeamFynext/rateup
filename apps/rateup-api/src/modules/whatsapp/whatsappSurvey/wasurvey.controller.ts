@@ -61,11 +61,7 @@ import {
   handleStaticFlowReply,
   sendFlow,
 } from "../flows/flow.service";
-// import { handleRegisterMessage } from "../../loyalty/internal/campaign/campaign.service";
-import {
-  checkIfMessageMatchesAnyAutomation,
-  sendAutomatedReplyMessage,
-} from "../automatedReply/wa_automatedReply.utils";
+import { checkIfMessageMatchesAnyAutomation } from "../automatedReply/wa_automatedReply.utils";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import {
   CampaignParticipant,
@@ -715,6 +711,9 @@ export async function processNextNode(
           waAutomatedReplyMessageId: automationMessageId,
           type: "AUTOMATION",
         });
+        break;
+      case "delayNode":
+        await wait((node?.data as NodeTypeMap["delayNode"])?.delayTime * 1000);
         break;
 
       default:

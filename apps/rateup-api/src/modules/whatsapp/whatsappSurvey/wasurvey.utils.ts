@@ -138,17 +138,6 @@ export function convertNodeToWhatsAppMessage(
       };
     }
 
-    case "stickerNode": {
-      const data = node.data as NodeTypeMap["stickerNode"];
-      return {
-        ...baseMessage,
-        type: "sticker",
-        sticker: {
-          id: data.stickerId || "",
-        },
-      };
-    }
-
     case "locationNode": {
       const data = node.data as NodeTypeMap["locationNode"];
       return {
@@ -308,7 +297,6 @@ export function convertNodeToWhatsAppMessage(
       };
     }
 
-    // TODO: FIX ME
     case "contactsNode": {
       const data = node.data as NodeTypeMap["contactsNode"];
 
@@ -329,7 +317,7 @@ export function convertNodeToWhatsAppMessage(
     }
 
     default:
-      return node.data;
+      return null;
   }
 }
 export const handlePaymentConfirmation = async (
