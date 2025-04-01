@@ -266,11 +266,18 @@ export function DataSourceInput(props) {
 }
 
 export class FileConverter {
-  public static async fileToBase64(file: File): Promise<string> {
+  public static async fileToBase64(
+    file: File,
+    withStart: boolean = false,
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         let base64URL = reader.result as string;
+        if (withStart) {
+          resolve(base64URL);
+          return;
+        }
         const base64Data = base64URL.replace(
           /^data:image\/[a-zA-Z]+;base64,/,
           "",

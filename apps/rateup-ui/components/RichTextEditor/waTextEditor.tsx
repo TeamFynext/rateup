@@ -1,6 +1,12 @@
 import React, { useEffect } from "react";
 
-import { Group, ScrollArea, ScrollAreaAutosize } from "@mantine/core";
+import {
+  Box,
+  Group,
+  ScrollArea,
+  ScrollAreaAutosize,
+  Text,
+} from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
 import CharacterCount from "@tiptap/extension-character-count";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -16,13 +22,16 @@ function WaTextEditor({
   content = "",
   className = "",
   mah = 350,
+  placeholder = "Enter your text",
+  label = "",
+  max = 1024,
+  required = false,
 }) {
-  let max = 1024;
   const editor = useEditor({
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder: "Enter your text",
+        placeholder,
       }),
       CharacterCount.configure({
         limit: max,
@@ -49,55 +58,74 @@ function WaTextEditor({
     : 0;
 
   return (
-    <RichTextEditor editor={editor} className={className}>
-      <RichTextEditor.Toolbar sticky tabIndex={-1}>
-        <Group gap={"xs"}>
-          <RichTextEditor.ControlsGroup>
-            <RichTextEditor.Bold />
-            <RichTextEditor.Italic />
-            <RichTextEditor.Strikethrough />
-            <RichTextEditor.ClearFormatting />
-            <RichTextEditor.Code />
-          </RichTextEditor.ControlsGroup>
-
-          <RichTextEditor.ControlsGroup>
-            <RichTextEditor.Blockquote />
-            <RichTextEditor.BulletList />
-            <RichTextEditor.OrderedList />
-          </RichTextEditor.ControlsGroup>
-
-          <RichTextEditor.ControlsGroup>
-            <RichTextEditor.Undo />
-            <RichTextEditor.Redo />
-          </RichTextEditor.ControlsGroup>
-          <RichTextEditor.ControlsGroup>
-            <InsertEmoji />
-          </RichTextEditor.ControlsGroup>
-        </Group>
-      </RichTextEditor.Toolbar>
-      <ScrollAreaAutosize mah={mah}>
-        <RichTextEditor.Content mih={120} />
-      </ScrollAreaAutosize>
-      <div
-        className={`${styles["character-count"]} ${editor?.storage?.characterCount?.characters() === max ? styles["character-count--warning"] : ""}`}
+    <Box>
+      <Text
+        htmlFor="editor"
+        fz={12}
+        c={
+          "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))"
+        }
       >
-        <svg height="20" width="20" viewBox="0 0 20 20">
-          <circle r="10" cx="10" cy="10" fill="#e9ecef" />
-          <circle
-            r="5"
-            cx="10"
-            cy="10"
-            fill="transparent"
-            stroke="currentColor"
-            strokeWidth="10"
-            strokeDasharray={`calc(${percentage} * 31.4 / 100) 31.4`}
-            transform="rotate(-90) translate(-20)"
-          />
-          <circle r="6" cx="10" cy="10" fill="white" />
-        </svg>
-        {editor?.storage?.characterCount?.characters()} / {max} characters
-      </div>
-    </RichTextEditor>
+        {label}{" "}
+        <span
+          style={{
+            color: "var(--mantine-color-red-6)",
+            fontWeight: 700,
+          }}
+        >
+          {required ? "*" : ""}
+        </span>
+      </Text>
+      <RichTextEditor editor={editor} className={className}>
+        <RichTextEditor.Toolbar sticky tabIndex={-1}>
+          <Group gap={"xs"}>
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Bold />
+              <RichTextEditor.Italic />
+              <RichTextEditor.Strikethrough />
+              <RichTextEditor.ClearFormatting />
+              <RichTextEditor.Code />
+            </RichTextEditor.ControlsGroup>
+
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Blockquote />
+              <RichTextEditor.BulletList />
+              <RichTextEditor.OrderedList />
+            </RichTextEditor.ControlsGroup>
+
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Undo />
+              <RichTextEditor.Redo />
+            </RichTextEditor.ControlsGroup>
+            <RichTextEditor.ControlsGroup>
+              <InsertEmoji />
+            </RichTextEditor.ControlsGroup>
+          </Group>
+        </RichTextEditor.Toolbar>
+        <ScrollAreaAutosize mah={mah}>
+          <RichTextEditor.Content mih={120} />
+        </ScrollAreaAutosize>
+        <div
+          className={`${styles["character-count"]} ${editor?.storage?.characterCount?.characters() === max ? styles["character-count--warning"] : ""}`}
+        >
+          <svg height="20" width="20" viewBox="0 0 20 20">
+            <circle r="10" cx="10" cy="10" fill="#e9ecef" />
+            <circle
+              r="5"
+              cx="10"
+              cy="10"
+              fill="transparent"
+              stroke="currentColor"
+              strokeWidth="10"
+              strokeDasharray={`calc(${percentage} * 31.4 / 100) 31.4`}
+              transform="rotate(-90) translate(-20)"
+            />
+            <circle r="6" cx="10" cy="10" fill="white" />
+          </svg>
+          {editor?.storage?.characterCount?.characters()} / {max} characters
+        </div>
+      </RichTextEditor>
+    </Box>
   );
 }
 

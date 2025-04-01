@@ -1,0 +1,820 @@
+import { Node } from "@xyflow/react";
+
+// Base node data interface with common properties
+export interface BaseNodeData {
+  label: string;
+}
+
+// Text Node
+export interface TextNodeData extends BaseNodeData {
+  body: string;
+  previewUrl: boolean;
+}
+
+// Quick Reply Node
+export interface QuickReplyNodeData extends BaseNodeData {
+  question: string;
+  options: string[];
+}
+
+// Image Node
+export interface ImageNodeData extends BaseNodeData {
+  link: string;
+  caption?: string;
+}
+
+// Conditional Node
+export interface ConditionalNodeData extends BaseNodeData {
+  condition: string;
+}
+
+// Input Nodes (shared structure)
+export interface InputNodeData extends BaseNodeData {
+  question: string;
+  variableName: string;
+  validation?: string;
+}
+
+// Delay Node
+export interface DelayNodeData extends BaseNodeData {
+  delayTime: number;
+}
+
+// Media Nodes
+export interface MediaNodeData extends BaseNodeData {
+  link: string;
+  caption?: string;
+}
+
+// Document Node
+export interface DocumentNodeData extends BaseNodeData {
+  link: string;
+  caption?: string;
+  filename?: string;
+}
+
+// Start Node
+export interface StartNodeData extends BaseNodeData {
+  startMessage?: string;
+  recipient: string;
+}
+
+// End Node
+export interface EndNodeData extends BaseNodeData {
+  endMessage?: string;
+}
+
+// Button Node
+export interface ButtonOption {
+  id: string;
+  title: string;
+}
+
+export interface ButtonNodeData extends BaseNodeData {
+  body: string;
+  header?: string;
+  headerType?: string;
+  footer?: string;
+  buttons: ButtonOption[];
+  caption?: string;
+  filename?: string;
+  link?: string;
+}
+
+// List Node
+export interface ListItem {
+  id: string;
+  title: string;
+  description?: string;
+}
+
+export interface ListNodeData extends BaseNodeData {
+  header?: string;
+  body?: string;
+  footer?: string;
+  button?: string;
+  sections?: Array<{
+    title: string;
+    rows: Array<{
+      id: string;
+      title: string;
+      description?: string;
+    }>;
+  }>;
+}
+
+// Sticker Node
+export interface StickerNodeData extends BaseNodeData {
+  stickerId: string;
+}
+
+// CTA URL Node
+export interface CTAUrlNodeData extends BaseNodeData {
+  header?: string;
+  body?: string;
+  footer?: string;
+  display_text: string;
+  url: string;
+}
+
+// Template Node
+export interface TemplateNodeData extends BaseNodeData {
+  template: {
+    id: string;
+    name?: string;
+  };
+  teamId?: string;
+  parameters?: any[];
+}
+
+// Reaction Node
+export interface ReactionNodeData extends BaseNodeData {
+  emoji: string;
+  messageId: string;
+}
+
+// Location Node
+export interface LocationNodeData extends BaseNodeData {
+  name?: string;
+  latitude: string;
+  longitude: string;
+  address?: string;
+}
+
+// Location Request Node
+export interface LocationRequestNodeData extends BaseNodeData {
+  message: string;
+}
+
+// Address Node
+export interface AddressNodeData extends BaseNodeData {
+  name: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+}
+
+// Contacts Node
+export interface ContactsNodeData extends BaseNodeData {
+  contacts: Array<{
+    name?: {
+      formatted_name: string;
+      first_name?: string;
+      last_name?: string;
+      middle_name?: string;
+      prefix?: string;
+      suffix?: string;
+    };
+    org?: {
+      company?: string;
+      department?: string;
+      title?: string;
+    };
+    birthday?: string;
+    phones?: Array<{
+      phone: string;
+      type: "CELL" | "WORK" | "HOME" | "MAIN";
+      wa_id?: string;
+    }>;
+    emails?: Array<{
+      email: string;
+      type: "WORK" | "HOME" | "OTHER";
+    }>;
+    addresses?: Array<{
+      street?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+      country?: string;
+      country_code?: string;
+      type: "HOME" | "WORK" | "OTHER";
+    }>;
+    urls?: Array<{
+      url: string;
+      type: "WORK" | "HOME" | "PROFILE" | "OTHER";
+    }>;
+  }>;
+}
+
+// Flow Node
+export interface FlowNodeData extends BaseNodeData {
+  teamId: string;
+  flow: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface TicketNodeData extends BaseNodeData {
+  ticket: {
+    selectedBoardId: string;
+    selectedBoardName: string;
+    selectedBoardColumnId: string;
+    selectedBoardColumnName: string;
+  };
+}
+
+// Map of node types to their data types
+export type NodeTypeMap = {
+  textNode: TextNodeData;
+  quickReplyNode: QuickReplyNodeData;
+  documentNode: DocumentNodeData;
+  imageNode: ImageNodeData;
+  conditionalNode: ConditionalNodeData;
+  textInputNode: InputNodeData;
+  numberInputNode: InputNodeData;
+  emailInputNode: InputNodeData;
+  phoneInputNode: InputNodeData;
+  dateInputNode: InputNodeData;
+  delayNode: DelayNodeData;
+  videoNode: MediaNodeData;
+  audioNode: MediaNodeData;
+  startNode: StartNodeData;
+  endNode: EndNodeData;
+  buttonNode: ButtonNodeData;
+  listNode: ListNodeData;
+  stickerNode: StickerNodeData;
+  ctaUrlNode: CTAUrlNodeData;
+  templateNode: TemplateNodeData;
+  reactionNode: ReactionNodeData;
+  locationNode: LocationNodeData;
+  locationRequestNode: LocationRequestNodeData;
+  addressNode: AddressNodeData;
+  contactsNode: ContactsNodeData;
+  flowNode: FlowNodeData;
+  ticketNode: TicketNodeData;
+};
+
+// Node type strings as a union type
+export type NodeType = keyof NodeTypeMap;
+
+// Union type for all node data types
+export type NodeData =
+  | TextNodeData
+  | QuickReplyNodeData
+  | DocumentNodeData
+  | ImageNodeData
+  | ConditionalNodeData
+  | InputNodeData
+  | DelayNodeData
+  | MediaNodeData
+  | StartNodeData
+  | EndNodeData
+  | ButtonNodeData
+  | ListNodeData
+  | StickerNodeData
+  | CTAUrlNodeData
+  | TemplateNodeData
+  | ReactionNodeData
+  | LocationNodeData
+  | LocationRequestNodeData
+  | AddressNodeData
+  | ContactsNodeData
+  | FlowNodeData
+  | TicketNodeData;
+
+// Extended Node type with typed data
+export type TypedNode<T extends NodeType = NodeType> = Omit<
+  Node,
+  "data" | "type"
+> & {
+  type: T;
+  data: NodeTypeMap[T];
+};
+
+// Helper function to check node type and cast data
+export function assertNodeType<T extends NodeType>(
+  node: TypedNode,
+  nodeType: T,
+): asserts node is TypedNode<T> {
+  if (node.type !== nodeType) {
+    throw new Error(`Expected node type ${nodeType}, got ${node.type}`);
+  }
+}
+
+// Simplified helper to safely get typed data from a node
+export function getTypedNodeData<T extends NodeType>(
+  node: TypedNode,
+  nodeType: T,
+): NodeTypeMap[T] | null {
+  return node.type === nodeType ? (node.data as NodeTypeMap[T]) : null;
+}
+
+// Helper function for creating default node data by type
+export function getDefaultNodeData(nodeType: string): NodeData {
+  const baseData = { label: `New ${nodeType}` };
+
+  switch (nodeType) {
+    case "textNode":
+      return { ...baseData, body: "", previewUrl: false } as TextNodeData;
+    case "quickReplyNode":
+      return { ...baseData, question: "", options: [] } as QuickReplyNodeData;
+    case "imageNode":
+      return { ...baseData, link: "", caption: "" } as ImageNodeData;
+    case "conditionalNode":
+      return { ...baseData, condition: "" } as ConditionalNodeData;
+    // Add cases for other node types...
+
+    default:
+      return baseData as BaseNodeData;
+  }
+}
+
+// Validation functions for node data
+export function validateNodeData(node: TypedNode): {
+  valid: boolean;
+  message: string;
+} {
+  const nodeType = node.type as NodeType;
+
+  // Common validation for all nodes
+  if (!node.data.label || node.data.label.trim() === "") {
+    return { valid: false, message: `Node label is required.` };
+  }
+
+  switch (nodeType) {
+    case "textNode": {
+      const data = node.data as NodeTypeMap["textNode"];
+      if (!data.body || data.body === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Message text is required.`,
+        };
+      }
+      break;
+    }
+
+    case "quickReplyNode": {
+      const data = node.data as NodeTypeMap["quickReplyNode"];
+      if (!data.question || data.question.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Question is required.`,
+        };
+      }
+      if (!data.options || data.options.length === 0) {
+        return {
+          valid: false,
+          message: `${node.data.label}: At least one option is required.`,
+        };
+      }
+      // Check if any option is empty
+      const emptyOption = data.options.some(
+        (option) => !option || option.trim() === "",
+      );
+      if (emptyOption) {
+        return {
+          valid: false,
+          message: `${node.data.label}: All options must have text.`,
+        };
+      }
+      break;
+    }
+
+    case "imageNode": {
+      const data = node.data as NodeTypeMap["imageNode"];
+      if (!data.link || data.link.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Image URL is required.`,
+        };
+      }
+      break;
+    }
+
+    case "conditionalNode": {
+      const data = node.data as NodeTypeMap["conditionalNode"];
+      if (!data.condition || data.condition.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Condition is required.`,
+        };
+      }
+      break;
+    }
+
+    case "textInputNode":
+    case "numberInputNode":
+    case "emailInputNode":
+    case "phoneInputNode":
+    case "dateInputNode": {
+      const data = node.data as NodeTypeMap[typeof nodeType];
+      if (!data.question || data.question.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Question is required.`,
+        };
+      }
+      if (!data.variableName || data.variableName.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Variable name is required.`,
+        };
+      }
+      break;
+    }
+
+    case "delayNode": {
+      const data = node.data as NodeTypeMap[typeof nodeType];
+      if (!data.delayTime || data.delayTime <= 0) {
+        return {
+          valid: false,
+          message: `${node.data.label}: Delay time must be greater than 0.`,
+        };
+      }
+      break;
+    }
+
+    case "videoNode":
+    case "audioNode": {
+      const data = node.data as NodeTypeMap[typeof nodeType];
+      if (!data.link || data.link.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Media URL is required.`,
+        };
+      }
+      break;
+    }
+
+    case "documentNode": {
+      const data = node.data as NodeTypeMap["documentNode"];
+      if (!data.link || data.link.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Document URL is required.`,
+        };
+      }
+      if (!data.filename || data.filename.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Filename is required.`,
+        };
+      }
+      break;
+    }
+
+    case "buttonNode": {
+      const data = node.data as NodeTypeMap["buttonNode"];
+      if (!data.body || data.body === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Message text is required.`,
+        };
+      }
+      if (!data.buttons || data.buttons.length === 0) {
+        return {
+          valid: false,
+          message: `${node.data.label}: At least one button is required.`,
+        };
+      }
+      if (data.buttons.length > 3) {
+        return {
+          valid: false,
+          message: `${node.data.label}: Maximum 3 buttons are allowed.`,
+        };
+      }
+      // Check if any button is empty
+      const emptyButton = data.buttons.some(
+        (button) => !button.title || button.title.trim() === "",
+      );
+      if (emptyButton) {
+        return {
+          valid: false,
+          message: `${node.data.label}: All buttons must have a title.`,
+        };
+      }
+
+      // Check button title length
+      const longButtonTitle = data.buttons.some(
+        (button) => button.title && button.title.length > 20,
+      );
+      if (longButtonTitle) {
+        return {
+          valid: false,
+          message: `${node.data.label}: Button titles must be 20 characters or less.`,
+        };
+      }
+
+      // Validate header content based on headerType
+      if (data.headerType) {
+        if (
+          data.headerType === "text" &&
+          (!data.header || data.header === "")
+        ) {
+          return {
+            valid: false,
+            message: `${node.data.label}: Text header content is required when header type is 'text'.`,
+          };
+        } else if (
+          ["image", "video", "document"].includes(data.headerType) &&
+          (!data.link || data.link.trim() === "")
+        ) {
+          return {
+            valid: false,
+            message: `${node.data.label}: Media URL is required for ${data.headerType} header type.`,
+          };
+        }
+
+        // If document header type, filename is required
+        if (
+          data.headerType === "document" &&
+          (!data.filename || data.filename.trim() === "")
+        ) {
+          return {
+            valid: false,
+            message: `${node.data.label}: Filename is required for document header type.`,
+          };
+        }
+      }
+      break;
+    }
+
+    case "listNode": {
+      const data = node.data as NodeTypeMap["listNode"];
+      if (!data.body || data.body === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Message text is required.`,
+        };
+      }
+      if (!data.button || data.button.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Button text is required.`,
+        };
+      }
+      if (!data.sections || data.sections.length === 0) {
+        return {
+          valid: false,
+          message: `${node.data.label}: At least one section is required.`,
+        };
+      }
+
+      // Check if any section is empty or missing title
+      const emptySection = data.sections.some(
+        (section) => !section.title || section.title.trim() === "",
+      );
+      if (emptySection) {
+        return {
+          valid: false,
+          message: `${node.data.label}: All sections must have a title.`,
+        };
+      }
+
+      // Check if any section has no rows
+      const emptySectionRows = data.sections.some(
+        (section) => !section.rows || section.rows.length === 0,
+      );
+      if (emptySectionRows) {
+        return {
+          valid: false,
+          message: `${node.data.label}: All sections must have at least one row.`,
+        };
+      }
+
+      // Check if any row is missing a title
+      const emptyRow = data.sections.some((section) =>
+        section.rows.some((row) => !row.title || row.title.trim() === ""),
+      );
+      if (emptyRow) {
+        return {
+          valid: false,
+          message: `${node.data.label}: All list rows must have a title.`,
+        };
+      }
+      break;
+    }
+
+    case "stickerNode": {
+      const data = node.data as NodeTypeMap["stickerNode"];
+      if (!data.stickerId || data.stickerId.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Sticker ID is required.`,
+        };
+      }
+      break;
+    }
+
+    case "ctaUrlNode": {
+      const data = node.data as NodeTypeMap["ctaUrlNode"];
+      if (!data.display_text || data.display_text.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Display text is required.`,
+        };
+      }
+      if (!data.url || data.url.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: URL is required.`,
+        };
+      }
+      break;
+    }
+
+    case "templateNode": {
+      const data = node.data as NodeTypeMap["templateNode"];
+      if (!data.template?.id || data.template?.id.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Template ID is required.`,
+        };
+      }
+      break;
+    }
+
+    case "reactionNode": {
+      const data = node.data as NodeTypeMap["reactionNode"];
+      if (!data.emoji || data.emoji.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Emoji is required.`,
+        };
+      }
+      if (!data.messageId || data.messageId.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Message ID is required.`,
+        };
+      }
+      break;
+    }
+
+    case "locationNode": {
+      const data = node.data as NodeTypeMap["locationNode"];
+      if (!data.latitude || data.latitude.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Latitude is required.`,
+        };
+      }
+      if (!data.longitude || data.longitude.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Longitude is required.`,
+        };
+      }
+      break;
+    }
+
+    case "locationRequestNode": {
+      const data = node.data as NodeTypeMap["locationRequestNode"];
+      if (!data.message || data.message.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Request message is required.`,
+        };
+      }
+      break;
+    }
+
+    case "addressNode": {
+      const data = node.data as NodeTypeMap["addressNode"];
+      if (!data.name || data.name.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Name is required.`,
+        };
+      }
+      if (!data.street || data.street.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Street is required.`,
+        };
+      }
+      if (!data.city || data.city.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: City is required.`,
+        };
+      }
+      break;
+    }
+
+    case "flowNode": {
+      const data = node.data as NodeTypeMap["flowNode"];
+      if (!data.flow?.id || data.flow?.id.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Flow ID is required.`,
+        };
+      }
+      if (!data.teamId || data.teamId.trim() === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Team ID is required.`,
+        };
+      }
+      break;
+    }
+
+    case "contactsNode": {
+      const data = node.data as NodeTypeMap["contactsNode"];
+      if (!data.contacts || data.contacts.length === 0) {
+        return {
+          valid: false,
+          message: `${node.data.label}: At least one contact is required.`,
+        };
+      }
+
+      // Validate each contact
+      for (const contact of data.contacts) {
+        if (
+          !contact.name ||
+          !contact.name.formatted_name ||
+          contact.name.formatted_name.trim() === ""
+        ) {
+          return {
+            valid: false,
+            message: `${node.data.label}: Each contact must have a formatted name.`,
+          };
+        }
+
+        if (!contact.name.first_name || contact.name.first_name.trim() === "") {
+          return {
+            valid: false,
+            message: `${node.data.label}: Each contact must have a first name.`,
+          };
+        }
+
+        // Validate phone numbers
+        if (contact.phones && contact.phones.length > 0) {
+          const invalidPhone = contact.phones.some(
+            (phone) => !phone.phone || phone.phone.trim() === "",
+          );
+          if (invalidPhone) {
+            return {
+              valid: false,
+              message: `${node.data.label}: All phone numbers must have a value.`,
+            };
+          }
+        }
+
+        // Validate email addresses
+        if (contact.emails && contact.emails.length > 0) {
+          const invalidEmail = contact.emails.some(
+            (email) => !email.email || email.email.trim() === "",
+          );
+          if (invalidEmail) {
+            return {
+              valid: false,
+              message: `${node.data.label}: All email addresses must have a value.`,
+            };
+          }
+        }
+
+        // Validate addresses
+        if (contact.addresses && contact.addresses.length > 0) {
+          const invalidAddress = contact.addresses.some(
+            (address) =>
+              !address.street ||
+              address.street.trim() === "" ||
+              !address.city ||
+              address.city.trim() === "",
+          );
+          if (invalidAddress) {
+            return {
+              valid: false,
+              message: `${node.data.label}: All addresses must have a street and city.`,
+            };
+          }
+        }
+
+        // Validate URLs
+        if (contact.urls && contact.urls.length > 0) {
+          const invalidUrl = contact.urls.some(
+            (url) => !url.url || url.url.trim() === "",
+          );
+          if (invalidUrl) {
+            return {
+              valid: false,
+              message: `${node.data.label}: All URLs must have a value.`,
+            };
+          }
+        }
+      }
+      break;
+    }
+
+    case "ticketNode": {
+      const data = node.data as NodeTypeMap["ticketNode"];
+      if (
+        !data.ticket?.selectedBoardColumnId ||
+        data.ticket.selectedBoardColumnId.trim() === ""
+      ) {
+        return {
+          valid: false,
+          message: `${node.data.label}: Selected column ID is required.`,
+        };
+      }
+      break;
+    }
+  }
+
+  // If we get here, all validations passed
+  return { valid: true, message: "" };
+}
