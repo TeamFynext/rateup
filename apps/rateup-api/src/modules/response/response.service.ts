@@ -74,6 +74,7 @@ import { autoGenerateTicket } from "../ticket/ticketCard/card.service";
 import { getCampaignParticipantsByCampaignId } from "../campaign/campaignParticipants/campaignParticipants.service";
 import { getTeamIdsByUserId } from "../team/team.service";
 import { BATCH_SIZE } from "../../utils/constants/constants";
+import { Prisma } from "@prisma/client";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -1789,97 +1790,128 @@ export async function getSurveyResponseBySurveyId(
     limit,
     surveyTeamMapIds,
     language,
-    tags,
+    tag,
     contactIds,
     dateRange,
     campaignIds,
+    mobile,
+    desc = "true",
+    ...rest
   } = filter;
-  let where = {
-    surveyTeamMap: {
-      surveyId,
-      teamId: {
-        in: teamIds,
-      },
-    },
-  };
-  if (surveyTeamMapIds?.length)
-    where.surveyTeamMap["id"] = {
-      in: surveyTeamMapIds?.split(","),
-    };
-  if (tags?.length) {
-    where["tag"] = {
-      contains: tags,
-    };
-  }
-  if (language?.length) {
-    where["language"] = language;
-  }
-  if (contactIds?.length || campaignIds?.length) {
-    let participants = [];
-    if (campaignIds?.length)
-      participants = await prisma.contact.findMany({
-        where: {
-          campaignParticipants: {
-            some: {
-              campaignId: {
-                in: campaignIds.split(","),
-              },
-            },
-          },
-        },
-        select: {
-          id: true,
-        },
-      });
-    const contacts = contactIds?.length ? contactIds.split(",") : [];
-    const allContactIds = new Set([
-      ...contacts,
-      ...participants?.map((p) => p.id),
-    ]);
-    if (allContactIds.size)
-      where["contactId"] = {
-        in: Array.from(allContactIds),
-      };
-  }
-  if (dateRange?.length) {
-    const [startDate, endDate] = dateRange?.split(",");
-    where["createdAt"] = {
-      gte: dayjs(startDate).startOf("day").toISOString(),
-      lte: dayjs(endDate).endOf("day").toISOString(),
-    };
-  }
 
-  let pagination = {};
+  let pagination = {
+    skip: 0,
+    take: 1000,
+  };
   if ((page === 0 || page) && limit) {
     pagination = {
       skip: page * Number(limit),
       take: Number(limit),
     };
   }
-  const totalCount = await prisma.surveyResponse.count({ where });
-  const responses = await prisma.surveyResponse.findMany({
-    where,
-    select: {
-      id: true,
-      contactId: true,
-      language: true,
-      tag: true,
-      responses: true,
-      createdAt: true,
-      encryptedResponses: true,
-      Contact: {
-        select: {
-          phone: true,
-        },
-      },
-      platform: true,
-    },
-    ...pagination,
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
-  return { totalCount, responses };
+  let filterQuery = "";
+  if (surveyTeamMapIds?.length) {
+    const mapIds = surveyTeamMapIds
+      ?.split(",")
+      .map((c) => `'${c}'::uuid`)
+      .join(",");
+    filterQuery += ` AND st.id IN (${mapIds})`;
+  }
+  if (tag?.length) {
+    filterQuery += ` AND sr."tags" LIKE '%LOWER(${tag})%'`;
+  }
+  if (language?.length) {
+    filterQuery += ` AND sr."language" = '${language}'`;
+  }
+
+  if (contactIds?.length) {
+    const contacts = contactIds
+      .split(",")
+      .map((c) => `'${c}'::uuid`)
+      .join(",");
+    filterQuery += ` AND sr."contactId" IN (${contacts})`;
+  }
+
+  if (campaignIds?.length) {
+    const campaigns = campaignIds
+      .split(",")
+      .map((c) => `'${c}'::uuid`)
+      .join(",");
+    filterQuery += ` AND EXISTS (
+      SELECT 1 FROM "CampaignParticipant" cp
+      WHERE cp."campaignId" IN (${campaigns})
+      AND cp."contactId" = sr."contactId"
+    )`;
+  }
+
+  if (dateRange?.length) {
+    const [startDate, endDate] = dateRange?.split(",");
+    if (startDate)
+      filterQuery += ` AND sr."createdAt" >= '${dayjs(startDate).startOf("day").toISOString()}'`;
+    if (endDate)
+      filterQuery += ` AND sr."createdAt" <= '${dayjs(endDate).endOf("day").toISOString()}'`;
+  }
+
+  if (mobile?.length) {
+    filterQuery += ` AND c."phone" LIKE '%${mobile}%'`;
+  }
+
+  if (Object.keys(rest)?.length) {
+    let query = [];
+    Object.entries(rest).map(([questionId, search]) => {
+      let escapedSearch = search.replace(/'/g, "''");
+      const escapedQuestionId = questionId.replace(/'/g, "''");
+      if (escapedSearch.includes(",")) {
+        escapedSearch = escapedSearch
+          .split(",")
+          .map((i) => `'${i}'`)
+          .join(",");
+        query.push(`EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(to_jsonb(sr."responses")) AS responseobj
+        WHERE
+          responseobj->>'questionId' = '${escapedQuestionId}'
+          AND (
+            (s."type" = '${SurveyType.WaFlow}' AND responseobj->>'response' IN (${escapedSearch}))
+            OR
+            responseobj->'response'->>(responseobj->>'type') IN (${escapedSearch})
+          )
+      )`);
+      } else {
+        query.push(`EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(to_jsonb(sr."responses")) AS responseobj
+        WHERE
+          responseobj->>'questionId' = '${escapedQuestionId}'
+          AND (
+            (s."type" = '${SurveyType.WaFlow}' AND cast(responseobj->'response' AS text) LIKE '%${escapedSearch}%')
+            OR
+            responseobj->'response'->>(responseobj->>'type') LIKE '%${escapedSearch}%'
+          )
+      )`);
+      }
+    });
+    filterQuery += ` AND EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(to_jsonb(sr."responses")) AS responseobj
+        WHERE
+          ${query.join(` AND `)}
+      )`;
+  }
+
+  const responses =
+    await prisma.$queryRaw`SELECT COUNT(*) OVER()::INTEGER , sr.id, sr."contactId", sr."language",
+  sr."tag", sr."responses", sr."createdAt",sr."encryptedResponses",sr."platform", c."phone" FROM "SurveyResponse" sr
+  LEFT JOIN "Contact" c on c.id = sr."contactId"
+  LEFT JOIN "SurveyTeamMap" st on st.id = sr."surveyTeamMapId"
+  LEFT JOIN "Survey" s ON s.id = st."surveyId"
+  WHERE st."surveyId" = ${surveyId}::uuid AND st."teamId" = ANY(${teamIds}::uuid[]) 
+  ${filterQuery?.length ? Prisma.raw(filterQuery) : Prisma.empty} 
+  ORDER BY sr."createdAt" ${desc === "true" ? Prisma.sql`DESC` : Prisma.sql`ASC`} 
+  LIMIT ${pagination.take} OFFSET ${pagination.skip}
+  ;`;
+
+  return { totalCount: responses[0]?.count ?? 0, responses };
 }
 
 export async function getResponseAnalyticsForGraph(

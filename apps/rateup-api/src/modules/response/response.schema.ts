@@ -119,16 +119,18 @@ export const summarizeSchema = z.object({
   teamId: z.string().optional(),
 });
 
-const responseFilterQuery = z.object({
-  page: z.number().optional(),
-  limit: z.number().optional(),
-  tags: z.string().optional(),
-  language: z.string().optional(),
-  surveyTeamMapIds: z.string().optional(),
-  contactIds: z.string().optional(),
-  dateRange: z.string().optional(),
-  campaignIds: z.string().optional(),
-});
+const responseFilterQuery = z
+  .object({
+    page: z.number().optional(),
+    limit: z.number().optional(),
+    tag: z.string().optional(),
+    language: z.string().optional(),
+    surveyTeamMapIds: z.string().optional(),
+    contactIds: z.string().optional(),
+    dateRange: z.string().optional(),
+    campaignIds: z.string().optional(),
+  })
+  .catchall(z.any());
 
 export const { schemas: responseSchemas, $ref: $Rref } = buildJsonSchemas({
   createResponseInputSchema,
