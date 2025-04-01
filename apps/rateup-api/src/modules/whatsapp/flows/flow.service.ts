@@ -353,7 +353,7 @@ export async function cloneFlow(
   });
 
   if (!survey) return "Survey not found to duplicate";
-  const { id, ...surveyWithoutId } = survey;
+  const { id, spreadSheetId, ...surveyWithoutId } = survey;
 
   const existingSurveys = await prisma.survey.findMany({
     where: {
