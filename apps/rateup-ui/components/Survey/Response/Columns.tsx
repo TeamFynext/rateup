@@ -22,6 +22,7 @@ import {
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
+import SurveyContext from "@/context/SurveyContext";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
@@ -160,7 +161,7 @@ export const useSurveyResponseColumns = ({
                 </Text>
               ),
               filterFn: fuzzyFilter,
-              accessorFn: (row) => row?.Contact?.phone,
+              accessorFn: (row) => row?.phone,
               id: "respondentsMobileNumber",
               cell: (info) => (
                 <Text p={10} miw={200}>
@@ -240,7 +241,7 @@ export const useSurveyResponseColumns = ({
         accessorKey: "action",
       },
     ],
-    [questions],
+    [questions, translations],
   );
   return column;
 };
