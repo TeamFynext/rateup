@@ -57,10 +57,6 @@ import {
   addWaMessageCampaignParticipantMap,
   updateCampaignParticipant,
 } from "../../../../campaign/internal-copy/campaign/campaignParticipants/campaignParticipants.service";
-import {
-  checkIfMessageMatchesAnyAutomation,
-  sendAutomatedReplyMessage,
-} from "../../../../../../whatsapp/automatedReply/wa_automatedReply.utils";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
