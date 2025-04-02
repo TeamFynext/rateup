@@ -90,6 +90,11 @@ export async function getTemplatesByOrgIdAndTemplateType(
       data: true,
       createdAt: true,
       templateType: true,
+      _count: {
+        select: {
+          Campaign: true,
+        },
+      },
     },
   });
   return templates as WaTemplateWithTypes[];

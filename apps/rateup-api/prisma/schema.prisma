@@ -1179,7 +1179,7 @@ enum WaAutomationProgressStatus {
 model WaAutomatedReplyMessage {
   id                 String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   phone              String
-  currentNode        String
+  currentNode        String?
   response           Json?
   status             WaAutomationProgressStatus @default(inProgress)
   createdAt          DateTime                   @default(now())
