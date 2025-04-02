@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 
 import {
   Anchor,
@@ -53,188 +53,195 @@ export const useSurveyResponseColumns = ({
 }) => {
   const { translations } = useTranslations();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const column: ColumnDef<any>[] = [
-    {
-      header: () => (
-        <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
-          {translations["Created At"]}
-        </Text>
-      ),
-      filterFn: fuzzyFilter,
-      accessorKey: "createdAt",
-      cell: (info) => (
-        <Text p={10} miw={200}>
-          {dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A")}
-        </Text>
-      ),
-    },
-    ...(questions?.length > 0
-      ? questions?.map((q) => {
-          const content =
-            getReplacedTitleFromVariable({
-              title:
-                q?.title[selectedLanguage ? selectedLanguage : defaultLanguage],
-              surveyId,
-            }) ||
-            q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
-            q?.description[
-              selectedLanguage ? selectedLanguage : defaultLanguage
-            ] ||
-            q?.label?.[selectedLanguage ? selectedLanguage : defaultLanguage] ||
-            "";
-          return {
-            ...(![
-              QuestionType.Rating,
-              QuestionType.Opinion,
-              QuestionType.Number,
-            ].includes(q?.type) && {
-              filterFn: fuzzyFilter,
-            }),
-            accessorFn: (row) => {
-              const response = row.responses
-                ?.filter((item) => item?.questionId === q.id)
-                ?.find((item) => item?.type === q.type)?.response[q.type];
-              if (
-                [
-                  QuestionType.Rating,
-                  QuestionType.Opinion,
-                  QuestionType.Number,
-                ].includes(q.type)
-              ) {
-                return Number(response);
-              }
-
-              return response;
-            },
-            id: content + "_,_" + q.type + "_,_" + q.id,
-            header: () => (
-              <HoverCardComponent content={content} fw={600} fz={"lg"} />
-            ),
-            enableColumnFilter: ![
-              QuestionType.DocumentPicker,
-              QuestionType.PhotoPicker,
-              QuestionType.Photo,
-              QuestionType.PCQ,
-            ].includes(q.type),
-            enableSorting: ![
-              QuestionType.Photo,
-              QuestionType.PCQ,
-              QuestionType.DocumentPicker,
-              QuestionType.PhotoPicker,
-            ].includes(q.type),
-            cell: (info) => {
-              return (
-                <BadgeorTextorPreview
-                  questionType={q?.type}
-                  response={getResponse(q, info.getValue())}
-                />
-              );
-            },
-          };
-        })
-      : []),
-    {
-      header: () => (
-        <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
-          {translations["Tags"]}
-        </Text>
-      ),
-      accessorKey: "tag",
-      cell: (info) => (
-        <Text p={10} miw={200}>
-          {info.getValue() as string}
-        </Text>
-      ),
-    },
-    ...(typeWa
-      ? [
-          {
-            header: () => (
-              <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
-                Respondent&apos;s Mobile Number
-              </Text>
-            ),
-            filterFn: fuzzyFilter,
-            accessorFn: (row) => row?.Contact?.phone,
-            id: "respondentsMobileNumber",
-            cell: (info) => (
-              <Text p={10} miw={200}>
-                {info.getValue()?.toString()}
-              </Text>
-            ),
-          },
-        ]
-      : []),
-    ...(enableTicket
-      ? [
-          {
-            header: () => (
-              <Text truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
-                {translations["Ticket"]}
-              </Text>
-            ),
-            enableColumnFilter: false,
-            enableSorting: false,
-            accessorKey: "ticket",
-            cell: (info) => {
-              let ticketData = info.row.original.Ticket;
-              let ticketExist = ticketData?.length > 0;
-              return (
-                <Center
-                  pr="80px"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    if (ticketExist) {
-                      let url = `/dashboard/tickets/${ticketData[0]?.id}`;
-                      window.open(url, "_blank");
-                    }
-                  }}
-                >
-                  {ticketExist && (
-                    <Tooltip
-                      withArrow
-                      label={translations["View Ticket"]}
-                      position="right-start"
-                    >
-                      <Stack>
-                        <IconTicket
-                          color="orange"
-                          style={{ width: rem(35), height: rem(35) }}
-                        />
-                      </Stack>
-                    </Tooltip>
-                  )}
-                </Center>
-              );
-            },
-          },
-        ]
-      : []),
-    {
-      header: () => (
-        <Text truncate="end" fw={600} miw={200} maw={200} fz={"lg"}>
-          Action
-        </Text>
-      ),
-      enableColumnFilter: false,
-      enableSorting: false,
-      cell: (info) => {
-        return (
-          <ActionMenu
-            open={open}
-            resId={info.row.original.id}
-            resTeamId={info.row.original.teamId}
-            setSelectedResponseId={setSelectedResponseId}
-            setResponseTeamId={setResponseTeamId}
-            setSelectedRowId={setSelectedRowId}
-            ticketData={info.row.original.Ticket}
-            enableTicket={enableTicket}
-          />
-        );
+  const column: ColumnDef<any>[] = useMemo(
+    () => [
+      {
+        header: () => (
+          <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
+            {translations["Created At"]}
+          </Text>
+        ),
+        filterFn: fuzzyFilter,
+        accessorKey: "createdAt",
+        cell: (info) => (
+          <Text p={10} miw={200}>
+            {dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A")}
+          </Text>
+        ),
       },
-      accessorKey: "action",
-    },
-  ];
+      ...(questions?.length > 0
+        ? questions?.map((q) => {
+            const content =
+              getReplacedTitleFromVariable({
+                title:
+                  q?.title[
+                    selectedLanguage ? selectedLanguage : defaultLanguage
+                  ],
+                surveyId,
+              }) ||
+              q?.title[selectedLanguage ? selectedLanguage : defaultLanguage] ||
+              q?.description[
+                selectedLanguage ? selectedLanguage : defaultLanguage
+              ] ||
+              q?.label?.[
+                selectedLanguage ? selectedLanguage : defaultLanguage
+              ] ||
+              "";
+            return {
+              ...(![
+                QuestionType.Rating,
+                QuestionType.Opinion,
+                QuestionType.Number,
+              ].includes(q?.type) && {
+                filterFn: fuzzyFilter,
+              }),
+              accessorFn: (row) => {
+                const response = row.responses
+                  ?.filter((item) => item?.questionId === q.id)
+                  ?.find((item) => item?.type === q.type)?.response[q.type];
+                if (
+                  [
+                    QuestionType.Rating,
+                    QuestionType.Opinion,
+                    QuestionType.Number,
+                  ].includes(q.type)
+                ) {
+                  return Number(response);
+                }
+
+                return response;
+              },
+              id: content + "_,_" + q.type + "_,_" + q.id,
+              header: () => (
+                <HoverCardComponent content={content} fw={600} fz={"lg"} />
+              ),
+              enableColumnFilter: ![
+                QuestionType.DocumentPicker,
+                QuestionType.PhotoPicker,
+                QuestionType.Photo,
+                QuestionType.PCQ,
+              ].includes(q.type),
+              enableSorting: ![
+                QuestionType.Photo,
+                QuestionType.PCQ,
+                QuestionType.DocumentPicker,
+                QuestionType.PhotoPicker,
+              ].includes(q.type),
+              cell: (info) => {
+                return (
+                  <BadgeorTextorPreview
+                    questionType={q?.type}
+                    response={getResponse(q, info.getValue())}
+                  />
+                );
+              },
+            };
+          })
+        : []),
+      {
+        header: () => (
+          <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
+            {translations["Tags"]}
+          </Text>
+        ),
+        accessorKey: "tag",
+        cell: (info) => (
+          <Text p={10} miw={200}>
+            {info.getValue() as string}
+          </Text>
+        ),
+      },
+      ...(typeWa
+        ? [
+            {
+              header: () => (
+                <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
+                  Respondent&apos;s Mobile Number
+                </Text>
+              ),
+              filterFn: fuzzyFilter,
+              accessorFn: (row) => row?.Contact?.phone,
+              id: "respondentsMobileNumber",
+              cell: (info) => (
+                <Text p={10} miw={200}>
+                  {info.getValue()?.toString()}
+                </Text>
+              ),
+            },
+          ]
+        : []),
+      ...(enableTicket
+        ? [
+            {
+              header: () => (
+                <Text truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
+                  {translations["Ticket"]}
+                </Text>
+              ),
+              enableColumnFilter: false,
+              enableSorting: false,
+              accessorKey: "ticket",
+              cell: (info) => {
+                let ticketData = info.row.original.Ticket;
+                let ticketExist = ticketData?.length > 0;
+                return (
+                  <Center
+                    pr="80px"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      if (ticketExist) {
+                        let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                        window.open(url, "_blank");
+                      }
+                    }}
+                  >
+                    {ticketExist && (
+                      <Tooltip
+                        withArrow
+                        label={translations["View Ticket"]}
+                        position="right-start"
+                      >
+                        <Stack>
+                          <IconTicket
+                            color="orange"
+                            style={{ width: rem(35), height: rem(35) }}
+                          />
+                        </Stack>
+                      </Tooltip>
+                    )}
+                  </Center>
+                );
+              },
+            },
+          ]
+        : []),
+      {
+        header: () => (
+          <Text truncate="end" fw={600} miw={200} maw={200} fz={"lg"}>
+            Action
+          </Text>
+        ),
+        enableColumnFilter: false,
+        enableSorting: false,
+        cell: (info) => {
+          return (
+            <ActionMenu
+              open={open}
+              resId={info.row.original.id}
+              resTeamId={info.row.original.teamId}
+              setSelectedResponseId={setSelectedResponseId}
+              setResponseTeamId={setResponseTeamId}
+              setSelectedRowId={setSelectedRowId}
+              ticketData={info.row.original.Ticket}
+              enableTicket={enableTicket}
+            />
+          );
+        },
+        accessorKey: "action",
+      },
+    ],
+    [questions],
+  );
   return column;
 };
 

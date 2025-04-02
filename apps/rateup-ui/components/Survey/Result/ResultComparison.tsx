@@ -55,20 +55,17 @@ export default function ResultComparison({
   surveyId,
   version = 1,
   flowQuestions,
+  questions,
 }: {
   surveyId: string;
   version: number;
   flowQuestions: any[];
+  questions;
 }) {
   const { filterTeams, filterTags } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
-  const {
-    data: questions,
-    isLoading: qLoading,
-    error: qError,
-  } = useQuestions(surveyId?.toString());
   const allQuestions = version === 1 ? questions : flowQuestions;
   const { translations } = useTranslations();
   const {
@@ -90,9 +87,8 @@ export default function ResultComparison({
   const { data: teamWiseComparison, isPending } =
     useResponseForComparison(surveyId);
 
-  if (qLoading || isPendingCount || isPending)
-    return <RateupLoader h={"100dvh"} />;
-  if (qError || countError) return <div>Error...</div>;
+  if (isPendingCount || isPending) return <RateupLoader h={"100dvh"} />;
+  if (countError) return <div>Error...</div>;
   if (responseCountData?.all === 0)
     return (
       <NothingFound text={translations["No responses found for comparison"]} />
@@ -156,6 +152,7 @@ export default function ResultComparison({
                       .map((key) => (
                         <Bar
                           dataKey={key}
+                          key={key}
                           stackId="a"
                           fill={
                             getResponseArrayByQuestionType(

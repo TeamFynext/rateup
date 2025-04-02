@@ -1,4 +1,4 @@
-import {
+import React, {
   Suspense,
   useCallback,
   useContext,
@@ -30,7 +30,6 @@ import {
 } from "@tabler/icons-react";
 import { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { Range } from "react-date-range";
 
@@ -84,10 +83,7 @@ import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { useSurveyResponseColumns } from "./Columns";
 import styles from "./Responses.module.css";
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-const Responses = ({ survey, defaultLanguage, subscription }) => {
+const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -126,12 +122,6 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
   const router = useRouter();
-  const [campaignFlowFilter, setCampaignFlowFilter] = useState<
-    {
-      id: string;
-      name: string;
-    }[]
-  >([]);
   const [campaignIds, setSelectedCampaignIds] = useState([]);
 
   const {
@@ -153,7 +143,6 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
         ? []
         : [ranges[0].startDate.toISOString(), ranges[0].endDate.toISOString()],
   });
-  const responses = responseData?.responses;
 
   useEffect(() => {
     if (ranges.length === 0) {
@@ -161,11 +150,11 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
     }
   }, [ranges]);
 
-  const hasContactQuestion =
-    responses &&
-    responses?.some((response) =>
-      response?.responses?.some((res) => QuestionType.Contact === res.type),
-    );
+  const hasContactQuestion = useMemo(
+    () => questions.find((q) => q.type === QuestionType.Contact),
+    [questions],
+  );
+
   const deleteResponse = useDeleteResponse(
     surveyId,
     surveyTeamMapId,
@@ -177,12 +166,6 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
   if (Array.isArray(surveyId)) {
     throw new Error(translations["surveyId is an array"]);
   }
-  const {
-    isPending: isQLoading,
-    error: QError,
-    data: questions,
-    refetch,
-  } = useQuestions(surveyId);
 
   const exportContactMutation = useExportContactResponses(surveyId);
   const {
@@ -214,7 +197,6 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
       ranges: ranges?.[0],
     });
   }, [
-    campaignFlowFilter,
     columnFilters,
     defaultLanguage,
     downloadExcelResponse,
@@ -222,6 +204,7 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
     ranges,
     survey?.title,
     surveyId,
+    campaignIds,
   ]);
 
   useEffect(() => {
@@ -255,12 +238,15 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
       });
     }
   };
+  const filteredQuestions = useMemo(
+    () =>
+      questions.filter(
+        (q) => q.type !== QuestionType.InfoMessage && !(q.type in PageType),
+      ),
+    [questions],
+  );
   const columns = useSurveyResponseColumns({
-    questions: !isQLoading
-      ? questions
-          .filter((q) => q.type !== QuestionType.InfoMessage)
-          .filter((q) => (q.type in PageType ? false : true))
-      : [],
+    questions: filteredQuestions,
     defaultLanguage,
     setSelectedRowId,
     open,
@@ -315,10 +301,12 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
       );
     }
   };
-  const isPending = isQLoading || isLoading || CFLoading || isRefetching;
+  const isPending = isLoading || CFLoading || isRefetching;
 
-  if (QError || error)
-    return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
+  if (error)
+    return (
+      <ErrorComponent refetch={refetchResponse} isRefetching={isRefetching} />
+    );
 
   return (
     <Stack className={styles["responses-root-div"]}>
@@ -466,7 +454,8 @@ const Responses = ({ survey, defaultLanguage, subscription }) => {
   );
 };
 
-export default Responses;
+export default React.memo(Responses);
+
 const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
   const [verifyEmail, setVerifyEmail] = useState("");
   return (

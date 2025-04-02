@@ -44,17 +44,13 @@ const ResultsOverview = ({
   flowId,
   version,
   flowQuestions,
+  questions,
 }) => {
   const { filterTeams, filterTags } = useContext(SurveyContext);
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
-  const {
-    isLoading: isQLoading,
-    error: QError,
-    data: questions,
-  } = useQuestions(surveyId);
   const { translations } = useTranslations();
   const contentDivRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -161,7 +157,7 @@ const ResultsOverview = ({
         </Flex>
       </PaperLayout>
       <Stack ref={contentDivRef}>
-        {isPending || isQLoading ? (
+        {isPending ? (
           <RateupLoader />
         ) : isError ? (
           <ErrorComponent refetch={refetch} isRefetching={isRefetching} />

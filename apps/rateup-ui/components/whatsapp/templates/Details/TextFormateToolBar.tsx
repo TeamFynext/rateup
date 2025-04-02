@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 
 import {
   ActionIcon,
@@ -17,9 +17,10 @@ import {
   IconPlus,
   IconStrikethrough,
 } from "@tabler/icons-react";
-import EmojiPicker from "emoji-picker-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
+
+const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
 export const TextFormateToolBar = ({
   insertValue,
@@ -135,7 +136,20 @@ export const PopoverEmojiPicker = ({
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown p={0}>
-        <EmojiPicker onEmojiClick={(emoji) => onEmojiClick(emoji.emoji)} />
+        <Suspense
+          fallback={
+            <div
+              style={{
+                width: "200px",
+                height: "200px",
+              }}
+            >
+              Loading...
+            </div>
+          }
+        >
+          <EmojiPicker onEmojiClick={(emoji) => onEmojiClick(emoji.emoji)} />
+        </Suspense>
       </Popover.Dropdown>
     </Popover>
   );

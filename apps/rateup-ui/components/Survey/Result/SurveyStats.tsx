@@ -91,19 +91,19 @@ export const SurveyResponseStats = ({
     );
     return [
       {
-        label: translations["Visited"],
+        label: translations["Visited"] ?? "Visited",
         count: surveyStats ? totalStats?.visited : "NA",
       },
       {
-        label: translations["Started"],
+        label: translations["Started"] ?? "Started",
         count: surveyStats ? totalStats?.started : "NA",
       },
       {
-        label: translations["Completed"],
+        label: translations["Completed"] ?? "Completed",
         count: surveyStats ? totalStats?.completed : "NA",
       },
     ];
-  }, [surveyStats]);
+  }, [surveyStats, translations]);
 
   return (
     <PaperLayout className={styles["user-stats-card-div"]} w={"fit-content"}>

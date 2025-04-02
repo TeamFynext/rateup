@@ -6,7 +6,10 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 
 import { QuestionType2 } from "@/types/enums";
+import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
@@ -58,10 +61,17 @@ const Result = ({
   const [passwordModalOpened, { close, open }] = useDisclosure(
     passwordModalOpenedCondition,
   );
+  const {
+    isLoading: isQLoading,
+    error: QError,
+    data: questions,
+    refetch,
+    isRefetching,
+  } = useQuestions(survey.id);
   //end to end encryption logic for result page ends here
   //.
   //.
-  const questions = useMemo(() => {
+  const flowQuestions = useMemo(() => {
     return flow?.json?.screens?.flatMap((screen) =>
       screen.layout.children
         .filter((child) => child.type !== QuestionType2.Footer)
@@ -85,6 +95,10 @@ const Result = ({
         .filter(({ name }) => name),
     );
   }, [flow]);
+  if (isQLoading) return <RateupLoader />;
+
+  if (QError)
+    return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
 
   return (
     <StyledTabs
@@ -117,7 +131,6 @@ const Result = ({
       }}
       value={activeTab}
       onChange={(value) => setActiveTab(value as ResultTab)}
-      keepMounted={false}
     >
       <Box className={styles["result-page-tabs-container"]}>
         <ScrollArea offsetScrollbars={true}>
@@ -135,6 +148,7 @@ const Result = ({
               survey={survey}
               defaultLanguage={defaultLanguage}
               subscription={subscription}
+              questions={questions}
             />
           ) : (
             <WaResponses
@@ -142,7 +156,7 @@ const Result = ({
               defaultLanguage={defaultLanguage}
               selectedTeamId={selectedTeamId}
               subscription={subscription}
-              questions={questions}
+              questions={flowQuestions}
             />
           )}
         </Tabs.Panel>
@@ -153,14 +167,16 @@ const Result = ({
             survey={survey}
             flowId={flowId}
             version={version}
-            flowQuestions={questions}
+            flowQuestions={flowQuestions}
+            questions={questions}
           />
         </Tabs.Panel>
         <Tabs.Panel value="comparison">
           <ResultComparison
             surveyId={survey?.id}
             version={version}
-            flowQuestions={questions}
+            flowQuestions={flowQuestions}
+            questions={questions}
           />
         </Tabs.Panel>
       </Box>

@@ -213,17 +213,29 @@ function TemplateCard({ template, onClick, toggle, setSelectedTemplate }) {
             {template.data.name}
           </Text>
           <Group>
-            <ActionIcon
-              variant="subtle"
-              c={"var(--light-grey-color-5)"}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedTemplate(template.id);
-                toggle();
-              }}
+            <Tooltip
+              label={
+                template?._count?.Campaign > 0
+                  ? "Cannot delete template with active campaigns"
+                  : "Delete template"
+              }
+              position="left"
             >
-              <IconTrash />
-            </ActionIcon>
+              <ActionIcon
+                variant="subtle"
+                c={"var(--light-grey-color-5)"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (template?._count?.Campaign > 0) return;
+                  setSelectedTemplate(template.id);
+                  toggle();
+                }}
+                disabled={template?._count?.Campaign > 0}
+                opacity={template?._count?.Campaign > 0 ? 0.5 : 1}
+              >
+                <IconTrash />
+              </ActionIcon>
+            </Tooltip>
           </Group>
         </Flex>
         <CreatedSinceText createdAt={template.createdAt} />

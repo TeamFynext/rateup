@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 
 import {
   ActionIcon,
@@ -205,4 +205,4 @@ const CustomTooltip = ({
   return null;
 };
 
-export default OverallResponseGraph;
+export default React.memo(OverallResponseGraph);

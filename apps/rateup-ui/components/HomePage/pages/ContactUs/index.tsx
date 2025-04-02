@@ -10,24 +10,16 @@ function ContactUs() {
         <Box>
           <h2 className={styles["country-name-h2"]}>India:</h2>
           <p className={styles["contact-details-p"]}>
-            {/* <span>Uprate Technologies</span>
+            <span>Uprate Technologies Private Limited, Cochin</span>
             <span>Kerala Startup Mission</span>
-            <span>Kasaragod - 671123 </span>
-            <span>Ph:+91 8547500686</span>
-            <span>E-mail : hello@rateup.app</span> */}
-            <span>Uprate Technologies Pvt Ltd</span>
-            <span>Door No Xii 154, Anish Bh, Mattappalliyil</span>
-            <span>Paduppu, Sankarampady</span>
-            <span>Kasaragod , Kerala, India - 671541</span>
-            <span>Ph:+91 8547500686</span>
             <span>E-mail : hello@rateup.app</span>
           </p>
         </Box>
         <Box>
           <h2 className={styles["country-name-h2"]}>Germany:</h2>
           <p className={styles["contact-details-p"]}>
-            <span>Drishya Technlogies UG</span>
             <span>Duesseldorf, Germany</span>
+            <span>E-mail : hello@rateup.app</span>
           </p>
         </Box>
       </Stack>

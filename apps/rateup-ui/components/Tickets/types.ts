@@ -95,7 +95,10 @@ export interface MemberData {
 export type WaAutomatedReplyMessage = {
   id: string;
   createdAt: string;
-  message: string;
+  response: {
+    value: string;
+    action?: string;
+  };
   phone: number;
   currentScreen: string;
   waAutomatedReplyId: string;
