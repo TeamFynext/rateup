@@ -526,7 +526,7 @@ const MediaNodeEditor: React.FC<
         >
           {(props) => (
             <Button {...props} size="xs">
-              Select Files
+              Select File
             </Button>
           )}
         </FileButton>
@@ -609,13 +609,13 @@ const EndNodeEditor: React.FC<NodeComponentProps<"endNode">> = ({
   const typedData = nodeData;
   return (
     <div className={styles.editorSection}>
-      <ContainedTextField
+      {/* <ContainedTextField
         id="endMessage"
         value={typedData.endMessage || ""}
         onChange={(e) => handleInputChange("endMessage", e.target.value)}
         label="End Message (optional)"
         placeholder="Enter an optional end message..."
-      />
+      /> */}
     </div>
   );
 };
