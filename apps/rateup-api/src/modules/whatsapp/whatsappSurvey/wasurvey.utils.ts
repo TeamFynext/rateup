@@ -15,12 +15,20 @@ import { log } from "../../../utils/logger";
 import { QuestionType as Q } from "../../../types/enums";
 import { callWhatsappApi } from "../wa_axios";
 import { getWaSettings } from "../settings/wa_settings.service";
-import { uploadFile } from "../../../utils/upload/s3Upload";
+import { getFileUrlFromKey, uploadFile } from "../../../utils/upload/s3Upload";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { TemplateType, WaSession } from "@prisma/client";
 import { sendMessage } from "./wasurvey.service";
 import prisma from "../../../utils/prisma";
+import {
+  ButtonOption,
+  ListItem,
+  NodeType,
+  NodeTypeMap,
+  TypedNode,
+  WhatsAppMessage,
+} from "./node-types";
 dayjs.extend(customParseFormat);
 
 const smileyEmojiMap = {
@@ -55,6 +63,262 @@ export function getEventType(data: WaMessageBody) {
     }
   }
   return null;
+}
+export function convertNodeToWhatsAppMessage(
+  node: TypedNode,
+  recipient: string,
+): WhatsAppMessage | null {
+  const baseMessage = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: recipient,
+  };
+
+  // Use type assertion with the node type
+  const nodeType = node.type as NodeType;
+
+  switch (nodeType) {
+    case "textNode": {
+      const data = node.data as NodeTypeMap["textNode"];
+      return {
+        ...baseMessage,
+        type: "text",
+        text: {
+          preview_url: data.previewUrl || true,
+          body: parseToWhatsAppFormat(data.body) || "Default message",
+        },
+      };
+    }
+
+    case "imageNode": {
+      const data = node.data as NodeTypeMap["imageNode"];
+      return {
+        ...baseMessage,
+        type: "image",
+        image: {
+          link: getFileUrlFromKey(data?.link) || "",
+          caption: parseToWhatsAppFormat(data.caption) || "",
+        },
+      };
+    }
+
+    case "videoNode": {
+      const data = node.data as NodeTypeMap["videoNode"];
+      return {
+        ...baseMessage,
+        type: "video",
+        video: {
+          link: getFileUrlFromKey(data?.link) || "",
+          caption: parseToWhatsAppFormat(data.caption) || "",
+        },
+      };
+    }
+
+    case "audioNode": {
+      const data = node.data as NodeTypeMap["audioNode"];
+      return {
+        ...baseMessage,
+        type: "audio",
+        audio: {
+          link: getFileUrlFromKey(data?.link) || "",
+        },
+      };
+    }
+
+    case "documentNode": {
+      const data = node.data as NodeTypeMap["documentNode"];
+      return {
+        ...baseMessage,
+        type: "document",
+        document: {
+          link: getFileUrlFromKey(data?.link) || "",
+          filename: data.filename || "document.pdf",
+          caption: parseToWhatsAppFormat(data.caption) || "",
+        },
+      };
+    }
+
+    case "locationNode": {
+      const data = node.data as NodeTypeMap["locationNode"];
+      return {
+        ...baseMessage,
+        type: "location",
+        location: {
+          latitude: data.latitude || "0",
+          longitude: data.longitude || "0",
+          name: data?.name || "",
+          address: data?.address || "",
+        },
+      };
+    }
+
+    case "buttonNode": {
+      const data = node.data as NodeTypeMap["buttonNode"];
+      let header = undefined;
+      if (data?.header && data.headerType === "text") {
+        header = {
+          type: "text",
+          text: data.header || "",
+        };
+      } else if (data?.link && data.headerType === "image") {
+        header = {
+          type: "image",
+          image: {
+            link: getFileUrlFromKey(data.link) || "",
+          },
+        };
+      } else if (data?.link && data.headerType === "video") {
+        header = {
+          type: "video",
+          video: {
+            link: getFileUrlFromKey(data.link) || "",
+          },
+        };
+      } else if (data?.link && data.headerType === "document") {
+        header = {
+          type: "document",
+          document: {
+            link: getFileUrlFromKey(data.link) || "",
+            filename: data.filename || "document.pdf",
+          },
+        };
+      }
+      return {
+        ...baseMessage,
+        type: "interactive",
+        interactive: {
+          type: "button",
+          header: header,
+          body: {
+            text: parseToWhatsAppFormat(data.body) || "Default message",
+          },
+          footer: data.footer
+            ? {
+                text: parseToWhatsAppFormat(data.footer),
+              }
+            : undefined,
+          action: {
+            buttons: (data.buttons || []).map(
+              (button: ButtonOption, index: number) => ({
+                type: "reply",
+                reply: {
+                  id: button.id || `button-${index}`,
+                  title: button.title || `Button ${index + 1}`,
+                },
+              }),
+            ),
+          },
+        },
+      };
+    }
+
+    case "listNode": {
+      const data = node.data as NodeTypeMap["listNode"];
+      return {
+        ...baseMessage,
+        type: "interactive",
+        interactive: {
+          type: "list",
+          header: data.header
+            ? {
+                type: "text",
+                text: data.header,
+              }
+            : undefined,
+          body: {
+            text: parseToWhatsAppFormat(data.body) || "Default message",
+          },
+          footer: data.footer
+            ? {
+                text: parseToWhatsAppFormat(data.footer),
+              }
+            : undefined,
+          action: {
+            button: data.button || "Select an option",
+            sections:
+              data.sections?.map((section) => ({
+                title: section.title,
+                rows: (section.rows || []).map(
+                  (row: ListItem, index: number) => ({
+                    id: row.id || `row-${index}`,
+                    title: row.title || `Row ${index + 1}`,
+                    description: row.description || "",
+                  }),
+                ),
+              })) || [],
+          },
+        },
+      };
+    }
+
+    case "ctaUrlNode": {
+      const data = node.data as NodeTypeMap["ctaUrlNode"];
+      return {
+        ...baseMessage,
+        type: "interactive",
+        interactive: {
+          type: "cta_url",
+          header: data.header
+            ? {
+                type: "text",
+                text: data.header,
+              }
+            : undefined,
+          body: data.body
+            ? {
+                text: parseToWhatsAppFormat(data.body),
+              }
+            : undefined,
+          footer: data.footer
+            ? {
+                text: parseToWhatsAppFormat(data.footer),
+              }
+            : undefined,
+          action: {
+            name: "cta_url",
+            parameters: {
+              display_text: data.display_text || "Visit Link",
+              url: data.url || "https://example.com",
+            },
+          },
+        },
+      };
+    }
+
+    case "reactionNode": {
+      const data = node.data as NodeTypeMap["reactionNode"];
+      return {
+        ...baseMessage,
+        type: "reaction",
+        reaction: {
+          message_id: data.messageId || "",
+          emoji: data.emoji || "👍",
+        },
+      };
+    }
+
+    case "contactsNode": {
+      const data = node.data as NodeTypeMap["contactsNode"];
+
+      return {
+        ...baseMessage,
+        type: "contacts",
+        contacts:
+          data?.contacts?.map((contact) => ({
+            addresses: contact?.addresses,
+            birthday: contact?.birthday,
+            emails: contact?.emails,
+            name: contact?.name,
+            org: contact?.org,
+            phones: contact?.phones,
+            urls: contact?.urls,
+          })) || [],
+      };
+    }
+
+    default:
+      return null;
+  }
 }
 export const handlePaymentConfirmation = async (
   phoneNo: string,

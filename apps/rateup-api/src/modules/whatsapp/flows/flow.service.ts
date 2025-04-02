@@ -52,6 +52,11 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { getTeamIdsByUserId } from "../../team/team.service";
+import { processNextNode } from "../whatsappSurvey/wasurvey.controller";
+import {
+  logFlowCompletion,
+  findRecentAutomation,
+} from "../whatsappSurvey/automation-logger.utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -972,37 +977,6 @@ async function handleFlowEnd({ session, decryptedBody }: handleFlowEndProps) {
   };
 }
 
-interface sendGReviewLinkProps {
-  phone: string;
-  surveyTeamMapId: string;
-  orgId: string;
-}
-export async function sendGReviewLink({
-  phone,
-  surveyTeamMapId,
-  orgId,
-}: sendGReviewLinkProps) {
-  log.trace("Sending google review link to %s", phone);
-  const thankYouPage = `${process.env.FRONTEND_URL}/public/survey/${surveyTeamMapId}/end?k=n&msg=thanks`;
-  const googleReviewMessage = createCTAButtonMessage({
-    to: phone,
-    buttonText: "Review us on Google",
-    url: thankYouPage,
-    body: "Thank you for your feedback!",
-  });
-  await sendMessage(orgId, googleReviewMessage);
-}
-
-export function removeDuplicateResponses(responses: QuestionResponse[]) {
-  const qIds = responses.map((r) => r.questionId);
-
-  const uniqueQIds = [...new Set(qIds)];
-
-  const reversedRes = responses.reverse();
-
-  return uniqueQIds.map((qId) => reversedRes.find((r) => r.questionId === qId));
-}
-
 export async function handleStaticFlowReply(
   orgId: string,
   waMessage: WaMessageBody,
@@ -1019,7 +993,7 @@ export async function handleStaticFlowReply(
     log.error("Session not found for %s", from);
     return;
   }
-  const dbFlowId = session.surveyTeamMap.survey.WaFlow.dbFlowId;
+  const dbFlowId = session?.surveyTeamMap?.survey?.WaFlow?.dbFlowId;
   const flow = await getFlowFromDb(dbFlowId);
 
   const questionResponses = generateQuestionResponsesFromFlowResponse({
@@ -1031,6 +1005,14 @@ export async function handleStaticFlowReply(
   const uniqueResponses = removeDuplicateResponses(questionResponses);
   session.responses = uniqueResponses;
   await saveResponses(session);
+
+  // Log flow submission using the utility function
+  const automationLog = await logFlowCompletion({
+    phone: session.phone,
+    orgId,
+    flowId: dbFlowId,
+  });
+
   let versionCheck = session?.surveyTeamMap?.survey?.WaFlow?.version === 1;
 
   const sendGRLink = versionCheck
@@ -1042,6 +1024,7 @@ export async function handleStaticFlowReply(
         screens: session.surveyTeamMap.survey.WaFlow.json.screens,
         responses: uniqueResponses,
       });
+
   if (sendGRLink) {
     await sendGReviewLink({
       phone: session.phone,
@@ -1049,5 +1032,50 @@ export async function handleStaticFlowReply(
       orgId: session.orgId,
     });
   }
+
+  // Use the utility function to find the recent automation
+  const progress = await findRecentAutomation(session.phone, orgId);
+
+  const automation = progress?.waAutomatedReply;
+  if (automation)
+    await processNextNode(
+      session.phone,
+      automation,
+      progress.currentNode,
+      orgId,
+      automationLog?.id,
+    );
   await deleteSession(session.orgId, session.phone);
+}
+
+export function removeDuplicateResponses(responses: QuestionResponse[]) {
+  const qIds = responses.map((r) => r.questionId);
+
+  const uniqueQIds = [...new Set(qIds)];
+
+  const reversedRes = responses.reverse();
+
+  return uniqueQIds.map((qId) => reversedRes.find((r) => r.questionId === qId));
+}
+
+interface sendGReviewLinkProps {
+  phone: string;
+  surveyTeamMapId: string;
+  orgId: string;
+}
+
+export async function sendGReviewLink({
+  phone,
+  surveyTeamMapId,
+  orgId,
+}: sendGReviewLinkProps) {
+  log.trace("Sending google review link to %s", phone);
+  const thankYouPage = `${process.env.FRONTEND_URL}/public/survey/${surveyTeamMapId}/end?k=n&msg=thanks`;
+  const googleReviewMessage = createCTAButtonMessage({
+    to: phone,
+    buttonText: "Review us on Google",
+    url: thankYouPage,
+    body: "Thank you for your feedback!",
+  });
+  await sendMessage(orgId, googleReviewMessage);
 }

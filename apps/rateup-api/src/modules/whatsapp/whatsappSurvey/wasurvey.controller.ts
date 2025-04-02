@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import {
   WA_SUBSCRIBE_STATUS,
   WaParsedMessage,
+  convertNodeToWhatsAppMessage,
   createListMessage,
   createReplyButtonsMessage,
   createTemplateMessage,
@@ -55,12 +56,12 @@ import {
   updateStartedSurvey,
   updateVisitedSurvey,
 } from "../../survey/survey.service";
-import { handleStaticFlowReply, sendFlow } from "../flows/flow.service";
-// import { handleRegisterMessage } from "../../loyalty/internal/campaign/campaign.service";
 import {
-  checkIfMessageMatchesAnyAutomation,
-  sendAutomatedReplyMessage,
-} from "../automatedReply/wa_automatedReply.utils";
+  getFlowWithSurveyTeamMapIdsWithDbFlowId,
+  handleStaticFlowReply,
+  sendFlow,
+} from "../flows/flow.service";
+import { checkIfMessageMatchesAnyAutomation } from "../automatedReply/wa_automatedReply.utils";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import {
   CampaignParticipant,
@@ -92,6 +93,13 @@ import {
   getAIResponseForQuery,
   getChatbotDetails,
 } from "../../chatbot/chatbot.service";
+import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller";
+import { NodeTypeMap, TypedNode } from "./node-types";
+import {
+  logAutomationAction,
+  findRecentAutomation,
+} from "./automation-logger.utils";
+import { autoGenerateTicket } from "../../ticket/ticketCard/card.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -479,6 +487,14 @@ async function handleSubscriptionStatus(
   }
 }
 
+/**
+ * Handles automated replies for WhatsApp messages
+ * @param orgId Organization ID
+ * @param waMessage WhatsApp message body
+ * @param parsedMessage Parsed message data
+ * @param phone User's phone number
+ * @param chatbot Chatbot configuration
+ */
 async function handleAutomatedReply(
   orgId: string,
   waMessage: WaMessageBody,
@@ -487,91 +503,384 @@ async function handleAutomatedReply(
   chatbot: Chatbot,
 ) {
   try {
-    const automation = await checkIfMessageMatchesAnyAutomation(
-      orgId,
-      waMessage,
-    );
-    const prevInteraction = await prisma.waAutomatedReplyMessage.findFirst({
-      where: { phone, orgId },
-      orderBy: { createdAt: "desc" },
-    });
-
-    if (automation) {
-      await sendAutomatedReplyMessage(
-        orgId,
-        parsedMessage,
-        automation,
-        prevInteraction?.waAutomatedReplyId === automation.id
-          ? prevInteraction
-          : undefined,
-      );
-    } else if (prevInteraction) {
-      const previousAutomation = await prisma.waAutomatedReply.findFirst({
-        where: { id: prevInteraction.waAutomatedReplyId },
+    // Case 1: User clicked a button in a previous message
+    if (parsedMessage?.buttonId) {
+      // Use the utility function instead of duplicating the query
+      const recentInteraction = await findRecentAutomation(phone, orgId, {
+        timeWindow: 24 * 60 * 60 * 1000, // 24 hours
       });
 
-      if (previousAutomation) {
-        const result = await sendAutomatedReplyMessage(
+      const automation = recentInteraction?.waAutomatedReply as {
+        id: string;
+        matchData: { json: { nodes: any[]; edges: any[] } };
+      };
+      if (!automation) {
+        log.warn(`No active automation found for button click from ${phone}`);
+        return;
+      }
+
+      // Log button click action using the utility function
+      const automationLog = await logAutomationAction({
+        phone,
+        nodeId: recentInteraction.currentNode,
+        automationId: automation.id,
+        orgId,
+        response: {
+          value: parsedMessage?.message,
+          buttonId: parsedMessage.buttonId,
+          action: "button_click",
+        },
+      });
+
+      // Find the next node based on the button clicked
+      const nextNode = automation?.matchData?.json?.edges.find(
+        (edge: any) => edge.sourceHandle === parsedMessage.buttonId,
+      );
+
+      if (nextNode?.target) {
+        await processNextNode(
+          phone,
+          automation,
+          nextNode.target,
           orgId,
-          parsedMessage,
-          previousAutomation,
-          prevInteraction,
-          false,
+          automationLog?.id,
+        );
+      } else {
+        log.warn(`No next node found for buttonId ${parsedMessage.buttonId}`);
+      }
+    }
+    // Case 2: New message from user
+    else {
+      // Check if message matches any automation rules
+      const automation = (await checkIfMessageMatchesAnyAutomation(
+        orgId,
+        waMessage,
+      )) as {
+        id: string;
+        matchData: { json: { nodes: any[]; edges: any[] } };
+      } | null;
+
+      if (automation) {
+        // Start a new automation flow
+        const startNode = automation?.matchData?.json?.nodes?.find(
+          (node: any) => node.type === "startNode",
         );
 
-        if (!result) {
+        if (!startNode) {
+          log.error(`No start node found in automation ${automation.id}`);
+          return;
+        }
+
+        // Create record of this interaction using the utility function
+        const automationLog = await logAutomationAction({
+          phone,
+          nodeId: startNode.id,
+          automationId: automation.id,
+          orgId,
+          response: {
+            value: parsedMessage?.message,
+            action: "initial_interaction",
+          },
+        });
+
+        await processNextNode(
+          phone,
+          automation,
+          startNode.id,
+          orgId,
+          automationLog?.id,
+        );
+      }
+      // Case 3: No matching automation rules found
+      else {
+        // Check if user has interacted within the last 24 hours
+        const recentActivity = await findRecentAutomation(phone, orgId, {
+          timeWindow: 24 * 60 * 60 * 1000, // 24 hours
+        });
+
+        // Only respond if this is the first message in 24 hours
+        if (!recentActivity) {
           if (chatbot?.enableWaChat && chatbot?.enableAllWaChat) {
+            // Handle AI chat if enabled
             await handleAiWaChat(chatbot, parsedMessage.message, orgId, phone);
-          } else
-            await handleInitialInteraction(
-              orgId,
-              parsedMessage,
-              prevInteraction,
-            );
+          } else {
+            // Send default welcome automation if available
+            await handleInitialInteraction(orgId, phone, parsedMessage.message);
+          }
         }
       }
-    } else {
-      if (chatbot?.enableWaChat && chatbot?.enableAllWaChat) {
-        await handleAiWaChat(chatbot, parsedMessage.message, orgId, phone);
-      } else
-        await handleInitialInteraction(orgId, parsedMessage, prevInteraction);
     }
   } catch (error) {
-    console.log("🚀 ~ error:", error);
     log.error("Error handling automated reply: %o", error);
   }
 }
 
+/**
+ * Process a node in the automation flow and move to the next node if applicable
+ * @param userPhone User's phone number
+ * @param automation The automation flow data
+ * @param nodeId Current node ID to process
+ * @param orgId Organization ID
+ */
+export async function processNextNode(
+  userPhone: string,
+  automation: any,
+  nodeId: string,
+  orgId: string,
+  automationMessageId: string,
+) {
+  try {
+    if (!nodeId || !automation?.matchData?.json?.nodes) {
+      log.error("Invalid node ID or automation data");
+      return;
+    }
+
+    // Find the current node
+    const node: TypedNode & {
+      data: {
+        template?: {
+          id: string;
+          name: string;
+        };
+        flow?: {
+          id: string;
+          name: string;
+        };
+        parameters?: any[];
+        teamId?: string;
+      };
+    } = automation.matchData?.json?.nodes.find((n: any) => n.id === nodeId);
+
+    if (!node) {
+      log.error(`Node with ID ${nodeId} not found in automation flow`);
+      return;
+    }
+
+    // Skip processing for special nodes
+    if (["endNode", "startNode"].includes(node?.type)) {
+      // If end node, mark interaction as completed
+      if (node?.type === "endNode") {
+        await prisma.waAutomatedReplyMessage.updateMany({
+          where: { phone: userPhone, waAutomatedReplyId: automation.id },
+          data: { status: "completed" },
+        });
+      }
+
+      // For start node, just move to the next node
+      const nextEdge = automation.matchData?.json?.edges.find(
+        (edge: any) => edge.source === nodeId,
+      );
+
+      if (nextEdge) {
+        await prisma.waAutomatedReplyMessage.updateMany({
+          where: { phone: userPhone, waAutomatedReplyId: automation.id },
+          data: { currentNode: nextEdge.target },
+        });
+
+        await processNextNode(
+          userPhone,
+          automation,
+          nextEdge.target,
+          orgId,
+          automationMessageId,
+        );
+      }
+
+      return;
+    }
+
+    // Process different node types
+    switch (node.type) {
+      case "flowNode":
+        await handleFlowNode(node, userPhone, orgId);
+        break;
+
+      case "templateNode":
+        await sendTemplateToUserCore(
+          orgId,
+          node?.data?.template?.id,
+          userPhone,
+          node?.data?.parameters ?? [],
+          node?.data?.teamId,
+        );
+        break;
+      case "ticketNode":
+        const typedData = node?.data as NodeTypeMap["ticketNode"];
+        await autoGenerateTicket({
+          ticketColumnId: typedData?.ticket?.selectedBoardColumnId,
+          waAutomatedReplyMessageId: automationMessageId,
+          type: "AUTOMATION",
+        });
+        break;
+      case "delayNode":
+        await wait((node?.data as NodeTypeMap["delayNode"])?.delayTime * 1000);
+        break;
+
+      default:
+        // For text, buttons, and other message types
+        const waMessage: any = convertNodeToWhatsAppMessage(node, userPhone);
+        await sendMessage(orgId, waMessage);
+        break;
+    }
+
+    // Find and process next node unless current node requires user input
+    const requiresUserInput = [
+      "buttonNode",
+      "flowNode",
+      "listNode",
+      "ticketNode",
+    ].includes(node?.type);
+    const nextEdge = automation.matchData?.json?.edges.find(
+      (edge: any) => edge.source === nodeId,
+    );
+
+    if (nextEdge) {
+      await prisma.waAutomatedReplyMessage.updateMany({
+        where: { phone: userPhone, waAutomatedReplyId: automation.id },
+        data: { currentNode: nextEdge.target },
+      });
+
+      if (!requiresUserInput) {
+        await processNextNode(
+          userPhone,
+          automation,
+          nextEdge.target,
+          orgId,
+          automationMessageId,
+        );
+      }
+    } else {
+      // No next node, mark as completed
+      await prisma.waAutomatedReplyMessage.updateMany({
+        where: { phone: userPhone, waAutomatedReplyId: automation.id },
+        data: { status: "completed" },
+      });
+    }
+  } catch (error) {
+    log.error(`Error processing node ${nodeId}: ${error.message}`);
+  }
+}
+
+/**
+ * Handle processing of a flow node
+ * @param node Flow node to process
+ * @param userPhone User's phone number
+ * @param orgId Organization ID
+ */
+async function handleFlowNode(node: any, userPhone: string, orgId: string) {
+  try {
+    const flowId = node?.data?.flow?.id;
+    const teamId = node?.data?.teamId;
+
+    if (!flowId) {
+      throw new Error("Flow ID not found in node data");
+    }
+
+    // Clear any existing session
+    await deleteSession(orgId, userPhone);
+
+    // Get flow data
+    const dbFlow = await getFlowWithSurveyTeamMapIdsWithDbFlowId(flowId);
+
+    if (!dbFlow) {
+      throw new Error(`Flow with ID ${flowId} not found`);
+    }
+
+    // Find survey team map
+    const surveyTeamMap = dbFlow?.survey?.teams?.find(
+      (team) => team?.teamId === teamId,
+    );
+
+    if (!surveyTeamMap) {
+      throw new Error(`No survey team map found for team ID ${teamId}`);
+    }
+
+    // Create a new session
+    await createSession({
+      phone: userPhone,
+      surveyTeamMapId: surveyTeamMap.id,
+      orgId,
+    });
+
+    // Send the flow
+    await sendFlow({
+      orgId,
+      dbFlowId: flowId,
+      phone: userPhone,
+    });
+  } catch (error) {
+    log.error(`Error handling flow node: ${error.message}`);
+    throw error; // Let the caller handle this
+  }
+}
+
+/**
+ * Handle initial interaction with a user when no specific automation matches
+ * @param orgId Organization ID
+ * @param phone User's phone number
+ * @param message User's message content
+ */
 async function handleInitialInteraction(
   orgId: string,
-  parsedMessage: WaParsedMessage,
-  prevInteraction: any,
+  phone: string,
+  message: string,
 ) {
-  const isInitialInteraction =
-    !prevInteraction ||
-    dayjs(prevInteraction.createdAt).isBefore(dayjs().subtract(1, "day"));
-
-  if (isInitialInteraction) {
-    let initialAutomation = await prisma.waAutomatedReplyCommands.findUnique({
-      where: {
-        command_org_id_unique: {
-          command: "*",
-          orgId: orgId,
+  try {
+    // Look for a wildcard automation command
+    const wildcardAutomation = await prisma.waAutomatedReplyCommands.findUnique(
+      {
+        where: {
+          command_org_id_unique: {
+            command: "*",
+            orgId: orgId,
+          },
+        },
+        include: {
+          waAutomatedReply: true,
         },
       },
-      include: {
-        waAutomatedReply: true,
+    );
+
+    if (!wildcardAutomation?.waAutomatedReply) {
+      log.info(`No wildcard automation found for org ${orgId}`);
+      return;
+    }
+
+    const automation = wildcardAutomation.waAutomatedReply as {
+      id: string;
+      matchData: { json: { nodes: any[]; edges: any[] } };
+    };
+    const startNode = automation?.matchData?.json?.nodes?.find(
+      (node: any) => node.type === "startNode",
+    );
+
+    if (!startNode) {
+      log.error("No start node found in the wildcard automation flow");
+      return;
+    }
+
+    // Create record of this interaction using the utility function
+    const automationLog = await logAutomationAction({
+      phone,
+      nodeId: startNode.id,
+      automationId: automation.id,
+      orgId,
+      response: {
+        value: message,
+        action: "initial_interaction",
       },
     });
 
-    if (initialAutomation) {
-      await sendAutomatedReplyMessage(
-        orgId,
-        parsedMessage,
-        initialAutomation?.waAutomatedReply,
-        prevInteraction,
-      );
-    }
+    // Process the automation flow
+    await processNextNode(
+      phone,
+      automation,
+      startNode.id,
+      orgId,
+      automationLog?.id,
+    );
+  } catch (error) {
+    log.error(`Error handling initial interaction: ${error.message}`);
   }
 }
 
@@ -1216,7 +1525,7 @@ async function _sendCampaignToParticipants(
           tag === "name"
             ? contact?.name || defaultValue[i]
             : contact.tags?.[tag] || defaultValue[i];
-        return { type: "text", text: textValue };
+        return { type: "text", textValue };
       });
       copyComponents.push({
         type: "body",
