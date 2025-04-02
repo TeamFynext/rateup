@@ -56,7 +56,6 @@ export interface DocumentNodeData extends BaseNodeData {
 // Start Node
 export interface StartNodeData extends BaseNodeData {
   startMessage?: string;
-  recipient: string;
 }
 
 // End Node
