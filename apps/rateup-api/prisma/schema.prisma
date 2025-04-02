@@ -1170,24 +1170,16 @@ model WaAutomatedReplyCommands {
   @@unique([command, orgId], name: "command_org_id_unique")
 }
 
-enum WaAutomationProgressStatus {
-  inProgress
-  paused
-  completed
-}
-
 model WaAutomatedReplyMessage {
-  id                 String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime          @default(now())
+  message            String
   phone              String
-  currentNode        String?
-  response           Json?
-  status             WaAutomationProgressStatus @default(inProgress)
-  createdAt          DateTime                   @default(now())
-  updatedAt          DateTime                   @updatedAt
-  waAutomatedReplyId String?                    @db.Uuid
-  waAutomatedReply   WaAutomatedReply?          @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
-  orgId              String                     @db.Uuid
-  org                Org                        @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  currentScreen      String
+  waAutomatedReplyId String?           @db.Uuid
+  waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
+  orgId              String            @db.Uuid
+  org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
   ticket             Ticket[]
   ticketCards        TicketCard[]
 }
