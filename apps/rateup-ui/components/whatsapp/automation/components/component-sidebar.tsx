@@ -75,7 +75,7 @@ const categories = [
       //   label: "Condition",
       //   icon: <IconGitBranch size={16} />,
       // },
-      { id: "delayNode", label: "Delay", icon: <IconClock size={16} /> },
+      // { id: "delayNode", label: "Delay", icon: <IconClock size={16} /> },
       { id: "startNode", label: "Start", icon: <IconPlayCard size={16} /> },
       { id: "endNode", label: "End", icon: <IconX size={16} /> },
     ],

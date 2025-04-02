@@ -324,4 +324,4 @@ const TableLayout = ({
   );
 };
 
-export default React.memo(TableLayout);
+export default TableLayout;
