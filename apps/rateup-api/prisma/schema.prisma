@@ -1183,7 +1183,6 @@ model WaAutomatedReplyMessage {
   response           Json?
   status             WaAutomationProgressStatus @default(inProgress)
   createdAt          DateTime                   @default(now())
-  updatedAt          DateTime                   @updatedAt
   waAutomatedReplyId String?                    @db.Uuid
   waAutomatedReply   WaAutomatedReply?          @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
   orgId              String                     @db.Uuid
