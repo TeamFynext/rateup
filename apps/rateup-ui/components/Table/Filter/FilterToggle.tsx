@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import { IconFilter } from "@tabler/icons-react";
 
+import { useResponseFilterStore } from "@/components/Survey/Response/store";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { extractText } from "../../../utils";
@@ -27,6 +28,7 @@ const FilterToggles = ({
   tempVisibleColumnArray,
 }) => {
   const { translations } = useTranslations();
+  const { setServerFilters } = useResponseFilterStore();
   return (
     <Group>
       {enableFilter && (
@@ -82,7 +84,10 @@ const FilterToggles = ({
         <Tooltip label={translations["Clear the filtered values"]}>
           <Box>
             <RateupButtonPrimary
-              onClick={() => table.resetColumnFilters()}
+              onClick={() => {
+                table.resetColumnFilters();
+                setServerFilters(null);
+              }}
               title="Reset"
               variant="outline"
             />

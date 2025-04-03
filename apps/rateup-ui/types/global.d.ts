@@ -1171,6 +1171,10 @@ export type WaReceiveMessageBody = {
         text: string;
         payload: string;
       };
+      reaction?: {
+        emoji: string;
+        message_id: string;
+      };
     },
   ];
   statuses: [
@@ -1198,7 +1202,8 @@ export type WaSendMessageBody = {
     | "contacts"
     | "sticker"
     | "location"
-    | "template";
+    | "template"
+    | "reaction";
   text?: {
     preview_url?: boolean;
     body: string;
@@ -1231,6 +1236,10 @@ export type WaSendMessageBody = {
       };
       // add image, video, document if needed in future
     };
+  };
+  reaction?: {
+    emoji: string;
+    message_id: string;
   };
 };
 type WaInteractiveMessageAction = {

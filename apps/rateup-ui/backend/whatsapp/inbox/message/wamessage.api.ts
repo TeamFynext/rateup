@@ -18,6 +18,7 @@ export type WaGetMessagesBody = {
     name?: string;
     profile_photo?: string;
   };
+  messageId?: string;
 };
 
 export type WaMessagePage = {

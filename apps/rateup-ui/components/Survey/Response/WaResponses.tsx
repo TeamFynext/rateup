@@ -95,6 +95,7 @@ import { WaHoverCardComponent } from "../HoverCard/WaHoverCard";
 import { ActionMenu } from "./Columns";
 import { fuzzyFilter } from "./Filter";
 import styles from "./Responses.module.css";
+import { useResponseFilterStore } from "./store";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -144,6 +145,12 @@ const WaResponses = ({
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
   const [campaignIds, setSelectedCampaignIds] = useState([]);
+  const { serverFilters, enableServerFilter, setServerFilters } =
+    useResponseFilterStore();
+  console.log("serverFilters", serverFilters);
+  useEffect(() => {
+    setServerFilters({});
+  }, [survey]);
   const {
     data: responseData,
     isLoading,
@@ -154,7 +161,6 @@ const WaResponses = ({
     page: pagination.pageIndex,
     limit: pagination.pageSize,
     surveyTeamMapIds: filterTeams,
-    tags: columnFilters.find((f) => f.id === "tag")?.value || "",
     language: "",
     contactIds: [],
     campaignIds,
@@ -165,6 +171,7 @@ const WaResponses = ({
             ranges[0]?.startDate.toISOString(),
             ranges[0]?.endDate.toISOString(),
           ],
+    ...serverFilters,
   });
 
   const enableTicket = useMemo(
@@ -306,7 +313,7 @@ const WaResponses = ({
       {
         accessorKey: "mobile",
         header: "Respondent Mobile",
-        id: "Respondent Mobile",
+        id: "mobile",
       },
       {
         header: "Tag",
@@ -441,7 +448,7 @@ const WaResponses = ({
         contactId: item.contactId,
         language: item.language,
         createdAt: item.createdAt,
-        mobile: item.Contact?.phone || "N/A",
+        mobile: item?.phone || "N/A",
         tag: item.tag,
       };
 
@@ -589,6 +596,7 @@ const WaResponses = ({
           isPending={isPending}
           columnFiltersE={columnFilters}
           setColumnFiltersE={setColumnFilters}
+          enableServerFilter={enableServerFilter}
         />
         <DeleteModal
           confirmDelete={confirmDelete}

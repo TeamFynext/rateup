@@ -80,6 +80,7 @@ export default function WaInboxChatSelectCard({
               <Text className={classes.latest_chat} truncate maw={200}>
                 {returnMessageContentBasedOnParsedMessage(
                   parseWaMessage(lastMessage?.messageBody),
+                  lastMessage.messageBody.exchangeProcess,
                 )}
               </Text>
             </Tooltip>
