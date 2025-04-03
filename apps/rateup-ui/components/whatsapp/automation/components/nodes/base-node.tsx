@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type React from "react";
 
-import { ActionIcon } from "@mantine/core";
+import { ActionIcon, Text } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
@@ -61,7 +61,9 @@ function BaseNode({
       <div className={styles.content}>
         <div className={styles.header}>
           <div className={styles.icon}>{icon}</div>
-          <div className={styles.title}>{data.label as string}</div>
+          <Text className={styles.title} truncate={"end"}>
+            {data.label}
+          </Text>
         </div>
 
         <div className={styles.details}>{children}</div>

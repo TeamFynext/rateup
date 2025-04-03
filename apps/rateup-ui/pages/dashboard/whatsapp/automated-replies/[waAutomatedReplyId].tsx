@@ -92,8 +92,8 @@ const WaAutomatedReplyId = () => {
           <Tabs.Tab value="share" leftSection={<IconShare size={18} />}>
             share
           </Tabs.Tab>
-          <Tabs.Tab value="result" leftSection={<IconDatabase size={18} />}>
-            Result
+          <Tabs.Tab value="response" leftSection={<IconDatabase size={18} />}>
+            Response
           </Tabs.Tab>
         </Tabs.List>
       </Group>
@@ -117,7 +117,7 @@ const WaAutomatedReplyId = () => {
           <ShareQR url={link} title={`New`} isPublished={true} />
         </Stack>
       </Tabs.Panel>
-      <Tabs.Panel value="result">
+      <Tabs.Panel value="response">
         <PaperLayout p={0} h={"96%"} w={"98%"} mah={"800px"} m={"xs"}>
           <TanstackTable data={waAutomtedReplyMessage} columns={column} />
         </PaperLayout>

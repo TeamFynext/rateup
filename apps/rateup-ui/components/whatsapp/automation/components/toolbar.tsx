@@ -144,9 +144,9 @@ export default function Toolbar({
           </Menu.Item>
           <Menu.Item
             leftSection={<IconReport size={16} />}
-            onClick={() => handleTabSwitch("result")}
+            onClick={() => handleTabSwitch("response")}
           >
-            Result
+            Response
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

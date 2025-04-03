@@ -241,7 +241,7 @@ export default function NodeEditor({
   return (
     <div className={styles.nodeEditor}>
       <div className={styles.editorHeader}>
-        <h3>Edit {nodeData.label}</h3>
+        <Text truncate={"end"}>Edit {nodeData.label}</Text>
         <button className={styles.closeButton} onClick={onClose}>
           ✕
         </button>
@@ -249,14 +249,12 @@ export default function NodeEditor({
 
       <div className={styles.editorContent}>
         <div className={styles.editorSection}>
-          <label htmlFor="label">Node Label</label>
-          <input
-            id="label"
+          <ContainedTextField
             type="text"
+            label="Node Label"
             value={nodeData.label || ""}
             onChange={(e) => handleInputChange("label", e.target.value)}
             placeholder="Enter node label..."
-            disabled
           />
         </div>
 
@@ -528,7 +526,7 @@ const MediaNodeEditor: React.FC<
         >
           {(props) => (
             <Button {...props} size="xs">
-              Upload MediaFile
+              Select File
             </Button>
           )}
         </FileButton>
@@ -594,11 +592,10 @@ const StartNodeEditor: React.FC<NodeComponentProps<"startNode">> = ({
   return (
     <div className={styles.editorSection}>
       <ContainedTextField
-        id="startMessage"
         value={typedData.startMessage || ""}
         onChange={(e) => handleInputChange("startMessage", e.target.value)}
-        label="Start Message (optional)"
-        placeholder="Enter an optional start message..."
+        label="Start Message"
+        disabled
       />
     </div>
   );
@@ -612,13 +609,13 @@ const EndNodeEditor: React.FC<NodeComponentProps<"endNode">> = ({
   const typedData = nodeData;
   return (
     <div className={styles.editorSection}>
-      <ContainedTextField
+      {/* <ContainedTextField
         id="endMessage"
         value={typedData.endMessage || ""}
         onChange={(e) => handleInputChange("endMessage", e.target.value)}
         label="End Message (optional)"
         placeholder="Enter an optional end message..."
-      />
+      /> */}
     </div>
   );
 };
@@ -629,6 +626,8 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
   handleInputChange,
 }) => {
   const typedData = nodeData;
+  const newButtonRef = useRef<HTMLInputElement | null>(null);
+
   const getType = () => {
     switch (typedData.headerType) {
       case "text":
@@ -642,6 +641,22 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
       default:
         return "textNode";
     }
+  };
+
+  const addNewButton = () => {
+    if (typedData.buttons?.length >= 3) return;
+    const newButtons = [
+      ...(typedData.buttons || []),
+      { id: `button-${Date.now()}`, title: "" },
+    ];
+    handleInputChange("buttons", newButtons);
+
+    // Focus will be set after render via useEffect
+    setTimeout(() => {
+      if (newButtonRef.current) {
+        newButtonRef.current.focus();
+      }
+    }, 0);
   };
 
   return (
@@ -729,6 +744,16 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
               }
               handleInputChange("buttons", newButtons);
             }}
+            onKeyDown={(e) => {
+              if (
+                e.key === "Enter" &&
+                index === typedData.buttons.length - 1 &&
+                typedData.buttons.length < 3
+              ) {
+                e.preventDefault();
+                addNewButton();
+              }
+            }}
             placeholder={`Button ${index + 1} title`}
             maxLength={20}
             description="Max 20 characters"
@@ -744,22 +769,13 @@ const ButtonNodeEditor: React.FC<NodeComponentProps<"buttonNode">> = ({
                 <IconX size={16} />
               </ActionIcon>
             }
+            ref={index === typedData.buttons?.length - 1 ? newButtonRef : null}
           />
         </div>
       ))}
-      <button
-        className={styles.addButton}
-        disabled={typedData.buttons?.length >= 3}
-        onClick={() => {
-          const newButtons = [
-            ...(typedData.buttons || []),
-            { id: `button-${Date.now()}`, title: "" },
-          ];
-          handleInputChange("buttons", newButtons);
-        }}
-      >
+      <Button disabled={typedData.buttons?.length >= 3} onClick={addNewButton}>
         + Add Button
-      </button>
+      </Button>
     </Stack>
   );
 };

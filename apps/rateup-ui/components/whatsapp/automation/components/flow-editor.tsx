@@ -159,7 +159,7 @@ function FlowEditorContent({
 
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const type = event.dataTransfer.getData("application/reactflow");
-      const nodeData = JSON.parse(
+      let nodeData = JSON.parse(
         event.dataTransfer.getData("application/nodeData") || "{}",
       );
 
@@ -170,6 +170,7 @@ function FlowEditorContent({
 
       // Check if we already have a start or end node
       if (type === "startNode") {
+        nodeData.startMessage = waAutomationData?.commands?.join(", ");
         const existingStartNode = reactFlowInstance
           .getNodes()
           .find((n: Node) => n.type === "startNode");
@@ -546,7 +547,6 @@ function FlowEditorContent({
           snapGrid={[15, 15]}
           connectionLineType={ConnectionLineType.SmoothStep}
           defaultEdgeOptions={{
-            animated: true,
             style: { stroke: "#6366f1", strokeWidth: 2 },
             markerEnd: {
               type: MarkerType.ArrowClosed,
