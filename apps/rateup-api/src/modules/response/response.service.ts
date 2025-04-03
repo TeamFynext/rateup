@@ -1055,6 +1055,10 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       const additionalColumns = ["team", "Respondent's Mobile Number", "tag"];
       const totalColumnCount =
         questionTitles.length + additionalColumns.length + 1;
+      console.log(
+        "🚀 ~ syncResponseToGoogleSheet ~ totalColumnCount:",
+        totalColumnCount,
+      );
       const sheet =
         (await doc.sheetsByTitle[lang]) ??
         (await doc.addSheet({
@@ -1073,17 +1077,30 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           columnCount: totalColumnCount,
           rowCount: initialRowCount,
         });
+      console.log(
+        "🚀 ~ syncResponseToGoogleSheet ~ initialRowCount:",
+        initialRowCount,
+      );
       await sheet.setHeaderRow([
         "Created At",
         ...questionTitles,
         ...additionalColumns,
       ]);
+      console.log(
+        "🚀 ~ syncResponseToGoogleSheet ~ additionalColumns:",
+        additionalColumns,
+      );
+      console.log(
+        "🚀 ~ syncResponseToGoogleSheet ~ questionTitles:",
+        JSON.stringify(questionTitles),
+      );
       await sheet.loadCells();
       const columnCount = await sheet.columnCount;
       for (var i = 0; i < columnCount; i++) {
         sheet.getCell(0, i).textFormat = { bold: true };
       }
-      await sheet.saveUpdatedCells();
+      console.log("🚀 ~ syncResponseToGoogleSheet ~ columnCount:", columnCount),
+        await sheet.saveUpdatedCells();
       await sheet.clearRows();
       const responseForSheet = [];
       for (const langRes of languageWiseResponse[lang]) {
