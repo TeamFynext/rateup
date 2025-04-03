@@ -1078,16 +1078,13 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         ...questionTitles,
         ...additionalColumns,
       ]);
-      console.log("🚀 ~ syncResponseToGoogleSheet ~:", 0);
       // await sheet.loadCells();
       // const columnCount = await sheet.columnCount;
       // for (var i = 0; i < columnCount; i++) {
       //   sheet.getCell(0, i).textFormat = { bold: true };
       // }
       await sheet.saveUpdatedCells();
-      console.log("🚀 ~ syncResponseToGoogleSheet ~ :", 1);
       await sheet.clearRows();
-      console.log("🚀 ~ syncResponseToGoogleSheet ~ :", 2);
       const responseForSheet = [];
       for (const langRes of languageWiseResponse[lang]) {
         langRes.teamWiseResponses.map((response) => {
@@ -1109,7 +1106,8 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
                 qstn?.description[lang] ||
                 qstn?.label?.[lang] ||
                 "";
-              let qstnTitle = QIndex + "_" + getContent(qsTitle)?.trim();
+              let qstnTitle =
+                QIndex + "_" + getContent(qsTitle)?.trim().normalize("NFC");
               if (
                 [
                   QuestionType.Contact,
@@ -1119,7 +1117,10 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
               )
                 Object.entries(res.response[res.type]).map(
                   ([key, value]) =>
-                    (resObj[(qstnTitle + ":" + key).trim()] = value),
+                    (resObj[(qstnTitle + ":" + key).trim()] =
+                      typeof value === "string"
+                        ? value.trim().normalize("NFC")
+                        : value),
                 );
               else if (qstn.type === QuestionType.Testimonial)
                 Object.entries(res.response[res.type]).map(
@@ -1127,17 +1128,24 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
                     (resObj[(qstnTitle + ":" + key).trim()] =
                       key == "photo"
                         ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                        : value),
+                        : typeof value === "string"
+                          ? value.trim().normalize("NFC")
+                          : value),
                 );
               else if (qstn.type === QuestionType.MCQGrid)
                 Object.entries(res.response[res.type]).map(
                   ([key, value]: [string, Choice]) =>
-                    (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
+                    (resObj[(qstnTitle + ":" + key).trim()] = value?.value
+                      ?.trim()
+                      .normalize("NFC")),
                 );
               else if (qstn.type === QuestionType.MultiTextInput)
                 Object.entries(res.response[res.type]).map(
                   ([key, value]) =>
-                    (resObj[(qstnTitle + ":" + key).trim()] = value),
+                    (resObj[(qstnTitle + ":" + key).trim()] =
+                      typeof value === "string"
+                        ? value.trim().normalize("NFC")
+                        : value),
                 );
               else
                 resObj[qstnTitle] = getFormattedResponse(
@@ -1147,14 +1155,16 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
                 );
             }
           });
-          resObj["Respondent's Mobile Number"] = response?.respondentPhone;
-          resObj["tag"] = response?.tag;
+          resObj["Respondent's Mobile Number"] = response?.respondentPhone
+            ?.trim()
+            .normalize("NFC");
+          resObj["tag"] = response?.tag?.trim().normalize("NFC");
           responseForSheet.push(resObj);
         });
       }
       console.log(
         "🚀 ~ syncResponseToGoogleSheet ~ responseForSheet:",
-        JSON.stringify(responseForSheet),
+        JSON.stringify(responseForSheet, null, 2),
       );
 
       await sheet.addRows(responseForSheet);
