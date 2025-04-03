@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useContext, useEffect, useMemo } from "react";
 
 import { Box, Divider, Flex, Group } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconSearch } from "@tabler/icons-react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -21,6 +21,7 @@ import RefreshButton from "../Button/RefreshButton";
 import { DETAIL_BTN } from "../Contacts/utils/utils";
 import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { fuzzyFilter } from "../Survey/Response/Filter";
+import { useResponseFilterStore } from "../Survey/Response/store";
 import FilterToggles from "./Filter/FilterToggle";
 import TableLayout from "./TableContent";
 import styles from "./TanstackTable.module.css";
@@ -43,6 +44,7 @@ function TanstackTable({
   pagination,
   setPagination,
   totalCount,
+  enableServerFilter = false,
 }: Readonly<{
   className?: string;
   data: any;
@@ -62,6 +64,7 @@ function TanstackTable({
   pagination?: any;
   setPagination?: (pagination) => void;
   totalCount?: number;
+  enableServerFilter?: boolean;
 }>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "createdAt", desc: true },
@@ -138,6 +141,28 @@ function TanstackTable({
     rowCount: totalCount,
     autoResetPageIndex: !pagination,
   });
+  const { setServerFilters, serverFilters } = useResponseFilterStore();
+
+  function handleServerFilter() {
+    setServerFilters(
+      columnFiltersE?.reduce((acc, c) => {
+        if (c.id.includes("_,_")) {
+          const id = c.id.split("_,_").pop();
+          acc[id] = c.value;
+        } else if (["tag", "mobile"].includes(c.id)) {
+          acc[c.id] = c.value;
+        }
+        return acc;
+      }, {}),
+    );
+  }
+
+  useEffect(() => {
+    const newfilter = { ...serverFilters };
+    newfilter["desc"] =
+      sorting?.find((s) => s.id === "createdAt")?.desc ?? true;
+    setServerFilters({ ...newfilter });
+  }, [sorting]);
 
   return (
     <Box className={`${styles["tanstack-table-root-div"]} ${className}`}>
@@ -170,7 +195,14 @@ function TanstackTable({
             </Box>
           )}
         </Group>
-
+        {filterVisibility && enableServerFilter && (
+          <RateupButtonBlue
+            title="search"
+            onClick={handleServerFilter}
+            rightIcon={<IconSearch size={"1rem"} />}
+            loading={isPending}
+          />
+        )}
         <FilterToggles
           enableFilter={enableFilter}
           filterVisibility={filterVisibility}
