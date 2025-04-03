@@ -1078,6 +1078,11 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         ...questionTitles,
         ...additionalColumns,
       ]);
+      await sheet.loadCells();
+      const columnCount = await sheet.columnCount;
+      for (var i = 0; i < columnCount; i++) {
+        sheet.getCell(0, i).textFormat = { bold: true };
+      }
       await sheet.saveUpdatedCells();
       await sheet.clearRows();
       const responseForSheet = [];
@@ -1101,7 +1106,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
                 qstn?.description[lang] ||
                 qstn?.label?.[lang] ||
                 "";
-              let qstnTitle = QIndex + "_" + getContent(qsTitle);
+              let qstnTitle = QIndex + "_" + getContent(qsTitle)?.trim();
               if (
                 [
                   QuestionType.Contact,
@@ -1111,8 +1116,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
               )
                 Object.entries(res.response[res.type]).map(
                   ([key, value]) =>
-                    (resObj[(qstnTitle + ":" + key).trim()] =
-                      sanitizeValue(value)),
+                    (resObj[(qstnTitle + ":" + key).trim()] = value),
                 );
               else if (qstn.type === QuestionType.Testimonial)
                 Object.entries(res.response[res.type]).map(
@@ -1120,34 +1124,32 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
                     (resObj[(qstnTitle + ":" + key).trim()] =
                       key == "photo"
                         ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
-                        : sanitizeValue(value)),
+                        : value),
                 );
               else if (qstn.type === QuestionType.MCQGrid)
                 Object.entries(res.response[res.type]).map(
                   ([key, value]: [string, Choice]) =>
-                    (resObj[(qstnTitle + ":" + key).trim()] = sanitizeValue(
-                      value?.value,
-                    )),
+                    (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
                 );
               else if (qstn.type === QuestionType.MultiTextInput)
                 Object.entries(res.response[res.type]).map(
                   ([key, value]) =>
-                    (resObj[(qstnTitle + ":" + key).trim()] =
-                      sanitizeValue(value)),
+                    (resObj[(qstnTitle + ":" + key).trim()] = value),
                 );
               else
-                resObj[qstnTitle] = sanitizeValue(
-                  getFormattedResponse(res.response[res.type], qstn, lang),
+                resObj[qstnTitle] = getFormattedResponse(
+                  res.response[res.type],
+                  qstn,
+                  lang,
                 );
             }
           });
-          resObj["Respondent's Mobile Number"] = sanitizeValue(
-            response?.respondentPhone,
-          );
-          resObj["tag"] = sanitizeValue(response?.tag);
+          resObj["Respondent's Mobile Number"] = response?.respondentPhone;
+          resObj["tag"] = response?.tag;
           responseForSheet.push(resObj);
         });
       }
+
       await sheet.addRows(responseForSheet);
       const dateColumnIndex = sheet.headerValues.indexOf("Created At");
       await sheet.loadCells();
@@ -1158,33 +1160,6 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         };
       }
       await sheet.saveUpdatedCells();
-    }
-
-    // Helper function to sanitize values by removing non-printable and special characters
-    function sanitizeValue(value) {
-      if (value === null || value === undefined) {
-        return "";
-      }
-
-      if (typeof value === "string") {
-        // Remove control characters, zero-width spaces, and other problematic characters
-        return value
-          .replace(
-            /[\u0000-\u001F\u007F-\u009F\u200B-\u200F\uFEFF\u2028\u2029]/g,
-            "",
-          )
-          .replace(/[\uD800-\uDFFF]/g, "") // Remove unpaired surrogates
-          .replace(/\ufeff/g, ""); // Remove BOM
-      }
-
-      if (typeof value === "object") {
-        return JSON.stringify(value).replace(
-          /[\u0000-\u001F\u007F-\u009F\u200B-\u200F\uFEFF\u2028\u2029]/g,
-          "",
-        );
-      }
-
-      return String(value);
     }
   } else {
     const responses =
