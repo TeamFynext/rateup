@@ -61,7 +61,7 @@ import classes from "./dashboard.module.css";
 
 export default function DashboardHome() {
   const router = useRouter();
-  const { translations } = useTranslations();
+  const { translations, loadingTranslations } = useTranslations();
 
   const { user } = useUser();
   const [filterParam, setFilterParam] = useState(SurveyTypeFilters.All);
