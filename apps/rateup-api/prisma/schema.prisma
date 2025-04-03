@@ -1179,11 +1179,10 @@ enum WaAutomationProgressStatus {
 model WaAutomatedReplyMessage {
   id                 String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   phone              String
-  currentNode        String
+  currentNode        String?
   response           Json?
   status             WaAutomationProgressStatus @default(inProgress)
   createdAt          DateTime                   @default(now())
-  updatedAt          DateTime                   @updatedAt
   waAutomatedReplyId String?                    @db.Uuid
   waAutomatedReply   WaAutomatedReply?          @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
   orgId              String                     @db.Uuid
