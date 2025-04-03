@@ -1149,6 +1149,10 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           responseForSheet.push(resObj);
         });
       }
+      console.log(
+        "🚀 ~ syncResponseToGoogleSheet ~ responseForSheet:",
+        JSON.stringify(responseForSheet),
+      );
 
       await sheet.addRows(responseForSheet);
       const dateColumnIndex = sheet.headerValues.indexOf("Created At");
