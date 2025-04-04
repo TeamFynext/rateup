@@ -658,32 +658,25 @@ export async function processNextNode(
 
     // Skip processing for special nodes
     if (["endNode", "startNode"].includes(node?.type)) {
-      // If end node, mark interaction as completed
-      if (node?.type === "endNode") {
-        await prisma.waAutomatedReplyMessage.updateMany({
-          where: { phone: userPhone, waAutomatedReplyId: automation.id },
-          data: { status: "completed" },
-        });
-      }
-
       // For start node, just move to the next node
-      const nextEdge = automation.matchData?.json?.edges.find(
+      const nextEdges = automation.matchData?.json?.edges.filter(
         (edge: any) => edge.source === nodeId,
       );
 
-      if (nextEdge) {
-        await prisma.waAutomatedReplyMessage.updateMany({
-          where: { phone: userPhone, waAutomatedReplyId: automation.id },
-          data: { currentNode: nextEdge.target },
-        });
-
-        await processNextNode(
-          userPhone,
-          automation,
-          nextEdge.target,
-          orgId,
-          automationMessageId,
-        );
+      if (nextEdges) {
+        for (const nextEdge of nextEdges) {
+          await prisma.waAutomatedReplyMessage.updateMany({
+            where: { phone: userPhone, waAutomatedReplyId: automation.id },
+            data: { currentNode: nextEdge.target },
+          });
+          await processNextNode(
+            userPhone,
+            automation,
+            nextEdge.target,
+            orgId,
+            automationMessageId,
+          );
+        }
       }
 
       return;
@@ -730,24 +723,25 @@ export async function processNextNode(
       "listNode",
       "ticketNode",
     ].includes(node?.type);
-    const nextEdge = automation.matchData?.json?.edges.find(
+    const nextEdges = automation.matchData?.json?.edges.filter(
       (edge: any) => edge.source === nodeId,
     );
 
-    if (nextEdge) {
-      await prisma.waAutomatedReplyMessage.updateMany({
-        where: { phone: userPhone, waAutomatedReplyId: automation.id },
-        data: { currentNode: nextEdge.target },
-      });
-
-      if (!requiresUserInput) {
-        await processNextNode(
-          userPhone,
-          automation,
-          nextEdge.target,
-          orgId,
-          automationMessageId,
-        );
+    if (nextEdges) {
+      for (const nextEdge of nextEdges) {
+        await prisma.waAutomatedReplyMessage.updateMany({
+          where: { phone: userPhone, waAutomatedReplyId: automation.id },
+          data: { currentNode: nextEdge.target },
+        });
+        if (!requiresUserInput) {
+          await processNextNode(
+            userPhone,
+            automation,
+            nextEdge.target,
+            orgId,
+            automationMessageId,
+          );
+        }
       }
     } else {
       // No next node, mark as completed
