@@ -5,9 +5,4 @@
 
 .toolbarButton {
   border: 1px solid #e0e0e0;
-  color: light-dark(#333, #fff);
-}
-
-.toolbarButton svg {
-  color: #6366f1;
 }

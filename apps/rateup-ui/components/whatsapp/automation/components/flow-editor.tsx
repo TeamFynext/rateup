@@ -23,13 +23,10 @@ import "@xyflow/react/dist/style.css";
 
 import { useRouter } from "next/router";
 
+import { useDebouncedCallback, useHotkeys } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 
-import {
-  useUpdateWaAutomatedReplyMutation,
-  useWaAutomatedReplyById,
-} from "@/backend/whatsapp/automated-reply/automatedReply.query";
-import RateupLoader from "@/components/Loaders/RateupLoader";
+import { useUpdateWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 
 import { TypedNode, validateNodeData } from "../types/node-types";
 import { getLayoutedElements } from "../utils/auto-layout";
@@ -41,6 +38,14 @@ import { initialEdges, initialNodes } from "./initial-data";
 import NodeEditor from "./node-editor";
 import { nodeTypes } from "./nodes";
 import Toolbar from "./toolbar";
+
+const defaultEdgeOptions = {
+  style: { stroke: "#6366f1", strokeWidth: 2 },
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    color: "#6366f1",
+  },
+};
 
 // This component is wrapped with ReactFlowProvider in the parent component
 function FlowEditorContent({
@@ -58,9 +63,13 @@ function FlowEditorContent({
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const router = useRouter();
-  // Add a flag to track undo/redo operations
+
   const isUndoRedoOperationRef = useRef(false);
+  const lastSavedFlowRef = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
+  const isInitialLoadRef = useRef(true);
 
   const updateWaAutomatedReplyMutation =
     useUpdateWaAutomatedReplyMutation(waAutomatedReplyId);
@@ -75,82 +84,134 @@ function FlowEditorContent({
       historyManager.saveState({ nodes, edges });
       updateUndoRedoState();
     }
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Update undo/redo button states
   const updateUndoRedoState = useCallback(() => {
-    setCanUndo(historyManager.canUndo());
-    setCanRedo(historyManager.canRedo());
-  }, [historyManager]);
+    if (isMountedRef.current) {
+      setCanUndo(historyManager.canUndo());
+      setCanRedo(historyManager.canRedo());
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const saveFlow = useCallback(() => {
+    if (!reactFlowInstance) return;
+
+    const flow = reactFlowInstance.toObject();
+    const flowJson = JSON.stringify(flow);
+
+    // Only save if the flow has actually changed
+    if (flowJson !== lastSavedFlowRef.current) {
+      lastSavedFlowRef.current = flowJson;
+
+      updateWaAutomatedReplyMutation.mutate(
+        {
+          ...waAutomationData,
+          matchData: {
+            ...waAutomationData.matchData,
+            json: flow,
+          },
+        },
+        {
+          onSettled: () => {
+            setHasUnsavedChanges(false);
+          },
+        },
+      );
+    }
+  }, [reactFlowInstance, updateWaAutomatedReplyMutation, waAutomationData]);
+
+  const debouncedSaveFlow = useDebouncedCallback(saveFlow, 1000);
 
   // Save state to history when nodes or edges change
   useEffect(() => {
-    // Skip saving state if an undo/redo operation is in progress
-    if (isUndoRedoOperationRef.current) {
+    if (isUndoRedoOperationRef.current || isInitialLoadRef.current) {
       return;
     }
 
     const timer = setTimeout(() => {
       historyManager.saveState({ nodes, edges });
       updateUndoRedoState();
-    }, 500); // Debounce to avoid saving too many states
+
+      setHasUnsavedChanges(true);
+
+      if (reactFlowInstance) {
+        debouncedSaveFlow();
+      }
+    }, 500);
 
     return () => clearTimeout(timer);
-  }, [nodes, edges, historyManager, updateUndoRedoState]);
+  }, [
+    nodes,
+    edges,
+    historyManager,
+    updateUndoRedoState,
+    reactFlowInstance,
+    debouncedSaveFlow,
+  ]);
 
-  // Handle undo action
   const handleUndo = useCallback(() => {
+    if (!historyManager.canUndo()) {
+      return;
+    }
+
     const previousState = historyManager.undo();
     if (previousState) {
-      // Set the flag before changing state
       isUndoRedoOperationRef.current = true;
+      try {
+        setNodes([...previousState.nodes]);
+        setEdges([...previousState.edges]);
+        updateUndoRedoState();
 
-      setNodes([...previousState.nodes]);
-      setEdges([...previousState.edges]);
-      updateUndoRedoState();
-
-      // Reset the flag after a delay
-      setTimeout(() => {
+        setTimeout(() => {
+          isUndoRedoOperationRef.current = false;
+        }, 600);
+      } catch (error) {
         isUndoRedoOperationRef.current = false;
-      }, 600);
+      }
     }
   }, [historyManager, setNodes, setEdges, updateUndoRedoState]);
 
-  // Handle redo action
   const handleRedo = useCallback(() => {
+    if (!historyManager.canRedo()) {
+      return;
+    }
+
     const nextState = historyManager.redo();
     if (nextState) {
-      // Set the flag before changing state
       isUndoRedoOperationRef.current = true;
+      try {
+        setNodes([...nextState.nodes]);
+        setEdges([...nextState.edges]);
+        updateUndoRedoState();
 
-      setNodes([...nextState.nodes]);
-      setEdges([...nextState.edges]);
-      updateUndoRedoState();
-
-      // Reset the flag after a delay
-      setTimeout(() => {
+        setTimeout(() => {
+          isUndoRedoOperationRef.current = false;
+        }, 600);
+      } catch (error) {
         isUndoRedoOperationRef.current = false;
-      }, 600);
+      }
     }
   }, [historyManager, setNodes, setEdges, updateUndoRedoState]);
 
-  // Handle node selection
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node as any);
     setIsEditorOpen(true);
   }, []);
 
-  // Handle connection between nodes
-  const onConnect = (params) =>
-    setEdges((eds) => addEdge({ ...params, type: "custom" }, eds));
+  const onConnect = useCallback(
+    (params) => setEdges((eds) => addEdge({ ...params, type: "custom" }, eds)),
+    [setEdges],
+  );
 
-  // Handle drag over for dropping components
   const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-  // Handle drop for creating new nodes
   const onDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault();
@@ -163,7 +224,6 @@ function FlowEditorContent({
         event.dataTransfer.getData("application/nodeData") || "{}",
       );
 
-      // Check if the dropped element is valid
       if (typeof type === "undefined" || !type) {
         return;
       }
@@ -184,26 +244,11 @@ function FlowEditorContent({
         }
       }
 
-      if (type === "endNode") {
-        const existingEndNode = reactFlowInstance
-          .getNodes()
-          .find((n: Node) => n.type === "endNode");
-        if (existingEndNode) {
-          notifications.show({
-            title: "Not Allowed",
-            message: "Only one end node is allowed in the flow.",
-            color: "red",
-          });
-          return;
-        }
-      }
-
       const position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX - reactFlowBounds.left,
         y: event.clientY - reactFlowBounds.top,
       });
 
-      // Create a new node with default data based on type
       const newNode = {
         id: `${type}-${Date.now()}`,
         type,
@@ -216,7 +261,7 @@ function FlowEditorContent({
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [reactFlowInstance, setNodes],
+    [reactFlowInstance, setNodes, waAutomationData?.commands],
   );
 
   // Update node data when edited
@@ -240,7 +285,6 @@ function FlowEditorContent({
     [setNodes],
   );
 
-  // Apply auto layout to the flow
   const handleAutoLayout = useCallback(
     (direction = "TB") => {
       if (!nodes.length) return;
@@ -259,6 +303,7 @@ function FlowEditorContent({
     },
     [nodes, edges, setNodes, reactFlowInstance],
   );
+
   const handleTabSwitch = useCallback(
     (tab: string) => {
       router.push(`${waAutomatedReplyId}?tab=${tab}`);
@@ -266,7 +311,6 @@ function FlowEditorContent({
     [router, waAutomatedReplyId],
   );
 
-  // Validate flow connections
   const validateFlow = useCallback(
     (silent: boolean = false) => {
       if (!reactFlowInstance) return false;
@@ -285,7 +329,6 @@ function FlowEditorContent({
         return false;
       }
 
-      // Check for exactly one start node
       const startNodes = allNodes.filter(
         (node: Node) => node.type === "startNode",
       );
@@ -307,26 +350,6 @@ function FlowEditorContent({
         return false;
       }
 
-      // Check for exactly one end node
-      const endNodes = allNodes.filter((node: Node) => node.type === "endNode");
-      if (endNodes.length === 0) {
-        !silent &&
-          notifications.show({
-            title: "Validation Error",
-            message: "Flow must have an end node.",
-            color: "red",
-          });
-        return false;
-      } else if (endNodes.length > 1) {
-        !silent &&
-          notifications.show({
-            title: "Validation Error",
-            message: "Flow must have exactly one end node.",
-            color: "red",
-          });
-        return false;
-      }
-
       // Check if all nodes (except start) have incoming connections
       const nodesWithIncomingEdges = new Set(
         allEdges.map((edge: any) => edge.target),
@@ -341,17 +364,6 @@ function FlowEditorContent({
           notifications.show({
             title: "Validation Error",
             message: `Some nodes are not connected: ${nodesWithoutIncoming.map((n: Node) => n.data.label).join(", ")}`,
-            color: "red",
-          });
-        return false;
-      }
-
-      // Check if end node has incoming connections
-      if (!nodesWithIncomingEdges.has(endNodes[0].id)) {
-        !silent &&
-          notifications.show({
-            title: "Validation Error",
-            message: "End node must be connected to at least one node.",
             color: "red",
           });
         return false;
@@ -381,59 +393,44 @@ function FlowEditorContent({
     },
     [reactFlowInstance],
   );
-  // Save flow to JSON
-  const saveFlow = useCallback(() => {
-    if (!reactFlowInstance) return;
-
-    // Validate before saving
-    if (!validateFlow(false)) {
-      return;
-    }
-
-    const flow = reactFlowInstance.toObject();
-
-    updateWaAutomatedReplyMutation.mutate({
-      ...waAutomationData,
-      matchData: {
-        ...waAutomationData.matchData,
-        json: flow,
-      },
-    });
-  }, [
-    reactFlowInstance,
-    updateWaAutomatedReplyMutation,
-    validateFlow,
-    waAutomationData,
-  ]);
 
   // Load flow from JSON
   const loadFlow = useCallback(() => {
+    // TODO: Implement a file upload dialog to load flow from a JSON file
     const savedFlow = localStorage.getItem("whatsapp-flow");
     if (savedFlow) {
-      const flow = JSON.parse(savedFlow);
-      setNodes(flow.nodes || []);
-      setEdges(flow.edges || []);
+      try {
+        const flow = JSON.parse(savedFlow);
+        setNodes(flow.nodes || []);
+        setEdges(flow.edges || []);
 
-      // Fit the view to show all nodes
-      setTimeout(() => {
-        if (reactFlowInstance) {
-          reactFlowInstance.fitView({ padding: 0.2 });
-        }
-      }, 50);
+        // Fit the view to show all nodes
+        setTimeout(() => {
+          if (reactFlowInstance) {
+            reactFlowInstance.fitView({ padding: 0.2 });
+          }
+        }, 50);
 
-      // Reset history with the loaded flow
-      historyManager.clear();
-      historyManager.saveState({
-        nodes: flow.nodes || [],
-        edges: flow.edges || [],
-      });
-      updateUndoRedoState();
+        // Reset history with the loaded flow
+        historyManager.clear();
+        historyManager.saveState({
+          nodes: flow.nodes || [],
+          edges: flow.edges || [],
+        });
+        updateUndoRedoState();
 
-      notifications.show({
-        title: "Success",
-        message: "Flow loaded successfully!",
-        color: "green",
-      });
+        notifications.show({
+          title: "Success",
+          message: "Flow loaded successfully!",
+          color: "green",
+        });
+      } catch (error) {
+        notifications.show({
+          title: "Error",
+          message: "Failed to load flow. The saved data might be corrupted.",
+          color: "red",
+        });
+      }
     }
   }, [
     setNodes,
@@ -443,32 +440,45 @@ function FlowEditorContent({
     updateUndoRedoState,
   ]);
 
-  // Export flow data
   const exportFlow = useCallback(() => {
     if (!reactFlowInstance) return;
 
-    // Validate before exporting
     if (!validateFlow(true)) {
       return;
     }
 
     const flow = reactFlowInstance.toObject();
-
     const dataUri =
-      "data:application/json;charset=utf-8," + encodeURIComponent(flow);
-
+      "data:application/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(flow));
     const exportFileDefaultName = "whatsapp-api-format.json";
+
     const linkElement = document.createElement("a");
     linkElement.setAttribute("href", dataUri);
     linkElement.setAttribute("download", exportFileDefaultName);
     linkElement.click();
-  }, [reactFlowInstance]);
+  }, [reactFlowInstance, validateFlow]);
 
-  // Close the node editor
   const closeEditor = useCallback(() => {
     setIsEditorOpen(false);
     setSelectedNode(null);
   }, []);
+
+  const handleNodesChange = useCallback(
+    (changes) => {
+      // Check if there's a removal change for the currently selected node
+      const isSelectedNodeRemoved = changes.some(
+        (change) => change.type === "remove" && change.id === selectedNode?.id,
+      );
+
+      if (isSelectedNodeRemoved) {
+        closeEditor();
+      }
+
+      onNodesChange(changes);
+    },
+    [selectedNode, closeEditor, onNodesChange],
+  );
 
   // Load saved flow on initial render
   useEffect(() => {
@@ -476,17 +486,30 @@ function FlowEditorContent({
     if (flow) {
       try {
         if (flow.nodes && flow.edges) {
+          isInitialLoadRef.current = true;
+
           setNodes(flow.nodes);
           setEdges(flow.edges);
+
+          // Store initial flow JSON to prevent unnecessary saves
+          lastSavedFlowRef.current = JSON.stringify(flow);
+          setHasUnsavedChanges(false);
 
           // Initialize history with loaded flow
           historyManager.clear();
           historyManager.saveState({ nodes: flow.nodes, edges: flow.edges });
           updateUndoRedoState();
+
+          setTimeout(() => {
+            isInitialLoadRef.current = false;
+          }, 100);
         }
       } catch (error) {
         console.error("Error loading saved flow:", error);
+        isInitialLoadRef.current = false;
       }
+    } else {
+      isInitialLoadRef.current = false;
     }
   }, [
     historyManager,
@@ -496,37 +519,11 @@ function FlowEditorContent({
     waAutomationData?.matchData?.json,
   ]);
 
-  // Add keyboard shortcuts for undo/redo
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Check if Ctrl/Cmd + Z is pressed (Undo)
-      if (
-        (event.ctrlKey || event.metaKey) &&
-        event.key === "z" &&
-        !event.shiftKey
-      ) {
-        event.preventDefault();
-        handleUndo();
-      }
-
-      // Check if Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y is pressed (Redo)
-      if (
-        ((event.ctrlKey || event.metaKey) &&
-          event.key === "z" &&
-          event.shiftKey) ||
-        ((event.ctrlKey || event.metaKey) && event.key === "y")
-      ) {
-        event.preventDefault();
-        handleRedo();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleUndo, handleRedo]);
+  useHotkeys([
+    ["mod+z", () => handleUndo()],
+    ["shift+mod+z", () => handleRedo()],
+    ["mod+y", () => handleRedo()],
+  ]);
 
   return (
     <div className={styles.flowEditorContainer}>
@@ -534,7 +531,7 @@ function FlowEditorContent({
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onInit={setReactFlowInstance}
@@ -546,13 +543,7 @@ function FlowEditorContent({
           snapToGrid
           snapGrid={[15, 15]}
           connectionLineType={ConnectionLineType.SmoothStep}
-          defaultEdgeOptions={{
-            style: { stroke: "#6366f1", strokeWidth: 2 },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: "#6366f1",
-            },
-          }}
+          defaultEdgeOptions={defaultEdgeOptions}
           edgeTypes={{ custom: CustomEdge }}
           proOptions={{ hideAttribution: true }}
         >
@@ -578,6 +569,8 @@ function FlowEditorContent({
               canUndo={canUndo}
               canRedo={canRedo}
               handleTabSwitch={handleTabSwitch}
+              validateFlow={validateFlow}
+              saveDisabled={!hasUnsavedChanges}
             />
           </Panel>
         </ReactFlow>
