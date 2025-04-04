@@ -42,7 +42,9 @@ export const getWaTemplateById = async (id: string) => {
 };
 
 export const createWaTemplate = async (templateData: any) => {
-  return axiosClient.post(`${TEMPLATES_URL}`, templateData);
+  return axiosClient.post(`${TEMPLATES_URL}`, templateData, {
+    timeout: 25000,
+  });
 };
 export const saveTemplateAsDraft = async (templateData: any) => {
   return axiosClient.post(`${TEMPLATES_URL}/save-as-draft`, templateData);
