@@ -2,7 +2,6 @@ import {
   OrderStatus,
   PaymentPlanStatus,
   PaymentStatus,
-  PrismaClient,
   SubscriptionStatus,
 } from "@prisma/client";
 import axios from "axios";
@@ -20,8 +19,8 @@ import {
   getRecurringCharge,
   getShopifyInfo,
 } from "../integrations/shopify/shopify.service";
+import prisma from "../../utils/prisma";
 
-const prisma = new PrismaClient();
 const credentials = Buffer.from(
   `${process.env.RAZORPAY_API_KEY}:${process.env.RAZORPAY_API_SECRET}`,
 ).toString("base64");

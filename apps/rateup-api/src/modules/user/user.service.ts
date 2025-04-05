@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import {
   CreateUserParams,
   CreateUserSignupSchema,
@@ -28,8 +27,7 @@ import {
   createHubSpotCompany,
   createHubSpotContact,
 } from "../../utils/hubspot";
-
-const prisma = new PrismaClient();
+import prisma from "../../utils/prisma";
 
 async function createUser({
   id,

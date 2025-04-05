@@ -747,7 +747,7 @@ export function getFlowIdFromTemplateComponents(
 export const deleteCampaignParticipantsByCampaignId = async (
   campaignId: string,
 ) => {
-  const d = await queue.getJobs("delayed");
+  const d = await queue.getJobs();
   d.filter((job) => job.name === campaignId).forEach((job) => job.remove());
 };
 

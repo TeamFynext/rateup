@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../prisma";
 
 export async function getSurveyTeamIdFromMap(surveyTeamMapId: string) {
   const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
