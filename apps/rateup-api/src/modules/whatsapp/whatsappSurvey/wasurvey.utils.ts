@@ -497,6 +497,7 @@ export function createReplyButtonsMessage(
 }
 
 export function parseToWhatsAppFormat(editorContent) {
+  if (!editorContent) return "";
   function formatText(text, type = "*") {
     let trimmedEnd = text.trimEnd();
     let trimmedStart = text.trimStart();
