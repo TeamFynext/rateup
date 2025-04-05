@@ -1,38 +1,40 @@
-import { PrismaClient } from "@prisma/client";
 import { CreateContactMessageInput } from "./contact.schema";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import { emailBodyContactForm } from "../../utils/email/emailBodyContactForm";
+import prisma from "../../utils/prisma";
 
-const prisma = new PrismaClient();
-
-export async function createMsg({ name, email, message, address }: CreateContactMessageInput) {
-
+export async function createMsg({
+  name,
+  email,
+  message,
+  address,
+}: CreateContactMessageInput) {
   if (address?.length > 0) {
-      return "Error"
+    return "Error";
   }
 
   const user = await prisma.contactForm.create({
     data: {
       name,
       email,
-      message
+      message,
     },
   });
 
-  if(user){
+  if (user) {
     const msg = {
-      to: 'hello@rateup.app', // Change to your recipient
-     // from: 'hello@rateup.app', // Change to your verified sender
-      subject: 'New Message in Rateup Website Contact Form',
+      to: "hello@rateup.app", // Change to your recipient
+      // from: 'hello@rateup.app', // Change to your verified sender
+      subject: "New Message in Rateup Website Contact Form",
       text: `You have received new contact message from ${email}`,
-      html: emailBodyContactForm(name, email, message)
-    }
+      html: emailBodyContactForm(name, email, message),
+    };
     try {
-      sendAWSEmail(msg)
+      sendAWSEmail(msg);
     } catch (error) {
-      console.error(error)
-      throw new Error('Email sending failed. E:'+ error);
+      console.error(error);
+      throw new Error("Email sending failed. E:" + error);
     }
-}
+  }
   return user;
 }

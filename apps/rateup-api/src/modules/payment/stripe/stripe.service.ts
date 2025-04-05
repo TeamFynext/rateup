@@ -1,15 +1,10 @@
-import {
-  OrderStatus,
-  PaymentStatus,
-  PrismaClient,
-  SubscriptionStatus,
-} from "@prisma/client";
+import { OrderStatus, PaymentStatus, SubscriptionStatus } from "@prisma/client";
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
 import axios from "axios";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated";
 import { paymentFailed } from "../../../utils/email/payments/paymentFailed";
+import prisma from "../../../utils/prisma";
 
-const prisma = new PrismaClient();
 const STRIPE_API = "https://api.stripe.com/v1";
 const stripe = require("stripe")(`${process.env.STRIPE_SECRET_KEY}`);
 
@@ -90,7 +85,7 @@ export async function createStripePayment(invoiceData) {
           renewedAt: new Date(),
           expiresAt: new Date(subscriptionData.current_period_end * 1000),
           subscriptionRef: subscription,
-          lastLimitAlertSentAt: null
+          lastLimitAlertSentAt: null,
         },
       });
 
@@ -124,11 +119,11 @@ export async function createStripePayment(invoiceData) {
       data: {
         renewedAt: new Date(),
         expiresAt: new Date(subscriptionData.current_period_end * 1000),
-        lastLimitAlertSentAt: null
+        lastLimitAlertSentAt: null,
       },
       include: {
         basePlan: true,
-      },   
+      },
     });
 
     const msg = {
@@ -163,9 +158,7 @@ export async function handleInvoicePaymentFailed(invoiceData) {
       to: invoiceData.customer_email,
       subject: "Payment Failed - Rateup Subscription Renewal - Rateup.app",
       text: `Subscription Renewal Failed. Please update your payment method.`,
-      html: paymentFailed(
-        true,
-      ),
+      html: paymentFailed(true),
     };
     try {
       sendAWSEmail(msg);
@@ -181,9 +174,7 @@ export async function handleInvoicePaymentFailed(invoiceData) {
       to: invoiceData.customer_email,
       subject: "Payment Failed - Rateup.app Subscription",
       text: `Subscription Payment Failed. Please update your payment method.`,
-      html: paymentFailed(
-        false,
-      ),
+      html: paymentFailed(false),
     };
     try {
       sendAWSEmail(msg);
