@@ -80,7 +80,32 @@ export function AutomatedReplyForm({
   function handleSubmitClick() {
     const data = {
       ...rootForm.values,
-      matchData: matchDataForm.values,
+      matchData: {
+        ...matchDataForm.values,
+        json: {
+          nodes: [
+            {
+              id: `startNode-${Date.now()}`,
+              type: "startNode",
+              position: {
+                x: 225,
+                y: 45,
+              },
+              data: {
+                label: "Start",
+                type: "startNode",
+                startMessage: rootForm?.values?.commands?.join(", "),
+              },
+              measured: {
+                width: 220,
+                height: 126,
+              },
+            },
+          ],
+          edges: [],
+          viewport: {},
+        },
+      },
     };
 
     if (editMode) {
