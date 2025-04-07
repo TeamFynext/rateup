@@ -104,7 +104,8 @@ export interface WaSendMessageBody {
     | "contacts"
     | "sticker"
     | "location"
-    | "template";
+    | "template"
+    | "reaction";
   text?: {
     preview_url?: boolean;
     body: string;
@@ -136,6 +137,10 @@ export interface WaSendMessageBody {
       };
       // add image, video, document if needed in future
     };
+  };
+  reaction?: {
+    message_id: string;
+    emoji: string;
   };
 }
 type WaButton = {
