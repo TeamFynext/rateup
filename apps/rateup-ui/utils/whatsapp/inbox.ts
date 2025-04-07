@@ -45,6 +45,9 @@ export function parseWaMessage(
         messageContent = "";
         interactive = send.interactive;
         break;
+      case "reaction":
+        messageContent = send.reaction.emoji;
+        break;
     }
   }
   if (messageBody?.exchangeProcess === "receive") {
@@ -83,6 +86,9 @@ export function parseWaMessage(
             break;
         }
         break;
+      case "reaction":
+        messageContent = receive.messages[0].reaction.emoji;
+        break;
     }
   }
   return { timeStamp, messageType, messageContent, template, interactive };
@@ -90,6 +96,7 @@ export function parseWaMessage(
 
 export function returnMessageContentBasedOnParsedMessage(
   parsedMessage: ParsedWaMessageReturn,
+  exchangeProcess: "send" | "receive",
 ) {
   if (parsedMessage.messageType === "text") {
     return parsedMessage.messageContent;
@@ -117,6 +124,10 @@ export function returnMessageContentBasedOnParsedMessage(
     return parsedMessage.messageContent;
   } else if (parsedMessage.messageType === "interactive") {
     return "Interactive Message";
+  } else if (parsedMessage.messageType === "reaction") {
+    return exchangeProcess === "send"
+      ? `You reacted ${parsedMessage.messageContent}`
+      : `Reacted ${parsedMessage.messageContent}`;
   } else {
     return "Unsupported message type";
   }

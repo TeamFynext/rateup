@@ -1,11 +1,26 @@
-import { Avatar, Group, Paper, Stack, Text } from "@mantine/core";
+import { useEffect, useState } from "react";
+
+import {
+  Avatar,
+  Group,
+  Indicator,
+  IndicatorProps,
+  Paper,
+  Popover,
+  Stack,
+  Text,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconCheck,
   IconChecks,
   IconClock,
   IconExclamationCircleFilled,
 } from "@tabler/icons-react";
-import dayjs from "dayjs";
+
+import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
+import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { formatToCustomTime } from "../../../../../../../utils/dateTime";
@@ -16,9 +31,23 @@ interface Props {
   messageObject: WaGetMessagesBody;
   children: any;
   forPreview?: boolean;
+  reaction?: {
+    emoji: string;
+    pos: IndicatorProps["position"];
+    from: string;
+  };
 }
 export default function WaInboxSingleMessageLayout(props: Props) {
   const { exchangeProcess } = props;
+  const [openedEmoji, { open: openEmoji, close: closeEmoji }] =
+    useDisclosure(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const { selectedContact } = useContactStore();
+  const sendnewWaMessage = useSendNewWaMessage(selectedContact.id);
+
+  useEffect(() => {
+    if (!isHovered && openedEmoji) closeEmoji();
+  }, [isHovered]);
 
   function getWrapperProps() {
     if (exchangeProcess === "send") {
@@ -66,31 +95,64 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     if (statusObj?.sent) return <IconCheck size={14} color="gray" />;
     return <IconClock size={13} color="gray" />;
   };
+  function sendReaction(emoji: string) {
+    const messageId = props.messageObject.messageBody.receive.messages[0].id;
+    const reaction = {
+      emoji,
+      toWaMessageId: messageId,
+    };
+    sendnewWaMessage.mutate({ reaction, type: "reaction" });
+  }
 
   return (
-    <Stack className={classes.wrapper} {...getWrapperProps()}>
+    <Stack
+      className={classes.wrapper}
+      {...getWrapperProps()}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <Group gap={4}>
-        <Paper className={classes.inner} {...getInnerProps()} py={2}>
-          <div>
-            <Text
-              fz={"xs"}
-              c={getColorForUser(props?.messageObject?.sender?.name)}
-              fw={500}
-              tt={"capitalize"}
-            >
-              {props?.messageObject?.sender?.name}
-            </Text>
-            {props?.children}
-          </div>
-          <Group justify="flex-end" gap={4}>
-            <Text fz={10} c={"dimmed"}>
-              {formatToCustomTime(props?.messageObject?.waCreatedAt)}
-            </Text>
-            {exchangeProcess === "send" && (
-              <Text>{getLatestStatus(props?.messageObject?.stats)}</Text>
-            )}
-          </Group>
-        </Paper>
+        <Indicator
+          disabled={!props.reaction}
+          label={
+            <ReactionPopOver
+              reaction={props.reaction}
+              bg={getInnerProps().bg}
+            />
+          }
+          inline
+          position={props.reaction?.pos}
+          color={"transparent"}
+        >
+          <Paper className={classes.inner} {...getInnerProps()} py={2}>
+            <div>
+              <Text
+                fz={"xs"}
+                c={getColorForUser(props?.messageObject?.sender?.name)}
+                fw={500}
+                tt={"capitalize"}
+              >
+                {props?.messageObject?.sender?.name}
+              </Text>
+              {props?.children}
+            </div>
+            <Group justify="flex-end" gap={4}>
+              <Text fz={10} c={"dimmed"}>
+                {formatToCustomTime(props?.messageObject?.waCreatedAt)}
+              </Text>
+              {exchangeProcess === "send" && (
+                <Text>{getLatestStatus(props?.messageObject?.stats)}</Text>
+              )}
+            </Group>
+          </Paper>
+        </Indicator>
+        {exchangeProcess === "receive" && isHovered && (
+          <PopoverEmojiPicker
+            onEmojiClick={sendReaction}
+            opened={openedEmoji}
+            onClick={openEmoji}
+          />
+        )}
         {exchangeProcess === "send" && (
           <Avatar
             name={props?.messageObject?.sender?.name}
@@ -104,3 +166,34 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     </Stack>
   );
 }
+
+const ReactionPopOver = ({ reaction, bg }) => {
+  return (
+    <Popover width={200} position="bottom" withArrow shadow="md">
+      <Popover.Target>
+        <Text
+          style={{
+            border: "1px solid var(--light-grey-color-4)",
+            borderRadius: "40%",
+          }}
+          px={4}
+          bg={bg}
+          mt={"lg"}
+          mr={reaction.pos === "bottom-end" && "xl"}
+          ml={reaction.pos === "bottom-start" && "xl"}
+        >
+          {reaction?.emoji}
+        </Text>
+      </Popover.Target>
+      <Popover.Dropdown p={"xs"}>
+        <Group justify="space-between">
+          <Group gap={0}>
+            <Avatar size={"sm"} />
+            <Text size="xs">{reaction.from}</Text>
+          </Group>
+          <Text>{reaction?.emoji}</Text>
+        </Group>
+      </Popover.Dropdown>
+    </Popover>
+  );
+};
