@@ -15,9 +15,14 @@ export enum DateType {
 const WaMessageText = z.object({
   body: z.string(),
 });
+const WaReaction = z.object({
+  toWaMessageId: z.string(),
+  emoji: z.string(),
+});
 const NewWaMessageBody = z.object({
-  type: z.enum(["text"]),
-  text: WaMessageText,
+  type: z.enum(["text", "reaction"]),
+  text: WaMessageText.optional(),
+  reaction: WaReaction.optional(),
 });
 
 const PaginateQuerySchema = z.object({

@@ -734,6 +734,19 @@ export function createNativeListMessage(
   };
 }
 
+export function createReactionMessage(to, to_wa_id, emoji): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "reaction",
+    reaction: {
+      message_id: to_wa_id,
+      emoji,
+    },
+  };
+}
+
 export async function generateMessageDataFromQuestion(
   session: WaSessionWithRelations,
   question: Question,

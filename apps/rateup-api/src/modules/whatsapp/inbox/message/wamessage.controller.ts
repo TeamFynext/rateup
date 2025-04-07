@@ -25,6 +25,7 @@ import {
   ContactCore,
 } from "../../../contact/contact.schema";
 import {
+  createReactionMessage,
   createTextMessage,
   validateSession,
 } from "../../whatsappSurvey/wasurvey.utils";
@@ -155,7 +156,17 @@ export async function sendNewWaMessageHandler(
           request?.body?.text?.body,
         );
         await sendMessage(orgId, messageBody, null, userId);
+        break;
       }
+      case "reaction":
+        const { emoji, toWaMessageId } = request.body.reaction;
+        const messageBody = createReactionMessage(
+          contact.phone,
+          toWaMessageId,
+          emoji,
+        );
+        await sendMessage(orgId, messageBody, null, userId);
+        break;
     }
     reply.send("Message Sent");
   } catch (error) {
