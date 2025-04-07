@@ -15,7 +15,12 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDots, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconAdjustmentsCog,
+  IconEdit,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
@@ -413,13 +418,14 @@ export function Column({
               borderBottomColor: "white",
             }}
           >
-            <Title order={5} c={"var(--shade-of-blue-14)"} tt={"uppercase"}>
+            <Title order={5} c="gray.7" tt="uppercase">
               {column.title}
             </Title>
+
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
                 <ActionIcon variant="transparent" aria-label="More actions">
-                  <IconDots size={16} />
+                  <IconAdjustmentsCog size={20} />
                 </ActionIcon>
               </Menu.Target>
 
@@ -469,8 +475,9 @@ export function Column({
               </div>
             ) : null}
           </div>
-          <Group p={"sm"}>
+          <Group p={"sm"} px={28}>
             <Button
+              radius={15}
               leftSection={<IconPlus size={16} />}
               variant="light"
               onClick={handleOpenAddCardModal}
