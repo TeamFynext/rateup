@@ -717,12 +717,9 @@ export async function processNextNode(
     }
 
     // Find and process next node unless current node requires user input
-    const requiresUserInput = [
-      "buttonNode",
-      "flowNode",
-      "listNode",
-      "ticketNode",
-    ].includes(node?.type);
+    const requiresUserInput = ["buttonNode", "flowNode", "listNode"].includes(
+      node?.type,
+    );
     const nextEdges = automation.matchData?.json?.edges.filter(
       (edge: any) => edge.source === nodeId,
     );
