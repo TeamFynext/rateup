@@ -70,9 +70,9 @@ export const useUpdateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
   return useMutation({
     mutationFn: ({ id, ...data }: any) => updateWaAutomatedReply(id, data),
     onSuccess: (res) => {
-      qc.invalidateQueries({
-        queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
-      });
+      // qc.invalidateQueries({
+      //   queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
+      // });
       showSuccessToast("Automated Reply Updated Successfully");
     },
     onError: (error: any) => {
