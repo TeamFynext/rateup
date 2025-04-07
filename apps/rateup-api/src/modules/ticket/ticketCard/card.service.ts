@@ -196,6 +196,7 @@ export async function getCardById(id: string) {
     const contact = await prisma.contact.findFirst({
       where: {
         phone: ticketCard.waAutomatedReplyMessage?.phone,
+        orgId: ticketCard.waAutomatedReplyMessage?.orgId,
       },
       select: {
         id: true,
