@@ -8,6 +8,7 @@ import {
   Center,
   Divider,
   Group,
+  IndicatorProps,
   Loader,
   Paper,
   Stack,
@@ -139,6 +140,40 @@ export default function WaInboxChatDisplayBody(props: Props) {
     scrollableRef.current.scrollTop = currentScrollPosition + heightDifference;
   }, [props?.data]);
 
+  function getReactionMessage(message: WaGetMessagesBody) {
+    const exchangeProcess = message.messageBody.exchangeProcess;
+    const wa_id =
+      exchangeProcess === "send"
+        ? message.messageId
+        : message.messageBody.receive.messages[0].id;
+    const reactionMsg = props.data?.findLast((msg) => {
+      const { messageType, messageContent } = parseWaMessage(msg.messageBody);
+      return (
+        messageType === "reaction" &&
+        wa_id ===
+          (msg.messageBody.exchangeProcess === "receive"
+            ? msg.messageBody.receive?.messages[0].reaction.message_id
+            : msg.messageBody.send.reaction.message_id)
+      );
+    });
+
+    const isSendReactionMsg =
+      reactionMsg && reactionMsg.messageBody.exchangeProcess === "send";
+    if (reactionMsg)
+      return {
+        emoji: isSendReactionMsg
+          ? reactionMsg.messageBody.send.reaction.emoji
+          : reactionMsg.messageBody.receive.messages[0].reaction.emoji,
+        from: isSendReactionMsg
+          ? reactionMsg.sender?.name
+          : reactionMsg.messageBody.receive.contacts[0].profile.name,
+        pos:
+          exchangeProcess === "receive"
+            ? "bottom-start"
+            : ("bottom-end" as IndicatorProps["position"]),
+      };
+  }
+
   return (
     <div className={classes.wrapper}>
       <div
@@ -164,6 +199,8 @@ export default function WaInboxChatDisplayBody(props: Props) {
           </Center>
         )}
         {props?.data?.map((message, index) => {
+          if (parseWaMessage(message?.messageBody)?.messageType === "reaction")
+            return false;
           const previousMessage = index > 0 ? props.data[index - 1] : null;
           const showDate =
             !previousMessage ||
@@ -171,12 +208,14 @@ export default function WaInboxChatDisplayBody(props: Props) {
               dayjs(previousMessage.waCreatedAt),
               "day",
             );
+          const reaction = getReactionMessage(message);
           return (
             <React.Fragment key={message?.id}>
               {showDate && <DateComponent date={message?.waCreatedAt} />}
               <WaInboxSingleMessageLayout
                 exchangeProcess={message?.messageBody?.exchangeProcess}
                 messageObject={message}
+                reaction={reaction}
               >
                 {singleMessage(
                   message?.messageBody,
