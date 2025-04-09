@@ -410,7 +410,7 @@ export function Column({
             p={"sm"}
             pb={"xs"}
             ref={headerRef}
-            bg={"white"}
+            bg={"teal.6"}
             bd={"1px solid var(--light-blue-5)"}
             style={{
               borderTopLeftRadius: 12,
@@ -418,14 +418,14 @@ export function Column({
               borderBottomColor: "white",
             }}
           >
-            <Title order={5} c="gray.7" tt="uppercase">
+            <Title order={5} c="gray.1">
               {column.title}
             </Title>
 
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
                 <ActionIcon variant="transparent" aria-label="More actions">
-                  <IconAdjustmentsCog size={20} />
+                  <IconAdjustmentsCog size={20} color="white" />
                 </ActionIcon>
               </Menu.Target>
 

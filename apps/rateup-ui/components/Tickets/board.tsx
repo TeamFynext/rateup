@@ -326,24 +326,38 @@ export function Board({
   if (isLoading) return <RateupLoader />;
 
   return (
-    <Flex direction="column" style={{ height: "100%" }} gap="md">
-      <Group mx="md" align="center" justify="space-between" mb="md">
-        <Flex gap={8}>
+    <Flex direction="column" gap="md">
+      <Group
+        mx="md"
+        py="md"
+        px="lg"
+        align="center"
+        justify="space-between"
+        mb="md"
+        style={{
+          backdropFilter: "blur(10px)",
+          background: "rgba(255, 255, 255, 0.05)",
+          borderRadius: "16px",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <Flex align="center" gap="md">
           <Button
+            variant="light"
             radius="md"
-            variant="filled"
+            size="sm"
             leftSection={<IconArrowLeft size={16} />}
             onClick={() => router.push({ query: {} })}
           >
             Back
           </Button>
 
-          <Text fw={700} size="xl">
+          <Text tt="capitalize" fw={500} c={"gray.9"} size="27px">
             {data.title}
           </Text>
         </Flex>
 
-        {/* Filtering on the basis of priority  */}
         <PriorityFilter
           filterOpened={filterOpened}
           setFilterOpened={setFilterOpened}
@@ -351,7 +365,6 @@ export function Board({
           setPriorityFilter={setPriorityFilter}
         />
       </Group>
-
       <Flex
         style={{
           flex: 1,
