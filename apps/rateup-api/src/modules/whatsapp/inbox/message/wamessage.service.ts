@@ -277,7 +277,8 @@ export async function filterChats(
     if (bodyFilterProps?.waMessageAssignStatus) {
       if (bodyFilterProps?.waMessageAssignStatus === "New") {
         filters.push(
-          `(c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours')`,
+          `(c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours') 
+          AND c."waMessageAssignStatus" = 'UNASSIGNED'`,
         );
       } else {
         const isAssignedToMe =
@@ -521,7 +522,8 @@ export async function getContactsCountByInbox(orgId, userId) {
 )
 SELECT 
     COUNT(DISTINCT CASE 
-        WHEN c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND wm."messageBody"->>'exchangeProcess' ='receive' 
+        WHEN c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND wm."messageBody"->>'exchangeProcess' ='receive'
+        AND c."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED}
         THEN wm."contactId" 
     END)::INTEGER AS new_count,
 

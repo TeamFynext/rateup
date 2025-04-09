@@ -98,7 +98,6 @@ export async function handleWaMessages(
 
     if (type === "receive") {
       const isChangeStatus =
-        isSessionExpired(contact.lastReceivedMessageTimeStamp) &&
         contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED;
       await updateContactById(contact.id, {
         waMessageAssignStatus: isChangeStatus
