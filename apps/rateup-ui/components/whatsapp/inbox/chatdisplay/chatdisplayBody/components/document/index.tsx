@@ -32,7 +32,7 @@ export default function WaInboxDocument({ messageContent }: Props) {
         // Automatically download the document
         const link = document.createElement("a");
         link.href = url;
-        link.download = filename;
+        link.download = filename ?? "document.pdf";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

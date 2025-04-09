@@ -137,7 +137,6 @@ function WaTextEditor({
       <Group gap={1}>
         {media.length &&
           media.map((me) => {
-            console.log("me", me.url);
             return (
               <Indicator
                 label={
