@@ -2,6 +2,7 @@ import { Button } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
+import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import TextStyle from "@tiptap/extension-text-style";
@@ -24,6 +25,7 @@ export default function TicketTextEditor({
   const editor = useEditor({
     extensions: [
       StarterKit,
+      Image,
       Underline,
       Link,
       Color,

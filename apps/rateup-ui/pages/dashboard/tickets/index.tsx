@@ -145,7 +145,17 @@ export default function Page() {
   if (isLoading) return <RateupLoader h={"100dvh"} />;
 
   return (
-    <Container size="2xl" py="xl">
+    <Container
+      size="2xl"
+      py="xl"
+      h={"100%"}
+      style={{
+        backgroundImage: `url("/images/cover/cover4.jpg")`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       {/* Header with team filter and create button */}
       {!selectedBoardId && (
         <Group mb="xl">

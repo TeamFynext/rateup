@@ -1,9 +1,18 @@
 import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
-import { ActionIcon, Badge, Divider, Group, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Box,
+  Divider,
+  Group,
+  Menu,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconClock, IconTrash } from "@tabler/icons-react";
+import { IconClock, IconDotsVertical, IconTrash } from "@tabler/icons-react";
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -103,6 +112,18 @@ export function CardDisplay({
     e.stopPropagation();
   };
 
+  const priorityStyles: Record<string, { bg: string; color: string }> = {
+    low: { bg: "#dcfce7", color: "#166534" },
+    medium: { bg: "#f3e8ff", color: "#7e22ce" },
+    high: { bg: "#fef9c3", color: "#92400e" },
+    critical: { bg: "#ffe5e5", color: "#c92a2a" },
+    na: { bg: "#edf2f7", color: "#6b7280" },
+  };
+
+  // Get priority key and styles
+  const priorityKey = card.priority?.toLowerCase() || "na";
+  const barStyle = priorityStyles[priorityKey] || priorityStyles.na;
+
   // Add class for animations
   const getAnimationClass = () => {
     if (state.type === "is-dragging") return "card-exiting";
@@ -160,93 +181,110 @@ export function CardDisplay({
             }}
             onClick={handleMenuClick}
           >
-            <ActionIcon
-              variant={"outline"}
-              onClick={onDelete}
-              size={"sm"}
-              color={"var(--board-scrollbar)"}
-            >
-              <IconTrash size={14} color="gray" />
-            </ActionIcon>
+            <Menu withinPortal position="bottom-end" shadow="md" offset={4}>
+              <Menu.Target>
+                <ActionIcon
+                  mt={21}
+                  mr={8}
+                  variant="white"
+                  size="sm"
+                  color="var(--board-scrollbar)"
+                >
+                  <IconDotsVertical size={16} />
+                </ActionIcon>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconTrash size={16} />}
+                  onClick={onDelete}
+                >
+                  Delete
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </div>
         )}
 
-        <Stack gap={8} p={4} py={6}>
-          {card.title && (
-            <Text
-              size="lg"
-              fw={700}
-              gradient={{ from: "teal", to: "#5c6ac4", deg: 65 }}
-              variant="gradient"
-            >
-              {card.title}
-            </Text>
-          )}
-          <Divider color={"var(--grey-color-5)"} />
-          <Group py={4}>
-            {[
-              { label: "Source", value: card.type },
-              {
-                label: "Priority",
-                value: card.priority ?? "NA",
-              },
-            ].map((item, i) => {
-              const isPriority = item.label === "Priority";
+        <Box
+          style={{
+            borderRadius: 12,
+            overflow: "hidden",
+            background: "#fff",
+            border: `1px solid #e9ecef`,
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
+          }}
+        >
+          {/* Top Bar */}
+          <Box h={6} style={{ backgroundColor: barStyle.color }} />
 
-              // Define styles based on priority
-              const priorityStyles: Record<
-                string,
-                { bg: string; color: string }
-              > = {
-                low: { bg: "#dcfce7", color: "#166534" },
-                medium: { bg: "#f3e8ff", color: "#7e22ce" },
-                high: { bg: "#fef9c3", color: "#92400e" },
-                critical: { bg: "#ffe5e5", color: "#c92a2a" },
-                na: { bg: "#f3f4f6", color: "#6b7280" },
-              };
-
-              const key = item.value?.toString().toLowerCase();
-              const styles = isPriority
-                ? priorityStyles[key] || priorityStyles.na
-                : { bg: "#e0f2fe", color: "#0369a1" };
-              return (
-                <Stack gap={0} key={i}>
-                  <Text size="xs" ta="center" c="var(--board-scrollbar)">
-                    {item.label}
-                  </Text>
-                  <Badge
-                    size="sm"
-                    fw="normal"
-                    variant="light"
-                    style={{
-                      backgroundColor: styles.bg,
-                      color: styles.color,
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {item.value}
-                  </Badge>
-                </Stack>
-              );
-            })}
-          </Group>
-
-          <Divider color={"var(--grey-color-5)"} />
-          <Group justify="space-between" py={2}>
-            <Group gap={4}>
-              <Text size="xs" c={"var(--board-scrollbar)"}>
-                Created on:
+          {/* Card Body */}
+          <Stack gap={8} p={4} py={6}>
+            {card.title && (
+              <Text
+                size="lg"
+                fw={700}
+                gradient={{ from: "teal", to: "#5c6ac4", deg: 65 }}
+                variant="gradient"
+              >
+                {card.title}
               </Text>
-              <Text size="xs">{formatDate(card.createdAt)}</Text>
+            )}
+
+            <Divider color={"var(--grey-color-5)"} />
+
+            <Group py={4}>
+              {[
+                { label: "Source", value: card.type },
+                { label: "Priority", value: card.priority ?? "NA" },
+              ].map((item, i) => {
+                const isPriority = item.label === "Priority";
+                const key = item.value?.toString().toLowerCase();
+                const styles = isPriority
+                  ? priorityStyles[key] || priorityStyles.na
+                  : { bg: "#e0f2fe", color: "#0369a1" };
+
+                return (
+                  <Stack gap={0} key={i}>
+                    <Text size="xs" ta="center" c="var(--board-scrollbar)">
+                      {item.label}
+                    </Text>
+                    <Badge
+                      size="sm"
+                      fw="normal"
+                      variant="light"
+                      style={{
+                        backgroundColor: styles.bg,
+                        color: styles.color,
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {item.value}
+                    </Badge>
+                  </Stack>
+                );
+              })}
             </Group>
-            <Group gap={4} display={card.deadline ? "flex" : "none"}>
-              <IconClock size={16} />
-              <Text size="xs" c={"red"} fw="bold">
-                {getTimeRemaining(card.deadline)}
-              </Text>
-            </Group>{" "}
-          </Group>
-        </Stack>
+
+            <Divider color={"var(--grey-color-5)"} />
+
+            <Group justify="space-between" py={2}>
+              <Group gap={4}>
+                <Text size="xs" c={"var(--board-scrollbar)"}>
+                  Created on:
+                </Text>
+                <Text size="xs">{formatDate(card.createdAt)}</Text>
+              </Group>
+              <Group gap={4} display={card.deadline ? "flex" : "none"}>
+                <IconClock size={16} />
+                <Text size="xs" c={"red"} fw="bold">
+                  {getTimeRemaining(card.deadline)}
+                </Text>
+              </Group>
+            </Group>
+          </Stack>
+        </Box>
       </div>
       {/* Put a shadow after the item if closer to the bottom edge */}
       {state.type === "is-over" && state.closestEdge === "bottom" ? (
