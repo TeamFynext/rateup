@@ -56,6 +56,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import TicketTextEditor from "@/components/RichTextEditor/TicketTextEditor";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { getCellData } from "@/components/Survey/Response/WaResponses";
+import ShareLink from "@/components/Tickets/ShareLink";
 import SurveyResponsesView from "@/components/Tickets/SingleTicket/SurveyResponsesView";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
 import { useUser } from "@/context/UserContext";
@@ -456,7 +457,7 @@ const EditTicket = ({
 
   return (
     <form aria-label="Edit ticket form">
-      <Group justify="space-between">
+      <Group justify="space-between" my="md">
         <Group gap="xs">
           <Tooltip label="Go back">
             <ActionIcon
@@ -469,11 +470,8 @@ const EditTicket = ({
             </ActionIcon>
           </Tooltip>
 
-          <Group gap={4}>
-            <Text size="sm">Ticket Id:</Text>
-            <Badge variant="light" radius="xs">
-              #{ticket.ticketId}
-            </Badge>
+          <Group px="xs">
+            <ShareLink />
           </Group>
 
           <Group gap={4}>

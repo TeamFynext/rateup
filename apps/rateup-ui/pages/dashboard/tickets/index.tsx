@@ -1,18 +1,30 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 
-import { Flex, Group, Modal, MultiSelect, Stack, Title } from "@mantine/core";
+import {
+  Container,
+  Flex,
+  Group,
+  Modal,
+  MultiSelect,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
-import { useBoard, useBoardQueries } from "@/backend/tickets/tickets.query";
+import { useBoardQueries } from "@/backend/tickets/tickets.query";
+import { useUserInfo } from "@/backend/user/user.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import { BoardSidebar } from "@/components/Tickets/BoardSidebar";
+import { BoardCard } from "@/components/Tickets/BoardCard";
+import { BoardContent } from "@/components/Tickets/BoardContent";
 import useTranslations from "@/dictionaries/useTranslation";
-
-import { Board } from "../../../components/Tickets/board";
+import { showWarnToast } from "@/utils/notifications";
 
 export default function Page() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -23,9 +35,16 @@ export default function Page() {
     title: "",
     teamIds: [],
   });
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("all");
   const router = useRouter();
   const selectedBoardId = router.query?.b as string;
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [boardIdToDelete, setBoardIdToDelete] = useState<string | null>(null);
+  // get userInformation for checking the role
+  const { data: userRes } = useUserInfo() as { data: { data: UserData } };
+  const role = userRes?.data?.role;
+  const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
+
   // Use Tanstack Query for boards data
   const { boards, isLoading, createBoard, updateBoard, deleteBoard } =
     useBoardQueries();
@@ -42,12 +61,18 @@ export default function Page() {
       }))
     : [];
 
-  // Get board info for sidebar
+  // Get board info for cards
   const boardInfos = boards.map((board) => ({
     id: board.id,
     title: board.title,
     teamIds: board.teams.map((team) => team.teamId),
   }));
+
+  // Filter boards by selected team
+  const filteredBoards =
+    selectedTeamId === "all"
+      ? boardInfos
+      : boardInfos.filter((board) => board.teamIds.includes(selectedTeamId));
 
   const handleCreateBoard = () => {
     if (!newBoardData.title.trim() || !newBoardData.teamIds?.length) return;
@@ -61,26 +86,18 @@ export default function Page() {
     setIsCreateModalOpen(false);
   };
 
-  // Define the handleOpenEditBoard function to open the edit modal
   const handleOpenEditBoard = (boardId: string) => {
-    console.log("Opening edit modal for board:", boardId);
-
-    // Find the board in boardInfos
     const board = boardInfos.find((b) => b.id === boardId);
     if (board) {
-      // Set the edit board data state
       setEditBoardData({
         id: board.id,
         title: board.title,
         teamIds: board.teamIds,
       });
 
-      // Open the modal - ensure this happens after state is set
       setTimeout(() => {
         setIsEditModalOpen(true);
       }, 0);
-    } else {
-      console.error("Board not found with ID:", boardId);
     }
   };
 
@@ -97,32 +114,94 @@ export default function Page() {
   };
 
   const handleDeleteBoard = (boardId: string) => {
-    deleteBoard(boardId);
+    setBoardIdToDelete(boardId);
+    setIsDeleteModalOpen(true);
+  };
 
-    if (boardId === selectedBoardId) {
-      router.push({
-        query: {},
-      });
+  const confirmDeleteBoard = () => {
+    if (!isAdmin) {
+      showWarnToast("Only admin or super admin can delete a board.");
+      return;
     }
+
+    if (boardIdToDelete) {
+      deleteBoard(boardIdToDelete);
+
+      if (boardIdToDelete === selectedBoardId) {
+        router.push({ query: {} });
+      }
+    }
+
+    setIsDeleteModalOpen(false);
+    setBoardIdToDelete(null);
+  };
+
+  const handleBoardSelect = (boardId: string) => {
+    router.push({
+      query: { b: boardId },
+    });
   };
 
   if (isLoading) return <RateupLoader h={"100dvh"} />;
 
   return (
-    <Flex h="100%">
-      <BoardSidebar
-        selectedBoardId={selectedBoardId}
-        onCreateBoard={() => setIsCreateModalOpen(true)}
-        onEditBoard={handleOpenEditBoard}
-        onDeleteBoard={handleDeleteBoard}
-        collapsed={sidebarCollapsed}
-        toggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        boards={boardInfos}
-      />
-      <ColumnListByBoardId
-        selectedBoardId={selectedBoardId}
-        // boardInfos={boardInfos}
-      />
+    <Container
+      size="2xl"
+      py="xl"
+      h={"100%"}
+      style={{
+        backgroundImage: `url("/images/cover/cover4.jpg")`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* Header with team filter and create button */}
+      {!selectedBoardId && (
+        <Group mb="xl">
+          <Title order={3}>Boards</Title>
+          <Group>
+            <TeamSelector
+              value={selectedTeamId}
+              onChange={(value) => setSelectedTeamId(value)}
+              enableAll
+            />
+            <RateupButtonPrimary
+              onClick={() => setIsCreateModalOpen(true)}
+              title="Create Board"
+              leftIcon={<IconPlus size={16} />}
+            />
+          </Group>
+        </Group>
+      )}
+
+      {/* Board Cards Grid */}
+      {selectedBoardId ? (
+        <BoardContent selectedBoardId={selectedBoardId} />
+      ) : (
+        <>
+          {filteredBoards.length > 0 ? (
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+              {filteredBoards.map((board) => (
+                <BoardCard
+                  key={board.id}
+                  board={board}
+                  isSelected={board.id === selectedBoardId}
+                  onSelect={handleBoardSelect}
+                  onEdit={handleOpenEditBoard}
+                  onDelete={handleDeleteBoard}
+                />
+              ))}
+            </SimpleGrid>
+          ) : (
+            <Flex align="center" justify="center" h="60vh">
+              <Text c="dimmed">
+                No boards found. Create a new board to get started.
+              </Text>
+            </Flex>
+          )}
+        </>
+      )}
 
       {/* Create Board Modal */}
       <Modal
@@ -160,7 +239,7 @@ export default function Page() {
         </Stack>
       </Modal>
 
-      {/* Edit Board Modal - Add a key to force re-render */}
+      {/* Edit Board Modal */}
       <Modal
         opened={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -199,36 +278,38 @@ export default function Page() {
           </Group>
         </Stack>
       </Modal>
-    </Flex>
+
+      <Modal
+        opened={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setBoardIdToDelete(null);
+        }}
+        title="Confirm Deletion"
+        centered
+      >
+        <Stack>
+          <Text>
+            Are you sure you want to delete this board? This action cannot be
+            undone.
+          </Text>
+          <Group justify="right">
+            <RateupButtonPrimary
+              variant="outline"
+              onClick={() => {
+                setIsDeleteModalOpen(false);
+                setBoardIdToDelete(null);
+              }}
+              title="Cancel"
+            />
+            <RateupButtonPrimary
+              color="red"
+              onClick={confirmDeleteBoard}
+              title="Delete"
+            />
+          </Group>
+        </Stack>
+      </Modal>
+    </Container>
   );
 }
-
-const ColumnListByBoardId = ({
-  selectedBoardId,
-  boardInfos,
-}: {
-  selectedBoardId: string;
-  boardInfos?: { id: string; title: string; teamId: string }[];
-}) => {
-  // Get selected board data
-  const { board: selectedBoard, isLoading: IsBoardDataLoading } = useBoard(
-    selectedBoardId || "",
-  );
-  if (IsBoardDataLoading) return <RateupLoader h={"100dvh"} w={"100%"} />;
-  if (!selectedBoard || !selectedBoardId)
-    return (
-      <Flex align="center" justify="center" h="100%" w={"100%"}>
-        <Title order={4}>Select a board to start</Title>
-      </Flex>
-    );
-  return (
-    <Stack style={{ flexGrow: 1, height: "100%", overflow: "hidden" }} p="md">
-      <div style={{ overflowX: "auto", width: "100%", height: "100%" }}>
-        <Board
-          initial={selectedBoard}
-          //  availableBoards={boardInfos}
-        />
-      </div>
-    </Stack>
-  );
-};
