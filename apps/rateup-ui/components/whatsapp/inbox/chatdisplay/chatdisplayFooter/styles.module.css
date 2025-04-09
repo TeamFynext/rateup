@@ -3,12 +3,12 @@
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-xl);
   display: flex;
   gap: var(--mantine-spacing-sm);
-  align-items: center;
+  align-items: flex-start;
 }
 .form {
   display: flex;
   gap: var(--mantine-spacing-sm);
-  align-items: center;
+  align-items: flex-start;
   flex: 1;
 }
 

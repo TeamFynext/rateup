@@ -21,6 +21,7 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
+import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { WaGetMessagesBody } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
@@ -214,7 +215,7 @@ const TempMessageBody = ({ body, timestamp }) => {
           shadow="xs"
           bg={"light-dark(#dcf0e4,rgb(82, 190, 127)"}
         >
-          <Text>{body}</Text>
+          <div>{parseJsonToReact(body)}</div>
           <Group gap={4}>
             <Text fz={10} c={"dimmed"}>
               {formatToCustomTime(timestamp)}

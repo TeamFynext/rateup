@@ -1166,6 +1166,8 @@ export type WaReceiveMessageBody = {
       };
       document: {
         id: string;
+        caption?: string;
+        filename: string;
       };
       button?: {
         text: string;
@@ -1231,6 +1233,18 @@ export type WaSendMessageBody = {
       };
       // add image, video, document if needed in future
     };
+  };
+  document?: {
+    link: string;
+    caption?: string;
+    filename?: string;
+  };
+  audio?: {
+    link: string;
+  };
+  video?: {
+    link: string;
+    caption?: string;
   };
 };
 type WaInteractiveMessageAction = {
