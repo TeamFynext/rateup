@@ -105,13 +105,17 @@ export interface WaSendMessageBody {
     | "sticker"
     | "location"
     | "template"
-    | "reaction";
+    | "reaction"
+    | "video";
   text?: {
     preview_url?: boolean;
     body: string;
   };
   template?: WaTemplateFetchBody;
-  image?: {};
+  image?: {
+    link: string;
+    caption?: string;
+  };
   interactive?: {
     type:
       | "button"
@@ -141,6 +145,19 @@ export interface WaSendMessageBody {
   reaction?: {
     message_id: string;
     emoji: string;
+  };
+  document?: {
+    link: string;
+    caption?: string;
+    filename?: string;
+  };
+  video?: {
+    link: string;
+    caption?: string;
+  };
+  audio?: {
+    link: string;
+    caption?: string;
   };
 }
 type WaButton = {

@@ -21,6 +21,14 @@ import {
   WaMessageAssignStatusTab,
 } from "../../../../types/enums";
 import { updateContactById } from "../../../contact/contact.service";
+import { wait } from "../../whatsappSurvey/wasurvey.controller";
+import { sendMessage } from "../../whatsappSurvey/wasurvey.service";
+import {
+  createReplyImageMessage,
+  createDocumentMessage,
+  createVideoMessage,
+  createAudioMessage,
+} from "../../whatsappSurvey/wasurvey.utils";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -558,4 +566,51 @@ WHERE c."orgId" = ${orgId}::uuid;`;
     assignedToMe: count[0].assigned_to_me_count,
     assigned: count[0].assigned_count,
   };
+}
+
+type WaMedia = {
+  type?: "audio" | "image" | "document" | "video";
+  url?: string;
+  name?: string;
+};
+
+export async function sendMediaMessages(
+  media: WaMedia[],
+  phone,
+  orgId,
+  userId,
+  caption = "",
+) {
+  for (var i = 0; i < media.length; i++) {
+    const item = media[i];
+    const isLastItem = i === media.length - 1;
+    let captionMsg = isLastItem ? caption : "";
+    let messageBody;
+    switch (item.type) {
+      case "image": {
+        console.log("item.url", item.url);
+        messageBody = createReplyImageMessage(phone, item.url, captionMsg);
+        break;
+      }
+      case "document": {
+        messageBody = createDocumentMessage(
+          phone,
+          item.url,
+          item.name,
+          captionMsg,
+        );
+        break;
+      }
+      case "video": {
+        messageBody = createVideoMessage(phone, item.url, captionMsg);
+        break;
+      }
+      case "audio": {
+        messageBody = createAudioMessage(phone, item.url, captionMsg);
+        break;
+      }
+    }
+    await sendMessage(orgId, messageBody, null, userId);
+    if (!isLastItem) wait(50);
+  }
 }
