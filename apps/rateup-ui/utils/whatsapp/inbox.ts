@@ -48,6 +48,9 @@ export function parseWaMessage(
       case "reaction":
         messageContent = send.reaction.emoji;
         break;
+      case "document":
+        messageContent = `${send?.document.link}_caption_${send?.document.filename}_caption_${send?.document.caption ?? ""}`;
+        break;
     }
   }
   if (messageBody?.exchangeProcess === "receive") {
@@ -71,7 +74,7 @@ export function parseWaMessage(
         messageContent = receive.messages[0].video.id;
         break;
       case "document":
-        messageContent = receive.messages[0].document.id;
+        messageContent = `${receive.messages[0].document.id}_caption_${receive.messages[0].document.filename}_caption_${receive.messages[0].document.caption ?? ""}`;
         break;
       case "interactive":
         switch (receive.messages[0].interactive.type) {
