@@ -1,10 +1,12 @@
 "use client";
 
 import { useContext, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
 
 import { Button, Flex, Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPlus } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
+import { IconArrowLeft, IconPlus } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
@@ -13,13 +15,16 @@ import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 import invariant from "tiny-invariant";
 
 import { useBoard } from "@/backend/tickets/tickets.query";
+import { useUserInfo } from "@/backend/user/user.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { showWarnToast } from "@/utils/notifications";
 
 import { Column } from "./column";
 import { TColumn } from "./data";
+import { PriorityFilter } from "./PriorityFilter";
 import { SettingsContext } from "./settings-context";
 import {
   BoardInfo,
@@ -42,6 +47,13 @@ export function Board({
   const scrollableRef = useRef<HTMLDivElement | null>(null);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [isAddingColumn, { open, close }] = useDisclosure(false);
+  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
+  const [filterOpened, setFilterOpened] = useState(false);
+  const router = useRouter();
+  // get userInformation for checking the role
+  const { data: userRes } = useUserInfo() as { data: { data: UserData } };
+  const role = userRes?.data?.role;
+  const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
   // Use Tanstack Query hooks
   const {
@@ -72,7 +84,25 @@ export function Board({
   };
 
   const handleDeleteColumn = (columnId: string) => {
-    deleteColumn(columnId);
+    if (!isAdmin) {
+      showWarnToast("Only admin or super admin can delete this.");
+      return;
+    }
+
+    modals.openConfirmModal({
+      title: "Delete ",
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this? This action cannot be undone.
+        </Text>
+      ),
+      labels: { confirm: "Delete", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: () => {
+        deleteColumn(columnId);
+      },
+    });
   };
 
   const handleUpdateColumn = (columnId: string, updates: Partial<TColumn>) => {
@@ -296,13 +326,45 @@ export function Board({
   if (isLoading) return <RateupLoader />;
 
   return (
-    <Flex direction="column" style={{ height: "100%" }} gap="md">
-      <Group justify="space-between">
-        <Text fw={700} size="xl">
-          {data.title}
-        </Text>
-      </Group>
+    <Flex direction="column" gap="md">
+      <Group
+        mx="md"
+        py="md"
+        px="lg"
+        align="center"
+        justify="space-between"
+        mb="md"
+        style={{
+          backdropFilter: "blur(10px)",
+          background: "rgba(255, 255, 255, 0.05)",
+          borderRadius: "16px",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <Flex align="center" gap="md">
+          <Button
+            variant="light"
+            radius="md"
+            size="sm"
+            leftSection={<IconArrowLeft size={16} />}
+            onClick={() => router.push({ query: {} })}
+          >
+            Back
+          </Button>
 
+          <Text tt="capitalize" fw={500} c={"gray.9"} size="27px">
+            {data.title}
+          </Text>
+        </Flex>
+
+        <PriorityFilter
+          filterOpened={filterOpened}
+          setFilterOpened={setFilterOpened}
+          priorityFilter={priorityFilter}
+          setPriorityFilter={setPriorityFilter}
+        />
+      </Group>
       <Flex
         style={{
           flex: 1,
@@ -333,17 +395,28 @@ export function Board({
           }}
         >
           {data.ticketColumns.length > 0 &&
-            data.ticketColumns.map((column) => (
-              <Column
-                key={column.id}
-                column={column}
-                onDelete={handleDeleteColumn}
-                onUpdate={handleUpdateColumn}
-                onMoveToBoard={handleMoveColumnToBoard}
-                // availableBoards={availableBoards}
-                currentBoardId={data.id}
-              />
-            ))}
+            data.ticketColumns.map((column) => {
+              const filteredColumn = {
+                ...column,
+                ticketCards: priorityFilter
+                  ? column.ticketCards.filter(
+                      (card) => card.priority === priorityFilter,
+                    )
+                  : column.ticketCards,
+              };
+
+              return (
+                <Column
+                  key={column.id}
+                  column={filteredColumn}
+                  onDelete={handleDeleteColumn}
+                  onUpdate={handleUpdateColumn}
+                  onMoveToBoard={handleMoveColumnToBoard}
+                  currentBoardId={data.id}
+                />
+              );
+            })}
+
           {/* Column add form */}
           {isAddingColumn ? (
             <Flex direction="column" style={{ width: 280 }}>
