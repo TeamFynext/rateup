@@ -4,6 +4,7 @@ import {
   ActionIcon,
   Avatar,
   Group,
+  Menu,
   Skeleton,
   Stack,
   Switch,
@@ -14,7 +15,10 @@ import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconArrowLeft,
+  IconChecks,
+  IconDotsVertical,
   IconEdit,
+  IconMessageCheck,
   IconPlus,
   IconTicket,
   IconUserShare,
@@ -33,6 +37,7 @@ import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamess
 import {
   useAssignInboxToUer,
   useGetAssignedUserForContact,
+  useMarkWaMessagesAsRead,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import EditContactModal from "@/components/Contacts/EditContactModal";
@@ -60,9 +65,8 @@ export default function WaInboxChatDisplayHeader({
   smallScreen,
 }: WaInboxChatDisplayHeaderProps) {
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
+  const editContactMutation = useEditContactMutation(null);
   const { setSelectedContact } = useContactStore();
-  const { user } = useUser();
-  const editContactMut = useEditContactMutation(null);
   const [
     openedCreateTicket,
     { open: openCreateTicket, close: closeCreateTicket },
@@ -72,7 +76,7 @@ export default function WaInboxChatDisplayHeader({
   const isMobile = useMediaQuery("(max-width: 1200px)");
 
   function handleCloseChat() {
-    editContactMut.mutate(
+    editContactMutation.mutate(
       {
         contactId: contact.id,
         data: { waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
@@ -87,7 +91,7 @@ export default function WaInboxChatDisplayHeader({
       },
     );
   }
-  const editContactMutation = useEditContactMutation(null);
+
   const { data: chatbot } = useGetChatbotDetails();
   const { data: subscription } = useSubscription();
 
@@ -158,20 +162,20 @@ export default function WaInboxChatDisplayHeader({
           timeStamp={contact?.lastReceivedMessageTimeStamp}
         />
       )}
-
-      <Group gap={"lg"}>
+      <ChatContactMenu contact={contact} />
+      {/* <Group gap={"lg"}>
         <Group gap="xs">
           <Tooltip label={"Assign"}>
             <ActionIcon onClick={openAssign} variant="outline">
               <IconUserShare />
             </ActionIcon>
-          </Tooltip>
-          {/* <Tooltip label={"Create Ticket"}>
+          </Tooltip> */}
+      {/* <Tooltip label={"Create Ticket"}>
                 <ActionIcon onClick={openCreateTicket}>
                   <IconTicket />
                 </ActionIcon>
               </Tooltip> */}
-        </Group>
+      {/* </Group>
         {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
           <RateupButtonPrimary
             color="var(--grey-color-7)"
@@ -193,7 +197,7 @@ export default function WaInboxChatDisplayHeader({
         contactId={contact.id}
         opened={openedAssign}
         close={closeAssign}
-      />
+      /> */}
     </div>
   );
 }
@@ -221,6 +225,66 @@ export const ContactEdit = ({ isMobile, contact }) => {
         />
       </FormModalLayout>
     </Stack>
+  );
+};
+
+const ChatContactMenu = ({ contact }) => {
+  const { setSelectedContact, filterData } = useContactStore();
+  const editContactMutation = useEditContactMutation(null);
+  const markasRead = useMarkWaMessagesAsRead(contact.id, filterData);
+  const [openedAssign, { open: openAssign, close: closeAssign }] =
+    useDisclosure(false);
+  function handleCloseChat() {
+    editContactMutation.mutate(
+      {
+        contactId: contact.id,
+        data: { waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
+      },
+      {
+        onSuccess: () => {
+          setSelectedContact({
+            ...contact,
+            waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+          });
+        },
+      },
+    );
+  }
+  function handleMarkAsRead() {
+    markasRead.mutate();
+  }
+  return (
+    <Menu shadow="xl" position="bottom-start">
+      <Menu.Target>
+        <IconDotsVertical />
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item
+          leftSection={<IconChecks size={14} color="#34B7F1" />}
+          onClick={handleMarkAsRead}
+        >
+          Mark as read
+        </Menu.Item>
+        <Menu.Divider />
+        <Menu.Item leftSection={<IconUserShare />} onClick={openAssign}>
+          Assign Chat
+        </Menu.Item>
+        <Menu.Divider />
+        {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
+          <Menu.Item
+            leftSection={<IconMessageCheck />}
+            onClick={handleCloseChat}
+          >
+            Close Chat
+          </Menu.Item>
+        )}
+      </Menu.Dropdown>
+      <AssignInbox
+        contactId={contact.id}
+        opened={openedAssign}
+        close={closeAssign}
+      />
+    </Menu>
   );
 };
 

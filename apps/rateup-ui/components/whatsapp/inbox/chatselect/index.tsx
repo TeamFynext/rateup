@@ -174,7 +174,7 @@ const WaInboxChatSelect = () => {
     },
     [],
   );
-  const { setSelectedContact, selectedContact, setFilterData } =
+  const { setSelectedContact, selectedContact, setFilterData, filterData } =
     useContactStore();
 
   const updateWaContactsList = useCallback(
@@ -224,6 +224,9 @@ const WaInboxChatSelect = () => {
             ["wa-messages", wsData.inbox.contact.id],
             newData,
           );
+          queryClient.invalidateQueries({
+            queryKey: ["contacts", "filtered", filterData],
+          });
         }
       }
     }
