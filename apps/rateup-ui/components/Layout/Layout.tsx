@@ -459,7 +459,7 @@ export default function Layout({ children, appProps }) {
     return acc;
   }, {});
 
-  useEffect(() => {
+   useEffect(() => {
     Object.entries(linksMapping).find(([key, value]) => {
       const [basePath, queryString] = tab.split("?");
       const params = new URLSearchParams(queryString || "");
