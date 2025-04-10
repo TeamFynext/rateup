@@ -30,6 +30,9 @@ interface messageInput {
 }
 export async function getAIResponseForQuery(data: messageInput, jwtToken) {
   const subscription = await getSubscription(data.orgId);
+  const chatbotDetails = await getChatbotDetails(data.orgId);
+  const customPrompt = chatbotDetails.waPrompt;
+
   const allowedTokens = subscription.features.ai.count;
   const usedTokens = await prisma.usageStats.findUnique({
     where: {
@@ -42,7 +45,7 @@ export async function getAIResponseForQuery(data: messageInput, jwtToken) {
   });
   const res = await axios.post(
     CHATBOT_BASEURL,
-    { ...data, allowedTokens, usedTokens },
+    { ...data, allowedTokens, usedTokens, customPrompt },
     {
       headers: {
         Accept: "application/json",
