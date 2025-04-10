@@ -85,7 +85,9 @@ export function convertNodeToWhatsAppMessage(
         type: "text",
         text: {
           preview_url: data.previewUrl || true,
-          body: parseToWhatsAppFormat(data.body) || "Default message",
+          body: data.body
+            ? parseToWhatsAppFormat(data.body)
+            : "Default message",
         },
       };
     }

@@ -337,8 +337,9 @@ export async function cloneFlowHandler(
     const { dbFlowId } = req.params;
     const previousFlow = await getFlowFromDb(dbFlowId);
     const { categories } = await getFlowFromWa(orgId, previousFlow.flowId);
+    const uniqueSuffix = Date.now();
     const { id: flowId } = await cloneFlowInWa(orgId, {
-      name: `${previousFlow.name} ${previousFlow.flowId}`,
+      name: `${previousFlow.name} ${previousFlow.flowId} ${uniqueSuffix}`,
       categories,
       clone_flow_id: previousFlow.flowId,
     });

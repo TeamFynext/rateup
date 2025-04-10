@@ -1006,13 +1006,6 @@ export async function handleStaticFlowReply(
   session.responses = uniqueResponses;
   await saveResponses(session);
 
-  // Log flow submission using the utility function
-  const automationLog = await logFlowCompletion({
-    phone: session.phone,
-    orgId,
-    flowId: dbFlowId,
-  });
-
   let versionCheck = session?.surveyTeamMap?.survey?.WaFlow?.version === 1;
 
   const sendGRLink = versionCheck
@@ -1035,16 +1028,44 @@ export async function handleStaticFlowReply(
 
   // Use the utility function to find the recent automation
   const progress = await findRecentAutomation(session.phone, orgId);
-
   const automation = progress?.waAutomatedReply;
-  if (automation)
-    await processNextNode(
-      session.phone,
-      automation,
-      progress.currentNode,
-      orgId,
-      automationLog?.id,
+  if (automation) {
+    const matchData = automation.matchData as {
+      json: { edges: any[]; nodes: any };
+    };
+    const nextEdge = matchData?.json?.edges?.find(
+      (edge: any) => edge.target === progress.currentNode,
     );
+
+    if (!nextEdge) return;
+
+    const nextNode = matchData?.json?.nodes?.find(
+      (node: any) => node.id === nextEdge.source,
+    );
+
+    if (!nextNode) return;
+
+    if (nextNode.type === "flowNode" && nextNode.data?.flow?.id === dbFlowId) {
+      // Log flow submission using the utility function
+      const automationLog = await logFlowCompletion({
+        phone: session.phone,
+        orgId,
+        flowId: dbFlowId,
+        recentActivity: {
+          ...progress,
+          currentNode: nextNode.id,
+        },
+      });
+
+      await processNextNode(
+        session.phone,
+        automation,
+        progress.currentNode,
+        orgId,
+        automationLog?.id,
+      );
+    }
+  }
   await deleteSession(session.orgId, session.phone);
 }
 
