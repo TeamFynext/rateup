@@ -464,8 +464,18 @@ export default function Layout({ children, appProps }) {
       const [basePath, queryString] = tab.split("?");
       const params = new URLSearchParams(queryString || "");
       const tabParam = params.get("tab");
-      const cleanPath = tabParam ? `${basePath}?tab=${tabParam}` : basePath;
-      let navItem = value?.find((v) => cleanPath.startsWith(v.link));
+
+      let navItem = value?.find((v) => {
+        const [vBasePath, vQuery] = v.link.split("?");
+        const vParams = new URLSearchParams(vQuery || "");
+        const vTabParam = vParams.get("tab");
+
+        const baseMatches = basePath.startsWith(vBasePath);
+        const tabMatches = vTabParam ? vTabParam === tabParam : true;
+
+        return baseMatches && tabMatches;
+      });
+
       if (navItem) {
         setActiveMainLink(key);
         setActiveSubLink(navItem?.link);
