@@ -465,7 +465,7 @@ export default function Layout({ children, appProps }) {
       const params = new URLSearchParams(queryString || "");
       const tabParam = params.get("tab");
       const cleanPath = tabParam ? `${basePath}?tab=${tabParam}` : basePath;
-      let navItem = value?.find((v) => cleanPath.startsWith(v.link));
+      let navItem = value?.find((v) => v.link.startsWith(cleanPath));
       if (navItem) {
         setActiveMainLink(key);
         setActiveSubLink(navItem?.link);
