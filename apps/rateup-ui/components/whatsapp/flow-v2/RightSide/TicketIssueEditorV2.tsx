@@ -403,7 +403,7 @@ const TicketIssueEditorV2 = ({
                 <Select
                   label="Select Board"
                   placeholder="Choose a board"
-                  value={selectedBoardId ?? ticketIssue.selectedBoardId}
+                  value={selectedBoardId ?? ticketIssue?.selectedBoardId}
                   data={boards}
                   onChange={(boardId) => {
                     setSelectedBoardId(boardId);
@@ -413,7 +413,7 @@ const TicketIssueEditorV2 = ({
                   <Select
                     label="Select Column"
                     placeholder="Choose a column"
-                    value={selectedColumnId ?? ticketIssue.selectedColumnId}
+                    value={selectedColumnId ?? ticketIssue?.selectedColumnId}
                     data={columns}
                     onChange={(columnId) => {
                       setSelectedColumnId(columnId);
