@@ -19,10 +19,20 @@ const WaReaction = z.object({
   toWaMessageId: z.string(),
   emoji: z.string(),
 });
+
+const WaMedia = z.array(
+  z.object({
+    type: z.enum(["image", "audio", "video", "document"]),
+    url: z.string(),
+    name: z.string(),
+  }),
+);
+
 const NewWaMessageBody = z.object({
-  type: z.enum(["text", "reaction"]),
+  type: z.enum(["text", "reaction", "media"]),
   text: WaMessageText.optional(),
   reaction: WaReaction.optional(),
+  media: WaMedia.optional(),
 });
 
 const PaginateQuerySchema = z.object({

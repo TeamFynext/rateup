@@ -19,6 +19,7 @@ import {
   getMediaFile,
   getWaMessagesByContactId,
   getWaTickets,
+  sendMediaMessages,
 } from "./wamessage.service";
 import {
   ByContactIdParams,
@@ -27,6 +28,7 @@ import {
 import {
   createReactionMessage,
   createTextMessage,
+  parseToWhatsAppFormat,
   validateSession,
 } from "../../whatsappSurvey/wasurvey.utils";
 import {
@@ -98,7 +100,6 @@ export async function handleWaMessages(
 
     if (type === "receive") {
       const isChangeStatus =
-        isSessionExpired(contact.lastReceivedMessageTimeStamp) &&
         contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED;
       await updateContactById(contact.id, {
         waMessageAssignStatus: isChangeStatus
@@ -150,6 +151,14 @@ export async function sendNewWaMessageHandler(
     }
     switch (type) {
       case "text": {
+        const media = request.body.media;
+        if (media.length) {
+          const text = request.body.text.body;
+          const caption =
+            typeof text === "string" ? text : parseToWhatsAppFormat(text);
+          await sendMediaMessages(media, contact.phone, orgId, userId, caption);
+          break;
+        }
         const messageBody = createTextMessage(
           contact.phone,
           "",
@@ -166,6 +175,15 @@ export async function sendNewWaMessageHandler(
           emoji,
         );
         await sendMessage(orgId, messageBody, null, userId);
+        break;
+      case "media":
+        if (request.body.media.length)
+          await sendMediaMessages(
+            request.body.media,
+            contact.phone,
+            orgId,
+            userId,
+          );
         break;
     }
     reply.send("Message Sent");
