@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useRouter } from "next/router";
@@ -441,8 +442,12 @@ const WaResponses = ({
     }
   }, [refreshing]);
 
+  const disableTags = useRef(false);
   const data = useMemo(() => {
     return responseData?.responses?.map((item) => {
+      if (!item.tag) {
+        disableTags.current = true;
+      }
       const row = {
         id: item.id,
         contactId: item.contactId,
@@ -589,7 +594,11 @@ const WaResponses = ({
       <Box className={styles["responses-table-container"]}>
         <TanstackTable
           data={data ?? []}
-          columns={columns}
+          columns={
+            disableTags.current
+              ? columns?.filter((col) => col.accessorKey !== "tag")
+              : columns
+          }
           pagination={pagination}
           setPagination={setPagination}
           totalCount={responseCount}

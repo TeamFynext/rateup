@@ -443,7 +443,11 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
       <Box className={styles["responses-table-container"]}>
         <TanstackTable
           data={responseData ? responseData?.responses : []}
-          columns={columns}
+          columns={
+            responseData?.responses?.every((row) => !row.tag)
+              ? columns?.filter((col: any) => col.accessorKey !== "tag")
+              : columns
+          }
           columnFiltersE={columnFilters}
           setColumnFiltersE={setColumnFilters}
           pagination={pagination}
