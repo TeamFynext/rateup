@@ -747,6 +747,51 @@ export function createReactionMessage(to, to_wa_id, emoji): WaSendMessageBody {
   };
 }
 
+export function createDocumentMessage(
+  to,
+  link,
+  filename,
+  caption,
+): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "document",
+    document: {
+      link,
+      caption: caption ?? "",
+      filename,
+    },
+  };
+}
+
+export function createVideoMessage(to, link, caption): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "video",
+    video: {
+      link,
+      caption: caption ?? "",
+    },
+  };
+}
+
+export function createAudioMessage(to, link, caption = ""): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "audio",
+    audio: {
+      link,
+      caption,
+    },
+  };
+}
+
 export async function generateMessageDataFromQuestion(
   session: WaSessionWithRelations,
   question: Question,

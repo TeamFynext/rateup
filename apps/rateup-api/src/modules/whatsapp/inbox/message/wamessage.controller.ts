@@ -19,6 +19,8 @@ import {
   getMediaFile,
   getWaMessagesByContactId,
   getWaTickets,
+  sendMediaMessages,
+  markMessagesAsRead,
 } from "./wamessage.service";
 import {
   ByContactIdParams,
@@ -27,6 +29,7 @@ import {
 import {
   createReactionMessage,
   createTextMessage,
+  parseToWhatsAppFormat,
   validateSession,
 } from "../../whatsappSurvey/wasurvey.utils";
 import {
@@ -149,6 +152,14 @@ export async function sendNewWaMessageHandler(
     }
     switch (type) {
       case "text": {
+        const media = request.body.media;
+        if (media.length) {
+          const text = request.body.text.body;
+          const caption =
+            typeof text === "string" ? text : parseToWhatsAppFormat(text);
+          await sendMediaMessages(media, contact.phone, orgId, userId, caption);
+          break;
+        }
         const messageBody = createTextMessage(
           contact.phone,
           "",
@@ -165,6 +176,15 @@ export async function sendNewWaMessageHandler(
           emoji,
         );
         await sendMessage(orgId, messageBody, null, userId);
+        break;
+      case "media":
+        if (request.body.media.length)
+          await sendMediaMessages(
+            request.body.media,
+            contact.phone,
+            orgId,
+            userId,
+          );
         break;
     }
     reply.send("Message Sent");
@@ -187,6 +207,21 @@ export async function getWaMessagesByContactIdHandler(
     reply.send(messages);
   } catch (error) {
     reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function markMessagesAsReadHandler(
+  request: FastifyRequest<{ Params: ByContactIdParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await markMessagesAsRead(
+      request.params.contactId,
+      request.user.userId,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    reply.code(500).send(e);
   }
 }
 
