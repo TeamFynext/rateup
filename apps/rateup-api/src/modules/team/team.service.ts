@@ -193,6 +193,12 @@ export async function inviteTeamMember(input: InviteMemberInput) {
       },
     });
 
+    const user = await prisma.user.findFirst({
+      where: {
+        email,
+      },
+    });
+
     if (existingInvitation) {
       if (existingInvitation.status === "PENDING") {
         // Call Resend email function here
@@ -205,7 +211,13 @@ export async function inviteTeamMember(input: InviteMemberInput) {
         existingInvitation.status === "ACCEPTED" &&
         existingInvitation.teamId === teamId
       ) {
-        throw new Error("Team member with the provided email already exists.");
+        if (!user) {
+          await deleteMemberInvite(existingInvitation.id);
+        } else {
+          throw new Error(
+            "Team member with the provided email already exists.",
+          );
+        }
       }
     }
 
