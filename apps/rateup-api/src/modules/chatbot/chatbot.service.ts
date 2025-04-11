@@ -30,6 +30,7 @@ interface messageInput {
 }
 export async function getAIResponseForQuery(data: messageInput, jwtToken) {
   const subscription = await getSubscription(data.orgId);
+
   const allowedTokens = subscription.features.ai.count;
   const usedTokens = await prisma.usageStats.findUnique({
     where: {

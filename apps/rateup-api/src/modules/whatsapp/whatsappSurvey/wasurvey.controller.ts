@@ -426,6 +426,7 @@ async function handleAiWaChat(
   phone: string,
 ) {
   try {
+    let query = "";
     const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
     if (chatbot.enableAllWaChat && !contact.aiWaChat) {
       log.trace("Ai chat is disabled for phone: %s", phone);
@@ -437,7 +438,12 @@ async function handleAiWaChat(
       role: "Contact",
     });
 
-    const query = message.slice(chatbot?.waCommand?.length);
+    if (chatbot.enableAllWaChat) {
+      query = message;
+    } else {
+      query = message.slice(chatbot?.waCommand?.length);
+    }
+
     const response = await getAIResponseForQuery(
       { query, userId: contact.id, orgId, customPrompt: chatbot?.waPrompt },
       jwtToken,
