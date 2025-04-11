@@ -31,6 +31,7 @@ export type ChatFilter = {
   campaigns: Array<MultiGV>;
   tags: Array<MultiGV>;
   waMessageAssignStatus?: string;
+  readTab?: string;
 };
 interface Props {
   filter: ChatFilter;

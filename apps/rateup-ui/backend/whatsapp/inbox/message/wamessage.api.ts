@@ -19,6 +19,7 @@ export type WaGetMessagesBody = {
     profile_photo?: string;
   };
   messageId?: string;
+  readUsers?: string[];
 };
 
 export type WaMessagePage = {
@@ -164,4 +165,9 @@ export async function getAssignedUserForContact(contactId) {
 
 export async function getInboxUserCount() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`)).data;
+}
+
+export async function markWaMessagesAsRead(contactId) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/mark/${contactId}`))
+    .data;
 }
