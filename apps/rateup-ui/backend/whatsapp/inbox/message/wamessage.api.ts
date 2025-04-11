@@ -19,6 +19,7 @@ export type WaGetMessagesBody = {
     profile_photo?: string;
   };
   messageId?: string;
+  readUsers?: string[];
 };
 
 export type WaMessagePage = {
@@ -51,7 +52,6 @@ export type ContactsWithLastMessage = ContactsData & {
     messageBody: WaInboxMessage;
   };
   lastReceivedMessageTimeStamp: string;
-  unReadMessageCount?: number;
   total_contact_count?: string;
 };
 type ContactsWithLastMessageResponse = {

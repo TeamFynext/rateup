@@ -162,20 +162,20 @@ export default function WaInboxChatDisplayHeader({
           timeStamp={contact?.lastReceivedMessageTimeStamp}
         />
       )}
-      <ChatContactMenu contact={contact} />
-      {/* <Group gap={"lg"}>
+      {/* <ChatContactMenu contact={contact} /> */}
+      <Group gap={"lg"}>
         <Group gap="xs">
           <Tooltip label={"Assign"}>
             <ActionIcon onClick={openAssign} variant="outline">
               <IconUserShare />
             </ActionIcon>
-          </Tooltip> */}
-      {/* <Tooltip label={"Create Ticket"}>
+          </Tooltip>
+          {/* <Tooltip label={"Create Ticket"}>
                 <ActionIcon onClick={openCreateTicket}>
                   <IconTicket />
                 </ActionIcon>
               </Tooltip> */}
-      {/* </Group>
+        </Group>
         {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
           <RateupButtonPrimary
             color="var(--grey-color-7)"
@@ -197,7 +197,7 @@ export default function WaInboxChatDisplayHeader({
         contactId={contact.id}
         opened={openedAssign}
         close={closeAssign}
-      /> */}
+      />
     </div>
   );
 }

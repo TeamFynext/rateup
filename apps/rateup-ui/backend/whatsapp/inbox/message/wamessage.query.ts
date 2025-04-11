@@ -124,12 +124,7 @@ export const useMarkWaMessagesAsRead = (contactId: string, filterData) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => markWaMessagesAsRead(contactId),
-    onSuccess: () => {
-      showSuccessToast("marked successfully");
-      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
-    },
-    onError: (e) => {
-      showWarnToast("Something went wrong" + JSON.stringify(e));
-    },
+    onSuccess: () => {},
+    onError: (e) => {},
   });
 };

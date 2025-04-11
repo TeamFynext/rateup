@@ -23,10 +23,15 @@ import {
 import dayjs from "dayjs";
 
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
+import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
+import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { WaGetMessagesBody } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { useGetMessagesByContactId } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useGetMessagesByContactId,
+  useMarkWaMessagesAsRead,
+} from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import {
   WaInboxMessage,
   WaTemplateComponent,
@@ -79,6 +84,7 @@ export default function WaInboxChatDisplayBody(props: Props) {
   });
   const { translations } = useTranslations();
   const { messages } = useMessageStore();
+  const { filterData } = useContactStore();
   const singleMessage = (
     messageBody: WaInboxMessage,
     templateComponentParams: WaTemplateComponent[],
@@ -140,6 +146,21 @@ export default function WaInboxChatDisplayBody(props: Props) {
     const heightDifference = newScrollHeight - currentScrollHeight;
     scrollableRef.current.scrollTop = currentScrollPosition + heightDifference;
   }, [props?.data]);
+  const markAsRead = useMarkWaMessagesAsRead(contactId, filterData);
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (
+      contactId &&
+      user.userId &&
+      props?.data?.find(
+        (message) =>
+          message.messageBody.exchangeProcess === "receive" &&
+          !message?.readUsers?.includes(user.userId),
+      )
+    )
+      markAsRead.mutate();
+  }, [contactId]);
 
   function getReactionMessage(message: WaGetMessagesBody) {
     const exchangeProcess = message.messageBody.exchangeProcess;
