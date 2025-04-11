@@ -9,6 +9,7 @@ import {
   getMediaFileByMediaId,
   getWaMessagesByContactIdHandler,
   getWaTicketsHandler,
+  markMessagesAsReadHandler,
   sendNewWaMessageHandler,
 } from "./wamessage.controller";
 import { checkSession } from "../../../../utils/checkSession";
@@ -36,6 +37,16 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     sendNewWaMessageHandler,
+  );
+
+  server.post(
+    "/mark/:contactId",
+    {
+      schema: {
+        params: $contactRef("byContactIdSchema"),
+      },
+    },
+    markMessagesAsReadHandler,
   );
 
   server.get("/filterdata", generateChatFilterDataHandler);

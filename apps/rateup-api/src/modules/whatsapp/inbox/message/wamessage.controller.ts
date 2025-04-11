@@ -20,6 +20,7 @@ import {
   getWaMessagesByContactId,
   getWaTickets,
   sendMediaMessages,
+  markMessagesAsRead,
 } from "./wamessage.service";
 import {
   ByContactIdParams,
@@ -206,6 +207,21 @@ export async function getWaMessagesByContactIdHandler(
     reply.send(messages);
   } catch (error) {
     reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function markMessagesAsReadHandler(
+  request: FastifyRequest<{ Params: ByContactIdParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await markMessagesAsRead(
+      request.params.contactId,
+      request.user.userId,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    reply.code(500).send(e);
   }
 }
 

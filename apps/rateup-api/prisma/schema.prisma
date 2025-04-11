@@ -1134,6 +1134,7 @@ model WaMessage {
   sendBy                          String?                           @db.Uuid
   sender                          User?                             @relation(fields: [sendBy], references: [id], onDelete: Cascade)
   errorMessage                    String?
+  readUsers                           String[]                          @default([])
 
   @@index([contactId, waCreatedAt(sort: Desc)])
 }
