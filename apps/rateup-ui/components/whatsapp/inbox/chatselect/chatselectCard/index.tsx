@@ -67,9 +67,7 @@ export default function WaInboxChatSelectCard({
             >
               {contact?.name || contact?.phone}
             </Text>
-            <Group gap={"xs"}>
-              <AssignedStatusBadge contact={contact} />
-            </Group>
+            <AssignedStatusBadge contact={contact} />
           </Group>
           <Group justify="space-between">
             <Tooltip
