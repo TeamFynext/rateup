@@ -219,6 +219,7 @@ export async function filterChats(
 
     // Base condition
     filters.push(`c."orgId" = $1::uuid`);
+    let orderBy = `wc."lastReceivedMessageTimeStamp"`;
 
     // Filter by message type
     if (
@@ -237,7 +238,25 @@ export async function filterChats(
           SELECT 1 FROM "WaMessage" wm
           WHERE wm."contactId" = c.id
         )`);
+        orderBy = `wc."lastMessage"->>'waCreatedAt'`;
       }
+    }
+    if (bodyFilterProps?.readTab?.length && bodyFilterProps.readTab !== "All") {
+      params.push(userId);
+      if (bodyFilterProps.readTab === "UnRead") {
+        filters.push(`EXISTS (
+          SELECT 1 FROM "WaMessage" w WHERE w."contactId" = c.id
+          AND w."messageBody"->>'exchangeProcess' = 'receive'
+          AND NOT($${paramIndex}::TEXT = ANY(w."readUsers"))
+          )`);
+      } else if (bodyFilterProps.readTab === "Read") {
+        filters.push(`EXISTS (
+          SELECT 1 FROM "WaMessage" w WHERE w."contactId" = c.id
+          AND w."messageBody"->>'exchangeProcess' = 'receive'
+          AND $${paramIndex}::TEXT = ANY(w."readUsers")
+          )`);
+      }
+      paramIndex++;
     }
 
     // Filter by contact groups
@@ -329,11 +348,11 @@ export async function filterChats(
           ORDER BY w."waCreatedAt" DESC
           LIMIT 1
         ) as "lastMessage" FROM "Contact" c
-      WHERE ${whereClause} 
-      ORDER BY c."lastReceivedMessageTimeStamp" DESC NULLS LAST LIMIT 100 OFFSET $2
+      WHERE ${whereClause}
     `;
+    const wrappedQuery = `SELECT * FROM (${query}) wc ORDER BY ${orderBy} DESC NULLS LAST LIMIT 100 OFFSET $2`;
 
-    const contacts = await prisma.$queryRawUnsafe(query, ...params);
+    const contacts = await prisma.$queryRawUnsafe(wrappedQuery, ...params);
     return contacts;
   } catch (error) {
     log.error("Error in inbox chat filter API: %o", error);
@@ -613,4 +632,18 @@ export async function sendMediaMessages(
     await sendMessage(orgId, messageBody, null, userId);
     if (!isLastItem) wait(50);
   }
+}
+
+export async function markMessagesAsRead(contactId: string, userId: string) {
+  const res = await prisma.$executeRawUnsafe(
+    `
+    UPDATE "WaMessage"
+    SET "readUsers" = "readUsers" || $2::TEXT
+    WHERE "contactId" = $1::uuid AND
+    "messageBody"->>'exchangeProcess' = 'receive'
+    AND NOT ($2::TEXT = ANY("readUsers"))
+  `,
+    contactId,
+    userId,
+  );
 }
