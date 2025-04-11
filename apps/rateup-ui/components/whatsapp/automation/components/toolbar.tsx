@@ -2,12 +2,10 @@
 
 import { ActionIcon, Menu, Tooltip } from "@mantine/core";
 import {
-  IconAdjustmentsPlus,
   IconArrowBackUp,
   IconArrowForwardUp,
   IconArrowLeft,
   IconArrowUp,
-  IconChevronDown,
   IconCopyCheck,
   IconDeviceFloppy,
   IconReport,
@@ -123,40 +121,38 @@ export default function Toolbar({
         </ActionIcon>
       </Tooltip>
 
-      <Menu position="bottom-start">
-        <Menu.Target>
-          <Tooltip label="More">
-            <ActionIcon
-              variant="outline"
-              className={styles.toolbarButton}
-              size={"lg"}
-            >
-              <IconAdjustmentsPlus />
-            </ActionIcon>
-          </Tooltip>
-        </Menu.Target>
+      <Tooltip label="Settings">
+        <ActionIcon
+          variant="outline"
+          className={styles.toolbarButton}
+          onClick={() => handleTabSwitch("settings")}
+          size={"lg"}
+        >
+          <IconSettings />
+        </ActionIcon>
+      </Tooltip>
 
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<IconSettings />}
-            onClick={() => handleTabSwitch("settings")}
-          >
-            Settings
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconShare />}
-            onClick={() => handleTabSwitch("share")}
-          >
-            Share
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconReport />}
-            onClick={() => handleTabSwitch("response")}
-          >
-            Response
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+      <Tooltip label="Share">
+        <ActionIcon
+          variant="outline"
+          className={styles.toolbarButton}
+          onClick={() => handleTabSwitch("share")}
+          size={"lg"}
+        >
+          <IconShare />
+        </ActionIcon>
+      </Tooltip>
+
+      <Tooltip label="Response">
+        <ActionIcon
+          variant="outline"
+          className={styles.toolbarButton}
+          onClick={() => handleTabSwitch("response")}
+          size={"lg"}
+        >
+          <IconReport />
+        </ActionIcon>
+      </Tooltip>
     </div>
   );
 }
