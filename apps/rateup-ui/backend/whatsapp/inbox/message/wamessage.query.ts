@@ -17,6 +17,7 @@ import {
   getMessagesByContactId,
   getWaChatMediaFile,
   getWaTickets,
+  markWaMessagesAsRead,
   sendNewWaMessage,
 } from "./wamessage.api";
 
@@ -116,5 +117,14 @@ export const useGetInboxUserCount = () => {
   return useQuery({
     queryKey: ["contactInboxCount"],
     queryFn: getInboxUserCount,
+  });
+};
+
+export const useMarkWaMessagesAsRead = (contactId: string, filterData) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => markWaMessagesAsRead(contactId),
+    onSuccess: () => {},
+    onError: (e) => {},
   });
 };

@@ -14,6 +14,7 @@ import {
   Divider,
   Group,
   Indicator,
+  SegmentedControl,
   Stack,
   Text,
 } from "@mantine/core";
@@ -61,8 +62,14 @@ enum TabsEnum {
   // tickets = "tickets",
 }
 
+enum ReadTabEnum {
+  All = "All",
+  Read = "Read",
+  UnRead = "UnRead",
+}
 const WaInboxChatSelect = () => {
   const router = useRouter();
+  const [readTab, setReadTab] = useState(ReadTabEnum.UnRead);
   const tab = (router.query?.tab as string) ?? "New";
   const [filter, setFilter] = useState<ChatFilter>({
     messageType: "usermessages",
@@ -72,6 +79,7 @@ const WaInboxChatSelect = () => {
     campaigns: [],
     tags: [],
     waMessageAssignStatus: "New",
+    readTab,
   });
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
 
@@ -88,7 +96,8 @@ const WaInboxChatSelect = () => {
       filters.searchTerm?.length > 0 ||
       filters.messageType !== "all" ||
       filters.messageType !== "usermessages" ||
-      filters.strictFilter !== false
+      filters.strictFilter !== false ||
+      filter.readTab.length
     );
   }, []);
 
@@ -104,6 +113,9 @@ const WaInboxChatSelect = () => {
     isLoading: isContactLoading,
     isFetching,
   } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
+
+  const { setSelectedContact, selectedContact, setFilterData } =
+    useContactStore();
 
   const allFilteredContactsRow = useMemo(
     () =>
@@ -174,8 +186,6 @@ const WaInboxChatSelect = () => {
     },
     [],
   );
-  const { setSelectedContact, selectedContact, setFilterData } =
-    useContactStore();
 
   const updateWaContactsList = useCallback(
     (newMessage: { contact: ContactsData; message: WaGetMessagesBody }) => {
@@ -218,7 +228,11 @@ const WaInboxChatSelect = () => {
       } = queryClient.getQueryData(["wa-messages", wsData.inbox.contact.id]);
       if (currentData) {
         const newData = { ...currentData };
-        if (!newData.pages[0].messages.includes(wsData.inbox.message)) {
+        if (
+          !newData.pages[0].messages.find(
+            (message) => message.id === wsData.inbox.message.id,
+          )
+        ) {
           newData.pages[0].messages.push(wsData.inbox.message);
           queryClient.setQueryData(
             ["wa-messages", wsData.inbox.contact.id],
@@ -377,6 +391,14 @@ const WaInboxChatSelect = () => {
         />
         <WaInboxChatExport filter={filter} />
       </Group>
+      <SegmentedControl
+        value={readTab}
+        onChange={(value) => {
+          prepareFilters({ ...filter, readTab: value });
+          setReadTab(value as ReadTabEnum);
+        }}
+        data={Object.values(ReadTabEnum)}
+      />
       <div>
         {filteredContactsStatus === "pending" ? (
           <Text px={"md"}>Loading...</Text>
@@ -387,7 +409,7 @@ const WaInboxChatSelect = () => {
             ref={parentRef}
             className="List"
             style={{
-              height: `calc(100dvh - 160px)`,
+              height: `calc(100dvh - 165px)`,
               width: `100%`,
               overflow: "auto",
             }}
