@@ -113,10 +113,11 @@ export const useGetAssignedUserForContact = (contactId) => {
   });
 };
 
-export const useGetInboxUserCount = () => {
+export const useGetInboxUserCount = (enabled: boolean) => {
   return useQuery({
     queryKey: ["contactInboxCount"],
     queryFn: getInboxUserCount,
+    enabled,
   });
 };
 

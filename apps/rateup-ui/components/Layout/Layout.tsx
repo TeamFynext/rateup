@@ -24,7 +24,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
+import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import useTranslations from "@/dictionaries/useTranslation";
+import { useChatContactCountStore } from "@/pages/dashboard/whatsapp/inbox/store";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
@@ -459,7 +461,7 @@ export default function Layout({ children, appProps }) {
     return acc;
   }, {});
 
-   useEffect(() => {
+  useEffect(() => {
     Object.entries(linksMapping).find(([key, value]) => {
       const [basePath, queryString] = tab.split("?");
       const params = new URLSearchParams(queryString || "");
@@ -482,6 +484,14 @@ export default function Layout({ children, appProps }) {
       }
     });
   }, [linksMapping, navLinks, tab]);
+  const { setTotalCount } = useChatContactCountStore();
+  const { data: inboxCount, refetch: refetchInboxCount } = useGetInboxUserCount(
+    activeMainLink === "Inbox",
+  );
+
+  useEffect(() => {
+    if (inboxCount) setTotalCount(inboxCount);
+  }, [inboxCount]);
 
   const mainLinks = (
     <MainNavLinks

@@ -22,6 +22,7 @@ import {
   IconMessage,
   IconMessageBolt,
   IconMessageCheck,
+  IconMessageUp,
   IconRefresh,
   IconSearch,
   IconSquareRoundedX,
@@ -122,13 +123,6 @@ const WaInboxChatSelect = () => {
       filteredContacts ? filteredContacts.pages.flatMap((d) => d.rows) : [],
     [filteredContacts],
   );
-  // Todo: re-add this after count is fixed:
-  const { data: inboxCount, refetch } = useGetInboxUserCount();
-
-  useEffect(() => {
-    if (filteredContacts && !inboxCount) refetch();
-    setTotalCount(inboxCount);
-  }, [inboxCount, filteredContacts]);
 
   const parentRef = useRef(null);
 
@@ -322,7 +316,7 @@ const WaInboxChatSelect = () => {
     } else {
       prepareFilters({
         ...filter,
-        messageType: "usermessages",
+        messageType: tab === "Sent" ? "all" : "usermessages",
         waMessageAssignStatus: tab,
       });
     }
@@ -379,7 +373,12 @@ const WaInboxChatSelect = () => {
             loading={
               isFilteredContactsFetchingNextPage || isRefetchingFilteredContacts
             }
-            onClick={refetchFilteredContacts}
+            onClick={() => {
+              refetchFilteredContacts();
+              queryClient.invalidateQueries({
+                queryKey: ["contactInboxCount"],
+              });
+            }}
           >
             <IconRefresh />
           </ActionIcon>
@@ -521,6 +520,16 @@ export const AssignedToMeInboxIcon = () => {
   return (
     <Indicator label={totalCount.assignedToMe} inline size={16} color="black">
       <IconUserCircle />
+    </Indicator>
+  );
+};
+
+export const SentInboxIcon = () => {
+  const { totalCount } = useChatContactCountStore();
+  if (!totalCount?.sent) return <IconMessageUp />;
+  return (
+    <Indicator label={totalCount.sent} inline size={16} color="black">
+      <IconMessageUp />
     </Indicator>
   );
 };
