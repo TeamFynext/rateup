@@ -596,23 +596,21 @@ async function handleAutomatedReply(
           orgId,
           automationLog?.id,
         );
+      } else if (chatbot?.enableWaChat && chatbot?.enableAllWaChat) {
+        // Handle AI chat if enabled
+        await handleAiWaChat(chatbot, parsedMessage.message, orgId, phone);
       }
       // Case 3: No matching automation rules found
       else {
-        // Check if user has interacted within the last 24 hours
+        // Check if user has interacted within the last 24 hours\
         const recentActivity = await findRecentAutomation(phone, orgId, {
           timeWindow: 24 * 60 * 60 * 1000, // 24 hours
         });
 
         // Only respond if this is the first message in 24 hours
         if (!recentActivity) {
-          if (chatbot?.enableWaChat && chatbot?.enableAllWaChat) {
-            // Handle AI chat if enabled
-            await handleAiWaChat(chatbot, parsedMessage.message, orgId, phone);
-          } else {
-            // Send default welcome automation if available
-            await handleInitialInteraction(orgId, phone, parsedMessage.message);
-          }
+          // Send default welcome automation if available
+          await handleInitialInteraction(orgId, phone, parsedMessage.message);
         }
       }
     }
