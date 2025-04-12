@@ -63,14 +63,8 @@ enum TabsEnum {
   // tickets = "tickets",
 }
 
-enum ReadTabEnum {
-  All = "All",
-  Read = "Read",
-  UnRead = "UnRead",
-}
 const WaInboxChatSelect = () => {
   const router = useRouter();
-  const [readTab, setReadTab] = useState(ReadTabEnum.UnRead);
   const tab = (router.query?.tab as string) ?? "New";
   const [filter, setFilter] = useState<ChatFilter>({
     messageType: "usermessages",
@@ -80,13 +74,10 @@ const WaInboxChatSelect = () => {
     campaigns: [],
     tags: [],
     waMessageAssignStatus: "New",
-    readTab,
   });
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
 
   const queryClient = useQueryClient();
-
-  const { setTotalCount } = useChatContactCountStore();
 
   const { translations } = useTranslations();
   const checkIfAnyFilterisActive = useCallback((filters: any) => {
@@ -97,8 +88,7 @@ const WaInboxChatSelect = () => {
       filters.searchTerm?.length > 0 ||
       filters.messageType !== "all" ||
       filters.messageType !== "usermessages" ||
-      filters.strictFilter !== false ||
-      filter.readTab.length
+      filters.strictFilter !== false
     );
   }, []);
 
@@ -390,14 +380,6 @@ const WaInboxChatSelect = () => {
         />
         <WaInboxChatExport filter={filter} />
       </Group>
-      <SegmentedControl
-        value={readTab}
-        onChange={(value) => {
-          prepareFilters({ ...filter, readTab: value });
-          setReadTab(value as ReadTabEnum);
-        }}
-        data={Object.values(ReadTabEnum)}
-      />
       <div>
         {filteredContactsStatus === "pending" ? (
           <Text px={"md"}>Loading...</Text>
