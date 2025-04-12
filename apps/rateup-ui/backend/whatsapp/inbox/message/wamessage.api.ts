@@ -53,6 +53,7 @@ export type ContactsWithLastMessage = ContactsData & {
   };
   lastReceivedMessageTimeStamp: string;
   total_contact_count?: string;
+  unReadMessageCount?: number;
 };
 type ContactsWithLastMessageResponse = {
   rows: ContactsWithLastMessage[];

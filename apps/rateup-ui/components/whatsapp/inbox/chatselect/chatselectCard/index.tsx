@@ -67,7 +67,12 @@ export default function WaInboxChatSelectCard({
             >
               {contact?.name || contact?.phone}
             </Text>
-            <AssignedStatusBadge contact={contact} />
+            <Group gap="xs">
+              {contact.unReadMessageCount && (
+                <Badge radius={"xl"}>{contact?.unReadMessageCount}</Badge>
+              )}
+              <AssignedStatusBadge contact={contact} />
+            </Group>
           </Group>
           <Group justify="space-between">
             <Tooltip
