@@ -22,6 +22,7 @@ import {
   IconMessage,
   IconMessageBolt,
   IconMessageCheck,
+  IconMessageUp,
   IconRefresh,
   IconSearch,
   IconSquareRoundedX,
@@ -62,14 +63,8 @@ enum TabsEnum {
   // tickets = "tickets",
 }
 
-enum ReadTabEnum {
-  All = "All",
-  Read = "Read",
-  UnRead = "UnRead",
-}
 const WaInboxChatSelect = () => {
   const router = useRouter();
-  const [readTab, setReadTab] = useState(ReadTabEnum.UnRead);
   const tab = (router.query?.tab as string) ?? "New";
   const [filter, setFilter] = useState<ChatFilter>({
     messageType: "usermessages",
@@ -79,13 +74,10 @@ const WaInboxChatSelect = () => {
     campaigns: [],
     tags: [],
     waMessageAssignStatus: "New",
-    readTab,
   });
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
 
   const queryClient = useQueryClient();
-
-  const { setTotalCount } = useChatContactCountStore();
 
   const { translations } = useTranslations();
   const checkIfAnyFilterisActive = useCallback((filters: any) => {
@@ -96,8 +88,7 @@ const WaInboxChatSelect = () => {
       filters.searchTerm?.length > 0 ||
       filters.messageType !== "all" ||
       filters.messageType !== "usermessages" ||
-      filters.strictFilter !== false ||
-      filter.readTab.length
+      filters.strictFilter !== false
     );
   }, []);
 
@@ -122,13 +113,6 @@ const WaInboxChatSelect = () => {
       filteredContacts ? filteredContacts.pages.flatMap((d) => d.rows) : [],
     [filteredContacts],
   );
-  // Todo: re-add this after count is fixed:
-  const { data: inboxCount, refetch } = useGetInboxUserCount();
-
-  useEffect(() => {
-    if (filteredContacts && !inboxCount) refetch();
-    setTotalCount(inboxCount);
-  }, [inboxCount, filteredContacts]);
 
   const parentRef = useRef(null);
 
@@ -322,7 +306,7 @@ const WaInboxChatSelect = () => {
     } else {
       prepareFilters({
         ...filter,
-        messageType: "usermessages",
+        messageType: tab === "Sent" ? "all" : "usermessages",
         waMessageAssignStatus: tab,
       });
     }
@@ -379,7 +363,12 @@ const WaInboxChatSelect = () => {
             loading={
               isFilteredContactsFetchingNextPage || isRefetchingFilteredContacts
             }
-            onClick={refetchFilteredContacts}
+            onClick={() => {
+              refetchFilteredContacts();
+              queryClient.invalidateQueries({
+                queryKey: ["contactInboxCount"],
+              });
+            }}
           >
             <IconRefresh />
           </ActionIcon>
@@ -391,14 +380,6 @@ const WaInboxChatSelect = () => {
         />
         <WaInboxChatExport filter={filter} />
       </Group>
-      <SegmentedControl
-        value={readTab}
-        onChange={(value) => {
-          prepareFilters({ ...filter, readTab: value });
-          setReadTab(value as ReadTabEnum);
-        }}
-        data={Object.values(ReadTabEnum)}
-      />
       <div>
         {filteredContactsStatus === "pending" ? (
           <Text px={"md"}>Loading...</Text>
@@ -521,6 +502,16 @@ export const AssignedToMeInboxIcon = () => {
   return (
     <Indicator label={totalCount.assignedToMe} inline size={16} color="black">
       <IconUserCircle />
+    </Indicator>
+  );
+};
+
+export const SentInboxIcon = () => {
+  const { totalCount } = useChatContactCountStore();
+  if (!totalCount?.sent) return <IconMessageUp />;
+  return (
+    <Indicator label={totalCount.sent} inline size={16} color="black">
+      <IconMessageUp />
     </Indicator>
   );
 };
