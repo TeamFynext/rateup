@@ -53,7 +53,6 @@ const WaChatFilterSchema = z.object({
   campaigns: z.array(z.string()).optional(),
   tags: z.array(z.any()).optional(),
   waMessageAssignStatus: z.string().optional(),
-  readTab: z.enum(["All", "Read", "UnRead"]).optional(),
 });
 
 const waChatFilterQuerySchema = PaginateQuerySchema.extend({
