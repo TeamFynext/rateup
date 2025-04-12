@@ -249,23 +249,6 @@ export async function filterChats(
         orderBy = `wc."lastMessage"->>'waCreatedAt'`;
       }
     }
-    if (bodyFilterProps?.readTab?.length && bodyFilterProps.readTab !== "All") {
-      params.push(userId);
-      if (bodyFilterProps.readTab === "UnRead") {
-        filters.push(`EXISTS (
-          SELECT 1 FROM "WaMessage" w WHERE w."contactId" = c.id
-          AND w."messageBody"->>'exchangeProcess' = 'receive'
-          AND NOT($${paramIndex}::TEXT = ANY(w."readUsers"))
-          )`);
-      } else if (bodyFilterProps.readTab === "Read") {
-        filters.push(`EXISTS (
-          SELECT 1 FROM "WaMessage" w WHERE w."contactId" = c.id
-          AND w."messageBody"->>'exchangeProcess' = 'receive'
-          AND $${paramIndex}::TEXT = ANY(w."readUsers")
-          )`);
-      }
-      paramIndex++;
-    }
 
     // Filter by contact groups
     if (bodyFilterProps?.contactGroups?.length > 0) {
