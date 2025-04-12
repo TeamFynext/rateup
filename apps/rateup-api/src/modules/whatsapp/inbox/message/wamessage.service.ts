@@ -211,8 +211,8 @@ export async function filterChats(
 ) {
   try {
     // Create params array to use parameterized queries instead of string concatenation
-    const params: any[] = [orgId, (page - 1) * 100];
-    let paramIndex = 3;
+    const params: any[] = [orgId, (page - 1) * 100, userId];
+    let paramIndex = 4;
 
     // Build where conditions using parameters to prevent SQL injection
     let filters = [];
@@ -234,10 +234,18 @@ export async function filterChats(
           AND wm."messageBody"->>'exchangeProcess' = 'receive'
         )`);
       } else if (bodyFilterProps?.messageType === "all") {
-        filters.push(`EXISTS (
-          SELECT 1 FROM "WaMessage" wm
-          WHERE wm."contactId" = c.id
-        )`);
+        if (bodyFilterProps.waMessageAssignStatus === "Sent") {
+          filters.push(`EXISTS (
+            SELECT 1 FROM "WaMessage" wm
+            WHERE wm."contactId" = c.id
+             AND wm."messageBody"->>'exchangeProcess' = 'send'
+          )`);
+        } else {
+          filters.push(`EXISTS (
+            SELECT 1 FROM "WaMessage" wm
+            WHERE wm."contactId" = c.id
+          )`);
+        }
         orderBy = `wc."lastMessage"->>'waCreatedAt'`;
       }
     }
@@ -301,7 +309,10 @@ export async function filterChats(
     }
 
     // Filter by assignment status
-    if (bodyFilterProps?.waMessageAssignStatus) {
+    if (
+      bodyFilterProps?.waMessageAssignStatus &&
+      bodyFilterProps.waMessageAssignStatus !== "Sent"
+    ) {
       if (bodyFilterProps?.waMessageAssignStatus === "New") {
         filters.push(
           `(c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours') 
@@ -338,6 +349,11 @@ export async function filterChats(
         c."waMessageAssignStatus",
         c."lastReceivedMessageTimeStamp",
         COALESCE(c.tags, '{}'::jsonb) as tags,
+        (
+          SELECT COUNT(*)::INTEGER FROM "WaMessage" w WHERE w."contactId" = c.id
+          AND w."messageBody"->>'exchangeProcess' = 'receive'
+          AND NOT($3::TEXT = ANY(w."readUsers"))
+        ) as "unReadMessageCount",
         (
           SELECT jsonb_build_object(
             'messageBody', w."messageBody",
@@ -542,6 +558,7 @@ export async function getContactsCountByInbox(orgId, userId) {
     closed_count: number;
     unassigned_count: number;
     assigned_to_me_count: number;
+    sent_count: number;
   }[] = await prisma.$queryRaw`WITH assigned_contacts AS (
     SELECT DISTINCT "contactId"
     FROM "WaInboxAssign"
@@ -555,6 +572,8 @@ SELECT
     END)::INTEGER AS new_count,
 
     COUNT(DISTINCT wm."contactId")::INTEGER AS total_count,
+
+    COUNT(DISTINCT CASE WHEN wm."messageBody"->>'exchangeProcess'= 'send' THEN wm."contactId" END)::INTEGER AS sent_count, 
 
     COUNT(DISTINCT CASE 
         WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND wm."messageBody"->>'exchangeProcess'='receive'
@@ -584,6 +603,7 @@ WHERE c."orgId" = ${orgId}::uuid;`;
     closed: count[0].closed_count,
     assignedToMe: count[0].assigned_to_me_count,
     assigned: count[0].assigned_count,
+    sent: count[0].sent_count,
   };
 }
 
