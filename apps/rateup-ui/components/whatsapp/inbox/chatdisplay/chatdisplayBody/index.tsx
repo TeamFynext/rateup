@@ -275,7 +275,23 @@ const TempMessageBody = ({ body, timestamp }) => {
           shadow="xs"
           bg={"light-dark(#dcf0e4,rgb(82, 190, 127)"}
         >
-          <div>{parseJsonToReact(body)}</div>
+          {body.url && body.urlType === "image" && (
+            <img src={body.url} height={"150px"} width={"150px"} />
+          )}
+          {body.url && body.urlType === "video" && (
+            <video src={body.url} height={"150px"} width={"150px"} />
+          )}
+          {body.url && body.urlType === "document" && (
+            <Text
+              onClick={() => {
+                window.open(body.url, "_blank");
+              }}
+            >
+              {body.filename}
+            </Text>
+          )}
+          {body.url && body.urlType === "audio" && <audio src={body.url} />}
+          <div>{body.text ? parseJsonToReact(body?.text) : null}</div>
           <Group gap={4}>
             <Text fz={10} c={"dimmed"}>
               {formatToCustomTime(timestamp)}

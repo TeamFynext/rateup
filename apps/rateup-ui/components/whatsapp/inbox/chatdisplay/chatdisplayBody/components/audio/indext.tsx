@@ -12,7 +12,9 @@ interface Props {
 
 export default function WaInboxAudio({ messageContent }: Props) {
   const { mutate, isPending } = useGetMediaFile();
+  const [id, caption] = messageContent.split(",");
   const audioRef = useRef<HTMLAudioElement>(null);
+  const link = id.startsWith("http") ? id : null;
 
   const handleAudioError = () => {
     showErrorToast(
@@ -23,7 +25,7 @@ export default function WaInboxAudio({ messageContent }: Props) {
   };
 
   const handleDownload = () => {
-    mutate(messageContent, {
+    mutate(id, {
       onSuccess: (fileData) => {
         // Create a Blob URL from the fetched audio data
         const blob = new Blob([fileData], { type: "audio/ogg" });
@@ -56,21 +58,23 @@ export default function WaInboxAudio({ messageContent }: Props) {
         style={{ flex: 1 }}
         onError={audioRef?.current?.src ? handleAudioError : undefined}
       >
-        <source type="audio/ogg" />
+        <source type="audio/ogg" src={link} />
         Your browser does not support the audio element.
       </audio>
-      <ActionIcon
-        pos={"absolute"}
-        right={10}
-        radius={"xl"}
-        size={"lg"}
-        onClick={handleDownload}
-        aria-label="Download Audio"
-        loading={isPending}
-        display={audioRef?.current?.src ? "none" : "flex"}
-      >
-        <IconDownload />
-      </ActionIcon>
+      {!link && (
+        <ActionIcon
+          pos={"absolute"}
+          right={10}
+          radius={"xl"}
+          size={"lg"}
+          onClick={handleDownload}
+          aria-label="Download Audio"
+          loading={isPending}
+          display={audioRef?.current?.src ? "none" : "flex"}
+        >
+          <IconDownload />
+        </ActionIcon>
+      )}
     </Group>
   );
 }
