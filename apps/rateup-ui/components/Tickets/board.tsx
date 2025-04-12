@@ -327,21 +327,7 @@ export function Board({
 
   return (
     <Flex direction="column" gap="md">
-      <Group
-        mx="md"
-        py="md"
-        px="lg"
-        align="center"
-        justify="space-between"
-        mb="md"
-        style={{
-          backdropFilter: "blur(10px)",
-          background: "rgba(255, 255, 255, 0.05)",
-          borderRadius: "16px",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-        }}
-      >
+      <Group mx="md" px="lg" align="center" justify="space-between" mb="md">
         <Flex align="center" gap="md">
           <Button
             variant="light"

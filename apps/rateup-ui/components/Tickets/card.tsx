@@ -217,21 +217,15 @@ export function CardDisplay({
           }}
         >
           {/* Top Bar */}
-          <Box h={6} style={{ backgroundColor: barStyle.color }} />
+          <Box h={4} style={{ backgroundColor: barStyle.color }} />
 
           {/* Card Body */}
           <Stack gap={8} p={4} py={6}>
             {card.title && (
-              <Text
-                size="lg"
-                fw={700}
-                gradient={{ from: "teal", to: "#5c6ac4", deg: 65 }}
-                variant="gradient"
-              >
+              <Text size="lg" fw={400} c="gray.8">
                 {card.title}
               </Text>
             )}
-
             <Divider color={"var(--grey-color-5)"} />
 
             <Group py={4}>
