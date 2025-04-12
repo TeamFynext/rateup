@@ -147,7 +147,7 @@ export default function Page() {
   return (
     <Container
       size="2xl"
-      py="xl"
+      py="sm"
       h={"100%"}
       style={{
         backgroundImage: `url("/images/cover/cover4.jpg")`,

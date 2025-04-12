@@ -1,0 +1,22 @@
+/* TicketPriority.module.css */
+.lowPriority {
+  color: green;
+}
+
+.mediumPriority {
+  color: orange;
+}
+
+.highPriority {
+  color: red;
+}
+
+.criticalPriority {
+  color: darkred;
+}
+.priorityInput {
+  font-weight: 400;
+  border-width: 1px;
+  border-radius: 8px;
+  padding: 10px 12px;
+}

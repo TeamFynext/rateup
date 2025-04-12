@@ -22,7 +22,7 @@ export function BoardContent({ selectedBoardId }: { selectedBoardId: string }) {
   return (
     <Stack>
       <Group></Group>
-      <div style={{ height: "calc(100vh - 200px)", overflow: "auto" }}>
+      <div style={{ height: "100%", overflow: "auto" }}>
         <Board initial={selectedBoard} />
       </div>
     </Stack>
