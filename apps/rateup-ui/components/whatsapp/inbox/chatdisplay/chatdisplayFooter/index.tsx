@@ -72,7 +72,7 @@ export default function WaInboxChatDisplayFooter({
           ? {
               url: values.media[0].url,
               urlType: values.media[0].type,
-              filname: values.media[0].name,
+              filename: values.media[0].name,
             }
           : {}),
       },

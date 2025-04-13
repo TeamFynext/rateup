@@ -39,7 +39,7 @@ import {
 import { formatDate, formatToCustomTime } from "../../../../../utils/dateTime";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
 import { useMessageStore } from "../chatdisplayFooter";
-import WaInboxAudio from "./components/audio/indext";
+import WaInboxAudio from "./components/audio";
 import WaInboxDocument from "./components/document";
 import WaInboxImage from "./components/image";
 import WaInboxInteractive from "./components/interactive";

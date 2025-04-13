@@ -12,7 +12,7 @@ interface Props {
 
 export default function WaInboxAudio({ messageContent }: Props) {
   const { mutate, isPending } = useGetMediaFile();
-  const [id, caption] = messageContent.split(",");
+  const [id, caption] = messageContent.split("_caption_");
   const audioRef = useRef<HTMLAudioElement>(null);
   const link = id.startsWith("http") ? id : null;
 
