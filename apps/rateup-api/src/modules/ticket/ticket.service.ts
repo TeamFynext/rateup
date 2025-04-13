@@ -1,85 +1,129 @@
 import prisma from "../../utils/prisma";
 import { CreateCommentInput } from "./ticket.schema";
-import { createEmailBodyTicketAssigned } from "../../utils/email/tickets/ticketAssigned";
+import {
+  createEmailBodyTicketAssigned,
+  createEmailBodyTicketCreated,
+} from "../../utils/email/tickets/ticketAssigned";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import { parsePhoneforWa } from "../loyalty/util";
 import { log } from "../../utils/logger";
-import {
-  getSession,
-  sendTextMessage,
-} from "../whatsapp/whatsappSurvey/wasurvey.service";
-import { validateSession } from "../whatsapp/whatsappSurvey/wasurvey.utils";
+import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service";
+import { getContactByPhoneNumberAndOrgId } from "../contact/contact.service";
+import dayjs from "dayjs";
 
-export async function sendTicketAssignWaMessage(newTicket, data) {
-  const user = await prisma.user.findUnique({
-    where: {
-      id: newTicket.assignedToId,
-    },
-    select: {
-      phone: true,
-    },
-  });
-  const phone = parsePhoneforWa(user.phone);
+export async function sendTicketAssignedWaMessage(data: {
+  phone: string;
+  orgId: string;
+  board_name: string;
+  column_name: string;
+  id: string;
+  ticketId: string;
+}) {
+  const phone = parsePhoneforWa(data.phone);
   if (!phone) {
-    log.trace("Phone number not found for the ticket assigned user");
+    log.trace("Phone number not found for the ticket create notifcation user");
     return;
   }
-  const { orgId, team_name, org_name } = data;
-  const session = await getSession(orgId, phone);
-  if (!validateSession(session)) {
-    log.trace("Aborting...session not found for phone: %s", phone);
+  const contact = await getContactByPhoneNumberAndOrgId(data.phone, data.orgId);
+  const { orgId } = data;
+  if (
+    !contact ||
+    (contact.lastReceivedMessageTimeStamp &&
+      dayjs().diff(dayjs(contact.lastReceivedMessageTimeStamp), "hour") < 24)
+  ) {
+    log.trace(
+      "Aborting...contact not found or message sent within the last 24 hours for phone: %s",
+      phone,
+    );
     return;
   }
-  const { number: ticket_no, priority } = newTicket;
-  const message = `A ticket has been assigned to you on RateUp.app under *${team_name}* team of *${org_name}*.\nKindly check the ticket and take necessary actions.\n\nTicket No: *#${ticket_no}*\nPriority: *${priority}*`;
+  const message = `A ticket has been assigned to you on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: https://rateup.app/dashboard/tickets/${data.id}`;
   await sendTextMessage({ phone, orgId }, null, message);
 }
 
-export async function sendTicketAssignEmail(newTicket) {
-  const user = await prisma.user.findUnique({
-    where: {
-      id: newTicket.assignedToId,
-    },
-    select: {
-      email: true,
-    },
-  });
+export async function sendTicketAssignedEmail(data: {
+  email: string;
+  orgId: string;
+  board_name: string;
+  column_name: string;
+  id: string;
+  ticketId: string;
+}) {
+  let ticket_link = `${process.env.FRONTEND_URL}/dashboard/tickets/` + data.id;
+  const msg = {
+    to: data.email,
+    subject: `Ticket Assigned to You `,
+    text: `A ticket has been assigned to you on Rateup.app`,
+    html: createEmailBodyTicketAssigned({
+      ticket_link,
+      ticket_no: data.ticketId,
+      board_name: data.board_name,
+      column_name: data.column_name,
+    }),
+  };
+  try {
+    sendAWSEmail(msg);
+  } catch (error) {
+    console.error(error);
+    throw new Error("Email sending failed. E:" + error);
+  }
+}
 
-  const team = await prisma.team.findUnique({
-    where: {
-      id: newTicket.teamId,
-    },
-    include: {
-      org: true,
-    },
-  });
+export async function sendTicketCreateWaMessage(data: {
+  phone: string;
+  orgId: string;
+  board_name: string;
+  column_name: string;
+  id: string;
+  ticketId: string;
+}) {
+  const phone = parsePhoneforWa(data.phone);
+  if (!phone) {
+    log.trace("Phone number not found for the ticket create notifcation user");
+    return;
+  }
+  const contact = await getContactByPhoneNumberAndOrgId(data.phone, data.orgId);
+  const { orgId } = data;
+  if (
+    !contact ||
+    (contact.lastReceivedMessageTimeStamp &&
+      dayjs().diff(dayjs(contact.lastReceivedMessageTimeStamp), "hour") < 24)
+  ) {
+    log.trace(
+      "Aborting...contact not found or message sent within the last 24 hours for phone: %s",
+      phone,
+    );
+    return;
+  }
+  const message = `A new ticket has been created on RateUp.app under *${data.board_name}* board in the *${data.column_name}* column.\nPlease review the ticket and take necessary actions.\n\nTicket ID: *${data.ticketId}*\nLink: https://rateup.app/dashboard/tickets/${data.id}`;
+  await sendTextMessage({ phone, orgId }, null, message);
+}
 
-  let teamName = team.name;
-  let orgName = team.org.name;
-
-  if (newTicket && user?.email && teamName && orgName) {
-    console.log("sending ticket email....");
-    let ticket_link =
-      `${process.env.FRONTEND_URL}/dashboard/tickets/` + newTicket.id;
-    const msg = {
-      to: user.email, // Change to your recipient
-      // from: 'hello@rateup.app', // Change to your verified sender
-      subject: `Ticket Assigned to You - ${orgName}`,
-      text: `A ticket has been assigned to you on Rateup.app`,
-      html: createEmailBodyTicketAssigned(
-        ticket_link,
-        newTicket.number,
-        teamName,
-        orgName,
-        newTicket.priority,
-      ),
-    };
-    try {
-      sendAWSEmail(msg);
-    } catch (error) {
-      console.error(error);
-      throw new Error("Email sending failed. E:" + error);
-    }
+export async function sendTicketCreateEmail(data: {
+  email: string;
+  orgId: string;
+  board_name: string;
+  column_name: string;
+  id: string;
+  ticketId: string;
+}) {
+  let ticket_link = `${process.env.FRONTEND_URL}/dashboard/tickets/` + data.id;
+  const msg = {
+    to: data.email,
+    subject: `Ticket Created`,
+    text: `A ticket has been assigned to you on Rateup.app`,
+    html: createEmailBodyTicketCreated({
+      ticket_link,
+      ticket_no: data.ticketId,
+      board_name: data.board_name,
+      column_name: data.column_name,
+    }),
+  };
+  try {
+    sendAWSEmail(msg);
+  } catch (error) {
+    console.error(error);
+    throw new Error("Email sending failed. E:" + error);
   }
 }
 
