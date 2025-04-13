@@ -763,11 +763,12 @@ export async function createResponse(
 
   if (shouldRaiseTicket && input?.responses?.length > 0 && columnId) {
     //generate ticket
-    let generatedTicket = await autoGenerateTicket({
+    await autoGenerateTicket({
       ticketColumnId: columnId,
       surveyResponseId: surveyResponse.id,
       type:
         surveyResponse.platform === "WEB" ? "SURVEY_RESPONSE" : "FLOW_RESPONSE",
+      orgId: surveyResponse?.surveyTeamMap?.team.orgId,
     });
   }
 

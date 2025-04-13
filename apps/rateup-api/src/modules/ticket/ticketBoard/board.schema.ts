@@ -22,6 +22,11 @@ const createBoardResponseSchema = z.object({
 const updateBoardRequestSchema = z.object({
   title: z.string().optional(),
   teamIds: z.array(z.string().uuid()).optional(),
+  ticketCreatedEmail: z.boolean().optional(),
+  ticketCreatedWhatsapp: z.boolean().optional(),
+  ticketAssignedEmail: z.boolean().optional(),
+  ticketAssignedWhatsapp: z.boolean().optional(),
+  assignedToIds: z.array(z.string().uuid()).optional(),
 });
 
 // Schema for id parameter in routes
@@ -39,3 +44,6 @@ export const { schemas: boardSchemas, $ref: $BoardRef } = buildJsonSchemas(
   },
   { $id: "boardSchemas" },
 );
+
+export type UpdateBoardRequestSchema = z.infer<typeof updateBoardRequestSchema>;
+export type CreateBoardRequestSchema = z.infer<typeof createBoardRequestSchema>;
