@@ -19,6 +19,14 @@ export interface Board {
     createdAt?: string;
     boardId?: string;
   }>;
+  ticketCreatedEmail: boolean;
+  ticketCreatedWhatsapp: boolean;
+  ticketAssignedEmail: boolean;
+  ticketAssignedWhatsapp: boolean;
+  notificationRecipients: Array<{
+    userId: string;
+    boardId?: string;
+  }>;
 }
 
 export interface BoardInfo {

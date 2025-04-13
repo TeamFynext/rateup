@@ -538,86 +538,7 @@ const EditTicket = ({
 
           <div>
             <Text className={styles.label}>Members</Text>
-            <Group gap="xs">
-              <Avatar.Group>
-                {visibleMembers?.map((user) => (
-                  <Avatar
-                    key={user.id}
-                    color="initials"
-                    radius="xl"
-                    name={user?.name}
-                    src={getFileUrlFromKey(user.profilePhoto)}
-                    title={user?.name}
-                  />
-                ))}
-                {hiddenMembersCount > 0 && (
-                  <Avatar
-                    color="gray"
-                    radius="xl"
-                    title={`${hiddenMembersCount} more members`}
-                  >
-                    +{hiddenMembersCount}
-                  </Avatar>
-                )}
-              </Avatar.Group>
-
-              <Popover position="bottom" withArrow>
-                <Popover.Target>
-                  <Tooltip label="Add or remove members">
-                    <Avatar
-                      color="teal"
-                      radius="xl"
-                      my={3}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <IconPlus size={16} />
-                    </Avatar>
-                  </Tooltip>
-                </Popover.Target>
-
-                <Popover.Dropdown p="xs" w={200}>
-                  <ScrollAreaAutosize mah={200}>
-                    {members.length === 0 ? (
-                      <Text size="sm" c="dimmed" ta="center" py="md">
-                        No members available to add
-                      </Text>
-                    ) : (
-                      members.map((user) => {
-                        const isSelected = form.values?.assignedToIds?.includes(
-                          user.id,
-                        );
-                        return (
-                          <Button
-                            key={user.id}
-                            variant="subtle"
-                            fullWidth
-                            justify="space-between"
-                            onClick={() => toggleMember(user.id)}
-                            leftSection={
-                              <Group gap="xs" wrap="nowrap">
-                                <Avatar
-                                  src={getFileUrlFromKey(user.profilePhoto)}
-                                  size="sm"
-                                  radius="xl"
-                                  name={user.name}
-                                  color="initials"
-                                />
-                                <Text size="sm">{user.name}</Text>
-                              </Group>
-                            }
-                            rightSection={
-                              isSelected ? <IconCheck size={16} /> : null
-                            }
-                            aria-pressed={isSelected}
-                            aria-label={`Toggle ${user.name}`}
-                          />
-                        );
-                      })
-                    )}
-                  </ScrollAreaAutosize>
-                </Popover.Dropdown>
-              </Popover>
-            </Group>
+            <MemberSelector form={form} members={members} />
           </div>
 
           <ContainedSelection
@@ -672,6 +593,118 @@ const EditTicket = ({
         </Box>
       </Collapse>
     </form>
+  );
+};
+
+export const MemberSelector = ({
+  members,
+  form,
+  maxVisibleMembers = 3,
+}: {
+  members: Array<{ id: string; name: string; profilePhoto?: string }>;
+  form: any;
+  maxVisibleMembers?: number;
+}) => {
+  const toggleMember = useCallback(
+    (userId: string) => {
+      const currentMembers = form.values.assignedToIds || [];
+      const isSelected = currentMembers.includes(userId);
+
+      form.setFieldValue(
+        "assignedToIds",
+        isSelected
+          ? currentMembers.filter((id) => id !== userId)
+          : [...currentMembers, userId],
+      );
+    },
+    [form],
+  );
+
+  const visibleMembers = useMemo(() => {
+    return form.values.assignedToIds
+      ?.slice(0, maxVisibleMembers)
+      .map((memberId) => members.find((u) => u.id === memberId))
+      .filter(Boolean);
+  }, [form.values.assignedToIds, maxVisibleMembers, members]);
+
+  const hiddenMembersCount = Math.max(
+    0,
+    (form.values.assignedToIds?.length || 0) - maxVisibleMembers,
+  );
+  return (
+    <Group gap="xs">
+      <Avatar.Group>
+        {visibleMembers?.map((user) => (
+          <Tooltip label={user?.name} key={user.id} withArrow>
+            <Avatar
+              color="initials"
+              radius="xl"
+              name={user?.name}
+              src={getFileUrlFromKey(user.profilePhoto)}
+            />
+          </Tooltip>
+        ))}
+        {hiddenMembersCount > 0 && (
+          <Avatar
+            color="gray"
+            radius="xl"
+            title={`${hiddenMembersCount} more members`}
+          >
+            +{hiddenMembersCount}
+          </Avatar>
+        )}
+      </Avatar.Group>
+
+      <Popover position="bottom" withArrow>
+        <Popover.Target>
+          <Tooltip label="Add or remove members">
+            <Avatar radius="xl" my={3} style={{ cursor: "pointer" }}>
+              <IconPlus size={16} />
+            </Avatar>
+          </Tooltip>
+        </Popover.Target>
+
+        <Popover.Dropdown p="xs" w={200}>
+          <ScrollAreaAutosize mah={200}>
+            {members.length === 0 ? (
+              <Text size="sm" c="dimmed" ta="center" py="md">
+                No members available to add
+              </Text>
+            ) : (
+              members.map((user) => {
+                const isSelected = form.values?.assignedToIds?.includes(
+                  user.id,
+                );
+                return (
+                  <Button
+                    key={user.id}
+                    variant="subtle"
+                    fullWidth
+                    justify="space-between"
+                    onClick={() => toggleMember(user.id)}
+                    leftSection={
+                      <Group gap="xs" wrap="nowrap">
+                        <Avatar
+                          src={getFileUrlFromKey(user.profilePhoto)}
+                          size="sm"
+                          radius="xl"
+                          name={user.name}
+                          color="initials"
+                        />
+                        <Text size="sm">{user.name}</Text>
+                      </Group>
+                    }
+                    rightSection={isSelected ? <IconCheck size={16} /> : null}
+                    aria-pressed={isSelected}
+                    aria-label={`Toggle ${user.name}`}
+                  />
+                );
+              })
+            )}
+          </ScrollAreaAutosize>
+        </Popover.Dropdown>
+      </Popover>
+    </Group>
   );
 };
 
