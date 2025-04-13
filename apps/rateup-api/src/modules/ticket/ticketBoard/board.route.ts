@@ -6,6 +6,7 @@ import {
   getSingleBoardHandler,
   updateBoardHandler,
   deleteBoardHandler,
+  getBoardTeamMembersHandler,
 } from "./board.controller";
 import { checkSession } from "../../../utils/checkSession";
 import { verifyTeamAccess } from "../../team/team.auth";
@@ -70,5 +71,16 @@ export async function boardRoutes(server: FastifyInstance) {
       },
     },
     deleteBoardHandler,
+  );
+  // Get all team members for a board
+  server.get(
+    "/:id/team-members",
+    {
+      preHandler: [verifyBoardAccess],
+      schema: {
+        params: $BoardRef("idParamsSchema"),
+      },
+    },
+    getBoardTeamMembersHandler,
   );
 }

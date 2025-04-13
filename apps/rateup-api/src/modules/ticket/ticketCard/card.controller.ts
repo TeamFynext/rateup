@@ -33,6 +33,7 @@ export async function createCardHandler(
       ticketColumnId,
       userId,
       type,
+      orgId: request.user.orgId,
     });
     return reply.code(201).send(card);
   } catch (error) {
@@ -111,7 +112,7 @@ export async function updateCardHandler(
     const body = request.body;
     const userId = request.userId;
 
-    const updatedCard = await updateCard(id, body, userId);
+    const updatedCard = await updateCard(id, body, userId, request.user.orgId);
 
     if (!updatedCard) {
       return reply.code(404).send({ message: "Card not found" });

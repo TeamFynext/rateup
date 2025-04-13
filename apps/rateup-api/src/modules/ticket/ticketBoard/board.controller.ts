@@ -5,12 +5,17 @@ import {
   getBoardById,
   updateBoard,
   deleteBoard,
+  getBoardTeamMembersById,
 } from "./board.service";
 import { createColumn } from "../ticketColumn/column.service";
+import {
+  CreateBoardRequestSchema,
+  UpdateBoardRequestSchema,
+} from "./board.schema";
 
 export async function createBoardHandler(
   request: FastifyRequest<{
-    Body: { title: string; teamIds: Array<string> };
+    Body: CreateBoardRequestSchema;
   }>,
   reply: FastifyReply,
 ) {
@@ -69,15 +74,14 @@ export async function getSingleBoardHandler(
 export async function updateBoardHandler(
   request: FastifyRequest<{
     Params: { id: string };
-    Body: { title?: string; teamIds?: Array<string> };
+    Body: UpdateBoardRequestSchema;
   }>,
   reply: FastifyReply,
 ) {
   try {
     const { id } = request.params;
-    const { title, teamIds } = request.body;
 
-    const updatedBoard = await updateBoard(id, { title, teamIds });
+    const updatedBoard = await updateBoard(id, request.body);
 
     if (!updatedBoard) {
       return reply.code(404).send({ message: "Board not found" });
@@ -103,5 +107,26 @@ export async function deleteBoardHandler(
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Error deleting board" });
+  }
+}
+
+export async function getBoardTeamMembersHandler(
+  request: FastifyRequest<{
+    Params: { id: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { id } = request.params;
+    const members = await getBoardTeamMembersById(id);
+
+    if (!members) {
+      return reply.code(404).send({ message: "Members not found" });
+    }
+
+    return reply.code(200).send(members);
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Error retrieving members" });
   }
 }

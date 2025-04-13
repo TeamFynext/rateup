@@ -707,6 +707,7 @@ export async function processNextNode(
           ticketColumnId: typedData?.ticket?.selectedBoardColumnId,
           waAutomatedReplyMessageId: automationMessageId,
           type: "AUTOMATION",
+          orgId,
         });
         break;
       case "delayNode":
