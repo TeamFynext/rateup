@@ -110,7 +110,7 @@ export async function sendTicketCreateEmail(data: {
   let ticket_link = `${process.env.FRONTEND_URL}/dashboard/tickets/` + data.id;
   const msg = {
     to: data.email,
-    subject: `Ticket Assigned to You `,
+    subject: `Ticket Created`,
     text: `A ticket has been assigned to you on Rateup.app`,
     html: createEmailBodyTicketCreated({
       ticket_link,
