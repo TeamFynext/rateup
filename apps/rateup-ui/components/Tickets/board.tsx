@@ -3,10 +3,10 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
-import { Button, Flex, Group, Text } from "@mantine/core";
+import { Button, Flex, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { IconArrowLeft, IconPlus } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
