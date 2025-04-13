@@ -177,7 +177,10 @@ export default function Page() {
 
       {/* Board Cards Grid */}
       {selectedBoardId ? (
-        <BoardContent selectedBoardId={selectedBoardId} />
+        <BoardContent
+          selectedBoardId={selectedBoardId}
+          teamOptions={teamOptions}
+        />
       ) : (
         <>
           {filteredBoards.length > 0 ? (

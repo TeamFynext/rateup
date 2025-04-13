@@ -42,6 +42,7 @@ export function PriorityFilter({
           size="md"
           px="md"
           tt="inherit"
+          ml={"auto"}
           leftSection={<IconFilter size={19} />}
           styles={{
             root: {
