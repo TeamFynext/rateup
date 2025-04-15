@@ -3,10 +3,10 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
-import { Button, Flex, Group, Text } from "@mantine/core";
+import { Button, Flex, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { IconArrowLeft, IconPlus } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
@@ -38,18 +38,17 @@ import {
 
 export function Board({
   initial,
+  priorityFilter,
   availableBoards,
 }: {
   initial: BoardType;
+  priorityFilter: string;
   availableBoards?: BoardInfo[];
 }) {
   const { settings } = useContext(SettingsContext);
   const scrollableRef = useRef<HTMLDivElement | null>(null);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [isAddingColumn, { open, close }] = useDisclosure(false);
-  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
-  const [filterOpened, setFilterOpened] = useState(false);
-  const router = useRouter();
   // get userInformation for checking the role
   const { data: userRes } = useUserInfo() as { data: { data: UserData } };
   const role = userRes?.data?.role;
@@ -327,62 +326,11 @@ export function Board({
 
   return (
     <Flex direction="column" gap="md">
-      <Group
-        mx="md"
-        py="md"
-        px="lg"
-        align="center"
-        justify="space-between"
-        mb="md"
-        style={{
-          backdropFilter: "blur(10px)",
-          background: "rgba(255, 255, 255, 0.05)",
-          borderRadius: "16px",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        <Flex align="center" gap="md">
-          <Button
-            variant="light"
-            radius="md"
-            size="sm"
-            leftSection={<IconArrowLeft size={16} />}
-            onClick={() => router.push({ query: {} })}
-          >
-            Back
-          </Button>
-
-          <Text tt="capitalize" fw={500} c={"gray.9"} size="27px">
-            {data.title}
-          </Text>
-        </Flex>
-
-        <PriorityFilter
-          filterOpened={filterOpened}
-          setFilterOpened={setFilterOpened}
-          priorityFilter={priorityFilter}
-          setPriorityFilter={setPriorityFilter}
-        />
-      </Group>
-      <Flex
-        style={{
-          flex: 1,
-          height: "calc(100% - 60px)",
-          ...(settings.isBoardMoreObvious
-            ? {
-                paddingLeft: "2rem",
-                paddingRight: "2rem",
-                paddingTop: "1rem",
-                paddingBottom: "1rem",
-              }
-            : {}),
-        }}
-      >
+      <Flex flex={1}>
         <Flex
           ref={scrollableRef}
           gap={"sm"}
-          p={"sm"}
+          mah={"calc(100vh - 121px)"}
           style={{
             overflowX: "auto",
             ...(settings.isBoardMoreObvious

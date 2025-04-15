@@ -1,3 +1,4 @@
+import { NotificationFormValues } from "@/components/Tickets/boardSettings";
 import {
   Activity,
   Board,
@@ -112,11 +113,9 @@ export const createBoard = async (board: {
   return data;
 };
 
-export const updateBoard = async (board: {
-  id: string;
-  title?: string;
-  teamIds?: Array<string>;
-}): Promise<Board> => {
+export const updateBoard = async (
+  board: NotificationFormValues,
+): Promise<Board> => {
   const { data } = await axiosClient.put(`/tickets/boards/${board.id}`, board);
   return data;
 };
@@ -231,6 +230,15 @@ export const fetchCardTeamMemberById = async (
 ): Promise<Array<MemberData>> => {
   const { data } = await axiosClient.get(
     `/tickets/cards/${cardId}/team-members`,
+  );
+  return data;
+};
+
+export const fetchBoardTeamMemberById = async (
+  cardId: string,
+): Promise<Array<MemberData>> => {
+  const { data } = await axiosClient.get(
+    `/tickets/boards/${cardId}/team-members`,
   );
   return data;
 };

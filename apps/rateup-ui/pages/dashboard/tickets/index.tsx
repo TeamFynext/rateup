@@ -147,7 +147,7 @@ export default function Page() {
   return (
     <Container
       size="2xl"
-      py="xl"
+      py="sm"
       h={"100%"}
       style={{
         backgroundImage: `url("/images/cover/cover4.jpg")`,
@@ -177,7 +177,10 @@ export default function Page() {
 
       {/* Board Cards Grid */}
       {selectedBoardId ? (
-        <BoardContent selectedBoardId={selectedBoardId} />
+        <BoardContent
+          selectedBoardId={selectedBoardId}
+          teamOptions={teamOptions}
+        />
       ) : (
         <>
           {filteredBoards.length > 0 ? (

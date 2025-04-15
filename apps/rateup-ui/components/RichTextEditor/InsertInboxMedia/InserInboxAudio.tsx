@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
-import { FileInput, Popover, Stack } from "@mantine/core";
+import { FileInput, Flex, Popover, Stack } from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
-import { IconMusic } from "@tabler/icons-react";
+import { IconMusic, IconUpload } from "@tabler/icons-react";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter";
@@ -12,7 +12,7 @@ import { showErrorToast } from "@/utils/notifications";
 const InsertInboxAudio = () => {
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [file, setFile] = useState(null);
-  const { addMedia, media } = useMediaStore();
+  const { addMedia, media, resetMedia } = useMediaStore();
 
   async function onSubmit() {
     if (!file) return;
@@ -26,6 +26,7 @@ const InsertInboxAudio = () => {
     } catch (e) {
       setIsUploadingFile(false);
       showErrorToast(e);
+      resetMedia();
     }
   }
 
@@ -33,30 +34,29 @@ const InsertInboxAudio = () => {
     <Popover position="top" withArrow shadow="md" trapFocus closeOnClickOutside>
       <Popover.Target>
         <RichTextEditor.Control
-          aria-label="Upload Image"
-          title={"Upload Image"}
+          aria-label="Upload audio"
+          title={"Upload Audio"}
           disabled={isUploadingFile || media.length > 0}
         >
           <IconMusic size={16} />
         </RichTextEditor.Control>
       </Popover.Target>
       <Popover.Dropdown>
-        <form onSubmit={onSubmit}>
-          <Stack>
-            <FileInput
-              label={"Upload Audio"}
-              placeholder={"Choose a audio to upload"}
-              withAsterisk
-              onChange={setFile}
-              accept="audio/aac,audio/amr,audio/mpeg,audio/mp4,audio/ogg"
-            />
-            <RateupButtonPrimary
-              loading={isUploadingFile}
-              title={"Submit"}
-              type="submit"
-            />
-          </Stack>
-        </form>
+        <Flex wrap={"wrap-reverse"} gap={"xs"}>
+          <FileInput
+            label={"Upload Audio"}
+            placeholder={"Choose a audio to upload"}
+            withAsterisk
+            onChange={setFile}
+            accept="audio/aac,audio/amr,audio/mpeg,audio/mp4,audio/ogg"
+          />
+          <RateupButtonPrimary
+            loading={isUploadingFile}
+            title={"Upload"}
+            rightIcon={<IconUpload size={"1rem"} />}
+            onClick={onSubmit}
+          />
+        </Flex>
       </Popover.Dropdown>
     </Popover>
   );

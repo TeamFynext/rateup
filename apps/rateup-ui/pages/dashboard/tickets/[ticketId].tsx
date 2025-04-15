@@ -7,6 +7,7 @@ import {
   Badge,
   Box,
   Button,
+  Collapse,
   Container,
   Grid,
   Group,
@@ -26,6 +27,7 @@ import { useDebouncedValue } from "@mantine/hooks";
 import {
   IconCalendar,
   IconCheck,
+  IconChevronDown,
   IconChevronLeft,
   IconFileDescription,
   IconHistory,
@@ -35,6 +37,7 @@ import {
   IconPlus,
   IconTrash,
   IconUser,
+  IconX,
 } from "@tabler/icons-react";
 import parse from "html-react-parser";
 import { z } from "zod";
@@ -73,6 +76,7 @@ import {
   WaAutomatedReplyMessage,
 } from "../../../components/Tickets/types";
 import styles from "./customInput.module.css";
+import styles2 from "./ticketPriority.module.css";
 
 export default function CardDetailPage() {
   const router = useRouter();
@@ -121,17 +125,19 @@ export default function CardDetailPage() {
         <Grid.Col span={{ base: 12, md: 8 }}>
           <PaperLayout h={"100%"} p={"xs"} radius={"md"}>
             <EditTicket ticket={card} router={router} ticketId={ticketId} />
-            <Tabs defaultValue="comments" classNames={styles} mt={"xs"}>
-              <Tabs.List>
+            <Tabs defaultValue="comments" classNames={styles} mt={"xl"}>
+              <Tabs.List c={"gray.7"}>
                 <Tabs.Tab
                   value="comments"
-                  leftSection={<IconMessage size={12} />}
+                  fw={500}
+                  leftSection={<IconMessage size={19} />}
                 >
                   Comments
                 </Tabs.Tab>
                 <Tabs.Tab
                   value="activity"
-                  leftSection={<IconHistory size={12} />}
+                  fw={500}
+                  leftSection={<IconHistory size={19} />}
                 >
                   Activity
                 </Tabs.Tab>
@@ -238,7 +244,9 @@ const TicketComments = ({
   };
   return (
     <>
-      <Title order={5}>Comments</Title>
+      <Title size={18} c={"gray.7"} my={12} fw={700} order={5}>
+        Comments
+      </Title>
       <TicketTextEditor
         onUpdate={handleAddComment}
         content={""}
@@ -382,6 +390,7 @@ const EditTicket = ({
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "idle">(
     "idle",
   );
+  const [showEditor, setShowEditor] = useState(false);
   const { data: members = [], isPending: isMembersLoading } =
     useCardTeamMembersById(ticketId);
 
@@ -452,170 +461,250 @@ const EditTicket = ({
     (form.values.assignedToIds?.length || 0) - 3,
   );
 
+  const getPriorityClass = (priority: string) => {
+    switch (priority) {
+      case "LOW":
+        return styles2.lowPriority;
+      case "MEDIUM":
+        return styles2.mediumPriority;
+      case "HIGH":
+        return styles2.highPriority;
+      case "CRITICAL":
+        return styles2.criticalPriority;
+      default:
+        return "";
+    }
+  };
+
   if (isMembersLoading)
     return <RateupLoader aria-label="Loading ticket members" />;
 
   return (
     <form aria-label="Edit ticket form">
-      <Group justify="space-between" my="md">
-        <Group gap="xs">
-          <Tooltip label="Go back">
-            <ActionIcon
-              radius="lg"
-              variant="filled"
-              onClick={() => router.back()}
-              aria-label="Go back"
+      <Container size="lg" px="xs">
+        <Group justify="space-between" my="md" w="100%">
+          <Group gap="md">
+            <Tooltip label="Go back">
+              <ActionIcon
+                radius="lg"
+                variant="filled"
+                onClick={() => router.back()}
+                aria-label="Go back"
+              >
+                <IconChevronLeft />
+              </ActionIcon>
+            </Tooltip>
+
+            <Group gap={4} mx={8}>
+              <Text size="sm">Created Date:</Text>
+              <Badge variant="transparent" c={"gray.7"} radius="xs">
+                {formatDate(ticket.createdAt)}
+              </Badge>
+            </Group>
+
+            <Group px="xs">
+              <ShareLink />
+            </Group>
+          </Group>
+
+          {saveStatus !== "idle" && (
+            <Badge
+              color={saveStatus === "saved" ? "teal" : "blue"}
+              variant="light"
+              size="sm"
+              aria-live="polite"
             >
-              <IconChevronLeft />
-            </ActionIcon>
-          </Tooltip>
-
-          <Group px="xs">
-            <ShareLink />
-          </Group>
-
-          <Group gap={4}>
-            <Text size="sm">Created Date:</Text>
-            <Badge variant="light" radius="xs">
-              {formatDate(ticket.createdAt)}
+              {saveStatus === "saved" ? "Changes saved" : "Saving..."}
             </Badge>
-          </Group>
+          )}
         </Group>
+      </Container>
 
-        {saveStatus !== "idle" && (
-          <Badge
-            color={saveStatus === "saved" ? "teal" : "blue"}
-            variant="light"
-            size="sm"
-            aria-live="polite"
-          >
-            {saveStatus === "saved" ? "Changes saved" : "Saving..."}
-          </Badge>
-        )}
-      </Group>
+      <Container>
+        <SimpleGrid
+          mx={{ base: 0, md: 16 }}
+          cols={{ base: 2, md: 3 }}
+          spacing="md"
+        >
+          <ContainedTextField
+            fw={500}
+            label="Ticket Name"
+            placeholder={translations["Enter Ticket Name"]}
+            required
+            classNames={styles}
+            aria-required="true"
+            {...form.getInputProps("title")}
+          />
 
-      <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">
-        <ContainedTextField
-          label="Ticket Name"
-          placeholder={translations["Enter Ticket Name"]}
-          required
-          classNames={styles}
-          aria-required="true"
-          {...form.getInputProps("title")}
-        />
+          <div>
+            <Text className={styles.label}>Members</Text>
+            <MemberSelector form={form} members={members} />
+          </div>
 
-        <div>
-          <Text className={styles.label}>Members</Text>
-          <Group gap="xs">
-            <Avatar.Group>
-              {visibleMembers?.map((user) => (
-                <Avatar
-                  key={user.id}
-                  color="initials"
-                  radius="xl"
-                  name={user?.name}
-                  src={getFileUrlFromKey(user.profilePhoto)}
-                  title={user?.name}
-                />
-              ))}
-              {hiddenMembersCount > 0 && (
-                <Avatar
-                  color="gray"
-                  radius="xl"
-                  title={`${hiddenMembersCount} more members`}
-                >
-                  +{hiddenMembersCount}
-                </Avatar>
-              )}
-            </Avatar.Group>
+          <ContainedSelection
+            allowDeselect={false}
+            data={Object.values(TicketPriority)}
+            label={translations["Priority"]}
+            placeholder={translations["Select priority for the ticket"]}
+            {...form.getInputProps("priority")}
+            rightSection={<IconChevronDown size={16} />}
+            classNames={{
+              input: `${styles2.priorityInput} ${getPriorityClass(form.values.priority)}`,
+            }}
+          />
 
-            <Popover position="bottom" withArrow>
-              <Popover.Target>
-                <Tooltip label="Add or remove members">
-                  <Avatar
-                    color="gray"
-                    radius="xl"
-                    style={{ cursor: "pointer" }}
-                  >
-                    <IconPlus size={16} />
-                  </Avatar>
-                </Tooltip>
-              </Popover.Target>
+          <ContainedDatePickerInput
+            label={translations["Deadline:"]}
+            placeholder={translations["Select a deadline for the ticket"]}
+            rightSection={
+              <IconCalendar color="var(--mantine-color-blue-4)" size={19} />
+            }
+            classNames={styles}
+            minDate={new Date()}
+            clearable
+            {...form.getInputProps("deadline")}
+          />
 
-              <Popover.Dropdown p="xs" w={200}>
-                <ScrollAreaAutosize mah={200}>
-                  {members.length === 0 ? (
-                    <Text size="sm" c="dimmed" ta="center" py="md">
-                      No members available to add
-                    </Text>
-                  ) : (
-                    members.map((user) => {
-                      const isSelected = form.values?.assignedToIds?.includes(
-                        user.id,
-                      );
-                      return (
-                        <Button
-                          key={user.id}
-                          variant="subtle"
-                          fullWidth
-                          justify="space-between"
-                          onClick={() => toggleMember(user.id)}
-                          leftSection={
-                            <Group gap="xs" wrap="nowrap">
-                              <Avatar
-                                src={getFileUrlFromKey(user.profilePhoto)}
-                                size="sm"
-                                radius="xl"
-                                name={user.name}
-                                color="initials"
-                              />
-                              <Text size="sm">{user.name}</Text>
-                            </Group>
-                          }
-                          rightSection={
-                            isSelected ? <IconCheck size={16} /> : null
-                          }
-                          aria-pressed={isSelected}
-                          aria-label={`Toggle ${user.name}`}
-                        />
-                      );
-                    })
-                  )}
-                </ScrollAreaAutosize>
-              </Popover.Dropdown>
-            </Popover>
-          </Group>
-        </div>
+          <Box mt={22} mx={12}>
+            <Button
+              type="button"
+              variant="light"
+              color="teal.7"
+              fw={500}
+              onClick={() => setShowEditor(!showEditor)}
+              leftSection={
+                showEditor ? <IconX size={16} /> : <IconPlus size={16} />
+              }
+            >
+              {showEditor ? "Close editor" : "Add description"}
+            </Button>
+          </Box>
+        </SimpleGrid>
+      </Container>
 
-        <ContainedSelection
-          allowDeselect={false}
-          data={Object.values(TicketPriority)}
-          label={translations["Priority"]}
-          placeholder={translations["Select priority for the ticket"]}
-          classNames={styles}
-          {...form.getInputProps("priority")}
-        />
-
-        <ContainedDatePickerInput
-          label={translations["Deadline:"]}
-          placeholder={translations["Select a deadline for the ticket"]}
-          rightSection={<IconCalendar size={16} />}
-          classNames={styles}
-          minDate={new Date()}
-          clearable
-          {...form.getInputProps("deadline")}
-        />
-      </SimpleGrid>
-
-      <Box mt="md">
-        <Text className={styles.label}>Description</Text>
-        <TicketTextEditor
-          content={form.values.description}
-          onUpdate={handleDescriptionUpdate}
-          placeholder="Add a description..."
-        />
-      </Box>
+      <Collapse in={showEditor}>
+        <Box mt="md">
+          <Text className={styles.label}>Description</Text>
+          <TicketTextEditor
+            content={form.values.description}
+            onUpdate={handleDescriptionUpdate}
+            placeholder="Add a description..."
+          />
+        </Box>
+      </Collapse>
     </form>
+  );
+};
+
+export const MemberSelector = ({
+  members,
+  form,
+  maxVisibleMembers = 3,
+}: {
+  members: Array<{ id: string; name: string; profilePhoto?: string }>;
+  form: any;
+  maxVisibleMembers?: number;
+}) => {
+  const toggleMember = useCallback(
+    (userId: string) => {
+      const currentMembers = form.values.assignedToIds || [];
+      const isSelected = currentMembers.includes(userId);
+
+      form.setFieldValue(
+        "assignedToIds",
+        isSelected
+          ? currentMembers.filter((id) => id !== userId)
+          : [...currentMembers, userId],
+      );
+    },
+    [form],
+  );
+
+  const visibleMembers = useMemo(() => {
+    return form.values.assignedToIds
+      ?.slice(0, maxVisibleMembers)
+      .map((memberId) => members.find((u) => u.id === memberId))
+      .filter(Boolean);
+  }, [form.values.assignedToIds, maxVisibleMembers, members]);
+
+  const hiddenMembersCount = Math.max(
+    0,
+    (form.values.assignedToIds?.length || 0) - maxVisibleMembers,
+  );
+  return (
+    <Group gap="xs">
+      <Avatar.Group>
+        {visibleMembers?.map((user) => (
+          <Tooltip label={user?.name} key={user.id} withArrow>
+            <Avatar
+              color="initials"
+              radius="xl"
+              name={user?.name}
+              src={getFileUrlFromKey(user.profilePhoto)}
+            />
+          </Tooltip>
+        ))}
+        {hiddenMembersCount > 0 && (
+          <Avatar
+            color="gray"
+            radius="xl"
+            title={`${hiddenMembersCount} more members`}
+          >
+            +{hiddenMembersCount}
+          </Avatar>
+        )}
+      </Avatar.Group>
+
+      <Popover position="bottom" withArrow>
+        <Popover.Target>
+          <Tooltip label="Add or remove members">
+            <Avatar radius="xl" my={3} style={{ cursor: "pointer" }}>
+              <IconPlus size={16} />
+            </Avatar>
+          </Tooltip>
+        </Popover.Target>
+
+        <Popover.Dropdown p="xs" w={200}>
+          <ScrollAreaAutosize mah={200}>
+            {members.length === 0 ? (
+              <Text size="sm" c="dimmed" ta="center" py="md">
+                No members available to add
+              </Text>
+            ) : (
+              members.map((user) => {
+                const isSelected = form.values?.assignedToIds?.includes(
+                  user.id,
+                );
+                return (
+                  <Button
+                    key={user.id}
+                    variant="subtle"
+                    fullWidth
+                    justify="space-between"
+                    onClick={() => toggleMember(user.id)}
+                    leftSection={
+                      <Group gap="xs" wrap="nowrap">
+                        <Avatar
+                          src={getFileUrlFromKey(user.profilePhoto)}
+                          size="sm"
+                          radius="xl"
+                          name={user.name}
+                          color="initials"
+                        />
+                        <Text size="sm">{user.name}</Text>
+                      </Group>
+                    }
+                    rightSection={isSelected ? <IconCheck size={16} /> : null}
+                    aria-pressed={isSelected}
+                    aria-label={`Toggle ${user.name}`}
+                  />
+                );
+              })
+            )}
+          </ScrollAreaAutosize>
+        </Popover.Dropdown>
+      </Popover>
+    </Group>
   );
 };
 

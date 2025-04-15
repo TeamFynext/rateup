@@ -1,17 +1,9 @@
 import React, { useState } from "react";
 
-import {
-  FileInput,
-  Group,
-  NumberInput,
-  Popover,
-  Select,
-  Stack,
-  TextInput,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
-import { IconFile, IconPhoto } from "@tabler/icons-react";
+import { FileInput, Flex, Popover, Stack } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { RichTextEditor } from "@mantine/tiptap";
+import { IconFile, IconUpload } from "@tabler/icons-react";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter";
@@ -21,7 +13,7 @@ import { showErrorToast } from "@/utils/notifications";
 const InsertInboxFile = () => {
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [file, setFile] = useState(null);
-  const { addMedia, media } = useMediaStore();
+  const { addMedia, media, resetMedia } = useMediaStore();
 
   async function onSubmit() {
     if (!file) return;
@@ -39,6 +31,7 @@ const InsertInboxFile = () => {
     } catch (e) {
       setIsUploadingFile(false);
       showErrorToast(e);
+      resetMedia();
     }
   }
 
@@ -54,7 +47,7 @@ const InsertInboxFile = () => {
         </RichTextEditor.Control>
       </Popover.Target>
       <Popover.Dropdown>
-        <Stack>
+        <Flex wrap={"wrap-reverse"} gap={"xs"}>
           <FileInput
             label={"Upload File"}
             placeholder={"Choose a file to upload"}
@@ -64,10 +57,11 @@ const InsertInboxFile = () => {
           />
           <RateupButtonPrimary
             loading={isUploadingFile}
-            title={"Submit"}
+            title={"Upload"}
             onClick={onSubmit}
+            rightIcon={<IconUpload size={"1rem"} />}
           />
-        </Stack>
+        </Flex>
       </Popover.Dropdown>
     </Popover>
   );

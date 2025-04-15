@@ -38,18 +38,11 @@ export function PriorityFilter({
           onClick={() => setFilterOpened((o) => !o)}
           variant="default"
           color="gray"
-          radius="xl"
-          size="md"
-          px="md"
-          tt="inherit"
+          radius="sm"
+          size="sm"
+          px="sm"
+          ml={"auto"}
           leftSection={<IconFilter size={19} />}
-          styles={{
-            root: {
-              backdropFilter: "blur(4px)",
-              backgroundColor: "rgba(255, 255, 255, 0.05)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-            },
-          }}
         >
           {priorityFilter || "Filter"}
         </Button>

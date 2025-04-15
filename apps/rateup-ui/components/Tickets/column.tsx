@@ -15,12 +15,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconAdjustmentsCog,
-  IconEdit,
-  IconPlus,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconEdit, IconFilter, IconPlus, IconTrash } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
@@ -407,10 +402,10 @@ export function Column({
           <Group
             justify={"space-between"}
             align={"center"}
+            bg={"white"}
             p={"sm"}
             pb={"xs"}
             ref={headerRef}
-            bg={"teal.6"}
             bd={"1px solid var(--light-blue-5)"}
             style={{
               borderTopLeftRadius: 12,
@@ -418,14 +413,14 @@ export function Column({
               borderBottomColor: "white",
             }}
           >
-            <Title order={5} c="gray.1">
+            <Title order={5} c={"blue.9"}>
               {column.title}
             </Title>
 
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
                 <ActionIcon variant="transparent" aria-label="More actions">
-                  <IconAdjustmentsCog size={20} color="white" />
+                  <IconFilter color="black" size={20} />
                 </ActionIcon>
               </Menu.Target>
 
@@ -504,18 +499,6 @@ export function Column({
             placeholder="Column title"
             autoFocus
           />
-
-          {/* {availableBoards && availableBoards.length > 0 && (
-            <NativeSelect
-              label="Board"
-              value={selectedBoardId}
-              onChange={(e) => setSelectedBoardId(e.target.value)}
-              data={availableBoards.map((board) => ({
-                value: board.id,
-                label: board.title,
-              }))}
-            />
-          )} */}
 
           <Group justify="right" mt="md">
             <RateupButtonPrimary
