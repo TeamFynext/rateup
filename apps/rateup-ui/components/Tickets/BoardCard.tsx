@@ -18,12 +18,10 @@ export function BoardCard({
     <Card
       shadow="sm"
       padding="lg"
-      radius="md"
+      radius="lg"
       withBorder
-      style={{
-        cursor: "pointer",
-        borderColor: isSelected ? "var(--mantine-primary-color)" : undefined,
-        borderWidth: isSelected ? "2px" : "1px",
+      styles={{
+        root: { cursor: "pointer" },
       }}
       onClick={() => onSelect(board.id)}
     >
