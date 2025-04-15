@@ -1,17 +1,8 @@
 import React, { useState } from "react";
 
-import {
-  FileInput,
-  Group,
-  NumberInput,
-  Popover,
-  Select,
-  Stack,
-  TextInput,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { FileInput, Flex, Popover } from "@mantine/core";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
-import { IconFile, IconImageInPicture, IconPhoto } from "@tabler/icons-react";
+import { IconPhoto, IconUpload } from "@tabler/icons-react";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { useMediaStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter";
@@ -21,7 +12,7 @@ import { showErrorToast } from "@/utils/notifications";
 const InsertInboxImage = () => {
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [file, setFile] = useState(null);
-  const { addMedia, media } = useMediaStore();
+  const { addMedia, media, resetMedia } = useMediaStore();
 
   async function onSubmit() {
     if (!file) return;
@@ -35,6 +26,7 @@ const InsertInboxImage = () => {
     } catch (e) {
       setIsUploadingFile(false);
       showErrorToast(e);
+      resetMedia();
     }
   }
 
@@ -42,15 +34,15 @@ const InsertInboxImage = () => {
     <Popover position="top" withArrow shadow="md" trapFocus closeOnClickOutside>
       <Popover.Target>
         <RichTextEditor.Control
-          aria-label="Upload Image"
-          title={"Upload Image"}
+          aria-label="Upload Photo"
+          title={"Upload Photo"}
           disabled={isUploadingFile || media.length > 0}
         >
           <IconPhoto size={16} />
         </RichTextEditor.Control>
       </Popover.Target>
       <Popover.Dropdown>
-        <Stack>
+        <Flex wrap={"wrap-reverse"} gap={"xs"}>
           <FileInput
             label={"Upload Photo"}
             placeholder={"Choose a photo to upload"}
@@ -60,10 +52,12 @@ const InsertInboxImage = () => {
           />
           <RateupButtonPrimary
             loading={isUploadingFile}
-            title={"Submit"}
+            title={"Upload"}
             onClick={onSubmit}
+            rightIcon={<IconUpload size={"1rem"} />}
+            size="sm"
           />
-        </Stack>
+        </Flex>
       </Popover.Dropdown>
     </Popover>
   );

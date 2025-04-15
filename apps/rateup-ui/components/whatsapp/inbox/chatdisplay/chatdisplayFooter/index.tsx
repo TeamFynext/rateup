@@ -56,27 +56,32 @@ export default function WaInboxChatDisplayFooter({
       },
     },
   });
-  function handleSendMessage(values: typeof form.values) {
+  function handleSendMessage() {
+    const values = { ...form.values };
     form.reset();
-    values.media = media;
-    if (
-      !parseToWhatsAppFormat(values.text.body).trim().length &&
-      !values.media.length
-    )
-      return;
-    if (
-      !parseToWhatsAppFormat(values.text.body).trim().length &&
-      values.media.length
-    )
-      values.type = "media";
+    const trimmedBody =
+      values.text.body !== ""
+        ? parseToWhatsAppFormat(values.text.body).trim()
+        : "";
+    if (!trimmedBody.length && !values.media.length) return;
+    if (!trimmedBody.length && values.media.length) values.type = "media";
     addMessage(contact.id, {
-      body: values.text.body,
+      body: {
+        text: values.text.body,
+        ...(values.media.length
+          ? {
+              url: values.media[0].url,
+              urlType: values.media[0].type,
+              filename: values.media[0].name,
+            }
+          : {}),
+      },
       type: "text",
     });
+    resetMedia();
     sendnewWaMessage.mutate(values, {
       onSuccess: () => {
         removeMessage(contact.id);
-        resetMedia();
       },
     });
   }
@@ -100,12 +105,18 @@ export default function WaInboxChatDisplayFooter({
     contact?.lastReceivedMessageTimeStamp,
   );
   submiRef.current = () => {
-    form.onSubmit((values) => handleSendMessage(values))();
+    handleSendMessage();
   };
 
   useEffect(() => {
     resetMedia();
   }, [contact]);
+
+  useEffect(() => {
+    if (media.length) {
+      form.setFieldValue("media", media);
+    }
+  }, [media]);
 
   return (
     <Stack gap={0}>
@@ -129,10 +140,7 @@ export default function WaInboxChatDisplayFooter({
             contact={contact}
             disabled={!isChatAssignedToMe}
           />
-          <form
-            onSubmit={form.onSubmit((values) => handleSendMessage(values))}
-            className={classes.form}
-          >
+          <form className={classes.form}>
             <div ref={inputRef} style={{ display: "flex", flex: 1 }}>
               <WaTextEditor
                 handleInputChange={(value) => {
@@ -148,9 +156,9 @@ export default function WaInboxChatDisplayFooter({
               />
             </div>
             <RateupButtonPrimary
-              type={"submit"}
               title={translations["Send"]}
               rightIcon={<IconSend />}
+              onClick={handleSendMessage}
             />
           </form>
         </div>
@@ -212,7 +220,12 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
 interface Message {
   id?: string;
   contactId: string;
-  body: string;
+  body: {
+    text: string;
+    url?: string;
+    urlType?: string;
+    filename?: string;
+  };
   type: string;
   timestamp: number;
   isOutgoing: boolean;

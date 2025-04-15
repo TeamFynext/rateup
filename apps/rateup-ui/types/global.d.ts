@@ -1158,11 +1158,13 @@ export type WaReceiveMessageBody = {
         mime_type: string;
         sha256: string;
         voice?: boolean;
+        caption?: string;
       };
       video: {
         id: string;
         mime_type: string;
         sha256: string;
+        caption?: string;
       };
       document: {
         id: string;
@@ -1213,6 +1215,7 @@ export type WaSendMessageBody = {
   template?: WaTemplateFetchBody;
   image?: {
     link: string;
+    caption?: string;
   };
   interactive?: {
     type:
@@ -1250,6 +1253,7 @@ export type WaSendMessageBody = {
   };
   audio?: {
     link: string;
+    caption: string;
   };
   video?: {
     link: string;

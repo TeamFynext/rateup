@@ -35,7 +35,13 @@ export function parseWaMessage(
         messageContent = send?.text?.body;
         break;
       case "image":
-        messageContent = send?.image?.link;
+        messageContent = `${send?.image?.link}_caption_${send?.image?.caption ?? ""}`;
+        break;
+      case "video":
+        messageContent = `${send?.video?.link}_caption_${send?.video?.caption ?? ""}`;
+        break;
+      case "audio":
+        messageContent = `${send?.audio?.link}_caption_${send?.audio?.caption ?? ""}`;
         break;
       case "template":
         messageContent = send.template.name;
@@ -62,16 +68,16 @@ export function parseWaMessage(
         messageContent = receive.messages[0].text.body;
         break;
       case "image":
-        messageContent = receive.messages[0].image.link;
+        messageContent = `${receive.messages[0].image?.id}_caption_${receive.messages[0].image?.caption ?? ""}`;
         break;
       case "button":
         messageContent = receive.messages[0].button.text;
         break;
       case "audio":
-        messageContent = receive.messages[0].audio.id;
+        messageContent = `${receive.messages[0].audio?.id}_caption_${receive.messages[0].audio?.caption ?? ""}`;
         break;
       case "video":
-        messageContent = receive.messages[0].video.id;
+        messageContent = `${receive.messages[0].video?.id}_caption_${receive.messages[0].video?.caption ?? ""}`;
         break;
       case "document":
         messageContent = `${receive.messages[0].document.id}_caption_${receive.messages[0].document.filename}_caption_${receive.messages[0].document.caption ?? ""}`;

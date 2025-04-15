@@ -140,7 +140,11 @@ function WaTextEditor({
             return (
               <Indicator
                 label={
-                  <IconX onClick={() => removeMedia(me.key)} size={"1rem"} />
+                  <IconX
+                    onClick={() => removeMedia(me.key)}
+                    size={"1rem"}
+                    style={{ cursor: "pointer" }}
+                  />
                 }
                 size={16}
                 color="red"
