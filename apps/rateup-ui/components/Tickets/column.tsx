@@ -15,12 +15,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconAdjustmentsCog,
-  IconEdit,
-  IconPlus,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconEdit, IconFilter, IconPlus, IconTrash } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
@@ -407,6 +402,7 @@ export function Column({
           <Group
             justify={"space-between"}
             align={"center"}
+            bg={"white"}
             p={"sm"}
             pb={"xs"}
             ref={headerRef}
@@ -424,7 +420,7 @@ export function Column({
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
                 <ActionIcon variant="transparent" aria-label="More actions">
-                  <IconAdjustmentsCog size={20} />
+                  <IconFilter color="black" size={20} />
                 </ActionIcon>
               </Menu.Target>
 

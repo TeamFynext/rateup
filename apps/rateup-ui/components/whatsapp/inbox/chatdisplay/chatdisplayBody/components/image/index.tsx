@@ -1,4 +1,4 @@
-import { Image, Modal } from "@mantine/core";
+import { Image, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
@@ -7,19 +7,23 @@ interface Props {
   messageContent: string;
 }
 export default function WaInboxImage(props: Props) {
-  const imageUrl = props?.messageContent.startsWith("http")
-    ? props?.messageContent
-    : `${getFileUrlFromKey(props?.messageContent)}`;
+  const [link, caption] = props?.messageContent?.split("_caption_");
+  const imageUrl = link.startsWith("http")
+    ? link
+    : `${getFileUrlFromKey(link)}`;
   const [opened, { open, close }] = useDisclosure(false);
   return (
     <>
-      <Image
-        src={imageUrl}
-        alt="image"
-        maw={"150px"}
-        radius={"sm"}
-        onClick={open}
-      />
+      <Stack gap={1} p={0}>
+        <Image
+          src={imageUrl}
+          alt="image"
+          maw={"150px"}
+          radius={"sm"}
+          onClick={open}
+        />
+        <Text size="sm">{caption}</Text>
+      </Stack>
       <Modal onClose={close} opened={opened} centered>
         <Image src={imageUrl} alt="image" w={"100%"} h={"100%"} radius={"sm"} />
       </Modal>

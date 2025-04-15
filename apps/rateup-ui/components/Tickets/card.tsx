@@ -217,18 +217,18 @@ export function CardDisplay({
           }}
         >
           {/* Top Bar */}
-          <Box h={4} style={{ backgroundColor: barStyle.color }} />
+          <Box h={3} bg={barStyle.color} />
 
           {/* Card Body */}
-          <Stack gap={8} p={4} py={6}>
+          <Stack gap={8} py={5}>
             {card.title && (
-              <Text size="lg" fw={400} c="gray.8">
+              <Text size="lg" mx={8} fw={400} c="gray.8">
                 {card.title}
               </Text>
             )}
-            <Divider color={"var(--grey-color-5)"} />
+            <Divider bg={"var(--grey-color-5)"} />
 
-            <Group py={4}>
+            <Group py={1} mx={8}>
               {[
                 { label: "Source", value: card.type },
                 { label: "Priority", value: card.priority ?? "NA" },
@@ -263,7 +263,7 @@ export function CardDisplay({
 
             <Divider color={"var(--grey-color-5)"} />
 
-            <Group justify="space-between" py={2}>
+            <Group justify="space-between" mx={8}>
               <Group gap={4}>
                 <Text size="xs" c={"var(--board-scrollbar)"}>
                   Created on:
