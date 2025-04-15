@@ -3,8 +3,10 @@ import { getShortUrlId } from "../../../utils/commnUtils";
 import prisma from "../../../utils/prisma";
 import { UpdateCardRequest } from "./card.schema";
 import {
-  sendTicketAssignEmail,
-  sendTicketAssignWaMessage,
+  sendTicketAssignedEmail,
+  sendTicketAssignedWaMessage,
+  sendTicketCreateEmail,
+  sendTicketCreateWaMessage,
 } from "../ticket.service";
 
 export interface CardInput {
@@ -12,6 +14,7 @@ export interface CardInput {
   description?: string;
   ticketColumnId: string;
   type: TicketType;
+  orgId: string;
   userId?: string;
   order?: number;
   reviewId?: string;
@@ -20,7 +23,7 @@ export interface CardInput {
 }
 
 export async function createCard(data: CardInput) {
-  const { title, userId, ...otherData } = data;
+  const { title, userId, orgId, ...otherData } = data;
   // Get the highest order in the column to place new card at the end
   const highestOrderCard = await prisma.ticketCard.findFirst({
     where: { ticketColumnId: data.ticketColumnId },
@@ -53,64 +56,51 @@ export async function createCard(data: CardInput) {
       },
     },
   });
+  const column = await prisma.ticketColumn.findUnique({
+    where: { id: data.ticketColumnId },
+    select: { ticketBoardId: true, title: true },
+  });
+  if (!column) return;
 
-  // if (data?.surveyResponseId) {
-  //   const sRes = await prisma.surveyResponse.findUnique({
-  //     where: {
-  //       id: data.surveyResponseId,
-  //     },
-  //     select: {
-  //       surveyTeamMapId: true,
-  //     },
-  //   });
-
-  //   const surveyTeamMap = await prisma.surveyTeamMap.findUnique({
-  //     where: {
-  //       id: sRes.surveyTeamMapId,
-  //     },
-  //     include: {
-  //       survey: {
-  //         select: {
-  //           id: true,
-  //           enableTicketEmailAlerts: true,
-  //           enableTicketWaMessageAlerts: true,
-  //           type: true,
-  //           orgId: true,
-  //           org: {
-  //             select: {
-  //               name: true,
-  //             },
-  //           },
-  //         },
-  //       },
-  //       team: {
-  //         select: {
-  //           name: true,
-  //         },
-  //       },
-  //     },
-  //   });
-
-  //   if (surveyTeamMap?.survey?.enableTicketEmailAlerts) {
-  //     sendTicketAssignEmail(card);
-  //   }
-  //   if (surveyTeamMap?.survey?.enableTicketWaMessageAlerts) {
-  //     const {
-  //       survey: {
-  //         org: { name: org_name },
-  //         orgId,
-  //       },
-  //       team: { name: team_name },
-  //     } = surveyTeamMap;
-  //     await sendTicketAssignWaMessage(card, {
-  //       orgId,
-  //       team_name,
-  //       org_name,
-  //     });
-  //   }
-  // } else {
-  //   sendTicketAssignEmail(card);
-  // }
+  const board = await prisma.ticketBoard.findFirst({
+    where: {
+      id: column.ticketBoardId,
+    },
+    include: {
+      notificationRecipients: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  for await (const notificationRecipient of board.notificationRecipients) {
+    const { user } = notificationRecipient;
+    if (board.ticketCreatedEmail)
+      await sendTicketCreateEmail({
+        board_name: board.title,
+        column_name: column.title,
+        id: card.id,
+        ticketId: card.ticketId,
+        email: user.email,
+        orgId,
+      });
+    if (board.ticketCreatedWhatsapp)
+      await sendTicketCreateWaMessage({
+        board_name: board.title,
+        column_name: column.title,
+        id: card.id,
+        ticketId: card.ticketId,
+        phone: user.phone,
+        orgId,
+      });
+  }
 
   return card;
 }
@@ -226,7 +216,19 @@ export async function updateCard(
   id: string,
   data: UpdateCardRequest,
   userId: string,
+  orgId: string,
 ) {
+  const previousCard = await prisma.ticketCard.findUnique({
+    where: { id },
+    select: { assignees: { select: { assigneeId: true } } },
+  });
+  const newAssignees = data.assignedToIds?.filter(
+    (assigneeId) =>
+      !previousCard?.assignees?.some(
+        (assignee) => assignee.assigneeId === assigneeId,
+      ),
+  );
+
   const card = await prisma.ticketCard.update({
     where: { id },
     data: {
@@ -256,6 +258,51 @@ export async function updateCard(
       },
     },
   });
+  if (!newAssignees.length) return;
+
+  const users = await prisma.user.findMany({
+    where: {
+      id: { in: newAssignees },
+    },
+    select: {
+      id: true,
+      email: true,
+      phone: true,
+    },
+  });
+
+  const column = await prisma.ticketColumn.findUnique({
+    where: { id: card.ticketColumnId },
+    select: { ticketBoardId: true, title: true },
+  });
+  if (!column) return;
+
+  const board = await prisma.ticketBoard.findFirst({
+    where: {
+      id: column.ticketBoardId,
+    },
+  });
+
+  for await (const user of users) {
+    if (board.ticketAssignedEmail)
+      await sendTicketAssignedEmail({
+        board_name: board.title,
+        column_name: column.title,
+        id: card.id,
+        ticketId: card.ticketId,
+        email: user.email,
+        orgId,
+      });
+    if (board.ticketAssignedWhatsapp)
+      await sendTicketAssignedWaMessage({
+        board_name: board.title,
+        column_name: column.title,
+        id: card.id,
+        ticketId: card.ticketId,
+        phone: user.phone,
+        orgId,
+      });
+  }
 
   return card;
 }

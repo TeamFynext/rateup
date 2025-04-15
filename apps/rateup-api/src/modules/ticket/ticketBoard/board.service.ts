@@ -1,17 +1,12 @@
 import prisma from "../../../utils/prisma";
+import {
+  CreateBoardRequestSchema,
+  UpdateBoardRequestSchema,
+} from "./board.schema";
 
-interface BoardInput {
-  title: string;
-  teamIds: Array<string>;
-  userId: string;
-}
-
-interface BoardUpdateInput {
-  title?: string;
-  teamIds?: Array<string>;
-}
-
-export async function createBoard(data: BoardInput) {
+export async function createBoard(
+  data: CreateBoardRequestSchema & { userId: string },
+) {
   return prisma.ticketBoard.create({
     data: {
       title: data.title,
@@ -68,11 +63,21 @@ export async function getBoardById(id: string) {
           ticketCards: true,
         },
       },
+      teams: {
+        select: {
+          teamId: true,
+        },
+      },
+      notificationRecipients: {
+        select: {
+          userId: true,
+        },
+      },
     },
   });
 }
 
-export async function updateBoard(id: string, data: BoardUpdateInput) {
+export async function updateBoard(id: string, data: UpdateBoardRequestSchema) {
   return prisma.ticketBoard.update({
     where: { id },
     data: {
@@ -81,8 +86,21 @@ export async function updateBoard(id: string, data: BoardUpdateInput) {
         deleteMany: {},
         createMany: {
           skipDuplicates: true,
-          data: data.teamIds.map((teamId) => ({
+          data: data.teamIds?.map((teamId) => ({
             teamId,
+          })),
+        },
+      },
+      ticketCreatedEmail: data.ticketCreatedEmail,
+      ticketCreatedWhatsapp: data.ticketCreatedWhatsapp,
+      ticketAssignedEmail: data.ticketAssignedEmail,
+      ticketAssignedWhatsapp: data.ticketAssignedWhatsapp,
+      notificationRecipients: {
+        deleteMany: {},
+        createMany: {
+          skipDuplicates: true,
+          data: data.assignedToIds?.map((userId) => ({
+            userId,
           })),
         },
       },
@@ -114,4 +132,17 @@ export async function isBoardMember(ticketBoardId: string, userId: string) {
   });
 
   return !!teamMember;
+}
+
+export async function getBoardTeamMembersById(id: string) {
+  const result = await prisma.$queryRaw<
+    { id: string; name: string; profilePhoto: string }[]
+  >`
+    SELECT DISTINCT u.id, u.name, u."profilePhoto"
+    FROM "User" u
+    INNER JOIN "TeamMember" tm ON u.id = tm."userId"
+    INNER JOIN "TicketBoardTeam" tbt ON tm."teamId" = tbt."teamId"
+    WHERE tbt."boardId" = ${id}::uuid;
+  `;
+  return result;
 }
