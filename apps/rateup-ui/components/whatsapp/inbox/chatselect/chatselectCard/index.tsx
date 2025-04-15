@@ -37,7 +37,8 @@ export default function WaInboxChatSelectCard({
   const lastMessage = contact?.lastMessage;
 
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
-  const { setSelectedContact } = useContactStore();
+  const { setSelectedContact, selectedContact, addOpenedContactIds } =
+    useContactStore();
   let tab = params.get("tab") ?? "New";
 
   return (
@@ -48,6 +49,7 @@ export default function WaInboxChatSelectCard({
       onClick={() => {
         setIsChatDisplayOpen(true);
         setSelectedContact(contact);
+        addOpenedContactIds(contact.id);
       }}
       py={"xs"}
     >
@@ -68,9 +70,10 @@ export default function WaInboxChatSelectCard({
               {contact?.name || contact?.phone}
             </Text>
             <Group gap="xs">
-              {contact.unReadMessageCount && (
-                <Badge radius={"xl"}>{contact?.unReadMessageCount}</Badge>
-              )}
+              {contact.unReadMessageCount &&
+                contact?.id !== selectedContact?.id && (
+                  <Badge radius={"xl"}>{contact?.unReadMessageCount}</Badge>
+                )}
               <AssignedStatusBadge contact={contact} />
             </Group>
           </Group>

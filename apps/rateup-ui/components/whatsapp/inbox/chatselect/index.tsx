@@ -105,14 +105,32 @@ const WaInboxChatSelect = () => {
     isFetching,
   } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
 
-  const { setSelectedContact, selectedContact, setFilterData } =
-    useContactStore();
+  const {
+    setSelectedContact,
+    selectedContact,
+    setFilterData,
+    openedContactIds,
+    setOpenedContactIds,
+  } = useContactStore();
 
   const allFilteredContactsRow = useMemo(
     () =>
-      filteredContacts ? filteredContacts.pages.flatMap((d) => d.rows) : [],
-    [filteredContacts],
+      filteredContacts
+        ? filteredContacts.pages.flatMap((d) =>
+            d.rows.map((r) => ({
+              ...r,
+              unReadMessageCount: openedContactIds.includes(r.id)
+                ? 0
+                : r.unReadMessageCount,
+            })),
+          )
+        : [],
+    [filteredContacts, openedContactIds],
   );
+
+  useEffect(() => {
+    if (isRefetchingFilteredContacts) setOpenedContactIds([]);
+  }, [isRefetchingFilteredContacts]);
 
   const parentRef = useRef(null);
 
