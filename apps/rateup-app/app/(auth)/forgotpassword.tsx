@@ -1,4 +1,5 @@
 import { sendPasswordResetEmail } from '@/src/api/api';
+import { BackIcon, MessageIcon, SuccessIcon } from '@/src/constants/imageExports';
 import { useRouter } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Dimensions, Image } from 'react-native';
@@ -38,20 +39,17 @@ export default function ResetPasswordScreen() {
             
             {/* Header */}
             <TouchableOpacity 
-                className="flex-row items-center mb-6"
+                className="flex-row items-center mb-6 justify-start"
                 onPress={() => router.replace("/(auth)/signin")}
             >
-                <Image
-                    className="h-4 w-6"
-                    source={require("@/assets/images/arrow-icon.png")}
-                />
+                <BackIcon/>
                 <Text className="text-xl font-bold ml-2">Reset Password</Text>
             </TouchableOpacity>
 
             {/* Image Placeholder */}
             <View className="items-center justify-center" style={{ height: height * 0.2 }}>
                 <View className="bg-[#C4D7F5] p-4 rounded-lg h-[80px] w-[80px] flex items-center justify-center">
-                    <Image source={require("@/assets/images/message-icon.png")} />
+                    <MessageIcon/>
                 </View>
                 <Text className="text-center text-[#7A8289] mt-4 mb-8 text-lg">
                 Please check your email for{'\n'}password reset link.
@@ -100,8 +98,7 @@ export default function ResetPasswordScreen() {
                     {
                         message?(
                             <View className='flex-row gap-1 items-center'>
-                            <Image
-                            source={require("@/assets/images/success-icon.png")}/>
+                            <SuccessIcon/>
                         <Text className="text-[#004F98] text-xl">
                         {message}
                         </Text>

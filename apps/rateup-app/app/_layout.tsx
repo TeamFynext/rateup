@@ -43,8 +43,14 @@ function RootLayout() {
         headerShown:false
       }}
       />
-      <Stack.Screen 
-      name="(dashboard)/(inbox)" 
+      <Stack.Screen
+      name="home"
+      options={{
+        headerShown:false
+      }}
+      />
+      <Stack.Screen
+      name="(inbox)"
       options={{
         headerShown:false
       }}

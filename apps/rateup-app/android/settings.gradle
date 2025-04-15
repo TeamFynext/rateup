@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'myapp2'
+rootProject.name = 'RateUp'
 
 dependencyResolutionManagement {
   versionCatalogs {

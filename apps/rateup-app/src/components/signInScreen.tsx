@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { signIn } from "@/src/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
+import { EyeIcon } from "../constants/imageExports";
 
 export default function SignInScreen({setError}:{setError:(msg:string)=> void}) {
   const [email, setEmail] = useState("");
@@ -59,7 +60,7 @@ export default function SignInScreen({setError}:{setError:(msg:string)=> void}) 
           onChangeText={setPassword}
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-          <Image source={require("@/assets/images/eye-icon.png")} />
+          <EyeIcon/>
         </TouchableOpacity>
       </View>
 

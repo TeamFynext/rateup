@@ -7,12 +7,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
-  Easing,
-  TouchableOpacity,
+  Easing
 } from "react-native";
 import React, { useRef, useState, useEffect } from "react";
 import SignInScreen from "@/src/components/signInScreen";
 import GoogleLogin from "@/src/components/googleSignInScreen";
+import { RateLogo } from "@/src/constants/imageExports";
 
 const SignIn = () => {
   const screenHeight = Dimensions.get("window").height;
@@ -69,17 +69,18 @@ const SignIn = () => {
           
           {/* Header */}
           <View className="flex flex-col items-center space-y-4 gap-6">
-            <Image
+            {/* <Image
               source={require("@/assets/images/signinpage_logo.png")}
               className="w-[63px] h-[60px]"
               resizeMode="contain"
-            />
+            /> */}
+            <RateLogo height={64}/>
             <View>
               <Text className="text-center font-bold text-2xl leading-7 uppercase font-[Geist]">
                 LOGIN TO RATEUP
               </Text>
               <Text className="text-[#7A8289] text-md mt-1 text-center font-[Geist]">
-                It’s great to see you again!
+                It's great to see you again!
               </Text>
             </View>
           </View>

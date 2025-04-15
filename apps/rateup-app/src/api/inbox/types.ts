@@ -19,11 +19,9 @@ export type ContactsWithLastMessageResponse = {
   };
   
   export enum WaMessageAssignStatus {
-    NEW = "NEW",
-    ASSIGNED = "ASSIGNED",
-    CLOSED = "CLOSED",
-    UNASSIGNED = "UNASSIGNED",
-    ALL = "ALL",
-    ASSIGNEDTOME = "ASSIGNEDTOME"
+    NEW = "New",
+    ASSIGNED = "Assigned",
+    CLOSED = "Closed",
+    UNASSIGNED = "UnAssigned"
   }
   

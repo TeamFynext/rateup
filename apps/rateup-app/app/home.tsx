@@ -30,7 +30,7 @@ const HomeScreen = () => {
       <View style={styles.buttonGroup}>
         <Button
           title="Inbox Testing"
-          onPress={() => router.push('/(dashboard)/(inbox)/new')}
+          onPress={() => router.push('/(inbox)/New')}
         />
       </View>
     </View>

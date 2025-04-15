@@ -7,10 +7,9 @@ import {
   StyleSheet,
 } from "react-native"
 import { ContactsWithLastMessage } from "@/src/api/inbox/types"
-import { useFilteredContacts } from "@/src/api/inbox/useFilteredContacts"
-import { getDefaultFilter } from "@/src/api/inbox/useFilteredContacts"
+import { useFilteredContacts, getDefaultFilter } from "@/src/api/inbox/useFilteredContacts"
 
-export default function Inbox({ filter }: { filter: Partial<Record<string, any>> }) {
+export default function Inbox(filter: any) {
   const defaultFilter = getDefaultFilter()
   const mergedFilter = {
     ...defaultFilter,
@@ -29,6 +28,8 @@ export default function Inbox({ filter }: { filter: Partial<Record<string, any>>
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isError,
+    error,
   } = useFilteredContacts(encodedFilter)
 
   const contacts = data?.pages.flatMap((page) => page.rows) ?? []
@@ -49,11 +50,25 @@ export default function Inbox({ filter }: { filter: Partial<Record<string, any>>
     </Pressable>
   )
 
-  return isLoading ? (
-    <View style={styles.loaderContainer}>
-      <ActivityIndicator size="large" />
-    </View>
-  ) : (
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" />
+      </View>
+    )
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.loaderContainer}>
+        <Text style={{ color: "red", textAlign: "center" }}>
+          Failed to load contacts.
+        </Text>
+      </View>
+    )
+  }
+
+  return (
     <FlatList
       data={contacts}
       keyExtractor={(item) => item.id}
@@ -67,7 +82,13 @@ export default function Inbox({ filter }: { filter: Partial<Record<string, any>>
       ListFooterComponent={
         isFetchingNextPage ? (
           <ActivityIndicator size="small" style={styles.footerLoader} />
-        ) : null
+        ) : (
+          <View style={{ padding: 16 }}>
+            <Text style={{ textAlign: "center", color: "#888" }}>
+              Nothing to show here
+            </Text>
+          </View>
+        )
       }
     />
   )

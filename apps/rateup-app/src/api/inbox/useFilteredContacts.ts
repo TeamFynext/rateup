@@ -1,8 +1,8 @@
 import axios from "@/src/config/axios"
-import {useInfiniteQuery} from "@tanstack/react-query"
-import { ContactsWithLastMessageResponse } from "./types";
+import { useInfiniteQuery } from "@tanstack/react-query"
+import { ContactsWithLastMessageResponse } from "./types"
 
-const API_URL =process.env.EXPO_PUBLIC_API_URL;
+const API_URL = process.env.EXPO_PUBLIC_API_URL
 
 export const getDefaultFilter = () => ({
   messageType: "usermessages",
@@ -14,21 +14,32 @@ export const getDefaultFilter = () => ({
   waMessageAssignStatus: "ALL",
 })
 
-export const getFilteredContacts = async (filterData:string,page:number) => {
-     console.log('filterData',filterData,"page",page)
-     const response = await axios.get<ContactsWithLastMessageResponse>(`${API_URL}/api/wa/inbox/contactsfiltered?filterData=${filterData}&page=${page}`)
-     console.log(response)
-
-     return response.data
+export const getFilteredContacts = async (filterData: string, page: number) => {
+  try {
+    const response = await axios.get<ContactsWithLastMessageResponse>(
+      `${API_URL}/api/wa/inbox/message/contactsfiltered`,
+      {
+        params: {
+          filterData,
+          page,
+        },
+      }
+    )
+    console.log("Response:", response)
+    return response.data
+  } catch (error: any) {
+    console.error("Failed to fetch filtered contacts:", error?.response?.data || error.message)
+    throw new Error("Failed to load contacts.")
+  }
 }
 
-export const useFilteredContacts = (filterData:string) => {
-    return useInfiniteQuery({
-        queryKey:["contacts","filtered",filterData],
-        queryFn:({pageParam= 1}) => getFilteredContacts(filterData,pageParam),
-        initialPageParam:1,
-        getNextPageParam:(lastPage,allPages)=>{
-            return lastPage?.nextOffset ?? null;
-        }
-    })
+export const useFilteredContacts = (filterData: string) => {
+  return useInfiniteQuery({
+    queryKey: ["contacts", "filtered", filterData],
+    queryFn: ({ pageParam = 1 }) => getFilteredContacts(filterData, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage?.nextOffset ?? null
+    },
+  })
 }
