@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { ActionIcon, Group } from "@mantine/core";
+import { ActionIcon, Group, Stack, Text } from "@mantine/core";
 import { IconDeviceAudioTape, IconDownload } from "@tabler/icons-react";
 
 import { useGetMediaFile } from "@/backend/whatsapp/inbox/message/wamessage.query";
@@ -12,6 +12,8 @@ interface Props {
 
 export default function WaInboxVideo({ messageContent }: Props) {
   const { mutate, isPending } = useGetMediaFile();
+  const [id, caption] = messageContent.split("_caption_");
+  const link = id.startsWith("http") ? id : null;
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleVideoError = () => {
@@ -23,7 +25,7 @@ export default function WaInboxVideo({ messageContent }: Props) {
   };
 
   const handleDownload = () => {
-    mutate(messageContent, {
+    mutate(id, {
       onSuccess: (fileData) => {
         // Create a Blob URL from the fetched video data
         const blob = new Blob([fileData], { type: "video/mp4" });
@@ -49,29 +51,34 @@ export default function WaInboxVideo({ messageContent }: Props) {
   };
 
   return (
-    <Group pt={"xs"} align="center" pos={"relative"}>
-      <video
-        ref={videoRef}
-        controls
-        style={{ width: "100%" }}
-        onError={videoRef?.current?.src ? handleVideoError : undefined}
-      >
-        <source type="video/mp4" />
-        Your browser does not support the video element.
-      </video>
-      <ActionIcon
-        pos={"absolute"}
-        right={"45%"}
-        left={"45%"}
-        radius={"xl"}
-        size={"lg"}
-        onClick={handleDownload}
-        aria-label="Download Video"
-        loading={isPending}
-        display={videoRef?.current?.src ? "none" : "flex"}
-      >
-        <IconDownload />
-      </ActionIcon>
-    </Group>
+    <Stack gap={1} p={0}>
+      <Group pt={"xs"} align="center" pos={"relative"}>
+        <video
+          ref={videoRef}
+          controls
+          style={{ width: "100%" }}
+          onError={videoRef?.current?.src ? handleVideoError : undefined}
+        >
+          <source type="video/mp4" src={link} />
+          Your browser does not support the video element.
+        </video>
+        {!link && (
+          <ActionIcon
+            pos={"absolute"}
+            right={"45%"}
+            left={"45%"}
+            radius={"xl"}
+            size={"lg"}
+            onClick={handleDownload}
+            aria-label="Download Video"
+            loading={isPending}
+            display={videoRef?.current?.src ? "none" : "flex"}
+          >
+            <IconDownload />
+          </ActionIcon>
+        )}
+      </Group>
+      <Text size={"sm"}>{caption}</Text>
+    </Stack>
   );
 }
