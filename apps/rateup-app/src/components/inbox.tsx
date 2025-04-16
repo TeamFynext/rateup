@@ -8,6 +8,7 @@ import {
 } from "react-native"
 import { ContactsWithLastMessage } from "@/src/api/inbox/types"
 import { useFilteredContacts, getDefaultFilter } from "@/src/api/inbox/useFilteredContacts"
+import ChatBox from "@/src/components/ChatBox"
 
 export default function Inbox(filter: any) {
   const defaultFilter = getDefaultFilter()
@@ -35,20 +36,15 @@ export default function Inbox(filter: any) {
   const contacts = data?.pages.flatMap((page) => page.rows) ?? []
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => (
-    <Pressable
-      onPress={() => console.log("Open chat with:", item.name)}
-      style={({ pressed }) => [
-        styles.itemContainer,
-        pressed && styles.itemPressed,
-      ]}
-    >
-      <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.message}>
-        {item.lastMessage?.messageBody?.text || "No message"}
-      </Text>
-      <Text style={styles.status}>{item.waMessageAssignStatus}</Text>
-    </Pressable>
+    <ChatBox
+  name={item.name}
+  lastMessage={item.lastMessage.messageBody.text}  // Passing entire lastMessage object
+  waMessageAssignStatus={item.waMessageAssignStatus}  // Status field
+  onPress={() => console.log("Open chat with:", item.name)}
+/>
+
   )
+  
 
   if (isLoading) {
     return (
@@ -84,9 +80,11 @@ export default function Inbox(filter: any) {
           <ActivityIndicator size="small" style={styles.footerLoader} />
         ) : (
           <View style={{ padding: 16 }}>
-            <Text style={{ textAlign: "center", color: "#888" }}>
-              Nothing to show here
-            </Text>
+            <ChatBox
+      name={"testUser"}
+      lastMessage={"hello,iam test message"}
+      onPress={() => console.log("Test user clicked")}
+    />
           </View>
         )
       }

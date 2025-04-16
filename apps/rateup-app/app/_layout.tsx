@@ -36,7 +36,10 @@ function RootLayout() {
   }
 
   return(
-    <Stack>
+    <Stack
+    screenOptions={{
+      headerShown:false
+    }}>
       <Stack.Screen 
       name="(auth)" 
       options={{
@@ -50,7 +53,7 @@ function RootLayout() {
       }}
       />
       <Stack.Screen
-      name="(inbox)"
+      name="inboxTabs"
       options={{
         headerShown:false
       }}

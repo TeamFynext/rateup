@@ -2,9 +2,11 @@ import { View, Text, Button, StyleSheet } from 'react-native';
 import React from 'react';
 import { checkProfile, signOut } from '@/src/api/api';
 import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 
 const HomeScreen = () => {
   const router = useRouter();
+  const navigation = useNavigation()
 
   const handleSignOut = async () => {
     await signOut();
@@ -30,7 +32,7 @@ const HomeScreen = () => {
       <View style={styles.buttonGroup}>
         <Button
           title="Inbox Testing"
-          onPress={() => router.push('/(inbox)/New')}
+          onPress={() => navigation.navigate("inboxTabs")}
         />
       </View>
     </View>

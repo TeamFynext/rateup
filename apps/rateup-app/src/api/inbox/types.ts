@@ -1,4 +1,3 @@
-// types/index.ts
 export type ContactsWithLastMessageResponse = {
     rows: ContactsWithLastMessage[];
     nextOffset: number | null;
