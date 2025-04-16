@@ -1,11 +1,12 @@
 import { useRef } from "react";
 
-import { ActionIcon, Indicator, Menu } from "@mantine/core";
+import { ActionIcon, Divider, Indicator, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconMessage2Code, IconPlus, IconWaveSine } from "@tabler/icons-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
+import WaInboxFlowDisplayModal from "../flowDisplayModel";
 import WaInboxTemplateDisplayModal from "../templateDisplayModal";
 import classes from "./styles.module.css";
 
@@ -26,6 +27,8 @@ export default function WaInboxFooterMenu(props: Props) {
   }
 
   const [isModalOpened, { close: onModalClose, open: openModal }] =
+    useDisclosure(false);
+  const [flowModalOpened, { close: flowModalClose, open: openFlowModal }] =
     useDisclosure(false);
   const { translations } = useTranslations();
   return (
@@ -59,6 +62,15 @@ export default function WaInboxFooterMenu(props: Props) {
         <Menu.Dropdown className={classes.menu_dropdown}>
           <Menu.Item
             leftSection={
+              <IconWaveSine color="var(--mantine-primary-color-6)" />
+            }
+            onClick={openFlowModal}
+          >
+            Send a Flow
+          </Menu.Item>
+          <Divider />
+          <Menu.Item
+            leftSection={
               <IconMessage2Code color="var(--mantine-primary-color-6)" />
             }
             rightSection={
@@ -78,6 +90,12 @@ export default function WaInboxFooterMenu(props: Props) {
         contact={props.contact}
         opened={isModalOpened}
         onClose={onModalClose}
+      />
+      <WaInboxFlowDisplayModal
+        sessionExpired={props.sessionExpired}
+        contact={props.contact}
+        opened={flowModalOpened}
+        close={flowModalClose}
       />
     </>
   );
