@@ -331,6 +331,8 @@ export async function filterChats(
         c."aiWaChat",
         c."waMessageAssignStatus",
         c."lastReceivedMessageTimeStamp",
+        c."consent",
+        c."whatsappUserName",
         COALESCE(c.tags, '{}'::jsonb) as tags,
         (
           SELECT COUNT(*)::INTEGER FROM "WaMessage" w WHERE w."contactId" = c.id
