@@ -1,15 +1,20 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Group, Stack } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { isNotEmpty, useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
-import { useCreateTicketMutation } from "../../backend/tickets/tickets.query";
+import {
+  useBoard,
+  useBoardQueries,
+  useCreateTicketMutation,
+  useTicket,
+} from "../../backend/tickets/tickets.query";
 import { TicketType } from "../../utils/enums/ticket";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import {
@@ -20,6 +25,7 @@ import {
 } from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
 import FormModalLayout from "../Modal/FormModalLayout";
+import Loading from "../Page/Loading";
 
 interface iProps {
   createTicketOpened: boolean;
@@ -230,6 +236,86 @@ const CreateTicketModal = ({
           />
         </Group>
       </Stack>
+    </FormModalLayout>
+  );
+};
+
+export const CreateTicketCard = ({ opened, close, type }) => {
+  const [selectedBoardId, setSelectedBoardId] = useState("");
+  const { boards, isLoading: isBoardsLoading } = useBoardQueries();
+  const { createCard, board, isLoading } = useBoard(selectedBoardId);
+
+  const form = useForm({
+    initialValues: {
+      ticketColumnId: "",
+      title: "",
+      description: "",
+      type,
+    },
+    validate: {
+      ticketColumnId: isNotEmpty("required"),
+      title: isNotEmpty("required"),
+    },
+  });
+
+  function handleSubmit() {
+    if (form.validate().hasErrors) return;
+    createCard(form.values, {
+      onSuccess: () => {
+        cancel();
+      },
+    });
+  }
+
+  function cancel() {
+    form.reset();
+    close();
+  }
+
+  return (
+    <FormModalLayout
+      title="Create Ticket"
+      opened={opened}
+      onClose={close}
+      buttonTitle="create"
+      onSubmit={handleSubmit}
+      cancelOnClick={cancel}
+      includeCancelButton
+    >
+      {isBoardsLoading || isLoading ? (
+        <Loading />
+      ) : (
+        <Stack>
+          <ContainedSelection
+            data={
+              boards ? boards.map((b) => ({ value: b.id, label: b.title })) : []
+            }
+            onChange={setSelectedBoardId}
+            value={selectedBoardId}
+            label={"Select Board"}
+          />
+          <ContainedSelection
+            data={
+              board?.ticketColumns
+                ? board?.ticketColumns.map((column) => ({
+                    value: column.id,
+                    label: column.title,
+                  }))
+                : []
+            }
+            {...form.getInputProps("ticketColumnId")}
+            label={"Select List"}
+          />
+          <ContainedTextField
+            {...form.getInputProps("title")}
+            label={"title"}
+          />
+          <ContainedTextArea
+            {...form.getInputProps("description")}
+            label={"Description"}
+          />
+        </Stack>
+      )}
     </FormModalLayout>
   );
 };

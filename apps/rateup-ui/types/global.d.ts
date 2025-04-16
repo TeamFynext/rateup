@@ -571,6 +571,7 @@ declare global {
     tags?: any;
     consent: boolean;
     waMessageAssignStatus: WaMessageAssignStatus;
+    whatsappUserName?: string;
     loyaltyCustomer?: {
       id: string;
       email?: string;
