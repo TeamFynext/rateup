@@ -202,7 +202,7 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
       };
 
       return () => {
-        if (!socket.CONNECTING) {
+        if (socket.readyState !== WebSocket.CONNECTING) {
           socket.close();
           connectionRef.current = null;
         }
