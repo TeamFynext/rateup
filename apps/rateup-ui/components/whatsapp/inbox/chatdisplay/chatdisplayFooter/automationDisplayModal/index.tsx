@@ -61,7 +61,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
         {...{
           opened: props?.opened,
           onClose,
-          title: "initiate Automation",
+          title: "Initiate Automation",
           centered: true,
         }}
       >
