@@ -2,6 +2,7 @@ import { FastifyRequest } from "fastify/types/request";
 import {
   ByWaAutomatedReplyIdParams,
   CreateAutomatedReplySchema,
+  InitiateAutomatedReplyBody,
 } from "./wa_automatedReply.schema";
 import { FastifyReply } from "fastify";
 import {
@@ -14,6 +15,7 @@ import {
 } from "./wa_automatedReply.service";
 import { ByTeamIdParams } from "../../team/team.schema";
 import { log } from "../../../utils/logger";
+import { handleAutomatedReply } from "../whatsappSurvey/wasurvey.controller";
 
 export async function getAutomatedRepliesMessagIdHandler(
   req: FastifyRequest<{ Params: { id: string } }>,
@@ -96,4 +98,28 @@ export async function deleteAutomatedReplyHandler(
     req.params.waAutomatedReplyId,
   );
   reply.send(automatedReply);
+}
+
+export async function initiateAutomatedReplyByIdHandler(
+  req: FastifyRequest<{
+    Params: ByWaAutomatedReplyIdParams;
+    Body: InitiateAutomatedReplyBody;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { phone } = req.body;
+    const automatedReply = await handleAutomatedReply(
+      req.user.orgId,
+      null,
+      null,
+      phone,
+      null,
+      req.params.waAutomatedReplyId,
+    );
+    reply.code(200).send(automatedReply);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
 }

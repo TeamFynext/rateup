@@ -19,6 +19,7 @@ import {
   WaTemplateComponent,
   WHATSAPP_BUTTON_TYPE,
 } from "../../types/whatsapp.types";
+import { aes_decrypt } from "../../../utils/encryption/encryption.utils";
 
 const redisURL = new URL(process.env.REDIS_URL);
 const redisConnection = new IORedis({
@@ -601,7 +602,9 @@ export async function getCampaginStatsById(campaignId: string) {
       countCompleted: 0,
     };
   }
-  const queueCount = await queue.getJobCounts();
+  // Get all jobs for this campaign to count them
+  const jobs = await queue.getJobs(["waiting", "delayed"]);
+  const campaignJobs = jobs.filter((job) => job.name === campaignId);
 
   return {
     countRead: stats.totalRead,
@@ -610,7 +613,7 @@ export async function getCampaginStatsById(campaignId: string) {
     countDelivered: stats.totalDelivered,
     countPending: stats.campaign?._count?.campaignParticipants ?? 0,
     countCompleted: stats.totalCompleted,
-    queueCount: queueCount.waiting + queueCount.delayed,
+    queueCount: campaignJobs?.length,
   };
 }
 
@@ -630,6 +633,10 @@ interface CampaignParticipant {
   dynamicTags: string[];
   data: any;
   defaultValues: any;
+  contactId: string;
+  campaignId: string;
+  accessToken: string;
+  accessToken_iv: string;
 }
 
 export async function enqueueCampaignMessage(
@@ -668,11 +675,12 @@ export async function enqueueCampaignMessage(
     // Fetch participants based on the provided conditions
     const campaignParticipants = await prisma.$queryRaw<CampaignParticipant[]>`
       SELECT cp.id, c.phone, c.name, c.tags, c."orgId", 
-             camp."dynamicTags", camp."teamId", wt.data, wt."defaultValues"
+             camp."dynamicTags", camp."teamId", wt.data, wt."defaultValues",c.id as "contactId",camp.id as "campaignId",was."accessToken",was."phoneId",was."accessToken_iv"
       FROM "CampaignParticipant" cp
       JOIN "Contact" c ON cp."contactId" = c.id
       JOIN "Campaign" camp ON cp."campaignId" = camp.id
       JOIN "WaTemplate" wt ON camp."waTemplateId" = wt.id
+      JOIN "WhatsappSettings" was ON c."orgId" = was."orgId"
       WHERE cp."campaignId" = ${campaignId}::uuid
         ${participantId ? Prisma.sql`AND cp.id = ${participantId}::uuid` : Prisma.sql`AND cp.status IN (${Prisma.join(sendToStatuses)})`}
         ${contactConsentCondition}
@@ -702,6 +710,17 @@ export async function enqueueCampaignMessage(
           select: { id: true },
         })
       : null;
+    if (
+      !campaignParticipants[0].accessToken ||
+      !campaignParticipants[0].accessToken_iv
+    ) {
+      throw new Error("Access token is null or undefined");
+    }
+    const decryptedToken = aes_decrypt(
+      campaignParticipants[0].accessToken,
+      Buffer.from(process.env.wa_access_token_encryption_key, "hex"),
+      campaignParticipants[0].accessToken_iv,
+    );
 
     // Enqueue messages
     await queue.addBulk(
@@ -709,6 +728,7 @@ export async function enqueueCampaignMessage(
         name: campaignId,
         data: {
           ...participant,
+          accessToken: decryptedToken,
           scheduledAt,
           campaignId,
           surveyTeamMapId: surveyTeamMap?.id,

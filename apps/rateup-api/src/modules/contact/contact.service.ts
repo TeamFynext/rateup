@@ -266,6 +266,20 @@ export async function getOrCreateContactByPhone(
     });
 
     if (contact) {
+      if (
+        additionalData?.name &&
+        (!contact.whatsappUserName ||
+          additionalData.name !== contact.whatsappUserName)
+      ) {
+        await prisma.contact.update({
+          where: {
+            id: contact.id,
+          },
+          data: {
+            whatsappUserName: additionalData.name,
+          },
+        });
+      }
       return contact;
     } else {
       return await prisma.contact.create({
