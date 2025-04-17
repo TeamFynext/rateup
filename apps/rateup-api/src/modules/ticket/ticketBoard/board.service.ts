@@ -62,7 +62,7 @@ export async function getBoardById(id: string) {
         include: {
           ticketCards: {
             orderBy: {
-              order: "asc",
+              createdAt: "desc",
             },
           },
         },
