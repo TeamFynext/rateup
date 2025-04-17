@@ -60,7 +60,11 @@ export async function getBoardById(id: string) {
     include: {
       ticketColumns: {
         include: {
-          ticketCards: true,
+          ticketCards: {
+            orderBy: {
+              order: "asc",
+            },
+          },
         },
       },
       teams: {
