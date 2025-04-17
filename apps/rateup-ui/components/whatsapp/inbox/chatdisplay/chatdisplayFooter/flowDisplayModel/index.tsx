@@ -1,9 +1,10 @@
 import { useState } from "react";
 
-import { Badge, Group, Loader, Radio, Stack } from "@mantine/core";
+import { Badge, Group, Loader, Radio, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconSend } from "@tabler/icons-react";
 
+import { TeamSelector } from "@/components/input/TeamSelector";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import {
@@ -20,31 +21,34 @@ import classes from "./styles.module.css";
 interface Props {
   sessionExpired: boolean;
   contact: ContactsData;
+  opened: boolean;
+  close: () => void;
 }
 export default function WaInboxFlowDisplayModal(props: Props) {
-  const [opened, { open, close }] = useDisclosure(false);
   const [selectedDbFlowId, setSelectedDbFlowId] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
   const { data, isLoading, error } = useWaFlowsFromDb();
+  const [teamId, setTeamId] = useState(null);
   const sendFlowToUser = useSendFlowToUser(props?.contact?.phone);
   const { translations } = useTranslations();
   function onClose() {
     setSelectedDbFlowId("");
-    close();
+    props?.close();
   }
   function handleSendFlow() {
-    setLoading(true);
-    sendFlowToUser.mutate(selectedDbFlowId, {
-      onSuccess: () => {
-        setSelectedDbFlowId("");
-        setLoading(false);
-        onClose();
+    sendFlowToUser.mutate(
+      {
+        dbFlowId: selectedDbFlowId,
+        teamId,
+        flowId: data?.find((f) => f.dbFlowId === selectedDbFlowId)?.flowId,
       },
-    });
-    setLoading(false);
+      {
+        onSuccess: () => {
+          setSelectedDbFlowId("");
+          onClose();
+        },
+      },
+    );
   }
-  if (isLoading) return <Loader />;
-  if (error) return <Badge color="red">{translations["Error"]}</Badge>;
   const acceptedFlows = data?.filter(
     (flow) => flow?.status === WaFlowStatus.PUBLISHED,
   );
@@ -52,15 +56,26 @@ export default function WaInboxFlowDisplayModal(props: Props) {
     <>
       <SimpleModalLayout
         {...{
-          opened,
+          opened: props?.opened,
           onClose,
           title: "Send Flow",
           centered: true,
         }}
       >
+        {isLoading && <Loader />}
+        {error && <Badge color="red">{translations["Error"]}</Badge>}
         {data && acceptedFlows.length > 0 ? (
           <>
             <Stack className={classes.inner}>
+              <TeamSelector
+                label="Select Team"
+                placeholder="Select a team of the flow"
+                onChange={setTeamId}
+                value={teamId}
+              />
+              <Title order={4} fw={400} size={"sm"}>
+                Select a Flow
+              </Title>
               <Radio.Group
                 value={selectedDbFlowId}
                 onChange={setSelectedDbFlowId}
@@ -73,7 +88,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
             <Group className={classes.send_button_wrapper}>
               <RateupButtonPrimary
                 title={translations["Send"]}
-                loading={loading}
+                loading={sendFlowToUser.isPending}
                 onClick={handleSendFlow}
                 rightIcon={<IconSend />}
                 disabled={!selectedDbFlowId}
@@ -90,11 +105,6 @@ export default function WaInboxFlowDisplayModal(props: Props) {
           />
         )}
       </SimpleModalLayout>
-      <RateupButtonPrimary
-        variant="transparent"
-        onClick={open}
-        title={translations["Send Flow"]}
-      />
     </>
   );
 }

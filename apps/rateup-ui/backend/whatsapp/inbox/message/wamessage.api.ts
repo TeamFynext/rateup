@@ -104,19 +104,6 @@ type tickets = {
   comments: comments[];
   assignedTo: assignedTo;
 };
-export async function getWaTickets(page: number) {
-  return (
-    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/tickets?page=${page}`, {
-      timeout: 16000,
-    })
-  ).data as {
-    rows: {
-      data: tickets[];
-      totalTickets: number;
-    };
-    nextOffset: number | null;
-  };
-}
 
 export async function exportWaChats({
   constraints,

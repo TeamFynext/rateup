@@ -3,6 +3,7 @@ import { useEffect, useMemo } from "react";
 import {
   ActionIcon,
   Avatar,
+  Badge,
   Group,
   Menu,
   Skeleton,
@@ -18,7 +19,10 @@ import {
   IconChecks,
   IconDotsVertical,
   IconEdit,
+  IconHandOff,
   IconMessageCheck,
+  IconMoon,
+  IconMoonFilled,
   IconPlus,
   IconTicket,
   IconUserShare,
@@ -44,7 +48,9 @@ import EditContactModal from "@/components/Contacts/EditContactModal";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
-import CreateTicketModal from "@/components/Tickets/CreateTicketModal";
+import CreateTicketModal, {
+  CreateTicketCard,
+} from "@/components/Tickets/CreateTicketModal";
 import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
@@ -99,6 +105,10 @@ export default function WaInboxChatDisplayHeader({
     () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
     [subscription],
   );
+  const hasTicketFeature = useMemo(
+    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    [subscription],
+  );
 
   function handleAiWaChat(e) {
     const checked = e.currentTarget.checked;
@@ -142,6 +152,11 @@ export default function WaInboxChatDisplayHeader({
           <Text className={classes.name} fw={600}>
             {contact.name}
           </Text>
+          {contact.whatsappUserName && (
+            <Tooltip label={"WhatsApp User Name"}>
+              <Text size="xs">{contact.whatsappUserName}</Text>
+            </Tooltip>
+          )}
           <Text className={classes.phone}>{contact.phone}</Text>
           {hasAIFeature &&
             chatbot?.enableWaChat &&
@@ -157,11 +172,23 @@ export default function WaInboxChatDisplayHeader({
         </Stack>
         {!smallScreen && <ContactEdit isMobile={isMobile} contact={contact} />}
       </Group>
-      {!smallScreen && (
-        <WaInboxCountdownTimer
-          timeStamp={contact?.lastReceivedMessageTimeStamp}
-        />
-      )}
+      <Stack gap={"xs"} align="center">
+        {!smallScreen && (
+          <WaInboxCountdownTimer
+            timeStamp={contact?.lastReceivedMessageTimeStamp}
+          />
+        )}
+        {!contact.consent && (
+          <Badge
+            leftSection={<IconHandOff size={"0.75rem"} />}
+            size="xs"
+            variant="outline"
+          >
+            Do Not Disturb
+          </Badge>
+        )}
+      </Stack>
+
       {/* <ChatContactMenu contact={contact} /> */}
       <Group gap={"lg"}>
         <Group gap="xs">
@@ -170,11 +197,13 @@ export default function WaInboxChatDisplayHeader({
               <IconUserShare />
             </ActionIcon>
           </Tooltip>
-          {/* <Tooltip label={"Create Ticket"}>
-                <ActionIcon onClick={openCreateTicket}>
-                  <IconTicket />
-                </ActionIcon>
-              </Tooltip> */}
+          {hasTicketFeature && (
+            <Tooltip label={"Create Ticket"}>
+              <ActionIcon onClick={openCreateTicket}>
+                <IconTicket />
+              </ActionIcon>
+            </Tooltip>
+          )}
         </Group>
         {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
           <RateupButtonPrimary
@@ -186,12 +215,11 @@ export default function WaInboxChatDisplayHeader({
           />
         )}
       </Group>
-
-      <CreateTicketModal
-        closeTicketModal={closeCreateTicket}
-        createTicketOpened={openedCreateTicket}
+      <CreateTicketCard
+        close={closeCreateTicket}
+        opened={openedCreateTicket}
         type={TicketType.CUSTOM}
-        selectedTeamId=""
+        hasTicketFeature={hasTicketFeature}
       />
       <AssignInbox
         contactId={contact.id}

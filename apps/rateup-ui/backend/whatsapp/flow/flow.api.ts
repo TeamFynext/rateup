@@ -123,8 +123,13 @@ export async function publishFlow(dbFlowId: string) {
   await axiosClient.put(`${BASE}/${dbFlowId}/publish`);
 }
 
-export async function sendFlow(dbFlowId: string, phone: string) {
-  await axiosClient.post(`${BASE}/${dbFlowId}/send`, { phone });
+export async function sendFlow(
+  dbFlowId: string,
+  phone: string,
+  teamId: string,
+  flowId: string,
+) {
+  await axiosClient.post(`${BASE}/${dbFlowId}/send`, { phone, teamId, flowId });
 }
 
 export async function updateFlowMetaData(

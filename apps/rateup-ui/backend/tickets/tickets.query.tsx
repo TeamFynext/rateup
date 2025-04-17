@@ -239,12 +239,13 @@ export function useUpdateBoardMutation() {
   });
 }
 
-export function useBoardQueries() {
+export function useBoardQueries(enabled = true) {
   const queryClient = useQueryClient();
 
   const boardsQuery = useQuery({
     queryKey: ["boards"],
     queryFn: () => fetchBoards(),
+    enabled,
   });
 
   const createBoardMutation = useMutation({
