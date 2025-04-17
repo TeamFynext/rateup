@@ -202,8 +202,10 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
       };
 
       return () => {
-        socket.close();
-        connectionRef.current = null;
+        if (!socket.CONNECTING) {
+          socket.close();
+          connectionRef.current = null;
+        }
       };
     }
   }, [data?.afterAuthId, setWsData, notifyWsMessages]);
