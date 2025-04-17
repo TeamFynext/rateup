@@ -63,6 +63,8 @@ const cloneFlowSchema = z.object({
 
 const sendFlowBodySchema = z.object({
   phone: z.string(),
+  teamId: z.string(),
+  flowId: z.string(),
 });
 export const { schemas: waFlowSchemas, $ref: $waFlow } = buildJsonSchemas(
   {

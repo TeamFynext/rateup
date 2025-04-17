@@ -100,6 +100,7 @@ import {
   findRecentAutomation,
 } from "./automation-logger.utils";
 import { autoGenerateTicket } from "../../ticket/ticketCard/card.service";
+import { getAutomatedReplyById } from "../automatedReply/wa_automatedReply.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -501,12 +502,13 @@ async function handleSubscriptionStatus(
  * @param phone User's phone number
  * @param chatbot Chatbot configuration
  */
-async function handleAutomatedReply(
+export async function handleAutomatedReply(
   orgId: string,
   waMessage: WaMessageBody,
   parsedMessage: WaParsedMessage,
   phone: string,
   chatbot: Chatbot,
+  automatedReplyId?: string,
 ) {
   try {
     // Case 1: User clicked a button in a previous message
@@ -557,14 +559,18 @@ async function handleAutomatedReply(
     }
     // Case 2: New message from user
     else {
+      let automation;
+      if (automatedReplyId)
+        automation = await getAutomatedReplyById(automatedReplyId);
       // Check if message matches any automation rules
-      const automation = (await checkIfMessageMatchesAnyAutomation(
-        orgId,
-        waMessage,
-      )) as {
-        id: string;
-        matchData: { json: { nodes: any[]; edges: any[] } };
-      } | null;
+      else
+        automation = (await checkIfMessageMatchesAnyAutomation(
+          orgId,
+          waMessage,
+        )) as {
+          id: string;
+          matchData: { json: { nodes: any[]; edges: any[] } };
+        } | null;
 
       if (automation) {
         // Start a new automation flow

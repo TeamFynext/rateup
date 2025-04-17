@@ -17,11 +17,16 @@ const byWaAutomatedReplyIdParams = z.object({
   waAutomatedReplyId: z.string(),
 });
 
+const initiateAutomatedReplyBody = z.object({
+  phone: z.string(),
+});
+
 export const { schemas: waAutomatedReplySchemas, $ref: $waAutomatedReplyRef } =
   buildJsonSchemas(
     {
       createAutomatedReplySchema,
       byWaAutomatedReplyIdParams,
+      initiateAutomatedReplyBody,
     },
     {
       $id: "waAutomatedReplySchemas",
@@ -33,4 +38,7 @@ export type CreateAutomatedReplySchema = z.infer<
 >;
 export type ByWaAutomatedReplyIdParams = z.infer<
   typeof byWaAutomatedReplyIdParams
+>;
+export type InitiateAutomatedReplyBody = z.infer<
+  typeof initiateAutomatedReplyBody
 >;

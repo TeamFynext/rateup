@@ -13,6 +13,7 @@ import {
   getFlowPreview,
   getFlowsFromDb,
   getFlowsFromWa,
+  getFlowWithSurveyTeamMapIds,
   getUnsyncedFlows,
   publishFlowInWa,
   sendFlow,
@@ -46,6 +47,12 @@ import { GraphApiError, callWhatsappApi } from "../wa_axios";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { getGraphApiErrorMessage } from "../wa_error_handler";
 import { updateMonthlyStat } from "../../stats/stats.service";
+import {
+  createSession,
+  deleteSession,
+  getSession,
+} from "../whatsappSurvey/wasurvey.service";
+import { validateSession } from "../whatsappSurvey/wasurvey.utils";
 
 /**
  * Get flows from whatsapp api or our database.
@@ -453,7 +460,7 @@ export async function sendFlowHandler(
   try {
     const { orgId, userId } = request.user;
     const { dbFlowId } = request.params;
-    const { phone } = request.body;
+    const { phone, teamId, flowId } = request.body;
     const serviceParam = {
       orgId,
       dbFlowId,
@@ -461,6 +468,23 @@ export async function sendFlowHandler(
       userId,
     };
     orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);
+    const surveyTeamMapId = dbFlow?.survey?.teams?.find(
+      (t) => t.teamId === teamId,
+    )?.id;
+    const session = await getSession(orgId, phone);
+    if (
+      !validateSession(session) ||
+      session.surveyTeamMapId !== surveyTeamMapId
+    ) {
+      await deleteSession(orgId, phone);
+      await createSession({
+        phone,
+        orgId,
+        surveyTeamMapId: surveyTeamMapId,
+        language: dbFlow?.survey?.languages[0],
+      });
+    }
     await sendFlow(serviceParam);
     reply.status(201).send();
   } catch (error) {
