@@ -44,7 +44,7 @@ export function parseWaMessage(
         messageContent = `${send?.audio?.link}_caption_${send?.audio?.caption ?? ""}`;
         break;
       case "template":
-        messageContent = send.template.name;
+        messageContent = send.template?.name ?? "";
         template = send.template;
         break;
       case "interactive":
