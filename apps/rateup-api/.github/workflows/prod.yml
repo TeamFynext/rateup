@@ -1,4 +1,4 @@
-name: prisma-migrate-dev
+name: prisma-migrate-prod
 on:  
   push:
     paths:
