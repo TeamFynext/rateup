@@ -42,6 +42,7 @@ interface WaTextEditorProps extends BoxComponentProps {
   required?: boolean;
   inbox?: boolean;
   customEnter?: () => void;
+  editable?: boolean;
 }
 
 export const CustomEnter = Extension.create({
@@ -75,6 +76,7 @@ function WaTextEditor({
   mih = 120,
   inbox = false,
   customEnter,
+  editable = true,
   ...props
 }: WaTextEditorProps) {
   const [opened, { open, close }] = useDisclosure(false);
@@ -101,6 +103,7 @@ function WaTextEditor({
     onUpdate: ({ editor }) => {
       handleInputChange(editor.getJSON());
     },
+    editable,
   });
   const { media, setSelectedMedia, selectedMedia, removeMedia } =
     useMediaStore();

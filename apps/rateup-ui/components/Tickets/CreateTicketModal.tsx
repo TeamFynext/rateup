@@ -240,9 +240,10 @@ const CreateTicketModal = ({
   );
 };
 
-export const CreateTicketCard = ({ opened, close, type }) => {
+export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
   const [selectedBoardId, setSelectedBoardId] = useState("");
-  const { boards, isLoading: isBoardsLoading } = useBoardQueries();
+  const { boards, isLoading: isBoardsLoading } =
+    useBoardQueries(hasTicketFeature);
   const { createCard, board, isLoading } = useBoard(selectedBoardId);
 
   const form = useForm({

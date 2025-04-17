@@ -8,6 +8,7 @@ import {
   getAutomatedRepliesMessageById,
   getWaAutomatedRepliesById,
   getWaAutomatedRepliesByTeamId,
+  initiateWaAutomatedReply,
   updateWaAutomatedReply,
 } from "./automatedReply.api";
 
@@ -77,6 +78,21 @@ export const useUpdateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
     },
     onError: (error: any) => {
       showErrorToast(error?.response?.data ?? "Error Updating Automated Reply");
+    },
+  });
+};
+
+export const useInitiateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
+  return useMutation({
+    mutationFn: ({ phone }: any) =>
+      initiateWaAutomatedReply(waAutomatedReplyId, phone),
+    onSuccess: (res) => {
+      showSuccessToast("Automation initiated Successfully");
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        error?.response?.data ?? "Error initiating Automated Reply",
+      );
     },
   });
 };

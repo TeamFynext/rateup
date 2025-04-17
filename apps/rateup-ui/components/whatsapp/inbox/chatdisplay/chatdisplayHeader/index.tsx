@@ -105,6 +105,10 @@ export default function WaInboxChatDisplayHeader({
     () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
     [subscription],
   );
+  const hasTicketFeature = useMemo(
+    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    [subscription],
+  );
 
   function handleAiWaChat(e) {
     const checked = e.currentTarget.checked;
@@ -193,11 +197,13 @@ export default function WaInboxChatDisplayHeader({
               <IconUserShare />
             </ActionIcon>
           </Tooltip>
-          <Tooltip label={"Create Ticket"}>
-            <ActionIcon onClick={openCreateTicket}>
-              <IconTicket />
-            </ActionIcon>
-          </Tooltip>
+          {hasTicketFeature && (
+            <Tooltip label={"Create Ticket"}>
+              <ActionIcon onClick={openCreateTicket}>
+                <IconTicket />
+              </ActionIcon>
+            </Tooltip>
+          )}
         </Group>
         {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
           <RateupButtonPrimary
@@ -209,11 +215,11 @@ export default function WaInboxChatDisplayHeader({
           />
         )}
       </Group>
-
       <CreateTicketCard
         close={closeCreateTicket}
         opened={openedCreateTicket}
         type={TicketType.CUSTOM}
+        hasTicketFeature={hasTicketFeature}
       />
       <AssignInbox
         contactId={contact.id}
