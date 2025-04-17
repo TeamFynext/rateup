@@ -142,6 +142,7 @@ model Org {
   WaAutomatedReplyMessage  WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
   WaAutomatedReply         WaAutomatedReply[]
+  whatsappQuickReplies     WhatsappQuickReply[]
 }
 
 model UsageStats {
@@ -1456,4 +1457,12 @@ model LoyaltyReferralCode {
   action       LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
   @@unique([customerId, actionId], name: "customer_action_unique")
+}
+
+model WhatsappQuickReply {
+   id  String  @id @default(dbgenerated("gen_random_uuid()"))  @db.Uuid
+   orgId  String @db.Uuid
+   org    Org   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+   text  String 
+   priority Int
 }

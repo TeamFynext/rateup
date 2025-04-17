@@ -267,8 +267,9 @@ export async function getOrCreateContactByPhone(
 
     if (contact) {
       if (
-        !contact.whatsappUserName ||
-        additionalData.name !== contact.whatsappUserName
+        additionalData?.name &&
+        (!contact.whatsappUserName ||
+          additionalData.name !== contact.whatsappUserName)
       ) {
         await prisma.contact.update({
           where: {
