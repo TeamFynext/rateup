@@ -105,6 +105,7 @@ export default function WaInboxChatDisplayFooter({
     contact?.lastReceivedMessageTimeStamp,
   );
   submiRef.current = () => {
+    if (isSessionExpired || !isChatAssignedToMe) return;
     handleSendMessage();
   };
 
@@ -133,36 +134,36 @@ export default function WaInboxChatDisplayFooter({
           <Text size="xs">This chat is not assigned to you</Text>
         </Group>
       )}
-      {!isSessionExpired && isChatAssignedToMe && (
-        <div className={classes.wrapper}>
-          <WaInboxFooterMenu
-            sessionExpired={isSessionExpired}
-            contact={contact}
-            disabled={!isChatAssignedToMe}
-          />
-          <form className={classes.form}>
-            <div ref={inputRef} style={{ display: "flex", flex: 1 }}>
-              <WaTextEditor
-                handleInputChange={(value) => {
-                  form.setValues({
-                    text: { ...form.values.text, body: value },
-                  });
-                }}
-                content={form.values.text.body}
-                mih={50}
-                flex={1}
-                inbox={true}
-                customEnter={() => submiRef.current()}
-              />
-            </div>
-            <RateupButtonPrimary
-              title={translations["Send"]}
-              rightIcon={<IconSend />}
-              onClick={handleSendMessage}
+      <div className={classes.wrapper}>
+        <WaInboxFooterMenu
+          sessionExpired={isSessionExpired}
+          contact={contact}
+          disabled={!isChatAssignedToMe}
+        />
+        <form className={classes.form}>
+          <div ref={inputRef} style={{ display: "flex", flex: 1 }}>
+            <WaTextEditor
+              handleInputChange={(value) => {
+                form.setValues({
+                  text: { ...form.values.text, body: value },
+                });
+              }}
+              content={form.values.text.body}
+              mih={50}
+              flex={1}
+              inbox={true}
+              customEnter={() => submiRef.current()}
+              editable={!isSessionExpired && isChatAssignedToMe}
             />
-          </form>
-        </div>
-      )}
+          </div>
+          <RateupButtonPrimary
+            title={translations["Send"]}
+            rightIcon={<IconSend />}
+            onClick={handleSendMessage}
+            disabled={isSessionExpired || !isChatAssignedToMe}
+          />
+        </form>
+      </div>
     </Stack>
   );
 }

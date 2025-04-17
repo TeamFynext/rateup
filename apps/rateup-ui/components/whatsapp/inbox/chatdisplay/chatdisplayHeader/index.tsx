@@ -215,14 +215,12 @@ export default function WaInboxChatDisplayHeader({
           />
         )}
       </Group>
-
-      {hasTicketFeature && (
-        <CreateTicketCard
-          close={closeCreateTicket}
-          opened={openedCreateTicket}
-          type={TicketType.CUSTOM}
-        />
-      )}
+      <CreateTicketCard
+        close={closeCreateTicket}
+        opened={openedCreateTicket}
+        type={TicketType.CUSTOM}
+        hasTicketFeature={hasTicketFeature}
+      />
       <AssignInbox
         contactId={contact.id}
         opened={openedAssign}
