@@ -16,7 +16,6 @@ import {
   getInboxUserCount,
   getMessagesByContactId,
   getWaChatMediaFile,
-  getWaTickets,
   markWaMessagesAsRead,
   sendNewWaMessage,
 } from "./wamessage.api";
@@ -54,15 +53,6 @@ export const useChatFilterData = () => {
     queryFn: getChatFilterData,
   });
 };
-
-export const useWaTicktes = () =>
-  useInfiniteQuery({
-    queryKey: ["waTickets"],
-    initialPageParam: 1,
-    queryFn: ({ pageParam }) => getWaTickets(pageParam),
-    getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
-    placeholderData: { pages: [], pageParams: [] },
-  });
 
 export const useFilteredContacts = (filterData: string) => {
   return useInfiniteQuery({
