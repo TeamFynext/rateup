@@ -18,7 +18,6 @@ import {
   getContactsCountByInbox,
   getMediaFile,
   getWaMessagesByContactId,
-  getWaTickets,
   sendMediaMessages,
   markMessagesAsRead,
 } from "./wamessage.service";
@@ -225,24 +224,6 @@ export async function markMessagesAsReadHandler(
   }
 }
 
-export async function getWaTicketsHandler(
-  request: FastifyRequest<{
-    Querystring: PaginateQuerySchema;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { page } = request.query;
-    const orgId = request.user.orgId;
-    const tickets = await getWaTickets(parseInt(page), orgId);
-    reply.send({
-      rows: tickets,
-      nextOffset: tickets?.data?.length > 0 ? parseInt(page) + 1 : null,
-    });
-  } catch (error) {
-    reply.status(500).send("Internal Server Error");
-  }
-}
 export async function generateChatFilterDataHandler(
   request: FastifyRequest,
   reply: FastifyReply,

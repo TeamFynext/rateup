@@ -772,7 +772,6 @@ export const handleMessageStatusUpdate = async (
   errors?: any,
 ) => {
   if (!messageId) return;
-
   let messageCampaignParticipant =
     await prisma.waMessageCampaginParticipantMap.findFirst({
       where: {
@@ -848,12 +847,12 @@ export const handleMessageStatusUpdate = async (
       });
       incrementData = { totalFailed: { increment: 1 } };
       break;
+    case WaEvent.SENT:
+      incrementData = { totalSend: { increment: 1 } };
+      break;
   }
 
-  if (
-    messageCampaignParticipant?.campaignParticipantId &&
-    status !== WaEvent.SENT
-  ) {
+  if (messageCampaignParticipant?.campaignParticipantId) {
     await prisma.campaignParticipant.update({
       where: {
         id: messageCampaignParticipant.campaignParticipantId,
@@ -861,6 +860,7 @@ export const handleMessageStatusUpdate = async (
       data: {
         status: status.toUpperCase(),
         errorMessage: errors?.[0]?.title,
+        ...(status === WaEvent.SENT ? { sentAt: new Date() } : {}),
       },
     });
 
