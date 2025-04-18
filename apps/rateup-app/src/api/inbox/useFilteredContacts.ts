@@ -4,14 +4,13 @@ import { ContactsWithLastMessageResponse } from "./types"
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL
 
-export const getDefaultFilter = () => ({
-  messageType: "usermessages",
+export const getDefaultFilter = (messageType:string) => ({
+  messageType: messageType,
   strictFilter: false,
   searchTerm: "",
   contactGroups: [],
   campaigns: [],
-  tags: [],
-  waMessageAssignStatus: "ALL",
+  tags: []
 })
 
 export const getFilteredContacts = async (filterData: string, page: number) => {
@@ -25,7 +24,7 @@ export const getFilteredContacts = async (filterData: string, page: number) => {
         },
       }
     )
-    console.log("Response:", response)
+    // console.log("Response:", response)
     return response.data
   } catch (error: any) {
     console.error("Failed to fetch filtered contacts:", error?.response?.data || error.message)

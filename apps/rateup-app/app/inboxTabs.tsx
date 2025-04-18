@@ -1,69 +1,122 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import SearchBar from "@/src/components/inboxSearchBar";
 import Inbox from "@/src/components/inbox";
-import { WaMessageAssignStatus } from "@/src/api/inbox/types";
-import { FullWindowOverlay } from "react-native-screens";
+import { useIsFocused } from "@react-navigation/native";
+
+// Icons
+import { MessageSquareText, UserX, UserCheck, CircleUser, MessageSquareOff, MessageSquareMore } from 'lucide-react-native';
 
 const Tab = createMaterialTopTabNavigator();
 
-function New() {
+// Common wrapper to add background when focused
+function TabIcon({ Icon, color, focused }: { Icon: any; color: string; focused: boolean }) {
   return (
-    <View className="h-full bg-white">
-      <Inbox filter={{waMessageAssignStatus:WaMessageAssignStatus.NEW}}/>
+    <View
+      style={{
+        padding:6,
+        borderRadius: 20,
+        backgroundColor: focused ? "#00993333" : "transparent",
+      }}
+    >
+      <Icon color={color} size={25} />
     </View>
   );
 }
 
-function Assigned() {
-  return (
-    <View className="h-full bg-white">
-      <Inbox filter={{waMessageAssignStatus:WaMessageAssignStatus.ASSIGNED}}/>
-    </View>
-  );
-}
+// Create a generic tab screen
+function createTabScreen(messageType: string, waMessageAssignStatus?: "New" | "Assigned" | "UnAssigned" | "Closed" | "AssignedToMe") {
+  return function Screen() {
+    const isFocused = useIsFocused();
+    if (!isFocused) return null;
 
-function UnAssigned() {
-  return (
-    <View className="h-full bg-white">
-      <Inbox filter={{waMessageAssignStatus:WaMessageAssignStatus.UNASSIGNED}}/>
-    </View>
-  );
-}
-
-function Closed() {
-  return (
-    <View className="h-full bg-white">
-      <Inbox filter={{waMessageAssignStatus:WaMessageAssignStatus.CLOSED}}/>
-    </View>
-  );
+    return (
+      <View className="h-full bg-white">
+        <Inbox messageType={messageType} waMessageAssignStatus={waMessageAssignStatus} />
+      </View>
+    );
+  };
 }
 
 export default function InboxLayout() {
   return (
-    <View className="flex-1">
+    <View className="flex-1 flex-col">
       <SearchBar />
 
       <Tab.Navigator
+      tabBarPosition="top"
         screenOptions={{
-          tabBarScrollEnabled: false,
-          tabBarActiveTintColor:"#009987",
-          tabBarInactiveTintColor:"#000",
-          tabBarIndicatorStyle: { backgroundColor: "#000" },
-          tabBarLabelStyle: { fontWeight: "bold"},
-          tabBarStyle:{
-            backgroundColor:"#EBF7F5",
+          lazy: true,
+          tabBarScrollEnabled: true,
+          tabBarActiveTintColor: "#009987",
+          tabBarInactiveTintColor: "#000",
+          tabBarItemStyle: {
+            width: 85
+          },    
+          tabBarIndicatorStyle: { backgroundColor: "transparent" },
+          tabBarLabelStyle: { fontWeight: "500", fontSize: 12 ,margin:-3},
+          tabBarStyle: {
+            backgroundColor: "#EBF7F5",
           },
-          tabBarItemStyle:{
-            
-          }
+          tabBarShowIcon: true,
+          tabBarBounces: true,
         }}
       >
-        <Tab.Screen name="New" component={New} />
-        <Tab.Screen name="Assigned" component={Assigned} />
-        <Tab.Screen name="UnAssigned" component={UnAssigned} />
-        <Tab.Screen name="Closed" component={Closed} />
+        <Tab.Screen 
+          name="New" 
+          component={createTabScreen("usermessages", "New")}
+          options={{
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon Icon={MessageSquareText} color={color} focused={focused} />
+            ),
+          }}
+        />
+        <Tab.Screen 
+          name="Assigned" 
+          component={createTabScreen("usermessages", "Assigned")}
+          options={{
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon Icon={UserCheck} color={color} focused={focused} />
+            ),
+          }}
+        />
+        <Tab.Screen 
+          name="UnAssigned" 
+          component={createTabScreen("usermessages", "UnAssigned")}
+          options={{
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon Icon={UserX} color={color} focused={focused} />
+            ),
+          }}
+        />
+        <Tab.Screen 
+          name="Closed" 
+          component={createTabScreen("usermessages", "Closed")}
+          options={{
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon Icon={MessageSquareOff} color={color} focused={focused} />
+            ),
+          }}
+        />
+        <Tab.Screen 
+          name="Assigned To Me" 
+          component={createTabScreen("usermessages", "AssignedToMe")}
+          options={{
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon Icon={CircleUser} color={color} focused={focused} />
+            ),
+          }}
+        />
+        <Tab.Screen 
+          name="All" 
+          component={createTabScreen("all")}
+          options={{
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon Icon={MessageSquareMore} color={color} focused={focused} />
+            ),
+          }}
+        />
       </Tab.Navigator>
     </View>
   );

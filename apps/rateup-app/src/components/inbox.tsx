@@ -6,22 +6,45 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native"
-import { ContactsWithLastMessage } from "@/src/api/inbox/types"
+import { ContactsWithLastMessage, WaMessageAssignStatus} from "@/src/api/inbox/types"
 import { useFilteredContacts, getDefaultFilter } from "@/src/api/inbox/useFilteredContacts"
 import ChatBox from "@/src/components/ChatBox"
 
-export default function Inbox(filter: any) {
-  const defaultFilter = getDefaultFilter()
+type InboxProps = {
+  messageType: string;
+  strictFilter?: boolean;
+  searchTerm?: string;
+  contactGroups?: string[];
+  campaigns?: string[];
+  tags?: string[];
+  waMessageAssignStatus?: "New" | "Assigned" | "UnAssigned" | "Closed" | "AssignedToMe" | undefined ;
+};
+
+export default function Inbox({
+  messageType,
+  strictFilter = false,
+  searchTerm = "",
+  contactGroups = [],
+  campaigns = [],
+  tags = [],
+  waMessageAssignStatus,
+}: InboxProps) {
+  const defaultFilter = getDefaultFilter(messageType);
+
   const mergedFilter = {
     ...defaultFilter,
-    ...filter,
-    waMessageAssignStatus:
-      filter.waMessageAssignStatus === "NEW"
-        ? "New"
-        : filter.waMessageAssignStatus ?? defaultFilter.waMessageAssignStatus,
-  }
+    strictFilter,
+    searchTerm,
+    contactGroups,
+    campaigns,
+    tags,
+    waMessageAssignStatus,
+  };
+
 
   const encodedFilter = encodeURIComponent(JSON.stringify(mergedFilter))
+  console.log("EncodedFilter:",encodedFilter)
+
 
   const {
     data,
@@ -33,13 +56,18 @@ export default function Inbox(filter: any) {
     error,
   } = useFilteredContacts(encodedFilter)
 
+  console.log("data::",data?.pages)
+
   const contacts = data?.pages.flatMap((page) => page.rows) ?? []
+
+  console.log("contacts:",contacts)
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => (
     <ChatBox
   name={item.name}
-  lastMessage={item.lastMessage.messageBody.text}  // Passing entire lastMessage object
-  waMessageAssignStatus={item.waMessageAssignStatus}  // Status field
+  //@ts-ignore
+  lastMessage={item.lastMessage.messageBody.text}  
+  waMessageAssignStatus={item.waMessageAssignStatus} 
   onPress={() => console.log("Open chat with:", item.name)}
 />
 
@@ -80,11 +108,8 @@ export default function Inbox(filter: any) {
           <ActivityIndicator size="small" style={styles.footerLoader} />
         ) : (
           <View style={{ padding: 16 }}>
-            <ChatBox
-      name={"testUser"}
-      lastMessage={"hello,iam test message"}
-      onPress={() => console.log("Test user clicked")}
-    />
+            <Text>Nothing to show here
+            </Text>
           </View>
         )
       }

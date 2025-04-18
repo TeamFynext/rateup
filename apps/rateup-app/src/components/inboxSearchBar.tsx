@@ -3,7 +3,7 @@ import { AddContactIcon, FilterIcon, RefreshIcon, SearchIcon } from "../constant
 
 export default function SearchBar() {
   return (
-    <View className="bg-[#EBF7F5] h-[10vh] flex-row justify-around items-center">
+    <View className="bg-[#EBF7F5] h-[9vh] flex-row justify-around items-center mb-[-21]">
     <View className="bg-[#FFFFFF] rounded-full px-4 py-2 mb-2 border border-[#E2E5ED] flex-row gap-1 items-center w-[60vw]">
         <SearchIcon />
       <TextInput
