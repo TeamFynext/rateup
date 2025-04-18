@@ -200,7 +200,7 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
 
       socket.onclose = () => {
         console.log("Disconnected from websocket");
-        connectionRef.current = null;
+        if (connectionRef.current === socket) connectionRef.current = null;
       };
 
       socket.onerror = () => {
@@ -208,13 +208,13 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
       };
 
       return () => {
-        if (connectionRef.current) {
+        if (connectionRef.current === socket) {
           connectionRef.current.close();
           connectionRef.current = null;
         }
       };
     }
-  }, [data?.afterAuthId, setWsData, notifyWsMessages]);
+  }, [data?.afterAuthId]);
 
   return null;
 };
