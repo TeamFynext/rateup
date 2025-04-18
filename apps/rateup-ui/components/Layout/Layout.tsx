@@ -179,7 +179,11 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
 
   useEffect(() => {
     if (data?.afterAuthId && !error) {
-      if (!data?.afterAuthId || error || connectionRef.current) return;
+      if (connectionRef.current) {
+        connectionRef.current.close();
+        connectionRef.current = null;
+      }
+
       const socket = new WebSocket(
         `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${data?.afterAuthId}`,
       );
@@ -204,12 +208,10 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
       };
 
       return () => {
-        if (
-          socket.readyState === WebSocket.OPEN ||
-          socket.readyState === WebSocket.CONNECTING
-        )
-          socket.close();
-        connectionRef.current = null;
+        if (connectionRef.current) {
+          connectionRef.current.close();
+          connectionRef.current = null;
+        }
       };
     }
   }, [data?.afterAuthId, setWsData, notifyWsMessages]);
