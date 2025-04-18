@@ -179,6 +179,7 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
 
   useEffect(() => {
     if (data?.afterAuthId && !error) {
+      if (!data?.afterAuthId || error || connectionRef.current) return;
       const socket = new WebSocket(
         `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${data?.afterAuthId}`,
       );
@@ -195,6 +196,7 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
 
       socket.onclose = () => {
         console.log("Disconnected from websocket");
+        connectionRef.current = null;
       };
 
       socket.onerror = () => {
@@ -202,10 +204,12 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
       };
 
       return () => {
-        if (socket.readyState !== WebSocket.CONNECTING) {
+        if (
+          socket.readyState === WebSocket.OPEN ||
+          socket.readyState === WebSocket.CONNECTING
+        )
           socket.close();
-          connectionRef.current = null;
-        }
+        connectionRef.current = null;
       };
     }
   }, [data?.afterAuthId, setWsData, notifyWsMessages]);
