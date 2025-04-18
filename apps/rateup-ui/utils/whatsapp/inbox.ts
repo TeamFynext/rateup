@@ -68,7 +68,7 @@ export function parseWaMessage(
         messageContent = receive.messages[0].text.body;
         break;
       case "image":
-        messageContent = `${receive.messages[0].image?.id}_caption_${receive.messages[0].image?.caption ?? ""}`;
+        messageContent = `${receive.messages[0].image?.link}_caption_${receive.messages[0].image?.caption ?? ""}`;
         break;
       case "button":
         messageContent = receive.messages[0].button.text;
