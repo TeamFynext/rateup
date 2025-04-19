@@ -178,30 +178,43 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
   const connectionRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    if (data && !error) {
-      connectionRef.current = new WebSocket(
+    if (data?.afterAuthId && !error) {
+      if (connectionRef.current) {
+        connectionRef.current.close();
+        connectionRef.current = null;
+      }
+
+      const socket = new WebSocket(
         `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${data?.afterAuthId}`,
       );
-
-      connectionRef.current.onopen = () => {
+      connectionRef.current = socket;
+      socket.onopen = () => {
         console.log("Connected to websocket");
       };
 
-      connectionRef.current.onmessage = (event) => {
+      socket.onmessage = (event) => {
         const newMessage: orgWsMessage = JSON.parse(event.data);
         setWsData(newMessage);
         notifyWsMessages(newMessage);
       };
 
-      connectionRef.current.onclose = () => {
+      socket.onclose = () => {
         console.log("Disconnected from websocket");
+        if (connectionRef.current === socket) connectionRef.current = null;
+      };
+
+      socket.onerror = () => {
+        console.error("error in socket");
       };
 
       return () => {
-        connectionRef.current?.close();
+        if (connectionRef.current === socket) {
+          connectionRef.current.close();
+          connectionRef.current = null;
+        }
       };
     }
-  }, [data, setWsData, notifyWsMessages]);
+  }, [data?.afterAuthId]);
 
   return null;
 };
