@@ -103,36 +103,6 @@ export async function getWaMessagesByContactId(
   return { messages, nextCursor };
 }
 
-export async function getWaTickets(page = 1, orgId: string) {
-  let condition: any = {
-    team: {
-      orgId,
-    },
-    type: {
-      in: ["FLOW_RESPONSE", "AUTOMATION"],
-    },
-  };
-  const [data, totalTickets] = await Promise.all([
-    prisma.ticket.findMany({
-      where: condition,
-      include: {
-        assignedTo: {
-          select: {
-            name: true,
-            recipeName: true,
-            phone: true,
-          },
-        },
-      },
-      skip: (page - 1) * 100,
-      take: 100,
-    }),
-    prisma.ticket.count({
-      where: condition,
-    }),
-  ]);
-  return { data, totalTickets };
-}
 export async function generateChatFilterData(orgId: string) {
   try {
     const [contactTags, tagsFromContacts, cGroups, campaigns] =
