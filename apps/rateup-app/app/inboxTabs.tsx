@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import SearchBar from "@/src/components/inboxSearchBar";
@@ -26,28 +26,28 @@ function TabIcon({ Icon, color, focused }: { Icon: any; color: string; focused: 
 }
 
 // Create a generic tab screen
-function createTabScreen(messageType: string, waMessageAssignStatus?: "New" | "Assigned" | "UnAssigned" | "Closed" | "AssignedToMe") {
+function createTabScreen(messageType: string, waMessageAssignStatus?: "New" | "Assigned" | "UnAssigned" | "Closed" | "AssignedToMe", searchTerm?:string) {
   return function Screen() {
     const isFocused = useIsFocused();
     if (!isFocused) return null;
 
     return (
       <View className="h-full bg-white">
-        <Inbox messageType={messageType} waMessageAssignStatus={waMessageAssignStatus} />
+        <Inbox messageType={messageType} waMessageAssignStatus={waMessageAssignStatus} searchTerm={searchTerm} />
       </View>
     );
   };
 }
 
 export default function InboxLayout() {
+  const [searchTerm,setSearchTerm] = useState("")
   return (
     <View className="flex-1 flex-col">
-      <SearchBar />
+      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm}/>
 
       <Tab.Navigator
       tabBarPosition="top"
         screenOptions={{
-          lazy: true,
           tabBarScrollEnabled: true,
           tabBarActiveTintColor: "#009987",
           tabBarInactiveTintColor: "#000",
@@ -65,7 +65,7 @@ export default function InboxLayout() {
       >
         <Tab.Screen 
           name="New" 
-          component={createTabScreen("usermessages", "New")}
+          component={createTabScreen("usermessages", "New", searchTerm)}
           options={{
             tabBarIcon: ({ color, focused }) => (
               <TabIcon Icon={MessageSquareText} color={color} focused={focused} />
@@ -74,7 +74,7 @@ export default function InboxLayout() {
         />
         <Tab.Screen 
           name="Assigned" 
-          component={createTabScreen("usermessages", "Assigned")}
+          component={createTabScreen("usermessages", "Assigned",searchTerm)}
           options={{
             tabBarIcon: ({ color, focused }) => (
               <TabIcon Icon={UserCheck} color={color} focused={focused} />
@@ -83,7 +83,7 @@ export default function InboxLayout() {
         />
         <Tab.Screen 
           name="UnAssigned" 
-          component={createTabScreen("usermessages", "UnAssigned")}
+          component={createTabScreen("usermessages", "UnAssigned", searchTerm)}
           options={{
             tabBarIcon: ({ color, focused }) => (
               <TabIcon Icon={UserX} color={color} focused={focused} />
@@ -92,7 +92,7 @@ export default function InboxLayout() {
         />
         <Tab.Screen 
           name="Closed" 
-          component={createTabScreen("usermessages", "Closed")}
+          component={createTabScreen("usermessages", "Closed",searchTerm)}
           options={{
             tabBarIcon: ({ color, focused }) => (
               <TabIcon Icon={MessageSquareOff} color={color} focused={focused} />
@@ -101,7 +101,7 @@ export default function InboxLayout() {
         />
         <Tab.Screen 
           name="Assigned To Me" 
-          component={createTabScreen("usermessages", "AssignedToMe")}
+          component={createTabScreen("usermessages", "AssignedToMe",searchTerm)}
           options={{
             tabBarIcon: ({ color, focused }) => (
               <TabIcon Icon={CircleUser} color={color} focused={focused} />
@@ -110,7 +110,7 @@ export default function InboxLayout() {
         />
         <Tab.Screen 
           name="All" 
-          component={createTabScreen("all")}
+          component={createTabScreen("all" ,undefined,searchTerm)}
           options={{
             tabBarIcon: ({ color, focused }) => (
               <TabIcon Icon={MessageSquareMore} color={color} focused={focused} />

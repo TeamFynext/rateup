@@ -7,13 +7,9 @@ export type ContactsWithLastMessageResponse = {
     id: string;
     name: string;
     phone: string;
-    lastMessage: {
-      waCreatedAt: string;
-      messageBody: {
-        type: string;
-        text?: string;
-      };
-    };
+    unReadMessageCount:number;
+    lastReceivedMessageTimeStamp:any;
+    lastMessage: any;
     waMessageAssignStatus: WaMessageAssignStatus;
   };
   

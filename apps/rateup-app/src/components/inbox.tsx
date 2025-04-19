@@ -1,14 +1,7 @@
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native"
-import { ContactsWithLastMessage, WaMessageAssignStatus} from "@/src/api/inbox/types"
-import { useFilteredContacts, getDefaultFilter } from "@/src/api/inbox/useFilteredContacts"
-import ChatBox from "@/src/components/ChatBox"
+import { View, Text, FlatList, ActivityIndicator } from "react-native";
+import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/src/api/inbox/types";
+import { useFilteredContacts, getDefaultFilter } from "@/src/api/inbox/useFilteredContacts";
+import ChatBox from "@/src/components/ChatBox";
 
 type InboxProps = {
   messageType: string;
@@ -17,13 +10,13 @@ type InboxProps = {
   contactGroups?: string[];
   campaigns?: string[];
   tags?: string[];
-  waMessageAssignStatus?: "New" | "Assigned" | "UnAssigned" | "Closed" | "AssignedToMe" | undefined ;
+  waMessageAssignStatus?: "New" | "Assigned" | "UnAssigned" | "Closed" | "AssignedToMe" | undefined;
 };
 
 export default function Inbox({
   messageType,
   strictFilter = false,
-  searchTerm = "",
+  searchTerm,
   contactGroups = [],
   campaigns = [],
   tags = [],
@@ -41,10 +34,8 @@ export default function Inbox({
     waMessageAssignStatus,
   };
 
-
-  const encodedFilter = encodeURIComponent(JSON.stringify(mergedFilter))
-  console.log("EncodedFilter:",encodedFilter)
-
+  const encodedFilter = encodeURIComponent(JSON.stringify(mergedFilter));
+  console.log("EncodedFilter:", encodedFilter);
 
   const {
     data,
@@ -53,43 +44,43 @@ export default function Inbox({
     isFetchingNextPage,
     isLoading,
     isError,
-    error,
-  } = useFilteredContacts(encodedFilter)
+  } = useFilteredContacts(encodedFilter);
 
-  console.log("data::",data?.pages)
+  console.log("data::", data?.pages);
 
-  const contacts = data?.pages.flatMap((page) => page.rows) ?? []
+  const contacts = data?.pages.flatMap((page) => page.rows) ?? [];
 
-  console.log("contacts:",contacts)
+  console.log("Unread contacts:", contacts);
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => (
     <ChatBox
-  name={item.name}
-  //@ts-ignore
-  lastMessage={item.lastMessage.messageBody.text}  
-  waMessageAssignStatus={item.waMessageAssignStatus} 
-  onPress={() => console.log("Open chat with:", item.name)}
-/>
-
-  )
-  
+     id={item.id}
+     phone={item.phone}
+      name={item.name}
+      lastMessage={item.lastMessage.messageBody.receive.messages[0]}
+      waMessageAssignStatus={item.waMessageAssignStatus}
+      onPress={() => console.log("Open chat with:", item.name)}
+      lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
+      unReadMessageCount={item.unReadMessageCount}
+    />
+  );
 
   if (isLoading) {
     return (
-      <View style={styles.loaderContainer}>
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" />
       </View>
-    )
+    );
   }
 
   if (isError) {
     return (
-      <View style={styles.loaderContainer}>
-        <Text style={{ color: "red", textAlign: "center" }}>
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-red-500 text-center">
           Failed to load contacts.
         </Text>
       </View>
-    )
+    );
   }
 
   return (
@@ -99,52 +90,19 @@ export default function Inbox({
       renderItem={renderItem}
       onEndReached={() => {
         if (hasNextPage && !isFetchingNextPage) {
-          fetchNextPage()
+          fetchNextPage();
         }
       }}
       onEndReachedThreshold={0.3}
       ListFooterComponent={
         isFetchingNextPage ? (
-          <ActivityIndicator size="small" style={styles.footerLoader} />
+          <ActivityIndicator size="small" className="py-4" />
         ) : (
-          <View style={{ padding: 16 }}>
-            <Text>Nothing to show here
-            </Text>
+          <View className="items-center py-4">
+            <View className="w-1/2 h-0.5 bg-gray-300 rounded-full" />
           </View>
         )
       }
     />
-  )
+  );
 }
-
-const styles = StyleSheet.create({
-  loaderContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  itemContainer: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
-  },
-  itemPressed: {
-    backgroundColor: "#f0f0f0",
-  },
-  name: {
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  message: {
-    fontSize: 14,
-    color: "#555",
-  },
-  status: {
-    fontSize: 12,
-    color: "#999",
-    marginTop: 4,
-  },
-  footerLoader: {
-    padding: 16,
-  },
-})

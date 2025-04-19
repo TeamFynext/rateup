@@ -8,7 +8,9 @@ import GoogleIcon from "@/assets/images/google-icon.svg"
 import FilterIcon from "@/assets/images/filter-icon.svg"
 import RefreshIcon from "@/assets/images/refresh-icon.svg"
 import AddContactIcon from "@/assets/images/addcontacts-icon.svg"
-
+import UsernameIcon from "@/assets/images/username-icon.svg"
+import EmailIcon from "@/assets/images/email-icon.svg"
+ 
 export {
     SearchIcon,
     RateLogo,
@@ -19,5 +21,7 @@ export {
     GoogleIcon,
     FilterIcon,
     RefreshIcon,
-    AddContactIcon
+    AddContactIcon,
+    UsernameIcon,
+    EmailIcon
 }
