@@ -20,3 +20,12 @@ export type ContactsWithLastMessageResponse = {
     UNASSIGNED = "UnAssigned"
   }
   
+  export interface ICreateContact {
+    name: string;
+    phone?: string;
+    email?: string;
+    teamId?: string;
+    source?: string;
+    tags?: any;
+    external_id?: string;
+  }

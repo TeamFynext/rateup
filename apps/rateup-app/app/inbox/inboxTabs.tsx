@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { View } from "react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import SearchBar from "@/src/components/inboxSearchBar";
-import Inbox from "@/src/components/inbox";
+import SearchBar from "@/src/components/inbox/inboxSearchBar";
+import Inbox from "@/src/components/inbox/inbox";
 import { useIsFocused } from "@react-navigation/native";
 
 // Icons
@@ -10,7 +10,6 @@ import { MessageSquareText, UserX, UserCheck, CircleUser, MessageSquareOff, Mess
 
 const Tab = createMaterialTopTabNavigator();
 
-// Common wrapper to add background when focused
 function TabIcon({ Icon, color, focused }: { Icon: any; color: string; focused: boolean }) {
   return (
     <View

@@ -1,5 +1,5 @@
 // app/_layout.tsx
-import { Slot, Stack, useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View, Text } from "react-native";
 import { AuthProvider, useAuth } from "@/src/context/AuthContext";
@@ -53,7 +53,7 @@ function RootLayout() {
       }}
       />
       <Stack.Screen
-      name="inboxTabs"
+      name="inbox"
       options={{
         headerShown:false
       }}

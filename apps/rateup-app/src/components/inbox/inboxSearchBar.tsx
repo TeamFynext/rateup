@@ -1,5 +1,5 @@
 import { View, TextInput, Pressable, TouchableOpacity } from "react-native"
-import { AddContactIcon, FilterIcon, RefreshIcon, SearchIcon, BackIcon } from "../constants/imageExports";
+import { AddContactIcon, FilterIcon, RefreshIcon, SearchIcon, BackIcon } from "@/src/constants/imageExports"
 import { useRouter } from "expo-router";
 
 type SearchBarProps = {
@@ -35,11 +35,12 @@ export default function SearchBar({searchTerm,setSearchTerm}:SearchBarProps) {
     <View className="flex-row gap-4">
 
       <TouchableOpacity
-      onPress={()=>router.push("/(addcontacts)/addContact")}>
+      onPress={()=>router.push("/inbox/addContact")}>
       <AddContactIcon/>
       </TouchableOpacity>
 
-      <TouchableOpacity>
+      <TouchableOpacity
+      onPress={()=>router.push("/inbox/filters")}>
       <FilterIcon/>
       </TouchableOpacity>
 

@@ -32,7 +32,8 @@ const HomeScreen = () => {
       <View style={styles.buttonGroup}>
         <Button
           title="Inbox Testing"
-          onPress={() => navigation.navigate("inboxTabs")}
+          //@ts-ignore
+          onPress={() =>router.push("/inbox/inboxTabs")}
         />
       </View>
     </View>

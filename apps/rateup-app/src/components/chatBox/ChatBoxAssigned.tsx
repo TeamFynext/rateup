@@ -1,15 +1,20 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import { ContactsWithLastMessage } from "../api/inbox/types";
+import { ContactsWithLastMessage } from "@/src/api/inbox/types";
+import { assignedContact } from "@/src/api/inbox/contacts";
 
-const ChatBox: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({
+const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({
+  id,
   name,
   phone,
   lastMessage,
   lastReceivedMessageTimeStamp,
   unReadMessageCount,
+  waMessageAssignStatus,
   onPress,
 }) => {
+
+  const [assignedUser, setAssignedUser] = useState<string | null>(null); 
 
   const namePreview = (name_:string) =>{
     const nameArray = name_.split(" ")
@@ -29,6 +34,21 @@ const ChatBox: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({
     return "Unsupported message";
   };
 
+  useEffect(() => {
+    async function assign() {
+      console.log("Fetching assigned user for id:", id);
+      try {
+        const assigned = await assignedContact(id);
+        if (assigned && assigned.length > 0 && assigned[0].assignedUser?.name) {
+          setAssignedUser(assigned[0].assignedUser.name); 
+        }
+      } catch (err) {
+        console.error("Error fetching assigned user:", err);
+      }
+    }
+    assign();
+  }, [id]);
+
   const getTime = (waCreatedAt: string | undefined) => {
     if (!waCreatedAt) return "No time";
     const date = new Date(waCreatedAt);
@@ -47,9 +67,14 @@ const ChatBox: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({
         <View className="flex-1 flex-row items-center justify-between">
           {/* Name and Last Message */}
           <View className="gap-1">
+            <View className="flex-row items-center justify-between gap-1">
             <Text className="text-lg font-semibold text-[#343A40]" numberOfLines={1}>
               {name || phone}
             </Text>
+            <Text className="bg-[#F5F5F5] px-2 rounded-full">
+                {assignedUser}
+            </Text>
+            </View>
             <Text className="text-sm text-black min-w-[40vw] max-w-[60vw]" numberOfLines={1}>
               {getMessagePreview(lastMessage)}
             </Text>
@@ -69,4 +94,4 @@ const ChatBox: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({
   );
 };
 
-export default ChatBox;
+export default ChatBoxAssigned;

@@ -1,7 +1,9 @@
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
 import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/src/api/inbox/types";
 import { useFilteredContacts, getDefaultFilter } from "@/src/api/inbox/useFilteredContacts";
-import ChatBox from "@/src/components/ChatBox";
+import ChatBoxNew from "../chatBox/ChatBoxNew";
+import ChatBoxAssigned from "../chatBox/ChatBoxAssigned";
+import ChatBoxAll from "../chatBox/ChatBoxAll";
 
 type InboxProps = {
   messageType: string;
@@ -50,20 +52,41 @@ export default function Inbox({
 
   const contacts = data?.pages.flatMap((page) => page.rows) ?? [];
 
-  console.log("Unread contacts:", contacts);
+  console.log("Contacts", contacts);
 
-  const renderItem = ({ item }: { item: ContactsWithLastMessage }) => (
-    <ChatBox
-     id={item.id}
-     phone={item.phone}
-      name={item.name}
-      lastMessage={item.lastMessage.messageBody.receive.messages[0]}
-      waMessageAssignStatus={item.waMessageAssignStatus}
-      onPress={() => console.log("Open chat with:", item.name)}
-      lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
-      unReadMessageCount={item.unReadMessageCount}
-    />
-  );
+  const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
+    let ChatBoxComponent;
+
+    switch (waMessageAssignStatus) {
+      case "Assigned":
+      case "AssignedToMe":
+        ChatBoxComponent = ChatBoxAssigned;
+        break;
+      case "UnAssigned":
+        ChatBoxComponent = ChatBoxNew;
+        break;
+      default:
+        ChatBoxComponent = ChatBoxAll;
+        break;
+    }
+    
+  
+    if (!ChatBoxComponent) return null;
+  
+    return (
+      <ChatBoxComponent
+        id={item.id}
+        phone={item.phone}
+        name={item.name}
+        lastMessage={item.lastMessage.messageBody.receive.messages[0]}
+        waMessageAssignStatus={item.waMessageAssignStatus}
+        onPress={() => console.log("Open chat with:", item.name)}
+        lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
+        unReadMessageCount={item.unReadMessageCount}
+      />
+    );
+  };
+  
 
   if (isLoading) {
     return (
