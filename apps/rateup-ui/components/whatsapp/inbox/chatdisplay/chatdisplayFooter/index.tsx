@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { Group, Stack, Text } from "@mantine/core";
+import { Flex, Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
@@ -31,10 +31,8 @@ import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplayFooter({
   contact,
-  isChatAssignedToMe,
 }: {
   contact: ContactsWithLastMessage;
-  isChatAssignedToMe: boolean;
 }) {
   const inputRef = useRef(null);
   const submiRef = useRef(null);
@@ -105,7 +103,7 @@ export default function WaInboxChatDisplayFooter({
     contact?.lastReceivedMessageTimeStamp,
   );
   submiRef.current = () => {
-    if (isSessionExpired || !isChatAssignedToMe) return;
+    if (isSessionExpired) return;
     handleSendMessage();
   };
 
@@ -119,27 +117,41 @@ export default function WaInboxChatDisplayFooter({
     }
   }, [media]);
 
-  return (
-    <Stack gap={0}>
-      {!isChatAssignedToMe && (
-        <Group
-          bg={"black"}
-          justify="center"
-          c={"white"}
-          color="white"
-          gap={2}
-          py={2}
-        >
-          <IconExclamationCircle size={"1rem"} />
-          <Text size="xs">This chat is not assigned to you</Text>
-        </Group>
-      )}
-      <div className={classes.wrapper}>
+  const SendMessageComponent = () => {
+    return (
+      <Group>
         <WaInboxFooterMenu
           sessionExpired={isSessionExpired}
           contact={contact}
-          disabled={!isChatAssignedToMe}
         />
+        <RateupButtonPrimary
+          title={translations["Send"]}
+          rightIcon={<IconSend />}
+          onClick={handleSendMessage}
+          disabled={isSessionExpired}
+        />
+      </Group>
+    );
+  };
+
+  if (isSessionExpired) {
+    return (
+      <Flex className={classes.wrapper} justify="flex-start">
+        <WaInboxFooterMenu
+          sessionExpired={isSessionExpired}
+          contact={contact}
+        />
+      </Flex>
+    );
+  }
+
+  return (
+    <Stack gap={0}>
+      <div className={classes.wrapper}>
+        {/* <WaInboxFooterMenu
+          sessionExpired={isSessionExpired}
+          contact={contact}
+        /> */}
         <form className={classes.form}>
           <div ref={inputRef} style={{ display: "flex", flex: 1 }}>
             <WaTextEditor
@@ -153,15 +165,10 @@ export default function WaInboxChatDisplayFooter({
               flex={1}
               inbox={true}
               customEnter={() => submiRef.current()}
-              editable={!isSessionExpired && isChatAssignedToMe}
+              editable={!isSessionExpired}
+              customHeaders={<SendMessageComponent />}
             />
           </div>
-          <RateupButtonPrimary
-            title={translations["Send"]}
-            rightIcon={<IconSend />}
-            onClick={handleSendMessage}
-            disabled={isSessionExpired || !isChatAssignedToMe}
-          />
         </form>
       </div>
     </Stack>

@@ -19,7 +19,6 @@ import classes from "./styles.module.css";
 interface Props {
   sessionExpired: boolean;
   contact: ContactsData;
-  disabled: boolean;
 }
 export default function WaInboxFooterMenu(props: Props) {
   const ref = useRef(null);
@@ -51,7 +50,6 @@ export default function WaInboxFooterMenu(props: Props) {
         closeOnItemClick={false}
         closeOnClickOutside={true}
         zIndex={10}
-        disabled={props.disabled}
       >
         <SessionBasedIndicatorRenderer sessionExpired={props.sessionExpired}>
           <Menu.Target>
@@ -63,7 +61,6 @@ export default function WaInboxFooterMenu(props: Props) {
                   e.currentTarget.classList.add(classes.action_icon_rotate),
                 );
               }}
-              disabled={props.disabled}
             >
               <IconPlus size={25} />
             </ActionIcon>

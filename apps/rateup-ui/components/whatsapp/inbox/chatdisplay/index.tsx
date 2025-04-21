@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { motion } from "motion/react";
+import { Group, Text } from "@mantine/core";
+import { IconExclamationCircle } from "@tabler/icons-react";
 
 import {
   useGetAssignedUserForContact,
@@ -41,19 +42,6 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
       )
       .flat() || [];
 
-  // Animation variants
-  const variants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        type: "spring", // Use a spring animation for a more natural feel
-        damping: 20, // Increase damping to make the animation more subtle
-        stiffness: 100, // Decrease stiffness to make the animation slower
-      },
-    },
-  };
-
   const { data: assignedUsers } = useGetAssignedUserForContact(contact?.id);
   const { user } = useUser();
   const isAssignedToMe = useMemo(
@@ -72,61 +60,30 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
       className={`${classes.wrapper} ${isChatDisplayOpen ? "chat-display-open" : ""}`}
     >
       {messages?.length >= 0 && contact ? (
-        <motion.div
-          key={contact?.phone} // Add a unique key for the contact
-          variants={variants} // Add the animation variants
-          initial="hidden" // Initial state
-          animate="show" // State when component is mounted
-          className={classes.inner_animated}
-          layout
-        >
+        <div className={classes.inner_animated}>
           <WaInboxChatDisplayHeader
             contact={contact}
             smallScreen={smallScreen}
           />
-          {/* <Flex gap={opened && "xs"} p={0}>
-            <motion.div
-              key={contact?.phone}
-              initial={{ flex: 1, opacity: 1 }}
-              animate={
-                opened ? { flex: 0.5, opacity: 1 } : { flex: 1, opacity: 1 }
-              }
-              transition={{ type: "spring", stiffness: 120, damping: 20 }}
-              style={{
-                overflow: "hidden",
-              }}
-            >
-              <Stack h="78vh" gap={0} p={0}> */}
           <WaInboxChatDisplayBody data={messages} smallScreen={smallScreen} />
           {!assignedUsers?.length ? (
             <WaInboxAssignUserFooter contactId={contact?.id} user={user} />
+          ) : isAssignedToMe ? (
+            <WaInboxChatDisplayFooter contact={contact} />
           ) : (
-            <WaInboxChatDisplayFooter
-              contact={contact}
-              isChatAssignedToMe={isAssignedToMe}
-            />
-          )}
-          {/* </Stack>
-            </motion.div>
-
-            <motion.div
-              key={selectedTicket}
-              initial={{ flex: 0, x: 300, opacity: 0 }}
-              animate={
-                opened
-                  ? { flex: 0.5, x: 0, opacity: 1 }
-                  : { flex: 0, x: 300, opacity: 0 }
-              }
-              transition={{ type: "spring", stiffness: 120, damping: 20 }}
-              style={{
-                overflow: "hidden",
-                pointerEvents: opened ? "auto" : "none",
-              }}
+            <Group
+              bg={"black"}
+              justify="center"
+              c={"white"}
+              color="white"
+              gap={2}
+              py={2}
             >
-              <WaInboxChatDisplayPopoverMsg />
-            </motion.div>
-          </Flex> */}
-        </motion.div>
+              <IconExclamationCircle size={"1rem"} />
+              <Text size="xs">This chat is not assigned to you</Text>
+            </Group>
+          )}
+        </div>
       ) : (
         <NothingFound text={translations["Select a chat to see messages"]} />
       )}

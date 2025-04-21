@@ -7,6 +7,7 @@ import {
   RingProgress,
   Stack,
   Text,
+  Tooltip,
 } from "@mantine/core";
 import { IconPointFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -50,31 +51,19 @@ export default function WaInboxCountdownTimer({
     return <Loader size={"xs"} />;
   }
   return (
-    <Stack gap={2}>
-      <Text
-        className={classes.timer_text}
-        fw={500}
-      >{`${hours ?? 0} : ${minutes ?? 0}`}</Text>
-      <Progress size={"md"} value={Math.floor((hours * 100) / 24)} w={120} />
-      <Badge
-        variant="outline"
-        styles={{
-          root: {
-            borderColor: "var(--active-green-2)",
-          },
-          label: {
-            fontWeight: 400,
-          },
-        }}
-        leftSection={
-          <IconPointFilled color="var(--active-green-2)" size={"1rem"} />
-        }
-        tt={"capitalize"}
-        w={120}
-        mt={4}
-      >
-        Session Active
-      </Badge>
-    </Stack>
+    <Tooltip label={"Session"}>
+      <Stack gap={2}>
+        <Text
+          className={classes.timer_text}
+          fw={500}
+        >{`${hours ?? 0} : ${minutes ?? 0}`}</Text>
+        <Progress
+          size={"md"}
+          value={Math.floor((hours * 100) / 24)}
+          w={120}
+          color={hours === 1 && "red"}
+        />
+      </Stack>
+    </Tooltip>
   );
 }

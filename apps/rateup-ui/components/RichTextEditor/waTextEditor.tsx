@@ -44,6 +44,7 @@ interface WaTextEditorProps extends BoxComponentProps {
   inbox?: boolean;
   customEnter?: () => void;
   editable?: boolean;
+  customHeaders?: React.ReactNode;
 }
 
 export const CustomEnter = Extension.create({
@@ -78,6 +79,7 @@ function WaTextEditor({
   inbox = false,
   customEnter,
   editable = true,
+  customHeaders = null,
   ...props
 }: WaTextEditorProps) {
   const [opened, { open, close }] = useDisclosure(false);
@@ -224,7 +226,10 @@ function WaTextEditor({
                 </>
               )}
             </Group>
-            <WaTextCharacterCount editor={editor} max={max} />
+            <Group>
+              <WaTextCharacterCount editor={editor} max={max} />
+              {customHeaders}
+            </Group>
           </Group>
         </RichTextEditor.Toolbar>
         <ScrollAreaAutosize mah={mah}>
