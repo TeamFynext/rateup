@@ -16,14 +16,10 @@ import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconArrowLeft,
-  IconChecks,
   IconDotsVertical,
-  IconEdit,
   IconHandOff,
   IconMessageCheck,
-  IconMoon,
-  IconMoonFilled,
-  IconPlus,
+  IconPencil,
   IconTicket,
   IconUserShare,
 } from "@tabler/icons-react";
@@ -41,7 +37,6 @@ import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamess
 import {
   useAssignInboxToUer,
   useGetAssignedUserForContact,
-  useMarkWaMessagesAsRead,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import EditContactModal from "@/components/Contacts/EditContactModal";
@@ -73,40 +68,13 @@ export default function WaInboxChatDisplayHeader({
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   const editContactMutation = useEditContactMutation(null);
   const { setSelectedContact } = useContactStore();
-  const [
-    openedCreateTicket,
-    { open: openCreateTicket, close: closeCreateTicket },
-  ] = useDisclosure(false);
-  const [openedAssign, { open: openAssign, close: closeAssign }] =
-    useDisclosure(false);
   const isMobile = useMediaQuery("(max-width: 1200px)");
-
-  function handleCloseChat() {
-    editContactMutation.mutate(
-      {
-        contactId: contact.id,
-        data: { waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
-      },
-      {
-        onSuccess: () => {
-          setSelectedContact({
-            ...contact,
-            waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
-          });
-        },
-      },
-    );
-  }
 
   const { data: chatbot } = useGetChatbotDetails();
   const { data: subscription } = useSubscription();
 
   const hasAIFeature = useMemo(
     () => hasFeature(subscription, SubscriptionFeaturePathName.AI),
-    [subscription],
-  );
-  const hasTicketFeature = useMemo(
-    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     [subscription],
   );
 
@@ -158,19 +126,7 @@ export default function WaInboxChatDisplayHeader({
             </Tooltip>
           )}
           <Text className={classes.phone}>{contact.phone}</Text>
-          {hasAIFeature &&
-            chatbot?.enableWaChat &&
-            chatbot?.enableAllWaChat && (
-              <Switch
-                size="xs"
-                label={"AI Chat"}
-                mt={"xs"}
-                checked={contact.aiWaChat}
-                onChange={handleAiWaChat}
-              />
-            )}
         </Stack>
-        {!smallScreen && <ContactEdit isMobile={isMobile} contact={contact} />}
       </Group>
       <Stack gap={"xs"} align="center">
         {!smallScreen && (
@@ -189,61 +145,32 @@ export default function WaInboxChatDisplayHeader({
         )}
       </Stack>
 
-      {/* <ChatContactMenu contact={contact} /> */}
-      <Group gap={"lg"}>
-        <Group gap="xs">
-          <Tooltip label={"Assign"}>
-            <ActionIcon onClick={openAssign} variant="outline">
-              <IconUserShare />
-            </ActionIcon>
-          </Tooltip>
-          {hasTicketFeature && (
-            <Tooltip label={"Create Ticket"}>
-              <ActionIcon onClick={openCreateTicket}>
-                <IconTicket />
-              </ActionIcon>
-            </Tooltip>
-          )}
-        </Group>
-        {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
-          <RateupButtonPrimary
-            color="var(--grey-color-7)"
-            title="Close Chat"
-            radius={"md"}
+      <Group gap={"sm"}>
+        {hasAIFeature && chatbot?.enableWaChat && chatbot?.enableAllWaChat && (
+          <Switch
             size="xs"
-            onClick={handleCloseChat}
+            label={"AI Chat"}
+            checked={contact.aiWaChat}
+            onChange={handleAiWaChat}
           />
         )}
+        <ChatContactMenu contact={contact} />
       </Group>
-      <CreateTicketCard
-        close={closeCreateTicket}
-        opened={openedCreateTicket}
-        type={TicketType.CUSTOM}
-        hasTicketFeature={hasTicketFeature}
-      />
-      <AssignInbox
-        contactId={contact.id}
-        opened={openedAssign}
-        close={closeAssign}
-      />
     </div>
   );
 }
 
-export const ContactEdit = ({ isMobile, contact }) => {
-  const [opened, { close, open }] = useDisclosure();
+export const ContactEdit = ({ contact, opened, close }) => {
   const { translations } = useTranslations();
   return (
     <Stack>
-      <ActionIcon onClick={open} variant="subtle">
-        <IconEdit size={!isMobile ? 20 : 12} />
-      </ActionIcon>
       <FormModalLayout
         opened={opened}
         title={translations["Edit Contact"]}
         onClose={close}
         centered
         noCustomHeader
+        size="lg"
       >
         <EditContactModal
           contact={contact}
@@ -257,9 +184,20 @@ export const ContactEdit = ({ isMobile, contact }) => {
 };
 
 const ChatContactMenu = ({ contact }) => {
-  const { setSelectedContact, filterData } = useContactStore();
+  const { data: subscription } = useSubscription();
+
+  const { setSelectedContact } = useContactStore();
+  const hasTicketFeature = useMemo(
+    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    [subscription],
+  );
+  const [openedEdit, { open: openEditContact, close: closeEditContact }] =
+    useDisclosure(false);
+  const [
+    openedCreateTicket,
+    { open: openCreateTicket, close: closeCreateTicket },
+  ] = useDisclosure(false);
   const editContactMutation = useEditContactMutation(null);
-  const markasRead = useMarkWaMessagesAsRead(contact.id, filterData);
   const [openedAssign, { open: openAssign, close: closeAssign }] =
     useDisclosure(false);
   function handleCloseChat() {
@@ -278,39 +216,58 @@ const ChatContactMenu = ({ contact }) => {
       },
     );
   }
-  function handleMarkAsRead() {
-    markasRead.mutate();
-  }
+
   return (
-    <Menu shadow="xl" position="bottom-start">
+    <Menu shadow="xl" position="bottom-end">
       <Menu.Target>
         <IconDotsVertical />
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
-          leftSection={<IconChecks size={14} color="#34B7F1" />}
-          onClick={handleMarkAsRead}
+          leftSection={<IconUserShare size={20} />}
+          onClick={openAssign}
         >
-          Mark as read
-        </Menu.Item>
-        <Menu.Divider />
-        <Menu.Item leftSection={<IconUserShare />} onClick={openAssign}>
           Assign Chat
         </Menu.Item>
-        <Menu.Divider />
         {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
           <Menu.Item
-            leftSection={<IconMessageCheck />}
+            leftSection={<IconMessageCheck size={20} />}
             onClick={handleCloseChat}
           >
             Close Chat
           </Menu.Item>
         )}
+        <Menu.Divider />
+        {hasTicketFeature && (
+          <Menu.Item
+            leftSection={<IconTicket size={20} />}
+            onClick={openCreateTicket}
+          >
+            Create Ticket
+          </Menu.Item>
+        )}
+        <Menu.Item
+          leftSection={<IconPencil size={20} />}
+          onClick={openEditContact}
+        >
+          Edit Contact
+        </Menu.Item>
       </Menu.Dropdown>
       <AssignInbox
         contactId={contact.id}
         opened={openedAssign}
         close={closeAssign}
+      />
+      <CreateTicketCard
+        close={closeCreateTicket}
+        opened={openedCreateTicket}
+        type={TicketType.CUSTOM}
+        hasTicketFeature={hasTicketFeature}
+      />
+      <ContactEdit
+        opened={openedEdit}
+        close={closeEditContact}
+        contact={contact}
       />
     </Menu>
   );

@@ -54,6 +54,7 @@ export type ContactsWithLastMessage = ContactsData & {
   lastReceivedMessageTimeStamp: string;
   total_contact_count?: string;
   unReadMessageCount?: number;
+  assignedUsers: { id: string; name: string }[];
 };
 type ContactsWithLastMessageResponse = {
   rows: ContactsWithLastMessage[];

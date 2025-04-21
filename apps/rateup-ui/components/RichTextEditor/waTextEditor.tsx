@@ -28,6 +28,7 @@ import InsertInboxAudio from "./InsertInboxMedia/InserInboxAudio";
 import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile";
 import InsertInboxImage from "./InsertInboxMedia/InsertInboxImage";
 import InsertInboxVideo from "./InsertInboxMedia/InsertInboxVideo";
+import WaQuickReplyControl from "./WaQuickReply";
 import styles from "./waTextEditor.module.css";
 
 interface WaTextEditorProps extends BoxComponentProps {
@@ -43,6 +44,7 @@ interface WaTextEditorProps extends BoxComponentProps {
   inbox?: boolean;
   customEnter?: () => void;
   editable?: boolean;
+  customHeaders?: React.ReactNode;
 }
 
 export const CustomEnter = Extension.create({
@@ -77,6 +79,7 @@ function WaTextEditor({
   inbox = false,
   customEnter,
   editable = true,
+  customHeaders = null,
   ...props
 }: WaTextEditorProps) {
   const [opened, { open, close }] = useDisclosure(false);
@@ -210,15 +213,23 @@ function WaTextEditor({
                 <InsertEmoji />
               </RichTextEditor.ControlsGroup>
               {inbox && (
-                <RichTextEditor.ControlsGroup>
-                  <InsertInboxFile />
-                  <InsertInboxImage />
-                  <InsertInboxVideo />
-                  <InsertInboxAudio />
-                </RichTextEditor.ControlsGroup>
+                <>
+                  <RichTextEditor.ControlsGroup>
+                    <InsertInboxFile />
+                    <InsertInboxImage />
+                    <InsertInboxVideo />
+                    <InsertInboxAudio />
+                  </RichTextEditor.ControlsGroup>
+                  <RichTextEditor.ControlsGroup>
+                    <WaQuickReplyControl />
+                  </RichTextEditor.ControlsGroup>
+                </>
               )}
             </Group>
-            <WaTextCharacterCount editor={editor} max={max} />
+            <Group>
+              <WaTextCharacterCount editor={editor} max={max} />
+              {customHeaders}
+            </Group>
           </Group>
         </RichTextEditor.Toolbar>
         <ScrollAreaAutosize mah={mah}>
