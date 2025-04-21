@@ -307,6 +307,7 @@ const WaInboxChatSelect = () => {
           messageBody: {} as WaInboxMessage,
           waCreatedAt: "",
         },
+        assignedUsers: [],
       });
       openChatDisplayForContact(contact);
     },

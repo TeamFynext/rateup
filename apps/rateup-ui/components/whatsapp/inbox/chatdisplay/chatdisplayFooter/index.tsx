@@ -17,7 +17,6 @@ import { deleteUploadedFiles } from "@/utils/file-upload/upload";
 import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
-  useGetAssignedUserForContact,
   useSendNewWaMessage,
 } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
