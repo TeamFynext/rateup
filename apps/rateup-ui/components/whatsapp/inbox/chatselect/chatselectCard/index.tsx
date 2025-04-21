@@ -14,7 +14,6 @@ import dayjs from "dayjs";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
@@ -102,27 +101,17 @@ export default function WaInboxChatSelectCard({
   );
 }
 
-const AssignedStatusBadge = ({ contact }) => {
-  const { data: assignedUsers, isLoading } = useGetAssignedUserForContact(
-    contact.id,
-  );
-  if (isLoading)
-    return (
-      <Skeleton>
-        <Badge size="xs" radius={"xs"}></Badge>
-      </Skeleton>
-    );
+const AssignedStatusBadge = ({
+  contact,
+}: {
+  contact: ContactsWithLastMessage;
+}) => {
   if (contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED)
     return (
       <Group>
-        {assignedUsers?.map((u) => (
-          <Badge
-            variant="light"
-            size="xs"
-            radius={"xs"}
-            key={u?.assignedUserId}
-          >
-            {u?.assignedUser?.name}
+        {contact?.assignedUsers?.map((u) => (
+          <Badge variant="light" size="xs" radius={"xs"} key={u?.id}>
+            {u?.name}
           </Badge>
         ))}
       </Group>
