@@ -309,6 +309,14 @@ export async function filterChats(
           AND w."messageBody"->>'exchangeProcess' = 'receive'
           AND NOT($3::TEXT = ANY(w."readUsers"))
         ) as "unReadMessageCount",
+        COALESCE(
+        json_agg(
+            json_build_object(
+                'id', u.id,
+                'name', u.name
+            )
+        ) FILTER (WHERE u.id IS NOT NULL),
+        '[]') AS "assignedUsers",
         (
           SELECT jsonb_build_object(
             'messageBody', w."messageBody",
@@ -319,7 +327,10 @@ export async function filterChats(
           ORDER BY w."waCreatedAt" DESC
           LIMIT 1
         ) as "lastMessage" FROM "Contact" c
+         LEFT JOIN "WaInboxAssign" wb ON wb."contactId" = c.id
+         LEFT JOIN "User" u ON wb."assignedUserId" = u.id
       WHERE ${whereClause}
+      GROUP BY c.id
     `;
     const wrappedQuery = `SELECT * FROM (${query}) wc ORDER BY ${orderBy} DESC NULLS LAST LIMIT 100 OFFSET $2`;
 
