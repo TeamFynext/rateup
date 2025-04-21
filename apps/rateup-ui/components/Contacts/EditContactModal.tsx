@@ -177,7 +177,7 @@ const EditContactModal = ({
             onClick={closeEditModal}
           />
           <RateupButtonBlue
-            title={translations["Edit contact"]}
+            title={translations["Save"]}
             loading={isUpdating}
             onClick={handleSubmit}
           />

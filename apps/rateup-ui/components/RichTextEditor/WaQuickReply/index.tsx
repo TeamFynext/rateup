@@ -14,7 +14,7 @@ import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import {
-  IconArrowUpLeft,
+  IconMessage2Bolt,
   IconPencil,
   IconPlus,
   IconTrash,
@@ -41,7 +41,7 @@ const WaQuickReplyControl = () => {
           title="Insert quick replies"
           onClick={() => setOpened((o) => !o)}
         >
-          <IconArrowUpLeft size={16} />
+          <IconMessage2Bolt size={16} />
         </RichTextEditor.Control>
       </Popover.Target>
       <Popover.Dropdown>
