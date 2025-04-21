@@ -1,0 +1,68 @@
+import prisma from "../../../../utils/prisma";
+import { UpdateOrderBody, UpdateQuickReplyInput } from "./quickReply.schema";
+
+export type QuickReply = {
+  text: string;
+  priority: number;
+};
+
+export async function createWaQuickReply(data: QuickReply, orgId: string) {
+  return await prisma.whatsappQuickReply.create({
+    data: {
+      ...data,
+      orgId,
+    },
+  });
+}
+
+export async function getWaQuickReplies(orgId: string) {
+  return await prisma.whatsappQuickReply.findMany({
+    where: {
+      orgId,
+    },
+    orderBy: {
+      priority: "asc",
+    },
+  });
+}
+
+export async function getWaQuickReplyById(id: string) {
+  return await prisma.whatsappQuickReply.findUnique({
+    where: {
+      id,
+    },
+  });
+}
+
+export async function deleteWaQuickReplyById(id: string) {
+  return await prisma.whatsappQuickReply.delete({
+    where: {
+      id,
+    },
+  });
+}
+
+export async function updateWaQuickReplyById(
+  id: string,
+  data: UpdateQuickReplyInput,
+) {
+  return await prisma.whatsappQuickReply.update({
+    where: {
+      id,
+    },
+    data,
+  });
+}
+
+export async function updateWaQuickReplyOrder(data: UpdateOrderBody) {
+  for (const quickReply of data) {
+    await prisma.whatsappQuickReply.update({
+      where: {
+        id: quickReply.id,
+      },
+      data: {
+        priority: quickReply.priority,
+      },
+    });
+  }
+}
