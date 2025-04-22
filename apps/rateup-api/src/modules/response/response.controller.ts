@@ -148,17 +148,16 @@ export async function downloadExcelResponseHandler(
           (child) => child?.type !== "Footer" && child.name,
         ),
       );
-      const [title, data] = await downloadExcelResponseV2(
+      const data = await downloadExcelResponseV2(
         allResponse,
         question,
         request.body.visibleColumn,
         request.body.tz,
       );
-      reply.header("filename", `${title}.xlsx`);
       reply.status(200).type("application/xlsx").send(data);
     } else {
       question = await getQuestionsBySurveyId(surveyId);
-      const [title, data] = await downloadExcelResponse(
+      const data = await downloadExcelResponse(
         surveyId,
         allResponse,
         question,
@@ -166,7 +165,6 @@ export async function downloadExcelResponseHandler(
         request.body.visibleColumn,
         request.body.tz,
       );
-      reply.header("filename", `${title}.xlsx`);
       reply.status(200).type("application/xlsx").send(data);
     }
   } catch (e) {
