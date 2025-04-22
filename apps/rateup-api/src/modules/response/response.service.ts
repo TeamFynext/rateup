@@ -522,7 +522,6 @@ export async function downloadExcelResponse(
       const width = Math.max(headingWidth, dataWidth);
       options.push({ width: width > 40 ? 40 : width });
     });
-    let fileName = allResponses?.[0].survey?.title ?? "download";
     let buffer = xlsx.build([
       {
         name: "Sheet1",
@@ -533,7 +532,7 @@ export async function downloadExcelResponse(
       },
     ]);
 
-    return [fileName, buffer];
+    return buffer;
   }
 }
 
@@ -626,7 +625,6 @@ export async function downloadExcelResponseV2(
       return { width: Math.min(Math.max(headingWidth, dataWidth), 40) };
     });
 
-    const fileName = allResponses?.[0]?.survey?.title || "download";
     const buffer = xlsx.build([
       {
         name: "Sheet1",
@@ -636,8 +634,7 @@ export async function downloadExcelResponseV2(
         },
       },
     ]);
-
-    return [fileName, buffer];
+    return buffer;
   }
 }
 function getMaxContentWidth(data, columnIndex: number) {
