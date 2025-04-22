@@ -1,9 +1,11 @@
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
 import { ContactsWithLastMessage, WaMessageAssignStatus } from "@/src/api/inbox/types";
-import { useFilteredContacts, getDefaultFilter } from "@/src/api/inbox/useFilteredContacts";
+import { useFilteredContacts, getDefaultFilter, filteredContactsCount } from "@/src/api/inbox/useFilteredContacts";
 import ChatBoxNew from "../chatBox/ChatBoxNew";
 import ChatBoxAssigned from "../chatBox/ChatBoxAssigned";
 import ChatBoxAll from "../chatBox/ChatBoxAll";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 
 type InboxProps = {
   messageType: string;
@@ -25,6 +27,7 @@ export default function Inbox({
   waMessageAssignStatus,
 }: InboxProps) {
   const defaultFilter = getDefaultFilter(messageType);
+  const router = useRouter()
 
   const mergedFilter = {
     ...defaultFilter,
@@ -37,7 +40,7 @@ export default function Inbox({
   };
 
   const encodedFilter = encodeURIComponent(JSON.stringify(mergedFilter));
-  console.log("EncodedFilter:", encodedFilter);
+  
 
   const {
     data,
@@ -48,11 +51,11 @@ export default function Inbox({
     isError,
   } = useFilteredContacts(encodedFilter);
 
-  console.log("data::", data?.pages);
+
 
   const contacts = data?.pages.flatMap((page) => page.rows) ?? [];
 
-  console.log("Contacts", contacts);
+  
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
     let ChatBoxComponent;
@@ -80,7 +83,8 @@ export default function Inbox({
         name={item.name}
         lastMessage={item.lastMessage.messageBody.receive.messages[0]}
         waMessageAssignStatus={item.waMessageAssignStatus}
-        onPress={() => console.log("Open chat with:", item.name)}
+        //@ts-ignore
+        onPress={() => router.push({pathname:`/inbox/chat/${item.id}`,params:{name:item.name, phone:item.phone, waAssignStatus:item.waMessageAssignStatus}})}
         lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
         unReadMessageCount={item.unReadMessageCount}
       />

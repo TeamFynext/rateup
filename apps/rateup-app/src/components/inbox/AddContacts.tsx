@@ -40,7 +40,7 @@ export default function AddContactScreen() {
     if(phone && selectedCountry){
       const formatted = selectedCountry.dial_code + phone.replace(/^0+/, '');
     setFullPhoneNumber(formatted.replace("+",""));
-    console.log('Formatted Phone Number:', formatted.replace("+",""));
+    
     }
   }, [phone, selectedCountry]);
 
@@ -72,7 +72,7 @@ export default function AddContactScreen() {
       setEmail('');
       // router.back(); 
     } catch (error: any) {
-      console.error(error);
+      
       setError(error?.response?.data?.error || 'Failed to add contact');
     } finally {
       setLoading(false);

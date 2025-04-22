@@ -13,7 +13,7 @@ export const signIn = async (email: string, password: string) => {
             { id: "password", value: password }
           ],
     })
-    console.log("response",response.data)
+
     const sessionExists = await SuperTokens.doesSessionExist()
     if(!sessionExists){
         return {
@@ -29,16 +29,13 @@ export const signIn = async (email: string, password: string) => {
         }
     }
     await AsyncStorage.setItem("accessToken",token)
-    const tokens = await AsyncStorage.getItem("accessToken")
-    
-    console.log("STOREDTOKEN",tokens);
+    await AsyncStorage.setItem("userId",response.data.user.id)
     
     return {
         success:true,
         data:response
     }
 }catch(err:any){
-    console.log(err)
     return {
         success:false,
         message: err?.response?.data?.message || "Sign in failed. Please try again."

@@ -45,7 +45,6 @@ export default function SignInScreen({setError}:{setError:(msg:string)=> void}) 
         placeholder="Enter Your Email"
         placeholderTextColor="#E2E5ED"
         onChangeText={setEmail}
-        keyboardType="email-address"
         autoCapitalize="none"
       />
 
@@ -58,6 +57,7 @@ export default function SignInScreen({setError}:{setError:(msg:string)=> void}) 
           placeholderTextColor="#E2E5ED"
           secureTextEntry={!showPassword}
           onChangeText={setPassword}
+          autoCapitalize="none"
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
           <EyeIcon/>

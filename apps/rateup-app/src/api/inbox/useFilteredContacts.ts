@@ -42,3 +42,9 @@ export const useFilteredContacts = (filterData: string) => {
     },
   })
 }
+
+
+export const filteredContactsCount = async() => {
+  const res = await axios.get(`${API_URL}/api/wa/inbox/message/count`)
+  return res.data
+}

@@ -29,3 +29,14 @@ export type ContactsWithLastMessageResponse = {
     tags?: any;
     external_id?: string;
   }
+
+
+export interface filteredContactCount {
+  all: number,
+  assigned: number,
+  assignedToMe: number,
+  closed: number,
+  new: number,
+  sent: number,
+  unassigned: number,
+}

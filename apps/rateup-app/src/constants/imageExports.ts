@@ -10,6 +10,8 @@ import RefreshIcon from "@/assets/images/refresh-icon.svg"
 import AddContactIcon from "@/assets/images/addcontacts-icon.svg"
 import UsernameIcon from "@/assets/images/username-icon.svg"
 import EmailIcon from "@/assets/images/email-icon.svg"
+import DotsIcon from "@/assets/images/3dots-icon.svg"
+import IIcon from "@/assets/images/i-icon.svg"
  
 export {
     SearchIcon,
@@ -23,5 +25,7 @@ export {
     RefreshIcon,
     AddContactIcon,
     UsernameIcon,
-    EmailIcon
+    EmailIcon,
+    DotsIcon,
+    IIcon
 }
