@@ -62,7 +62,7 @@ export default function WaInboxFooterMenu(props: Props) {
                 );
               }}
             >
-              <IconPlus size={25} />
+              <IconPlus size={18} />
             </ActionIcon>
           </Menu.Target>
         </SessionBasedIndicatorRenderer>
