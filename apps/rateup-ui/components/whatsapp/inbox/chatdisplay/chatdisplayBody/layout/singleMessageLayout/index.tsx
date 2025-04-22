@@ -39,15 +39,9 @@ interface Props {
 }
 export default function WaInboxSingleMessageLayout(props: Props) {
   const { exchangeProcess } = props;
-  const [openedEmoji, { open: openEmoji, close: closeEmoji }] =
-    useDisclosure(false);
   const [isHovered, setIsHovered] = useState(false);
   const { selectedContact } = useContactStore();
   const sendnewWaMessage = useSendNewWaMessage(selectedContact.id);
-
-  useEffect(() => {
-    if (!isHovered && openedEmoji) closeEmoji();
-  }, [isHovered]);
 
   function getWrapperProps() {
     if (exchangeProcess === "send") {
@@ -147,11 +141,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
           </Paper>
         </Indicator>
         {exchangeProcess === "receive" && isHovered && (
-          <PopoverEmojiPicker
-            onEmojiClick={sendReaction}
-            opened={openedEmoji}
-            onClick={openEmoji}
-          />
+          <PopoverEmojiPicker onEmojiClick={sendReaction} />
         )}
         {exchangeProcess === "send" && (
           <Avatar

@@ -115,22 +115,18 @@ export const PopoverEmojiPicker = ({
   onEmojiClick,
   showIcon,
   size = "xs",
-  opened,
-  onClick,
 }: {
   onEmojiClick: (emoji: string) => void;
   showIcon?: React.ReactNode;
   size?: "xs" | "sm" | "md" | "lg";
-  opened?: boolean;
-  onClick?: () => void;
 }) => {
   const { translations } = useTranslations();
   return (
-    <Popover withArrow shadow="md" floatingStrategy="fixed" opened={opened}>
+    <Popover withArrow shadow="md" floatingStrategy="fixed">
       <Popover.Target>
         <Tooltip label={translations["Insert an emoji"]}>
           {showIcon ?? (
-            <ActionIcon variant={"transparent"} size={size} onClick={onClick}>
+            <ActionIcon variant={"transparent"} size={size}>
               <IconMoodHappy
                 color="var(--grey-color)"
                 size={size === "xs" ? 14 : 30}
