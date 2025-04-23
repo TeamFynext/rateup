@@ -291,6 +291,12 @@ export async function filterChats(
       }
     }
 
+    if (bodyFilterProps?.blockedUsers) {
+      filters?.push(`c."blockedOnWhatsApp" = TRUE`);
+    } else {
+      filters?.push(`c."blockedOnWhatsApp" = FALSE`);
+    }
+
     const whereClause = filters.join(" AND ");
 
     // Simplified and optimized query
@@ -303,6 +309,7 @@ export async function filterChats(
         c."lastReceivedMessageTimeStamp",
         c."consent",
         c."whatsappUserName",
+        c."blockedOnWhatsApp",
         COALESCE(c.tags, '{}'::jsonb) as tags,
         (
           SELECT COUNT(*)::INTEGER FROM "WaMessage" w WHERE w."contactId" = c.id
@@ -525,6 +532,7 @@ export async function getContactsCountByInbox(orgId, userId) {
     unassigned_count: number;
     assigned_to_me_count: number;
     sent_count: number;
+    blocked_count: number;
   }[] = await prisma.$queryRaw`WITH assigned_contacts AS (
     SELECT DISTINCT "contactId"
     FROM "WaInboxAssign"
@@ -538,6 +546,8 @@ SELECT
     END)::INTEGER AS new_count,
 
     COUNT(DISTINCT wm."contactId")::INTEGER AS total_count,
+
+    COUNT(DISTINCT CASE WHEN c."blockedOnWhatsApp" THEN wm."contactId" END)::INTEGER AS blocked_count,
 
     COUNT(DISTINCT CASE WHEN wm."messageBody"->>'exchangeProcess'= 'send' THEN wm."contactId" END)::INTEGER AS sent_count, 
 
@@ -570,6 +580,7 @@ WHERE c."orgId" = ${orgId}::uuid;`;
     assignedToMe: count[0].assigned_to_me_count,
     assigned: count[0].assigned_count,
     sent: count[0].sent_count,
+    blocked: count[0].blocked_count,
   };
 }
 

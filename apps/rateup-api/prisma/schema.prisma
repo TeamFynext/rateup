@@ -450,6 +450,7 @@ model Contact {
   waInboxAssign                WaInboxAssign[]
   lastReceivedMessageTimeStamp DateTime?
   whatsappUserName             String?
+  blockedOnWhatsApp            Boolean               @default(false)
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")

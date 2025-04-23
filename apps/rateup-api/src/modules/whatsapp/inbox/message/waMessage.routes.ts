@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import {
   assignWaMessageHandler,
+  blockWhatsappUserHandler,
   exportWhatsappChatsHandler,
   generateChatFilterDataHandler,
   getAssignedUserForContactHandler,
@@ -10,6 +11,7 @@ import {
   getWaMessagesByContactIdHandler,
   markMessagesAsReadHandler,
   sendNewWaMessageHandler,
+  unblockWhatsappUserHandler,
 } from "./wamessage.controller";
 import { checkSession } from "../../../../utils/checkSession";
 import { $contactRef } from "../../../contact/contact.schema";
@@ -90,4 +92,24 @@ export async function waMessageRoutes(server: FastifyInstance) {
   );
 
   server.get("/count", getContactsCountByInboxTabHandler);
+
+  server.post(
+    "/block-user",
+    {
+      schema: {
+        body: $waMessage("blockUserSchema"),
+      },
+    },
+    blockWhatsappUserHandler,
+  );
+
+  server.post(
+    "/unblock-user",
+    {
+      schema: {
+        body: $waMessage("blockUserSchema"),
+      },
+    },
+    unblockWhatsappUserHandler,
+  );
 }
