@@ -6,6 +6,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
 import { create } from "zustand";
 
+import { VoiceRecorder } from "@/components/RichTextEditor/InsertInboxMedia/RecordVoiceController";
 import WaTextEditor, {
   parseJsonToReact,
   parseToWhatsAppFormat,
@@ -129,6 +130,7 @@ export default function WaInboxChatDisplayFooter({
           onClick={handleSendMessage}
           disabled={isSessionExpired}
         />
+        <VoiceRecorder />
       </Group>
     );
   };
@@ -147,10 +149,6 @@ export default function WaInboxChatDisplayFooter({
   return (
     <Stack gap={0}>
       <div className={classes.wrapper}>
-        {/* <WaInboxFooterMenu
-          sessionExpired={isSessionExpired}
-          contact={contact}
-        /> */}
         <form className={classes.form}>
           <div ref={inputRef} style={{ display: "flex", flex: 1 }}>
             <WaTextEditor

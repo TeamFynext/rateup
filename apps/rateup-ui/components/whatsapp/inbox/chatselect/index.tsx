@@ -43,6 +43,7 @@ import {
   useFilteredContacts,
   useGetInboxUserCount,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { VoiceRecorder } from "@/components/RichTextEditor/InsertInboxMedia/RecordVoiceController";
 import { useWsData } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
@@ -330,6 +331,8 @@ const WaInboxChatSelect = () => {
       });
     }
   }, [router.query?.tab]);
+
+  return <VoiceRecorder />;
 
   if (isContactLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading} />;
