@@ -17,6 +17,7 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconArrowLeft,
   IconDotsVertical,
+  IconForbid2,
   IconHandOff,
   IconMessageCheck,
   IconPencil,
@@ -36,12 +37,14 @@ import { useTickets } from "@/backend/tickets/tickets.query";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
+  useBlockWhatsAppUser,
   useGetAssignedUserForContact,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import EditContactModal from "@/components/Contacts/EditContactModal";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import CreateTicketModal, {
   CreateTicketCard,
@@ -53,6 +56,7 @@ import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { UserRole } from "@/utils/enums";
 import { TicketType } from "@/utils/enums/ticket";
 import { hasFeature } from "@/utils/subscription/subscription";
+import { isInboxSessionExpired } from "@/utils/whatsapp/inbox";
 
 import WaInboxCountdownTimer from "./countDown";
 import classes from "./styles.module.css";
@@ -186,7 +190,7 @@ export const ContactEdit = ({ contact, opened, close }) => {
 const ChatContactMenu = ({ contact }) => {
   const { data: subscription } = useSubscription();
 
-  const { setSelectedContact } = useContactStore();
+  const { setSelectedContact, filterData } = useContactStore();
   const hasTicketFeature = useMemo(
     () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     [subscription],
@@ -198,7 +202,10 @@ const ChatContactMenu = ({ contact }) => {
     { open: openCreateTicket, close: closeCreateTicket },
   ] = useDisclosure(false);
   const editContactMutation = useEditContactMutation(null);
+  const blockmut = useBlockWhatsAppUser(filterData);
   const [openedAssign, { open: openAssign, close: closeAssign }] =
+    useDisclosure(false);
+  const [openedConfirmation, { open: openConfirm, close: closeConfirm }] =
     useDisclosure(false);
   function handleCloseChat() {
     editContactMutation.mutate(
@@ -215,6 +222,10 @@ const ChatContactMenu = ({ contact }) => {
         },
       },
     );
+  }
+
+  function handleBlock() {
+    blockmut.mutate({ phoneNumbersList: [contact.phone] });
   }
 
   return (
@@ -252,6 +263,14 @@ const ChatContactMenu = ({ contact }) => {
         >
           Edit Contact
         </Menu.Item>
+        {!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) && (
+          <Menu.Item
+            leftSection={<IconForbid2 size={20} />}
+            onClick={openConfirm}
+          >
+            Block contact
+          </Menu.Item>
+        )}
       </Menu.Dropdown>
       <AssignInbox
         contactId={contact.id}
@@ -268,6 +287,17 @@ const ChatContactMenu = ({ contact }) => {
         opened={openedEdit}
         close={closeEditContact}
         contact={contact}
+      />
+      <ConfirmationModal
+        onClose={closeConfirm}
+        headerTitle={`Block ${contact?.name ?? contact?.phone}`}
+        confirmLabel="Block"
+        opened={openedConfirmation}
+        onConfirm={handleBlock}
+        closeLabel="Cancel"
+        deleteQuotion="The blocked user cannot message you and you cannot message the user"
+        forDeleteFunctionality
+        headerLabel="Are you sure to block this user?"
       />
     </Menu>
   );

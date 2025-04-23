@@ -5,10 +5,15 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { showSuccessToast, showWarnToast } from "@/utils/notifications";
+import {
+  showErrorToast,
+  showSuccessToast,
+  showWarnToast,
+} from "@/utils/notifications";
 
 import {
   assignInboxToUser,
+  blockWhatsAppUser,
   exportWaChats,
   getAssignedUserForContact,
   getChatFilterData,
@@ -18,6 +23,7 @@ import {
   getWaChatMediaFile,
   markWaMessagesAsRead,
   sendNewWaMessage,
+  unblockWhatsAppUser,
 } from "./wamessage.api";
 
 export const useGetMessagesByContactId = (contactId: string) => {
@@ -117,5 +123,33 @@ export const useMarkWaMessagesAsRead = (contactId: string, filterData) => {
     mutationFn: () => markWaMessagesAsRead(contactId),
     onSuccess: () => {},
     onError: (e) => {},
+  });
+};
+
+export const useBlockWhatsAppUser = (filterData) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: blockWhatsAppUser,
+    onSuccess: () => {
+      showSuccessToast("User blocked successfully");
+      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+    },
+    onError: (e) => {
+      showErrorToast("Unable to block users");
+    },
+  });
+};
+
+export const useUnBlockWhatsAppUser = (filterData) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: unblockWhatsAppUser,
+    onSuccess: () => {
+      showSuccessToast("User unblocked successfully");
+      qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
+    },
+    onError: (e) => {
+      showErrorToast("Unable to unblock users");
+    },
   });
 };
