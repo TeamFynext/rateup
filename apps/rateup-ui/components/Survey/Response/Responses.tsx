@@ -82,6 +82,7 @@ import TanstackTable from "../../Table/TanstackTable";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { useSurveyResponseColumns } from "./Columns";
 import styles from "./Responses.module.css";
+import { useResponseFilterStore } from "./store";
 
 const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
   const [pagination, setPagination] = useState({
@@ -124,6 +125,13 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
   const router = useRouter();
   const [campaignIds, setSelectedCampaignIds] = useState([]);
 
+  const { serverFilters, enableServerFilter, setServerFilters } =
+    useResponseFilterStore();
+
+  useEffect(() => {
+    setServerFilters({});
+  }, [survey]);
+
   const {
     data: responseData,
     isLoading,
@@ -134,7 +142,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
     page: pagination.pageIndex,
     limit: pagination.pageSize,
     surveyTeamMapIds: filterTeams,
-    tags: columnFilters.find((f) => f.id === "tag")?.value ?? "",
     language: "",
     contactIds: [],
     campaignIds,
@@ -142,6 +149,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
       !ranges.length || !ranges[0]?.startDate || !ranges[0]?.endDate
         ? []
         : [ranges[0].startDate.toISOString(), ranges[0].endDate.toISOString()],
+    ...serverFilters,
   });
 
   useEffect(() => {
@@ -435,13 +443,18 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
       <Box className={styles["responses-table-container"]}>
         <TanstackTable
           data={responseData ? responseData?.responses : []}
-          columns={columns}
+          columns={
+            responseData?.responses?.every((row) => !row.tag)
+              ? columns?.filter((col: any) => col.accessorKey !== "tag")
+              : columns
+          }
           columnFiltersE={columnFilters}
           setColumnFiltersE={setColumnFilters}
           pagination={pagination}
           setPagination={setPagination}
           totalCount={responseData?.totalCount}
           isPending={isPending}
+          enableServerFilter={enableServerFilter}
         />
         <DeleteModal
           confirmDelete={confirmDelete}

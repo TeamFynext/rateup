@@ -4,7 +4,6 @@ import type React from "react";
 import { useCallback } from "react";
 
 import {
-  IconClock,
   IconExternalLink,
   IconFile,
   IconGitMerge,
@@ -19,7 +18,6 @@ import {
   IconSquare,
   IconUsers,
   IconVideo,
-  IconX,
 } from "@tabler/icons-react";
 
 import styles from "./component-sidebar.module.css";
@@ -38,7 +36,6 @@ const categories = [
       { id: "videoNode", label: "Video", icon: <IconVideo size={16} /> },
       { id: "audioNode", label: "Audio", icon: <IconMusic size={16} /> },
       { id: "documentNode", label: "Document", icon: <IconFile size={16} /> },
-      // { id: "stickerNode", label: "Sticker", icon: <IconSticker size={16} /> },
     ],
   },
   {
@@ -56,7 +53,6 @@ const categories = [
         icon: <IconExternalLink size={16} />,
       },
       { id: "templateNode", label: "Template", icon: <IconLayout size={16} /> },
-      // { id: "reactionNode", label: "Reaction", icon: <IconSmile size={16} /> },
     ],
   },
   {
@@ -64,7 +60,6 @@ const categories = [
     items: [
       { id: "locationNode", label: "Location", icon: <IconMapPin size={16} /> },
       // { id: "locationRequestNode", label: "Location Request", icon: <IconNavigation size={16} /> },
-      // { id: "addressNode", label: "Address", icon: <IconHome size={16} /> },
       { id: "contactsNode", label: "Contacts", icon: <IconUsers size={16} /> },
     ],
   },
@@ -79,7 +74,6 @@ const categories = [
       // },
       // { id: "delayNode", label: "Delay", icon: <IconClock size={16} /> },
       { id: "startNode", label: "Start", icon: <IconPlayCard size={16} /> },
-      { id: "endNode", label: "End", icon: <IconX size={16} /> },
     ],
   },
   {

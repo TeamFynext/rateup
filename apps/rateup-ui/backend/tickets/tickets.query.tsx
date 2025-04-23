@@ -19,6 +19,7 @@ import {
   deleteTicket,
   fetchBoard,
   fetchBoards,
+  fetchBoardTeamMemberById,
   fetchCardById,
   fetchCardTeamMemberById,
   getTicket,
@@ -224,13 +225,27 @@ export function useBoardsQueries() {
     queryFn: () => fetchBoards(),
   });
 }
+export function useUpdateBoardMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateBoard,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      showSuccessToast("Board updated successfully!", "update-board-success");
+    },
+    onError: () => {
+      showErrorToast("Failed to update board.", "update-board-error");
+    },
+  });
+}
 
-export function useBoardQueries() {
+export function useBoardQueries(enabled = true) {
   const queryClient = useQueryClient();
 
   const boardsQuery = useQuery({
     queryKey: ["boards"],
     queryFn: () => fetchBoards(),
+    enabled,
   });
 
   const createBoardMutation = useMutation({
@@ -607,6 +622,13 @@ export function useCardTeamMembersById(cardId: string | undefined) {
   });
 }
 
+export function useBoardTeamMembersById(cardId: string | undefined) {
+  return useQuery({
+    queryKey: ["teamMembersByBoardId", cardId],
+    queryFn: () => fetchBoardTeamMemberById(cardId as string),
+    enabled: !!cardId,
+  });
+}
 export function useDeleteCommentMutation(cardId: string) {
   const queryClient = useQueryClient();
   return useMutation({

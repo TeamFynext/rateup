@@ -1,13 +1,12 @@
 "use client";
 
-import { Button, Menu } from "@mantine/core";
+import { ActionIcon, Menu, Tooltip } from "@mantine/core";
 import {
-  IconAdjustmentsPlus,
   IconArrowBackUp,
   IconArrowForwardUp,
   IconArrowLeft,
   IconArrowUp,
-  IconChevronDown,
+  IconCopyCheck,
   IconDeviceFloppy,
   IconReport,
   IconSettings,
@@ -27,6 +26,8 @@ interface ToolbarProps {
   canUndo: boolean;
   canRedo: boolean;
   handleTabSwitch: (tab: string) => void;
+  validateFlow: (slient?: boolean) => void;
+  saveDisabled?: boolean;
 }
 
 export default function Toolbar({
@@ -39,57 +40,56 @@ export default function Toolbar({
   canUndo,
   canRedo,
   handleTabSwitch,
+  validateFlow,
+  saveDisabled = false,
 }: ToolbarProps) {
   return (
     <div className={styles.toolbar}>
-      <Button
-        variant="outline"
-        className={styles.toolbarButton}
-        leftSection={<IconDeviceFloppy size={16} />}
-        onClick={onSave}
-      >
-        Save
-      </Button>
+      <Tooltip label="Save">
+        <ActionIcon
+          variant="outline"
+          className={styles.toolbarButton}
+          onClick={onSave}
+          disabled={saveDisabled}
+          size={"lg"}
+        >
+          <IconDeviceFloppy />
+        </ActionIcon>
+      </Tooltip>
 
-      {/* <Button
-        variant="outline"
-        className={styles.toolbarButton}
-        leftSection={<IconDownload size={16} />}
-        onClick={onLoad}
-      >
-        Load
-      </Button>
-
-      <Button
-        variant="outline"
-        className={styles.toolbarButton}
-        leftSection={<IconFileExport size={16} />}
-        onClick={onExport}
-      >
-        Export
-      </Button> */}
+      <Tooltip label="Validate">
+        <ActionIcon
+          variant="outline"
+          className={styles.toolbarButton}
+          onClick={() => validateFlow(false)}
+          size={"lg"}
+        >
+          <IconCopyCheck />
+        </ActionIcon>
+      </Tooltip>
 
       <Menu position="bottom-start">
         <Menu.Target>
-          <Button
-            variant="outline"
-            className={styles.toolbarButton}
-            leftSection={<IconTable size={16} />}
-            rightSection={<IconChevronDown size={12} />}
-          >
-            Layout
-          </Button>
+          <Tooltip label="Layout">
+            <ActionIcon
+              variant="outline"
+              className={styles.toolbarButton}
+              size={"lg"}
+            >
+              <IconTable />
+            </ActionIcon>
+          </Tooltip>
         </Menu.Target>
 
         <Menu.Dropdown>
           <Menu.Item
-            leftSection={<IconArrowUp size={16} />}
+            leftSection={<IconArrowUp />}
             onClick={() => onAutoLayout("TB")}
           >
             Vertical Layout
           </Menu.Item>
           <Menu.Item
-            leftSection={<IconArrowLeft size={16} />}
+            leftSection={<IconArrowLeft />}
             onClick={() => onAutoLayout("LR")}
           >
             Horizontal Layout
@@ -97,59 +97,62 @@ export default function Toolbar({
         </Menu.Dropdown>
       </Menu>
 
-      <Button
-        variant="outline"
-        className={styles.toolbarButton}
-        leftSection={<IconArrowBackUp size={16} />}
-        onClick={onUndo}
-        disabled={!canUndo}
-      >
-        Undo
-      </Button>
+      <Tooltip label="Undo (Ctrl+Z)">
+        <ActionIcon
+          variant="outline"
+          className={styles.toolbarButton}
+          onClick={onUndo}
+          disabled={!canUndo}
+          size={"lg"}
+        >
+          <IconArrowBackUp />
+        </ActionIcon>
+      </Tooltip>
 
-      <Button
-        variant="outline"
-        className={styles.toolbarButton}
-        leftSection={<IconArrowForwardUp size={16} />}
-        onClick={onRedo}
-        disabled={!canRedo}
-      >
-        Redo
-      </Button>
+      <Tooltip label="Redo (Ctrl+Y or Ctrl+Shift+Z)">
+        <ActionIcon
+          variant="outline"
+          className={styles.toolbarButton}
+          onClick={onRedo}
+          disabled={!canRedo}
+          size={"lg"}
+        >
+          <IconArrowForwardUp />
+        </ActionIcon>
+      </Tooltip>
 
-      <Menu position="bottom-start">
-        <Menu.Target>
-          <Button
-            variant="outline"
-            className={styles.toolbarButton}
-            leftSection={<IconAdjustmentsPlus size={16} />}
-            rightSection={<IconChevronDown size={12} />}
-          >
-            More
-          </Button>
-        </Menu.Target>
+      <Tooltip label="Settings">
+        <ActionIcon
+          variant="outline"
+          className={styles.toolbarButton}
+          onClick={() => handleTabSwitch("settings")}
+          size={"lg"}
+        >
+          <IconSettings />
+        </ActionIcon>
+      </Tooltip>
 
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<IconSettings size={16} />}
-            onClick={() => handleTabSwitch("settings")}
-          >
-            Settings
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconShare size={16} />}
-            onClick={() => handleTabSwitch("share")}
-          >
-            Share
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconReport size={16} />}
-            onClick={() => handleTabSwitch("response")}
-          >
-            Response
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+      <Tooltip label="Share">
+        <ActionIcon
+          variant="outline"
+          className={styles.toolbarButton}
+          onClick={() => handleTabSwitch("share")}
+          size={"lg"}
+        >
+          <IconShare />
+        </ActionIcon>
+      </Tooltip>
+
+      <Tooltip label="Response">
+        <ActionIcon
+          variant="outline"
+          className={styles.toolbarButton}
+          onClick={() => handleTabSwitch("response")}
+          size={"lg"}
+        >
+          <IconReport />
+        </ActionIcon>
+      </Tooltip>
     </div>
   );
 }

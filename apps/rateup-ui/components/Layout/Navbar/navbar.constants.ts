@@ -50,6 +50,7 @@ import {
   AssignedToMeInboxIcon,
   ClosedInboxIcon,
   NewInboxIcon,
+  SentInboxIcon,
   UnAssignedInboxIcon,
 } from "@/components/whatsapp/inbox/chatselect";
 
@@ -127,6 +128,11 @@ export function getNavTopData(
                 label: translations["Closed"],
                 link: "/dashboard/whatsapp/inbox?tab=Closed",
                 icon: ClosedInboxIcon,
+              },
+              {
+                label: translations["Sent"],
+                link: "/dashboard/whatsapp/inbox?tab=Sent",
+                icon: SentInboxIcon,
               },
               {
                 label: translations["All"],

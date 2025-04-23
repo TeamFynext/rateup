@@ -14,7 +14,6 @@ import dayjs from "dayjs";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import { useGetAssignedUserForContact } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
@@ -37,7 +36,8 @@ export default function WaInboxChatSelectCard({
   const lastMessage = contact?.lastMessage;
 
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
-  const { setSelectedContact } = useContactStore();
+  const { setSelectedContact, selectedContact, addOpenedContactIds } =
+    useContactStore();
   let tab = params.get("tab") ?? "New";
 
   return (
@@ -48,6 +48,7 @@ export default function WaInboxChatSelectCard({
       onClick={() => {
         setIsChatDisplayOpen(true);
         setSelectedContact(contact);
+        addOpenedContactIds(contact.id);
       }}
       py={"xs"}
     >
@@ -67,7 +68,13 @@ export default function WaInboxChatSelectCard({
             >
               {contact?.name || contact?.phone}
             </Text>
-            <AssignedStatusBadge contact={contact} />
+            <Group gap="xs">
+              {contact.unReadMessageCount &&
+                contact?.id !== selectedContact?.id && (
+                  <Badge radius={"xl"}>{contact?.unReadMessageCount}</Badge>
+                )}
+              <AssignedStatusBadge contact={contact} />
+            </Group>
           </Group>
           <Group justify="space-between">
             <Tooltip
@@ -80,6 +87,7 @@ export default function WaInboxChatSelectCard({
               <Text className={classes.latest_chat} truncate maw={200}>
                 {returnMessageContentBasedOnParsedMessage(
                   parseWaMessage(lastMessage?.messageBody),
+                  lastMessage.messageBody.exchangeProcess,
                 )}
               </Text>
             </Tooltip>
@@ -93,27 +101,17 @@ export default function WaInboxChatSelectCard({
   );
 }
 
-const AssignedStatusBadge = ({ contact }) => {
-  const { data: assignedUsers, isLoading } = useGetAssignedUserForContact(
-    contact.id,
-  );
-  if (isLoading)
-    return (
-      <Skeleton>
-        <Badge size="xs" radius={"xs"}></Badge>
-      </Skeleton>
-    );
+const AssignedStatusBadge = ({
+  contact,
+}: {
+  contact: ContactsWithLastMessage;
+}) => {
   if (contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED)
     return (
       <Group>
-        {assignedUsers?.map((u) => (
-          <Badge
-            variant="light"
-            size="xs"
-            radius={"xs"}
-            key={u?.assignedUserId}
-          >
-            {u?.assignedUser?.name}
+        {contact?.assignedUsers?.map((u) => (
+          <Badge variant="light" size="xs" radius={"xs"} key={u?.id}>
+            {u?.name}
           </Badge>
         ))}
       </Group>

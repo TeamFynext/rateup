@@ -571,6 +571,7 @@ declare global {
     tags?: any;
     consent: boolean;
     waMessageAssignStatus: WaMessageAssignStatus;
+    whatsappUserName?: string;
     loyaltyCustomer?: {
       id: string;
       email?: string;
@@ -1158,18 +1159,26 @@ export type WaReceiveMessageBody = {
         mime_type: string;
         sha256: string;
         voice?: boolean;
+        caption?: string;
       };
       video: {
         id: string;
         mime_type: string;
         sha256: string;
+        caption?: string;
       };
       document: {
         id: string;
+        caption?: string;
+        filename: string;
       };
       button?: {
         text: string;
         payload: string;
+      };
+      reaction?: {
+        emoji: string;
+        message_id: string;
       };
     },
   ];
@@ -1198,7 +1207,8 @@ export type WaSendMessageBody = {
     | "contacts"
     | "sticker"
     | "location"
-    | "template";
+    | "template"
+    | "reaction";
   text?: {
     preview_url?: boolean;
     body: string;
@@ -1206,6 +1216,7 @@ export type WaSendMessageBody = {
   template?: WaTemplateFetchBody;
   image?: {
     link: string;
+    caption?: string;
   };
   interactive?: {
     type:
@@ -1231,6 +1242,23 @@ export type WaSendMessageBody = {
       };
       // add image, video, document if needed in future
     };
+  };
+  reaction?: {
+    emoji: string;
+    message_id: string;
+  };
+  document?: {
+    link: string;
+    caption?: string;
+    filename?: string;
+  };
+  audio?: {
+    link: string;
+    caption: string;
+  };
+  video?: {
+    link: string;
+    caption?: string;
   };
 };
 type WaInteractiveMessageAction = {

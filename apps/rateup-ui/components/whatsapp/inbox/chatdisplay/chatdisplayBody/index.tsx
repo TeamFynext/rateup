@@ -8,6 +8,7 @@ import {
   Center,
   Divider,
   Group,
+  IndicatorProps,
   Loader,
   Paper,
   Stack,
@@ -21,10 +22,16 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
+import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
+import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
+import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { WaGetMessagesBody } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { useGetMessagesByContactId } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useGetMessagesByContactId,
+  useMarkWaMessagesAsRead,
+} from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import {
   WaInboxMessage,
   WaTemplateComponent,
@@ -32,7 +39,7 @@ import {
 import { formatDate, formatToCustomTime } from "../../../../../utils/dateTime";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
 import { useMessageStore } from "../chatdisplayFooter";
-import WaInboxAudio from "./components/audio/indext";
+import WaInboxAudio from "./components/audio";
 import WaInboxDocument from "./components/document";
 import WaInboxImage from "./components/image";
 import WaInboxInteractive from "./components/interactive";
@@ -77,6 +84,7 @@ export default function WaInboxChatDisplayBody(props: Props) {
   });
   const { translations } = useTranslations();
   const { messages } = useMessageStore();
+  const { filterData } = useContactStore();
   const singleMessage = (
     messageBody: WaInboxMessage,
     templateComponentParams: WaTemplateComponent[],
@@ -138,6 +146,55 @@ export default function WaInboxChatDisplayBody(props: Props) {
     const heightDifference = newScrollHeight - currentScrollHeight;
     scrollableRef.current.scrollTop = currentScrollPosition + heightDifference;
   }, [props?.data]);
+  const markAsRead = useMarkWaMessagesAsRead(contactId, filterData);
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (
+      contactId &&
+      user.userId &&
+      props?.data?.find(
+        (message) =>
+          message.messageBody.exchangeProcess === "receive" &&
+          !message?.readUsers?.includes(user.userId),
+      )
+    )
+      markAsRead.mutate();
+  }, [contactId]);
+
+  function getReactionMessage(message: WaGetMessagesBody) {
+    const exchangeProcess = message.messageBody.exchangeProcess;
+    const wa_id =
+      exchangeProcess === "send"
+        ? message.messageId
+        : message.messageBody.receive.messages[0].id;
+    const reactionMsg = props.data?.findLast((msg) => {
+      const { messageType, messageContent } = parseWaMessage(msg.messageBody);
+      return (
+        messageType === "reaction" &&
+        wa_id ===
+          (msg.messageBody.exchangeProcess === "receive"
+            ? msg.messageBody.receive?.messages[0].reaction.message_id
+            : msg.messageBody.send.reaction.message_id)
+      );
+    });
+
+    const isSendReactionMsg =
+      reactionMsg && reactionMsg.messageBody.exchangeProcess === "send";
+    if (reactionMsg)
+      return {
+        emoji: isSendReactionMsg
+          ? reactionMsg.messageBody.send.reaction.emoji
+          : reactionMsg.messageBody.receive.messages[0].reaction.emoji,
+        from: isSendReactionMsg
+          ? reactionMsg.sender?.name
+          : reactionMsg.messageBody.receive.contacts[0].profile.name,
+        pos:
+          exchangeProcess === "receive"
+            ? "bottom-start"
+            : ("bottom-end" as IndicatorProps["position"]),
+      };
+  }
 
   return (
     <div className={classes.wrapper}>
@@ -164,6 +221,8 @@ export default function WaInboxChatDisplayBody(props: Props) {
           </Center>
         )}
         {props?.data?.map((message, index) => {
+          if (parseWaMessage(message?.messageBody)?.messageType === "reaction")
+            return false;
           const previousMessage = index > 0 ? props.data[index - 1] : null;
           const showDate =
             !previousMessage ||
@@ -171,12 +230,14 @@ export default function WaInboxChatDisplayBody(props: Props) {
               dayjs(previousMessage.waCreatedAt),
               "day",
             );
+          const reaction = getReactionMessage(message);
           return (
             <React.Fragment key={message?.id}>
               {showDate && <DateComponent date={message?.waCreatedAt} />}
               <WaInboxSingleMessageLayout
                 exchangeProcess={message?.messageBody?.exchangeProcess}
                 messageObject={message}
+                reaction={reaction}
               >
                 {singleMessage(
                   message?.messageBody,
@@ -214,7 +275,23 @@ const TempMessageBody = ({ body, timestamp }) => {
           shadow="xs"
           bg={"light-dark(#dcf0e4,rgb(82, 190, 127)"}
         >
-          <Text>{body}</Text>
+          {body.url && body.urlType === "image" && (
+            <img src={body.url} height={"150px"} width={"150px"} />
+          )}
+          {body.url && body.urlType === "video" && (
+            <video src={body.url} height={"150px"} width={"150px"} />
+          )}
+          {body.url && body.urlType === "document" && (
+            <Text
+              onClick={() => {
+                window.open(body.url, "_blank");
+              }}
+            >
+              {body.filename}
+            </Text>
+          )}
+          {body.url && body.urlType === "audio" && <audio src={body.url} />}
+          <div>{body.text ? parseJsonToReact(body?.text) : null}</div>
           <Group gap={4}>
             <Text fz={10} c={"dimmed"}>
               {formatToCustomTime(timestamp)}

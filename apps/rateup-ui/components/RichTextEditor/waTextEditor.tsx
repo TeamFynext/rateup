@@ -1,21 +1,70 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 
 import {
+  ActionIcon,
+  Anchor,
   Box,
+  BoxComponentProps,
   Group,
+  Indicator,
+  Modal,
   ScrollArea,
   ScrollAreaAutosize,
+  Stack,
   Text,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { RichTextEditor } from "@mantine/tiptap";
+import { IconFileFilled, IconTrash, IconX } from "@tabler/icons-react";
 import CharacterCount from "@tiptap/extension-character-count";
 import Placeholder from "@tiptap/extension-placeholder";
-import { generateHTML, useEditor } from "@tiptap/react";
+import { Extension, generateHTML, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 
+import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter";
 import InsertEmoji from "./InsertEmoji";
+import InsertInboxAudio from "./InsertInboxMedia/InserInboxAudio";
+import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile";
+import InsertInboxImage from "./InsertInboxMedia/InsertInboxImage";
+import InsertInboxVideo from "./InsertInboxMedia/InsertInboxVideo";
+import WaQuickReplyControl from "./WaQuickReply";
 import styles from "./waTextEditor.module.css";
+
+interface WaTextEditorProps extends BoxComponentProps {
+  handleInputChange: (value) => void;
+  content: string;
+  className?: string;
+  mah?: number | string;
+  placeholder?: string;
+  label?: string;
+  max?: number;
+  mih?: number;
+  required?: boolean;
+  inbox?: boolean;
+  customEnter?: () => void;
+  editable?: boolean;
+  customHeaders?: React.ReactNode;
+}
+
+export const CustomEnter = Extension.create({
+  name: "customEnter",
+
+  addOptions() {
+    return {
+      onEnter: () => {},
+    };
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      Enter: () => {
+        this.options.onEnter();
+        return true;
+      },
+    };
+  },
+});
 
 function WaTextEditor({
   handleInputChange,
@@ -26,9 +75,16 @@ function WaTextEditor({
   label = "",
   max = 1024,
   required = false,
-}) {
-  const editor = useEditor({
-    extensions: [
+  mih = 120,
+  inbox = false,
+  customEnter,
+  editable = true,
+  customHeaders = null,
+  ...props
+}: WaTextEditorProps) {
+  const [opened, { open, close }] = useDisclosure(false);
+  const extensions = useMemo(() => {
+    const ext = [
       StarterKit,
       Placeholder.configure({
         placeholder,
@@ -36,12 +92,24 @@ function WaTextEditor({
       CharacterCount.configure({
         limit: max,
       }),
-    ],
-
+    ];
+    if (customEnter)
+      ext.push(
+        CustomEnter.configure({
+          onEnter: customEnter,
+        }),
+      );
+    return ext;
+  }, [customEnter]);
+  const editor = useEditor({
+    extensions,
     onUpdate: ({ editor }) => {
       handleInputChange(editor.getJSON());
     },
+    editable,
   });
+  const { media, setSelectedMedia, selectedMedia, removeMedia } =
+    useMediaStore();
 
   useEffect(() => {
     if (editor) {
@@ -53,12 +121,8 @@ function WaTextEditor({
     }
   }, [content, editor]);
 
-  const percentage = editor
-    ? Math.round((100 / max) * editor.storage.characterCount.characters())
-    : 0;
-
   return (
-    <Box>
+    <Box {...props}>
       <Text
         htmlFor="editor"
         fz={12}
@@ -76,60 +140,165 @@ function WaTextEditor({
           {required ? "*" : ""}
         </span>
       </Text>
+      <Group gap={1}>
+        {media.length &&
+          media.map((me) => {
+            return (
+              <Indicator
+                label={
+                  <IconX
+                    onClick={() => removeMedia(me.key)}
+                    size={"1rem"}
+                    style={{ cursor: "pointer" }}
+                  />
+                }
+                size={16}
+                color="red"
+                inline
+              >
+                <Stack
+                  w={50}
+                  h={50}
+                  bd={"2px solid white"}
+                  justify="center"
+                  align="center"
+                  style={{ zIndex: 9999 }}
+                  onClick={() => {
+                    if (["audio", "document"].includes(me.type)) return;
+                    setSelectedMedia(me);
+                    open();
+                  }}
+                >
+                  {me.type === "image" && (
+                    <img src={me.url} width={48} height={48} alt={me.name} />
+                  )}
+                  {me.type === "video" && (
+                    <video src={me.url} width={48} height={48} />
+                  )}
+                  {me.type === "document" && (
+                    <Anchor href={me.url}>
+                      <IconFileFilled color="white" size={"2rem"} />
+                    </Anchor>
+                  )}
+                </Stack>
+              </Indicator>
+            );
+          })}
+        <ShowMedia opened={opened} close={close} />
+      </Group>
+
       <RichTextEditor editor={editor} className={className}>
         <RichTextEditor.Toolbar sticky tabIndex={-1}>
-          <Group gap={"xs"}>
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.Bold />
-              <RichTextEditor.Italic />
-              <RichTextEditor.Strikethrough />
-              <RichTextEditor.ClearFormatting />
-              <RichTextEditor.Code />
-            </RichTextEditor.ControlsGroup>
+          <Group justify="space-between" w={"100%"}>
+            <Group gap={"xs"}>
+              <RichTextEditor.ControlsGroup>
+                <RichTextEditor.Bold />
+                <RichTextEditor.Italic />
+                <RichTextEditor.Strikethrough />
+                <RichTextEditor.ClearFormatting />
+                <RichTextEditor.Code />
+              </RichTextEditor.ControlsGroup>
 
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.Blockquote />
-              <RichTextEditor.BulletList />
-              <RichTextEditor.OrderedList />
-            </RichTextEditor.ControlsGroup>
+              <RichTextEditor.ControlsGroup>
+                <RichTextEditor.Blockquote />
+                <RichTextEditor.BulletList />
+                <RichTextEditor.OrderedList />
+              </RichTextEditor.ControlsGroup>
 
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.Undo />
-              <RichTextEditor.Redo />
-            </RichTextEditor.ControlsGroup>
-            <RichTextEditor.ControlsGroup>
-              <InsertEmoji />
-            </RichTextEditor.ControlsGroup>
+              <RichTextEditor.ControlsGroup>
+                <RichTextEditor.Undo />
+                <RichTextEditor.Redo />
+              </RichTextEditor.ControlsGroup>
+              <RichTextEditor.ControlsGroup>
+                <InsertEmoji />
+              </RichTextEditor.ControlsGroup>
+              {inbox && (
+                <>
+                  <RichTextEditor.ControlsGroup>
+                    <InsertInboxFile />
+                    <InsertInboxImage />
+                    <InsertInboxVideo />
+                    <InsertInboxAudio />
+                  </RichTextEditor.ControlsGroup>
+                  <RichTextEditor.ControlsGroup>
+                    <WaQuickReplyControl />
+                  </RichTextEditor.ControlsGroup>
+                </>
+              )}
+            </Group>
+            <Group>
+              <WaTextCharacterCount editor={editor} max={max} />
+              {customHeaders}
+            </Group>
           </Group>
         </RichTextEditor.Toolbar>
         <ScrollAreaAutosize mah={mah}>
-          <RichTextEditor.Content mih={120} />
+          <RichTextEditor.Content mih={mih} />
         </ScrollAreaAutosize>
-        <div
-          className={`${styles["character-count"]} ${editor?.storage?.characterCount?.characters() === max ? styles["character-count--warning"] : ""}`}
-        >
-          <svg height="20" width="20" viewBox="0 0 20 20">
-            <circle r="10" cx="10" cy="10" fill="#e9ecef" />
-            <circle
-              r="5"
-              cx="10"
-              cy="10"
-              fill="transparent"
-              stroke="currentColor"
-              strokeWidth="10"
-              strokeDasharray={`calc(${percentage} * 31.4 / 100) 31.4`}
-              transform="rotate(-90) translate(-20)"
-            />
-            <circle r="6" cx="10" cy="10" fill="white" />
-          </svg>
-          {editor?.storage?.characterCount?.characters()} / {max} characters
-        </div>
       </RichTextEditor>
     </Box>
   );
 }
 
 export default WaTextEditor;
+
+const ShowMedia = ({ opened, close }) => {
+  const { selectedMedia: media, removeMedia } = useMediaStore();
+  if (!media) return null;
+  return (
+    <Modal onClose={close} opened={opened} centered>
+      <Stack>
+        <ActionIcon
+          color="red"
+          onClick={async () => {
+            await removeMedia(media.key);
+            close();
+          }}
+        >
+          <IconTrash />
+        </ActionIcon>
+        {media.type === "image" && (
+          <img
+            src={media.url}
+            width={"100%"}
+            height={"100%"}
+            alt={media.name}
+          />
+        )}
+        {media.type === "video" && (
+          <video src={media.url} width={"100%"} height={"100%"} controls />
+        )}
+      </Stack>
+    </Modal>
+  );
+};
+
+const WaTextCharacterCount = ({ editor, max }) => {
+  const percentage = editor
+    ? Math.round((100 / max) * editor.storage.characterCount.characters())
+    : 0;
+  return (
+    <div
+      className={`${styles["character-count"]} ${editor?.storage?.characterCount?.characters() === max ? styles["character-count--warning"] : ""}`}
+    >
+      <svg height="20" width="20" viewBox="0 0 20 20">
+        <circle r="10" cx="10" cy="10" fill="#e9ecef" />
+        <circle
+          r="5"
+          cx="10"
+          cy="10"
+          fill="transparent"
+          stroke="currentColor"
+          strokeWidth="10"
+          strokeDasharray={`calc(${percentage} * 31.4 / 100) 31.4`}
+          transform="rotate(-90) translate(-20)"
+        />
+        <circle r="6" cx="10" cy="10" fill="white" />
+      </svg>
+      {editor?.storage?.characterCount?.characters()} / {max} characters
+    </div>
+  );
+};
 
 export function parseToWhatsAppFormat(editorContent) {
   function formatText(text, type = "*") {

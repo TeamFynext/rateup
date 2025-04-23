@@ -40,3 +40,8 @@ export async function getAutomatedRepliesMessageById(id: string) {
   const res = await axiosClient.get(`${base}/message/${id}`);
   return res.data;
 }
+
+export async function initiateWaAutomatedReply(id: string, phone: string) {
+  const res = await axiosClient.post(`${base}/initiate/${id}`, { phone });
+  return res.data;
+}

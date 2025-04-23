@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useRouter } from "next/router";
@@ -95,6 +96,7 @@ import { WaHoverCardComponent } from "../HoverCard/WaHoverCard";
 import { ActionMenu } from "./Columns";
 import { fuzzyFilter } from "./Filter";
 import styles from "./Responses.module.css";
+import { useResponseFilterStore } from "./store";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -144,6 +146,12 @@ const WaResponses = ({
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
   const [campaignIds, setSelectedCampaignIds] = useState([]);
+  const { serverFilters, enableServerFilter, setServerFilters } =
+    useResponseFilterStore();
+  console.log("serverFilters", serverFilters);
+  useEffect(() => {
+    setServerFilters({});
+  }, [survey]);
   const {
     data: responseData,
     isLoading,
@@ -154,7 +162,6 @@ const WaResponses = ({
     page: pagination.pageIndex,
     limit: pagination.pageSize,
     surveyTeamMapIds: filterTeams,
-    tags: columnFilters.find((f) => f.id === "tag")?.value || "",
     language: "",
     contactIds: [],
     campaignIds,
@@ -165,6 +172,7 @@ const WaResponses = ({
             ranges[0]?.startDate.toISOString(),
             ranges[0]?.endDate.toISOString(),
           ],
+    ...serverFilters,
   });
 
   const enableTicket = useMemo(
@@ -306,7 +314,7 @@ const WaResponses = ({
       {
         accessorKey: "mobile",
         header: "Respondent Mobile",
-        id: "Respondent Mobile",
+        id: "mobile",
       },
       {
         header: "Tag",
@@ -434,14 +442,18 @@ const WaResponses = ({
     }
   }, [refreshing]);
 
+  const disableTags = useRef(false);
   const data = useMemo(() => {
     return responseData?.responses?.map((item) => {
+      if (!item.tag) {
+        disableTags.current = true;
+      }
       const row = {
         id: item.id,
         contactId: item.contactId,
         language: item.language,
         createdAt: item.createdAt,
-        mobile: item.Contact?.phone || "N/A",
+        mobile: item?.phone || "N/A",
         tag: item.tag,
       };
 
@@ -582,13 +594,18 @@ const WaResponses = ({
       <Box className={styles["responses-table-container"]}>
         <TanstackTable
           data={data ?? []}
-          columns={columns}
+          columns={
+            disableTags.current
+              ? columns?.filter((col) => col.accessorKey !== "tag")
+              : columns
+          }
           pagination={pagination}
           setPagination={setPagination}
           totalCount={responseCount}
           isPending={isPending}
           columnFiltersE={columnFilters}
           setColumnFiltersE={setColumnFilters}
+          enableServerFilter={enableServerFilter}
         />
         <DeleteModal
           confirmDelete={confirmDelete}

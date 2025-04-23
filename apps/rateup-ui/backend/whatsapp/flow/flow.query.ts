@@ -1,27 +1,28 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
+  cloneAndDeprecateFlows,
+  cloneFlows,
+  cloneFlowsProps,
+  createFlow,
+  createFlowInput,
+  deleteFlow,
+  deprecateFlow,
+  getFlowPreview,
   getUnsyncedFlows,
+  getWaFlowFromDb,
+  getWaFlowJson,
+  getWaFlowMetrics,
   getWaFlowsFromDb,
   getWaFlowsFromWa,
-  getWaFlowJson,
   importFlows,
-  getWaFlowFromDb,
-  createFlowInput,
-  createFlow,
-  updateFlow,
-  getFlowPreview,
-  deleteFlow,
   publishFlow,
-  deprecateFlow,
-  cloneFlows,
-  cloneAndDeprecateFlows,
-  cloneFlowsProps,
-  sendFlow,
-  updateFlowMetaData,
   pushFlowJsonToWa,
-  getWaFlowMetrics,
+  sendFlow,
+  updateFlow,
+  updateFlowMetaData,
 } from "./flow.api";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
 export const useWaFlowsFromDb = (enabled = true) =>
   useQuery({
@@ -209,7 +210,15 @@ export const useDeprecateFlowMutation = () => {
 export const useSendFlowToUser = (phone: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (dbFlowId: string) => sendFlow(dbFlowId, phone),
+    mutationFn: ({
+      dbFlowId,
+      teamId,
+      flowId,
+    }: {
+      dbFlowId: string;
+      teamId: string;
+      flowId: string;
+    }) => sendFlow(dbFlowId, phone, teamId, flowId),
     onSuccess: () => {
       showSuccessToast("Flow Sent Successfully");
     },

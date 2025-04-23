@@ -13,6 +13,9 @@ interface ContactStore {
   setTicketAndOpen: (ticket: any) => void;
   filterData: string;
   setFilterData: (value: string) => void;
+  openedContactIds: string[];
+  addOpenedContactIds: (id: string) => void;
+  setOpenedContactIds: (value: string[]) => void;
 }
 
 interface ChatContactCountStore {
@@ -23,6 +26,7 @@ interface ChatContactCountStore {
     assigned: number;
     assignedToMe: number;
     unassigned: number;
+    sent: number;
   };
   setTotalCount: (value) => void;
 }
@@ -38,6 +42,12 @@ const useContactStore = create<ContactStore>((set) => ({
   setTicketAndOpen: (ticket) => set({ selectedTicket: ticket, opened: true }),
   filterData: null,
   setFilterData: (value) => set({ filterData: value }),
+  openedContactIds: [],
+  addOpenedContactIds: (id) =>
+    set((state) => ({
+      openedContactIds: Array.from(new Set([...state.openedContactIds, id])),
+    })),
+  setOpenedContactIds: (value) => set({ openedContactIds: value }),
 }));
 
 export const useChatContactCountStore = create<ChatContactCountStore>(
@@ -49,6 +59,7 @@ export const useChatContactCountStore = create<ChatContactCountStore>(
       assigned: 0,
       assignedToMe: 0,
       unassigned: 0,
+      sent: 0,
     },
     setTotalCount: (value) => set({ totalCount: value }),
   }),

@@ -18,6 +18,8 @@ export type WaGetMessagesBody = {
     name?: string;
     profile_photo?: string;
   };
+  messageId?: string;
+  readUsers?: string[];
 };
 
 export type WaMessagePage = {
@@ -51,6 +53,8 @@ export type ContactsWithLastMessage = ContactsData & {
   };
   lastReceivedMessageTimeStamp: string;
   total_contact_count?: string;
+  unReadMessageCount?: number;
+  assignedUsers: { id: string; name: string }[];
 };
 type ContactsWithLastMessageResponse = {
   rows: ContactsWithLastMessage[];
@@ -101,19 +105,6 @@ type tickets = {
   comments: comments[];
   assignedTo: assignedTo;
 };
-export async function getWaTickets(page: number) {
-  return (
-    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/tickets?page=${page}`, {
-      timeout: 16000,
-    })
-  ).data as {
-    rows: {
-      data: tickets[];
-      totalTickets: number;
-    };
-    nextOffset: number | null;
-  };
-}
 
 export async function exportWaChats({
   constraints,
@@ -163,4 +154,9 @@ export async function getAssignedUserForContact(contactId) {
 
 export async function getInboxUserCount() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`)).data;
+}
+
+export async function markWaMessagesAsRead(contactId) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/mark/${contactId}`))
+    .data;
 }

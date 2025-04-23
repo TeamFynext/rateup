@@ -1,22 +1,22 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 
-import { Group, Stack, Text } from "@mantine/core";
+import { Flex, Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconExclamationCircle,
-  IconInfoCircle,
-  IconSend,
-} from "@tabler/icons-react";
+import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
 import { create } from "zustand";
 
+import WaTextEditor, {
+  parseJsonToReact,
+  parseToWhatsAppFormat,
+} from "@/components/RichTextEditor/waTextEditor";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+import { deleteUploadedFiles } from "@/utils/file-upload/upload";
 
 import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
-  useGetAssignedUserForContact,
   useSendNewWaMessage,
 } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
@@ -24,27 +24,26 @@ import {
   RateupButtonPrimary,
   RateupButtonSecondary,
 } from "../../../../Button/RateupButtons";
-import { ContainedTextField } from "../../../../input/ContainedInput/ContainedInput";
-import { PopoverEmojiPicker } from "../../../templates/Details/TextFormateToolBar";
 import { AssignInbox } from "../chatdisplayHeader";
 import WaInboxFooterMenu from "./footerMenu";
 import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplayFooter({
   contact,
-  isChatAssignedToMe,
 }: {
   contact: ContactsWithLastMessage;
-  isChatAssignedToMe: boolean;
 }) {
   const inputRef = useRef(null);
+  const submiRef = useRef(null);
   const { translations } = useTranslations();
   const sendnewWaMessage = useSendNewWaMessage(contact.id);
   const { addMessage, removeMessage } = useMessageStore();
+  const { media, resetMedia } = useMediaStore();
   const form = useForm({
     initialValues: {
       type: "text",
       text: { body: "" },
+      media: media,
     },
     validate: {
       text: (value) => {
@@ -54,12 +53,29 @@ export default function WaInboxChatDisplayFooter({
       },
     },
   });
-  function handleSendMessage(values: typeof form.values) {
+  function handleSendMessage() {
+    const values = { ...form.values };
     form.reset();
+    const trimmedBody =
+      values.text.body !== ""
+        ? parseToWhatsAppFormat(values.text.body).trim()
+        : "";
+    if (!trimmedBody.length && !values.media.length) return;
+    if (!trimmedBody.length && values.media.length) values.type = "media";
     addMessage(contact.id, {
-      body: values.text.body,
+      body: {
+        text: values.text.body,
+        ...(values.media.length
+          ? {
+              url: values.media[0].url,
+              urlType: values.media[0].type,
+              filename: values.media[0].name,
+            }
+          : {}),
+      },
       type: "text",
     });
+    resetMedia();
     sendnewWaMessage.mutate(values, {
       onSuccess: () => {
         removeMessage(contact.id);
@@ -85,50 +101,74 @@ export default function WaInboxChatDisplayFooter({
   const isSessionExpired = isInboxSessionExpired(
     contact?.lastReceivedMessageTimeStamp,
   );
-  return (
-    <Stack gap={0}>
-      {!isChatAssignedToMe && (
-        <Group
-          bg={"black"}
-          justify="center"
-          c={"white"}
-          color="white"
-          gap={2}
-          py={2}
-        >
-          <IconExclamationCircle size={"1rem"} />
-          <Text size="xs">This chat is not assigned to you</Text>
-        </Group>
-      )}
-      <div className={classes.wrapper}>
+  submiRef.current = () => {
+    if (isSessionExpired) return;
+    handleSendMessage();
+  };
+
+  useEffect(() => {
+    resetMedia();
+  }, [contact]);
+
+  useEffect(() => {
+    if (media.length) {
+      form.setFieldValue("media", media);
+    }
+  }, [media]);
+
+  const SendMessageComponent = () => {
+    return (
+      <Group>
         <WaInboxFooterMenu
           sessionExpired={isSessionExpired}
           contact={contact}
-          disabled={!isChatAssignedToMe}
         />
-        <form
-          onSubmit={form.onSubmit((values) => handleSendMessage(values))}
-          className={classes.form}
-        >
-          <ContainedTextField
-            ref={inputRef}
-            disabled={isSessionExpired || !isChatAssignedToMe}
-            leftSection={<PopoverEmojiPicker onEmojiClick={insertEmoji} />}
-            flex={1}
-            placeholder={translations["Enter message here..."]}
-            value={form.values.text.body}
-            onChange={(e) =>
-              form.setValues({
-                text: { ...form.values.text, body: e.target.value },
-              })
-            }
-          />
-          <RateupButtonPrimary
-            disabled={isSessionExpired || !isChatAssignedToMe}
-            type={"submit"}
-            title={translations["Send"]}
-            rightIcon={<IconSend />}
-          />
+        <RateupButtonPrimary
+          title={translations["Send"]}
+          rightIcon={<IconSend size={16} />}
+          size="xs"
+          onClick={handleSendMessage}
+          disabled={isSessionExpired}
+        />
+      </Group>
+    );
+  };
+
+  if (isSessionExpired) {
+    return (
+      <Flex className={classes.wrapper} justify="flex-start">
+        <WaInboxFooterMenu
+          sessionExpired={isSessionExpired}
+          contact={contact}
+        />
+      </Flex>
+    );
+  }
+
+  return (
+    <Stack gap={0}>
+      <div className={classes.wrapper}>
+        {/* <WaInboxFooterMenu
+          sessionExpired={isSessionExpired}
+          contact={contact}
+        /> */}
+        <form className={classes.form}>
+          <div ref={inputRef} style={{ display: "flex", flex: 1 }}>
+            <WaTextEditor
+              handleInputChange={(value) => {
+                form.setValues({
+                  text: { ...form.values.text, body: value },
+                });
+              }}
+              content={form.values.text.body}
+              mih={50}
+              flex={1}
+              inbox={true}
+              customEnter={() => submiRef.current()}
+              editable={!isSessionExpired}
+              customHeaders={<SendMessageComponent />}
+            />
+          </div>
         </form>
       </div>
     </Stack>
@@ -188,7 +228,12 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
 interface Message {
   id?: string;
   contactId: string;
-  body: string;
+  body: {
+    text: string;
+    url?: string;
+    urlType?: string;
+    filename?: string;
+  };
   type: string;
   timestamp: number;
   isOutgoing: boolean;
@@ -234,4 +279,35 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         },
       };
     }),
+}));
+
+type WaMedia = {
+  type: string;
+  url: string;
+  name: string;
+  key: string;
+};
+
+interface MediaStore {
+  media: WaMedia[];
+  addMedia: (value: WaMedia) => void;
+  removeMedia: (key) => void;
+  resetMedia: () => void;
+  selectedMedia: WaMedia;
+  setSelectedMedia: (value) => void;
+}
+
+export const useMediaStore = create<MediaStore>((set) => ({
+  media: [],
+  addMedia: (value) => set((state) => ({ media: [...state.media, value] })),
+  selectedMedia: null,
+  setSelectedMedia: (value) => set(() => ({ selectedMedia: value })),
+  removeMedia: async (key) => {
+    await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
+    set((state) => {
+      const medias = state.media.filter((m) => m.key !== key);
+      return { media: medias };
+    });
+  },
+  resetMedia: () => set(() => ({ media: [] })),
 }));

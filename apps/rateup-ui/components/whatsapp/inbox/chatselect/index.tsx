@@ -14,6 +14,7 @@ import {
   Divider,
   Group,
   Indicator,
+  SegmentedControl,
   Stack,
   Text,
 } from "@mantine/core";
@@ -21,6 +22,7 @@ import {
   IconMessage,
   IconMessageBolt,
   IconMessageCheck,
+  IconMessageUp,
   IconRefresh,
   IconSearch,
   IconSquareRoundedX,
@@ -77,8 +79,6 @@ const WaInboxChatSelect = () => {
 
   const queryClient = useQueryClient();
 
-  const { setTotalCount } = useChatContactCountStore();
-
   const { translations } = useTranslations();
   const checkIfAnyFilterisActive = useCallback((filters: any) => {
     return (
@@ -105,18 +105,32 @@ const WaInboxChatSelect = () => {
     isFetching,
   } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
 
+  const {
+    setSelectedContact,
+    selectedContact,
+    setFilterData,
+    openedContactIds,
+    setOpenedContactIds,
+  } = useContactStore();
+
   const allFilteredContactsRow = useMemo(
     () =>
-      filteredContacts ? filteredContacts.pages.flatMap((d) => d.rows) : [],
-    [filteredContacts],
+      filteredContacts
+        ? filteredContacts.pages.flatMap((d) =>
+            d.rows.map((r) => ({
+              ...r,
+              unReadMessageCount: openedContactIds.includes(r.id)
+                ? 0
+                : r.unReadMessageCount,
+            })),
+          )
+        : [],
+    [filteredContacts, openedContactIds],
   );
-  // Todo: re-add this after count is fixed:
-  const { data: inboxCount, refetch } = useGetInboxUserCount();
 
   useEffect(() => {
-    if (filteredContacts && !inboxCount) refetch();
-    setTotalCount(inboxCount);
-  }, [inboxCount, filteredContacts]);
+    if (isRefetchingFilteredContacts) setOpenedContactIds([]);
+  }, [isRefetchingFilteredContacts]);
 
   const parentRef = useRef(null);
 
@@ -174,8 +188,6 @@ const WaInboxChatSelect = () => {
     },
     [],
   );
-  const { setSelectedContact, selectedContact, setFilterData } =
-    useContactStore();
 
   const updateWaContactsList = useCallback(
     (newMessage: { contact: ContactsData; message: WaGetMessagesBody }) => {
@@ -218,7 +230,11 @@ const WaInboxChatSelect = () => {
       } = queryClient.getQueryData(["wa-messages", wsData.inbox.contact.id]);
       if (currentData) {
         const newData = { ...currentData };
-        if (!newData.pages[0].messages.includes(wsData.inbox.message)) {
+        if (
+          !newData.pages[0].messages.find(
+            (message) => message.id === wsData.inbox.message.id,
+          )
+        ) {
           newData.pages[0].messages.push(wsData.inbox.message);
           queryClient.setQueryData(
             ["wa-messages", wsData.inbox.contact.id],
@@ -291,6 +307,7 @@ const WaInboxChatSelect = () => {
           messageBody: {} as WaInboxMessage,
           waCreatedAt: "",
         },
+        assignedUsers: [],
       });
       openChatDisplayForContact(contact);
     },
@@ -308,7 +325,7 @@ const WaInboxChatSelect = () => {
     } else {
       prepareFilters({
         ...filter,
-        messageType: "usermessages",
+        messageType: tab === "Sent" ? "all" : "usermessages",
         waMessageAssignStatus: tab,
       });
     }
@@ -365,7 +382,12 @@ const WaInboxChatSelect = () => {
             loading={
               isFilteredContactsFetchingNextPage || isRefetchingFilteredContacts
             }
-            onClick={refetchFilteredContacts}
+            onClick={() => {
+              refetchFilteredContacts();
+              queryClient.invalidateQueries({
+                queryKey: ["contactInboxCount"],
+              });
+            }}
           >
             <IconRefresh />
           </ActionIcon>
@@ -499,6 +521,16 @@ export const AssignedToMeInboxIcon = () => {
   return (
     <Indicator label={totalCount.assignedToMe} inline size={16} color="black">
       <IconUserCircle />
+    </Indicator>
+  );
+};
+
+export const SentInboxIcon = () => {
+  const { totalCount } = useChatContactCountStore();
+  if (!totalCount?.sent) return <IconMessageUp />;
+  return (
+    <Indicator label={totalCount.sent} inline size={16} color="black">
+      <IconMessageUp />
     </Indicator>
   );
 };

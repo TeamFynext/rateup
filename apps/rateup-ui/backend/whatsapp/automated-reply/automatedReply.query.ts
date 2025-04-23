@@ -8,6 +8,7 @@ import {
   getAutomatedRepliesMessageById,
   getWaAutomatedRepliesById,
   getWaAutomatedRepliesByTeamId,
+  initiateWaAutomatedReply,
   updateWaAutomatedReply,
 } from "./automatedReply.api";
 
@@ -70,13 +71,28 @@ export const useUpdateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
   return useMutation({
     mutationFn: ({ id, ...data }: any) => updateWaAutomatedReply(id, data),
     onSuccess: (res) => {
-      qc.invalidateQueries({
-        queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
-      });
+      // qc.invalidateQueries({
+      //   queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
+      // });
       showSuccessToast("Automated Reply Updated Successfully");
     },
     onError: (error: any) => {
       showErrorToast(error?.response?.data ?? "Error Updating Automated Reply");
+    },
+  });
+};
+
+export const useInitiateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
+  return useMutation({
+    mutationFn: ({ phone }: any) =>
+      initiateWaAutomatedReply(waAutomatedReplyId, phone),
+    onSuccess: (res) => {
+      showSuccessToast("Automation initiated Successfully");
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        error?.response?.data ?? "Error initiating Automated Reply",
+      );
     },
   });
 };

@@ -1,14 +1,14 @@
 .wrapper {
   background-color: light-dark(#ebebeb, var(--mantine-color-dark-6));
-  padding: var(--mantine-spacing-sm) var(--mantine-spacing-xl);
+  padding: var(--mantine-spacing-xs);
   display: flex;
   gap: var(--mantine-spacing-sm);
-  align-items: center;
+  align-items: flex-start;
 }
 .form {
   display: flex;
   gap: var(--mantine-spacing-sm);
-  align-items: center;
+  align-items: flex-start;
   flex: 1;
 }
 

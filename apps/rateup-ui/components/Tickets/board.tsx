@@ -1,9 +1,11 @@
 "use client";
 
 import { useContext, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
 
-import { Button, Flex, Group, Text } from "@mantine/core";
+import { Button, Flex, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
 import { IconPlus } from "@tabler/icons-react";
 import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
@@ -13,13 +15,16 @@ import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 import invariant from "tiny-invariant";
 
 import { useBoard } from "@/backend/tickets/tickets.query";
+import { useUserInfo } from "@/backend/user/user.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { showWarnToast } from "@/utils/notifications";
 
 import { Column } from "./column";
 import { TColumn } from "./data";
+import { PriorityFilter } from "./PriorityFilter";
 import { SettingsContext } from "./settings-context";
 import {
   BoardInfo,
@@ -33,15 +38,21 @@ import {
 
 export function Board({
   initial,
+  priorityFilter,
   availableBoards,
 }: {
   initial: BoardType;
+  priorityFilter: string;
   availableBoards?: BoardInfo[];
 }) {
   const { settings } = useContext(SettingsContext);
   const scrollableRef = useRef<HTMLDivElement | null>(null);
   const [newColumnTitle, setNewColumnTitle] = useState("");
   const [isAddingColumn, { open, close }] = useDisclosure(false);
+  // get userInformation for checking the role
+  const { data: userRes } = useUserInfo() as { data: { data: UserData } };
+  const role = userRes?.data?.role;
+  const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
   // Use Tanstack Query hooks
   const {
@@ -72,7 +83,25 @@ export function Board({
   };
 
   const handleDeleteColumn = (columnId: string) => {
-    deleteColumn(columnId);
+    if (!isAdmin) {
+      showWarnToast("Only admin or super admin can delete this.");
+      return;
+    }
+
+    modals.openConfirmModal({
+      title: "Delete ",
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this? This action cannot be undone.
+        </Text>
+      ),
+      labels: { confirm: "Delete", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: () => {
+        deleteColumn(columnId);
+      },
+    });
   };
 
   const handleUpdateColumn = (columnId: string, updates: Partial<TColumn>) => {
@@ -296,31 +325,12 @@ export function Board({
   if (isLoading) return <RateupLoader />;
 
   return (
-    <Flex direction="column" style={{ height: "100%" }} gap="md">
-      <Group justify="space-between">
-        <Text fw={700} size="xl">
-          {data.title}
-        </Text>
-      </Group>
-
-      <Flex
-        style={{
-          flex: 1,
-          height: "calc(100% - 60px)",
-          ...(settings.isBoardMoreObvious
-            ? {
-                paddingLeft: "2rem",
-                paddingRight: "2rem",
-                paddingTop: "1rem",
-                paddingBottom: "1rem",
-              }
-            : {}),
-        }}
-      >
+    <Flex direction="column" gap="md">
+      <Flex flex={1}>
         <Flex
           ref={scrollableRef}
           gap={"sm"}
-          p={"sm"}
+          mah={"calc(100vh - 121px)"}
           style={{
             overflowX: "auto",
             ...(settings.isBoardMoreObvious
@@ -333,17 +343,28 @@ export function Board({
           }}
         >
           {data.ticketColumns.length > 0 &&
-            data.ticketColumns.map((column) => (
-              <Column
-                key={column.id}
-                column={column}
-                onDelete={handleDeleteColumn}
-                onUpdate={handleUpdateColumn}
-                onMoveToBoard={handleMoveColumnToBoard}
-                // availableBoards={availableBoards}
-                currentBoardId={data.id}
-              />
-            ))}
+            data.ticketColumns.map((column) => {
+              const filteredColumn = {
+                ...column,
+                ticketCards: priorityFilter
+                  ? column.ticketCards.filter(
+                      (card) => card.priority === priorityFilter,
+                    )
+                  : column.ticketCards,
+              };
+
+              return (
+                <Column
+                  key={column.id}
+                  column={filteredColumn}
+                  onDelete={handleDeleteColumn}
+                  onUpdate={handleUpdateColumn}
+                  onMoveToBoard={handleMoveColumnToBoard}
+                  currentBoardId={data.id}
+                />
+              );
+            })}
+
           {/* Column add form */}
           {isAddingColumn ? (
             <Flex direction="column" style={{ width: 280 }}>

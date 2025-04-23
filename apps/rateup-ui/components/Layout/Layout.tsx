@@ -24,7 +24,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
+import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import useTranslations from "@/dictionaries/useTranslation";
+import { useChatContactCountStore } from "@/pages/dashboard/whatsapp/inbox/store";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
@@ -176,30 +178,43 @@ const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
   const connectionRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    if (data && !error) {
-      connectionRef.current = new WebSocket(
+    if (data?.afterAuthId && !error) {
+      if (connectionRef.current) {
+        connectionRef.current.close();
+        connectionRef.current = null;
+      }
+
+      const socket = new WebSocket(
         `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${data?.afterAuthId}`,
       );
-
-      connectionRef.current.onopen = () => {
+      connectionRef.current = socket;
+      socket.onopen = () => {
         console.log("Connected to websocket");
       };
 
-      connectionRef.current.onmessage = (event) => {
+      socket.onmessage = (event) => {
         const newMessage: orgWsMessage = JSON.parse(event.data);
         setWsData(newMessage);
         notifyWsMessages(newMessage);
       };
 
-      connectionRef.current.onclose = () => {
+      socket.onclose = () => {
         console.log("Disconnected from websocket");
+        if (connectionRef.current === socket) connectionRef.current = null;
+      };
+
+      socket.onerror = () => {
+        console.error("error in socket");
       };
 
       return () => {
-        connectionRef.current?.close();
+        if (connectionRef.current === socket) {
+          connectionRef.current.close();
+          connectionRef.current = null;
+        }
       };
     }
-  }, [data, setWsData, notifyWsMessages]);
+  }, [data?.afterAuthId]);
 
   return null;
 };
@@ -464,14 +479,32 @@ export default function Layout({ children, appProps }) {
       const [basePath, queryString] = tab.split("?");
       const params = new URLSearchParams(queryString || "");
       const tabParam = params.get("tab");
-      const cleanPath = tabParam ? `${basePath}?tab=${tabParam}` : basePath;
-      let navItem = value?.find((v) => cleanPath.startsWith(v.link));
+
+      let navItem = value?.find((v) => {
+        const [vBasePath, vQuery] = v.link.split("?");
+        const vParams = new URLSearchParams(vQuery || "");
+        const vTabParam = vParams.get("tab");
+
+        const baseMatches = basePath.startsWith(vBasePath);
+        const tabMatches = vTabParam ? vTabParam === tabParam : true;
+
+        return baseMatches && tabMatches;
+      });
+
       if (navItem) {
         setActiveMainLink(key);
         setActiveSubLink(navItem?.link);
       }
     });
   }, [linksMapping, navLinks, tab]);
+  const { setTotalCount } = useChatContactCountStore();
+  const { data: inboxCount, refetch: refetchInboxCount } = useGetInboxUserCount(
+    activeMainLink === "Inbox",
+  );
+
+  useEffect(() => {
+    if (inboxCount) setTotalCount(inboxCount);
+  }, [inboxCount]);
 
   const mainLinks = (
     <MainNavLinks
