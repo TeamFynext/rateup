@@ -35,7 +35,7 @@ const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void
 
   useEffect(() => {
     async function assign() {
-      console.log("Fetching assigned user for id:", id);
+
       try {
         const assigned = await assignedContact(id);
         if (assigned && assigned.length > 0 && assigned[0].assignedUser?.name) {
@@ -103,9 +103,11 @@ const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void
             <Text className="text-xs text-[#7A8289] ml-2">
               {getRelativeTime(lastReceivedMessageTimeStamp)}
             </Text>
-            <View className="bg-[#69F0AE] rounded-full h-6 w-6 flex items-center justify-center">
-              <Text className="text-[#009987]">{unReadMessageCount}</Text>
-            </View>
+            {unReadMessageCount > 0 && (
+              <View className="bg-[#69F0AE] rounded-full h-6 w-6 flex items-center justify-center">
+                <Text className="text-[#009987]">{unReadMessageCount}</Text>
+              </View>
+            )}
           </View>
         </View>
       </View>

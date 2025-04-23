@@ -12,6 +12,7 @@ import UsernameIcon from "@/assets/images/username-icon.svg"
 import EmailIcon from "@/assets/images/email-icon.svg"
 import DotsIcon from "@/assets/images/3dots-icon.svg"
 import IIcon from "@/assets/images/i-icon.svg"
+import RateupIcon from "@/assets/images/rateupstar-icon.svg"
  
 export {
     SearchIcon,
@@ -27,5 +28,6 @@ export {
     UsernameIcon,
     EmailIcon,
     DotsIcon,
-    IIcon
+    IIcon,
+    RateupIcon
 }

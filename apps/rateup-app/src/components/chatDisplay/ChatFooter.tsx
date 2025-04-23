@@ -31,7 +31,6 @@ const ChatFooter = ({ waAssignStatus ,id}: { waAssignStatus: string,id:string })
     const [assignedUser, setAssignedUser] = useState("")
 useEffect(() => {
     async function assign() {
-      console.log("Fetching assigned user for id:", id);
       try {
         const assigned = await assignedContact(id);
         if (assigned && assigned.length > 0 && assigned[0].assignedUser?.name) {
