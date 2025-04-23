@@ -14,6 +14,8 @@ import {
   IconMenu,
   IconMusic,
   IconPlayCard,
+  IconRobot,
+  IconRobotFace,
   IconSquare,
   IconUsers,
   IconVideo,
@@ -84,6 +86,7 @@ const categories = [
     name: "None Interactive",
     items: [
       { id: "ticketNode", label: "Ticket", icon: <IconGitMerge size={16} /> },
+      { id: "aibotNode", label: "AiBot", icon: <IconRobotFace size={16} /> },
     ],
   },
 ];

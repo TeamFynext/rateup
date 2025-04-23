@@ -205,6 +205,15 @@ export interface FlowNodeData extends BaseNodeData {
     name: string;
   };
 }
+///////////////////////aibot node
+export interface AiBotNodeData extends BaseNodeData {
+  body: string;
+  teamId: string;
+  flow: {
+    id: string;
+    name: string;
+  };
+}
 
 export interface TicketNodeData extends BaseNodeData {
   ticket: {
@@ -243,6 +252,7 @@ export type NodeTypeMap = {
   addressNode: AddressNodeData;
   contactsNode: ContactsNodeData;
   flowNode: FlowNodeData;
+  aibotNode: AiBotNodeData;
   ticketNode: TicketNodeData;
 };
 
@@ -272,6 +282,7 @@ export type NodeData =
   | AddressNodeData
   | ContactsNodeData
   | FlowNodeData
+  | AiBotNodeData
   | TicketNodeData;
 
 // Extended Node type with typed data
@@ -708,6 +719,31 @@ export function validateNodeData(node: TypedNode): {
           message: `${node.data.label}: Team ID is required.`,
         };
       }
+      break;
+    }
+    //// aibot node
+    case "aibotNode": {
+      const data = node.data as NodeTypeMap["aibotNode"];
+      // if (!data.flow?.id || data.flow?.id.trim() === "") {
+      //   return {
+      //     valid: false,
+      //     message: `${node.data.label}: Flow ID is required.`,
+      //   };
+
+      // }
+
+      if (!data.body || data.body === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Message text is required.`,
+        };
+      }
+      // if (!data.teamId || data.teamId.trim() === "") {
+      //   return {
+      //     valid: false,
+      //     message: `${node.data.label}: Team ID is required.`,
+      //   };
+      // }
       break;
     }
 

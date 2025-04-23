@@ -1,3 +1,4 @@
+import AiBotNode from "./aibot-node";
 import AudioNode from "./audio-node";
 import ButtonNode from "./button-node";
 import ContactsNode from "./contacts-node";
@@ -38,5 +39,6 @@ export const nodeTypes = {
   locationNode: LocationNode,
   contactsNode: ContactsNode,
   flowNode: FlowNode,
+  aibotNode: AiBotNode,
   ticketNode: ticketNode,
 };

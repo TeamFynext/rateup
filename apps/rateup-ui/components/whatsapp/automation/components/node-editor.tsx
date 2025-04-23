@@ -229,6 +229,14 @@ export default function NodeEditor({
             flows={flows}
           />
         );
+      case "aibotNode":
+        return (
+          <AibotNodeEditor
+            nodeData={nodeData as NodeTypeMap["aibotNode"]}
+            handleInputChange={handleInputChange}
+            flows={flows}
+          />
+        );
       default:
         return (
           <div className={styles.editorSection}>
@@ -1891,6 +1899,56 @@ const FlowNodeEditor: React.FC<
           })) || []
         }
         label="Flow"
+        allowDeselect={false}
+        placeholder={`Select Flow`}
+        value={typedData?.flow?.id || ""}
+        onChange={(value, values) => {
+          handleInputChange("flow", {
+            id: value,
+            name: values?.label,
+          });
+        }}
+        flex={1}
+      />
+      {typedData?.flow?.id && (
+        <TeamSelector
+          value={typedData.teamId}
+          onChange={(id) => {
+            handleInputChange("teamId", id);
+          }}
+          w={"100%"}
+        />
+      )}
+    </Stack>
+  );
+};
+
+const AibotNodeEditor: React.FC<
+  NodeComponentProps<"aibotNode"> & { flows: any }
+> = ({ nodeData, handleInputChange, flows }) => {
+  const typedData = nodeData;
+  return (
+    <Stack>
+      <div className={styles.editorSection}>
+        <WaTextEditor
+          content={typedData.body || ""}
+          handleInputChange={(e) => handleInputChange("body", e)}
+          label="Start Message"
+          placeholder="Enter your message text here..."
+          required
+        />
+        <Text fz={"xs"} ta={"right"}>
+          {typedData.body?.length || 0}/4096 characters
+        </Text>
+      </div>
+      <ContainedSelection
+        data={
+          flows?.map((t) => ({
+            label: t.name,
+            value: t.dbFlowId,
+          })) || []
+        }
+        label="AiBot"
         allowDeselect={false}
         placeholder={`Select Flow`}
         value={typedData?.flow?.id || ""}
