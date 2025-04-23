@@ -529,38 +529,45 @@ export async function getContactsCountByInbox(orgId, userId) {
     SELECT DISTINCT "contactId"
     FROM "WaInboxAssign"
     WHERE "assignedUserId" = ${userId}::uuid
+), filterd_messages AS (
+  SELECT wm."contactId",
+  c."lastReceivedMessageTimeStamp",
+  c."waMessageAssignStatus",
+  wm."messageBody"->>'exchangeProcess' as exchange_process,
+  CASE WHEN ac."contactId" IS NOT NULL THEN true ELSE false END as is_assigned_to_me
+  FROM "WaMessage" wm 
+  JOIN "Contact" c ON wm."contactId" = c.id
+  LEFT JOIN assigned_contacts ac ON wm."contactId" = ac."contactId"
+  WHERE c."orgId" = ${orgId}::uuid
 )
 SELECT 
     COUNT(DISTINCT CASE 
-        WHEN c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND wm."messageBody"->>'exchangeProcess' ='receive'
-        AND c."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED}
-        THEN wm."contactId" 
+        WHEN fm."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND exchange_process ='receive'
+        AND fm."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED}
+        THEN fm."contactId"
     END)::INTEGER AS new_count,
 
-    COUNT(DISTINCT wm."contactId")::INTEGER AS total_count,
+    COUNT(DISTINCT fm."contactId")::INTEGER AS total_count,
 
-    COUNT(DISTINCT CASE WHEN wm."messageBody"->>'exchangeProcess'= 'send' THEN wm."contactId" END)::INTEGER AS sent_count, 
+    COUNT(DISTINCT CASE WHEN exchange_process = 'send' THEN fm."contactId" END)::INTEGER AS sent_count, 
 
     COUNT(DISTINCT CASE 
-        WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND wm."messageBody"->>'exchangeProcess'='receive'
-        THEN wm."contactId" 
+        WHEN fm."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND exchange_process ='receive'
+        THEN fm."contactId"
     END)::INTEGER AS assigned_count,
 
     COUNT(DISTINCT CASE 
-        WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND wm."messageBody"->>'exchangeProcess'='receive'
-        THEN wm."contactId" 
+        WHEN fm."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND exchange_process ='receive'
+        THEN fm."contactId"
     END)::INTEGER AS closed_count,
 
     COUNT(DISTINCT CASE 
-        WHEN c."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED} AND wm."messageBody"->>'exchangeProcess'='receive'
-        THEN wm."contactId" 
+        WHEN fm."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED} AND exchange_process = 'receive'
+        THEN fm."contactId"
     END)::INTEGER AS unassigned_count,
 
-    COUNT(DISTINCT CASE WHEN wm."messageBody"->>'exchangeProcess'='receive' THEN ac."contactId" END)::INTEGER AS assigned_to_me_count
-FROM "WaMessage" wm
-JOIN "Contact" c ON wm."contactId" = c.id
-LEFT JOIN assigned_contacts ac ON wm."contactId" = ac."contactId"
-WHERE c."orgId" = ${orgId}::uuid;`;
+    COUNT(DISTINCT CASE WHEN exchange_process ='receive' AND is_assigned_to_me THEN fm."contactId" END)::INTEGER AS assigned_to_me_count
+FROM filterd_messages fm`;
 
   return {
     new: count[0].new_count,
