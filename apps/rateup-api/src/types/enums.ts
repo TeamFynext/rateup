@@ -198,6 +198,8 @@ export enum CampaignStatus {
   INACTIVE = "INACTIVE",
   SCHEDULED = "SCHEDULED",
   COMPLETED = "COMPLETED",
+  QUEUING = "QUEUING",
+  DEQUEUING = "DEQUEUING",
 }
 export enum CampaignType {
   WHATSAPP = "WHATSAPP",

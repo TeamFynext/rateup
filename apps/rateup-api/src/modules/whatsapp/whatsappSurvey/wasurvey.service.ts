@@ -5,7 +5,6 @@ import {
   QuestionType as Q,
   QuestionType,
   QuestionType2,
-  WaEvent,
   WaQuestions,
 } from "../../../types/enums";
 import {
@@ -47,11 +46,19 @@ import {
 import { getGraphApiErrorMessage } from "../wa_error_handler";
 import { uploadFile } from "../../../utils/upload/s3Upload";
 import axios from "axios";
-import {
-  handleLoyaltyFeedback,
-  handleLoyaltyPointsCommand,
-} from "../../loyalty/settings/settings.service";
-import { fa } from "@faker-js/faker";
+import { handleLoyaltyFeedback } from "../../loyalty/settings/settings.service";
+import { Queue } from "bullmq";
+
+import IORedis from "ioredis";
+const redisURL = new URL(process.env.REDIS_URL);
+const redisConnection = new IORedis({
+  family: 0,
+  host: redisURL.hostname,
+  port: parseInt(redisURL.port),
+  username: redisURL.username,
+  password: redisURL.password,
+  maxRetriesPerRequest: null,
+});
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -766,161 +773,27 @@ export async function handleTestimonialReply(
   });
   await handleTestimonialQuestion(question, session);
 }
+
+const waStatusQueue = new Queue("wa-status-queue", {
+  connection: redisConnection,
+});
+
+export async function addToStatusUpdateQueue(data: {
+  status: string;
+  messageId: string;
+  errors?: any;
+}) {
+  await waStatusQueue.add("status-update", data, {
+    removeOnComplete: true,
+    removeOnFail: true,
+  });
+}
+
 export const handleMessageStatusUpdate = async (
   status: string,
   messageId: string,
   errors?: any,
 ) => {
   if (!messageId) return;
-  let messageCampaignParticipant =
-    await prisma.waMessageCampaginParticipantMap.findFirst({
-      where: {
-        waMessage: {
-          messageId: messageId,
-        },
-      },
-      include: {
-        campaignParticipant: {
-          select: {
-            campaignId: true,
-            status: true,
-          },
-        },
-        waMessage: {
-          include: {
-            contact: {
-              select: {
-                phone: true,
-                orgId: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-  if (!messageCampaignParticipant) {
-    let waMessage = await prisma.waMessage.findFirst({
-      where: {
-        messageId: messageId,
-      },
-      include: {
-        contact: {
-          select: {
-            phone: true,
-            orgId: true,
-          },
-        },
-      },
-    });
-    messageCampaignParticipant = {
-      waMessage,
-      waMessageId: "",
-      campaignParticipantId: "",
-      campaignParticipant: {
-        campaignId: "",
-        status: "",
-      },
-    };
-  }
-
-  const msg = messageCampaignParticipant.waMessage;
-  msg.stats = msg?.stats || {};
-
-  let incrementData = {};
-
-  // Only update if the new status represents progress
-  switch (status) {
-    case WaEvent.SENT:
-      if (!msg.stats[WaEvent.SENT]) {
-        msg.stats[WaEvent.SENT] = new Date();
-        incrementData = { totalSend: { increment: 1 } };
-      }
-      break;
-    case WaEvent.DELIVERED:
-      if (!msg.stats[WaEvent.DELIVERED]) {
-        // Ensure SENT is also tracked
-        if (!msg.stats[WaEvent.SENT]) {
-          msg.stats[WaEvent.SENT] = new Date();
-          incrementData = {
-            totalSend: { increment: 1 },
-            totalDelivered: { increment: 1 },
-          };
-        } else {
-          incrementData = { totalDelivered: { increment: 1 } };
-        }
-        msg.stats[WaEvent.DELIVERED] = new Date();
-      }
-      break;
-    case WaEvent.READ:
-      if (!msg.stats[WaEvent.READ]) {
-        // Ensure SENT and DELIVERED are also tracked
-        let needsToUpdateSent = !msg.stats[WaEvent.SENT];
-        let needsToUpdateDelivered = !msg.stats[WaEvent.DELIVERED];
-
-        if (needsToUpdateSent) msg.stats[WaEvent.SENT] = new Date();
-        if (needsToUpdateDelivered) msg.stats[WaEvent.DELIVERED] = new Date();
-        msg.stats[WaEvent.READ] = new Date();
-
-        incrementData = {
-          ...(needsToUpdateSent ? { totalSend: { increment: 1 } } : {}),
-          ...(needsToUpdateDelivered
-            ? { totalDelivered: { increment: 1 } }
-            : {}),
-          totalRead: { increment: 1 },
-        };
-      }
-      break;
-    case WaEvent.FAILED:
-      if (!msg.stats[WaEvent.FAILED]) {
-        await prisma.waLogs.create({
-          data: {
-            orgId: msg.contact.orgId,
-            logs: errors,
-            phone: msg.contact.phone,
-          },
-        });
-        incrementData = { totalFailed: { increment: 1 } };
-        msg.stats[WaEvent.FAILED] = new Date();
-      }
-      break;
-  }
-
-  // Only update campaign stats if we have a campaign participant and there are stats to update
-  if (
-    messageCampaignParticipant?.campaignParticipantId &&
-    Object.keys(incrementData).length > 0
-  ) {
-    // Update participant status
-    await prisma.campaignParticipant.update({
-      where: {
-        id: messageCampaignParticipant.campaignParticipantId,
-      },
-      data: {
-        status: status.toUpperCase(),
-        errorMessage:
-          status === WaEvent.FAILED ? errors?.[0]?.title : undefined,
-        ...(status === WaEvent.SENT ? { sentAt: new Date() } : {}),
-      },
-    });
-
-    // Update campaign stats only if incrementData has items
-    await prisma.campaignStats.update({
-      where: {
-        campaignId: messageCampaignParticipant?.campaignParticipant?.campaignId,
-      },
-      data: incrementData,
-    });
-  }
-
-  // Update the message stats
-  await prisma.waMessage.update({
-    where: {
-      id: msg.id,
-    },
-    data: {
-      stats: msg.stats,
-      errorMessage: status === WaEvent.FAILED ? errors?.[0]?.title : undefined,
-    },
-  });
+  await addToStatusUpdateQueue({ status, messageId, errors });
 };
