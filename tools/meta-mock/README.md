@@ -12,11 +12,13 @@ A mock server that simulates WhatsApp's Business API for message sending and sta
 ## Setup
 
 1. Install dependencies:
+
    ```
    npm install
    ```
 
 2. Configure environment variables in `.env`:
+
    ```
    PORT=3000                              # Port for the mock server
    DEFAULT_WEBHOOK_URL=http://your-webhook-url  # Default webhook destination for status updates
@@ -36,15 +38,17 @@ POST /v1/messages
 ```
 
 Request body:
+
 ```json
 {
   "to": "9198765432",
   "text": "Your message here",
-  "webhook_url": "http://your-webhook-url"  // Optional - overrides DEFAULT_WEBHOOK_URL
+  "webhook_url": "http://your-webhook-url" // Optional - overrides DEFAULT_WEBHOOK_URL
 }
 ```
 
 Response:
+
 ```json
 {
   "messaging_product": "whatsapp",
@@ -83,7 +87,7 @@ After sending a message, the server will send status updates to your webhook URL
             "statuses": [
               {
                 "id": "wamid.HBgM9198765432FQIAERgSQzk4QzE4QkQzMjVDRTM2Q0UzAA==",
-                "status": "delivered",  // Can be: sent, delivered, read, failed
+                "status": "delivered", // Can be: sent, delivered, read, failed
                 "timestamp": "1745484275",
                 "recipient_id": "9198765432",
                 "conversation": {
