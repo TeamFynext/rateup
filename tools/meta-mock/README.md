@@ -20,7 +20,7 @@ A mock server that simulates WhatsApp's Business API for message sending and sta
 2. Configure environment variables in `.env`:
 
    ```
-   PORT=3000                              # Port for the mock server
+   PORT=3004                                    # Port for the mock server
    DEFAULT_WEBHOOK_URL=http://your-webhook-url  # Default webhook destination for status updates
    ```
 
