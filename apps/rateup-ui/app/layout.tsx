@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 
-import { ColorSchemeScript, MantineProvider } from "@mantine/core";
+import {
+  ColorSchemeScript,
+  mantineHtmlProps,
+  MantineProvider,
+} from "@mantine/core";
 
 import "./globals.css";
 
@@ -23,19 +27,19 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  // Layouts must accept a children prop.
-  // This will be populated with nested layouts or pages
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" {...mantineHtmlProps}>
       <head>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <ColorSchemeScript nonce="8IBTHwOdqNKAWeKl7plt8g==" />
+        <ColorSchemeScript />
         <link rel="shortcut icon" href="/favicon.png" />
+        <meta
+          name="viewport"
+          content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
+        />
         {isProduction && (
           <>
             <GoogleAnalytics />

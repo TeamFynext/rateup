@@ -127,7 +127,8 @@ export default function WaInboxChatDisplayFooter({
         />
         <RateupButtonPrimary
           title={translations["Send"]}
-          rightIcon={<IconSend />}
+          rightIcon={<IconSend size={16} />}
+          size="xs"
           onClick={handleSendMessage}
           disabled={isSessionExpired}
         />
