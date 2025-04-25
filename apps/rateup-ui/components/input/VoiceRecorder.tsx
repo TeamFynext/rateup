@@ -3,7 +3,7 @@ import React, { useRef, useState } from "react";
 const VoiceRecorder = () => {
   const { audioUrl, recording, startRecording, stopRecording } =
     useAudioRecorder();
-  return <div></div>;
+  return <></>;
 };
 
 const useAudioRecorder = () => {

@@ -6,7 +6,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
 import { create } from "zustand";
 
-import { VoiceRecorder } from "@/components/RichTextEditor/InsertInboxMedia/RecordVoiceController";
+import VoiceRecorder from "@/components/input/VoiceRecorder";
 import WaTextEditor, {
   parseJsonToReact,
   parseToWhatsAppFormat,
