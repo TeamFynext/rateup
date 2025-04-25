@@ -81,10 +81,10 @@ function createStatusPayload(messageId, recipientId, status) {
 }
 
 // Send status update to webhook
-async function sendStatusUpdate(webhookUrl, payload) {
+async function sendStatusUpdate(webhookUrl, payload,phoneNumber) {
   try {
     console.log(
-      `Sending ${payload.entry[0].changes[0].value.statuses[0].status} status to webhook...`
+      `Sending ${payload.entry[0].changes[0].value.statuses[0].status} status to webhook... ,${phoneNumber}`
     );
     const response = await axios.post(webhookUrl, payload, {
       headers: {
@@ -100,13 +100,13 @@ async function sendStatusUpdate(webhookUrl, payload) {
 }
 
 // Simulate message status progression with sequential updates
-async function simulateStatusProgression(messageId, recipientId, webhookUrl) {
+async function simulateStatusProgression(messageId, recipientId, webhookUrl,to) {
   // First always send "sent" status
   const sentPayload = createStatusPayload(messageId, recipientId, "sent");
 
   try {
     // Send the "sent" status first
-    await sendStatusUpdate(webhookUrl, sentPayload);
+    await sendStatusUpdate(webhookUrl, sentPayload,to);
 
     // Small random chance of message failure (20%)
     const willFail = Math.random() < 0.2;
@@ -130,7 +130,7 @@ async function simulateStatusProgression(messageId, recipientId, webhookUrl) {
           },
         },
       ];
-      await sendStatusUpdate(webhookUrl, failedPayload);
+      await sendStatusUpdate(webhookUrl, failedPayload,to);
       // No further status updates after failure
       return;
     }
@@ -142,12 +142,12 @@ async function simulateStatusProgression(messageId, recipientId, webhookUrl) {
       recipientId,
       "delivered"
     );
-    await sendStatusUpdate(webhookUrl, deliveredPayload);
+    await sendStatusUpdate(webhookUrl, deliveredPayload,to);
 
     // Finally send read status after another delay
     await new Promise((resolve) => setTimeout(resolve, 3000));
     const readPayload = createStatusPayload(messageId, recipientId, "read");
-    await sendStatusUpdate(webhookUrl, readPayload);
+    await sendStatusUpdate(webhookUrl, readPayload,to);
   } catch (error) {
     console.error(`Error in status progression sequence: ${error.message}`);
   }
@@ -167,6 +167,7 @@ app.get("/", (req, res) => {
 app.post("/v1/messages", async (req, res) => {
   try {
     const { to } = req.body;
+    console.log("🚀 ~ app.post ~ to:", to)
     if (!to) {
       return res.status(400).json({
         error: {
@@ -184,7 +185,7 @@ app.post("/v1/messages", async (req, res) => {
     const messageId = generateMessageId(recipientId);
     const webhookUrl = DEFAULT_WEBHOOK_URL;
 
-    await simulateStatusProgression(messageId, recipientId, webhookUrl);
+    await simulateStatusProgression(messageId, recipientId, webhookUrl,to);
 
     // Return immediate success response similar to actual WhatsApp API
     res.status(200).json({
