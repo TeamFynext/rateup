@@ -225,7 +225,17 @@ const ChatContactMenu = ({ contact }) => {
   }
 
   function handleBlock() {
-    blockmut.mutate({ phoneNumbersList: [contact.phone] });
+    blockmut.mutate(
+      { phoneNumbersList: [contact.phone] },
+      {
+        onSuccess: () => {
+          setSelectedContact({
+            ...contact,
+            blockedOnWhatsApp: true,
+          });
+        },
+      },
+    );
   }
 
   return (
@@ -263,14 +273,15 @@ const ChatContactMenu = ({ contact }) => {
         >
           Edit Contact
         </Menu.Item>
-        {!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) && (
-          <Menu.Item
-            leftSection={<IconForbid2 size={20} />}
-            onClick={openConfirm}
-          >
-            Block contact
-          </Menu.Item>
-        )}
+        {!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) &&
+          !contact?.blockedOnWhatsApp && (
+            <Menu.Item
+              leftSection={<IconForbid2 size={20} />}
+              onClick={openConfirm}
+            >
+              Block contact
+            </Menu.Item>
+          )}
       </Menu.Dropdown>
       <AssignInbox
         contactId={contact.id}

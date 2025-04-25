@@ -135,10 +135,6 @@ export default function WaInboxChatDisplayFooter({
     );
   };
 
-  if (contact.blockedOnWhatsApp) {
-    return <WaInboxBlockedContactFooter contact={contact} />;
-  }
-
   if (isSessionExpired) {
     return (
       <Flex className={classes.wrapper} justify="flex-start">
@@ -231,11 +227,18 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
 };
 
 export const WaInboxBlockedContactFooter = ({ contact }) => {
-  const { filterData } = useContactStore();
+  const { setSelectedContact, filterData } = useContactStore();
   const [opened, { open, close }] = useDisclosure(false);
   const unblockMut = useUnBlockWhatsAppUser(filterData);
   function handleUnblock() {
-    unblockMut.mutate({ phoneNumbersList: [contact.phone] });
+    unblockMut.mutate(
+      { phoneNumbersList: [contact.phone] },
+      {
+        onSuccess: () => {
+          setSelectedContact({ ...contact, blockedOnWhatsApp: false });
+        },
+      },
+    );
   }
   return (
     <Stack gap={"xs"} pb={"xs"}>

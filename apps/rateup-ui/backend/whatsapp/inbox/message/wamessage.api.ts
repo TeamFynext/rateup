@@ -153,7 +153,9 @@ export async function getAssignedUserForContact(contactId) {
 }
 
 export async function getInboxUserCount() {
-  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`)).data;
+  return (
+    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`, { timeout: 30000 })
+  ).data;
 }
 
 export async function markWaMessagesAsRead(contactId) {

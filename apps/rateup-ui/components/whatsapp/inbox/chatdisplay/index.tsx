@@ -17,6 +17,7 @@ import NothingFound from "../../../NothingFound/NothingFound";
 import WaInboxChatDisplayBody from "./chatdisplayBody";
 import WaInboxChatDisplayFooter, {
   WaInboxAssignUserFooter,
+  WaInboxBlockedContactFooter,
 } from "./chatdisplayFooter";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader";
 import classes from "./styles.module.css";
@@ -66,7 +67,9 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
             smallScreen={smallScreen}
           />
           <WaInboxChatDisplayBody data={messages} smallScreen={smallScreen} />
-          {!assignedUsers?.length ? (
+          {contact?.blockedOnWhatsApp ? (
+            <WaInboxBlockedContactFooter contact={contact} />
+          ) : !assignedUsers?.length ? (
             <WaInboxAssignUserFooter contactId={contact?.id} user={user} />
           ) : isAssignedToMe ? (
             <WaInboxChatDisplayFooter contact={contact} />
