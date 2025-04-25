@@ -82,6 +82,7 @@ export default function ConfirmationModal({
               icon={<IconAlertOctagon size={18} />}
               iconSize={30}
               p={"sm"}
+              mt={"sm"}
             >
               <Text size="xs">{deleteQuotion}</Text>
             </Blockquote>

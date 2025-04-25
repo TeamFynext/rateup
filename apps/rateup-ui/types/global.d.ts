@@ -572,6 +572,7 @@ declare global {
     consent: boolean;
     waMessageAssignStatus: WaMessageAssignStatus;
     whatsappUserName?: string;
+    blockedOnWhatsApp: boolean;
     loyaltyCustomer?: {
       id: string;
       email?: string;
