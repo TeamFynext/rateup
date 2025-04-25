@@ -1,7 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import {
   ByCampaignIdParams,
-  ByFlowIdParams,
   CreateCampaignInput,
   GetCampaignsQuery,
   SendCampaignInput,
@@ -11,7 +10,6 @@ import {
   createCampaign,
   deleteCampaign,
   deleteCampaignParticipantsByCampaignId,
-  doesCampaignIdExistInMessageQueue,
   enqueueCampaignMessage,
   getCampaginStatsById,
   getCampaignById,
@@ -20,19 +18,11 @@ import {
   getCampaignsByTeamId,
   getResponseByCampaignById,
   getResponseExcelByCampaignById,
-  sendCampaign,
   updateCampaign,
-  updateCampaignMessageQueueRetryCount,
 } from "./campaign.service";
-import { Role } from "@prisma/client";
-import { verifyRole } from "../../utils/auth";
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema";
-import {
-  CampaignParticipantStatus,
-  CampaignStatus,
-  SentCampaignEnum,
-} from "../../types/enums";
+import { CampaignStatus, SentCampaignEnum } from "../../types/enums";
 import { log } from "../../utils/logger";
 
 export async function createCampaignHandler(
@@ -110,58 +100,57 @@ export async function sendCampaignHandler(
   try {
     if (status === CampaignStatus.INACTIVE) {
       await updateCampaign(campaignId, {
-        status: CampaignStatus.ACTIVE,
+        status: CampaignStatus.DEQUEUING,
         campaignSentAt: null,
         scheduledStatuses: [],
       });
       await deleteCampaignParticipantsByCampaignId(campaignId);
       return reply.status(200).send({
-        message: "Campaign schedule cancelled",
-        code: "MSG_SCHEDULED",
+        message: "Campaign schedule cancellation requested",
+        code: "MSG_SCHEDULE_CANCEL_REQUESTED",
+      });
+    }
+    const campaign = await getCampaignById(campaignId);
+    if (
+      [CampaignStatus.DEQUEUING, CampaignStatus.QUEUING].includes(
+        campaign.status,
+      )
+    ) {
+      return reply.status(400).send({
+        message: `Campaign ${campaign.status} is in progress, so no action can be performed at this time.`,
+        code: "CAMPAIGN_ENQUEUE_DEQUEUE_IN_PROGRESS",
       });
     }
 
     if (campaignSentAt && sentCampaignChoice === SentCampaignEnum.LATER) {
       await updateCampaign(campaignId, {
-        status: CampaignStatus.SCHEDULED,
+        status: CampaignStatus.QUEUING,
         campaignSentAt,
         scheduledStatuses: [],
       });
-      const isScheduled = await enqueueCampaignMessage(
+      await enqueueCampaignMessage(
         campaignId,
         sendToStatuses,
         undefined,
         campaignSentAt,
       );
-      if (!isScheduled.status) {
-        return reply.status(400).send({
-          message: isScheduled.message,
-          code: "MSG_NOT_SCHEDULED",
-        });
-      }
       return reply.status(200).send({
-        message: "Campaign scheduled successfully",
-        code: "MSG_SCHEDULED",
+        message: "Campaign scheduling requested",
+        code: "MSG_SCHEDULE_REQUESTED",
       });
     }
     await updateCampaign(campaignId, {
-      status: CampaignStatus.ACTIVE,
+      status: CampaignStatus.QUEUING,
       campaignSentAt: null,
       scheduledStatuses: [],
     });
 
-    const isScheduled = await enqueueCampaignMessage(
-      campaignId,
-      sendToStatuses,
-      participantId,
-    );
-    if (!isScheduled.status) {
-      return reply.status(400).send({
-        message: isScheduled.message,
-        code: "MSG_NOT_SCHEDULED",
-      });
-    }
-    return reply.status(204).send();
+    await enqueueCampaignMessage(campaignId, sendToStatuses, participantId);
+    return reply.status(200).send({
+      message:
+        "Campaign enqueue request accepted. Processing will occur asynchronously.",
+      code: "ENQUEUE_REQUEST_ACCEPTED",
+    });
   } catch (error) {
     log.error("Error while handling sendCampaignHandler", error);
     return reply.code(500).send({
