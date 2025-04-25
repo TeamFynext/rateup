@@ -216,7 +216,7 @@ app.post("/v1/messages", async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT,":", () => {
   console.log(`WhatsApp API mock server running on port ${PORT}`);
   console.log(`Default webhook URL: ${DEFAULT_WEBHOOK_URL}`);
 });
