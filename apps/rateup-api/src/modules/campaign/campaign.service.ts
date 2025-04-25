@@ -19,7 +19,6 @@ import {
   WaTemplateComponent,
   WHATSAPP_BUTTON_TYPE,
 } from "../../types/whatsapp.types";
-import { aes_decrypt } from "../../../utils/encryption/encryption.utils";
 
 const redisURL = new URL(process.env.REDIS_URL);
 const redisConnection = new IORedis({
@@ -37,54 +36,6 @@ export interface WaMessageStats {
   delivered?: boolean;
   [key: string]: any;
 }
-type campaginExtentend = {
-  team: {
-    id: string;
-    createdAt: Date;
-    name: string;
-    code: string;
-    googleLink: string;
-    tags: string[];
-    orgId: string;
-    org: {
-      WaAccountSettings: {
-        contactTags: string[];
-      };
-    };
-  };
-  waTemplate: {
-    data: {};
-  };
-  campaignParticipants: {
-    id: string;
-    status: string;
-    createdAt: Date;
-    sentAt?: Date;
-    contact?: {
-      name: string;
-      phone: string;
-    };
-    WaMessageCampaginParticipantMap: {
-      campaignParticipantId: string;
-      waMessageId: string;
-      waMessage: {
-        stats: WaMessageStats;
-        waCreatedAt: Date;
-      };
-    }[];
-  }[];
-  flowId?: string;
-  stats?: {
-    countRead?: number;
-    countSent?: number;
-    countFailed?: number;
-    countDelivered?: number;
-    countPending?: number;
-    countCompleted?: number;
-  };
-  contactTags?: string[];
-  name?: string;
-};
 
 export function getLatestStatus(participant = []) {
   let latestStatus = null;
@@ -617,7 +568,7 @@ export async function getCampaginStatsById(campaignId: string) {
   };
 }
 
-const queue = new Queue("waMessageQueue", { connection: redisConnection });
+const queue = new Queue("waCampaignEnqueue", { connection: redisConnection });
 
 interface Campaign {
   useUserConsent: boolean;
@@ -646,103 +597,18 @@ export async function enqueueCampaignMessage(
   scheduledAt?: Date,
 ): Promise<{ status: boolean; message: string }> {
   try {
-    const jobs = await queue.getJobs([
-      "delayed",
-      "waiting",
-      "active",
-      "failed",
-      "paused",
-    ]);
-    const count = jobs.filter((job) => job.name === campaignId).length;
-    if (count > 0) {
-      return {
-        status: false,
-        message: "Campaign already scheduled",
-      };
-    }
-
-    // Fetch campaign settings
-    const campaign = await prisma.campaign.findUnique({
-      where: { id: campaignId },
-      select: { useUserConsent: true },
-    });
-
-    // Define the contact consent condition
-    const contactConsentCondition = campaign?.useUserConsent
-      ? Prisma.sql`AND c.consent = true`
-      : Prisma.sql``;
-
-    // Fetch participants based on the provided conditions
-    const campaignParticipants = await prisma.$queryRaw<CampaignParticipant[]>`
-      SELECT cp.id, c.phone, c.name, c.tags, c."orgId", 
-             camp."dynamicTags", camp."teamId", wt.data, wt."defaultValues",c.id as "contactId",camp.id as "campaignId",was."accessToken",was."phoneId",was."accessToken_iv"
-      FROM "CampaignParticipant" cp
-      JOIN "Contact" c ON cp."contactId" = c.id
-      JOIN "Campaign" camp ON cp."campaignId" = camp.id
-      JOIN "WaTemplate" wt ON camp."waTemplateId" = wt.id
-      JOIN "WhatsappSettings" was ON c."orgId" = was."orgId"
-      WHERE cp."campaignId" = ${campaignId}::uuid
-        ${participantId ? Prisma.sql`AND cp.id = ${participantId}::uuid` : Prisma.sql`AND cp.status IN (${Prisma.join(sendToStatuses)})`}
-        ${contactConsentCondition}
-    `;
-
-    if (campaignParticipants.length === 0) {
-      return {
-        message: "No participants found matching the conditions",
-        status: false,
-      };
-    }
-
-    const flowId = getFlowIdFromTemplateComponents(
-      campaignParticipants[0]?.data?.components,
+    queue.add(
+      campaignId,
+      {
+        campaignId,
+        sendToStatuses,
+        participantId,
+        scheduledAt,
+      },
+      {
+        removeOnComplete: true,
+      },
     );
-
-    const surveyTeamMap = flowId
-      ? await prisma.surveyTeamMap.findFirst({
-          where: {
-            teamId: campaignParticipants[0].teamId,
-            survey: {
-              WaFlow: {
-                flowId,
-              },
-            },
-          },
-          select: { id: true },
-        })
-      : null;
-    if (
-      !campaignParticipants[0].accessToken ||
-      !campaignParticipants[0].accessToken_iv
-    ) {
-      throw new Error("Access token is null or undefined");
-    }
-    const decryptedToken = aes_decrypt(
-      campaignParticipants[0].accessToken,
-      Buffer.from(process.env.wa_access_token_encryption_key, "hex"),
-      campaignParticipants[0].accessToken_iv,
-    );
-
-    // Enqueue messages
-    await queue.addBulk(
-      campaignParticipants.map((participant) => ({
-        name: campaignId,
-        data: {
-          ...participant,
-          accessToken: decryptedToken,
-          scheduledAt,
-          campaignId,
-          surveyTeamMapId: surveyTeamMap?.id,
-        },
-        opts: {
-          delay: scheduledAt
-            ? dayjs(scheduledAt).diff(dayjs(), "millisecond")
-            : undefined,
-          removeOnComplete: true,
-          deduplication: { id: participant?.id },
-        },
-      })),
-    );
-
     return { status: true, message: "Campaign messages enqueued successfully" };
   } catch (error) {
     console.error("Error enqueuing campaign message:", error);
@@ -763,12 +629,13 @@ export function getFlowIdFromTemplateComponents(
 
   return flowId;
 }
-
+const deleteQueue = new Queue("waCampaignDequeue", {
+  connection: redisConnection,
+});
 export const deleteCampaignParticipantsByCampaignId = async (
   campaignId: string,
 ) => {
-  const d = await queue.getJobs();
-  d.filter((job) => job.name === campaignId).forEach((job) => job.remove());
+  deleteQueue.add(campaignId, { campaignId });
 };
 
 export async function doesCampaignIdExistInMessageQueue(campaignId: string) {

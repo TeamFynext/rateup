@@ -7,6 +7,7 @@ import {
   WaChatExportConstraints,
   WaMediaFileByMediaIdBody,
   WaMessageAssignBody,
+  BlockUserBody,
 } from "./wamessage.schema";
 import {
   addNewWaMessage,
@@ -32,10 +33,12 @@ import {
   validateSession,
 } from "../../whatsappSurvey/wasurvey.utils";
 import {
+  blockWhatsappUser,
   createSession,
   deleteSession,
   getSession,
   sendMessage,
+  unblockWhatsappUser,
 } from "../../whatsappSurvey/wasurvey.service";
 import {
   handleWaReceivedImages,
@@ -361,6 +364,40 @@ export async function getContactsCountByInboxTabHandler(
       request.user.userId,
     );
     reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function blockWhatsappUserHandler(
+  request: FastifyRequest<{ Body: BlockUserBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await blockWhatsappUser(
+      request.user.orgId,
+      request.body.phoneNumbersList,
+    );
+    if (res.success) return reply.code(200).send();
+    reply.code(400).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function unblockWhatsappUserHandler(
+  request: FastifyRequest<{ Body: BlockUserBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await unblockWhatsappUser(
+      request.user.orgId,
+      request.body.phoneNumbersList,
+    );
+    if (res.success) return reply.code(200).send();
+    reply.code(400).send(res);
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
