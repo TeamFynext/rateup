@@ -113,6 +113,133 @@ export async function sendMessage(
   }
 }
 
+function createBlockWhatsappUserBody(phoneNumbersList: string[]) {
+  const listBody = phoneNumbersList.map((phone) => ({ user: phone }));
+  return {
+    messaging_product: "whatsapp",
+    block_users: listBody,
+  };
+}
+
+export async function blockWhatsappUser(orgId: string, phoneNumbers: string[]) {
+  const waSettings = await getWaSettings(orgId);
+  const body = createBlockWhatsappUserBody(phoneNumbers);
+  try {
+    const res = await callWhatsappApi(
+      `/${waSettings.phoneId}/block_users`,
+      "POST",
+      waSettings.accessToken,
+      body,
+    );
+    if (res.status === 200) {
+      log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
+      await prisma.contact.updateMany({
+        where: {
+          phone: {
+            in: phoneNumbers,
+          },
+          orgId,
+        },
+        data: {
+          blockedOnWhatsApp: true,
+        },
+      });
+      return { success: true };
+    }
+    if (res.status === 400 && res.data?.error?.code === 139100) {
+      log.error("Failed to block some users: see error %o", res.data);
+      const blockedNumbers = res.data?.blocked_users?.added_users?.map(
+        (user) => user?.input,
+      );
+      const failedNumbers = res.data?.blocked_users?.failed_users?.map(
+        (user) => user?.input,
+      );
+      log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
+      await prisma.contact.updateMany({
+        where: {
+          phone: {
+            in: blockedNumbers,
+          },
+          orgId,
+        },
+        data: {
+          blockedOnWhatsApp: true,
+        },
+      });
+      return {
+        success: false,
+        failedNumbers,
+      };
+    }
+    return { success: false };
+  } catch (e) {
+    console.error(e);
+    log.error(e);
+    return { success: false, error: e };
+  }
+}
+
+export async function unblockWhatsappUser(
+  orgId: string,
+  phoneNumbers: string[],
+) {
+  const waSettings = await getWaSettings(orgId);
+  const body = createBlockWhatsappUserBody(phoneNumbers);
+  try {
+    const res = await callWhatsappApi(
+      `/${waSettings.phoneId}/block_users`,
+      "DELETE",
+      waSettings.accessToken,
+      body,
+    );
+    if (res.status === 200) {
+      log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
+      await prisma.contact.updateMany({
+        where: {
+          phone: {
+            in: phoneNumbers,
+          },
+          orgId,
+        },
+        data: {
+          blockedOnWhatsApp: false,
+        },
+      });
+      return { success: true };
+    }
+    if (res.status === 400 && res.data?.error?.code === 139100) {
+      log.error("Failed to block some users: see error %o", res.data);
+      const unblockedNumbers = res.data?.blocked_users?.added_users?.map(
+        (user) => user?.input,
+      );
+      const failedNumbers = res.data?.blocked_users?.failed_users?.map(
+        (user) => user?.input,
+      );
+      log.trace(`blocked users successfully %o %o`, res.data, res.statusText);
+      await prisma.contact.updateMany({
+        where: {
+          phone: {
+            in: unblockedNumbers,
+          },
+          orgId,
+        },
+        data: {
+          blockedOnWhatsApp: false,
+        },
+      });
+      return {
+        success: false,
+        failedNumbers,
+      };
+    }
+    return { success: false };
+  } catch (e) {
+    console.error(e);
+    log.error(e);
+    return { success: false, error: e };
+  }
+}
+
 export async function getSession(orgId: string, phone: string) {
   const session = await prisma.waSession.findUnique({
     where: {

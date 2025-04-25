@@ -291,6 +291,12 @@ export async function filterChats(
       }
     }
 
+    if (bodyFilterProps?.blockedUsers) {
+      filters?.push(`c."blockedOnWhatsApp" = TRUE`);
+    } else {
+      filters?.push(`c."blockedOnWhatsApp" = FALSE`);
+    }
+
     const whereClause = filters.join(" AND ");
 
     // Simplified and optimized query
@@ -303,6 +309,7 @@ export async function filterChats(
         c."lastReceivedMessageTimeStamp",
         c."consent",
         c."whatsappUserName",
+        c."blockedOnWhatsApp",
         COALESCE(c.tags, '{}'::jsonb) as tags,
         (
           SELECT COUNT(*)::INTEGER FROM "WaMessage" w WHERE w."contactId" = c.id
@@ -525,49 +532,53 @@ export async function getContactsCountByInbox(orgId, userId) {
     unassigned_count: number;
     assigned_to_me_count: number;
     sent_count: number;
-  }[] = await prisma.$queryRaw`WITH assigned_contacts AS (
-    SELECT DISTINCT "contactId"
-    FROM "WaInboxAssign"
-    WHERE "assignedUserId" = ${userId}::uuid
-), filterd_messages AS (
-  SELECT wm."contactId",
-  c."lastReceivedMessageTimeStamp",
-  c."waMessageAssignStatus",
-  wm."messageBody"->>'exchangeProcess' as exchange_process,
-  CASE WHEN ac."contactId" IS NOT NULL THEN true ELSE false END as is_assigned_to_me
-  FROM "WaMessage" wm 
-  JOIN "Contact" c ON wm."contactId" = c.id
-  LEFT JOIN assigned_contacts ac ON wm."contactId" = ac."contactId"
-  WHERE c."orgId" = ${orgId}::uuid
-)
-SELECT 
-    COUNT(DISTINCT CASE 
-        WHEN fm."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND exchange_process ='receive'
-        AND fm."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED}
-        THEN fm."contactId"
-    END)::INTEGER AS new_count,
-
-    COUNT(DISTINCT fm."contactId")::INTEGER AS total_count,
-
-    COUNT(DISTINCT CASE WHEN exchange_process = 'send' THEN fm."contactId" END)::INTEGER AS sent_count, 
-
-    COUNT(DISTINCT CASE 
-        WHEN fm."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND exchange_process ='receive'
-        THEN fm."contactId"
-    END)::INTEGER AS assigned_count,
-
-    COUNT(DISTINCT CASE 
-        WHEN fm."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND exchange_process ='receive'
-        THEN fm."contactId"
-    END)::INTEGER AS closed_count,
-
-    COUNT(DISTINCT CASE 
-        WHEN fm."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED} AND exchange_process = 'receive'
-        THEN fm."contactId"
-    END)::INTEGER AS unassigned_count,
-
-    COUNT(DISTINCT CASE WHEN exchange_process ='receive' AND is_assigned_to_me THEN fm."contactId" END)::INTEGER AS assigned_to_me_count
-FROM filterd_messages fm`;
+    blocked_count: number;
+  }[] = await prisma.$queryRaw`WITH message_flags AS (
+    SELECT
+      c.id AS contact_id,
+      c."waMessageAssignStatus",
+      c."blockedOnWhatsApp",
+      EXISTS (
+        SELECT 1 FROM "WaMessage" wm_recv 
+        WHERE wm_recv."contactId" = c.id 
+        AND wm_recv."messageBody"->>'exchangeProcess' = 'receive'
+        LIMIT 1
+      ) AS has_receive,
+      EXISTS (
+        SELECT 1 FROM "WaMessage" wm_send 
+        WHERE wm_send."contactId" = c.id 
+        AND wm_send."messageBody"->>'exchangeProcess' = 'send'
+        LIMIT 1
+      ) AS has_send,
+      EXISTS (
+        SELECT 1 FROM "WaMessage" wm_recent 
+        WHERE wm_recent."contactId" = c.id 
+        AND wm_recent."messageBody"->>'exchangeProcess' = 'receive'
+        AND c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours'
+        LIMIT 1
+      ) AS has_recent,
+      EXISTS (
+        SELECT 1 FROM "WaInboxAssign" wa 
+        WHERE wa."contactId" = c.id 
+        AND wa."assignedUserId" = ${userId}::uuid
+        LIMIT 1
+      ) AS is_assigned_to_me
+    FROM "Contact" c
+    WHERE c."orgId" = ${orgId}::uuid
+  )
+  SELECT
+    COUNT(CASE WHEN mf.has_recent AND mf."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED} AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS new_count,
+    COUNT(CASE WHEN mf.has_receive OR mf.has_send AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS total_count,
+    COUNT(CASE WHEN mf.has_send AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS sent_count,
+    COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND mf.has_receive
+      AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS assigned_count,
+    COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND mf.has_receive
+      AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS closed_count,
+    COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED} AND mf.has_receive
+      AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS unassigned_count,
+    COUNT(CASE WHEN mf.has_receive AND mf.is_assigned_to_me AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS assigned_to_me_count,
+    COUNT(CASE WHEN mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS blocked_count
+  FROM message_flags mf;`;
 
   return {
     new: count[0].new_count,
@@ -577,6 +588,7 @@ FROM filterd_messages fm`;
     assignedToMe: count[0].assigned_to_me_count,
     assigned: count[0].assigned_count,
     sent: count[0].sent_count,
+    blocked: count[0].blocked_count,
   };
 }
 
