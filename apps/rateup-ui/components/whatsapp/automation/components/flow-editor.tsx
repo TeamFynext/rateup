@@ -51,9 +51,11 @@ const defaultEdgeOptions = {
 function FlowEditorContent({
   waAutomatedReplyId,
   waAutomationData,
+  refetch,
 }: {
   waAutomatedReplyId: string;
   waAutomationData: any;
+  refetch: () => void;
 }) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -571,6 +573,7 @@ function FlowEditorContent({
               handleTabSwitch={handleTabSwitch}
               validateFlow={validateFlow}
               saveDisabled={!hasUnsavedChanges}
+              refetch={refetch}
             />
           </Panel>
         </ReactFlow>
@@ -591,15 +594,18 @@ function FlowEditorContent({
 export default function FlowEditor({
   waAutomatedReplyId,
   data,
+  refetch,
 }: {
   waAutomatedReplyId: string;
   data: any;
+  refetch: () => void;
 }) {
   return (
     <ReactFlowProvider>
       <FlowEditorContent
         waAutomatedReplyId={waAutomatedReplyId}
         waAutomationData={data}
+        refetch={refetch}
       />
     </ReactFlowProvider>
   );

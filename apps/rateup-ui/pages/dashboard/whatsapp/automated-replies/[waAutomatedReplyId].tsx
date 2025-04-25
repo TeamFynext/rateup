@@ -60,7 +60,7 @@ const column: ColumnDef<any>[] = [
 const WaAutomatedReplyId = () => {
   const router = useRouter();
   let automatedId = router.query.waAutomatedReplyId as string;
-  const { data, isPending } = useWaAutomatedReplyById(automatedId);
+  const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
   const { data: waAutomtedReplyMessage, isLoading } =
     useWaAutomatedRepliesMessageById(automatedId);
   const { data: waSettings, isPending: waPending } = useWaSettings();
@@ -100,7 +100,11 @@ const WaAutomatedReplyId = () => {
 
       <Tabs.Panel value="flow">
         <Stack style={{ width: "100%", height: "100%" }}>
-          <FlowEditor data={data} waAutomatedReplyId={automatedId} />
+          <FlowEditor
+            data={data}
+            waAutomatedReplyId={automatedId}
+            refetch={refetch}
+          />
         </Stack>
       </Tabs.Panel>
       <Tabs.Panel value="settings">
