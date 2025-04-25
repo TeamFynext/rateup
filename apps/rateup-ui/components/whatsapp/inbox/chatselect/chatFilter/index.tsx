@@ -31,7 +31,7 @@ export type ChatFilter = {
   campaigns: Array<MultiGV>;
   tags: Array<MultiGV>;
   waMessageAssignStatus?: string;
-  readTab?: string;
+  blockedUsers: boolean;
 };
 interface Props {
   filter: ChatFilter;
@@ -124,6 +124,7 @@ export default function WaInboxChatFilter(props: Props) {
       messageType: props?.tag === "All" ? "all" : "usermessages",
       strictFilter: false,
       searchTerm: "",
+      blockedUsers: false,
     });
   }
 
