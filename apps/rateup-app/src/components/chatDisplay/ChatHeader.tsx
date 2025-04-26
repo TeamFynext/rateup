@@ -8,7 +8,7 @@ const { width: screenWidth } = Dimensions.get('window')
 
 const MoreOptions = ({ visible, onClose }: { visible: boolean, onClose: () => void }) => {
     const modalWidth = screenWidth * 0.4 // 40% of screen width (you can adjust)
-
+    const router = useRouter()
     return (
         <Modal
             visible={visible}
@@ -35,7 +35,10 @@ const MoreOptions = ({ visible, onClose }: { visible: boolean, onClose: () => vo
                         gap:2
                     }}
                 >
-                    <TouchableOpacity className="p-3" onPress={() => { onClose(); /* handle Edit */ }}>
+                    <TouchableOpacity className="p-3" onPress={() => { 
+                        onClose();
+                        router.push("/inbox/contact/edit")
+                     }}>
                         <Text className="text-gray-800 text-lg">Edit</Text>
                     </TouchableOpacity>
                     <TouchableOpacity className="p-3" onPress={() => { onClose(); /* handle Assign */ }}>

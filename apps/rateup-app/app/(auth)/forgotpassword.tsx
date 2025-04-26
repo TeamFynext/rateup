@@ -42,7 +42,7 @@ export default function ResetPasswordScreen() {
                 className="flex-row items-center mb-6 justify-start"
                 onPress={() => router.replace("/(auth)/signin")}
             >
-                <BackIcon/>
+                <BackIcon height={25} width={25}/>
                 <Text className="text-xl font-bold ml-2">Reset Password</Text>
             </TouchableOpacity>
 

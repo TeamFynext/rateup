@@ -10,14 +10,14 @@ type SearchBarProps = {
 
 export default function SearchBar({ searchTerm, setSearchTerm }: SearchBarProps) {
   const router = useRouter();
-  const rotation = useRef(new Animated.Value(0)).current; // <-- animation value
+  const rotation = useRef(new Animated.Value(0)).current; 
   const [isRotating, setIsRotating] = useState(false);
 
   const handleRefresh = () => {
-    if (isRotating) return; // avoid spamming
+    if (isRotating) return; 
     setIsRotating(true);
 
-    // Start rotation animation
+
     Animated.loop(
       Animated.timing(rotation, {
         toValue: 1,
@@ -27,16 +27,16 @@ export default function SearchBar({ searchTerm, setSearchTerm }: SearchBarProps)
       }),
     ).start();
 
-    // Stop after 3 seconds
+    
     setTimeout(() => {
       rotation.stopAnimation(() => {
-        rotation.setValue(0); // Reset
+        rotation.setValue(0); 
       });
       setIsRotating(false);
     }, 3000);
   };
 
-  // Interpolating rotation degrees
+ 
   const rotate = rotation.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],

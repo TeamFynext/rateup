@@ -94,7 +94,7 @@ export default function AddContactScreen() {
     <View className="px-4 pt-6 pb-2">
       <View className='flex-row items-center justify-start mb-8 gap-2'>
         <Pressable onPress={() => router.back()}>
-          <BackIcon />
+          <BackIcon height={25} width={25}/>
         </Pressable>
         <Text className="text-black text-2xl font-bold">Add New Contact</Text>
       </View>

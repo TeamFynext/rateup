@@ -12,14 +12,13 @@ interface ICreateGoogleUser {
 
 export const signInWithGoogle = async () => {
   try {
-    console.log("Attempting Google Sign-In");
+    
 
     // Ensure no existing session and Play Services
     await GoogleSignin.signOut();
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
     // Sign in and get tokens
-    const userInfo = await GoogleSignin.signIn();
 
     const tokens = await GoogleSignin.getTokens();
     const idToken = tokens.idToken;
@@ -55,8 +54,6 @@ export const signInWithGoogle = async () => {
     }
 
     await AsyncStorage.setItem("accessToken", token);
-    const storedToken = await AsyncStorage.getItem("accessToken");
-    console.log("Stored Google Token:", storedToken);
 
     return {
       success: true,

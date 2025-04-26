@@ -7,37 +7,38 @@ import {
   Image,
   Animated,
   Easing,
+  Keyboard,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { signIn } from "@/src/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
 import { EyeIcon } from "../constants/imageExports";
 
-export default function SignInScreen({setError}:{setError:(msg:string)=> void}) {
+export default function SignInScreen({ setError }: { setError: (msg: string) => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [loading,setLoading] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(false);
 
   const router = useRouter();
 
   const handleSignIn = async () => {
-    setLoading(true)
+    Keyboard.dismiss();
+    setLoading(true);
     const response = await signIn(email, password);
     if (!response.success) {
       setError(response.message);
-      setLoading(false)
+      setLoading(false);
     } else {
       setError("");
       router.replace("/home");
-      setLoading(false)
+      setLoading(false);
     }
   };
 
   return (
     <View className="w-full px-2 relative">
-
       {/* Email */}
       <Text className="text-sm text-[#7A8289] mb-1 mt-8">Email Address</Text>
       <TextInput
@@ -60,7 +61,7 @@ export default function SignInScreen({setError}:{setError:(msg:string)=> void}) 
           autoCapitalize="none"
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-          <EyeIcon/>
+          <EyeIcon />
         </TouchableOpacity>
       </View>
 
@@ -99,7 +100,7 @@ export default function SignInScreen({setError}:{setError:(msg:string)=> void}) 
           />
           <Text className="ml-2 text-sm text-[#343A40]">Remember Me</Text>
         </View>
-        <TouchableOpacity onPress={()=>router.push("/(auth)/forgotpassword")}>
+        <TouchableOpacity onPress={() => router.push("/(auth)/forgotpassword")}>
           <Text className="text-[#004F98] text-sm font-medium">
             Forgot Password?
           </Text>
@@ -109,10 +110,14 @@ export default function SignInScreen({setError}:{setError:(msg:string)=> void}) 
       {/* Sign In Button */}
       <TouchableOpacity
         onPress={handleSignIn}
-        className="bg-[#004F98] py-3 rounded-md mb-4 items-center"
+        className={`py-3 rounded-md mb-4 items-center ${
+          loading ? "bg-[#7AA5C8]" : "bg-[#004F98]"
+        }`}
         disabled={loading}
       >
-        <Text className="text-white font-semibold text-[16px]">{loading?"Signing In...":"Sign In"}</Text>
+        <Text className="text-white font-semibold text-[16px]">
+          {loading ? "Signing In..." : "Sign In"}
+        </Text>
       </TouchableOpacity>
     </View>
   );

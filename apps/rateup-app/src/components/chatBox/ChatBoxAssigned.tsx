@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
 import { assignedContact } from "@/src/api/inbox/contacts";
+import { getMessagePreview, namePreview, getRelativeTime } from "./utils";
 
 const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({
   id,
@@ -15,23 +16,6 @@ const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void
 }) => {
   const [assignedUser, setAssignedUser] = useState<string | null>(null);
 
-  const namePreview = (name_: string) => {
-    const nameArray = name_.split(" ");
-    if (nameArray.length >= 2) {
-      return (nameArray[0][0] + nameArray[1][0]).toUpperCase();
-    }
-    return nameArray[0].slice(0, 2).toUpperCase();
-  };
-
-  const getMessagePreview = (lastMessage: any) => {
-    if (!lastMessage) return "No message";
-
-    if (lastMessage.text) return lastMessage.text.body;
-    if (lastMessage.image) return "📷 Photo";
-    if (lastMessage.video) return "🎥 Video";
-
-    return "Unsupported message";
-  };
 
   useEffect(() => {
     async function assign() {
@@ -47,27 +31,6 @@ const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void
     }
     assign();
   }, [id]);
-
-  const getRelativeTime = (waCreatedAt: string | undefined) => {
-    if (!waCreatedAt) return "No time";
-    const timestamp = new Date(waCreatedAt).getTime();
-    const now = Date.now();
-    const diff = now - timestamp;
-
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
-
-    if (seconds < 60) return `${seconds}s ago`;
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-    if (weeks < 4) return `${weeks}w ago`;
-
-    return new Date(waCreatedAt).toLocaleDateString();
-  };
 
   return (
     <TouchableOpacity onPress={onPress}>

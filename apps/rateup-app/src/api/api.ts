@@ -29,7 +29,6 @@ export const signIn = async (email: string, password: string) => {
         }
     }
     await AsyncStorage.setItem("accessToken",token)
-    await AsyncStorage.setItem("userId",response.data.user.id)
     
     return {
         success:true,
@@ -92,9 +91,4 @@ export const sendPasswordResetEmail = async (email: string) => {
     }
   };
   
-
-export const checkProfile = async ()=>{
-    const res= await axios.get(`${API_URL}/api/user/profile`)
-    return res
-}
 

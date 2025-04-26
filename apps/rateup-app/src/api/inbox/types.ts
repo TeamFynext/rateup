@@ -40,3 +40,5 @@ export interface filteredContactCount {
   sent: number,
   unassigned: number,
 }
+
+export type HomeInterface = "inbox" | "whatsapp" | ""
