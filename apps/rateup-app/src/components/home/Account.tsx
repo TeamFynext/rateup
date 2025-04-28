@@ -15,6 +15,7 @@ interface UserProfile {
 const AccountBar = ({ email, orgName, role, profilePhoto, orgPhone, userName }: UserProfile) => {
 
   const [loading, setLoading] = useState<boolean>(false)
+  console.log(profilePhoto)
 
   const handleSignOut = async() => {
     setLoading(true)

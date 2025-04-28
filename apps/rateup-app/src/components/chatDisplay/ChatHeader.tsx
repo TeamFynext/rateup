@@ -1,10 +1,12 @@
 import { View, Text, TouchableOpacity, Pressable, Modal, Dimensions } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { BackIcon, DotsIcon } from '@/src/constants/imageExports';
 import { useRouter } from 'expo-router';
+import { namePreview } from '../chatBox/utils';
 
 
 const { width: screenWidth } = Dimensions.get('window')
+let userId:string;
 
 const MoreOptions = ({ visible, onClose }: { visible: boolean, onClose: () => void }) => {
     const modalWidth = screenWidth * 0.4 // 40% of screen width (you can adjust)
@@ -37,7 +39,7 @@ const MoreOptions = ({ visible, onClose }: { visible: boolean, onClose: () => vo
                 >
                     <TouchableOpacity className="p-3" onPress={() => { 
                         onClose();
-                        router.push("/inbox/contact/edit")
+                        router.push({pathname:"/inbox/contact/edit" ,params:{userId}})
                      }}>
                         <Text className="text-gray-800 text-lg">Edit</Text>
                     </TouchableOpacity>
@@ -57,14 +59,7 @@ const MoreOptions = ({ visible, onClose }: { visible: boolean, onClose: () => vo
 const ChatHeader = ({ id, name, phone }: { id: string, name: string, phone:number }) => {
     const router = useRouter()
     const [optionsVisible, setOptionsVisible] = useState(false)
-
-    const namePreview = (name_: string) => {
-        const nameArray = name_.split(" ");
-        if (nameArray.length >= 2) {
-            return (nameArray[0][0] + nameArray[1][0]).toUpperCase();
-        }
-        return nameArray[0].slice(0, 2).toUpperCase();
-    };
+    userId = id;
 
     return (
         <View className="flex-row items-center justify-between px-6 py-4 bg-white gap-3">

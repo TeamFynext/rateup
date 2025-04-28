@@ -7,7 +7,7 @@ type AuthContextType = {
     isAuthenticated: boolean | null;
     loading: boolean;
     setIsAuthenticated: (value:boolean) => void;
-    userData:any | null
+    userId:string | null
 
 }
 
@@ -15,25 +15,25 @@ const AuthContext = createContext<AuthContextType>({
     isAuthenticated: null,
     loading: true,
     setIsAuthenticated: () => {},
-    userData:null
+    userId:null
 });
 
 export const AuthProvider = ({children}:{children: React.ReactNode}) => {
     const [ isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const [loading, setLoading] = useState(true);
-    const [userData, setUserData] = useState<any | null>(null);
+    const [userId, setUserId] = useState<any | null>(null);
 
     useEffect(()=>{
         const checkUserAuth = async () => {
             try {
                 const authStatus = await checkAuth();
-                const userData = await axios.get("/api/user/info")
+                const userID = await AsyncStorage.getItem("userId")
                 setIsAuthenticated(authStatus);
-                setUserData(userData.data.data);
+                setUserId(userID);
             } catch (error) {
                 console.error("Error checking authentication:", error);
                 setIsAuthenticated(false);
-                setUserData(null)
+                setUserId(null)
             } finally {
                 setLoading(false);
             }
@@ -43,7 +43,7 @@ export const AuthProvider = ({children}:{children: React.ReactNode}) => {
     }, []);
     
     return (
-        <AuthContext.Provider value={{ isAuthenticated, loading, setIsAuthenticated, userData }}>
+        <AuthContext.Provider value={{ isAuthenticated, loading, setIsAuthenticated, userId }}>
             {children}
         </AuthContext.Provider>
     );

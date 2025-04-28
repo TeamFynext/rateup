@@ -14,3 +14,13 @@ export const assignedContact = async (contactId:string) => {
 export const markMessageAsRead = async (contactId:string) => {
     await axios.post(`/api/wa/inbox/message/mark/${contactId}`)
 }
+
+export const getContactById = async (contactId:string) => {
+  const res = await axios.get(`/api/contact/${contactId}`)
+  return res.data
+}
+
+export const editContactById = async (contactId:string,data:any) => {
+  const res = await axios.put(`/api/contact/${contactId}`,data)
+  return res.data
+}

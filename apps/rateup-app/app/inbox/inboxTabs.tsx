@@ -77,11 +77,14 @@ export default function InboxLayout() {
       tabBarPosition="top"
         screenOptions={{
           lazy:true,
+          tabBarPressOpacity:1,
+          tabBarPressColor:"transparent",
           tabBarScrollEnabled: true,
           tabBarActiveTintColor: "#009987",
           tabBarInactiveTintColor: "#000",
+
           tabBarItemStyle: {
-            width: 85
+            width: 85,
           },    
           tabBarIndicatorStyle: { backgroundColor: "transparent" },
           tabBarLabelStyle: { fontWeight: "500", fontSize: 12 ,margin:-3},
@@ -89,7 +92,7 @@ export default function InboxLayout() {
             backgroundColor: "#EBF7F5",
           },
           tabBarShowIcon: true,
-          tabBarBounces: true,
+          tabBarBounces: false,
         }}
       >
         <Tab.Screen 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, memo, useMemo } from "react";
-import { View, Text, TouchableOpacity, Pressable, Animated, Image } from "react-native";
+import { View, Text, TouchableOpacity, Pressable, Animated, Image, Easing, Dimensions } from "react-native";
 import { MenuIcon } from "lucide-react-native";
 import InboxLayoutComponent from "./inbox/inboxTabs";
 import MenuBar from "@/src/components/home/Menu";
@@ -7,15 +7,32 @@ import AccountBar from "@/src/components/home/Account";
 import { useAuth } from "@/src/context/AuthContext";
 import { HomeInterface } from "@/src/api/inbox/types";
 import { namePreview } from "@/src/components/chatBox/utils";
+import axios from "@/src/config/axios";
+
+const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
+
+const PANEL_HEIGHT_PERCENTAGE = 0.6; // 60% of the screen height
+const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 
 const InboxLayout = memo(InboxLayoutComponent);
 
 export default function Home() {
-  const { userData } = useAuth();
-  const { email, orgName, role, profilePhoto, orgPhone, userName } = userData;
+  const {userId} = useAuth();
+  const [userData, setUserData] = useState("")
+  
+  const getUserInfo = async() => {
+    const userDetails = await axios.get("/api/user/info")
+    setUserData( userDetails.data.data)
+  }
 
+  useEffect(()=>{
+    getUserInfo();
+  },[userId])
+
+//@ts-ignore
+  const { email, orgName, role, profilePhoto, orgPhone, userName } = userData
   const [selectedItem, setSelectedItem] = useState<"menu" | "account" | null>(null);
-  const [lastOpenedItem, setLastOpenedItem] = useState<"menu" | "account" | null>(null); // 
+  const [lastOpenedItem, setLastOpenedItem] = useState<"menu" | "account" | null>(null);
   const [shouldRenderOverlay, setShouldRenderOverlay] = useState(false);
   const [selectedInterface, setSelectedInterface] = useState<HomeInterface>("inbox");
 
@@ -37,17 +54,19 @@ export default function Home() {
 
   useEffect(() => {
     if (open) {
-      setLastOpenedItem(selectedItem); //  Store the open item
+      setLastOpenedItem(selectedItem);
       setShouldRenderOverlay(true);
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 180,
+          easing: Easing.out(Easing.ease),
           useNativeDriver: true,
         }),
         Animated.timing(slideAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 180,
+          easing: Easing.out(Easing.ease),
           useNativeDriver: true,
         }),
       ]).start();
@@ -55,24 +74,35 @@ export default function Home() {
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 100,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
           useNativeDriver: true,
         }),
         Animated.timing(slideAnim, {
           toValue: 0,
-          duration: 100,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
           useNativeDriver: true,
         }),
       ]).start(() => {
         setShouldRenderOverlay(false);
-        setLastOpenedItem(null); //  Clear after closing
+        setLastOpenedItem(null);
       });
     }
   }, [selectedItem]);
 
+  const handleAccountPress = () => {
+    if (selectedItem === "account") {
+      setSelectedItem(null);
+    } else {
+      setSelectedItem("account");
+      getUserInfo();
+    }
+  };
+
   const translateY = slideAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [300, 0],
+    outputRange: [PANEL_HEIGHT,0], // from bottom off-screen to 60% height
   });
 
   return (
@@ -104,11 +134,14 @@ export default function Home() {
             bottom: 0,
             left: 0,
             right: 0,
-            height: "60%",
+            height: PANEL_HEIGHT,
             backgroundColor: "#fff",
             zIndex: 20,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            paddingVertical: 16,
+            paddingHorizontal: 24,
           }}
-          className="rounded-3xl py-8 px-6"
         >
           {lastOpenedItem === "menu" ? (
             <MenuBar
@@ -152,9 +185,7 @@ export default function Home() {
         {/* Account Button */}
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() =>
-            selectedItem === "account" ? setSelectedItem(null) : setSelectedItem("account")
-          }
+          onPress={handleAccountPress}
         >
           <View
             className={`flex-row justify-center items-center min-w-12 h-12 rounded-full ${
