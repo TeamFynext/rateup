@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, memo, useMemo } from "react";
-import { View, Text, TouchableOpacity, Pressable, Animated, Image, Easing, Dimensions } from "react-native";
+import { View, Text, TouchableOpacity, Pressable, Animated, Image, Easing, Dimensions, ActivityIndicator } from "react-native";
 import { MenuIcon } from "lucide-react-native";
 import InboxLayoutComponent from "./inbox/inboxTabs";
 import MenuBar from "@/src/components/home/Menu";
@@ -9,28 +9,17 @@ import { HomeInterface } from "@/src/api/inbox/types";
 import { namePreview } from "@/src/components/chatBox/utils";
 import axios from "@/src/config/axios";
 
-const { height: screenHeight, width: screenWidth } = Dimensions.get("window");
+const { height: screenHeight } = Dimensions.get("window");
 
-const PANEL_HEIGHT_PERCENTAGE = 0.6; // 60% of the screen height
+const PANEL_HEIGHT_PERCENTAGE = 0.6;
 const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 
 const InboxLayout = memo(InboxLayoutComponent);
 
 export default function Home() {
-  const {userId} = useAuth();
-  const [userData, setUserData] = useState("")
-  
-  const getUserInfo = async() => {
-    const userDetails = await axios.get("/api/user/info")
-    setUserData( userDetails.data.data)
-  }
-
-  useEffect(()=>{
-    getUserInfo();
-  },[userId])
-
-//@ts-ignore
-  const { email, orgName, role, profilePhoto, orgPhone, userName } = userData
+  const { userId } = useAuth();
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<"menu" | "account" | null>(null);
   const [lastOpenedItem, setLastOpenedItem] = useState<"menu" | "account" | null>(null);
   const [shouldRenderOverlay, setShouldRenderOverlay] = useState(false);
@@ -40,6 +29,21 @@ export default function Home() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const open = selectedItem !== null;
+
+  const getUserInfo = async () => {
+    try {
+      const userDetails = await axios.get("/api/user/info");
+      setUserData(userDetails.data.data);
+    } catch (error) {
+      console.error("Failed to fetch user info:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getUserInfo();
+  }, [userId]);
 
   const renderedInterface = useMemo(() => {
     switch (selectedInterface) {
@@ -102,8 +106,27 @@ export default function Home() {
 
   const translateY = slideAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [PANEL_HEIGHT,0], // from bottom off-screen to 60% height
+    outputRange: [PANEL_HEIGHT, 0],
   });
+
+  // ⚡ AFTER ALL HOOKS: Now we handle loading and error rendering safely
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#004F98" />
+      </View>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text>Failed to load user data</Text>
+      </View>
+    );
+  }
+
+  const { email, orgName, role, profilePhoto, orgPhone, userName } = userData;
 
   return (
     <View className="flex-1 items-center relative">
@@ -183,10 +206,7 @@ export default function Home() {
         </TouchableOpacity>
 
         {/* Account Button */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={handleAccountPress}
-        >
+        <TouchableOpacity activeOpacity={0.8} onPress={handleAccountPress}>
           <View
             className={`flex-row justify-center items-center min-w-12 h-12 rounded-full ${
               selectedItem === "account" ? "bg-[#004F98] pl-2" : "bg-[#C4D7F5]"
@@ -198,7 +218,7 @@ export default function Home() {
             <View className="min-w-12 h-12 bg-[#00998733] rounded-full flex justify-center items-center">
               {profilePhoto ? (
                 <Image
-                  source={{ uri: `${profilePhoto}` }}
+                  source={{ uri: profilePhoto }}
                   className="h-full w-full rounded-full"
                   style={{ resizeMode: "cover" }}
                 />

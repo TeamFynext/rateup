@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { checkAuth } from "../utils/checkAuth";
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import axios from "../config/axios";
 
 type AuthContextType = {
     isAuthenticated: boolean | null;

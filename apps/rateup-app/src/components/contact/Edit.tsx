@@ -35,15 +35,25 @@ export default function EditContacts() {
     setShowDropdown(false);
   };
 
-  const handleEdit = async() => {
-    const res = await editContactById(userId,{
-      name,
-      aiWaChat:isAiChatActive,
-      phone:fullPhoneNumber
-    })
-    console.log(res);
-    
-  }
+  const handleEdit = async () => {
+    try {
+      setLoading(true);
+      await editContactById(userId, {
+        name,
+        aiWaChat: isAiChatActive,
+        phone: fullPhoneNumber,
+      });
+      setLoading(false)
+      setMessage("Successfully Updated")
+
+    } catch (error) {
+      setError('Failed to update contact details. Please try again.');
+      setMessage('');
+    } finally {
+      setLoading(false); 
+    }
+  };
+  
 
   const getContactDetails = async() => {
     setLoading(true)
@@ -63,7 +73,6 @@ export default function EditContacts() {
       }
       
       setName(res.name)
-      setMessage("Contact details loaded successfully")
       
 
       setError('')
