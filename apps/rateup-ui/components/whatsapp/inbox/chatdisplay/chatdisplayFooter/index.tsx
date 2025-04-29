@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { Flex, Group, Stack, Text } from "@mantine/core";
+import { ActionIcon, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
@@ -133,19 +133,27 @@ export default function WaInboxChatDisplayFooter({
 
   const SendMessageComponent = () => {
     return (
-      <Group>
+      <Group gap={"xs"}>
         <WaInboxFooterMenu
           sessionExpired={isSessionExpired}
           contact={contact}
         />
         <VoiceRecorder />
-        <RateupButtonPrimary
+        <Tooltip label={translations["Send"]}>
+          <ActionIcon
+            onClick={handleSendMessage}
+            disabled={isSessionExpired || isRecording}
+          >
+            <IconSend size={16} />
+          </ActionIcon>
+        </Tooltip>
+        {/* <RateupButtonPrimary
           title={translations["Send"]}
           rightIcon={<IconSend size={16} />}
           size="xs"
           onClick={handleSendMessage}
           disabled={isSessionExpired || isRecording}
-        />
+        /> */}
       </Group>
     );
   };

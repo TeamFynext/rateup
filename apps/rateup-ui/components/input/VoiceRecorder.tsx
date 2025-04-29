@@ -208,7 +208,7 @@ const VoiceRecorder = () => {
     const draw = () => {
       analyser.getByteFrequencyData(dataArray);
       const scaled = Array.from(dataArray)
-        .slice(0, 20)
+        .slice(0, 15)
         .map((v) => Math.max(4, (v / 255) * 40));
       setBarHeights(scaled);
       animationRef.current = requestAnimationFrame(draw);
@@ -231,7 +231,7 @@ const VoiceRecorder = () => {
           <WavesurferPlayer
             url={audioUrl}
             height={20}
-            width={100}
+            width={80}
             waveColor="violet"
             onReady={onReady}
             onPlay={() => setIsPlaying(true)}
