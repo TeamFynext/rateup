@@ -24,7 +24,7 @@
     "@shopify/shopify-api": "^11.1.0",
     "axios": "^1.4.0",
     "bcrypt": "^5.1.1",
-    "bullmq": "^5.41.5",
+    "bullmq": "^5.51.1",
     "cheerio": "^1.0.0-rc.12",
     "dayjs": "^1.11.10",
     "dotenv": "^16.0.3",
