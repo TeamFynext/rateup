@@ -526,12 +526,9 @@ export async function deleteAssignedUsersforContact(contactId) {
 export async function getContactsCountByInbox(orgId, userId) {
   const count: {
     new_count: number;
-    total_count: number;
     assigned_count: number;
     closed_count: number;
-    unassigned_count: number;
     assigned_to_me_count: number;
-    sent_count: number;
     blocked_count: number;
   }[] = await prisma.$queryRaw`WITH message_flags AS (
     SELECT
@@ -544,12 +541,6 @@ export async function getContactsCountByInbox(orgId, userId) {
         AND wm_recv."messageBody"->>'exchangeProcess' = 'receive'
         LIMIT 1
       ) AS has_receive,
-      EXISTS (
-        SELECT 1 FROM "WaMessage" wm_send 
-        WHERE wm_send."contactId" = c.id 
-        AND wm_send."messageBody"->>'exchangeProcess' = 'send'
-        LIMIT 1
-      ) AS has_send,
       EXISTS (
         SELECT 1 FROM "WaMessage" wm_recent 
         WHERE wm_recent."contactId" = c.id 
@@ -568,26 +559,19 @@ export async function getContactsCountByInbox(orgId, userId) {
   )
   SELECT
     COUNT(CASE WHEN mf.has_recent AND mf."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED} AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS new_count,
-    COUNT(CASE WHEN mf.has_receive OR mf.has_send AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS total_count,
-    COUNT(CASE WHEN mf.has_send AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS sent_count,
     COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND mf.has_receive
       AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS assigned_count,
     COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND mf.has_receive
       AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS closed_count,
-    COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED} AND mf.has_receive
-      AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS unassigned_count,
     COUNT(CASE WHEN mf.has_receive AND mf.is_assigned_to_me AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS assigned_to_me_count,
     COUNT(CASE WHEN mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS blocked_count
   FROM message_flags mf;`;
 
   return {
     new: count[0].new_count,
-    unassigned: count[0].unassigned_count,
-    all: count[0].total_count,
     closed: count[0].closed_count,
     assignedToMe: count[0].assigned_to_me_count,
     assigned: count[0].assigned_count,
-    sent: count[0].sent_count,
     blocked: count[0].blocked_count,
   };
 }
@@ -630,7 +614,7 @@ export async function sendMediaMessages(
         break;
       }
       case "audio": {
-        messageBody = createAudioMessage(phone, item.url, captionMsg);
+        messageBody = createAudioMessage(phone, item.url);
         break;
       }
     }
