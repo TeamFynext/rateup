@@ -147,13 +147,6 @@ export default function WaInboxChatDisplayFooter({
             <IconSend size={16} />
           </ActionIcon>
         </Tooltip>
-        {/* <RateupButtonPrimary
-          title={translations["Send"]}
-          rightIcon={<IconSend size={16} />}
-          size="xs"
-          onClick={handleSendMessage}
-          disabled={isSessionExpired || isRecording}
-        /> */}
       </Group>
     );
   };
@@ -185,7 +178,7 @@ export default function WaInboxChatDisplayFooter({
               flex={1}
               inbox={true}
               customEnter={() => submiRef.current()}
-              editable={!isSessionExpired || !isRecording || !audioUrl}
+              editable={!isSessionExpired && !isRecording && !audioUrl}
               customHeaders={<SendMessageComponent />}
             />
           </div>

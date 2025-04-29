@@ -133,7 +133,7 @@ const VoiceRecorder = () => {
       const blob = new Blob(chunks, { type: mimeType });
       const file = new File(
         [blob],
-        `voice-${Date.now()}${getAudioExtension(mimeType)}}`,
+        `voice-${Date.now()}${getAudioExtension(mimeType)}`,
         {
           type: mimeType,
         },
