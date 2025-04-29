@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams } from 'expo-router'
 import ChatHeader from '@/src/components/chatDisplay/ChatHeader'
 import ChatFooter from '@/src/components/chatDisplay/ChatFooter'
@@ -7,8 +7,8 @@ import ChatBody from '@/src/components/chatDisplay/ChatBody'
 import { markMessageAsRead } from '@/src/api/inbox/contacts'
 
 const ChatDisplay = () => {
-    const {id,name, phone, waAssignStatus} = useLocalSearchParams();
-
+    const {id,name, phone, waAssignStatus:initialStatus} = useLocalSearchParams();
+    const [assignStatus, setAssignStatus] = useState(initialStatus);
     useEffect(() => {
       async function MarkRead(){
         try{
@@ -31,7 +31,7 @@ const ChatDisplay = () => {
       <ChatBody id={id}/>
 
       {/* @ts-ignore */}
-      <ChatFooter waAssignStatus={waAssignStatus} id={id}/>
+      <ChatFooter waAssignStatus={assignStatus} setWaAssignStatus={setAssignStatus} id={id}/>
     </View>
   )
 }

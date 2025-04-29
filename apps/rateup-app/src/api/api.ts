@@ -92,3 +92,7 @@ export const sendPasswordResetEmail = async (email: string) => {
   };
   
 
+export const loggedUserDetails = async() => {
+  const res = await axios.get("/api/user/info");
+  return res.data
+}

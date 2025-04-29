@@ -29,3 +29,11 @@ export const closeChat = async (contactId:string,data:any) => {
   const res = await axios.put(`/api/contact/${contactId}`,data)
   return res.data
 }
+
+export async function assignInboxToUser(data: {
+  contactId: string;
+  assignedUserIds: string[];
+  teamId: string;
+}) {
+  await axios.post("/api/wa/inbox/message/assign", data);
+}

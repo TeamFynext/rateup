@@ -7,7 +7,7 @@ import AccountBar from "@/src/components/home/Account";
 import { useAuth } from "@/src/context/AuthContext";
 import { HomeInterface } from "@/src/api/inbox/types";
 import { namePreview } from "@/src/components/chatBox/utils";
-import axios from "@/src/config/axios";
+import { loggedUserDetails } from "@/src/api/api";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -32,8 +32,8 @@ export default function Home() {
 
   const getUserInfo = async () => {
     try {
-      const userDetails = await axios.get("/api/user/info");
-      setUserData(userDetails.data.data);
+      const userDetails = await loggedUserDetails();
+      setUserData(userDetails.data);
     } catch (error) {
       console.error("Failed to fetch user info:", error);
     } finally {
@@ -109,7 +109,7 @@ export default function Home() {
     outputRange: [PANEL_HEIGHT, 0],
   });
 
-  // ⚡ AFTER ALL HOOKS: Now we handle loading and error rendering safely
+ 
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -125,7 +125,6 @@ export default function Home() {
       </View>
     );
   }
-
   const { email, orgName, role, profilePhoto, orgPhone, userName } = userData;
 
   return (

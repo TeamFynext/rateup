@@ -138,7 +138,7 @@ const ChatHeader = ({ id, name, phone }: { id: string; name: string; phone: numb
     try {
       await closeChat(userId, { waMessageAssignStatus: 'CLOSED' })
       setConfirmModalVisible(false)
-      console.log('Chat closed!')
+      router.back();
     } catch (error) {
       console.error('Error closing chat:', error)
     } finally {
