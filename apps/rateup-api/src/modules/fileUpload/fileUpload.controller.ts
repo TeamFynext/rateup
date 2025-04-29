@@ -48,12 +48,11 @@ export async function uploadController(
     data.mimetype === "audio/ogg"
   ) {
     const tmpDir = path.join(".", "tmp");
-    // Check if the directory exists, and create it if it doesn't
     if (!fs.existsSync(tmpDir)) {
       fs.mkdirSync(tmpDir, { recursive: true });
     }
     tempRawPath = path.join(tmpDir, `${randomUUID()}_${filename}`);
-    tempOutputPath = tempRawPath.replace(/\.[^/.]+$/, "") + ".m4a"; // Convert to .m4a
+    tempOutputPath = tempRawPath.replace(/\.[^/.]+$/, "") + ".m4a";
 
     await pumpToFile(file, tempRawPath);
 
