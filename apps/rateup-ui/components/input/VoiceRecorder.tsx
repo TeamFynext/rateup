@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-import { ActionIcon, Group } from "@mantine/core";
+import { ActionIcon, Group, Text } from "@mantine/core";
 import {
   IconMicrophone,
   IconPlayerPauseFilled,
@@ -237,6 +237,15 @@ const VoiceRecorder = () => {
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
           />
+          <Text size={"xs"}>
+            {" "}
+            {wavesurfer &&
+              `${Math.floor(wavesurfer?.getDuration() / 60)}:${Math.floor(
+                wavesurfer?.getDuration() % 60,
+              )
+                .toString()
+                .padStart(2, "0")}`}
+          </Text>
         </Group>
       )}
 
