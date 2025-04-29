@@ -6,7 +6,9 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
 import { create } from "zustand";
 
-import VoiceRecorder from "@/components/input/VoiceRecorder";
+import VoiceRecorder, {
+  useVoiceRecordStore,
+} from "@/components/input/VoiceRecorder";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
   parseJsonToReact,
@@ -42,6 +44,7 @@ export default function WaInboxChatDisplayFooter({
   const sendnewWaMessage = useSendNewWaMessage(contact.id);
   const { addMessage, removeMessage } = useMessageStore();
   const { media, resetMedia } = useMediaStore();
+  const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const form = useForm({
     initialValues: {
       type: "text",
@@ -57,7 +60,15 @@ export default function WaInboxChatDisplayFooter({
     },
   });
   function handleSendMessage() {
-    const values = { ...form.values };
+    const values = audioUrl
+      ? {
+          media: [{ url: audioUrl, type: "audio", name: "voice-note" }],
+          type: "media",
+          text: {
+            body: "",
+          },
+        }
+      : { ...form.values };
     form.reset();
     const trimmedBody =
       values.text.body !== ""
@@ -79,6 +90,7 @@ export default function WaInboxChatDisplayFooter({
       type: "text",
     });
     resetMedia();
+    setAudioUrl(null);
     sendnewWaMessage.mutate(values, {
       onSuccess: () => {
         removeMessage(contact.id);
@@ -126,14 +138,14 @@ export default function WaInboxChatDisplayFooter({
           sessionExpired={isSessionExpired}
           contact={contact}
         />
+        <VoiceRecorder />
         <RateupButtonPrimary
           title={translations["Send"]}
           rightIcon={<IconSend size={16} />}
           size="xs"
           onClick={handleSendMessage}
-          disabled={isSessionExpired}
+          disabled={isSessionExpired || isRecording}
         />
-        <VoiceRecorder />
       </Group>
     );
   };
@@ -165,7 +177,7 @@ export default function WaInboxChatDisplayFooter({
               flex={1}
               inbox={true}
               customEnter={() => submiRef.current()}
-              editable={!isSessionExpired}
+              editable={!isSessionExpired || !isRecording || !audioUrl}
               customHeaders={<SendMessageComponent />}
             />
           </div>

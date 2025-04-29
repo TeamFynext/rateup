@@ -44,7 +44,6 @@ import {
   useFilteredContacts,
   useGetInboxUserCount,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { VoiceRecorder } from "@/components/RichTextEditor/InsertInboxMedia/RecordVoiceController";
 import { useWsData } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
@@ -520,15 +519,6 @@ export const AssignedInboxIcon = () => {
   );
 };
 
-export const UnAssignedInboxIcon = () => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.unassigned) return <IconUserX />;
-  return (
-    <Indicator label={totalCount.unassigned} inline size={16} color="black">
-      <IconUserX />
-    </Indicator>
-  );
-};
 export const AssignedToMeInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.assignedToMe) return <IconUserCircle />;
@@ -539,31 +529,12 @@ export const AssignedToMeInboxIcon = () => {
   );
 };
 
-export const SentInboxIcon = () => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.sent) return <IconMessageUp />;
-  return (
-    <Indicator label={totalCount.sent} inline size={16} color="black">
-      <IconMessageUp />
-    </Indicator>
-  );
-};
 export const ClosedInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
   if (!totalCount?.closed) return <IconMessageCheck />;
   return (
     <Indicator label={totalCount.closed} inline size={16} color="black">
       <IconMessageCheck />
-    </Indicator>
-  );
-};
-
-export const AllInboxIcon = () => {
-  const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.all) return <IconMessage />;
-  return (
-    <Indicator label={totalCount.all} inline size={16} color="black">
-      <IconMessage />
     </Indicator>
   );
 };
