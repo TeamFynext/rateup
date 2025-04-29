@@ -521,6 +521,9 @@ export const getResponseExcelByCampaignById = async (id: string) => {
 
   return [campaign?.name, buffer];
 };
+const waMessageQueue = new Queue("waMessageQueue", {
+  connection: redisConnection,
+});
 
 export async function getCampaginStatsById(campaignId: string) {
   const stats = await prisma.campaignStats.findUnique({
@@ -554,7 +557,7 @@ export async function getCampaginStatsById(campaignId: string) {
     };
   }
   // Get all jobs for this campaign to count them
-  const jobs = await queue.getJobs(["waiting", "delayed"]);
+  const jobs = await waMessageQueue.getJobs();
   const campaignJobs = jobs.filter((job) => job.name === campaignId);
 
   return {
@@ -569,26 +572,6 @@ export async function getCampaginStatsById(campaignId: string) {
 }
 
 const queue = new Queue("waCampaignEnqueue", { connection: redisConnection });
-
-interface Campaign {
-  useUserConsent: boolean;
-}
-
-interface CampaignParticipant {
-  id: string;
-  phone: string;
-  name: string;
-  tags: string[];
-  orgId: string;
-  teamId: string;
-  dynamicTags: string[];
-  data: any;
-  defaultValues: any;
-  contactId: string;
-  campaignId: string;
-  accessToken: string;
-  accessToken_iv: string;
-}
 
 export async function enqueueCampaignMessage(
   campaignId: string,

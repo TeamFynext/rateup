@@ -22,6 +22,9 @@ export async function getAutomatedRepliesByOrgId(orgId: string) {
         },
       },
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
   return automatedReplies.map((ar) => {
     const { WaAutomatedReplyCommands, ...rest } = ar;
