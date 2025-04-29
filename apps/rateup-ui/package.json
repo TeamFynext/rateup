@@ -65,6 +65,7 @@
     "@visx/scale": "^3.5.0",
     "@visx/text": "^3.12.0",
     "@visx/wordcloud": "^3.12.0",
+    "@wavesurfer/react": "^1.0.11",
     "@xyflow/react": "^12.4.4",
     "axios": "^1.6.7",
     "classnames": "^2.5.1",
@@ -96,7 +97,6 @@
     "react-cropper": "^2.3.3",
     "react-date-range": "^1.4.0",
     "react-dom": "^19.1.0",
-    "react-media-recorder": "^1.7.1",
     "react-phone-number-input": "^3.3.12",
     "react-to-pdf": "^1.0.1",
     "react-use": "^17.5.0",
@@ -114,6 +114,7 @@
     "tiptap-markdown": "^0.8.10",
     "use-immer": "^0.11.0",
     "uuid": "^9.0.1",
+    "wavesurfer.js": "^7.9.4",
     "zod": "^3.23.8",
     "zustand": "^5.0.3"
   },
