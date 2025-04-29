@@ -7,6 +7,7 @@ import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
 import { create } from "zustand";
 
 import VoiceRecorder from "@/components/input/VoiceRecorder";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
   parseJsonToReact,
   parseToWhatsAppFormat,
@@ -19,6 +20,7 @@ import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/m
 import {
   useAssignInboxToUer,
   useSendNewWaMessage,
+  useUnBlockWhatsAppUser,
 } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
 import {
@@ -126,7 +128,8 @@ export default function WaInboxChatDisplayFooter({
         />
         <RateupButtonPrimary
           title={translations["Send"]}
-          rightIcon={<IconSend />}
+          rightIcon={<IconSend size={16} />}
+          size="xs"
           onClick={handleSendMessage}
           disabled={isSessionExpired}
         />
@@ -217,6 +220,54 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
         contactId={contactId}
         opened={openedAssign}
         close={closeAssign}
+      />
+    </Stack>
+  );
+};
+
+export const WaInboxBlockedContactFooter = ({ contact }) => {
+  const { setSelectedContact, filterData } = useContactStore();
+  const [opened, { open, close }] = useDisclosure(false);
+  const unblockMut = useUnBlockWhatsAppUser(filterData);
+  function handleUnblock() {
+    unblockMut.mutate(
+      { phoneNumbersList: [contact.phone] },
+      {
+        onSuccess: () => {
+          setSelectedContact({ ...contact, blockedOnWhatsApp: false });
+        },
+      },
+    );
+  }
+  return (
+    <Stack gap={"xs"} pb={"xs"}>
+      <Group
+        bg={"black"}
+        justify="center"
+        c={"white"}
+        color="white"
+        gap={2}
+        py={2}
+      >
+        <IconExclamationCircle size={"1rem"} />
+        <Text size="xs">This contact has been blocked by you.</Text>
+      </Group>
+      <Group justify={"center"} gap={"xs"}>
+        <RateupButtonPrimary
+          title="Unblock contact"
+          onClick={open}
+          size="xs"
+          radius={"md"}
+        />
+      </Group>
+      <ConfirmationModal
+        confirmLabel="Unblock"
+        headerLabel="Are you sure to unblock this contact?"
+        headerTitle={`Unblock ${contact?.name ?? contact?.phone}`}
+        onClose={close}
+        onConfirm={handleUnblock}
+        opened={opened}
+        closeLabel="cancel"
       />
     </Stack>
   );

@@ -19,6 +19,7 @@ import {
   Text,
 } from "@mantine/core";
 import {
+  IconForbid2,
   IconMessage,
   IconMessageBolt,
   IconMessageCheck,
@@ -75,6 +76,7 @@ const WaInboxChatSelect = () => {
     campaigns: [],
     tags: [],
     waMessageAssignStatus: "New",
+    blockedUsers: false,
   });
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
 
@@ -317,22 +319,31 @@ const WaInboxChatSelect = () => {
   useEffect(() => {
     let tab = router.query?.tab as string;
     if (!tab) return;
+    if (tab === "blocked") {
+      prepareFilters({
+        ...filter,
+        messageType: "all",
+        waMessageAssignStatus: undefined,
+        blockedUsers: true,
+      });
+      return;
+    }
     if (tab === "All") {
       prepareFilters({
         ...filter,
         messageType: "all",
         waMessageAssignStatus: undefined,
+        blockedUsers: false,
       });
     } else {
       prepareFilters({
         ...filter,
         messageType: tab === "Sent" ? "all" : "usermessages",
         waMessageAssignStatus: tab,
+        blockedUsers: false,
       });
     }
   }, [router.query?.tab]);
-
-  return <VoiceRecorder />;
 
   if (isContactLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading} />;
@@ -553,6 +564,16 @@ export const AllInboxIcon = () => {
   return (
     <Indicator label={totalCount.all} inline size={16} color="black">
       <IconMessage />
+    </Indicator>
+  );
+};
+
+export const BlockedInboxIcon = () => {
+  const { totalCount } = useChatContactCountStore();
+  if (!totalCount?.blocked) return <IconForbid2 />;
+  return (
+    <Indicator label={totalCount.blocked} inline size={16} color="black">
+      <IconForbid2 />
     </Indicator>
   );
 };
