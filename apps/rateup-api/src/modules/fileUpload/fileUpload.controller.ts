@@ -77,11 +77,6 @@ export async function uploadController(
 
   try {
     const fileUrl = await uploadFile(params);
-    if (["audio/mp4", "audio/ogg"].includes(params.ContentType)) {
-      fs.unlinkSync(tempRawPath);
-      fs.unlinkSync(tempOutputPath);
-    }
-
     const data = {
       fileUrl,
       key: uniqueFilename,
@@ -89,6 +84,11 @@ export async function uploadController(
     reply.code(200).send({ message: "File uploaded successfully", data });
   } catch (err) {
     reply.code(500).send(err);
+  } finally {
+    if (["audio/mp4", "audio/ogg"].includes(params.ContentType)) {
+      fs.unlinkSync(tempRawPath);
+      fs.unlinkSync(tempOutputPath);
+    }
   }
 }
 
