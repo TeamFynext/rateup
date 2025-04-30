@@ -4,9 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
-  Animated,
-  Easing,
   Keyboard,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -32,7 +29,7 @@ export default function SignInScreen({ setError }: { setError: (msg: string) => 
       setLoading(false);
     } else {
       setError("");
-      router.replace("/home");
+      router.replace("/Home");
       setLoading(false);
     }
   };
@@ -100,7 +97,7 @@ export default function SignInScreen({ setError }: { setError: (msg: string) => 
           />
           <Text className="ml-2 text-sm text-[#343A40]">Remember Me</Text>
         </View>
-        <TouchableOpacity onPress={() => router.push("/(auth)/forgotpassword")}>
+        <TouchableOpacity onPress={() => router.push("/(auth)/ForgotPassword")}>
           <Text className="text-[#004F98] text-sm font-medium">
             Forgot Password?
           </Text>

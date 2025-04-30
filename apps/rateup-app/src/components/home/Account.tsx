@@ -1,6 +1,6 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
-import { namePreview } from '../chatBox/utils';
+import { namePreview } from '../../utils/chatbox_utils';
 import { signOut } from '@/src/api/api';
 
 interface UserProfile {
@@ -15,7 +15,6 @@ interface UserProfile {
 const AccountBar = ({ email, orgName, role, profilePhoto, orgPhone, userName }: UserProfile) => {
 
   const [loading, setLoading] = useState<boolean>(false)
-  console.log(profilePhoto)
 
   const handleSignOut = async() => {
     setLoading(true)

@@ -20,7 +20,7 @@ const GoogleLogin = ({setError}:{setError:(msg:string)=> void}) => {
       setError(res.message);
       setLoading(false)
     } else {
-      router.replace("/home");
+      router.replace("/Home");
       setLoading(false)
     }
   };

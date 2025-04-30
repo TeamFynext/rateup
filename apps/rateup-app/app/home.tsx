@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect, memo, useMemo } from "react";
-import { View, Text, TouchableOpacity, Pressable, Animated, Image, Easing, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, Pressable, Animated, Image, Easing, Dimensions, ActivityIndicator, Button } from "react-native";
 import { MenuIcon } from "lucide-react-native";
-import InboxLayoutComponent from "./inbox/inboxTabs";
+import InboxLayoutComponent from "./inbox/InboxTabs";
 import MenuBar from "@/src/components/home/Menu";
 import AccountBar from "@/src/components/home/Account";
 import { useAuth } from "@/src/context/AuthContext";
 import { HomeInterface } from "@/src/api/inbox/types";
-import { namePreview } from "@/src/components/chatBox/utils";
+import { namePreview } from "@/src/utils/chatbox_utils";
 import { loggedUserDetails } from "@/src/api/api";
+import { useRouter } from "expo-router";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -17,6 +18,7 @@ const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 const InboxLayout = memo(InboxLayoutComponent);
 
 export default function Home() {
+  const router = useRouter();
   const { userId } = useAuth();
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -122,11 +124,11 @@ export default function Home() {
     return (
       <View className="flex-1 justify-center items-center">
         <Text>Failed to load user data</Text>
+        <Button title="close" onPress={()=>router.replace("/(auth)/SignIn")}/>
       </View>
     );
   }
   const { email, orgName, role, profilePhoto, orgPhone, userName } = userData;
-
   return (
     <View className="flex-1 items-center relative">
       {renderedInterface}

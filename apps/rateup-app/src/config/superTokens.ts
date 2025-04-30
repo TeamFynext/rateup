@@ -7,6 +7,4 @@ SuperTokens.init({
     sessionTokenBackendDomain:process.env.EXPO_PUBLIC_API_URL
 })
 
-console.log('supertoken initialized')
-
 export default SuperTokens

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
-import { getMessagePreview, namePreview, getRelativeTime } from "./utils";
+import { getMessagePreview, namePreview, getRelativeTime } from "../../utils/chatbox_utils";
 
 const ChatBoxNew: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({
   name,

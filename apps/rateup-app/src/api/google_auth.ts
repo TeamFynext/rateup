@@ -3,24 +3,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "@/src/config/axios";
 import SuperTokens from "supertokens-react-native";
 
-interface ICreateGoogleUser {
-  name: string;
-  orgName: string;
-  type: string;
-  email?: string;
-}
 
 export const signInWithGoogle = async () => {
   try {
-    
 
     // Ensure no existing session and Play Services
     await GoogleSignin.signOut();
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-
+    await GoogleSignin.signIn();
     // Sign in and get tokens
 
     const tokens = await GoogleSignin.getTokens();
+    console.log(tokens)
     const idToken = tokens.idToken;
     const accessToken = tokens.accessToken;
 
@@ -33,7 +27,6 @@ export const signInWithGoogle = async () => {
       },
     });
 
-    console.log("SuperTokens Response:", response.data.user);
 
     // Validate session creation
     const sessionExists = await SuperTokens.doesSessionExist();

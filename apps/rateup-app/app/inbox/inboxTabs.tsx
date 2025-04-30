@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import SearchBar from "@/src/components/inbox/inboxSearchBar";
-import Inbox from "@/src/components/inbox/inbox";
+import SearchBar from "@/src/components/inbox/InboxSearchBar";
+import Inbox from "@/src/components/inbox/Inbox";
 import { useIsFocused } from "@react-navigation/native";
 
 // Icons
@@ -46,6 +46,7 @@ function createTabScreen(messageType: string, waMessageAssignStatus?: "New" | "A
 
 export default function InboxLayout() {
   const [searchTerm,setSearchTerm] = useState("")
+  const [refreshKey, setRefreshKey] = useState(0);
   const [contactCounts, setContactCounts] = useState<filteredContactCount>({
     all: 0,
     assigned: 0,
@@ -55,6 +56,10 @@ export default function InboxLayout() {
     sent: 0,
     unassigned: 0,
   });
+
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   const getCount = async() => {
     try {
@@ -67,11 +72,11 @@ export default function InboxLayout() {
   
   useEffect(()=>{
     getCount();
-  },[])
+  },[refreshKey])
 
   return (
     <View className="flex-1 flex-col">
-      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm}/>
+      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} onRefresh={handleRefresh}/>
 
       <Tab.Navigator
       tabBarPosition="top"

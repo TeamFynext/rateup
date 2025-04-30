@@ -5,6 +5,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const API_URL =process.env.EXPO_PUBLIC_API_URL;
 
+interface ICreateGoogleUser {
+  name: string;
+  orgName: string;
+  type: string;
+  email?: string;
+}
+
 export const signIn = async (email: string, password: string) => {
     try{
     const response = await axios.post(`${API_URL}/api/auth/signin`,{
@@ -46,7 +53,7 @@ export const signOut = async () => {
     try{
     await SuperTokens.signOut();
     await AsyncStorage.removeItem("accessToken")
-    router.replace("/signin")
+    router.replace("/SignIn")
     return {success:true}
     }catch(err:any){
         return {
@@ -95,4 +102,9 @@ export const sendPasswordResetEmail = async (email: string) => {
 export const loggedUserDetails = async() => {
   const res = await axios.get("/api/user/info");
   return res.data
+}
+
+
+export const createGoogleUser = async(data: ICreateGoogleUser) =>{
+  await axios.post("/user/complete-google-signup",data);
 }

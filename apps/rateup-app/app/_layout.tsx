@@ -22,7 +22,7 @@ function RootLayout() {
 
   useEffect(() => {
     if (!loading) {
-      router.replace(isAuthenticated ? "/home" : "/signin");
+      router.replace(isAuthenticated ? "/Home" : "/SignIn");
     }
   }, [loading, isAuthenticated]);
 
@@ -47,7 +47,7 @@ function RootLayout() {
       }}
       />
       <Stack.Screen
-      name="home"
+      name="Home"
       options={{
         headerShown:false
       }}

@@ -77,7 +77,7 @@ export default function EditContacts() {
 
       setError('')
     } catch (err) {
-      console.error("Error fetching contact details:", err)
+
       setError("Failed to load contact details. Please try again.")
     
       setMessage('')

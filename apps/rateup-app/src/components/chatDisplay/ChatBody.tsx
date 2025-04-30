@@ -2,8 +2,8 @@
 
 import { View, FlatList, ActivityIndicator, Text } from 'react-native';
 import React from 'react';
-import { useGetMessagesByContactId } from '@/src/api/inbox/Messages';
-import { parseWaMessage } from '@/src/api/inbox/Messages';
+import { useGetMessagesByContactId } from '@/src/api/inbox/messages';
+import { parseWaMessage } from '@/src/api/inbox/messages';
 import MessageBubble from './chatBody/MessageBubble';
 import DateSeparator from './chatBody/DateSeperator';
 import dayjs from '@/src/utils/day'; 

@@ -6,8 +6,8 @@ import "@/global.css"
 const AuthLayout = () => {
   return (
     <Stack>
-        <Stack.Screen name="signin" options={{ headerShown: false }} />
-        <Stack.Screen name="forgotpassword" options={{ headerShown: false }} />
+        <Stack.Screen name="SignIn" options={{ headerShown: false }} />
+        <Stack.Screen name="ForgotPassword" options={{ headerShown: false }} />
     </Stack>
   )
 }

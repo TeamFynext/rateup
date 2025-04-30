@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Pressable, Modal, Dimensions, ActivityInd
 import React, { useState } from 'react'
 import { BackIcon, DotsIcon } from '@/src/constants/imageExports'
 import { useRouter } from 'expo-router'
-import { namePreview } from '../chatBox/utils'
+import { namePreview } from '../../utils/chatbox_utils'
 import { closeChat } from '@/src/api/inbox/contacts'
 
 const { width: screenWidth } = Dimensions.get('window')
@@ -50,7 +50,7 @@ const MoreOptions = ({
             className="p-3"
             onPress={() => {
               onClose()
-              router.push({ pathname: '/inbox/contact/edit', params: { userId } })
+              router.push({ pathname: '/inbox/contact/Edit', params: { userId } })
             }}
           >
             <Text className="text-gray-800 text-lg">Edit</Text>

@@ -7,5 +7,5 @@ export const configureGoogleSignIn = () => {
         offlineAccess:true,
         forceCodeForRefreshToken: true
     })
-    console.log("GoogleAuth configured");
+    console.log('google configured')
 } 

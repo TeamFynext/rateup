@@ -6,9 +6,10 @@ import { useRef, useState } from "react";
 type SearchBarProps = {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
+  onRefresh: () => void;
 };
 
-export default function SearchBar({ searchTerm, setSearchTerm }: SearchBarProps) {
+export default function SearchBar({ searchTerm, setSearchTerm ,onRefresh}: SearchBarProps) {
   const router = useRouter();
   const rotation = useRef(new Animated.Value(0)).current; 
   const [isRotating, setIsRotating] = useState(false);
@@ -16,7 +17,7 @@ export default function SearchBar({ searchTerm, setSearchTerm }: SearchBarProps)
   const handleRefresh = () => {
     if (isRotating) return; 
     setIsRotating(true);
-
+    onRefresh();
 
     Animated.loop(
       Animated.timing(rotation, {
@@ -64,11 +65,11 @@ export default function SearchBar({ searchTerm, setSearchTerm }: SearchBarProps)
 
       {/* add contacts */}
       <View className="flex-row gap-4">
-        <TouchableOpacity onPress={() => router.push("/inbox/addContact")}>
+        <TouchableOpacity onPress={() => router.push("/inbox/AddContact")}>
           <AddContactIcon />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/inbox/filters")}>
+        <TouchableOpacity onPress={() => router.push("/inbox/Filters")}>
           <FilterIcon />
         </TouchableOpacity>
 

@@ -8,13 +8,13 @@ const InboxLayout = () => {
         {headerShown:false}
     }>
         <Stack.Screen
-        name='addContact'        
+        name='AddContact'        
         />
         <Stack.Screen
-        name='inboxTabs'        
+        name='InboxTabs'        
         />
         <Stack.Screen
-        name='filters'        
+        name='Filters'        
         />
     </Stack>
   )

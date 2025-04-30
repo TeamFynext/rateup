@@ -10,8 +10,8 @@ import {
   Easing
 } from "react-native";
 import React, { useRef, useState, useEffect } from "react";
-import SignInScreen from "@/src/components/signInScreen";
-import GoogleLogin from "@/src/components/googleSignInScreen";
+import SignInScreen from "@/src/components/SignInScreen";
+import GoogleLogin from "@/src/components/GoogleSignInScreen";
 import { RateLogo } from "@/src/constants/imageExports";
 
 const SignIn = () => {
