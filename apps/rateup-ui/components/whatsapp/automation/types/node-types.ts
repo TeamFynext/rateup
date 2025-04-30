@@ -208,11 +208,6 @@ export interface FlowNodeData extends BaseNodeData {
 ///////////////////////aibot node
 export interface AiBotNodeData extends BaseNodeData {
   body: string;
-  teamId: string;
-  flow: {
-    id: string;
-    name: string;
-  };
 }
 
 export interface TicketNodeData extends BaseNodeData {
@@ -724,13 +719,6 @@ export function validateNodeData(node: TypedNode): {
     //// aibot node
     case "aibotNode": {
       const data = node.data as NodeTypeMap["aibotNode"];
-      // if (!data.flow?.id || data.flow?.id.trim() === "") {
-      //   return {
-      //     valid: false,
-      //     message: `${node.data.label}: Flow ID is required.`,
-      //   };
-
-      // }
 
       if (!data.body || data.body === "") {
         return {

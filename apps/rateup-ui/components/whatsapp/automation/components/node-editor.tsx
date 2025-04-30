@@ -234,7 +234,6 @@ export default function NodeEditor({
           <AibotNodeEditor
             nodeData={nodeData as NodeTypeMap["aibotNode"]}
             handleInputChange={handleInputChange}
-            flows={flows}
           />
         );
       default:
@@ -1921,9 +1920,10 @@ const FlowNodeEditor: React.FC<
   );
 };
 
-const AibotNodeEditor: React.FC<
-  NodeComponentProps<"aibotNode"> & { flows: any }
-> = ({ nodeData, handleInputChange, flows }) => {
+const AibotNodeEditor: React.FC<NodeComponentProps<"aibotNode">> = ({
+  nodeData,
+  handleInputChange,
+}) => {
   const typedData = nodeData;
   return (
     <Stack>
@@ -1939,34 +1939,6 @@ const AibotNodeEditor: React.FC<
           {typedData.body?.length || 0}/4096 characters
         </Text>
       </div>
-      <ContainedSelection
-        data={
-          flows?.map((t) => ({
-            label: t.name,
-            value: t.dbFlowId,
-          })) || []
-        }
-        label="AiBot"
-        allowDeselect={false}
-        placeholder={`Select Flow`}
-        value={typedData?.flow?.id || ""}
-        onChange={(value, values) => {
-          handleInputChange("flow", {
-            id: value,
-            name: values?.label,
-          });
-        }}
-        flex={1}
-      />
-      {typedData?.flow?.id && (
-        <TeamSelector
-          value={typedData.teamId}
-          onChange={(id) => {
-            handleInputChange("teamId", id);
-          }}
-          w={"100%"}
-        />
-      )}
     </Stack>
   );
 };
