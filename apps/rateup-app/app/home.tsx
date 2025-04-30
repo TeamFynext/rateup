@@ -8,7 +8,7 @@ import { useAuth } from "@/src/context/AuthContext";
 import { HomeInterface } from "@/src/api/inbox/types";
 import { namePreview } from "@/src/utils/chatbox_utils";
 import { loggedUserDetails } from "@/src/api/api";
-import { useRouter } from "expo-router";
+import { useToast } from "react-native-toast-notifications";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -18,7 +18,7 @@ const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 const InboxLayout = memo(InboxLayoutComponent);
 
 export default function Home() {
-  const router = useRouter();
+  const toast =useToast();
   const { userId } = useAuth();
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -121,12 +121,7 @@ export default function Home() {
   }
 
   if (!userData) {
-    return (
-      <View className="flex-1 justify-center items-center">
-        <Text>Failed to load user data</Text>
-        <Button title="close" onPress={()=>router.replace("/(auth)/SignIn")}/>
-      </View>
-    );
+    toast.show("Failed to load user data. Please sign in again.", { type: "danger" });
   }
   const { email, orgName, role, profilePhoto, orgPhone, userName } = userData;
   return (
@@ -169,7 +164,13 @@ export default function Home() {
         >
           {lastOpenedItem === "menu" ? (
             <MenuBar
-              onSendValue={(val: HomeInterface) => setSelectedInterface(val)}
+              onSendValue={(val: HomeInterface) => {
+                setSelectedInterface(val)
+                toast.show(`Switched to ${val}`, {
+                  type: "success",
+                  placement: "top",
+                });
+              }}
               selected={selectedInterface}
             />
           ) : (

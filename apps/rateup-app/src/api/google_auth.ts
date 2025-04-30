@@ -14,7 +14,6 @@ export const signInWithGoogle = async () => {
     // Sign in and get tokens
 
     const tokens = await GoogleSignin.getTokens();
-    console.log(tokens)
     const idToken = tokens.idToken;
     const accessToken = tokens.accessToken;
 
