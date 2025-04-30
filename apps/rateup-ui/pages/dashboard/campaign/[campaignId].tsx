@@ -413,22 +413,25 @@ const StartCampaignCard = ({
           </Tooltip>
         </Stack>
       )}
-      {queueCount > 0 && (
-        <Tooltip label={translations["cancel schedule"]}>
-          <ActionIcon
-            size={"sm"}
-            variant="light"
-            onClick={() => {
-              sendMutation.mutate({
-                status: CampaignStatus.INACTIVE,
-                statuses: [CampaignParticipantStatus.FAILED],
-              });
-            }}
-          >
-            <IconX size={18} />
-          </ActionIcon>
-        </Tooltip>
-      )}
+      {queueCount > 0 &&
+        ![CampaignStatus.DEQUEUING, CampaignStatus.QUEUING].includes(
+          campaign?.status,
+        ) && (
+          <Tooltip label={translations["cancel schedule"]}>
+            <ActionIcon
+              size={"sm"}
+              variant="light"
+              onClick={() => {
+                sendMutation.mutate({
+                  status: CampaignStatus.INACTIVE,
+                  statuses: [CampaignParticipantStatus.FAILED],
+                });
+              }}
+            >
+              <IconX size={18} />
+            </ActionIcon>
+          </Tooltip>
+        )}
       <SendCampaignModal
         close={close}
         opened={opened}
