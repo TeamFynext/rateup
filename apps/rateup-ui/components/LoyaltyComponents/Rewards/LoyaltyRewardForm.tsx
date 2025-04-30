@@ -136,7 +136,7 @@ const LoyaltyRewardForm = ({
   }, [form.values.reward_id]);
 
   return (
-    <Stack>
+    <Stack p={"xs"}>
       <Group justify="space-between">
         <Title>{title}</Title>
         <Group>

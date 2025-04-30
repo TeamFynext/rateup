@@ -63,7 +63,7 @@ export default function Reward() {
         );
 
   return (
-    <Stack>
+    <Stack p={"xs"}>
       <Group justify="space-between">
         <Group>
           <RateupButtonBlue

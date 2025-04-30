@@ -532,3 +532,8 @@ export enum WaMessageAssignStatus {
   CLOSED = "CLOSED",
   UNASSIGNED = "UNASSIGNED",
 }
+
+export enum LoyaltyApiFeature {
+  action = "action",
+  reward = "reward",
+}

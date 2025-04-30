@@ -2,6 +2,7 @@
 import {
   IconActivity,
   IconAddressBook,
+  IconApi,
   IconApps,
   IconAutomation,
   IconAward,
@@ -23,6 +24,7 @@ import {
   IconMessageCancel,
   IconMessageChatbot,
   IconMessageCheck,
+  IconMessageUp,
   IconPin,
   IconPinned,
   IconQrcode,
@@ -39,20 +41,18 @@ import {
   IconUsers,
   IconUsersGroup,
   IconUserShare,
+  IconUserX,
   IconWallpaper,
   IconWaveSine,
 } from "@tabler/icons-react";
 
 import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
 import {
-  AllInboxIcon,
   AssignedInboxIcon,
   AssignedToMeInboxIcon,
   BlockedInboxIcon,
   ClosedInboxIcon,
   NewInboxIcon,
-  SentInboxIcon,
-  UnAssignedInboxIcon,
 } from "@/components/whatsapp/inbox/chatselect";
 
 import {
@@ -113,7 +113,7 @@ export function getNavTopData(
               {
                 label: translations["UnAssigned"],
                 link: "/dashboard/whatsapp/inbox?tab=UnAssigned",
-                icon: UnAssignedInboxIcon,
+                icon: IconUserX,
               },
               {
                 label: translations["Assigned"],
@@ -133,15 +133,15 @@ export function getNavTopData(
               {
                 label: translations["Sent"],
                 link: "/dashboard/whatsapp/inbox?tab=Sent",
-                icon: SentInboxIcon,
+                icon: IconMessageUp,
               },
               {
                 label: translations["All"],
                 link: "/dashboard/whatsapp/inbox?tab=All",
-                icon: AllInboxIcon,
+                icon: IconMessage,
               },
               {
-                label: translations["Blocked Contacts"],
+                label: translations["Blocked"],
                 link: "/dashboard/whatsapp/inbox?tab=blocked",
                 icon: BlockedInboxIcon,
               },
@@ -242,6 +242,11 @@ export function getNavTopData(
                 label: translations["Settings"],
                 link: "/dashboard/loyalty/settings",
                 icon: IconSettings,
+              },
+              {
+                label: "API Settings",
+                link: "/dashboard/loyalty/api",
+                icon: IconApi,
               },
             ],
           },
