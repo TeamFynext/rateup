@@ -1255,7 +1255,6 @@ export type WaSendMessageBody = {
   };
   audio?: {
     link: string;
-    caption: string;
   };
   video?: {
     link: string;

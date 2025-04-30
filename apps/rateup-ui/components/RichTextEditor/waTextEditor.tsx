@@ -5,6 +5,7 @@ import {
   Anchor,
   Box,
   BoxComponentProps,
+  Flex,
   Group,
   Indicator,
   Modal,
@@ -187,7 +188,7 @@ function WaTextEditor({
         <ShowMedia opened={opened} close={close} />
       </Group>
 
-      <RichTextEditor editor={editor} className={className}>
+      <RichTextEditor editor={editor} className={className} bg={"white"}>
         <RichTextEditor.Toolbar sticky tabIndex={-1}>
           <Group justify="space-between" w={"100%"}>
             <Group gap={"xs"}>
@@ -226,15 +227,15 @@ function WaTextEditor({
                 </>
               )}
             </Group>
-            <Group>
-              <WaTextCharacterCount editor={editor} max={max} />
-              {customHeaders}
-            </Group>
+            {customHeaders}
           </Group>
         </RichTextEditor.Toolbar>
         <ScrollAreaAutosize mah={mah}>
           <RichTextEditor.Content mih={mih} />
         </ScrollAreaAutosize>
+        <Flex justify={"flex-end"} pr={"lg"}>
+          <WaTextCharacterCount editor={editor} max={max} />
+        </Flex>
       </RichTextEditor>
     </Box>
   );
