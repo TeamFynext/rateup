@@ -781,7 +781,7 @@ export function createVideoMessage(to, link, caption): WaSendMessageBody {
   };
 }
 
-export function createAudioMessage(to, link, caption = ""): WaSendMessageBody {
+export function createAudioMessage(to, link): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -789,7 +789,6 @@ export function createAudioMessage(to, link, caption = ""): WaSendMessageBody {
     type: "audio",
     audio: {
       link,
-      caption,
     },
   };
 }

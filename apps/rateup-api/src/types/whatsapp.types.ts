@@ -157,7 +157,6 @@ export interface WaSendMessageBody {
   };
   audio?: {
     link: string;
-    caption?: string;
   };
 }
 type WaButton = {

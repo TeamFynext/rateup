@@ -415,3 +415,8 @@ export enum WaMessageAssignStatusTab {
   AssignedToMe = "ASSIGNED",
   Closed = "CLOSED",
 }
+
+export enum LoyaltyApiFeature {
+  action = "action",
+  reward = "reward",
+}
