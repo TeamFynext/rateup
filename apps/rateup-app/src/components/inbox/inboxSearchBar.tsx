@@ -1,23 +1,41 @@
-import { View, TextInput, Pressable, TouchableOpacity, Animated, Easing } from "react-native";
-import { AddContactIcon, FilterIcon, RefreshIcon, SearchIcon, BackIcon } from "@/src/constants/imageExports";
+import {
+  View,
+  TextInput,
+  Pressable,
+  TouchableOpacity,
+  Animated,
+  Easing,
+} from "react-native";
+import {
+  AddContactIcon,
+  FilterIcon,
+  RefreshIcon,
+  SearchIcon,
+  BackIcon,
+} from "@/src/constants/imageExports";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 type SearchBarProps = {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
-  onRefresh: () => void;
 };
 
-export default function SearchBar({ searchTerm, setSearchTerm ,onRefresh}: SearchBarProps) {
+export default function SearchBar({
+  searchTerm,
+  setSearchTerm,
+}: SearchBarProps) {
   const router = useRouter();
-  const rotation = useRef(new Animated.Value(0)).current; 
+  const queryClient = useQueryClient();
+
+  const rotation = useRef(new Animated.Value(0)).current;
   const [isRotating, setIsRotating] = useState(false);
 
   const handleRefresh = () => {
-    if (isRotating) return; 
+    if (isRotating) return;
     setIsRotating(true);
-    onRefresh();
+    queryClient.invalidateQueries({queryKey:["contactCounts"]});
 
     Animated.loop(
       Animated.timing(rotation, {
@@ -25,19 +43,17 @@ export default function SearchBar({ searchTerm, setSearchTerm ,onRefresh}: Searc
         duration: 1000,
         easing: Easing.linear,
         useNativeDriver: true,
-      }),
+      })
     ).start();
 
-    
     setTimeout(() => {
       rotation.stopAnimation(() => {
-        rotation.setValue(0); 
+        rotation.setValue(0);
       });
       setIsRotating(false);
     }, 3000);
   };
 
- 
   const rotate = rotation.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
@@ -53,7 +69,7 @@ export default function SearchBar({ searchTerm, setSearchTerm ,onRefresh}: Searc
         ) : (
           <SearchIcon />
         )}
-        
+
         <TextInput
           placeholder="Search Contacts"
           placeholderTextColor="#E2E5ED"

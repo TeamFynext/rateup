@@ -4,21 +4,22 @@ import {
   ScrollView,
   Dimensions,
   KeyboardAvoidingView,
-  Platform
+  Platform,
 } from "react-native";
 import React from "react";
-import SignInScreen from "@/src/components/SignInScreen";
-import GoogleLogin from "@/src/components/GoogleSignInScreen";
+import SignInScreen from "@/src/components/signInScreen";
+import GoogleLogin from "@/src/components/googleSignInScreen";
 import { RateLogo } from "@/src/constants/imageExports";
-import { useToast } from "react-native-toast-notifications"; // ✅ import the toast hook
+import { useToast } from "react-native-toast-notifications";
 
 const SignIn = () => {
   const screenHeight = Dimensions.get("window").height;
-  const toast = useToast(); // ✅ initialize toast
+  const toast = useToast();
 
-  // Function to trigger toast
   const showError = (message: string) => {
-    toast.show(message, { type: "danger" });
+    toast.show(message, {
+      type: "danger",
+    });
   };
 
   return (

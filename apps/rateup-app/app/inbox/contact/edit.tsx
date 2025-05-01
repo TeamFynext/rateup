@@ -1,13 +1,8 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import EditContacts from '@/src/components/contact/Edit'
+import React from "react";
+import EditContacts from "@/src/components/contact/Edit";
 
 const edit = () => {
-  return (
+  return <EditContacts />;
+};
 
-      <EditContacts/>
-  
-  )
-}
-
-export default edit
+export default edit;

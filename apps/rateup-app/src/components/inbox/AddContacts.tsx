@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { countries } from '@/src/constants/countries';
 import { BackIcon, EmailIcon, UsernameIcon } from '@/src/constants/imageExports';
 import { useRouter } from 'expo-router';
-import { createContact } from '@/src/api/inbox/contacts';
+import { createContact } from '@/src/api/inbox/contacts.api';
 
 export default function AddContactScreen() {
   const [name, setName] = useState('');

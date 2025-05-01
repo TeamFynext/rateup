@@ -1,56 +1,46 @@
-import { View, Text, TouchableOpacity, Pressable, Modal, Dimensions, ActivityIndicator } from 'react-native'
-import React, { useState } from 'react'
-import { BackIcon, DotsIcon } from '@/src/constants/imageExports'
-import { useRouter } from 'expo-router'
-import { namePreview } from '../../utils/chatbox_utils'
-import { closeChat } from '@/src/api/inbox/contacts'
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Pressable,
+  Modal,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
+import React, { useState } from "react";
+import { BackIcon, DotsIcon } from "@/src/constants/imageExports";
+import { useRouter } from "expo-router";
+import { namePreview } from "../../utils/chatbox_utils";
+import { closeChat } from "@/src/api/inbox/contacts.api";
+import { useQueryClient } from "@tanstack/react-query";
 
-const { width: screenWidth } = Dimensions.get('window')
-let userId: string
+const { width: screenWidth } = Dimensions.get("window");
+let userId: string;
 
 const MoreOptions = ({
   visible,
   onClose,
   onCloseChatPress,
 }: {
-  visible: boolean
-  onClose: () => void
-  onCloseChatPress: () => void
+  visible: boolean;
+  onClose: () => void;
+  onCloseChatPress: () => void;
 }) => {
-  const modalWidth = screenWidth * 0.4
-  const router = useRouter()
+  const router = useRouter();
+  const modalWidth = screenWidth * 0.4;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable className="flex-1" onPress={onClose}>
         <View
-          style={{
-            width: modalWidth,
-            backgroundColor: 'white',
-            borderRadius: 8,
-            padding: 8,
-            position: 'absolute',
-            right: 10,
-            top: 55,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-            display: 'flex',
-            gap: 2,
-          }}
+          className="absolute right-[10px] top-[55px] rounded-md p-2 bg-white shadow-md z-50"
+          style={{ width: modalWidth }}
         >
           <TouchableOpacity
             className="p-3"
             onPress={() => {
-              onClose()
-              router.push({ pathname: '/inbox/contact/Edit', params: { userId } })
+              onClose();
+              router.push({ pathname: "/inbox/contact/Edit", params: { userId } });
             }}
           >
             <Text className="text-gray-800 text-lg">Edit</Text>
@@ -63,8 +53,8 @@ const MoreOptions = ({
           <TouchableOpacity
             className="p-3"
             onPress={() => {
-              onClose()
-              onCloseChatPress()
+              onClose();
+              onCloseChatPress();
             }}
           >
             <Text className="text-gray-800 text-lg">Close Chat</Text>
@@ -72,8 +62,8 @@ const MoreOptions = ({
         </View>
       </Pressable>
     </Modal>
-  )
-}
+  );
+};
 
 const ConfirmationModal = ({
   visible,
@@ -81,34 +71,26 @@ const ConfirmationModal = ({
   onProceed,
   isLoading,
 }: {
-  visible: boolean
-  onCancel: () => void
-  onProceed: () => void
-  isLoading: boolean
+  visible: boolean;
+  onCancel: () => void;
+  onProceed: () => void;
+  isLoading: boolean;
 }) => {
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onCancel}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View className="flex-1 justify-center items-center bg-black/50">
         <View className="bg-white p-6 rounded-xl w-[80vw] h-[18vh] flex gap-3">
           <Text className="text-xl font-semibold">Close This Chat?</Text>
           <Text className="text-md">This chat will be moved to Closed</Text>
           <View className="flex-row items-center justify-end gap-6 mt-4">
-            <TouchableOpacity
-              className="border py-2 px-6 rounded-full"
-              onPress={onCancel}
-            >
+            <TouchableOpacity className="border py-2 px-6 rounded-full" onPress={onCancel}>
               <Text className="text-gray-800 font-semibold">Cancel</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              className={`${
-                isLoading ? 'bg-gray-400' : 'bg-[#009987]'
-              } py-2 px-6 rounded-full`}
+              className={`py-2 px-6 rounded-full ${
+                isLoading ? "bg-gray-400" : "bg-[#009987]"
+              }`}
               onPress={isLoading ? undefined : onProceed}
               disabled={isLoading}
             >
@@ -122,29 +104,30 @@ const ConfirmationModal = ({
         </View>
       </View>
     </Modal>
-  )
-}
+  );
+};
 
 const ChatHeader = ({ id, name, phone }: { id: string; name: string; phone: number }) => {
-  const router = useRouter()
-  const [optionsVisible, setOptionsVisible] = useState(false)
-  const [confirmModalVisible, setConfirmModalVisible] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  userId = id
+  const router = useRouter();
+  const [optionsVisible, setOptionsVisible] = useState(false);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+  userId = id;
 
-  // Async function to close chat
   const handleProceedCloseChat = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await closeChat(userId, { waMessageAssignStatus: 'CLOSED' })
-      setConfirmModalVisible(false)
+      await closeChat(userId, { waMessageAssignStatus: "CLOSED" });
+      setConfirmModalVisible(false);
+      queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
       router.back();
     } catch (error) {
-      console.error('Error closing chat:', error)
+      console.error("Error closing chat:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <View className="flex-row items-center justify-between px-6 py-4 bg-white gap-3">
@@ -183,7 +166,7 @@ const ChatHeader = ({ id, name, phone }: { id: string; name: string; phone: numb
         isLoading={isLoading}
       />
     </View>
-  )
-}
+  );
+};
 
-export default ChatHeader
+export default ChatHeader;

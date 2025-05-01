@@ -1,5 +1,15 @@
 import React, { useState, useRef, useEffect, memo, useMemo } from "react";
-import { View, Text, TouchableOpacity, Pressable, Animated, Image, Easing, Dimensions, ActivityIndicator, Button } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Pressable,
+  Animated,
+  Image,
+  Easing,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
 import { MenuIcon } from "lucide-react-native";
 import InboxLayoutComponent from "./inbox/InboxTabs";
 import MenuBar from "@/src/components/home/Menu";
@@ -7,8 +17,7 @@ import AccountBar from "@/src/components/home/Account";
 import { useAuth } from "@/src/context/AuthContext";
 import { HomeInterface } from "@/src/api/inbox/types";
 import { namePreview } from "@/src/utils/chatbox_utils";
-import { loggedUserDetails } from "@/src/api/api";
-import { useToast } from "react-native-toast-notifications";
+import { useLoggedInUser } from "@/src/api/api";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -18,34 +27,28 @@ const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 const InboxLayout = memo(InboxLayoutComponent);
 
 export default function Home() {
-  const toast =useToast();
   const { userId } = useAuth();
-  const [userData, setUserData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<"menu" | "account" | null>(null);
-  const [lastOpenedItem, setLastOpenedItem] = useState<"menu" | "account" | null>(null);
+  const [selectedItem, setSelectedItem] = useState<"menu" | "account" | null>(
+    null
+  );
+  const [lastOpenedItem, setLastOpenedItem] = useState<
+    "menu" | "account" | null
+  >(null);
   const [shouldRenderOverlay, setShouldRenderOverlay] = useState(false);
-  const [selectedInterface, setSelectedInterface] = useState<HomeInterface>("inbox");
+  const [selectedInterface, setSelectedInterface] =
+    useState<HomeInterface>("inbox");
 
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const open = selectedItem !== null;
 
-  const getUserInfo = async () => {
-    try {
-      const userDetails = await loggedUserDetails();
-      setUserData(userDetails.data);
-    } catch (error) {
-      console.error("Failed to fetch user info:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getUserInfo();
-  }, [userId]);
+  const {
+    data: userData,
+    isLoading: loading,
+    isError,
+    refetch,
+  } = useLoggedInUser();
 
   const renderedInterface = useMemo(() => {
     switch (selectedInterface) {
@@ -102,7 +105,7 @@ export default function Home() {
       setSelectedItem(null);
     } else {
       setSelectedItem("account");
-      getUserInfo();
+      refetch();
     }
   };
 
@@ -111,7 +114,6 @@ export default function Home() {
     outputRange: [PANEL_HEIGHT, 0],
   });
 
- 
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
@@ -121,8 +123,9 @@ export default function Home() {
   }
 
   if (!userData) {
-    toast.show("Failed to load user data. Please sign in again.", { type: "danger" });
+    return null;
   }
+
   const { email, orgName, role, profilePhoto, orgPhone, userName } = userData;
   return (
     <View className="flex-1 items-center relative">
@@ -164,13 +167,7 @@ export default function Home() {
         >
           {lastOpenedItem === "menu" ? (
             <MenuBar
-              onSendValue={(val: HomeInterface) => {
-                setSelectedInterface(val)
-                toast.show(`Switched to ${val}`, {
-                  type: "success",
-                  placement: "top",
-                });
-              }}
+              onSendValue={(val: HomeInterface) => setSelectedInterface(val)}
               selected={selectedInterface}
             />
           ) : (
@@ -192,7 +189,9 @@ export default function Home() {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() =>
-            selectedItem === "menu" ? setSelectedItem(null) : setSelectedItem("menu")
+            selectedItem === "menu"
+              ? setSelectedItem(null)
+              : setSelectedItem("menu")
           }
         >
           <View

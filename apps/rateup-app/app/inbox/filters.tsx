@@ -1,13 +1,13 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import FiltersScreen from '@/src/components/inbox/Filters'
+import { View } from "react-native";
+import React from "react";
+import FiltersScreen from "@/src/components/inbox/Filters";
 
 const filters = () => {
   return (
     <View>
-      <FiltersScreen/>
+      <FiltersScreen />
     </View>
-  )
-}
+  );
+};
 
-export default filters
+export default filters;

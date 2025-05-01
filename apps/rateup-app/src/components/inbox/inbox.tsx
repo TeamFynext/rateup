@@ -1,6 +1,6 @@
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
-import { useFilteredContacts, getDefaultFilter } from "@/src/api/inbox/useFilteredContacts";
+import { useFilteredContacts, getDefaultFilter } from "@/src/api/inbox/contacts.query";
 import ChatBoxNew from "../chatBox/ChatBoxNew";
 import ChatBoxAssigned from "../chatBox/ChatBoxAssigned";
 import ChatBoxAll from "../chatBox/ChatBoxAll";

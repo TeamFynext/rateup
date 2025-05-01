@@ -2,6 +2,7 @@ import axios from "@/src/config/axios"
 import { router } from "expo-router";
 import SuperTokens from "supertokens-react-native"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { useQuery } from "@tanstack/react-query";
 
 const API_URL =process.env.EXPO_PUBLIC_API_URL;
 
@@ -104,6 +105,14 @@ export const loggedUserDetails = async() => {
   return res.data
 }
 
+export const useLoggedInUser = () =>
+  useQuery({
+    queryKey: ["loggedUser"],
+    queryFn: async () => {
+      const res = await loggedUserDetails();
+      return res.data;
+    },
+  });
 
 export const createGoogleUser = async(data: ICreateGoogleUser) =>{
   await axios.post("/user/complete-google-signup",data);

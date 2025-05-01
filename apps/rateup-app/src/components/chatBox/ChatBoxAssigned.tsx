@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
-import { assignedContact } from "@/src/api/inbox/contacts";
+import { assignedContact } from "@/src/api/inbox/contacts.api";
 import { getMessagePreview, namePreview, getRelativeTime } from "../../utils/chatbox_utils";
 
 const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({

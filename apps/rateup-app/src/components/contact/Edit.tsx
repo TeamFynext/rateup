@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { countries } from '@/src/constants/countries';
 import { BackIcon, UsernameIcon } from '@/src/constants/imageExports';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { editContactById, getContactById } from '@/src/api/inbox/contacts';
+import { editContactById, getContactById } from '@/src/api/inbox/contacts.api';
 import { convertFullPhoneNumToCoutryCodeAndNationalNum } from '@/src/utils/phoneNumConvert';
 
 export default function EditContacts() {

@@ -13,3 +13,8 @@ export const checkAuthAndGetToken = async() => {
     const token = await SuperTokens.getAccessToken();
     return token
 } 
+
+export const getUserID = async() => {
+    const userId = await SuperTokens.getUserId();
+    return userId
+}
