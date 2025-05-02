@@ -14,7 +14,6 @@ import { MenuIcon } from "lucide-react-native";
 import InboxLayoutComponent from "./inbox/InboxTabs";
 import MenuBar from "@/src/components/home/Menu";
 import AccountBar from "@/src/components/home/Account";
-import { useAuth } from "@/src/context/AuthContext";
 import { HomeInterface } from "@/src/api/inbox/types";
 import { namePreview } from "@/src/utils/chatbox_utils";
 import { useLoggedInUser } from "@/src/api/api";
@@ -27,7 +26,6 @@ const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 const InboxLayout = memo(InboxLayoutComponent);
 
 export default function Home() {
-  const { userId } = useAuth();
   const [selectedItem, setSelectedItem] = useState<"menu" | "account" | null>(
     null
   );

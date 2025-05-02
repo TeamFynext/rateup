@@ -60,40 +60,43 @@ export default function SearchBar({
   });
 
   return (
-    <View className="bg-[#EBF7F5] h-[9vh] flex-row justify-around items-center mb-[-21] px-4">
-      <View className="bg-[#FFFFFF] rounded-full px-4 py-2 mb-2 border border-[#E2E5ED] flex-row gap-1 items-center w-[60vw]">
-        {searchTerm ? (
-          <Pressable onPress={() => setSearchTerm("")}>
-            <BackIcon />
-          </Pressable>
-        ) : (
-          <SearchIcon />
-        )}
+    <View className="bg-rateUpLightGreen px-4 pt-3 pb-2">
+      <View className="flex-row items-center justify-between gap-2">
+        {/* Search Input */}
+        <View className="flex-1 flex-row items-center border border-[#E2E5ED] bg-white rounded-full px-4 py-2">
+          {searchTerm ? (
+            <Pressable onPress={() => setSearchTerm("")}>
+              <BackIcon />
+            </Pressable>
+          ) : (
+            <SearchIcon />
+          )}
 
-        <TextInput
-          placeholder="Search Contacts"
-          placeholderTextColor="#E2E5ED"
-          className="w-full"
-          value={searchTerm}
-          onChangeText={setSearchTerm}
-        />
-      </View>
+          <TextInput
+            placeholder="Search Contacts"
+            placeholderTextColor="#E2E5ED"
+            className="flex-1 ml-2 text-sm"
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+          />
+        </View>
 
-      {/* add contacts */}
-      <View className="flex-row gap-4">
-        <TouchableOpacity onPress={() => router.push("/inbox/AddContact")}>
-          <AddContactIcon />
-        </TouchableOpacity>
+        {/* Icons */}
+        <View className="flex-row gap-2 ml-2">
+          <TouchableOpacity onPress={() => router.push("/inbox/AddContact")}>
+            <AddContactIcon />
+          </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/inbox/Filters")}>
-          <FilterIcon />
-        </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/inbox/Filters")}>
+            <FilterIcon />
+          </TouchableOpacity>
 
-        <TouchableOpacity onPress={handleRefresh}>
-          <Animated.View style={{ transform: [{ rotate }] }}>
-            <RefreshIcon />
-          </Animated.View>
-        </TouchableOpacity>
+          <TouchableOpacity onPress={handleRefresh}>
+            <Animated.View style={{ transform: [{ rotate }] }}>
+              <RefreshIcon />
+            </Animated.View>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );

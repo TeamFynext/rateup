@@ -10,6 +10,7 @@ module.exports = {
         colors: {
           rateUpGreen: "#009987",
           rateUpGreen20:"#00998714",
+          rateUpLightGreen:"#EBF7F5"
         },
     },
   },

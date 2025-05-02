@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import React, { useState } from "react";
 import { namePreview } from "../../utils/chatbox_utils";
 import { signOut } from "@/src/api/api";
@@ -29,21 +29,26 @@ const AccountBar = ({
   };
 
   return (
-    <View className="flex-1 bg-white p-6">
+    <ScrollView
+      className="flex-1 bg-white px-6 pt-6"
+      contentContainerStyle={{ flexGrow: 1 }}
+      showsHorizontalScrollIndicator={false}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Heading */}
-      <Text className="text-xl font-bold text-gray-900 mb-6">
+      <Text className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">
         Account Details
       </Text>
 
       {/* Top section: Role Badge + Profile Picture */}
       <View className="flex-row items-start justify-between mb-6">
-        {/* Role Badge */}
         <View className="bg-[#FFA500] px-3 py-1 rounded-full">
-          <Text className="text-white font-semibold text-xs">{role}</Text>
+          <Text className="text-white font-semibold text-xs sm:text-sm">
+            {role}
+          </Text>
         </View>
 
-        {/* Profile Picture */}
-        <View className="w-16 h-16 rounded-full overflow-hidden bg-gray-200">
+        <View className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-200">
           {profilePhoto ? (
             <Image
               source={{ uri: profilePhoto }}
@@ -61,46 +66,48 @@ const AccountBar = ({
       </View>
 
       {/* Details Section */}
-      <View className="flex gap-4">
+      <View className="flex flex-col gap-3 pb-20">
         <View>
           <Text className="text-gray-400 text-xs">Name</Text>
-          <Text className="text-gray-900 font-semibold text-base">
+          <Text className="text-gray-900 font-semibold text-base sm:text-lg">
             {userName}
           </Text>
         </View>
 
         <View>
           <Text className="text-gray-400 text-xs">Organization Name</Text>
-          <Text className="text-gray-900 font-semibold text-base">
+          <Text className="text-gray-900 font-semibold text-base sm:text-lg">
             {orgName}
           </Text>
         </View>
 
         <View>
           <Text className="text-gray-400 text-xs">Phone Number</Text>
-          <Text className="text-gray-900 font-semibold text-base">
+          <Text className="text-gray-900 font-semibold text-base sm:text-lg">
             {orgPhone}
           </Text>
         </View>
 
         <View>
           <Text className="text-gray-400 text-xs">Email</Text>
-          <Text className="text-gray-900 font-semibold text-base">{email}</Text>
+          <Text className="text-gray-900 font-semibold text-base sm:text-lg">
+            {email}
+          </Text>
         </View>
 
         <TouchableOpacity
           className={`rounded-lg flex items-center justify-center ${
-            loading ? "bg-[#343a4061] " : "bg-[#343A40]"
+            loading ? "bg-[#343a4061]" : "bg-[#343A40]"
           }`}
           onPress={handleSignOut}
           disabled={loading}
         >
-          <Text className="text-white p-3 text-xl font-bold">
+          <Text className="text-white py-3 px-6 text-lg sm:text-xl font-bold">
             {loading ? "Logging Out..." : "Log Out"}
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

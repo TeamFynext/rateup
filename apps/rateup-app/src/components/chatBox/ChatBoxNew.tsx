@@ -1,9 +1,15 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
-import { getMessagePreview, namePreview, getRelativeTime } from "../../utils/chatbox_utils";
+import {
+  getMessagePreview,
+  namePreview,
+  getRelativeTime,
+} from "../../utils/chatbox_utils";
 
-const ChatBoxNew: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({
+const ChatBoxNew: React.FC<
+  ContactsWithLastMessage & { onPress?: () => void }
+> = ({
   name,
   phone,
   lastMessage,
@@ -11,8 +17,6 @@ const ChatBoxNew: React.FC<ContactsWithLastMessage & { onPress?: () => void }> =
   unReadMessageCount,
   onPress,
 }) => {
-
-
   return (
     <TouchableOpacity onPress={onPress}>
       <View className="flex-row items-center p-4">
@@ -27,12 +31,18 @@ const ChatBoxNew: React.FC<ContactsWithLastMessage & { onPress?: () => void }> =
         <View className="flex-1 flex-row items-center justify-between">
           <View className="gap-1">
             {/* Name */}
-            <Text className="text-lg font-semibold text-[#343A40]" numberOfLines={1}>
+            <Text
+              className="text-lg font-semibold text-[#343A40]"
+              numberOfLines={1}
+            >
               {name || phone}
             </Text>
 
             {/* Last Message */}
-            <Text className="text-sm text-black min-w-[40vw] max-w-[60vw]" numberOfLines={1}>
+            <Text
+              className="text-sm text-black min-w-[40vw] max-w-[60vw]"
+              numberOfLines={1}
+            >
               {getMessagePreview(lastMessage)}
             </Text>
           </View>

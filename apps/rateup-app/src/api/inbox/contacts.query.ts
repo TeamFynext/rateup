@@ -1,7 +1,11 @@
-
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
-import { assignedContact, getContactById, getFilteredContacts, markMessageAsRead } from "./contacts.api";
+import {
+  assignedContact,
+  getContactById,
+  getFilteredContacts,
+  markMessageAsRead,
+} from "./contacts.api";
 import { filteredContactsCount } from "./contacts.api";
 
 export const getDefaultFilter = (messageType: string) => ({
@@ -31,15 +35,13 @@ export const useContactCounts = () => {
   });
 };
 
-
-export const useAssignedContact = (contactId:string) => {
+export const useAssignedContact = (contactId: string) => {
   return useQuery({
-    queryKey:["assigned-contact",contactId],
-    queryFn:()=> assignedContact(contactId),
-    enabled: !!contactId
-  })
-}
-
+    queryKey: ["assigned-contact", contactId],
+    queryFn: () => assignedContact(contactId),
+    enabled: !!contactId,
+  });
+};
 
 export const useContactById = (contactId: string) =>
   useQuery({
@@ -48,9 +50,7 @@ export const useContactById = (contactId: string) =>
     enabled: !!contactId,
   });
 
-  
-  export const useMarkMessageAsRead = () =>
-    useMutation({
-      mutationFn: (contactId: string) => markMessageAsRead(contactId),
-    });
-  
+export const useMarkMessageAsRead = () =>
+  useMutation({
+    mutationFn: (contactId: string) => markMessageAsRead(contactId),
+  });
