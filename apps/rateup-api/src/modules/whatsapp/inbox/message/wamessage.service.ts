@@ -268,9 +268,30 @@ export async function filterChats(
     ) {
       if (bodyFilterProps?.waMessageAssignStatus === "New") {
         filters.push(
-          `(c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours') 
-          AND c."waMessageAssignStatus" = 'UNASSIGNED'`,
+          `(c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours')`,
         );
+        const newStatuses = bodyFilterProps.newStatuses;
+        if (newStatuses?.length) {
+          params.push(
+            newStatuses.map((status) =>
+              status === "ASSIGNEDTOME" ? "ASSIGNED" : status,
+            ),
+          );
+          let newQuery = `c."waMessageAssignStatus" = ANY($${paramIndex++}::TEXT[])`;
+          if (bodyFilterProps.newStatuses.includes("ASSIGNEDTOME")) {
+            params.push(userId);
+            const assignmentCondition = `EXISTS (
+              SELECT 1 FROM "WaInboxAssign" winb 
+              WHERE winb."contactId" = c.id 
+              AND winb."assignedUserId" = $${paramIndex++}::uuid
+            )`;
+            newQuery +=
+              newStatuses.length === 1
+                ? ` AND ${assignmentCondition}`
+                : ` OR ${assignmentCondition}`;
+          }
+          filters.push(newQuery);
+        }
       } else {
         const isAssignedToMe =
           bodyFilterProps?.waMessageAssignStatus === "AssignedToMe";
@@ -558,7 +579,7 @@ export async function getContactsCountByInbox(orgId, userId) {
     WHERE c."orgId" = ${orgId}::uuid
   )
   SELECT
-    COUNT(CASE WHEN mf.has_recent AND mf."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED} AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS new_count,
+    COUNT(CASE WHEN mf.has_recent AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS new_count,
     COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND mf.has_receive
       AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS assigned_count,
     COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND mf.has_receive

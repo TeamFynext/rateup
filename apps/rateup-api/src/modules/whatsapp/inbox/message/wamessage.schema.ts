@@ -54,6 +54,7 @@ const WaChatFilterSchema = z.object({
   tags: z.array(z.any()).optional(),
   waMessageAssignStatus: z.string().optional(),
   blockedUsers: z.boolean().optional(),
+  newStatuses: z.array(z.string()).optional(),
 });
 
 const waChatFilterQuerySchema = PaginateQuerySchema.extend({
