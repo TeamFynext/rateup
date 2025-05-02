@@ -40,7 +40,7 @@ const Logs = () => {
       header: () => "Time",
       accessorKey: "createdAt",
       cell: (info) =>
-        dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+        dayjs.utc(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
     },
     {
       header: () => "Phone",
