@@ -1,6 +1,10 @@
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import utc from "dayjs/plugin/utc";
+
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
+
 
 export const namePreview = (name_: string) => {
   const nameArray = name_.split(" ");
@@ -24,3 +28,11 @@ export const getMessagePreview = (lastMessage: any) => {
 
   return "Unsupported message";
 };
+
+export function isInboxSessionExpired(timeStamp: string) {
+  if (!timeStamp) return true;
+  const currentTime = dayjs().utc();
+  const givenTime = dayjs(timeStamp).utc();
+  const diffInHours = currentTime.diff(givenTime, "hours");
+  return diffInHours >= 24;
+}

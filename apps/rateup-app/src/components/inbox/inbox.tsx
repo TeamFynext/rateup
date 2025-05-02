@@ -3,10 +3,11 @@ import { ContactsWithLastMessage } from "@/src/api/inbox/types";
 import {
   useFilteredContacts,
   getDefaultFilter,
-} from "@/src/api/inbox/contacts.query";
+} from "@/src/api/inbox/contacts/contacts.query";
 import ChatBoxNew from "../chatBox/ChatBoxNew";
 import ChatBoxAssigned from "../chatBox/ChatBoxAssigned";
 import ChatBoxAll from "../chatBox/ChatBoxAll";
+import ChatBoxClosed from "../chatBox/ChatBoxClosed";
 import { useRouter } from "expo-router";
 
 type InboxProps = {
@@ -71,6 +72,8 @@ export default function Inbox({
       case "UnAssigned":
         ChatBoxComponent = ChatBoxNew;
         break;
+      case "Closed":
+        ChatBoxComponent = ChatBoxClosed;
       default:
         ChatBoxComponent = ChatBoxAll;
         break;

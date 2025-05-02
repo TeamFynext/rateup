@@ -11,7 +11,7 @@ import React, { useState } from "react";
 import { BackIcon, DotsIcon } from "@/src/constants/imageExports";
 import { useRouter } from "expo-router";
 import { namePreview } from "../../utils/chatbox_utils";
-import { closeChat } from "@/src/api/inbox/contacts.api";
+import { closeChat } from "@/src/api/inbox/contacts/contacts.api";
 import { useQueryClient } from "@tanstack/react-query";
 
 const { width: screenWidth } = Dimensions.get("window");

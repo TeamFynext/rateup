@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
-import { assignedContact } from "@/src/api/inbox/contacts.api";
 import { getMessagePreview, namePreview, getRelativeTime } from "../../utils/chatbox_utils";
+import { useAssignedContact } from "@/src/api/inbox/contacts/contacts.query";
 
 const ChatBoxAll: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({
   id,
@@ -14,21 +14,10 @@ const ChatBoxAll: React.FC<ContactsWithLastMessage & { onPress?: () => void }> =
   waMessageAssignStatus,
   onPress,
 }) => {
-  const [assignedUser, setAssignedUser] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function assign() {
-      try {
-        const assigned = await assignedContact(id);
-        if (assigned && assigned.length > 0 && assigned[0].assignedUser?.name) {
-          setAssignedUser(assigned[0].assignedUser.name);
-        }
-      } catch (err) {
-        console.error("Error fetching assigned user:", err);
-      }
-    }
-    assign();
-  }, [id]);
+  const { data: assignedData, isLoading } = useAssignedContact(id);
+  
+    const assignedUser =
+      assignedData?.[0]?.assignedUser?.name ?? waMessageAssignStatus;
 
 
   return (

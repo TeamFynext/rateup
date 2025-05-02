@@ -4,7 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 import ChatHeader from "@/src/components/chatDisplay/ChatHeader";
 import ChatFooter from "@/src/components/chatDisplay/ChatFooter";
 import ChatBody from "@/src/components/chatDisplay/ChatBody";
-import { useMarkMessageAsRead } from "@/src/api/inbox/contacts.query";
+import { useMarkMessageAsRead } from "@/src/api/inbox/contacts/contacts.query";
 
 const ChatDisplay = () => {
   const {

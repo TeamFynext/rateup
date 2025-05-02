@@ -1,5 +1,3 @@
-// src/components/Chat/ChatBody.tsx
-
 import { View, FlatList, ActivityIndicator, Text } from "react-native";
 import React from "react";
 import { useGetMessagesByContactId } from "@/src/api/inbox/messages";

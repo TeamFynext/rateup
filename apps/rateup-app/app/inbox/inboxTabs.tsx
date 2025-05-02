@@ -21,7 +21,7 @@ import {
   MessageSquareMore,
 } from "lucide-react-native";
 
-import { useContactCounts } from "@/src/api/inbox/contacts.query";
+import { useContactCounts } from "@/src/api/inbox/contacts/contacts.query";
 
 const Tab = createMaterialTopTabNavigator();
 

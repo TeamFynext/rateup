@@ -6,7 +6,7 @@ import {
   namePreview,
   getRelativeTime,
 } from "../../utils/chatbox_utils";
-import { useAssignedContact } from "@/src/api/inbox/contacts.query";
+import { useAssignedContact } from "@/src/api/inbox/contacts/contacts.query";
 
 const ChatBoxAssigned: React.FC<
   ContactsWithLastMessage & { onPress?: () => void }

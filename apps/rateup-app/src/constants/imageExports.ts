@@ -13,6 +13,9 @@ import EmailIcon from "@/assets/images/email-icon.svg";
 import DotsIcon from "@/assets/images/3dots-icon.svg";
 import IIcon from "@/assets/images/i-icon.svg";
 import RateupIcon from "@/assets/images/rateupstar-icon.svg";
+import SendIcon from "@/assets/images/send-wa-message-icon.svg";
+import PlusIcon from "@/assets/images/plus-icon.svg";
+import EmojiIcon from "@/assets/images/emoji-icon.svg"
 
 export {
   SearchIcon,
@@ -30,4 +33,7 @@ export {
   DotsIcon,
   IIcon,
   RateupIcon,
+  SendIcon,
+  PlusIcon,
+  EmojiIcon
 };
