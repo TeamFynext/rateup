@@ -521,9 +521,6 @@ export const getResponseExcelByCampaignById = async (id: string) => {
 
   return [campaign?.name, buffer];
 };
-const waMessageQueue = new Queue("waMessageQueue", {
-  connection: redisConnection,
-});
 
 export async function getCampaginStatsById(campaignId: string) {
   const stats = await prisma.campaignStats.findUnique({
@@ -556,9 +553,7 @@ export async function getCampaginStatsById(campaignId: string) {
       countCompleted: 0,
     };
   }
-  // Get all jobs for this campaign to count them
-  const jobs = await waMessageQueue.getJobs();
-  const campaignJobs = jobs.filter((job) => job.name === campaignId);
+  const tc = await redisConnection.scard(`campaign:${campaignId}:jobs`);
 
   return {
     countRead: stats.totalRead,
@@ -567,7 +562,7 @@ export async function getCampaginStatsById(campaignId: string) {
     countDelivered: stats.totalDelivered,
     countPending: stats.campaign?._count?.campaignParticipants ?? 0,
     countCompleted: stats.totalCompleted,
-    queueCount: campaignJobs?.length,
+    queueCount: tc ?? 0,
   };
 }
 
