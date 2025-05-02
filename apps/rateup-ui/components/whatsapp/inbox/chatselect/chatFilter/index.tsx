@@ -13,6 +13,7 @@ import {
 import { useMediaQuery } from "@mantine/hooks";
 import { IconFilter } from "@tabler/icons-react";
 
+import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
@@ -32,6 +33,7 @@ export type ChatFilter = {
   tags: Array<MultiGV>;
   waMessageAssignStatus?: string;
   blockedUsers: boolean;
+  newStatuses: string[];
 };
 interface Props {
   filter: ChatFilter;
@@ -118,15 +120,27 @@ export default function WaInboxChatFilter(props: Props) {
   }
   function clearFilters() {
     props.setFilter({
+      ...props.filter,
       contactGroups: [],
       campaigns: [],
       tags: [],
-      messageType: props?.tag === "All" ? "all" : "usermessages",
       strictFilter: false,
       searchTerm: "",
-      blockedUsers: false,
+      newStatuses: [
+        WaMessageAssignStatus.ASSIGNED,
+        WaMessageAssignStatus.UNASSIGNED,
+      ],
     });
   }
+
+  const statusData = [
+    WaMessageAssignStatus.ASSIGNED,
+    WaMessageAssignStatus.UNASSIGNED,
+    "ASSIGNEDTOME",
+  ].map((status) => ({
+    value: status,
+    label: WaMessageAssignStatusTab[status],
+  }));
 
   return (
     <HoverCard position={isMobile ? "bottom-end" : "right-start"}>
@@ -175,6 +189,18 @@ export default function WaInboxChatFilter(props: Props) {
                 }),
               );
             }}
+          />
+          <ContainedMultiSelect
+            data={statusData}
+            placeholder="statuses"
+            w={220}
+            value={props.filter.newStatuses}
+            onChange={(values) =>
+              props.setFilter({
+                ...props.filter,
+                newStatuses: values as WaMessageAssignStatus[],
+              })
+            }
           />
         </Stack>
       </HoverCardDropdown>
