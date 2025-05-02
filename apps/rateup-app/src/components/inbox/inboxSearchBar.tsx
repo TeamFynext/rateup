@@ -35,7 +35,7 @@ export default function SearchBar({
   const handleRefresh = () => {
     if (isRotating) return;
     setIsRotating(true);
-    queryClient.invalidateQueries({queryKey:["contactCounts"]});
+    queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
 
     Animated.loop(
       Animated.timing(rotation, {

@@ -1,6 +1,9 @@
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
-import { useFilteredContacts, getDefaultFilter } from "@/src/api/inbox/contacts.query";
+import {
+  useFilteredContacts,
+  getDefaultFilter,
+} from "@/src/api/inbox/contacts.query";
 import ChatBoxNew from "../chatBox/ChatBoxNew";
 import ChatBoxAssigned from "../chatBox/ChatBoxAssigned";
 import ChatBoxAll from "../chatBox/ChatBoxAll";
@@ -13,7 +16,13 @@ type InboxProps = {
   contactGroups?: string[];
   campaigns?: string[];
   tags?: string[];
-  waMessageAssignStatus?: "New" | "Assigned" | "UnAssigned" | "Closed" | "AssignedToMe" | undefined;
+  waMessageAssignStatus?:
+    | "New"
+    | "Assigned"
+    | "UnAssigned"
+    | "Closed"
+    | "AssignedToMe"
+    | undefined;
 };
 
 export default function Inbox({
@@ -26,7 +35,7 @@ export default function Inbox({
   waMessageAssignStatus,
 }: InboxProps) {
   const defaultFilter = getDefaultFilter(messageType);
-  const router = useRouter()
+  const router = useRouter();
 
   const mergedFilter = {
     ...defaultFilter,
@@ -39,7 +48,6 @@ export default function Inbox({
   };
 
   const encodedFilter = encodeURIComponent(JSON.stringify(mergedFilter));
-  
 
   const {
     data,
@@ -50,11 +58,7 @@ export default function Inbox({
     isError,
   } = useFilteredContacts(encodedFilter);
 
-
-
   const contacts = data?.pages.flatMap((page) => page.rows) ?? [];
-
-  
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
     let ChatBoxComponent;
@@ -71,10 +75,9 @@ export default function Inbox({
         ChatBoxComponent = ChatBoxAll;
         break;
     }
-    
-  
+
     if (!ChatBoxComponent) return null;
-  
+
     return (
       <ChatBoxComponent
         id={item.id}
@@ -82,14 +85,22 @@ export default function Inbox({
         name={item.name}
         lastMessage={item.lastMessage.messageBody.receive.messages[0]}
         waMessageAssignStatus={item.waMessageAssignStatus}
-        //@ts-ignore
-        onPress={() => router.push({pathname:`/inbox/chat/${item.id}`,params:{name:item.name, phone:item.phone, waAssignStatus:item.waMessageAssignStatus}})}
+        onPress={() =>
+          router.push({
+            //@ts-ignore
+            pathname: `/inbox/chat/${item.id}`,
+            params: {
+              name: item.name,
+              phone: item.phone,
+              waAssignStatus: item.waMessageAssignStatus,
+            },
+          })
+        }
         lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
         unReadMessageCount={item.unReadMessageCount}
       />
     );
   };
-  
 
   if (isLoading) {
     return (

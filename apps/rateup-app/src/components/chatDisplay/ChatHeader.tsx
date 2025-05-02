@@ -89,7 +89,7 @@ const ConfirmationModal = ({
 
             <TouchableOpacity
               className={`py-2 px-6 rounded-full ${
-                isLoading ? "bg-gray-400" : "bg-[#009987]"
+                isLoading ? "bg-gray-400" : "bg-rateUpGreen"
               }`}
               onPress={isLoading ? undefined : onProceed}
               disabled={isLoading}
@@ -137,7 +137,7 @@ const ChatHeader = ({ id, name, phone }: { id: string; name: string; phone: numb
         </TouchableOpacity>
 
         <View className="w-12 h-12 rounded-full bg-[#00998733] flex items-center justify-center">
-          <Text className="text-[#009987] font-bold text-xl">{namePreview(name)}</Text>
+          <Text className="text-rateUpGreen font-bold text-xl">{namePreview(name)}</Text>
         </View>
 
         <View>

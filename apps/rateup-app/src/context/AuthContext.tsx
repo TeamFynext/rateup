@@ -7,7 +7,7 @@ type AuthContextType = {
   loading: boolean;
   setIsAuthenticated: (value: boolean) => void;
   userId: string | null;
-  setUserId:(value: string) => void;
+  setUserId: (value: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsAuthenticated(authStatus);
         if (authStatus) {
           const userDetails = await loggedUserDetails();
-          const userData = userDetails.data;          
+          const userData = userDetails.data;
           const { userId } = userData;
           setUserId(userId);
         }
@@ -48,7 +48,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, loading, setIsAuthenticated, userId, setUserId }}
+      value={{
+        isAuthenticated,
+        loading,
+        setIsAuthenticated,
+        userId,
+        setUserId,
+      }}
     >
       {children}
     </AuthContext.Provider>

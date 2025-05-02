@@ -24,7 +24,7 @@ const ChatBody = ({ id }: { id: string }) => {
   
     if (isPending) {
       return (
-        <View className="flex-1 justify-center items-center bg-[#00998714]">
+        <View className="flex-1 justify-center items-center bg-rateUpGreen20">
           <ActivityIndicator size="large" color="#009987" />
         </View>
       );
@@ -32,7 +32,7 @@ const ChatBody = ({ id }: { id: string }) => {
   
     if (isError) {
       return (
-        <View className="flex-1 justify-center items-center bg-[#00998714]">
+        <View className="flex-1 justify-center items-center bg-rateUpGreen20">
           <Text className="text-red-500">{error?.message || "Something went wrong"}</Text>
         </View>
       );
@@ -74,7 +74,7 @@ const ChatBody = ({ id }: { id: string }) => {
     };
   
     return (
-      <View className="flex-1 bg-[#00998714]">
+      <View className="flex-1 bg-rateUpGreen20">
         <FlatList
           data={reversedMessages} 
           keyExtractor={(item) => item.id.toString()}

@@ -1,10 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
-import { assignedContact } from "@/src/api/inbox/contacts.api";
-import { getMessagePreview, namePreview, getRelativeTime } from "../../utils/chatbox_utils";
+import {
+  getMessagePreview,
+  namePreview,
+  getRelativeTime,
+} from "../../utils/chatbox_utils";
+import { useAssignedContact } from "@/src/api/inbox/contacts.query";
 
-const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void }> = ({
+const ChatBoxAssigned: React.FC<
+  ContactsWithLastMessage & { onPress?: () => void }
+> = ({
   id,
   name,
   phone,
@@ -14,30 +20,17 @@ const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void
   waMessageAssignStatus,
   onPress,
 }) => {
-  const [assignedUser, setAssignedUser] = useState<string | null>(null);
+  const { data: assignedData, isLoading } = useAssignedContact(id);
 
-
-  useEffect(() => {
-    async function assign() {
-
-      try {
-        const assigned = await assignedContact(id);
-        if (assigned && assigned.length > 0 && assigned[0].assignedUser?.name) {
-          setAssignedUser(assigned[0].assignedUser.name);
-        }
-      } catch (err) {
-        console.error("Error fetching assigned user:", err);
-      }
-    }
-    assign();
-  }, [id]);
+  const assignedUser =
+    assignedData?.[0]?.assignedUser?.name ?? waMessageAssignStatus;
 
   return (
     <TouchableOpacity onPress={onPress}>
       <View className="flex-row items-center p-4">
         {/* Profile initials */}
         <View className="w-16 h-16 rounded-full mr-4 bg-[#00998733] flex items-center justify-center">
-          <Text className="text-[#009987] font-bold text-[30px]">
+          <Text className="text-rateUpGreen font-bold text-[30px]">
             {namePreview(name)}
           </Text>
         </View>
@@ -47,16 +40,22 @@ const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void
           <View className="gap-1">
             {/* Name and Assigned */}
             <View className="flex-row items-center justify-between gap-1">
-              <Text className="text-lg font-semibold text-[#343A40]" numberOfLines={1}>
+              <Text
+                className="text-lg font-semibold text-[#343A40]"
+                numberOfLines={1}
+              >
                 {name || phone}
               </Text>
               <Text className="bg-[#F5F5F5] px-2 rounded-full">
-                {assignedUser ? assignedUser : waMessageAssignStatus}
+                {isLoading ? "..." : assignedUser}
               </Text>
             </View>
 
             {/* Last Message Preview */}
-            <Text className="text-sm text-black min-w-[40vw] max-w-[60vw]" numberOfLines={1}>
+            <Text
+              className="text-sm text-black min-w-[40vw] max-w-[60vw]"
+              numberOfLines={1}
+            >
               {getMessagePreview(lastMessage)}
             </Text>
           </View>
@@ -68,7 +67,7 @@ const ChatBoxAssigned: React.FC<ContactsWithLastMessage & { onPress?: () => void
             </Text>
             {unReadMessageCount > 0 && (
               <View className="bg-[#69F0AE] rounded-full h-6 w-6 flex items-center justify-center">
-                <Text className="text-[#009987]">{unReadMessageCount}</Text>
+                <Text className="text-rateUpGreen">{unReadMessageCount}</Text>
               </View>
             )}
           </View>

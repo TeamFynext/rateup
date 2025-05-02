@@ -1,22 +1,33 @@
-import { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, useWindowDimensions } from 'react-native';
-import ToggleSwitch from 'toggle-switch-react-native';
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
-import { countries } from '@/src/constants/countries';
-import { BackIcon, UsernameIcon } from '@/src/constants/imageExports';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { editContactById, getContactById } from '@/src/api/inbox/contacts.api';
-import { convertFullPhoneNumToCoutryCodeAndNationalNum } from '@/src/utils/phoneNumConvert';
+import { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  FlatList,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  useWindowDimensions,
+} from "react-native";
+import ToggleSwitch from "toggle-switch-react-native";
+import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { countries } from "@/src/constants/countries";
+import { BackIcon, UsernameIcon } from "@/src/constants/imageExports";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { editContactById, getContactById } from "@/src/api/inbox/contacts.api";
+import { convertFullPhoneNumToCoutryCodeAndNationalNum } from "@/src/utils/phoneNumConvert";
 
 export default function EditContacts() {
-  const {userId}:{userId:string}= useLocalSearchParams();
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [fullPhoneNumber, setFullPhoneNumber] = useState('');
-  const [isAiChatActive, setIsAiChatActive] = useState(false)
+  const { userId }: { userId: string } = useLocalSearchParams();
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [fullPhoneNumber, setFullPhoneNumber] = useState("");
+  const [isAiChatActive, setIsAiChatActive] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -25,8 +36,8 @@ export default function EditContacts() {
 
   useEffect(() => {
     if (phone && selectedCountry) {
-      const formatted = selectedCountry.dial_code + phone.replace(/^0+/, '');
-      setFullPhoneNumber(formatted.replace('+', ''));
+      const formatted = selectedCountry.dial_code + phone.replace(/^0+/, "");
+      setFullPhoneNumber(formatted.replace("+", ""));
     }
   }, [phone, selectedCountry]);
 
@@ -43,55 +54,51 @@ export default function EditContacts() {
         aiWaChat: isAiChatActive,
         phone: fullPhoneNumber,
       });
-      setLoading(false)
-      setMessage("Successfully Updated")
-
+      setLoading(false);
+      setMessage("Successfully Updated");
     } catch (error) {
-      setError('Failed to update contact details. Please try again.');
-      setMessage('');
+      setError("Failed to update contact details. Please try again.");
+      setMessage("");
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
-  
 
-  const getContactDetails = async() => {
-    setLoading(true)
+  const getContactDetails = async () => {
+    setLoading(true);
     try {
-      const res = await getContactById(userId)
-      setIsAiChatActive(res.aiWaChat)
-      
-      const numbers = convertFullPhoneNumToCoutryCodeAndNationalNum(`+${res.phone}`)
-      setPhone(numbers.national_number)
-      
-      const matchingCountry = countries.find(country => 
-        country.dial_code === `+${numbers.country_code}`
-      )
-      
+      const res = await getContactById(userId);
+      setIsAiChatActive(res.aiWaChat);
+
+      const numbers = convertFullPhoneNumToCoutryCodeAndNationalNum(
+        `+${res.phone}`
+      );
+      setPhone(numbers.national_number);
+
+      const matchingCountry = countries.find(
+        (country) => country.dial_code === `+${numbers.country_code}`
+      );
+
       if (matchingCountry) {
-        setSelectedCountry(matchingCountry)
+        setSelectedCountry(matchingCountry);
       }
-      
-      setName(res.name)
-      
 
-      setError('')
+      setName(res.name);
+
+      setError("");
     } catch (err) {
+      setError("Failed to load contact details. Please try again.");
 
-      setError("Failed to load contact details. Please try again.")
-    
-      setMessage('')
+      setMessage("");
     } finally {
-      
-      setLoading(false)
+      setLoading(false);
     }
-  }
-  
+  };
+
   useEffect(() => {
-    
-    setLoading(true)
-    getContactDetails()
-  }, [userId])
+    setLoading(true);
+    getContactDetails();
+  }, [userId]);
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
@@ -106,9 +113,9 @@ export default function EditContacts() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-      style={{ flex: 1, backgroundColor: 'white' }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      style={{ flex: 1, backgroundColor: "white" }}
     >
       <View style={{ flex: 1, padding: 16 }}>
         {/* Top Part */}
@@ -123,8 +130,15 @@ export default function EditContacts() {
 
           {/* Error / Success Message */}
           {(error || message) && (
-            <View className="mb-4 p-3 rounded-lg" style={{ backgroundColor: error ? '#ffe5e5' : '#e5fff0' }}>
-              <Text className={`text-sm ${error ? 'text-[#cc0000]' : 'text-[#007e33]'}`}>
+            <View
+              className="mb-4 p-3 rounded-lg"
+              style={{ backgroundColor: error ? "#ffe5e5" : "#e5fff0" }}
+            >
+              <Text
+                className={`text-sm ${
+                  error ? "text-[#cc0000]" : "text-[#007e33]"
+                }`}
+              >
                 {error || message}
               </Text>
             </View>
@@ -160,8 +174,12 @@ export default function EditContacts() {
                   className="flex-row items-center border border-[#E2E5ED] rounded-lg px-3 py-3 bg-white"
                   style={{ minWidth: width * 0.28 }}
                 >
-                  <Text className="text-black mr-2 text-base">{selectedCountry.flag}</Text>
-                  <Text className="text-black text-base">{selectedCountry.dial_code}</Text>
+                  <Text className="text-black mr-2 text-base">
+                    {selectedCountry.flag}
+                  </Text>
+                  <Text className="text-black text-base">
+                    {selectedCountry.dial_code}
+                  </Text>
                   {showDropdown ? (
                     <ChevronUp size={18} color="black" className="ml-1" />
                   ) : (
@@ -200,7 +218,11 @@ export default function EditContacts() {
               />
             </View>
           </View>
-          <View className={`flex-row items-center p-3 justify-between rounded-lg ${ isAiChatActive? "bg-[#00998733]" : "bg-[#F5F5F5]" }`}>
+          <View
+            className={`flex-row items-center p-3 justify-between rounded-lg ${
+              isAiChatActive ? "bg-[#00998733]" : "bg-[#F5F5F5]"
+            }`}
+          >
             <Text className="text-[#000] text-xl font-semibold">AI Chat</Text>
             <ToggleSwitch
               isOn={isAiChatActive}
@@ -214,9 +236,9 @@ export default function EditContacts() {
         {/* Bottom Button */}
         <View className="mt-8">
           <Pressable
-          onPress={handleEdit}
+            onPress={handleEdit}
             disabled={loading}
-            className="bg-[#009987] rounded-xl py-4 flex items-center justify-center"
+            className="bg-rateUpGreen rounded-xl py-4 flex items-center justify-center"
           >
             {loading ? (
               <ActivityIndicator color="#fff" />

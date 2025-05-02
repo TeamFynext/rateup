@@ -31,19 +31,19 @@ export const useContactCounts = () => {
   });
 };
 
-export const ASSIGNED_CONTACT_QUERY_KEY = "assigned-contact";
+
 export const useAssignedContact = (contactId:string) => {
   return useQuery({
-    queryKey:[ASSIGNED_CONTACT_QUERY_KEY,contactId],
+    queryKey:["assigned-contact",contactId],
     queryFn:()=> assignedContact(contactId),
     enabled: !!contactId
   })
 }
 
-export const CONTACT_BY_ID_QUERY_KEY = 'contact-by-id'
+
 export const useContactById = (contactId: string) =>
   useQuery({
-    queryKey: [CONTACT_BY_ID_QUERY_KEY, contactId],
+    queryKey: ["contact-by-id", contactId],
     queryFn: () => getContactById(contactId),
     enabled: !!contactId,
   });

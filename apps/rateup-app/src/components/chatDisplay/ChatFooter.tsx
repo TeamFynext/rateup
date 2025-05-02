@@ -47,16 +47,16 @@ const NotAssigned = ({
           ) : (
             <>
               <CircleUser color={"#009987"} />
-              <Text className="text-[#009987]">Assign To Me</Text>
+              <Text className="text-rateUpGreen">Assign To Me</Text>
             </>
           )}
         </View>
       </TouchableOpacity>
 
       <TouchableOpacity disabled>
-        <View className="bg-[#FFFFFF] border border-[#009987] rounded-full w-[40vw] flex-row p-2 justify-around items-center">
+        <View className="bg-[#FFFFFF] border border-rateUpGreen rounded-full w-[40vw] flex-row p-2 justify-around items-center">
           <UserCheck color={"#009987"} />
-          <Text className="text-[#009987]">Assign To Member</Text>
+          <Text className="text-rateUpGreen">Assign To Member</Text>
         </View>
       </TouchableOpacity>
     </View>

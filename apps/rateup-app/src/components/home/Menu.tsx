@@ -1,7 +1,7 @@
-import { View, Text, Pressable } from 'react-native'
-import React, { useState } from 'react'
-import { MessageCircleMore, PanelsTopLeft } from "lucide-react-native"
-import WhatsAppIcon from '@/assets/images/whatsapp';
+import { View, Text, Pressable } from "react-native";
+import React, { useState } from "react";
+import { MessageCircleMore, PanelsTopLeft } from "lucide-react-native";
+import WhatsAppIcon from "@/assets/images/whatsapp";
 
 const MENU_ITEMS = [
   {
@@ -24,7 +24,13 @@ const MENU_ITEMS = [
   },
 ];
 
-const MenuBar = ({ onSendValue, selected }: { onSendValue: (val: any) => void, selected: string }) => {
+const MenuBar = ({
+  onSendValue,
+  selected,
+}: {
+  onSendValue: (val: any) => void;
+  selected: string;
+}) => {
   const [selectedInterface, setSelectedInterface] = useState(selected);
 
   const handlePress = (val: string) => {
@@ -42,11 +48,21 @@ const MenuBar = ({ onSendValue, selected }: { onSendValue: (val: any) => void, s
         return (
           <Pressable
             key={key}
-            className={`p-2 rounded-md mb-2 flex-row justify-start items-center gap-1 ${isSelected ? "bg-[#C4D7F5]" : "bg-white"}`}
+            className={`p-2 rounded-md mb-2 flex-row justify-start items-center gap-1 ${
+              isSelected ? "bg-[#C4D7F5]" : "bg-white"
+            }`}
             onPress={() => handlePress(key)}
           >
-            <Icon color={isSelected ? iconColor : "#C4D7F5"} width={24} height={24} />
-            <Text className={`text-base ${isSelected ? "text-[#004F98]" : "text-[#7A8289]"}`}>
+            <Icon
+              color={isSelected ? iconColor : "#C4D7F5"}
+              width={24}
+              height={24}
+            />
+            <Text
+              className={`text-base ${
+                isSelected ? "text-[#004F98]" : "text-[#7A8289]"
+              }`}
+            >
               {label}
             </Text>
           </Pressable>
@@ -54,6 +70,6 @@ const MenuBar = ({ onSendValue, selected }: { onSendValue: (val: any) => void, s
       })}
     </View>
   );
-}
+};
 
 export default MenuBar;

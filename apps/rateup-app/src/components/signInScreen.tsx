@@ -11,7 +11,11 @@ import { signIn } from "@/src/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
 import { EyeIcon } from "../constants/imageExports";
 
-export default function SignInScreen({ setError }: { setError: (msg: string) => void }) {
+export default function SignInScreen({
+  setError,
+}: {
+  setError: (msg: string) => void;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

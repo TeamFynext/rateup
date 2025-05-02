@@ -18,7 +18,7 @@ const ChatBoxNew: React.FC<ContactsWithLastMessage & { onPress?: () => void }> =
       <View className="flex-row items-center p-4">
         {/* Profile initials */}
         <View className="w-16 h-16 rounded-full mr-4 bg-[#00998733] flex items-center justify-center">
-          <Text className="text-[#009987] font-bold text-[30px]">
+          <Text className="text-rateUpGreen font-bold text-[30px]">
             {namePreview(name)}
           </Text>
         </View>
@@ -44,7 +44,7 @@ const ChatBoxNew: React.FC<ContactsWithLastMessage & { onPress?: () => void }> =
             </Text>
             {unReadMessageCount > 0 && (
               <View className="bg-[#69F0AE] rounded-full h-6 w-6 flex items-center justify-center">
-                <Text className="text-[#009987]">{unReadMessageCount}</Text>
+                <Text className="text-rateUpGreen">{unReadMessageCount}</Text>
               </View>
             )}
           </View>

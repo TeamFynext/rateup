@@ -1,19 +1,34 @@
-import { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, useWindowDimensions } from 'react-native';
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
-import { countries } from '@/src/constants/countries';
-import { BackIcon, EmailIcon, UsernameIcon } from '@/src/constants/imageExports';
-import { useRouter } from 'expo-router';
-import { createContact } from '@/src/api/inbox/contacts.api';
+import { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  FlatList,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  useWindowDimensions,
+} from "react-native";
+import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { countries } from "@/src/constants/countries";
+import {
+  BackIcon,
+  EmailIcon,
+  UsernameIcon,
+} from "@/src/constants/imageExports";
+import { useRouter } from "expo-router";
+import { createContact } from "@/src/api/inbox/contacts.api";
 
 export default function AddContactScreen() {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [fullPhoneNumber, setFullPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [fullPhoneNumber, setFullPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -22,8 +37,8 @@ export default function AddContactScreen() {
 
   useEffect(() => {
     if (phone && selectedCountry) {
-      const formatted = selectedCountry.dial_code + phone.replace(/^0+/, '');
-      setFullPhoneNumber(formatted.replace('+', ''));
+      const formatted = selectedCountry.dial_code + phone.replace(/^0+/, "");
+      setFullPhoneNumber(formatted.replace("+", ""));
     }
   }, [phone, selectedCountry]);
 
@@ -33,11 +48,11 @@ export default function AddContactScreen() {
   };
 
   const handleAddContact = async () => {
-    setError('');
-    setMessage('');
+    setError("");
+    setMessage("");
 
     if (!name || !phone || !email) {
-      setError('Please fill all fields');
+      setError("Please fill all fields");
       return;
     }
 
@@ -47,14 +62,14 @@ export default function AddContactScreen() {
         name,
         phone: fullPhoneNumber,
         email,
-        source: "MANUAL"
+        source: "MANUAL",
       });
-      setMessage('Contact added successfully!');
-      setName('');
-      setPhone('');
-      setEmail('');
+      setMessage("Contact added successfully!");
+      setName("");
+      setPhone("");
+      setEmail("");
     } catch (error: any) {
-      setError(error?.response?.data?.error || 'Failed to add contact');
+      setError(error?.response?.data?.error || "Failed to add contact");
     } finally {
       setLoading(false);
     }
@@ -73,11 +88,11 @@ export default function AddContactScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-      style={{ flex: 1, backgroundColor: 'white' }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      style={{ flex: 1, backgroundColor: "white" }}
     >
-      <View style={{ flex: 1, padding: 16, justifyContent: 'space-between' }}>
+      <View style={{ flex: 1, padding: 16, justifyContent: "space-between" }}>
         {/* Form */}
         <View>
           {/* Header */}
@@ -85,13 +100,22 @@ export default function AddContactScreen() {
             <Pressable onPress={() => router.back()}>
               <BackIcon height={25} width={25} />
             </Pressable>
-            <Text className="text-black text-2xl font-bold">Add New Contact</Text>
+            <Text className="text-black text-2xl font-bold">
+              Add New Contact
+            </Text>
           </View>
 
           {/* Error or Success Messages */}
           {(error || message) && (
-            <View className="mb-4 p-3 rounded-lg" style={{ backgroundColor: error ? '#ffe5e5' : '#e5fff0' }}>
-              <Text className={`text-sm ${error ? 'text-[#cc0000]' : 'text-[#007e33]'}`}>
+            <View
+              className="mb-4 p-3 rounded-lg"
+              style={{ backgroundColor: error ? "#ffe5e5" : "#e5fff0" }}
+            >
+              <Text
+                className={`text-sm ${
+                  error ? "text-[#cc0000]" : "text-[#007e33]"
+                }`}
+              >
                 {error || message}
               </Text>
             </View>
@@ -126,8 +150,12 @@ export default function AddContactScreen() {
                   className="flex-row items-center border border-[#E2E5ED] rounded-lg px-3 py-3 bg-white"
                   style={{ minWidth: width * 0.28 }}
                 >
-                  <Text className="text-black mr-2 text-base">{selectedCountry.flag}</Text>
-                  <Text className="text-black text-base">{selectedCountry.dial_code}</Text>
+                  <Text className="text-black mr-2 text-base">
+                    {selectedCountry.flag}
+                  </Text>
+                  <Text className="text-black text-base">
+                    {selectedCountry.dial_code}
+                  </Text>
                   {showDropdown ? (
                     <ChevronUp size={18} color="black" />
                   ) : (
@@ -190,7 +218,7 @@ export default function AddContactScreen() {
           <Pressable
             onPress={handleAddContact}
             disabled={loading}
-            className="bg-[#009987] rounded-xl py-4 flex items-center justify-center"
+            className="bg-rateUpGreen rounded-xl py-4 flex items-center justify-center"
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
