@@ -64,6 +64,7 @@ export const campaignResponseDownloadById = async (campaignId) => {
     `/campaign/${campaignId}/download`,
     {},
     {
+      timeout: 25000,
       responseType: "blob",
     },
   );

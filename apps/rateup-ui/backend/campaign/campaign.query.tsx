@@ -199,6 +199,7 @@ export const useCampaignResponseDownloadById = () => {
         "Delivery report generated successfully.",
         "delivery-report",
         <IconCheck />,
+        true,
       );
     },
     onError: (error: any) => {
@@ -206,6 +207,7 @@ export const useCampaignResponseDownloadById = () => {
         `Error generating delivery report: ${error?.response?.data.error}`,
         "delivery-report",
         <IconX />,
+        true,
       );
     },
   });

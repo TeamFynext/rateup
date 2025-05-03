@@ -34,6 +34,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
+import { WaMessageAssignStatus } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
 import {
   ContactsWithLastMessage,
@@ -76,6 +77,10 @@ const WaInboxChatSelect = () => {
     tags: [],
     waMessageAssignStatus: "New",
     blockedUsers: false,
+    newStatuses: [
+      WaMessageAssignStatus.ASSIGNED,
+      WaMessageAssignStatus.UNASSIGNED,
+    ],
   });
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
 
@@ -422,7 +427,7 @@ const WaInboxChatSelect = () => {
             ref={parentRef}
             className="List"
             style={{
-              height: `calc(100dvh - 160px)`,
+              height: `calc(100dvh - 130px)`,
               width: `100%`,
               overflow: "auto",
             }}
