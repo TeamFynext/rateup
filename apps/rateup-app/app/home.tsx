@@ -17,6 +17,7 @@ import AccountBar from "@/src/components/home/Account";
 import { HomeInterface } from "@/src/api/inbox/types";
 import { namePreview } from "@/src/utils/chatbox_utils";
 import { useLoggedInUser } from "@/src/api/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -40,6 +41,7 @@ export default function Home() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const open = selectedItem !== null;
+  const queryClient = useQueryClient();
 
   const {
     data: userData,
@@ -103,7 +105,7 @@ export default function Home() {
       setSelectedItem(null);
     } else {
       setSelectedItem("account");
-      refetch();
+      queryClient.invalidateQueries({queryKey:["loggedUser"]})
     }
   };
 
