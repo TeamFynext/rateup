@@ -12,6 +12,8 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconFilter } from "@tabler/icons-react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -36,13 +38,12 @@ export type ChatFilter = {
   newStatuses: string[];
 };
 interface Props {
-  filter: ChatFilter;
-  setFilter: (filter: ChatFilter) => void;
-  tag: string;
+  tab: string;
 }
 
-export default function WaInboxChatFilter(props: Props) {
+export default function WaInboxChatFilter({ tab }: Props) {
   const { data, isLoading, error } = useChatFilterData();
+  const { filter, setFilter } = useChatFilterStore();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { translations } = useTranslations();
   if (isLoading) {
@@ -56,26 +57,15 @@ export default function WaInboxChatFilter(props: Props) {
     );
   }
   const allMultiSelectFilters = [
-    ...props?.filter?.contactGroups,
-    ...props?.filter?.campaigns,
-    ...props?.filter?.tags,
+    ...filter?.contactGroups,
+    ...filter?.campaigns,
+    ...filter?.tags,
   ];
 
-  function setFilters(
-    type:
-      | "messageType"
-      | "strictFilter"
-      | "contactGroups"
-      | "campaigns"
-      | "tags",
-    value: any,
-  ) {
-    props.setFilter({ ...props.filter, [type]: value });
-  }
   function multiSelectOnChange(cf: ChatFilter, value: Array<MultiGV>) {
     const current_filter = { contactGroups: [], campaigns: [], tags: [] };
     if (value.length === 0) {
-      props.setFilter({ ...cf, contactGroups: [], campaigns: [], tags: [] });
+      setFilter({ ...cf, contactGroups: [], campaigns: [], tags: [] });
     } else {
       const fcgs = value?.filter((v) => v.group === "contactGroups");
       const fcs = value?.filter((v) => v.group === "campaigns");
@@ -91,7 +81,7 @@ export default function WaInboxChatFilter(props: Props) {
       if (fts.length > 0) {
         current_filter.tags = fts;
       }
-      props.setFilter({
+      setFilter({
         ...cf,
         contactGroups: current_filter.contactGroups,
         campaigns: current_filter.campaigns,
@@ -101,26 +91,26 @@ export default function WaInboxChatFilter(props: Props) {
   }
   function getFilterActiveCount() {
     let count = 0;
-    if (props.filter.contactGroups.length > 0) {
-      count += props.filter.contactGroups.length;
+    if (filter.contactGroups.length > 0) {
+      count += filter.contactGroups.length;
     }
-    if (props.filter.campaigns.length > 0) {
-      count += props.filter.campaigns.length;
+    if (filter.campaigns.length > 0) {
+      count += filter.campaigns.length;
     }
-    if (props.filter.tags.length > 0) {
-      count += props.filter.tags.length;
+    if (filter.tags.length > 0) {
+      count += filter.tags.length;
     }
-    if (props.filter.messageType !== "usermessages") {
+    if (filter.messageType !== "usermessages") {
       count += 1;
     }
-    if (props.filter.strictFilter !== false) {
+    if (filter.strictFilter !== false) {
       count += 1;
     }
     return count;
   }
   function clearFilters() {
-    props.setFilter({
-      ...props.filter,
+    setFilter({
+      ...filter,
       contactGroups: [],
       campaigns: [],
       tags: [],
@@ -178,7 +168,7 @@ export default function WaInboxChatFilter(props: Props) {
             )}
             onChange={(value) => {
               multiSelectOnChange(
-                props.filter,
+                filter,
                 value.map((val) => {
                   const grpname = val.split("|-")[0];
                   const grpval = val.split("|-")[1];
@@ -194,10 +184,10 @@ export default function WaInboxChatFilter(props: Props) {
             data={statusData}
             placeholder="statuses"
             w={220}
-            value={props.filter.newStatuses}
+            value={filter.newStatuses}
             onChange={(values) =>
-              props.setFilter({
-                ...props.filter,
+              setFilter({
+                ...filter,
                 newStatuses: values as WaMessageAssignStatus[],
               })
             }
@@ -207,3 +197,33 @@ export default function WaInboxChatFilter(props: Props) {
     </HoverCard>
   );
 }
+
+type ChatFilterStore = {
+  filter: ChatFilter;
+  setFilter: (value) => void;
+};
+
+export const useChatFilterStore = create<ChatFilterStore>()(
+  persist(
+    (set, get) => ({
+      filter: {
+        messageType: "usermessages",
+        strictFilter: false,
+        searchTerm: "",
+        contactGroups: [],
+        campaigns: [],
+        tags: [],
+        waMessageAssignStatus: "New",
+        blockedUsers: false,
+        newStatuses: [
+          WaMessageAssignStatus.ASSIGNED,
+          WaMessageAssignStatus.UNASSIGNED,
+        ],
+      },
+      setFilter: (value) => set({ filter: value }),
+    }),
+    {
+      name: "chat-filter-storage", // name of the item in the storage (must be unique)
+    },
+  ),
+);
