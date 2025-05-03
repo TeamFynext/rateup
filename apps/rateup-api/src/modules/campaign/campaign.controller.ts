@@ -193,10 +193,10 @@ export async function getResponseExcelByCampaignByIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    const [title, data] = await getResponseExcelByCampaignById(
+    const { title, data } = await getResponseExcelByCampaignById(
       request.params.campaignId,
     );
-    reply.header("filename", `${title}.xlsx`);
+    reply.header("filename", `${encodeURIComponent(title)}.xlsx`);
     reply.header("Access-Control-Expose-Headers", "filename");
     reply.status(200).type("application/xlsx").send(data);
   } catch (error) {
