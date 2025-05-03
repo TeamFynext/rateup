@@ -73,7 +73,7 @@ import {
 import { Campaign } from "../../../types/global";
 import { getErrorMessage } from "../../../utils";
 import { getCampaignParticipantStatusLabel } from "../../../utils/enums";
-import { showErrorToast } from "../../../utils/notifications";
+import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
 import styles from "./campaign.module.css";
 
 dayjs.extend(timezone);
@@ -195,6 +195,7 @@ const CampaignById = () => {
             title="Delivery Report"
             onClick={() => {
               mut.mutate(campaignId);
+              showLoadingToast("Generating report", "delivery-report");
             }}
           />
         </Group>
