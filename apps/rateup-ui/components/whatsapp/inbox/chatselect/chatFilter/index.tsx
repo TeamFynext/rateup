@@ -200,7 +200,7 @@ export default function WaInboxChatFilter({ tab }: Props) {
 
 type ChatFilterStore = {
   filter: ChatFilter;
-  setFilter: (value) => void;
+  setFilter: (value: ChatFilter) => void;
 };
 
 export const useChatFilterStore = create<ChatFilterStore>()(
