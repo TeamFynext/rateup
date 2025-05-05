@@ -9,6 +9,7 @@ import { getVerifySubscriptionHandler } from "../../utils/auth";
 import { SubscriptionFeaturePathName } from "../../types/enums";
 import { loyaltyDashboardRoutes } from "./dashboard/dashboard.router";
 import { customerGroupRoutes } from "./customer/customerGroup/customerGroup.route";
+import { loyaltyApiSettingRoutes } from "./apiSetting/apiSetting.route";
 
 export async function loyaltyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -23,4 +24,5 @@ export async function loyaltyRoutes(server: FastifyInstance) {
   server.register(LoyaltySettingsRoutes, { prefix: "/settings" });
   server.register(loyaltyDashboardRoutes, { prefix: "/dashboard" });
   server.register(customerGroupRoutes, { prefix: "/customer/group" });
+  server.register(loyaltyApiSettingRoutes, { prefix: "/api-settings" });
 }

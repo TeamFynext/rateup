@@ -143,6 +143,7 @@ model Org {
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
   WaAutomatedReply         WaAutomatedReply[]
   whatsappQuickReplies     WhatsappQuickReply[]
+  loyaltyApiSettings       LoyaltyApiSettings[]
 }
 
 model UsageStats {
@@ -1355,6 +1356,7 @@ model LoyaltyAction {
   refereeReward                 LoyaltyReward?             @relation("referee_reward", fields: [refereeRewardId], references: [id], onDelete: Cascade)
   loyaltyWaCommand              LoyaltyWaCommand?
   LoyaltyActionFlowMap          LoyaltyActionFlowMap[]
+  loyaltyApiSettings            LoyaltyApiSettings?
 
   @@unique([action_id, orgId], name: "action_id_org_id_unique")
 }
@@ -1378,6 +1380,7 @@ model LoyaltyReward {
   reward_id             String?
   actions               LoyaltyAction[] @relation("referrer_reward")
   loyaltyRefereeActions LoyaltyAction[] @relation("referee_reward")
+  loyaltyApiSettings    LoyaltyApiSettings?
 
   @@unique([reward_id, orgId], name: "reward_id_org_id_unique")
 }
@@ -1471,4 +1474,23 @@ model WhatsappQuickReply {
    org    Org   @relation(fields: [orgId], references: [id], onDelete: Cascade)
    text  String 
    priority Int
+}
+
+model LoyaltyApiSettings {
+  id     String  @id  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId  String  @db.Uuid 
+  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  feature String //enum LoyaltyApiFeature
+  phoneKey  String
+  amountKey String
+  actionId  String? @unique @db.Uuid
+  action    LoyaltyAction? @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  rewardId  String? @unique @db.Uuid
+  reward    LoyaltyReward?  @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  rules     Json
+  priority  Int
+  active    Boolean  @default(true)
+
+  @@unique([orgId, priority])
+  @@index([orgId, feature])
 }
