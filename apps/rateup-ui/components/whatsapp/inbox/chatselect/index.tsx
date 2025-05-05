@@ -511,7 +511,7 @@ export const NewInboxIcon = () => {
     } else {
       return totalCount.new;
     }
-  }, [filter.newStatuses]);
+  }, [filter.newStatuses, totalCount]);
   if (!count) return <IconMessageBolt />;
   return (
     <Indicator label={count} inline size={16} color="black">
