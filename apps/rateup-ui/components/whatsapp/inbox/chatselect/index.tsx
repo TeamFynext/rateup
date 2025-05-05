@@ -491,9 +491,30 @@ const WaInboxChatSelect = () => {
 
 export const NewInboxIcon = () => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.new) return <IconMessageBolt />;
+  const { filter } = useChatFilterStore();
+  const count = useMemo(() => {
+    const mapStatus = {
+      ASSIGNED: "newAssigned",
+      UNASSIGNED: "newUnassigned",
+      ASSIGNEDTOME: "newAssignedTome",
+    };
+    if (filter.newStatuses.length) {
+      const newStatuses = [...filter.newStatuses].filter((status) =>
+        filter.newStatuses.includes("ASSIGNED")
+          ? status !== "ASSIGNEDTOME"
+          : true,
+      );
+      return newStatuses.reduce((acc, status) => {
+        acc += totalCount[mapStatus[status]];
+        return acc;
+      }, 0);
+    } else {
+      return totalCount.new;
+    }
+  }, [filter.newStatuses, totalCount]);
+  if (!count) return <IconMessageBolt />;
   return (
-    <Indicator label={totalCount.new} inline size={16} color="black">
+    <Indicator label={count} inline size={16} color="black">
       <IconMessageBolt />
     </Indicator>
   );

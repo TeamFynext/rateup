@@ -180,18 +180,20 @@ export default function WaInboxChatFilter({ tab }: Props) {
               );
             }}
           />
-          <ContainedMultiSelect
-            data={statusData}
-            placeholder="statuses"
-            w={220}
-            value={filter.newStatuses}
-            onChange={(values) =>
-              setFilter({
-                ...filter,
-                newStatuses: values as WaMessageAssignStatus[],
-              })
-            }
-          />
+          {tab === "New" && (
+            <ContainedMultiSelect
+              data={statusData}
+              placeholder="statuses"
+              w={220}
+              value={filter.newStatuses}
+              onChange={(values) =>
+                setFilter({
+                  ...filter,
+                  newStatuses: values as WaMessageAssignStatus[],
+                })
+              }
+            />
+          )}
         </Stack>
       </HoverCardDropdown>
     </HoverCard>
