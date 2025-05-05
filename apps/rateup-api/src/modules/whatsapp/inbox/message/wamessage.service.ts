@@ -545,9 +545,11 @@ export async function deleteAssignedUsersforContact(contactId) {
   });
 }
 
-export async function getContactsCountByInbox(orgId, userId) {
+export async function getContactsCountByInbox(orgId: string, userId: string) {
   const count: {
-    new_count: number;
+    new_assigned_count: number;
+    new_unassigned_count: number;
+    new_assigned_to_me_count: number;
     assigned_count: number;
     closed_count: number;
     assigned_to_me_count: number;
@@ -580,17 +582,24 @@ export async function getContactsCountByInbox(orgId, userId) {
     WHERE c."orgId" = ${orgId}::uuid
   )
   SELECT
-    COUNT(CASE WHEN mf.has_recent AND NOT mf."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS new_count,
-    COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND mf.has_receive
-      AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS assigned_count,
-    COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND mf.has_receive
-      AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS closed_count,
-    COUNT(CASE WHEN mf.has_receive AND mf.is_assigned_to_me AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS assigned_to_me_count,
-    COUNT(CASE WHEN mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS blocked_count
+    COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND mf.has_receive
+      AND NOT mf."blockedOnWhatsApp")::INTEGER AS assigned_count,
+      COUNT(*) FILTER (WHERE mf."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND mf.has_receive
+      AND NOT mf."blockedOnWhatsApp")::INTEGER AS closed_count,
+      COUNT(*) FILTER (WHERE mf.has_receive AND mf.is_assigned_to_me AND NOT mf."blockedOnWhatsApp")::INTEGER AS assigned_to_me_count,
+      COUNT(*) FILTER (WHERE mf."blockedOnWhatsApp")::INTEGER AS blocked_count,
+      COUNT(*) FILTER (WHERE mf.has_recent AND mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED}
+    AND NOT mf."blockedOnWhatsApp")::INTEGER AS new_assigned_count,
+    COUNT(*) FILTER (WHERE mf.has_recent AND mf."waMessageAssignStatus" = ${WaMessageAssignStatus.UNASSIGNED}
+    AND NOT mf."blockedOnWhatsApp")::INTEGER AS new_unassigned_count,
+    COUNT(*) FILTER (WHERE mf.has_recent AND mf.is_assigned_to_me AND NOT mf."blockedOnWhatsApp")::INTEGER AS new_assigned_to_me_count
   FROM message_flags mf;`;
 
   return {
-    new: count[0].new_count,
+    new: count[0].new_assigned_count + count[0].new_unassigned_count,
+    newAssigned: count[0].new_assigned_count,
+    newUnassigned: count[0].new_unassigned_count,
+    newAssignedTome: count[0].new_assigned_to_me_count,
     closed: count[0].closed_count,
     assignedToMe: count[0].assigned_to_me_count,
     assigned: count[0].assigned_count,
