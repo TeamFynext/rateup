@@ -43,7 +43,7 @@ const index = () => {
     return <ErrorComponent refetch={refetch} />;
 
   return (
-    <Stack>
+    <Stack p={"xs"}>
       <Group justify="space-between">
         <Group>
           <RateupButtonBlue
