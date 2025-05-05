@@ -191,11 +191,14 @@ export async function getContactsByOrgId(
       },
     },
   };
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / Number(limit)));
+  const pageNo = Math.min(Math.max(Number(page), 0), totalPages - 1);
   // Fetch paginated contacts
   const users = await prisma.contact.findMany({
     where: searchCondition,
     include: includeCondition,
-    skip: Number(page) * Number(limit),
+    skip: pageNo * Number(limit),
     take: Number(limit),
     orderBy: {
       [sort]: desc,
