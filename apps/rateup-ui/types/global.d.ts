@@ -857,6 +857,23 @@ declare global {
     redeems: LoyaltyRedeem[];
     action: any;
   };
+
+  interface LoyaltyApiSetting {
+    id: string;
+    orgId: string;
+    feature: LoyaltyApiFeature;
+    rules: {
+      fields: { key: string; value: string }[];
+    };
+    action?: LoyaltyAction;
+    reward?: LoyaltyReward;
+    phoneKey: string;
+    amountKey: string;
+    actionId?: string;
+    rewardId?: string;
+    priority: number;
+    active: boolean;
+  }
 }
 export interface MenuLanding {
   success: boolean;
