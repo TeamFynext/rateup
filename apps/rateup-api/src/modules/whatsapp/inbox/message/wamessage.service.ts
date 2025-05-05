@@ -267,8 +267,9 @@ export async function filterChats(
       bodyFilterProps.waMessageAssignStatus !== "Sent"
     ) {
       if (bodyFilterProps?.waMessageAssignStatus === "New") {
+        params.push(WaMessageAssignStatus.CLOSED);
         filters.push(
-          `(c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours')`,
+          `(c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours') AND NOT c."waMessageAssignStatus" = $${paramIndex++}::TEXT`,
         );
         const newStatuses = bodyFilterProps.newStatuses;
         if (newStatuses?.length) {
@@ -579,7 +580,7 @@ export async function getContactsCountByInbox(orgId, userId) {
     WHERE c."orgId" = ${orgId}::uuid
   )
   SELECT
-    COUNT(CASE WHEN mf.has_recent AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS new_count,
+    COUNT(CASE WHEN mf.has_recent AND NOT mf."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS new_count,
     COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.ASSIGNED} AND mf.has_receive
       AND NOT mf."blockedOnWhatsApp" THEN 1 END)::INTEGER AS assigned_count,
     COUNT(CASE WHEN mf."waMessageAssignStatus" = ${WaMessageAssignStatus.CLOSED} AND mf.has_receive
