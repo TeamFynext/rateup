@@ -469,11 +469,57 @@ export const getResponseByCampaignById = async (id: string) => {
 };
 
 export const getResponseExcelByCampaignById = async (id: string) => {
-  const [campaign, participants, stats] = await Promise.all([
-    getCampaignById(id),
-    getCampaignParticipantsByCampaignId(id),
-    getCampaginStatsById(id),
-  ]);
+  const stats = await getCampaginStatsById(id);
+  const pageSize = 10000; // Number of records per batch
+  let page = 0;
+  let hasMoreRecords = true;
+  let campaignParticipants = [];
+  const campaign = await prisma.campaign.findUnique({
+    where: { id },
+    select: { name: true },
+  });
+
+  while (hasMoreRecords) {
+    const batch = (await prisma.$queryRaw`
+      SELECT 
+        cp."createdAt",
+        c."name" as "contactName",
+        c."phone" as "contactPhone",
+        cp."status",
+        cp."sentAt"
+      FROM "CampaignParticipant" cp
+      LEFT JOIN "Contact" c ON cp."contactId" = c.id
+      WHERE cp."campaignId" = ${id}::uuid
+      ORDER BY cp."createdAt" DESC
+      LIMIT ${pageSize}
+      OFFSET ${page * pageSize}
+    `) as Array<{
+      createdAt: Date;
+      contactName: string;
+      contactPhone: string;
+      status: CampaignParticipantStatus;
+      sentAt: Date;
+    }>;
+
+    if (batch.length === 0) {
+      hasMoreRecords = false;
+    } else {
+      campaignParticipants = [
+        ...campaignParticipants,
+        ...batch.map((row) => ({
+          createdAt: row.createdAt,
+          contact: {
+            name: row.contactName,
+            phone: row.contactPhone,
+          },
+          status: row.status,
+          sentAt: row.sentAt,
+          campaign: { name: campaign?.name },
+        })),
+      ];
+      page++;
+    }
+  }
   const headerArray = [
     "Created At",
     "Participant Name",
@@ -481,7 +527,7 @@ export const getResponseExcelByCampaignById = async (id: string) => {
     "Status",
     "Sent At",
   ];
-  const bodyArray = participants?.map((participant) => [
+  const bodyArray = campaignParticipants?.map((participant) => [
     participant?.createdAt,
     participant?.contact?.name,
     participant?.contact?.phone,
@@ -519,11 +565,8 @@ export const getResponseExcelByCampaignById = async (id: string) => {
     },
   ]);
 
-  return [campaign?.name, buffer];
+  return { title: campaign?.name, data: buffer };
 };
-const waMessageQueue = new Queue("waMessageQueue", {
-  connection: redisConnection,
-});
 
 export async function getCampaginStatsById(campaignId: string) {
   const stats = await prisma.campaignStats.findUnique({
@@ -556,9 +599,7 @@ export async function getCampaginStatsById(campaignId: string) {
       countCompleted: 0,
     };
   }
-  // Get all jobs for this campaign to count them
-  const jobs = await waMessageQueue.getJobs();
-  const campaignJobs = jobs.filter((job) => job.name === campaignId);
+  const tc = await redisConnection.scard(`campaign:${campaignId}:jobs`);
 
   return {
     countRead: stats.totalRead,
@@ -567,7 +608,7 @@ export async function getCampaginStatsById(campaignId: string) {
     countDelivered: stats.totalDelivered,
     countPending: stats.campaign?._count?.campaignParticipants ?? 0,
     countCompleted: stats.totalCompleted,
-    queueCount: campaignJobs?.length,
+    queueCount: tc ?? 0,
   };
 }
 
