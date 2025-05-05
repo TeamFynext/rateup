@@ -6,7 +6,6 @@ import {
   namePreview,
   getRelativeTime,
 } from "../../utils/chatbox_utils";
-import { useAssignedContact } from "@/src/api/inbox/contacts/contacts.query";
 
 const ChatBoxAll: React.FC<
   ContactsWithLastMessage & { onPress?: () => void }
@@ -19,11 +18,11 @@ const ChatBoxAll: React.FC<
   unReadMessageCount,
   waMessageAssignStatus,
   onPress,
+  assignedUsers
 }) => {
-  const { data: assignedData, isLoading } = useAssignedContact(id);
 
-  const assignedUser =
-    assignedData?.[0]?.assignedUser?.name ?? waMessageAssignStatus;
+  const assignedUser = assignedUsers?.[0].name
+
 
   return (
     <TouchableOpacity onPress={onPress}>

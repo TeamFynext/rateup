@@ -60,6 +60,7 @@ export default function Inbox({
   } = useFilteredContacts(encodedFilter);
 
   const contacts = data?.pages.flatMap((page) => page.rows) ?? [];
+  console.log(contacts)
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
     let ChatBoxComponent;
@@ -88,6 +89,7 @@ export default function Inbox({
         name={item.name}
         lastMessage={item.lastMessage.messageBody.receive.messages[0]}
         waMessageAssignStatus={item.waMessageAssignStatus}
+        assignedUsers={item.assignedUsers}
         onPress={() =>
           router.push({
             //@ts-ignore

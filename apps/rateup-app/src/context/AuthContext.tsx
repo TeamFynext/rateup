@@ -33,11 +33,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const authStatus = await checkAuth();
         setIsAuthenticated(authStatus);
-        const userDetails = await loggedUserDetails();
-        const userData = userDetails.data;
-        const { userId, orgId } = userData;
-        setUserId(userId);
-        setOrgId(orgId);
+        if (authStatus) {
+          const userDetails = await loggedUserDetails();
+          const userData = userDetails.data;
+          const { userId, orgId } = userData;
+          setUserId(userId);
+          setOrgId(orgId);
+        }
       } catch (error) {
         console.error("Error checking authentication:", error);
         setIsAuthenticated(false);
@@ -49,7 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     checkUserAuth();
-  });
+  }, []);
 
   return (
     <AuthContext.Provider

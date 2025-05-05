@@ -11,6 +11,7 @@ export type ContactsWithLastMessageResponse = {
     lastReceivedMessageTimeStamp:any;
     lastMessage: any;
     waMessageAssignStatus: WaMessageAssignStatus;
+    assignedUsers:any
   };
   
   export enum WaMessageAssignStatus {
