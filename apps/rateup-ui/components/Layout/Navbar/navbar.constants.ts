@@ -2,6 +2,7 @@
 import {
   IconActivity,
   IconAddressBook,
+  IconApi,
   IconApps,
   IconAutomation,
   IconAward,
@@ -241,6 +242,11 @@ export function getNavTopData(
                 label: translations["Settings"],
                 link: "/dashboard/loyalty/settings",
                 icon: IconSettings,
+              },
+              {
+                label: "API Settings",
+                link: "/dashboard/loyalty/api",
+                icon: IconApi,
               },
             ],
           },

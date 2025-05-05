@@ -51,7 +51,7 @@ const DashboardLoyalty = () => {
   if (isPending) return <RateupLoader />;
   if (isError) return <ErrorComponent refetch={refetch} />;
   return (
-    <>
+    <Stack p={"xs"}>
       <SummaryCards data={data.summaryData} icons={ICONS} />
       <PaperLayout mt={"xl"} bg={"var(--light-blue-5)"} radius={20}>
         <Grid p={"lg"}>
@@ -74,7 +74,7 @@ const DashboardLoyalty = () => {
           <TopRedeemedRewards data={data.topRedeemedRewardsData} />
         </PaperLayout>
       </SimpleGrid>
-    </>
+    </Stack>
   );
 };
 

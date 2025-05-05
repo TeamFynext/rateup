@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import {
   Anchor,
   Box,
+  Center,
   Flex,
   Portal,
   Stack,
@@ -84,13 +85,13 @@ export default function Contacts() {
   const columnGroup = useMemo(() => loyaltyGroupColumn, []);
   return (
     <Stack>
-      <Portal target={"#tabs-container-entity-editor-tabs"}>
+      <Center>
         <TabsListComp
           value={activeTab}
           onChange={setActiveTab}
           tabs={Object.values(CustomerTabs)}
         />
-      </Portal>
+      </Center>
       <Tabs value={activeTab} color="var(--tertiary-color)" keepMounted={false}>
         <Flex justify="space-between" align={"center"} wrap={"wrap"} gap={10}>
           {[CustomerTabs.GROUPS].includes(activeTab) && (
