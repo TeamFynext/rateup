@@ -12,7 +12,7 @@ import {
   createRedeem,
   RedeemStatus,
 } from "../../../../../../loyalty/redeems/redeem.service";
-import { custom } from "zod";
+import { processRedeemWebhook } from "./redeem.service";
 
 //active check
 export async function redeemPointsHandler(
@@ -53,6 +53,20 @@ export async function redeemPointsHandler(
     } else {
       reply.code(403).send(message);
     }
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function redeemRewardWebhookHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const res = await processRedeemWebhook(request.body, orgId);
+    reply.code(200).send({ message: res });
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

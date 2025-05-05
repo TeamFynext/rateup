@@ -90,6 +90,7 @@ import { customerGroupSchemas } from "./modules/loyalty/customer/customerGroup/c
 import { columnSchemas } from "./modules/ticket/ticketColumn/column.schema";
 import { cardSchemas } from "./modules/ticket/ticketCard/card.schema";
 import { boardSchemas } from "./modules/ticket/ticketBoard/board.schema";
+import { loyaltyApiSettingSchemas } from "./modules/loyalty/apiSetting/apiSetting.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -134,6 +135,7 @@ export function registerRoutes(server: FastifyInstance): void {
     boardSchemas,
     columnSchemas,
     cardSchemas,
+    loyaltyApiSettingSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {

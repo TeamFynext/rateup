@@ -1,5 +1,11 @@
 // Any modification to this file should be reflected in the frontend
-import { Contact, Prisma, Role, WaMessage } from "@prisma/client";
+import {
+  Contact,
+  LoyaltyReward,
+  Prisma,
+  Role,
+  WaMessage,
+} from "@prisma/client";
 import {
   QuestionType,
   SmileyResponse,
@@ -515,6 +521,23 @@ declare global {
     type PWaTemplateDefaultValues = WaTemplateDefaultValues;
     type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
     type PWaEncryptionKeys = WaEncryptionKeys;
+  }
+
+  interface LoyaltyApiSetting {
+    id: string;
+    orgId: string;
+    feature: LoyaltyApiFeature;
+    rules: {
+      fields: { key: string; value: string }[];
+    };
+    action?: LoyaltyAction | null;
+    reward?: LoyaltyReward | null;
+    phoneKey: string;
+    amountKey: string;
+    actionId?: string;
+    rewardId?: string;
+    priority: number;
+    active: boolean;
   }
 }
 export interface FlowLogicCondition {
