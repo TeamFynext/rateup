@@ -40,7 +40,7 @@ const Logs = () => {
       header: () => "Time",
       accessorKey: "createdAt",
       cell: (info) =>
-        dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+        dayjs.utc(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
     },
     {
       header: () => "Phone",
@@ -89,7 +89,7 @@ const Logs = () => {
   );
   return (
     <Box m={"xs"} h={"97%"}>
-      <PaperLayout p={0} h={"100%"} mah={"800px"}>
+      <PaperLayout p={0} h={"100%"}>
         <ContactTable
           data={data?.logs ?? []}
           columns={columns}

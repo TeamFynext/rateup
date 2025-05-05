@@ -34,6 +34,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
+import { WaMessageAssignStatus } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
 import {
   ContactsWithLastMessage,
@@ -54,7 +55,10 @@ import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput
 import WhatsAppInboxLoader from "../loader";
 import AddUnknownContactModal from "./addUnknownContactModal";
 import WaInboxChatExport from "./chatExport";
-import WaInboxChatFilter, { ChatFilter } from "./chatFilter";
+import WaInboxChatFilter, {
+  ChatFilter,
+  useChatFilterStore,
+} from "./chatFilter";
 import WaInboxChatSelectCard from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
 import classes from "./styles.module.css";
@@ -67,16 +71,7 @@ enum TabsEnum {
 const WaInboxChatSelect = () => {
   const router = useRouter();
   const tab = (router.query?.tab as string) ?? "New";
-  const [filter, setFilter] = useState<ChatFilter>({
-    messageType: "usermessages",
-    strictFilter: false,
-    searchTerm: "",
-    contactGroups: [],
-    campaigns: [],
-    tags: [],
-    waMessageAssignStatus: "New",
-    blockedUsers: false,
-  });
+  const { filter, setFilter } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
 
   const queryClient = useQueryClient();
@@ -268,7 +263,6 @@ const WaInboxChatSelect = () => {
 
   const prepareFilters = useCallback(
     (filters: any) => {
-      setFilter(filters);
       if (checkIfAnyFilterisActive(filters)) {
         const processedFilters = {
           ...filters,
@@ -342,7 +336,7 @@ const WaInboxChatSelect = () => {
         blockedUsers: false,
       });
     }
-  }, [router.query?.tab]);
+  }, [router.query?.tab, filter]);
 
   if (isContactLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading} />;
@@ -370,14 +364,14 @@ const WaInboxChatSelect = () => {
               <IconSquareRoundedX
                 size={18}
                 style={{ marginRight: "var(--mantine-spacing-xs)" }}
-                onClick={() => prepareFilters({ ...filter, searchTerm: null })}
+                onClick={() => setFilter({ ...filter, searchTerm: null })}
               />
             )
           }
           placeholder={translations["Search Contacts"]}
           value={filter?.searchTerm || ""}
           onChange={(e) =>
-            prepareFilters({ ...filter, searchTerm: e.currentTarget.value })
+            setFilter({ ...filter, searchTerm: e.currentTarget.value })
           }
           flex={1}
         />
@@ -405,11 +399,7 @@ const WaInboxChatSelect = () => {
             <IconRefresh />
           </ActionIcon>
         </Group>
-        <WaInboxChatFilter
-          filter={filter}
-          setFilter={prepareFilters}
-          tag={router.query?.tab as string}
-        />
+        <WaInboxChatFilter tab={router.query?.tab as string} />
         <WaInboxChatExport filter={filter} />
       </Group>
       <div>
@@ -422,7 +412,7 @@ const WaInboxChatSelect = () => {
             ref={parentRef}
             className="List"
             style={{
-              height: `calc(100dvh - 160px)`,
+              height: `calc(100dvh - 130px)`,
               width: `100%`,
               overflow: "auto",
             }}
@@ -470,7 +460,7 @@ const WaInboxChatSelect = () => {
                   <AddUnknownContactModal
                     phone={filter.searchTerm}
                     successCallback={(contact) => {
-                      prepareFilters({
+                      setFilter({
                         ...filter,
                         searchTerm: "",
                       });
