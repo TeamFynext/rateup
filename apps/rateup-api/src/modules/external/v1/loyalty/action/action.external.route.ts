@@ -9,6 +9,7 @@ import {
   updateLoyaltyActionByIdHandler,
 } from "../../../../loyalty/actions/actions.controller";
 import { $lActionRef } from "../../../../loyalty/actions/actions.schema";
+import { actionWebhookHandler } from "./internal-copy/actions/actions.controller";
 
 export async function externalLoyaltyActionRoutes(server: FastifyInstance) {
   server.get(
@@ -58,4 +59,6 @@ export async function externalLoyaltyActionRoutes(server: FastifyInstance) {
     },
     referActionHandler,
   );
+
+  server.post("/webhook", actionWebhookHandler);
 }

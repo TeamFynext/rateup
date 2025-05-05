@@ -6,6 +6,7 @@ import {
   getLoyaltyRewardsHandler,
   updateLoyaltyRewardByIdHandler,
 } from "../../../../loyalty/rewards/rewards.controller";
+import { redeemRewardWebhookHandler } from "../redeem/internal-copy/redeems/redeem.controller";
 
 export async function externalLoyaltyRewardRoutes(server: FastifyInstance) {
   server.get(
@@ -41,4 +42,6 @@ export async function externalLoyaltyRewardRoutes(server: FastifyInstance) {
     },
     getLoyaltyRewardByIdHandler,
   );
+
+  server.post("/webhook", redeemRewardWebhookHandler);
 }
