@@ -18,6 +18,7 @@ function RootLayout() {
     Geist: require("@/assets/fonts/Geist-Regular.ttf"),
   });
 
+
   useEffect(() => {
     if (!loading) {
       router.replace(isAuthenticated ? "/Home" : "/(auth)/SignIn");

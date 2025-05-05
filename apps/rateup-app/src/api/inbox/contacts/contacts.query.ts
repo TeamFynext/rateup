@@ -1,5 +1,4 @@
-import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import {
   assignedContact,
   getContactById,

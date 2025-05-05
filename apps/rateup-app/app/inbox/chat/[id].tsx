@@ -5,6 +5,7 @@ import ChatHeader from "@/src/components/chatDisplay/ChatHeader";
 import ChatFooter from "@/src/components/chatDisplay/ChatFooter";
 import ChatBody from "@/src/components/chatDisplay/ChatBody";
 import { useMarkMessageAsRead } from "@/src/api/inbox/contacts/contacts.query";
+import { useChatAssignStatusStore } from "@/src/utils/store";
 
 const ChatDisplay = () => {
   const {
@@ -13,7 +14,10 @@ const ChatDisplay = () => {
     phone,
     waAssignStatus: initialStatus,
   } = useLocalSearchParams();
-  const [assignStatus, setAssignStatus] = useState(initialStatus);
+
+  const setWaAssignStatus = useChatAssignStatusStore(
+    (state) => state.setWaAssignStatus
+  );
 
   const { mutate: markRead } = useMarkMessageAsRead();
 
@@ -21,6 +25,8 @@ const ChatDisplay = () => {
     if (id) {
       //@ts-ignore
       markRead(id);
+      //@ts-ignore
+      setWaAssignStatus(initialStatus);
     }
   }, [id]);
 
@@ -32,14 +38,8 @@ const ChatDisplay = () => {
       {/* @ts-ignore */}
       <ChatBody id={id} />
 
-      <ChatFooter
-        // @ts-ignore
-        waAssignStatus={assignStatus}
-        //@ts-ignore
-        setWaAssignStatus={setAssignStatus}
-        //@ts-ignore
-        id={id}
-      />
+      {/* @ts-ignore */}
+      <ChatFooter id={id} />
     </View>
   );
 };

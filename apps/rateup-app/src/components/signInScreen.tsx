@@ -7,9 +7,10 @@ import {
   Keyboard,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { signIn } from "@/src/api/api";
+import { loggedUserDetails, signIn } from "@/src/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
 import { EyeIcon } from "../constants/imageExports";
+import { useAuth } from "../context/AuthContext";
 
 export default function SignInScreen({
   setError,
@@ -24,6 +25,8 @@ export default function SignInScreen({
 
   const router = useRouter();
 
+  const { setUserId, setOrgId } = useAuth();
+
   const handleSignIn = async () => {
     Keyboard.dismiss();
     setLoading(true);
@@ -33,6 +36,11 @@ export default function SignInScreen({
       setLoading(false);
     } else {
       setError("");
+      const userDetails = await loggedUserDetails();
+      const userData = userDetails.data;
+      const { userId, orgId } = userData;
+      setUserId(userId);
+      setOrgId(orgId);
       router.replace("/Home");
       setLoading(false);
     }

@@ -28,7 +28,7 @@ const MessageSendPanel = () => {
   };
 
   const handleClick = () => {
-    console.log("Message Sent");
+    //
   };
 
   const rotateInterpolate = rotateAnim.interpolate({

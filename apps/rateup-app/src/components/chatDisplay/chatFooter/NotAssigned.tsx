@@ -4,17 +4,15 @@ import { UserCheck, CircleUser } from "lucide-react-native";
 import { assignInboxToUser } from "@/src/api/inbox/contacts/contacts.api";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
+import { useChatAssignStatusStore } from "@/src/utils/store";
 
-const NotAssigned = ({
-  contactId,
-  setWaAssignStatus,
-}: {
-  contactId: string;
-  setWaAssignStatus: React.Dispatch<React.SetStateAction<string>>;
-}) => {
+const NotAssigned = ({ contactId }: { contactId: string }) => {
   const queryClient = useQueryClient();
-  const router = useRouter()
+  const router = useRouter();
   const { data: userData, isLoading: loadingUser } = useLoggedInUser();
+  const setWaAssignStatus = useChatAssignStatusStore(
+    (state) => state.setWaAssignStatus
+  );
 
   const { mutate, isPending: assigning } = useMutation({
     mutationFn: async () => {
@@ -57,8 +55,14 @@ const NotAssigned = ({
         </View>
       </TouchableOpacity>
 
-      <TouchableOpacity 
-      onPress={() => router.push({pathname:"/inbox/contact/AssignToUser",params:{id:contactId}})}>
+      <TouchableOpacity
+        onPress={() =>
+          router.push({
+            pathname: "/inbox/contact/AssignToUser",
+            params: { contactId: contactId },
+          })
+        }
+      >
         <View className="bg-[#FFFFFF] border border-rateUpGreen rounded-full w-[40vw] flex-row p-2 justify-around items-center">
           <UserCheck color={"#009987"} />
           <Text className="text-rateUpGreen">Assign To Member</Text>

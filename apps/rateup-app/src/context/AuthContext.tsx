@@ -8,6 +8,8 @@ type AuthContextType = {
   setIsAuthenticated: (value: boolean) => void;
   userId: string | null;
   setUserId: (value: string) => void;
+  orgId: string | null;
+  setOrgId: (value: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -16,35 +18,38 @@ const AuthContext = createContext<AuthContextType>({
   setIsAuthenticated: () => {},
   userId: null,
   setUserId: () => {},
+  orgId: null,
+  setOrgId: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<any | null>(null);
+  const [orgId, setOrgId] = useState<any | null>(null);
 
   useEffect(() => {
     const checkUserAuth = async () => {
       try {
         const authStatus = await checkAuth();
         setIsAuthenticated(authStatus);
-        if (authStatus) {
-          const userDetails = await loggedUserDetails();
-          const userData = userDetails.data;
-          const { userId } = userData;
-          setUserId(userId);
-        }
+        const userDetails = await loggedUserDetails();
+        const userData = userDetails.data;
+        const { userId, orgId } = userData;
+        setUserId(userId);
+        setOrgId(orgId);
       } catch (error) {
         console.error("Error checking authentication:", error);
         setIsAuthenticated(false);
         setUserId(null);
+        setOrgId(null);
       } finally {
         setLoading(false);
       }
     };
 
     checkUserAuth();
-  }, []);
+  });
 
   return (
     <AuthContext.Provider
@@ -54,6 +59,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsAuthenticated,
         userId,
         setUserId,
+        orgId,
+        setOrgId,
       }}
     >
       {children}

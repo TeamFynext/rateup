@@ -30,7 +30,12 @@ const MoreOptions = ({
   const modalWidth = screenWidth * 0.4;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <Pressable className="flex-1" onPress={onClose}>
         <View
           className="absolute right-[10px] top-[55px] rounded-md p-2 bg-white shadow-md z-50"
@@ -40,7 +45,10 @@ const MoreOptions = ({
             className="p-3"
             onPress={() => {
               onClose();
-              router.push({ pathname: "/inbox/contact/Edit", params: { userId } });
+              router.push({
+                pathname: "/inbox/contact/Edit",
+                params: { userId },
+              });
             }}
           >
             <Text className="text-gray-800 text-lg">Edit</Text>
@@ -77,13 +85,21 @@ const ConfirmationModal = ({
   isLoading: boolean;
 }) => {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
       <View className="flex-1 justify-center items-center bg-black/50">
         <View className="bg-white p-6 rounded-xl w-[80vw] h-[18vh] flex gap-3">
           <Text className="text-xl font-semibold">Close This Chat?</Text>
           <Text className="text-md">This chat will be moved to Closed</Text>
           <View className="flex-row items-center justify-end gap-6 mt-4">
-            <TouchableOpacity className="border py-2 px-6 rounded-full" onPress={onCancel}>
+            <TouchableOpacity
+              className="border py-2 px-6 rounded-full"
+              onPress={onCancel}
+            >
               <Text className="text-gray-800 font-semibold">Cancel</Text>
             </TouchableOpacity>
 
@@ -107,7 +123,15 @@ const ConfirmationModal = ({
   );
 };
 
-const ChatHeader = ({ id, name, phone }: { id: string; name: string; phone: number }) => {
+const ChatHeader = ({
+  id,
+  name,
+  phone,
+}: {
+  id: string;
+  name: string;
+  phone: number;
+}) => {
   const router = useRouter();
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -137,7 +161,9 @@ const ChatHeader = ({ id, name, phone }: { id: string; name: string; phone: numb
         </TouchableOpacity>
 
         <View className="w-12 h-12 rounded-full bg-[#00998733] flex items-center justify-center">
-          <Text className="text-rateUpGreen font-bold text-xl">{namePreview(name)}</Text>
+          <Text className="text-rateUpGreen font-bold text-xl">
+            {namePreview(name)}
+          </Text>
         </View>
 
         <View>

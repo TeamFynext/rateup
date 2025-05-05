@@ -1,28 +1,29 @@
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query";
 import axios from "@/src/config/axios";
 
 export const useGetMessagesByContactId = (contactId: string) => {
-    return useInfiniteQuery({
-      queryKey: ["wa-messages", contactId],
-      initialPageParam: "",
-      queryFn: ({ pageParam }) => getMessagesByContactId(contactId, pageParam),
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-      select: (data) => ({
-        pages: [...data.pages].reverse(),
-        pageParams: [...data.pageParams].reverse(),
-      }),
-      enabled: !!contactId,
-    });
-  };
+  return useInfiniteQuery({
+    queryKey: ["wa-messages", contactId],
+    initialPageParam: "",
+    queryFn: ({ pageParam }) => getMessagesByContactId(contactId, pageParam),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    select: (data) => ({
+      pages: [...data.pages].reverse(),
+      pageParams: [...data.pageParams].reverse(),
+    }),
+    enabled: !!contactId,
+  });
+};
 
-  export async function getMessagesByContactId(
-    contactId: string,
-    cursor: string,
-  ) {
-      const res = await axios.get(`/api/wa/inbox/message/${contactId}?cursor=${cursor}`)
-      return res.data
-  }
-
+export async function getMessagesByContactId(
+  contactId: string,
+  cursor: string
+) {
+  const res = await axios.get(
+    `/api/wa/inbox/message/${contactId}?cursor=${cursor}`
+  );
+  return res.data;
+}
 
 export type ParsedWaMessage = {
   timeStamp: string;
@@ -54,5 +55,5 @@ export function parseWaMessage(messageBody: any): ParsedWaMessage {
     }
   }
 
-  return { timeStamp, messageType, messageContent, isSent};
+  return { timeStamp, messageType, messageContent, isSent };
 }

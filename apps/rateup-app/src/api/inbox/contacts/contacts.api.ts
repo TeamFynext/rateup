@@ -1,6 +1,6 @@
 import axios from "@/src/config/axios";
-import { ICreateContact } from "./types";
-import { ContactsWithLastMessageResponse } from "./types";
+import { ICreateContact } from "../types";
+import { ContactsWithLastMessageResponse } from "../types";
 
 export const createContact = async (data: ICreateContact) => {
   const response = await axios.post("/api/contact", data);
