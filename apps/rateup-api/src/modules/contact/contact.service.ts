@@ -20,11 +20,14 @@ import { BATCH_SIZE } from "../../utils/constants/constants";
 import { AddNewContactsToGroupInput } from "./contactGroup/contactGroup.schema";
 import { WaMessageAssignStatus } from "../../types/enums";
 import { deleteAssignedUsersforContact } from "../whatsapp/inbox/message/wamessage.service";
+import { getChatbotDetails } from "../chatbot/chatbot.service";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
     throw new Error("Phone must be provided");
   }
+  const chatbot = await getChatbotDetails(contact.orgId);
+  if (chatbot && chatbot.enableAllWaChat) contact.aiWaChat = true;
   const user = await prisma.contact.create({
     data: contact,
   });
@@ -44,6 +47,8 @@ export async function getOrcreateContact(
     },
   });
   if (user) return user;
+  const chatbot = await getChatbotDetails(contact.orgId);
+  if (chatbot && chatbot.enableAllWaChat) contact.aiWaChat = true;
   user = await prisma.contact.create({
     data: contact,
   });
@@ -54,7 +59,13 @@ export async function createMultipleContacts(
   contacts: createMultipleContactInput,
   orgId: string,
 ) {
-  const contactsData = contacts.map((contact) => ({ ...contact, orgId }));
+  const chatbot = await getChatbotDetails(orgId);
+  const aiWaChat = chatbot && chatbot.enableAllWaChat;
+  const contactsData = contacts.map((contact) => ({
+    ...contact,
+    orgId,
+    aiWaChat,
+  }));
   return await prisma.contact.createMany({
     skipDuplicates: true,
     data: contactsData,
@@ -285,9 +296,12 @@ export async function getOrCreateContactByPhone(
       }
       return contact;
     } else {
+      const chatbot = await getChatbotDetails(orgId);
+      const aiWaChat = chatbot && chatbot.enableAllWaChat;
       return await prisma.contact.create({
         data: {
           ...additionalData,
+          aiWaChat,
           phone,
           orgId,
         },
