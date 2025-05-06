@@ -1434,7 +1434,7 @@ model LoyaltyActionCustomerMap {
 
 model LoyaltyActionFlowMap {
   id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  actionId  String        @db.Uuid
+  actionId  String        @db.Uuid @unique
   action    LoyaltyAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
   flowId    String        @db.Uuid
   flow      WaFlow        @relation(fields: [flowId], references: [dbFlowId], onDelete: Cascade)

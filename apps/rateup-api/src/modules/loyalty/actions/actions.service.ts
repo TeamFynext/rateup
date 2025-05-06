@@ -70,17 +70,46 @@ export async function getLoyaltyActions(orgId: string) {
 }
 
 export async function getLoyaltyActionById(id: string) {
-  return await prisma.loyaltyAction.findFirst({
+  const action = await prisma.loyaltyAction.findFirst({
     where: {
       id,
     },
+    include: {
+      LoyaltyActionFlowMap: true,
+    },
   });
+  return {
+    ...action,
+    flowId:
+      action.LoyaltyActionFlowMap.length &&
+      action.LoyaltyActionFlowMap[0].flowId,
+  };
 }
 
 export async function updateLoyaltyActionById(
   id: string,
-  data: lActionUpdateInput,
+  input: lActionUpdateInput,
 ) {
+  const { flowId, ...data } = input;
+  if (flowId) {
+    const actionFlow = await prisma.loyaltyActionFlowMap.findUnique({
+      where: {
+        actionId: id,
+      },
+    });
+    if (!actionFlow) {
+      await createLoyaltyActionFlowMap({ flowId, actionId: id });
+    } else if (actionFlow.flowId !== flowId) {
+      await prisma.loyaltyActionFlowMap.update({
+        where: {
+          actionId: id,
+        },
+        data: {
+          flowId,
+        },
+      });
+    }
+  }
   return await prisma.loyaltyAction.update({
     where: {
       id,
