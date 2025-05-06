@@ -9,6 +9,8 @@ import ChatBoxAssigned from "../chatBox/ChatBoxAssigned";
 import ChatBoxAll from "../chatBox/ChatBoxAll";
 import ChatBoxClosed from "../chatBox/ChatBoxClosed";
 import { useRouter } from "expo-router";
+import { parseWaMessage_, returnMessageContentBasedOnParsedMessage } from "@/src/api/inbox/messages";
+import dayjs from "dayjs";
 
 type InboxProps = {
   messageType: string;
@@ -60,7 +62,7 @@ export default function Inbox({
   } = useFilteredContacts(encodedFilter);
 
   const contacts = data?.pages.flatMap((page) => page.rows) ?? [];
-  console.log(contacts)
+
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
     let ChatBoxComponent;
@@ -81,13 +83,20 @@ export default function Inbox({
     }
 
     if (!ChatBoxComponent) return null;
+    const parsedMessage = parseWaMessage_(item.lastMessage.messageBody);
+
+  const messagePreview = returnMessageContentBasedOnParsedMessage(
+    parsedMessage,
+    item.lastMessage.messageBody.exchangeProcess
+  );
+
 
     return (
       <ChatBoxComponent
         id={item.id}
         phone={item.phone}
         name={item.name}
-        lastMessage={item.lastMessage.messageBody.receive.messages[0]}
+        lastMessage={messagePreview}
         waMessageAssignStatus={item.waMessageAssignStatus}
         assignedUsers={item.assignedUsers}
         onPress={() =>
@@ -101,7 +110,7 @@ export default function Inbox({
             },
           })
         }
-        lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
+        lastReceivedMessageTimeStamp={dayjs.utc(item.lastMessage?.waCreatedAt).fromNow()}
         unReadMessageCount={item.unReadMessageCount}
       />
     );

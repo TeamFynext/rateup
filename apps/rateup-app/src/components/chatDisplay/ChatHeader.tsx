@@ -54,7 +54,16 @@ const MoreOptions = ({
             <Text className="text-gray-800 text-lg">Edit</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="p-3" onPress={onClose}>
+          <TouchableOpacity
+            className="p-3"
+            onPress={() => {
+              onClose();
+              router.push({
+                pathname: "/inbox/contact/AssignToUser",
+                params: { contactId: userId },
+              });
+            }}
+          >
             <Text className="text-gray-800 text-lg">Assign</Text>
           </TouchableOpacity>
 

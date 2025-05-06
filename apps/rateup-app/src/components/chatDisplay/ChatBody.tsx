@@ -1,10 +1,9 @@
 import { View, FlatList, ActivityIndicator, Text } from "react-native";
 import React from "react";
-import { useGetMessagesByContactId } from "@/src/api/inbox/messages";
-import { parseWaMessage } from "@/src/api/inbox/messages";
+import { parseWaMessage_, returnMessageContentBasedOnParsedMessage, useGetMessagesByContactId } from "@/src/api/inbox/messages";
 import MessageBubble from "./chatBody/MessageBubble";
 import DateSeparator from "./chatBody/DateSeperator";
-import dayjs from "@/src/utils/day";
+import dayjs from "dayjs"
 
 const ChatBody = ({ id }: { id: string }) => {
   const {
@@ -38,41 +37,41 @@ const ChatBody = ({ id }: { id: string }) => {
     );
   }
 
-  const getDateLabel = (timestamp: string) => {
-    const date = dayjs(Number(timestamp) * 1000);
-    if (date.isToday()) return "Today";
-    if (date.isYesterday()) return "Yesterday";
-    const now = dayjs();
-    if (now.diff(date, "day") < 7) {
-      return date.format("dddd");
-    }
-    return date.format("MMM D");
+  const formatToTimeWithMeridiem = (timestamp: string) => {
+    return dayjs(timestamp).format("h:mm A");
   };
 
   const renderItem = ({ item, index }: { item: any; index: number }) => {
-    const parsed = parseWaMessage(item.messageBody);
-    if (parsed.messageType !== "text") return null;
-
-    const currentLabel = getDateLabel(parsed.timeStamp);
-
-    const prevItem = reversedMessages[index - 1];
-    const prevParsed = prevItem ? parseWaMessage(prevItem.messageBody) : null;
-    const prevLabel = prevParsed ? getDateLabel(prevParsed.timeStamp) : null;
-
-    const showDateSeparator = index === 0 || currentLabel !== prevLabel;
-
+    const parsed = parseWaMessage_(item.messageBody);
+    const time = formatToTimeWithMeridiem(item.createdAt);
+    const messagePreview = returnMessageContentBasedOnParsedMessage(
+      parsed,
+      item.messageBody.exchangeProcess
+    );
+  
+    const currentDate = dayjs(item.createdAt).format("YYYY-MM-DD");
+    const previousDate =
+      index > 0
+        ? dayjs(reversedMessages[index - 1].createdAt).format("YYYY-MM-DD")
+        : null;
+  
+    const shouldShowDate = currentDate !== previousDate;
+  
     return (
       <>
-        {showDateSeparator && <DateSeparator label={currentLabel} />}
+        {shouldShowDate && <DateSeparator label={dayjs(item.createdAt).format("DD MMM YYYY")} />}
         <MessageBubble
-          message={parsed.messageContent}
-          timestamp={parsed.timeStamp}
-          isSent={parsed.isSent}
+          message={messagePreview}
+          timestamp={time}
+          isSent={item.messageBody.exchangeProcess === "send"}
+          messageType={parsed.messageType}
+          rawMessage={item.messageBody}
         />
       </>
     );
   };
-
+  
+  
   return (
     <View className="flex-1 bg-rateUpGreen20">
       <FlatList

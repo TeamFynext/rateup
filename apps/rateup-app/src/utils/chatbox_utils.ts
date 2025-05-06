@@ -13,20 +13,6 @@ export const namePreview = (name_: string) => {
   return nameArray[0].slice(0, 2).toUpperCase();
 };
 
-export const getRelativeTime = (waCreatedAt: string | undefined) => {
-  if (!waCreatedAt) return "No time";
-  return dayjs(waCreatedAt).fromNow();
-};
-
-export const getMessagePreview = (lastMessage: any) => {
-  if (!lastMessage) return "No message";
-
-  if (lastMessage.text) return lastMessage.text.body;
-  if (lastMessage.image) return "📷 Photo";
-  if (lastMessage.video) return "🎥 Video";
-
-  return "Unsupported message";
-};
 
 export function isInboxSessionExpired(timeStamp: string) {
   if (!timeStamp) return true;

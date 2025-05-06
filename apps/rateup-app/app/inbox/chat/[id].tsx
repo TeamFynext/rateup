@@ -1,11 +1,11 @@
 import { View } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useLocalSearchParams } from "expo-router";
 import ChatHeader from "@/src/components/chatDisplay/ChatHeader";
 import ChatFooter from "@/src/components/chatDisplay/ChatFooter";
 import ChatBody from "@/src/components/chatDisplay/ChatBody";
 import { useMarkMessageAsRead } from "@/src/api/inbox/contacts/contacts.query";
-import { useChatAssignStatusStore } from "@/src/utils/store";
+import { useChatAssignStatusStore, useContactIdStore } from "@/src/utils/store";
 
 const ChatDisplay = () => {
   const {
@@ -19,6 +19,11 @@ const ChatDisplay = () => {
     (state) => state.setWaAssignStatus
   );
 
+  const setSelectedContactId = useContactIdStore(
+    (contactId) => contactId.setSelectedContactId
+  );
+  //@ts-ignore
+  setSelectedContactId(id);
   const { mutate: markRead } = useMarkMessageAsRead();
 
   useEffect(() => {

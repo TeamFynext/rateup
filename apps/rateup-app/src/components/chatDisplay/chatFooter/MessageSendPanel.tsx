@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   TextInput,
@@ -8,12 +8,18 @@ import {
   Easing,
 } from "react-native";
 import { EmojiIcon, PlusIcon, SendIcon } from "@/src/constants/imageExports";
+import { useContactIdStore } from "@/src/utils/store";
+import { useSendNewWaMessage } from "@/src/api/inbox/messages";
 
 const MessageSendPanel = () => {
   const screenWidth = Dimensions.get("window").width;
   const inputWidth = screenWidth * 0.85;
+  const selectedContactId = useContactIdStore((state) => state.selectedContactId);
 
   const rotateAnim = useRef(new Animated.Value(0)).current;
+  const [message, setMessage] = useState("");
+//@ts-ignore
+  const mutation = useSendNewWaMessage(selectedContactId);
 
   const handlePlusPress = () => {
     rotateAnim.stopAnimation((currentValue) => {
@@ -27,8 +33,16 @@ const MessageSendPanel = () => {
     });
   };
 
-  const handleClick = () => {
-    //
+  const handleSend = () => {
+    const trimmed = message.trim();
+    if (!trimmed || !selectedContactId) return;
+
+    mutation.mutate({
+      type: "text",
+      text: { body: trimmed },
+      media:[]
+    });
+    setMessage(""); 
   };
 
   const rotateInterpolate = rotateAnim.interpolate({
@@ -47,17 +61,23 @@ const MessageSendPanel = () => {
             <PlusIcon />
           </Animated.View>
         </TouchableOpacity>
+
         <TextInput
           className="flex-1 text-base text-black py-2"
           placeholder="Type a message or '/' for commands"
           placeholderTextColor="#7A8289"
           multiline
+          value={message}
+          onChangeText={setMessage}
+          onSubmitEditing={handleSend}
         />
+
         <TouchableOpacity>
           <EmojiIcon />
         </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={handleClick} className="ml-2">
+
+      <TouchableOpacity onPress={handleSend} className="ml-2">
         <SendIcon />
       </TouchableOpacity>
     </View>

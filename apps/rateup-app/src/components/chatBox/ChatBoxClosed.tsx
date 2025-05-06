@@ -1,11 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
-import {
-  getMessagePreview,
-  namePreview,
-  getRelativeTime,
-} from "../../utils/chatbox_utils";
+import { namePreview } from "../../utils/chatbox_utils";
 
 const ChatBoxClosed: React.FC<
   ContactsWithLastMessage & { onPress?: () => void }
@@ -43,14 +39,14 @@ const ChatBoxClosed: React.FC<
               className="text-sm text-black min-w-[40vw] max-w-[60vw]"
               numberOfLines={1}
             >
-              {getMessagePreview(lastMessage)}
+              {lastMessage}
             </Text>
           </View>
 
           {/* Time and Unread */}
           <View className="flex items-center justify-center gap-1">
             <Text className="text-xs text-[#7A8289] ml-2">
-              {getRelativeTime(lastReceivedMessageTimeStamp)}
+              {lastReceivedMessageTimeStamp}
             </Text>
             {unReadMessageCount > 0 && (
               <View className="bg-[#69F0AE] rounded-full h-6 w-6 flex items-center justify-center">
