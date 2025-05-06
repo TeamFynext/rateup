@@ -278,7 +278,7 @@ export async function filterChats(
               status === "ASSIGNEDTOME" ? "ASSIGNED" : status,
             ),
           );
-          let newQuery = `c."waMessageAssignStatus" = ANY($${paramIndex++}::TEXT[])`;
+          let newQuery = `(c."waMessageAssignStatus" = ANY($${paramIndex++}::TEXT[])`;
           if (bodyFilterProps.newStatuses.includes("ASSIGNEDTOME")) {
             params.push(userId);
             const assignmentCondition = `EXISTS (
@@ -288,8 +288,8 @@ export async function filterChats(
             )`;
             newQuery +=
               newStatuses.length === 1
-                ? ` AND ${assignmentCondition}`
-                : ` OR ${assignmentCondition}`;
+                ? ` AND ${assignmentCondition})`
+                : ` OR ${assignmentCondition})`;
           }
           filters.push(newQuery);
         }
