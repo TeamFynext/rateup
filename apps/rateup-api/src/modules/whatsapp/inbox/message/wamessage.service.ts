@@ -290,6 +290,8 @@ export async function filterChats(
               newStatuses.length === 1
                 ? ` AND ${assignmentCondition})`
                 : ` OR ${assignmentCondition})`;
+          } else {
+            newQuery += `)`;
           }
           filters.push(newQuery);
         }
