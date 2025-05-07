@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
 import { LoyaltyActionType } from "@/types/enums";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
@@ -38,8 +39,10 @@ export const useCreateLoyaltyAction = () => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
       showSuccessToast("Loyalty Action created successfully");
     },
-    onError: () => {
-      showErrorToast("Error in creating loyalty action");
+    onError: (e: AxiosError) => {
+      showErrorToast(
+        "Error in creating loyalty action. " + (e?.response?.data ?? ""),
+      );
     },
   });
 };
@@ -72,8 +75,10 @@ export const useUpdateLoyaltyAction = (actionId) => {
       queryClient.invalidateQueries({ queryKey: ["loyaltyActions"] });
       showSuccessToast("Loyalty Action updated successfully");
     },
-    onError: () => {
-      showErrorToast("Error in updating loyalty action");
+    onError: (e: AxiosError) => {
+      showErrorToast(
+        "Error in updating loyalty action. " + (e?.response?.data ?? ""),
+      );
     },
   });
 };
