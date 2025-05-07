@@ -942,7 +942,7 @@ model WaFlow {
   surveyId             String                 @unique @db.Uuid
   anonymous            Boolean                @default(false)
   version              Int                    @default(1)
-  LoyaltyActionFlowMap LoyaltyActionFlowMap[]
+  loyaltyAction        LoyaltyAction?
   ///[FlowTicket[]]
   ticketIssued         Json[]
 
@@ -1355,7 +1355,8 @@ model LoyaltyAction {
   refereeRewardId               String?                    @db.Uuid
   refereeReward                 LoyaltyReward?             @relation("referee_reward", fields: [refereeRewardId], references: [id], onDelete: Cascade)
   loyaltyWaCommand              LoyaltyWaCommand?
-  LoyaltyActionFlowMap          LoyaltyActionFlowMap[]
+  flowId                        String?                   @unique @db.Uuid
+  waFlow                        WaFlow?                   @relation(fields: [flowId], references: [dbFlowId], onDelete: Cascade)
   loyaltyApiSettings            LoyaltyApiSettings?
 
   @@unique([action_id, orgId], name: "action_id_org_id_unique")
@@ -1430,15 +1431,6 @@ model LoyaltyActionCustomerMap {
   refereePhone String?
   amount       Float? //amount spent on action
   createdAt    DateTime        @default(now())
-}
-
-model LoyaltyActionFlowMap {
-  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  actionId  String        @db.Uuid
-  action    LoyaltyAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
-  flowId    String        @db.Uuid
-  flow      WaFlow        @relation(fields: [flowId], references: [dbFlowId], onDelete: Cascade)
-  createdAt DateTime      @default(now())
 }
 
 model LoyaltyWaCommand {
