@@ -116,7 +116,7 @@ export default function MenuLandingPage({ fullMenu, menuBanner }) {
             onMouseEnter={autoplay.current.stop}
             onMouseLeave={autoplay.current.reset}
             controlsOffset="lg"
-            loop
+            emblaOptions={{ loop: true }}
           >
             {menuBanner?.map((value) => (
               <Carousel.Slide

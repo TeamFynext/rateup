@@ -9,34 +9,9 @@
 /* Style for the tab list */
 .list {
   position: sticky;
-  border-radius: 10px;
-  padding-bottom: 0 !important;
-  overflow: hidden;
+  border-radius: var(--tabs-radius);
   background-color: var(--mantine-color-body);
-  width: fit-content;
   border: 1px solid var(--mantine-primary-color-filled);
-  flex: 0 0 auto;
-}
-
-/* Style for each individual tab */
-.tab {
-  padding: 9px 10px;
-  cursor: pointer;
-  border: none;
-  min-width: 100px;
-  background-color: var(--mantine-color-body);
-  border-radius: 5px;
-}
-
-/* Style for the active tab */
-.tab[data-active] {
-  background-color: var(--mantine-primary-color-filled);
-  color: var(--mantine-color-white);
-}
-
-/* Hover style for inactive tabs */
-.tab:hover:not([data-active]) {
-  background-color: var(--mantine-primary-color-light-hover);
 }
 
 /* Style for the content panel */

@@ -1,10 +1,12 @@
-import { useRouter } from "next/router";
 import React from "react";
-import { useGetAllTestimonialsByCollection } from "../../../backend/testimonials/testimonial.query";
-import { Carousel } from "@mantine/carousel";
-import TestimonialCard from "../../../components/testimonial/TestimonialCard";
 import Head from "next/head";
+import { useRouter } from "next/router";
+
+import { Carousel } from "@mantine/carousel";
 import { Flex, Loader, SimpleGrid } from "@mantine/core";
+
+import { useGetAllTestimonialsByCollection } from "../../../backend/testimonials/testimonial.query";
+import TestimonialCard from "../../../components/testimonial/TestimonialCard";
 
 const Collections = () => {
   const router = useRouter();
@@ -44,14 +46,16 @@ const Collections = () => {
           <Loader type="bars" />
         ) : collection?.theme.layout == "horizontal" ? (
           <Carousel
-            align="start"
             slideSize={{ base: "270px", xs: "320px" }}
             slideGap={{ base: "md", xs: "sm", sm: "md", md: "lg" }}
-            slidesToScroll={1}
-            loop
-            speed={5}
             controlsOffset={"xs"}
             w={"100%"}
+            emblaOptions={{
+              loop: true,
+              dragFree: true,
+              align: "start",
+              slidesToScroll: 1,
+            }}
           >
             {collection?.testimonials?.map((testimonial) => {
               return (

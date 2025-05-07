@@ -326,8 +326,8 @@ const TestimonialEditModal = ({
                       <Carousel
                         color="#E2E5ED"
                         slideSize={"25%"}
-                        slidesToScroll={1}
                         slideGap={"xs"}
+                        emblaOptions={{ slidesToScroll: 1 }}
                       >
                         {Array.apply(null, { length: 3 }).map((e, index) => (
                           <Carousel.Slide key={index}>
