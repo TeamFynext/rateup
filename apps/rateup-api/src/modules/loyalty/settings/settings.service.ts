@@ -195,8 +195,7 @@ export async function handleLoyaltyPointsCommand(phone, loyaltyWaCommand) {
     await sendTextMessage({ phone, orgId }, null, message);
   }
 }
-export async function handleLoyaltyFeedback(phone, loyaltyWaCommand) {
-  const { action } = loyaltyWaCommand;
+export async function handleLoyaltyFeedback(phone, action) {
   const { waTemplateId, orgId } = action;
   if (
     dayjs().isBefore(dayjs(action.startDate)) ||

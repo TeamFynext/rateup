@@ -53,6 +53,7 @@ export async function processRedeemWebhook(data, orgId) {
   let shouldRedeem = false;
 
   for (const apiSetting of apiSettings) {
+    if (!apiSetting.active) continue;
     const fields = apiSetting.rules ? apiSetting.rules.fields : [];
     if (fields.length) {
       if (

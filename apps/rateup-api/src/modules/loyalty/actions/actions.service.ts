@@ -41,18 +41,11 @@ export async function createLoyaltyAction(
       refereeRewardId: data.refereeRewardId?.length
         ? data.refereeRewardId
         : undefined,
+      flowId: data.flowId?.length ? data.flowId : undefined,
     },
   });
   await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyAction, orgId);
   return action;
-}
-export async function createLoyaltyActionFlowMap({ flowId, actionId }) {
-  return await prisma.loyaltyActionFlowMap.create({
-    data: {
-      flowId,
-      actionId,
-    },
-  });
 }
 export async function getLoyaltyActions(orgId: string) {
   return await prisma.loyaltyAction.findMany({
@@ -70,46 +63,17 @@ export async function getLoyaltyActions(orgId: string) {
 }
 
 export async function getLoyaltyActionById(id: string) {
-  const action = await prisma.loyaltyAction.findFirst({
+  return await prisma.loyaltyAction.findFirst({
     where: {
       id,
     },
-    include: {
-      LoyaltyActionFlowMap: true,
-    },
   });
-  return {
-    ...action,
-    flowId:
-      action.LoyaltyActionFlowMap.length &&
-      action.LoyaltyActionFlowMap[0].flowId,
-  };
 }
 
 export async function updateLoyaltyActionById(
   id: string,
-  input: lActionUpdateInput,
+  data: lActionUpdateInput,
 ) {
-  const { flowId, ...data } = input;
-  if (flowId) {
-    const actionFlow = await prisma.loyaltyActionFlowMap.findUnique({
-      where: {
-        actionId: id,
-      },
-    });
-    if (!actionFlow) {
-      await createLoyaltyActionFlowMap({ flowId, actionId: id });
-    } else if (actionFlow.flowId !== flowId) {
-      await prisma.loyaltyActionFlowMap.update({
-        where: {
-          actionId: id,
-        },
-        data: {
-          flowId,
-        },
-      });
-    }
-  }
   return await prisma.loyaltyAction.update({
     where: {
       id,
@@ -124,6 +88,7 @@ export async function updateLoyaltyActionById(
       refereeRewardId: data.refereeRewardId?.length
         ? data.refereeRewardId
         : undefined,
+      flowId: data.flowId?.length ? data.flowId : null,
     },
   });
 }
