@@ -41,18 +41,11 @@ export async function createLoyaltyAction(
       refereeRewardId: data.refereeRewardId?.length
         ? data.refereeRewardId
         : undefined,
+      flowId: data.flowId?.length ? data.flowId : undefined,
     },
   });
   await updateMonthlyStat(SubscriptionFeaturePathName.LoyaltyAction, orgId);
   return action;
-}
-export async function createLoyaltyActionFlowMap({ flowId, actionId }) {
-  return await prisma.loyaltyActionFlowMap.create({
-    data: {
-      flowId,
-      actionId,
-    },
-  });
 }
 export async function getLoyaltyActions(orgId: string) {
   return await prisma.loyaltyAction.findMany({
@@ -95,6 +88,7 @@ export async function updateLoyaltyActionById(
       refereeRewardId: data.refereeRewardId?.length
         ? data.refereeRewardId
         : undefined,
+      flowId: data.flowId?.length ? data.flowId : null,
     },
   });
 }

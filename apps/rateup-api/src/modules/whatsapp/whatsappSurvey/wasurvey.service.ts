@@ -670,12 +670,9 @@ export async function saveResponses(session: WaSessionWithRelations) {
     columnId,
   );
   await updateResponse(res.id, { ip: session.ip, location: undefined });
-  const loyalty = await prisma.loyaltyActionFlowMap.findFirst({
+  const loyalty = await prisma.loyaltyAction.findFirst({
     where: {
       flowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
-    },
-    include: {
-      action: true,
     },
   });
   if (loyalty) {
