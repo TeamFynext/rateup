@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Carousel, Embla, useAnimationOffsetEffect } from "@mantine/carousel";
+import { Carousel } from "@mantine/carousel";
 import {
   Box,
   Card,
@@ -38,12 +38,8 @@ export function ItemDetailedViewModal({
   onClose,
   currency = "0",
 }: Readonly<ItemDetailedViewModalProps>) {
-  const TRANSITION_DURATION = 200;
   const [alleryView, setAlleryView] = useState(false);
-  const [embla, setEmbla] = useState<Embla | null>(null);
   let foodLabelLength = item?.foodLabels?.length;
-
-  useAnimationOffsetEffect(embla, TRANSITION_DURATION);
 
   const imageStyle = {
     aspectRatio: 3 / 2,
@@ -98,7 +94,6 @@ export function ItemDetailedViewModal({
             <Carousel
               withIndicators={count > 1}
               withControls={count > 1}
-              getEmblaApi={setEmbla}
               slideGap={"lg"}
             >
               {videoSlides}

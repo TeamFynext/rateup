@@ -21,8 +21,7 @@ function TrustedByCompaniesCarousel() {
         height={isVPLeq768px ? 100 : 175}
         slideSize={{ base: "30%", xs: "25%", sm: "23%", lg: "20%", xl: "16%" }}
         slideGap={"md"}
-        loop
-        dragFree
+        emblaOptions={{ loop: true, dragFree: true }}
         classNames={{
           slide: cx("slide"),
           controls: cx("controls"),

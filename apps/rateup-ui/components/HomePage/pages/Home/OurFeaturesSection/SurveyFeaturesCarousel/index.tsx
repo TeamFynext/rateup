@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import { Carousel } from "@mantine/carousel";
 import { Flex, Tabs, Title } from "@mantine/core";
-import { Carousel, Embla } from "@mantine/carousel";
-import styles from "./SurveyFeaturesCarousel.module.css";
-import carouselStyles from "./ImageCarousel.module.css";
-import tabsStyles from "./SurveyTypeTabs.module.css";
-import {
-  SurveyType,
-  imageCarouselSlides,
-  getTabIndexFromSurveyTypeStr,
-} from "./constants";
 import { useIntersection } from "@mantine/hooks";
+import { EmblaCarouselType } from "embla-carousel";
+
+import {
+  getTabIndexFromSurveyTypeStr,
+  imageCarouselSlides,
+  SurveyType,
+} from "./constants";
+import carouselStyles from "./ImageCarousel.module.css";
+import styles from "./SurveyFeaturesCarousel.module.css";
+import tabsStyles from "./SurveyTypeTabs.module.css";
 
 function SurveyFeaturesCarousel() {
   const [activeTab, setActiveTab] = useState<SurveyType>(SurveyType.WebSurvey);
@@ -18,7 +21,7 @@ function SurveyFeaturesCarousel() {
   const prevActiveTabIndex = useRef<number>(0);
 
   const [imageCarouselEmblaInstance, setImageCarouselEmblaInstance] =
-    useState<Embla | null>(null);
+    useState<EmblaCarouselType | null>(null);
 
   const videoElementsRef = useRef([]);
 
@@ -125,7 +128,6 @@ function SurveyFeaturesCarousel() {
           withControls={false}
           withIndicators
           onSlideChange={handleImageCarouselSlideChange}
-          speed={10}
           ref={intersectionRef}
         >
           {imageCarouselSlides.map(({ id, srcsArray, name }, index) => {
