@@ -67,6 +67,7 @@ export async function processActionWebhook(data, orgId) {
   let shouldPerformAction = false;
 
   for (const apiSetting of apiSettings) {
+    if (!apiSetting.active) continue;
     const fields = apiSetting.rules ? apiSetting.rules.fields : [];
     if (fields.length) {
       if (

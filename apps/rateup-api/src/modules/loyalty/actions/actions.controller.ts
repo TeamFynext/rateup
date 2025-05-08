@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createLoyaltyAction,
-  createLoyaltyActionFlowMap,
   deleteLoyaltyActionById,
   getCustomerActions,
   getLoyaltyActionById,
@@ -47,9 +46,7 @@ export async function createLoyaltyActionHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { flowId, ...restBody } = request.body;
-    const res = await createLoyaltyAction(restBody, request.user.orgId);
-    flowId && (await createLoyaltyActionFlowMap({ flowId, actionId: res.id }));
+    const res = await createLoyaltyAction(request.body, request.user.orgId);
     reply.code(200).send(res);
     if (!isLReferralAction(res.type)) return;
     const { customers } = await getLoyaltyCustomers(request.user.orgId);
@@ -57,8 +54,11 @@ export async function createLoyaltyActionHandler(
       await getReferralCodeByActionAndCustomer(res.id, customer.id);
   } catch (e) {
     log.error(e);
-    if (e instanceof PrismaClientKnownRequestError && e.code === "P2002")
+    if (e instanceof PrismaClientKnownRequestError && e.code === "P2002") {
+      if (e.meta.target[0] === "flowId")
+        return reply.code(500).send("Flow already used in another action");
       return reply.code(500).send("Action already exist");
+    }
     reply.code(500).send(e);
   }
 }
@@ -107,6 +107,11 @@ export async function updateLoyaltyActionByIdHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
+    if (e instanceof PrismaClientKnownRequestError && e.code === "P2002") {
+      if (e.meta.target[0] === "flowId")
+        return reply.code(500).send("Flow already used in another action");
+      return reply.code(500).send("Action already exist");
+    }
     reply.code(500).send(e);
   }
 }
