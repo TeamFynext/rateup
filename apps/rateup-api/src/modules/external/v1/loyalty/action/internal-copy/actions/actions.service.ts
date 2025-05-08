@@ -5,6 +5,8 @@ import {
   updateLCustomer,
 } from "../../../../../../loyalty/customer/customer.service";
 import { LoyaltyApiFeature } from "../../../../../../../types/enums";
+import { log } from "../../../../../../../utils/logger";
+import { parsePhoneNumber } from "libphonenumber-js";
 
 export async function getLoyaltyActionByActionId(action_id, orgId) {
   return await prisma.loyaltyAction.findUnique({
@@ -35,13 +37,19 @@ export async function processActionWebhook(data, orgId) {
     return "no api settings found";
   }
 
-  const phone = data[apiSettings[0].phoneKey];
-  if (!phone) return "phone number not found";
+  const phoneNumber = data[apiSettings[0].phoneKey];
+  if (!phoneNumber) return "phone number not found";
+
+  const phone = parsePhoneNumber(phoneNumber, "IN");
+  if (phone.isValid() === false) {
+    log.trace("Invalid Phone number");
+    return false;
+  }
 
   const customer = await prisma.loyaltyCustomer.findFirst({
     where: {
       Contact: {
-        phone,
+        phone: phone.number.replace("+", ""),
         orgId,
       },
     },
@@ -91,7 +99,9 @@ export async function processActionWebhook(data, orgId) {
     } = await handleLCustomerAction({
       customerId: customer.id,
       actionId: apiSetting.actionId,
-      amount: apiSetting.amountKey ? data[apiSetting.amountKey] : undefined,
+      amount: apiSetting.amountKey
+        ? Number(data[apiSetting.amountKey])
+        : undefined,
     });
     if (!success) {
       return "unable to perform action: " + message;

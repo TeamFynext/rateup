@@ -1,4 +1,6 @@
+import { parsePhoneNumber } from "libphonenumber-js";
 import { LoyaltyApiFeature } from "../../../../../../../types/enums";
+import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
 import {
   updateLCustomer,
@@ -29,13 +31,19 @@ export async function processRedeemWebhook(data, orgId) {
     return "no api settings found";
   }
 
-  const phone = data[apiSettings[0].phoneKey];
-  if (!phone) return "phone number not found";
+  const phoneNumber = data[apiSettings[0].phoneKey];
+  if (!phoneNumber) return "phone number not found";
+
+  const phone = parsePhoneNumber(phoneNumber, "IN");
+  if (phone.isValid() === false) {
+    log.trace("Invalid Phone number");
+    return false;
+  }
 
   const customer = await prisma.loyaltyCustomer.findFirst({
     where: {
       Contact: {
-        phone,
+        phone: phone.number.replace("+", ""),
         orgId,
       },
     },

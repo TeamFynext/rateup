@@ -203,6 +203,7 @@ declare global {
     active: boolean;
     schedules: ShopifySchedules[];
     actionId?: string;
+    loyaltyApiFeature?: string;
   };
 
   type ScheduleObj = {
@@ -218,6 +219,7 @@ declare global {
     checkoutId?: string;
     actionStatus?: "success" | "failed";
     history: ScheduleObj[];
+    apiStatus?: string;
   };
 
   type WaSectionsType = Array<{
