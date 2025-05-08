@@ -105,7 +105,7 @@ const AssignToUser = () => {
 
         {/* Team Picker */}
         <View className="mb-6">
-          <Text className="text-[#7A8289] mb-2 text-[4vw]">
+          <Text className="text-rateUpTextGray mb-2 text-[4vw]">
             Team <Text className="text-[#CC292C]">*</Text>
           </Text>
           <Pressable
@@ -119,7 +119,7 @@ const AssignToUser = () => {
         </View>
 
         {/* Members Input */}
-        <Text className="text-[#7A8289] mb-2 text-[4vw]">
+        <Text className="text-rateUpTextGray mb-2 text-[4vw]">
           Members <Text className="text-[#CC292C]">*</Text>
         </Text>
         <Pressable
@@ -206,7 +206,7 @@ const AssignToUser = () => {
                   onPress={() => handleTeamSelect(item)}
                   className="py-3 px-3"
                 >
-                  <Text className="text-lg text-[#7A8289]">{item.name}</Text>
+                  <Text className="text-lg text-rateUpTextGray">{item.name}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -260,7 +260,7 @@ const AssignToUser = () => {
                   >
                     <Text
                       className={`text-lg ${
-                        isSelected ? "text-black font-bold" : "text-[#7A8289]"
+                        isSelected ? "text-black font-bold" : "text-rateUpTextGray"
                       }`}
                     >
                       {item.name}

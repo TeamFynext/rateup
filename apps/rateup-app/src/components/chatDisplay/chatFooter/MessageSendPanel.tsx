@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { EmojiIcon, PlusIcon, SendIcon } from "@/src/constants/imageExports";
 import { useContactIdStore } from "@/src/utils/store";
-import { useSendNewWaMessage } from "@/src/api/inbox/messages";
+import { useSendNewWaMessage } from "@/src/api/inbox/messages/message.query";
 
 const MessageSendPanel = () => {
   const screenWidth = Dimensions.get("window").width;

@@ -1,21 +1,5 @@
-import {
-  View,
-  TextInput,
-  Pressable,
-  TouchableOpacity,
-  Animated,
-  Easing,
-} from "react-native";
-import {
-  AddContactIcon,
-  FilterIcon,
-  RefreshIcon,
-  SearchIcon,
-  BackIcon,
-} from "@/src/constants/imageExports";
-import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { View, TextInput, Pressable } from "react-native";
+import { SearchIcon, BackIcon } from "@/src/constants/imageExports";
 
 type SearchBarProps = {
   searchTerm: string;
@@ -26,50 +10,16 @@ export default function SearchBar({
   searchTerm,
   setSearchTerm,
 }: SearchBarProps) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-
-  const rotation = useRef(new Animated.Value(0)).current;
-  const [isRotating, setIsRotating] = useState(false);
-
-  const handleRefresh = () => {
-    if (isRotating) return;
-    setIsRotating(true);
-    queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
-
-    Animated.loop(
-      Animated.timing(rotation, {
-        toValue: 1,
-        duration: 1000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-
-    setTimeout(() => {
-      rotation.stopAnimation(() => {
-        rotation.setValue(0);
-      });
-      setIsRotating(false);
-    }, 3000);
-  };
-
-  const rotate = rotation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
-
   return (
-    <View className="bg-rateUpLightGreen px-4 pt-3 pb-2">
-      <View className="flex-row items-center justify-between gap-2">
+    <View className="flex-1 bg-rateUpLightGreen">
         {/* Search Input */}
-        <View className="flex-1 flex-row items-center border border-[#E2E5ED] bg-white rounded-full px-4 py-2">
+        <View className="flex-row items-center border border-[#E2E5ED] bg-white rounded-full px-4 py-2">
           {searchTerm ? (
             <Pressable onPress={() => setSearchTerm("")}>
-              <BackIcon />
+              <BackIcon width={20} height={20} />
             </Pressable>
           ) : (
-            <SearchIcon />
+            <SearchIcon width={20} height={20} />
           )}
 
           <TextInput
@@ -80,24 +30,6 @@ export default function SearchBar({
             onChangeText={setSearchTerm}
           />
         </View>
-
-        {/* Icons */}
-        <View className="flex-row gap-2 ml-2">
-          <TouchableOpacity onPress={() => router.push("/inbox/AddContact")}>
-            <AddContactIcon />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => router.push("/inbox/Filters")}>
-            <FilterIcon />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleRefresh}>
-            <Animated.View style={{ transform: [{ rotate }] }}>
-              <RefreshIcon />
-            </Animated.View>
-          </TouchableOpacity>
-        </View>
       </View>
-    </View>
   );
 }

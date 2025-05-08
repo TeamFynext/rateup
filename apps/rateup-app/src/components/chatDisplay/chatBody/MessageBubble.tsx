@@ -1,60 +1,45 @@
-import { View, Text, Image, Pressable } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import React from "react";
-import dayjs from "dayjs";
 import { RateupIcon } from "@/src/constants/imageExports";
+import { WaInboxImage, WaInboxVideo } from "./messageBubbleTypes";
 
 type MessageBubbleProps = {
-  message: string;
+  messageContent: any;
   timestamp: string;
   isSent: boolean;
   messageType?: string;
-  rawMessage?: any;
 };
 
 const MessageBubble = ({
-  message,
+  messageContent,
   timestamp,
   isSent,
-  messageType = "text",
-  rawMessage,
+  messageType,
 }: MessageBubbleProps) => {
-  // const formattedTimestamp = dayjs(Number(timestamp) * 1000).format("h:mm A");
-
   const bubbleStyle =
     "max-w-[75%] p-3 rounded-lg " + (isSent ? "bg-[#00993333]" : "bg-white");
 
   const renderContent = () => {
     switch (messageType) {
       case "image":
-        return (
-          <>
-            <Image
-              source={{ uri: extractImageLink(rawMessage) }}
-              style={{ width: 200, height: 200, borderRadius: 12 }}
-              resizeMode="cover"
-            />
-            {rawMessage?.send?.image?.caption && (
-              <Text className="text-black mt-1">{rawMessage.send.image.caption}</Text>
-            )}
-          </>
-        );
+        return <WaInboxImage messageContent={messageContent} />;
       case "audio":
         return <Text className="text-black">🎧 Audio Message</Text>;
       case "document":
         return (
           <Pressable>
-            <Text className="text-black underline">📄 {message}</Text>
+            <Text className="text-black underline">📄 {messageContent}</Text>
           </Pressable>
         );
       case "video":
-        return <Text className="text-black">🎥 Video Message</Text>;
+        return <WaInboxVideo messageContent={messageContent} />
       case "reaction":
-        return <Text className="text-xl">{message}</Text>;
+        return <Text className="text-xl">{messageContent}</Text>;
       case "button":
       case "interactive":
-        return <Text className="text-black">{message}</Text>;
+        return <Text className="text-black">{messageContent}</Text>;
       default:
-        return <Text className="text-black">{message}</Text>;
+        return <Text className="text-black">{messageContent}</Text>;
     }
   };
 
@@ -76,13 +61,3 @@ const MessageBubble = ({
 };
 
 export default MessageBubble;
-
-const extractImageLink = (messageBody: any) => {
-  if (!messageBody) return "";
-  if (messageBody.exchangeProcess === "send") {
-    return messageBody.send?.image?.link ?? "";
-  } else if (messageBody.exchangeProcess === "receive") {
-    return messageBody.receive?.messages?.[0]?.image?.link ?? "";
-  }
-  return "";
-};

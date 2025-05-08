@@ -9,16 +9,13 @@ import ChatBoxAssigned from "../chatBox/ChatBoxAssigned";
 import ChatBoxAll from "../chatBox/ChatBoxAll";
 import ChatBoxClosed from "../chatBox/ChatBoxClosed";
 import { useRouter } from "expo-router";
-import { parseWaMessage_, returnMessageContentBasedOnParsedMessage } from "@/src/api/inbox/messages";
 import dayjs from "dayjs";
+import { useChatFilterStore } from "@/src/utils/store";
+import { parseWaMessage_, returnMessageContentBasedOnParsedMessage } from "@/src/api/inbox/messages/utils";
 
 type InboxProps = {
   messageType: string;
-  strictFilter?: boolean;
   searchTerm?: string;
-  contactGroups?: string[];
-  campaigns?: string[];
-  tags?: string[];
   waMessageAssignStatus?:
     | "New"
     | "Assigned"
@@ -30,23 +27,16 @@ type InboxProps = {
 
 export default function Inbox({
   messageType,
-  strictFilter = false,
   searchTerm,
-  contactGroups = [],
-  campaigns = [],
-  tags = [],
   waMessageAssignStatus,
 }: InboxProps) {
-  const defaultFilter = getDefaultFilter(messageType);
+  const filterFromStore = useChatFilterStore((state)=>state.filter);
   const router = useRouter();
 
   const mergedFilter = {
-    ...defaultFilter,
-    strictFilter,
+    ...filterFromStore,
+    messageType,
     searchTerm,
-    contactGroups,
-    campaigns,
-    tags,
     waMessageAssignStatus,
   };
 

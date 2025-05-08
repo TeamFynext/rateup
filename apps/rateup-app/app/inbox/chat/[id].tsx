@@ -4,7 +4,6 @@ import { useLocalSearchParams } from "expo-router";
 import ChatHeader from "@/src/components/chatDisplay/ChatHeader";
 import ChatFooter from "@/src/components/chatDisplay/ChatFooter";
 import ChatBody from "@/src/components/chatDisplay/ChatBody";
-import { useMarkMessageAsRead } from "@/src/api/inbox/contacts/contacts.query";
 import { useChatAssignStatusStore, useContactIdStore } from "@/src/utils/store";
 
 const ChatDisplay = () => {
@@ -24,12 +23,9 @@ const ChatDisplay = () => {
   );
   //@ts-ignore
   setSelectedContactId(id);
-  const { mutate: markRead } = useMarkMessageAsRead();
 
   useEffect(() => {
     if (id) {
-      //@ts-ignore
-      markRead(id);
       //@ts-ignore
       setWaAssignStatus(initialStatus);
     }
@@ -39,7 +35,7 @@ const ChatDisplay = () => {
     <View className="flex justify-between h-full">
       {/* @ts-ignore */}
       <ChatHeader id={id} name={name} phone={phone} />
-
+      
       {/* @ts-ignore */}
       <ChatBody id={id} />
 

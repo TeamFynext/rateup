@@ -14,10 +14,7 @@ const ChatBoxAssigned: React.FC<
   unReadMessageCount,
   waMessageAssignStatus,
   onPress,
-  assignedUsers,
 }) => {
-  const assignedUser = assignedUsers?.[0].name;
-
   return (
     <TouchableOpacity onPress={onPress}>
       <View className="flex-row items-center p-4">
@@ -40,7 +37,7 @@ const ChatBoxAssigned: React.FC<
                 {name || phone}
               </Text>
               <Text className="bg-[#F5F5F5] px-2 rounded-full">
-                {assignedUser}
+                {waMessageAssignStatus}
               </Text>
             </View>
 

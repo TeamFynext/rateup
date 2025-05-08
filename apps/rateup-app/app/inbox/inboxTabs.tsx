@@ -21,6 +21,7 @@ import {
 } from "lucide-react-native";
 
 import { useContactCounts } from "@/src/api/inbox/contacts/contacts.query";
+import InboxButtons from "@/src/components/inbox/InboxButtons";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -102,7 +103,10 @@ export default function InboxLayout() {
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
+        <View className="bg-rateUpGreen20 flex-row justify-center items-center p-4">
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <InboxButtons/>
+        </View>
 
         <Tab.Navigator
           tabBarPosition="top"
