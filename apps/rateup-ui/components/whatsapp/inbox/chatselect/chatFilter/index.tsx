@@ -106,6 +106,9 @@ export default function WaInboxChatFilter({ tab }: Props) {
     if (filter.strictFilter !== false) {
       count += 1;
     }
+    if (filter.newStatuses.length) {
+      count += filter.newStatuses.length;
+    }
     return count;
   }
   function clearFilters() {

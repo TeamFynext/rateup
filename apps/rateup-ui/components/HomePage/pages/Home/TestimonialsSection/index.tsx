@@ -1,10 +1,11 @@
-import { Flex, Text, Title } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
-import TestimonialCard from "./TestimonialCard";
-import { testimonials } from "./constants";
+import { Flex, Text, Title } from "@mantine/core";
+
 import commonStyles from "../../../index.module.css";
-import styles from "./TestimonialsSection.module.css";
 import carouselStyles from "./CarouselStyles.module.css";
+import { testimonials } from "./constants";
+import TestimonialCard from "./TestimonialCard";
+import styles from "./TestimonialsSection.module.css";
 
 function TestimonialsSection() {
   return (
@@ -20,13 +21,10 @@ function TestimonialsSection() {
 
       <Flex className={styles["testimonials-carousel-container"]}>
         <Carousel
-          align="start"
           classNames={carouselStyles}
           slideSize={{ base: "270px", xs: "320px" }}
           slideGap={{ base: "sm", xs: "sm", sm: "md", md: "lg" }}
-          slidesToScroll={1}
-          loop
-          speed={15}
+          emblaOptions={{ loop: true, align: "start", slidesToScroll: 1 }}
         >
           {testimonials.map((testimonialObj) => {
             return (
