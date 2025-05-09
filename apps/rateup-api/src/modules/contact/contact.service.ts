@@ -297,7 +297,7 @@ export async function getOrCreateContactByPhone(
       return contact;
     } else {
       const chatbot = await getChatbotDetails(orgId);
-      const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
+      const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
       return await prisma.contact.create({
         data: {
           ...additionalData,
