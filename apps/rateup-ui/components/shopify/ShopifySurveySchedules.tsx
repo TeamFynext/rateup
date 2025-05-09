@@ -41,6 +41,7 @@ const ShopifySurveySchedules = ({
     { key: "event", value: "Event" },
     { key: "whatsapp_template", value: translations["WhatsApp Template"] },
     { key: "loyaltyAction", value: translations["Loyalty Action"] },
+    { key: "loyaltyApiFeature", value: "Loyalty API" },
     { key: "isProductSpecific", value: translations["Product Specific"] },
     { key: "product", value: translations["Product"] },
     { key: "timeDelay", value: translations["Time Delay (in minutes)"] },
@@ -92,6 +93,7 @@ const ShopifySurveySchedules = ({
           loyaltyAction:
             loyaltyActions?.find((a) => a.id === row.actionId)?.name ?? "----",
           action: row,
+          loyaltyApiFeature: row.loyaltyApiFeature ?? "----",
         };
       })
     : [];
