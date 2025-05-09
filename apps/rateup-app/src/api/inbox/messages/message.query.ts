@@ -8,8 +8,8 @@ export const useGetMessagesByContactId = (contactId: string) => {
       queryFn: ({ pageParam }) => getMessagesByContactId(contactId, pageParam),
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       select: (data) => ({
-        pages: [...data.pages].reverse(),
-        pageParams: [...data.pageParams].reverse(),
+        pages: data.pages,
+        pageParams: data.pageParams
       }),
       enabled: !!contactId,
     });

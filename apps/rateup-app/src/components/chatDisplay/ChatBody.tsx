@@ -3,8 +3,10 @@ import {
   ActivityIndicator,
   Text,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
-import React, { useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import React, { useRef, useCallback, useMemo } from "react";
 import { parseWaMessage_ } from "@/src/api/inbox/messages/utils";
 import MessageBubble from "./chatBody/MessageBubble";
 import DateSeparator from "./chatBody/DateSeperator";
@@ -13,9 +15,9 @@ import { useMarkMessageAsRead } from "@/src/api/inbox/contacts/contacts.query";
 import { useAuth } from "@/src/context/AuthContext";
 import { ViewToken } from "react-native";
 import { useGetMessagesByContactId } from "@/src/api/inbox/messages/message.query";
-import { FlashList } from "@shopify/flash-list"; // Import FlashList
+import { FlashList } from "@shopify/flash-list";
+import { ChevronDown } from "lucide-react-native";
 
-// Get the screen height
 const { height: screenHeight } = Dimensions.get("window");
 
 const ChatBody = ({ id }: { id: string }) => {
@@ -34,15 +36,25 @@ const ChatBody = ({ id }: { id: string }) => {
   const listRef = useRef<any>(null);
 
   const messages = data?.pages.flatMap((page) => page.messages) || [];
-  const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
-
+  const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
+  const lastVisibleIndex = useRef(0);
+  const prevMessageCount = useRef(messages.length);
+  const messageList = useMemo(() => messages, [messages]);
+  React.useEffect(() => {
+    if (
+      messages.length > prevMessageCount.current &&
+      lastVisibleIndex.current < messages.length - 5
+    ) {
+      setShowScrollToBottom(true);
+    }
+    prevMessageCount.current = messages.length;
+  }, [messages.length]);
   const markedAsRead = useRef(new Set<string>());
 
   const viewabilityConfig = {
     itemVisiblePercentThreshold: 50,
   };
 
-  // Memoize onViewableItemsChanged to prevent unnecessary re-renders
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
       viewableItems.forEach(({ item }) => {
@@ -57,18 +69,19 @@ const ChatBody = ({ id }: { id: string }) => {
     }
   ).current;
 
-  // Memoize renderItem to avoid re-creation on every render
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
       const parsed = parseWaMessage_(item.messageBody);
       const time = dayjs(item.createdAt).format("h:mm A");
-      const currentDate = dayjs(item.createdAt).format("YYYY-MM-DD");
-      const previousDate =
-        index > 0
-          ? dayjs(reversedMessages[index - 1].createdAt).format("YYYY-MM-DD")
-          : null;
 
-      const shouldShowDate = currentDate !== previousDate;
+      const currentDate = dayjs(item.createdAt).format("YYYY-MM-DD");
+      const nextItem =
+        index < messageList.length - 1 ? messageList[index + 1] : null;
+      const nextDate = nextItem
+        ? dayjs(nextItem.createdAt).format("YYYY-MM-DD")
+        : null;
+
+      const shouldShowDate = currentDate !== nextDate;
 
       return (
         <>
@@ -86,26 +99,9 @@ const ChatBody = ({ id }: { id: string }) => {
         </>
       );
     },
-    [reversedMessages] // Add reversedMessages as a dependency
+    [messageList]
   );
 
-  // UseEffect to handle scroll after rendering
-  useLayoutEffect(() => {
-    if (reversedMessages.length > 0) {
-      // Scroll to the last item when the list changes
-      listRef.current?.scrollToIndex({ index: reversedMessages.length - 1, animated: false });
-    }
-  }, [reversedMessages.length]);
-
-  // Handle content size change to ensure scrolling
-  const handleContentSizeChange = (contentWidth: number, contentHeight: number) => {
-    if (reversedMessages.length > 0) {
-      // Scroll to the last item when content size changes
-      listRef.current?.scrollToEnd({ animated: true });
-    }
-  };
-
-  // Dynamic padding based on screen size
   const dynamicPaddingBottom = screenHeight > 800 ? 8 : 10;
 
   if (isPending) {
@@ -129,13 +125,19 @@ const ChatBody = ({ id }: { id: string }) => {
   return (
     <View className="flex-1 bg-rateUpGreen20">
       <FlashList
-        data={reversedMessages}
+        inverted
+        data={messageList}
         ref={listRef}
         showsVerticalScrollIndicator={false}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
+        onScroll={(event) => {
+          const offsetY = event.nativeEvent.contentOffset.y;
+          const isAtBottom = offsetY <= 50;
+          setShowScrollToBottom(!isAtBottom);
+        }}
         //@ts-ignore
         getItemLayout={(_, index) => ({
           length: 80,
@@ -163,13 +165,37 @@ const ChatBody = ({ id }: { id: string }) => {
         }
         contentContainerStyle={{
           paddingBottom: dynamicPaddingBottom,
-        }} // Dynamic padding based on screen size
-        initialNumToRender={20} // Render the first 20 items
-        maxToRenderPerBatch={10} // Max items to render per batch
-        updateCellsBatchingPeriod={50} // Delay for batch rendering
-        estimatedItemSize={80} // Set the estimated item size for performance optimization
-        onContentSizeChange={handleContentSizeChange} // Ensure scroll after content size change
+        }}
+        initialNumToRender={20}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        estimatedItemSize={80}
       />
+      {showScrollToBottom && (
+        <Animated.View
+          entering={FadeIn}
+          exiting={FadeOut}
+          style={{
+            position: "absolute",
+            bottom: 20,
+            right: 20,
+            zIndex: 100,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => {
+              listRef.current?.scrollToIndex({
+                index: 0,
+                animated: true,
+              });
+              setShowScrollToBottom(false);
+            }}
+            className="bg-black p-2 rounded-full shadow-md"
+          >
+            <ChevronDown color="white" />
+          </TouchableOpacity>
+        </Animated.View>
+      )}
     </View>
   );
 };

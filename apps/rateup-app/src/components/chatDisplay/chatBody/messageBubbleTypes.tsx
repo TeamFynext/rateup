@@ -16,6 +16,34 @@ import Video from "react-native-video";
 import { fromByteArray } from "base64-js";
 import { Pressable } from "react-native";
 import { useToast } from "react-native-toast-notifications";
+import { Linking } from "react-native";
+
+export default function WaInboxText({
+  messageContent,
+}: {
+  messageContent: string;
+}) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+  const parts = messageContent?.split(urlRegex).filter(Boolean);
+  console.log(parts);
+
+  return (
+    <View>
+      {parts?.map((text, index) =>
+        urlRegex.test(text) ? (
+          <Pressable key={index} onPress={() => Linking.openURL(text)}>
+            <Text className="underline text-blue-600 text-lg">{text}</Text>
+          </Pressable>
+        ) : (
+          <Text className="text-lg" key={index}>
+            {text}
+          </Text>
+        )
+      )}
+    </View>
+  );
+}
 
 export function WaInboxImage({ messageContent }: { messageContent: string }) {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -132,7 +160,7 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
   return (
     <View className="space-y-2">
       {isPending && <ActivityIndicator />}
-  
+
       {/* Video Available */}
       {link || localPath ? (
         <TouchableOpacity
@@ -161,10 +189,10 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
           <Text className="text-sm text-gray-600 mt-2">Download video</Text>
         </TouchableOpacity>
       )}
-  
+
       {/* Caption */}
       {caption ? <Text className="text-sm text-center">{caption}</Text> : null}
-  
+
       {/* Fullscreen Modal */}
       <Modal
         animationType="fade"
@@ -190,10 +218,15 @@ export function WaInboxVideo({ messageContent }: { messageContent: string }) {
       </Modal>
     </View>
   );
-  
 }
 
-export function WaInboxAudio({ messageContent,timestamp}: { messageContent: string, timestamp:string }) {
+export function WaInboxAudio({
+  messageContent,
+  timestamp,
+}: {
+  messageContent: string;
+  timestamp: string;
+}) {
   const { mutate, isPending } = useGetMediaFile();
   const [localPath, setLocalPath] = useState<string | null>(null);
   const [id, caption] = messageContent.split("_caption_");
@@ -264,8 +297,8 @@ export function WaInboxAudio({ messageContent,timestamp}: { messageContent: stri
   return (
     <View className="space-y-2 w-[60vw] rounded-xl bg-white">
       {isPending && <ActivityIndicator size="small" color="#009987" />}
-  
-      {(link || localPath) ? (
+
+      {link || localPath ? (
         <View className="space-y-3">
           {/* Audio Row */}
           <View className="flex-row items-center space-x-3 gap-1">
@@ -273,7 +306,7 @@ export function WaInboxAudio({ messageContent,timestamp}: { messageContent: stri
             <View className="p-3 rounded-full bg-rateUpGreen20">
               <Headphones size={24} color="#009987" />
             </View>
-  
+
             {/* Play + Progress + Time */}
             <View className="flex-1 space-y-1">
               <View className="flex-row items-center space-x-3">
@@ -288,7 +321,7 @@ export function WaInboxAudio({ messageContent,timestamp}: { messageContent: stri
                     <Play size={20} color="#000" />
                   )}
                 </TouchableOpacity>
-  
+
                 {/* Progress Bar */}
                 <View className="flex-1 h-3 bg-rateUpGreen20 rounded-full overflow-hidden">
                   <View
@@ -297,19 +330,17 @@ export function WaInboxAudio({ messageContent,timestamp}: { messageContent: stri
                   />
                 </View>
               </View>
-  
+
               {/* Time */}
               <View className="flex-row justify-between px-1">
                 <Text className="text-xs text-gray-600">
                   {isPlaying ? formatTime(progress) : formatTime(duration)}
                 </Text>
-                <Text className="text-xs text-gray-500">
-                  {timestamp}
-                </Text>
+                <Text className="text-xs text-gray-500">{timestamp}</Text>
               </View>
             </View>
           </View>
-  
+
           {/* Hidden Video */}
           <Video
             ref={playerRef}
@@ -340,12 +371,10 @@ export function WaInboxAudio({ messageContent,timestamp}: { messageContent: stri
               Tap to download audio
             </Text>
           </TouchableOpacity>
-          <Text className="text-xs text-gray-500 text-right">
-            {timestamp}
-          </Text>
+          <Text className="text-xs text-gray-500 text-right">{timestamp}</Text>
         </View>
       )}
-  
+
       {/* Optional Caption */}
       {caption ? (
         <Text className="text-sm text-gray-700 text-center italic">
@@ -354,5 +383,4 @@ export function WaInboxAudio({ messageContent,timestamp}: { messageContent: stri
       ) : null}
     </View>
   );
-  
 }
