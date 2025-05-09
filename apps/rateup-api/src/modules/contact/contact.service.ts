@@ -60,7 +60,7 @@ export async function createMultipleContacts(
   orgId: string,
 ) {
   const chatbot = await getChatbotDetails(orgId);
-  const aiWaChat = chatbot && chatbot.enableAllWaChat;
+  const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
   const contactsData = contacts.map((contact) => ({
     ...contact,
     orgId,
@@ -297,7 +297,7 @@ export async function getOrCreateContactByPhone(
       return contact;
     } else {
       const chatbot = await getChatbotDetails(orgId);
-      const aiWaChat = chatbot && chatbot.enableAllWaChat;
+      const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
       return await prisma.contact.create({
         data: {
           ...additionalData,

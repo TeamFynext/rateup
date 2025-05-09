@@ -29,10 +29,14 @@ const WaMedia = z.array(
 );
 
 const NewWaMessageBody = z.object({
-  type: z.enum(["text", "reaction", "media"]),
+  type: z.enum(["text", "reaction", "media", "contact"]),
   text: WaMessageText.optional(),
   reaction: WaReaction.optional(),
   media: WaMedia.optional(),
+  contacts: z.object({
+    contactIds: z.array(z.string()).optional(),
+    groupIds: z.array(z.string()).optional(),
+  }),
 });
 
 const PaginateQuerySchema = z.object({

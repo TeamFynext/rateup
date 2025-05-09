@@ -28,6 +28,7 @@ import {
   createDocumentMessage,
   createVideoMessage,
   createAudioMessage,
+  createContactMessage,
 } from "../../whatsappSurvey/wasurvey.utils";
 
 export async function addNewWaMessage(
@@ -668,4 +669,51 @@ export async function markMessagesAsRead(contactId: string, userId: string) {
     contactId,
     userId,
   );
+}
+
+export async function sendContactMessage(
+  contacts: { contactIds?: string[]; groupIds?: string[] },
+  phone,
+  orgId,
+  userId,
+) {
+  if (!contacts.contactIds && !contacts.groupIds) return;
+  let filterCondition = {
+    OR: [],
+  };
+  if (contacts.contactIds && contacts.contactIds.length) {
+    filterCondition.OR.push({
+      id: {
+        in: contacts.contactIds,
+      },
+    });
+  }
+  if (contacts.groupIds && contacts.groupIds.length) {
+    filterCondition.OR.push({
+      contactGroups: {
+        some: {
+          contactGroupId: {
+            in: contacts?.groupIds,
+          },
+        },
+      },
+    });
+  }
+  const contactsData = await prisma.contact.findMany({
+    where: filterCondition,
+    select: {
+      name: true,
+      phone: true,
+      dob: true,
+      email: true,
+      org: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  const messageBody = createContactMessage(phone, contactsData);
+  await sendMessage(orgId, messageBody, null, userId);
 }
