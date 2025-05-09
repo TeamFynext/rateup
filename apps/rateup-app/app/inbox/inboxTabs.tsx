@@ -118,7 +118,7 @@ export default function InboxLayout() {
             tabBarActiveTintColor: "#009987",
             tabBarInactiveTintColor: "#000",
             tabBarItemStyle: {
-              width: 85,
+              width: "auto",
             },
             tabBarIndicatorStyle: { backgroundColor: "transparent" },
             tabBarLabelStyle: {

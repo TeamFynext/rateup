@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import React from "react";
+import React, { memo } from "react";
 
 type DateSeparatorProps = {
   label: string;
@@ -15,4 +15,4 @@ const DateSeparator = ({ label }: DateSeparatorProps) => {
   );
 };
 
-export default DateSeparator;
+export default memo(DateSeparator);
