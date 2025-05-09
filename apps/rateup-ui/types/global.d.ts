@@ -1572,6 +1572,7 @@ export type ShopifySurvey = {
     unit: string; // "hour" | "day"
   };
   actionId?: string;
+  loyaltyApiFeature?: string;
 };
 
 type ScheduleObj = {
@@ -1587,4 +1588,5 @@ export type ShopifySchedule = ScheduleObj & {
   checkoutId?: string;
   actionStatus?: "success" | "failed";
   history: ScheduleObj[];
+  apiStatus?: string;
 };
