@@ -24,6 +24,7 @@ import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter";
+import InboxContactsControl from "./InboxContactMessage";
 import InsertEmoji from "./InsertEmoji";
 import InsertInboxAudio from "./InsertInboxMedia/InserInboxAudio";
 import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile";
@@ -120,7 +121,11 @@ function WaTextEditor({
       });
       editor.commands.setTextSelection(selection);
     }
-  }, [content, editor]);
+  }, [content, editor, editable]);
+
+  useEffect(() => {
+    if (editor) editor.setEditable(editable);
+  }, [editable]);
 
   return (
     <Box {...props}>
@@ -223,6 +228,7 @@ function WaTextEditor({
                   </RichTextEditor.ControlsGroup>
                   <RichTextEditor.ControlsGroup>
                     <WaQuickReplyControl />
+                    <InboxContactsControl />
                   </RichTextEditor.ControlsGroup>
                 </>
               )}

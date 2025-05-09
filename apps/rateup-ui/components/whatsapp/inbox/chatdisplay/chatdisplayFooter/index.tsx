@@ -45,37 +45,79 @@ export default function WaInboxChatDisplayFooter({
   const { addMessage, removeMessage } = useMessageStore();
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
+  const { body, setBody, resetBody } = useMessageBodyStore();
   const form = useForm({
     initialValues: {
       type: "text",
       text: { body: "" },
       media: media,
+      contacts: {
+        contactIds: [],
+        groupIds: [],
+      },
     },
     validate: {
-      text: (value) => {
-        if (value.body.length === 0) {
+      text: (value, values) => {
+        if (
+          values.type === "text" &&
+          (value.body === "" ||
+            parseToWhatsAppFormat(value.body).trim().length === 0)
+        ) {
           return translations["Message can't be empty"];
+        }
+      },
+      media: (value, values) => {
+        if (values.type === "media" && !value.length) {
+          return "media required";
+        }
+      },
+      contacts: (value, values) => {
+        if (
+          values.type === "contact" &&
+          !value.contactIds.length &&
+          !value.groupIds.length
+        ) {
+          return "contacts required";
         }
       },
     },
   });
+
+  useEffect(() => {
+    if (media.length) {
+      let message = {
+        media,
+        type: "text",
+      };
+      if (
+        body.text.body === "" ||
+        parseToWhatsAppFormat(body.text.body).trim().length === 0
+      ) {
+        message.type = "media";
+      }
+      form.setValues({ ...body, ...message });
+    } else {
+      form.setValues({ ...body });
+    }
+  }, [body, media]);
+
+  useEffect(() => {
+    if (audioUrl) {
+      setBody({
+        ...body,
+        media: [{ url: audioUrl, type: "audio", name: "voice-note" }],
+        type: "media",
+        text: {
+          body: "",
+        },
+      });
+    }
+  }, [audioUrl]);
   function handleSendMessage() {
-    const values = audioUrl
-      ? {
-          media: [{ url: audioUrl, type: "audio", name: "voice-note" }],
-          type: "media",
-          text: {
-            body: "",
-          },
-        }
-      : { ...form.values };
+    if (form.validate().hasErrors) return;
+    const values = { ...form.values };
     form.reset();
-    const trimmedBody =
-      values.text.body !== ""
-        ? parseToWhatsAppFormat(values.text.body).trim()
-        : "";
-    if (!trimmedBody.length && !values.media.length) return;
-    if (!trimmedBody.length && values.media.length) values.type = "media";
+    resetBody();
     addMessage(contact.id, {
       body: {
         text: values.text.body,
@@ -125,12 +167,6 @@ export default function WaInboxChatDisplayFooter({
     resetMedia();
   }, [contact]);
 
-  useEffect(() => {
-    if (media.length) {
-      form.setFieldValue("media", media);
-    }
-  }, [media]);
-
   const SendMessageComponent = () => {
     return (
       <Group gap={"xs"}>
@@ -169,16 +205,19 @@ export default function WaInboxChatDisplayFooter({
           <div ref={inputRef} style={{ display: "flex", flex: 1 }}>
             <WaTextEditor
               handleInputChange={(value) => {
-                form.setValues({
-                  text: { ...form.values.text, body: value },
-                });
+                setBody({ ...body, text: { ...body.text, body: value } });
               }}
-              content={form.values.text.body}
+              content={body.text.body}
               mih={50}
               flex={1}
               inbox={true}
               customEnter={() => submiRef.current()}
-              editable={!isSessionExpired && !isRecording && !audioUrl}
+              editable={
+                !isSessionExpired &&
+                !isRecording &&
+                !audioUrl &&
+                body.type === "text"
+              }
               customHeaders={<SendMessageComponent />}
             />
           </div>
@@ -371,4 +410,32 @@ export const useMediaStore = create<MediaStore>((set) => ({
     });
   },
   resetMedia: () => set(() => ({ media: [] })),
+}));
+
+const initialMessgabody = {
+  type: "text",
+  media: [],
+  text: { body: "" },
+  contacts: {
+    contactIds: [],
+    groupIds: [],
+  },
+};
+
+export const useMessageBodyStore = create<{
+  body: {
+    type: string;
+    media: WaMedia[];
+    text: { body: string };
+    contacts: {
+      contactIds: string[];
+      groupIds: string[];
+    };
+  };
+  setBody: (value) => void;
+  resetBody: () => void;
+}>((set) => ({
+  body: initialMessgabody,
+  setBody: (value) => set({ body: value }),
+  resetBody: () => set({ body: initialMessgabody }),
 }));
