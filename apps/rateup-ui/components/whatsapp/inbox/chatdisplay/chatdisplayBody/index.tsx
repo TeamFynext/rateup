@@ -40,6 +40,7 @@ import { formatDate, formatToCustomTime } from "../../../../../utils/dateTime";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
 import { useMessageStore } from "../chatdisplayFooter";
 import WaInboxAudio from "./components/audio";
+import WaInboxContact from "./components/contact";
 import WaInboxDocument from "./components/document";
 import WaInboxImage from "./components/image";
 import WaInboxInteractive from "./components/interactive";
@@ -119,6 +120,8 @@ export default function WaInboxChatDisplayBody(props: Props) {
         return <WaInboxVideo messageContent={messageContent} />;
       case "document":
         return <WaInboxDocument messageContent={messageContent} />;
+      case "contacts":
+        return <WaInboxContact messageContent={messageContent} />;
       case "location":
         return <WaInboxLocation messageContent={messageContent} />;
       default:

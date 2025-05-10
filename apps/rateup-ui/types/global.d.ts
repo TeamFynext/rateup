@@ -1198,6 +1198,44 @@ export type WaReceiveMessageBody = {
         emoji: string;
         message_id: string;
       };
+      contacts?: {
+        addresses?: {
+          street?: string;
+          city?: string;
+          state?: string;
+          zip?: string;
+          country?: string;
+          country_code?: string;
+          type?: string;
+        }[];
+        birthday?: string;
+        emails?: {
+          email?: string;
+          type?: string;
+        }[];
+        name: {
+          formatted_name: string;
+          first_name?: string;
+          last_name?: string;
+          middle_name?: string;
+          suffix?: string;
+          prefix?: string;
+        };
+        org?: {
+          company?: string;
+          department?: string;
+          title?: string;
+        };
+        phones: {
+          phone: string;
+          type?: string;
+          wa_id?: string;
+        }[];
+        urls?: {
+          url?: string;
+          type?: string;
+        }[];
+      }[];
       location?: {
         longitude: number;
         latitude: number;
@@ -1283,6 +1321,44 @@ export type WaSendMessageBody = {
     link: string;
     caption?: string;
   };
+  contacts?: {
+    addresses?: {
+      street?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+      country?: string;
+      country_code?: string;
+      type?: string;
+    }[];
+    birthday?: string;
+    emails?: {
+      email?: string;
+      type?: string;
+    }[];
+    name: {
+      formatted_name: string;
+      first_name?: string;
+      last_name?: string;
+      middle_name?: string;
+      suffix?: string;
+      prefix?: string;
+    };
+    org?: {
+      company?: string;
+      department?: string;
+      title?: string;
+    };
+    phones: {
+      phone: string;
+      type?: string;
+      wa_id?: string;
+    }[];
+    urls?: {
+      url?: string;
+      type?: string;
+    }[];
+  }[];
   location?: {
     longitude: number;
     latitude: number;

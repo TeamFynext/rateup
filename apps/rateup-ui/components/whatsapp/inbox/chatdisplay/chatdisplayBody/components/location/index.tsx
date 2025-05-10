@@ -22,7 +22,7 @@ const WaInboxLocation = ({
         )
       }
     >
-      <Map width={200} height={200} center={[latitude, longitude]}>
+      <Map width={270} height={200} center={[latitude, longitude]}>
         <Marker />
       </Map>
       <Text fw={500} size="sm">

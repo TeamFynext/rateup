@@ -6,11 +6,13 @@ import { IconLocation, IconMapPin } from "@tabler/icons-react";
 import { Map, Marker, Point } from "pigeon-maps";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter";
 
 const InboxLocationControl = () => {
   const [opened, setOpened] = useState(false);
+  const { body, setBody } = useMessageBodyStore();
   function handleLocation(location) {
-    console.log("location", location);
+    setBody({ ...body, type: "location", location });
     setOpened((o) => !o);
   }
   return (
