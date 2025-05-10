@@ -28,6 +28,7 @@ import {
   createDocumentMessage,
   createVideoMessage,
   createAudioMessage,
+  createLocationMessage,
 } from "../../whatsappSurvey/wasurvey.utils";
 
 export async function addNewWaMessage(
@@ -668,4 +669,9 @@ export async function markMessagesAsRead(contactId: string, userId: string) {
     contactId,
     userId,
   );
+}
+
+export async function sendLocationMessage(location, phone, orgId, userId) {
+  const messageBody = createLocationMessage(phone, location);
+  await sendMessage(orgId, messageBody, null, userId);
 }

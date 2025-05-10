@@ -21,6 +21,7 @@ import {
   getWaMessagesByContactId,
   sendMediaMessages,
   markMessagesAsRead,
+  sendLocationMessage,
 } from "./wamessage.service";
 import {
   ByContactIdParams,
@@ -144,7 +145,7 @@ export async function sendNewWaMessageHandler(
 ) {
   try {
     const { contactId } = request.params;
-    const { type } = request.body;
+    const { type, location } = request.body;
     const { orgId, userId } = request.user;
     const contact = await getContactById(contactId);
     if (!contact) {
@@ -187,6 +188,9 @@ export async function sendNewWaMessageHandler(
             orgId,
             userId,
           );
+        break;
+      case "location":
+        await sendLocationMessage(location, contact.phone, orgId, userId);
         break;
     }
     reply.send("Message Sent");

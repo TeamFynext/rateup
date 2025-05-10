@@ -793,6 +793,19 @@ export function createAudioMessage(to, link): WaSendMessageBody {
   };
 }
 
+export function createLocationMessage(
+  to: string,
+  location: WaSendMessageBody["location"],
+): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "location",
+    location,
+  };
+}
+
 export async function generateMessageDataFromQuestion(
   session: WaSessionWithRelations,
   question: Question,

@@ -158,6 +158,12 @@ export interface WaSendMessageBody {
   audio?: {
     link: string;
   };
+  location?: {
+    latitude: number;
+    longitude: number;
+    name?: string;
+    address?: string;
+  };
 }
 type WaButton = {
   type: "reply";

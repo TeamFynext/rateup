@@ -29,10 +29,18 @@ const WaMedia = z.array(
 );
 
 const NewWaMessageBody = z.object({
-  type: z.enum(["text", "reaction", "media"]),
+  type: z.enum(["text", "reaction", "media", "location"]),
   text: WaMessageText.optional(),
   reaction: WaReaction.optional(),
   media: WaMedia.optional(),
+  location: z
+    .object({
+      latitude: z.string(),
+      longitude: z.string(),
+      name: z.string(),
+      address: z.string(),
+    })
+    .optional(),
 });
 
 const PaginateQuerySchema = z.object({
