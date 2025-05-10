@@ -57,6 +57,9 @@ export function parseWaMessage(
       case "document":
         messageContent = `${send?.document.link}_caption_${send?.document.filename}_caption_${send?.document.caption ?? ""}`;
         break;
+      case "location":
+        messageContent = { ...send.location };
+        break;
     }
   }
   if (messageBody?.exchangeProcess === "receive") {
@@ -97,6 +100,9 @@ export function parseWaMessage(
         break;
       case "reaction":
         messageContent = receive.messages[0].reaction.emoji;
+        break;
+      case "location":
+        messageContent = { ...receive.messages[0].location };
         break;
     }
   }

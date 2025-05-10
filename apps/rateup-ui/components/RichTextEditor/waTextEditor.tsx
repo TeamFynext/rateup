@@ -24,6 +24,7 @@ import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter";
+import InboxLocationControl from "./InboxLocation";
 import InsertEmoji from "./InsertEmoji";
 import InsertInboxAudio from "./InsertInboxMedia/InserInboxAudio";
 import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile";
@@ -223,6 +224,7 @@ function WaTextEditor({
                   </RichTextEditor.ControlsGroup>
                   <RichTextEditor.ControlsGroup>
                     <WaQuickReplyControl />
+                    <InboxLocationControl />
                   </RichTextEditor.ControlsGroup>
                 </>
               )}

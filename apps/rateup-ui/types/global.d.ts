@@ -1198,6 +1198,12 @@ export type WaReceiveMessageBody = {
         emoji: string;
         message_id: string;
       };
+      location?: {
+        longitude: number;
+        latitude: number;
+        name: string;
+        address: string;
+      };
     },
   ];
   statuses: [
@@ -1276,6 +1282,12 @@ export type WaSendMessageBody = {
   video?: {
     link: string;
     caption?: string;
+  };
+  location?: {
+    longitude: number;
+    latitude: number;
+    name: string;
+    address: string;
   };
 };
 type WaInteractiveMessageAction = {
