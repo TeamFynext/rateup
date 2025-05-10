@@ -40,7 +40,7 @@ import classes from "./ContactSelect.module.css";
 const InboxContactsControl = () => {
   const [opened, setOpened] = useState(false);
 
-  const { body, setBody } = useMessageBodyStore();
+  const { body, setBody, resetBody } = useMessageBodyStore();
 
   function handleSubmit(contacts) {
     setBody({ ...body, type: "contact", contacts });
@@ -70,7 +70,10 @@ const InboxContactsControl = () => {
         <SelectContacts
           submitbtnTitle={"Next"}
           onSubmit={handleSubmit}
-          onCancel={() => setOpened((o) => !o)}
+          onCancel={() => {
+            resetBody();
+            setOpened((o) => !o);
+          }}
           contactIds={body.contacts.contactIds}
           groupIds={body.contacts.groupIds}
         />
