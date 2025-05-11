@@ -29,6 +29,7 @@ import {
   TypedNode,
   WhatsAppMessage,
 } from "./node-types";
+import { ContactCore } from "../../contact/contact.schema";
 dayjs.extend(customParseFormat);
 
 const smileyEmojiMap = {
@@ -790,6 +791,31 @@ export function createAudioMessage(to, link): WaSendMessageBody {
     audio: {
       link,
     },
+  };
+}
+
+export function createContactMessage(
+  to,
+  contactsData: (ContactCore & { org: { name: string } })[],
+): WaSendMessageBody {
+  return {
+    messaging_product: "whatsapp",
+    to,
+    type: "contacts",
+    contacts: contactsData.map((contact) => ({
+      birthday: contact.dob
+        ? dayjs(contact.dob).format("YYYY-MM-DD")
+        : undefined,
+      emails: contact?.email ? [{ email: contact.email }] : undefined,
+      name: {
+        formatted_name: contact.name,
+        first_name: contact.name,
+      },
+      org: {
+        company: contact.org.name,
+      },
+      phones: [{ phone: contact.phone, wa_id: contact.phone, type: "Mobile" }],
+    })),
   };
 }
 

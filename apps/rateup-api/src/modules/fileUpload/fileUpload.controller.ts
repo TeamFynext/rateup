@@ -52,7 +52,7 @@ export async function uploadController(
       fs.mkdirSync(tmpDir, { recursive: true });
     }
     tempRawPath = path.join(tmpDir, `${randomUUID()}_${filename}`);
-    tempOutputPath = tempRawPath.replace(/\.[^/.]+$/, "") + ".m4a";
+    tempOutputPath = path.join(tmpDir, `${randomUUID()}_output.m4a`);
 
     await pumpToFile(file, tempRawPath);
 

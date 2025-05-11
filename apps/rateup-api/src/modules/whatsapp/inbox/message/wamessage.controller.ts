@@ -21,6 +21,7 @@ import {
   getWaMessagesByContactId,
   sendMediaMessages,
   markMessagesAsRead,
+  sendContactMessage,
 } from "./wamessage.service";
 import {
   ByContactIdParams,
@@ -83,6 +84,7 @@ export async function handleWaMessages(
     const contact = await getOrCreateContactByPhone(phone, orgId, contactCore);
 
     let parameterData = {};
+    const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody);
     switch (type) {
       case "send": {
         //condition to add template body to messageData if type is template
@@ -94,22 +96,20 @@ export async function handleWaMessages(
           parameterData = messageBody.template.components;
           waMessageBody.send.template = template.data as unknown as any;
         }
+        break;
       }
       case "receive": {
         waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
+        const isChangeStatus =
+          contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED;
+        await updateContactById(contact.id, {
+          waMessageAssignStatus: isChangeStatus
+            ? WaMessageAssignStatus.UNASSIGNED
+            : undefined,
+          lastReceivedMessageTimeStamp: waTimeStamp,
+        });
+        break;
       }
-    }
-    const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody);
-
-    if (type === "receive") {
-      const isChangeStatus =
-        contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED;
-      await updateContactById(contact.id, {
-        waMessageAssignStatus: isChangeStatus
-          ? WaMessageAssignStatus.UNASSIGNED
-          : undefined,
-        lastReceivedMessageTimeStamp: waTimeStamp,
-      });
     }
 
     const waMessage = await addNewWaMessage(
@@ -144,7 +144,7 @@ export async function sendNewWaMessageHandler(
 ) {
   try {
     const { contactId } = request.params;
-    const { type } = request.body;
+    const { type, contacts } = request.body;
     const { orgId, userId } = request.user;
     const contact = await getContactById(contactId);
     if (!contact) {
@@ -188,6 +188,10 @@ export async function sendNewWaMessageHandler(
             userId,
           );
         break;
+      case "contact": {
+        await sendContactMessage(contacts, contact.phone, orgId, userId);
+        break;
+      }
     }
     reply.send("Message Sent");
   } catch (error) {
