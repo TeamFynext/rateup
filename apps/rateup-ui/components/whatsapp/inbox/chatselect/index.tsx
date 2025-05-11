@@ -85,7 +85,9 @@ const WaInboxChatSelect = () => {
       filters.searchTerm?.length > 0 ||
       filters.messageType !== "all" ||
       filters.messageType !== "usermessages" ||
-      filters.strictFilter !== false
+      filters.strictFilter !== false ||
+      !filters.waMessageAssignStatus ||
+      filters.waMessageAssignStatus.length
     );
   }, []);
 
