@@ -60,6 +60,8 @@ import {
   handleLCustomerAction,
   updateLCustomer,
 } from "../../loyalty/customer/customer.service";
+import { processActionWebhook } from "../../external/v1/loyalty/action/internal-copy/actions/actions.service";
+import { processRedeemWebhook } from "../../external/v1/loyalty/redeem/internal-copy/redeems/redeem.service";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -144,6 +146,7 @@ export async function createScheduleOnShopifyEvent({
   webhookId,
   scheduleFromDate,
   amount,
+  body,
 }: {
   customerPhone: string;
   event: ShopifyEvents;
@@ -152,6 +155,7 @@ export async function createScheduleOnShopifyEvent({
   webhookId?: string;
   scheduleFromDate: Date;
   amount?: number;
+  body: any;
 }) {
   log.info(`checking survey for shopify event ${event}`);
   const phone = parsePhoneNumber(customerPhone, "IN");
@@ -200,6 +204,14 @@ export async function createScheduleOnShopifyEvent({
         });
     }
   }
+  let apiStatus = null;
+  if (shopifySurvey.loyaltyApiFeature) {
+    if (shopifySurvey.loyaltyApiFeature === "action") {
+      apiStatus = await processActionWebhook(body, shopifyInfo.orgId);
+    } else {
+      apiStatus = await processRedeemWebhook(body, shopifyInfo.orgId);
+    }
+  }
 
   const schedules = [...shopifySurvey.schedules];
   const scheduleObj = {
@@ -213,6 +225,7 @@ export async function createScheduleOnShopifyEvent({
     webhookId,
     actionStatus,
     history: [scheduleObj],
+    apiStatus,
   };
   schedules.push(data);
   shopifySurvey.schedules = schedules;
@@ -915,6 +928,7 @@ export async function handleShopifyOrderEvents(webhook) {
     webhookId,
     scheduleFromDate: new Date(),
     amount: Number(body?.total_price),
+    body,
   });
 }
 
