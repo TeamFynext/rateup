@@ -29,10 +29,16 @@ const WaMedia = z.array(
 );
 
 const NewWaMessageBody = z.object({
-  type: z.enum(["text", "reaction", "media", "location"]),
+  type: z.enum(["text", "reaction", "media", "contact", "location"]),
   text: WaMessageText.optional(),
   reaction: WaReaction.optional(),
   media: WaMedia.optional(),
+  contacts: z
+    .object({
+      contactIds: z.array(z.string()).optional(),
+      groupIds: z.array(z.string()).optional(),
+    })
+    .optional(),
   location: z
     .object({
       latitude: z.string(),
