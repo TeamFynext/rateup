@@ -10,11 +10,11 @@ import {
   TouchableOpacity,
   View,
   Modal,
+  Pressable,
 } from "react-native";
 import RNFS from "react-native-fs";
 import Video from "react-native-video";
 import { fromByteArray } from "base64-js";
-import { Pressable } from "react-native";
 import { useToast } from "react-native-toast-notifications";
 import { Linking } from "react-native";
 
@@ -24,10 +24,7 @@ export default function WaInboxText({
   messageContent: string;
 }) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
-
   const parts = messageContent?.split(urlRegex).filter(Boolean);
-  console.log(parts);
-
   return (
     <View>
       {parts?.map((text, index) =>
@@ -384,3 +381,114 @@ export function WaInboxAudio({
     </View>
   );
 }
+
+export function WaInboxDocument({ messageContent }: { messageContent: string }) {
+  const toast  = useToast();
+  const { mutate, isPending } = useGetMediaFile();
+  const [localPath, setLocalPath] = useState<string | null>(null);
+  const [id,filename, caption] = messageContent.split("_caption_");
+  const appFolderPath = `${RNFS.DownloadDirectoryPath}/wa_media`; // Folder where you store media
+  const downloadPath = `${appFolderPath}/${filename}.pdf`; // Document file path (adjust for your file type)
+  
+  useEffect(() => {
+    // Check if the document exists locally
+    const checkLocalFile = async () => {
+      const appFolderExists = await RNFS.exists(appFolderPath);
+      if (!appFolderExists) {
+        await RNFS.mkdir(appFolderPath); // Ensure the folder exists
+      }
+
+      const exists = await RNFS.exists(downloadPath); // Check if the document is already downloaded
+      if (exists) {
+        setLocalPath("file://" + downloadPath); // Set the local path
+      }
+    };
+
+    checkLocalFile();
+  }, [downloadPath]);
+
+ const handleDownload = async () => {
+  const hasPermission = await requestStoragePermission(); // Make sure it supports Android 13+
+  if (!hasPermission) {
+    toast.show("Storage permission denied.", { type: "warning" });
+    return;
+  }
+
+  const folderPath = `${RNFS.DownloadDirectoryPath}/wa_media`;
+  const fullPath = `${folderPath}/${filename}.pdf`;
+
+  const folderExists = await RNFS.exists(folderPath);
+  if (!folderExists) {
+    await RNFS.mkdir(folderPath);
+  }
+
+  const fileExists = await RNFS.exists(fullPath);
+  if (fileExists) {
+    setLocalPath("file://" + fullPath);
+    return;
+  }
+
+  const downloadOptions = {
+    fromUrl: id, // direct URL to the document
+    toFile: fullPath,
+    background: true,
+    discretionary: true,
+  };
+
+  try {
+    const result = await RNFS.downloadFile(downloadOptions).promise;
+    if (result.statusCode === 200) {
+      toast.show("Document saved to Downloads.", { type: "success" });
+      setLocalPath("file://" + fullPath);
+    } else {
+      toast.show("Failed to download document.", { type: "danger" });
+    }
+  } catch (error) {
+    console.error("Download error:", error);
+    toast.show("Error while downloading.", { type: "danger" });
+  }
+};
+
+  
+  const openDocument = () => {
+    if (localPath) {
+      // Open the document using the local file path in the default viewer
+      Linking.openURL(localPath).catch((err) => {
+        toast.show("Unable to open the document.", { type: "danger" });
+      });
+    }
+  };
+
+  return (
+    <View className="space-y-2">
+      {isPending && <ActivityIndicator size="small" color="#009987" />}
+      
+      {/* Show downloading or open document */}
+      {localPath ? (
+        <TouchableOpacity
+          onPress={openDocument} // Open document when clicked
+          activeOpacity={0.7}
+          className="relative w-72 h-80 self-center rounded-3xl bg-white shadow-lg justify-center items-center"
+        >
+          <Text className="text-xl text-center text-black font-semibold">
+            📄 Open Document
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        // Placeholder to trigger download
+        <TouchableOpacity
+          className="w-72 h-80 rounded-3xl bg-gray-200 dark:bg-gray-700 justify-center items-center self-center shadow-lg"
+          onPress={handleDownload}
+        >
+          <Download size={36} color="#4b5563" />
+          <Text className="text-sm text-center text-gray-600 mt-2">Download Document</Text>
+        </TouchableOpacity>
+      )}
+  
+      {/* Caption */}
+      {caption ? <Text className="text-sm text-center text-gray-500">{caption}</Text> : null}
+    </View>
+  );
+  
+}
+

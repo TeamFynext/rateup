@@ -1,6 +1,6 @@
 import { View, Text, Pressable } from "react-native";
 import React, { memo, useCallback } from "react";
-import WaInboxText, { WaInboxAudio, WaInboxImage, WaInboxVideo } from "./messageBubbleTypes";
+import WaInboxText, { WaInboxAudio, WaInboxDocument, WaInboxImage, WaInboxVideo } from "./messageBubbleTypes";
 
 type MessageBubbleProps = {
   messageContent: any;
@@ -25,11 +25,7 @@ const MessageBubble = ({
       case "audio":
         return <WaInboxAudio messageContent={messageContent} timestamp={timestamp} />;
       case "document":
-        return (
-          <Pressable>
-            <Text className="text-black underline">📄 {messageContent}</Text>
-          </Pressable>
-        );
+        return <WaInboxDocument messageContent={messageContent} />
       case "video":
         return <WaInboxVideo messageContent={messageContent} />;
       case "reaction":
