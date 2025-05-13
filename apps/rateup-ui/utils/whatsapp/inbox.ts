@@ -60,6 +60,9 @@ export function parseWaMessage(
       case "contacts":
         messageContent = [...send.contacts];
         break;
+      case "location":
+        messageContent = { ...send.location };
+        break;
     }
   }
   if (messageBody?.exchangeProcess === "receive") {
@@ -103,6 +106,9 @@ export function parseWaMessage(
         break;
       case "contacts":
         messageContent = [...receive.messages[0].contacts];
+        break;
+      case "location":
+        messageContent = { ...receive.messages[0].location };
         break;
     }
   }

@@ -44,6 +44,7 @@ import WaInboxContact from "./components/contact";
 import WaInboxDocument from "./components/document";
 import WaInboxImage from "./components/image";
 import WaInboxInteractive from "./components/interactive";
+import WaInboxLocation from "./components/location";
 import WaInboxTemplate from "./components/template";
 import WaInboxText from "./components/text";
 import WaInboxVideo from "./components/video";
@@ -121,6 +122,8 @@ export default function WaInboxChatDisplayBody(props: Props) {
         return <WaInboxDocument messageContent={messageContent} />;
       case "contacts":
         return <WaInboxContact messageContent={messageContent} />;
+      case "location":
+        return <WaInboxLocation messageContent={messageContent} />;
       default:
         return (
           <Text fz={"xs"} c={"red"}>

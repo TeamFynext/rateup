@@ -1236,6 +1236,12 @@ export type WaReceiveMessageBody = {
           type?: string;
         }[];
       }[];
+      location?: {
+        longitude: number;
+        latitude: number;
+        name: string;
+        address: string;
+      };
     },
   ];
   statuses: [
@@ -1353,6 +1359,12 @@ export type WaSendMessageBody = {
       type?: string;
     }[];
   }[];
+  location?: {
+    longitude: number;
+    latitude: number;
+    name: string;
+    address: string;
+  };
 };
 type WaInteractiveMessageAction = {
   name?: string;
