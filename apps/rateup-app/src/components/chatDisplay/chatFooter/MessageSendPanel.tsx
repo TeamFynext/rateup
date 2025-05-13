@@ -14,6 +14,7 @@ import DocumentPicker from "react-native-document-picker";
 import { useContactIdStore, useMediaStore, useMessageStore } from "@/src/utils/store";
 import { useSendNewWaMessage } from "@/src/api/inbox/messages/message.query";
 import { Text } from "react-native";
+import { uploadFile } from "@/src/utils/fileUpload";
 
 const MessageSendPanel = () => {
   const screenWidth = Dimensions.get("window").width;
@@ -52,38 +53,62 @@ const MessageSendPanel = () => {
   };
 
   const pickMedia = async (type: "image" | "video" | "audio" | "document") => {
-    try {
-      const typeMap = {
-        image: [DocumentPicker.types.images],
-        video: [DocumentPicker.types.video],
-        audio: [DocumentPicker.types.audio],
-        document: [
-          DocumentPicker.types.pdf,
-          DocumentPicker.types.plainText,
-          DocumentPicker.types.allFiles,
-        ],
+  try {
+    const typeMap = {
+      image: [DocumentPicker.types.images],
+      video: [DocumentPicker.types.video],
+      audio: [DocumentPicker.types.audio],
+      document: [
+        DocumentPicker.types.pdf,
+        DocumentPicker.types.plainText,
+        DocumentPicker.types.allFiles,
+      ],
+    };
+
+    const res = await DocumentPicker.pick({
+      type: typeMap[type],
+      allowMultiSelection: true,
+    });
+
+    for (const file of res) {
+      const fileObj: any = {
+        uri: file.uri,
+        name: file.name,
+        type: file.type || "application/octet-stream",
       };
 
-      const res = await DocumentPicker.pick({
-        type: typeMap[type],
-        allowMultiSelection: true,
-      });
-
-      const files = res.map((file) => ({
-        type,
-        url: Platform.OS === "ios" ? file.uri.replace("file://", "") : file.uri,
+      // Construct a `File`-like object for the FormData
+      const uploadable = {
+        uri: file.uri,
         name: file.name,
-        key: `${file.uri}_${Date.now()}`,
-      }));
-      //@ts-ignore
-      addMedia(files);
-      togglePanel();
-    } catch (err) {
-      if (!DocumentPicker.isCancel(err)) {
-        console.error("Document pick error:", err);
+        type: file.type,
+      };
+
+      try {
+        //@ts-ignore
+        const key = await uploadFile(uploadable); // call your existing upload function
+        const cloudUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`;
+
+        addMedia({
+          type,
+          //@ts-ignore
+          name: file.name,
+          url: cloudUrl,
+          key,
+        });
+      } catch (uploadErr) {
+        console.error("Upload failed for file:", file.name, uploadErr);
       }
     }
-  };
+
+    togglePanel();
+  } catch (err) {
+    if (!DocumentPicker.isCancel(err)) {
+      console.error("Document pick error:", err);
+    }
+  }
+};
+
 
   const handleSend = () => {
     const trimmed = message.trim();
@@ -91,9 +116,19 @@ const MessageSendPanel = () => {
 
     const isMedia = media.length > 0;
     const payload = isMedia
-      ? { type: "media", text: { body: trimmed || "" }, media }
-      : { type: "text", text: { body: trimmed }, media: [] };
+  ? {
+      type: "media",
+      text: { body: trimmed || "" },
+      media: [...media], // ensure it's a flat array
+    }
+  : {
+      type: "text",
+      text: { body: trimmed },
+      media: [],
+    };
 
+      console.log(payload);
+      console.log(payload.media);
     // Optimistic message update
     addMessage(selectedContactId, {
       type: "text",

@@ -39,3 +39,35 @@ export const getFileUrlFromKey = (
       console.log('error',error)
     }
   };
+
+
+
+ export const uploadFile = async (
+  file: File,
+  withThumbnails = false,
+  data = { allowAll: false },
+): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("metadata", JSON.stringify(data));
+
+  try {
+    console.log("Uploading file...");
+    const response = await axios.post(
+      `/api/public/upload/${
+        withThumbnails ? "fileWithThumb" : "file"
+      }`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    console.log("File uploaded successfully");
+    return response?.data?.data?.key as string;
+  } catch (error: any) {
+    console.log("File upload failed:", error?.response?.data?.message);
+    throw error?.response?.data?.message;
+  }
+};
