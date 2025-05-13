@@ -29,6 +29,7 @@ import {
   createVideoMessage,
   createAudioMessage,
   createContactMessage,
+  createLocationMessage,
 } from "../../whatsappSurvey/wasurvey.utils";
 
 export async function addNewWaMessage(
@@ -715,5 +716,10 @@ export async function sendContactMessage(
   });
 
   const messageBody = createContactMessage(phone, contactsData);
+  await sendMessage(orgId, messageBody, null, userId);
+}
+
+export async function sendLocationMessage(location, phone, orgId, userId) {
+  const messageBody = createLocationMessage(phone, location);
   await sendMessage(orgId, messageBody, null, userId);
 }
