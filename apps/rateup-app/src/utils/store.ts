@@ -17,12 +17,11 @@ export const useChatAssignStatusStore = create<ChatState>((set: any) => ({
   setWaAssignStatus: (status: string) => set({ waAssignStatus: status }),
 }));
 
-
-export const useContactIdStore = create<SelectedContactState>((set:any)=>({
-  selectedContactId:null,
-  setSelectedContactId:(contactId:string)=> set({selectedContactId:contactId})
-}))
-
+export const useContactIdStore = create<SelectedContactState>((set: any) => ({
+  selectedContactId: null,
+  setSelectedContactId: (contactId: string) =>
+    set({ selectedContactId: contactId }),
+}));
 
 type ChatFilterStore = {
   filter: ChatFilter;
@@ -51,7 +50,6 @@ export const useChatFilterStore = create<ChatFilterStore>()(
   )
 );
 
-
 type WaMedia = {
   type: string;
   url: string;
@@ -63,16 +61,24 @@ interface MediaStore {
   media: WaMedia[];
   addMedia: (value: WaMedia) => void;
   resetMedia: () => void;
+  removeMedia: (key: string) => Promise<void>;
 }
 
-export const useMediaStore = create<MediaStore>((set) => ({
+export const useMediaStore = create<MediaStore>((set, get) => ({
   media: [],
   addMedia: (value) => set((state) => ({ media: [...state.media, value] })),
   resetMedia: () => set(() => ({ media: [] })),
+  removeMedia: async (key) => {
+    try {
+      await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] }); // ☁️ Delete from cloud
+      set((state) => ({
+        media: state.media.filter((m) => m.key !== key), // 🧹 Remove from store
+      }));
+    } catch (err) {
+      console.error("Failed to delete media:", err);
+    }
+  },
 }));
-
-
-
 
 interface Message {
   id?: string;
@@ -92,7 +98,7 @@ interface MessageState {
   messages: Record<string, Message[]>;
   addMessage: (
     contactId: string,
-    message: Omit<Message, "contactId" | "timestamp" | "isOutgoing">,
+    message: Omit<Message, "contactId" | "timestamp" | "isOutgoing">
   ) => void;
   removeMessage: (contactId: string) => void;
 }

@@ -1,6 +1,4 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "@/src/config/axios";
-
 
 export async function getMessagesByContactId(
   contactId: string,
@@ -13,15 +11,15 @@ export async function getMessagesByContactId(
 }
 
 export async function sendNewWaMessage(contactId: string, message: any) {
-  return await axios.post(
-    `/api/wa/inbox/message/${contactId}`,
-    message,
-  );
+  return await axios.post(`/api/wa/inbox/message/${contactId}`, message);
 }
 
 export async function getWaChatMediaFile(mediaId: string) {
-  const response = await axios.get(`/api/wa/inbox/message/mediafile/${mediaId}`, {
-    responseType: "arraybuffer",
-  });
+  const response = await axios.get(
+    `/api/wa/inbox/message/mediafile/${mediaId}`,
+    {
+      responseType: "arraybuffer",
+    }
+  );
   return response.data;
 }

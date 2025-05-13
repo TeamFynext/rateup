@@ -2,37 +2,41 @@ import React, { useRef, useState } from "react";
 import {
   View,
   TextInput,
-  Dimensions,
   TouchableOpacity,
   Animated,
   Easing,
-  Platform,
   Pressable,
+  Image,
+  ActivityIndicator,
+  Text,
 } from "react-native";
-import { PlusIcon, EmojiIcon, SendIcon } from "@/src/constants/imageExports";
 import DocumentPicker from "react-native-document-picker";
-import { useContactIdStore, useMediaStore, useMessageStore } from "@/src/utils/store";
+import {
+  useContactIdStore,
+  useMediaStore,
+  useMessageStore,
+} from "@/src/utils/store";
 import { useSendNewWaMessage } from "@/src/api/inbox/messages/message.query";
-import { Text } from "react-native";
+import { PlusIcon, EmojiIcon, SendIcon } from "@/src/constants/imageExports";
 import { uploadFile } from "@/src/utils/fileUpload";
 
 const MessageSendPanel = () => {
-  const screenWidth = Dimensions.get("window").width;
-  const inputWidth = screenWidth * 0.85;
-  const selectedContactId = useContactIdStore((state) => state.selectedContactId);
-
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const panelAnim = useRef(new Animated.Value(0)).current;
-  const [message, setMessage] = useState("");
-  const [panelVisible, setPanelVisible] = useState(false);
-  const { media, addMedia, resetMedia } = useMediaStore();
-  const { addMessage } = useMessageStore(); // To manage optimistic message sending
-
+  const selectedContactId = useContactIdStore((s) => s.selectedContactId);
+  const { media, addMedia, resetMedia, removeMedia } = useMediaStore();
+  const { addMessage } = useMessageStore();
   //@ts-ignore
   const mutation = useSendNewWaMessage(selectedContactId);
 
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const panelAnim = useRef(new Animated.Value(0)).current;
+
+  const [message, setMessage] = useState("");
+  const [panelVisible, setPanelVisible] = useState(false);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
+
   const togglePanel = () => {
-    const toValue = panelVisible ? 0 : 1;
+    const isOpening = !panelVisible;
+    const toValue = isOpening ? 1 : 0;
 
     Animated.parallel([
       Animated.timing(rotateAnim, {
@@ -47,170 +51,223 @@ const MessageSendPanel = () => {
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }),
-    ]).start();
-
-    setPanelVisible(!panelVisible);
+    ]).start(() => {
+      // Only update state AFTER animation completes
+      setPanelVisible(isOpening);
+    });
   };
 
   const pickMedia = async (type: "image" | "video" | "audio" | "document") => {
-  try {
-    const typeMap = {
-      image: [DocumentPicker.types.images],
-      video: [DocumentPicker.types.video],
-      audio: [DocumentPicker.types.audio],
-      document: [
-        DocumentPicker.types.pdf,
-        DocumentPicker.types.plainText,
-        DocumentPicker.types.allFiles,
-      ],
-    };
-
-    const res = await DocumentPicker.pick({
-      type: typeMap[type],
-      allowMultiSelection: true,
-    });
-
-    for (const file of res) {
-      const fileObj: any = {
-        uri: file.uri,
-        name: file.name,
-        type: file.type || "application/octet-stream",
+    try {
+      const typeMap = {
+        image: [DocumentPicker.types.images],
+        video: [DocumentPicker.types.video],
+        audio: [DocumentPicker.types.audio],
+        document: [
+          DocumentPicker.types.pdf,
+          DocumentPicker.types.plainText,
+          DocumentPicker.types.allFiles,
+        ],
       };
 
-      // Construct a `File`-like object for the FormData
-      const uploadable = {
-        uri: file.uri,
-        name: file.name,
-        type: file.type,
-      };
+      const res = await DocumentPicker.pick({
+        type: typeMap[type],
+        allowMultiSelection: true,
+      });
 
-      try {
-        //@ts-ignore
-        const key = await uploadFile(uploadable); // call your existing upload function
-        const cloudUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`;
+      for (const file of res) {
+        const tempKey = `${file.name}-${Date.now()}`;
 
+        // Step 1: Show placeholder with loading
         addMedia({
+          key: tempKey,
           type,
           //@ts-ignore
           name: file.name,
-          url: cloudUrl,
-          key,
+          //@ts-ignore
+          url: null,
+          uploading: true,
         });
-      } catch (uploadErr) {
-        console.error("Upload failed for file:", file.name, uploadErr);
+
+        try {
+          const uploadable = {
+            uri: file.uri,
+            name: file.name,
+            type: file.type || "application/octet-stream",
+          };
+          //@ts-ignore
+          const key = await uploadFile(uploadable);
+          const cloudUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`;
+
+          // Step 2: Replace with final uploaded item
+          removeMedia(tempKey);
+          addMedia({
+            key,
+            type,
+            //@ts-ignore
+            name: file.name,
+            url: cloudUrl,
+            uploading: false,
+          });
+        } catch (uploadErr) {
+          console.error("Upload failed:", file.name, uploadErr);
+          removeMedia(tempKey);
+        }
+      }
+
+      togglePanel();
+    } catch (err) {
+      if (!DocumentPicker.isCancel(err)) {
+        console.error("Media picker error:", err);
       }
     }
-
-    togglePanel();
-  } catch (err) {
-    if (!DocumentPicker.isCancel(err)) {
-      console.error("Document pick error:", err);
-    }
-  }
-};
-
+  };
 
   const handleSend = () => {
     const trimmed = message.trim();
     if (!selectedContactId) return;
 
     const isMedia = media.length > 0;
-    const payload = isMedia
-  ? {
-      type: "media",
-      text: { body: trimmed || "" },
-      media: [...media], // ensure it's a flat array
-    }
-  : {
-      type: "text",
-      text: { body: trimmed },
-      media: [],
-    };
 
-      console.log(payload);
-      console.log(payload.media);
-    // Optimistic message update
+    const payload = isMedia
+      ? {
+          type: "media",
+          text: { body: trimmed || "" },
+          //@ts-ignore
+          media: media.filter((m) => !m.uploading), // don't send incomplete ones
+        }
+      : {
+          type: "text",
+          text: { body: trimmed },
+          media: [],
+        };
+
     addMessage(selectedContactId, {
       type: "text",
       body: {
         text: trimmed,
         ...(isMedia && {
-          url: media[0].url,
-          urlType: media[0].type,
-          filename: media[0].name,
+          url: media[0]?.url,
+          urlType: media[0]?.type,
+          filename: media[0]?.name,
         }),
       },
     });
 
     mutation.mutate(payload);
     setMessage("");
-    resetMedia(); // Reset media after sending
+    resetMedia();
   };
 
   const rotateInterpolate = rotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["0deg", "135deg"],
+    outputRange: ["0deg", "90deg"],
   });
 
   const panelTranslateY = panelAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [80, 0],
+    outputRange: [100, 0],
   });
 
   return (
-    <View className="bg-white pt-3 px-2 relative">
-      {/* Media Picker Panel */}
+    <View className="bg-white pt-3 px-3 pb-5">
+      {/* Backdrop & Panel */}
       {panelVisible && (
         <Pressable
           onPress={togglePanel}
-          className="absolute top-0 left-0 right-0 bottom-16 z-50 bg-black/20"
+          className="absolute top-0 left-0 right-0 bottom-0 z-40 bg-black/30"
         >
           <Animated.View
-            className="absolute bottom-16 left-2 right-2 bg-white p-4 rounded-xl flex-row justify-between shadow-md"
+            className="absolute bottom-20 left-4 right-4 bg-white rounded-2xl px-6 py-4 flex-row justify-between items-center shadow-lg"
             style={{ transform: [{ translateY: panelTranslateY }] }}
           >
-            <TouchableOpacity onPress={() => pickMedia("image")}>
-              <View className="items-center">
-                <Text className="text-blue-600 text-xs">📷</Text>
-                <Text className="text-xs mt-1">Image</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => pickMedia("video")}>
-              <View className="items-center">
-                <Text className="text-red-500 text-xs">🎥</Text>
-                <Text className="text-xs mt-1">Video</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => pickMedia("document")}>
-              <View className="items-center">
-                <Text className="text-green-600 text-xs">📄</Text>
-                <Text className="text-xs mt-1">Document</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => pickMedia("audio")}>
-              <View className="items-center">
-                <Text className="text-purple-500 text-xs">🎙️</Text>
-                <Text className="text-xs mt-1">Audio</Text>
-              </View>
-            </TouchableOpacity>
+            {["image", "video", "document", "audio"].map((type) => (
+              <TouchableOpacity
+                key={type}
+                onPress={() => pickMedia(type as any)}
+                className="items-center"
+              >
+                <Text className="text-2xl">
+                  {
+                    {
+                      image: "🖼️",
+                      video: "🎬",
+                      document: "📄",
+                      audio: "🎵",
+                    }[type]
+                  }
+                </Text>
+                <Text className="text-xs mt-1 capitalize text-gray-600">
+                  {type}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </Animated.View>
         </Pressable>
       )}
 
-      {/* Message Input Bar */}
-      <View className="flex-row items-center justify-between">
-        <View
-          className="flex-row items-center bg-white border border-[#E2E5ED] rounded-full px-3 gap-2"
-          style={{ width: inputWidth, height: 48 }}
-        >
+      {/* Media Preview */}
+      {media.length > 0 && (
+        <View className="flex-row flex-wrap gap-2 mb-3 px-1">
+          {media.map((item) => (
+            <View key={item.key} className="relative w-[80px] h-[80px]">
+              {/* @ts-ignore */}
+              {!item.uploading && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setDeletingKey(item.key);
+                    setTimeout(() => {
+                      removeMedia(item.key);
+                      setDeletingKey(null);
+                    }, 300);
+                  }}
+                  className="absolute -top-1 -right-1 bg-black/60 z-10 w-5 h-5 rounded-full items-center justify-center"
+                >
+                  {deletingKey === item.key ? (
+                    <ActivityIndicator size={12} color="#fff" />
+                  ) : (
+                    <Text className="text-white text-xs">×</Text>
+                  )}
+                </TouchableOpacity>
+              )}
+              {/* @ts-ignore */}
+              {item.uploading ? (
+                <View className="w-full h-full bg-gray-100 rounded-xl items-center justify-center">
+                  <ActivityIndicator size="small" color="#888" />
+                  <Text className="text-[10px] text-gray-500 mt-1">
+                    Uploading...
+                  </Text>
+                </View>
+              ) : item.type === "image" ? (
+                <Image
+                  source={{ uri: item.url }}
+                  className="w-full h-full rounded-xl"
+                />
+              ) : (
+                <View className="w-full h-full rounded-xl bg-gray-200 items-center justify-center">
+                  <Text className="text-[10px] text-center">
+                    {item.type.toUpperCase()}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Input Bar */}
+      <View className="flex-row items-end">
+        <View className="flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-3 py-2 space-x-2">
           <TouchableOpacity onPress={togglePanel}>
-            <Animated.View style={{ transform: [{ rotate: rotateInterpolate }] }}>
+            <Animated.View
+              style={{ transform: [{ rotate: rotateInterpolate }] }}
+            >
               <PlusIcon />
             </Animated.View>
           </TouchableOpacity>
 
           <TextInput
-            className="flex-1 text-base text-black py-2"
+            className="flex-1 text-base text-black max-h-28"
             placeholder="Type a message or '/' for commands"
             placeholderTextColor="#7A8289"
             multiline
@@ -224,7 +281,10 @@ const MessageSendPanel = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={handleSend} className="ml-2">
+        <TouchableOpacity
+          onPress={handleSend}
+          className="ml-2 w-10 h-10 items-center justify-center"
+        >
           <SendIcon />
         </TouchableOpacity>
       </View>

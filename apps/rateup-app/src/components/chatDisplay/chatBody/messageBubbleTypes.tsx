@@ -17,7 +17,7 @@ import Video from "react-native-video";
 import { fromByteArray } from "base64-js";
 import { useToast } from "react-native-toast-notifications";
 import { Linking } from "react-native";
-import FileViewer from 'react-native-file-viewer';
+import FileViewer from "react-native-file-viewer";
 
 export default function WaInboxText({
   messageContent,
@@ -383,14 +383,18 @@ export function WaInboxAudio({
   );
 }
 
-export function WaInboxDocument({ messageContent }: { messageContent: string }) {
-  const toast  = useToast();
-  const [isPending, setIsPending] = useState(false)
+export function WaInboxDocument({
+  messageContent,
+}: {
+  messageContent: string;
+}) {
+  const toast = useToast();
+  const [isPending, setIsPending] = useState(false);
   const [localPath, setLocalPath] = useState<string | null>(null);
-  const [id,filename, caption] = messageContent.split("_caption_");
+  const [id, filename, caption] = messageContent.split("_caption_");
   const appFolderPath = `${RNFS.DownloadDirectoryPath}/wa_media`; // Folder where you store media
   const downloadPath = `${appFolderPath}/${filename}`; // Document file path (adjust for your file type)
-  
+
   useEffect(() => {
     // Check if the document exists locally
     const checkLocalFile = async () => {
@@ -408,103 +412,102 @@ export function WaInboxDocument({ messageContent }: { messageContent: string }) 
     checkLocalFile();
   }, [downloadPath]);
 
- const handleDownload = async () => {
-  const hasPermission = await requestStoragePermission(); // Make sure it supports Android 13+
-  if (!hasPermission) {
-    toast.show("Storage permission denied.", { type: "warning" });
-    return;
-  }
+  const handleDownload = async () => {
+    const hasPermission = await requestStoragePermission(); // Make sure it supports Android 13+
+    if (!hasPermission) {
+      toast.show("Storage permission denied.", { type: "warning" });
+      return;
+    }
 
-  const folderPath = `${RNFS.DownloadDirectoryPath}/wa_media`;
-  const fullPath = `${folderPath}/${filename}`;
+    const folderPath = `${RNFS.DownloadDirectoryPath}/wa_media`;
+    const fullPath = `${folderPath}/${filename}`;
 
-  const folderExists = await RNFS.exists(folderPath);
-  if (!folderExists) {
-    await RNFS.mkdir(folderPath);
-  }
+    const folderExists = await RNFS.exists(folderPath);
+    if (!folderExists) {
+      await RNFS.mkdir(folderPath);
+    }
 
-  const fileExists = await RNFS.exists(fullPath);
-  if (fileExists) {
-    setLocalPath("file://" + fullPath);
-    return;
-  }
+    const fileExists = await RNFS.exists(fullPath);
+    if (fileExists) {
+      setLocalPath("file://" + fullPath);
+      return;
+    }
 
-  const downloadOptions = {
-    fromUrl: id, // direct URL to the document
-    toFile: fullPath,
-    background: true,
-    discretionary: true,
+    const downloadOptions = {
+      fromUrl: id, // direct URL to the document
+      toFile: fullPath,
+      background: true,
+      discretionary: true,
+    };
+
+    try {
+      setIsPending(true);
+      const result = await RNFS.downloadFile(downloadOptions).promise;
+      if (result.statusCode === 200) {
+        setIsPending(false);
+        setLocalPath("file://" + fullPath);
+      } else {
+        setIsPending(false);
+        toast.show("Failed to download document.", { type: "danger" });
+      }
+    } catch (error) {
+      setIsPending(false);
+      console.error("Download error:", error);
+      toast.show("Error while downloading.", { type: "danger" });
+    }
   };
 
-  try {
-    setIsPending(true)
-    const result = await RNFS.downloadFile(downloadOptions).promise;
-    if (result.statusCode === 200) {
-      setIsPending(false)
-      setLocalPath("file://" + fullPath);
-    } else {
-      setIsPending(false)
-      toast.show("Failed to download document.", { type: "danger" });
+  const openDocument = async () => {
+    if (localPath) {
+      try {
+        await FileViewer.open(localPath, {
+          showOpenWithDialog: true, // shows the "Open with..." prompt
+        });
+      } catch (err) {
+        console.error("Error opening file:", err);
+        toast.show("Unable to open the document.", { type: "danger" });
+      }
     }
-  } catch (error) {
-    setIsPending(false)
-    console.error("Download error:", error);
-    toast.show("Error while downloading.", { type: "danger" });
-  }
-};
-
-
-const openDocument = async () => {
-  if (localPath) {
-    try {
-      await FileViewer.open(localPath, {
-        showOpenWithDialog: true, // shows the "Open with..." prompt
-      });
-    } catch (err) {
-      console.error("Error opening file:", err);
-      toast.show("Unable to open the document.", { type: "danger" });
-    }
-  }
-};
-
+  };
 
   return (
-  <View className="space-y-2 w-[60vw] rounded-xl bg-white p-3 shadow-lg h-16">
-    {isPending && <ActivityIndicator size="small" color="#009987" />}
+    <View className="space-y-2 w-[60vw] rounded-xl bg-white p-3 shadow-lg h-16">
+      {isPending && <ActivityIndicator size="small" color="#009987" />}
 
-    {localPath ? (
-      <TouchableOpacity
-        onPress={openDocument}
-        activeOpacity={0.7}
-        className="flex-col justify-center items-center space-y-2"
-      >
+      {localPath ? (
+        <TouchableOpacity
+          onPress={openDocument}
+          activeOpacity={0.7}
+          className="flex-col justify-center items-center space-y-2"
+        >
+          <Text className="text-base text-gray-700 font-medium text-center">
+            📄 Open Document
+          </Text>
+          <Text className="text-xs text-gray-500 text-center">{filename}</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          onPress={handleDownload}
+          className="flex-row items-center space-x-4"
+        >
+          <View className="p-3 rounded-full bg-gray-200">
+            <Download size={24} color="#9ca3af" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-sm text-gray-700 font-medium">
+              Tap to download document
+            </Text>
+            <Text className="text-xs text-gray-500">{filename}</Text>
+          </View>
+        </TouchableOpacity>
+      )}
 
-        <Text className="text-base text-gray-700 font-medium text-center">
-          📄 Open Document
+      {/* Optional caption */}
+      {caption ? (
+        <Text className="text-sm text-gray-700 text-center italic">
+          {caption}
         </Text>
-        <Text className="text-xs text-gray-500 text-center">{filename}</Text>
-      </TouchableOpacity>
-    ) : (
-      <TouchableOpacity
-        onPress={handleDownload}
-        className="flex-row items-center space-x-4"
-      >
-        <View className="p-3 rounded-full bg-gray-200">
-          <Download size={24} color="#9ca3af" />
-        </View>
-        <View className="flex-1">
-          <Text className="text-sm text-gray-700 font-medium">Tap to download document</Text>
-          <Text className="text-xs text-gray-500">{filename}</Text>
-        </View>
-      </TouchableOpacity>
-    )}
-
-    {/* Optional caption */}
-    {caption ? (
-      <Text className="text-sm text-gray-700 text-center italic">{caption}</Text>
-    ) : null}
-  </View>
-);
-
-  
+      ) : null}
+    </View>
+  );
 }
