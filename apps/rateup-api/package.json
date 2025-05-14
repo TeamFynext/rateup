@@ -11,13 +11,13 @@
     "@aws-sdk/client-ses": "^3.451.0",
     "@aws-sdk/lib-storage": "^3.451.0",
     "@faker-js/faker": "^8.4.1",
-    "@fastify/cors": "^8.5.0",
-    "@fastify/formbody": "^7.4.0",
-    "@fastify/jwt": "^8.0.0",
-    "@fastify/multipart": "^8.2.0",
-    "@fastify/swagger": "^8.14.0",
-    "@fastify/swagger-ui": "^3.0.0",
-    "@fastify/websocket": "^10.0.1",
+    "@fastify/cors": "^11.0.1",
+    "@fastify/formbody": "^8.0.2",
+    "@fastify/jwt": "^9.1.0",
+    "@fastify/multipart": "^9.0.3",
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.2",
+    "@fastify/websocket": "^11.0.2",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google-cloud/language": "^6.1.1",
     "@prisma/client": "^6.5.0",
@@ -29,9 +29,9 @@
     "cheerio": "^1.0.0-rc.12",
     "dayjs": "^1.11.10",
     "dotenv": "^16.0.3",
-    "fastify": "^4.26.2",
-    "fastify-cron": "^1.3.1",
-    "fastify-raw-body": "^4.3.0",
+    "fastify": "^5.3.3",
+    "fastify-cron": "^1.4.0",
+    "fastify-raw-body": "^5.0.0",
     "fastify-zod": "^1.4.0",
     "fluent-ffmpeg": "^2.1.3",
     "form-data": "^4.0.2",
@@ -85,5 +85,10 @@
   },
   "lint-staged": {
     "*.{ts,js,md}": "prettier --write"
+  },
+  "overrides": {
+    "fastify-zod": {
+      "fastify": "^5.3.3"
+    }
   }
 }
