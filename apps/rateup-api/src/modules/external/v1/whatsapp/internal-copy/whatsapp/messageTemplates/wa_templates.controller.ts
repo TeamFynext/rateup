@@ -446,10 +446,6 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
   try {
     const data = await req.file();
 
-    if (!data.file) {
-      return rep.code(400).send("File is required");
-    }
-
     const templateName = data.fields.templateName?.["value"];
     if (!templateName) {
       return rep.code(400).send("Template name is required");
