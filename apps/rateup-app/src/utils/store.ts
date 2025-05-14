@@ -128,3 +128,17 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       },
     })),
 }));
+
+interface VoiceRecordState {
+  isRecording: boolean;
+  audioUrl: string | null;
+  setAudioUrl: (url: string | null) => void;
+  setIsRecording: (recording: boolean) => void;
+}
+
+export const useVoiceRecordStore = create<VoiceRecordState>((set) => ({
+  isRecording: false,
+  audioUrl: null,
+  setAudioUrl: (url) => set({ audioUrl: url }),
+  setIsRecording: (isRecording) => set({ isRecording }),
+}));

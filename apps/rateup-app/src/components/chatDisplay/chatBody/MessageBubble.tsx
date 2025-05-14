@@ -6,12 +6,14 @@ import WaInboxText, {
   WaInboxImage,
   WaInboxVideo,
 } from "./messageBubbleTypes";
+import { namePreview } from "@/src/utils/chatbox_utils";
 
 type MessageBubbleProps = {
   messageContent: any;
   timestamp: string;
   isSent: boolean;
   messageType?: string;
+  senderName?: string;
 };
 
 const MessageBubble = ({
@@ -19,6 +21,7 @@ const MessageBubble = ({
   timestamp,
   isSent,
   messageType,
+  senderName,
 }: MessageBubbleProps) => {
   // Memoize renderContent to avoid recreating on each render
   const renderContent = useCallback(() => {
@@ -48,7 +51,7 @@ const MessageBubble = ({
 
   return (
     <View
-      className={`flex-row px-2 w-full mb-2 ${
+      className={`flex-row px-2 w-full mb-2 items-center gap-1 ${
         isSent ? "justify-end" : "justify-start"
       }`}
     >
@@ -57,12 +60,19 @@ const MessageBubble = ({
           isSent ? "bg-[#d2f8d2]" : "bg-white"
         }`}
       >
+        <Text className="text-blue-500 italic opacity-70 p-1">{senderName}</Text>
         {renderContent()}
         {messageType !== "audio" && (
           <Text className="text-sm text-gray-500 text-right mt-1">
             {timestamp}
           </Text>
         )}
+      </View>
+      <View className="w-8 h-8 rounded-full bg-[#00998733] flex items-center justify-center">
+        <Text className="text-rateUpGreen font-bold text-md">
+          {/* @ts-ignore */}
+          {namePreview(senderName)}
+        </Text>
       </View>
     </View>
   );

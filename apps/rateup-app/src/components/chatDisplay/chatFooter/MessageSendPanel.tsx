@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
-  Pressable,
   Image,
   ActivityIndicator,
   Text,
@@ -17,44 +16,33 @@ import {
   useMessageStore,
 } from "@/src/utils/store";
 import { useSendNewWaMessage } from "@/src/api/inbox/messages/message.query";
-import { PlusIcon, EmojiIcon, SendIcon } from "@/src/constants/imageExports";
 import { uploadFile } from "@/src/utils/fileUpload";
+import VoiceRecorder, { useVoiceStore } from "./VoiceRecorder";
+import { ImageIcon, VideoIcon, MusicIcon, BookText } from "lucide-react-native"; // Import Lucide icons
+import { EmojiIcon, SendIcon, PlusIcon } from "@/src/constants/imageExports";
 
 const MessageSendPanel = () => {
   const selectedContactId = useContactIdStore((s) => s.selectedContactId);
   const { media, addMedia, resetMedia, removeMedia } = useMediaStore();
   const { addMessage } = useMessageStore();
+  const voiceReset = useVoiceStore((s) => s.reset);
   //@ts-ignore
   const mutation = useSendNewWaMessage(selectedContactId);
 
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const panelAnim = useRef(new Animated.Value(0)).current;
-
   const [message, setMessage] = useState("");
   const [panelVisible, setPanelVisible] = useState(false);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  //@ts-ignore
+  const isUploading = media.some((m) => m.uploading);
 
   const togglePanel = () => {
-    const isOpening = !panelVisible;
-    const toValue = isOpening ? 1 : 0;
-
-    Animated.parallel([
-      Animated.timing(rotateAnim, {
-        toValue,
-        duration: 150,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }),
-      Animated.timing(panelAnim, {
-        toValue,
-        duration: 150,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      // Only update state AFTER animation completes
-      setPanelVisible(isOpening);
-    });
+    Animated.timing(rotateAnim, {
+      toValue: panelVisible ? 0 : 1,
+      duration: 150,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start(() => setPanelVisible(!panelVisible));
   };
 
   const pickMedia = async (type: "image" | "video" | "audio" | "document") => {
@@ -77,8 +65,7 @@ const MessageSendPanel = () => {
 
       for (const file of res) {
         const tempKey = `${file.name}-${Date.now()}`;
-
-        // Step 1: Show placeholder with loading
+        //@ts-ignore
         addMedia({
           key: tempKey,
           type,
@@ -98,9 +85,8 @@ const MessageSendPanel = () => {
           //@ts-ignore
           const key = await uploadFile(uploadable);
           const cloudUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`;
-
-          // Step 2: Replace with final uploaded item
           removeMedia(tempKey);
+          //@ts-ignore
           addMedia({
             key,
             type,
@@ -109,47 +95,42 @@ const MessageSendPanel = () => {
             url: cloudUrl,
             uploading: false,
           });
-        } catch (uploadErr) {
-          console.error("Upload failed:", file.name, uploadErr);
+        } catch {
           removeMedia(tempKey);
         }
       }
 
       togglePanel();
     } catch (err) {
-      if (!DocumentPicker.isCancel(err)) {
-        console.error("Media picker error:", err);
-      }
+      if (!DocumentPicker.isCancel(err)) console.error("Picker Error:", err);
     }
   };
 
   const handleSend = () => {
     const trimmed = message.trim();
-    if (!selectedContactId) return;
+    if (!trimmed && media.length === 0) return;
 
-    const isMedia = media.length > 0;
-
-    const payload = isMedia
+    const payload = media.length
       ? {
           type: "media",
-          text: { body: trimmed || "" },
+          text: { body: trimmed },
           //@ts-ignore
-          media: media.filter((m) => !m.uploading), // don't send incomplete ones
+          media: media.filter((m) => !m.uploading),
         }
       : {
           type: "text",
           text: { body: trimmed },
           media: [],
         };
-
+    //@ts-ignore
     addMessage(selectedContactId, {
       type: "text",
       body: {
         text: trimmed,
-        ...(isMedia && {
-          url: media[0]?.url,
-          urlType: media[0]?.type,
-          filename: media[0]?.name,
+        ...(media[0] && {
+          url: media[0].url,
+          urlType: media[0].type,
+          filename: media[0].name,
         }),
       },
     });
@@ -157,56 +138,22 @@ const MessageSendPanel = () => {
     mutation.mutate(payload);
     setMessage("");
     resetMedia();
+    voiceReset();
   };
 
-  const rotateInterpolate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "90deg"],
-  });
-
-  const panelTranslateY = panelAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [100, 0],
-  });
+  const rotateStyle = {
+    transform: [
+      {
+        rotate: rotateAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: ["0deg", "90deg"],
+        }),
+      },
+    ],
+  };
 
   return (
     <View className="bg-white pt-3 px-3 pb-5">
-      {/* Backdrop & Panel */}
-      {panelVisible && (
-        <Pressable
-          onPress={togglePanel}
-          className="absolute top-0 left-0 right-0 bottom-0 z-40 bg-black/30"
-        >
-          <Animated.View
-            className="absolute bottom-20 left-4 right-4 bg-white rounded-2xl px-6 py-4 flex-row justify-between items-center shadow-lg"
-            style={{ transform: [{ translateY: panelTranslateY }] }}
-          >
-            {["image", "video", "document", "audio"].map((type) => (
-              <TouchableOpacity
-                key={type}
-                onPress={() => pickMedia(type as any)}
-                className="items-center"
-              >
-                <Text className="text-2xl">
-                  {
-                    {
-                      image: "🖼️",
-                      video: "🎬",
-                      document: "📄",
-                      audio: "🎵",
-                    }[type]
-                  }
-                </Text>
-                <Text className="text-xs mt-1 capitalize text-gray-600">
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </Animated.View>
-        </Pressable>
-      )}
-
-      {/* Media Preview */}
       {media.length > 0 && (
         <View className="flex-row flex-wrap gap-2 mb-3 px-1">
           {media.map((item) => (
@@ -255,13 +202,47 @@ const MessageSendPanel = () => {
         </View>
       )}
 
-      {/* Input Bar */}
+      <View className="flex-row justify-between px-1 mb-3">
+        <TouchableOpacity
+          onPress={() => pickMedia("image")}
+          className="items-center mx-2"
+        >
+          <ImageIcon size={30} color="black" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => pickMedia("video")}
+          className="items-center mx-2"
+        >
+          <VideoIcon size={30} color="black" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => pickMedia("document")}
+          className="items-center mx-2"
+        >
+          <BookText size={30} color="black" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => pickMedia("audio")}
+          className="items-center mx-2"
+        >
+          <MusicIcon size={30} color="black" />
+        </TouchableOpacity>
+
+        <VoiceRecorder
+          onRecordingUpload={({ key, url, name }) =>
+            //@ts-ignore
+            addMedia({ key, url, name, type: "audio", uploading: false })
+          }
+        />
+      </View>
+
       <View className="flex-row items-end">
         <View className="flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-3 py-2 space-x-2">
           <TouchableOpacity onPress={togglePanel}>
-            <Animated.View
-              style={{ transform: [{ rotate: rotateInterpolate }] }}
-            >
+            <Animated.View style={rotateStyle}>
               <PlusIcon />
             </Animated.View>
           </TouchableOpacity>
@@ -273,19 +254,21 @@ const MessageSendPanel = () => {
             multiline
             value={message}
             onChangeText={setMessage}
-            onSubmitEditing={handleSend}
           />
 
-          <TouchableOpacity>
-            <EmojiIcon />
-          </TouchableOpacity>
+          <EmojiIcon />
         </View>
 
         <TouchableOpacity
           onPress={handleSend}
+          disabled={isUploading}
           className="ml-2 w-10 h-10 items-center justify-center"
         >
-          <SendIcon />
+          {isUploading ? (
+            <ActivityIndicator size="small" color="#009987" />
+          ) : (
+            <SendIcon />
+          )}
         </TouchableOpacity>
       </View>
     </View>

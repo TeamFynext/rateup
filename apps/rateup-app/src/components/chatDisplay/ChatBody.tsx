@@ -34,7 +34,6 @@ const ChatBody = ({ id }: { id: string }) => {
   const { userId } = useAuth();
   const { mutate: markRead } = useMarkMessageAsRead();
   const listRef = useRef<any>(null);
-
   const messages = data?.pages.flatMap((page) => page.messages) || [];
   const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
   const lastVisibleIndex = useRef(0);
@@ -94,6 +93,7 @@ const ChatBody = ({ id }: { id: string }) => {
             messageContent={parsed.messageContent}
             timestamp={time}
             isSent={item.messageBody.exchangeProcess === "send"}
+            senderName={item.sender?.name || ""}
             messageType={parsed.messageType}
           />
         </>
