@@ -16,6 +16,7 @@ export async function uploadController(
   reply: FastifyReply,
 ) {
   const data = await req.file();
+
   const metadata = data?.fields?.metadata
     ? JSON.parse(data?.fields?.metadata?.["value"])
     : null;

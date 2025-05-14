@@ -8,9 +8,17 @@ import {
   sendTemplatesToContactsHandler,
   getErrorLogsHandler,
   getMessageStatusByIdHandler,
+  sendTemplateByNameToPhoneWithFileHandler,
 } from "../internal-copy/whatsapp/messageTemplates/wa_templates.controller";
+import fastifyMultipart from "@fastify/multipart";
 
 export async function extWaTemplateRoutes(server: FastifyInstance) {
+  server.register(fastifyMultipart, {
+    limits: {
+      fileSize: 1048576 * 100,
+    },
+    throwFileSizeLimit: true,
+  });
   server.get(
     "/",
     {
@@ -41,6 +49,62 @@ export async function extWaTemplateRoutes(server: FastifyInstance) {
       },
     },
     sendTemplateByNameToPhoneHandler,
+  );
+  server.post(
+    "/send-with-file",
+    {
+      schema: {
+        consumes: ["multipart/form-data"],
+        // body: {
+        //   type: "object",
+        //   required: ["templateName", "phone"],
+        //   properties: {
+        //     timeDelay: {
+        //       type: "integer",
+        //       minimum: 15,
+        //     },
+        //     templateName: {
+        //       type: "string",
+        //     },
+        //     phone: {
+        //       type: "number",
+        //     },
+        //     body_variables: {
+        //       type: "array",
+        //       items: { type: "string" },
+        //     },
+        //     teamId: {
+        //       type: "string",
+        //     },
+        //     tag: {
+        //       type: "string",
+        //     },
+        //     parameterData: {
+        //       type: "array",
+        //       items: {
+        //         type: "object",
+        //         required: ["type"],
+        //         properties: {
+        //           type: {
+        //             type: "string", // You can use enum here if needed
+        //             enum: ["DOCUMENT", "IMAGE", "VIDEO", "AUDIO"], // Replace with your actual enum values from WaTemplateSendMediaTypes
+        //           },
+        //         },
+        //       },
+        //     },
+        //     // Optional file upload handled via multipart
+        //     file: {
+        //       type: "array",
+        //     },
+        //   },
+        // },
+        tags: ["WhatsApp/Template"],
+        description:
+          "Send a template to a phone number. Phone number should contain country code",
+        summary: "Send a template to a phone number",
+      },
+    },
+    sendTemplateByNameToPhoneWithFileHandler,
   );
 
   server.post(

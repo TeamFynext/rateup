@@ -29,10 +29,10 @@ import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
 import {
   WaTemplateComponentType,
   WaTemplateStatus,
+  WaTemplateSupportedFormats,
 } from "../../../../../../../types/enums";
 import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
-import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload";
 import {
   SendTemplateToContacts,
   SendTemplateToContactGroups,
@@ -43,6 +43,7 @@ import {
 import { ByContactIdParams } from "../../../../contact/internal-copy/contact/contact.schema";
 import { parsePhoneNumber } from "libphonenumber-js";
 import { sendTemplateToUserCore } from "../../../../../../whatsapp/messageTemplates/wa_templates.controller";
+import { callWhatsappApi } from "../wa_axios";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -390,6 +391,139 @@ export async function sendTemplateByNameToPhoneHandler(
             [type]: {
               link,
               filename,
+            },
+          },
+        ],
+      });
+    }
+    if (body_variables?.length > 0) {
+      header.push({
+        type: WaTemplateComponentType.BODY,
+        parameters: body_variables.map((variable) => {
+          return {
+            type: "text",
+            text: variable,
+          };
+        }),
+      });
+    }
+    const response = await sendTemplateToUserCore(
+      orgId,
+      templateName,
+      phoneNumber,
+      header,
+      teamId,
+      userId,
+      timeDelay,
+      true,
+      tag,
+    );
+    rep
+      .code(200)
+      .send(
+        timeDelay
+          ? { status: response.status, scheduleId: response?.id }
+          : response,
+      );
+  } catch (error) {
+    log.error("Error sending template to contacts \n%o", error);
+    if (error instanceof Error) {
+      rep.code(400).send(error?.message);
+    } else {
+      rep
+        .code(500)
+        .send(error?.message ?? "Error sending template to contacts");
+    }
+  }
+}
+import FormData from "form-data";
+import { getWaSettings } from "../settings/wa_settings.service";
+
+export async function sendTemplateByNameToPhoneWithFileHandler(
+  req: FastifyRequest,
+  rep: FastifyReply,
+) {
+  try {
+    const data = await req.file();
+
+    if (!data.file) {
+      return rep.code(400).send("File is required");
+    }
+
+    const templateName = data.fields.templateName?.["value"];
+    if (!templateName) {
+      return rep.code(400).send("Template name is required");
+    }
+
+    const phoneValue = data.fields.phone?.["value"];
+    if (!phoneValue) {
+      return rep.code(400).send("Phone number is required");
+    }
+
+    const formattedPhoneNumber = "+" + phoneValue;
+    const phone = parsePhoneNumber(formattedPhoneNumber);
+    if (!phone.isValid()) {
+      return rep.code(400).send("Invalid phone number format");
+    }
+
+    const orgId = req.user.orgId;
+    if (!orgId) {
+      return rep.code(400).send("Organization ID is required");
+    }
+
+    const timeDelay = data.fields.timeDelay?.["value"];
+    const teamId = data.fields.teamId?.["value"];
+    const body_variables = data.fields.body_variables?.["value"];
+    const tag = data.fields.tag?.["value"];
+    const type = data.fields.headerType?.["value"];
+    const filename = data.fields.filename?.["value"];
+
+    log.info("🚀 ~ req.body - external: %o", {
+      templateName,
+      timeDelay,
+      teamId,
+      body_variables,
+      tag,
+      phone,
+      type,
+      filename,
+    });
+    const userId = req.user.userId;
+
+    let phoneNumber = phone.number.replace("+", "");
+    let header: any = [];
+    const headerType = type ? type?.toLowerCase() : "";
+    if (["document", "image", "video"].includes(type)) {
+      const waSettings = await getWaSettings(orgId);
+
+      const form = new FormData();
+      form.append("messaging_product", "whatsapp");
+      form.append("file", data.file, {
+        filename: data.filename,
+        contentType: data.mimetype,
+      });
+      const uploadedFile = await callWhatsappApi(
+        `/${waSettings?.phoneId}/media`,
+        "POST",
+        waSettings?.accessToken,
+        form,
+        {},
+        form.getHeaders(),
+      );
+      if (!uploadedFile) {
+        log.error("file not uploaded to /media");
+        return;
+      }
+      header.push({
+        type: WaTemplateComponentType.HEADER,
+        parameters: [
+          {
+            type: headerType,
+            [headerType]: {
+              id: uploadedFile?.data?.id,
+              ...(headerType === "document"
+                ? { filename: filename ? filename : data?.filename }
+                : {}),
             },
           },
         ],
