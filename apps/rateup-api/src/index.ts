@@ -60,6 +60,7 @@ server.register(cors, {
     ),
   ],
   allowedHeaders: ["Content-Type", ...supertokens.getAllCORSHeaders()],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 });
 
