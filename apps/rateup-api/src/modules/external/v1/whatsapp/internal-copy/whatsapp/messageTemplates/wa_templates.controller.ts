@@ -25,7 +25,11 @@ import {
   updateTemplateInDb,
   uploadFileToWaTemplate,
 } from "./wa_templates.service";
-import { generateTemplate, waAllowedMimeTypes } from "./wa_templates.utils";
+import {
+  generateTemplate,
+  templateFileUploadSchema,
+  waAllowedMimeTypes,
+} from "./wa_templates.utils";
 import {
   WaTemplateComponentType,
   WaTemplateStatus,
@@ -459,18 +463,43 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
       file,
     } = req.body;
     const orgId = req.user.orgId;
-    if (!orgId) return rep.code(400).send("Organization ID is required");
+    if (!orgId)
+      return rep.code(400).send({
+        statusCode: 400,
+        code: "FST_ERR_VALIDATION",
+        error: "Bad Request",
+        message: "Organization ID is required",
+      });
     const formattedPhoneNumber = "+" + phoneValue;
     const phone = parsePhoneNumber(formattedPhoneNumber);
     if (!phone.isValid())
-      return rep.code(400).send("Invalid phone number format");
+      return rep.code(400).send({
+        statusCode: 400,
+        code: "FST_ERR_VALIDATION",
+        error: "Bad Request",
+        message: "Invalid phone number format",
+      });
 
     const userId = req.user.userId;
-
     let phoneNumber = phone.number.replace("+", "");
     let header: any = [];
     const type = headerType ? headerType?.toLowerCase() : "";
-    if (["document", "image", "video"].includes(type)) {
+    if (type || file) {
+      const result = templateFileUploadSchema.safeParse({
+        type,
+        mimeType: file?.mimetype,
+        sizeInBytes: file?.size ?? 1 * 1024 * 1024,
+      });
+
+      if (!result.success) {
+        let errorMessage = JSON.parse(result.error.message ?? "{}");
+        return rep.code(400).send({
+          statusCode: 400,
+          code: errorMessage?.[0]?.code || "FST_ERR_VALIDATION",
+          error: "Bad Request",
+          message: errorMessage?.[0]?.message,
+        });
+      }
       const waSettings = await getWaSettings(orgId);
 
       const form = new FormData();
@@ -489,7 +518,12 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
       );
       if (!uploadedFile) {
         log.error("file not uploaded to /media");
-        return rep.code(404).send("file not uploaded to /media");
+        return rep.code(404).send({
+          statusCode: 404,
+          code: "FST_ERR_NOT_FOUND",
+          error: "Not Found",
+          message: "file not uploaded to /media",
+        });
       }
       header.push({
         type: WaTemplateComponentType.HEADER,

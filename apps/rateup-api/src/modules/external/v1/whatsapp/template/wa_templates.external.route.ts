@@ -14,11 +14,11 @@ import fastifyMultipart from "@fastify/multipart";
 
 async function onFile(part) {
   const buff = await part.toBuffer();
-  // const decoded = Buffer.from(buff.toString(), "base64").toString();
   part.value = {
     filename: part.filename,
     encoding: part.encoding,
     mimetype: part.mimetype,
+    size: part?.file?.bytesRead,
     data: buff,
   };
 }

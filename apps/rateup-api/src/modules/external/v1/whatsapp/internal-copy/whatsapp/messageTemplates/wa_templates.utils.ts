@@ -235,3 +235,86 @@ export function getFlowIdFromTemplateComponents(
 
   return flowId;
 }
+
+import { z } from "zod";
+
+const MB = 1024 * 1024;
+
+const allowedMimeTypes = {
+  audio: {
+    mimeTypes: [
+      "audio/aac",
+      "audio/amr",
+      "audio/mpeg",
+      "audio/mp4",
+      "audio/ogg", // OPUS only (not enforced here)
+    ],
+    maxSize: 16 * MB,
+  },
+  document: {
+    mimeTypes: [
+      "text/plain",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "application/pdf",
+    ],
+    maxSize: 100 * MB,
+  },
+  image: {
+    mimeTypes: ["image/jpeg", "image/png"],
+    maxSize: 5 * MB,
+  },
+  sticker: {
+    mimeTypes: ["image/webp"],
+    maxSize: 500 * 1024, // Max for animated stickers; lower for static not distinguished here
+  },
+  video: {
+    mimeTypes: ["video/3gpp", "video/mp4"],
+    maxSize: 16 * MB,
+  },
+};
+
+export const templateFileUploadSchema = z
+  .object({
+    type: z.enum(["audio", "document", "image", "sticker", "video"]),
+    mimeType: z.string(),
+    sizeInBytes: z.number().positive(),
+  })
+  .superRefine((file, ctx) => {
+    const config = allowedMimeTypes[file.type];
+    // Check if mimeType is allowed for any type
+    const allAllowedMimeTypes = Object.values(allowedMimeTypes).flatMap(
+      (c) => c.mimeTypes,
+    );
+    const isMimeTypeKnown = allAllowedMimeTypes.includes(file.mimeType);
+    if (!isMimeTypeKnown) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["mimeType"],
+        message: `Unknown MIME type '${file.mimeType}'`,
+      });
+      return;
+    }
+    // Check if mimeType is allowed for the given type
+    if (!config.mimeTypes.includes(file.mimeType)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["mimeType"],
+        message: `MIME type '${file.mimeType}' is not valid for type '${file.type}'`,
+      });
+    }
+    if (file.sizeInBytes > config.maxSize) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.too_big,
+        maximum: config.maxSize,
+        inclusive: true,
+        type: "number",
+        path: ["sizeInBytes"],
+        message: `File size exceeds maximum for type '${file.type}' (${config.maxSize / MB} MB)`,
+      });
+    }
+  });

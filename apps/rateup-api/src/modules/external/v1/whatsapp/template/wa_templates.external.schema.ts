@@ -94,6 +94,7 @@ const sendTemplateWithFile = z.object({
     filename: z.string(),
     encoding: z.string(),
     mimetype: z.string(),
+    size: z.number(),
     data: z.any(),
   }),
 });
