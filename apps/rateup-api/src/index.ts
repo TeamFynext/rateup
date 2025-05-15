@@ -32,7 +32,7 @@ import { sendSchedulesWaMessages } from "./modules/whatsapp/wa_message_scheduler
 import { deactivateExpiredActions } from "./modules/loyalty/actions/actions.service";
 
 const server = Fastify({
-  logger: logOptions,
+  loggerInstance: log,
   disableRequestLogging: true,
   //TODO this is a temporary fix for the large payload error issue
   bodyLimit: 30971520,
@@ -146,7 +146,7 @@ server.register(fastifyCron, {
 
 server.register(formDataPlugin);
 server.register(plugin);
-server.setErrorHandler(errorHandler());
+server.setErrorHandler(errorHandler() as any);
 async function main() {
   const port: number = parseInt(process.env.PORT || "3001");
   const host: string = process.env.HOST || "0.0.0.0";
@@ -171,6 +171,7 @@ async function main() {
         routePrefix: "/docs",
         uiConfig: {
           defaultModelsExpandDepth: -1,
+          persistAuthorization: true,
         },
       });
       log.trace("Swagger registered. Exposing docs at /docs");

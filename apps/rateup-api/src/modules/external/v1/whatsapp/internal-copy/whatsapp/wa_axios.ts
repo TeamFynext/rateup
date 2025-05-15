@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { log } from "../../../../../../utils/logger";
 
-const WA_API_VERSION = "v19.0";
+const WA_API_VERSION = "v22.0";
 export async function callWhatsappApi(
   url: string,
   method: AxiosRequestConfig["method"],
