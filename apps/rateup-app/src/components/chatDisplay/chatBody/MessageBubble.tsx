@@ -60,7 +60,9 @@ const MessageBubble = ({
           isSent ? "bg-[#d2f8d2]" : "bg-white"
         }`}
       >
-        <Text className="text-blue-500 italic opacity-70 p-1">{senderName}</Text>
+        <Text className="text-blue-500 italic opacity-70 p-1">
+          {senderName}
+        </Text>
         {renderContent()}
         {messageType !== "audio" && (
           <Text className="text-sm text-gray-500 text-right mt-1">
@@ -68,12 +70,14 @@ const MessageBubble = ({
           </Text>
         )}
       </View>
-      <View className="w-8 h-8 rounded-full bg-[#00998733] flex items-center justify-center">
-        <Text className="text-rateUpGreen font-bold text-md">
-          {/* @ts-ignore */}
-          {namePreview(senderName)}
-        </Text>
-      </View>
+      {isSent && (
+        <View className="w-8 h-8 rounded-full bg-[#00998733] flex items-center justify-center">
+          <Text className="text-rateUpGreen font-bold text-md">
+            {/* @ts-ignore */}
+            {namePreview(senderName)}
+          </Text>
+        </View>
+      )}
     </View>
   );
 };

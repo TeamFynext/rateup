@@ -1,9 +1,6 @@
 import { View, Text, FlatList, ActivityIndicator } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
-import {
-  useFilteredContacts,
-  getDefaultFilter,
-} from "@/src/api/inbox/contacts/contacts.query";
+import { useFilteredContacts } from "@/src/api/inbox/contacts/contacts.query";
 import ChatBoxNew from "../chatBox/ChatBoxNew";
 import ChatBoxAssigned from "../chatBox/ChatBoxAssigned";
 import ChatBoxAll from "../chatBox/ChatBoxAll";
@@ -11,7 +8,10 @@ import ChatBoxClosed from "../chatBox/ChatBoxClosed";
 import { useRouter } from "expo-router";
 import dayjs from "dayjs";
 import { useChatFilterStore } from "@/src/utils/store";
-import { parseWaMessage_, returnMessageContentBasedOnParsedMessage } from "@/src/api/inbox/messages/utils";
+import {
+  parseWaMessage_,
+  returnMessageContentBasedOnParsedMessage,
+} from "@/src/api/inbox/messages/utils";
 
 type InboxProps = {
   messageType: string;
@@ -30,7 +30,7 @@ export default function Inbox({
   searchTerm,
   waMessageAssignStatus,
 }: InboxProps) {
-  const filterFromStore = useChatFilterStore((state)=>state.filter);
+  const filterFromStore = useChatFilterStore((state) => state.filter);
   const router = useRouter();
 
   const mergedFilter = {
@@ -52,8 +52,6 @@ export default function Inbox({
   } = useFilteredContacts(encodedFilter);
 
   const contacts = data?.pages.flatMap((page) => page.rows) ?? [];
-
-
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
     let ChatBoxComponent;
 
@@ -67,6 +65,7 @@ export default function Inbox({
         break;
       case "Closed":
         ChatBoxComponent = ChatBoxClosed;
+        break
       default:
         ChatBoxComponent = ChatBoxAll;
         break;
@@ -75,12 +74,17 @@ export default function Inbox({
     if (!ChatBoxComponent) return null;
     const parsedMessage = parseWaMessage_(item.lastMessage.messageBody);
 
-  const messagePreview = returnMessageContentBasedOnParsedMessage(
-    parsedMessage,
-    item.lastMessage.messageBody.exchangeProcess
-  );
-
-
+    const messagePreview = returnMessageContentBasedOnParsedMessage(
+      parsedMessage,
+      item.lastMessage.messageBody.exchangeProcess
+    );
+    const sessionExpiry = dayjs(item.lastReceivedMessageTimeStamp).add(
+      24,
+      "hour"
+    );
+    const now = dayjs();
+    const diffInMinutes = sessionExpiry.diff(now, "minute");
+    const isSessionActive = diffInMinutes > 0;
     return (
       <ChatBoxComponent
         id={item.id}
@@ -97,10 +101,17 @@ export default function Inbox({
               name: item.name,
               phone: item.phone,
               waAssignStatus: item.waMessageAssignStatus,
+              lastReceivedMessageTimeStamp: item.lastReceivedMessageTimeStamp,
+              //@ts-ignore
+              sessionActive:isSessionActive,
             },
           })
         }
-        lastReceivedMessageTimeStamp={dayjs.utc(item.lastMessage?.waCreatedAt).fromNow()}
+        lastMessageTimeStamp={dayjs
+          .utc(item.lastMessage?.waCreatedAt)
+          .fromNow()}
+        lastReceivedMessageTimeStamp={item.lastReceivedMessageTimeStamp}
+        isSessionActive={isSessionActive}
         unReadMessageCount={item.unReadMessageCount}
       />
     );

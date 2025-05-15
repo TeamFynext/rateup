@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { namePreview } from "../../utils/chatbox_utils";
 import { closeChat } from "@/src/api/inbox/contacts/contacts.api";
 import { useQueryClient } from "@tanstack/react-query";
+import dayjs from "dayjs";
 
 const { width: screenWidth } = Dimensions.get("window");
 let userId: string;
@@ -101,7 +102,7 @@ const ConfirmationModal = ({
       onRequestClose={onCancel}
     >
       <View className="flex-1 justify-center items-center bg-black/50">
-        <View className="bg-white p-6 rounded-xl w-[80vw] h-[18vh] flex gap-3">
+        <View className="bg-white p-6 rounded-xl w-[80vw] flex gap-3">
           <Text className="text-xl font-semibold">Close This Chat?</Text>
           <Text className="text-md">This chat will be moved to Closed</Text>
           <View className="flex-row items-center justify-end gap-6 mt-4">
@@ -113,7 +114,7 @@ const ConfirmationModal = ({
             </TouchableOpacity>
 
             <TouchableOpacity
-              className={`py-2 px-6 rounded-full ${
+              className={`py-2 rounded-full w-[30%] ${
                 isLoading ? "bg-gray-400" : "bg-rateUpGreen"
               }`}
               onPress={isLoading ? undefined : onProceed}
@@ -122,7 +123,9 @@ const ConfirmationModal = ({
               {isLoading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text className="text-white font-semibold">Proceed</Text>
+                <Text className="text-white font-semibold text-center">
+                  Close
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -136,10 +139,12 @@ const ChatHeader = ({
   id,
   name,
   phone,
+  lastReceivedMessageTimeStamp,
 }: {
   id: string;
   name: string;
   phone: number;
+  lastReceivedMessageTimeStamp: any;
 }) => {
   const router = useRouter();
   const [optionsVisible, setOptionsVisible] = useState(false);
@@ -147,6 +152,13 @@ const ChatHeader = ({
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
   userId = id;
+  const sessionExpiry = dayjs(lastReceivedMessageTimeStamp).add(24, "hour");
+  const now = dayjs();
+  const diffInMinutes = sessionExpiry.diff(now, "minute");
+  const isSessionActive = diffInMinutes > 0;
+
+  const hoursLeft = Math.floor(diffInMinutes / 60);
+  const minutesLeft = diffInMinutes % 60;
 
   const handleProceedCloseChat = async () => {
     setIsLoading(true);
@@ -178,6 +190,19 @@ const ChatHeader = ({
         <View>
           <Text className="text-xl text-[#343A40] font-medium">{name}</Text>
           <Text className="text-[#7A8289]">{phone}</Text>
+          {isSessionActive ? (
+            <View className="mt-1 bg-rateUpGreen20 w-fit px-2 py-0.5 rounded-md">
+              <Text className="text-rateUp text-sm text-center">
+                Session expires in {hoursLeft}h {minutesLeft}m
+              </Text>
+            </View>
+          ) : (
+            <View className="mt-1 bg-[#99000014] w-fit px-2 py-0.5 rounded-md">
+              <Text className="text-[#990000] text-sm text-center">
+                Session expired
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 

@@ -1,65 +1,65 @@
 export type ContactsWithLastMessageResponse = {
-    rows: ContactsWithLastMessage[];
-    nextOffset: number | null;
-  };
-  
-  export type ContactsWithLastMessage = {
-    id: string;
-    name: string;
-    phone: string;
-    unReadMessageCount:number;
-    lastReceivedMessageTimeStamp:any;
-    lastMessage: any;
-    waMessageAssignStatus: WaMessageAssignStatus;
-    assignedUsers:any
-  };
-  
-  export enum WaMessageAssignStatus {
-    NEW = "New",
-    ASSIGNED = "Assigned",
-    CLOSED = "Closed",
-    UNASSIGNED = "UnAssigned"
-  }
+  rows: ContactsWithLastMessage[];
+  nextOffset: number | null;
+};
 
-  export type MultiGV = {
-    group: string;
-    value: string;
-  };
-  export type ChatFilter = {
-    messageType: "all" | "replied" | "unread" | "usermessages";
-    strictFilter: boolean;
-    searchTerm?: string;
-    contactGroups: Array<MultiGV>;
-    campaigns: Array<MultiGV>;
-    tags: Array<MultiGV>;
-    waMessageAssignStatus?: string;
-    blockedUsers: boolean;
-    newStatuses: string[];
-  };
-  
-  export interface ICreateContact {
-    name: string;
-    phone?: string;
-    email?: string;
-    teamId?: string;
-    source?: string;
-    tags?: any;
-    external_id?: string;
-  }
+export type ContactsWithLastMessage = {
+  id: string;
+  name: string;
+  phone: string;
+  unReadMessageCount: number;
+  lastReceivedMessageTimeStamp: any;
+  lastMessage: any;
+  lastMessageTimeStamp: any;
+  waMessageAssignStatus: WaMessageAssignStatus;
+  assignedUsers: any;
+  isSessionActive: boolean;
+};
 
-
-export interface filteredContactCount {
-  all: number,
-  assigned: number,
-  assignedToMe: number,
-  closed: number,
-  new: number,
-  sent: number,
-  unassigned: number,
+export enum WaMessageAssignStatus {
+  NEW = "New",
+  ASSIGNED = "Assigned",
+  CLOSED = "Closed",
+  UNASSIGNED = "UnAssigned",
 }
 
-export type HomeInterface = "inbox" | "whatsapp" | ""
+export type MultiGV = {
+  group: string;
+  value: string;
+};
+export type ChatFilter = {
+  messageType: "all" | "replied" | "unread" | "usermessages";
+  strictFilter: boolean;
+  searchTerm?: string;
+  contactGroups: Array<MultiGV>;
+  campaigns: Array<MultiGV>;
+  tags: Array<MultiGV>;
+  waMessageAssignStatus?: string;
+  blockedUsers: boolean;
+  newStatuses: string[];
+};
 
+export interface ICreateContact {
+  name: string;
+  phone?: string;
+  email?: string;
+  teamId?: string;
+  source?: string;
+  tags?: any;
+  external_id?: string;
+}
+
+export interface filteredContactCount {
+  all: number;
+  assigned: number;
+  assignedToMe: number;
+  closed: number;
+  new: number;
+  sent: number;
+  unassigned: number;
+}
+
+export type HomeInterface = "inbox" | "whatsapp" | "";
 
 export enum WaMessageTypes {
   text = "text",
@@ -86,7 +86,7 @@ export type WaReceiveMessageBody = {
         name: string;
       };
       wa_id: string;
-    },
+    }
   ];
   messages: [
     {
@@ -97,7 +97,7 @@ export type WaReceiveMessageBody = {
       text: {
         body: string;
       };
-    
+
       image: {
         id: string;
         mime_type: string;
@@ -131,7 +131,7 @@ export type WaReceiveMessageBody = {
         emoji: string;
         message_id: string;
       };
-    },
+    }
   ];
   statuses: [
     {
@@ -142,7 +142,7 @@ export type WaReceiveMessageBody = {
       conversation: {
         id: string;
       };
-    },
+    }
   ];
 };
 export type WaSendMessageBody = {

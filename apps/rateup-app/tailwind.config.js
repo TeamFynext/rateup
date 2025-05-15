@@ -13,6 +13,7 @@ module.exports = {
           rateUpLightGreen:"#EBF7F5",
           rateUpTextGray:"#7A8289"
         },
+        
     },
   },
   plugins: [],

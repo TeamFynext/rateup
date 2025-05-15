@@ -11,6 +11,10 @@ type SelectedContactState = {
   selectedContactId: string | null;
   setSelectedContactId: (contactId: string) => void;
 };
+type SessionState = {
+  isSessionActive: boolean;
+  setIsSessionActive: (session: boolean) => void;
+};
 
 export const useChatAssignStatusStore = create<ChatState>((set: any) => ({
   waAssignStatus: "",
@@ -21,6 +25,12 @@ export const useContactIdStore = create<SelectedContactState>((set: any) => ({
   selectedContactId: null,
   setSelectedContactId: (contactId: string) =>
     set({ selectedContactId: contactId }),
+}));
+
+export const useSessionActiveStore = create<SessionState>((set:any) => ({
+  isSessionActive: true,
+  setIsSessionActive: (session: boolean) =>
+    set({ isSessionActive: session }),
 }));
 
 type ChatFilterStore = {

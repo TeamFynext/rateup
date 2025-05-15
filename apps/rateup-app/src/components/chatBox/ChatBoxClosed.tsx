@@ -9,7 +9,7 @@ const ChatBoxClosed: React.FC<
   name,
   phone,
   lastMessage,
-  lastReceivedMessageTimeStamp,
+  lastMessageTimeStamp,
   unReadMessageCount,
   onPress,
 }) => {
@@ -46,7 +46,7 @@ const ChatBoxClosed: React.FC<
           {/* Time and Unread */}
           <View className="flex items-center justify-center gap-1">
             <Text className="text-xs text-[#7A8289] ml-2">
-              {lastReceivedMessageTimeStamp}
+              {lastMessageTimeStamp}
             </Text>
             {unReadMessageCount > 0 && (
               <View className="bg-[#69F0AE] rounded-full h-6 w-6 flex items-center justify-center">

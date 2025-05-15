@@ -116,7 +116,7 @@ const ChatFooter = ({ id }: { id: string }) => {
         </View>
       )}
 
-      {currentUserAssignment && <MessageSendPanel />}
+      {currentUserAssignment && <MessageSendPanel/>}
       <AssignedUsersModal />
     </>
   );

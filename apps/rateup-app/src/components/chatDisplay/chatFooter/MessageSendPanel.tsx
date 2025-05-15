@@ -14,6 +14,7 @@ import {
   useContactIdStore,
   useMediaStore,
   useMessageStore,
+  useSessionActiveStore,
 } from "@/src/utils/store";
 import { useSendNewWaMessage } from "@/src/api/inbox/messages/message.query";
 import { uploadFile } from "@/src/utils/fileUpload";
@@ -28,6 +29,7 @@ const MessageSendPanel = () => {
   const voiceReset = useVoiceStore((s) => s.reset);
   //@ts-ignore
   const mutation = useSendNewWaMessage(selectedContactId);
+  const {isSessionActive} = useSessionActiveStore();
 
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const [message, setMessage] = useState("");
@@ -154,6 +156,7 @@ const MessageSendPanel = () => {
 
   return (
     <View className="bg-white pt-3 px-3 pb-5">
+      <View className={isSessionActive === true ? "opacity-100" : "opacity-50"} pointerEvents={isSessionActive === true ? "auto" : "none" }>
       {media.length > 0 && (
         <View className="flex-row flex-wrap gap-2 mb-3 px-1">
           {media.map((item) => (
@@ -270,6 +273,7 @@ const MessageSendPanel = () => {
             <SendIcon />
           )}
         </TouchableOpacity>
+      </View>
       </View>
     </View>
   );
