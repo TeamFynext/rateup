@@ -15,10 +15,19 @@ type SessionState = {
   isSessionActive: boolean;
   setIsSessionActive: (session: boolean) => void;
 };
+type SelectedTabState = {
+  selectedTab: string;
+  setSelectedTab: (tab:string) => void;
+};
 
 export const useChatAssignStatusStore = create<ChatState>((set: any) => ({
   waAssignStatus: "",
   setWaAssignStatus: (status: string) => set({ waAssignStatus: status }),
+}));
+
+export const useSelectedTabStore = create<SelectedTabState>((set: any) => ({
+  selectedTab: "New",
+  setSelectedTab: (tab: string) => set({ selectedTab: tab }),
 }));
 
 export const useContactIdStore = create<SelectedContactState>((set: any) => ({

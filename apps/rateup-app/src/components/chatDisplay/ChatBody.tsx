@@ -91,6 +91,7 @@ const ChatBody = ({ id }: { id: string }) => {
           )}
           <MessageBubble
             messageContent={parsed.messageContent}
+            interactive={parsed.interactive} //if it is interactive
             timestamp={time}
             isSent={item.messageBody.exchangeProcess === "send"}
             senderName={item.sender?.name || ""}

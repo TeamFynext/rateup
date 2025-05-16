@@ -97,7 +97,21 @@ export type WaReceiveMessageBody = {
       text: {
         body: string;
       };
-
+      interactive?: {
+        type: "list_reply" | "button_reply" | "nfm_reply";
+        list_reply: {
+          id: string;
+          title: string;
+        };
+        button_reply: {
+          id: string;
+          title: string;
+        };
+        nfm_reply: {
+          response_json: string;
+          name: string;
+        };
+      };
       image: {
         id: string;
         mime_type: string;
@@ -164,6 +178,31 @@ export type WaSendMessageBody = {
     preview_url?: boolean;
     body: string;
   };
+   interactive?: {
+    type:
+      | "button"
+      | "list"
+      | "cta_url"
+      | "flow"
+      | "catalog_message"
+      | "product"
+      | "product_list";
+    action?: WaInteractiveMessageAction;
+    body?: {
+      text: string; // max 1024 chars
+    };
+    footer?: {
+      text: string; // max 60 chars
+    };
+    header?: {
+      type: "text" | "image" | "video" | "document";
+      text?: string; // max 60 chars
+      image?: {
+        link: string;
+      };
+      // add image, video, document if needed in future
+    };
+  };
   image?: {
     link: string;
     caption?: string;
@@ -185,3 +224,50 @@ export type WaSendMessageBody = {
     caption?: string;
   };
 };
+
+
+type WaInteractiveMessageAction = {
+  name?: string;
+  button?: string; // max 20 chars
+  sections?: Array<WaSection>;
+  buttons?: Array<WaButton>;
+  parameters?: {
+    display_text?: string;
+    url?: string;
+    flow_message_version?: number;
+    flow_token?: string;
+    flow_id?: string;
+    flow_cta?: string; // text to be displayed on the button. max 20 chars
+    flow_action_payload?: {
+      screen: string; // id of the screen
+      data?: any; // data to be sent to the screen
+    };
+    mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
+  };
+};
+
+
+type WaButton = {
+  type: "reply";
+  reply: {
+    title: string; // max 20 chars
+    id: string;
+  };
+};
+
+type WaSection = {
+  title?: string; // max 24 chars
+  rows: Array<{
+    title: string; // max 24 chars
+    description?: string; // max 72 chars
+    id: string;
+  }>;
+};
+
+export enum WaFlowStatus {
+  PUBLISHED = "PUBLISHED",
+  DRAFT = "DRAFT",
+  DEPRECATED = "DEPRECATED",
+  BLOCKED = "BLOCKED",
+  THROTTLED = "THROTTLED",
+}

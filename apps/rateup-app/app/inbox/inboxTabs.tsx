@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ import {
 
 import { useContactCounts } from "@/src/api/inbox/contacts/contacts.query";
 import InboxButtons from "@/src/components/inbox/InboxButtons";
+import { useSelectedTabStore } from "@/src/utils/store";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -69,6 +70,12 @@ function createTabScreen(
 ) {
   return function Screen() {
     const isFocused = useIsFocused();
+      const setSelectedTab = useSelectedTabStore((state) => state.setSelectedTab);
+      useEffect(() => {
+      if (isFocused) {
+        setSelectedTab(waMessageAssignStatus ?? "All")
+      }
+    }, [isFocused]);
     if (!isFocused) return null;
 
     return (
@@ -104,8 +111,8 @@ export default function InboxLayout() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View className="bg-rateUpGreen20 flex-row justify-center items-center p-4">
-        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-        <InboxButtons/>
+          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+          <InboxButtons />
         </View>
 
         <Tab.Navigator

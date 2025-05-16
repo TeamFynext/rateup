@@ -65,7 +65,7 @@ export default function Inbox({
         break;
       case "Closed":
         ChatBoxComponent = ChatBoxClosed;
-        break
+        break;
       default:
         ChatBoxComponent = ChatBoxAll;
         break;
@@ -103,7 +103,7 @@ export default function Inbox({
               waAssignStatus: item.waMessageAssignStatus,
               lastReceivedMessageTimeStamp: item.lastReceivedMessageTimeStamp,
               //@ts-ignore
-              sessionActive:isSessionActive,
+              sessionActive: isSessionActive,
             },
           })
         }

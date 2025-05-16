@@ -4,9 +4,8 @@ import FiltersScreen from "@/src/components/inbox/Filters";
 
 const filters = () => {
   return (
-    <View>
+  
       <FiltersScreen />
-    </View>
   );
 };
 

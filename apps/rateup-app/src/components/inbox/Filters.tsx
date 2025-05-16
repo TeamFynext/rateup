@@ -5,39 +5,24 @@ import {
   TextInput,
   TouchableOpacity,
   Pressable,
-  Keyboard,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { BackIcon } from "@/src/constants/imageExports";
 import { useRouter } from "expo-router";
+import { useSelectedTabStore } from "@/src/utils/store";
 
 const FiltersScreen = () => {
+  const { selectedTab } = useSelectedTabStore();
   const router = useRouter();
-  const [keyboardStatus, setKeyboardStatus] = useState<boolean>(false);
   const [result, setResult] = useState<number>(123);
+  const [assignmentStatuses, setAssignmentStatuses] = useState<
+    ("Assigned" | "UnAssigned" | "AssignedToMe")[]
+  >([]);
 
-  useEffect(() => {
-    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
-      setKeyboardStatus(true);
-    });
-    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardStatus(false);
-    });
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
+  const isNew = selectedTab == "New";
   return (
     <KeyboardAvoidingView className="bg-white h-screen">
-      <View
-        className={
-          keyboardStatus
-            ? "flex justify-between p-4 h-[50vh]"
-            : "flex justify-between p-4 h-screen"
-        }
-      >
+      <View className={"flex justify-between p-4 h-screen"}>
         <View>
           <View className="flex-row justify-between p-3">
             <View className="flex-row items-center gap-2">
@@ -57,6 +42,44 @@ const FiltersScreen = () => {
             placeholderTextColor="#E2E5ED"
             className="border border-[#E2E5ED] px-3 py-3 rounded-full"
           />
+          {isNew && (
+            <View className="mt-4">
+              <Text className="mb-2 font-semibold text-md">Assign Status</Text>
+              <View className="flex-row gap-3">
+                {["Assigned", "UnAssigned", "Assigned To Me"].map((status) => {
+                  const isSelected = assignmentStatuses.includes(
+                    status as "Assigned" | "UnAssigned" | "AssignedToMe"
+                  );
+
+                  return (
+                    <Pressable
+                      key={status}
+                      onPress={() => {
+                        setAssignmentStatuses((prev) =>
+                          isSelected
+                            ? prev.filter((s) => s !== status)
+                            : [...prev, status as "Assigned" | "UnAssigned" | "AssignedToMe"]
+                        );
+                      }}
+                      className={`px-4 py-2 rounded-full border ${
+                        isSelected
+                          ? "bg-rateUpGreen border-rateUpGreen"
+                          : "border-[#E2E5ED]"
+                      }`}
+                    >
+                      <Text
+                        className={`${
+                          isSelected ? "text-white" : "text-black"
+                        } font-medium`}
+                      >
+                        {status}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
         </View>
 
         <Pressable className="bg-rateUpGreen rounded-xl py-4">

@@ -1,15 +1,17 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import React, { memo, useCallback } from "react";
 import WaInboxText, {
   WaInboxAudio,
   WaInboxDocument,
   WaInboxImage,
+  WaInboxInteractive,
   WaInboxVideo,
 } from "./messageBubbleTypes";
 import { namePreview } from "@/src/utils/chatbox_utils";
 
 type MessageBubbleProps = {
   messageContent: any;
+  interactive?:any
   timestamp: string;
   isSent: boolean;
   messageType?: string;
@@ -22,6 +24,7 @@ const MessageBubble = ({
   isSent,
   messageType,
   senderName,
+  interactive
 }: MessageBubbleProps) => {
   // Memoize renderContent to avoid recreating on each render
   const renderContent = useCallback(() => {
@@ -42,8 +45,13 @@ const MessageBubble = ({
         return <Text className="text-xl">{messageContent}</Text>;
       case "button":
         return <Text>buttons</Text>;
-      case "interactive":
-        return <Text className="text-black">interactive</Text>;
+       case "interactive":
+      return (
+        <WaInboxInteractive
+          interactiveBody={interactive}
+          messageContent={messageContent}
+        />
+      );
       default:
         return <Text className="text-black text-sm">{messageContent}</Text>;
     }

@@ -1,7 +1,13 @@
 import { useGetMediaFile } from "@/src/api/inbox/messages/message.query";
 import { getFileUrlFromKey } from "@/src/utils/fileUpload";
 import requestStoragePermission from "@/src/utils/permission";
-import { Download, Headphones, Pause, Play } from "lucide-react-native";
+import {
+  Download,
+  Headphones,
+  LucideCheckCircle2,
+  Pause,
+  Play,
+} from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,6 +17,7 @@ import {
   View,
   Modal,
   Pressable,
+  Button,
 } from "react-native";
 import RNFS from "react-native-fs";
 import Video from "react-native-video";
@@ -18,6 +25,7 @@ import { fromByteArray } from "base64-js";
 import { useToast } from "react-native-toast-notifications";
 import { Linking } from "react-native";
 import FileViewer from "react-native-file-viewer";
+import { WaSendMessageBody } from "@/src/api/inbox/types";
 
 export default function WaInboxText({
   messageContent,
@@ -510,4 +518,70 @@ export function WaInboxDocument({
       ) : null}
     </View>
   );
+}
+
+interface Props {
+  interactiveBody: WaSendMessageBody["interactive"];
+  messageContent: string;
+}
+
+interface Props1 {
+  interactiveBody: WaSendMessageBody["interactive"];
+}
+
+export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
+  return (
+    <View className="p-3 rounded-xl bg-muted/50 space-y-2">
+      {messageContent ? (
+        <View className="flex-row items-center space-x-1">
+          <LucideCheckCircle2 size={16} color="#4ade80" />
+          <Text className="text-sm text-muted-foreground">
+            {`${messageContent} responded`}
+          </Text>
+        </View>
+      ) : null}
+
+      {interactiveBody?.header && (
+        <WaInboxInteractiveHeader interactiveBody={interactiveBody} />
+      )}
+
+      {interactiveBody?.body?.text && (
+        <Text className="text-base text-foreground">
+          {interactiveBody.body.text}
+        </Text>
+      )}
+
+      {interactiveBody?.footer?.text && (
+        <Text className="text-xs text-muted-foreground">
+          {interactiveBody.footer.text}
+        </Text>
+      )}
+
+      {interactiveBody?.action && (
+        <TouchableOpacity className="bg-rateUpGreen rounded-md">
+          <Text className="p-2">{interactiveBody.action?.parameters?.flow_cta}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+function WaInboxInteractiveHeader({ interactiveBody }: Props1) {
+  const header = interactiveBody?.header;
+  if (!header) return null;
+
+  switch (header.type) {
+    case "text":
+      return <Text className="text-base font-semibold">{header.text}</Text>;
+    case "image":
+      return (
+        <Image
+          source={{ uri: header.image?.link }}
+          style={{ height: 200, width: "100%", borderRadius: 12 }}
+          resizeMode="cover"
+        />
+      );
+    default:
+      return null;
+  }
 }

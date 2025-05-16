@@ -19,7 +19,6 @@ const ChatDisplay = () => {
   const setWaAssignStatus = useChatAssignStatusStore(
     (state) => state.setWaAssignStatus
   );
-  console.log(sessionActive);
 
   const setSelectedContactId = useContactIdStore(
     (contactId) => contactId.setSelectedContactId

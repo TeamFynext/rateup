@@ -1,13 +1,18 @@
+import { WaSendMessageBody } from "../types";
+
 export type ParsedWaMessageReturn = {
   timeStamp: string;
   messageType: string;
   messageContent: string;
+    interactive?: WaSendMessageBody["interactive"];
 };
 
 export function parseWaMessage_(messageBody: any): ParsedWaMessageReturn {
   let timeStamp: string = new Date().toLocaleTimeString();
   let messageType: string = "text";
   let messageContent: string = "No messages yet";
+  let interactive: WaSendMessageBody["interactive"] =
+    {} as WaSendMessageBody["interactive"];
   if (messageBody?.exchangeProcess === "send") {
     const { send } = messageBody;
     messageType = send.type;
@@ -27,6 +32,10 @@ export function parseWaMessage_(messageBody: any): ParsedWaMessageReturn {
         break;
       case "audio":
         messageContent = `${send?.audio?.link}`;
+        break;
+      case "interactive":
+        messageContent = "";
+        interactive = send.interactive;
         break;
       case "reaction":
         messageContent = send?.reaction.emoji;
@@ -92,7 +101,7 @@ export function parseWaMessage_(messageBody: any): ParsedWaMessageReturn {
         messageContent = "Not Supported Yet";
     }
   }
-  return { timeStamp, messageType, messageContent };
+  return { timeStamp, messageType, messageContent, interactive };
 }
 
 export function returnMessageContentBasedOnParsedMessage(
