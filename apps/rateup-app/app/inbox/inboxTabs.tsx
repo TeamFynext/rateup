@@ -22,7 +22,7 @@ import {
 
 import { useContactCounts } from "@/src/api/inbox/contacts/contacts.query";
 import InboxButtons from "@/src/components/inbox/InboxButtons";
-import { useSelectedTabStore } from "@/src/utils/store";
+import { useChatFilterStore, useSelectedTabStore } from "@/src/utils/store";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -104,6 +104,13 @@ export default function InboxLayout() {
     },
   } = useContactCounts();
 
+  const filterFromStore = useChatFilterStore((state) => state.filter);
+const activeFilterCount =
+  (filterFromStore.campaigns.length > 0 ? 1 : 0) +
+  (filterFromStore.contactGroups.length > 0 ? 1 : 0) +
+  (filterFromStore.tags.length > 0 ? 1 : 0) +
+  (filterFromStore.newStatuses.length > 0 ? 1 : 0);
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
@@ -112,7 +119,7 @@ export default function InboxLayout() {
       >
         <View className="bg-rateUpGreen20 flex-row justify-center items-center p-4">
           <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-          <InboxButtons />
+          <InboxButtons activeFilterCount={activeFilterCount} />
         </View>
 
         <Tab.Navigator

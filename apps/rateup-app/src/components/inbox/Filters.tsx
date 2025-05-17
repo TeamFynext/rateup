@@ -9,10 +9,11 @@ import {
 import React, { useState } from "react";
 import { BackIcon } from "@/src/constants/imageExports";
 import { useRouter } from "expo-router";
-import { useSelectedTabStore } from "@/src/utils/store";
+import { useChatFilterStore, useSelectedTabStore } from "@/src/utils/store";
 
 const FiltersScreen = () => {
   const { selectedTab } = useSelectedTabStore();
+  const { filter, setFilter } = useChatFilterStore();
   const router = useRouter();
   const [result, setResult] = useState<number>(123);
   const [assignmentStatuses, setAssignmentStatuses] = useState<
@@ -82,11 +83,37 @@ const FiltersScreen = () => {
           )}
         </View>
 
-        <Pressable className="bg-rateUpGreen rounded-xl py-4">
-          <Text className="text-white text-center font-bold text-lg">
-            Show {result} results
-          </Text>
-        </Pressable>
+       <Pressable
+  className="bg-rateUpGreen rounded-xl py-4"
+  onPress={() => {
+    // Convert to internal filter values
+    const newStatuses = assignmentStatuses.map((status) => {
+      switch (status) {
+        case "Assigned":
+          return "ASSIGNED";
+        case "UnAssigned":
+          return "UNASSIGNED";
+        case "AssignedToMe":
+          return "ASSIGNEDTOME"; // Update if backend expects something else
+        default:
+          return null;
+      }
+    }).filter(Boolean);
+
+    setFilter({
+      ...filter,
+      //@ts-ignore
+      newStatuses,
+    });
+
+    router.back(); // Optional: go back after applying filter
+  }}
+>
+  <Text className="text-white text-center font-bold text-lg">
+    Show {result} results
+  </Text>
+</Pressable>
+
       </View>
     </KeyboardAvoidingView>
   );
