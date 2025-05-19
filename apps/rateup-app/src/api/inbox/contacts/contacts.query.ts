@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import {
   assignedContact,
+  getChatFilterData,
   getContactById,
   getFilteredContacts,
   markMessageAsRead,
@@ -53,3 +54,10 @@ export const useMarkMessageAsRead = () =>
   useMutation({
     mutationFn: (contactId: string) => markMessageAsRead(contactId),
   });
+
+export const useChatFilterData = () => {
+  return useQuery({
+    queryKey: ["contacts", "filter-data"],
+    queryFn: getChatFilterData,
+  });
+};

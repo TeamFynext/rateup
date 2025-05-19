@@ -47,27 +47,21 @@ type ChatFilterStore = {
   setFilter: (value: ChatFilter) => void;
 };
 
-export const useChatFilterStore = create<ChatFilterStore>()(
-  persist(
-    (set, get) => ({
-      filter: {
-        messageType: "usermessages",
-        strictFilter: false,
-        searchTerm: "",
-        contactGroups: [],
-        campaigns: [],
-        tags: [],
-        waMessageAssignStatus: "New",
-        blockedUsers: false,
-        newStatuses: ["ASSIGNED", "UNASSIGNED"],
-      },
-      setFilter: (value) => set({ filter: value }),
-    }),
-    {
-      name: "chat-filter-storage", // name of the item in the storage (must be unique)
-    }
-  )
-);
+export const useChatFilterStore = create<ChatFilterStore>((set) => ({
+  filter: {
+    messageType: "usermessages",
+    strictFilter: false,
+    searchTerm: "",
+    contactGroups: [],
+    campaigns: [],
+    tags: [],
+    waMessageAssignStatus: "New",
+    blockedUsers: false,
+    newStatuses: [],
+  },
+  setFilter: (value) => set({ filter: value }),
+}));
+
 
 type WaMedia = {
   type: string;

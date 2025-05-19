@@ -64,3 +64,7 @@ export const getFilteredContacts = async (filterData: string, page: number) => {
     throw new Error("Failed to load contacts.");
   }
 };
+
+export async function getChatFilterData() {
+  return (await axios.get(`/api/wa/inbox/message/filterdata`)).data;
+}
