@@ -155,3 +155,4 @@ export const useVoiceRecordStore = create<VoiceRecordState>((set) => ({
   setAudioUrl: (url) => set({ audioUrl: url }),
   setIsRecording: (isRecording) => set({ isRecording }),
 }));
+

@@ -21,7 +21,6 @@ const FiltersScreen = () => {
 
   const isNew = selectedTab === "New";
   const { data, isLoading, error } = useChatFilterData();
-  0;
 
   useEffect(() => {
     if (filter?.newStatuses?.length > 0) {

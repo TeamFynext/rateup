@@ -57,12 +57,12 @@ const ChatFooter = ({ id }: { id: string }) => {
             contentContainerStyle={{
               display: "flex",
               justifyContent: "center",
-              gap: 2,
+              gap: 5,
             }}
             data={assignedData}
             keyExtractor={(item) => item.assignedUserId}
             renderItem={({ item }) => (
-              <View className="flex-row gap-1 justify-start items-center px-6">
+              <View className="flex-row gap-1 justify-start items-center px-6 bg-rateUpGreen20 rounded-lg">
                 <UserCheck color="#7A8289" width={20} height={20} />
                 <Text className="text-lg text-gray-500">{item.assignedUser?.name}</Text>
               </View>
