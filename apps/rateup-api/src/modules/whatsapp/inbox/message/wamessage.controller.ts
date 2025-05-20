@@ -56,14 +56,16 @@ import {
 } from "../../../contact/contact.service";
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
 import xlsx from "node-xlsx";
-import fs from "fs";
 import { WaMessageAssignStatus } from "../../../../types/enums";
+import { PlatformType } from "@prisma/client";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
   messageBody: any,
   phone: string,
   orgId: string,
+  sourcePlatform: PlatformType,
+  sourceIdentifier: string,
   userName?: string,
   messageId?: string,
   userId?: string,
@@ -117,6 +119,8 @@ export async function handleWaMessages(
       waMessageBody,
       contact.id,
       waTimeStamp,
+      sourcePlatform,
+      sourceIdentifier,
       parameterData,
       messageId,
       userId,
