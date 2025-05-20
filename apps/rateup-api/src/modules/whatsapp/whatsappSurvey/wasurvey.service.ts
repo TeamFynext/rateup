@@ -1,4 +1,4 @@
-import { ResponsePlatform } from "@prisma/client";
+import { PlatformType, ResponsePlatform } from "@prisma/client";
 import {
   CampaignParticipantStatus,
   LogicAction,
@@ -96,6 +96,8 @@ export async function sendMessage(
       messageData,
       to,
       orgId,
+      PlatformType.WHATSAPP,
+      waSettings.phone,
       userName,
       res?.data?.messages?.[0]?.id,
       userId,
