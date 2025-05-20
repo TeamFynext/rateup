@@ -52,7 +52,7 @@ const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number })
         <View className="relative">
           <FilterIcon />
           {activeFilterCount > 0 && (
-            <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-[16px] h-[16px] px-1 items-center justify-center">
+            <View className="absolute -top-1 -right-1 bg-rateUpGreen rounded-full min-w-[16px] h-[16px] px-1 items-center justify-center">
               <Text className="text-white text-[10px] font-bold">
                 {activeFilterCount}
               </Text>

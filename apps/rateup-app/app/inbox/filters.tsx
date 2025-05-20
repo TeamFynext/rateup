@@ -1,10 +1,8 @@
-import { View } from "react-native";
 import React from "react";
 import FiltersScreen from "@/src/components/inbox/Filters";
 
 const filters = () => {
   return (
-  
       <FiltersScreen />
   );
 };
