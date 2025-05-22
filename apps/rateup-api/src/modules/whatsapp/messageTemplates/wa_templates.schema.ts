@@ -34,6 +34,7 @@ const waTemplateInput = {
         flow_id: z.string().optional(),
         flow_action: z.string().optional(),
         navigate_screen: z.string().optional(),
+        thumbnail_product_retailer_id: z.string().optional(),
       }),
     )
     .optional(),

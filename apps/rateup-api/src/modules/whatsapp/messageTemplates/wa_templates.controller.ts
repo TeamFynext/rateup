@@ -65,6 +65,7 @@ import { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.uti
 import { wait } from "../whatsappSurvey/wasurvey.controller";
 import { createWaMessageSchedule } from "../wa_message_scheduler";
 import { parsePhoneforWa } from "../../loyalty/util";
+import { WHATSAPP_BUTTON_TYPE } from "../../../types/whatsapp.types";
 
 export async function getTemplatesHandler(
   request: FastifyRequest<{
@@ -555,6 +556,25 @@ export async function sendTemplateToUserCore(
                   coupon_code: button.example[0],
                 },
               ],
+            });
+          } else if (button.type === WHATSAPP_BUTTON_TYPE.CATALOG) {
+            components.push({
+              type: "button",
+              sub_type: button.type,
+              index: 0,
+              ...(button.thumbnail_product_retailer_id
+                ? {
+                    parameters: [
+                      {
+                        type: "action",
+                        action: {
+                          thumbnail_product_retailer_id:
+                            button.thumbnail_product_retailer_id,
+                        },
+                      },
+                    ],
+                  }
+                : {}),
             });
           }
         }

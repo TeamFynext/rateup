@@ -203,6 +203,7 @@ model WhatsappSettings {
   type       String // enums.ts: WaConfigType
   /// [PWaEncryptionKeys]
   encryption Json? // for flow {publicKey: string, privateKey: string}
+  WaCatalog      WhatsaAppCatalog?
 }
 
 model WaAccountSettings {
@@ -1485,4 +1486,12 @@ model LoyaltyApiSettings {
 
   @@unique([orgId, priority])
   @@index([orgId, feature])
+}
+model WhatsaAppCatalog {
+  catalogId  String 
+  orgId     String  @db.Uuid @unique
+  whatsappSettings    WhatsappSettings     @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
+  vertical   String
+  ///[PWaCatalogProducts]
+  products   Json[]
 }

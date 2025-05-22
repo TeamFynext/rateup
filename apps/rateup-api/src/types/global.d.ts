@@ -29,6 +29,7 @@ import {
 } from "./whatsapp.types";
 import { RouteShorthandOptionsWithHandler } from "fastify";
 import { Session } from "@shopify/shopify-api";
+import z from "zod";
 
 type GoogleReview = {
   minRating?: number;
@@ -507,6 +508,93 @@ declare global {
     message: any;
     forwardMessage?: any;
   };
+  type CatalogImage = {
+    url: string;
+    tag: string[];
+  };
+
+  type CatalogProductCore = {
+    type: "PRODUCT_ITEM";
+    id: string;
+    retailer_id: string;
+    title: string;
+    description: string;
+    condition?:
+      | "new"
+      | "refurbished"
+      | "used"
+      | "used_like_new"
+      | "used_good"
+      | "used_fair"
+      | "cpo"
+      | "open_box_new";
+    image?: CatalogImage[];
+    internal_label?: string;
+    link?: string;
+    price: string;
+    video?: CatalogImage[];
+    availability:
+      | "in stock"
+      | "out of stock"
+      | "available for order"
+      | "discontinued";
+    brand: string;
+    age_group?: "newborn" | "infant" | "toddler" | "kids" | "adult";
+    color?: string;
+    gender?: "male" | "female" | "unisex";
+    pattern?: string;
+    user_rating?: number;
+    rating_count?: number;
+    size?: string;
+    image_link?: string;
+    sale_price_effective_date?: string;
+    sale_price: string;
+    manufacturer_part_number?: string;
+    item_group_id?: string;
+    google_product_category?: string;
+    disabled_capabilities?: string[];
+    additional_image_link?: string[];
+  };
+
+  type CatalogHotel = {
+    type: "HOTEL";
+    name: string;
+    latitude: string;
+    longitude: string;
+    url: string;
+    address: Record<string, string>;
+    base_price: string;
+    sale_price: string;
+    tags: string[]; // max 5 strings, each max 100 chars
+    numbertags: number[]; // max 5 nonnegative ints
+    description: string;
+    hotel_id: string;
+    image: CatalogImage[];
+  };
+
+  type CatalogHotelRoom = {
+    type: "HOTEL_ROOM";
+    name: string;
+    url: string;
+    base_price: string;
+    description: string;
+    hotel_retailer_id: string;
+    hotel_room_id: string;
+    image: CatalogImage[];
+  };
+
+  type WhatsappCatalog = {
+    catalogId: string;
+    orgId: string;
+    products: PWaCatalogProducts;
+    vertical: string;
+  };
+
+  type WaCatalogProductItem =
+    | CatalogProductCore
+    | CatalogHotel
+    | CatalogHotelRoom;
+
   // PRISMA JSON TYPES
   namespace PrismaJson {
     type PWaFlowJson = WaFlowJson;
@@ -523,6 +611,7 @@ declare global {
     type PWaTemplateDefaultValues = WaTemplateDefaultValues;
     type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
     type PWaEncryptionKeys = WaEncryptionKeys;
+    type PWaCatalogProducts = WaCatalogProductItem[];
   }
 
   interface LoyaltyApiSetting {
