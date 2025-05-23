@@ -8,9 +8,30 @@ import {
   sendTemplatesToContactsHandler,
   getErrorLogsHandler,
   getMessageStatusByIdHandler,
+  sendTemplateByNameToPhoneWithFileHandler,
 } from "../internal-copy/whatsapp/messageTemplates/wa_templates.controller";
+import fastifyMultipart from "@fastify/multipart";
+
+async function onFile(part) {
+  const buff = await part.toBuffer();
+  part.value = {
+    filename: part.filename,
+    encoding: part.encoding,
+    mimetype: part.mimetype,
+    size: part?.file?.bytesRead,
+    data: buff,
+  };
+}
 
 export async function extWaTemplateRoutes(server: FastifyInstance) {
+  server.register(fastifyMultipart, {
+    limits: {
+      fileSize: 1048576 * 100,
+    },
+    throwFileSizeLimit: true,
+    attachFieldsToBody: "keyValues",
+    onFile,
+  });
   server.get(
     "/",
     {
@@ -41,6 +62,62 @@ export async function extWaTemplateRoutes(server: FastifyInstance) {
       },
     },
     sendTemplateByNameToPhoneHandler,
+  );
+  server.post(
+    "/send-with-file",
+    {
+      schema: {
+        consumes: ["multipart/form-data"],
+        body: {
+          type: "object",
+          required: ["templateName", "phone"],
+          properties: {
+            timeDelay: {
+              type: "integer",
+              minimum: 15,
+            },
+            templateName: {
+              type: "string",
+            },
+            phone: {
+              type: "number",
+            },
+            body_variables: {
+              type: "array",
+              items: { type: "string" },
+            },
+            teamId: {
+              type: "string",
+            },
+            tag: {
+              type: "string",
+            },
+            headerType: {
+              type: "string",
+            },
+            filename: {
+              type: "string",
+            },
+            file: {
+              oneOf: [
+                {
+                  format: "binary",
+                  type: "string",
+                },
+                {
+                  type: "object",
+                },
+              ],
+            },
+          },
+        },
+        tags: ["WhatsApp/Template"],
+        description:
+          "Send a template to a phone number. Phone number should contain country code",
+        summary: "Send a template to a phone number",
+      },
+    },
+    sendTemplateByNameToPhoneWithFileHandler,
   );
 
   server.post(

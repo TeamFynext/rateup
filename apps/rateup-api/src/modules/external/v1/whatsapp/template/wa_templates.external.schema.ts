@@ -81,6 +81,23 @@ const sendTemplateByNameToPhone = scheduleTemplate.extend({
     )
     .optional(),
 });
+const sendTemplateWithFile = z.object({
+  templateName: z.string(),
+  phone: z.number().optional(),
+  timeDelay: z.number().int().optional(),
+  teamId: z.string().optional(),
+  body_variables: z.array(z.string()).optional(),
+  tag: z.string().optional(),
+  headerType: z.nativeEnum(WaTemplateSendMediaTypes).optional(),
+  filename: z.string().optional(),
+  file: z.object({
+    filename: z.string(),
+    encoding: z.string(),
+    mimetype: z.string(),
+    size: z.number(),
+    data: z.any(),
+  }),
+});
 
 const sendTemplateToContactParams = z.object({
   templateId: z.string(),
@@ -181,3 +198,5 @@ export type SendTemplateByNameToPhone = z.infer<
 >;
 
 export type ErrorLogsQuery = z.infer<typeof errorLogsQuery>;
+
+export type SendTemplateWithFile = z.infer<typeof sendTemplateWithFile>;

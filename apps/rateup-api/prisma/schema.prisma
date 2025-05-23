@@ -72,26 +72,26 @@ enum ContactGroupType {
 }
 
 model User {
-  id                  String               @id @default(uuid()) @db.Uuid
-  createdAt           DateTime             @default(now())
-  email               String               @unique
+  id                  String                    @id @default(uuid()) @db.Uuid
+  createdAt           DateTime                  @default(now())
+  email               String                    @unique
   name                String?
   profilePhoto        String?
   phone               String?
-  active              Boolean              @default(true)
+  active              Boolean                   @default(true)
   gender              Gender?
   recipeName          UserRecipes?
-  isPaused            Boolean?             @default(false)
+  isPaused            Boolean?                  @default(false)
   pausedBy            String?
-  prefLanguage        String?              @default("English")
+  prefLanguage        String?                   @default("English")
   deletedAt           DateTime?
   org                 Org[]
   orgMember           OrgMember[]
   teamMember          TeamMember[]
   surveys             Survey[]
   Order               Order[]
-  assignedTicket      Ticket[]             @relation("AssignedTicket")
-  createdTicket       Ticket[]             @relation("CreatedTicket")
+  assignedTicket      Ticket[]                  @relation("AssignedTicket")
+  createdTicket       Ticket[]                  @relation("CreatedTicket")
   TicketComment       TicketComment[]
   linktree            Linktree[]
   generateQr          GenerateQr[]
@@ -144,6 +144,7 @@ model Org {
   WaAutomatedReply         WaAutomatedReply[]
   whatsappQuickReplies     WhatsappQuickReply[]
   loyaltyApiSettings       LoyaltyApiSettings[]
+  WaCatalog      WhatsaAppCatalog[]
 }
 
 model UsageStats {
@@ -203,7 +204,6 @@ model WhatsappSettings {
   type       String // enums.ts: WaConfigType
   /// [PWaEncryptionKeys]
   encryption Json? // for flow {publicKey: string, privateKey: string}
-  WaCatalog      WhatsaAppCatalog?
 }
 
 model WaAccountSettings {
@@ -937,15 +937,15 @@ model WaFlow {
   /// [PWaFlowStartMessageConfig]
   startMessageConfig Json @default("{}")
 
-  org                  Org                    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                String                 @db.Uuid
-  survey               Survey                 @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  surveyId             String                 @unique @db.Uuid
-  anonymous            Boolean                @default(false)
-  version              Int                    @default(1)
-  loyaltyAction        LoyaltyAction?
+  org           Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId         String         @db.Uuid
+  survey        Survey         @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  surveyId      String         @unique @db.Uuid
+  anonymous     Boolean        @default(false)
+  version       Int            @default(1)
+  loyaltyAction LoyaltyAction?
   ///[FlowTicket[]]
-  ticketIssued         Json[]
+  ticketIssued  Json[]
 
   @@unique([flowId, orgId])
 }
@@ -1042,23 +1042,23 @@ model TicketComment {
 }
 
 model TicketBoard {
-  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title         String
-  ticketColumns TicketColumn[]
-  teams         TicketBoardTeam[]
-  ticketCreatedEmail      Boolean   @default(false)
-  ticketCreatedWhatsapp   Boolean   @default(false)
-  ticketAssignedEmail     Boolean   @default(false)
-  ticketAssignedWhatsapp  Boolean   @default(false)
-  notificationRecipients  TicketBoardNotification[]
+  id                     String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title                  String
+  ticketColumns          TicketColumn[]
+  teams                  TicketBoardTeam[]
+  ticketCreatedEmail     Boolean                   @default(false)
+  ticketCreatedWhatsapp  Boolean                   @default(false)
+  ticketAssignedEmail    Boolean                   @default(false)
+  ticketAssignedWhatsapp Boolean                   @default(false)
+  notificationRecipients TicketBoardNotification[]
 }
 
 model TicketBoardNotification {
-  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ticketBoard   TicketBoard  @relation(fields: [ticketBoardId], references: [id], onDelete: Cascade)
-  ticketBoardId String       @db.Uuid
-  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String       @db.Uuid
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ticketBoard   TicketBoard @relation(fields: [ticketBoardId], references: [id], onDelete: Cascade)
+  ticketBoardId String      @db.Uuid
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String      @db.Uuid
 
   @@unique([ticketBoardId, userId], name: "ticketBoard_user_notification_unique")
 }
@@ -1143,6 +1143,11 @@ model Linktree {
   createdBy      User     @relation(fields: [createdById], references: [id])
 }
 
+enum PlatformType {
+  WHATSAPP
+  INSTAGRAM
+}
+
 model WaMessage {
   id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt                       DateTime                          @default(now())
@@ -1159,7 +1164,9 @@ model WaMessage {
   sendBy                          String?                           @db.Uuid
   sender                          User?                             @relation(fields: [sendBy], references: [id], onDelete: Cascade)
   errorMessage                    String?
-  readUsers                           String[]                          @default([])
+  readUsers                       String[]                          @default([])
+  sourcePlatform                  PlatformType?
+  sourceIdentifier                String?
 
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
@@ -1356,32 +1363,32 @@ model LoyaltyAction {
   refereeRewardId               String?                    @db.Uuid
   refereeReward                 LoyaltyReward?             @relation("referee_reward", fields: [refereeRewardId], references: [id], onDelete: Cascade)
   loyaltyWaCommand              LoyaltyWaCommand?
-  flowId                        String?                   @unique @db.Uuid
-  waFlow                        WaFlow?                   @relation(fields: [flowId], references: [dbFlowId], onDelete: Cascade)
+  flowId                        String?                    @unique @db.Uuid
+  waFlow                        WaFlow?                    @relation(fields: [flowId], references: [dbFlowId], onDelete: Cascade)
   loyaltyApiSettings            LoyaltyApiSettings?
 
   @@unique([action_id, orgId], name: "action_id_org_id_unique")
 }
 
 model LoyaltyReward {
-  id                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                  String
   points                Int
   description           String
   tnc                   String
   maxPerUser            Int
   expireAt              DateTime?
-  createdAt             DateTime        @default(now())
-  orgId                 String          @db.Uuid
-  org                   Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt             DateTime            @default(now())
+  orgId                 String              @db.Uuid
+  org                   Org                 @relation(fields: [orgId], references: [id], onDelete: Cascade)
   redeems               LoyaltyRedeem[]
-  waTemplateId          String?         @db.Uuid
-  waTemplate            WaTemplate?     @relation(fields: [waTemplateId], references: [id])
+  waTemplateId          String?             @db.Uuid
+  waTemplate            WaTemplate?         @relation(fields: [waTemplateId], references: [id])
   rewardType            String?
   rewardValue           Json?
   reward_id             String?
-  actions               LoyaltyAction[] @relation("referrer_reward")
-  loyaltyRefereeActions LoyaltyAction[] @relation("referee_reward")
+  actions               LoyaltyAction[]     @relation("referrer_reward")
+  loyaltyRefereeActions LoyaltyAction[]     @relation("referee_reward")
   loyaltyApiSettings    LoyaltyApiSettings?
 
   @@unique([reward_id, orgId], name: "reward_id_org_id_unique")
@@ -1462,36 +1469,40 @@ model LoyaltyReferralCode {
 }
 
 model WhatsappQuickReply {
-   id  String  @id @default(dbgenerated("gen_random_uuid()"))  @db.Uuid
-   orgId  String @db.Uuid
-   org    Org   @relation(fields: [orgId], references: [id], onDelete: Cascade)
-   text  String 
-   priority Int
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId    String @db.Uuid
+  org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  text     String
+  priority Int
 }
 
 model LoyaltyApiSettings {
-  id     String  @id  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId  String  @db.Uuid 
-  org    Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  feature String //enum LoyaltyApiFeature
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId     String         @db.Uuid
+  org       Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  feature   String //enum LoyaltyApiFeature
   phoneKey  String
   amountKey String
-  actionId  String? @unique @db.Uuid
+  actionId  String?        @unique @db.Uuid
   action    LoyaltyAction? @relation(fields: [actionId], references: [id], onDelete: Cascade)
-  rewardId  String? @unique @db.Uuid
-  reward    LoyaltyReward?  @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  rewardId  String?        @unique @db.Uuid
+  reward    LoyaltyReward? @relation(fields: [rewardId], references: [id], onDelete: Cascade)
   rules     Json
   priority  Int
-  active    Boolean  @default(true)
+  active    Boolean        @default(true)
 
   @@unique([orgId, priority])
   @@index([orgId, feature])
 }
+
 model WhatsaAppCatalog {
-  catalogId  String 
-  orgId     String  @db.Uuid @unique
-  whatsappSettings    WhatsappSettings     @relation(fields: [orgId], references: [orgId], onDelete: Cascade)
+  catalogId  String @unique
+  orgId     String  @db.Uuid
+  org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   vertical   String
+  name       String?
+  isWhatsappConnected   Boolean @default(false) 
   ///[PWaCatalogProducts]
   products   Json[]
+  @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
 }

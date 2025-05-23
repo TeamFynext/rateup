@@ -5,6 +5,7 @@ import {
   deleteCatalogProducts,
   getCatalogProducts,
   syncCatalogProducts,
+  updateCatalogProducts,
 } from "./product.service";
 import {
   catalogItemBatchSchema,
@@ -12,16 +13,20 @@ import {
   catalogItemSchema,
   CatalogProductIdsSchema,
 } from "./product.schema";
-import { getWaCatalog } from "../catalog.service";
+import { CatalogIdParam } from "../catalog.schema";
 
 export async function createCatalogProductsBatchHandler(
-  request: FastifyRequest<{ Body: catalogItemBatchSchema }>,
+  request: FastifyRequest<{
+    Body: catalogItemBatchSchema;
+    Params: CatalogIdParam;
+  }>,
   reply: FastifyReply,
 ) {
   try {
     const { type } = request.body;
+    const { catalogId } = request.params;
     const { orgId } = request.user;
-    const catalogInfo = await getCatalogProducts(orgId);
+    const catalogInfo = await getCatalogProducts(catalogId);
     if (!catalogInfo) {
       return reply.code(404).send("No catalog found");
     }
@@ -39,12 +44,16 @@ export async function createCatalogProductsBatchHandler(
 }
 
 export async function syncCatalogProductsHandler(
-  request: FastifyRequest<{ Body: CatalogItemQueryFilter }>,
+  request: FastifyRequest<{
+    Body: CatalogItemQueryFilter;
+    Params: CatalogIdParam;
+  }>,
   reply: FastifyReply,
 ) {
   try {
     const { orgId } = request.user;
-    const res = await syncCatalogProducts(orgId, request.body);
+    const { catalogId } = request.params;
+    const res = await syncCatalogProducts(orgId, catalogId, request.body);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -53,12 +62,12 @@ export async function syncCatalogProductsHandler(
 }
 
 export async function getCatalogProductsHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Params: CatalogIdParam }>,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
-    const res = await getCatalogProducts(orgId, request.query);
+    const { catalogId } = request.params;
+    const res = await getCatalogProducts(catalogId, request.query);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -67,13 +76,44 @@ export async function getCatalogProductsHandler(
 }
 
 export async function deleteCatalogProductsHandler(
-  request: FastifyRequest<{ Body: CatalogProductIdsSchema }>,
+  request: FastifyRequest<{
+    Body: CatalogProductIdsSchema;
+    Params: CatalogIdParam;
+  }>,
   reply: FastifyReply,
 ) {
   try {
     const { orgId } = request.user;
-    console.log("here----------");
-    const res = await deleteCatalogProducts(orgId, request.body.produtIds);
+    const { catalogId } = request.params;
+    const res = await deleteCatalogProducts(
+      orgId,
+      catalogId,
+      request.body.productIds,
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function updateCatalogProductsHandler(
+  request: FastifyRequest<{
+    Body: catalogItemBatchSchema;
+    Params: CatalogIdParam;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { type } = request.body;
+    const { catalogId } = request.params;
+    const res = await updateCatalogProducts(
+      orgId,
+      catalogId,
+      request.body[type],
+      type,
+    );
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

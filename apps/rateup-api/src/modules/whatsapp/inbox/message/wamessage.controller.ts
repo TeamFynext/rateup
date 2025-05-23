@@ -22,6 +22,7 @@ import {
   sendMediaMessages,
   markMessagesAsRead,
   sendContactMessage,
+  sendLocationMessage,
 } from "./wamessage.service";
 import {
   ByContactIdParams,
@@ -55,14 +56,16 @@ import {
 } from "../../../contact/contact.service";
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
 import xlsx from "node-xlsx";
-import fs from "fs";
 import { WaMessageAssignStatus } from "../../../../types/enums";
+import { PlatformType } from "@prisma/client";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
   messageBody: any,
   phone: string,
   orgId: string,
+  sourcePlatform: PlatformType,
+  sourceIdentifier: string,
   userName?: string,
   messageId?: string,
   userId?: string,
@@ -116,6 +119,8 @@ export async function handleWaMessages(
       waMessageBody,
       contact.id,
       waTimeStamp,
+      sourcePlatform,
+      sourceIdentifier,
       parameterData,
       messageId,
       userId,
@@ -144,7 +149,7 @@ export async function sendNewWaMessageHandler(
 ) {
   try {
     const { contactId } = request.params;
-    const { type, contacts } = request.body;
+    const { type, contacts, location } = request.body;
     const { orgId, userId } = request.user;
     const contact = await getContactById(contactId);
     if (!contact) {
@@ -192,6 +197,9 @@ export async function sendNewWaMessageHandler(
         await sendContactMessage(contacts, contact.phone, orgId, userId);
         break;
       }
+      case "location":
+        await sendLocationMessage(location, contact.phone, orgId, userId);
+        break;
     }
     reply.send("Message Sent");
   } catch (error) {

@@ -2,7 +2,6 @@ import { WhatsaAppCatalog } from "@prisma/client";
 import prisma from "../../../../utils/prisma";
 import { getWaSettings } from "../../settings/wa_settings.service";
 import { callWhatsappApi } from "../../wa_axios";
-import { getWaCatalog } from "../catalog.service";
 import {
   catalogHotel,
   catalogHotelRoom,
@@ -27,10 +26,17 @@ export async function createCatalogProductsBatch(
   for (const data of dataList) {
     let input;
     if (type === "PRODUCT_ITEM") {
-      const { price, currencyCode, internal_label, sale_price, ...rest } =
-        data as catalogItemSchema["PRODUCT_ITEM"];
+      const {
+        price,
+        currencyCode,
+        internal_label,
+        sale_price,
+        retailer_id,
+        ...rest
+      } = data as catalogItemSchema["PRODUCT_ITEM"];
       input = {
         ...rest,
+        id: retailer_id,
         price: `${price} ${currencyCode}`,
         sale_price: `${sale_price} ${currencyCode}`,
         internal_label: internal_label.map((label) => `'${label}'`),
@@ -72,6 +78,11 @@ export async function createCatalogProductsBatch(
     newProducts.push({
       type,
       retailer_id: id ?? undefined,
+      currency: data.currencyCode,
+      image_link: data.image.length ? data.image[0].url : undefined,
+      additional_image_link: data.image.length
+        ? data.image.map((image) => image.url)
+        : undefined,
       ...rest,
     });
   }
@@ -79,7 +90,7 @@ export async function createCatalogProductsBatch(
 
   await prisma.whatsaAppCatalog.update({
     where: {
-      orgId,
+      catalogId,
     },
     data: {
       products: newProducts,
@@ -118,15 +129,15 @@ export async function sendProducts(
 
 export async function syncCatalogProducts(
   orgId: string,
+  catalogId,
   { limit, next }: CatalogItemQueryFilter,
 ) {
   const [waSettings, catalogInfo] = await Promise.all([
     getWaSettings(orgId),
-    getCatalogProducts(orgId),
+    getCatalogProducts(catalogId),
   ]);
   if (!waSettings || !catalogInfo) return;
   const { accessToken } = waSettings;
-  const { catalogId } = catalogInfo;
   const url = `/${catalogId}/products`;
   let filter = {
     limit: 50,
@@ -156,6 +167,7 @@ export async function syncCatalogProducts(
   console.log("..here..");
 
   const res = await callWhatsappApi(`${url}`, "GET", null, null, { params });
+  console.dir(res.data.data, { depth: null });
   const { products, vertical } = catalogInfo;
   const newProducts = [...products];
   for (const product of res.data.data) {
@@ -178,7 +190,7 @@ export async function syncCatalogProducts(
         newProducts.push(item);
       }
     }
-    if (vertical === "hotel") {
+    if (vertical === "hotels") {
       const index = products.findIndex(
         (p: CatalogHotel) => p.hotel_id === product.hotel_id,
       );
@@ -209,9 +221,10 @@ export async function syncCatalogProducts(
       }
     }
   }
+  // const updatedProducts = newProducts.filter(p => res.data.data.some(pr => pr.id === p.id))
   await prisma.whatsaAppCatalog.update({
     where: {
-      orgId,
+      catalogId,
     },
     data: {
       products: newProducts,
@@ -224,19 +237,20 @@ export async function syncCatalogProducts(
   };
 }
 
-export async function getCatalogProducts(orgId, query = null) {
+export async function getCatalogProducts(catalogId, query = null) {
   return (await prisma.whatsaAppCatalog.findUnique({
     where: {
-      orgId,
+      catalogId,
     },
   })) as WhatsappCatalog;
 }
 
 export async function deleteCatalogProducts(
   orgId: string,
-  productIds: CatalogProductIdsSchema["produtIds"],
+  catalogId: string,
+  productIds: CatalogProductIdsSchema["productIds"],
 ) {
-  const { vertical, catalogId, products } = await getCatalogProducts(orgId);
+  const { vertical, products } = await getCatalogProducts(catalogId);
 
   const requests = productIds.map((id) => {
     let obj = {
@@ -246,7 +260,7 @@ export async function deleteCatalogProducts(
     if (vertical === "commerce") {
       obj.data["id"] = id.id;
     }
-    if (vertical === "hotel") {
+    if (vertical === "hotels") {
       obj.data["hotel_id"] = id.id;
     }
     if (vertical === "hotel_room") {
@@ -267,26 +281,120 @@ export async function deleteCatalogProducts(
   const newProducts = products.filter((product) => {
     if (vertical === "commerce") {
       return productIds.some(
-        (p) => p.id === (product as CatalogProductCore).retailer_id,
+        (p) => p.id !== (product as CatalogProductCore).retailer_id,
       );
     }
-    if (vertical === "hotel") {
+    if (vertical === "hotels") {
       return productIds.some(
-        (p) => p.id === (product as CatalogHotel).hotel_id,
+        (p) => p.id !== (product as CatalogHotel).hotel_id,
       );
     }
     if (vertical === "hotel_room") {
       return productIds.some(
         (p) =>
-          p.id === (product as CatalogHotelRoom).hotel_room_id &&
-          p.hotel_retailer_id ===
-            (product as CatalogHotelRoom).hotel_retailer_id,
+          !(
+            p.id === (product as CatalogHotelRoom).hotel_room_id &&
+            p.hotel_retailer_id ===
+              (product as CatalogHotelRoom).hotel_retailer_id
+          ),
       );
     }
   });
   await prisma.whatsaAppCatalog.update({
     where: {
-      orgId,
+      catalogId,
+    },
+    data: {
+      products: newProducts,
+    },
+  });
+}
+
+export async function updateCatalogProducts(orgId, catalogId, dataList, type) {
+  const { products, vertical } = await getCatalogProducts(catalogId);
+  let requests = [];
+  const newProducts = [...products];
+  for (const data of dataList) {
+    let input;
+    let productIndex;
+    if (type === "PRODUCT_ITEM") {
+      const {
+        price,
+        currencyCode,
+        internal_label,
+        sale_price,
+        retailer_id,
+        ...rest
+      } = data as Partial<catalogItemSchema["PRODUCT_ITEM"]>;
+      input = {
+        ...rest,
+        id: retailer_id,
+        price: `${price} ${currencyCode}`,
+        sale_price: `${sale_price} ${currencyCode}`,
+        internal_label:
+          internal_label && internal_label.map((label) => `'${label}'`),
+      };
+      productIndex = newProducts.findIndex(
+        (p) => p.retailer_id === retailer_id,
+      );
+    }
+    if (type === "HOTEL") {
+      const {
+        base_price,
+        currencyCode,
+        tags,
+        numbertags,
+        sale_price,
+        ...rest
+      } = data as Partial<catalogItemSchema["HOTEL"]>;
+      let tagInputs = {};
+      tags.map((tag, index) => {
+        tagInputs[`custom_label_${index}`] = tag;
+      });
+      numbertags.map((tag, index) => {
+        tagInputs[`custom_number_${index}`] = tag;
+      });
+      input = {
+        ...rest,
+        base_price: `${base_price} ${currencyCode}`,
+        sale_price: `${sale_price} ${currencyCode}`,
+        ...tagInputs,
+      };
+      productIndex = newProducts.findIndex((p) => p.hotel_id === rest.hotel_id);
+    }
+    if (type === "HOTEL_ROOM") {
+      const { base_price, currencyCode, ...rest } = data as Partial<
+        catalogItemSchema["HOTEL_ROOM"]
+      >;
+      input = {
+        ...rest,
+        base_price: `${base_price} ${currencyCode}`,
+      };
+      productIndex = newProducts.findIndex(
+        (p) =>
+          p.hotel_room_id === rest.hotel_room_id &&
+          p.hotel_retailer_id === rest.hotel_retailer_id,
+      );
+    }
+    requests.push({ method: "UPDATE", data: input });
+    const { id, ...rest } = input;
+    const obj = {
+      type,
+      retailer_id: id ?? undefined,
+      currency: data.currencyCode,
+      image_link: data.image.length ? data.image[0].url : undefined,
+      additional_image_link: data.image.length
+        ? data.image.map((image) => image.url)
+        : undefined,
+      ...rest,
+    };
+    newProducts[productIndex] = obj;
+  }
+  await sendProducts(orgId, requests, type, catalogId);
+
+  await prisma.whatsaAppCatalog.update({
+    where: {
+      catalogId,
     },
     data: {
       products: newProducts,
@@ -298,7 +406,7 @@ function getCatalogProdutType(vertical) {
   switch (vertical) {
     case "commerce":
       return CatalogProductTypes.PRODUCT_ITEM;
-    case "hotel":
+    case "hotels":
       return CatalogProductTypes.HOTEL;
     case "hotel_room":
       return CatalogProductTypes.HOTEL_ROOM;

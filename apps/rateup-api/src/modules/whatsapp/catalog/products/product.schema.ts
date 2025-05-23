@@ -2,7 +2,7 @@ import { buildJsonSchemas } from "fastify-zod";
 import z, { nativeEnum } from "zod";
 
 export const catalogProductCore = z.object({
-  id: z.string(),
+  retailer_id: z.string(),
   title: z.string().max(100),
   description: z.string().max(5000, "Give short text describing product"),
   condition: z.enum(["new", "refurbished", "used"]),
@@ -10,7 +10,7 @@ export const catalogProductCore = z.object({
     .array(
       z.object({
         url: z.string(),
-        tag: z.array(z.string()),
+        tag: z.array(z.string()).optional(),
       }),
     )
     .max(20, "Only upto 20 images are supported")
@@ -220,7 +220,7 @@ const catalogItemQueryFilter = z.object({
 });
 
 const catalogProductIdsSchema = z.object({
-  produtIds: z.array(
+  productIds: z.array(
     z.object({
       id: z.string(),
       hotel_retailer_id: z.string().optional(),

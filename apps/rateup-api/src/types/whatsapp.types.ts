@@ -196,6 +196,12 @@ export interface WaSendMessageBody {
       type?: string;
     }[];
   }[];
+  location?: {
+    latitude: number;
+    longitude: number;
+    name?: string;
+    address?: string;
+  };
 }
 type WaButton = {
   type: "reply";

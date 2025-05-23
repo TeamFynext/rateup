@@ -2,6 +2,7 @@ import {
   Campaign,
   Contact,
   ContactGroup,
+  PlatformType,
   WaAccountSettings,
   WaMessage,
 } from "@prisma/client";
@@ -29,12 +30,15 @@ import {
   createVideoMessage,
   createAudioMessage,
   createContactMessage,
+  createLocationMessage,
 } from "../../whatsappSurvey/wasurvey.utils";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
   contactId: string,
   waCreatedAt: string,
+  sourcePlatform: PlatformType,
+  sourceIdentifier: string,
   componentParams?: any,
   messageId?: string,
   sendBy?: string,
@@ -47,6 +51,8 @@ export async function addNewWaMessage(
       templateComponentParams: componentParams,
       messageId,
       sendBy,
+      sourcePlatform,
+      sourceIdentifier,
     },
   });
   return newMessage;
@@ -715,5 +721,10 @@ export async function sendContactMessage(
   });
 
   const messageBody = createContactMessage(phone, contactsData);
+  await sendMessage(orgId, messageBody, null, userId);
+}
+
+export async function sendLocationMessage(location, phone, orgId, userId) {
+  const messageBody = createLocationMessage(phone, location);
   await sendMessage(orgId, messageBody, null, userId);
 }

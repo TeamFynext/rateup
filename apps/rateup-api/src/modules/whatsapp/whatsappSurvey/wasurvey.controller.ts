@@ -67,6 +67,7 @@ import {
   CampaignParticipant,
   Chatbot,
   Contact,
+  PlatformType,
   WhatsappSettings,
 } from "@prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
@@ -370,11 +371,22 @@ async function whatsappMessageHandler(
     userName,
   } = parsedMessage;
 
+  let sourcePlatform;
+  let sourceIdentifier;
+  if (waMessage.object === "whatsapp_business_account") {
+    sourcePlatform = PlatformType.WHATSAPP;
+    sourceIdentifier =
+      waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata
+        ?.display_phone_number;
+  }
+
   await handleWaMessages(
     "receive",
     completeMessageObject,
     from,
     orgId,
+    sourcePlatform,
+    sourceIdentifier,
     userName,
     waMessage?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
   );

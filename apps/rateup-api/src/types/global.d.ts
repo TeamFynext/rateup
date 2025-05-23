@@ -554,6 +554,7 @@ declare global {
     google_product_category?: string;
     disabled_capabilities?: string[];
     additional_image_link?: string[];
+    currency?: string;
   };
 
   type CatalogHotel = {
@@ -570,6 +571,7 @@ declare global {
     description: string;
     hotel_id: string;
     image: CatalogImage[];
+    id?: string;
   };
 
   type CatalogHotelRoom = {
@@ -581,6 +583,7 @@ declare global {
     hotel_retailer_id: string;
     hotel_room_id: string;
     image: CatalogImage[];
+    id?: string;
   };
 
   type WhatsappCatalog = {
@@ -588,6 +591,8 @@ declare global {
     orgId: string;
     products: PWaCatalogProducts;
     vertical: string;
+    name: string;
+    isWhatsappConnected: boolean;
   };
 
   type WaCatalogProductItem =
