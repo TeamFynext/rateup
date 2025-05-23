@@ -29,7 +29,8 @@ const MessageSendPanel = () => {
   const voiceReset = useVoiceStore((s) => s.reset);
   //@ts-ignore
   const mutation = useSendNewWaMessage(selectedContactId);
-  const {isSessionActive} = useSessionActiveStore();
+  // const {isSessionActive} = useSessionActiveStore();
+  const isSessionActive = true
 
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const [message, setMessage] = useState("");

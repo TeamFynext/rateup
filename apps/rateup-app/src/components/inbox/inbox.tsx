@@ -12,6 +12,9 @@ import {
   parseWaMessage_,
   returnMessageContentBasedOnParsedMessage,
 } from "@/src/api/inbox/messages/utils";
+import { useWsData } from "@/src/context/UserContext";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 type InboxProps = {
   messageType: string;
@@ -32,6 +35,10 @@ export default function Inbox({
 }: InboxProps) {
   const filterFromStore = useChatFilterStore((state) => state.filter);
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [updatedContacts, setUpdatedContacts] = useState<
+    ContactsWithLastMessage[]
+  >([]);
 
   const mergedFilter = {
     ...filterFromStore,
@@ -39,6 +46,7 @@ export default function Inbox({
     searchTerm,
     waMessageAssignStatus,
   };
+  const { wsData } = useWsData();
 
   const encodedFilter = encodeURIComponent(JSON.stringify(mergedFilter));
 
@@ -52,6 +60,46 @@ export default function Inbox({
   } = useFilteredContacts(encodedFilter);
 
   const contacts = data?.pages.flatMap((page) => page.rows) ?? [];
+
+  useEffect(() => {
+    if (wsData?.type === "inbox" && wsData?.inbox?.contact?.id) {
+      const contactId = wsData.inbox.contact.id;
+
+      setUpdatedContacts((prev) => {
+        const alreadyUpdated = prev.find((c) => c.id === contactId);
+        const fromOriginalContacts = contacts.find((c) => c.id === contactId);
+        const baseContact = alreadyUpdated || fromOriginalContacts;
+
+        if (!baseContact) return prev; // not in current contacts list
+
+        const isUnread =
+          Array.isArray(wsData.inbox.message.readUsers) &&
+          wsData.inbox.message.readUsers.length === 0 &&
+          wsData.inbox.message.sendBy === null;
+
+        const updatedContact: ContactsWithLastMessage = {
+          ...baseContact,
+          ...wsData.inbox.contact,
+          lastMessage: wsData.inbox.message,
+          lastReceivedMessageTimeStamp:
+            wsData.inbox.contact.lastReceivedMessageTimeStamp,
+          unReadMessageCount: isUnread
+            ? (baseContact.unReadMessageCount ?? 0) + 1
+            : baseContact.unReadMessageCount ?? 0,
+        };
+        const filtered = prev.filter((c) => c.id !== contactId);
+        queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
+        return [updatedContact, ...filtered];
+        
+      });
+    }
+  }, [wsData]);
+
+  const displayedContacts = contacts.map((contact) => {
+    const updated = updatedContacts.find((u) => u.id === contact.id);
+    return updated || contact;
+  });
+
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
     let ChatBoxComponent;
 
@@ -137,7 +185,7 @@ export default function Inbox({
 
   return (
     <FlatList
-      data={contacts}
+      data={displayedContacts}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
       onEndReached={() => {

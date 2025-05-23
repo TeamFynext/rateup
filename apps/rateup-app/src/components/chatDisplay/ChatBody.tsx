@@ -17,6 +17,8 @@ import { ViewToken } from "react-native";
 import { useGetMessagesByContactId } from "@/src/api/inbox/messages/message.query";
 import { FlashList } from "@shopify/flash-list";
 import { ChevronDown } from "lucide-react-native";
+import { useWsData } from "@/src/context/UserContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -30,7 +32,7 @@ const ChatBody = ({ id }: { id: string }) => {
     isError,
     error,
   } = useGetMessagesByContactId(id);
-
+  const queryClient = useQueryClient();
   const { userId } = useAuth();
   const { mutate: markRead } = useMarkMessageAsRead();
   const listRef = useRef<any>(null);
@@ -39,6 +41,7 @@ const ChatBody = ({ id }: { id: string }) => {
   const lastVisibleIndex = useRef(0);
   const prevMessageCount = useRef(messages.length);
   const messageList = useMemo(() => messages, [messages]);
+  const {wsData} = useWsData()
   React.useEffect(() => {
     if (
       messages.length > prevMessageCount.current &&
@@ -48,6 +51,39 @@ const ChatBody = ({ id }: { id: string }) => {
     }
     prevMessageCount.current = messages.length;
   }, [messages.length]);
+
+  React.useEffect(() => {
+  if (
+    wsData?.type === "inbox" &&
+    wsData.inbox.contact.id === id // only for current chat
+  ) {
+    const isDuplicate = messageList.some(
+      (msg) => msg.id === wsData.inbox.message.id
+    );
+    if (!isDuplicate) {
+      // Optimistically push to FlashList by invalidating the query
+      // or by triggering a manual refetch, or you can prepend it manually
+      queryClient.setQueryData(
+        ["wa-messages", id],
+        (oldData: any) => {
+          if (!oldData) return oldData;
+
+          const newPages = [...oldData.pages];
+          newPages[0] = {
+            ...newPages[0],
+            messages: [wsData.inbox.message, ...newPages[0].messages],
+          };
+
+          return {
+            ...oldData,
+            pages: newPages,
+          };
+        }
+      );
+    }
+  }
+}, [wsData, id, messageList]);
+
   const markedAsRead = useRef(new Set<string>());
 
   const viewabilityConfig = {

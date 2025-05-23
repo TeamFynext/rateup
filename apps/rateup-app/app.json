@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.abhinavviswam_01.myapp2"
+      "package": "com.abhinavviswam_01.myapp2",
+      "googleServicesFile": "./android/app/google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -38,6 +39,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ac893a5d-c44f-4b62-8d08-b679c335ccb8"
+      }
+    },
+    "owner": "abhinav_viswam"
   }
 }

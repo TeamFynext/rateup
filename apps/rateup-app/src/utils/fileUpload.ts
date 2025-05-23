@@ -24,7 +24,6 @@ export const deleteUploadedFiles = async (data: any) => {
         Accept: "application/json",
       },
     });
-    console.log("File removed successfully");
     return response?.data;
   } catch (error) {
     console.log("error", error);
@@ -41,7 +40,6 @@ export const uploadFile = async (
   formData.append("metadata", JSON.stringify(data));
 
   try {
-    console.log("Uploading file...");
     const response = await axios.post(
       `/api/public/upload/${withThumbnails ? "fileWithThumb" : "file"}`,
       formData,
@@ -51,7 +49,6 @@ export const uploadFile = async (
         },
       }
     );
-    console.log("File uploaded successfully");
     return response?.data?.data?.key as string;
   } catch (error: any) {
     console.log("File upload failed:", error?.response?.data?.message);

@@ -156,3 +156,42 @@ export const useVoiceRecordStore = create<VoiceRecordState>((set) => ({
   setIsRecording: (isRecording) => set({ isRecording }),
 }));
 
+type Message1 = any;
+
+interface LiveMessageStore {
+  messages: Message1[];
+  addMessage: (msg: Message1) => void;
+  clearMessages: () => void;
+}
+
+export const useLiveMessages = create<LiveMessageStore>((set) => ({
+  messages: [],
+  addMessage: (msg) =>
+    set((state) => ({
+      messages: [msg, ...state.messages], // for FlashList inverted
+    })),
+  clearMessages: () => set({ messages: [] }),
+}));
+
+
+type AuthState = {
+  isAuthenticated: boolean | null;
+  loading: boolean;
+  userId: string | null;
+  orgId: string | null;
+  setIsAuthenticated: (value: boolean) => void;
+  setLoading: (value: boolean) => void;
+  setUserId: (id: string | null) => void;
+  setOrgId: (id: string | null) => void;
+};
+
+export const useAuthStore = create<AuthState>((set) => ({
+  isAuthenticated: null,
+  loading: true,
+  userId: null,
+  orgId: null,
+  setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
+  setLoading: (loading) => set({ loading }),
+  setUserId: (userId) => set({ userId }),
+  setOrgId: (orgId) => set({ orgId }),
+}));

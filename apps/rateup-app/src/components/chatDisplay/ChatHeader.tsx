@@ -14,6 +14,7 @@ import { namePreview } from "../../utils/chatbox_utils";
 import { closeChat } from "@/src/api/inbox/contacts/contacts.api";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { useChatAssignStatusStore } from "@/src/utils/store";
 
 const { width: screenWidth } = Dimensions.get("window");
 let userId: string;
@@ -29,7 +30,9 @@ const MoreOptions = ({
 }) => {
   const router = useRouter();
   const modalWidth = screenWidth * 0.4;
-
+  const waAssignStatus = useChatAssignStatusStore(
+    (state) => state.waAssignStatus
+  );
   return (
     <Modal
       visible={visible}
@@ -68,15 +71,17 @@ const MoreOptions = ({
             <Text className="text-gray-800 text-lg">Assign</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            className="p-3"
-            onPress={() => {
-              onClose();
-              onCloseChatPress();
-            }}
-          >
-            <Text className="text-gray-800 text-lg">Close Chat</Text>
-          </TouchableOpacity>
+          {waAssignStatus !== "CLOSED" ? (
+            <TouchableOpacity
+              className="p-3"
+              onPress={() => {
+                onClose();
+                onCloseChatPress();
+              }}
+            >
+              <Text className="text-gray-800 text-lg">Close Chat</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </Pressable>
     </Modal>

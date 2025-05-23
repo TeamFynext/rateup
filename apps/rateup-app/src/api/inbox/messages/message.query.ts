@@ -1,5 +1,8 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getMessagesByContactId, getWaChatMediaFile, sendNewWaMessage } from "./message.api";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getMessagesByContactId, getWaChatMediaFile, orgWsAuthCheck, sendNewWaMessage } from "./message.api";
+import { useLiveMessages } from "@/src/utils/store";
+import { useEffect } from "react";
+import { useAuth } from "@/src/context/AuthContext";
 
 export const useGetMessagesByContactId = (contactId: string) => {
     return useInfiniteQuery({
@@ -35,3 +38,34 @@ export const useGetMessagesByContactId = (contactId: string) => {
       mutationFn: getWaChatMediaFile,
     });
   };
+
+
+// const useSocketMessages = (contactId: string) => {
+//   const { addMessage } = useLiveMessages();
+//   const { userId } = useAuth();
+// console.log('yuserId',userId)
+//   useEffect(() => {
+//     const ws = new WebSocket(`${process.env.EXPO_PUBLIC_API_URL}/api/org/ws/${userId}`);
+
+//     ws.onmessage = (event) => {
+//       const data = JSON.parse(event.data);
+//       if (
+//         data?.type === "new_message" &&
+//         data.message?.contactId === contactId
+//       ) {
+//         addMessage(data.message); // push to Zustand
+//       }
+//     };
+
+//     return () => {
+//       ws.close();
+//     };
+//   }, [contactId]);
+// };
+
+export const useOrgWsAuthCheck = () => {
+  return useQuery({
+    queryKey: ["org_auth_check_for_ws"],
+    queryFn: orgWsAuthCheck,
+  });
+};

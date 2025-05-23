@@ -19,6 +19,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CircleX } from "lucide-react-native";
 import { useChatAssignStatusStore } from "@/src/utils/store";
 import { useToast } from "react-native-toast-notifications";
+import { useAssignedContact } from "@/src/api/inbox/contacts/contacts.query";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -32,12 +33,26 @@ const AssignToUser = () => {
 
   const { contactId } = useLocalSearchParams();
   const toast = useToast();
+  //@ts-ignore
+  const { data: assignedData = [] ,isLoading:Loading} = useAssignedContact(contactId);
   const [teamModalVisible, setTeamModalVisible] = useState(false);
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [membersModalVisible, setMembersModalVisible] = useState(false);
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
-
+  React.useEffect(() => {
+  if (assignedData?.length > 0) {
+    const assignedIds = assignedData.map((item: any) => item.assignedUserId);
+    setSelectedMemberIds(assignedIds);
+    // Optionally also set the team if they all belong to same team
+    const firstTeamId = assignedData[0]?.teamId;
+    setSelectedTeamId(firstTeamId);
+    const selectedTeam = teams.data?.data?.find((t:any) => t.id === firstTeamId);
+    if (selectedTeam) {
+      setSelectedTeamName(selectedTeam.name);
+    }
+  }
+}, [assignedData]);
   const { data: membersData, isLoading } = useUserByTeam(selectedTeamId);
   const filteredMembers =
     membersData?.data?.filter((member: any) =>
@@ -75,6 +90,15 @@ const AssignToUser = () => {
       router.back();
     },
   });
+
+  if (Loading) {
+  return (
+    <View className="flex-1 justify-center items-center bg-white">
+      <ActivityIndicator size="large" color="#4CAF50" />
+      <Text className="text-black mt-4 text-[4vw]">Loading assigned users...</Text>
+    </View>
+  );
+}
 
   if (isError) {
     toast.show("Could not Assign", {
