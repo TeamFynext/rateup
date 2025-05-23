@@ -1096,7 +1096,10 @@ export async function sendGReviewLink({
   log.trace("Sending google review link to %s", phone);
   const thankYouPage = `${process.env.FRONTEND_URL}/public/survey/${surveyTeamMapId}/end?k=n&msg=thanks`;
   const reviewPage = await getGoogleUrlBySurveyTeamMapId(surveyTeamMapId);
-  if (!reviewPage) return;
+  if (!reviewPage) {
+    log.trace("Google Review page not found");
+    return;
+  }
   const googleReviewMessage = createCTAButtonMessage({
     to: phone,
     buttonText: "Review us on Google",
