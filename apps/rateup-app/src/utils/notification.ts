@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
 
 export async function registerForPushNotificationsAsync() {
   try {
