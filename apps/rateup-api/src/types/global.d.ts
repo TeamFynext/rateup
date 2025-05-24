@@ -493,6 +493,9 @@ declare global {
     video?: {
       link: string;
     };
+    catalog?: {
+      thumbnail_product_retailer_id?: string;
+    };
   };
   type WaFlowStartMessageConfig = {
     prefix: string;

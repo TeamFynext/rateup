@@ -140,7 +140,7 @@ export async function createTemplateHandler(
       await updateTemplateInDb(
         templateData.id,
         fetchedTemplate,
-        null,
+        defaultValues as WaTemplateDefaultValues,
         templateType,
         config,
       );
@@ -562,14 +562,15 @@ export async function sendTemplateToUserCore(
               type: "button",
               sub_type: button.type,
               index: 0,
-              ...(button.thumbnail_product_retailer_id
+              ...(defaultValues?.catalog?.thumbnail_product_retailer_id?.length
                 ? {
                     parameters: [
                       {
                         type: "action",
                         action: {
                           thumbnail_product_retailer_id:
-                            button.thumbnail_product_retailer_id,
+                            defaultValues?.catalog
+                              ?.thumbnail_product_retailer_id,
                         },
                       },
                     ],

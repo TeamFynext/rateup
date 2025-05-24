@@ -34,7 +34,6 @@ const waTemplateInput = {
         flow_id: z.string().optional(),
         flow_action: z.string().optional(),
         navigate_screen: z.string().optional(),
-        thumbnail_product_retailer_id: z.string().optional(),
       }),
     )
     .optional(),
@@ -55,6 +54,11 @@ const waTemplateInput = {
       video: z
         .object({
           link: z.string(),
+        })
+        .optional(),
+      catalog: z
+        .object({
+          thumbnail_product_retailer_id: z.string().optional(),
         })
         .optional(),
     })
