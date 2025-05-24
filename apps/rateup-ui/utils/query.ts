@@ -1,4 +1,5 @@
 import { AxiosError } from "axios";
+
 import { showErrorToast } from "./notifications";
 
 export function showErrorToastFromError(
@@ -7,6 +8,10 @@ export function showErrorToastFromError(
 ) {
   if (e instanceof AxiosError) {
     if (e?.response?.data?.message) {
+      showErrorToast(e.response.data.message);
+      return;
+    }
+    if (e?.response?.data) {
       showErrorToast(e.response.data.message);
       return;
     }

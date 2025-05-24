@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import {
   IconAdjustments,
+  IconBuildingStore,
   IconBulb,
   IconChevronDown,
   IconCopy,
@@ -30,12 +31,14 @@ interface ButtonSelectionProps extends MenuProps {
   flowBtn: boolean;
   btnLen: number;
   disabled?: boolean;
+  category: string;
 }
 export const ButtonSelection = ({
   handleMenuSelection,
   flowBtn,
   btnLen,
   disabled,
+  category,
   ...restProps
 }: ButtonSelectionProps) => {
   const { translations } = useTranslations();
@@ -200,6 +203,32 @@ export const ButtonSelection = ({
                 }
               >
                 {translations["Visit website"]}
+              </Menu.Item>
+            </Box>
+          </Tooltip>
+          <Tooltip
+            label={
+              flowBtn
+                ? translations["Remove flow button to add other buttons"]
+                : category !== "MARKETING"
+                  ? "Change category to marketing to enable catalog"
+                  : ""
+            }
+            display={!flowBtn && category === "MARKETING" ? "none" : "block"}
+          >
+            <Box>
+              <Menu.Item
+                disabled={flowBtn || category !== "MARKETING"}
+                leftSection={
+                  <IconBuildingStore
+                    style={{ width: rem(14), height: rem(14) }}
+                  />
+                }
+                onClick={() =>
+                  handleMenuSelection(WHATSAPP_BUTTON_TYPE.CATALOG)
+                }
+              >
+                View Catalog
               </Menu.Item>
             </Box>
           </Tooltip>

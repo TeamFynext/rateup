@@ -104,6 +104,31 @@ export const templateSchema = z
     status: z.nativeEnum(WaTemplateStatus),
     example: z.array(z.string().trim()).optional(),
     templateType: z.nativeEnum(TemplateType),
+    defaultValues: z
+      .object({
+        image: z
+          .object({
+            link: z.string(),
+          })
+          .optional(),
+        document: z
+          .object({
+            link: z.string(),
+            filename: z.string().optional(),
+          })
+          .optional(),
+        video: z
+          .object({
+            link: z.string(),
+          })
+          .optional(),
+        catalog: z
+          .object({
+            thumbnail_product_retailer_id: z.string().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
   })
   .superRefine((values, ctx) => {
     const format = values.format;

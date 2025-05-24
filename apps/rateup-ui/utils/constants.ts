@@ -236,6 +236,7 @@ export enum WHATSAPP_BUTTON_TYPE {
   FLOW = "FLOW",
   WEBSURVEY = "WEBSURVEY",
   ORDER_DETAILS = "ORDER_DETAILS",
+  CATALOG = "CATALOG",
 }
 
 export const MIN_AMOUNT_ERROR = "Purchase amount ineligible for gift.";
@@ -369,3 +370,20 @@ export const DEFAULT_IMAGE_BASE64_START = "data:image/jpeg;base64,";
 
 export const MAX_DESCRIPTION_COUNT = 300;
 export const MAX_METADATA_COUNT = 20;
+
+export const CATALOG_PRODUCT_TYPES = ["PRODUCT_ITEM", "HOTEL", "HOTEL_ROOM"];
+export const CATALOG_PRODUCT_CONDITIONS = ["new", "refurbished", "used"];
+export const CATALOG_PRODUCT_AVAILABILITY = [
+  "in stock",
+  "out of stock",
+  "available for order",
+  "discontinued",
+];
+export const CURRENCY_CODES = [
+  "INR", // Indian Rupee
+  "AED", // United Arab Emirates Dirham
+  "KWD", // Kuwaiti Dinar
+  "QAR", // Qatari Riyal
+  "EUR", // Euro
+  "USD", // United States Dollar
+];

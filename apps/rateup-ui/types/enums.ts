@@ -545,3 +545,9 @@ export enum LoyaltyApiFeature {
   action = "action",
   reward = "reward",
 }
+
+export enum CatalogProductType {
+  PRODUCT_ITEM = "PRODUCT_ITEM",
+  HOTEL = "HOTEL",
+  HOTEL_ROOM = "HOTEL_ROOM",
+}

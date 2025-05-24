@@ -10,6 +10,7 @@ import {
   IconBrandTeams,
   IconBrandWhatsapp,
   IconBrowser,
+  IconBuildingStore,
   IconCirclePlus,
   IconDashboard,
   IconFileDescription,
@@ -198,6 +199,11 @@ export function getNavTopData(
                     },
                   ]
                 : []),
+              {
+                label: "Catalog",
+                link: "/dashboard/whatsapp/catalog",
+                icon: IconBuildingStore,
+              },
               {
                 label: translations["Logs"],
                 link: "/dashboard/whatsapp/logs",

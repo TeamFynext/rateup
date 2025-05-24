@@ -313,7 +313,46 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           />
         </>
       );
-
+    case WHATSAPP_BUTTON_TYPE.CATALOG:
+      return (
+        <>
+          <ContainedTextField
+            label={
+              <Text fz={14} fw={500}>
+                {translations["Type of action"]}
+              </Text>
+            }
+            value={"View catalog"}
+            readOnly
+          />
+          <ContainedTextField
+            label={
+              <Text fz={14} fw={500}>
+                {translations["Button text"]}
+              </Text>
+            }
+            rightSection={
+              <LengthTracker
+                length={form.values?.buttons?.[index]?.text?.length}
+                maxValue={25}
+                atStart
+              />
+            }
+            {...form.getInputProps(`buttons.${index}.text`)}
+            readOnly
+          />
+          <ContainedTextField
+            label={
+              <Text fz={14} fw={500}>
+                {"Thumbnail product retailer id"}
+              </Text>
+            }
+            {...form.getInputProps(
+              "defaultValues.catalog.thumbnail_product_retailer_id",
+            )}
+          />
+        </>
+      );
     default:
       return <></>;
   }

@@ -106,6 +106,11 @@ export default function WhatsappTemplateById() {
       status: WaTemplateStatus.DRAFT,
       example: [],
       templateType: TemplateType.GENERAL_NOTIFICATION,
+      defaultValues: {
+        catalog: {
+          thumbnail_product_retailer_id: "",
+        },
+      },
     },
     validate: zodResolver(templateSchema),
   });
@@ -261,7 +266,7 @@ export default function WhatsappTemplateById() {
           filename,
         };
         //@ts-ignore
-        values.defaultValues = defaultValues;
+        values.defaultValues = { ...values.defaultValues, ...defaultValues };
       }
       let templateData = isOrderCreate
         ? { ...values, config: configForm.getValues() }
@@ -345,7 +350,9 @@ export default function WhatsappTemplateById() {
         ? { type: e, example: "" }
         : e === WHATSAPP_BUTTON_TYPE.WEBSURVEY
           ? { type: WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE, text: "", example: [] }
-          : { type: e, text: "" };
+          : e === WHATSAPP_BUTTON_TYPE.CATALOG
+            ? { type: e, text: "View catalog" }
+            : { type: e, text: "" };
     if (e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
       const btn = form.values?.buttons?.filter(
         (data) => data.type === (e as WHATSAPP_BUTTON_TYPE),
@@ -694,6 +701,7 @@ export default function WhatsappTemplateById() {
                           }
                           btnLen={form?.values?.buttons?.length}
                           disabled={isOrderCreate}
+                          category={form.values.category}
                         />
                         {form.values?.buttons?.length > 0 && (
                           <>

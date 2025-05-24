@@ -11,6 +11,7 @@ export function parseTemplate(template) {
   parsedTemplate.buttons = [];
   parsedTemplate.footer = "";
   parsedTemplate.templateType = template?.templateType;
+  parsedTemplate.defaultValues = template?.defaultValues;
   // parsedTemplate.config = template?.config;
 
   for (const component of template?.data?.components ?? []) {
