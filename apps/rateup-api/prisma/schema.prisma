@@ -1397,7 +1397,7 @@ model LoyaltyCustomer {
   actions            LoyaltyActionCustomerMap[]
   referralCodes      LoyaltyReferralCode[]
   contactId          String                     @unique @db.Uuid
-  Contact            Contact                    @relation(fields: [contactId], references: [id])
+  Contact            Contact                    @relation(fields: [contactId], references: [id], onDelete: Cascade)
   LoyaltyCustomerMap LoyaltyCustomerMap[]
   active             Boolean?                   @default(true)
 }

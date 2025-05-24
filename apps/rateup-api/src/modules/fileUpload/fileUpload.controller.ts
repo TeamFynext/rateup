@@ -16,6 +16,7 @@ export async function uploadController(
   reply: FastifyReply,
 ) {
   const data = await req.file();
+
   const metadata = data?.fields?.metadata
     ? JSON.parse(data?.fields?.metadata?.["value"])
     : null;
@@ -52,7 +53,7 @@ export async function uploadController(
       fs.mkdirSync(tmpDir, { recursive: true });
     }
     tempRawPath = path.join(tmpDir, `${randomUUID()}_${filename}`);
-    tempOutputPath = tempRawPath.replace(/\.[^/.]+$/, "") + ".m4a";
+    tempOutputPath = path.join(tmpDir, `${randomUUID()}_output.m4a`);
 
     await pumpToFile(file, tempRawPath);
 

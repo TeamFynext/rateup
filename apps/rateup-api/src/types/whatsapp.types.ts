@@ -93,7 +93,7 @@ export interface WaReceiveMessageBody {
 }
 export interface WaSendMessageBody {
   messaging_product: "whatsapp";
-  recipient_type: "individual";
+  recipient_type?: "individual";
   to: string; // PHONE_NUMBER type
   type:
     | "text"
@@ -157,6 +157,50 @@ export interface WaSendMessageBody {
   };
   audio?: {
     link: string;
+  };
+  contacts?: {
+    addresses?: {
+      street?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+      country?: string;
+      country_code?: string;
+      type?: string;
+    }[];
+    birthday?: string;
+    emails?: {
+      email?: string;
+      type?: string;
+    }[];
+    name: {
+      formatted_name: string;
+      first_name?: string;
+      last_name?: string;
+      middle_name?: string;
+      suffix?: string;
+      prefix?: string;
+    };
+    org?: {
+      company?: string;
+      department?: string;
+      title?: string;
+    };
+    phones: {
+      phone: string;
+      type?: string;
+      wa_id?: string;
+    }[];
+    urls?: {
+      url?: string;
+      type?: string;
+    }[];
+  }[];
+  location?: {
+    latitude: number;
+    longitude: number;
+    name?: string;
+    address?: string;
   };
 }
 type WaButton = {
