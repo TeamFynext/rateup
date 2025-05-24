@@ -24,7 +24,10 @@ import FormData from "form-data";
 import { log } from "../../../utils/logger";
 import { LogicAction, QuestionType, WaFlowStatus } from "../../../types/enums";
 import { FlowLogicJump } from "../../../types/global";
-import { getSurveyById } from "../../survey/survey.service";
+import {
+  getGoogleUrlBySurveyTeamMapId,
+  getSurveyById,
+} from "../../survey/survey.service";
 import {
   deleteSession,
   getSession,
@@ -1092,10 +1095,15 @@ export async function sendGReviewLink({
 }: sendGReviewLinkProps) {
   log.trace("Sending google review link to %s", phone);
   const thankYouPage = `${process.env.FRONTEND_URL}/public/survey/${surveyTeamMapId}/end?k=n&msg=thanks`;
+  const reviewPage = await getGoogleUrlBySurveyTeamMapId(surveyTeamMapId);
+  if (!reviewPage) {
+    log.trace("Google Review page not found");
+    return;
+  }
   const googleReviewMessage = createCTAButtonMessage({
     to: phone,
     buttonText: "Review us on Google",
-    url: thankYouPage,
+    url: reviewPage,
     body: "Thank you for your feedback!",
   });
   await sendMessage(orgId, googleReviewMessage);

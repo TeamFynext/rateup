@@ -2,6 +2,7 @@ import {
   Campaign,
   Contact,
   ContactGroup,
+  PlatformType,
   WaAccountSettings,
   WaMessage,
 } from "@prisma/client";
@@ -36,6 +37,8 @@ export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
   contactId: string,
   waCreatedAt: string,
+  sourcePlatform: PlatformType,
+  sourceIdentifier: string,
   componentParams?: any,
   messageId?: string,
   sendBy?: string,
@@ -48,6 +51,8 @@ export async function addNewWaMessage(
       templateComponentParams: componentParams,
       messageId,
       sendBy,
+      sourcePlatform,
+      sourceIdentifier,
     },
   });
   return newMessage;
