@@ -19,7 +19,7 @@ function AiBotNode(props: NodeProps & { data: AiBotNodeData }) {
           ? parseJsonToReact(data.body)
           : "Double-click to edit message"}
       </div> */}
-      <Text>{data?.flow?.name}</Text>
+      <Text>{data?.chatbot?.name}</Text>
     </BaseNode>
   );
 }

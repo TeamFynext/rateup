@@ -208,6 +208,10 @@ export interface FlowNodeData extends BaseNodeData {
 ///////////////////////aibot node
 export interface AiBotNodeData extends BaseNodeData {
   body: string;
+  chatbot: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface TicketNodeData extends BaseNodeData {
@@ -726,12 +730,12 @@ export function validateNodeData(node: TypedNode): {
           message: `${node.data.label}: Message text is required.`,
         };
       }
-      // if (!data.teamId || data.teamId.trim() === "") {
-      //   return {
-      //     valid: false,
-      //     message: `${node.data.label}: Team ID is required.`,
-      //   };
-      // }
+      if (!data.chatbot.id || data.chatbot.id === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Chatbot selection is required.`,
+        };
+      }
       break;
     }
 
