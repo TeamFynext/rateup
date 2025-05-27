@@ -1,11 +1,15 @@
 import { useEffect, useRef } from "react";
 
-import { Flex, Group, Stack, Text } from "@mantine/core";
+import { ActionIcon, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
 import { create } from "zustand";
 
+import VoiceRecorder, {
+  useVoiceRecordStore,
+} from "@/components/input/VoiceRecorder";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
   parseJsonToReact,
   parseToWhatsAppFormat,
@@ -18,6 +22,7 @@ import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/m
 import {
   useAssignInboxToUer,
   useSendNewWaMessage,
+  useUnBlockWhatsAppUser,
 } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
 import {
@@ -39,29 +44,87 @@ export default function WaInboxChatDisplayFooter({
   const sendnewWaMessage = useSendNewWaMessage(contact.id);
   const { addMessage, removeMessage } = useMessageStore();
   const { media, resetMedia } = useMediaStore();
+  const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
+  const { body, setBody, resetBody } = useMessageBodyStore();
   const form = useForm({
     initialValues: {
       type: "text",
       text: { body: "" },
       media: media,
+      contacts: {
+        contactIds: [],
+        groupIds: [],
+      },
+      location: null,
     },
     validate: {
-      text: (value) => {
-        if (value.body.length === 0) {
+      text: (value, values) => {
+        if (
+          values.type === "text" &&
+          (value.body === "" ||
+            parseToWhatsAppFormat(value.body).trim().length === 0)
+        ) {
           return translations["Message can't be empty"];
+        }
+      },
+      media: (value, values) => {
+        if (values.type === "media" && !value.length) {
+          return "media required";
+        }
+      },
+      contacts: (value, values) => {
+        if (
+          values.type === "contact" &&
+          !value.contactIds.length &&
+          !value.groupIds.length
+        ) {
+          return "contacts required";
         }
       },
     },
   });
+
+  useEffect(() => {
+    if (media.length) {
+      let message = {
+        media,
+        type: "text",
+      };
+      if (
+        body.text.body === "" ||
+        parseToWhatsAppFormat(body.text.body).trim().length === 0
+      ) {
+        message.type = "media";
+      }
+      form.setValues({ ...body, ...message });
+    } else {
+      form.setValues({ ...body });
+    }
+  }, [body, media]);
+
+  useEffect(() => {
+    if (form.values.type === "location" && form.values.location) {
+      handleSendMessage();
+    }
+  }, [form.values]);
+
+  useEffect(() => {
+    if (audioUrl) {
+      setBody({
+        ...body,
+        media: [{ url: audioUrl, type: "audio", name: "voice-note" }],
+        type: "media",
+        text: {
+          body: "",
+        },
+      });
+    }
+  }, [audioUrl]);
   function handleSendMessage() {
+    if (form.validate().hasErrors) return;
     const values = { ...form.values };
     form.reset();
-    const trimmedBody =
-      values.text.body !== ""
-        ? parseToWhatsAppFormat(values.text.body).trim()
-        : "";
-    if (!trimmedBody.length && !values.media.length) return;
-    if (!trimmedBody.length && values.media.length) values.type = "media";
+    resetBody();
     addMessage(contact.id, {
       body: {
         text: values.text.body,
@@ -76,6 +139,7 @@ export default function WaInboxChatDisplayFooter({
       type: "text",
     });
     resetMedia();
+    setAudioUrl(null);
     sendnewWaMessage.mutate(values, {
       onSuccess: () => {
         removeMessage(contact.id);
@@ -110,26 +174,22 @@ export default function WaInboxChatDisplayFooter({
     resetMedia();
   }, [contact]);
 
-  useEffect(() => {
-    if (media.length) {
-      form.setFieldValue("media", media);
-    }
-  }, [media]);
-
   const SendMessageComponent = () => {
     return (
-      <Group>
+      <Group gap={"xs"}>
         <WaInboxFooterMenu
           sessionExpired={isSessionExpired}
           contact={contact}
         />
-        <RateupButtonPrimary
-          title={translations["Send"]}
-          rightIcon={<IconSend size={16} />}
-          size="xs"
-          onClick={handleSendMessage}
-          disabled={isSessionExpired}
-        />
+        <VoiceRecorder />
+        <Tooltip label={translations["Send"]}>
+          <ActionIcon
+            onClick={handleSendMessage}
+            disabled={isSessionExpired || isRecording}
+          >
+            <IconSend size={16} />
+          </ActionIcon>
+        </Tooltip>
       </Group>
     );
   };
@@ -148,24 +208,23 @@ export default function WaInboxChatDisplayFooter({
   return (
     <Stack gap={0}>
       <div className={classes.wrapper}>
-        {/* <WaInboxFooterMenu
-          sessionExpired={isSessionExpired}
-          contact={contact}
-        /> */}
         <form className={classes.form}>
           <div ref={inputRef} style={{ display: "flex", flex: 1 }}>
             <WaTextEditor
               handleInputChange={(value) => {
-                form.setValues({
-                  text: { ...form.values.text, body: value },
-                });
+                setBody({ ...body, text: { ...body.text, body: value } });
               }}
-              content={form.values.text.body}
+              content={body.text.body}
               mih={50}
               flex={1}
               inbox={true}
               customEnter={() => submiRef.current()}
-              editable={!isSessionExpired}
+              editable={
+                !isSessionExpired &&
+                !isRecording &&
+                !audioUrl &&
+                body.type === "text"
+              }
               customHeaders={<SendMessageComponent />}
             />
           </div>
@@ -220,6 +279,54 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
         contactId={contactId}
         opened={openedAssign}
         close={closeAssign}
+      />
+    </Stack>
+  );
+};
+
+export const WaInboxBlockedContactFooter = ({ contact }) => {
+  const { setSelectedContact, filterData } = useContactStore();
+  const [opened, { open, close }] = useDisclosure(false);
+  const unblockMut = useUnBlockWhatsAppUser(filterData);
+  function handleUnblock() {
+    unblockMut.mutate(
+      { phoneNumbersList: [contact.phone] },
+      {
+        onSuccess: () => {
+          setSelectedContact({ ...contact, blockedOnWhatsApp: false });
+        },
+      },
+    );
+  }
+  return (
+    <Stack gap={"xs"} pb={"xs"}>
+      <Group
+        bg={"black"}
+        justify="center"
+        c={"white"}
+        color="white"
+        gap={2}
+        py={2}
+      >
+        <IconExclamationCircle size={"1rem"} />
+        <Text size="xs">This contact has been blocked by you.</Text>
+      </Group>
+      <Group justify={"center"} gap={"xs"}>
+        <RateupButtonPrimary
+          title="Unblock contact"
+          onClick={open}
+          size="xs"
+          radius={"md"}
+        />
+      </Group>
+      <ConfirmationModal
+        confirmLabel="Unblock"
+        headerLabel="Are you sure to unblock this contact?"
+        headerTitle={`Unblock ${contact?.name ?? contact?.phone}`}
+        onClose={close}
+        onConfirm={handleUnblock}
+        opened={opened}
+        closeLabel="cancel"
       />
     </Stack>
   );
@@ -310,4 +417,39 @@ export const useMediaStore = create<MediaStore>((set) => ({
     });
   },
   resetMedia: () => set(() => ({ media: [] })),
+}));
+
+const initialMessgabody = {
+  type: "text",
+  media: [],
+  text: { body: "" },
+  contacts: {
+    contactIds: [],
+    groupIds: [],
+  },
+  location: null,
+};
+
+export const useMessageBodyStore = create<{
+  body: {
+    type: string;
+    media?: WaMedia[];
+    text?: { body: string };
+    contacts?: {
+      contactIds: string[];
+      groupIds: string[];
+    };
+    location?: {
+      longitude: string;
+      latitude: string;
+      name?: string;
+      address?: string;
+    };
+  };
+  setBody: (value) => void;
+  resetBody: () => void;
+}>((set) => ({
+  body: initialMessgabody,
+  setBody: (value) => set({ body: value }),
+  resetBody: () => set({ body: initialMessgabody }),
 }));

@@ -6,6 +6,7 @@ import {
   Group,
   Radio,
   RadioGroup,
+  ScrollAreaAutosize,
   SimpleGrid,
   Stack,
   Text,
@@ -302,9 +303,9 @@ const LoyaltyActionForm = ({
   }, [form.values.action_id]);
 
   return (
-    <Stack>
+    <Stack p={"xs"} h={"95vh"}>
       <Group justify="space-between">
-        <Title>{title}</Title>
+        <Title order={3}>{title}</Title>
         <Group>
           <RateupButtonSecondary
             title={translations["Cancel"]}
@@ -320,263 +321,271 @@ const LoyaltyActionForm = ({
           />
         </Group>
       </Group>
-      <PaperLayout>
-        <Stack>
-          <SimpleGrid cols={2}>
-            <LoyaltyActionSelect
-              onChange={(value) => form.setFieldValue("type", value)}
-              value={form.values.type}
-              disabled={!!action}
-              isReferralAvailable={isReferralAvailable}
-            />
-            <ContainedTextField
-              label={translations["Action Id"]}
-              {...form.getInputProps("action_id")}
-              disabled={action && action.action_id?.length}
-            />
-            <ContainedTextField
-              label={translations["Name"]}
-              {...form.getInputProps("name")}
-            />
-            <Group>
-              <ContainedDateInput
-                label={translations["Start Date"]}
-                {...form.getInputProps("startDate")}
-              />{" "}
-              -
-              <ContainedDateInput
-                label={translations["End Date"]}
-                {...form.getInputProps("endDate")}
+      <PaperLayout flex={1}>
+        <ScrollAreaAutosize>
+          <Stack>
+            <SimpleGrid cols={2}>
+              <LoyaltyActionSelect
+                onChange={(value) => form.setFieldValue("type", value)}
+                value={form.values.type}
+                disabled={!!action}
+                isReferralAvailable={isReferralAvailable}
               />
-            </Group>
-            <ContainedTextArea
-              label={translations["Description"]}
-              {...form.getInputProps("description")}
-              autosize
-              minRows={3}
-            />
-            {LoyaltyActionType.FeedBack && (
-              // <WaTemplateSelector {...form.getInputProps("flowId")} />
-              <FlowSelector
-                onlyPublished
-                id={"dbFlowId"}
-                {...form.getInputProps("flowId")}
-                searchable
-                comboboxProps={{ position: "top" }}
+              <ContainedTextField
+                label={translations["Action Id"]}
+                {...form.getInputProps("action_id")}
+                disabled={action && action.action_id?.length}
               />
-            )}
-            <Group>
-              <Stack>
-                <Checkbox
-                  label={
-                    isLReferralAction(form.values.type)
-                      ? translations["Amount Based"] +
-                        translations["for referrer"]
-                      : translations["Amount Based"]
-                  }
-                  {...form.getInputProps("isAmountBased")}
-                  checked={form.values.isAmountBased}
-                  display={
-                    isLPurchaseAction(form.values.type) ? "block" : "none"
-                  }
+              <ContainedTextField
+                label={translations["Name"]}
+                {...form.getInputProps("name")}
+              />
+              <Group>
+                <ContainedDateInput
+                  label={translations["Start Date"]}
+                  {...form.getInputProps("startDate")}
+                />{" "}
+                -
+                <ContainedDateInput
+                  label={translations["End Date"]}
+                  {...form.getInputProps("endDate")}
                 />
-                <Checkbox
-                  label={
-                    translations["Amount Based"] + translations["for friends"]
-                  }
-                  {...form.getInputProps("isAmountBasedForReferee")}
-                  checked={form.values.isAmountBasedForReferee}
+              </Group>
+              <ContainedTextArea
+                label={translations["Description"]}
+                {...form.getInputProps("description")}
+                autosize
+                minRows={3}
+              />
+              {LoyaltyActionType.FeedBack && (
+                // <WaTemplateSelector {...form.getInputProps("flowId")} />
+                <FlowSelector
+                  onlyPublished
+                  id={"dbFlowId"}
+                  {...form.getInputProps("flowId")}
+                  searchable
+                  comboboxProps={{ position: "top" }}
+                  allowDeselect={true}
+                />
+              )}
+              <Group>
+                <Stack>
+                  <Checkbox
+                    label={
+                      isLReferralAction(form.values.type)
+                        ? translations["Amount Based"] +
+                          translations["for referrer"]
+                        : translations["Amount Based"]
+                    }
+                    {...form.getInputProps("isAmountBased")}
+                    checked={form.values.isAmountBased}
+                    display={
+                      isLPurchaseAction(form.values.type) ? "block" : "none"
+                    }
+                  />
+                  <Checkbox
+                    label={
+                      translations["Amount Based"] + translations["for friends"]
+                    }
+                    {...form.getInputProps("isAmountBasedForReferee")}
+                    checked={form.values.isAmountBasedForReferee}
+                    display={
+                      isLPurchaseAction(form.values.type) &&
+                      isLReferralAction(form.values.type)
+                        ? "block"
+                        : "none"
+                    }
+                  />
+                </Stack>
+                <ContainedNumberInput
+                  label={translations["Amount"]}
+                  {...form.getInputProps("amount")}
+                  allowNegative={false}
                   display={
-                    isLPurchaseAction(form.values.type) &&
-                    isLReferralAction(form.values.type)
+                    (isLPurchaseAction(form.values.type) &&
+                      form.values.isAmountBased) ||
+                    form.values.isAmountBasedForReferee
                       ? "block"
                       : "none"
                   }
                 />
-              </Stack>
-              <ContainedNumberInput
-                label={translations["Amount"]}
-                {...form.getInputProps("amount")}
-                allowNegative={false}
-                display={
-                  (isLPurchaseAction(form.values.type) &&
-                    form.values.isAmountBased) ||
-                  form.values.isAmountBasedForReferee
-                    ? "block"
-                    : "none"
-                }
-              />
-            </Group>
-          </SimpleGrid>
-          <SimpleGrid cols={2}>
-            <PaperLayout bg={"var(--grey-color-5)"} h={350}>
+              </Group>
+            </SimpleGrid>
+            <SimpleGrid cols={2}>
+              <PaperLayout bg={"var(--grey-color-5)"} h={350}>
+                <Stack>
+                  {isLReferralAction(form.values.type) && (
+                    <Text size="sm" fw="bold">
+                      Referrer
+                    </Text>
+                  )}
+                  <RadioGroup {...form.getInputProps("actionRewardType")}>
+                    <Group>
+                      {Object.values(ActionRewadTypes).map((type) => (
+                        <Radio value={type} label={type} key={type} />
+                      ))}
+                    </Group>
+                  </RadioGroup>
+                  {form.values.actionRewardType === ActionRewadTypes.Reward ? (
+                    <LRSelector
+                      {...form.getInputProps("rewardId")}
+                      label={translations["Reward"]}
+                    />
+                  ) : (
+                    <>
+                      <ContainedNumberInput
+                        label={
+                          form.values.isAmountBased
+                            ? translations["Points per amount"]
+                            : translations["Points"]
+                        }
+                        {...form.getInputProps("points")}
+                        allowDecimal={false}
+                        allowNegative={false}
+                      />
+                      <ContainedNumberInput
+                        label={translations["Max Points Per Transaction"]}
+                        {...form.getInputProps("maxPoints")}
+                        allowDecimal={false}
+                        allowNegative={false}
+                        display={form.values.isAmountBased ? "block" : "none"}
+                      />
+                    </>
+                  )}
+                  <WaTemplateSelector
+                    templateType={TemplateType.LOYALTY}
+                    label={
+                      isLReferralAction(form.values.type)
+                        ? translations["whatsApp Template"] +
+                          translations["for referrer"] +
+                          translations["(to send after action)"]
+                        : translations["whatsApp Template"] +
+                          translations["(to send after action)"]
+                    }
+                    description={`Dynamic variable {{1}} - ${translations["customer name"]}, {{2}} - 
+                      ${translations["current earned points"]} ${isLReferralAction(form.values.type) ? `,{{3}} - ${translations["Friend name"]}, {{4}} - ${translations["Friend phone number"]}` : ""} `}
+                    {...form.getInputProps("waTemplateId")}
+                  />
+                </Stack>
+              </PaperLayout>
               <Stack>
                 {isLReferralAction(form.values.type) && (
-                  <Text size="sm" fw="bold">
-                    Referrer
-                  </Text>
-                )}
-                <RadioGroup {...form.getInputProps("actionRewardType")}>
-                  <Group>
-                    {Object.values(ActionRewadTypes).map((type) => (
-                      <Radio value={type} label={type} key={type} />
-                    ))}
-                  </Group>
-                </RadioGroup>
-                {form.values.actionRewardType === ActionRewadTypes.Reward ? (
-                  <LRSelector
-                    {...form.getInputProps("rewardId")}
-                    label={translations["Reward"]}
-                  />
-                ) : (
-                  <>
-                    <ContainedNumberInput
-                      label={
-                        form.values.isAmountBased
-                          ? translations["Points per amount"]
-                          : translations["Points"]
-                      }
-                      {...form.getInputProps("points")}
-                      allowDecimal={false}
-                      allowNegative={false}
-                    />
-                    <ContainedNumberInput
-                      label={translations["Max Points Per Transaction"]}
-                      {...form.getInputProps("maxPoints")}
-                      allowDecimal={false}
-                      allowNegative={false}
-                      display={form.values.isAmountBased ? "block" : "none"}
-                    />
-                  </>
-                )}
-                <WaTemplateSelector
-                  templateType={TemplateType.LOYALTY}
-                  label={
-                    isLReferralAction(form.values.type)
-                      ? translations["whatsApp Template"] +
-                        translations["for referrer"] +
-                        translations["(to send after action)"]
-                      : translations["whatsApp Template"] +
-                        translations["(to send after action)"]
-                  }
-                  description={`Dynamic variable {{1}} - ${translations["customer name"]}, {{2}} - 
-                      ${translations["current earned points"]} ${isLReferralAction(form.values.type) ? `,{{3}} - ${translations["Friend name"]}, {{4}} - ${translations["Friend phone number"]}` : ""} `}
-                  {...form.getInputProps("waTemplateId")}
-                />
-              </Stack>
-            </PaperLayout>
-            <Stack>
-              {isLReferralAction(form.values.type) && (
-                <PaperLayout bg={"var(--grey-color-5)"} h={350}>
-                  <Stack>
-                    <Text size="sm" fw="bold">
-                      Friends
-                    </Text>
+                  <PaperLayout bg={"var(--grey-color-5)"} h={350}>
+                    <Stack>
+                      <Text size="sm" fw="bold">
+                        Friends
+                      </Text>
 
-                    <RadioGroup
-                      {...form.getInputProps("refereeActionRewardType")}
-                    >
-                      <Group>
-                        {Object.values(ActionRewadTypes).map((type) => (
-                          <Radio value={type} label={type} key={type} />
-                        ))}
-                      </Group>
-                    </RadioGroup>
-                    {form.values.refereeActionRewardType ===
-                    ActionRewadTypes.Reward ? (
-                      <LRSelector
-                        {...form.getInputProps("refereeRewardId")}
-                        label={translations["Reward"]}
+                      <RadioGroup
+                        {...form.getInputProps("refereeActionRewardType")}
+                      >
+                        <Group>
+                          {Object.values(ActionRewadTypes).map((type) => (
+                            <Radio value={type} label={type} key={type} />
+                          ))}
+                        </Group>
+                      </RadioGroup>
+                      {form.values.refereeActionRewardType ===
+                      ActionRewadTypes.Reward ? (
+                        <LRSelector
+                          {...form.getInputProps("refereeRewardId")}
+                          label={translations["Reward"]}
+                        />
+                      ) : (
+                        <>
+                          <ContainedNumberInput
+                            label={translations["Points"]}
+                            {...form.getInputProps("refereePoints")}
+                            allowDecimal={false}
+                            allowNegative={false}
+                          />
+                          <ContainedNumberInput
+                            label={translations["Max Points Per Transaction"]}
+                            {...form.getInputProps("maxPointsForReferee")}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            display={
+                              isLPurchaseAction(form.values.type) &&
+                              form.values.isAmountBasedForReferee
+                                ? "block"
+                                : "none"
+                            }
+                          />
+                        </>
+                      )}
+                      <Checkbox
+                        label={
+                          translations["Referral allowed for existing customer"]
+                        }
+                        {...form.getInputProps("isExistingUserReferralAllowed")}
+                        checked={form.values.isExistingUserReferralAllowed}
                       />
-                    ) : (
-                      <>
-                        <ContainedNumberInput
-                          label={translations["Points"]}
-                          {...form.getInputProps("refereePoints")}
-                          allowDecimal={false}
-                          allowNegative={false}
-                        />
-                        <ContainedNumberInput
-                          label={translations["Max Points Per Transaction"]}
-                          {...form.getInputProps("maxPointsForReferee")}
-                          allowDecimal={false}
-                          allowNegative={false}
-                          display={
-                            isLPurchaseAction(form.values.type) &&
-                            form.values.isAmountBasedForReferee
-                              ? "block"
-                              : "none"
-                          }
-                        />
-                      </>
-                    )}
-                    <Checkbox
-                      label={
-                        translations["Referral allowed for existing customer"]
-                      }
-                      {...form.getInputProps("isExistingUserReferralAllowed")}
-                      checked={form.values.isExistingUserReferralAllowed}
-                    />
-                    <WaTemplateSelector
-                      templateType={TemplateType.LOYALTY}
-                      label={
-                        translations["whatsApp Template"] +
-                        translations["for friends"] +
-                        translations["(to send after action)"]
-                      }
-                      description={`Dynamic variable {{1}} - ${translations["customer name"]}, {{2}} - ${translations["current earned points"]}`}
-                      {...form.getInputProps("refereeWaTemplateId")}
-                    />
-                  </Stack>
-                </PaperLayout>
-              )}
-            </Stack>
-          </SimpleGrid>
-
-          {isLReferralAction(form.values.type) && (
-            <SimpleGrid cols={2}>
-              <Stack gap={0}>
-                <Text size="sm">{translations["Referral Message"]}</Text>
-                <Text size="xs" c={"dimmed"}>
-                  {
-                    translations[
-                      "Used in whatsapp message to send for referral"
-                    ]
-                  }
-                </Text>
-                <WaTextEditor
-                  handleInputChange={(value) => {
-                    form.setFieldValue("message.message", value.content);
-                  }}
-                  content={form.values.message.message}
-                  mah={120}
-                />
-              </Stack>
-              <Stack gap={0}>
-                <Text size="sm">
-                  {
-                    translations[
-                      "Referral forwarding Message with referral code"
-                    ]
-                  }
-                </Text>
-                <Text size="xs" c={"dimmed"}>
-                  {translations[
-                    "Used in whatsapp message for forwarding to friends"
-                  ] +
-                    translations["Use {{code}} to replace with referral code"]}
-                </Text>
-                <WaTextEditor
-                  handleInputChange={(value) => {
-                    form.setFieldValue("message.forwardMessage", value.content);
-                  }}
-                  content={form.values.message.forwardMessage}
-                  mah={120}
-                />
+                      <WaTemplateSelector
+                        templateType={TemplateType.LOYALTY}
+                        label={
+                          translations["whatsApp Template"] +
+                          translations["for friends"] +
+                          translations["(to send after action)"]
+                        }
+                        description={`Dynamic variable {{1}} - ${translations["customer name"]}, {{2}} - ${translations["current earned points"]}`}
+                        {...form.getInputProps("refereeWaTemplateId")}
+                      />
+                    </Stack>
+                  </PaperLayout>
+                )}
               </Stack>
             </SimpleGrid>
-          )}
-        </Stack>
+
+            {isLReferralAction(form.values.type) && (
+              <SimpleGrid cols={2}>
+                <Stack gap={0}>
+                  <Text size="sm">{translations["Referral Message"]}</Text>
+                  <Text size="xs" c={"dimmed"}>
+                    {
+                      translations[
+                        "Used in whatsapp message to send for referral"
+                      ]
+                    }
+                  </Text>
+                  <WaTextEditor
+                    handleInputChange={(value) => {
+                      form.setFieldValue("message.message", value.content);
+                    }}
+                    content={form.values.message.message}
+                    mah={120}
+                  />
+                </Stack>
+                <Stack gap={0}>
+                  <Text size="sm">
+                    {
+                      translations[
+                        "Referral forwarding Message with referral code"
+                      ]
+                    }
+                  </Text>
+                  <Text size="xs" c={"dimmed"}>
+                    {translations[
+                      "Used in whatsapp message for forwarding to friends"
+                    ] +
+                      translations[
+                        "Use {{code}} to replace with referral code"
+                      ]}
+                  </Text>
+                  <WaTextEditor
+                    handleInputChange={(value) => {
+                      form.setFieldValue(
+                        "message.forwardMessage",
+                        value.content,
+                      );
+                    }}
+                    content={form.values.message.forwardMessage}
+                    mah={120}
+                  />
+                </Stack>
+              </SimpleGrid>
+            )}
+          </Stack>
+        </ScrollAreaAutosize>
       </PaperLayout>
     </Stack>
   );

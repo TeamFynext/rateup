@@ -5,6 +5,7 @@ import {
   Anchor,
   Box,
   BoxComponentProps,
+  Flex,
   Group,
   Indicator,
   Modal,
@@ -23,6 +24,8 @@ import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter";
+import InboxContactsControl from "./InboxContactMessage";
+import InboxLocationControl from "./InboxLocation";
 import InsertEmoji from "./InsertEmoji";
 import InsertInboxAudio from "./InsertInboxMedia/InserInboxAudio";
 import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile";
@@ -119,7 +122,11 @@ function WaTextEditor({
       });
       editor.commands.setTextSelection(selection);
     }
-  }, [content, editor]);
+  }, [content, editor, editable]);
+
+  useEffect(() => {
+    if (editor) editor.setEditable(editable);
+  }, [editable]);
 
   return (
     <Box {...props}>
@@ -187,7 +194,7 @@ function WaTextEditor({
         <ShowMedia opened={opened} close={close} />
       </Group>
 
-      <RichTextEditor editor={editor} className={className}>
+      <RichTextEditor editor={editor} className={className} bg={"white"}>
         <RichTextEditor.Toolbar sticky tabIndex={-1}>
           <Group justify="space-between" w={"100%"}>
             <Group gap={"xs"}>
@@ -222,19 +229,21 @@ function WaTextEditor({
                   </RichTextEditor.ControlsGroup>
                   <RichTextEditor.ControlsGroup>
                     <WaQuickReplyControl />
+                    <InboxContactsControl />
+                    <InboxLocationControl />
                   </RichTextEditor.ControlsGroup>
                 </>
               )}
             </Group>
-            <Group>
-              <WaTextCharacterCount editor={editor} max={max} />
-              {customHeaders}
-            </Group>
+            {customHeaders}
           </Group>
         </RichTextEditor.Toolbar>
         <ScrollAreaAutosize mah={mah}>
           <RichTextEditor.Content mih={mih} />
         </ScrollAreaAutosize>
+        <Flex justify={"flex-end"} pr={"lg"}>
+          <WaTextCharacterCount editor={editor} max={max} />
+        </Flex>
       </RichTextEditor>
     </Box>
   );

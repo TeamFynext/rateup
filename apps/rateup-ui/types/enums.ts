@@ -212,6 +212,8 @@ export enum CampaignStatus {
   INACTIVE = "INACTIVE",
   SCHEDULED = "SCHEDULED",
   COMPLETED = "COMPLETED",
+  QUEUING = "QUEUING",
+  DEQUEUING = "DEQUEUING",
 }
 export enum CampaignType {
   WHATSAPP = "WHATSAPP",
@@ -529,4 +531,17 @@ export enum WaMessageAssignStatus {
   ASSIGNED = "ASSIGNED",
   CLOSED = "CLOSED",
   UNASSIGNED = "UNASSIGNED",
+}
+
+export enum WaMessageAssignStatusTab {
+  NEW = "New",
+  UNASSIGNED = "UnAssigned",
+  ASSIGNED = "Assigned",
+  ASSIGNEDTOME = "Assigned To Me",
+  CLOSED = "Closed",
+}
+
+export enum LoyaltyApiFeature {
+  action = "action",
+  reward = "reward",
 }

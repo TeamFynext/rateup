@@ -21,12 +21,13 @@ interface ContactStore {
 interface ChatContactCountStore {
   totalCount: {
     new: number;
-    all: number;
     closed: number;
     assigned: number;
     assignedToMe: number;
-    unassigned: number;
-    sent: number;
+    blocked: number;
+    newAssigned: number;
+    newUnassigned: number;
+    newAssignedTome: number;
   };
   setTotalCount: (value) => void;
 }
@@ -55,11 +56,12 @@ export const useChatContactCountStore = create<ChatContactCountStore>(
     totalCount: {
       new: 0,
       closed: 0,
-      all: 0,
       assigned: 0,
       assignedToMe: 0,
-      unassigned: 0,
-      sent: 0,
+      blocked: 0,
+      newAssigned: 0,
+      newUnassigned: 0,
+      newAssignedTome: 0,
     },
     setTotalCount: (value) => set({ totalCount: value }),
   }),

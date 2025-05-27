@@ -73,7 +73,7 @@ import {
 import { Campaign } from "../../../types/global";
 import { getErrorMessage } from "../../../utils";
 import { getCampaignParticipantStatusLabel } from "../../../utils/enums";
-import { showErrorToast } from "../../../utils/notifications";
+import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
 import styles from "./campaign.module.css";
 
 dayjs.extend(timezone);
@@ -195,6 +195,7 @@ const CampaignById = () => {
             title="Delivery Report"
             onClick={() => {
               mut.mutate(campaignId);
+              showLoadingToast("Generating report", "delivery-report");
             }}
           />
         </Group>
@@ -413,22 +414,25 @@ const StartCampaignCard = ({
           </Tooltip>
         </Stack>
       )}
-      {queueCount > 0 && (
-        <Tooltip label={translations["cancel schedule"]}>
-          <ActionIcon
-            size={"sm"}
-            variant="light"
-            onClick={() => {
-              sendMutation.mutate({
-                status: CampaignStatus.INACTIVE,
-                statuses: [CampaignParticipantStatus.FAILED],
-              });
-            }}
-          >
-            <IconX size={18} />
-          </ActionIcon>
-        </Tooltip>
-      )}
+      {queueCount > 0 &&
+        ![CampaignStatus.DEQUEUING, CampaignStatus.QUEUING].includes(
+          campaign?.status,
+        ) && (
+          <Tooltip label={translations["cancel schedule"]}>
+            <ActionIcon
+              size={"sm"}
+              variant="light"
+              onClick={() => {
+                sendMutation.mutate({
+                  status: CampaignStatus.INACTIVE,
+                  statuses: [CampaignParticipantStatus.FAILED],
+                });
+              }}
+            >
+              <IconX size={18} />
+            </ActionIcon>
+          </Tooltip>
+        )}
       <SendCampaignModal
         close={close}
         opened={opened}

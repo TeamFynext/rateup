@@ -28,6 +28,7 @@ interface ToolbarProps {
   handleTabSwitch: (tab: string) => void;
   validateFlow: (slient?: boolean) => void;
   saveDisabled?: boolean;
+  refetch?: () => void;
 }
 
 export default function Toolbar({
@@ -42,6 +43,7 @@ export default function Toolbar({
   handleTabSwitch,
   validateFlow,
   saveDisabled = false,
+  refetch,
 }: ToolbarProps) {
   return (
     <div className={styles.toolbar}>
@@ -125,7 +127,10 @@ export default function Toolbar({
         <ActionIcon
           variant="outline"
           className={styles.toolbarButton}
-          onClick={() => handleTabSwitch("settings")}
+          onClick={() => {
+            refetch?.();
+            handleTabSwitch("settings");
+          }}
           size={"lg"}
         >
           <IconSettings />

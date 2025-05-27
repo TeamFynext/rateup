@@ -81,6 +81,10 @@ const ShopifySchedules = ({
         ),
     },
     {
+      key: "apiStatus",
+      value: "Loyalty API Status",
+    },
+    {
       key: "event_details",
       value: "Event Details",
       renderCell: (value) => (
@@ -126,6 +130,7 @@ const ShopifySchedules = ({
             : "----",
           status: schedule.status ?? "----",
           actionStatus: schedule.actionStatus,
+          apiStatus: schedule.apiStatus ?? "----",
           createdAt: formatIsoDateStringWithTime(schedule.createdAt),
           history: schedule,
           event_details: shopifyInfo.credential.shopifySurveys?.find((s) =>

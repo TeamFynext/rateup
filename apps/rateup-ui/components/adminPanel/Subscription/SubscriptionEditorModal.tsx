@@ -96,7 +96,7 @@ export function SubscriptionEditorModal({
               label={translations["Expires At"]}
               value={dayjs(subscriptionForm.values.expiresAt).toDate()}
               onChange={(value) =>
-                subscriptionForm.setFieldValue("expiresAt", value)
+                subscriptionForm.setFieldValue("expiresAt", new Date(value))
               }
               disabled={!!isRazorPayPlan}
             />

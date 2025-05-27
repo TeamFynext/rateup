@@ -153,10 +153,24 @@ export async function getAssignedUserForContact(contactId) {
 }
 
 export async function getInboxUserCount() {
-  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`)).data;
+  return (
+    await axiosClient.get(`${WA_CONTACT_BASE_PATH}/count`, { timeout: 30000 })
+  ).data;
 }
 
 export async function markWaMessagesAsRead(contactId) {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/mark/${contactId}`))
+    .data;
+}
+
+export async function blockWhatsAppUser(data: { phoneNumbersList: string[] }) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/block-user`, data))
+    .data;
+}
+
+export async function unblockWhatsAppUser(data: {
+  phoneNumbersList: string[];
+}) {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/unblock-user`, data))
     .data;
 }

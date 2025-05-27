@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 
-import { Group, ScrollAreaAutosize, SimpleGrid, Stack } from "@mantine/core";
+import {
+  Box,
+  Group,
+  ScrollArea,
+  ScrollAreaAutosize,
+  SimpleGrid,
+  Stack,
+} from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useDebouncedState, useListState } from "@mantine/hooks";
 import {
@@ -23,6 +30,7 @@ import { PAGE_SIZE } from "@/utils/constants";
 import { CustomerStatsCard } from "../utils";
 import LCustomerCard from "./LCustomerCard";
 import LoyaltyUtilityMenu from "./LoyaltyUtilityMenu";
+import classes from "./Style.module.css";
 
 enum SortMenu {
   LatestFirst = "Latest First",
@@ -164,7 +172,7 @@ const LCustomerPage = () => {
   if (isError) return <ErrorComponent refetch={refetch} />;
 
   return (
-    <Stack>
+    <Stack h={"87vh"}>
       <PaperLayout bg={"var(--grey-color-5)"} p={"xs"}>
         <SimpleGrid cols={5}>
           {totalStats?.map((s) => (
@@ -177,8 +185,8 @@ const LCustomerPage = () => {
           ))}
         </SimpleGrid>
       </PaperLayout>
-      <PaperLayout p={0}>
-        <Stack>
+      <PaperLayout p={0} flex={1}>
+        <Stack justify="space-between">
           <Group bg={"var(--light-blue-5)"} justify="space-between" p={"xs"}>
             <Group>
               <LoyaltyUtilityMenu />
@@ -192,7 +200,7 @@ const LCustomerPage = () => {
               <DateInput
                 leftSection={<IconCalendar />}
                 value={date}
-                onChange={setDate}
+                onChange={(value) => setDate(new Date(value))}
                 clearable
               />
               <ContainedSelection
@@ -214,17 +222,19 @@ const LCustomerPage = () => {
               />
             </Group>
           </Group>
-          {customers?.length === 0 ? (
-            <NothingFound text={translations["No customer found"]} />
-          ) : (
-            <ScrollAreaAutosize h={"45vh"}>
-              <SimpleGrid cols={4} p={"sm"}>
-                {customers?.map((c) => (
-                  <LCustomerCard key={c?.id} customer={c} />
-                ))}
-              </SimpleGrid>
-            </ScrollAreaAutosize>
-          )}
+          <Box h={"49vh"} p={0}>
+            {customers?.length === 0 ? (
+              <NothingFound text={translations["No customer found"]} />
+            ) : (
+              <ScrollAreaAutosize h={"100%"}>
+                <SimpleGrid cols={4} p={"sm"}>
+                  {customers?.map((c) => (
+                    <LCustomerCard key={c?.id} customer={c} />
+                  ))}
+                </SimpleGrid>
+              </ScrollAreaAutosize>
+            )}
+          </Box>
           <Stack px={"xs"} pb="xs">
             <ContactPagination
               pagination={pagination}

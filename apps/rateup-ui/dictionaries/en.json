@@ -2104,5 +2104,7 @@
   "Assigned": "Assigned",
   "Assigned to Me": "Assigned to Me",
   "Closed": "Closed",
-  "UnAssigned": "UnAssigned"
+  "UnAssigned": "UnAssigned",
+  "Blocked": "Blocked",
+  "Choose Loyalty API/Action or Whatsapp Template": "Choose Loyalty API/Action or Whatsapp Template"
 }

@@ -10,9 +10,7 @@ import { FeatureBadge } from "./FeatureBadge";
 
 interface FeatureCardProps {
   featurePathName: SubscriptionFeaturePathName;
-  subscriptionForm: UseFormReturnType<
-    Pick<Subscription, "features" | "expiresAt">
-  >;
+  subscriptionForm: any;
 }
 
 export function FeatureCard({

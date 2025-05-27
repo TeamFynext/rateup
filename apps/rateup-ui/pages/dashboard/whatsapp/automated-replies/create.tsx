@@ -34,7 +34,30 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
     name: "",
     matchType: WaAutomatedReplyMatchType.ContainsAnyOf,
     matchData: {
-      json: {},
+      json: {
+        nodes: [
+          {
+            id: `startNode-${Date.now()}`,
+            type: "startNode",
+            position: {
+              x: 225,
+              y: 45,
+            },
+            data: {
+              label: "Start",
+              type: "startNode",
+              // startMessage: rootForm?.values?.commands?.join(", "),
+              startMessage: "",
+            },
+            measured: {
+              width: 220,
+              height: 126,
+            },
+          },
+        ],
+        edges: [],
+        viewport: {},
+      },
       caseSensitive: false,
     },
     commands: [],
@@ -78,33 +101,27 @@ export function AutomatedReplyForm({
   }
 
   function handleSubmitClick() {
+    const jsonData = matchDataForm.values.json;
+
+    // Update startMessage in all nodes of type "startNode"
+    jsonData.nodes = jsonData.nodes.map((node) => {
+      if (node.type === "startNode") {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            startMessage: rootForm?.values?.commands?.join(", "),
+          },
+        };
+      }
+      return node;
+    });
+
     const data = {
       ...rootForm.values,
       matchData: {
         ...matchDataForm.values,
-        json: {
-          nodes: [
-            {
-              id: `startNode-${Date.now()}`,
-              type: "startNode",
-              position: {
-                x: 225,
-                y: 45,
-              },
-              data: {
-                label: "Start",
-                type: "startNode",
-                startMessage: rootForm?.values?.commands?.join(", "),
-              },
-              measured: {
-                width: 220,
-                height: 126,
-              },
-            },
-          ],
-          edges: [],
-          viewport: {},
-        },
+        json: jsonData,
       },
     };
 

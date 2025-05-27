@@ -572,6 +572,7 @@ declare global {
     consent: boolean;
     waMessageAssignStatus: WaMessageAssignStatus;
     whatsappUserName?: string;
+    blockedOnWhatsApp: boolean;
     loyaltyCustomer?: {
       id: string;
       email?: string;
@@ -856,6 +857,23 @@ declare global {
     redeems: LoyaltyRedeem[];
     action: any;
   };
+
+  interface LoyaltyApiSetting {
+    id: string;
+    orgId: string;
+    feature: LoyaltyApiFeature;
+    rules: {
+      fields: { key: string; value: string }[];
+    };
+    action?: LoyaltyAction;
+    reward?: LoyaltyReward;
+    phoneKey: string;
+    amountKey: string;
+    actionId?: string;
+    rewardId?: string;
+    priority: number;
+    active: boolean;
+  }
 }
 export interface MenuLanding {
   success: boolean;
@@ -1180,6 +1198,50 @@ export type WaReceiveMessageBody = {
         emoji: string;
         message_id: string;
       };
+      contacts?: {
+        addresses?: {
+          street?: string;
+          city?: string;
+          state?: string;
+          zip?: string;
+          country?: string;
+          country_code?: string;
+          type?: string;
+        }[];
+        birthday?: string;
+        emails?: {
+          email?: string;
+          type?: string;
+        }[];
+        name: {
+          formatted_name: string;
+          first_name?: string;
+          last_name?: string;
+          middle_name?: string;
+          suffix?: string;
+          prefix?: string;
+        };
+        org?: {
+          company?: string;
+          department?: string;
+          title?: string;
+        };
+        phones: {
+          phone: string;
+          type?: string;
+          wa_id?: string;
+        }[];
+        urls?: {
+          url?: string;
+          type?: string;
+        }[];
+      }[];
+      location?: {
+        longitude: number;
+        latitude: number;
+        name: string;
+        address: string;
+      };
     },
   ];
   statuses: [
@@ -1254,11 +1316,54 @@ export type WaSendMessageBody = {
   };
   audio?: {
     link: string;
-    caption: string;
   };
   video?: {
     link: string;
     caption?: string;
+  };
+  contacts?: {
+    addresses?: {
+      street?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+      country?: string;
+      country_code?: string;
+      type?: string;
+    }[];
+    birthday?: string;
+    emails?: {
+      email?: string;
+      type?: string;
+    }[];
+    name: {
+      formatted_name: string;
+      first_name?: string;
+      last_name?: string;
+      middle_name?: string;
+      suffix?: string;
+      prefix?: string;
+    };
+    org?: {
+      company?: string;
+      department?: string;
+      title?: string;
+    };
+    phones: {
+      phone: string;
+      type?: string;
+      wa_id?: string;
+    }[];
+    urls?: {
+      url?: string;
+      type?: string;
+    }[];
+  }[];
+  location?: {
+    longitude: number;
+    latitude: number;
+    name: string;
+    address: string;
   };
 };
 type WaInteractiveMessageAction = {
@@ -1479,6 +1584,7 @@ export type ShopifySurvey = {
     unit: string; // "hour" | "day"
   };
   actionId?: string;
+  loyaltyApiFeature?: string;
 };
 
 type ScheduleObj = {
@@ -1494,4 +1600,5 @@ export type ShopifySchedule = ScheduleObj & {
   checkoutId?: string;
   actionStatus?: "success" | "failed";
   history: ScheduleObj[];
+  apiStatus?: string;
 };

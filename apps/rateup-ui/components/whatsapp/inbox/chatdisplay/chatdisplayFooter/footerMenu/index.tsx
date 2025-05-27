@@ -71,20 +71,20 @@ export default function WaInboxFooterMenu(props: Props) {
             <>
               <Menu.Item
                 leftSection={
-                  <IconWaveSine color="var(--mantine-primary-color-6)" />
-                }
-                onClick={openFlowModal}
-              >
-                Send a Flow
-              </Menu.Item>
-              <Divider />
-              <Menu.Item
-                leftSection={
                   <IconAutomation color="var(--mantine-primary-color-6)" />
                 }
                 onClick={openAutomationModal}
               >
-                Initiate an Automation
+                Initiate Automation
+              </Menu.Item>
+              <Divider />
+              <Menu.Item
+                leftSection={
+                  <IconWaveSine color="var(--mantine-primary-color-6)" />
+                }
+                onClick={openFlowModal}
+              >
+                Send WhatsApp Flow
               </Menu.Item>
               <Divider />
             </>
@@ -100,8 +100,7 @@ export default function WaInboxFooterMenu(props: Props) {
             }
             onClick={() => openModal()}
           >
-            {translations["Initiate conversation by sending a template"]}
-            {/* <WaInboxTemplateDisplayModal {...props} /> */}
+            Send WhatsApp Template
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
