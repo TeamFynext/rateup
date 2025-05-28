@@ -58,7 +58,7 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
       <TouchableOpacity
         onPress={() =>
           router.push({
-            pathname: "/inbox/contact/AssignToUser",
+            pathname: "/protected/inbox/contact/AssignToUser",
             params: { contactId: contactId },
           })
         }

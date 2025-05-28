@@ -9,6 +9,7 @@ import {
 import { AppState } from "react-native";
 import { orgWsMessage } from "./type";
 import { useOrgWsAuthCheck } from "../api/inbox/messages/message.query";
+import { useAuth } from "./AuthContext";
 
 interface UserContextProps {
   user: any;
@@ -28,15 +29,18 @@ const WA_INBOX_WEBSOCKET_CONNECTION_STRING = `${WEBSOCKET_URL}/api${ORG_WS_BASE_
 const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [wsData, setWsData] = useState<orgWsMessage>({} as orgWsMessage);
+  const { isAuthenticated } = useAuth();
+
+  // Pass isAuthenticated as `enabled` to the query to fetch only when authenticated
+  const { data, error } = useOrgWsAuthCheck();
 
   const connectionRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const retryIntervalRef = useRef(1000); // Start with 1s
 
-  const { data, error } = useOrgWsAuthCheck();
-
   const connectWebSocket = () => {
+    if (!isAuthenticated) return; // Don't connect if not authenticated
     if (!data?.afterAuthId || error) return;
 
     const socket = new WebSocket(
@@ -87,7 +91,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (data?.afterAuthId && !error) {
+    if (isAuthenticated && data?.afterAuthId && !error) {
       connectWebSocket();
     }
 
@@ -105,19 +109,23 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         reconnectTimeoutRef.current = null;
       }
     };
-  }, [data?.afterAuthId]);
+  }, [isAuthenticated, data?.afterAuthId]);
 
   // Reconnect when app resumes from background
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active" && connectionRef.current?.readyState !== WebSocket.OPEN) {
+      if (
+        state === "active" &&
+        connectionRef.current?.readyState !== WebSocket.OPEN &&
+        isAuthenticated
+      ) {
         console.log("🔁 Reconnecting WebSocket after resume");
         connectWebSocket();
       }
     });
 
     return () => subscription.remove();
-  }, []);
+  }, [isAuthenticated]);
 
   return (
     <UserContext.Provider value={{ user, setUser, wsData, setWsData }}>

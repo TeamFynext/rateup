@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { configureGoogleSignIn } from "../config/googleConfig";
 import { useRouter } from "expo-router";
 import { GoogleIcon } from "../constants/imageExports";
+import { loggedUserDetails } from "../api/api";
+import { useAuth } from "../context/AuthContext";
 
 const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
+  const { setUserId, setOrgId } = useAuth();
 
   useEffect(() => {
     configureGoogleSignIn();
@@ -20,7 +23,12 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       setError(res.message);
       setLoading(false);
     } else {
-      router.replace("/Home");
+      const userDetails = await loggedUserDetails();
+      const userData = userDetails.data;
+      const { userId, orgId } = userData;
+      setUserId(userId);
+      setOrgId(orgId);
+      router.replace("/protected/Home");
       setLoading(false);
     }
   };

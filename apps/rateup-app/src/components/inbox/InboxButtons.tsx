@@ -7,6 +7,7 @@ import {
   FilterIcon,
   RefreshIcon,
 } from "@/src/constants/imageExports";
+import { addToken } from "@/src/api/notification";
 
 const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number }) => {
   const router = useRouter();
@@ -15,7 +16,7 @@ const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number })
   const rotation = useRef(new Animated.Value(0)).current;
   const [isRotating, setIsRotating] = useState(false);
 
-  const handleRefresh = () => {
+  const handleRefresh = async() => {
     if (isRotating) return;
     setIsRotating(true);
     queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
@@ -44,11 +45,11 @@ const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number })
 
   return (
     <View className="flex-row gap-2 ml-2">
-      <TouchableOpacity onPress={() => router.push("/inbox/AddContact")}>
+      <TouchableOpacity onPress={() => router.push("/protected/inbox/AddContact")}>
         <AddContactIcon />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push("/inbox/Filters")}>
+      <TouchableOpacity onPress={() => router.push("/protected/inbox/Filters")}>
         <View className="relative">
           <FilterIcon />
           {activeFilterCount > 0 && (

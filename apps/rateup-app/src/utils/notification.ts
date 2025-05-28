@@ -1,5 +1,4 @@
 import * as Notifications from 'expo-notifications';
-import { useEffect } from 'react';
 import { Alert } from 'react-native';
 
 export async function registerForPushNotificationsAsync() {
@@ -27,16 +26,4 @@ export async function registerForPushNotificationsAsync() {
     console.error("❌ Failed to get push token:", err);
     return null;
   }
-}
-
-export function useRegisterPushToken(onRegister: (token: string) => void) {
-  useEffect(() => {
-    registerForPushNotificationsAsync().then((token) => {
-      if (token) {
-        onRegister(token);
-      } else {
-        console.log("⚠️ No token returned from push registration.");
-      }
-    });
-  }, []);
 }

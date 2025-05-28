@@ -50,7 +50,7 @@ const MoreOptions = ({
             onPress={() => {
               onClose();
               router.push({
-                pathname: "/inbox/contact/Edit",
+                pathname: "/protected/inbox/contact/Edit",
                 params: { userId },
               });
             }}
@@ -63,7 +63,7 @@ const MoreOptions = ({
             onPress={() => {
               onClose();
               router.push({
-                pathname: "/inbox/contact/AssignToUser",
+                pathname: "/protected/inbox/contact/AssignToUser",
                 params: { contactId: userId },
               });
             }}

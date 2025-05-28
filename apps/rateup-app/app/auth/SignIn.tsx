@@ -15,7 +15,6 @@ import { RateLogo } from "@/src/constants/imageExports";
 import { useToast } from "react-native-toast-notifications";
 
 const SignIn = () => {
-  const screenHeight = Dimensions.get("window").height;
   const toast = useToast();
 
   const showError = (message: string) => {

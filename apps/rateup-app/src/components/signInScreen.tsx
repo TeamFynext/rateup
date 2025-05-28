@@ -11,6 +11,7 @@ import { loggedUserDetails, signIn } from "@/src/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
 import { EyeIcon } from "../constants/imageExports";
 import { useAuth } from "../context/AuthContext";
+import { registerForPushNotificationsAsync } from "../utils/notification";
 
 export default function SignInScreen({
   setError,
@@ -22,10 +23,9 @@ export default function SignInScreen({
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const {setUserId,setOrgId} = useAuth();
 
   const router = useRouter();
-
-  const { setUserId, setOrgId } = useAuth();
 
   const handleSignIn = async () => {
     Keyboard.dismiss();
@@ -35,13 +35,14 @@ export default function SignInScreen({
       setError(response.message);
       setLoading(false);
     } else {
-      setError("");
       const userDetails = await loggedUserDetails();
       const userData = userDetails.data;
       const { userId, orgId } = userData;
-      setUserId(userId);
+      setUserId(userId)
       setOrgId(orgId);
-      router.replace("/Home");
+      const token = await registerForPushNotificationsAsync();
+      console.log(token);
+      router.replace("/protected/Home");
       setLoading(false);
     }
   };
@@ -109,7 +110,7 @@ export default function SignInScreen({
           />
           <Text className="ml-2 text-sm text-[#343A40]">Remember Me</Text>
         </View>
-        <TouchableOpacity onPress={() => router.push("/(auth)/ForgotPassword")}>
+        <TouchableOpacity onPress={() => router.push("/auth/ForgotPassword")}>
           <Text className="text-[#004F98] text-sm font-medium">
             Forgot Password?
           </Text>

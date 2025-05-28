@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { ChatFilter } from "../api/inbox/types";
-import { persist } from "zustand/middleware";
 import { deleteUploadedFiles } from "./fileUpload";
 
 type ChatState = {
@@ -15,6 +14,7 @@ type SessionState = {
   isSessionActive: boolean;
   setIsSessionActive: (session: boolean) => void;
 };
+
 type SelectedTabState = {
   selectedTab: string;
   setSelectedTab: (tab:string) => void;
@@ -41,6 +41,7 @@ export const useSessionActiveStore = create<SessionState>((set:any) => ({
   setIsSessionActive: (session: boolean) =>
     set({ isSessionActive: session }),
 }));
+
 
 type ChatFilterStore = {
   filter: ChatFilter;

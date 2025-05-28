@@ -5,7 +5,6 @@ import ChatHeader from "@/src/components/chatDisplay/ChatHeader";
 import ChatFooter from "@/src/components/chatDisplay/ChatFooter";
 import ChatBody from "@/src/components/chatDisplay/ChatBody";
 import { useChatAssignStatusStore, useContactIdStore, useSessionActiveStore } from "@/src/utils/store";
-import { UserProvider } from "@/src/context/UserContext";
 
 const ChatDisplay = () => {
   const {
