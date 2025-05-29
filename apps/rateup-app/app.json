@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "RateUp",
-    "slug": "myapp2",
+    "slug": "rateup",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
-    "scheme": "myapp",
+    "scheme": "RateUp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -16,8 +16,8 @@
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.abhinavviswam_01.myapp2",
-      "googleServicesFile": "./android/app/google-services.json"
+      "package": "com.rateupapp.rateup",
+      "googleServicesFile":"./android/app/google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -45,9 +45,8 @@
         "origin": false
       },
       "eas": {
-        "projectId": "ac893a5d-c44f-4b62-8d08-b679c335ccb8"
+        "projectId": "349704fe-fb2c-40e3-b1e1-3bc33aecdb29"
       }
-    },
-    "owner": "abhinav_viswam"
+    }
   }
 }

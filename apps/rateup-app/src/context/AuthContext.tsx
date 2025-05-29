@@ -3,7 +3,7 @@ import { checkAuth } from "../utils/checkAuth";
 import { loggedUserDetails } from "../api/api";
 
 type AuthContextType = {
-  isAuthenticated: boolean | null;
+  isAuthenticated: boolean;
   loading: boolean;
   setIsAuthenticated: (value: boolean) => void;
   userId: string | null;
@@ -13,7 +13,7 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: null,
+  isAuthenticated: false,
   loading: true,
   setIsAuthenticated: () => {},
   userId: null,
@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<any | null>(null);
   const [orgId, setOrgId] = useState<any | null>(null);

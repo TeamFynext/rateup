@@ -24,63 +24,58 @@ const ORG_WS_BASE_PATH = "/org/ws";
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 const WEBSOCKET_PROTOCOL = API_URL.startsWith("https") ? "wss" : "ws";
 const WEBSOCKET_URL = API_URL.replace(/(http)s?/, WEBSOCKET_PROTOCOL);
-const WA_INBOX_WEBSOCKET_CONNECTION_STRING = `${WEBSOCKET_URL}/api${ORG_WS_BASE_PATH}`;
+const WS_URL = `${WEBSOCKET_URL}/api${ORG_WS_BASE_PATH}`;
 
 const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [wsData, setWsData] = useState<orgWsMessage>({} as orgWsMessage);
   const { isAuthenticated } = useAuth();
 
-  // Pass isAuthenticated as `enabled` to the query to fetch only when authenticated
-  const { data, error } = useOrgWsAuthCheck();
+  const { data, error } = useOrgWsAuthCheck(isAuthenticated);
 
   const connectionRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const retryIntervalRef = useRef(1000); // Start with 1s
+  const retryIntervalRef = useRef(1000); // 1s, exponential backoff
 
   const connectWebSocket = () => {
-    if (!isAuthenticated) return; // Don't connect if not authenticated
-    if (!data?.afterAuthId || error) return;
+    if (
+      connectionRef.current ||
+      !isAuthenticated ||
+      !data?.afterAuthId ||
+      error
+    ) {
+      return;
+    }
 
-    const socket = new WebSocket(
-      `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${data.afterAuthId}`
-    );
-
+    const socket = new WebSocket(`${WS_URL}/${data.afterAuthId}`);
     connectionRef.current = socket;
 
     socket.onopen = () => {
       console.log("📡 WebSocket connected");
-      retryIntervalRef.current = 1000; // Reset backoff
-
-      // Heartbeat ping every 30 seconds
-      heartbeatIntervalRef.current = setInterval(() => {
-        if (socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({ type: "ping" }));
-        }
-      }, 30000);
+      retryIntervalRef.current = 1000;
     };
 
     socket.onmessage = (event) => {
       try {
-        const newMessage = JSON.parse(event.data);
-        setWsData(newMessage);
-      } catch (e) {
-        console.error("❌ WebSocket message parse error:", e);
+        const message = JSON.parse(event.data);
+        setWsData(message);
+      } catch (err) {
+        console.error("❌ Error parsing WebSocket message:", err);
       }
     };
 
     socket.onclose = () => {
       console.log("🔌 WebSocket disconnected");
-      if (connectionRef.current === socket) connectionRef.current = null;
-      if (heartbeatIntervalRef.current) {
-        clearInterval(heartbeatIntervalRef.current);
-        heartbeatIntervalRef.current = null;
+
+      if (connectionRef.current === socket) {
+        connectionRef.current = null;
       }
 
-      // Retry with exponential backoff
       reconnectTimeoutRef.current = setTimeout(() => {
-        retryIntervalRef.current = Math.min(retryIntervalRef.current * 2, 30000);
+        retryIntervalRef.current = Math.min(
+          retryIntervalRef.current * 2,
+          30000
+        );
         connectWebSocket();
       }, retryIntervalRef.current);
     };
@@ -100,18 +95,13 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         connectionRef.current.close();
         connectionRef.current = null;
       }
-      if (heartbeatIntervalRef.current) {
-        clearInterval(heartbeatIntervalRef.current);
-        heartbeatIntervalRef.current = null;
-      }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
       }
     };
-  }, [isAuthenticated, data?.afterAuthId]);
+  }, [isAuthenticated, data?.afterAuthId, error]);
 
-  // Reconnect when app resumes from background
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
       if (
@@ -119,7 +109,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         connectionRef.current?.readyState !== WebSocket.OPEN &&
         isAuthenticated
       ) {
-        console.log("🔁 Reconnecting WebSocket after resume");
+        console.log("🔁 Reconnecting WebSocket on app resume");
         connectWebSocket();
       }
     });

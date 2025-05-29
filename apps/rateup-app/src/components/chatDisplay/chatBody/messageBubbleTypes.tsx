@@ -301,14 +301,12 @@ export function WaInboxAudio({
   };
 
   return (
-    <View className="space-y-2 w-[60vw] rounded-xl bg-white">
-      {isPending && <ActivityIndicator size="small" color="#009987" />}
-
+    <View className="space-y-2 w-[60vw] rounded-xl bg-white p-3">
       {link || localPath ? (
         <View className="space-y-3">
           {/* Audio Row */}
-          <View className="flex-row items-center space-x-3 gap-1">
-            {/* Headphones */}
+          <View className="flex-row items-center space-x-3">
+            {/* Headphones Icon */}
             <View className="p-3 rounded-full bg-rateUpGreen20">
               <Headphones size={24} color="#009987" />
             </View>
@@ -366,18 +364,28 @@ export function WaInboxAudio({
         </View>
       ) : (
         <View className="space-y-1">
-          <TouchableOpacity
-            className="flex-row items-center gap-4 rounded-lg"
-            onPress={handleDownload}
-          >
+          <View className="flex-row items-center space-x-3">
+            {/* Headphones Icon */}
             <View className="p-3 rounded-full bg-gray-200">
               <Headphones size={24} color="#9ca3af" />
             </View>
-            <Text className="text-sm text-gray-700 font-medium">
-              Tap to download audio
-            </Text>
-          </TouchableOpacity>
-          <Text className="text-xs text-gray-500 text-right">{timestamp}</Text>
+
+            {/* Text and Button */}
+            <TouchableOpacity
+              onPress={handleDownload}
+              disabled={isPending}
+              className="flex-1 flex-row justify-between items-center rounded-lg px-3 py-2 bg-gray-50"
+            >
+              {isPending ? (
+                <ActivityIndicator size="small" color="#009987" />
+              ) : (
+                <Text className="text-sm text-gray-700 font-medium">
+                  Tap to download audio
+                </Text>
+              )}
+              <Text className="text-xs text-gray-500">{timestamp}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -399,10 +407,12 @@ export function WaInboxDocument({
   const toast = useToast();
   const [isPending, setIsPending] = useState(false);
   const [localPath, setLocalPath] = useState<string | null>(null);
-  const [id, filename, caption] = messageContent.split("_caption_");
-  const appFolderPath = `${RNFS.DownloadDirectoryPath}/wa_media`; // Folder where you store media
-  const downloadPath = `${appFolderPath}/${filename}`; // Document file path (adjust for your file type)
 
+  // Parse messageContent
+  const [id, filename = "document.pdf", caption = ""] =
+    messageContent.split("_caption_");
+  const appFolderPath = `${RNFS.ExternalDirectoryPath}/wa_media`;
+  const downloadPath = `${appFolderPath}/${filename}`;
   useEffect(() => {
     // Check if the document exists locally
     const checkLocalFile = async () => {
@@ -420,50 +430,33 @@ export function WaInboxDocument({
     checkLocalFile();
   }, [downloadPath]);
 
-  const handleDownload = async () => {
-    const hasPermission = await requestStoragePermission(); // Make sure it supports Android 13+
-    if (!hasPermission) {
-      toast.show("Storage permission denied.", { type: "warning" });
-      return;
-    }
+ const { mutateAsync } = useGetMediaFile();
 
-    const folderPath = `${RNFS.DownloadDirectoryPath}/wa_media`;
-    const fullPath = `${folderPath}/${filename}`;
+const handleDownload = async () => {
+  const hasPermission = await requestStoragePermission();
+  if (!hasPermission) {
+    toast.show("Storage permission denied.", { type: "warning" });
+    return;
+  }
 
-    const folderExists = await RNFS.exists(folderPath);
-    if (!folderExists) {
-      await RNFS.mkdir(folderPath);
-    }
+  try {
+    setIsPending(true);
 
-    const fileExists = await RNFS.exists(fullPath);
-    if (fileExists) {
-      setLocalPath("file://" + fullPath);
-      return;
-    }
+    // 1. Get binary file from backend using media ID
+    const fileData = await mutateAsync(id); // `id` is actually the mediaId
 
-    const downloadOptions = {
-      fromUrl: id, // direct URL to the document
-      toFile: fullPath,
-      background: true,
-      discretionary: true,
-    };
+    // 2. Write to filesystem using react-native-fs
+    await RNFS.writeFile(downloadPath, Buffer.from(fileData).toString("base64"), 'base64');
 
-    try {
-      setIsPending(true);
-      const result = await RNFS.downloadFile(downloadOptions).promise;
-      if (result.statusCode === 200) {
-        setIsPending(false);
-        setLocalPath("file://" + fullPath);
-      } else {
-        setIsPending(false);
-        toast.show("Failed to download document.", { type: "danger" });
-      }
-    } catch (error) {
-      setIsPending(false);
-      console.error("Download error:", error);
-      toast.show("Error while downloading.", { type: "danger" });
-    }
-  };
+    setLocalPath("file://" + downloadPath);
+  } catch (error) {
+    console.error("Download error:", error);
+    toast.show("Failed to download document.", { type: "danger" });
+  } finally {
+    setIsPending(false);
+  }
+};
+
 
   const openDocument = async () => {
     if (localPath) {
@@ -477,47 +470,53 @@ export function WaInboxDocument({
       }
     }
   };
+return (
+  <View className="w-[60vw] rounded-xl bg-white p-3 shadow-lg min-h-[64px] justify-center relative">
+    {/* Loading spinner - absolute to prevent layout shift */}
+    {isPending && (
+      <View className="absolute inset-0 justify-center items-center z-10 bg-white/70 rounded-xl">
+        <ActivityIndicator size="small" color="#009987" />
+      </View>
+    )}
 
-  return (
-    <View className="space-y-2 w-[60vw] rounded-xl bg-white p-3 shadow-lg h-16">
-      {isPending && <ActivityIndicator size="small" color="#009987" />}
-
-      {localPath ? (
-        <TouchableOpacity
-          onPress={openDocument}
-          activeOpacity={0.7}
-          className="flex-col justify-center items-center space-y-2"
-        >
-          <Text className="text-base text-gray-700 font-medium text-center">
-            📄 Open Document
+    {!localPath ? (
+      <TouchableOpacity
+        onPress={handleDownload}
+        disabled={isPending}
+        className="flex-row items-center space-x-4"
+      >
+        <View className="p-3 rounded-full bg-gray-200">
+          <Download size={24} color="#9ca3af" />
+        </View>
+        <View className="flex-1">
+          <Text className="text-sm text-gray-700 font-medium">
+            Tap to download document
           </Text>
-          <Text className="text-xs text-gray-500 text-center">{filename}</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          onPress={handleDownload}
-          className="flex-row items-center space-x-4"
-        >
-          <View className="p-3 rounded-full bg-gray-200">
-            <Download size={24} color="#9ca3af" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-sm text-gray-700 font-medium">
-              Tap to download document
-            </Text>
-            <Text className="text-xs text-gray-500">{filename}</Text>
-          </View>
-        </TouchableOpacity>
-      )}
-
-      {/* Optional caption */}
-      {caption ? (
-        <Text className="text-sm text-gray-700 text-center italic">
-          {caption}
+          <Text className="text-xs text-gray-500">{filename}</Text>
+        </View>
+      </TouchableOpacity>
+    ) : (
+      <TouchableOpacity
+        onPress={openDocument}
+        activeOpacity={0.7}
+        className="flex-col justify-center items-center space-y-1"
+      >
+        <Text className="text-base text-gray-700 font-medium text-center">
+          📄 Open Document
         </Text>
-      ) : null}
-    </View>
-  );
+        <Text className="text-xs text-gray-500 text-center">{filename}</Text>
+      </TouchableOpacity>
+    )}
+
+    {/* Optional caption */}
+    {caption ? (
+      <Text className="text-sm text-gray-700 text-center italic mt-2">
+        {caption}
+      </Text>
+    ) : null}
+  </View>
+);
+
 }
 
 interface Props {
@@ -559,7 +558,9 @@ export function WaInboxInteractive({ interactiveBody, messageContent }: Props) {
 
       {interactiveBody?.action && (
         <TouchableOpacity className="bg-rateUpGreen rounded-md">
-          <Text className="p-2">{interactiveBody.action?.parameters?.flow_cta}</Text>
+          <Text className="p-2">
+            {interactiveBody.action?.parameters?.flow_cta}
+          </Text>
         </TouchableOpacity>
       )}
     </View>

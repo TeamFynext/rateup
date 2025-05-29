@@ -86,9 +86,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.abhinavviswam_01.myapp2'
+    namespace 'com.rateupapp.rateup'
     defaultConfig {
-        applicationId 'com.abhinavviswam_01.myapp2'
+        applicationId 'com.rateupapp.rateup'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

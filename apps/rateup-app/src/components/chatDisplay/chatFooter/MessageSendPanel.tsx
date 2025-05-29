@@ -29,8 +29,9 @@ const MessageSendPanel = () => {
   const voiceReset = useVoiceStore((s) => s.reset);
   //@ts-ignore
   const mutation = useSendNewWaMessage(selectedContactId);
-  // const {isSessionActive} = useSessionActiveStore();
-  const isSessionActive = true
+  let { isSessionActive } = useSessionActiveStore();
+  //@ts-ignore
+  isSessionActive = isSessionActive === "true";
 
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const [message, setMessage] = useState("");
@@ -157,124 +158,127 @@ const MessageSendPanel = () => {
 
   return (
     <View className="bg-white pt-3 px-3 pb-5">
-      <View className={isSessionActive === true ? "opacity-100" : "opacity-50"} pointerEvents={isSessionActive === true ? "auto" : "none" }>
-      {media.length > 0 && (
-        <View className="flex-row flex-wrap gap-2 mb-3 px-1">
-          {media.map((item) => (
-            <View key={item.key} className="relative w-[80px] h-[80px]">
-              {/* @ts-ignore */}
-              {!item.uploading && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setDeletingKey(item.key);
-                    setTimeout(() => {
-                      removeMedia(item.key);
-                      setDeletingKey(null);
-                    }, 300);
-                  }}
-                  className="absolute -top-1 -right-1 bg-black/60 z-10 w-5 h-5 rounded-full items-center justify-center"
-                >
-                  {deletingKey === item.key ? (
-                    <ActivityIndicator size={12} color="#fff" />
-                  ) : (
-                    <Text className="text-white text-xs">×</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-              {/* @ts-ignore */}
-              {item.uploading ? (
-                <View className="w-full h-full bg-gray-100 rounded-xl items-center justify-center">
-                  <ActivityIndicator size="small" color="#888" />
-                  <Text className="text-[10px] text-gray-500 mt-1">
-                    Uploading...
-                  </Text>
-                </View>
-              ) : item.type === "image" ? (
-                <Image
-                  source={{ uri: item.url }}
-                  className="w-full h-full rounded-xl"
-                />
-              ) : (
-                <View className="w-full h-full rounded-xl bg-gray-200 items-center justify-center">
-                  <Text className="text-[10px] text-center">
-                    {item.type.toUpperCase()}
-                  </Text>
-                </View>
-              )}
-            </View>
-          ))}
-        </View>
-      )}
+      <View
+        className={isSessionActive ? "opacity-100" : "opacity-50"}
+        pointerEvents={isSessionActive ? "auto" : "none"}
+      >
+        {media.length > 0 && (
+          <View className="flex-row flex-wrap gap-2 mb-3 px-1">
+            {media.map((item) => (
+              <View key={item.key} className="relative w-[80px] h-[80px]">
+                {/* @ts-ignore */}
+                {!item.uploading && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setDeletingKey(item.key);
+                      setTimeout(() => {
+                        removeMedia(item.key);
+                        setDeletingKey(null);
+                      }, 300);
+                    }}
+                    className="absolute -top-1 -right-1 bg-black/60 z-10 w-5 h-5 rounded-full items-center justify-center"
+                  >
+                    {deletingKey === item.key ? (
+                      <ActivityIndicator size={12} color="#fff" />
+                    ) : (
+                      <Text className="text-white text-xs">×</Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+                {/* @ts-ignore */}
+                {item.uploading ? (
+                  <View className="w-full h-full bg-gray-100 rounded-xl items-center justify-center">
+                    <ActivityIndicator size="small" color="#888" />
+                    <Text className="text-[10px] text-gray-500 mt-1">
+                      Uploading...
+                    </Text>
+                  </View>
+                ) : item.type === "image" ? (
+                  <Image
+                    source={{ uri: item.url }}
+                    className="w-full h-full rounded-xl"
+                  />
+                ) : (
+                  <View className="w-full h-full rounded-xl bg-gray-200 items-center justify-center">
+                    <Text className="text-[10px] text-center">
+                      {item.type.toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
 
-      <View className="flex-row justify-between px-1 mb-3">
-        <TouchableOpacity
-          onPress={() => pickMedia("image")}
-          className="items-center mx-2"
-        >
-          <ImageIcon size={30} color="black" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => pickMedia("video")}
-          className="items-center mx-2"
-        >
-          <VideoIcon size={30} color="black" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => pickMedia("document")}
-          className="items-center mx-2"
-        >
-          <BookText size={30} color="black" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => pickMedia("audio")}
-          className="items-center mx-2"
-        >
-          <MusicIcon size={30} color="black" />
-        </TouchableOpacity>
-
-        <VoiceRecorder
-          onRecordingUpload={({ key, url, name }) =>
-            //@ts-ignore
-            addMedia({ key, url, name, type: "audio", uploading: false })
-          }
-        />
-      </View>
-
-      <View className="flex-row items-end">
-        <View className="flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-3 py-2 space-x-2">
-          <TouchableOpacity onPress={togglePanel}>
-            <Animated.View style={rotateStyle}>
-              <PlusIcon />
-            </Animated.View>
+        <View className="flex-row justify-between px-1 mb-3">
+          <TouchableOpacity
+            onPress={() => pickMedia("image")}
+            className="items-center mx-2"
+          >
+            <ImageIcon size={30} color="black" />
           </TouchableOpacity>
 
-          <TextInput
-            className="flex-1 text-base text-black max-h-28"
-            placeholder="Type a message or '/' for commands"
-            placeholderTextColor="#7A8289"
-            multiline
-            value={message}
-            onChangeText={setMessage}
-          />
+          <TouchableOpacity
+            onPress={() => pickMedia("video")}
+            className="items-center mx-2"
+          >
+            <VideoIcon size={30} color="black" />
+          </TouchableOpacity>
 
-          <EmojiIcon />
+          <TouchableOpacity
+            onPress={() => pickMedia("document")}
+            className="items-center mx-2"
+          >
+            <BookText size={30} color="black" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => pickMedia("audio")}
+            className="items-center mx-2"
+          >
+            <MusicIcon size={30} color="black" />
+          </TouchableOpacity>
+
+          <VoiceRecorder
+            onRecordingUpload={({ key, url, name }) =>
+              //@ts-ignore
+              addMedia({ key, url, name, type: "audio", uploading: false })
+            }
+          />
         </View>
 
-        <TouchableOpacity
-          onPress={handleSend}
-          disabled={isUploading}
-          className="ml-2 w-10 h-10 items-center justify-center"
-        >
-          {isUploading ? (
-            <ActivityIndicator size="small" color="#009987" />
-          ) : (
-            <SendIcon />
-          )}
-        </TouchableOpacity>
-      </View>
+        <View className="flex-row items-end">
+          <View className="flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-3 py-2 space-x-2">
+            <TouchableOpacity onPress={togglePanel}>
+              <Animated.View style={rotateStyle}>
+                <PlusIcon />
+              </Animated.View>
+            </TouchableOpacity>
+
+            <TextInput
+              className="flex-1 text-base text-black max-h-28"
+              placeholder="Type a message or '/' for commands"
+              placeholderTextColor="#7A8289"
+              multiline
+              value={message}
+              onChangeText={setMessage}
+            />
+
+            <EmojiIcon />
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSend}
+            disabled={isUploading}
+            className="ml-2 w-10 h-10 items-center justify-center"
+          >
+            {isUploading ? (
+              <ActivityIndicator size="small" color="#009987" />
+            ) : (
+              <SendIcon />
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );

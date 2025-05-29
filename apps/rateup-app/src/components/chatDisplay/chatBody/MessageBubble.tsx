@@ -11,7 +11,7 @@ import { namePreview } from "@/src/utils/chatbox_utils";
 
 type MessageBubbleProps = {
   messageContent: any;
-  interactive?:any
+  interactive?: any;
   timestamp: string;
   isSent: boolean;
   messageType?: string;
@@ -24,9 +24,8 @@ const MessageBubble = ({
   isSent,
   messageType,
   senderName,
-  interactive
+  interactive,
 }: MessageBubbleProps) => {
-  // Memoize renderContent to avoid recreating on each render
   const renderContent = useCallback(() => {
     switch (messageType) {
       case "text":
@@ -45,17 +44,26 @@ const MessageBubble = ({
         return <Text className="text-xl">{messageContent}</Text>;
       case "button":
         return <Text>buttons</Text>;
-       case "interactive":
-      return (
-        <WaInboxInteractive
-          interactiveBody={interactive}
-          messageContent={messageContent}
-        />
-      );
+      case "interactive":
+        return (
+          <WaInboxInteractive
+            interactiveBody={interactive}
+            messageContent={messageContent}
+          />
+        );
       default:
         return <Text className="text-black text-sm">{messageContent}</Text>;
     }
   }, [messageContent, messageType, timestamp]);
+
+  // ⛔️ SPECIAL CASE: Received audio message — no bubble
+  if (messageType === "audio" && !isSent) {
+    return (
+      <View className="flex-row px-2 w-full mb-2 items-center gap-1 justify-start">
+        {renderContent()}
+      </View>
+    );
+  }
 
   return (
     <View
@@ -68,9 +76,11 @@ const MessageBubble = ({
           isSent ? "bg-[#d2f8d2]" : "bg-white"
         }`}
       >
-        <Text className="text-blue-500 italic opacity-70 p-1">
+        {isSent && (
+          <Text className="text-blue-500 italic opacity-70 p-1">
           {senderName}
         </Text>
+        )}
         {renderContent()}
         {messageType !== "audio" && (
           <Text className="text-sm text-gray-500 text-right mt-1">
@@ -78,6 +88,7 @@ const MessageBubble = ({
           </Text>
         )}
       </View>
+
       {isSent && (
         <View className="w-8 h-8 rounded-full bg-[#00998733] flex items-center justify-center">
           <Text className="text-rateUpGreen font-bold text-md">

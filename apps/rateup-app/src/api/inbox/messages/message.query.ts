@@ -63,9 +63,10 @@ export const useGetMessagesByContactId = (contactId: string) => {
 //   }, [contactId]);
 // };
 
-export const useOrgWsAuthCheck = () => {
+export const useOrgWsAuthCheck = (enabled:boolean) => {
   return useQuery({
     queryKey: ["org_auth_check_for_ws"],
     queryFn: orgWsAuthCheck,
+    enabled
   });
 };
