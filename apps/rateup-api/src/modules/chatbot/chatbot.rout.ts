@@ -6,6 +6,8 @@ import {
   deleteChatHistoryHandler,
   deleteEmbeddedSourceHandler,
   deleteManyEmbeddedSourcesHandler,
+  deleteSelectedChatbotHandler,
+  getAllChatbotsByOrgHandler,
   getChatbotDetailsHandler,
   getChatHitoryByOrgHandler,
   getUploadedSourceHandler,
@@ -16,6 +18,7 @@ import {
 import { $chatbotRef } from "./chatbot.schema";
 import FastifyMultipart from "@fastify/multipart";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
+import { Type } from "@sinclair/typebox";
 
 export async function chatbotRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -92,7 +95,7 @@ export async function chatbotRoutes(server: FastifyInstance) {
   );
 
   server.put(
-    "/chatbot",
+    "/chatbot/:chatbotId",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
@@ -102,17 +105,33 @@ export async function chatbotRoutes(server: FastifyInstance) {
     updateChatbotDetailsHanlder,
   );
   server.get(
-    "/chatbot",
+    "/chatbot/:chatbotId",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
     },
     getChatbotDetailsHandler,
   );
   server.get(
-    "/chathistory",
+    "/chathistory/:chatbotId",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
     },
     getChatHitoryByOrgHandler,
+  );
+
+  server.get(
+    "/chatbots",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    getAllChatbotsByOrgHandler,
+  );
+
+  server.delete(
+    "/chatbot/:chatbotId",
+    {
+      preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
+    },
+    deleteSelectedChatbotHandler,
   );
 }

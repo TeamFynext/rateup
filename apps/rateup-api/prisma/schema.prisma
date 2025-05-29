@@ -127,7 +127,7 @@ model Org {
   ApiAccessToken           ApiAccessToken?
   surveyThemes             WebSurveyTheme[]
   UsageStats               UsageStats?
-  chatbot                  Chatbot?
+  chatbot                  Chatbot[] 
   Survey                   Survey[]
   WaAccountSettings        WaAccountSettings?
   generateQr               GenerateQr[]
@@ -447,6 +447,8 @@ model Contact {
   loyaltyCustomer              LoyaltyCustomer?
   external_id                  String?
   aiWaChat                     Boolean               @default(false)
+  isAiBotActive                Boolean               @default(false)
+  chatbotId                    String                @default("")
   waMessageAssignStatus        String                @default("UNASSIGNED")
   waInboxAssign                WaInboxAssign[]
   lastReceivedMessageTimeStamp DateTime?
@@ -1235,8 +1237,9 @@ model ApiAccessToken {
 
 model Chatbot {
   id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId            String  @unique @db.Uuid
+  orgId            String  @db.Uuid
   org              Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name             String @default("Default Chatbot")
   shortUrlId       String  @unique
   publicPageStatus String? @default("INACTIVE")
   enableWaChat     Boolean @default(false)

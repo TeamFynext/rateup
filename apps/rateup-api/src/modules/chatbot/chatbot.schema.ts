@@ -8,10 +8,12 @@ import {
 export const dataLoadSchema = z.object({
   source: z.string(),
   type: z.nativeEnum(ChatBotDataSourceType),
+  chatbotId: z.string(),
 });
 
 export const chatbotMessageSchema = z.object({
   query: z.string(),
+  chatbotId: z.string(),
 });
 
 export const deleteContentSchema = z.object({
