@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { Group, RadioGroup, Stack, Tooltip } from "@mantine/core";
 
+import { AccountSelector } from "@/components/input/AccountSelector";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useSendWaTemplateToUser } from "../../../../../../backend/whatsapp/whatsapp.query";
@@ -30,6 +31,8 @@ export default function WaInboxTemplateDisplayModal({
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const sendTemplate = useSendWaTemplateToUser(contact.phone, contact.id);
   const [teamId, setTeamId] = useState<string>("");
+  const [whatsappSettingsPhoneId, setWhatsappSettingsPhoneId] =
+    useState<string>("");
   const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);
   const approvedTemplates = templatesAvailableForTeam?.filter(
     (template) => template?.data?.status === "APPROVED",
@@ -84,6 +87,10 @@ export default function WaInboxTemplateDisplayModal({
                     />
                   </div>
                 </Tooltip>
+                <AccountSelector
+                  value={whatsappSettingsPhoneId}
+                  onChange={setWhatsappSettingsPhoneId}
+                />
                 <WaTemplateSF
                   searchTerm={searchTerm}
                   setSearchTerm={setSearchTerm}
@@ -106,6 +113,7 @@ export default function WaInboxTemplateDisplayModal({
                   sendTemplate={sendTemplate}
                   onClose={onClose}
                   setSelectedTemplateId={setSelectedTemplateId}
+                  whatsappSettingsPhoneId={whatsappSettingsPhoneId}
                 />
               ) : (
                 <NothingFound
