@@ -78,13 +78,14 @@ export async function registerBusinessClientHandler(
     );
     await setBusinessPublicKey(keys.publicKey, phone_number_id, accessToken);
     // Saving settings
-    const waSetting = await prisma.whatsappSettings.findUnique({
+    const waSetting = await prisma.whatsappSettings.findFirst({
       where: {
         orgId,
+        phoneId: phone_number_id,
       },
     });
     if (waSetting) {
-      await updateWaSettings(orgId, {
+      await updateWaSettings(orgId, phone_number_id, {
         accessToken,
       });
     } else {
@@ -114,12 +115,12 @@ export async function registerBusinessClientHandler(
 }
 
 export async function deRegisterBusinessClientHandler(
-  req: FastifyRequest,
+  req: FastifyRequest<{ Params: { phoneId: string } }>,
   rep: FastifyReply,
 ) {
   try {
     // TODO
-    await deleteWaSettings(req.user.orgId);
+    await deleteWaSettings(req.user.orgId, req.params.phoneId);
   } catch (e) {
     log.error(e);
     rep.status(500).send({ message: "Internal server error" });

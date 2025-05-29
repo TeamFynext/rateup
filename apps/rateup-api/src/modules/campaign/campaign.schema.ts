@@ -13,6 +13,7 @@ const coreCampaignSchema = z.object({
   teamId: z.string(),
   waTemplateId: z.string(),
   flowId: z.string().optional(),
+  whatsappSettingsPhoneId: z.string(),
 });
 
 const createCampaignInputSchema = coreCampaignSchema;
@@ -31,6 +32,7 @@ const updateCampaignInputSchema = z.object({
   errorMessage: z.string().optional(),
   dynamicTags: z.array(z.string().nullable()).optional(),
   useUserConsent: z.boolean().optional(),
+  whatsappSettingsPhoneId: z.string().optional(),
 });
 
 const byCampaignIdParamsSchema = z.object({

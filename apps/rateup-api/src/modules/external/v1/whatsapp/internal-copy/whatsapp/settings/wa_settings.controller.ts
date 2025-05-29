@@ -50,7 +50,7 @@ export async function updateWaSettingsHandler(
   res: FastifyReply,
 ) {
   const orgId = req.user.orgId;
-  const waSettings = await updateWaSettings(orgId, req.body);
+  const waSettings = await updateWaSettings(orgId, req.body?.phoneId, req.body);
   return res.status(200).send(waSettings);
 }
 
@@ -59,15 +59,15 @@ export async function upsertWaSettingsHandler(
   res: FastifyReply,
 ) {
   const orgId = req.user.orgId;
-  const waSettings = await upsertWaSettings(orgId, req.body);
+  const waSettings = await upsertWaSettings(orgId, req.body?.phoneId, req.body);
   return res.status(200).send(waSettings);
 }
 
 export async function deleteWaSettingsHandler(
-  req: FastifyRequest,
+  req: FastifyRequest<{ Params: { phoneId: string } }>,
   res: FastifyReply,
 ) {
-  await deleteWaSettings(req.user.orgId);
+  await deleteWaSettings(req.user.orgId, req.params?.phoneId);
   return res.status(200).send();
 }
 

@@ -11,6 +11,7 @@ const createAutomatedReplySchema = z.object({
   matchType: z.nativeEnum(WaAutomatedReplyMatchType),
   matchData: matchDataSchema,
   commands: z.array(z.string()),
+  whatsappSettingsPhoneId: z.string(),
 });
 
 const byWaAutomatedReplyIdParams = z.object({

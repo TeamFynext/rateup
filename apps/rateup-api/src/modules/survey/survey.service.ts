@@ -320,7 +320,7 @@ export async function getPhoneBySurveyTeamMapId(id: string) {
         select: {
           org: {
             select: {
-              whatsappSettings: {
+              WhatsappSettings: {
                 select: {
                   phone: true,
                 },
@@ -332,7 +332,7 @@ export async function getPhoneBySurveyTeamMapId(id: string) {
     },
   });
 
-  return surveyTeamMap?.team?.org?.whatsappSettings?.phone;
+  return surveyTeamMap?.team?.org?.WhatsappSettings?.[0]?.phone;
 }
 
 //---------------get lnding page by landingId------------

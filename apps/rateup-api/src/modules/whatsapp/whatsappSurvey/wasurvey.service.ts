@@ -85,8 +85,9 @@ export async function sendMessage(
   messageData: WaSendMessageBody,
   userName?: string,
   userId?: string,
+  whatsappSettingsPhoneId?: string,
 ) {
-  const waSettings = await getWaSettings(orgId);
+  const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
   const { to } = messageData;
   log.trace(`sending message to %s \n%o`, messageData.to, messageData);
   try {

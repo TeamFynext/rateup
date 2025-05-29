@@ -117,7 +117,6 @@ model Org {
   members                  OrgMember[]
   teams                    Team[]
   invitations              Invitation[]
-  whatsappSettings         WhatsappSettings?
   templates                WaTemplate[]
   Subscription             Subscription?
   Order                    Order[]
@@ -144,6 +143,7 @@ model Org {
   WaAutomatedReply         WaAutomatedReply[]
   whatsappQuickReplies     WhatsappQuickReply[]
   loyaltyApiSettings       LoyaltyApiSettings[]
+  WhatsappSettings         WhatsappSettings[]
 }
 
 model UsageStats {
@@ -190,7 +190,7 @@ model UsageStats {
 
 model WhatsappSettings {
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId String @unique @db.Uuid
+  orgId String @db.Uuid
 
   accessToken     String // encrypted
   accessToken_iv  String
@@ -200,9 +200,12 @@ model WhatsappSettings {
   appId           String
   webhookPassword String?
 
-  type       String // enums.ts: WaConfigType
+  type             String // enums.ts: WaConfigType
   /// [PWaEncryptionKeys]
-  encryption Json? // for flow {publicKey: string, privateKey: string}
+  encryption       Json? // for flow {publicKey: string, privateKey: string}
+  Campaign         Campaign[]
+  WaAutomatedReply WaAutomatedReply[]
+  LoyaltyWaCommand LoyaltyWaCommand[]
 }
 
 model WaAccountSettings {
@@ -512,19 +515,21 @@ model Campaign {
   status    String    @default("INACTIVE") // enums.ts: CampaignStatus
   type      String // enums.ts: CampaignType
 
-  team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId               String                @db.Uuid
-  waTemplate           WaTemplate?           @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
-  waTemplateId         String?               @db.Uuid
-  flowId               String?
+  team                    Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId                  String                @db.Uuid
+  waTemplate              WaTemplate?           @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  waTemplateId            String?               @db.Uuid
+  flowId                  String?
   // TODO: add email template?
-  campaignParticipants CampaignParticipant[]
-  campaignSentAt       DateTime?
-  scheduledStatuses    String[]              @default([])
-  errorMessage         String?
-  dynamicTags          String[]              @default([])
-  useUserConsent       Boolean               @default(true)
-  CampaignStats        CampaignStats?
+  campaignParticipants    CampaignParticipant[]
+  campaignSentAt          DateTime?
+  scheduledStatuses       String[]              @default([])
+  errorMessage            String?
+  dynamicTags             String[]              @default([])
+  useUserConsent          Boolean               @default(true)
+  CampaignStats           CampaignStats?
+  WhatsappSettings        WhatsappSettings?     @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
+  whatsappSettingsPhoneId String?
 }
 
 model CampaignStats {
@@ -1181,13 +1186,15 @@ model WaMessageCampaginParticipantMap {
 }
 
 model WaAutomatedReply {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  createdAt DateTime @default(now())
-  matchData Json
-  matchType String // enums.ts: WaAutomatedReplyMatchType
-  orgId     String?  @db.Uuid
-  org       Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  id                      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String
+  createdAt               DateTime          @default(now())
+  matchData               Json
+  matchType               String // enums.ts: WaAutomatedReplyMatchType
+  orgId                   String?           @db.Uuid
+  org                     Org?              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  WhatsappSettings        WhatsappSettings? @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
+  whatsappSettingsPhoneId String?
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
@@ -1444,18 +1451,20 @@ model LoyaltyActionCustomerMap {
 }
 
 model LoyaltyWaCommand {
-  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId          String         @db.Uuid
-  org            Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  type           String //enum LoyaltyTemplateTypes 
-  waTemplateId   String?        @db.Uuid
-  waTemplate     WaTemplate?    @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
-  requestMessage String?
-  createdAt      DateTime       @default(now())
-  content        Json?
-  responseType   String         @default("Template") // enum WaAutomatedReplyResponseType
-  actionId       String?        @unique @db.Uuid
-  action         LoyaltyAction? @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  id                      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId                   String            @db.Uuid
+  org                     Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  type                    String //enum LoyaltyTemplateTypes 
+  waTemplateId            String?           @db.Uuid
+  waTemplate              WaTemplate?       @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+  requestMessage          String?
+  createdAt               DateTime          @default(now())
+  content                 Json?
+  responseType            String            @default("Template") // enum WaAutomatedReplyResponseType
+  actionId                String?           @unique @db.Uuid
+  action                  LoyaltyAction?    @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  WhatsappSettings        WhatsappSettings? @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
+  whatsappSettingsPhoneId String?
 
   @@unique([requestMessage, orgId], name: "request_message_org_unique")
 }
