@@ -51,9 +51,9 @@ import CreateTicketModal, {
 } from "@/components/Tickets/CreateTicketModal";
 import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
-import { useChatbotStore } from "@/pages/dashboard/chatbot/chatbot.store";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+import { useChatbotStore } from "@/store/chatbot.store";
 import { UserRole } from "@/utils/enums";
 import { TicketType } from "@/utils/enums/ticket";
 import { hasFeature } from "@/utils/subscription/subscription";

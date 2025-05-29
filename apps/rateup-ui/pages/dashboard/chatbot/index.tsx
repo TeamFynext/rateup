@@ -28,10 +28,10 @@ import {
 import ChatbotMessageContainer from "../../../components/ChatBot/ChatbotMessageContainer";
 import ChatbotResources from "../../../components/ChatBot/ChatbotResources";
 import PublishChatbot from "../../../components/ChatBot/PublishChatBot";
+import { useChatbotStore } from "../../../store/chatbot.store";
 import { ChatBotSource } from "../../../types/enums";
 import { ChatBotMessage } from "../../../types/global";
 import { WhatsAppAIChatConfiguration } from "../whatsapp/settings";
-import { useChatbotStore } from "./chatbot.store";
 
 enum ChatbotTab {
   ChatBot = "ChatBot",
