@@ -26,6 +26,7 @@ interface messageInput {
   query: string;
   userId: string;
   orgId: string;
+  chatbotId: string;
   customPrompt?: string;
 }
 export async function getAIResponseForQuery(data: messageInput, jwtToken) {
@@ -108,6 +109,8 @@ export async function getPublicAIResponseForQuery(data) {
 }
 
 export async function uploadFileForAIEmbed(data, jwtToken) {
+  console.log("uploadFileForAIEmbed data : ", data);
+
   return await axios.post(`${CHATBOT_BASEURL}/embed-doc/file`, data, {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -116,8 +119,13 @@ export async function uploadFileForAIEmbed(data, jwtToken) {
   });
 }
 
-export async function getUploadedSources(jwtToken) {
-  const res = await axios.get(CHATBOT_BASEURL, {
+export async function getUploadedSources(jwtToken, chatbotId: string) {
+  const url = new URL(CHATBOT_BASEURL);
+  if (chatbotId) {
+    url.searchParams.append("chatbotId", chatbotId); // Append chatbotId to the query params
+  }
+
+  const res = await axios.get(url.toString(), {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${jwtToken}`,
@@ -163,27 +171,42 @@ export async function deletePublicChatHistory(userId) {
   });
 }
 
-export async function createChatbot(orgId: string) {
+export async function createChatbot(orgId: string, name: string) {
   return await prisma.chatbot.create({
     data: {
       orgId,
+      name,
       shortUrlId: getShortUrlId(),
     },
   });
 }
 
-export async function getChatbotDetails(orgId: string) {
-  return await prisma.chatbot.findUnique({
+export async function getChatbotDetails(orgId: string, chatbotId?: string) {
+  return await prisma.chatbot.findFirst({
+    where: {
+      id: chatbotId,
+      orgId,
+    },
+  });
+}
+
+export async function getAllChatbot(orgId: string) {
+  return await prisma.chatbot.findMany({
     where: {
       orgId,
     },
   });
 }
 
-export async function updateChatbotDetails(data, orgId: string) {
+export async function updateChatbotDetails(
+  data,
+  orgId: string,
+  chatbotId: string,
+) {
   const res = await prisma.chatbot.upsert({
     where: {
       orgId,
+      id: chatbotId,
     },
     create: {
       shortUrlId: getShortUrlId(),
@@ -236,8 +259,10 @@ export async function getTextSummaryByAI(
   }
 }
 
-export async function getChatBotHistory(client) {
-  const res = await client.get(`/chatbot/chathistory`);
+export async function getChatBotHistory(client, chatbotId?: string) {
+  const res = await client.get(`/chatbot/chathistory`, {
+    params: chatbotId ? { chatbotId } : {},
+  });
   const userIds = res.data.map((hist) => hist.userId);
   const userDetails = await prisma.user.findMany({
     where: {
@@ -271,4 +296,14 @@ export async function getChatBotHistory(client) {
         name: `Anonymous_${hist.userId.slice(-4)}`,
       },
   }));
+}
+
+export async function deleteChatbotFromDatabase({ chatbotId, orgId }) {
+  // Ensure chatbot belongs to the organization before deleting
+  return await prisma.chatbot.delete({
+    where: {
+      id: chatbotId,
+      orgId: orgId,
+    },
+  });
 }

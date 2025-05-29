@@ -51,6 +51,12 @@ import { handleLoyaltyFeedback } from "../../loyalty/settings/settings.service";
 import { Queue } from "bullmq";
 
 import IORedis from "ioredis";
+import {
+  findRecentAutomation,
+  logAutomationAction,
+  logFlowCompletion,
+} from "./automation-logger.utils";
+import { processNextNode } from "./wasurvey.controller";
 const redisURL = new URL(process.env.REDIS_URL);
 const redisConnection = new IORedis({
   family: 0,
@@ -924,3 +930,70 @@ export const handleMessageStatusUpdate = async (
   if (!messageId) return;
   await addToStatusUpdateQueue({ status, messageId, errors });
 };
+
+export async function setAiBotActiveStatus(
+  phone: string,
+  orgId: string,
+  isActive: boolean,
+  chatbotId: string,
+) {
+  await prisma.contact.updateMany({
+    where: {
+      phone: phone,
+      orgId: orgId,
+    },
+    data: {
+      isAiBotActive: isActive,
+      chatbotId: chatbotId,
+    },
+  });
+}
+
+export async function getAiBotActiveStatus(phone: string, orgId: string) {
+  const contact = await prisma.contact.findFirst({
+    where: {
+      phone: phone,
+      orgId: orgId,
+    },
+  });
+  return {
+    isAiBotActive: contact?.isAiBotActive,
+    chatbotId: contact?.chatbotId ?? null,
+  };
+}
+
+export async function aibotNodeCompletion(phone: string, orgId: string) {
+  const progress = await findRecentAutomation(phone, orgId);
+  const automation = progress?.waAutomatedReply;
+  if (automation) {
+    const matchData = automation.matchData as {
+      json: { edges: any[]; nodes: any };
+    };
+    const nextEdge = matchData?.json?.edges?.find(
+      (edge: any) => edge.target === progress.currentNode,
+    );
+
+    if (!nextEdge) return;
+
+    const nextNode = matchData?.json?.nodes?.find(
+      (node: any) => node.id === nextEdge.source,
+    );
+
+    const automationLog = await logAutomationAction({
+      phone,
+      nodeId: progress.currentNode,
+      automationId: automation.id,
+      orgId,
+    });
+
+    if (nextNode) {
+      await processNextNode(
+        phone,
+        automation,
+        progress.currentNode,
+        orgId,
+        automationLog?.id,
+      );
+    }
+  }
+}
