@@ -134,7 +134,9 @@ const ShareSurvey = ({
       survey.type === SurveyType.WaFlow
     ) {
       if (!waSettings) return;
-      const phone = waSettings.phone?.replace("+", "").replaceAll(" ", "");
+      const phone = waSettings?.[0]?.phone
+        ?.replace("+", "")
+        .replaceAll(" ", "");
       if (!phone) setShareUrl("Configure WhatsApp settings to get share link");
       if (shortUrlId) {
         // TODO: get phone number from phone id (add phone number field)

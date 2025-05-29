@@ -160,11 +160,20 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
       templateId,
       parameterData,
       teamId,
+      whatsappSettingsPhoneId,
     }: {
       templateId: string;
       parameterData: any;
       teamId: string;
-    }) => sendWaTemplateToUser(templateId, phone, parameterData, teamId),
+      whatsappSettingsPhoneId: string;
+    }) =>
+      sendWaTemplateToUser(
+        templateId,
+        phone,
+        parameterData,
+        teamId,
+        whatsappSettingsPhoneId,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wa-messages", contactId] });
       queryClient.invalidateQueries({ queryKey: ["wa-contacts"] });

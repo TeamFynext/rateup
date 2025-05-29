@@ -38,6 +38,7 @@ const SendLoyaltyTemplate = ({ opened, close }) => {
       templateId: form.values.waTemplateId,
       parameterData: [],
       teamId: null,
+      whatsappSettingsPhoneId: undefined,
     });
   }
   return (

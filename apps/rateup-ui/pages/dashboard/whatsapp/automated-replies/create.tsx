@@ -5,6 +5,8 @@ import { Button, Checkbox, Group, Radio, Stack, Tabs } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconMessageCircle, IconPhoto } from "@tabler/icons-react";
 
+import { AccountSelector } from "@/components/input/AccountSelector";
+
 import {
   useCreateWaAutomatedReplyMutation,
   useUpdateWaAutomatedReplyMutation,
@@ -61,6 +63,7 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
       caseSensitive: false,
     },
     commands: [],
+    whatsappSettingsPhoneId: "",
   };
 }
 
@@ -145,6 +148,9 @@ export function AutomatedReplyForm({
           required
           style={{ flex: 4 }}
           {...rootForm.getInputProps("name")}
+        />
+        <AccountSelector
+          {...rootForm.getInputProps("whatsappSettingsPhoneId")}
         />
         <Tabs
           defaultValue="keywords"
