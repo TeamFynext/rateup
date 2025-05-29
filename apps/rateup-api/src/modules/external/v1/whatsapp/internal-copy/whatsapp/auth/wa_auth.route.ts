@@ -9,5 +9,5 @@ export async function waAuthRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 
   server.post("/register", registerBusinessClientHandler);
-  server.post("/deregister", deRegisterBusinessClientHandler);
+  server.post("/deregister/:phoneId", deRegisterBusinessClientHandler);
 }

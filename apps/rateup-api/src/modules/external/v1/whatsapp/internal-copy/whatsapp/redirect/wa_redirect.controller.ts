@@ -32,7 +32,7 @@ export async function getWaShareMessageFromSTMIdHandler(
       org: {
         select: {
           name: true,
-          whatsappSettings: {
+          WhatsappSettings: {
             select: {
               phone: true,
             },
@@ -65,7 +65,7 @@ export async function getWaShareMessageFromSTMIdHandler(
   const teamCode = res.survey.teams.find(
     (t) => t.shortUrlId === request.params.surveyTeamMapShortId,
   )?.team.code;
-  let phone = res.org.whatsappSettings.phone;
+  let phone = res.org.WhatsappSettings?.[0]?.phone;
   // remove + and spaces
   phone = phone.replace("+", "").replace(/\s/g, "");
 
