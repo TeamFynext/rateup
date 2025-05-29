@@ -24,6 +24,7 @@ import {
 import dayjs from "dayjs";
 import { useImmer } from "use-immer";
 
+import { useAllChatbots } from "@/backend/chatbot/chatbot.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
@@ -73,7 +74,17 @@ export default function NodeEditor({
   const { data: flows, isPending } = useWaFlowsFromDb();
   const { data: boardData, isPending: isBoardsPending } = useBoardsQueries();
   const [nodeData, setNodeData] = useState<NodeData>(node.data);
-
+  const {
+    data: allChatbots,
+    isLoading: isLoadingChatbots,
+    isError: isErrorChatbots,
+  } = useAllChatbots();
+  const [selectedChatbotId, setSelectedChatbotId] = useState<string | null>(
+    null,
+  );
+  const handleChatbotSelect = (value: string | null) => {
+    setSelectedChatbotId(value);
+  };
   // Update local state when node changes
   useEffect(() => {
     setNodeData(node.data);
@@ -227,6 +238,14 @@ export default function NodeEditor({
             nodeData={nodeData as NodeTypeMap["flowNode"]}
             handleInputChange={handleInputChange}
             flows={flows}
+          />
+        );
+      case "aibotNode":
+        return (
+          <AibotNodeEditor
+            nodeData={nodeData as NodeTypeMap["aibotNode"]}
+            handleInputChange={handleInputChange}
+            allChatbots={allChatbots}
           />
         );
       default:
@@ -1909,6 +1928,46 @@ const FlowNodeEditor: React.FC<
           w={"100%"}
         />
       )}
+    </Stack>
+  );
+};
+
+const AibotNodeEditor: React.FC<
+  NodeComponentProps<"aibotNode"> & { allChatbots: any }
+> = ({ nodeData, handleInputChange, allChatbots }) => {
+  const typedData = nodeData;
+  return (
+    <Stack>
+      <WaTextEditor
+        content={typedData.body || ""}
+        handleInputChange={(e) => handleInputChange("body", e)}
+        label="Start Message"
+        placeholder="Enter your message text here..."
+        required
+      />
+      <Text fz="xs" ta="right">
+        {typedData.body?.length || 0}/4096 characters
+      </Text>
+
+      <ContainedSelection
+        data={
+          allChatbots?.map((bot) => ({
+            label: bot.name,
+            value: bot.id,
+          })) || []
+        }
+        label="Select Chatbot"
+        allowDeselect={false}
+        placeholder="Select a chatbot"
+        value={typedData?.chatbot?.id || ""}
+        onChange={(value, selected) => {
+          handleInputChange("chatbot", {
+            id: value,
+            name: selected?.label,
+          });
+        }}
+        flex={1}
+      />
     </Stack>
   );
 };

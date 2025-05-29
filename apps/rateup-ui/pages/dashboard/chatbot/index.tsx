@@ -1,20 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { SimpleGrid, Stack, Tabs } from "@mantine/core";
+import { Flex, Select, SimpleGrid, Stack, Tabs } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import {
   IconAi,
   IconBrandWhatsapp,
   IconFile,
   IconMessageChatbot,
+  IconPlus,
   IconRobot,
   IconRobotFace,
 } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import ChatHistory from "@/components/ChatBot/ChatHistory";
+import CreateNewChatbot from "@/components/ChatBot/CreateNewChatbot";
+import { showSuccessToast } from "@/utils/notifications";
 
 import {
+  useAllChatbots,
   useChatMutation,
+  useCreateChatbot,
+  useDeleteChatbot,
   useDeleteChatHistory,
 } from "../../../backend/chatbot/chatbot.query";
 import ChatbotMessageContainer from "../../../components/ChatBot/ChatbotMessageContainer";
@@ -23,6 +31,7 @@ import PublishChatbot from "../../../components/ChatBot/PublishChatBot";
 import { ChatBotSource } from "../../../types/enums";
 import { ChatBotMessage } from "../../../types/global";
 import { WhatsAppAIChatConfiguration } from "../whatsapp/settings";
+import { useChatbotStore } from "./chatbot.store";
 
 enum ChatbotTab {
   ChatBot = "ChatBot",
@@ -33,17 +42,105 @@ enum ChatbotTab {
 
 const ChatBot = () => {
   const [inputQuery, setInputQuery] = useState("");
+  const queryClient = useQueryClient();
   const [messages, handler] = useListState<ChatBotMessage>([]);
   const messageMutate = useChatMutation();
   const deleteChatMutation = useDeleteChatHistory();
   const [activetab, setActiveTab] = useState(ChatbotTab.ChatBot);
+  const { setSelectedChatbotId: setGlobalChatbotId } = useChatbotStore();
+  const { mutate: deleteChatbot, isPending: isDeletingChatbot } =
+    useDeleteChatbot();
+
+  //new
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const { mutate: createChatbot } = useCreateChatbot();
+  const {
+    data: allChatbots,
+    isLoading: isLoadingChatbots,
+    isError: isErrorChatbots,
+  } = useAllChatbots();
+
+  const [selectedChatbotId, setSelectedChatbotId] = useState<string | null>(
+    null,
+  );
+
+  const handleCreateChatbot = (name: string) => {
+    createChatbot(
+      { name },
+      {
+        onSuccess: (newChatbot) => {
+          console.log("New chatbot created:", newChatbot);
+          showSuccessToast("Chatbot created successfully");
+
+          queryClient.setQueryData(["all-chatbots"], (old: any) => {
+            if (!old) return [newChatbot];
+            return [...old, newChatbot];
+          });
+
+          setSelectedChatbotId(newChatbot.data.id);
+          setGlobalChatbotId(newChatbot.data.id);
+          setShowCreateModal(false);
+        },
+      },
+    );
+  };
+
+  const handleCreateNewChatbotClick = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleChatbotSelect = (value: string | null) => {
+    setSelectedChatbotId(value);
+    setGlobalChatbotId(value);
+  };
+  useEffect(() => {
+    if (allChatbots && allChatbots.length > 0 && selectedChatbotId === null) {
+      const defaultChatbotId = allChatbots[0].id;
+      setSelectedChatbotId(defaultChatbotId);
+      setGlobalChatbotId(defaultChatbotId);
+    }
+  }, [allChatbots]);
+
+  const handleDeleteChatbot = () => {
+    if (!selectedChatbotId || !allChatbots) return;
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this chatbot?",
+    );
+    if (!confirmDelete) return;
+
+    deleteChatbot(selectedChatbotId, {
+      onSuccess: () => {
+        showSuccessToast("Chatbot deleted successfully");
+
+        const updatedChatbots = allChatbots.filter(
+          (cb) => cb.id !== selectedChatbotId,
+        );
+        if (updatedChatbots.length > 0) {
+          const deletedIndex = allChatbots.findIndex(
+            (cb) => cb.id === selectedChatbotId,
+          );
+          const nextIndex =
+            deletedIndex < updatedChatbots.length
+              ? deletedIndex
+              : updatedChatbots.length - 1;
+          const nextChatbotId = updatedChatbots[nextIndex].id;
+          setSelectedChatbotId(nextChatbotId);
+          setGlobalChatbotId(nextChatbotId);
+        } else {
+          setSelectedChatbotId(null);
+          setGlobalChatbotId(null);
+        }
+      },
+    });
+  };
 
   const handleSendQuery = () => {
     if (!inputQuery.trim().length || messageMutate.isPending) return;
     handler.append({ content: inputQuery, source: ChatBotSource.HUMAN });
     setInputQuery("");
     messageMutate.mutate(
-      { query: inputQuery },
+      { query: inputQuery, chatbotId: selectedChatbotId },
       {
         onSuccess: (data) => {
           handler.append({ content: data.message, source: ChatBotSource.AI });
@@ -84,7 +181,42 @@ const ChatBot = () => {
   }
   return (
     <Stack p={"sm"}>
-      <PublishChatbot />
+      <PublishChatbot selectedChatbotId={selectedChatbotId} />
+      <Flex justify="space-between" align="center" mb="sm" wrap="wrap" gap="md">
+        <RateupButtonBlue
+          title="Create New Chatbot"
+          rightIcon={<IconPlus />}
+          onClick={handleCreateNewChatbotClick}
+        />
+        <Stack>
+          <Select
+            label="Select Chatbot"
+            placeholder="Choose a chatbot"
+            data={
+              allChatbots?.map((chatbot) => ({
+                value: chatbot.id,
+                label: chatbot.name,
+              })) || []
+            }
+            value={selectedChatbotId}
+            onChange={handleChatbotSelect}
+            disabled={isLoadingChatbots}
+            error={isErrorChatbots ? "Failed to load chatbots" : ""}
+            searchable
+            w={250}
+          />
+          <RateupButtonBlue
+            title="Delete"
+            onClick={handleDeleteChatbot}
+            disabled={!selectedChatbotId || allChatbots?.length === 0}
+          />
+        </Stack>
+      </Flex>
+      <CreateNewChatbot
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreate={handleCreateChatbot}
+      />
       <Tabs
         defaultValue={ChatbotTab.ChatBot}
         value={activetab}
@@ -115,13 +247,19 @@ const ChatBot = () => {
           />
         </Tabs.Panel>
         <Tabs.Panel value={ChatbotTab.Resources} p={"sm"}>
-          <ChatbotResources enableApi={activetab === ChatbotTab.Resources} />
+          <ChatbotResources
+            selectedChatbotId={selectedChatbotId}
+            enableApi={activetab === ChatbotTab.Resources}
+          />
         </Tabs.Panel>
         <Tabs.Panel value={ChatbotTab.WaSettings}>
-          <WhatsAppAIChatConfiguration />
+          <WhatsAppAIChatConfiguration selectedChatbotId={selectedChatbotId} />
         </Tabs.Panel>
         <Tabs.Panel value={ChatbotTab.UserChats} p={"sm"} h={"73dvh"}>
-          <ChatHistory enableApi={activetab === ChatbotTab.UserChats} />
+          <ChatHistory
+            selectedChatbotId={selectedChatbotId}
+            enableApi={activetab === ChatbotTab.UserChats}
+          />
         </Tabs.Panel>
       </Tabs>
     </Stack>

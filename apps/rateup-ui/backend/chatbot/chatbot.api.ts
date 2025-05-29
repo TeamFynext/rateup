@@ -9,6 +9,7 @@ const CHATBOT_PUBLIC_BASEURL = "/public/chatbot";
 
 interface ChatbotMessage {
   query: string;
+  chatbotId: string;
 }
 
 export interface ChatbotResourses {
@@ -34,9 +35,10 @@ export async function uploadSourceForEmbed(data) {
   return res?.data;
 }
 
-export async function uploadFileForEmbed(file) {
+export async function uploadFileForEmbed(file, selectedChatbotId) {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("chatbotId", selectedChatbotId);
   try {
     const response = await axiosClient.post(
       `${CHATBOT_BASEURL}/embed-doc/file`,
@@ -54,8 +56,10 @@ export async function uploadFileForEmbed(file) {
   }
 }
 
-export async function getChatbotResources() {
-  const res = await axiosClient.get(CHATBOT_BASEURL);
+export async function getChatbotResources(chatbotId: string) {
+  const res = await axiosClient.get(CHATBOT_BASEURL, {
+    params: { chatbotId },
+  });
   return res?.data as Array<ChatbotResourses>;
 }
 
@@ -82,12 +86,16 @@ export async function getChatbotPublicPageStatus(chatbotId) {
     ?.data as { publicPageStatus: ChatbotPublicPageStatus };
 }
 
-export async function getChatbotDetails() {
-  return (await axiosClient.get(`${CHATBOT_BASEURL}/chatbot`)).data;
+export async function getChatbotDetails(chatbotId: string) {
+  return (await axiosClient.get(`${CHATBOT_BASEURL}/chatbot/${chatbotId}`))
+    .data;
+}
+export async function getAllChatbots() {
+  return (await axiosClient.get(`${CHATBOT_BASEURL}/chatbots`)).data;
 }
 
-export async function createChatbot() {
-  return await axiosClient.post(`${CHATBOT_BASEURL}/chatbot`);
+export async function createChatbot({ name }: { name: string }) {
+  return (await axiosClient.post(`${CHATBOT_BASEURL}/chatbot`, { name })).data;
 }
 
 type IChatbotUpdate = {
@@ -98,10 +106,21 @@ type IChatbotUpdate = {
   enableAllWaChat?: boolean;
 };
 
-export async function updateChatbot(data: IChatbotUpdate) {
-  return await axiosClient.put(`${CHATBOT_BASEURL}/chatbot`, data);
+type IUpdateChatbotArgs = {
+  chatbotId: string;
+  data: IChatbotUpdate;
+};
+
+export async function updateChatbot({ chatbotId, data }: IUpdateChatbotArgs) {
+  return await axiosClient.put(`${CHATBOT_BASEURL}/chatbot/${chatbotId}`, data);
 }
 
-export async function getUserAiChats() {
-  return (await axiosClient.get(`${CHATBOT_BASEURL}/chathistory`)).data;
+export async function getUserAiChats(chatbotId: string) {
+  return (await axiosClient.get(`${CHATBOT_BASEURL}/chathistory/${chatbotId}`))
+    .data;
+}
+
+export async function deleteChatbot(chatbotId: string) {
+  return (await axiosClient.delete(`${CHATBOT_BASEURL}/chatbot/${chatbotId}`))
+    .data;
 }
