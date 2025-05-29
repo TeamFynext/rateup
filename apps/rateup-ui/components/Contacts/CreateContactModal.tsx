@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Blockquote,
@@ -56,6 +56,7 @@ const CreateContactModal = ({
   cTags = [],
   importCSVContactMutation,
   type = ContactGroupType.NORMAL,
+  initialValues = null,
 }) => {
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -63,7 +64,7 @@ const CreateContactModal = ({
   const { translations } = useTranslations();
   const form = useForm({
     mode: "uncontrolled",
-    initialValues: {
+    initialValues: initialValues ?? {
       name: "",
       phone: "",
       email: "",
@@ -149,6 +150,13 @@ const CreateContactModal = ({
       });
     }
   };
+
+  useEffect(() => {
+    if (initialValues) {
+      form.setValues(initialValues);
+    }
+  }, [initialValues]);
+
   return (
     <Box p="0">
       <form
@@ -212,18 +220,22 @@ const CreateContactModal = ({
                   <Text>{translations["Phone Number"]}</Text>
                   <Text c="red">*</Text>
                 </Group>
-                <PhoneInputWithCountrySelect
-                  defaultCountry="IN"
-                  international
-                  countryCallingCodeEditable={false}
-                  placeholder={translations["Enter phone number"]}
-                  className={styles.inputPhone}
-                  key={form.key("phone")}
-                  {...form.getInputProps("phone")}
-                />
-                <Text size="sm" c={"red"}>
-                  {form?.errors?.phone}
-                </Text>
+                <Box
+                  className={`${styles["phone-input-container"]} ${form?.errors?.phone ? styles["phone-input-error"] : ""}`}
+                >
+                  <PhoneInputWithCountrySelect
+                    defaultCountry="IN"
+                    international
+                    countryCallingCodeEditable={false}
+                    placeholder={translations["Enter phone number"]}
+                    value={form.values.phone}
+                    {...form.getInputProps("phone")}
+                    className={styles.inputPhone}
+                  />
+                  <Text size="sm" c={"red"}>
+                    {form?.errors?.phone}
+                  </Text>
+                </Box>
               </Stack>
               {type === ContactGroupType.LOYALTY && (
                 <>

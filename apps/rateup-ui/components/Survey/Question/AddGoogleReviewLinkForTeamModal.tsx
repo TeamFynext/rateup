@@ -55,7 +55,12 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
           [platform]: form.getValues().url,
         };
     }
-    await editTeamMutation.mutateAsync({ reviewPageLinks: newReviewPageLinks });
+    await editTeamMutation.mutateAsync({
+      reviewPageLinks: newReviewPageLinks,
+      googleLink: newReviewPageLinks[ReviewPagePlatform.Google]?.length
+        ? newReviewPageLinks[ReviewPagePlatform.Google]
+        : undefined,
+    });
     form.reset();
     close();
   };

@@ -18,7 +18,7 @@ export default function StyledTabs(props: Readonly<StyledTabsProps>) {
       styles={{
         list: { margin: "auto" },
       }}
-      variant="unstyled"
+      variant="pills"
       {...rest}
     />
   );

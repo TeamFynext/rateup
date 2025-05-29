@@ -31,7 +31,7 @@ function CompaniesUsingRateup({ className = "" }) {
           className={styles["companies-logos-carousel"]}
           height={isVpLeq768px ? 100 : 120}
           plugins={[autoScrollRef?.current]}
-          loop
+          emblaOptions={{ loop: true, dragFree: true }}
           slideSize={{
             base: "36%",
             xs: "25%",
@@ -44,7 +44,6 @@ function CompaniesUsingRateup({ className = "" }) {
             controls: cx("controls"),
             control: cx("control"),
           }}
-          dragFree
           initialSlide={3}
           withControls={false}
         >

@@ -22,7 +22,7 @@ import {
 } from "../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../Modal/FormModalLayout";
 
-const UploadChatbotSource = ({ opened, close }) => {
+const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
   const [source, setSource] = useState(ChatBotDataSourceType.FILE);
   const [url, setUrl] = useState("");
   const [isUpload, setIsUpload] = useState(false);
@@ -39,6 +39,7 @@ const UploadChatbotSource = ({ opened, close }) => {
           {
             source: url,
             type: ChatBotDataSourceType.WEB,
+            chatbotId: selectedChatbotId,
           },
           {
             onSettled: () => {
@@ -70,7 +71,7 @@ const UploadChatbotSource = ({ opened, close }) => {
             "teal",
             false,
           );
-        await uploadFileForEmbed(file).then(
+        await uploadFileForEmbed(file, selectedChatbotId).then(
           () => {
             setIsUpload(false);
             showSuccessToast(

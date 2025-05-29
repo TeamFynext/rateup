@@ -27,10 +27,12 @@ import { RateupButtonSecondary } from "../Button/RateupButtons";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import { CopyLinkComponent } from "../Survey/ShareSurvey/ShareSurvey";
 
-const PublishChatbot = () => {
+const PublishChatbot = (selectedChatbotId) => {
   const [chatbotPublicUrl, setChatbotPublicUrl] = useState("");
   const createChatbotUrlMutate = useCreateChatbot();
-  const { data: chatbotDetails } = useGetChatbotDetails();
+  const { data: chatbotDetails } = useGetChatbotDetails(
+    selectedChatbotId.selectedChatbotId,
+  );
   const updateChatbotMutate = useUpdateChatbot();
   const [opened, { toggle }] = useDisclosure(false);
   const [isActive, setIsActive] = useState(false);
@@ -73,9 +75,12 @@ const PublishChatbot = () => {
     showLoadingToast(loadingMessage, "chatbot-page", true, loadingTitle);
     updateChatbotMutate.mutate(
       {
-        publicPageStatus: isActive
-          ? ChatbotPublicPageStatus.INACTIVE
-          : ChatbotPublicPageStatus.ACTIVE,
+        chatbotId: selectedChatbotId.selectedChatbotId,
+        data: {
+          publicPageStatus: isActive
+            ? ChatbotPublicPageStatus.INACTIVE
+            : ChatbotPublicPageStatus.ACTIVE,
+        },
       },
       {
         onSuccess: () => {

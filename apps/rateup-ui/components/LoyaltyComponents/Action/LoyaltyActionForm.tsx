@@ -365,6 +365,7 @@ const LoyaltyActionForm = ({
                   {...form.getInputProps("flowId")}
                   searchable
                   comboboxProps={{ position: "top" }}
+                  allowDeselect={true}
                 />
               )}
               <Group>

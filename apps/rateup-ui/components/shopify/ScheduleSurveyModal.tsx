@@ -13,7 +13,11 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { IconAlertCircle, IconRefresh } from "@tabler/icons-react";
 
-import { IntegratedApps, ShopifyEvents } from "@/types/enums";
+import {
+  IntegratedApps,
+  LoyaltyApiFeature,
+  ShopifyEvents,
+} from "@/types/enums";
 import { ShopifyIntegration } from "@/types/global";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
@@ -57,10 +61,10 @@ const ScheduleSurveyModal = ({
         unit: "hour",
       },
       actionId: "",
+      loyaltyApiFeature: "",
     },
     validate: {
-      // waTemplateId: isNotEmpty("Template is required"),
-      event: isNotEmpty("Template is required"),
+      event: isNotEmpty("Event is required"),
       teamId: isNotEmpty("Team is required"),
       productId: (value, values) =>
         values.isProductSpecific && !value ? "Product is required" : null,
@@ -77,10 +81,18 @@ const ScheduleSurveyModal = ({
 
   const handleScheduleSurvey = () => {
     if (form.validate().hasErrors) return;
-    if (!form.values.waTemplateId && !form.values.actionId) {
+    if (
+      !form.values.waTemplateId &&
+      !form.values.actionId &&
+      !form.values.loyaltyApiFeature
+    ) {
       form.setErrors({
-        actionId: translations["Choose Loyalty Action or Whatapp Template"],
-        waTemplateId: translations["Choose Loyalty Action or Whatapp Template"],
+        actionId:
+          translations["Choose Loyalty API/Action or Whatsapp Template"],
+        waTemplateId:
+          translations["Choose Loyalty API/Action or Whatsapp Template"],
+        loyaltyApiFeature:
+          translations["Choose Loyalty API/Action or Whatsapp Template"],
       });
       return;
     }
@@ -166,11 +178,10 @@ const ScheduleSurveyModal = ({
           icon={<IconAlertCircle color="red" />}
           color="red"
         >
-          {
-            translations[
-              "Allow rateup to subscribe to your store events in th settings before scheduling survey"
-            ]
-          }
+          {translations[
+            "Allow rateup to subscribe to your store events in th settings before scheduling survey"
+          ] ||
+            "Allow rateup to subscribe to your store events in th settings before scheduling survey"}
         </Alert>
         <TeamSelector
           placeholder={translations["Select Team"]}
@@ -211,6 +222,12 @@ const ScheduleSurveyModal = ({
               ? "none"
               : "block"
           }
+        />
+        <ContainedSelection
+          label={"Loyalty API"}
+          {...form.getInputProps("loyaltyApiFeature")}
+          placeholder="Select an API Feature"
+          data={Object.values(LoyaltyApiFeature)}
         />
 
         {form.values.event === ShopifyEvents.ABANDONED_CHECKOUTS ? (

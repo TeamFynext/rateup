@@ -200,7 +200,7 @@ const LCustomerPage = () => {
               <DateInput
                 leftSection={<IconCalendar />}
                 value={date}
-                onChange={setDate}
+                onChange={(value) => setDate(new Date(value))}
                 clearable
               />
               <ContainedSelection

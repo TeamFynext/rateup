@@ -507,8 +507,8 @@ function MetaLoginStatusLoaderSkeleton() {
   );
 }
 
-export function WhatsAppAIChatConfiguration() {
-  const { data: chatbot, isLoading } = useGetChatbotDetails();
+export function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
+  const { data: chatbot, isLoading } = useGetChatbotDetails(selectedChatbotId);
   const { translations } = useTranslations();
   const updateChatbotdetMut = useUpdateChatbot();
   const { data: subscription } = useSubscription();
@@ -521,20 +521,36 @@ export function WhatsAppAIChatConfiguration() {
   });
 
   function handleEnableWaAIChat(e) {
-    updateChatbotdetMut.mutate({ enableWaChat: e.currentTarget.checked });
+    updateChatbotdetMut.mutate({
+      chatbotId: selectedChatbotId,
+      data: {
+        enableWaChat: e.currentTarget.checked,
+      },
+    });
   }
 
   useEffect(() => {
-    const initialValues = {
-      waCommand: chatbot?.waCommand,
-      waPrompt: chatbot?.waPrompt,
-    };
-    form.setInitialValues(initialValues);
-    form.setValues(initialValues);
-  }, [chatbot]);
+    if (chatbot) {
+      const newValues = {
+        waCommand: chatbot.waCommand ?? "",
+        waPrompt: chatbot.waPrompt ?? "",
+      };
+
+      form.setInitialValues(newValues); // set new base values
+      form.setValues(newValues); // explicitly reset to the new chatbot's values
+    } else {
+      form.setValues({
+        waCommand: "",
+        waPrompt: "",
+      });
+    }
+  }, [chatbot?.id]);
 
   function handleSubmit() {
-    updateChatbotdetMut.mutate(form.values);
+    updateChatbotdetMut.mutate({
+      chatbotId: selectedChatbotId,
+      data: form.values,
+    });
   }
 
   const hasAIFeature = useMemo(
@@ -563,7 +579,10 @@ export function WhatsAppAIChatConfiguration() {
                     checked={chatbot?.enableAllWaChat}
                     onChange={(e) =>
                       updateChatbotdetMut.mutate({
-                        enableAllWaChat: e.currentTarget.checked,
+                        chatbotId: selectedChatbotId,
+                        data: {
+                          enableAllWaChat: e.currentTarget.checked,
+                        },
                       })
                     }
                   />

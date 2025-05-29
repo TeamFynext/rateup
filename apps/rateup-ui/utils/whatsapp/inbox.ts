@@ -14,7 +14,7 @@ import {
 export type ParsedWaMessageReturn = {
   timeStamp: string;
   messageType: string;
-  messageContent: string;
+  messageContent: any;
   template?: WaTemplateFetchBody;
   interactive?: WaSendMessageBody["interactive"];
 };
@@ -23,7 +23,7 @@ export function parseWaMessage(
 ): ParsedWaMessageReturn {
   let timeStamp: string = new Date().toLocaleTimeString();
   let messageType: string = "text";
-  let messageContent: string = "No messages yet";
+  let messageContent = "No messages yet" as any;
   let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
   let interactive: WaSendMessageBody["interactive"] =
     {} as WaSendMessageBody["interactive"];
@@ -56,6 +56,12 @@ export function parseWaMessage(
         break;
       case "document":
         messageContent = `${send?.document.link}_caption_${send?.document.filename}_caption_${send?.document.caption ?? ""}`;
+        break;
+      case "contacts":
+        messageContent = [...send.contacts];
+        break;
+      case "location":
+        messageContent = { ...send.location };
         break;
     }
   }
@@ -98,6 +104,12 @@ export function parseWaMessage(
       case "reaction":
         messageContent = receive.messages[0].reaction.emoji;
         break;
+      case "contacts":
+        messageContent = [...receive.messages[0].contacts];
+        break;
+      case "location":
+        messageContent = { ...receive.messages[0].location };
+        break;
     }
   }
   return { timeStamp, messageType, messageContent, template, interactive };
@@ -119,7 +131,7 @@ export function returnMessageContentBasedOnParsedMessage(
     return "Document";
   } else if (parsedMessage.messageType === "location") {
     return "Location";
-  } else if (parsedMessage.messageType === "contact") {
+  } else if (parsedMessage.messageType === "contacts") {
     return "Contact";
   } else if (parsedMessage.messageType === "sticker") {
     return "Sticker";

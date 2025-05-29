@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
-import { Carousel, Embla, useAnimationOffsetEffect } from "@mantine/carousel";
+import { Carousel } from "@mantine/carousel";
 import {
   ActionIcon,
   Group,
@@ -61,10 +61,7 @@ export const BannerAddAndViewModal = ({
     decrement();
   });
   const { data, isPending } = useMenuBannerQuery(menuId);
-  const TRANSITION_DURATION = 200;
-  const [embla, setEmbla] = useState<Embla | null>(null);
   const { translations } = useTranslations();
-  useAnimationOffsetEffect(embla, TRANSITION_DURATION);
   useEffect(() => {
     if (data) {
       handleCarouselControl(1, data?.length);
@@ -262,7 +259,6 @@ export const BannerAddAndViewModal = ({
                     background: "var(--tertiary-color)",
                   },
                 }}
-                getEmblaApi={setEmbla}
               >
                 {bannerForm}
               </Carousel>
