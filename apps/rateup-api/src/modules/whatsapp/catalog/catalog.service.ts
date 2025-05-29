@@ -3,6 +3,8 @@ import prisma from "../../../utils/prisma";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
 import { UpdateCatalogSchema } from "./catalog.schema";
+import { WaReceiveMessageBody } from "../../../types/whatsapp.types";
+import { log } from "../../../utils/logger";
 
 export async function updateWaCatalog(
   catalogId: string,
@@ -110,6 +112,37 @@ export async function getConnectedWaCatalog(orgId) {
     where: {
       orgId,
       isWhatsappConnected: true,
+    },
+  });
+}
+
+export async function handleWaOrderfromCatalog(data: WaReceiveMessageBody) {
+  const order = data.messages[0].order;
+  const orderObj = {
+    catalogId: order.catalog_id,
+    products: order.product_items.map((p) => ({
+      retailerId: p.product_retailer_id,
+      currency: p.currency,
+      price: p.item_price,
+      quantity: p.quantity,
+    })),
+  } as WaCatalogOrder;
+  const catalog = await prisma.whatsaAppCatalog.findUnique({
+    where: {
+      catalogId: order.catalog_id,
+    },
+  });
+  if (!catalog) {
+    log.trace("catalog not synced yet => %s", order.catalog_id);
+    return;
+  }
+  const newOrders = [...catalog.orders, orderObj];
+  await prisma.whatsaAppCatalog.update({
+    where: {
+      catalogId: order.catalog_id,
+    },
+    data: {
+      orders: newOrders as WaCatalogOrder[],
     },
   });
 }

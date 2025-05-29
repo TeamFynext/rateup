@@ -495,6 +495,12 @@ declare global {
     };
     catalog?: {
       thumbnail_product_retailer_id?: string;
+      mpm?: {
+        sections: { title: string; products: [] }[];
+      };
+      spm?: {
+        product_retailer_id: string;
+      };
     };
   };
   type WaFlowStartMessageConfig = {
@@ -603,6 +609,17 @@ declare global {
     | CatalogHotel
     | CatalogHotelRoom;
 
+  type WaCatalogOrder = {
+    catalogId: string;
+    products: {
+      retailerId: string;
+      quantity: number;
+      price: number;
+      currency: string;
+    }[];
+    contactId: string;
+  };
+
   // PRISMA JSON TYPES
   namespace PrismaJson {
     type PWaFlowJson = WaFlowJson;
@@ -620,6 +637,7 @@ declare global {
     type PWaFlowStartMessageConfig = WaFlowStartMessageConfig;
     type PWaEncryptionKeys = WaEncryptionKeys;
     type PWaCatalogProducts = WaCatalogProductItem[];
+    type PWaCatalogOrders = WaCatalogOrder[];
   }
 
   interface LoyaltyApiSetting {

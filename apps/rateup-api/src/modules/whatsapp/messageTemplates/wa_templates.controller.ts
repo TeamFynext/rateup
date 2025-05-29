@@ -66,6 +66,8 @@ import { wait } from "../whatsappSurvey/wasurvey.controller";
 import { createWaMessageSchedule } from "../wa_message_scheduler";
 import { parsePhoneforWa } from "../../loyalty/util";
 import { WHATSAPP_BUTTON_TYPE } from "../../../types/whatsapp.types";
+import { isEmptyString } from "../../../utils/commnUtils";
+import { getConnectedWaCatalog } from "../catalog/catalog.service";
 
 export async function getTemplatesHandler(
   request: FastifyRequest<{
@@ -112,6 +114,7 @@ export async function createTemplateHandler(
     switch (request.body.templateType) {
       case TemplateType.GENERAL_NOTIFICATION:
       case TemplateType.LOYALTY:
+      case TemplateType.CAROUSEL:
         const template = await createTemplate(orgId, formattedTemplate);
         //this is required to fetch the template from whatsapp to retreive the actual template data from whatsap
         fetchedTemplate = await fetchTemplate(template?.name, orgId);
@@ -173,7 +176,7 @@ export async function saveTemplateAsDraftHandler(
 ) {
   try {
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    const { defaultValues, ...templateData } = request.body;
+    const { defaultValues, templateType, ...templateData } = request.body;
     let formattedTemplate: any = generateTemplate(templateData);
     formattedTemplate.status = WaTemplateStatus.DRAFT;
     if (request.body?.id) {
@@ -182,12 +185,18 @@ export async function saveTemplateAsDraftHandler(
       template.data.components = formattedTemplate.components ?? [];
       template.data.status = WaTemplateStatus.DRAFT;
       template.data.language = formattedTemplate.language ?? "en";
-      await updateTemplateInDb(request.body.id, template.data);
+      await updateTemplateInDb(
+        request.body.id,
+        template.data,
+        defaultValues as WaTemplateDefaultValues,
+        templateType,
+      );
     } else {
       await saveTemplate(
         formattedTemplate,
         orgId,
         defaultValues as WaTemplateDefaultValues,
+        templateType,
       );
     }
     reply.code(200);
@@ -481,7 +490,22 @@ export async function sendTemplateToUserCore(
           );
         }
         break;
-
+      case WaTemplateSupportedFormats.PRODUCT:
+        const catalog = await getConnectedWaCatalog(orgId);
+        components.push({
+          type: WaTemplateComponentType.HEADER,
+          parameters: [
+            {
+              type: WaTemplateSupportedFormats.PRODUCT.toLocaleUpperCase(),
+              [WaTemplateSupportedFormats.PRODUCT.toLocaleLowerCase()]: {
+                product_retailer_id:
+                  defaultValues?.catalog.spm.product_retailer_id,
+                catalog_id: catalog.catalogId,
+              },
+            },
+          ],
+        });
+        break;
       default:
         // Handle unsupported formats if needed
         break;
@@ -577,8 +601,158 @@ export async function sendTemplateToUserCore(
                   }
                 : {}),
             });
+          } else if (button.type === WHATSAPP_BUTTON_TYPE.MPM) {
+            components.push({
+              type: "button",
+              sub_type: button.type,
+              index: 0,
+              parameters: [
+                {
+                  type: "action",
+                  action: {
+                    thumbnail_product_retailer_id:
+                      isEmptyString(
+                        defaultValues?.catalog?.thumbnail_product_retailer_id,
+                      ) ?? undefined,
+                    sections: defaultValues?.catalog?.mpm?.sections?.map(
+                      ({ title, products }) => ({
+                        title,
+                        product_items: products.map((p) => ({
+                          product_retailer_id: p,
+                        })),
+                      }),
+                    ),
+                  },
+                },
+              ],
+            });
           }
         }
+      }
+      if (item.type?.toLowerCase() === WaTemplateComponentType.CAROUSEL) {
+        let cards = item?.cards?.map((card, index) => {
+          const cardInComponents = components.find(
+            (c) => c.type === WaTemplateComponentType.CAROUSEL,
+          )?.cards?.[index];
+          const cardDefaultValues = defaultValues?.mediaCarousel.find(
+            (c) => c.cardIndex === index,
+          );
+          let cardComponents = cardInComponents
+            ? [...cardInComponents.components]
+            : [];
+          for (const comp of card.components) {
+            if (comp.type.toLowerCase() === WaTemplateComponentType.HEADER) {
+              if (
+                !cardComponents?.some(
+                  (c) => c.type === WaTemplateComponentType.HEADER,
+                )
+              ) {
+                const fileKey = cardDefaultValues?.headerLink;
+                cardComponents.push({
+                  type: WaTemplateComponentType.HEADER,
+                  parameters: [
+                    {
+                      type: comp.format.toLowerCase(),
+                      [comp.format.toLowerCase()]: {
+                        link: getFileUrlFromKey(fileKey),
+                      },
+                    },
+                  ],
+                });
+              }
+            } else if (
+              comp.type.toLowerCase() === WaTemplateComponentType.BODY
+            ) {
+              const defaultValue = comp.example?.body_text[0];
+              if (defaultValue?.length > 0) {
+                const cardBodyIndex = cardComponents.findIndex(
+                  (component) => component.type === "body",
+                );
+                if (cardBodyIndex !== -1) {
+                  let params = cardComponents[cardBodyIndex]?.parameters;
+                  if (params) {
+                    params.forEach((data, i) => {
+                      if (!data?.text || !data?.text?.trim()) {
+                        data.text = defaultValue?.[i];
+                      }
+                    });
+                    if (params.length < defaultValue?.length) {
+                      const remainingValues = defaultValue.slice(params.length);
+                      remainingValues.forEach((value) => {
+                        params.push({
+                          type: "text",
+                          text: value,
+                        });
+                      });
+                    }
+                    cardComponents[cardBodyIndex] = {
+                      type: "body",
+                      parameterers: params,
+                    };
+                  }
+                } else {
+                  cardComponents.push({
+                    type: "body",
+                    parameters: defaultValue.map((data: string) => ({
+                      type: "text",
+                      text: data,
+                    })),
+                  });
+                }
+              } else {
+                cardComponents = cardComponents.filter(
+                  (f) => f.type !== "body",
+                );
+              }
+            } else if (
+              comp.type.toLowerCase() === WaTemplateComponentType.BUTTONS
+            ) {
+              for (const [idx, button] of comp.buttons?.entries()) {
+                if (button?.type === "URL") {
+                  cardComponents.push({
+                    type: "button",
+                    sub_type: "url",
+                    index: idx,
+                    ...(cardDefaultValues?.urlButtonVariable
+                      ? {
+                          parameters: [
+                            {
+                              type: "text",
+                              text: cardDefaultValues?.urlButtonVariable,
+                            },
+                          ],
+                        }
+                      : {}),
+                  });
+                } else if (button?.type === "QUICK_REPLY") {
+                  cardComponents.push({
+                    type: "button",
+                    sub_type: "quick_reply",
+                    index: idx,
+                    ...(cardDefaultValues?.quickReplyPayload
+                      ? {
+                          parameters: [
+                            {
+                              type: "payload",
+                              payload: cardDefaultValues?.quickReplyPayload,
+                            },
+                          ],
+                        }
+                      : {}),
+                  });
+                }
+              }
+            }
+          }
+          return {
+            card_index: index,
+            components: cardComponents,
+          };
+        });
+        components.push({
+          type: "carousel",
+          cards,
+        });
       }
     }
   }

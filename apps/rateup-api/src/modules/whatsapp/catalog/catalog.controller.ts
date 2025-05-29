@@ -93,3 +93,16 @@ export async function getWaCatalogByOrgHandler(
     reply.code(500).send(e);
   }
 }
+
+export async function getConnectedWaCatalogHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const catalog = await getConnectedWaCatalog(request.user.orgId);
+    reply.code(200).send(catalog);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}

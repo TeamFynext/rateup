@@ -69,6 +69,16 @@ export interface WaReceiveMessageBody {
         caption?: string;
       };
       button?: any;
+      order?: {
+        catalog_id: string;
+        text: string;
+        product_items: {
+          product_retailer_id: string;
+          quantity: number;
+          item_price: number;
+          currency: string;
+        }[];
+      };
     },
   ];
   statuses: [
@@ -243,6 +253,7 @@ export enum WaMessageTypes {
   image = "image",
   interactive = "interactive",
   button = "button",
+  order = "order",
 }
 
 export enum WaSessionType {
@@ -297,6 +308,8 @@ export enum WHATSAPP_BUTTON_TYPE {
   URL = "URL",
   FLOW = "FLOW",
   CATALOG = "CATALOG",
+  MPM = "MPM",
+  SPM = "SPM",
 }
 
 type WaTemplateParameter = {

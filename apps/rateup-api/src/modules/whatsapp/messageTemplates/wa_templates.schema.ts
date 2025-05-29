@@ -59,9 +59,67 @@ const waTemplateInput = {
       catalog: z
         .object({
           thumbnail_product_retailer_id: z.string().optional(),
+          mpm: z
+            .object({
+              sections: z.array(
+                z.object({ title: z.string(), products: z.array(z.string()) }),
+              ),
+            })
+            .optional(),
+          spm: z
+            .object({
+              product_retailer_id: z.string(),
+            })
+            .optional(),
         })
         .optional(),
+      mediaCarousel: z
+        .array(
+          z.object({
+            headerLink: z.string(),
+            cardIndex: z.number(),
+          }),
+        )
+        .optional(),
     })
+    .optional(),
+  mediaCarousel: z
+    .array(
+      z.object({
+        body: z.string().trim().min(1).max(1024),
+        header: z.string(),
+        format: z.string(),
+        example: z.array(z.string()).optional(),
+        buttons: z
+          .array(
+            z.object({
+              text: z.string().max(25),
+              type: z.string(),
+              example: z.array(z.string().trim().min(1).max(2000)).optional(),
+              phone_number: z.string().max(25).optional(),
+              url: z.string().trim().url().max(2000).optional(),
+            }),
+          )
+          .max(2)
+          .min(1),
+      }),
+    )
+    .max(10)
+    .min(2)
+    .optional(),
+  productCarousel: z
+    .union([
+      z.null(),
+      z.object({
+        button: z.object({
+          text: z.string().max(25),
+          type: z.string(),
+          example: z.array(z.string().trim().min(1).max(2000)),
+          url: z.string().trim().url().max(2000).optional(),
+        }),
+        products: z.array(z.string()).max(10).min(2),
+      }),
+    ])
     .optional(),
   templateType: z.nativeEnum(TemplateType).optional(),
   config: z.any(),

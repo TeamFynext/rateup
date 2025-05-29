@@ -46,7 +46,12 @@ import {
   getDbTemplate,
 } from "../messageTemplates/wa_templates.service";
 import { getWaSettingsByPhoneId } from "../settings/wa_settings.service";
-import { WaMessageBody } from "../../../types/whatsapp.types";
+import {
+  WaMessageBody,
+  WaMessageTypes,
+  WaReceiveMessageBody,
+  WaSessionType,
+} from "../../../types/whatsapp.types";
 import {
   addWaMessageCampaignParticipantMap,
   updateCampaignParticipant,
@@ -102,6 +107,7 @@ import {
 } from "./automation-logger.utils";
 import { autoGenerateTicket } from "../../ticket/ticketCard/card.service";
 import { getAutomatedReplyById } from "../automatedReply/wa_automatedReply.service";
+import { handleWaOrderfromCatalog } from "../catalog/catalog.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -390,6 +396,9 @@ async function whatsappMessageHandler(
     userName,
     waMessage?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
   );
+  if (type === WaMessageTypes.order) {
+    await handleWaOrderfromCatalog(completeMessageObject);
+  }
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
   const messageLowerCase =

@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { waCatalogProductRoutes } from "./products/product.route";
 import { checkSession } from "../../../utils/checkSession";
 import {
+  getConnectedWaCatalogHandler,
   getWaCatalogByOrgHandler,
   getWaCatalogInfoHandler,
   syncCatalogsHandler,
@@ -35,4 +36,5 @@ export async function waCatalogRoutes(server: FastifyInstance) {
 
   server.get("/:catalogId", getWaCatalogInfoHandler);
   server.get("/", getWaCatalogByOrgHandler);
+  server.get("/connected", getConnectedWaCatalogHandler);
 }

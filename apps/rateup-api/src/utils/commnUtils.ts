@@ -44,4 +44,12 @@ const asyncErrHandler = (
   };
 };
 
-export { asyncErrHandler, getShortUrlId, shortIdUniqueConstraintErrHandler };
+const isEmptyString = (str: string): string | null =>
+  !str || !str.trim().length ? null : str;
+
+export {
+  asyncErrHandler,
+  getShortUrlId,
+  shortIdUniqueConstraintErrHandler,
+  isEmptyString,
+};

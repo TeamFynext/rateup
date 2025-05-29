@@ -64,6 +64,7 @@ enum TemplateType {
   ORDER_DETAILS
   PAYMENT_CONFIRMATION
   LOYALTY
+  CAROUSEL
 }
 
 enum ContactGroupType {
@@ -1504,5 +1505,7 @@ model WhatsaAppCatalog {
   isWhatsappConnected   Boolean @default(false) 
   ///[PWaCatalogProducts]
   products   Json[]
+  ///[PWaCatalogOrders]
+  orders     Json[]
   @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
 }
