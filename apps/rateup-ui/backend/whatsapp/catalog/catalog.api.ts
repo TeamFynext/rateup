@@ -23,3 +23,7 @@ export async function syncWaCatalog(businessId) {
 export async function getWaCatalogById(catalogId) {
   return (await axiosClient.get(`${waCatalogUrl}/${catalogId}`)).data;
 }
+
+export async function getWaConnectedCatalog() {
+  return (await axiosClient.get(`${waCatalogUrl}/connected`)).data;
+}

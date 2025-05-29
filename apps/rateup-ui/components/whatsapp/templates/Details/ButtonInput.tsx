@@ -1,13 +1,25 @@
-import { ActionIcon, Box, Text } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { ActionIcon, Box, Group, Stack, Text } from "@mantine/core";
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconPlus,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
-import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
+import {
+  ContainedMultiSelect,
+  ContainedSelection,
+  ContainedTextField,
+} from "../../../input/ContainedInput/ContainedInput";
 import { LengthTracker } from "../../../input/LengthTracker";
 
 import "react-phone-number-input/style.css";
 
+import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
@@ -27,6 +39,30 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
     if (screeenId) {
       data["navigate_screen"] = screeenId;
     }
+  }
+  const { connectedCatalog } = useWaCatalog();
+  const { data: catalog } = connectedCatalog;
+  const productRetailerIds = catalog
+    ? catalog?.products?.map((p) => p.retailer_id)
+    : [];
+
+  function handleAddMPMSections() {
+    const defaultValues = form.values.defaultValues ?? {};
+    const catalog = defaultValues?.catalog ?? {
+      thumbnail_product_retailer_id: "",
+    };
+    const mpm = catalog?.mpm
+      ? {
+          ...catalog?.mpm,
+          sections: [...catalog?.mpm?.sections, { title: "", products: [] }],
+        }
+      : {
+          sections: [{ title: "", products: [] }],
+        };
+    form.setFieldValue("defaultValues", {
+      ...defaultValues,
+      catalog: { ...catalog, mpm },
+    });
   }
 
   switch (data.type) {
@@ -331,13 +367,6 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
                 {translations["Button text"]}
               </Text>
             }
-            rightSection={
-              <LengthTracker
-                length={form.values?.buttons?.[index]?.text?.length}
-                maxValue={25}
-                atStart
-              />
-            }
             {...form.getInputProps(`buttons.${index}.text`)}
             readOnly
           />
@@ -351,6 +380,175 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
               "defaultValues.catalog.thumbnail_product_retailer_id",
             )}
           />
+          <ActionIcon
+            mt={24}
+            variant="transparent"
+            onClick={() => {
+              form.setFieldValue(
+                "defaultValues.catalog.thumbnail_product_retailer_id",
+                "",
+              );
+              deleteButton(index);
+            }}
+          >
+            <IconX />
+          </ActionIcon>
+        </>
+      );
+    case WHATSAPP_BUTTON_TYPE.MPM:
+      return (
+        <Stack>
+          <Group>
+            <ContainedTextField
+              label={
+                <Text fz={14} fw={500}>
+                  {translations["Type of action"]}
+                </Text>
+              }
+              value={"View Catalog items"}
+              readOnly
+            />
+            <ContainedTextField
+              label={
+                <Text fz={14} fw={500}>
+                  {translations["Button text"]}
+                </Text>
+              }
+              {...form.getInputProps(`buttons.${index}.text`)}
+              readOnly
+            />
+            <ContainedTextField
+              label={
+                <Text fz={14} fw={500}>
+                  {"Thumbnail product retailer id"}
+                </Text>
+              }
+              {...form.getInputProps(
+                "defaultValues.catalog.thumbnail_product_retailer_id",
+              )}
+            />
+            <ActionIcon
+              mt={24}
+              variant="transparent"
+              onClick={() => {
+                form.setFieldValue("defaultValues.catalog", {
+                  thumbnail_product_retailer_id: "",
+                  mpm: {
+                    sections: [],
+                  },
+                  spm: {
+                    product_retailer_id: "",
+                  },
+                });
+                deleteButton(index);
+              }}
+            >
+              <IconX />
+            </ActionIcon>
+          </Group>
+          <RateupButtonSecondary
+            radius={"md"}
+            w={"fit-content"}
+            leftIcon={<IconPlus size={15} />}
+            rightIcon={<IconChevronDown size={15} />}
+            title="Add Sections"
+            onClick={handleAddMPMSections}
+          />
+          {form.values.defaultValues?.catalog?.mpm?.sections?.map(
+            (sec, index) => (
+              <Group
+                bg={"var(--light-grey-color-4)"}
+                p={"md"}
+                key={index}
+                style={{ borderRadius: "10px" }}
+              >
+                <ContainedTextField
+                  label={
+                    <Text fz={14} fw={500}>
+                      Section Title
+                    </Text>
+                  }
+                  key={form.key(
+                    `defaultValues.catalog.mpm.sections.${index}.title`,
+                  )}
+                  {...form.getInputProps(
+                    `defaultValues.catalog.mpm.sections.${index}.title`,
+                  )}
+                />
+                <ContainedMultiSelect
+                  data={productRetailerIds}
+                  label={
+                    <Text fz={14} fw={500}>
+                      {"Product Retailer Ids"}
+                    </Text>
+                  }
+                  {...form.getInputProps(
+                    `defaultValues.catalog.mpm.sections.${index}.products`,
+                  )}
+                  nothingFoundMessage={"products not found"}
+                />
+                <ActionIcon
+                  mt={24}
+                  variant="transparent"
+                  onClick={() =>
+                    form.removeListItem(
+                      "defaultValues.catalog.mpm.sections",
+                      index,
+                    )
+                  }
+                >
+                  <IconTrash color="red" size={15} />
+                </ActionIcon>
+              </Group>
+            ),
+          )}
+        </Stack>
+      );
+    case WHATSAPP_BUTTON_TYPE.SPM:
+      return (
+        <>
+          <ContainedTextField
+            label={
+              <Text fz={14} fw={500}>
+                {translations["Type of action"]}
+              </Text>
+            }
+            value={"View Single Product"}
+            readOnly
+          />
+          <ContainedTextField
+            label={
+              <Text fz={14} fw={500}>
+                {translations["Button text"]}
+              </Text>
+            }
+            {...form.getInputProps(`buttons.${index}.text`)}
+            readOnly
+          />
+          <ContainedSelection
+            data={productRetailerIds}
+            label={
+              <Text fz={14} fw={500}>
+                {"Product retailer id"}
+              </Text>
+            }
+            {...form.getInputProps(
+              "defaultValues.catalog.spm.product_retailer_id",
+            )}
+          />
+          <ActionIcon
+            mt={24}
+            variant="transparent"
+            onClick={() => {
+              form.setFieldValue(
+                "defaultValues.catalog.spm.product_retailer_id",
+                "",
+              );
+              deleteButton(index);
+            }}
+          >
+            <IconX />
+          </ActionIcon>
         </>
       );
     default:

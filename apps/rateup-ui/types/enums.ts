@@ -508,6 +508,7 @@ export enum TemplateType {
   ORDER_DETAILS = "ORDER_DETAILS",
   PAYMENT_CONFIRMATION = "PAYMENT_CONFIRMATION",
   LOYALTY = "LOYALTY",
+  CAROUSEL = "CAROUSEL",
 }
 
 export enum OrderType {

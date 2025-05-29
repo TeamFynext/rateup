@@ -32,10 +32,12 @@ interface ButtonSelectionProps extends MenuProps {
   btnLen: number;
   disabled?: boolean;
   category: string;
+  mpmBtn: boolean;
 }
 export const ButtonSelection = ({
   handleMenuSelection,
   flowBtn,
+  mpmBtn,
   btnLen,
   disabled,
   category,
@@ -101,13 +103,15 @@ export const ButtonSelection = ({
           </Tooltip>
           <Tooltip
             label={
-              flowBtn && translations["Remove flow button to add other buttons"]
+              (flowBtn &&
+                translations["Remove flow button to add other buttons"]) ||
+              (mpmBtn && translations["Remove MPM button to add other buttons"])
             }
-            display={!flowBtn ? "none" : "block"}
+            display={!flowBtn && !mpmBtn ? "none" : "block"}
           >
             <Box>
               <Menu.Item
-                disabled={flowBtn}
+                disabled={flowBtn || mpmBtn}
                 leftSection={
                   <IconWorld style={{ width: rem(14), height: rem(14) }} />
                 }
@@ -123,13 +127,15 @@ export const ButtonSelection = ({
           <Menu.Label>{translations["Quick Reply Buttons"]}</Menu.Label>
           <Tooltip
             label={
-              flowBtn && translations["Remove flow button to add other buttons"]
+              (flowBtn &&
+                translations["Remove flow button to add other buttons"]) ||
+              (mpmBtn && translations["Remove MPM button to add other buttons"])
             }
-            display={!flowBtn ? "none" : "block"}
+            display={!flowBtn && !mpmBtn ? "none" : "block"}
           >
             <Box>
               <Menu.Item
-                disabled={flowBtn}
+                disabled={flowBtn || mpmBtn}
                 leftSection={
                   <IconAdjustments
                     style={{ width: rem(14), height: rem(14) }}
@@ -148,13 +154,15 @@ export const ButtonSelection = ({
           <Menu.Label>{translations["Call-To-Action Buttons"]}</Menu.Label>
           <Tooltip
             label={
-              flowBtn && translations["Remove flow button to add other buttons"]
+              (flowBtn &&
+                translations["Remove flow button to add other buttons"]) ||
+              (mpmBtn && translations["Remove MPM button to add other buttons"])
             }
-            display={!flowBtn ? "none" : "block"}
+            display={!flowBtn && !mpmBtn ? "none" : "block"}
           >
             <Box>
               <Menu.Item
-                disabled={flowBtn}
+                disabled={flowBtn || mpmBtn}
                 leftSection={
                   <IconPhone style={{ width: rem(14), height: rem(14) }} />
                 }
@@ -168,13 +176,15 @@ export const ButtonSelection = ({
           </Tooltip>
           <Tooltip
             label={
-              flowBtn && translations["Remove flow button to add other buttons"]
+              (flowBtn &&
+                translations["Remove flow button to add other buttons"]) ||
+              (mpmBtn && translations["Remove MPM button to add other buttons"])
             }
-            display={!flowBtn ? "none" : "block"}
+            display={!flowBtn && !mpmBtn ? "none" : "block"}
           >
             <Box>
               <Menu.Item
-                disabled={flowBtn}
+                disabled={flowBtn || mpmBtn}
                 leftSection={
                   <IconCopy style={{ width: rem(14), height: rem(14) }} />
                 }
@@ -188,13 +198,15 @@ export const ButtonSelection = ({
           </Tooltip>
           <Tooltip
             label={
-              flowBtn && translations["Remove flow button to add other buttons"]
+              (flowBtn &&
+                translations["Remove flow button to add other buttons"]) ||
+              (mpmBtn && translations["Remove MPM button to add other buttons"])
             }
-            display={!flowBtn ? "none" : "block"}
+            display={!flowBtn && !mpmBtn ? "none" : "block"}
           >
             <Box>
               <Menu.Item
-                disabled={flowBtn}
+                disabled={flowBtn || mpmBtn}
                 leftSection={
                   <IconLink style={{ width: rem(14), height: rem(14) }} />
                 }
@@ -206,19 +218,26 @@ export const ButtonSelection = ({
               </Menu.Item>
             </Box>
           </Tooltip>
+          <Menu.Divider />
+
+          <Menu.Label>{translations["Catalog Buttons"]}</Menu.Label>
           <Tooltip
             label={
               flowBtn
                 ? translations["Remove flow button to add other buttons"]
-                : category !== "MARKETING"
-                  ? "Change category to marketing to enable catalog"
-                  : ""
+                : mpmBtn
+                  ? translations["Remove MPM button to add other buttons"]
+                  : category !== "MARKETING"
+                    ? "Change category to marketing to enable catalog"
+                    : ""
             }
-            display={!flowBtn && category === "MARKETING" ? "none" : "block"}
+            display={
+              !flowBtn && !mpmBtn && category === "MARKETING" ? "none" : "block"
+            }
           >
             <Box>
               <Menu.Item
-                disabled={flowBtn || category !== "MARKETING"}
+                disabled={flowBtn || category !== "MARKETING" || mpmBtn}
                 leftSection={
                   <IconBuildingStore
                     style={{ width: rem(14), height: rem(14) }}
@@ -229,6 +248,60 @@ export const ButtonSelection = ({
                 }
               >
                 View Catalog
+              </Menu.Item>
+            </Box>
+          </Tooltip>
+          <Tooltip
+            label={
+              btnLen > 0
+                ? "Remove all button to add a MPM button"
+                : category !== "MARKETING"
+                  ? "Change category to marketing to to add MPM button"
+                  : ""
+            }
+            display={
+              btnLen === 0 && category === "MARKETING" ? "none" : "block"
+            }
+          >
+            <Box>
+              <Menu.Item
+                disabled={btnLen > 0 || category !== "MARKETING"}
+                leftSection={
+                  <IconBuildingStore
+                    style={{ width: rem(14), height: rem(14) }}
+                  />
+                }
+                onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.MPM)}
+              >
+                MPM (Multi-Product)
+              </Menu.Item>
+            </Box>
+          </Tooltip>
+          <Tooltip
+            label={
+              flowBtn
+                ? translations["Remove flow button to add other buttons"]
+                : mpmBtn
+                  ? translations["Remove MPM button to add other buttons"]
+                  : category !== "MARKETING"
+                    ? "Change category to marketing to to add MPM button"
+                    : ""
+            }
+            display={
+              !flowBtn && !mpmBtn && category === "MARKETING" ? "none" : "block"
+            }
+          >
+            <Box>
+              <Menu.Item
+                disabled={flowBtn || mpmBtn || category !== "MARKETING"}
+                leftSection={
+                  <IconBuildingStore
+                    style={{ width: rem(14), height: rem(14) }}
+                  />
+                }
+                onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.SPM)}
+              >
+                SPM (Single-Product)
               </Menu.Item>
             </Box>
           </Tooltip>

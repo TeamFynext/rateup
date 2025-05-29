@@ -226,6 +226,7 @@ export enum WHATSAPP_TEMPLATE_BROADCAST_TYPE {
   VIDEO = "VIDEO",
   DOCUMENT = "DOCUMENT",
   LOCATION = "LOCATION",
+  PRODUCT = "PRODUCT",
 }
 
 export enum WHATSAPP_BUTTON_TYPE {
@@ -237,6 +238,8 @@ export enum WHATSAPP_BUTTON_TYPE {
   WEBSURVEY = "WEBSURVEY",
   ORDER_DETAILS = "ORDER_DETAILS",
   CATALOG = "CATALOG",
+  MPM = "MPM",
+  SPM = "SPM",
 }
 
 export const MIN_AMOUNT_ERROR = "Purchase amount ineligible for gift.";

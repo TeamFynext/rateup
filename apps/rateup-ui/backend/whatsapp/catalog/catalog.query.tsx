@@ -6,6 +6,7 @@ import { showErrorToastFromError } from "@/utils/query";
 import {
   getWaCatalogById,
   getWaCatalogs,
+  getWaConnectedCatalog,
   syncWaCatalog,
   updateWaCatalog,
 } from "./catalog.api";
@@ -46,10 +47,16 @@ export const useWaCatalog = (catalogId = null) => {
     queryKey: ["allWaCatalog"],
   });
 
+  const connectedCatalog = useQuery({
+    queryFn: getWaConnectedCatalog,
+    queryKey: ["connected_catalog"],
+  });
+
   return {
     sync,
     getCatalogInfo,
     update,
     allCatalogs,
+    connectedCatalog,
   };
 };

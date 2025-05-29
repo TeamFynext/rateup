@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -11,6 +11,7 @@ import {
   Group,
   MantineProvider,
   Overlay,
+  ScrollAreaAutosize,
   SimpleGrid,
   Stack,
   Text,
@@ -36,7 +37,10 @@ import {
   useUpdateTemplateMutation,
   useWaTemplateById,
 } from "@/backend/whatsapp/whatsapp.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "@/components/Button/RateupButtons";
 import {
   ContainedNumberInput,
   ContainedSelection,
@@ -54,6 +58,7 @@ import { BroadCastTypeValue } from "@/components/whatsapp/templates/Details/Broa
 import ButtonInput from "@/components/whatsapp/templates/Details/ButtonInput";
 import buttonInputStyles from "@/components/whatsapp/templates/Details/ButtonInput.module.css";
 import { ButtonSelection } from "@/components/whatsapp/templates/Details/ButtonSelectionMenu";
+import CardCarousel from "@/components/whatsapp/templates/Details/CardCarousel";
 import { HeaderWithFormatting } from "@/components/whatsapp/templates/Details/HeaderWithFormating";
 import { TextFormateToolBar } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
 import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating";
@@ -106,9 +111,17 @@ export default function WhatsappTemplateById() {
       status: WaTemplateStatus.DRAFT,
       example: [],
       templateType: TemplateType.GENERAL_NOTIFICATION,
+      mediaCarousel: [],
+      productCarousel: null,
       defaultValues: {
         catalog: {
           thumbnail_product_retailer_id: "",
+          mpm: {
+            sections: [],
+          },
+          spm: {
+            product_retailer_id: "",
+          },
         },
       },
     },
@@ -134,6 +147,11 @@ export default function WhatsappTemplateById() {
     }
   }, [editingItem]);
 
+  const spmBtn = useMemo(
+    () => form.values.buttons.find((b) => b.type === WHATSAPP_BUTTON_TYPE.SPM),
+    [form.values.buttons],
+  );
+
   useEffect(() => {
     switch (form.getValues().templateType) {
       case TemplateType.ORDER_DETAILS:
@@ -151,6 +169,12 @@ export default function WhatsappTemplateById() {
         form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
         form.setFieldValue("buttons", []);
         break;
+      case TemplateType.CAROUSEL:
+        form.setFieldValue("category", "MARKETING");
+        form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
+        form.setFieldValue("buttons", []);
+        form.setFieldValue("footer", "");
+        break;
       default:
         const currentTemplateType = form.getValues().templateType;
         const previousTemplateType = editingItem?.templateType;
@@ -163,7 +187,7 @@ export default function WhatsappTemplateById() {
           currentTemplateType === previousTemplateType
         ) {
           const buttons = editingItem?.data?.components?.find(
-            (component) => component.type === "BUTTONS",
+            (component) => component.type.toLowerCase() === "buttons",
           )?.buttons;
           form.setFieldValue("buttons", buttons || []);
         } else {
@@ -248,6 +272,24 @@ export default function WhatsappTemplateById() {
       );
       return;
     }
+    if (values.templateType === TemplateType.CAROUSEL) {
+      for (const card of values.mediaCarousel) {
+        const dynamicVariableArr = parseStringWithVariables(card.body);
+        if (dynamicVariableArr.length > 0) {
+          if (!isArrayInCorrectOrder(dynamicVariableArr)) {
+            showErrorToast(
+              translations["Dynamic variables name should is numberic order"],
+            );
+            return;
+          } else if (card.example?.length !== dynamicVariableArr?.length) {
+            showErrorToast(
+              translations["Dynamic variables example values should be given"],
+            );
+            return;
+          }
+        }
+      }
+    }
     try {
       if (saveAsDraft) setIsSubmittingDraft(true);
       else setIsSubmitting(true);
@@ -267,6 +309,34 @@ export default function WhatsappTemplateById() {
         };
         //@ts-ignore
         values.defaultValues = { ...values.defaultValues, ...defaultValues };
+      }
+      if (values.templateType === TemplateType.CAROUSEL) {
+        await Promise.all(
+          values.mediaCarousel.map(async (card, index) => {
+            if (card.header instanceof File) {
+              const file = await uploadTemplateMedia(card.header as File);
+              const publicImageLink = await uploadFile(card.header);
+              values.mediaCarousel[index].header = file?.id ?? "";
+              const defValues = values.defaultValues.mediaCarousel ?? [];
+              const defCardIndex = defValues.findIndex(
+                (v) => v.cardIndex === index,
+              );
+              const obj = {
+                cardIndex: index,
+                headerLink: publicImageLink,
+              };
+              if (defCardIndex !== -1) {
+                defValues[defCardIndex] = obj;
+              } else {
+                defValues.push(obj);
+              }
+              values.defaultValues = {
+                ...values.defaultValues,
+                mediaCarousel: defValues,
+              };
+            }
+          }),
+        );
       }
       let templateData = isOrderCreate
         ? { ...values, config: configForm.getValues() }
@@ -352,7 +422,11 @@ export default function WhatsappTemplateById() {
           ? { type: WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE, text: "", example: [] }
           : e === WHATSAPP_BUTTON_TYPE.CATALOG
             ? { type: e, text: "View catalog" }
-            : { type: e, text: "" };
+            : e === WHATSAPP_BUTTON_TYPE.MPM
+              ? { type: e, text: "View items" }
+              : e === WHATSAPP_BUTTON_TYPE.SPM
+                ? { type: e, text: "View" }
+                : { type: e, text: "" };
     if (e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
       const btn = form.values?.buttons?.filter(
         (data) => data.type === (e as WHATSAPP_BUTTON_TYPE),
@@ -374,6 +448,10 @@ export default function WhatsappTemplateById() {
       form.insertListItem("buttons", newObject);
     } else {
       form.insertListItem("buttons", newObject, lastIndex + 1);
+    }
+    if (e === WHATSAPP_BUTTON_TYPE.SPM) {
+      form.setFieldValue("header", null);
+      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT);
     }
   };
   const deleteButton = (index: number) => {
@@ -524,20 +602,22 @@ export default function WhatsappTemplateById() {
                       allowDeselect={false}
                     />
                     {form.getValues().templateType !==
-                      TemplateType.PAYMENT_CONFIRMATION && (
-                      <ContainedSelection
-                        label={
-                          <Text fz={14} fw={500}>
-                            Category {requiredIcon}
-                          </Text>
-                        }
-                        placeholder={translations["Category"]}
-                        {...form.getInputProps("category")}
-                        data={WHATSAPP_TEMPLATE_CATEGORY}
-                        allowDeselect={false}
-                        disabled={isOrderCreate}
-                      />
-                    )}
+                      TemplateType.PAYMENT_CONFIRMATION &&
+                      form.getValues().templateType !==
+                        TemplateType.CAROUSEL && (
+                        <ContainedSelection
+                          label={
+                            <Text fz={14} fw={500}>
+                              Category {requiredIcon}
+                            </Text>
+                          }
+                          placeholder={translations["Category"]}
+                          {...form.getInputProps("category")}
+                          data={WHATSAPP_TEMPLATE_CATEGORY}
+                          allowDeselect={false}
+                          disabled={isOrderCreate}
+                        />
+                      )}
 
                     <ContainedSelection
                       label={
@@ -553,63 +633,66 @@ export default function WhatsappTemplateById() {
                     />
                   </SimpleGrid>
                   {form.getValues().templateType !==
-                    TemplateType.PAYMENT_CONFIRMATION && (
-                    <Grid pos={"relative"}>
-                      <ReadonlyOverlay />
-
-                      <Grid.Col span={6}>
-                        <ContainedSelection
-                          label={
-                            <>
-                              <Text fz={14} fw={500}>
-                                {translations["Broadcast header"]}{" "}
-                                {requiredIcon}
-                              </Text>
-                              <Text fz={13}>
-                                {
-                                  translations[
-                                    "Highlight your brand here, use images or videos, to stand out"
-                                  ]
-                                }
-                              </Text>
-                            </>
-                          }
-                          placeholder={translations["Broadcast Type"]}
-                          onChange={(e) => {
-                            if (
-                              e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT &&
-                              form.values.header instanceof File
-                            ) {
-                              form.setFieldValue("header", "");
+                    TemplateType.PAYMENT_CONFIRMATION &&
+                    form.getValues().templateType !== TemplateType.CAROUSEL && (
+                      <Grid pos={"relative"}>
+                        <ReadonlyOverlay />
+                        <Grid.Col span={6}>
+                          <ContainedSelection
+                            label={
+                              <>
+                                <Text fz={14} fw={500}>
+                                  {translations["Broadcast header"]}{" "}
+                                  {requiredIcon}
+                                </Text>
+                                <Text fz={13}>
+                                  {
+                                    translations[
+                                      "Highlight your brand here, use images or videos, to stand out"
+                                    ]
+                                  }
+                                </Text>
+                              </>
                             }
-                            form.setFieldValue("format", e);
-                          }}
-                          value={form.values.format}
-                          data={
-                            isOrderCreate
-                              ? [
-                                  WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT,
-                                  WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
-                                ]
-                              : Object.values(WHATSAPP_TEMPLATE_BROADCAST_TYPE)
-                          }
-                          allowDeselect={false}
-                        />
-                      </Grid.Col>
-                      <Grid.Col span={"auto"}>
-                        <Stack
-                          h={"100%"}
-                          justify="center"
-                          w={form.values?.format === "TEXT" ? "100%" : 300}
-                        >
-                          <BroadCastTypeValue
-                            form={form}
-                            type={form.values?.format}
+                            placeholder={translations["Broadcast Type"]}
+                            onChange={(e) => {
+                              if (
+                                e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT &&
+                                form.values.header instanceof File
+                              ) {
+                                form.setFieldValue("header", "");
+                              }
+                              form.setFieldValue("format", e);
+                            }}
+                            value={form.values.format}
+                            data={
+                              isOrderCreate
+                                ? [
+                                    WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT,
+                                    WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
+                                  ]
+                                : Object.values(
+                                    WHATSAPP_TEMPLATE_BROADCAST_TYPE,
+                                  )
+                            }
+                            allowDeselect={false}
+                            disabled={!!spmBtn}
                           />
-                        </Stack>
-                      </Grid.Col>
-                    </Grid>
-                  )}
+                        </Grid.Col>
+                        <Grid.Col span={"auto"}>
+                          <Stack
+                            h={"100%"}
+                            justify="center"
+                            w={form.values?.format === "TEXT" ? "100%" : 300}
+                          >
+                            <BroadCastTypeValue
+                              form={form}
+                              type={form.values?.format}
+                            />
+                          </Stack>
+                        </Grid.Col>
+                      </Grid>
+                    )}
 
                   <Stack gap={0} pos={"relative"}>
                     <ReadonlyOverlay />
@@ -665,112 +748,121 @@ export default function WhatsappTemplateById() {
                       />
                     ))}
                     {form.getValues().templateType !==
-                      TemplateType.PAYMENT_CONFIRMATION && (
-                      <>
-                        <ContainedTextField
-                          label={
+                      TemplateType.PAYMENT_CONFIRMATION &&
+                      form.getValues().templateType !==
+                        TemplateType.CAROUSEL && (
+                        <>
+                          <ContainedTextField
+                            label={
+                              <>
+                                <Text fz={14} fw={500}>
+                                  {translations["Footer (Optional)"]}
+                                </Text>
+                                <Text fz={13}>
+                                  {
+                                    translations[
+                                      "Footers are great to add any disclaimers or to add a thoughtful PS"
+                                    ]
+                                  }
+                                </Text>
+                              </>
+                            }
+                            placeholder={translations["Footer"]}
+                            {...form.getInputProps("footer")}
+                            rightSection={
+                              <LengthTracker
+                                length={form?.values?.footer?.length}
+                                maxValue={60}
+                                atStart
+                              />
+                            }
+                          />
+                          <ButtonSelection
+                            handleMenuSelection={handleMenuSelection}
+                            flowBtn={
+                              !!form?.values?.buttons?.find(
+                                (data) => data.type === "FLOW",
+                              )
+                            }
+                            mpmBtn={
+                              !!form?.values?.buttons?.find(
+                                (data) => data.type === "MPM",
+                              )
+                            }
+                            btnLen={form?.values?.buttons?.length}
+                            disabled={isOrderCreate}
+                            category={form.values.category}
+                          />
+                          {form.values?.buttons?.length > 0 && (
+                            <>
+                              {form.values?.buttons?.map((data, index) => (
+                                <Group
+                                  className={buttonInputStyles.buttonBox}
+                                  key={index}
+                                >
+                                  <ButtonInput
+                                    form={form}
+                                    deleteButton={deleteButton}
+                                    index={index}
+                                    data={data}
+                                  />
+                                </Group>
+                              ))}
+                            </>
+                          )}
+                          {isOrderCreate && (
                             <>
                               <Text fz={14} fw={500}>
-                                {translations["Footer (Optional)"]}
+                                {translations["Config"]} {requiredIcon}
                               </Text>
-                              <Text fz={13}>
-                                {
-                                  translations[
-                                    "Footers are great to add any disclaimers or to add a thoughtful PS"
-                                  ]
+                              <ContainedTextField
+                                label={
+                                  <Text fz={14} fw={500}>
+                                    {translations["Name"]} {requiredIcon}
+                                  </Text>
                                 }
-                              </Text>
+                                placeholder={"name"}
+                                {...configForm.getInputProps("name")}
+                              />
+                              <ContainedNumberInput
+                                label={
+                                  <Text fz={14} fw={500}>
+                                    {translations["Price"]} {requiredIcon}
+                                  </Text>
+                                }
+                                placeholder={translations["price"]}
+                                min={0}
+                                {...configForm.getInputProps("price")}
+                              />
+                              <ContainedNumberInput
+                                label={
+                                  <Text fz={14} fw={500}>
+                                    {translations["Tax"]} {requiredIcon}
+                                  </Text>
+                                }
+                                placeholder={translations["tax"]}
+                                min={0}
+                                {...configForm.getInputProps("tax")}
+                              />
+                              <ContainedSelection
+                                label={
+                                  <Text fz={14} fw={500}>
+                                    {translations["OrderType"]}
+                                  </Text>
+                                }
+                                placeholder={translations["order type"]}
+                                data={Object.values(OrderType)}
+                                description={
+                                  'When this field is passed in we hide the "Review and Pay" button and only show the "Pay Now" button in the order details bubble'
+                                }
+                                {...configForm.getInputProps("orderType")}
+                              />
                             </>
-                          }
-                          placeholder={translations["Footer"]}
-                          {...form.getInputProps("footer")}
-                          rightSection={
-                            <LengthTracker
-                              length={form?.values?.footer?.length}
-                              maxValue={60}
-                              atStart
-                            />
-                          }
-                        />
-                        <ButtonSelection
-                          handleMenuSelection={handleMenuSelection}
-                          flowBtn={
-                            !!form?.values?.buttons?.find(
-                              (data) => data.type === "FLOW",
-                            )
-                          }
-                          btnLen={form?.values?.buttons?.length}
-                          disabled={isOrderCreate}
-                          category={form.values.category}
-                        />
-                        {form.values?.buttons?.length > 0 && (
-                          <>
-                            {form.values?.buttons?.map((data, index) => (
-                              <Group
-                                className={buttonInputStyles.buttonBox}
-                                key={index}
-                              >
-                                <ButtonInput
-                                  form={form}
-                                  deleteButton={deleteButton}
-                                  index={index}
-                                  data={data}
-                                />
-                              </Group>
-                            ))}
-                          </>
-                        )}
-                        {isOrderCreate && (
-                          <>
-                            <Text fz={14} fw={500}>
-                              {translations["Config"]} {requiredIcon}
-                            </Text>
-                            <ContainedTextField
-                              label={
-                                <Text fz={14} fw={500}>
-                                  {translations["Name"]} {requiredIcon}
-                                </Text>
-                              }
-                              placeholder={"name"}
-                              {...configForm.getInputProps("name")}
-                            />
-                            <ContainedNumberInput
-                              label={
-                                <Text fz={14} fw={500}>
-                                  {translations["Price"]} {requiredIcon}
-                                </Text>
-                              }
-                              placeholder={translations["price"]}
-                              min={0}
-                              {...configForm.getInputProps("price")}
-                            />
-                            <ContainedNumberInput
-                              label={
-                                <Text fz={14} fw={500}>
-                                  {translations["Tax"]} {requiredIcon}
-                                </Text>
-                              }
-                              placeholder={translations["tax"]}
-                              min={0}
-                              {...configForm.getInputProps("tax")}
-                            />
-                            <ContainedSelection
-                              label={
-                                <Text fz={14} fw={500}>
-                                  {translations["OrderType"]}
-                                </Text>
-                              }
-                              placeholder={translations["order type"]}
-                              data={Object.values(OrderType)}
-                              description={
-                                'When this field is passed in we hide the "Review and Pay" button and only show the "Pay Now" button in the order details bubble'
-                              }
-                              {...configForm.getInputProps("orderType")}
-                            />
-                          </>
-                        )}
-                      </>
-                    )}
+                          )}
+                        </>
+                      )}
+                    {form.getValues().templateType ===
+                      TemplateType.CAROUSEL && <CardCarousel form={form} />}
                   </Stack>
                 </Stack>
               </PaperLayout>
@@ -808,17 +900,10 @@ export default function WhatsappTemplateById() {
                             <Text fz={"xs"}>${"{{}}"}</Text>
                           </Group>
                         </Box>
-                        <Text
-                          fw="bold"
-                          style={{
-                            color: "#444",
-                          }}
-                        >
-                          {HeaderWithFormatting(
-                            form.values?.header,
-                            form.values?.format,
-                          )}
-                        </Text>
+                        {HeaderWithFormatting(
+                          form.values?.header,
+                          form.values?.format,
+                        )}
                         <Text
                           fz={"0.95rem"}
                           style={{
@@ -863,6 +948,48 @@ export default function WhatsappTemplateById() {
                           text={translations["See all options"]}
                         />
                       )}
+                      <ScrollAreaAutosize maw={"220px"}>
+                        <Box
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            gap: 8,
+                            width: "fit-content",
+                            padding: 4,
+                          }}
+                        >
+                          {form.values.mediaCarousel?.map((card, index) => (
+                            <Stack
+                              w={"180px"}
+                              bg={"white"}
+                              key={index}
+                              gap={1}
+                              style={{ borderRadius: "10px" }}
+                            >
+                              {HeaderWithFormatting(card?.header, card?.format)}
+                              <Text
+                                fz={"0.95rem"}
+                                style={{
+                                  wordBreak: "break-all",
+                                  whiteSpace: "pre-wrap",
+                                  fontFamily: "inherit",
+                                }}
+                                component="pre"
+                                p={"xs"}
+                              >
+                                {TextWithFormatting(card?.body, card?.example)}
+                              </Text>
+                              {card?.buttons.map((data) => (
+                                <QuickReplyButton
+                                  text={data?.text}
+                                  key={data?.text}
+                                  type={data?.type}
+                                />
+                              ))}
+                            </Stack>
+                          ))}
+                        </Box>
+                      </ScrollAreaAutosize>
                     </Stack>
                   </WaChatPreview>
                 </Stack>
@@ -874,7 +1001,7 @@ export default function WhatsappTemplateById() {
     </MantineProvider>
   );
 }
-function parseStringWithVariables(string) {
+export function parseStringWithVariables(string) {
   const regex = /{{(.*?)}}/g;
   let match;
   const dynamicVariables = [];

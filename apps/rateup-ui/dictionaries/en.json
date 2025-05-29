@@ -2106,5 +2106,7 @@
   "Closed": "Closed",
   "UnAssigned": "UnAssigned",
   "Blocked": "Blocked",
-  "Choose Loyalty API/Action or Whatsapp Template": "Choose Loyalty API/Action or Whatsapp Template"
+  "Choose Loyalty API/Action or Whatsapp Template": "Choose Loyalty API/Action or Whatsapp Template",
+  "Catalog Buttons": "Catalog Buttons",
+  "Remove MPM button to add other buttons": "Remove MPM button to add other buttons"
 }

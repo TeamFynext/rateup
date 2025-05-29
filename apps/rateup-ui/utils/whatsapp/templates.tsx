@@ -12,6 +12,8 @@ export function parseTemplate(template) {
   parsedTemplate.footer = "";
   parsedTemplate.templateType = template?.templateType;
   parsedTemplate.defaultValues = template?.defaultValues;
+  parsedTemplate.mediaCarousel = [];
+  parsedTemplate.productCarousel = null;
   // parsedTemplate.config = template?.config;
 
   for (const component of template?.data?.components ?? []) {
@@ -19,7 +21,8 @@ export function parseTemplate(template) {
       parsedTemplate.format = component?.format ?? "NONE";
       if (
         component.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE ||
-        component.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.LOCATION
+        component.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.LOCATION ||
+        component.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT
       ) {
         parsedTemplate[component.type.toLowerCase()] = null;
       } else if (component.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT) {
@@ -47,6 +50,36 @@ export function parseTemplate(template) {
         return parsedButton;
       });
       parsedTemplate["buttons"] = parsedButtons;
+    } else if (component.type.toLowerCase() === "carousel") {
+      const cards = component.cards.map((card) => {
+        let cardCarousel = {
+          format: "IMAGE",
+          body: "",
+          buttons: [],
+          header: null,
+          example: [],
+        };
+        for (const cardComponent of card?.components ?? []) {
+          if (cardComponent.type.toLowerCase() === "header") {
+            cardCarousel.format = cardComponent?.format ?? "IMAGE";
+            cardCarousel[cardComponent.type.toLowerCase()] =
+              cardComponent?.example?.header_handle?.[0];
+          } else if ("body" === cardComponent.type.toLowerCase()) {
+            cardCarousel[cardComponent.type.toLowerCase()] = cardComponent.text;
+            cardCarousel["example"] =
+              cardComponent.example?.body_text?.[0] ?? [];
+          } else if (cardComponent.type.toLowerCase() == "buttons") {
+            cardComponent.buttons.map((data) => {
+              if (data?.example && Array.isArray(data.example)) {
+                data.example = data.example?.[0];
+              }
+            });
+            cardCarousel["buttons"] = cardComponent.buttons;
+          }
+        }
+        return cardCarousel;
+      });
+      parsedTemplate["mediaCarousel"] = cards;
     }
   }
   return parsedTemplate;

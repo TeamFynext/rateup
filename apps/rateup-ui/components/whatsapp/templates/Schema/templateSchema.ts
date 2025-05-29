@@ -104,6 +104,74 @@ export const templateSchema = z
     status: z.nativeEnum(WaTemplateStatus),
     example: z.array(z.string().trim()).optional(),
     templateType: z.nativeEnum(TemplateType),
+    mediaCarousel: z
+      .array(
+        z.object({
+          body: z.string().trim().min(1).max(1024),
+          header: z.union([
+            z.null(),
+            z.string().trim().min(1),
+            z.instanceof(File).superRefine((f, ctx) => {
+              const allowed = [
+                "image/png",
+                "image/jpg",
+                "image/jpeg",
+                "video/mp4",
+              ];
+              if (!allowed.includes(f.type)) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: `File must be one of [${allowed.join(
+                    ", ",
+                  )}] but was ${f.type}`,
+                });
+              }
+              if (f.size > FILE_SIZE * MB_BYTES) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.too_big,
+                  type: "array",
+                  message: `The file must not be larger than ${FILE_SIZE} MB`,
+                  maximum: FILE_SIZE * MB_BYTES,
+                  inclusive: true,
+                });
+              }
+            }),
+          ]),
+          format: z.string(),
+          example: z.array(z.string().trim()).optional(),
+          buttons: z
+            .array(
+              z.object({
+                text: z.string().max(25),
+                type: z.string(),
+                example: z.array(z.string().trim().min(1).max(2000)).optional(),
+                phone_number: z
+                  .string()
+                  .max(25)
+                  .refine(isValidPhoneNumber)
+                  .optional(),
+                url: z.string().trim().url().max(2000).optional(),
+              }),
+            )
+            .max(2)
+            .min(1),
+        }),
+      )
+      .max(10, "Only upto 10 cards can be added")
+      .min(2, "Minimum 2 cards should be there")
+      .optional(),
+    productCarousel: z.union([
+      z.null(),
+      z.object({
+        button: z.object({
+          text: z.string().max(25),
+          type: z.string(),
+          example: z.array(z.string().trim().min(1).max(2000)),
+          url: z.string().trim().url().max(2000).optional(),
+        }),
+        products: z.array(z.string()).max(10).min(2),
+      }),
+    ]),
     defaultValues: z
       .object({
         image: z
@@ -125,7 +193,30 @@ export const templateSchema = z
         catalog: z
           .object({
             thumbnail_product_retailer_id: z.string().optional(),
+            mpm: z
+              .object({
+                sections: z.array(
+                  z.object({
+                    title: z.string(),
+                    products: z.array(z.string()),
+                  }),
+                ),
+              })
+              .optional(),
+            spm: z
+              .object({
+                product_retailer_id: z.string(),
+              })
+              .optional(),
           })
+          .optional(),
+        mediaCarousel: z
+          .array(
+            z.object({
+              headerLink: z.string(),
+              cardIndex: z.number(),
+            }),
+          )
           .optional(),
       })
       .optional(),
@@ -173,7 +264,47 @@ export const templateSchema = z
             });
           }
           break;
+        case WHATSAPP_BUTTON_TYPE.MPM:
+          let errormsg;
 
+          if (values.defaultValues.catalog.mpm.sections.length > 10) {
+            errormsg = "Sections cannot be more than 10";
+          } else if (
+            values.defaultValues.catalog.mpm.sections.some(
+              (s) => s.products.length > 30,
+            )
+          ) {
+            errormsg = "Each sections can have only upto 30 products";
+          } else if (
+            values.defaultValues.catalog.mpm.sections.some(
+              (s) => !s.title.length || !s.products.length,
+            )
+          ) {
+            errormsg = "Fill out the sections";
+          } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE) {
+            ctx.addIssue({
+              path: ["header"],
+              code: z.ZodIssueCode.custom,
+              message: "Header is required for templates with a MPM button",
+            });
+          }
+          if (errormsg) {
+            ctx.addIssue({
+              path: ["button", index],
+              code: z.ZodIssueCode.custom,
+              message: "Fill out the sections",
+            });
+          }
+          break;
+        case WHATSAPP_BUTTON_TYPE.SPM:
+          if (!values.defaultValues.catalog.spm.product_retailer_id) {
+            ctx.addIssue({
+              path: ["buttons", index],
+              code: z.ZodIssueCode.custom,
+              message: "product retailer id required",
+            });
+          }
+          break;
         default:
           break;
       }
@@ -207,6 +338,52 @@ export const templateSchema = z
         code: z.ZodIssueCode.custom,
         message: errorMessage,
       });
+
+    if (
+      values.templateType === TemplateType.CAROUSEL &&
+      values.mediaCarousel.length
+    ) {
+      values.mediaCarousel.map((card, index) => {
+        const cardHeaerTypeNotString = typeof card.header !== "string";
+        if (!card.body.length) {
+          ctx.addIssue({
+            path: ["mediaCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: "Every card should have body",
+          });
+        } else if (!card.header) {
+          ctx.addIssue({
+            path: ["mediaCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: "Every card should have header",
+          });
+        } else if (
+          card.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE &&
+          cardHeaerTypeNotString
+        ) {
+          let msg =
+            !imageType.includes((card.header as File)?.type) &&
+            `Incorrect Type use only ${imageType?.join(",")}`;
+          ctx.addIssue({
+            path: ["mediaCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: msg,
+          });
+        } else if (
+          format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO &&
+          cardHeaerTypeNotString
+        ) {
+          let msg =
+            !videoType.includes((card.header as File)?.type) &&
+            `Incorrect Type use only ${videoType?.join(",")}`;
+          ctx.addIssue({
+            path: ["mediaCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: msg,
+          });
+        }
+      });
+    }
   });
 
 export type WaTemplateDefaultValues = {
