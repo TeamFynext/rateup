@@ -576,7 +576,7 @@ async function handleSubscriptionStatus(
  * @param waMessage WhatsApp message body
  * @param parsedMessage Parsed message data
  * @param phone User's phone number
- * @param chatbot Chatbot configuration
+ * @param automatedReplyId Optional ID of the automated reply to use
  */
 export async function handleAutomatedReply(
   orgId: string,
@@ -772,7 +772,12 @@ export async function processNextNode(
     // Process different node types
     switch (node.type) {
       case "flowNode":
-        await handleFlowNode(node, userPhone, orgId);
+        await handleFlowNode(
+          node,
+          userPhone,
+          orgId,
+          automation?.whatsappSettingsPhoneId,
+        );
         break;
       case "aibotNode":
         await handleAiBotNode(node, userPhone, orgId);
@@ -785,6 +790,11 @@ export async function processNextNode(
           userPhone,
           node?.data?.parameters ?? [],
           node?.data?.teamId,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          automation?.whatsappSettingsPhoneId,
         );
         break;
       case "ticketNode":
@@ -803,7 +813,13 @@ export async function processNextNode(
       default:
         // For text, buttons, and other message types
         const waMessage: any = convertNodeToWhatsAppMessage(node, userPhone);
-        await sendMessage(orgId, waMessage);
+        await sendMessage(
+          orgId,
+          waMessage,
+          undefined,
+          undefined,
+          automation?.whatsappSettingsPhoneId,
+        );
         break;
     }
 
@@ -857,8 +873,14 @@ export async function processNextNode(
  * @param node Flow node to process
  * @param userPhone User's phone number
  * @param orgId Organization ID
+ * @param whatsappSettingsPhoneId WhatsApp settings phone ID
  */
-async function handleFlowNode(node: any, userPhone: string, orgId: string) {
+async function handleFlowNode(
+  node: any,
+  userPhone: string,
+  orgId: string,
+  whatsappSettingsPhoneId: string,
+) {
   try {
     const flowId = node?.data?.flow?.id;
     const teamId = node?.data?.teamId;
@@ -898,6 +920,7 @@ async function handleFlowNode(node: any, userPhone: string, orgId: string) {
       orgId,
       dbFlowId: flowId,
       phone: userPhone,
+      whatsappSettingsPhoneId,
     });
   } catch (error) {
     log.error(`Error handling flow node: ${error.message}`);
