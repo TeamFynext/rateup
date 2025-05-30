@@ -4,7 +4,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Dimensions,
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";

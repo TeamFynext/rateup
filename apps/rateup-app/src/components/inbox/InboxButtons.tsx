@@ -7,20 +7,15 @@ import {
   FilterIcon,
   RefreshIcon,
 } from "@/src/constants/imageExports";
-import { addToken, getToken } from "@/src/api/notification";
-import { registerForPushNotificationsAsync } from "@/src/utils/notification";
 
 const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
-
   const rotation = useRef(new Animated.Value(0)).current;
   const [isRotating, setIsRotating] = useState(false);
 
   const handleRefresh = async() => {
     if (isRotating) return;
-    const pushToken = await registerForPushNotificationsAsync();
-    console.log(pushToken);
     setIsRotating(true);
     queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
 

@@ -12,6 +12,7 @@ import ToggleSwitch from "toggle-switch-react-native";
 import { EyeIcon } from "../constants/imageExports";
 import { useAuth } from "../context/AuthContext";
 import { registerForPushNotificationsAsync } from "../utils/notification";
+import { addToken } from "../api/notification";
 
 export default function SignInScreen({
   setError,
@@ -41,7 +42,9 @@ export default function SignInScreen({
       setUserId(userId)
       setOrgId(orgId);
       const token = await registerForPushNotificationsAsync();
-      console.log(token);
+      if(token){
+        await addToken(token)
+      }
       router.replace("/protected/Home");
       setLoading(false);
     }

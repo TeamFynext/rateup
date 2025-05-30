@@ -26,6 +26,7 @@ import { useToast } from "react-native-toast-notifications";
 import { Linking } from "react-native";
 import FileViewer from "react-native-file-viewer";
 import { WaSendMessageBody } from "@/src/api/inbox/types";
+import { Buffer } from "buffer";
 
 export default function WaInboxText({
   messageContent,
@@ -430,33 +431,63 @@ export function WaInboxDocument({
     checkLocalFile();
   }, [downloadPath]);
 
- const { mutateAsync } = useGetMediaFile();
+  const { mutateAsync } = useGetMediaFile();
 
-const handleDownload = async () => {
-  const hasPermission = await requestStoragePermission();
-  if (!hasPermission) {
-    toast.show("Storage permission denied.", { type: "warning" });
-    return;
-  }
+  const handleDownload = async () => {
+    const hasPermission = await requestStoragePermission();
+    if (!hasPermission) {
+      toast.show("Storage permission denied.", { type: "warning" });
+      return;
+    }
 
-  try {
-    setIsPending(true);
+    const folderPath = `${RNFS.ExternalDirectoryPath}/wa_media`;
+    const fullPath = `${folderPath}/${filename}`;
+    if (id.startsWith("http")) {
+      const downloadOptions = {
+        fromUrl: id, // direct URL to the document
+        toFile: fullPath,
+        background: true,
+        discretionary: true,
+      };
 
-    // 1. Get binary file from backend using media ID
-    const fileData = await mutateAsync(id); // `id` is actually the mediaId
+      try {
+        setIsPending(true);
+        const result = await RNFS.downloadFile(downloadOptions).promise;
+        if (result.statusCode === 200) {
+          setIsPending(false);
+          setLocalPath("file://" + fullPath);
+        } else {
+          setIsPending(false);
+          toast.show("Failed to download document.", { type: "danger" });
+        }
+      } catch (error) {
+        setIsPending(false);
+        console.error("Download error:", error);
+        toast.show("Error while downloading.", { type: "danger" });
+      }
+    } else {
+      try {
+        setIsPending(true);
 
-    // 2. Write to filesystem using react-native-fs
-    await RNFS.writeFile(downloadPath, Buffer.from(fileData).toString("base64"), 'base64');
+        // 1. Get binary file from backend using media ID
+        const fileData = await mutateAsync(id); // `id` is actually the mediaId
 
-    setLocalPath("file://" + downloadPath);
-  } catch (error) {
-    console.error("Download error:", error);
-    toast.show("Failed to download document.", { type: "danger" });
-  } finally {
-    setIsPending(false);
-  }
-};
+        // 2. Write to filesystem using react-native-fs
+        await RNFS.writeFile(
+          downloadPath,
+          Buffer.from(fileData).toString("base64"),
+          "base64"
+        );
 
+        setLocalPath("file://" + downloadPath);
+      } catch (error) {
+        console.error("Download error:", error);
+        toast.show("Failed to download document.", { type: "danger" });
+      } finally {
+        setIsPending(false);
+      }
+    }
+  };
 
   const openDocument = async () => {
     if (localPath) {
@@ -470,53 +501,52 @@ const handleDownload = async () => {
       }
     }
   };
-return (
-  <View className="w-[60vw] rounded-xl bg-white p-3 shadow-lg min-h-[64px] justify-center relative">
-    {/* Loading spinner - absolute to prevent layout shift */}
-    {isPending && (
-      <View className="absolute inset-0 justify-center items-center z-10 bg-white/70 rounded-xl">
-        <ActivityIndicator size="small" color="#009987" />
-      </View>
-    )}
-
-    {!localPath ? (
-      <TouchableOpacity
-        onPress={handleDownload}
-        disabled={isPending}
-        className="flex-row items-center space-x-4"
-      >
-        <View className="p-3 rounded-full bg-gray-200">
-          <Download size={24} color="#9ca3af" />
+  return (
+    <View className="w-[60vw] rounded-xl bg-white p-3 shadow-lg min-h-[64px] justify-center relative">
+      {/* Loading spinner - absolute to prevent layout shift */}
+      {isPending && (
+        <View className="absolute inset-0 justify-center items-center z-10 bg-white/70 rounded-xl">
+          <ActivityIndicator size="small" color="#009987" />
         </View>
-        <View className="flex-1">
-          <Text className="text-sm text-gray-700 font-medium">
-            Tap to download document
+      )}
+
+      {!localPath ? (
+        <TouchableOpacity
+          onPress={handleDownload}
+          disabled={isPending}
+          className="flex-row items-center space-x-4"
+        >
+          <View className="p-3 rounded-full bg-gray-200">
+            <Download size={24} color="#9ca3af" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-sm text-gray-700 font-medium">
+              Tap to download document
+            </Text>
+            <Text className="text-xs text-gray-500">{filename}</Text>
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          onPress={openDocument}
+          activeOpacity={0.7}
+          className="flex-col justify-center items-center space-y-1"
+        >
+          <Text className="text-base text-gray-700 font-medium text-center">
+            📄 Open Document
           </Text>
-          <Text className="text-xs text-gray-500">{filename}</Text>
-        </View>
-      </TouchableOpacity>
-    ) : (
-      <TouchableOpacity
-        onPress={openDocument}
-        activeOpacity={0.7}
-        className="flex-col justify-center items-center space-y-1"
-      >
-        <Text className="text-base text-gray-700 font-medium text-center">
-          📄 Open Document
+          <Text className="text-xs text-gray-500 text-center">{filename}</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Optional caption */}
+      {caption ? (
+        <Text className="text-sm text-gray-700 text-center italic mt-2">
+          {caption}
         </Text>
-        <Text className="text-xs text-gray-500 text-center">{filename}</Text>
-      </TouchableOpacity>
-    )}
-
-    {/* Optional caption */}
-    {caption ? (
-      <Text className="text-sm text-gray-700 text-center italic mt-2">
-        {caption}
-      </Text>
-    ) : null}
-  </View>
-);
-
+      ) : null}
+    </View>
+  );
 }
 
 interface Props {
