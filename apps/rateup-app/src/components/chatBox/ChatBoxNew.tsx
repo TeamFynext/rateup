@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
 import { namePreview } from "../../utils/chatbox_utils";
@@ -76,4 +76,4 @@ const ChatBoxNew: React.FC<
   );
 };
 
-export default ChatBoxNew;
+export default memo(ChatBoxNew);

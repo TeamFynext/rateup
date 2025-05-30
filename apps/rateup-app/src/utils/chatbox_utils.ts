@@ -6,11 +6,16 @@ dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
 export const namePreview = (name_: string) => {
-  const nameArray = name_.split(" ");
+  if(name_){
+    const nameArray = name_.split(" ");
   if (nameArray.length >= 2) {
     return (nameArray[0][0] + nameArray[1][0]).toUpperCase();
   }
   return nameArray[0].slice(0, 2).toUpperCase();
+  }
+  else{
+    return 0
+  }
 };
 
 

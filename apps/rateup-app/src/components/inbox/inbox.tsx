@@ -15,6 +15,7 @@ import {
 import { useWsData } from "@/src/context/UserContext";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { FlashList } from "@shopify/flash-list";
 
 type InboxProps = {
   messageType: string;
@@ -184,25 +185,26 @@ export default function Inbox({
   }
 
   return (
-    <FlatList
-      data={displayedContacts}
-      keyExtractor={(item) => item.id}
-      renderItem={renderItem}
-      onEndReached={() => {
-        if (hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      }}
-      onEndReachedThreshold={0.3}
-      ListFooterComponent={
-        isFetchingNextPage ? (
-          <ActivityIndicator size="small" className="py-4" />
-        ) : (
-          <View className="items-center py-4">
-            <View className="w-1/2 h-0.5 bg-gray-300 rounded-full" />
-          </View>
-        )
+  <FlashList
+    data={displayedContacts}
+    keyExtractor={(item) => item.id}
+    renderItem={renderItem}
+    onEndReached={() => {
+      if (hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
       }
-    />
-  );
+    }}
+    onEndReachedThreshold={0.3}
+    estimatedItemSize={100}
+    ListFooterComponent={
+      isFetchingNextPage ? (
+        <ActivityIndicator size="small" className="py-4" />
+      ) : (
+        <View className="items-center py-4">
+          <View className="w-1/2 h-0.5 bg-gray-300 rounded-full" />
+        </View>
+      )
+    }
+  />
+);
 }

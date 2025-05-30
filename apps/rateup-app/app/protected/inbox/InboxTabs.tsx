@@ -129,6 +129,7 @@ const activeFilterCount =
             tabBarPressOpacity: 1,
             tabBarPressColor: "transparent",
             tabBarScrollEnabled: true,
+            swipeEnabled:false,
             tabBarActiveTintColor: "#009987",
             tabBarInactiveTintColor: "#000",
             tabBarItemStyle: {
