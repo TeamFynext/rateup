@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "108745082217",
+    "project_id": "rateup-a19a1",
+    "storage_bucket": "rateup-a19a1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:108745082217:android:42e0220112d53b4a6029f8",
+        "android_client_info": {
+          "package_name": "com.rateupapp.rateup"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "108745082217-3e7hd70i0aknu20qvhisamfc3u7rvm4i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rateupapp.rateup",
+            "certificate_hash": "42dd8a17f68085303803a6bc61403fee090cfc69"
+          }
+        },
+        {
+          "client_id": "108745082217-6nk6gba2sa9cr8rttf4be9d3srs6nvvm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rateupapp.rateup",
+            "certificate_hash": "ac1abfcbc95e3ad617ec6d358e20c62ba1757d79"
+          }
+        },
+        {
+          "client_id": "108745082217-i258lnco52fbc38qs7netkr5qjsd9cgv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCE_Mbrhne0sqDrx1ERzUU7ZQvpQeyoSsg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "108745082217-9sh6il6bj4ei9amulqq0kiclhn59rchh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
