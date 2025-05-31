@@ -14,14 +14,6 @@
       },
       "oauth_client": [
         {
-          "client_id": "108745082217-3e7hd70i0aknu20qvhisamfc3u7rvm4i.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.rateupapp.rateup",
-            "certificate_hash": "42dd8a17f68085303803a6bc61403fee090cfc69"
-          }
-        },
-        {
           "client_id": "108745082217-6nk6gba2sa9cr8rttf4be9d3srs6nvvm.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -43,7 +35,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "108745082217-9sh6il6bj4ei9amulqq0kiclhn59rchh.apps.googleusercontent.com",
+              "client_id": "108745082217-i258lnco52fbc38qs7netkr5qjsd9cgv.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
