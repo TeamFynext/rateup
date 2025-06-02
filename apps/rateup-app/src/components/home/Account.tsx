@@ -51,7 +51,9 @@ const AccountBar = ({
         <View className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-gray-200">
           {profilePhoto ? (
             <Image
-              source={{ uri: profilePhoto }}
+              source={{
+                uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`,
+              }}
               className="w-full h-full"
               style={{ resizeMode: "cover" }}
             />

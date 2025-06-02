@@ -91,7 +91,6 @@ export default function Inbox({
         const filtered = prev.filter((c) => c.id !== contactId);
         queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
         return [updatedContact, ...filtered];
-        
       });
     }
   }, [wsData]);
@@ -134,6 +133,7 @@ export default function Inbox({
     const now = dayjs();
     const diffInMinutes = sessionExpiry.diff(now, "minute");
     const isSessionActive = diffInMinutes > 0;
+
     return (
       <ChatBoxComponent
         id={item.id}
@@ -185,26 +185,31 @@ export default function Inbox({
   }
 
   return (
-  <FlashList
-    data={displayedContacts}
-    keyExtractor={(item) => item.id}
-    renderItem={renderItem}
-    onEndReached={() => {
-      if (hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    }}
-    onEndReachedThreshold={0.3}
-    estimatedItemSize={100}
-    ListFooterComponent={
-      isFetchingNextPage ? (
-        <ActivityIndicator size="small" className="py-4" />
-      ) : (
-        <View className="items-center py-4">
-          <View className="w-1/2 h-0.5 bg-gray-300 rounded-full" />
-        </View>
-      )
+    <FlashList
+      data={displayedContacts}
+      keyExtractor={(item) => item.id}
+      renderItem={renderItem}
+      ListEmptyComponent={
+      <View className="h-full flex items-center justify-center">
+        <Text className="text-gray-500">No contacts found.</Text>
+      </View>
     }
-  />
-);
+      onEndReached={() => {
+        if (hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      }}
+      onEndReachedThreshold={0.3}
+      estimatedItemSize={100}
+      ListFooterComponent={
+        isFetchingNextPage ? (
+          <ActivityIndicator size="small" className="py-4" />
+        ) : (
+          <View className="items-center py-4">
+            <View className="w-1/2 h-0.5 bg-gray-300 rounded-full" />
+          </View>
+        )
+      }
+    />
+  );
 }

@@ -7,18 +7,19 @@ import {
   FilterIcon,
   RefreshIcon,
 } from "@/src/constants/imageExports";
-import { registerForPushNotificationsAsync } from "@/src/utils/notification";
 
-const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number }) => {
+const InboxButtons = ({
+  activeFilterCount = 0,
+}: {
+  activeFilterCount?: number;
+}) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const rotation = useRef(new Animated.Value(0)).current;
   const [isRotating, setIsRotating] = useState(false);
 
-  const handleRefresh = async() => {
+  const handleRefresh = () => {
     if (isRotating) return;
-    const token = await registerForPushNotificationsAsync();
-    console.log(token);
     setIsRotating(true);
     queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
 
@@ -46,7 +47,9 @@ const InboxButtons = ({ activeFilterCount = 0 }: { activeFilterCount?: number })
 
   return (
     <View className="flex-row gap-2 ml-2">
-      <TouchableOpacity onPress={() => router.push("/protected/inbox/AddContact")}>
+      <TouchableOpacity
+        onPress={() => router.push("/protected/inbox/AddContact")}
+      >
         <AddContactIcon />
       </TouchableOpacity>
 

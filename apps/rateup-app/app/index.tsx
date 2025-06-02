@@ -20,7 +20,7 @@ const index = () => {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
-        <Text>Checking session...</Text>
+        <Text>Just a moment</Text>
       </View>
     );
   }

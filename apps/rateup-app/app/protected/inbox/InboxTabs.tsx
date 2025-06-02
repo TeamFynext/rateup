@@ -70,10 +70,10 @@ function createTabScreen(
 ) {
   return function Screen() {
     const isFocused = useIsFocused();
-      const setSelectedTab = useSelectedTabStore((state) => state.setSelectedTab);
-      useEffect(() => {
+    const setSelectedTab = useSelectedTabStore((state) => state.setSelectedTab);
+    useEffect(() => {
       if (isFocused) {
-        setSelectedTab(waMessageAssignStatus ?? "All")
+        setSelectedTab(waMessageAssignStatus ?? "All");
       }
     }, [isFocused]);
     if (!isFocused) return null;
@@ -105,11 +105,11 @@ export default function InboxLayout() {
   } = useContactCounts();
 
   const filterFromStore = useChatFilterStore((state) => state.filter);
-const activeFilterCount =
-  (filterFromStore.campaigns.length > 0 ? 1 : 0) +
-  (filterFromStore.contactGroups.length > 0 ? 1 : 0) +
-  (filterFromStore.tags.length > 0 ? 1 : 0) +
-  (filterFromStore.newStatuses.length > 0 ? 1 : 0);
+  const activeFilterCount =
+    (filterFromStore.campaigns.length > 0 ? 1 : 0) +
+    (filterFromStore.contactGroups.length > 0 ? 1 : 0) +
+    (filterFromStore.tags.length > 0 ? 1 : 0) +
+    (filterFromStore.newStatuses.length > 0 ? 1 : 0);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -129,7 +129,7 @@ const activeFilterCount =
             tabBarPressOpacity: 1,
             tabBarPressColor: "transparent",
             tabBarScrollEnabled: true,
-            swipeEnabled:false,
+            swipeEnabled: false,
             tabBarActiveTintColor: "#009987",
             tabBarInactiveTintColor: "#000",
             tabBarItemStyle: {

@@ -105,7 +105,7 @@ export default function Home() {
       setSelectedItem(null);
     } else {
       setSelectedItem("account");
-      queryClient.invalidateQueries({queryKey:["loggedUser"]})
+      queryClient.invalidateQueries({ queryKey: ["loggedUser"] });
     }
   };
 
@@ -219,7 +219,9 @@ export default function Home() {
             <View className="min-w-12 h-12 bg-[#00998733] rounded-full flex justify-center items-center">
               {profilePhoto ? (
                 <Image
-                  source={{ uri: `${profilePhoto}` }}
+                  source={{
+                    uri: `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`,
+                  }}
                   className="h-full w-full rounded-full"
                   style={{ resizeMode: "cover" }}
                 />
