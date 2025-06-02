@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "108745082217-7bho92hsjjanu075it2ukeabp3i9mh3i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rateupapp.rateup",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
           "client_id": "108745082217-i258lnco52fbc38qs7netkr5qjsd9cgv.apps.googleusercontent.com",
           "client_type": 3
         }

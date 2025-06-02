@@ -247,7 +247,7 @@ const MessageSendPanel = () => {
           />
         </View>
 
-        <View className="flex-row items-end">
+        <View className="flex-row items-center justify-center">
           <View className="flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-3 py-2 space-x-2">
             <TouchableOpacity onPress={togglePanel}>
               <Animated.View style={rotateStyle}>

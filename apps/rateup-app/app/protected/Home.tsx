@@ -219,7 +219,7 @@ export default function Home() {
             <View className="min-w-12 h-12 bg-[#00998733] rounded-full flex justify-center items-center">
               {profilePhoto ? (
                 <Image
-                  source={{ uri: profilePhoto }}
+                  source={{ uri: `${profilePhoto}` }}
                   className="h-full w-full rounded-full"
                   style={{ resizeMode: "cover" }}
                 />
