@@ -58,7 +58,9 @@ import { BroadCastTypeValue } from "@/components/whatsapp/templates/Details/Broa
 import ButtonInput from "@/components/whatsapp/templates/Details/ButtonInput";
 import buttonInputStyles from "@/components/whatsapp/templates/Details/ButtonInput.module.css";
 import { ButtonSelection } from "@/components/whatsapp/templates/Details/ButtonSelectionMenu";
-import CardCarousel from "@/components/whatsapp/templates/Details/CardCarousel";
+import CardCarousel, {
+  ProductCardCarouselPreview,
+} from "@/components/whatsapp/templates/Details/CardCarousel";
 import { HeaderWithFormatting } from "@/components/whatsapp/templates/Details/HeaderWithFormating";
 import { TextFormateToolBar } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
 import TextWithFormatting from "@/components/whatsapp/templates/Details/TextWithFormating";
@@ -112,7 +114,7 @@ export default function WhatsappTemplateById() {
       example: [],
       templateType: TemplateType.GENERAL_NOTIFICATION,
       mediaCarousel: [],
-      productCarousel: null,
+      productCarousel: [],
       defaultValues: {
         catalog: {
           thumbnail_product_retailer_id: "",
@@ -289,6 +291,25 @@ export default function WhatsappTemplateById() {
           }
         }
       }
+      const defaultValueCards = values.defaultValues.productCarousel ?? [];
+      values.productCarousel.map((card, index) => {
+        const cardIndex = defaultValueCards.findIndex(
+          (c) => c.cardIndex === index,
+        );
+        if (cardIndex !== -1) {
+          defaultValueCards[cardIndex].product_retailer_id =
+            card.product_retailer_id;
+        } else {
+          defaultValueCards.push({
+            cardIndex: index,
+            product_retailer_id: card.product_retailer_id,
+          });
+        }
+      });
+      values.defaultValues = {
+        ...values.defaultValues,
+        productCarousel: defaultValueCards,
+      };
     }
     try {
       if (saveAsDraft) setIsSubmittingDraft(true);
@@ -988,6 +1009,7 @@ export default function WhatsappTemplateById() {
                               ))}
                             </Stack>
                           ))}
+                          <ProductCardCarouselPreview form={form} />
                         </Box>
                       </ScrollAreaAutosize>
                     </Stack>

@@ -243,6 +243,7 @@ export function ContainedMultiSelect(props: MultiSelectProps) {
     <MultiSelect
       searchable
       hidePickedOptions
+      classNames={classes}
       styles={{
         input: {
           borderRadius: "12px",

@@ -1,10 +1,11 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 
 import {
   ActionIcon,
   Card,
   CardSection,
   Group,
+  Image,
   Menu,
   MenuDropdown,
   MenuItem,
@@ -30,6 +31,7 @@ import {
 } from "@tabler/icons-react";
 import { z } from "zod";
 
+import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
 import {
   ContainedFileInput,
@@ -47,6 +49,7 @@ import {
 } from "@/utils/constants";
 import { showErrorToast } from "@/utils/notifications";
 
+import { QuickReplyButton } from "../../MessageComponents";
 import { templateSchema } from "../Schema/templateSchema";
 import ButtonInput from "./ButtonInput";
 import { TextFormateToolBar } from "./TextFormateToolBar";
@@ -71,7 +74,22 @@ const CardCarousel = ({
     });
   }
 
-  function handleProductCarousel() {}
+  function handleProductCarousel() {
+    if (form.values.productCarousel.length === 10) {
+      showErrorToast("Only 10 cards are allowed");
+      return;
+    }
+    const firstCard = form.values.productCarousel[0];
+    form.insertListItem("productCarousel", {
+      button: firstCard
+        ? firstCard.button
+        : {
+            type: WHATSAPP_BUTTON_TYPE.SPM,
+            text: "View",
+          },
+      product_reatiler_id: "",
+    });
+  }
   const { translations } = useTranslations();
   const [selectedText, setSelectedText] = useState("");
   const contentHistory = useRef([]); // Ref to store content history
@@ -123,6 +141,9 @@ const CardCarousel = ({
   function deleteMediaCard(index) {
     form.removeListItem("mediaCarousel", index);
   }
+  function deleteProductCard(index) {
+    form.removeListItem("productCarousel", index);
+  }
   function handleButtonSelect(btn, index) {
     const newObject = { type: btn, text: "" };
     const existing = form.values.mediaCarousel[index].buttons.find(
@@ -134,6 +155,21 @@ const CardCarousel = ({
     }
     form.insertListItem(`mediaCarousel.${index}.buttons`, newObject);
   }
+  const { connectedCatalog } = useWaCatalog();
+  const { data: catalog } = connectedCatalog;
+  const productRetailerIds = catalog
+    ? catalog?.products?.map((p) => p.retailer_id)
+    : [];
+  const productCarouselButtons = [
+    {
+      value: WHATSAPP_BUTTON_TYPE.SPM,
+      label: "View Single Product",
+    },
+    {
+      value: WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE,
+      label: "Visit website",
+    },
+  ];
 
   return (
     <Stack pt={"sm"}>
@@ -151,22 +187,22 @@ const CardCarousel = ({
         <MenuDropdown>
           <Tooltip
             label={
-              form.values.productCarousel
+              form.values.productCarousel?.length
                 ? "Remove prodcut card to add media card"
                 : ""
             }
-            disabled={!form.values.productCarousel}
+            disabled={!form.values.productCarousel?.length}
           >
             <MenuItem
               leftSection={<IconCarouselHorizontal size={16} />}
               onClick={handleMediaCarousel}
-              disabled={!!form.values.productCarousel}
+              disabled={form.values.productCarousel?.length > 0}
             >
               Media Card
             </MenuItem>
           </Tooltip>
           <Tooltip
-            disabled={!form.values.mediaCarousel.length}
+            disabled={!form.values.mediaCarousel?.length}
             label={
               form.values.mediaCarousel.length > 0
                 ? "Remove media card to add product card"
@@ -176,7 +212,7 @@ const CardCarousel = ({
             <MenuItem
               leftSection={<IconShoppingCart size={16} />}
               onClick={handleProductCarousel}
-              disabled={form.values.mediaCarousel.length > 0}
+              disabled={form.values.mediaCarousel?.length > 0}
             >
               Catalog Product Card
             </MenuItem>
@@ -336,13 +372,92 @@ const CardCarousel = ({
           ))}
         </Card>
       ) : null}
-      {form.values.productCarousel && (
-        <Group>
-          <ContainedSelection />
-          <ContainedTextField />
-          <ContainedMultiSelect />
-        </Group>
-      )}
+      {form.values.productCarousel.length ? (
+        <Card bg={"var(--light-grey-color-2)"} p={"sm"} radius={"md"}>
+          <Group fz={14} gap={"xs"} wrap="nowrap" mb={"xs"}>
+            <IconBulb size={16} />
+            Use the same structure for all cards
+          </Group>
+          {form.values.productCarousel.map((card, index) => (
+            <Card withBorder mb={"sm"} radius={"md"} key={index}>
+              <CardSection withBorder p={4}>
+                <Group justify="space-between">
+                  <Text>Card {index + 1}</Text>
+                  <ActionIcon
+                    variant="subtle"
+                    onClick={() => deleteProductCard(index)}
+                  >
+                    <IconTrash size={16} color="red" />
+                  </ActionIcon>
+                </Group>
+              </CardSection>
+              <Group p={"xs"}>
+                <ContainedSelection
+                  data={productCarouselButtons}
+                  {...form.getInputProps(
+                    `productCarousel.${index}.button.type`,
+                  )}
+                  label={
+                    <Text fz={14} fw={500}>
+                      {translations["Type of action"]}
+                    </Text>
+                  }
+                  placeholder="Select a action"
+                  onChange={(value) => {
+                    const spmBtn = value === WHATSAPP_BUTTON_TYPE.SPM;
+                    form.setFieldValue(`productCarousel.${index}.button`, {
+                      type: value,
+                      text: spmBtn ? "View" : "",
+                      ...(spmBtn
+                        ? {
+                            url: "",
+                            example: [],
+                          }
+                        : {}),
+                    });
+                  }}
+                />
+                <ContainedTextField
+                  {...form.getInputProps(
+                    `productCarousel.${index}.button.text`,
+                  )}
+                  readOnly={card.button.type === WHATSAPP_BUTTON_TYPE.SPM}
+                  label={
+                    <Text fz={14} fw={500}>
+                      {translations["Button text"]}
+                    </Text>
+                  }
+                />
+                <ContainedTextField
+                  {...form.getInputProps(`productCarousel.${index}.button.url`)}
+                  display={
+                    card.button.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE
+                      ? "block"
+                      : "none"
+                  }
+                  label={
+                    <Text fz={14} fw={500}>
+                      {translations["Website Url"]}
+                    </Text>
+                  }
+                />
+                <ContainedSelection
+                  data={productRetailerIds}
+                  {...form.getInputProps(
+                    `productCarousel.${index}.product_retailer_id`,
+                  )}
+                  label={
+                    <Text fz={14} fw={500}>
+                      Product Item
+                    </Text>
+                  }
+                  placeholder="Select a product"
+                />
+              </Group>
+            </Card>
+          ))}
+        </Card>
+      ) : null}
     </Stack>
   );
 };
@@ -403,6 +518,64 @@ const CarouselButtonMenu = ({ btnLength, handleButtonSelect }) => {
         </Tooltip>
       </MenuDropdown>
     </Menu>
+  );
+};
+
+export const ProductCardCarouselPreview = ({
+  form,
+}: {
+  form: UseFormReturnType<z.infer<typeof templateSchema>>;
+}) => {
+  const { connectedCatalog } = useWaCatalog();
+  const { data: catalog } = connectedCatalog;
+
+  const productCardData = useMemo(
+    () =>
+      catalog
+        ? form.values.productCarousel?.map((card) => {
+            const product = catalog?.products?.find(
+              (p) => p?.retailer_id === card.product_retailer_id,
+            );
+            return {
+              image: product?.image_link || product?.image?.[0]?.url || "",
+              title: product?.title ?? product?.name ?? "",
+              price: product?.price || "",
+              button: card.button,
+            };
+          })
+        : [],
+    [catalog, form.values.productCarousel],
+  );
+  if (!productCardData?.length) return;
+  return (
+    <>
+      {productCardData.map((card, index) => (
+        <Stack
+          gap={0}
+          style={{ borderRadius: "10px" }}
+          key={index}
+          p={1}
+          bg={"white"}
+          w={"180px"}
+        >
+          <Image
+            src={card.image}
+            h={100}
+            w={"100%"}
+            alt="image of the product"
+          />
+          <Stack gap={1} bg={"var(--light-grey-color)"} p={"xs"}>
+            <Text fw={600} truncate>
+              {card.title}
+            </Text>
+            <Text c="dimmed" size="sm">
+              {card.price}
+            </Text>
+          </Stack>
+          <QuickReplyButton text={card.button.text} type={card.button.type} />
+        </Stack>
+      ))}
+    </>
   );
 };
 

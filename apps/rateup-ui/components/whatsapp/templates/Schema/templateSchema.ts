@@ -157,21 +157,20 @@ export const templateSchema = z
             .min(1),
         }),
       )
-      .max(10, "Only upto 10 cards can be added")
-      .min(2, "Minimum 2 cards should be there")
       .optional(),
-    productCarousel: z.union([
-      z.null(),
-      z.object({
-        button: z.object({
-          text: z.string().max(25),
-          type: z.string(),
-          example: z.array(z.string().trim().min(1).max(2000)),
-          url: z.string().trim().url().max(2000).optional(),
+    productCarousel: z
+      .array(
+        z.object({
+          button: z.object({
+            text: z.string().max(25),
+            type: z.string(),
+            example: z.array(z.string().trim().min(1).max(2000)).optional(),
+            url: z.string().trim().url().max(2000).optional(),
+          }),
+          product_retailer_id: z.string(),
         }),
-        products: z.array(z.string()).max(10).min(2),
-      }),
-    ]),
+      )
+      .optional(),
     defaultValues: z
       .object({
         image: z
@@ -214,6 +213,14 @@ export const templateSchema = z
           .array(
             z.object({
               headerLink: z.string(),
+              cardIndex: z.number(),
+            }),
+          )
+          .optional(),
+        productCarousel: z
+          .array(
+            z.object({
+              product_retailer_id: z.string(),
               cardIndex: z.number(),
             }),
           )
@@ -343,6 +350,14 @@ export const templateSchema = z
       values.templateType === TemplateType.CAROUSEL &&
       values.mediaCarousel.length
     ) {
+      if (values.mediaCarousel.length < 2) {
+        ctx.addIssue({
+          path: ["mediaCarousel"],
+          code: z.ZodIssueCode.custom,
+          message: "Minimum 2 cards required",
+        });
+        return;
+      }
       values.mediaCarousel.map((card, index) => {
         const cardHeaerTypeNotString = typeof card.header !== "string";
         if (!card.body.length) {
@@ -381,6 +396,37 @@ export const templateSchema = z
             code: z.ZodIssueCode.custom,
             message: msg,
           });
+        } else if (!card.buttons.length) {
+          ctx.addIssue({
+            path: ["mediaCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: "Atleast 1 button required",
+          });
+        }
+      });
+    }
+
+    if (
+      values.templateType === TemplateType.CAROUSEL &&
+      values.productCarousel.length
+    ) {
+      if (values.productCarousel.length < 2) {
+        ctx.addIssue({
+          path: ["mediaCarousel"],
+          code: z.ZodIssueCode.custom,
+          message: "Minimum 2 cards required",
+        });
+        return;
+      }
+      let buttonType = values.productCarousel[0].button.type;
+      values.productCarousel.map((card, index) => {
+        if (card.button.type !== buttonType) {
+          ctx.addIssue({
+            path: ["productCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: "Every card should have same button action",
+          });
+          return;
         }
       });
     }
