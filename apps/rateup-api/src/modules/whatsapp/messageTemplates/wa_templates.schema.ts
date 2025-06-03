@@ -81,6 +81,14 @@ const waTemplateInput = {
           }),
         )
         .optional(),
+      productCarousel: z
+        .array(
+          z.object({
+            product_retailer_id: z.string(),
+            cardIndex: z.number(),
+          }),
+        )
+        .optional(),
     })
     .optional(),
   mediaCarousel: z
@@ -104,22 +112,19 @@ const waTemplateInput = {
           .min(1),
       }),
     )
-    .max(10)
-    .min(2)
     .optional(),
   productCarousel: z
-    .union([
-      z.null(),
+    .array(
       z.object({
         button: z.object({
           text: z.string().max(25),
           type: z.string(),
-          example: z.array(z.string().trim().min(1).max(2000)),
+          example: z.array(z.string().trim().min(1).max(2000)).optional(),
           url: z.string().trim().url().max(2000).optional(),
         }),
-        products: z.array(z.string()).max(10).min(2),
+        product_retailer_id: z.string(),
       }),
-    ])
+    )
     .optional(),
   templateType: z.nativeEnum(TemplateType).optional(),
   config: z.any(),

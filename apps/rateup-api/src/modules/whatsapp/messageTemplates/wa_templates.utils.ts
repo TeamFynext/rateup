@@ -77,6 +77,24 @@ export function generateTemplate(
       type: WaTemplateComponentType.CAROUSEL,
       cards,
     });
+  } else if (input.productCarousel?.length) {
+    let cards = [];
+    for (const card of input.productCarousel) {
+      let cardComponents = [];
+      cardComponents.push({
+        type: WaTemplateComponentType.HEADER,
+        format: WaTemplateSupportedFormats.PRODUCT,
+      });
+      cardComponents.push({
+        type: WaTemplateComponentType.BUTTONS,
+        buttons: [card.button],
+      });
+      cards.push({ components: cardComponents });
+    }
+    components.push({
+      type: WaTemplateComponentType.CAROUSEL,
+      cards,
+    });
   } else {
     if (input.buttons?.length > 0) {
       components.push({
