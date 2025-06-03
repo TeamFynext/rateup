@@ -25,7 +25,7 @@ const createFlowInput = z.object({
 });
 
 const updateFlowInput = z.object({
-  name: z.string().optional(),
+  name: z.string().trim().optional(),
   status: z.string().optional(),
   json: z.any().optional(),
   map: z.any().optional(),

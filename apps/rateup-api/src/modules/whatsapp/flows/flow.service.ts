@@ -587,7 +587,10 @@ export async function updateFlowInDb(
     where: {
       dbFlowId: dbFlowId,
     },
-    data: data,
+    data: {
+      ...data,
+      name: data.name?.trim(),
+    },
     include: {
       survey: true,
     },
@@ -596,7 +599,7 @@ export async function updateFlowInDb(
   // updating survey title if name is updated
   if (data.name || data.status === WaFlowStatus.PUBLISHED) {
     const updateData = {
-      title: data.name,
+      title: data.name?.trim(),
       isPublished: data.status
         ? data.status === WaFlowStatus.PUBLISHED
         : undefined,
