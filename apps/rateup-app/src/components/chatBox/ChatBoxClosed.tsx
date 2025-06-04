@@ -31,7 +31,9 @@ const ChatBoxClosed: React.FC<
               className="text-lg font-semibold text-[#343A40]"
               numberOfLines={1}
             >
-              {name || phone}
+              {(name || phone)?.length > 20
+                ? (name || phone).slice(0, 17) + "..."
+                : name || phone}
             </Text>
 
             {/* Last Message */}

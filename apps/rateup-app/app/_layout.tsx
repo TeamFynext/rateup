@@ -6,6 +6,8 @@ export default function RootLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
+        statusBarStyle:"light",
+        statusBarBackgroundColor:"transparent"
       }}
     >
       <Stack.Screen name="protected" />

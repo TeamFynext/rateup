@@ -1,28 +1,20 @@
 {
   "project_info": {
-    "project_number": "108745082217",
-    "project_id": "rateup-a19a1",
-    "storage_bucket": "rateup-a19a1.firebasestorage.app"
+    "project_number": "42123891439",
+    "project_id": "rateup-app-2023",
+    "storage_bucket": "rateup-app-2023.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:108745082217:android:42e0220112d53b4a6029f8",
+        "mobilesdk_app_id": "1:42123891439:android:3b6e4a4e32642e69edc11a",
         "android_client_info": {
           "package_name": "com.rateupapp.rateup"
         }
       },
       "oauth_client": [
         {
-          "client_id": "108745082217-6nk6gba2sa9cr8rttf4be9d3srs6nvvm.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.rateupapp.rateup",
-            "certificate_hash": "ac1abfcbc95e3ad617ec6d358e20c62ba1757d79"
-          }
-        },
-        {
-          "client_id": "108745082217-7bho92hsjjanu075it2ukeabp3i9mh3i.apps.googleusercontent.com",
+          "client_id": "42123891439-540g1mkr9upimagnekdl8inhmkadmgeg.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.rateupapp.rateup",
@@ -30,20 +22,28 @@
           }
         },
         {
-          "client_id": "108745082217-i258lnco52fbc38qs7netkr5qjsd9cgv.apps.googleusercontent.com",
+          "client_id": "42123891439-gbd2auqafnldhprd8kutkp833icj7hqu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rateupapp.rateup",
+            "certificate_hash": "ac1abfcbc95e3ad617ec6d358e20c62ba1757d79"
+          }
+        },
+        {
+          "client_id": "42123891439-i07vvb961u4rlnrfg543o20jciptmd7s.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCE_Mbrhne0sqDrx1ERzUU7ZQvpQeyoSsg"
+          "current_key": "AIzaSyABCJelX2MinkZz72lGUtY_NgcWkTcV8c0"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "108745082217-i258lnco52fbc38qs7netkr5qjsd9cgv.apps.googleusercontent.com",
+              "client_id": "42123891439-i07vvb961u4rlnrfg543o20jciptmd7s.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

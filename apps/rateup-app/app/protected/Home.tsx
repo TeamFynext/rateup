@@ -27,6 +27,7 @@ const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 const InboxLayout = memo(InboxLayoutComponent);
 
 export default function Home() {
+  
   const [selectedItem, setSelectedItem] = useState<"menu" | "account" | null>(
     null
   );

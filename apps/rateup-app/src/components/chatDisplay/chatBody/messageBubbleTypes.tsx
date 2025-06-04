@@ -17,7 +17,6 @@ import {
   View,
   Modal,
   Pressable,
-  Button,
 } from "react-native";
 import RNFS from "react-native-fs";
 import Video from "react-native-video";
@@ -277,7 +276,6 @@ export function WaInboxAudio({
       onSuccess: async (arrayBufferData) => {
         const byteArray = new Uint8Array(arrayBufferData);
         const base64Data = fromByteArray(byteArray);
-
         try {
           await RNFS.writeFile(downloadPath, base64Data, "base64");
           setLocalPath("file://" + downloadPath);
@@ -302,99 +300,97 @@ export function WaInboxAudio({
   };
 
   return (
-  <View className="w-[60vw] rounded-2xl bg-white px-4 py-3">
-    {link || localPath ? (
-      <View className="flex-row items-center space-x-3">
-        <View className="flex-row gap-1">
-        {/* Headphones Icon */}
-        <View className="p-2 rounded-full bg-rateUpGreen20">
-          <Headphones size={20} color="#009987" />
-        </View>
+    <View className="w-[60vw] rounded-2xl bg-white px-4 py-3">
+      {link || localPath ? (
+        <View className="flex-row items-center space-x-3">
+          <View className="flex-row gap-1">
+            {/* Headphones Icon */}
+            <View className="p-2 rounded-full bg-rateUpGreen20">
+              <Headphones size={20} color="#009987" />
+            </View>
 
-        {/* Play / Pause Button */}
-        <TouchableOpacity
-          onPress={togglePlay}
-          className="p-2 rounded-full bg-gray-100"
-        >
-          {isPlaying ? (
-            <Pause size={20} color="#000" />
-          ) : (
-            <Play size={20} color="#000" />
-          )}
-        </TouchableOpacity>
-        </View>
-
-        {/* Progress Bar + Time */}
-        <View className="flex-1 ml-2">
-          {/* Progress Bar */}
-          <View className="h-2 bg-rateUpGreen20 rounded-full overflow-hidden mb-1">
-            <View
-              className="h-full bg-rateUpGreen rounded-full"
-              style={{ width: `${(progress / duration) * 100 || 0}%` }}
-            />
+            {/* Play / Pause Button */}
+            <TouchableOpacity
+              onPress={togglePlay}
+              className="p-2 rounded-full bg-gray-100"
+            >
+              {isPlaying ? (
+                <Pause size={20} color="#000" />
+              ) : (
+                <Play size={20} color="#000" />
+              )}
+            </TouchableOpacity>
           </View>
 
-          {/* Time Info */}
-          <View className="flex-row justify-between px-1">
-            <Text className="text-xs text-gray-600">
-              {isPlaying ? formatTime(progress) : formatTime(duration)}
-            </Text>
+          {/* Progress Bar + Time */}
+          <View className="flex-1 ml-2">
+            {/* Progress Bar */}
+            <View className="h-2 bg-rateUpGreen20 rounded-full overflow-hidden mb-1">
+              <View
+                className="h-full bg-rateUpGreen rounded-full"
+                style={{ width: `${(progress / duration) * 100 || 0}%` }}
+              />
+            </View>
+
+            {/* Time Info */}
+            <View className="flex-row justify-between px-1">
+              <Text className="text-xs text-gray-600">
+                {isPlaying ? formatTime(progress) : formatTime(duration)}
+              </Text>
+              <Text className="text-xs text-gray-500">{timestamp}</Text>
+            </View>
+          </View>
+
+          {/* Hidden Video */}
+          <Video
+            ref={playerRef}
+            source={{ uri: localPath ?? link! }}
+            paused={!isPlaying}
+            onEnd={() => {
+              setIsPlaying(false);
+              setProgress(0);
+              playerRef.current?.seek(0);
+            }}
+            onLoad={(meta) => setDuration(meta.duration)}
+            onProgress={(p) => setProgress(p.currentTime)}
+            playInBackground={false}
+            playWhenInactive={false}
+            style={{ width: 0, height: 0 }}
+          />
+        </View>
+      ) : (
+        <View className="flex-row items-center space-x-3">
+          {/* Headphones Icon */}
+          <View className="p-2 rounded-full bg-gray-200">
+            <Headphones size={20} color="#9ca3af" />
+          </View>
+
+          {/* Download Button */}
+          <TouchableOpacity
+            onPress={handleDownload}
+            disabled={isPending}
+            className="flex-1 flex-row justify-between items-center rounded-lg px-3 py-2 bg-gray-50"
+          >
+            {isPending ? (
+              <ActivityIndicator size="small" color="#009987" />
+            ) : (
+              <Text className="text-sm text-gray-700 font-medium">
+                Tap to download audio
+              </Text>
+            )}
             <Text className="text-xs text-gray-500">{timestamp}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
+      )}
 
-        {/* Hidden Video */}
-        <Video
-          ref={playerRef}
-          source={{ uri: localPath ?? link! }}
-          paused={!isPlaying}
-          onEnd={() => {
-            setIsPlaying(false);
-            setProgress(0);
-            playerRef.current?.seek(0);
-          }}
-          onLoad={(meta) => setDuration(meta.duration)}
-          onProgress={(p) => setProgress(p.currentTime)}
-          playInBackground={false}
-          playWhenInactive={false}
-          style={{ width: 0, height: 0 }}
-        />
-      </View>
-    ) : (
-      <View className="flex-row items-center space-x-3">
-        {/* Headphones Icon */}
-        <View className="p-2 rounded-full bg-gray-200">
-          <Headphones size={20} color="#9ca3af" />
-        </View>
-
-        {/* Download Button */}
-        <TouchableOpacity
-          onPress={handleDownload}
-          disabled={isPending}
-          className="flex-1 flex-row justify-between items-center rounded-lg px-3 py-2 bg-gray-50"
-        >
-          {isPending ? (
-            <ActivityIndicator size="small" color="#009987" />
-          ) : (
-            <Text className="text-sm text-gray-700 font-medium">
-              Tap to download audio
-            </Text>
-          )}
-          <Text className="text-xs text-gray-500">{timestamp}</Text>
-        </TouchableOpacity>
-      </View>
-    )}
-
-    {/* Optional Caption */}
-    {caption ? (
-      <Text className="text-sm text-gray-700 italic mt-2 text-center">
-        {caption}
-      </Text>
-    ) : null}
-  </View>
-);
-
-
+      {/* Optional Caption */}
+      {caption ? (
+        <Text className="text-sm text-gray-700 italic mt-2 text-center">
+          {caption}
+        </Text>
+      ) : null}
+    </View>
+  );
 }
 
 export function WaInboxDocument({
@@ -499,7 +495,7 @@ export function WaInboxDocument({
     }
   };
   return (
-    <View className="w-[60vw] rounded-xl bg-white p-3 shadow-lg min-h-[64px] justify-center relative">
+    <View className="w-[60vw] rounded-xl bg-white p-3 min-h-[64px] justify-center relative">
       {/* Loading spinner - absolute to prevent layout shift */}
       {isPending && (
         <View className="absolute inset-0 justify-center items-center z-10 bg-white/70 rounded-xl">
