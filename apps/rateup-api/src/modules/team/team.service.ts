@@ -63,7 +63,7 @@ export async function createTeam(input: CreateTeamInput) {
         const team = await prisma.team.create({
           data: {
             name: input.name,
-            code: input.code,
+            code: input.code.trim(),
             orgId: input.orgId,
           },
           select: {
