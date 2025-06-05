@@ -149,10 +149,31 @@ export default function WhatsappTemplateById() {
     }
   }, [editingItem]);
 
-  const spmBtn = useMemo(
-    () => form.values.buttons.find((b) => b.type === WHATSAPP_BUTTON_TYPE.SPM),
-    [form.values.buttons],
-  );
+  const { spmBtn, mpmBtn, checkoutBtn, flowBtn, catalogBtn } = useMemo(() => {
+    let spmBtn = false,
+      mpmBtn = false,
+      checkoutBtn = false,
+      flowBtn = false,
+      catalogBtn = false;
+    form.values.buttons.map((b) => {
+      if (b.type === WHATSAPP_BUTTON_TYPE.SPM) {
+        spmBtn = true;
+      }
+      if (b.type === WHATSAPP_BUTTON_TYPE.MPM) {
+        mpmBtn = true;
+      }
+      if (b.type === WHATSAPP_BUTTON_TYPE.ORDER_DETAILS) {
+        checkoutBtn = true;
+      }
+      if (b.type === WHATSAPP_BUTTON_TYPE.FLOW) {
+        flowBtn = true;
+      }
+      if (b.type === WHATSAPP_BUTTON_TYPE.CATALOG) {
+        catalogBtn = true;
+      }
+    });
+    return { spmBtn, mpmBtn, checkoutBtn, flowBtn, catalogBtn };
+  }, [form.values.buttons]);
 
   useEffect(() => {
     switch (form.getValues().templateType) {
@@ -435,19 +456,13 @@ export default function WhatsappTemplateById() {
     input.setSelectionRange(newCursorPosition, newCursorPosition);
     input.focus();
   };
-  const handleMenuSelection = (e: string) => {
+  const handleMenuSelection = (e: string, text: string = "") => {
     const newObject =
       e === WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE
         ? { type: e, example: "" }
         : e === WHATSAPP_BUTTON_TYPE.WEBSURVEY
           ? { type: WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE, text: "", example: [] }
-          : e === WHATSAPP_BUTTON_TYPE.CATALOG
-            ? { type: e, text: "View catalog" }
-            : e === WHATSAPP_BUTTON_TYPE.MPM
-              ? { type: e, text: "View items" }
-              : e === WHATSAPP_BUTTON_TYPE.SPM
-                ? { type: e, text: "View" }
-                : { type: e, text: "" };
+          : { type: e, text };
     if (e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
       const btn = form.values?.buttons?.filter(
         (data) => data.type === (e as WHATSAPP_BUTTON_TYPE),
@@ -458,6 +473,43 @@ export default function WhatsappTemplateById() {
       }
     }
     const newData = form.values.buttons ?? [];
+    if (e === WHATSAPP_BUTTON_TYPE.ORDER_DETAILS) {
+      const otherBtns = newData.find(
+        (b) => b.type !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY,
+      );
+      if (otherBtns) {
+        showErrorToast(
+          `Only quick reply buttons are allowed along with checkout button. Remove others to add checkout button`,
+        );
+        return;
+      }
+      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE);
+      form.setFieldValue("defaultValues", {
+        orderDetails: {
+          productType: "digital-goods",
+          discount: 0.0,
+          expiry: null,
+          paymentType: "razorpay",
+          paymentConfigName: "",
+          shipping: 0.0,
+          tax: 0.0,
+          item: {
+            name: "",
+            price: 0.0,
+            quantity: 1,
+            salePrice: 0.0,
+            importerAddress1: "",
+            importerCity: "",
+            importerName: "",
+            importerPostalCode: "",
+            importerZoneCode: "",
+            origin: "",
+          },
+          discountDiscription: "",
+          taxDescription: "",
+        },
+      });
+    }
     const lastIndex = newData.reduceRight((index, obj, currentIndex) => {
       if (obj.type === "QUICK_REPLY" && index === -1) {
         return currentIndex;
@@ -473,6 +525,15 @@ export default function WhatsappTemplateById() {
     if (e === WHATSAPP_BUTTON_TYPE.SPM) {
       form.setFieldValue("header", null);
       form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.PRODUCT);
+    }
+    if (e === WHATSAPP_BUTTON_TYPE.CATALOG) {
+      form.setFieldValue("header", null);
+      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE);
+      form.setFieldValue("category", "MARKETING");
+    }
+    if (e === WHATSAPP_BUTTON_TYPE.MPM) {
+      form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
+      form.setFieldValue("category", "MARKETING");
     }
   };
   const deleteButton = (index: number) => {
@@ -636,7 +697,13 @@ export default function WhatsappTemplateById() {
                           {...form.getInputProps("category")}
                           data={WHATSAPP_TEMPLATE_CATEGORY}
                           allowDeselect={false}
-                          disabled={isOrderCreate}
+                          disabled={
+                            isOrderCreate ||
+                            catalogBtn ||
+                            spmBtn ||
+                            mpmBtn ||
+                            checkoutBtn
+                          }
                         />
                       )}
 
@@ -692,12 +759,17 @@ export default function WhatsappTemplateById() {
                                     WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT,
                                     WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
                                   ]
-                                : Object.values(
-                                    WHATSAPP_TEMPLATE_BROADCAST_TYPE,
-                                  )
+                                : checkoutBtn
+                                  ? [
+                                      WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE,
+                                      WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO,
+                                    ]
+                                  : Object.values(
+                                      WHATSAPP_TEMPLATE_BROADCAST_TYPE,
+                                    )
                             }
                             allowDeselect={false}
-                            disabled={!!spmBtn}
+                            disabled={spmBtn || catalogBtn || mpmBtn}
                           />
                         </Grid.Col>
                         <Grid.Col span={"auto"}>
@@ -800,19 +872,13 @@ export default function WhatsappTemplateById() {
                           />
                           <ButtonSelection
                             handleMenuSelection={handleMenuSelection}
-                            flowBtn={
-                              !!form?.values?.buttons?.find(
-                                (data) => data.type === "FLOW",
-                              )
-                            }
-                            mpmBtn={
-                              !!form?.values?.buttons?.find(
-                                (data) => data.type === "MPM",
-                              )
-                            }
+                            flowBtn={flowBtn}
+                            mpmBtn={mpmBtn}
+                            checkoutBtn={checkoutBtn}
+                            catalogBtn={catalogBtn}
+                            spmBtn={spmBtn}
                             btnLen={form?.values?.buttons?.length}
                             disabled={isOrderCreate}
-                            category={form.values.category}
                           />
                           {form.values?.buttons?.length > 0 && (
                             <>

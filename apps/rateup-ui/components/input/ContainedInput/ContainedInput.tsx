@@ -163,7 +163,7 @@ export function ContainedFileButton(props: fileButtonPropsExtend) {
   );
 }
 
-const isToday = (date) => {
+const isToday = (date: Date) => {
   const today = new Date();
   return (
     date.getDate() === today.getDate() &&
@@ -174,7 +174,7 @@ const isToday = (date) => {
 
 const getDayProps = (date) => ({
   style: {
-    backgroundColor: isToday(date) && "#73C2FB",
+    backgroundColor: date && isToday(new Date(date)) && "#73C2FB",
   },
 });
 

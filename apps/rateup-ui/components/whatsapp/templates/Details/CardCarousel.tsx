@@ -27,6 +27,7 @@ import {
   IconPlus,
   IconShoppingCart,
   IconTrash,
+  IconWorld,
   IconX,
 } from "@tabler/icons-react";
 import { z } from "zod";
@@ -49,6 +50,7 @@ import {
 } from "@/utils/constants";
 import { showErrorToast } from "@/utils/notifications";
 
+import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector";
 import { QuickReplyButton } from "../../MessageComponents";
 import { templateSchema } from "../Schema/templateSchema";
 import ButtonInput from "./ButtonInput";
@@ -145,9 +147,12 @@ const CardCarousel = ({
     form.removeListItem("productCarousel", index);
   }
   function handleButtonSelect(btn, index) {
-    const newObject = { type: btn, text: "" };
+    let newObject = { type: btn, text: "" };
+    if (btn === WHATSAPP_BUTTON_TYPE.WEBSURVEY) {
+      (newObject.type = "URL"), (newObject["example"] = []);
+    }
     const existing = form.values.mediaCarousel[index].buttons.find(
-      (b) => b.type === btn,
+      (b) => b.type === newObject.type,
     );
     if (existing) {
       showErrorToast(`Only one button allowed for this type`);
@@ -169,7 +174,24 @@ const CardCarousel = ({
       value: WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE,
       label: "Visit website",
     },
+    {
+      value: WHATSAPP_BUTTON_TYPE.WEBSURVEY,
+      label: "Rateup Web Survey",
+    },
   ];
+
+  function getButtonAction(type) {
+    switch (type) {
+      case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
+        return "Call phone number";
+      case WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE:
+        return "Visit a Website";
+      case WHATSAPP_BUTTON_TYPE.WEBSURVEY:
+        return "RateUp Web Survey";
+      case WHATSAPP_BUTTON_TYPE.QUICK_REPLY:
+        return "Quick Reply";
+    }
+  }
 
   return (
     <Stack pt={"sm"}>
@@ -326,8 +348,8 @@ const CardCarousel = ({
                     style={{ borderRadius: "5px" }}
                   >
                     <ContainedTextField
-                      {...form.getInputProps(
-                        `mediaCarousel.${index}.buttons.${btnIndex}.type`,
+                      value={getButtonAction(
+                        btn.example ? WHATSAPP_BUTTON_TYPE.WEBSURVEY : btn.type,
                       )}
                       readOnly
                       label={"Button Type"}
@@ -338,18 +360,33 @@ const CardCarousel = ({
                         `mediaCarousel.${index}.buttons.${btnIndex}.text`,
                       )}
                     />
-                    {btn.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE ? (
-                      <ContainedTextField
-                        label={"Url"}
-                        {...form.getInputProps(
-                          `mediaCarousel.${index}.buttons.${btnIndex}.url`,
-                        )}
-                      />
-                    ) : btn.type === WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER ? (
+                    {btn.type === WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER ? (
                       <PhoneInputWithCountry
                         label={"Phone Number"}
                         {...form.getInputProps(
                           `mediaCarousel.${index}.buttons.${btnIndex}.phone_number`,
+                        )}
+                      />
+                    ) : btn.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE &&
+                      btn.example ? (
+                      <WebsurveySelector
+                        onlyPublished
+                        searchable
+                        label={
+                          <Text fz={14} fw={500}>
+                            {translations["Web Survey"]}
+                          </Text>
+                        }
+                        comboboxProps={{ position: "top" }}
+                        form={form}
+                        index={btnIndex}
+                        carousel={`mediaCarousel.${index}.buttons.${btnIndex}`}
+                      />
+                    ) : btn.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE ? (
+                      <ContainedTextField
+                        label={"Url"}
+                        {...form.getInputProps(
+                          `mediaCarousel.${index}.buttons.${btnIndex}.url`,
                         )}
                       />
                     ) : null}
@@ -403,15 +440,22 @@ const CardCarousel = ({
                     </Text>
                   }
                   placeholder="Select a action"
-                  onChange={(value) => {
+                  onChange={(value, option) => {
                     const spmBtn = value === WHATSAPP_BUTTON_TYPE.SPM;
                     form.setFieldValue(`productCarousel.${index}.button`, {
-                      type: value,
+                      type:
+                        value === WHATSAPP_BUTTON_TYPE.WEBSURVEY
+                          ? "URL"
+                          : value,
                       text: spmBtn ? "View" : "",
-                      ...(spmBtn
+                      ...(!spmBtn
                         ? {
                             url: "",
-                            example: [],
+                            ...(value === WHATSAPP_BUTTON_TYPE.WEBSURVEY
+                              ? {
+                                  example: [],
+                                }
+                              : {}),
                           }
                         : {}),
                     });
@@ -428,19 +472,39 @@ const CardCarousel = ({
                     </Text>
                   }
                 />
-                <ContainedTextField
-                  {...form.getInputProps(`productCarousel.${index}.button.url`)}
-                  display={
-                    card.button.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE
-                      ? "block"
-                      : "none"
-                  }
-                  label={
-                    <Text fz={14} fw={500}>
-                      {translations["Website Url"]}
-                    </Text>
-                  }
-                />
+                {!card.button.example && (
+                  <ContainedTextField
+                    {...form.getInputProps(
+                      `productCarousel.${index}.button.url`,
+                    )}
+                    display={
+                      card.button.type === WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE
+                        ? "block"
+                        : "none"
+                    }
+                    label={
+                      <Text fz={14} fw={500}>
+                        {translations["Website Url"]}
+                      </Text>
+                    }
+                  />
+                )}
+
+                {card.button.example && (
+                  <WebsurveySelector
+                    onlyPublished
+                    searchable
+                    label={
+                      <Text fz={14} fw={500}>
+                        {translations["Web Survey"]}
+                      </Text>
+                    }
+                    comboboxProps={{ position: "top" }}
+                    form={form}
+                    index={0}
+                    carousel={`productCarousel.${index}.button`}
+                  />
+                )}
                 <ContainedSelection
                   data={productRetailerIds}
                   {...form.getInputProps(
@@ -500,6 +564,18 @@ const CarouselButtonMenu = ({ btnLength, handleButtonSelect }) => {
             }
           >
             Visit website
+          </Menu.Item>
+        </Tooltip>
+        <Tooltip
+          label={btnLength === 2 ? "Maximum 2 buttons allowed" : ""}
+          disabled={btnLength < 2}
+        >
+          <Menu.Item
+            disabled={btnLength === 2}
+            leftSection={<IconWorld size={16} />}
+            onClick={() => handleButtonSelect(WHATSAPP_BUTTON_TYPE.WEBSURVEY)}
+          >
+            Rateup Web Survey
           </Menu.Item>
         </Tooltip>
         <Tooltip
