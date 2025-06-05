@@ -109,7 +109,7 @@ const waTemplateInput = {
           shipping: z.number(),
           tax: z.number(),
           discount: z.number().optional(),
-          discountDiscription: z.string().max(60).optional(),
+          discountDescription: z.string().max(60).optional(),
           taxDescription: z.string().max(60),
           expiry: z.string().optional(),
         })

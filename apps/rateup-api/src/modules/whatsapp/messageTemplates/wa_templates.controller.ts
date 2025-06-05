@@ -69,7 +69,7 @@ import { wait } from "../whatsappSurvey/wasurvey.controller";
 import { createWaMessageSchedule } from "../wa_message_scheduler";
 import { parsePhoneforWa } from "../../loyalty/util";
 import { WHATSAPP_BUTTON_TYPE } from "../../../types/whatsapp.types";
-import { isEmptyString } from "../../../utils/commnUtils";
+import { isEmptyString } from "../../../utils/commonUtils";
 import { getConnectedWaCatalog } from "../catalog/catalog.service";
 import dayjs from "dayjs";
 
@@ -743,7 +743,7 @@ export async function sendTemplateToUserCore(
                                 offset: 100,
                                 discription:
                                   defaultValues?.orderDetails
-                                    ?.discountDiscription,
+                                    ?.discountDescription,
                                 value:
                                   Number(
                                     defaultValues?.orderDetails?.discount,

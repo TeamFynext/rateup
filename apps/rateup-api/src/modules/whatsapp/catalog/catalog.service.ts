@@ -1,6 +1,5 @@
-import { WhatsappSettings, WhatsaAppCatalog } from "@prisma/client";
+import { WhatsappSettings } from "@prisma/client";
 import prisma from "../../../utils/prisma";
-import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
 import { UpdateCatalogSchema } from "./catalog.schema";
 import { WaReceiveMessageBody } from "../../../types/whatsapp.types";
@@ -10,7 +9,7 @@ export async function updateWaCatalog(
   catalogId: string,
   data: UpdateCatalogSchema,
 ) {
-  await prisma.whatsaAppCatalog.update({
+  await prisma.whatsappCatalog.update({
     where: {
       catalogId,
     },
@@ -19,7 +18,7 @@ export async function updateWaCatalog(
 }
 
 export async function getWaCatalog(catalogId) {
-  return await prisma.whatsaAppCatalog.findUnique({
+  return await prisma.whatsappCatalog.findUnique({
     where: {
       catalogId,
     },
@@ -46,11 +45,11 @@ export async function syncWaCatalogs(
     ...rest,
   }));
 
-  await prisma.whatsaAppCatalog.createMany({
+  await prisma.whatsappCatalog.createMany({
     data: catalogs,
     skipDuplicates: true,
   });
-  const existingCatalogs = await prisma.whatsaAppCatalog.findMany({
+  const existingCatalogs = await prisma.whatsappCatalog.findMany({
     where: {
       orgId,
     },
@@ -75,7 +74,7 @@ export async function syncWaCatalogs(
   });
 
   if (deletedCatalogs.length) {
-    await prisma.whatsaAppCatalog.deleteMany({
+    await prisma.whatsappCatalog.deleteMany({
       where: {
         catalogId: {
           in: deletedCatalogs,
@@ -86,7 +85,7 @@ export async function syncWaCatalogs(
 
   if (updateCatalogs.length) {
     for (const catalog of updateCatalogs) {
-      await prisma.whatsaAppCatalog.update({
+      await prisma.whatsappCatalog.update({
         where: {
           catalogId: catalog.catalogId,
         },
@@ -97,7 +96,7 @@ export async function syncWaCatalogs(
 }
 
 export async function getWaCatalogsByOrg(orgId) {
-  return await prisma.whatsaAppCatalog.findMany({
+  return await prisma.whatsappCatalog.findMany({
     where: {
       orgId,
     },
@@ -108,7 +107,7 @@ export async function getWaCatalogsByOrg(orgId) {
 }
 
 export async function getConnectedWaCatalog(orgId) {
-  return await prisma.whatsaAppCatalog.findFirst({
+  return await prisma.whatsappCatalog.findFirst({
     where: {
       orgId,
       isWhatsappConnected: true,
@@ -129,7 +128,7 @@ export async function handleWaOrderfromCatalog(data: WaReceiveMessageBody) {
     paymentStatus: "Pending",
     status: "Pending",
   } as WaCatalogOrder;
-  const catalog = await prisma.whatsaAppCatalog.findUnique({
+  const catalog = await prisma.whatsappCatalog.findUnique({
     where: {
       catalogId: order.catalog_id,
     },
@@ -139,7 +138,7 @@ export async function handleWaOrderfromCatalog(data: WaReceiveMessageBody) {
     return;
   }
   const newOrders = [...catalog.orders, orderObj];
-  await prisma.whatsaAppCatalog.update({
+  await prisma.whatsappCatalog.update({
     where: {
       catalogId: order.catalog_id,
     },

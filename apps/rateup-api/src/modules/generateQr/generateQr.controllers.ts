@@ -3,7 +3,7 @@ import {
   CreateGenerateQrRecordReqBody,
   updateGenerateQrRecordReqBodyType,
 } from "./generateQr.schema";
-import { shortIdUniqueConstraintErrHandler } from "../../utils/commnUtils";
+import { shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils";
 import {
   createGenerateQrRecordInDB,
   deleteGenerateQrRecordInDB,

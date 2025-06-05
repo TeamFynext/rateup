@@ -145,7 +145,7 @@ model Org {
   whatsappQuickReplies     WhatsappQuickReply[]
   loyaltyApiSettings       LoyaltyApiSettings[]
   WhatsappSettings         WhatsappSettings[]
-  WaCatalog      WhatsaAppCatalog[]
+  WaCatalog                WhatsappCatalog[]
 }
 
 model UsageStats {
@@ -1508,7 +1508,7 @@ model LoyaltyApiSettings {
   @@index([orgId, feature])
 }
 
-model WhatsaAppCatalog {
+model WhatsappCatalog {
   catalogId  String @unique
   orgId     String  @db.Uuid
   org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)

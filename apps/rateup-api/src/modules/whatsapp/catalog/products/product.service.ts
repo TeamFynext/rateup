@@ -1,4 +1,3 @@
-import { WhatsaAppCatalog } from "@prisma/client";
 import prisma from "../../../../utils/prisma";
 import { getWaSettings } from "../../settings/wa_settings.service";
 import { callWhatsappApi } from "../../wa_axios";
@@ -88,7 +87,7 @@ export async function createCatalogProductsBatch(
   }
   await sendProducts(orgId, requests, type, catalogId);
 
-  await prisma.whatsaAppCatalog.update({
+  await prisma.whatsappCatalog.update({
     where: {
       catalogId,
     },
@@ -222,7 +221,7 @@ export async function syncCatalogProducts(
     }
   }
   // const updatedProducts = newProducts.filter(p => res.data.data.some(pr => pr.id === p.id))
-  await prisma.whatsaAppCatalog.update({
+  await prisma.whatsappCatalog.update({
     where: {
       catalogId,
     },
@@ -238,7 +237,7 @@ export async function syncCatalogProducts(
 }
 
 export async function getCatalogProducts(catalogId, query = null) {
-  return (await prisma.whatsaAppCatalog.findUnique({
+  return (await prisma.whatsappCatalog.findUnique({
     where: {
       catalogId,
     },
@@ -300,7 +299,7 @@ export async function deleteCatalogProducts(
       );
     }
   });
-  await prisma.whatsaAppCatalog.update({
+  await prisma.whatsappCatalog.update({
     where: {
       catalogId,
     },
@@ -392,7 +391,7 @@ export async function updateCatalogProducts(orgId, catalogId, dataList, type) {
   }
   await sendProducts(orgId, requests, type, catalogId);
 
-  await prisma.whatsaAppCatalog.update({
+  await prisma.whatsappCatalog.update({
     where: {
       catalogId,
     },

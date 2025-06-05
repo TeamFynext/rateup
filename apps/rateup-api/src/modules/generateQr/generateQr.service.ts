@@ -1,6 +1,6 @@
 import { FastifyRequest } from "fastify";
 import { CreateGenerateQrRecordReqBody } from "./generateQr.schema";
-import { getShortUrlId } from "../../utils/commnUtils";
+import { getShortUrlId } from "../../utils/commonUtils";
 import prisma from "../../utils/prisma";
 
 async function createGenerateQrRecordInDB(
