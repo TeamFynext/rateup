@@ -69,7 +69,7 @@ export function parseTemplate(template) {
             product_retailer_id: cardDefaultValue.product_retailer_id,
           };
           for (const cardComponent of card?.components ?? []) {
-            if (cardComponent.type.toLowerCase() == "buttons") {
+            if (cardComponent.type.toLowerCase() === "buttons") {
               cardComponent.buttons.map((data) => {
                 if (data?.example && Array.isArray(data.example)) {
                   data.example = data.example?.[0];
@@ -100,7 +100,7 @@ export function parseTemplate(template) {
                 cardComponent.text;
               cardCarousel["example"] =
                 cardComponent.example?.body_text?.[0] ?? [];
-            } else if (cardComponent.type.toLowerCase() == "buttons") {
+            } else if (cardComponent.type.toLowerCase() === "buttons") {
               cardComponent.buttons.map((data) => {
                 if (data?.example && Array.isArray(data.example)) {
                   data.example = data.example?.[0];
