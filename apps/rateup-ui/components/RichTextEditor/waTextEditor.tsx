@@ -25,6 +25,7 @@ import parse from "html-react-parser";
 
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter";
 import InboxContactsControl from "./InboxContactMessage";
+import InboxLocationControl from "./InboxLocation";
 import InsertEmoji from "./InsertEmoji";
 import InsertInboxAudio from "./InsertInboxMedia/InserInboxAudio";
 import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile";
@@ -229,6 +230,7 @@ function WaTextEditor({
                   <RichTextEditor.ControlsGroup>
                     <WaQuickReplyControl />
                     <InboxContactsControl />
+                    <InboxLocationControl />
                   </RichTextEditor.ControlsGroup>
                 </>
               )}

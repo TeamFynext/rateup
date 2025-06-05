@@ -4,10 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   createChatbot,
+  deleteChatbot,
   deleteChatbotResource,
   deleteChatHistory,
   deleteManyChatbotResource,
   deletePublicChatHistory,
+  getAllChatbots,
   getChatbotDetails,
   getChatbotPublicPageStatus,
   getChatbotResources,
@@ -43,11 +45,11 @@ export const useUploadSourceForEmbed = () => {
   });
 };
 
-export const useGetChatbotResources = (enabled) => {
+export const useGetChatbotResources = (enabled, chatbotId: string) => {
   return useQuery({
-    queryKey: ["chatbotResources"],
-    queryFn: getChatbotResources,
-    enabled,
+    queryKey: ["chatbotResources", chatbotId],
+    queryFn: () => getChatbotResources(chatbotId),
+    enabled: enabled && !!chatbotId,
   });
 };
 
@@ -127,12 +129,17 @@ export const useGetChatbotPublicPageStatus = (chatbotId: string) => {
   });
 };
 
-export const useGetChatbotDetails = () => {
+export const useGetChatbotDetails = (chatbotId: string | null) => {
   return useQuery({
-    queryFn: getChatbotDetails,
-    queryKey: ["chatbotDetails"],
+    queryFn: () => getChatbotDetails(chatbotId!),
+    queryKey: ["chatbotDetails", chatbotId],
+    enabled: !!chatbotId,
+    refetchOnMount: true,
   });
 };
+
+export const useAllChatbots = () =>
+  useQuery({ queryKey: ["all-chatbots"], queryFn: getAllChatbots });
 
 export const useCreateChatbot = () => {
   const queryClient = useQueryClient();
@@ -159,10 +166,33 @@ export const useUpdateChatbot = () => {
   });
 };
 
-export const useGetUserAiChats = (enabled) => {
+export const useGetUserAiChats = (enabled, chatbotId: string) => {
   return useQuery({
-    queryFn: getUserAiChats,
-    queryKey: ["aiChat"],
-    enabled,
+    queryFn: () => getUserAiChats(chatbotId!),
+    queryKey: ["aiChat", chatbotId],
+    enabled: enabled && !!chatbotId,
+  });
+};
+
+export const useDeleteChatbot = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (chatbotId: string) => {
+      await deleteChatbot(chatbotId);
+      return chatbotId;
+    }, // API function for deletion
+    onSuccess: (chatbotId: string) => {
+      queryClient.invalidateQueries({ queryKey: ["all-chatbots"] });
+
+      queryClient.invalidateQueries({
+        queryKey: ["chatbotDetails", chatbotId],
+      });
+
+      showSuccessToast("Chatbot deleted successfully");
+    },
+    onError: () => {
+      showErrorToast("Failed to delete chatbot");
+    },
   });
 };

@@ -245,7 +245,7 @@ const fbLogin = (): Promise<FBLoginResponse> => {
         extras: {
           setup: {},
           featureType: "",
-          sessionInfoVersion: "2",
+          sessionInfoVersion: "3",
         },
       },
     );
@@ -357,7 +357,7 @@ export default function WhatsAppSettingsPage() {
   const { translations } = useTranslations();
   useEffect(() => {
     if (waSettings) {
-      setTab(waSettings.type);
+      setTab(waSettings?.[0]?.type);
     }
   }, [waSettings]);
 
@@ -365,8 +365,8 @@ export default function WhatsAppSettingsPage() {
     return <MetaLoginStatusLoaderSkeleton />;
   }
 
-  const isAutomated = waSettings?.type === WaConfigType.Automated;
-  const isManual = waSettings?.type === WaConfigType.Manual;
+  const isAutomated = waSettings?.[0]?.type === WaConfigType.Automated;
+  const isManual = waSettings?.[0]?.type === WaConfigType.Manual;
 
   return (
     <Stack h={"100%"}>
@@ -412,7 +412,7 @@ export default function WhatsAppSettingsPage() {
           <MetaLoginStatus waSettings={waSettings} />
         </Tabs.Panel>
         <Tabs.Panel value={WaConfigType.Manual}>
-          <WhatsAppManualConfiguration waSettings={waSettings} />
+          <WhatsAppManualConfiguration waSettings={waSettings?.[0]} />
         </Tabs.Panel>
       </StyledTabs>
     </Stack>
@@ -421,60 +421,88 @@ export default function WhatsAppSettingsPage() {
 
 function MetaLoginStatus({ waSettings }) {
   const deRegisterMutation = useDeregisterBusinessClientMutation();
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [openDeleteConfirmation, { open, close }] = useDisclosure(false);
   const { translations } = useTranslations();
+
   function handleDeRegister() {
-    deRegisterMutation.mutate();
+    console.log(
+      "🚀 ~ handleDeRegister ~ selectedAccountId:",
+      selectedAccountId,
+    );
+    deRegisterMutation.mutate(selectedAccountId);
+    close();
   }
 
-  if (waSettings) {
+  const handleLogoutAccount = (accountId) => {
+    setSelectedAccountId(accountId);
+    open();
+  };
+
+  if (waSettings?.length > 0) {
     return (
-      <PaperLayout w={"fit-content"}>
+      <PaperLayout w={"fit-content"} m={"md"}>
         <Stack>
-          <Group justify={"space-between"}>
-            <Text
-              style={{
-                fontSize: "1.2rem",
-                fontWeight: "bold",
-              }}
-              c="dimmed"
-            >
-              {translations["Linked WhatsApp Business Account"]}
-            </Text>
-            <Tooltip
-              label={translations["Logout from WhatsApp Business Account"]}
-            >
-              <ActionIcon variant="subtle" color="red" onClick={open}>
-                <IconLogout />
-              </ActionIcon>
-            </Tooltip>
-            <ConfirmationModal
-              forDeleteFunctionality
-              deleteQuotion={
-                translations[
-                  "Are you sure you want to DeRegister from WhatsApp Business Account?"
-                ]
-              }
-              opened={openDeleteConfirmation}
-              onClose={close}
-              onConfirm={handleDeRegister}
-              confirmLabel={translations["DeRegister"]}
-              headerLabel={translations["DeRegister WhatsApp Business Account"]}
-              headerTitle={translations["Confirmation Dialog"]}
-            />
-          </Group>
-          <Group gap={"xl"}>
-            <ContainedTextField
-              label={translations["WhatsApp Business ID"]}
-              value={waSettings.wabaId}
-              readOnly
-            />
-            <ContainedTextField
-              label={translations["WhatsApp Phone Number"]}
-              value={waSettings.phone}
-              readOnly
-            />
-          </Group>
+          <Text
+            style={{
+              fontSize: "1.2rem",
+              fontWeight: "bold",
+            }}
+            c="dimmed"
+          >
+            {translations["Linked WhatsApp Business Account"]}
+          </Text>
+          {waSettings.map((setting, index) => (
+            <Box key={index} mb="md">
+              <Divider
+                mb="sm"
+                label={`Setting ${index + 1}`}
+                labelPosition="center"
+              />
+              <Group align="flex-end" justify="apart">
+                <Group gap={"xl"}>
+                  <ContainedTextField
+                    label={translations["WhatsApp Business ID"]}
+                    value={setting.wabaId}
+                    readOnly
+                  />
+                  <ContainedTextField
+                    label={translations["WhatsApp Phone Number"]}
+                    value={setting.phone}
+                    readOnly
+                  />
+                </Group>
+                <Tooltip label={"Logout from this WhatsApp Business Account"}>
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
+                    onClick={() => handleLogoutAccount(setting.phoneId)}
+                  >
+                    <IconLogout />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+            </Box>
+          ))}
+          <ConfirmationModal
+            forDeleteFunctionality
+            deleteQuotion={
+              translations[
+                "Are you sure you want to DeRegister this WhatsApp Business Account?"
+              ]
+            }
+            opened={openDeleteConfirmation}
+            onClose={close}
+            onConfirm={handleDeRegister}
+            confirmLabel={translations["DeRegister"]}
+            headerLabel={translations["DeRegister WhatsApp Business Account"]}
+            headerTitle={translations["Confirmation Dialog"]}
+          />
+
+          <Divider my="md" label={"Add New Account"} labelPosition="center" />
+          <Center>
+            <MetaLoginButton />
+          </Center>
         </Stack>
       </PaperLayout>
     );
@@ -487,7 +515,10 @@ function MetaLoginStatus({ waSettings }) {
           borderRadius: "4px",
         }}
       >
-        <MetaLoginButton />
+        <Stack align="center" gap="md">
+          <Text>{"No WhatsApp Business Accounts Connected"}</Text>
+          <MetaLoginButton />
+        </Stack>
       </Center>
     );
   }
@@ -507,8 +538,8 @@ function MetaLoginStatusLoaderSkeleton() {
   );
 }
 
-export function WhatsAppAIChatConfiguration() {
-  const { data: chatbot, isLoading } = useGetChatbotDetails();
+export function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
+  const { data: chatbot, isLoading } = useGetChatbotDetails(selectedChatbotId);
   const { translations } = useTranslations();
   const updateChatbotdetMut = useUpdateChatbot();
   const { data: subscription } = useSubscription();
@@ -521,20 +552,36 @@ export function WhatsAppAIChatConfiguration() {
   });
 
   function handleEnableWaAIChat(e) {
-    updateChatbotdetMut.mutate({ enableWaChat: e.currentTarget.checked });
+    updateChatbotdetMut.mutate({
+      chatbotId: selectedChatbotId,
+      data: {
+        enableWaChat: e.currentTarget.checked,
+      },
+    });
   }
 
   useEffect(() => {
-    const initialValues = {
-      waCommand: chatbot?.waCommand,
-      waPrompt: chatbot?.waPrompt,
-    };
-    form.setInitialValues(initialValues);
-    form.setValues(initialValues);
-  }, [chatbot]);
+    if (chatbot) {
+      const newValues = {
+        waCommand: chatbot.waCommand ?? "",
+        waPrompt: chatbot.waPrompt ?? "",
+      };
+
+      form.setInitialValues(newValues); // set new base values
+      form.setValues(newValues); // explicitly reset to the new chatbot's values
+    } else {
+      form.setValues({
+        waCommand: "",
+        waPrompt: "",
+      });
+    }
+  }, [chatbot?.id]);
 
   function handleSubmit() {
-    updateChatbotdetMut.mutate(form.values);
+    updateChatbotdetMut.mutate({
+      chatbotId: selectedChatbotId,
+      data: form.values,
+    });
   }
 
   const hasAIFeature = useMemo(
@@ -563,7 +610,10 @@ export function WhatsAppAIChatConfiguration() {
                     checked={chatbot?.enableAllWaChat}
                     onChange={(e) =>
                       updateChatbotdetMut.mutate({
-                        enableAllWaChat: e.currentTarget.checked,
+                        chatbotId: selectedChatbotId,
+                        data: {
+                          enableAllWaChat: e.currentTarget.checked,
+                        },
                       })
                     }
                   />

@@ -28,8 +28,11 @@ import NothingFound from "../NothingFound/NothingFound";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 import UploadChatbotSource from "./UploadChatbotSource";
 
-const ChatbotResources = ({ enableApi }) => {
-  const { data: chatbotResourses } = useGetChatbotResources(enableApi);
+const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
+  const { data: chatbotResourses } = useGetChatbotResources(
+    enableApi,
+    selectedChatbotId,
+  );
   const { translations } = useTranslations();
   const [selectedSources, setSelectedSources] = useState<ChatbotResourses[]>(
     [],
@@ -143,7 +146,11 @@ const ChatbotResources = ({ enableApi }) => {
           <NothingFound text={translations["No Resources uploaded"]} />
         )}
       </PaperLayout>
-      <UploadChatbotSource opened={opened} close={close} />
+      <UploadChatbotSource
+        selectedChatbotId={selectedChatbotId}
+        opened={opened}
+        close={close}
+      />
     </Stack>
   );
 };

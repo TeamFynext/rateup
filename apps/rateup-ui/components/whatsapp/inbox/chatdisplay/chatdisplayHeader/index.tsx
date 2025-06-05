@@ -53,6 +53,7 @@ import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+import { useChatbotStore } from "@/store/chatbot.store";
 import { UserRole } from "@/utils/enums";
 import { TicketType } from "@/utils/enums/ticket";
 import { hasFeature } from "@/utils/subscription/subscription";
@@ -73,8 +74,9 @@ export default function WaInboxChatDisplayHeader({
   const editContactMutation = useEditContactMutation(null);
   const { setSelectedContact } = useContactStore();
   const isMobile = useMediaQuery("(max-width: 1200px)");
+  const { selectedChatbotId } = useChatbotStore();
 
-  const { data: chatbot } = useGetChatbotDetails();
+  const { data: chatbot } = useGetChatbotDetails(selectedChatbotId);
   const { data: subscription } = useSubscription();
 
   const hasAIFeature = useMemo(

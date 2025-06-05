@@ -66,7 +66,7 @@ const WaAutomatedReplyId = () => {
   const { data: waSettings, isPending: waPending } = useWaSettings();
 
   if (isPending || isLoading || waPending) return <RateupLoader />;
-  let link = `https://api.whatsapp.com/send/?phone=${encodeURIComponent(waSettings?.phone?.replace("+", ""))}&text=${encodeURIComponent(data?.commands?.[0] ?? "")}`;
+  let link = `https://api.whatsapp.com/send/?phone=${encodeURIComponent(waSettings?.[0]?.phone?.replace("+", ""))}&text=${encodeURIComponent(data?.commands?.[0] ?? "")}`;
 
   return (
     <StyledTabs

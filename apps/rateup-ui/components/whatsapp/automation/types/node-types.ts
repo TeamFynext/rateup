@@ -205,6 +205,14 @@ export interface FlowNodeData extends BaseNodeData {
     name: string;
   };
 }
+///////////////////////aibot node
+export interface AiBotNodeData extends BaseNodeData {
+  body: string;
+  chatbot: {
+    id: string;
+    name: string;
+  };
+}
 
 export interface TicketNodeData extends BaseNodeData {
   ticket: {
@@ -243,6 +251,7 @@ export type NodeTypeMap = {
   addressNode: AddressNodeData;
   contactsNode: ContactsNodeData;
   flowNode: FlowNodeData;
+  aibotNode: AiBotNodeData;
   ticketNode: TicketNodeData;
 };
 
@@ -272,6 +281,7 @@ export type NodeData =
   | AddressNodeData
   | ContactsNodeData
   | FlowNodeData
+  | AiBotNodeData
   | TicketNodeData;
 
 // Extended Node type with typed data
@@ -706,6 +716,24 @@ export function validateNodeData(node: TypedNode): {
         return {
           valid: false,
           message: `${node.data.label}: Team ID is required.`,
+        };
+      }
+      break;
+    }
+    //// aibot node
+    case "aibotNode": {
+      const data = node.data as NodeTypeMap["aibotNode"];
+
+      if (!data.body || data.body === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Message text is required.`,
+        };
+      }
+      if (!data.chatbot.id || data.chatbot.id === "") {
+        return {
+          valid: false,
+          message: `${node.data.label}: Chatbot selection is required.`,
         };
       }
       break;

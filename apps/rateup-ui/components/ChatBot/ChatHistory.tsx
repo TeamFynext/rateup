@@ -29,8 +29,11 @@ import PaperLayout from "../styled/Layouts/PaperLayout";
 import ChatSelectSkeletonCardList from "../whatsapp/inbox/chatselect/chatselectCard/Skeleton";
 import classes from "./ChatbotStyle.module.css";
 
-const ChatHistory = ({ enableApi }) => {
-  const { data: chats, isLoading } = useGetUserAiChats(enableApi);
+const ChatHistory = ({ enableApi, selectedChatbotId }) => {
+  const { data: chats, isLoading } = useGetUserAiChats(
+    enableApi,
+    selectedChatbotId,
+  );
   const userChats = useMemo(() => {
     if (!chats) return null;
     const userChats = Object.groupBy(chats, ({ userId }) => userId);

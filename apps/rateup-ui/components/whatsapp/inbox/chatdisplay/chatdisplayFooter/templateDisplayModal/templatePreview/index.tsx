@@ -27,6 +27,7 @@ interface Props {
       templateId: string;
       parameterData: any;
       teamId: string;
+      whatsappSettingsPhoneId: string;
     },
     unknown
   >;
@@ -34,6 +35,7 @@ interface Props {
   setSelectedTemplateId: (id: string) => void;
   onClose: () => void;
   teamId: string;
+  whatsappSettingsPhoneId: string;
 }
 export default function WaInboxTemplatePreview(props: Props) {
   const [parameterData, setParameterData] = useImmer<any>([]);
@@ -85,6 +87,7 @@ export default function WaInboxTemplatePreview(props: Props) {
       templateId: props?.selectedTemplateId,
       parameterData: modifiedParamData,
       teamId: props?.teamId,
+      whatsappSettingsPhoneId: props?.whatsappSettingsPhoneId,
     });
     setLoading(false);
     props?.onClose();

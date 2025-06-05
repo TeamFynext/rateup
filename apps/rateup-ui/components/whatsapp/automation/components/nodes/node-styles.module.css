@@ -459,6 +459,10 @@
   border-left: 4px solid #ef4444;
 }
 
+.aibotNode {
+  border-left: 4px solid #676665;
+}
+
 .startNode {
   border-left: 4px solid #22c55e;
 }

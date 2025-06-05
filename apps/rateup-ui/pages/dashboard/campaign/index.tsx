@@ -97,7 +97,7 @@ export default function CampaignList() {
           onClose={close}
           centered
           size={"lg"}
-          radius={"lg"}
+          radius={"md"}
         >
           <CreateCampaignModal close={close} isEdit={false} />
         </Modal>

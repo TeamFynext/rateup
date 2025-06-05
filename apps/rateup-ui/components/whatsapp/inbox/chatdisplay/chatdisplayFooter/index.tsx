@@ -55,6 +55,7 @@ export default function WaInboxChatDisplayFooter({
         contactIds: [],
         groupIds: [],
       },
+      location: null,
     },
     validate: {
       text: (value, values) => {
@@ -100,6 +101,12 @@ export default function WaInboxChatDisplayFooter({
       form.setValues({ ...body });
     }
   }, [body, media]);
+
+  useEffect(() => {
+    if (form.values.type === "location" && form.values.location) {
+      handleSendMessage();
+    }
+  }, [form.values]);
 
   useEffect(() => {
     if (audioUrl) {
@@ -420,16 +427,23 @@ const initialMessgabody = {
     contactIds: [],
     groupIds: [],
   },
+  location: null,
 };
 
 export const useMessageBodyStore = create<{
   body: {
     type: string;
-    media: WaMedia[];
-    text: { body: string };
-    contacts: {
+    media?: WaMedia[];
+    text?: { body: string };
+    contacts?: {
       contactIds: string[];
       groupIds: string[];
+    };
+    location?: {
+      longitude: string;
+      latitude: string;
+      name?: string;
+      address?: string;
     };
   };
   setBody: (value) => void;
