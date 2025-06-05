@@ -618,6 +618,10 @@ declare global {
       currency: string;
     }[];
     contactId: string;
+    paymentMethod?: string;
+    paymentStatus: string;
+    status: string;
+    transactionId?: string;
   };
 
   // PRISMA JSON TYPES

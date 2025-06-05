@@ -61,13 +61,17 @@ import {
   handleWhatsappError,
 } from "../wa_error_handler";
 import { updateMonthlyStat } from "../../stats/stats.service";
-import { sendPaymentInitTemplate } from "../automatedReply/wa_automatedReply.utils";
+import {
+  generateOrderReferenceId,
+  sendPaymentInitTemplate,
+} from "../automatedReply/wa_automatedReply.utils";
 import { wait } from "../whatsappSurvey/wasurvey.controller";
 import { createWaMessageSchedule } from "../wa_message_scheduler";
 import { parsePhoneforWa } from "../../loyalty/util";
 import { WHATSAPP_BUTTON_TYPE } from "../../../types/whatsapp.types";
 import { isEmptyString } from "../../../utils/commnUtils";
 import { getConnectedWaCatalog } from "../catalog/catalog.service";
+import dayjs from "dayjs";
 
 export async function getTemplatesHandler(
   request: FastifyRequest<{
@@ -626,6 +630,148 @@ export async function sendTemplateToUserCore(
                 },
               ],
             });
+          } else if (
+            button.type === WHATSAPP_BUTTON_TYPE.ORDER_DETAILS &&
+            dbTemplate.templateType !== TemplateType.ORDER_DETAILS &&
+            !components.some(
+              (c) => c.type === "button" && c.sub_type === "order_details",
+            )
+          ) {
+            const sub_total =
+              Number(defaultValues?.orderDetails?.item?.price) *
+              Number(defaultValues?.orderDetails?.item?.quantity);
+            const total_amount =
+              sub_total +
+              Number(defaultValues?.orderDetails?.shipping ?? 0) +
+              Number(defaultValues?.orderDetails?.tax ?? 0) -
+              Number(defaultValues?.orderDetails?.discount ?? 0);
+            components.push({
+              type: "button",
+              sub_type: button.type.toLowerCase(),
+              index: 0,
+              parameters: [
+                {
+                  type: "action",
+                  action: {
+                    order_details: {
+                      reference_id: generateOrderReferenceId(),
+                      currency: "INR",
+                      type: defaultValues?.orderDetails?.productType,
+                      payment_settings: [
+                        {
+                          type: "payment_gateway",
+                          payment_gateway: {
+                            type: defaultValues?.orderDetails?.paymentType,
+                            configuration_name:
+                              defaultValues?.orderDetails?.paymentConfigName,
+                          },
+                        },
+                      ],
+                      ...(defaultValues?.orderDetails?.productType ===
+                      "physical-goods"
+                        ? {
+                            shipping_info: {
+                              country: "IN",
+                              addresses: [],
+                            },
+                          }
+                        : {}),
+                      order: {
+                        items: [
+                          {
+                            amount: {
+                              offset: 100,
+                              value:
+                                Number(
+                                  defaultValues?.orderDetails?.item?.price,
+                                ) * 100,
+                            },
+                            ...(defaultValues?.orderDetails?.item?.salePrice
+                              ? {
+                                  sale_amount: {
+                                    offset: 100,
+                                    value:
+                                      Number(
+                                        defaultValues?.orderDetails?.item
+                                          ?.salePrice,
+                                      ) * 100,
+                                  },
+                                }
+                              : {}),
+                            name: defaultValues?.orderDetails?.item?.name,
+                            quantity:
+                              defaultValues?.orderDetails?.item?.quantity,
+                            country_of_origin:
+                              defaultValues?.orderDetails?.item?.origin,
+                            importer_name:
+                              defaultValues?.orderDetails?.item?.importerName,
+                            importer_address: {
+                              address_line1:
+                                defaultValues?.orderDetails?.item
+                                  ?.importerAddress1,
+                              city: defaultValues?.orderDetails?.item
+                                ?.importerCity,
+                              zone_code:
+                                defaultValues?.orderDetails?.item
+                                  ?.importerZoneCode,
+                              postal_code:
+                                defaultValues?.orderDetails?.item
+                                  ?.importerPostalCode,
+                              country_code: "IN",
+                            },
+                          },
+                        ],
+                        sub_total: {
+                          offset: 100,
+                          value: sub_total * 100,
+                        },
+                        shipping: {
+                          offset: 100,
+                          value:
+                            Number(defaultValues?.orderDetails?.shipping) * 100,
+                        },
+                        tax: {
+                          offset: 100,
+                          discription:
+                            defaultValues?.orderDetails?.taxDescription,
+                          value: Number(defaultValues?.orderDetails?.tax) * 100,
+                        },
+                        ...(defaultValues?.orderDetails?.discount
+                          ? {
+                              discount: {
+                                offset: 100,
+                                discription:
+                                  defaultValues?.orderDetails
+                                    ?.discountDiscription,
+                                value:
+                                  Number(
+                                    defaultValues?.orderDetails?.discount,
+                                  ) * 100,
+                              },
+                            }
+                          : {}),
+                        status: "pending",
+                        ...(defaultValues?.orderDetails?.expiry
+                          ? {
+                              expiration: {
+                                timestamp: dayjs(
+                                  defaultValues?.orderDetails?.expiry,
+                                )
+                                  .add(300, "seconds")
+                                  .unix(),
+                              },
+                            }
+                          : {}),
+                      },
+                      total_amount: {
+                        offset: 100,
+                        value: total_amount,
+                      },
+                    },
+                  },
+                },
+              ],
+            });
           }
         }
       }
@@ -635,170 +781,286 @@ export async function sendTemplateToUserCore(
         )?.format;
         if (headerFormat === WaTemplateSupportedFormats.PRODUCT) {
           const catalog = await getConnectedWaCatalog(orgId);
-          let cards = item?.cards?.map((card, index) => {
-            const cardInComponents = components.find(
-              (c) => c.type === WaTemplateComponentType.CAROUSEL,
-            )?.cards?.[index];
-            const cardDefaultValues = defaultValues?.productCarousel.find(
-              (c) => c.cardIndex === index,
-            );
-            let cardComponents = cardInComponents
-              ? [...cardInComponents.components]
-              : [];
-            for (const comp of card.components) {
-              if (comp.type.toLowerCase() === WaTemplateComponentType.HEADER) {
+          let cards = await Promise.all([
+            item?.cards?.map(async (card, index) => {
+              const cardInComponents = components.find(
+                (c) => c.type === WaTemplateComponentType.CAROUSEL,
+              )?.cards?.[index];
+              const cardDefaultValues = defaultValues?.productCarousel.find(
+                (c) => c.cardIndex === index,
+              );
+              let cardComponents = cardInComponents
+                ? [...cardInComponents.components]
+                : [];
+              for (const comp of card.components) {
                 if (
-                  !cardComponents?.some(
-                    (c) => c.type === WaTemplateComponentType.HEADER,
-                  )
+                  comp.type.toLowerCase() === WaTemplateComponentType.HEADER
                 ) {
-                  const productId = cardDefaultValues?.product_retailer_id;
-                  cardComponents.push({
-                    type: WaTemplateComponentType.HEADER,
-                    parameters: [
-                      {
-                        type: comp.format.toLowerCase(),
-                        [comp.format.toLowerCase()]: {
-                          product_retailer_id: productId,
-                          catalog_id: catalog.catalogId,
+                  if (
+                    !cardComponents?.some(
+                      (c) => c.type === WaTemplateComponentType.HEADER,
+                    )
+                  ) {
+                    const productId = cardDefaultValues?.product_retailer_id;
+                    cardComponents.push({
+                      type: WaTemplateComponentType.HEADER,
+                      parameters: [
+                        {
+                          type: comp.format.toLowerCase(),
+                          [comp.format.toLowerCase()]: {
+                            product_retailer_id: productId,
+                            catalog_id: catalog.catalogId,
+                          },
                         },
-                      },
-                    ],
-                  });
+                      ],
+                    });
+                  }
+                } else if (
+                  comp.type.toLowerCase() === WaTemplateComponentType.BUTTONS
+                ) {
+                  for (const [idx, button] of comp.buttons?.entries()) {
+                    if (button?.type === "URL") {
+                      if (button?.example?.[0]?.startsWith(":")) {
+                        let shortUrlId = button?.example[0].slice(1);
+                        if (shortUrlId?.startsWith("error")) continue;
+
+                        const surveyTeamMapData =
+                          await prisma.surveyTeamMap.findFirst({
+                            where: { shortUrlId },
+                          });
+
+                        const surveyTeamMapWithTeam =
+                          await prisma.surveyTeamMap.findFirst({
+                            where: {
+                              surveyId: surveyTeamMapData.surveyId,
+                              ...(teamId && { teamId }),
+                            },
+                          });
+
+                        let url =
+                          surveyTeamMapWithTeam?.shortUrlId ||
+                          surveyTeamMapWithTeam?.id ||
+                          shortUrlId ||
+                          "error";
+                        let convertedTag =
+                          tag?.trim()?.replace(/\s+/g, "-") ?? "";
+                        log.info("Short URL ID: %s", url);
+                        log.info(
+                          "length : %s",
+                          `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`
+                            .length,
+                        );
+                        cardComponents.push({
+                          type: "button",
+                          sub_type: "url",
+                          index: idx,
+                          parameters: [
+                            {
+                              type: "text",
+                              text: `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`,
+                            },
+                          ],
+                        });
+                        continue;
+                      }
+                      cardComponents.push({
+                        type: "button",
+                        sub_type: "url",
+                        index: idx,
+                        ...(button?.example[0]
+                          ? {
+                              parameters: [
+                                {
+                                  type: "text",
+                                  text: button?.example[0],
+                                },
+                              ],
+                            }
+                          : {}),
+                      });
+                    }
+                  }
                 }
               }
-            }
-            return {
-              card_index: index,
-              components: cardComponents,
-            };
-          });
+              return {
+                card_index: index,
+                components: cardComponents,
+              };
+            }),
+          ]);
           components.push({
             type: "carousel",
             cards,
           });
         } else {
-          let cards = item?.cards?.map((card, index) => {
-            const cardInComponents = components.find(
-              (c) => c.type === WaTemplateComponentType.CAROUSEL,
-            )?.cards?.[index];
-            const cardDefaultValues = defaultValues?.mediaCarousel.find(
-              (c) => c.cardIndex === index,
-            );
-            let cardComponents = cardInComponents
-              ? [...cardInComponents.components]
-              : [];
-            for (const comp of card.components) {
-              if (comp.type.toLowerCase() === WaTemplateComponentType.HEADER) {
+          let cards = await Promise.all(
+            item?.cards?.map(async (card, index) => {
+              const cardInComponents = components.find(
+                (c) => c.type === WaTemplateComponentType.CAROUSEL,
+              )?.cards?.[index];
+              const cardDefaultValues = defaultValues?.mediaCarousel.find(
+                (c) => c.cardIndex === index,
+              );
+              let cardComponents = cardInComponents
+                ? [...cardInComponents.components]
+                : [];
+              for (const comp of card.components) {
                 if (
-                  !cardComponents?.some(
-                    (c) => c.type === WaTemplateComponentType.HEADER,
-                  )
+                  comp.type.toLowerCase() === WaTemplateComponentType.HEADER
                 ) {
-                  const fileKey = cardDefaultValues?.headerLink;
-                  cardComponents.push({
-                    type: WaTemplateComponentType.HEADER,
-                    parameters: [
-                      {
-                        type: comp.format.toLowerCase(),
-                        [comp.format.toLowerCase()]: {
-                          link: getFileUrlFromKey(fileKey),
-                        },
-                      },
-                    ],
-                  });
-                }
-              } else if (
-                comp.type.toLowerCase() === WaTemplateComponentType.BODY
-              ) {
-                const defaultValue = comp.example?.body_text[0];
-                if (defaultValue?.length > 0) {
-                  const cardBodyIndex = cardComponents.findIndex(
-                    (component) => component.type === "body",
-                  );
-                  if (cardBodyIndex !== -1) {
-                    let params = cardComponents[cardBodyIndex]?.parameters;
-                    if (params) {
-                      params.forEach((data, i) => {
-                        if (!data?.text || !data?.text?.trim()) {
-                          data.text = defaultValue?.[i];
-                        }
-                      });
-                      if (params.length < defaultValue?.length) {
-                        const remainingValues = defaultValue.slice(
-                          params.length,
-                        );
-                        remainingValues.forEach((value) => {
-                          params.push({
-                            type: "text",
-                            text: value,
-                          });
-                        });
-                      }
-                      cardComponents[cardBodyIndex] = {
-                        type: "body",
-                        parameterers: params,
-                      };
-                    }
-                  } else {
+                  if (
+                    !cardComponents?.some(
+                      (c) => c.type === WaTemplateComponentType.HEADER,
+                    )
+                  ) {
+                    const fileKey = cardDefaultValues?.headerLink;
                     cardComponents.push({
-                      type: "body",
-                      parameters: defaultValue.map((data: string) => ({
-                        type: "text",
-                        text: data,
-                      })),
+                      type: WaTemplateComponentType.HEADER,
+                      parameters: [
+                        {
+                          type: comp.format.toLowerCase(),
+                          [comp.format.toLowerCase()]: {
+                            link: getFileUrlFromKey(fileKey),
+                          },
+                        },
+                      ],
                     });
                   }
-                } else {
-                  cardComponents = cardComponents.filter(
-                    (f) => f.type !== "body",
-                  );
-                }
-              } else if (
-                comp.type.toLowerCase() === WaTemplateComponentType.BUTTONS
-              ) {
-                for (const [idx, button] of comp.buttons?.entries()) {
-                  if (button?.type === "URL") {
-                    cardComponents.push({
-                      type: "button",
-                      sub_type: "url",
-                      index: idx,
-                      ...(cardDefaultValues?.urlButtonVariable
-                        ? {
-                            parameters: [
-                              {
-                                type: "text",
-                                text: cardDefaultValues?.urlButtonVariable,
-                              },
-                            ],
+                } else if (
+                  comp.type.toLowerCase() === WaTemplateComponentType.BODY
+                ) {
+                  const defaultValue = comp.example?.body_text[0];
+                  if (defaultValue?.length > 0) {
+                    const cardBodyIndex = cardComponents.findIndex(
+                      (component) => component.type === "body",
+                    );
+                    if (cardBodyIndex !== -1) {
+                      let params = cardComponents[cardBodyIndex]?.parameters;
+                      if (params) {
+                        params.forEach((data, i) => {
+                          if (!data?.text || !data?.text?.trim()) {
+                            data.text = defaultValue?.[i];
                           }
-                        : {}),
-                    });
-                  } else if (button?.type === "QUICK_REPLY") {
-                    cardComponents.push({
-                      type: "button",
-                      sub_type: "quick_reply",
-                      index: idx,
-                      ...(cardDefaultValues?.quickReplyPayload
-                        ? {
-                            parameters: [
-                              {
-                                type: "payload",
-                                payload: cardDefaultValues?.quickReplyPayload,
-                              },
-                            ],
-                          }
-                        : {}),
-                    });
+                        });
+                        if (params.length < defaultValue?.length) {
+                          const remainingValues = defaultValue.slice(
+                            params.length,
+                          );
+                          remainingValues.forEach((value) => {
+                            params.push({
+                              type: "text",
+                              text: value,
+                            });
+                          });
+                        }
+                        cardComponents[cardBodyIndex] = {
+                          type: "body",
+                          parameterers: params,
+                        };
+                      }
+                    } else {
+                      cardComponents.push({
+                        type: "body",
+                        parameters: defaultValue.map((data: string) => ({
+                          type: "text",
+                          text: data,
+                        })),
+                      });
+                    }
+                  } else {
+                    cardComponents = cardComponents.filter(
+                      (f) => f.type !== "body",
+                    );
+                  }
+                } else if (
+                  comp.type.toLowerCase() === WaTemplateComponentType.BUTTONS
+                ) {
+                  for (const [idx, button] of comp.buttons?.entries()) {
+                    if (button?.type === "URL") {
+                      if (button?.example?.[0]?.startsWith(":")) {
+                        let shortUrlId = button?.example[0].slice(1);
+                        if (shortUrlId?.startsWith("error")) continue;
+
+                        const surveyTeamMapData =
+                          await prisma.surveyTeamMap.findFirst({
+                            where: { shortUrlId },
+                          });
+
+                        const surveyTeamMapWithTeam =
+                          await prisma.surveyTeamMap.findFirst({
+                            where: {
+                              surveyId: surveyTeamMapData.surveyId,
+                              ...(teamId && { teamId }),
+                            },
+                          });
+
+                        let url =
+                          surveyTeamMapWithTeam?.shortUrlId ||
+                          surveyTeamMapWithTeam?.id ||
+                          shortUrlId ||
+                          "error";
+                        let convertedTag =
+                          tag?.trim()?.replace(/\s+/g, "-") ?? "";
+                        log.info("Short URL ID: %s", url);
+                        log.info(
+                          "length : %s",
+                          `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`
+                            .length,
+                        );
+                        cardComponents.push({
+                          type: "button",
+                          sub_type: "url",
+                          index: idx,
+                          parameters: [
+                            {
+                              type: "text",
+                              text: `${url}?tag=${phone}${convertedTag ? `,${convertedTag}` : ""}`,
+                            },
+                          ],
+                        });
+                        continue;
+                      }
+                      cardComponents.push({
+                        type: "button",
+                        sub_type: "url",
+                        index: idx,
+                        ...(button?.example[0]
+                          ? {
+                              parameters: [
+                                {
+                                  type: "text",
+                                  text: button?.example[0],
+                                },
+                              ],
+                            }
+                          : {}),
+                      });
+                    } else if (button?.type === "QUICK_REPLY") {
+                      cardComponents.push({
+                        type: "button",
+                        sub_type: "quick_reply",
+                        index: idx,
+                        ...(cardDefaultValues?.quickReplyPayload
+                          ? {
+                              parameters: [
+                                {
+                                  type: "payload",
+                                  payload: cardDefaultValues?.quickReplyPayload,
+                                },
+                              ],
+                            }
+                          : {}),
+                      });
+                    }
                   }
                 }
               }
-            }
-            return {
-              card_index: index,
-              components: cardComponents,
-            };
-          });
+              return {
+                card_index: index,
+                components: cardComponents,
+              };
+            }),
+          );
           components.push({
             type: "carousel",
             cards,

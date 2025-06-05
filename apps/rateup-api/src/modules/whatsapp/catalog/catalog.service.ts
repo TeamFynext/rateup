@@ -126,6 +126,8 @@ export async function handleWaOrderfromCatalog(data: WaReceiveMessageBody) {
       price: p.item_price,
       quantity: p.quantity,
     })),
+    paymentStatus: "Pending",
+    status: "Pending",
   } as WaCatalogOrder;
   const catalog = await prisma.whatsaAppCatalog.findUnique({
     where: {
@@ -145,4 +147,5 @@ export async function handleWaOrderfromCatalog(data: WaReceiveMessageBody) {
       orders: newOrders as WaCatalogOrder[],
     },
   });
+  log.info("Order placed => %o", orderObj);
 }

@@ -89,6 +89,31 @@ const waTemplateInput = {
           }),
         )
         .optional(),
+      orderDetails: z
+        .object({
+          paymentConfigName: z.string(),
+          paymentType: z.string(),
+          productType: z.string(),
+          item: z.object({
+            name: z.string(),
+            salePrice: z.number(),
+            price: z.number(),
+            quantity: z.number(),
+            origin: z.string().max(100),
+            importerName: z.string().max(200),
+            importerAddress1: z.string().max(100),
+            importerCity: z.string().max(120),
+            importerZoneCode: z.string().length(2),
+            importerPostalCode: z.string().max(6),
+          }),
+          shipping: z.number(),
+          tax: z.number(),
+          discount: z.number().optional(),
+          discountDiscription: z.string().max(60).optional(),
+          taxDescription: z.string().max(60),
+          expiry: z.string().optional(),
+        })
+        .optional(),
     })
     .optional(),
   mediaCarousel: z

@@ -310,6 +310,7 @@ export enum WHATSAPP_BUTTON_TYPE {
   CATALOG = "CATALOG",
   MPM = "MPM",
   SPM = "SPM",
+  ORDER_DETAILS = "ORDER_DETAILS",
 }
 
 type WaTemplateParameter = {
