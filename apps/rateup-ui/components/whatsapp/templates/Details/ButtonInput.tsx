@@ -673,7 +673,7 @@ const OrderDetailsButtonForm = ({
         />
         <ContainedTextField
           {...form.getInputProps(
-            "defaultValues.orderDetails.discountDiscription",
+            "defaultValues.orderDetails.discountDescription",
           )}
           label={"Discount Description"}
         />

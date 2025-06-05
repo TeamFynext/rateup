@@ -147,7 +147,7 @@ const ProductsItems = ({ catalogId }) => {
     return <NothingFound text="No products found" />;
   }
 
-  const propductProps = [
+  const productProps = [
     { key: "brand", label: "Brand" },
     { key: "color", label: "Color" },
     { key: "size", label: "Size" },
@@ -211,7 +211,7 @@ const ProductsItems = ({ catalogId }) => {
       productIds = [{ id: product.retailer_id }];
     } else if (vertical === "hotels") {
       productIds = [{ id: product.hotel_id }];
-    } else if (vertical === "hotels") {
+    } else if (vertical === "hotel_room") {
       productIds = [
         {
           id: product.hotel_room_id,
@@ -284,7 +284,7 @@ const ProductsItems = ({ catalogId }) => {
               </Text>
             )}
             <Stack gap={2}>
-              {propductProps.map((pp) => (
+              {productProps.map((pp) => (
                 <Group justify="space-between" key={pp.key}>
                   <Text size="sm" fw={500}>
                     {pp.label}

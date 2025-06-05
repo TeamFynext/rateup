@@ -36,7 +36,7 @@ export function parseTemplate(template) {
       parsedTemplate["example"] = component.example?.body_text?.[0] ?? [];
     } else if ("footer" === component.type.toLowerCase()) {
       parsedTemplate[component.type.toLowerCase()] = component.text;
-    } else if (component.type.toLowerCase() == "buttons") {
+    } else if (component.type.toLowerCase() === "buttons") {
       component.buttons.map((data) => {
         if (data?.example && Array.isArray(data.example)) {
           data.example = data.example?.[0];

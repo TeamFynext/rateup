@@ -155,7 +155,7 @@ export default function WhatsappTemplateById() {
       checkoutBtn = false,
       flowBtn = false,
       catalogBtn = false;
-    form.values.buttons.map((b) => {
+    form.values.buttons.forEach((b) => {
       if (b.type === WHATSAPP_BUTTON_TYPE.SPM) {
         spmBtn = true;
       }
@@ -505,7 +505,7 @@ export default function WhatsappTemplateById() {
             importerZoneCode: "",
             origin: "",
           },
-          discountDiscription: "",
+          discountDescription: "",
           taxDescription: "",
         },
       });

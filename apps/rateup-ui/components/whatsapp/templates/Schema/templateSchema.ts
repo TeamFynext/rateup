@@ -245,7 +245,7 @@ export const templateSchema = z
             shipping: z.number(),
             tax: z.number(),
             discount: z.number().optional(),
-            discountDiscription: z.string().max(60).optional(),
+            discountDescription: z.string().max(60).optional(),
             taxDescription: z.string().max(60),
             expiry: z.string().optional(),
           })
@@ -322,7 +322,7 @@ export const templateSchema = z
           }
           if (errormsg) {
             ctx.addIssue({
-              path: ["button", index],
+              path: ["buttons", index],
               code: z.ZodIssueCode.custom,
               message: "Fill out the sections",
             });
@@ -437,7 +437,7 @@ export const templateSchema = z
     ) {
       if (values.productCarousel.length < 2) {
         ctx.addIssue({
-          path: ["mediaCarousel"],
+          path: ["productCarousel"],
           code: z.ZodIssueCode.custom,
           message: "Minimum 2 cards required",
         });

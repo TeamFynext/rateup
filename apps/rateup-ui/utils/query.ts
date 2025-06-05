@@ -11,8 +11,8 @@ export function showErrorToastFromError(
       showErrorToast(e.response.data.message);
       return;
     }
-    if (e?.response?.data) {
-      showErrorToast(e.response.data.message);
+    if (typeof e?.response?.data === "string") {
+      showErrorToast(e.response.data);
       return;
     }
   }
