@@ -115,9 +115,9 @@ const VoiceRecorder = ({
           onPress={isRecording ? stopRecording : startRecording}
         >
           {isRecording ? (
-            <CircleStop size={30} color="black" />
+            <CircleStop size={30} color="black" strokeWidth={1.5} />
           ) : (
-            <Mic size={30} color="black" />
+            <Mic size={30} color="black" strokeWidth={1.5} />
           )}
         </TouchableOpacity>
       )}

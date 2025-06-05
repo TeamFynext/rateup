@@ -20,6 +20,7 @@ import {
 } from "@/src/constants/imageExports";
 import { useRouter } from "expo-router";
 import { createContact } from "@/src/api/inbox/contacts/contacts.api";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddContactScreen() {
   const [name, setName] = useState("");
@@ -87,12 +88,13 @@ export default function AddContactScreen() {
   );
 
   return (
-    <KeyboardAvoidingView
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-      style={{ flex: 1, backgroundColor: "white" }}
+      className="flex-grow px-4 bg-white"
     >
-      <View style={{ flex: 1, padding: 16, justifyContent: "space-between" }}>
+      <View className="flex-grow justify-between">
         {/* Form */}
         <View>
           {/* Header */}
@@ -229,5 +231,6 @@ export default function AddContactScreen() {
         </View>
       </View>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

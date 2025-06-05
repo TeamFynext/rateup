@@ -20,6 +20,7 @@ import { CircleX } from "lucide-react-native";
 import { useChatAssignStatusStore } from "@/src/utils/store";
 import { useToast } from "react-native-toast-notifications";
 import { useAssignedContact } from "@/src/api/inbox/contacts/contacts.query";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -107,12 +108,7 @@ const AssignToUser = () => {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-      style={{ flex: 1 }}
-      className="bg-white"
-    >
+    <SafeAreaView className="bg-white flex-grow">
       <View
         className="flex-1 px-[5%] pt-[5%] pb-10"
         style={{ minHeight: screenHeight }}
@@ -296,7 +292,7 @@ const AssignToUser = () => {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

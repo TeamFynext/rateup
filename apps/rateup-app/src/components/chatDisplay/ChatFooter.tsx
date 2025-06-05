@@ -24,27 +24,12 @@ const ChatFooter = ({ id }: { id: string }) => {
   const { data: assignedData = [] } = useAssignedContact(id);
   const { userId } = useAuth();
   const [isModalVisible, setModalVisible] = useState(false);
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
   let currentUserAssignment = assignedData.find(
     (entry: any) => entry.assignedUserId === userId
   );
 
   const toggleModal = () => setModalVisible(!isModalVisible);
-
-  useEffect(() => {
-    const keyboardShow = Keyboard.addListener("keyboardDidShow", () =>
-      setKeyboardVisible(true)
-    );
-    const keyboardHide = Keyboard.addListener("keyboardDidHide", () =>
-      setKeyboardVisible(false)
-    );
-
-    return () => {
-      keyboardShow.remove();
-      keyboardHide.remove();
-    };
-  }, []);
 
   const AssignedUsersModal = () => (
     <Modal
@@ -108,10 +93,7 @@ const ChatFooter = ({ id }: { id: string }) => {
   }
 
   return (
-    <>
-      {/* myview only when keyboard NOT visible */}
-      {!isKeyboardVisible && (
-        <View>
+    <View>
           {!currentUserAssignment && (
             <View className="bg-black flex-row py-3 px-1 items-center justify-center gap-1 flex-wrap">
               <IIcon />
@@ -127,12 +109,11 @@ const ChatFooter = ({ id }: { id: string }) => {
               )}
             </View>
           )}
-        </View>
-      )}
+
 
       {currentUserAssignment && <MessageSendPanel />}
-      <AssignedUsersModal />
-    </>
+        <AssignedUsersModal />
+    </View>
   );
 };
 

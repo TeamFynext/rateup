@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import { loggedUserDetails, signIn } from "@/src/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
 import { EyeIcon } from "../constants/imageExports";
+import { Eye, EyeClosed } from "lucide-react-native";
 import { useAuth } from "../context/AuthContext";
 import { registerForPushNotificationsAsync } from "../utils/notification";
 import { addToken } from "../api/notification";
@@ -24,7 +25,7 @@ export default function SignInScreen({
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const {setUserId,setOrgId} = useAuth();
+  const { setUserId, setOrgId } = useAuth();
 
   const router = useRouter();
 
@@ -39,7 +40,7 @@ export default function SignInScreen({
       const userDetails = await loggedUserDetails();
       const userData = userDetails.data;
       const { userId, orgId } = userData;
-      setUserId(userId)
+      setUserId(userId);
       setOrgId(orgId);
       // const token = await registerForPushNotificationsAsync();
       // if(token){
@@ -74,7 +75,11 @@ export default function SignInScreen({
           autoCapitalize="none"
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-          <EyeIcon />
+          {showPassword ? (
+            <Eye color={"black"} strokeWidth={1} />
+          ) : (
+            <EyeClosed color={"black"} strokeWidth={1} />
+          )}
         </TouchableOpacity>
       </View>
 

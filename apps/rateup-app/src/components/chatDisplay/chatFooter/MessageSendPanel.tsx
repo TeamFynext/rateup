@@ -19,7 +19,7 @@ import {
 import { useSendNewWaMessage } from "@/src/api/inbox/messages/message.query";
 import { uploadFile } from "@/src/utils/fileUpload";
 import VoiceRecorder, { useVoiceStore } from "./VoiceRecorder";
-import { ImageIcon, VideoIcon, MusicIcon, BookText } from "lucide-react-native"; // Import Lucide icons
+import { ImageIcon, VideoIcon, MusicIcon, File } from "lucide-react-native"; // Import Lucide icons
 import { EmojiIcon, SendIcon, PlusIcon } from "@/src/constants/imageExports";
 
 const MessageSendPanel = () => {
@@ -157,7 +157,7 @@ const MessageSendPanel = () => {
   };
 
   return (
-    <View className="bg-white pt-3 px-3 pb-5">
+    <View className="bg-white pt-3 px-3">
       <View
         className={isSessionActive ? "opacity-100" : "opacity-50"}
         pointerEvents={isSessionActive ? "auto" : "none"}
@@ -200,9 +200,16 @@ const MessageSendPanel = () => {
                   />
                 ) : (
                   <View className="w-full h-full rounded-xl bg-gray-200 items-center justify-center">
-                    <Text className="text-[10px] text-center">
-                      {item.type.toUpperCase()}
+                   {item.type !== "image" && (
+                  <View className="w-full h-full items-center justify-center bg-gray-100 rounded">
+                    {item.type === "video" && <VideoIcon size={20} color={"black"}/>}
+                    {item.type === "audio" && <MusicIcon size={20} color={"black"} />}
+                    {item.type === "document" && <File size={20} color={"black"}/>}
+                    <Text className="text-xs text-center px-1 mt-1">
+                      {item.type}
                     </Text>
+                  </View>
+                )}
                   </View>
                 )}
               </View>
@@ -215,28 +222,28 @@ const MessageSendPanel = () => {
             onPress={() => pickMedia("image")}
             className="items-center mx-2"
           >
-            <ImageIcon size={30} color="black" />
+            <ImageIcon size={30} color="black" strokeWidth={1.5} />
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => pickMedia("video")}
             className="items-center mx-2"
           >
-            <VideoIcon size={30} color="black" />
+            <VideoIcon size={30} color="black" strokeWidth={1.5} />
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => pickMedia("document")}
             className="items-center mx-2"
           >
-            <BookText size={30} color="black" />
+            <File size={30} color="black" strokeWidth={1.5} />
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => pickMedia("audio")}
             className="items-center mx-2"
           >
-            <MusicIcon size={30} color="black" />
+            <MusicIcon size={30} color="black" strokeWidth={1.5} />
           </TouchableOpacity>
 
           <VoiceRecorder

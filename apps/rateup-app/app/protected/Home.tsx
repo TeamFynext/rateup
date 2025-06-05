@@ -18,6 +18,7 @@ import { HomeInterface } from "@/src/api/inbox/types";
 import { namePreview } from "@/src/utils/chatbox_utils";
 import { useLoggedInUser } from "@/src/api/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -27,7 +28,7 @@ const PANEL_HEIGHT = screenHeight * PANEL_HEIGHT_PERCENTAGE;
 const InboxLayout = memo(InboxLayoutComponent);
 
 export default function Home() {
-  
+  const insets = useSafeAreaInsets();
   const [selectedItem, setSelectedItem] = useState<"menu" | "account" | null>(
     null
   );
@@ -129,7 +130,10 @@ export default function Home() {
 
   const { email, orgName, role, profilePhoto, orgPhone, userName } = userData;
   return (
-    <View className="flex-1 items-center relative">
+    <View
+      className="items-center relative flex-grow bg-rateUpLightGreen"
+      style={{ paddingTop: insets.top }}
+    >
       {renderedInterface}
 
       {/* Dim background overlay */}
@@ -185,7 +189,10 @@ export default function Home() {
       )}
 
       {/* Bottom bar */}
-      <View className="flex-row justify-center gap-4 items-center border-t border-gray-300 bg-white py-4 w-full z-30">
+      <View
+        className="flex-row justify-center gap-4 items-center border-t border-gray-300 bg-white py-4 w-full z-30"
+        style={{ paddingBottom: insets.bottom }}
+      >
         {/* Menu Button */}
         <TouchableOpacity
           activeOpacity={0.8}

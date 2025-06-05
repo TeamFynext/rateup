@@ -16,8 +16,12 @@ import { ChevronDown, ChevronUp } from "lucide-react-native";
 import { countries } from "@/src/constants/countries";
 import { BackIcon, UsernameIcon } from "@/src/constants/imageExports";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { editContactById, getContactById } from "@/src/api/inbox/contacts/contacts.api";
+import {
+  editContactById,
+  getContactById,
+} from "@/src/api/inbox/contacts/contacts.api";
 import { convertFullPhoneNumToCoutryCodeAndNationalNum } from "@/src/utils/phoneNumConvert";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditContacts() {
   const { userId }: { userId: string } = useLocalSearchParams();
@@ -112,14 +116,10 @@ export default function EditContacts() {
   );
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-      style={{ flex: 1, backgroundColor: "white" }}
-    >
-      <View style={{ flex: 1, padding: 16 }}>
+    <SafeAreaView className="flex-grow bg-white">
+      <View className="flex-1 p-4">
         {/* Top Part */}
-        <View style={{ flex: 1 }}>
+        <View className="flex-1">
           {/* Header */}
           <View className="flex-row items-center mb-8 gap-2">
             <Pressable onPress={() => router.back()}>
@@ -248,6 +248,6 @@ export default function EditContacts() {
           </Pressable>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

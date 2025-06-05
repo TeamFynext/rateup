@@ -65,7 +65,7 @@ const FiltersScreen = () => {
             <View className="flex-row justify-between items-center mb-4">
               <View className="flex-row items-center gap-2">
                 <Pressable onPress={() => router.back()}>
-                  <BackIcon />
+                  <BackIcon width={24} height={24} />
                 </Pressable>
                 <Text className="text-2xl font-bold">Filters</Text>
               </View>

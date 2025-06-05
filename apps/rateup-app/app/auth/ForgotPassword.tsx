@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useToast } from "react-native-toast-notifications";
 
 const { width, height } = Dimensions.get("window");
@@ -43,7 +44,7 @@ export default function ResetPasswordScreen() {
   };
 
   return (
-    <View className="flex gap-20 bg-white px-4 pt-6" style={{ width, height }}>
+    <SafeAreaView className="flex gap-20 bg-white px-4 pt-6 h-full">
       {/* Header */}
       <TouchableOpacity
         className="flex-row items-center mb-6 justify-start"
@@ -89,6 +90,6 @@ export default function ResetPasswordScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
