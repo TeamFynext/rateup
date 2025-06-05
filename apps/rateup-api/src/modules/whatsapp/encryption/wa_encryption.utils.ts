@@ -134,7 +134,7 @@ export async function setNewEncryptionKeys(waSettings: WhatsappSettings) {
   await setBusinessPublicKey(encryption.publicKey, phoneId, accessToken);
 
   log.trace("Updating encryption keys in database");
-  await updateWaSettings(orgId, { encryption });
+  await updateWaSettings(orgId, phoneId, { encryption });
   log.trace("Encryption keys updated successfully");
 }
 
@@ -165,7 +165,7 @@ export async function handleFlowResponse(
     );
 
     await setBusinessPublicKey(encryption.publicKey, phoneId, accessToken);
-    await updateWaSettings(orgId, { encryption });
+    await updateWaSettings(orgId, phoneId, { encryption });
   }
   const { privateKey, passphrase } = encryption as unknown as WaEncryptionKeys;
 

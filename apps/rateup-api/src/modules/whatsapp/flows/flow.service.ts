@@ -24,7 +24,10 @@ import FormData from "form-data";
 import { log } from "../../../utils/logger";
 import { LogicAction, QuestionType, WaFlowStatus } from "../../../types/enums";
 import { FlowLogicJump } from "../../../types/global";
-import { getSurveyById } from "../../survey/survey.service";
+import {
+  getGoogleUrlBySurveyTeamMapId,
+  getSurveyById,
+} from "../../survey/survey.service";
 import {
   deleteSession,
   getSession,
@@ -467,12 +470,14 @@ interface sendFlowProps {
   dbFlowId: string;
   phone: string;
   userId?: string;
+  whatsappSettingsPhoneId?: string;
 }
 export async function sendFlow({
   orgId,
   dbFlowId,
   phone,
   userId,
+  whatsappSettingsPhoneId,
 }: sendFlowProps) {
   try {
     log.trace("Sending flow %s to %s", dbFlowId, phone);
@@ -481,7 +486,13 @@ export async function sendFlow({
       to: phone,
       dbFlow,
     });
-    await sendMessage(orgId, { ...messageData, to: phone }, null, userId);
+    await sendMessage(
+      orgId,
+      { ...messageData, to: phone },
+      null,
+      userId,
+      whatsappSettingsPhoneId,
+    );
     return true;
   } catch (e) {
     log.error(e);
@@ -584,7 +595,10 @@ export async function updateFlowInDb(
     where: {
       dbFlowId: dbFlowId,
     },
-    data: data,
+    data: {
+      ...data,
+      name: data.name?.trim(),
+    },
     include: {
       survey: true,
     },
@@ -593,7 +607,7 @@ export async function updateFlowInDb(
   // updating survey title if name is updated
   if (data.name || data.status === WaFlowStatus.PUBLISHED) {
     const updateData = {
-      title: data.name,
+      title: data.name?.trim(),
       isPublished: data.status
         ? data.status === WaFlowStatus.PUBLISHED
         : undefined,
@@ -1092,10 +1106,15 @@ export async function sendGReviewLink({
 }: sendGReviewLinkProps) {
   log.trace("Sending google review link to %s", phone);
   const thankYouPage = `${process.env.FRONTEND_URL}/public/survey/${surveyTeamMapId}/end?k=n&msg=thanks`;
+  const reviewPage = await getGoogleUrlBySurveyTeamMapId(surveyTeamMapId);
+  if (!reviewPage) {
+    log.trace("Google Review page not found");
+    return;
+  }
   const googleReviewMessage = createCTAButtonMessage({
     to: phone,
     buttonText: "Review us on Google",
-    url: thankYouPage,
+    url: reviewPage,
     body: "Thank you for your feedback!",
   });
   await sendMessage(orgId, googleReviewMessage);

@@ -235,6 +235,7 @@ const waUserSendTemplateBodySchema = z.object({
   phone: z.string(),
   parameterData: z.any(),
   teamId: z.string().optional(),
+  whatsappSettingsPhoneId: z.string(),
 });
 
 export const { schemas: waTemplateSchemas, $ref: $WTref } = buildJsonSchemas(

@@ -12,6 +12,7 @@ const loyaltyTemplateSchema = z.object({
   content: z.any().optional(),
   responseType: z.nativeEnum(WaAutomatedReplyResponseType).optional(),
   actionId: z.string().optional(),
+  whatsappSettingsPhoneId: z.string().optional(),
 });
 
 const byTypeQuerySchema = z.object({

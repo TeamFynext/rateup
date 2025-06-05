@@ -240,4 +240,5 @@ export enum ReplyComponentType {
   Image = "Image",
   List = "List",
   Ticket = "Ticket",
+  AiBot = "AiBot",
 }

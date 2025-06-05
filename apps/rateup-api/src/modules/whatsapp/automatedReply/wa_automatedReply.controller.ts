@@ -114,7 +114,6 @@ export async function initiateAutomatedReplyByIdHandler(
       null,
       null,
       phone,
-      null,
       req.params.waAutomatedReplyId,
     );
     reply.code(200).send(automatedReply);

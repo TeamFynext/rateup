@@ -208,6 +208,14 @@ export interface FlowNodeData extends BaseNodeData {
     name: string;
   };
 }
+export interface AiBotNodeData extends BaseNodeData {
+  body: string;
+  // chatbotId?: string;
+  chatbot: {
+    id: string;
+    name: string;
+  };
+}
 
 export interface TicketNodeData extends BaseNodeData {
   ticket: {
@@ -246,6 +254,7 @@ export type NodeTypeMap = {
   addressNode: AddressNodeData;
   contactsNode: ContactsNodeData;
   flowNode: FlowNodeData;
+  aibotNode: AiBotNodeData;
   ticketNode: TicketNodeData;
 };
 
@@ -275,6 +284,7 @@ export type NodeData =
   | AddressNodeData
   | ContactsNodeData
   | FlowNodeData
+  | AiBotNodeData
   | TicketNodeData;
 
 // Extended Node type with typed data

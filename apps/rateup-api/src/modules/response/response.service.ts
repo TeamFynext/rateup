@@ -1030,7 +1030,10 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           ].includes(q.type)
         )
           Object.entries(q.features?.[lang]).map(([key, value]) =>
-            value?.isEnabled
+            typeof value === "object" &&
+            value !== null &&
+            "isEnabled" in value &&
+            (value as { isEnabled: boolean }).isEnabled
               ? questionTitles.push((qstnTitle + ":" + key).trim())
               : null,
           );

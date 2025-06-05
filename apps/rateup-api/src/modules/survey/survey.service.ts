@@ -320,7 +320,7 @@ export async function getPhoneBySurveyTeamMapId(id: string) {
         select: {
           org: {
             select: {
-              whatsappSettings: {
+              WhatsappSettings: {
                 select: {
                   phone: true,
                 },
@@ -332,7 +332,7 @@ export async function getPhoneBySurveyTeamMapId(id: string) {
     },
   });
 
-  return surveyTeamMap?.team?.org?.whatsappSettings?.phone;
+  return surveyTeamMap?.team?.org?.WhatsappSettings?.[0]?.phone;
 }
 
 //---------------get lnding page by landingId------------
@@ -1090,7 +1090,7 @@ function validateSurvey(surveyData) {
 
 export async function getGoogleUrlBySurveyTeamMapId(surveyTeamMapId: string) {
   const {
-    team: { googleLink },
+    team: { googleLink, reviewPageLinks },
   } = await prisma.surveyTeamMap.findUnique({
     where: {
       id: surveyTeamMapId,
@@ -1099,11 +1099,12 @@ export async function getGoogleUrlBySurveyTeamMapId(surveyTeamMapId: string) {
       team: {
         select: {
           googleLink: true,
+          reviewPageLinks: true,
         },
       },
     },
   });
-  return googleLink;
+  return googleLink?.length ? googleLink : reviewPageLinks["Google"];
 }
 
 export async function updateGoogleLink(
