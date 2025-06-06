@@ -45,7 +45,7 @@ import {
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
-} from "../../../utils/commnUtils";
+} from "../../../utils/commonUtils";
 import { WaMessageBody } from "../../../types/whatsapp.types";
 import {
   getIntegrationByName,

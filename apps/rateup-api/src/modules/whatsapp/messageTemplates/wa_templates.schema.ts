@@ -56,7 +56,100 @@ const waTemplateInput = {
           link: z.string(),
         })
         .optional(),
+      catalog: z
+        .object({
+          thumbnail_product_retailer_id: z.string().optional(),
+          mpm: z
+            .object({
+              sections: z.array(
+                z.object({ title: z.string(), products: z.array(z.string()) }),
+              ),
+            })
+            .optional(),
+          spm: z
+            .object({
+              product_retailer_id: z.string(),
+            })
+            .optional(),
+        })
+        .optional(),
+      mediaCarousel: z
+        .array(
+          z.object({
+            headerLink: z.string(),
+            cardIndex: z.number(),
+          }),
+        )
+        .optional(),
+      productCarousel: z
+        .array(
+          z.object({
+            product_retailer_id: z.string(),
+            cardIndex: z.number(),
+          }),
+        )
+        .optional(),
+      orderDetails: z
+        .object({
+          paymentConfigName: z.string(),
+          paymentType: z.string(),
+          productType: z.string(),
+          item: z.object({
+            name: z.string(),
+            salePrice: z.number(),
+            price: z.number(),
+            quantity: z.number(),
+            origin: z.string().max(100),
+            importerName: z.string().max(200),
+            importerAddress1: z.string().max(100),
+            importerCity: z.string().max(120),
+            importerZoneCode: z.string().length(2),
+            importerPostalCode: z.string().max(6),
+          }),
+          shipping: z.number(),
+          tax: z.number(),
+          discount: z.number().optional(),
+          discountDescription: z.string().max(60).optional(),
+          taxDescription: z.string().max(60),
+          expiry: z.string().optional(),
+        })
+        .optional(),
     })
+    .optional(),
+  mediaCarousel: z
+    .array(
+      z.object({
+        body: z.string().trim().min(1).max(1024),
+        header: z.string(),
+        format: z.string(),
+        example: z.array(z.string()).optional(),
+        buttons: z
+          .array(
+            z.object({
+              text: z.string().max(25),
+              type: z.string(),
+              example: z.array(z.string().trim().min(1).max(2000)).optional(),
+              phone_number: z.string().max(25).optional(),
+              url: z.string().trim().url().max(2000).optional(),
+            }),
+          )
+          .max(2)
+          .min(1),
+      }),
+    )
+    .optional(),
+  productCarousel: z
+    .array(
+      z.object({
+        button: z.object({
+          text: z.string().max(25),
+          type: z.string(),
+          example: z.array(z.string().trim().min(1).max(2000)).optional(),
+          url: z.string().trim().url().max(2000).optional(),
+        }),
+        product_retailer_id: z.string(),
+      }),
+    )
     .optional(),
   templateType: z.nativeEnum(TemplateType).optional(),
   config: z.any(),

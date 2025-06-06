@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import prisma from "../../utils/prisma";
 import { deleteFile } from "../../utils/upload/s3Upload";
 import { CreateMenuInput, UpdateMenuInput } from "./menu.schema";
-import { getShortUrlId } from "../../utils/commnUtils";
+import { getShortUrlId } from "../../utils/commonUtils";
 import { updateMonthlyStat } from "../stats/stats.service";
 import { createMenuBanner } from "./banner/banner.service";
 import { createMenuCategory } from "./category/category.service";
@@ -330,11 +330,10 @@ export async function deleteMenu(id: string) {
         },
       });
 
-      items?.flatMap(
-        (item) =>
-          item.images?.map((image) => {
-            fileKeyArray.push({ Key: image });
-          }),
+      items?.flatMap((item) =>
+        item.images?.map((image) => {
+          fileKeyArray.push({ Key: image });
+        }),
       );
     }
 

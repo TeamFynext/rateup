@@ -8,7 +8,7 @@ import {
   updateLandingPageWithShortIdInDB,
   updatePageVisitInDB,
 } from "./landingPage.service";
-import { shortIdUniqueConstraintErrHandler } from "../../utils/commnUtils";
+import { shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils";
 
 async function getLandingPages(req: FastifyRequest, rep: FastifyReply) {
   const allLandingPagesArray = await getAllLandingPagesFromDB(req);

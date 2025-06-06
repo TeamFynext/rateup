@@ -64,6 +64,7 @@ enum TemplateType {
   ORDER_DETAILS
   PAYMENT_CONFIRMATION
   LOYALTY
+  CAROUSEL
 }
 
 enum ContactGroupType {
@@ -144,6 +145,7 @@ model Org {
   whatsappQuickReplies     WhatsappQuickReply[]
   loyaltyApiSettings       LoyaltyApiSettings[]
   WhatsappSettings         WhatsappSettings[]
+  WaCatalog                WhatsappCatalog[]
 }
 
 model UsageStats {
@@ -318,6 +320,8 @@ model Survey {
   enableTickets                     Boolean           @default(false)
   enableTicketEmailAlerts           Boolean           @default(false)
   enableAutoGenerateTicket          Boolean           @default(false)
+  ticketBoardId                     String?
+  ticketColumnId                    String?
   enableTicketWaMessageAlerts       Boolean           @default(false)
   webSurveyAutoTransitionToNextQues Boolean           @default(true)
   shareSettings                     Json?
@@ -1504,4 +1508,18 @@ model LoyaltyApiSettings {
 
   @@unique([orgId, priority])
   @@index([orgId, feature])
+}
+
+model WhatsappCatalog {
+  catalogId  String @unique
+  orgId     String  @db.Uuid
+  org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  vertical   String
+  name       String?
+  isWhatsappConnected   Boolean @default(false) 
+  ///[PWaCatalogProducts]
+  products   Json[]
+  ///[PWaCatalogOrders]
+  orders     Json[]
+  @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
 }

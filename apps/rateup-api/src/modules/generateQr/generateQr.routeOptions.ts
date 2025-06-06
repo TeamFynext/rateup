@@ -1,6 +1,6 @@
 import { RouteShorthandOptionsWithHandler } from "fastify";
 import { CustomRouteShortHandOptionsWithHandler } from "../../types/global";
-import { asyncErrHandler } from "../../utils/commnUtils";
+import { asyncErrHandler } from "../../utils/commonUtils";
 import {
   createGenerateQrRecord,
   deleteGenerateQrRecordWithShortId,
