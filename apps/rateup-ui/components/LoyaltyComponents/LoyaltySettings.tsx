@@ -26,6 +26,7 @@ import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector";
 import useTranslations from "@/dictionaries/useTranslation";
 
+import { AccountSelector } from "../input/AccountSelector";
 import {
   ContainedSelection,
   ContainedTextField,
@@ -132,6 +133,7 @@ export const LoyaltyWaTemplateConfig = ({
     content: null,
     responseType: WaAutomatedReplyResponseType.Template,
     actionId: "",
+    whatsappSettingsPhoneId: "",
   };
 
   const form = useForm({
@@ -154,6 +156,7 @@ export const LoyaltyWaTemplateConfig = ({
         values.type === LoyaltyTemplateTypes.Referral && !value?.length
           ? translations["Select action"]
           : null,
+      whatsappSettingsPhoneId: isNotEmpty("required"),
     },
   });
 
@@ -225,6 +228,7 @@ export const LoyaltyWaTemplateConfig = ({
           label={translations["Service Type"]}
           disabled={!!config}
         />
+        <AccountSelector {...form.getInputProps("whatsappSettingsPhoneId")} />
         <ContainedTextField
           label={translations["Request Message"]}
           {...form.getInputProps("requestMessage")}

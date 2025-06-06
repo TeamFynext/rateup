@@ -100,12 +100,14 @@ export async function sendWaTemplateToUser(
   phone: string,
   parameterData: any,
   teamId: string,
+  whatsappSettingsPhoneId: string,
 ) {
   return axiosClient.post(`${TEMPLATES_URL}/${templateId}/send`, {
     templateId,
     phone,
     parameterData,
     teamId,
+    whatsappSettingsPhoneId,
   });
 }
 

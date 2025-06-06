@@ -2094,5 +2094,7 @@
   "All Contacts": "Tous les contacts",
   "Groups": "Groupes",
   "Access Links": "Liens d'accès",
-  "All Members": "Tous les membres"
+  "All Members": "Tous les membres",
+  "Choose Loyalty API/Action or Whatsapp Template": "Choisissez l'API/Action de fidélité ou le modèle WhatsApp",
+  "Select Account": "Sélectionner le compte"
 }

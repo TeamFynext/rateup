@@ -24,6 +24,7 @@ import useTranslations from "@/dictionaries/useTranslation";
 import { SAVE_HOTKEY } from "@/utils/constants";
 
 import { RateupButtonPrimary } from "../Button/RateupButtons";
+import { AccountSelector } from "../input/AccountSelector";
 import {
   ContainedSelection,
   ContainedTextField,
@@ -53,6 +54,7 @@ const CreateCampaignModal = ({
       flowId: z.string().optional(),
       dynamicTags: z.array(z.string().trim().nullable()),
       useUserConsent: z.boolean(),
+      whatsappSettingsPhoneId: z.string().min(1),
     })
     .superRefine((values, ctx) => {
       dynamicVariables?.map((_, i) => {
@@ -75,6 +77,7 @@ const CreateCampaignModal = ({
       flowId: campaign?.flowId || "",
       dynamicTags: campaign?.dynamicTags || [],
       useUserConsent: campaign?.useUserConsent ?? true,
+      whatsappSettingsPhoneId: campaign?.whatsappSettingsPhoneId || "",
     },
     validate: zodResolver(schema),
   });
@@ -89,6 +92,7 @@ const CreateCampaignModal = ({
         flowId: campaign?.flowId || "",
         dynamicTags: campaign?.dynamicTags || [],
         useUserConsent: campaign?.useUserConsent ?? true,
+        whatsappSettingsPhoneId: campaign?.whatsappSettingsPhoneId || "",
       });
   }, [campaign]);
 
@@ -116,6 +120,7 @@ const CreateCampaignModal = ({
 
   const handleSubmit = (values) => {
     const validation = form.validate();
+    console.log("🚀 ~ handleSubmit ~ validation:", validation.errors);
     if (validation.hasErrors) return;
     const flowId =
       templates
@@ -239,6 +244,7 @@ const CreateCampaignModal = ({
               </Box>
             )}
           </Group>
+          <AccountSelector {...form.getInputProps("whatsappSettingsPhoneId")} />
         </SimpleGrid>
         <SimpleGrid cols={{ base: 2, lg: 4 }} pl={"lg"}>
           {dynamicVariables?.map((_, i) => (

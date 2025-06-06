@@ -13,7 +13,7 @@ type WaSettings = {
   webhookPassword: string;
   appId: string;
   type: WaConfigType;
-};
+}[];
 export const getWaSettings = async () => {
   const res = await axiosClient.get(SettingsUrl);
   return res.data as WaSettings;
@@ -48,8 +48,8 @@ export const registerBusinessClient = async ({
   return res;
 };
 
-export const deRegisterBusinessClient = async () => {
-  const res = axiosClient.post(`${authUrl}/deregister`);
+export const deRegisterBusinessClient = async (phoneId: string) => {
+  const res = axiosClient.post(`${authUrl}/deregister/${phoneId}`);
   return res;
 };
 
