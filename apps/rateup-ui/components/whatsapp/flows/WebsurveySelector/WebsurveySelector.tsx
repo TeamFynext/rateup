@@ -5,18 +5,18 @@ import { SurveyType } from "../../../../types/enums";
 import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
 
 interface WebsurveySelectorProps extends SelectProps {
-  value?: string;
   onChange?: (flowId: string) => void;
   onlyPublished?: boolean;
   form: any;
+  carousel?: string;
   index: number;
 }
 
 export function WebsurveySelector({
-  value,
   onChange,
   onlyPublished = false,
   form,
+  carousel,
   index,
   ...props
 }: Readonly<WebsurveySelectorProps>) {
@@ -43,19 +43,32 @@ export function WebsurveySelector({
 
   const handleChange = (url) => {
     let arr = url?.split("?");
-    form.setFieldValue(`buttons.${index}.url`, `${arr?.[0]}{{1}}`);
-    form.setFieldValue(`buttons.${index}.example`, [arr?.[1]]);
+    if (carousel) {
+      form.setFieldValue(`${carousel}.url`, `${arr?.[0]}{{1}}`);
+      form.setFieldValue(`${carousel}.example`, [arr?.[1]]);
+    } else {
+      form.setFieldValue(`buttons.${index}.url`, `${arr?.[0]}{{1}}`);
+      form.setFieldValue(`buttons.${index}.example`, [arr?.[1]]);
+    }
   };
+  let value = "";
+  if (carousel) {
+    const fields = carousel.split(".");
+    const button = fields.reduce((acc, key) => acc?.[key], form.values);
+    value = button.url?.replace("{{1}}", `?${button.example}`);
+  } else {
+    value = form.values.buttons[index].url?.replace(
+      "{{1}}",
+      `?${form.values.buttons[index].example}`,
+    );
+  }
   return (
     <ContainedSelection
       data={selectOptions}
       placeholder="Select websurvey"
       label="Websurvey"
       allowDeselect={false}
-      value={form.values.buttons[index].url?.replace(
-        "{{1}}",
-        `?${form.values.buttons[index].example}`,
-      )}
+      value={value}
       onChange={handleChange}
       {...props}
     />

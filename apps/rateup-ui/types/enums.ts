@@ -508,6 +508,7 @@ export enum TemplateType {
   ORDER_DETAILS = "ORDER_DETAILS",
   PAYMENT_CONFIRMATION = "PAYMENT_CONFIRMATION",
   LOYALTY = "LOYALTY",
+  CAROUSEL = "CAROUSEL",
 }
 
 export enum OrderType {
@@ -544,4 +545,10 @@ export enum WaMessageAssignStatusTab {
 export enum LoyaltyApiFeature {
   action = "action",
   reward = "reward",
+}
+
+export enum CatalogProductType {
+  PRODUCT_ITEM = "PRODUCT_ITEM",
+  HOTEL = "HOTEL",
+  HOTEL_ROOM = "HOTEL_ROOM",
 }
