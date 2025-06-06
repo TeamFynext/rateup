@@ -666,7 +666,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     ?.ticketIssued as unknown as FlowTicket[];
   let shouldRaiseTicket =
     session?.surveyTeamMap?.survey?.enableAutoGenerateTicket;
-  let columnId = null;
+  let columnId = session?.surveyTeamMap?.survey?.ticketColumnId;
   if (ticketIssued.length && !shouldRaiseTicket) {
     columnId = getColumnIdFromTickets(ticketIssued, questionResponses);
     shouldRaiseTicket = checkShouldRaiseTicket(ticketIssued, questionResponses);

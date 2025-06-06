@@ -320,6 +320,8 @@ model Survey {
   enableTickets                     Boolean           @default(false)
   enableTicketEmailAlerts           Boolean           @default(false)
   enableAutoGenerateTicket          Boolean           @default(false)
+  ticketBoardId                     String?
+  ticketColumnId                    String?
   enableTicketWaMessageAlerts       Boolean           @default(false)
   webSurveyAutoTransitionToNextQues Boolean           @default(true)
   shareSettings                     Json?
