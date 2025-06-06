@@ -178,7 +178,7 @@ export type WaSendMessageBody = {
     preview_url?: boolean;
     body: string;
   };
-   interactive?: {
+  interactive?: {
     type:
       | "button"
       | "list"
@@ -225,7 +225,6 @@ export type WaSendMessageBody = {
   };
 };
 
-
 type WaInteractiveMessageAction = {
   name?: string;
   button?: string; // max 20 chars
@@ -245,7 +244,6 @@ type WaInteractiveMessageAction = {
     mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
   };
 };
-
 
 type WaButton = {
   type: "reply";

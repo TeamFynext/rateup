@@ -4,7 +4,7 @@ export type ParsedWaMessageReturn = {
   timeStamp: string;
   messageType: string;
   messageContent: string;
-    interactive?: WaSendMessageBody["interactive"];
+  interactive?: WaSendMessageBody["interactive"];
 };
 
 export function parseWaMessage_(messageBody: any): ParsedWaMessageReturn {

@@ -35,25 +35,27 @@ const AssignToUser = () => {
   const { contactId } = useLocalSearchParams();
   const toast = useToast();
   //@ts-ignore
-  const { data: assignedData = [] ,isLoading:Loading} = useAssignedContact(contactId);
+  const { data: assignedData = [], isLoading: Loading } = useAssignedContact(contactId);
   const [teamModalVisible, setTeamModalVisible] = useState(false);
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [membersModalVisible, setMembersModalVisible] = useState(false);
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   React.useEffect(() => {
-  if (assignedData?.length > 0) {
-    const assignedIds = assignedData.map((item: any) => item.assignedUserId);
-    setSelectedMemberIds(assignedIds);
-    // Optionally also set the team if they all belong to same team
-    const firstTeamId = assignedData[0]?.teamId;
-    setSelectedTeamId(firstTeamId);
-    const selectedTeam = teams.data?.data?.find((t:any) => t.id === firstTeamId);
-    if (selectedTeam) {
-      setSelectedTeamName(selectedTeam.name);
+    if (assignedData?.length > 0) {
+      const assignedIds = assignedData.map((item: any) => item.assignedUserId);
+      setSelectedMemberIds(assignedIds);
+      // Optionally also set the team if they all belong to same team
+      const firstTeamId = assignedData[0]?.teamId;
+      setSelectedTeamId(firstTeamId);
+      const selectedTeam = teams.data?.data?.find(
+        (t: any) => t.id === firstTeamId
+      );
+      if (selectedTeam) {
+        setSelectedTeamName(selectedTeam.name);
+      }
     }
-  }
-}, [assignedData]);
+  }, [assignedData]);
   const { data: membersData, isLoading } = useUserByTeam(selectedTeamId);
   const filteredMembers =
     membersData?.data?.filter((member: any) =>
@@ -93,13 +95,15 @@ const AssignToUser = () => {
   });
 
   if (Loading) {
-  return (
-    <View className="flex-1 justify-center items-center bg-white">
-      <ActivityIndicator size="large" color="#4CAF50" />
-      <Text className="text-black mt-4 text-[4vw]">Loading assigned users...</Text>
-    </View>
-  );
-}
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#4CAF50" />
+        <Text className="text-black mt-4 text-[4vw]">
+          Loading assigned users...
+        </Text>
+      </View>
+    );
+  }
 
   if (isError) {
     toast.show("Could not Assign", {
@@ -226,7 +230,9 @@ const AssignToUser = () => {
                   onPress={() => handleTeamSelect(item)}
                   className="py-3 px-3"
                 >
-                  <Text className="text-lg text-rateUpTextGray">{item.name}</Text>
+                  <Text className="text-lg text-rateUpTextGray">
+                    {item.name}
+                  </Text>
                 </TouchableOpacity>
               )}
             />
@@ -280,7 +286,9 @@ const AssignToUser = () => {
                   >
                     <Text
                       className={`text-lg ${
-                        isSelected ? "text-black font-bold" : "text-rateUpTextGray"
+                        isSelected
+                          ? "text-black font-bold"
+                          : "text-rateUpTextGray"
                       }`}
                     >
                       {item.name}

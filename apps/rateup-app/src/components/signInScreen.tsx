@@ -9,7 +9,6 @@ import {
 import { useRouter } from "expo-router";
 import { loggedUserDetails, signIn } from "@/src/api/api";
 import ToggleSwitch from "toggle-switch-react-native";
-import { EyeIcon } from "../constants/imageExports";
 import { Eye, EyeClosed } from "lucide-react-native";
 import { useAuth } from "../context/AuthContext";
 import { registerForPushNotificationsAsync } from "../utils/notification";
@@ -32,6 +31,11 @@ export default function SignInScreen({
   const handleSignIn = async () => {
     Keyboard.dismiss();
     setLoading(true);
+    if(!email || !password){
+      setError("Email and Password required")
+      setLoading(false)
+      return;
+    }
     const response = await signIn(email, password);
     if (!response.success) {
       setError(response.message);

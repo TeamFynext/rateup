@@ -1,6 +1,5 @@
 import SearchIcon from "@/assets/images/search-icon.svg";
 import RateLogo from "@/assets/images/signinpage-icon.svg";
-import EyeIcon from "@/assets/images/eye-icon.svg";
 import MessageIcon from "@/assets/images/message-icon.svg";
 import BackIcon from "@/assets/images/arrow-icon.svg";
 import SuccessIcon from "@/assets/images/success-icon.svg";
@@ -20,7 +19,6 @@ import EmojiIcon from "@/assets/images/emoji-icon.svg"
 export {
   SearchIcon,
   RateLogo,
-  EyeIcon,
   MessageIcon,
   BackIcon,
   SuccessIcon,

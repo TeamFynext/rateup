@@ -166,7 +166,7 @@ export default function Home() {
             zIndex: 20,
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
-            paddingVertical: 16,
+            paddingVertical: 30,
             paddingHorizontal: 24,
           }}
         >

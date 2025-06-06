@@ -27,6 +27,7 @@ function AuthLayoutWrapper() {
           type={toastOptions.type}
         />
       )}
+      offsetTop={40}
     >
       <AuthLayout />
     </ToastProvider>

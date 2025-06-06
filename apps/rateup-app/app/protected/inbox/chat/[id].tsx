@@ -50,19 +50,18 @@ const ChatDisplay = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-    <KeyboardAvoidingView
+      <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0} // adjust offset if needed
-        style={{ flex: 1 }} 
+        style={{ flex: 1 }}
       >
         {/* @ts-ignore */}
         <ChatHeader id={id} name={name} phone={phone}
           lastReceivedMessageTimeStamp={lastReceivedMessageTimeStamp}
         />
 
-            {/* @ts-ignore */}
-          <ChatBody id={id} />
-        
+        {/* @ts-ignore */}
+        <ChatBody id={id} />
 
         {/* @ts-ignore */}
         <ChatFooter id={id} />
