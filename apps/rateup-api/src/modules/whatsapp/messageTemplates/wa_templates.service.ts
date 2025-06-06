@@ -227,8 +227,6 @@ export async function saveTemplate(
   templateType?: TemplateType,
   config?: any,
 ) {
-  console.log(config, "config");
-
   try {
     const res = await prisma.waTemplate.create({
       data: {

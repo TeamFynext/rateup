@@ -77,12 +77,12 @@ export async function registerBusinessClientHandler(
 }
 
 export async function deRegisterBusinessClientHandler(
-  req: FastifyRequest,
+  req: FastifyRequest<{ Params: { phoneId: string } }>,
   rep: FastifyReply,
 ) {
   try {
     // TODO
-    await deleteWaSettings(req.user.orgId);
+    await deleteWaSettings(req.user.orgId, req.params?.phoneId);
   } catch (e) {
     log.error(e);
     rep.status(500).send({ message: "Internal server error" });

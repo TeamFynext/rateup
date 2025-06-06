@@ -357,6 +357,7 @@ export async function sendTemplateToUserCore(
   timeDelay?: number,
   isTemplateName = false,
   tag?: string,
+  whatsappSettingsPhoneId?: string,
 ): Promise<{ status: boolean; message: string; id?: string }> {
   let dbTemplate = null;
   const phone = parsePhoneforWa(phoneNumber);
@@ -633,7 +634,13 @@ export async function sendTemplateToUserCore(
     log.trace("Template schedule created successfully");
   } else {
     await wait(50);
-    res = await sendMessage(orgId, templateMessage, null, userId);
+    res = await sendMessage(
+      orgId,
+      templateMessage,
+      null,
+      userId,
+      whatsappSettingsPhoneId,
+    );
     await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     log.trace("Template send to user successfully");
   }
@@ -649,7 +656,8 @@ export async function sendTemplateToUserHandler(
 ) {
   try {
     const { templateId } = request.params;
-    const { phone, parameterData, teamId } = request.body;
+    const { phone, parameterData, teamId, whatsappSettingsPhoneId } =
+      request.body;
     const orgId = request.user.orgId;
     const userId = request.userId;
 
@@ -660,6 +668,10 @@ export async function sendTemplateToUserHandler(
       parameterData,
       teamId,
       userId,
+      undefined,
+      false,
+      undefined,
+      whatsappSettingsPhoneId,
     );
 
     reply.code(200).send("Template sent to user successfully");

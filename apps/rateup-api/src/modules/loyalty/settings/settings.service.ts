@@ -39,6 +39,7 @@ export async function createLoyaltyWaCommand(
       actionId: data.actionId?.length ? data.actionId : undefined,
       content: data.content,
       responseType: data.responseType,
+      whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
     },
   });
 }

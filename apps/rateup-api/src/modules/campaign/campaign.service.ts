@@ -311,6 +311,7 @@ export async function createCampaign(data: CreateCampaignInput) {
       teamId: data.teamId,
       waTemplateId: data.waTemplateId ?? undefined,
       flowId: flowId,
+      whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
     },
   });
   await prisma.campaignStats.create({

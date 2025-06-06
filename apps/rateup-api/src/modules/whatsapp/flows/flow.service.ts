@@ -470,12 +470,14 @@ interface sendFlowProps {
   dbFlowId: string;
   phone: string;
   userId?: string;
+  whatsappSettingsPhoneId?: string;
 }
 export async function sendFlow({
   orgId,
   dbFlowId,
   phone,
   userId,
+  whatsappSettingsPhoneId,
 }: sendFlowProps) {
   try {
     log.trace("Sending flow %s to %s", dbFlowId, phone);
@@ -484,7 +486,13 @@ export async function sendFlow({
       to: phone,
       dbFlow,
     });
-    await sendMessage(orgId, { ...messageData, to: phone }, null, userId);
+    await sendMessage(
+      orgId,
+      { ...messageData, to: phone },
+      null,
+      userId,
+      whatsappSettingsPhoneId,
+    );
     return true;
   } catch (e) {
     log.error(e);

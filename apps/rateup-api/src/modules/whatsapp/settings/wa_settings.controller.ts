@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  ByWaSettingsIdParamsSchema,
   ContactTagSchema,
   createWaSettingsInput,
   PaginationQuery,
@@ -10,6 +11,7 @@ import { Role } from "../../org/org.services";
 import {
   createWaSettings,
   deleteWaSettings,
+  getAllWaSettings,
   getContactTag,
   getWaLogs,
   getWaSettings,
@@ -47,8 +49,8 @@ export async function getWaSettingsHandler(
   res: FastifyReply,
 ) {
   const { orgId } = req.user;
-  const waSettings = await getWaSettings(orgId);
-  if (!waSettings) {
+  const waSettings = await getAllWaSettings(orgId);
+  if (!waSettings?.length) {
     return res.status(204).send();
   }
   return res.status(200).send(waSettings);
@@ -67,7 +69,11 @@ export async function updateWaSettingsHandler(
       message: "You are not authorized to perform this action",
     });
   }
-  const waSettings = await updateWaSettings(org.orgId, req.body);
+  const waSettings = await updateWaSettings(
+    org.orgId,
+    req.body?.phoneId,
+    req.body,
+  );
   return res.status(200).send(waSettings);
 }
 
@@ -82,12 +88,18 @@ export async function upsertWaSettingsHandler(
       message: "You are not authorized to perform this action",
     });
   }
-  const waSettings = await upsertWaSettings(org.orgId, req.body);
+  const waSettings = await upsertWaSettings(
+    org.orgId,
+    req.body?.phoneId,
+    req.body,
+  );
   return res.status(200).send(waSettings);
 }
 
 export async function deleteWaSettingsHandler(
-  req: FastifyRequest,
+  req: FastifyRequest<{
+    Params: ByWaSettingsIdParamsSchema;
+  }>,
   res: FastifyReply,
 ) {
   const org = await getOrgIdAndRole({ id: req.userId });
@@ -98,7 +110,7 @@ export async function deleteWaSettingsHandler(
     });
   }
 
-  await deleteWaSettings(req.user.orgId);
+  await deleteWaSettings(req.user.orgId, req.params.phoneId);
   return res.status(200).send();
 }
 

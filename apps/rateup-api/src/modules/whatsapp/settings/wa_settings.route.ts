@@ -42,7 +42,15 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     },
     upsertWaSettingsHandler,
   );
-  server.delete("/", deleteWaSettingsHandler);
+  server.delete(
+    "/:phoneId",
+    {
+      schema: {
+        params: $WASettingsref("byWaSettingsIdParamsSchema"),
+      },
+    },
+    deleteWaSettingsHandler,
+  );
   server.get("/contact_tag", getContactTagHandler);
   server.post(
     "/contact_tag",
