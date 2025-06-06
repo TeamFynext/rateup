@@ -32,7 +32,7 @@ import { WaMessageBody } from "../../../../../../../types/whatsapp.types";
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
-} from "../../../../../../../utils/commnUtils";
+} from "../../../../../../../utils/commonUtils";
 import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
 import { validateLogic } from "../../../../../../question/question.utils";

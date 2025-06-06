@@ -1,5 +1,5 @@
 import { TicketType } from "@prisma/client";
-import { getShortUrlId } from "../../../utils/commnUtils";
+import { getShortUrlId } from "../../../utils/commonUtils";
 import prisma from "../../../utils/prisma";
 import { UpdateCardRequest } from "./card.schema";
 import {

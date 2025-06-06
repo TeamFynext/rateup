@@ -37,40 +37,105 @@ export function generateTemplate(
     });
   }
 
-  if (input.buttons?.length > 0) {
-    components.push({
-      type: WaTemplateComponentType.BUTTONS,
-      buttons: input.buttons,
-    });
-  }
+  if (input.mediaCarousel?.length) {
+    let cards = [];
+    for (const card of input.mediaCarousel) {
+      let cardComponents = [];
+      if (card.header) {
+        cardComponents.push({
+          type: WaTemplateComponentType.HEADER,
+          format: card.format,
+          example: {
+            header_handle: [card.header],
+          },
+        });
+      }
+      if (parseStringWithVariables(card.body)?.length > 0) {
+        cardComponents.push({
+          type: WaTemplateComponentType.BODY,
+          text: card.body,
+          example: {
+            body_text: [card.example],
+          },
+        });
+      } else {
+        cardComponents.push({
+          type: WaTemplateComponentType.BODY,
+          text: card.body,
+        });
+      }
 
-  if (input.header) {
-    if (input.format === WaTemplateSupportedFormats.TEXT) {
-      components.push({
+      if (card.buttons.length > 0) {
+        cardComponents.push({
+          type: WaTemplateComponentType.BUTTONS,
+          buttons: card.buttons,
+        });
+      }
+      cards.push({ components: cardComponents });
+    }
+    components.push({
+      type: WaTemplateComponentType.CAROUSEL,
+      cards,
+    });
+  } else if (input.productCarousel?.length) {
+    let cards = [];
+    for (const card of input.productCarousel) {
+      let cardComponents = [];
+      cardComponents.push({
         type: WaTemplateComponentType.HEADER,
-        format: WaTemplateSupportedFormats.TEXT,
-        text: input.header,
+        format: WaTemplateSupportedFormats.PRODUCT,
       });
-    } else if (input.format === WaTemplateSupportedFormats.LOCATION) {
-      components.push({
-        type: WaTemplateComponentType.HEADER,
-        format: WaTemplateSupportedFormats.LOCATION,
+      cardComponents.push({
+        type: WaTemplateComponentType.BUTTONS,
+        buttons: [card.button],
       });
-    } else {
+      cards.push({ components: cardComponents });
+    }
+    components.push({
+      type: WaTemplateComponentType.CAROUSEL,
+      cards,
+    });
+  } else {
+    if (input.buttons?.length > 0) {
       components.push({
-        type: WaTemplateComponentType.HEADER,
-        format: input.format,
-        example: {
-          header_handle: [input.header],
-        },
+        type: WaTemplateComponentType.BUTTONS,
+        buttons: input.buttons,
       });
     }
+    if (input.header) {
+      if (input.format === WaTemplateSupportedFormats.TEXT) {
+        components.push({
+          type: WaTemplateComponentType.HEADER,
+          format: WaTemplateSupportedFormats.TEXT,
+          text: input.header,
+        });
+      } else if (input.format === WaTemplateSupportedFormats.LOCATION) {
+        components.push({
+          type: WaTemplateComponentType.HEADER,
+          format: WaTemplateSupportedFormats.LOCATION,
+        });
+      } else {
+        components.push({
+          type: WaTemplateComponentType.HEADER,
+          format: input.format,
+          example: {
+            header_handle: [input.header],
+          },
+        });
+      }
+    }
+    if (input.format === WaTemplateSupportedFormats.PRODUCT) {
+      components.push({
+        type: WaTemplateComponentType.HEADER,
+        format: WaTemplateSupportedFormats.PRODUCT,
+      });
+    }
+    if (input.footer)
+      components.push({
+        type: WaTemplateComponentType.FOOTER,
+        text: input.footer,
+      });
   }
-  if (input.footer)
-    components.push({
-      type: WaTemplateComponentType.FOOTER,
-      text: input.footer,
-    });
 
   return {
     name: input.name,

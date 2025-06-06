@@ -18,7 +18,7 @@ import {
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
-} from "../../utils/commnUtils";
+} from "../../utils/commonUtils";
 import {
   createSurveyDefaultVariableForQuestion,
   getSurveysOrgId,

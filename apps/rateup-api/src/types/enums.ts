@@ -149,6 +149,7 @@ export enum WaTemplateComponentType {
   BUTTONS = "buttons",
   HEADER = "header",
   FOOTER = "footer",
+  CAROUSEL = "carousel",
 }
 export enum WaTemplateComponentTypeUpperCase {
   BODY = "BODY",
@@ -167,6 +168,7 @@ export enum WaTemplateSupportedFormats {
   LOCATION = "LOCATION",
   DOCUMENT = "DOCUMENT",
   VIDEO = "VIDEO",
+  PRODUCT = "PRODUCT",
 }
 export enum WaTemplateStatus {
   APPROVED = "APPROVED",

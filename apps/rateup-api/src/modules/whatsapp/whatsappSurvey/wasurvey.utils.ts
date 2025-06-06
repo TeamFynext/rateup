@@ -418,6 +418,9 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
     case WaMessageTypes.button:
       body = message.button.text;
       break;
+    case WaMessageTypes.order:
+      body = message.order.text;
+      break;
   }
   return {
     from,

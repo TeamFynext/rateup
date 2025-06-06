@@ -1,6 +1,6 @@
 import { FastifyRequest } from "fastify";
 import prisma from "../../utils/prisma";
-import { getShortUrlId } from "../../utils/commnUtils";
+import { getShortUrlId } from "../../utils/commonUtils";
 import { CreateLandingPageReqBody } from "./landingPage.schema";
 
 async function createLandingPageInDB(

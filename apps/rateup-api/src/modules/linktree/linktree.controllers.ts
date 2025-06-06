@@ -9,7 +9,7 @@ import {
   updateLinktreeWithShortIdInDB,
   updatePageVisitOrLinkClickInDB,
 } from "./linktree.service";
-import { shortIdUniqueConstraintErrHandler } from "../../utils/commnUtils";
+import { shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils";
 
 async function getLinktrees(req: FastifyRequest, rep: FastifyReply) {
   const allLinktreesArray = await getAllLinktreesFromDB(req);

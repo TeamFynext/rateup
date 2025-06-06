@@ -1,5 +1,5 @@
 import { RouteShorthandOptionsWithHandler } from "fastify";
-import { asyncErrHandler } from "../../utils/commnUtils";
+import { asyncErrHandler } from "../../utils/commonUtils";
 import {
   createLandingPage,
   deleteLandingPageById,

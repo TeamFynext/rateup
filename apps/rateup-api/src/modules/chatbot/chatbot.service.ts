@@ -1,6 +1,6 @@
 import axios from "axios";
 import { dataSourceUploadInput } from "./chatbot.schema";
-import { getShortUrlId } from "../../utils/commnUtils";
+import { getShortUrlId } from "../../utils/commonUtils";
 import prisma from "../../utils/prisma";
 import { FastifyRequest } from "fastify";
 import { getAxiosAIClient } from "./chatbot.controller";

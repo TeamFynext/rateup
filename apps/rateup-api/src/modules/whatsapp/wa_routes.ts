@@ -13,6 +13,9 @@ import { waAutomatedReplyRoutes } from "./automatedReply/wa_automatedReply.route
 import { waInboxRoutes } from "./inbox/wainbox.routes";
 import { waAuthRoutes } from "./auth/wa_auth.route";
 import { handleWhatsappError } from "./wa_error_handler";
+import { waCatalogRoutes } from "./catalog/catalog.route";
+import { catalogProductSchema } from "./catalog/products/product.schema";
+import { waCatalogSchemas } from "./catalog/catalog.schema";
 
 export async function whatsappRoutes(server: FastifyInstance) {
   const modules = [
@@ -20,6 +23,8 @@ export async function whatsappRoutes(server: FastifyInstance) {
     waTemplateSchemas,
     waFlowSchemas,
     waAutomatedReplySchemas,
+    catalogProductSchema,
+    waCatalogSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -38,4 +43,5 @@ export async function whatsappRoutes(server: FastifyInstance) {
   server.register(waRedirectRoutes, { prefix: "/redirect" });
   server.register(waAutomatedReplyRoutes, { prefix: "/automated-reply" });
   server.register(waInboxRoutes, { prefix: "/inbox" });
+  server.register(waCatalogRoutes, { prefix: "/catalog" });
 }
