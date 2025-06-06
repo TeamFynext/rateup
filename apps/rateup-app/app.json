@@ -1,22 +1,24 @@
 {
   "expo": {
     "name": "RateUp",
-    "slug": "myapp2",
+    "slug": "rateup",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
-    "scheme": "myapp",
+    "icon": "./assets/images/icon.png",
+    "scheme": "RateUp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "transparent"
       },
-      "package": "com.abhinavviswam_01.myapp2"
+      "package": "com.rateupapp.rateup",
+      "googleServicesFile":"./android/app/google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -32,12 +34,20 @@
           "image": "./assets/images/logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "transparent"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "349704fe-fb2c-40e3-b1e1-3bc33aecdb29"
+      }
     }
   }
 }

@@ -1,0 +1,104 @@
+import { View, Text } from "react-native";
+import React, { memo, useCallback } from "react";
+import WaInboxText, {
+  WaInboxAudio,
+  WaInboxDocument,
+  WaInboxImage,
+  WaInboxInteractive,
+  WaInboxVideo,
+} from "./messageBubbleTypes";
+import { namePreview } from "@/src/utils/chatbox_utils";
+
+type MessageBubbleProps = {
+  messageContent: any;
+  interactive?: any;
+  timestamp: string;
+  isSent: boolean;
+  messageType?: string;
+  senderName?: string;
+};
+
+const MessageBubble = ({
+  messageContent,
+  timestamp,
+  isSent,
+  messageType,
+  senderName,
+  interactive,
+}: MessageBubbleProps) => {
+  const renderContent = useCallback(() => {
+    switch (messageType) {
+      case "text":
+        return <WaInboxText messageContent={messageContent} />;
+      case "image":
+        return <WaInboxImage messageContent={messageContent} />;
+      case "audio":
+        return (
+          <WaInboxAudio messageContent={messageContent} timestamp={timestamp} />
+        );
+      case "document":
+        return <WaInboxDocument messageContent={messageContent} />;
+      case "video":
+        return <WaInboxVideo messageContent={messageContent} />;
+      case "reaction":
+        return <Text className="text-xl">{messageContent}</Text>;
+      case "button":
+        return <Text>buttons</Text>;
+      case "interactive":
+        return (
+          <WaInboxInteractive
+            interactiveBody={interactive}
+            messageContent={messageContent}
+          />
+        );
+      default:
+        return <Text className="text-black text-sm">{messageContent}</Text>;
+    }
+  }, [messageContent, messageType, timestamp]);
+
+  // ⛔️ SPECIAL CASE: Received audio message — no bubble
+  if (messageType === "audio" && !isSent) {
+    return (
+      <View className="flex-row px-2 w-full mb-2 items-center gap-1 justify-start">
+        {renderContent()}
+      </View>
+    );
+  }
+
+  return (
+    <View
+      className={`flex-row px-2 w-full mb-2 items-center gap-1 ${
+        isSent ? "justify-end" : "justify-start"
+      }`}
+    >
+      <View
+        className={`flex-col max-w-[75%] px-3 py-2 rounded-xl ${
+          isSent ? "bg-[#d2f8d2]" : "bg-white"
+        }`}
+      >
+        {isSent && (
+          <Text className="text-blue-500 italic opacity-70 p-1">
+          {senderName}
+        </Text>
+        )}
+        {renderContent()}
+        {messageType !== "audio" && (
+          <Text className="text-sm text-gray-500 text-right mt-1">
+            {timestamp}
+          </Text>
+        )}
+      </View>
+
+      {isSent && (
+        <View className="w-8 h-8 rounded-full bg-[#00998733] flex items-center justify-center">
+          <Text className="text-rateUpGreen font-bold text-md">
+            {/* @ts-ignore */}
+            {namePreview(senderName)}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+export default memo(MessageBubble);

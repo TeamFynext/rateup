@@ -4,6 +4,9 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+  <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -24,8 +27,9 @@
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="myapp"/>
-        <data android:scheme="com.abhinavviswam_01.myapp2"/>
+        <data android:scheme="RateUp"/>
+        <data android:scheme="com.rateupapp.rateup"/>
+        <data android:scheme="exp+rateup"/>
       </intent-filter>
     </activity>
   </application>

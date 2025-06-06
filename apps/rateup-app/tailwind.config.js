@@ -6,7 +6,15 @@ module.exports = {
   ],
   presets: [require("nativewind/preset")],
   theme: {
-    extend: {},
+    extend: {
+        colors: {
+          rateUpGreen: "#009987",
+          rateUpGreen20:"#00998714",
+          rateUpLightGreen:"#EBF7F5",
+          rateUpTextGray:"#7A8289"
+        },
+        
+    },
   },
   plugins: [],
 }
