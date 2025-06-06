@@ -142,6 +142,8 @@ const updateSurveyRequestSchema = z.object({
   sendWeeklyReport: z.boolean().optional(),
   enableAutoGenerateTicket: z.boolean().optional(),
   enableTicketWaMessageAlerts: z.boolean().optional(),
+  ticketBoardId: z.string().optional(),
+  ticketColumnId: z.string().optional(),
 });
 const updateLandingPageRequestSchema = z.object({
   title: z
