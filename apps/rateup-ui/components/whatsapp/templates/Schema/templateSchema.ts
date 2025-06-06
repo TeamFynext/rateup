@@ -104,6 +104,154 @@ export const templateSchema = z
     status: z.nativeEnum(WaTemplateStatus),
     example: z.array(z.string().trim()).optional(),
     templateType: z.nativeEnum(TemplateType),
+    mediaCarousel: z
+      .array(
+        z.object({
+          body: z.string().trim().min(1).max(1024),
+          header: z.union([
+            z.null(),
+            z.string().trim().min(1),
+            z.instanceof(File).superRefine((f, ctx) => {
+              const allowed = [
+                "image/png",
+                "image/jpg",
+                "image/jpeg",
+                "video/mp4",
+              ];
+              if (!allowed.includes(f.type)) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: `File must be one of [${allowed.join(
+                    ", ",
+                  )}] but was ${f.type}`,
+                });
+              }
+              if (f.size > FILE_SIZE * MB_BYTES) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.too_big,
+                  type: "array",
+                  message: `The file must not be larger than ${FILE_SIZE} MB`,
+                  maximum: FILE_SIZE * MB_BYTES,
+                  inclusive: true,
+                });
+              }
+            }),
+          ]),
+          format: z.string(),
+          example: z.array(z.string().trim()).optional(),
+          buttons: z
+            .array(
+              z.object({
+                text: z.string().max(25),
+                type: z.string(),
+                example: z.array(z.string().trim().min(1).max(2000)).optional(),
+                phone_number: z
+                  .string()
+                  .max(25)
+                  .refine(isValidPhoneNumber)
+                  .optional(),
+                url: z.string().trim().url().max(2000).optional(),
+              }),
+            )
+            .max(2)
+            .min(1),
+        }),
+      )
+      .optional(),
+    productCarousel: z
+      .array(
+        z.object({
+          button: z.object({
+            text: z.string().max(25),
+            type: z.string(),
+            example: z.array(z.string().trim().min(1).max(2000)).optional(),
+            url: z.string().trim().url().max(2000).optional(),
+          }),
+          product_retailer_id: z.string(),
+        }),
+      )
+      .optional(),
+    defaultValues: z
+      .object({
+        image: z
+          .object({
+            link: z.string(),
+          })
+          .optional(),
+        document: z
+          .object({
+            link: z.string(),
+            filename: z.string().optional(),
+          })
+          .optional(),
+        video: z
+          .object({
+            link: z.string(),
+          })
+          .optional(),
+        catalog: z
+          .object({
+            thumbnail_product_retailer_id: z.string().optional(),
+            mpm: z
+              .object({
+                sections: z.array(
+                  z.object({
+                    title: z.string(),
+                    products: z.array(z.string()),
+                  }),
+                ),
+              })
+              .optional(),
+            spm: z
+              .object({
+                product_retailer_id: z.string(),
+              })
+              .optional(),
+          })
+          .optional(),
+        mediaCarousel: z
+          .array(
+            z.object({
+              headerLink: z.string(),
+              cardIndex: z.number(),
+            }),
+          )
+          .optional(),
+        productCarousel: z
+          .array(
+            z.object({
+              product_retailer_id: z.string(),
+              cardIndex: z.number(),
+            }),
+          )
+          .optional(),
+        orderDetails: z
+          .object({
+            paymentConfigName: z.string(),
+            paymentType: z.string(),
+            productType: z.string(),
+            item: z.object({
+              name: z.string(),
+              salePrice: z.number(),
+              price: z.number(),
+              quantity: z.number(),
+              origin: z.string().max(100),
+              importerName: z.string().max(200),
+              importerAddress1: z.string().max(100),
+              importerCity: z.string().max(120),
+              importerZoneCode: z.string().length(2),
+              importerPostalCode: z.string().max(6),
+            }),
+            shipping: z.number(),
+            tax: z.number(),
+            discount: z.number().optional(),
+            discountDescription: z.string().max(60).optional(),
+            taxDescription: z.string().max(60),
+            expiry: z.string().optional(),
+          })
+          .optional(),
+      })
+      .optional(),
   })
   .superRefine((values, ctx) => {
     const format = values.format;
@@ -148,7 +296,47 @@ export const templateSchema = z
             });
           }
           break;
+        case WHATSAPP_BUTTON_TYPE.MPM:
+          let errormsg;
 
+          if (values.defaultValues.catalog.mpm.sections.length > 10) {
+            errormsg = "Sections cannot be more than 10";
+          } else if (
+            values.defaultValues.catalog.mpm.sections.some(
+              (s) => s.products.length > 30,
+            )
+          ) {
+            errormsg = "Each sections can have only upto 30 products";
+          } else if (
+            values.defaultValues.catalog.mpm.sections.some(
+              (s) => !s.title.length || !s.products.length,
+            )
+          ) {
+            errormsg = "Fill out the sections";
+          } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE) {
+            ctx.addIssue({
+              path: ["header"],
+              code: z.ZodIssueCode.custom,
+              message: "Header is required for templates with a MPM button",
+            });
+          }
+          if (errormsg) {
+            ctx.addIssue({
+              path: ["buttons", index],
+              code: z.ZodIssueCode.custom,
+              message: "Fill out the sections",
+            });
+          }
+          break;
+        case WHATSAPP_BUTTON_TYPE.SPM:
+          if (!values.defaultValues.catalog.spm.product_retailer_id) {
+            ctx.addIssue({
+              path: ["buttons", index],
+              code: z.ZodIssueCode.custom,
+              message: "product retailer id required",
+            });
+          }
+          break;
         default:
           break;
       }
@@ -182,6 +370,91 @@ export const templateSchema = z
         code: z.ZodIssueCode.custom,
         message: errorMessage,
       });
+
+    if (
+      values.templateType === TemplateType.CAROUSEL &&
+      values.mediaCarousel.length
+    ) {
+      if (values.mediaCarousel.length < 2) {
+        ctx.addIssue({
+          path: ["mediaCarousel"],
+          code: z.ZodIssueCode.custom,
+          message: "Minimum 2 cards required",
+        });
+        return;
+      }
+      values.mediaCarousel.map((card, index) => {
+        const cardHeaerTypeNotString = typeof card.header !== "string";
+        if (!card.body.length) {
+          ctx.addIssue({
+            path: ["mediaCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: "Every card should have body",
+          });
+        } else if (!card.header) {
+          ctx.addIssue({
+            path: ["mediaCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: "Every card should have header",
+          });
+        } else if (
+          card.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE &&
+          cardHeaerTypeNotString
+        ) {
+          let msg =
+            !imageType.includes((card.header as File)?.type) &&
+            `Incorrect Type use only ${imageType?.join(",")}`;
+          ctx.addIssue({
+            path: ["mediaCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: msg,
+          });
+        } else if (
+          format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO &&
+          cardHeaerTypeNotString
+        ) {
+          let msg =
+            !videoType.includes((card.header as File)?.type) &&
+            `Incorrect Type use only ${videoType?.join(",")}`;
+          ctx.addIssue({
+            path: ["mediaCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: msg,
+          });
+        } else if (!card.buttons.length) {
+          ctx.addIssue({
+            path: ["mediaCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: "Atleast 1 button required",
+          });
+        }
+      });
+    }
+
+    if (
+      values.templateType === TemplateType.CAROUSEL &&
+      values.productCarousel.length
+    ) {
+      if (values.productCarousel.length < 2) {
+        ctx.addIssue({
+          path: ["productCarousel"],
+          code: z.ZodIssueCode.custom,
+          message: "Minimum 2 cards required",
+        });
+        return;
+      }
+      let buttonType = values.productCarousel[0].button.type;
+      values.productCarousel.map((card, index) => {
+        if (card.button.type !== buttonType) {
+          ctx.addIssue({
+            path: ["productCarousel", index],
+            code: z.ZodIssueCode.custom,
+            message: "Every card should have same button action",
+          });
+          return;
+        }
+      });
+    }
   });
 
 export type WaTemplateDefaultValues = {

@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { Box, Group, Stack } from "@mantine/core";
+import { Box, Flex, Group, Select, Stack } from "@mantine/core";
 
+import { useBoardsQueries } from "@/backend/tickets/tickets.query";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import PremiumFeature from "@/components/Premium/PremiumFeature";
 import RateupSwitch from "@/components/Switch/RateupSwitch";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -12,6 +14,8 @@ import NotificationEmailSettings from "./NotificationEmailSettings";
 
 const TicketSettings = ({ survey, surveyId, enabledModules }) => {
   const [enableTickets, setEnableTickets] = useState(survey?.enableTickets);
+  const [ticketBoardId, setTicketBoardId] = useState(survey?.ticketBoardId);
+  const [ticketColumnId, setTicketColumnId] = useState(survey?.ticketColumnId);
   const [enableTicketEmailAlerts, setEnableTicketEmailAlerts] = useState(
     survey?.enableTicketEmailAlerts,
   );
@@ -29,7 +33,40 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
     setEnableTicketEmailAlerts(survey?.enableTicketEmailAlerts);
     setEnableAutoGenerateTicket(survey?.enableAutoGenerateTicket);
     setEnableTicketWaMessageAlerts(survey?.enableTicketWaMessageAlerts);
+    setTicketBoardId(survey?.ticketBoardId);
+    setTicketColumnId(survey?.ticketColumnId);
   }, [survey]);
+  const { data: options, isPending } = useBoardsQueries();
+  // Transform boards for Select component
+  const boards = useMemo(
+    () => options?.map((board) => ({ value: board.id, label: board.title })),
+    [options],
+  );
+  // Get columns for selected board
+  const columns = useMemo(() => {
+    const selectedBoard = options?.find((board) => board.id === ticketBoardId);
+    return selectedBoard
+      ? selectedBoard.ticketColumns.map((col) => ({
+          value: col.id,
+          label: col.title,
+        }))
+      : [];
+  }, [options, ticketBoardId]);
+  useEffect(() => {
+    if (
+      (ticketBoardId &&
+        ticketColumnId &&
+        survey?.ticketBoardId !== ticketBoardId) ||
+      survey?.ticketColumnId !== ticketColumnId
+    ) {
+      editSurvey.mutate({
+        ticketColumnId,
+        ticketBoardId,
+      });
+    }
+  }, [ticketBoardId, ticketColumnId]);
+
+  if (isPending) return <RateupLoader />;
 
   return (
     <PaperLayout className="section-div">
@@ -73,6 +110,30 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
               <h3>{translations["Enable Auto-Generate Ticket"]}</h3>
             </Box>
           </Group>
+          {enableAutoGenerateTicket && (
+            <Group w={"100%"} py={"sm"}>
+              <Select
+                label="Select Board"
+                placeholder="Choose a board"
+                value={ticketBoardId}
+                data={boards}
+                onChange={(boardId) => {
+                  setTicketBoardId(boardId);
+                }}
+              />
+
+              <Select
+                label="Select Column"
+                placeholder="Choose a column"
+                value={ticketColumnId}
+                data={columns}
+                onChange={(columnId) => {
+                  setTicketColumnId(columnId);
+                }}
+              />
+            </Group>
+          )}
+          {/* 
           {enabledModules.includes("flow") && (
             <Group>
               <RateupSwitch
@@ -116,7 +177,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
             <Box className={"switch-heading-and-desc-container"}>
               <h3>{translations["Enable Ticket Email Alerts"]}</h3>
             </Box>
-          </Group>
+          </Group> */}
         </PremiumFeature>
 
         <PremiumFeature
