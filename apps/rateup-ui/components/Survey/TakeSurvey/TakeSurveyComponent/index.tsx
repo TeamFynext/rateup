@@ -290,10 +290,13 @@ function TakeSurvey({
         responsesRef.current,
         selectedLanguage,
       );
-    let selectedColumnId = getColumnIdFromTickets(
-      survey?.questions,
-      responsesRef.current,
-    );
+    let selectedColumnId = survey?.ticketColumnId;
+    if (shouldRaiseTicket && !survey?.enableAutoGenerateTicket) {
+      selectedColumnId = getColumnIdFromTickets(
+        survey?.questions,
+        responsesRef.current,
+      );
+    }
     // This If Condition is for survey preview in survey editor.
     if (isSurveyThemePreview) {
       shouldShowGoogleReview && !(pageType === PageType.ThankYou)
