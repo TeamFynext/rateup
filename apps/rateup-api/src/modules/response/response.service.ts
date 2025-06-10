@@ -1176,7 +1176,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       const createdAt = "Created At";
       const responseTag = "Tag";
       let whatsappRespondentNumber = "Respondent's Mobile Number";
-      let teamTag = "team";
+      let teamTag = "Team";
       headerArray.unshift(createdAt);
       filteredSecondArray.unshift(createdAt);
       headerArray.push(whatsappRespondentNumber);
