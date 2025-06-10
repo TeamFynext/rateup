@@ -459,7 +459,6 @@ export async function sendTemplateToUserCore(
     switch (format) {
       case WaTemplateSupportedFormats.IMAGE:
         if (defaultValues?.image?.link) {
-          console.log("defaultValues?.image?.link", defaultValues?.image?.link);
           addHeaderComponent(
             WaTemplateSupportedFormats.IMAGE,
             getFileUrlFromKey(defaultValues.image.link),
@@ -1074,8 +1073,6 @@ export async function sendTemplateToUserCore(
 
   // Call the function and wait for it to complete before proceeding.
   await processComponents();
-
-  console.dir(components, { depth: null });
 
   const templateQuery = {
     name: data?.name,
