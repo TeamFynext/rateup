@@ -11,8 +11,8 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import { CampaignStatus, CampaignType } from "@/types/enums";
 import useTemplatesAvailableForTeam from "@/hooks/team";
@@ -49,20 +49,21 @@ const CreateCampaignModal = ({
       teamId: z.string().min(1, { message: "Must select a team" }),
       name: z.string().trim().min(1, { message: "Name cannot be empty" }),
       waTemplateId: z.string().min(1, { message: "Must select a template" }),
-      type: z.nativeEnum(CampaignType),
+      type: z.enum(CampaignType),
       surveyTeamMapId: z.string().optional(),
       flowId: z.string().optional(),
       dynamicTags: z.array(z.string().trim().nullable()),
       useUserConsent: z.boolean(),
       whatsappSettingsPhoneId: z.string().min(1),
     })
-    .superRefine((values, ctx) => {
+    .check((ctx) => {
       dynamicVariables?.map((_, i) => {
-        if (!values.dynamicTags?.[i]) {
-          ctx.addIssue({
+        if (!ctx.value.dynamicTags?.[i]) {
+          ctx.issues.push({
             path: [`dynamicTags.${i}`],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Select a tag",
+            input: "",
           });
         }
       });
@@ -79,7 +80,7 @@ const CreateCampaignModal = ({
       useUserConsent: campaign?.useUserConsent ?? true,
       whatsappSettingsPhoneId: campaign?.whatsappSettingsPhoneId || "",
     },
-    validate: zodResolver(schema),
+    validate: zod4Resolver(schema),
   });
   useEffect(() => {
     if (campaign)

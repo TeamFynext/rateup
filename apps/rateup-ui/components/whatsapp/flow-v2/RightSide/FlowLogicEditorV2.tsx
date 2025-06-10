@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { Updater, useImmer } from "use-immer";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import {
   LogicAction,
@@ -134,9 +134,9 @@ export const FlowLogicEditorV2 = () => {
   const handleSave = () => {
     let { success, error } = arraySchema.safeParse(logicJumpsComponentLevel);
     let message =
-      "Invalid input" === error?.errors[0]?.message
+      "Invalid input" === error[0].message
         ? "All field must be filled"
-        : error?.errors[0]?.message;
+        : error[0]?.message;
     if (!success) {
       showErrorToast(message, "error-invalid-logic-jumps");
     }

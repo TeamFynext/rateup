@@ -15,8 +15,8 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import { QuestionType2 } from "@/types/enums";
 import {
@@ -97,7 +97,7 @@ export function DataSourceInput(props) {
           metadata: "",
           image: "",
         },
-    validate: zodResolver(choiceSchema),
+    validate: zod4Resolver(choiceSchema),
   });
   const { translations } = useTranslations();
   const handleAddChoice = async () => {
@@ -349,7 +349,7 @@ function Choice({
           metadata: "",
           image: "",
         },
-    validate: zodResolver(choiceSchema),
+    validate: zod4Resolver(choiceSchema),
   });
 
   useEffect(() => {
