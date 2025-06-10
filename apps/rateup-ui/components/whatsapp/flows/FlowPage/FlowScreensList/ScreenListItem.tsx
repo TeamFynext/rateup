@@ -33,7 +33,11 @@ import {
   WaFlowFormElementType,
   WaFlowStatus,
 } from "@/types/enums";
-import { WaFlowFormElement, WaFlowScreen } from "@/types/global";
+import {
+  WaFlowFormChoice,
+  WaFlowFormElement,
+  WaFlowScreen,
+} from "@/types/global";
 import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questions.query";
 import {
   usePushToWaMutation,
@@ -227,7 +231,7 @@ function ScreenListItem({
       const questions = getQuestionsFromScreen(flScreen, survey, map);
       for (const qs of questions) {
         if (FlowChoiceQuestions.includes(qs.type as QuestionType)) {
-          let choice = Object.values(qs?.choices ?? {})?.[0];
+          let choice: any = Object.values(qs?.choices ?? {})?.[0];
           if (!choice || choice?.length === 0) {
             let title = Object.values(qs?.title ?? {})?.[0];
             let label = Object.values(qs?.label ?? {})?.[0];
