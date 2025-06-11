@@ -149,63 +149,71 @@ export async function sendSchedulesWaMessages() {
 
 // Cron job entry point
 export async function processDripCampaigns() {
-  // Fetch all campaign drip stages with their related participant drip stages and participants
-  const dripStages = await prisma.campaignDripStage.findMany({
-    include: {
-      waTemplate: true,
-      CampaignParticipantDripStage: {
-        where: {
-          status: "PENDING",
-          participant: {
-            campaign: {
-              status: "ACTIVE",
-            },
-          },
-        },
-        include: {
-          participant: {
-            include: {
-              contact: true,
-              campaign: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  // Fetch all drip stages with pending participant drip stages for active campaigns
+  const results = await prisma.$queryRawUnsafe<
+    {
+      dripStageId: string;
+      delay: number;
+      delayUnit: string;
+      sendAtTime: string | null;
+      participantCreatedAt: Date;
+      campaignStartedAt: Date;
+      campaignId: string;
+    }[]
+  >(`
+  SELECT DISTINCT ON (cds.id, p."campaignId")
+    cds.id AS "dripStageId",
+    cds.delay,
+    cds."delayUnit",
+    cds."sendAtTime",
+    p."createdAt" AS "participantCreatedAt",
+    c."startedAt" AS "campaignStartedAt",
+    p."campaignId"
+  FROM "CampaignParticipantDripStage" cpds
+  JOIN "CampaignParticipant" p ON p.id = cpds."participantId"
+  JOIN "Campaign" c ON c.id = p."campaignId"
+  JOIN "CampaignDripStage" cds ON cds.id = cpds."dripStageId"
+  WHERE cpds.status = 'PENDING' AND c.status = 'ACTIVE'
+  ORDER BY cds.id, p."campaignId", p."createdAt" DESC
+`);
 
-  for (const dripStage of dripStages) {
-    for (const stage of dripStage.CampaignParticipantDripStage) {
-      const campaignStartDate = stage.participant.campaign.startedAt;
-      const participantCreatedAt = stage.participant.createdAt;
+  for (const row of results) {
+    const {
+      dripStageId,
+      delay,
+      delayUnit,
+      sendAtTime,
+      participantCreatedAt,
+      campaignStartedAt,
+      campaignId,
+    } = row;
 
-      // Use campaign startDate if participant was added before or at campaign start, else use participant createdAt
-      const baseDate = dayjs(participantCreatedAt).isAfter(campaignStartDate)
-        ? dayjs(participantCreatedAt)
-        : dayjs(campaignStartDate);
-      let sendAfter = dayjs(baseDate).add(
-        dripStage.delay,
-        dripStage.delayUnit as dayjs.ManipulateType,
+    const baseDate = dayjs(participantCreatedAt).isAfter(campaignStartedAt)
+      ? dayjs(participantCreatedAt)
+      : dayjs(campaignStartedAt);
+
+    let sendAfter = dayjs(baseDate).add(
+      delay,
+      delayUnit as dayjs.ManipulateType,
+    );
+
+    if (sendAtTime) {
+      const [hours, minutes] = sendAtTime.split(":").map(Number);
+      sendAfter = sendAfter
+        .hour(hours)
+        .minute(minutes)
+        .second(0)
+        .millisecond(0);
+    }
+
+    if (dayjs().isAfter(sendAfter)) {
+      await enqueueCampaignMessage(
+        campaignId,
+        [CampaignParticipantStatus.PENDING],
+        undefined,
+        undefined,
+        dripStageId,
       );
-
-      // If sendAtTime is set, adjust sendAfter to that time of day
-      if (dripStage.sendAtTime) {
-        const [hours, minutes] = dripStage.sendAtTime.split(":").map(Number);
-        sendAfter = sendAfter
-          .hour(hours)
-          .minute(minutes)
-          .second(0)
-          .millisecond(0);
-      }
-      if (dayjs().isAfter(sendAfter)) {
-        await enqueueCampaignMessage(
-          stage.participant.campaignId,
-          [CampaignParticipantStatus.PENDING],
-          undefined,
-          undefined,
-          dripStage.id,
-        );
-      }
     }
   }
 }
