@@ -1,0 +1,38 @@
+# Node dependencies
+node_modules
+package-lock.json
+yarn.lock
+
+# Git & version control
+.git
+.gitignore
+.gitattributes
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode
+.idea
+
+# Build artifacts
+build
+dist
+*.apk
+*.aab
+*.ipa
+
+# Testing
+coverage
+jest-output
+
+# Cache & temp files
+*.log
+.nyc_output
+.tmp
+.cache
+.expo
+.expo-shared
+.env
+.env.*
