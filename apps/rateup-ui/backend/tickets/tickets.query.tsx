@@ -219,10 +219,11 @@ export const useCreateCommentMutation = (id) => {
   });
 };
 
-export function useBoardsQueries() {
+export function useBoardsQueries(enabled = true) {
   return useQuery({
     queryKey: ["boards"],
     queryFn: () => fetchBoards(),
+    enabled,
   });
 }
 export function useUpdateBoardMutation() {
