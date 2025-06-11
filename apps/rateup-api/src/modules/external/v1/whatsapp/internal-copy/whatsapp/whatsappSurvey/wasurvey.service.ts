@@ -83,6 +83,7 @@ export async function sendMessage(
     );
     return { status: true, message: res?.data?.messages?.[0]?.id };
   } catch (e: any) {
+    console.log("🚀 ~ e:", e);
     log.error("Error sending message", e);
     return {
       status: false,
