@@ -148,7 +148,6 @@ const WaResponses = ({
   const [campaignIds, setSelectedCampaignIds] = useState([]);
   const { serverFilters, enableServerFilter, setServerFilters } =
     useResponseFilterStore();
-  console.log("serverFilters", serverFilters);
   useEffect(() => {
     setServerFilters({});
   }, [survey]);
