@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import prisma from "../../utils/prisma";
 import { WaSendMessageBody } from "../../types/whatsapp.types";
 import {
+  CampaignParticipantStatus,
   SubscriptionFeaturePathName,
   waMessageScheduleSource,
   WaMessageScheduleStatus,
@@ -19,6 +20,7 @@ import { updateMonthlyStat } from "../stats/stats.service";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import { createMessageTemplate } from "../../utils/email/emailWeeklyStatsReport";
 import { FRONTEND_URL } from "../../utils/constants/constants";
+import { enqueueCampaignMessage } from "../campaign/campaign.service";
 
 interface waMessageScheduleProps {
   phone: string;
@@ -142,5 +144,68 @@ export async function sendSchedulesWaMessages() {
     );
   } catch (e) {
     log.error("error in wamessageschedule %o", e);
+  }
+}
+
+// Cron job entry point
+export async function processDripCampaigns() {
+  // Fetch all campaign drip stages with their related participant drip stages and participants
+  const dripStages = await prisma.campaignDripStage.findMany({
+    include: {
+      waTemplate: true,
+      CampaignParticipantDripStage: {
+        where: {
+          status: "PENDING",
+          participant: {
+            campaign: {
+              status: "ACTIVE",
+            },
+          },
+        },
+        include: {
+          participant: {
+            include: {
+              contact: true,
+              campaign: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  for (const dripStage of dripStages) {
+    for (const stage of dripStage.CampaignParticipantDripStage) {
+      const campaignStartDate = stage.participant.campaign.startedAt;
+      const participantCreatedAt = stage.participant.createdAt;
+
+      // Use campaign startDate if participant was added before or at campaign start, else use participant createdAt
+      const baseDate = dayjs(participantCreatedAt).isAfter(campaignStartDate)
+        ? dayjs(participantCreatedAt)
+        : dayjs(campaignStartDate);
+      let sendAfter = dayjs(baseDate).add(
+        dripStage.delay,
+        dripStage.delayUnit as dayjs.ManipulateType,
+      );
+
+      // If sendAtTime is set, adjust sendAfter to that time of day
+      if (dripStage.sendAtTime) {
+        const [hours, minutes] = dripStage.sendAtTime.split(":").map(Number);
+        sendAfter = sendAfter
+          .hour(hours)
+          .minute(minutes)
+          .second(0)
+          .millisecond(0);
+      }
+      if (dayjs().isAfter(sendAfter)) {
+        await enqueueCampaignMessage(
+          stage.participant.campaignId,
+          [CampaignParticipantStatus.PENDING],
+          undefined,
+          undefined,
+          dripStage.id,
+        );
+      }
+    }
   }
 }

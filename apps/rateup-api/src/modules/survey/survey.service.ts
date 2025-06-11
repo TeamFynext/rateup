@@ -388,6 +388,7 @@ export async function getSurveysByUserId(
       active: true,
       createdAt: true,
       questions: includeQuestions,
+      isPublished: true,
       teams: {
         select: {
           id: true,
