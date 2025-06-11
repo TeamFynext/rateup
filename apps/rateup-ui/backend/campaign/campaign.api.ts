@@ -40,6 +40,7 @@ export const sendCampaign = async (
   participantId?: string,
   campaignSentAt?: Date,
   status?: CampaignStatus,
+  type?: string,
 ) => {
   return axiosClient.post(`/campaign/${campaignId}/send`, {
     sendToStatuses,
@@ -47,6 +48,7 @@ export const sendCampaign = async (
     campaignSentAt,
     sentCampaignChoice,
     status,
+    type,
   });
 };
 
@@ -59,9 +61,14 @@ export const getCampaignFilterForFlows = async (surveyId: string) => {
   }[];
 };
 
-export const campaignResponseDownloadById = async (campaignId) => {
+export const campaignResponseDownloadById = async ({
+  campaignId,
+  selectedDripStage,
+}) => {
   const response = await axiosClient.post(
-    `/campaign/${campaignId}/download`,
+    selectedDripStage
+      ? `/campaign/${campaignId}/download?selectedDripStage=${selectedDripStage}`
+      : `/campaign/${campaignId}/download`,
     {},
     {
       timeout: 25000,
@@ -75,6 +82,10 @@ export const campaignResponseDownloadById = async (campaignId) => {
   return saveAs(blob, response?.headers?.filename ?? "file.xlsx");
 };
 
-export async function getCampaignStatsById(campaignId) {
-  return (await axiosClient.get(`/campaign/${campaignId}/stats`)).data;
+export async function getCampaignStatsById(campaignId, selectedDripStage) {
+  return (
+    await axiosClient.get(
+      `/campaign/${campaignId}/stats?selectedDripStage=${selectedDripStage ?? "all"}`,
+    )
+  ).data;
 }
