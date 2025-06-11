@@ -61,8 +61,6 @@ const ChatBody = ({ id }: { id: string }) => {
       (msg) => msg.id === wsData.inbox.message.id
     );
     if (!isDuplicate) {
-      // Optimistically push to FlashList by invalidating the query
-      // or by triggering a manual refetch, or you can prepend it manually
       queryClient.setQueryData(
         ["wa-messages", id],
         (oldData: any) => {
@@ -132,6 +130,8 @@ const ChatBody = ({ id }: { id: string }) => {
             isSent={item.messageBody.exchangeProcess === "send"}
             senderName={item.sender?.name || ""}
             messageType={parsed.messageType}
+            template={parsed.template} //if it is template
+            templateComponentParams={item.templateComponentParams}
           />
         </>
       );

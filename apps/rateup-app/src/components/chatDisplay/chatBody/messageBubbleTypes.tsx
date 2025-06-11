@@ -7,6 +7,7 @@ import {
   LucideCheckCircle2,
   Pause,
   Play,
+  Reply,
 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -26,6 +27,13 @@ import { Linking } from "react-native";
 import FileViewer from "react-native-file-viewer";
 import { WaSendMessageBody } from "@/src/api/inbox/types";
 import { Buffer } from "buffer";
+import {
+  WaTemplateComponent,
+  WaTemplateFetchBody,
+  WaTemplateFetchBodyComponent,
+} from "@/src/context/type";
+import TextWithFormatting from "@/src/utils/TextFormatting";
+import { ScrollView } from "react-native";
 
 export default function WaInboxText({
   messageContent,
@@ -609,3 +617,125 @@ function WaInboxInteractiveHeader({ interactiveBody }: Props1) {
       return null;
   }
 }
+
+interface Props2 {
+  templateBody: WaTemplateFetchBody;
+  parameters: WaTemplateComponent[] | any;
+}
+
+export function WaInboxTemplate({ templateBody, parameters }: Props2) {
+  return (
+    <View className="p-3">
+      {templateBody?.components?.map((component, i) => {
+        const param =
+          parameters?.find(
+            (param: any) =>
+              param?.type?.toLowerCase() === component?.type?.toLowerCase()
+          ) ?? undefined;
+
+        return (
+          <WaInboxTemplateComponents
+            key={i}
+            templateComponent={component}
+            parameterData={param}
+          />
+        );
+      })}
+    </View>
+  );
+}
+
+interface Props3 {
+  templateComponent: WaTemplateFetchBodyComponent;
+  parameterData: WaTemplateComponent;
+}
+function WaInboxTemplateComponents(props: Props3) {
+  switch (props?.templateComponent?.type) {
+    case "HEADER":
+      return <WaInboxTemplateHeader {...props} />;
+    case "BODY":
+      return <WaInboxTemplateBody {...props} />;
+    case "FOOTER":
+      return <WaInboxTemplateFooter {...props.templateComponent} />;
+    case "BUTTONS":
+      return <WaInboxTemplateButtons {...props.templateComponent} />;
+    default:
+      return null;
+  }
+}
+
+const WaInboxTemplateHeader = ({
+  templateComponent,
+  parameterData,
+}: Props3) => {
+  const format = templateComponent?.format?.toLowerCase(); // "image", "document", etc
+  //@ts-ignore
+  const mediaId = parameterData?.parameters?.[0]?.[format]?.link;
+  const fallback = templateComponent?.example?.header_handle?.[0];
+  const sanitizeUrl = (url?: string) => url?.replace(/([^:]\/)\/+/g, "$1"); // removes double slashes after protocol
+  const uri = mediaId ? sanitizeUrl(mediaId) : fallback;
+  switch (templateComponent.format) {
+    case "TEXT":
+      return (
+        <Text className="text-base font-semibold mb-2">
+          {templateComponent.text}
+        </Text>
+      );
+    case "IMAGE":
+      return (
+        <Image
+          source={{ uri }}
+          className="w-full aspect-square"
+          resizeMode="contain"
+        />
+      );
+
+    case "DOCUMENT":
+      return (
+        <View className="h-72 mb-3 rounded-md overflow-hidden">
+          <Text>{uri}</Text>
+        </View>
+      );
+    default:
+      return null;
+  }
+};
+
+const WaInboxTemplateBody = ({ templateComponent, parameterData }: Props3) => {
+  const text = templateComponent?.text;
+  const values =
+    parameterData?.parameters?.map((d) => d?.text) ??
+    templateComponent?.example?.body_text?.[0] ??
+    [];
+
+  return (
+    <Text className="text-[15px] text-neutral-800 mb-2">
+      {TextWithFormatting({ text, examples: values })}
+    </Text>
+  );
+};
+
+const WaInboxTemplateFooter = ({ text }: WaTemplateFetchBodyComponent) => {
+  return <Text className="text-xs text-gray-500 italic mt-1">{text}</Text>;
+};
+
+const WaInboxTemplateButtons = ({ buttons }: WaTemplateFetchBodyComponent) => {
+  if (!buttons?.length) return null;
+
+  return (
+    <View className="border-t border-gray-200 mt-2">
+      {buttons.map((button, i) => (
+        <TouchableOpacity
+          key={i}
+          className="flex-row items-center py-3 border-b border-gray-100"
+          onPress={() => {
+            // handle reply button press here
+          }}
+        >
+          <Reply size={18} color="#000" className="mr-2 ml-1" />
+          <Text className="text-sm">{button?.text}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
