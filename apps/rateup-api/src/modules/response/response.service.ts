@@ -914,6 +914,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           team: {
             select: {
               id: true,
+              name: true,
             },
           },
         },
@@ -1055,7 +1056,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           );
         } else questionTitles.push(qstnTitle);
       });
-      const additionalColumns = ["team", "Respondent's Mobile Number", "tag"];
+      const additionalColumns = ["Team", "Respondent's Mobile Number", "Tag"];
       const totalColumnCount =
         questionTitles.length + additionalColumns.length + 1;
       const sheet =
@@ -1091,7 +1092,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
       const responseForSheet = [];
       for (const langRes of languageWiseResponse[lang]) {
         langRes.teamWiseResponses.map((response) => {
-          const resObj = { team: langRes.team };
+          const resObj = { Team: langRes.team };
           resObj["Created At"] = dayjs(response.createdAt).format(
             "DD-MM-YYYY hh:mm A",
           );
@@ -1148,7 +1149,7 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
             }
           });
           resObj["Respondent's Mobile Number"] = response?.respondentPhone;
-          resObj["tag"] = response?.tag;
+          resObj["Tag"] = response?.tag;
           responseForSheet.push(resObj);
         });
       }
@@ -1206,7 +1207,10 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           } else if (question === responseTag) {
             responseValue = response.tag || "";
           } else if (question === teamTag) {
-            responseValue = survey.teams.map((t) => t.team.id).join("\n") || "";
+            const teamName = survey.teams.find(
+              (t) => t.team.id === response.teamId,
+            ).team.name;
+            responseValue = teamName || "";
           } else {
             responseValue = "";
           }
@@ -1343,7 +1347,10 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
       const doc = new GoogleSpreadsheet(spreadSheetId, authClient);
       await doc.loadInfo();
       let sheet = await doc.sheetsByTitle[response.language];
-      const resObj = { team: team.name };
+      const resObj = {
+        Team: team.name,
+        team: team.name, // for old synced response
+      };
       resObj["Created At"] = dayjs(response.createdAt).format(
         "DD-MM-YYYY hh:mm A",
       );
@@ -1428,6 +1435,7 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
       });
       resObj["Respondent's Mobile Number"] = respondent;
       resObj["Tag"] = tag;
+      resObj["tag"] = tag; // for old synced response
       const newRow = await sheet.addRow(resObj);
       const dateColumnIndex = sheet.headerValues.indexOf("Created At");
       await sheet.loadCells();
