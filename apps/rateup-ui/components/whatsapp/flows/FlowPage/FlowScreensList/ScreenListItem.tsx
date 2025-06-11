@@ -228,7 +228,10 @@ function ScreenListItem({
       for (const qs of questions) {
         if (FlowChoiceQuestions.includes(qs.type as QuestionType)) {
           let choice = Object.values(qs?.choices ?? {})?.[0];
-          if (!choice || (typeof choice === "string" && choice.length === 0)) {
+          if (
+            !choice ||
+            (typeof choice === "string" && (choice as string)?.length === 0)
+          ) {
             let title = Object.values(qs?.title ?? {})?.[0];
             let label = Object.values(qs?.label ?? {})?.[0];
             errorMessages.push(title || label);
