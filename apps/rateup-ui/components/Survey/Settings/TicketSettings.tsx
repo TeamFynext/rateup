@@ -36,7 +36,9 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
     setTicketBoardId(survey?.ticketBoardId);
     setTicketColumnId(survey?.ticketColumnId);
   }, [survey]);
-  const { data: options, isPending } = useBoardsQueries();
+  const { data: options, isPending } = useBoardsQueries(
+    enabledModules.includes("tickets"),
+  );
   // Transform boards for Select component
   const boards = useMemo(
     () => options?.map((board) => ({ value: board.id, label: board.title })),
@@ -66,7 +68,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
     }
   }, [ticketBoardId, ticketColumnId]);
 
-  if (isPending) return <RateupLoader />;
+  if (enabledModules.includes("tickets") && isPending) return <RateupLoader />;
 
   return (
     <PaperLayout className="section-div">

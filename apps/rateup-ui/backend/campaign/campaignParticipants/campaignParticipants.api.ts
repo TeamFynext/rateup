@@ -30,12 +30,13 @@ export const getCampaignParticipants = async (
     desc: string;
   },
   columnFilters: { id: string; value: string }[],
+  selectedDripStage?: string,
 ) => {
   let filter = columnFilters
     .map((data) => `&${data.id}=${data.value}`)
     .join("&");
   let desc = sort.desc ? "desc" : "asc";
-  const url = `/campaign/${campaignId}/participants?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}`;
+  const url = `/campaign/${campaignId}/participants?page=${pagination.pageIndex}&limit=${pagination.pageSize}&search=${search}&desc=${desc}${filter}${selectedDripStage ? `&selectedDripStage=${selectedDripStage}` : ""}`;
   let res = await axiosClient.get(url);
   return res?.data as {
     participants: any[];

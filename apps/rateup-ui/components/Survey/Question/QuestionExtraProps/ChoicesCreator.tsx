@@ -19,8 +19,8 @@ import {
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure, useHover } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash, IconUpload } from "@tabler/icons-react";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import { NPSWeightage, QuestionType, SurveyType } from "@/types/enums";
 import { useResponses } from "@/backend/surveys/response/response.query";
@@ -118,7 +118,7 @@ export function ChoicesCreator({
       metadata: "",
       image: "",
     },
-    validate: zodResolver(choiceSchema),
+    validate: zod4Resolver(choiceSchema),
   });
   const { translations } = useTranslations();
   const choices = form.values.choices?.[selectedLanguage] || [];
@@ -659,7 +659,7 @@ function Choice({
       metadata: "",
       image: "",
     },
-    validate: zodResolver(choiceSchema),
+    validate: zod4Resolver(choiceSchema),
   });
   useEffect(() => {
     if (typeof choice.value === "object") choiceForm.setValues(choice.value);

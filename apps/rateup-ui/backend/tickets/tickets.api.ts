@@ -114,7 +114,7 @@ export const createBoard = async (board: {
 };
 
 export const updateBoard = async (
-  board: NotificationFormValues,
+  board: Partial<NotificationFormValues>,
 ): Promise<Board> => {
   const { data } = await axiosClient.put(`/tickets/boards/${board.id}`, board);
   return data;

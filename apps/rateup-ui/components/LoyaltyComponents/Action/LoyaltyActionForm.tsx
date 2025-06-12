@@ -13,8 +13,8 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import { LoyaltyActionType, TemplateType } from "@/types/enums";
 import {
@@ -113,26 +113,29 @@ const LoyaltyActionForm = ({
       refereeActionRewardType: z.nativeEnum(ActionRewadTypes),
       flowId: z.string().optional().nullable(),
     })
-    .superRefine((values, ctx) => {
+    .check((ctx) => {
+      const { value: values } = ctx;
       if (
         !action &&
         values.action_id &&
-        existingActionIds.includes(form.values.action_id)
+        existingActionIds.includes(values.action_id)
       ) {
-        ctx.addIssue({
+        ctx.issues.push({
           path: ["action_id"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: translations["Action Id already taken"],
+          input: "",
         });
       }
       if (
         values.actionRewardType === ActionRewadTypes.Point &&
         !values.points
       ) {
-        ctx.addIssue({
+        ctx.issues.push({
           path: ["points"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: translations["Points should be minimum of one"],
+          input: "",
         });
       }
       if (
@@ -140,31 +143,35 @@ const LoyaltyActionForm = ({
         values.refereeActionRewardType === ActionRewadTypes.Point &&
         !values.refereePoints
       ) {
-        ctx.addIssue({
+        ctx.issues.push({
           path: ["refereePoints"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: translations["Points should be minimum of one"],
+          input: "",
         });
       }
       if (values.endDate <= values.startDate) {
-        ctx.addIssue({
+        ctx.issues.push({
           path: ["endDate"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: translations["End date must be after start date"],
+          input: "",
         });
       }
       if (isLReferralAction(values.type)) {
         if (!values.message?.message)
-          ctx.addIssue({
+          ctx.issues.push({
             path: ["message.message"],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: translations["Message cannot be blank"],
+            input: "",
           });
         if (!values.message?.forwardMessage) {
-          ctx.addIssue({
+          ctx.issues.push({
             path: ["message.forwardMessage"],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: translations["Forward Message cannot be blank"],
+            input: "",
           });
         }
       }
@@ -172,9 +179,10 @@ const LoyaltyActionForm = ({
         values.actionRewardType === ActionRewadTypes.Reward &&
         !values.rewardId.length
       ) {
-        ctx.addIssue({
+        ctx.issues.push({
+          input: "",
           path: ["rewardId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: translations["Select the reward"],
         });
       }
@@ -182,10 +190,11 @@ const LoyaltyActionForm = ({
         values.refereeActionRewardType === ActionRewadTypes.Reward &&
         !values.refereeRewardId.length
       ) {
-        ctx.addIssue({
+        ctx.issues.push({
           path: ["refereeRewardId"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: translations["Select the reward"],
+          input: "",
         });
       }
     });
@@ -218,7 +227,7 @@ const LoyaltyActionForm = ({
       refereeActionRewardType: ActionRewadTypes.Point,
       flowId: "",
     },
-    validate: zodResolver(schema),
+    validate: zod4Resolver(schema),
   });
 
   function handleSubmit() {

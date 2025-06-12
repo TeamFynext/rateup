@@ -65,6 +65,7 @@ export const useCampaignParticipants = (
   search,
   sort,
   columnFilters,
+  selectedDripStage,
 ) => {
   return useQuery({
     queryKey: [
@@ -74,6 +75,7 @@ export const useCampaignParticipants = (
       search,
       sort,
       columnFilters,
+      selectedDripStage,
     ],
     queryFn: () =>
       getCampaignParticipants(
@@ -82,6 +84,7 @@ export const useCampaignParticipants = (
         search,
         sort,
         columnFilters,
+        selectedDripStage,
       ),
     enabled: !!campaignId,
   });

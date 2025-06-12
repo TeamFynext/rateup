@@ -63,10 +63,10 @@ export const useCampaignById = (campaignId) => {
   });
 };
 
-export const useCampaignStatsById = (campaignId) => {
+export const useCampaignStatsById = (campaignId, selectedDripStage) => {
   return useQuery({
-    queryKey: ["campaignStats", campaignId],
-    queryFn: () => getCampaignStatsById(campaignId),
+    queryKey: ["campaignStats", campaignId, selectedDripStage],
+    queryFn: () => getCampaignStatsById(campaignId, selectedDripStage),
     enabled: !!campaignId,
   });
 };
@@ -129,6 +129,7 @@ type sendCampaignProps = {
   sentCampaignChoice: string;
   participantId?: string;
   status?: CampaignStatus;
+  type?: string;
 };
 
 export const useSendCampaign = (campaignId: string, teamId: string) => {
@@ -140,6 +141,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
       campaignSentAt,
       sentCampaignChoice,
       status,
+      type,
     }: sendCampaignProps) =>
       sendCampaign(
         campaignId,
@@ -148,6 +150,7 @@ export const useSendCampaign = (campaignId: string, teamId: string) => {
         participantId,
         campaignSentAt,
         status,
+        type,
       ),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
