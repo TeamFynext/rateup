@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Chip, Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -61,7 +61,7 @@ const RateupPlanModal = ({ opened, close, planList }) => {
       description: [],
       features: "",
     },
-    validate: zodResolver(schema),
+    validate: zod4Resolver(schema),
   });
 
   useEffect(() => {

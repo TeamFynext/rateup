@@ -31,7 +31,7 @@ import {
   IconTicket,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 
 import { QuestionType2, SubscriptionFeaturePathName } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
@@ -107,7 +107,7 @@ function ElementEditor() {
 
   const form2 = useForm({
     initialValues: {},
-    validate: zodResolver(validationSchema),
+    validate: zod4Resolver(validationSchema),
   });
   useEffect(() => {
     if (element) {

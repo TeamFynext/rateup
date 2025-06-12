@@ -22,7 +22,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import {
   IconEye,
@@ -39,7 +39,8 @@ import {
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import { useCampaignParticipants } from "@/backend/campaign/campaignParticipants/campaignParticipants.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
@@ -354,12 +355,14 @@ const StartCampaignCard = ({
       sentCampaignChoice: z.nativeEnum(SentCampaignEnum),
       statuses: z.array(z.nativeEnum(CampaignParticipantStatus)).optional(),
     })
-    .superRefine((values, ctx) => {
+    .check((ctx) => {
+      const { value: values } = ctx;
       if (startCampaign && values.statuses?.length === 0) {
-        ctx.addIssue({
+        ctx.issues.push({
           path: ["statuses"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: translations["Select at least one status"],
+          input: "",
         });
       }
     });
@@ -369,7 +372,7 @@ const StartCampaignCard = ({
       statuses: [CampaignParticipantStatus.FAILED],
       sentCampaignChoice: SentCampaignEnum.NOW,
     },
-    validate: zodResolver(schema),
+    validate: zod4Resolver(schema),
     onValuesChange: (values) => {
       if (
         values.sentCampaignChoice === SentCampaignEnum.NOW &&

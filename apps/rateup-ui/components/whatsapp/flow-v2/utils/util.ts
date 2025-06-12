@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import {
   LDResponse2,
@@ -261,7 +261,7 @@ export const getValidationSchema = (type: QuestionType2) => {
     case QuestionType2.EmbeddedLink:
       schema = {
         type: z.literal("EmbeddedLink"),
-        url: z.string().url(),
+        url: z.url(),
         visible: z.boolean(),
       };
       break;
@@ -288,48 +288,54 @@ export const getValidationSchema = (type: QuestionType2) => {
       };
       break;
   }
-  return z.object(schema).superRefine((data, ctx) => {
+  return z.object(schema).check((ctx) => {
+    const { value: data } = ctx;
     if (data["visible"] === false) {
       if (data["required"]) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+        ctx.issues.push({
+          code: "custom",
           message: "If the component is hidden, it cannot be required",
           path: ["visible"],
+          input: data["visible"],
         });
       }
     }
     if (data["min-date"] || data["max-date"]) {
-      data["unavailable-dates"].forEach((date) => {
+      (data["unavailable-dates"] as Date[]).forEach((date) => {
         if (date && dayjs(date).isBefore(data["min-date"])) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+          ctx.issues.push({
+            code: "custom",
             message: "Unavailable dates must be after min-date",
             path: ["unavailable-dates"],
+            input: data["unavailable-dates"],
           });
         }
         if (date && dayjs(date).isAfter(data["max-date"])) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+          ctx.issues.push({
+            code: "custom",
             message: "Unavailable dates must be before max-date",
             path: ["unavailable-dates"],
+            input: data["unavailable-dates"],
           });
         }
       });
     }
     if (data["min-selected-items"] && data["max-selected-items"]) {
       if (data["min-selected-items"] > data["max-selected-items"]) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+        ctx.issues.push({
+          code: "custom",
           message: "Min selected items should be less than max selected items",
           path: ["min-selected-items"],
+          input: "",
         });
       }
     }
-    if (data["url"] && !data["url"].startsWith("https")) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+    if (data["url"] && !(data["url"] as string).startsWith("https")) {
+      ctx.issues.push({
+        code: "custom",
         message: "URL must start with https",
         path: ["url"],
+        input: "",
       });
     }
   });
@@ -352,7 +358,7 @@ type InitialValues = {
 export const getInitialValues = (type: QuestionType2) => {
   let initialValues: InitialValues = {};
   let validation = getValidationSchema(type);
-  let shape: any = validation?._def?.schema?._def?.shape();
+  let shape: any = validation?.def?.shape;
   let LABEL_MAX = shape?.label?._def?.checks?.find(
     (data) => data.kind === "max",
   ).value;
