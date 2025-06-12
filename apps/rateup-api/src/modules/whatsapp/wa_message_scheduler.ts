@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import prisma from "../../utils/prisma";
 import { WaSendMessageBody } from "../../types/whatsapp.types";
 import {
+  CampaignParticipantStatus,
   SubscriptionFeaturePathName,
   waMessageScheduleSource,
   WaMessageScheduleStatus,
@@ -19,6 +20,7 @@ import { updateMonthlyStat } from "../stats/stats.service";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import { createMessageTemplate } from "../../utils/email/emailWeeklyStatsReport";
 import { FRONTEND_URL } from "../../utils/constants/constants";
+import { enqueueCampaignMessage } from "../campaign/campaign.service";
 
 interface waMessageScheduleProps {
   phone: string;
@@ -142,5 +144,76 @@ export async function sendSchedulesWaMessages() {
     );
   } catch (e) {
     log.error("error in wamessageschedule %o", e);
+  }
+}
+
+// Cron job entry point
+export async function processDripCampaigns() {
+  // Fetch all drip stages with pending participant drip stages for active campaigns
+  const results = await prisma.$queryRawUnsafe<
+    {
+      dripStageId: string;
+      delay: number;
+      delayUnit: string;
+      sendAtTime: string | null;
+      participantCreatedAt: Date;
+      campaignStartedAt: Date;
+      campaignId: string;
+    }[]
+  >(`
+  SELECT DISTINCT ON (cds.id, p."campaignId")
+    cds.id AS "dripStageId",
+    cds.delay,
+    cds."delayUnit",
+    cds."sendAtTime",
+    p."createdAt" AS "participantCreatedAt",
+    c."startedAt" AS "campaignStartedAt",
+    p."campaignId"
+  FROM "CampaignParticipantDripStage" cpds
+  JOIN "CampaignParticipant" p ON p.id = cpds."participantId"
+  JOIN "Campaign" c ON c.id = p."campaignId"
+  JOIN "CampaignDripStage" cds ON cds.id = cpds."dripStageId"
+  WHERE cpds.status = 'PENDING' AND c.status = 'ACTIVE'
+  ORDER BY cds.id, p."campaignId", p."createdAt" DESC
+`);
+
+  for (const row of results) {
+    const {
+      dripStageId,
+      delay,
+      delayUnit,
+      sendAtTime,
+      participantCreatedAt,
+      campaignStartedAt,
+      campaignId,
+    } = row;
+
+    const baseDate = dayjs(participantCreatedAt).isAfter(campaignStartedAt)
+      ? dayjs(participantCreatedAt)
+      : dayjs(campaignStartedAt);
+
+    let sendAfter = dayjs(baseDate).add(
+      delay,
+      delayUnit as dayjs.ManipulateType,
+    );
+
+    if (sendAtTime) {
+      const [hours, minutes] = sendAtTime.split(":").map(Number);
+      sendAfter = sendAfter
+        .hour(hours)
+        .minute(minutes)
+        .second(0)
+        .millisecond(0);
+    }
+
+    if (dayjs().isAfter(sendAfter)) {
+      await enqueueCampaignMessage(
+        campaignId,
+        [CampaignParticipantStatus.PENDING],
+        undefined,
+        undefined,
+        dripStageId,
+      );
+    }
   }
 }

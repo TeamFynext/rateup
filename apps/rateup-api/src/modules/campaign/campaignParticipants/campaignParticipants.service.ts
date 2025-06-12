@@ -123,7 +123,8 @@ export async function createCampaignParticipants(
   campaignId: string,
   data: CreateCampaignParticipantsInput,
 ) {
-  const promise = Promise.all([
+  // Create participants from contacts, groups, and other campaigns
+  const [fromContacts, fromGroups, fromCampaigns] = await Promise.all([
     createCampaignParticipantsFromContacts(campaignId, {
       contactIds: data.contactIds,
     }),
@@ -132,7 +133,40 @@ export async function createCampaignParticipants(
     }),
     createCampaignParticipantsFromAnotherCampaign(campaignId, data),
   ]);
-  promise.then((results) => results).catch((error) => error);
+
+  // Fetch all participant IDs for this campaign
+  const participants = await prisma.campaignParticipant.findMany({
+    where: { campaignId },
+    select: { id: true },
+  });
+
+  // Fetch all drip stages for this campaign
+  const dripStages = await prisma.campaignDripStage.findMany({
+    where: { campaignId },
+    orderBy: { delay: "asc" },
+  });
+
+  // Prepare data for participant-drip stage mapping
+  const participantDripStageData = [];
+  for (const participant of participants) {
+    for (const stage of dripStages) {
+      participantDripStageData.push({
+        participantId: participant.id,
+        dripStageId: stage.id,
+        status: "PENDING",
+      });
+    }
+  }
+
+  // Create mappings in bulk
+  if (participantDripStageData.length > 0) {
+    await prisma.campaignParticipantDripStage.createMany({
+      data: participantDripStageData,
+      skipDuplicates: true,
+    });
+  }
+
+  return { fromContacts, fromGroups, fromCampaigns };
 }
 
 export async function getCampaignParticipantsByCampaignId(
@@ -159,7 +193,9 @@ export async function getCampaignParticipantsByCampaignId(
 
 export async function getCampaignParticipantsByCampaignIdPaginated(
   campaignId: string,
-  query?: PaginationQuery,
+  query?: PaginationQuery & {
+    selectedDripStage?: string;
+  },
 ) {
   const {
     page,
@@ -167,6 +203,7 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
     desc = "asc",
     search = "",
     sort = "createdAt",
+    selectedDripStage,
     ...filter
   } = query;
 
@@ -253,6 +290,15 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
           consent: true,
         },
       },
+      ...(selectedDripStage && selectedDripStage !== "all"
+        ? {
+            CampaignParticipantDripStage: {
+              where: {
+                dripStageId: selectedDripStage,
+              },
+            },
+          }
+        : {}),
     },
     skip: page && limit ? Number(page) * Number(limit) : undefined,
     take: limit ? Number(limit) : undefined,
@@ -261,7 +307,25 @@ export async function getCampaignParticipantsByCampaignIdPaginated(
     },
   });
 
-  return { participants: campaignParticipants, totalCount, searchCount };
+  return {
+    participants: campaignParticipants.map((campaignParticipant) => ({
+      ...campaignParticipant,
+      status:
+        campaignParticipant.CampaignParticipantDripStage?.[0].status ??
+        campaignParticipant.status,
+      dripStageId:
+        campaignParticipant.CampaignParticipantDripStage?.[0].dripStageId ??
+        null,
+      sentAt:
+        campaignParticipant.CampaignParticipantDripStage?.[0].sentAt ??
+        campaignParticipant.sentAt,
+      createdAt:
+        campaignParticipant.CampaignParticipantDripStage?.[0].createdAt ??
+        campaignParticipant.createdAt,
+    })),
+    totalCount,
+    searchCount,
+  };
 }
 
 export async function getCampaignParticipantById(
@@ -312,6 +376,18 @@ export async function updateCampaignParticipant(
   const campaignParticipant = await prisma.campaignParticipant.update({
     where: {
       id: campaignParticipantId,
+    },
+    data,
+  });
+  return campaignParticipant;
+}
+export async function updateDripCampaignParticipant(
+  id: string,
+  data: Partial<CampaignParticipant>,
+) {
+  const campaignParticipant = await prisma.campaignParticipantDripStage.update({
+    where: {
+      id,
     },
     data,
   });

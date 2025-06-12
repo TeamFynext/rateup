@@ -14,7 +14,10 @@ import {
 } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
-import { updateCampaignParticipant } from "../../campaign/campaignParticipants/campaignParticipants.service";
+import {
+  updateCampaignParticipant,
+  updateDripCampaignParticipant,
+} from "../../campaign/campaignParticipants/campaignParticipants.service";
 import { getOrCreateContactByPhone } from "../../contact/contact.service";
 import { getQuestionsBySurveyId } from "../../question/question.service";
 import { parseLogicAction } from "../../question/question.utils";
@@ -48,24 +51,14 @@ import { getGraphApiErrorMessage } from "../wa_error_handler";
 import { uploadFile } from "../../../utils/upload/s3Upload";
 import axios from "axios";
 import { handleLoyaltyFeedback } from "../../loyalty/settings/settings.service";
-import { Queue } from "bullmq";
 
-import IORedis from "ioredis";
 import {
   findRecentAutomation,
   logAutomationAction,
   logFlowCompletion,
 } from "./automation-logger.utils";
 import { processNextNode } from "./wasurvey.controller";
-const redisURL = new URL(process.env.REDIS_URL);
-const redisConnection = new IORedis({
-  family: 0,
-  host: redisURL.hostname,
-  port: parseInt(redisURL.port),
-  username: redisURL.username,
-  password: redisURL.password,
-  maxRetriesPerRequest: null,
-});
+import { waStatusQueue } from "../../../utils/redisConnection";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -702,10 +695,22 @@ export async function saveResponses(session: WaSessionWithRelations) {
   // TODO move out of this function
   updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));
   if (session.campaignParticipantId) {
-    await updateCampaignParticipant(session.campaignParticipantId, {
-      status: CampaignParticipantStatus.COMPLETED,
-      responseId: res.id,
-    });
+    if (session.campaignParticipantDripStageId) {
+      await updateDripCampaignParticipant(
+        session.campaignParticipantDripStageId,
+        {
+          status: CampaignParticipantStatus.COMPLETED,
+          // responseId: res.id,
+        },
+      );
+      await updateDripCampaignStats(session.campaignParticipantDripStageId);
+    } else {
+      await updateCampaignParticipant(session.campaignParticipantId, {
+        status: CampaignParticipantStatus.COMPLETED,
+        responseId: res.id,
+      });
+    }
+
     await updateCampaignStats(session.campaignParticipantId);
   }
   return res;
@@ -723,6 +728,26 @@ async function updateCampaignStats(id: string) {
     await prisma.campaignStats.update({
       where: {
         campaignId: participant?.campaignId,
+      },
+      data: {
+        totalCompleted: { increment: 1 },
+      },
+    });
+  }
+}
+async function updateDripCampaignStats(id: string) {
+  const participant = await prisma.campaignParticipantDripStage.findFirst({
+    where: {
+      id,
+    },
+    select: {
+      dripStageId: true,
+    },
+  });
+  if (participant?.dripStageId) {
+    await prisma.campaignDripStage.update({
+      where: {
+        id: participant?.dripStageId,
       },
       data: {
         totalCompleted: { increment: 1 },
@@ -908,10 +933,6 @@ export async function handleTestimonialReply(
   });
   await handleTestimonialQuestion(question, session);
 }
-
-const waStatusQueue = new Queue("wa-status-queue", {
-  connection: redisConnection,
-});
 
 export async function addToStatusUpdateQueue(data: {
   status: string;

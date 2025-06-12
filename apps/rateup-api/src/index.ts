@@ -28,7 +28,10 @@ import {
 } from "./modules/integrations/shopify/shopify.service";
 import { subscriptionExpiryAlert } from "./utils/email/payments/subscriptionExpiryAlert";
 import { sendPetpoojaWaTemplateCronAction } from "./modules/integrations/integrations.service";
-import { sendSchedulesWaMessages } from "./modules/whatsapp/wa_message_scheduler";
+import {
+  processDripCampaigns,
+  sendSchedulesWaMessages,
+} from "./modules/whatsapp/wa_message_scheduler";
 import { deactivateExpiredActions } from "./modules/loyalty/actions/actions.service";
 
 const server = Fastify({
@@ -93,6 +96,20 @@ server.register(fastifyCron, {
           // sendPetpoojaWaTemplateCronAction(),
           sendSchedulesWaMessages(),
         ]);
+      },
+      start: true,
+      // Set to UTC+0
+    },
+    {
+      name: "test",
+      cronTime: "*/4 * * * *", // Every 4 minutes
+      onTick: async () => {
+        const currentTime = new Date();
+        console.log(
+          ".......Running every 4min JOB --> Drip Campaign Processing........",
+          currentTime,
+        );
+        await processDripCampaigns();
       },
       start: true,
       timeZone: "Etc/UTC", // Set to UTC+0
