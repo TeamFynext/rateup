@@ -18,7 +18,7 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.rateupapp.rateup",
-      "googleServicesFile":"./android/app/google-services.json"
+      "googleServicesFile": "./android/app/google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -42,7 +42,11 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "62982a5a-c2c6-4de4-931a-6af66d273ba8"
       }
-    }
+    },
+    "owner": "rateup-app"
   }
 }

@@ -8,28 +8,13 @@ const index = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-    }),
-  });
-
-  useEffect(() => {
-  const subscription = Notifications.addNotificationReceivedListener(notification => {
-    console.log("Notification received!", notification);
-  });
-
-  const responseSub = Notifications.addNotificationResponseReceivedListener(response => {
-    console.log("User tapped notification!", response);
-  });
-
-  return () => {
-    subscription.remove();
-    responseSub.remove();
-  };
-}, []);
+//   Notifications.setNotificationHandler({
+//     handleNotification: async () => ({
+//       shouldShowAlert: true,
+//       shouldPlaySound: true,
+//       shouldSetBadge: true,
+//     }),
+//   });
 
 
   useEffect(() => {

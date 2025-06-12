@@ -21,8 +21,8 @@ const InboxButtons = ({
 
   const handleRefresh = async() => {
     if (isRotating) return;
-    const token = await registerForPushNotificationsAsync();
-    console.log(token);
+    // const token = await registerForPushNotificationsAsync();
+    // console.log(token);
     setIsRotating(true);
     queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
 

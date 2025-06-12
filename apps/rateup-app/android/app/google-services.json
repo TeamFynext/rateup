@@ -14,19 +14,19 @@
       },
       "oauth_client": [
         {
-          "client_id": "42123891439-540g1mkr9upimagnekdl8inhmkadmgeg.apps.googleusercontent.com",
+          "client_id": "42123891439-qhrh9iq970rd0729a2d380br7kgc1i8j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rateupapp.rateup",
+            "certificate_hash": "77af12f75e9e8b6161ed4edf64bbc312b00be4b5"
+          }
+        },
+        {
+          "client_id": "42123891439-sgku7hp6n279agourhrplscd4nip1aal.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.rateupapp.rateup",
             "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
-          }
-        },
-        {
-          "client_id": "42123891439-gbd2auqafnldhprd8kutkp833icj7hqu.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.rateupapp.rateup",
-            "certificate_hash": "ac1abfcbc95e3ad617ec6d358e20c62ba1757d79"
           }
         },
         {
