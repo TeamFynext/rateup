@@ -41,10 +41,7 @@ import {
   WaGetMessagesBody,
   WaMessagePage,
 } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import {
-  useFilteredContacts,
-  useGetInboxUserCount,
-} from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWsData } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
