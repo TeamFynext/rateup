@@ -206,6 +206,7 @@ export enum CampaignStatus {
 export enum CampaignType {
   WHATSAPP = "WHATSAPP",
   EMAIL = "EMAIL",
+  DRIP = "DRIP",
 }
 export enum CampaignParticipantSource {
   GROUP = "GROUP",

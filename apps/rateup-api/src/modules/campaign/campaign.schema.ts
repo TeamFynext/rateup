@@ -7,14 +7,39 @@ import {
   SentCampaignEnum,
 } from "../../types/enums";
 
-const coreCampaignSchema = z.object({
-  name: z.string(),
-  type: z.nativeEnum(CampaignType),
-  teamId: z.string(),
-  waTemplateId: z.string(),
-  flowId: z.string().optional(),
-  whatsappSettingsPhoneId: z.string(),
-});
+const coreCampaignSchema = z
+  .object({
+    name: z.string(),
+    type: z.nativeEnum(CampaignType),
+    teamId: z.string(),
+    waTemplateId: z.string().optional(),
+    flowId: z.string().optional(),
+    whatsappSettingsPhoneId: z.string(),
+    dripStages: z
+      .array(
+        z.object({
+          templateId: z.string().uuid(),
+          delay: z.number(),
+          delayUnit: z.string(),
+          sendAtTime: z.string().optional(),
+        }),
+      )
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.type === CampaignType.DRIP) {
+        return Array.isArray(data.dripStages) && data.dripStages.length > 0;
+      } else {
+        return !!data.waTemplateId;
+      }
+    },
+    {
+      message:
+        "If type is DRIP, dripStages is required with at least one item. Otherwise, waTemplateId is required.",
+      path: ["type"],
+    },
+  );
 
 const createCampaignInputSchema = coreCampaignSchema;
 
@@ -33,6 +58,17 @@ const updateCampaignInputSchema = z.object({
   dynamicTags: z.array(z.string().nullable()).optional(),
   useUserConsent: z.boolean().optional(),
   whatsappSettingsPhoneId: z.string().optional(),
+  dripStages: z
+    .array(
+      z.object({
+        id: z.string().uuid().optional(),
+        templateId: z.string().uuid(),
+        delay: z.number(),
+        delayUnit: z.string(),
+        sendAtTime: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 
 const byCampaignIdParamsSchema = z.object({
@@ -80,6 +116,7 @@ const sendCampaignInputSchema = z.object({
   campaignSentAt: z.date().optional().nullable(),
   sentCampaignChoice: z.nativeEnum(SentCampaignEnum),
   status: z.nativeEnum(CampaignStatus).optional().nullable(),
+  type: z.string().optional(),
 });
 export const { schemas: campaignSchemas, $ref: $campaignRef } =
   buildJsonSchemas(
