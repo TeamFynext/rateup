@@ -23,8 +23,8 @@ import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconBrandGoogle, IconDeviceSdCard } from "@tabler/icons-react";
 import _ from "lodash";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import {
   DocumentMimeType,
@@ -219,8 +219,9 @@ function ElementEditor({
   const fileSchema = z
     .object({
       "photo-source": z
-        .nativeEnum(PhotoSource, {
-          required_error: translations["Photo source is required"],
+        .enum(PhotoSource)
+        .refine((value) => value !== undefined, {
+          message: translations["Photo source is required"],
         })
         .optional()
         .nullable(),
@@ -241,26 +242,29 @@ function ElementEditor({
       "allowed-mime-types": z.array(z.string()).optional(),
       "input-type": z.nativeEnum(InputType).optional().nullable(),
     })
-    .superRefine((values, ctx) => {
+    .check((ctx) => {
+      const { value: values } = ctx;
       if (values["min-uploaded-photos"] > values["max-uploaded-photos"]) {
-        ctx.addIssue({
+        ctx.issues.push({
           path: ["max-uploaded-photos"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message:
             translations[
               "Minimum uploaded photos cannot be greater than maximum"
             ],
+          input: values["min-uploaded-photos"],
         });
       } else if (
         values["min-uploaded-documents"] > values["max-uploaded-documents"]
       ) {
-        ctx.addIssue({
+        ctx.issues.push({
           path: ["min-uploaded-documents"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message:
             translations[
               "Minimum uploaded documents cannot be greater than maximum"
             ],
+          input: values["min-uploaded-documents"],
         });
       }
     });
@@ -276,7 +280,7 @@ function ElementEditor({
   };
 
   const extraConfigForm = useForm({
-    validate: zodResolver(fileSchema),
+    validate: zod4Resolver(fileSchema),
     initialValues: {
       "photo-source": PhotoSource.cameraGallery,
       "max-file-size-kb": 5120,

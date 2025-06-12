@@ -22,7 +22,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
   IconCalendar,
@@ -40,7 +40,8 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import parse from "html-react-parser";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import { QuestionType2 } from "@/types/enums";
 import {
@@ -367,8 +368,8 @@ const ticketSchema = z.object({
   priority: z.string().optional(),
   deadline: z
     .date({
-      required_error: "Deadline is required",
-      invalid_type_error: "Invalid date format",
+      error: (issue) =>
+        issue.input === undefined ? "Deadline required" : "Invalid Date Format",
     })
     .nullable(),
   description: z.string().optional(),
@@ -407,7 +408,7 @@ const EditTicket = ({
   );
 
   const form = useForm<TicketFormValues>({
-    validate: zodResolver(ticketSchema),
+    validate: zod4Resolver(ticketSchema),
     initialValues,
   });
 

@@ -25,8 +25,8 @@ import {
   IconImageInPicture,
   IconInfoCircle,
 } from "@tabler/icons-react";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import { OrderType, TemplateType, WaTemplateStatus } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
@@ -127,7 +127,7 @@ export default function WhatsappTemplateById() {
         },
       },
     },
-    validate: zodResolver(templateSchema),
+    validate: zod4Resolver(templateSchema),
   });
   const configForm = useForm<z.infer<typeof configSchema>>({
     initialValues: {
@@ -136,7 +136,7 @@ export default function WhatsappTemplateById() {
       orderType: null,
       name: "",
     },
-    validate: zodResolver(configSchema),
+    validate: zod4Resolver(configSchema),
   });
   const isOrderCreate = form.values.templateType === TemplateType.ORDER_DETAILS;
 

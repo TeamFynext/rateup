@@ -33,7 +33,11 @@ import {
   WaFlowFormElementType,
   WaFlowStatus,
 } from "@/types/enums";
-import { WaFlowFormElement, WaFlowScreen } from "@/types/global";
+import {
+  WaFlowFormChoice,
+  WaFlowFormElement,
+  WaFlowScreen,
+} from "@/types/global";
 import { useReplaceQuestionsMutation } from "@/backend/surveys/questions/questions.query";
 import {
   usePushToWaMutation,

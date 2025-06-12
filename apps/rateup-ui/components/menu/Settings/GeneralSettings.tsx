@@ -12,7 +12,7 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconMinus, IconPlus } from "@tabler/icons-react";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import { MenuButtons } from "@/types/enums";
@@ -75,7 +75,7 @@ const GeneralSettings = ({ editingItem }) => {
       locationUrl: "",
       locationText: "",
     },
-    validate: zodResolver(schema),
+    validate: zod4Resolver(schema),
   });
 
   const { isPending, mutate } = useUpdateMenuMutation(

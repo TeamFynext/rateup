@@ -12,9 +12,10 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import { IconBell } from "@tabler/icons-react";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import {
   useBoardTeamMembersById,
@@ -69,7 +70,7 @@ export default function TicketSettings({
       title: selectedBoard?.title || "",
       teamIds: selectedBoard?.teams?.map((teams) => teams.teamId) || [],
     },
-    validate: zodResolver(notificationSchema),
+    validate: zod4Resolver(notificationSchema),
   });
 
   const handleSubmit = form.onSubmit((values) => {

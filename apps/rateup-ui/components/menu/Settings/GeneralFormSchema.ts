@@ -1,5 +1,5 @@
 import { isValidPhoneNumber } from "react-phone-number-input";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { MenuButtons } from "@/types/enums";
 
@@ -42,7 +42,8 @@ export const schema = z
         },
       ),
   })
-  .superRefine((values, ctx) => {
+  .check((ctx) => {
+    const { value: values } = ctx;
     values.menuButtons?.map((data, index) => {
       if (
         [MenuButtons.CONTACT, MenuButtons.WHATSAPP].includes(
@@ -50,10 +51,11 @@ export const schema = z
         ) &&
         !isValidPhoneNumber(data.link)
       ) {
-        ctx.addIssue({
+        ctx.issues.push({
           path: [`menuButtons.${index}.link`],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Phone number should be valid",
+          input: "",
         });
       } else if (
         ![MenuButtons.CONTACT, MenuButtons.WHATSAPP].includes(data.name as any)
@@ -61,10 +63,11 @@ export const schema = z
         try {
           new URL(data.link);
         } catch {
-          ctx.addIssue({
+          ctx.issues.push({
             path: [`menuButtons.${index}.link`],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "URL should be valid",
+            input: "",
           });
         }
       }
