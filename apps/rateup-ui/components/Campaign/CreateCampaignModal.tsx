@@ -35,8 +35,8 @@ import {
   IconUsers,
   IconWand,
 } from "@tabler/icons-react";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import { CampaignType } from "@/types/enums";
 import useTemplatesAvailableForTeam from "@/hooks/team";
