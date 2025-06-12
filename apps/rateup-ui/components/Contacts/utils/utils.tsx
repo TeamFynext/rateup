@@ -232,6 +232,20 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     cell: (info) => info.getValue(),
   },
   {
+    header: () => "Type",
+    accessorKey: "type",
+    cell: (info) => {
+      const type = info.getValue() as string;
+      const color =
+        type === "WHATSAPP" ? "blue" : type === "DRIP" ? "orange" : "gray";
+      return (
+        <Badge variant="light" color={color}>
+          {type}
+        </Badge>
+      );
+    },
+  },
+  {
     header: () => "Team",
     accessorKey: "teamName",
     id: "Team",

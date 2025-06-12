@@ -116,7 +116,7 @@
     "use-immer": "^0.11.0",
     "uuid": "^9.0.1",
     "wavesurfer.js": "^7.9.4",
-    "zod": "^3.25.0",
+    "zod": "^3.25.63",
     "zustand": "^5.0.4"
   },
   "devDependencies": {

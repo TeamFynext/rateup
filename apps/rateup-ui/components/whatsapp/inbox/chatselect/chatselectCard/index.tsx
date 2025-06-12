@@ -66,7 +66,7 @@ export default function WaInboxChatSelectCard({
               tt={"capitalize"}
               fw={500}
             >
-              {contact?.name || contact?.phone}
+              {contact?.name || contact?.whatsappUserName || contact?.phone}
             </Text>
             <Group gap="xs">
               {contact.unReadMessageCount &&

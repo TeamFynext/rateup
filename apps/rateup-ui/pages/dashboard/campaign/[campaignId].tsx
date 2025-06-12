@@ -5,6 +5,7 @@ import {
   ActionIcon,
   Alert,
   Badge,
+  Box,
   Button,
   Group,
   MantineProvider,
@@ -28,6 +29,7 @@ import {
   IconInfoCircle,
   IconRefresh,
   IconSend,
+  IconSettings,
   IconX,
 } from "@tabler/icons-react";
 import {
@@ -61,7 +63,10 @@ import {
   contactParticipentDetailColumn,
   WhatsappTableType,
 } from "../../../components/Contacts/utils/utils";
-import { ContainedDateTimePickerInput } from "../../../components/input/ContainedInput/ContainedInput";
+import {
+  ContainedDateTimePickerInput,
+  ContainedSelection,
+} from "../../../components/input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import ContactTable from "../../../components/Table/ContactTable";
@@ -70,6 +75,7 @@ import { useRouteParams } from "../../../context/RouteParamsContext";
 import {
   CampaignParticipantStatus,
   CampaignStatus,
+  CampaignType,
 } from "../../../types/enums";
 import { Campaign } from "../../../types/global";
 import { getErrorMessage } from "../../../utils";
@@ -95,6 +101,7 @@ const CampaignById = () => {
     pageIndex: 0,
     pageSize: PAGE_SIZE[0],
   });
+  const [selectedDripStage, setSelectedDripStage] = useState("all");
   const router = useRouter();
   const { campaignId } = router.query;
   const { update } = useRouteParams();
@@ -124,6 +131,7 @@ const CampaignById = () => {
     searchText,
     sorting,
     columnFilters,
+    selectedDripStage,
   );
 
   const {
@@ -132,7 +140,7 @@ const CampaignById = () => {
     isError: isStatsError,
     isRefetching: isRefetchingStats,
     refetch: refetchStats,
-  } = useCampaignStatsById(campaignId);
+  } = useCampaignStatsById(campaignId, selectedDripStage);
 
   const campaignInfo = {
     template: campaignData?.templateData?.name,
@@ -157,6 +165,23 @@ const CampaignById = () => {
     refetchCampaign();
     refetchStats();
   };
+
+  const dripStages = useMemo(
+    () =>
+      campaignData?.dripStages?.map((d, idx) => ({
+        value: d?.id,
+        label: `Stage ${idx + 1} - ${d?.delay} ${d?.delayUnit}`,
+      })) || [],
+    [campaignData?.dripStages],
+  );
+
+  useEffect(() => {
+    if (activeTab === CampaignParticipantsTabs.PARTICIPANTS) {
+      setSelectedDripStage(dripStages?.[0]?.value);
+    } else {
+      setSelectedDripStage("all");
+    }
+  }, [activeTab, dripStages]);
 
   if (isError || isParticipantsError || isStatsError)
     return <ErrorComponent refetch={refetchCampaign} />;
@@ -195,10 +220,28 @@ const CampaignById = () => {
           <RateupButtonPrimary
             title="Delivery Report"
             onClick={() => {
-              mut.mutate(campaignId);
+              mut.mutate({
+                campaignId,
+                selectedDripStage,
+              });
               showLoadingToast("Generating report", "delivery-report");
             }}
           />
+          {dripStages?.length && (
+            <ContainedSelection
+              label={"Select drip stages"}
+              data={
+                activeTab === CampaignParticipantsTabs.INFO
+                  ? [{ value: "all", label: "All" }, ...dripStages]
+                  : dripStages
+              }
+              onChange={setSelectedDripStage}
+              value={selectedDripStage}
+              placeholder="select stage"
+              size="xs"
+              style={{ marginLeft: "auto" }}
+            />
+          )}
         </Group>
         <Alert
           variant="filled"
@@ -385,15 +428,36 @@ const StartCampaignCard = ({
 
   return (
     <>
-      {campaign?.status !== CampaignStatus.SCHEDULED && (
+      {campaign?.type !== CampaignType.DRIP ? (
+        campaign?.status !== CampaignStatus.SCHEDULED && (
+          <Button
+            variant="outline"
+            radius={"xl"}
+            disabled={!participantCount}
+            onClick={toggle}
+            rightSection={<IconSend size={16} />}
+          >
+            {startCampaign ? translations["Resend"] : translations["Send"]}
+          </Button>
+        )
+      ) : (
         <Button
           variant="outline"
           radius={"xl"}
           disabled={!participantCount}
-          onClick={toggle}
+          onClick={() => {
+            sendMutation.mutate({
+              status:
+                campaign?.status === CampaignStatus.INACTIVE
+                  ? CampaignStatus.ACTIVE
+                  : CampaignStatus.INACTIVE,
+              statuses: [],
+              type: campaign?.type,
+            });
+          }}
           rightSection={<IconSend size={16} />}
         >
-          {startCampaign ? translations["Resend"] : translations["Send"]}
+          {campaign?.status === CampaignStatus.INACTIVE ? "Start" : " Pause"}
         </Button>
       )}
 
@@ -455,94 +519,203 @@ const StartCampaignCardRightSection = ({
 }) => {
   const { translations } = useTranslations();
   const router = useRouter();
+  const [editModalOpened, { open: openEditModal, close: closeEditModal }] =
+    useDisclosure(false);
+
   if (isPending) return <Skeleton w={"100%"} h={147} />;
   if (!campaign) return null;
+
   return (
-    <PaperLayout radius={"md"}>
-      <Group justify="space-between">
+    <>
+      <PaperLayout radius={"md"}>
+        <Group justify="space-between">
+          <Box flex={1}>
+            <Title order={2} mb="sm">
+              {campaign.name}
+            </Title>
+            <Group gap="md" mb="sm">
+              <Badge variant="light" size="lg">
+                {campaign.type === "DRIP"
+                  ? "Drip Campaign"
+                  : "WhatsApp Campaign"}
+              </Badge>
+              <Badge variant="outline" size="lg">
+                {campaignInfo?.team}
+              </Badge>
+            </Group>
+            <Text size="sm" c="dimmed">
+              {campaign.type === "DRIP"
+                ? `${campaign.dripStages?.length || 0} stage automation`
+                : `Template: ${campaignInfo?.template}`}
+            </Text>
+          </Box>
+
+          <Stack align="flex-end">
+            <Group>
+              <Tooltip label={translations["Refresh data"]}>
+                <ActionIcon
+                  variant="light"
+                  aria-label={translations["refresh"]}
+                  onClick={() => refetchCampaign()}
+                >
+                  <IconRefresh
+                    style={{ width: "90%", height: "90%" }}
+                    stroke={1.5}
+                  />
+                </ActionIcon>
+              </Tooltip>
+
+              <Button
+                variant="light"
+                size="sm"
+                onClick={openEditModal}
+                leftSection={<IconSettings size={16} />}
+              >
+                Edit Campaign
+              </Button>
+            </Group>
+
+            {campaignInfo?.flowId && (
+              <Button
+                variant="light"
+                size="sm"
+                onClick={() =>
+                  router.push(
+                    `whatsapp/flows/v${campaignInfo.flowVersion ?? 1}/${campaignInfo.flowId}}?tab=Result`,
+                  )
+                }
+                leftSection={<IconEye size={16} />}
+              >
+                View Responses
+              </Button>
+            )}
+          </Stack>
+        </Group>
+      </PaperLayout>
+
+      <Modal
+        opened={editModalOpened}
+        onClose={closeEditModal}
+        size="xl"
+        centered
+        padding={0}
+        radius="lg"
+        title={null}
+        overlayProps={{ opacity: 0.5, blur: 4 }}
+      >
         <CreateCampaignModal
           isEdit={true}
           campaign={campaign}
-          close={() => {}}
+          close={closeEditModal}
           dynamicVariables={dynamicVariables}
         />
-        <Stack>
-          <Group>
-            <Tooltip label={translations["Refresh data"]}>
-              <ActionIcon
-                variant="light"
-                aria-label={translations["refresh"]}
-                onClick={() => refetchCampaign()}
-              >
-                <IconRefresh
-                  style={{ width: "90%", height: "90%" }}
-                  stroke={1.5}
-                />
-              </ActionIcon>
-            </Tooltip>
-            <Badge variant="outline" size="xl">
-              {campaignInfo?.team}
-            </Badge>
-          </Group>
-          {campaignInfo?.flowId && (
-            <RateupButtonPrimary
-              title="View Responses"
-              rightIcon={<IconEye size={14} />}
-              size="xs"
-              variant="light"
-              onClick={() =>
-                router.push(
-                  `whatsapp/flows/v${campaignInfo.flowVersion ?? 1}/${campaignInfo.flowId}}?tab=Result`,
-                )
-              }
-            />
-          )}
-        </Stack>
-      </Group>
-    </PaperLayout>
+      </Modal>
+    </>
   );
 };
 const CampaignInfoCard = ({ participantCount, stats, flowId, isPending }) => {
   const { translations } = useTranslations();
   const statsArray = [
-    { label: translations["Participants"], count: participantCount },
-    { label: translations["Pending"], count: stats?.countPending },
-    { label: translations["Sent"], count: stats?.countSent },
-    { label: translations["Delivered"], count: stats?.countDelivered },
-    { label: translations["Read"], count: stats?.countRead },
-    { label: translations["Failed"], count: stats?.countFailed, color: "red" },
-    // { label: "Responded", count: responseCount ?? 0 },
+    {
+      key: "participants",
+      label: translations["Participants"],
+      count: participantCount,
+      color: "gray",
+      icon: <IconInfoCircle size={22} />,
+    },
+    {
+      key: "pending",
+      label: translations["Pending"],
+      count: stats?.countPending,
+      color: "yellow",
+      icon: <IconRefresh size={22} />,
+    },
+    {
+      key: "sent",
+      label: translations["Sent"],
+      count: stats?.countSent,
+      color: "blue",
+      icon: <IconSend size={22} />,
+    },
+    {
+      key: "delivered",
+      label: translations["Delivered"],
+      count: stats?.countDelivered,
+      color: "teal",
+      icon: <IconEye size={22} />,
+    },
+    {
+      key: "read",
+      label: translations["Read"],
+      count: stats?.countRead,
+      color: "green",
+      icon: <IconEye size={22} />,
+    },
+    {
+      key: "failed",
+      label: translations["Failed"],
+      count: stats?.countFailed,
+      color: "red",
+      icon: <IconX size={22} />,
+    },
   ];
+
   if (flowId) {
     statsArray.push({
+      key: "completed",
       label: translations["Completed"],
       count: stats?.countCompleted,
+      color: "grape",
+      icon: <IconSettings size={22} />,
     });
   }
-  return (
-    <SimpleGrid cols={{ base: 2, lg: 3 }} m={"xl"}>
-      {statsArray.map((item) => (
-        <Stack key={item.label} gap={0} align="center">
-          {isPending ? (
-            <Skeleton w={20} h={25} my={"xs"} />
-          ) : (
-            <Text fw={600} fz={30}>
-              {item.count}
-            </Text>
-          )}
 
-          <Badge
-            variant="light"
-            radius={"md"}
-            color={item.color}
-            fullWidth
-            p={"lg"}
+  return (
+    <PaperLayout mt={"sm"}>
+      <Title order={3} mb="lg" ta="center" c="dimmed">
+        Campaign Statistics
+      </Title>
+      <SimpleGrid cols={{ base: 2, sm: 3, lg: 4 }} spacing="lg">
+        {statsArray.map((item) => (
+          <Box
+            key={item.label}
+            p="md"
+            style={{
+              border: `1px solid var(--mantine-color-${item.color}-3)`,
+              borderRadius: "var(--mantine-radius-md)",
+              backgroundColor: `var(--mantine-color-${item.color}-0)`,
+              transition: "all 0.2s ease",
+              cursor: "default",
+            }}
+            className={styles.statCard || ""}
           >
-            {item.label}
-          </Badge>
-        </Stack>
-      ))}
-    </SimpleGrid>
+            <Stack gap="xs" align="center">
+              {/* <Text fz={24}>
+                {item.icon}
+              </Text> */}
+
+              {isPending ? (
+                <Skeleton w={40} h={32} radius="sm" />
+              ) : (
+                <Text fw={700} fz={28} c={`${item.color}.7`} lh={1}>
+                  {item.count?.toLocaleString() || 0}
+                </Text>
+              )}
+
+              <Text
+                size="sm"
+                fw={500}
+                c={`${item.color}.8`}
+                ta="center"
+                lh={1.2}
+              >
+                {item.label}
+              </Text>
+            </Stack>
+          </Box>
+        ))}
+      </SimpleGrid>
+    </PaperLayout>
   );
 };
 
