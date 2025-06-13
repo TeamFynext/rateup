@@ -507,7 +507,7 @@ export default function Layout({ children, appProps }) {
   useEffect(() => {
     if (inboxCount) {
       const { assignedTeamWiseCount, ...rest } = inboxCount;
-      if (filter.assignedTeams.length) {
+      if (filter.assignedTeams && filter.assignedTeams?.length) {
         setTotalCount({
           ...rest,
           assigned: assignedTeamWiseCount.reduce((count, t) => {
