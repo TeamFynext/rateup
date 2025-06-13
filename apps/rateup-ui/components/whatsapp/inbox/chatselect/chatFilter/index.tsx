@@ -124,10 +124,7 @@ export default function WaInboxChatFilter({ tab }: Props) {
     if (tab === WaMessageAssignStatusTab.NEW && filter.newStatuses.length) {
       count += filter.newStatuses.length;
     }
-    if (
-      ["Assigned", "AssignedToMe"].includes(tab) &&
-      filter.assignedTeams.length
-    ) {
+    if (["Assigned", "AssignedToMe"].includes(tab) && filter.assignedTeams) {
       count += filter.assignedTeams.length;
     }
     return count;
@@ -144,6 +141,7 @@ export default function WaInboxChatFilter({ tab }: Props) {
         WaMessageAssignStatus.ASSIGNED,
         WaMessageAssignStatus.UNASSIGNED,
       ],
+      assignedTeams: [],
     });
   }
 
@@ -221,7 +219,7 @@ export default function WaInboxChatFilter({ tab }: Props) {
           {["Assigned", "AssignedToMe"].includes(tab) && (
             <ContainedMultiSelect
               radius="md"
-              value={filter.assignedTeams}
+              value={filter.assignedTeams || []}
               onChange={(values) =>
                 setFilter({
                   ...filter,
