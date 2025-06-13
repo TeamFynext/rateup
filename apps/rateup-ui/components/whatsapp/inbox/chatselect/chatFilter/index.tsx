@@ -16,6 +16,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
+import { useTeamsByUser } from "@/backend/team/team.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
@@ -36,6 +37,7 @@ export type ChatFilter = {
   waMessageAssignStatus?: string;
   blockedUsers: boolean;
   newStatuses: string[];
+  assignedTeams: string[];
 };
 interface Props {
   tab: string;
@@ -46,6 +48,12 @@ export default function WaInboxChatFilter({ tab }: Props) {
   const { filter, setFilter } = useChatFilterStore();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { translations } = useTranslations();
+  const {
+    data: teamRes,
+    isLoading: teamsLoading,
+    isError,
+    error: teamsError,
+  } = useTeamsByUser();
   if (isLoading) {
     return <Loader size={"xs"} />;
   }
@@ -61,6 +69,11 @@ export default function WaInboxChatFilter({ tab }: Props) {
     ...filter?.campaigns,
     ...filter?.tags,
   ];
+
+  const teamOptions = teamRes.data?.map((team) => ({
+    value: team?.id,
+    label: team?.name,
+  }));
 
   function multiSelectOnChange(cf: ChatFilter, value: Array<MultiGV>) {
     const current_filter = { contactGroups: [], campaigns: [], tags: [] };
@@ -106,8 +119,14 @@ export default function WaInboxChatFilter({ tab }: Props) {
     if (filter.strictFilter !== false) {
       count += 1;
     }
-    if (filter.newStatuses.length) {
+    if (tab === WaMessageAssignStatusTab.NEW && filter.newStatuses.length) {
       count += filter.newStatuses.length;
+    }
+    if (
+      ["Assigned", "AssignedToMe"].includes(tab) &&
+      filter.assignedTeams.length
+    ) {
+      count += filter.assignedTeams.length;
     }
     return count;
   }
@@ -197,6 +216,21 @@ export default function WaInboxChatFilter({ tab }: Props) {
               }
             />
           )}
+          {["Assigned", "AssignedToMe"].includes(tab) && (
+            <ContainedMultiSelect
+              radius="md"
+              value={filter.assignedTeams}
+              onChange={(values) =>
+                setFilter({
+                  ...filter,
+                  assignedTeams: values,
+                })
+              }
+              placeholder={translations["Select teams (type in to search)"]}
+              data={teamOptions}
+              searchable
+            />
+          )}
         </Stack>
       </HoverCardDropdown>
     </HoverCard>
@@ -224,6 +258,7 @@ export const useChatFilterStore = create<ChatFilterStore>()(
           WaMessageAssignStatus.ASSIGNED,
           WaMessageAssignStatus.UNASSIGNED,
         ],
+        assignedTeams: [],
       },
       setFilter: (value) => set({ filter: value }),
     }),
