@@ -54,7 +54,7 @@ export default function WaInboxChatFilter({ tab }: Props) {
     isError,
     error: teamsError,
   } = useTeamsByUser();
-  if (isLoading) {
+  if (isLoading || teamsLoading) {
     return <Loader size={"xs"} />;
   }
   if (error) {
@@ -70,10 +70,12 @@ export default function WaInboxChatFilter({ tab }: Props) {
     ...filter?.tags,
   ];
 
-  const teamOptions = teamRes.data?.map((team) => ({
-    value: team?.id,
-    label: team?.name,
-  }));
+  const teamOptions = teamRes
+    ? teamRes.data?.map((team) => ({
+        value: team?.id,
+        label: team?.name,
+      }))
+    : [];
 
   function multiSelectOnChange(cf: ChatFilter, value: Array<MultiGV>) {
     const current_filter = { contactGroups: [], campaigns: [], tags: [] };
