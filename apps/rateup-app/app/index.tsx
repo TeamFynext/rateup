@@ -2,20 +2,10 @@ import { View, Text, ActivityIndicator } from "react-native";
 import React, { useEffect, useState } from "react";
 import { checkAuth } from "@/src/utils/checkAuth";
 import { useRouter } from "expo-router";
-import * as Notifications from "expo-notifications";
 
 const index = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-//   Notifications.setNotificationHandler({
-//     handleNotification: async () => ({
-//       shouldShowAlert: true,
-//       shouldPlaySound: true,
-//       shouldSetBadge: true,
-//     }),
-//   });
-
 
   useEffect(() => {
     const init = async () => {

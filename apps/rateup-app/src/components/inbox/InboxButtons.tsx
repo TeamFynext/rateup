@@ -8,6 +8,7 @@ import {
   RefreshIcon,
 } from "@/src/constants/imageExports";
 import { registerForPushNotificationsAsync } from "@/src/utils/notification";
+import { deleteToken } from "@/src/api/notification";
 
 const InboxButtons = ({
   activeFilterCount = 0,
@@ -21,8 +22,6 @@ const InboxButtons = ({
 
   const handleRefresh = async() => {
     if (isRotating) return;
-    // const token = await registerForPushNotificationsAsync();
-    // console.log(token);
     setIsRotating(true);
     queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
 

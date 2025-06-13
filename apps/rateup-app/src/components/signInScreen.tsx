@@ -46,11 +46,11 @@ export default function SignInScreen({
       const { userId, orgId } = userData;
       setUserId(userId);
       setOrgId(orgId);
-      // const token = await registerForPushNotificationsAsync();
-      // if(token){
-      //   await addToken(token)
-      //   console.log("Added Token");
-      // }
+      const token = await registerForPushNotificationsAsync();
+      if(token){
+        await addToken(token)
+        console.log("Added Token");
+      }
       router.replace("/protected/Home");
       setLoading(false);
     }
