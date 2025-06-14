@@ -134,6 +134,7 @@ export async function handleWaMessages(
         message: waMessage,
       },
     });
+    return waMessage;
   } catch (error) {
     log.error("Error in handleWaMessages: %o", error);
     log.error(error);

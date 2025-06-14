@@ -390,7 +390,7 @@ async function whatsappMessageHandler(
         ?.display_phone_number;
   }
 
-  await handleWaMessages(
+  const messageObj = await handleWaMessages(
     "receive",
     completeMessageObject,
     from,
@@ -401,7 +401,7 @@ async function whatsappMessageHandler(
     waMessage?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
   );
   if (type === WaMessageTypes.order) {
-    await handleWaOrderfromCatalog(completeMessageObject);
+    await handleWaOrderfromCatalog(completeMessageObject, messageObj);
   }
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);

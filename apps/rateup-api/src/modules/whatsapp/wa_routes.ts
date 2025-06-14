@@ -16,6 +16,7 @@ import { handleWhatsappError } from "./wa_error_handler";
 import { waCatalogRoutes } from "./catalog/catalog.route";
 import { catalogProductSchema } from "./catalog/products/product.schema";
 import { waCatalogSchemas } from "./catalog/catalog.schema";
+import { waCatalogOrderSchemas } from "./catalog/orders/catalogOrder.schema";
 
 export async function whatsappRoutes(server: FastifyInstance) {
   const modules = [
@@ -25,6 +26,7 @@ export async function whatsappRoutes(server: FastifyInstance) {
     waAutomatedReplySchemas,
     catalogProductSchema,
     waCatalogSchemas,
+    waCatalogOrderSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {

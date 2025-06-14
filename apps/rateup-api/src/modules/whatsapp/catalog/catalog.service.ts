@@ -1,4 +1,4 @@
-import { WhatsappSettings } from "@prisma/client";
+import { Contact, WaMessage, WhatsappSettings } from "@prisma/client";
 import prisma from "../../../utils/prisma";
 import { callWhatsappApi } from "../wa_axios";
 import { UpdateCatalogSchema } from "./catalog.schema";
@@ -21,10 +21,6 @@ export async function getWaCatalog(catalogId) {
   return await prisma.whatsappCatalog.findUnique({
     where: {
       catalogId,
-    },
-    select: {
-      catalogId: true,
-      vertical: true,
     },
   });
 }
@@ -100,9 +96,6 @@ export async function getWaCatalogsByOrg(orgId) {
     where: {
       orgId,
     },
-    omit: {
-      products: true,
-    },
   });
 }
 
@@ -115,19 +108,11 @@ export async function getConnectedWaCatalog(orgId) {
   });
 }
 
-export async function handleWaOrderfromCatalog(data: WaReceiveMessageBody) {
+export async function handleWaOrderfromCatalog(
+  data: WaReceiveMessageBody,
+  messageObj: WaMessage,
+) {
   const order = data.messages[0].order;
-  const orderObj = {
-    catalogId: order.catalog_id,
-    products: order.product_items.map((p) => ({
-      retailerId: p.product_retailer_id,
-      currency: p.currency,
-      price: p.item_price,
-      quantity: p.quantity,
-    })),
-    paymentStatus: "Pending",
-    status: "Pending",
-  } as WaCatalogOrder;
   const catalog = await prisma.whatsappCatalog.findUnique({
     where: {
       catalogId: order.catalog_id,
@@ -137,14 +122,18 @@ export async function handleWaOrderfromCatalog(data: WaReceiveMessageBody) {
     log.trace("catalog not synced yet => %s", order.catalog_id);
     return;
   }
-  const newOrders = [...catalog.orders, orderObj];
-  await prisma.whatsappCatalog.update({
-    where: {
-      catalogId: order.catalog_id,
-    },
+  const newOrder = await prisma.waCatalogOrder.create({
     data: {
-      orders: newOrders as WaCatalogOrder[],
+      catalogId: order.catalog_id,
+      contactId: messageObj.contactId,
+      products: order.product_items.map((p) => ({
+        retailerId: p.product_retailer_id,
+        currency: p.currency,
+        price: p.item_price,
+        quantity: p.quantity,
+      })),
+      createdAt: messageObj.waCreatedAt,
     },
   });
-  log.info("Order placed => %o", orderObj);
+  log.info("Order placed => %o", newOrder);
 }
