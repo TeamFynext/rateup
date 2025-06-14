@@ -98,9 +98,6 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
     ),
   );
 
-  console.log("images", images);
-  console.log("urls", urls);
-
   const newSurveyTheme = produce(surveyTheme, (draft) => {
     if (surveyTheme?.welcomeTheme) {
       delete draft.welcomeTheme.bg.desktopBgImgFile;
