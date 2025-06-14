@@ -1,8 +1,8 @@
 import { Box, CloseButton, SimpleGrid } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDebouncedCallback } from "@mantine/hooks";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -28,29 +28,32 @@ const WOPExtraProps = ({ form }) => {
         .min(2, { message: translations["minimum two segments needed "] }),
       segColors: z.array(z.string()),
     })
-    .superRefine((values, ctx) => {
+    .check((ctx) => {
+      const { value: values } = ctx;
       if (
         !values.imageSrc &&
         values.segColors?.length !== values.segments?.length
       ) {
         ["segments", "segColors"].forEach((data) => {
-          ctx.addIssue({
+          ctx.issues.push({
             path: [data],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message:
               translations[
                 "Segments and segColors should have equal number of data"
               ],
+            input: "",
           });
         });
       }
       try {
         values.imageSrc && new URL(values.imageSrc);
       } catch (error) {
-        ctx.addIssue({
+        ctx.issues.push({
           path: ["imageSrc"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: translations["image url should be valid"],
+          input: "",
         });
       }
     });
@@ -63,7 +66,7 @@ const WOPExtraProps = ({ form }) => {
 
   const wopForm = useForm({
     initialValues: form.values.wop || DEFAULT_WOP,
-    validate: zodResolver(schema),
+    validate: zod4Resolver(schema),
     onValuesChange: handleWop,
   });
 

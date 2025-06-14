@@ -22,8 +22,8 @@ import {
 } from "@tabler/icons-react";
 import clsx from "clsx";
 import dayjs from "dayjs";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import { IntegratedApps } from "@/types/enums";
 import {
@@ -103,14 +103,14 @@ const WhatsappPayment = () => {
       merchant_category_code: "0000",
       provider_name: Providers.razorpay,
     },
-    validate: zodResolver(schema),
+    validate: zod4Resolver(schema),
   });
   const getConfigForm = useForm<z.infer<typeof getConfigSchema>>({
     mode: "uncontrolled",
     initialValues: {
       configuration_name: "",
     },
-    validate: zodResolver(getConfigSchema),
+    validate: zod4Resolver(getConfigSchema),
   });
   if (isPending) <RateupLoader />;
   const handleSubmit = () => {

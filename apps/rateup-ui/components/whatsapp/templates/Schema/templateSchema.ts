@@ -1,5 +1,5 @@
 import { isValidPhoneNumber } from "react-phone-number-input";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import {
   OrderType,
@@ -24,9 +24,16 @@ const ACCEPTED_MIME_TYPES = [
 export const configSchema = z.object({
   price: z.number().min(0),
   tax: z.number().min(0),
-  orderType: z.nativeEnum(OrderType).nullable().optional(),
+  orderType: z.enum(OrderType).nullable().optional(),
   name: z.string().min(1).max(60),
 });
+
+const allowedMimesforMediaCarousel = [
+  "image/png",
+  "image/jpg",
+  "image/jpeg",
+  "video/mp4",
+];
 export const templateSchema = z
   .object({
     name: z
@@ -43,22 +50,24 @@ export const templateSchema = z
     header: z.union([
       z.null(),
       z.string().trim().min(1),
-      z.instanceof(File).superRefine((f, ctx) => {
-        if (!ACCEPTED_MIME_TYPES.includes(f.type)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+      z.instanceof(File).check((ctx) => {
+        if (!ACCEPTED_MIME_TYPES.includes(ctx.value.type)) {
+          ctx.issues.push({
+            input: "",
+            code: "custom",
             message: `File must be one of [${ACCEPTED_MIME_TYPES.join(
               ", ",
-            )}] but was ${f.type}`,
+            )}] but was ${ctx.value.type}`,
           });
         }
-        if (f.size > FILE_SIZE * MB_BYTES) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.too_big,
-            type: "array",
+        if (ctx.value.size > FILE_SIZE * MB_BYTES) {
+          ctx.issues.push({
+            input: "",
+            code: "too_big",
             message: `The file must not be larger than ${FILE_SIZE} MB`,
             maximum: FILE_SIZE * MB_BYTES,
             inclusive: true,
+            origin: "file",
           });
         }
       }),
@@ -70,25 +79,27 @@ export const templateSchema = z
         z.object({
           text: z.string().max(25).optional(),
           type: z.string(),
-          example: z.union([
-            z
-              .string()
-              .max(15)
-              .refine((text) => !text.includes(" "), {
-                message: "Name cannot contain spaces",
-              })
-              .optional(),
-            z.array(
+          example: z
+            .union([
               z
                 .string()
-                .trim()
-                .min(1)
-                .max(2000)
+                .max(15)
                 .refine((text) => !text.includes(" "), {
-                  message: "websurvey example cannot contain spaces",
-                }),
-            ),
-          ]),
+                  message: "Name cannot contain spaces",
+                })
+                .optional(),
+              z.array(
+                z
+                  .string()
+                  .trim()
+                  .min(1)
+                  .max(2000)
+                  .refine((text) => !text.includes(" "), {
+                    message: "websurvey example cannot contain spaces",
+                  }),
+              ),
+            ])
+            .optional(),
           phone_number: z
             .string()
             .max(25)
@@ -101,9 +112,9 @@ export const templateSchema = z
         }),
       )
       .max(10),
-    status: z.nativeEnum(WaTemplateStatus),
+    status: z.enum(WaTemplateStatus),
     example: z.array(z.string().trim()).optional(),
-    templateType: z.nativeEnum(TemplateType),
+    templateType: z.enum(TemplateType),
     mediaCarousel: z
       .array(
         z.object({
@@ -111,28 +122,21 @@ export const templateSchema = z
           header: z.union([
             z.null(),
             z.string().trim().min(1),
-            z.instanceof(File).superRefine((f, ctx) => {
-              const allowed = [
-                "image/png",
-                "image/jpg",
-                "image/jpeg",
-                "video/mp4",
-              ];
-              if (!allowed.includes(f.type)) {
-                ctx.addIssue({
-                  code: z.ZodIssueCode.custom,
-                  message: `File must be one of [${allowed.join(
+            z.instanceof(File).check((ctx) => {
+              if (!allowedMimesforMediaCarousel.includes(ctx.value.type)) {
+                ctx.issues.push({
+                  input: ctx.value,
+                  code: "custom",
+                  message: `File must be one of [${allowedMimesforMediaCarousel.join(
                     ", ",
-                  )}] but was ${f.type}`,
+                  )}] but was ${ctx.value.type}`,
                 });
               }
-              if (f.size > FILE_SIZE * MB_BYTES) {
-                ctx.addIssue({
-                  code: z.ZodIssueCode.too_big,
-                  type: "array",
+              if (ctx.value.size > FILE_SIZE * MB_BYTES) {
+                ctx.issues.push({
+                  input: ctx.value,
+                  code: "custom",
                   message: `The file must not be larger than ${FILE_SIZE} MB`,
-                  maximum: FILE_SIZE * MB_BYTES,
-                  inclusive: true,
                 });
               }
             }),
@@ -253,7 +257,8 @@ export const templateSchema = z
       })
       .optional(),
   })
-  .superRefine((values, ctx) => {
+  .check((ctx) => {
+    const { value: values, issues } = ctx;
     const format = values.format;
     const value = values.header;
     let errorMessage = "";
@@ -262,37 +267,41 @@ export const templateSchema = z
     const documentType = [...imageType, ...videoType, "application/pdf"];
     values.buttons?.map((data, index) => {
       if (data.text?.trim()?.length === 0) {
-        ctx.addIssue({
+        issues.push({
           path: ["buttons", index, "text"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Button text is required",
+          input: values,
         });
       }
       switch (data.type) {
         case WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE:
           if (!data.url) {
-            ctx.addIssue({
+            issues.push({
               path: ["buttons", index, "url"],
-              code: z.ZodIssueCode.custom,
+              code: "custom",
               message: "website url is required",
+              input: data.url,
             });
           }
           break;
         case WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE:
           if (!data.example) {
-            ctx.addIssue({
-              path: ["buttons", index, "example"],
-              code: z.ZodIssueCode.custom,
+            issues.push({
+              input: data.example,
+              code: "custom",
               message: "Offer code is required",
+              path: ["buttons", index, "example"],
             });
           }
           break;
         case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
           if (!isValidPhoneNumber(data?.phone_number ?? "")) {
-            ctx.addIssue({
-              path: ["buttons", index, "phone_number"],
-              code: z.ZodIssueCode.custom,
+            issues.push({
+              input: data?.phone_number,
+              code: "custom",
               message: "Invalid phone number",
+              path: ["buttons", index, "phone_number"],
             });
           }
           break;
@@ -314,25 +323,28 @@ export const templateSchema = z
           ) {
             errormsg = "Fill out the sections";
           } else if (format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.NONE) {
-            ctx.addIssue({
+            issues.push({
+              input: format,
               path: ["header"],
-              code: z.ZodIssueCode.custom,
+              code: "custom",
               message: "Header is required for templates with a MPM button",
             });
           }
           if (errormsg) {
-            ctx.addIssue({
+            issues.push({
+              input: "",
               path: ["buttons", index],
-              code: z.ZodIssueCode.custom,
+              code: "custom",
               message: "Fill out the sections",
             });
           }
           break;
         case WHATSAPP_BUTTON_TYPE.SPM:
           if (!values.defaultValues.catalog.spm.product_retailer_id) {
-            ctx.addIssue({
+            issues.push({
+              input: "",
               path: ["buttons", index],
-              code: z.ZodIssueCode.custom,
+              code: "custom",
               message: "product retailer id required",
             });
           }
@@ -365,10 +377,11 @@ export const templateSchema = z
       errorMessage = "Header Text Needed";
     }
     if (errorMessage)
-      ctx.addIssue({
+      issues.push({
         path: ["header"],
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: errorMessage,
+        input: "",
       });
 
     if (
@@ -376,26 +389,29 @@ export const templateSchema = z
       values.mediaCarousel.length
     ) {
       if (values.mediaCarousel.length < 2) {
-        ctx.addIssue({
+        issues.push({
           path: ["mediaCarousel"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Minimum 2 cards required",
+          input: "",
         });
         return;
       }
       values.mediaCarousel.map((card, index) => {
         const cardHeaerTypeNotString = typeof card.header !== "string";
         if (!card.body.length) {
-          ctx.addIssue({
+          issues.push({
             path: ["mediaCarousel", index],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Every card should have body",
+            input: "",
           });
         } else if (!card.header) {
-          ctx.addIssue({
+          issues.push({
             path: ["mediaCarousel", index],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Every card should have header",
+            input: "",
           });
         } else if (
           card.format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.IMAGE &&
@@ -404,10 +420,11 @@ export const templateSchema = z
           let msg =
             !imageType.includes((card.header as File)?.type) &&
             `Incorrect Type use only ${imageType?.join(",")}`;
-          ctx.addIssue({
+          issues.push({
             path: ["mediaCarousel", index],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: msg,
+            input: "",
           });
         } else if (
           format === WHATSAPP_TEMPLATE_BROADCAST_TYPE.VIDEO &&
@@ -416,16 +433,18 @@ export const templateSchema = z
           let msg =
             !videoType.includes((card.header as File)?.type) &&
             `Incorrect Type use only ${videoType?.join(",")}`;
-          ctx.addIssue({
+          issues.push({
             path: ["mediaCarousel", index],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: msg,
+            input: "",
           });
         } else if (!card.buttons.length) {
-          ctx.addIssue({
+          issues.push({
             path: ["mediaCarousel", index],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Atleast 1 button required",
+            input: "",
           });
         }
       });
@@ -436,20 +455,22 @@ export const templateSchema = z
       values.productCarousel.length
     ) {
       if (values.productCarousel.length < 2) {
-        ctx.addIssue({
+        issues.push({
           path: ["productCarousel"],
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Minimum 2 cards required",
+          input: "",
         });
         return;
       }
       let buttonType = values.productCarousel[0].button.type;
       values.productCarousel.map((card, index) => {
         if (card.button.type !== buttonType) {
-          ctx.addIssue({
+          issues.push({
             path: ["productCarousel", index],
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Every card should have same button action",
+            input: "",
           });
           return;
         }

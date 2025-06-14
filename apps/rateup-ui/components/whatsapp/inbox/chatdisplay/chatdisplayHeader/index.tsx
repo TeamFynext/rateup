@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   ActionIcon,
@@ -6,6 +6,8 @@ import {
   Badge,
   Group,
   Menu,
+  Radio,
+  RadioGroup,
   Skeleton,
   Stack,
   Switch,
@@ -317,6 +319,7 @@ const ChatContactMenu = ({ contact }) => {
 };
 
 export const AssignInbox = ({ contactId, opened, close }) => {
+  const [memberChoice, setMemberChoice] = useState("manual");
   const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
   const { data: assignedUsers } = useGetAssignedUserForContact(contactId);
   const { filterData } = useContactStore();
@@ -329,7 +332,7 @@ export const AssignInbox = ({ contactId, opened, close }) => {
     },
     validate: {
       teamId: isNotEmpty("required"),
-      assignedUserIds: isNotEmpty("required"),
+      assignedUserIds: memberChoice === "manual" && isNotEmpty("required"),
     },
   });
   const members = useMemo(
@@ -345,7 +348,10 @@ export const AssignInbox = ({ contactId, opened, close }) => {
 
   function handleSubmit() {
     if (form.validate().hasErrors) return;
-    assignMut.mutate(form.values, {
+    const values = { ...form.values };
+    if (memberChoice === "all")
+      values.assignedUserIds = members?.map((m) => m.value);
+    assignMut.mutate(values, {
       onSettled: () => {
         onClose();
       },
@@ -383,20 +389,30 @@ export const AssignInbox = ({ contactId, opened, close }) => {
     >
       <Stack>
         <TeamSelector label="Select Team" {...form.getInputProps("teamId")} />
-        <Skeleton visible={isLoading}>
-          <ContainedMultiSelect
-            data={members}
-            styles={{
-              label: {
-                color:
-                  "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))",
-                fontSize: 12,
-              },
-            }}
-            {...form.getInputProps("assignedUserIds")}
-            label={"Select Members"}
-          />
-        </Skeleton>
+        <RadioGroup value={memberChoice} onChange={setMemberChoice}>
+          <Group>
+            <Radio value={"all"} label={"All Members"} />
+            <Radio value={"manual"} label={"Select Manually"} />
+          </Group>
+        </RadioGroup>
+        {memberChoice === "manual" && (
+          <Skeleton visible={isLoading}>
+            <ContainedMultiSelect
+              data={members}
+              styles={{
+                label: {
+                  color:
+                    "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))",
+                  fontSize: 12,
+                },
+              }}
+              {...form.getInputProps("assignedUserIds")}
+              label={"Select Members"}
+              placeholder="click to select"
+              searchable
+            />
+          </Skeleton>
+        )}
       </Stack>
     </FormModalLayout>
   );

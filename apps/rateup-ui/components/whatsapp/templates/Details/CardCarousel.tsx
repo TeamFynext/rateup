@@ -30,7 +30,7 @@ import {
   IconWorld,
   IconX,
 } from "@tabler/icons-react";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";

@@ -21,7 +21,7 @@ import { LengthTracker } from "../../../input/LengthTracker";
 import "react-phone-number-input/style.css";
 
 import { UseFormReturnType } from "@mantine/form";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";

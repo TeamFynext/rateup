@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 
 import { ActionIcon, Box, Group, Skeleton, Stack, Title } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import { IconTrash } from "@tabler/icons-react";
-import { z } from "zod";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { z } from "zod/v4";
 
 import { IntegratedApps } from "@/types/enums";
 import {
@@ -48,7 +49,7 @@ const WpAmelia = () => {
   };
   const form = useForm<z.infer<typeof schema>>({
     initialValues: initialValues,
-    validate: zodResolver(schema),
+    validate: zod4Resolver(schema),
   });
 
   useEffect(() => {

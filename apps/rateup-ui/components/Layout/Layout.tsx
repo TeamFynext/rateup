@@ -41,6 +41,7 @@ import { orgWsMessage } from "../../types/global";
 import NavbarSkeleton from "../animation/skeleton/Navbar.Skeleton";
 import SessionAuth from "../SuperToken/SessionAuth";
 import ColorSchemaButton from "../theme/ColorSchemaButton";
+import { useChatFilterStore } from "../whatsapp/inbox/chatselect/chatFilter";
 import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
 import { getNavTopData } from "./Navbar/navbar.constants";
@@ -498,13 +499,35 @@ export default function Layout({ children, appProps }) {
     });
   }, [linksMapping, navLinks, tab]);
   const { setTotalCount } = useChatContactCountStore();
+  const { filter } = useChatFilterStore();
   const { data: inboxCount, refetch: refetchInboxCount } = useGetInboxUserCount(
     activeMainLink === "Inbox",
   );
 
   useEffect(() => {
-    if (inboxCount) setTotalCount(inboxCount);
-  }, [inboxCount]);
+    if (inboxCount) {
+      const { assignedTeamWiseCount, ...rest } = inboxCount;
+      if (filter.assignedTeams && filter.assignedTeams?.length) {
+        setTotalCount({
+          ...rest,
+          assigned: assignedTeamWiseCount.reduce((count, t) => {
+            count += filter.assignedTeams.includes(t.teamId)
+              ? t.assignedCount
+              : 0;
+            return count;
+          }, 0),
+          assignedToMe: assignedTeamWiseCount.reduce((count, t) => {
+            count += filter.assignedTeams.includes(t.teamId)
+              ? t.assignedToMeCount
+              : 0;
+            return count;
+          }, 0),
+        });
+      } else {
+        setTotalCount(rest);
+      }
+    }
+  }, [inboxCount, filter.assignedTeams]);
 
   const mainLinks = (
     <MainNavLinks
