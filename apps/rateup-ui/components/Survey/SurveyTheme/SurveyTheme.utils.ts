@@ -55,7 +55,7 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
   const welcomeDesktopBgImgFile = welcomeThemeBgObj?.desktopBgImgFile;
   const welcomeMobileBgImgFile = welcomeThemeBgObj?.mobileBgImgFile;
 
-  const thankyouThemeBgObj = surveyTheme?.thankyoukTheme?.bg;
+  const thankyouThemeBgObj = surveyTheme?.thankyouTheme?.bg;
   const thankyouDesktopBgImgUrl = thankyouThemeBgObj?.desktopBg?.imageUrl;
   const thankyouMobileBgImgUrl = thankyouThemeBgObj?.mobileBg?.imageUrl;
   const thankyouDesktopBgImgFile = thankyouThemeBgObj?.desktopBgImgFile;
@@ -97,6 +97,9 @@ export async function destructureThemeAndUploadImagesIfAny(surveyTheme) {
         : Promise.resolve(image),
     ),
   );
+
+  console.log("images", images);
+  console.log("urls", urls);
 
   const newSurveyTheme = produce(surveyTheme, (draft) => {
     if (surveyTheme?.welcomeTheme) {
