@@ -163,30 +163,6 @@ const CatalogOrders = ({ catalogId }) => {
             columns={productItemsColumns}
             rows={productItems}
           />
-          {/* <PaperLayout>
-              
-              {selectedOrder?.products?.map((item) => (
-              <Stack  gap={"xs"} key={item.retailerId}>
-                <Text size="sm" c="dimmed">
-                  <Text component="span" c="black">Product Retailer ID: </Text>
-                   {item?.retailerId}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  <Text component="span" c="black">Quantity:  </Text>
-                  {item?.quantity}
-                </Text>
-                <Text size="sm" c="dimmed">
-                   <Text component="span" c="black">Product Price: </Text>
-                  {item?.currency} {item?.price}
-                </Text>
-                <Text size="sm" fw={500}>
-                  Total: {item?.currency} {item?.price * item?.quantity}
-                </Text>
-                <Divider />
-              </Stack>
-            ))}
-            </PaperLayout> */}
-
           <Text fw={600}>
             Grand Total: {selectedOrder?.products?.[0]?.currency} {totalPrice}
           </Text>
