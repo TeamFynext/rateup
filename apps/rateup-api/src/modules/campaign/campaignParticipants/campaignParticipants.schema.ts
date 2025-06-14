@@ -44,6 +44,7 @@ const campaginParticipantPaginateSchema = z.object({
   consent: z.string().optional(),
   sentAt: z.string().optional(),
   createdAt: z.string().optional(),
+  selectedDripStage: z.string().optional(),
 });
 
 const paginateQuerySchema = paginationQuery.merge(

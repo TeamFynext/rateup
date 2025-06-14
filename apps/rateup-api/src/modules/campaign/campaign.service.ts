@@ -12,23 +12,16 @@ import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 import xlsx from "node-xlsx";
 import { getCampaignParticipantsByCampaignId } from "./campaignParticipants/campaignParticipants.service";
 import { Prisma } from "@prisma/client";
-import { Queue } from "bullmq";
 
-import IORedis from "ioredis";
 import {
   WaTemplateComponent,
   WHATSAPP_BUTTON_TYPE,
 } from "../../types/whatsapp.types";
-
-const redisURL = new URL(process.env.REDIS_URL);
-const redisConnection = new IORedis({
-  family: 0,
-  host: redisURL.hostname,
-  port: parseInt(redisURL.port),
-  username: redisURL.username,
-  password: redisURL.password,
-  maxRetriesPerRequest: null,
-});
+import {
+  getCampaignCount,
+  waCampaignDequeue,
+  waCampaignEnqueue,
+} from "../../utils/redisConnection";
 
 export interface WaMessageStats {
   read?: boolean;
@@ -230,10 +223,22 @@ export async function getCampaignById(campaignId: string) {
   //   },
   // };
 
-  const campaign =
-    await prisma.$queryRaw`SELECT c.*, wt."data" as "templateData", t."name" as "teamName", wf."version" as "flowVersion" FROM "Campaign" c 
-  LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" LEFT JOIN "Team" t ON t.id = c."teamId"
-  LEFT JOIN "WaFlow" wf ON wf."dbFlowId" = NULLIF(c."flowId",'')::uuid WHERE c.id = ${campaignId}::uuid;`;
+  const campaign = await prisma.$queryRaw`
+      SELECT 
+        c.*, 
+        wt."data" as "templateData", 
+        t."name" as "teamName", 
+        wf."version" as "flowVersion",
+        (
+          SELECT COALESCE(json_agg(cds), '[]'::json)
+          FROM "CampaignDripStage" cds
+          WHERE cds."campaignId" = c.id
+        ) as "dripStages"
+      FROM "Campaign" c 
+      LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" 
+      LEFT JOIN "Team" t ON t.id = c."teamId"
+      LEFT JOIN "WaFlow" wf ON wf."dbFlowId" = NULLIF(c."flowId",'')::uuid 
+      WHERE c.id = ${campaignId}::uuid`;
   return campaign[0];
 }
 
@@ -284,6 +289,7 @@ export async function getCampaignsByOrgId(orgId: string) {
   c."createdAt",
   c."status",
   c."teamId",
+  c.type,
   t."name" AS "teamName",
   COUNT(cp.id)::INTEGER AS "campaignParticipantsCount"
 FROM "Campaign" c
@@ -314,6 +320,16 @@ export async function createCampaign(data: CreateCampaignInput) {
       whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
     },
   });
+  await prisma.campaignDripStage.createMany({
+    data:
+      data.dripStages?.map((step) => ({
+        campaignId: campaign.id,
+        waTemplateId: step.templateId,
+        delay: step.delay,
+        delayUnit: step.delayUnit,
+        sendAtTime: step.sendAtTime,
+      })) ?? [],
+  });
   await prisma.campaignStats.create({
     data: {
       campaignId: campaign.id,
@@ -326,12 +342,88 @@ export async function updateCampaign(
   campaignId: string,
   data: UpdateCampaignInput,
 ) {
-  return await prisma.campaign.update({
+  const { dripStages, startedAt, ...rest } = data;
+
+  if (startedAt) {
+    const existingCampaign = await prisma.campaign.findUnique({
+      where: {
+        id: campaignId,
+        startedAt: null,
+      },
+    });
+    if (existingCampaign) {
+      await prisma.campaign.update({
+        where: {
+          id: campaignId,
+        },
+        data: {
+          startedAt,
+        },
+      });
+    }
+  }
+
+  // Update the campaign basic info
+  const updatedCampaign = await prisma.campaign.update({
     where: {
       id: campaignId,
     },
-    data,
+    data: rest,
   });
+
+  // Handle drip steps if provided
+  if (dripStages) {
+    // Get existing drip stages for this campaign
+    const existingDripStages = await prisma.campaignDripStage.findMany({
+      where: { campaignId },
+    });
+
+    // Create a map of existing stages by ID for quick lookup
+    const existingStagesMap = new Map(
+      existingDripStages.map((stage) => [stage.id, stage]),
+    );
+
+    // Process each drip step
+    for (const step of dripStages) {
+      if (step.id) {
+        // Update existing drip stage
+        await prisma.campaignDripStage.update({
+          where: { id: step.id },
+          data: {
+            waTemplateId: step.templateId,
+            delay: step.delay,
+            delayUnit: step.delayUnit,
+            sendAtTime: step.sendAtTime || null,
+          },
+        });
+        // Remove from map to track which ones to delete later
+        existingStagesMap.delete(step.id);
+      } else {
+        // Create new drip stage
+        await prisma.campaignDripStage.create({
+          data: {
+            campaignId,
+            waTemplateId: step.templateId,
+            delay: step.delay,
+            delayUnit: step.delayUnit,
+            sendAtTime: step.sendAtTime || null,
+          },
+        });
+      }
+    }
+
+    // Delete drip stages that weren't in the update
+    const stageIdsToDelete = Array.from(existingStagesMap.keys());
+    if (stageIdsToDelete.length > 0) {
+      await prisma.campaignDripStage.deleteMany({
+        where: {
+          id: { in: stageIdsToDelete },
+        },
+      });
+    }
+  }
+
+  return updatedCampaign;
 }
 
 export async function deleteCampaign(campaignId: string) {
@@ -469,8 +561,11 @@ export const getResponseByCampaignById = async (id: string) => {
   return responsesWithTitles;
 };
 
-export const getResponseExcelByCampaignById = async (id: string) => {
-  const stats = await getCampaginStatsById(id);
+export const getResponseExcelByCampaignById = async (
+  id: string,
+  selectedDripStage?: string,
+) => {
+  const stats = await getCampaginStatsById(id, selectedDripStage);
   const pageSize = 10000; // Number of records per batch
   let page = 0;
   let hasMoreRecords = true;
@@ -481,26 +576,58 @@ export const getResponseExcelByCampaignById = async (id: string) => {
   });
 
   while (hasMoreRecords) {
-    const batch = (await prisma.$queryRaw`
-      SELECT 
-        cp."createdAt",
-        c."name" as "contactName",
-        c."phone" as "contactPhone",
-        cp."status",
-        cp."sentAt"
-      FROM "CampaignParticipant" cp
-      LEFT JOIN "Contact" c ON cp."contactId" = c.id
-      WHERE cp."campaignId" = ${id}::uuid
-      ORDER BY cp."createdAt" DESC
-      LIMIT ${pageSize}
-      OFFSET ${page * pageSize}
-    `) as Array<{
+    let batch: Array<{
       createdAt: Date;
       contactName: string;
       contactPhone: string;
       status: CampaignParticipantStatus;
       sentAt: Date;
-    }>;
+    }> = [];
+
+    if (selectedDripStage) {
+      batch = (await prisma.$queryRaw`
+        SELECT 
+          cpds."createdAt",
+          c."name" as "contactName",
+          c."phone" as "contactPhone",
+          cpds."status",
+          cpds."sentAt"
+        FROM "CampaignParticipantDripStage" cpds
+        LEFT JOIN "CampaignParticipant" cp ON cpds."participantId" = cp.id
+        LEFT JOIN "Contact" c ON cp."contactId" = c.id
+        WHERE cpds."dripStageId" = ${selectedDripStage}::uuid
+        ORDER BY cpds."createdAt" DESC
+        LIMIT ${pageSize}
+        OFFSET ${page * pageSize}
+      `) as Array<{
+        createdAt: Date;
+        contactName: string;
+        contactPhone: string;
+        status: CampaignParticipantStatus;
+        sentAt: Date;
+      }>;
+    } else {
+      batch = (await prisma.$queryRaw`
+        SELECT 
+          cp."createdAt",
+          c."name" as "contactName",
+          c."phone" as "contactPhone",
+          cp."status",
+          cp."sentAt"
+        FROM "CampaignParticipant" cp
+        LEFT JOIN "Contact" c ON cp."contactId" = c.id
+        WHERE cp."campaignId" = ${id}::uuid
+        ORDER BY cp."createdAt" DESC
+        LIMIT ${pageSize}
+        OFFSET ${page * pageSize}
+      `) as Array<{
+        createdAt: Date;
+        contactName: string;
+        contactPhone: string;
+        status: CampaignParticipantStatus;
+        sentAt: Date;
+      }>;
+    }
 
     if (batch.length === 0) {
       hasMoreRecords = false;
@@ -569,66 +696,109 @@ export const getResponseExcelByCampaignById = async (id: string) => {
   return { title: campaign?.name, data: buffer };
 };
 
-export async function getCampaginStatsById(campaignId: string) {
-  const stats = await prisma.campaignStats.findUnique({
-    where: {
-      campaignId,
-    },
-    include: {
-      campaign: {
-        select: {
-          _count: {
-            select: {
-              campaignParticipants: {
-                where: {
-                  status: CampaignParticipantStatus.PENDING,
+export async function getCampaginStatsById(
+  campaignId: string,
+  selectedDripStage = "all",
+) {
+  if (selectedDripStage === "all") {
+    const stats = await prisma.campaignStats.findUnique({
+      where: {
+        campaignId,
+      },
+      include: {
+        campaign: {
+          select: {
+            _count: {
+              select: {
+                campaignParticipants: {
+                  where: {
+                    status: CampaignParticipantStatus.PENDING,
+                  },
                 },
               },
             },
           },
         },
       },
-    },
-  });
-  if (!stats) {
+    });
+    if (!stats) {
+      return {
+        countRead: 0,
+        countSent: 0,
+        countFailed: 0,
+        countDelivered: 0,
+        countPending: 0,
+        countCompleted: 0,
+      };
+    }
+    const tc = await getCampaignCount(campaignId);
+
     return {
-      countRead: 0,
-      countSent: 0,
-      countFailed: 0,
-      countDelivered: 0,
-      countPending: 0,
-      countCompleted: 0,
+      countRead: stats.totalRead,
+      countSent: stats.totalSend,
+      countFailed: stats.totalFailed,
+      countDelivered: stats.totalDelivered,
+      countPending: stats.campaign?._count?.campaignParticipants ?? 0,
+      countCompleted: stats.totalCompleted,
+      queueCount: tc ?? 0,
+    };
+  } else {
+    const stats = await prisma.campaignDripStage.findUnique({
+      where: {
+        id: selectedDripStage,
+      },
+      include: {
+        _count: {
+          select: {
+            CampaignParticipantDripStage: {
+              where: {
+                status: CampaignParticipantStatus.PENDING,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!stats) {
+      return {
+        countRead: 0,
+        countSent: 0,
+        countFailed: 0,
+        countDelivered: 0,
+        countPending: 0,
+        countCompleted: 0,
+      };
+    }
+    const tc = await getCampaignCount(campaignId);
+
+    return {
+      countRead: stats.totalRead,
+      countSent: stats.totalSend,
+      countFailed: stats.totalFailed,
+      countDelivered: stats.totalDelivered,
+      countPending: stats._count.CampaignParticipantDripStage ?? 0,
+      countCompleted: stats.totalCompleted,
+      queueCount: tc ?? 0,
     };
   }
-  const tc = await redisConnection.scard(`campaign:${campaignId}:jobs`);
-
-  return {
-    countRead: stats.totalRead,
-    countSent: stats.totalSend,
-    countFailed: stats.totalFailed,
-    countDelivered: stats.totalDelivered,
-    countPending: stats.campaign?._count?.campaignParticipants ?? 0,
-    countCompleted: stats.totalCompleted,
-    queueCount: tc ?? 0,
-  };
 }
-
-const queue = new Queue("waCampaignEnqueue", { connection: redisConnection });
 
 export async function enqueueCampaignMessage(
   campaignId: string,
   sendToStatuses: CampaignParticipantStatus[],
   participantId?: string,
   scheduledAt?: Date,
+  dripStageId?: string,
 ): Promise<{ status: boolean; message: string }> {
   try {
-    queue.add(
+    waCampaignEnqueue.add(
       campaignId,
       {
         campaignId,
         sendToStatuses,
         participantId,
         scheduledAt,
+        dripStageId,
       },
       {
         removeOnComplete: true,
@@ -654,13 +824,11 @@ export function getFlowIdFromTemplateComponents(
 
   return flowId;
 }
-const deleteQueue = new Queue("waCampaignDequeue", {
-  connection: redisConnection,
-});
+
 export const deleteCampaignParticipantsByCampaignId = async (
   campaignId: string,
 ) => {
-  deleteQueue.add(campaignId, { campaignId });
+  waCampaignDequeue.add(campaignId, { campaignId });
 };
 
 export async function doesCampaignIdExistInMessageQueue(campaignId: string) {

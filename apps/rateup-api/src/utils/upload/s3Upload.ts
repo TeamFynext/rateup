@@ -70,11 +70,20 @@ export const getFileUrlFromKey = (
   s3Upload = true,
   unsplashImage = false,
 ) => {
-  if (unsplashImage) return `${process.env.UNSPLASH_URL}${key}`;
-  const imgUrl = s3Upload
-    ? key?.startsWith("/")
-      ? `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${key}`
-      : `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}/${key}`
-    : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/${key}`;
-  return imgUrl;
+  if (unsplashImage) {
+    return `${process.env.UNSPLASH_URL?.replace(/\/+$/, "")}/${key.replace(/^\/+/, "")}`;
+  }
+
+  if (s3Upload) {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL?.replace(/\/+$/, "") || "";
+    const cleanKey = key.replace(/^\/+/, ""); // remove leading slashes
+    return `${baseUrl}/${cleanKey}`;
+  }
+
+  const fallbackBase =
+    process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL?.replace(/\/+$/, "") ||
+    "";
+  const fallbackKey = key.replace(/^\/+/, "");
+  return `${fallbackBase}/${fallbackKey}`;
 };

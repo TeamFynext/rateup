@@ -313,11 +313,28 @@ export async function filterChats(
 
         if (isAssignedToMe) {
           params.push(userId);
+          let assignedQuery = [
+            `winb."contactId" = c.id 
+          AND winb."assignedUserId" = $${paramIndex++}::uuid`,
+          ];
+          if (bodyFilterProps?.assignedTeams?.length) {
+            params.push(bodyFilterProps?.assignedTeams);
+            assignedQuery.push(`winb."teamId" = ANY($${paramIndex++}::uuid[])`);
+          }
           filters.push(`EXISTS (
           SELECT 1 FROM "WaInboxAssign" winb 
-          WHERE winb."contactId" = c.id 
-          AND winb."assignedUserId" = $${paramIndex++}::uuid
+          WHERE ${assignedQuery.join(" AND ")}
         )`);
+        } else if (
+          assignedStatus === "ASSIGNED" &&
+          bodyFilterProps?.assignedTeams?.length
+        ) {
+          params.push(bodyFilterProps?.assignedTeams);
+          filters.push(`EXISTS (
+            SELECT 1 FROM "WaInboxAssign" winb 
+            WHERE winb."contactId" = c.id 
+            AND winb."teamId" = ANY($${paramIndex++}::uuid[])
+          )`);
         }
       }
     }
@@ -604,6 +621,15 @@ export async function getContactsCountByInbox(orgId: string, userId: string) {
     COUNT(*) FILTER (WHERE mf.has_recent AND mf.is_assigned_to_me AND NOT mf."blockedOnWhatsApp")::INTEGER AS new_assigned_to_me_count
   FROM message_flags mf;`;
 
+  const assignedTeamWiseCount = await prisma.$queryRaw`
+  SELECT 
+    "teamId", 
+    COUNT(DISTINCT "contactId")::INTEGER AS "assignedCount",
+    COUNT(DISTINCT CASE WHEN "assignedUserId" = ${userId}::uuid THEN "contactId" END)::INTEGER AS "assignedToMeCount"
+  FROM "WaInboxAssign"
+  GROUP BY "teamId";
+`;
+
   return {
     new: count[0].new_assigned_count + count[0].new_unassigned_count,
     newAssigned: count[0].new_assigned_count,
@@ -613,6 +639,7 @@ export async function getContactsCountByInbox(orgId: string, userId: string) {
     assignedToMe: count[0].assigned_to_me_count,
     assigned: count[0].assigned_count,
     blocked: count[0].blocked_count,
+    assignedTeamWiseCount,
   };
 }
 
@@ -636,7 +663,6 @@ export async function sendMediaMessages(
     let messageBody;
     switch (item.type) {
       case "image": {
-        console.log("item.url", item.url);
         messageBody = createReplyImageMessage(phone, item.url, captionMsg);
         break;
       }

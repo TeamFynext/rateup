@@ -1,5 +1,39 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import { log } from "../../utils/logger";
+
+async function axiosWithRetry<T = any>(
+  config: AxiosRequestConfig,
+  retries = 3,
+): Promise<AxiosResponse<T>> {
+  let lastError: AxiosError | null = null;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await axios({
+        ...config,
+        validateStatus: () => true, // prevent throwing on non-2xx
+      });
+      return response;
+    } catch (error: any) {
+      lastError = error;
+      const isNetworkError =
+        error.code === "ENETUNREACH" ||
+        error.code === "ECONNABORTED" ||
+        error.code === "ECONNRESET" ||
+        error.code === "ETIMEDOUT";
+
+      if (!isNetworkError || attempt === retries) {
+        throw error;
+      }
+
+      log.warn(
+        `Retry attempt ${attempt} failed with ${error.code}. Retrying...`,
+      );
+    }
+  }
+
+  throw lastError!;
+}
 
 const WA_API_VERSION = "v22.0";
 export async function callWhatsappApi(
@@ -21,6 +55,7 @@ export async function callWhatsappApi(
       ...headAuth,
       ...headerConfig,
     },
+    timeout: 15000,
     validateStatus: () => true, // don't throw error on non-2xx status
     ...otherConfig,
   };
@@ -30,7 +65,7 @@ export async function callWhatsappApi(
     config.url,
     config.data,
   );
-  const res = await axios(config);
+  const res = await axiosWithRetry(config);
   if (res.status.toString().startsWith("2")) {
     return res;
   } else {

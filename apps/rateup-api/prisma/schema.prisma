@@ -127,7 +127,7 @@ model Org {
   ApiAccessToken           ApiAccessToken?
   surveyThemes             WebSurveyTheme[]
   UsageStats               UsageStats?
-  chatbot                  Chatbot[] 
+  chatbot                  Chatbot[]
   Survey                   Survey[]
   WaAccountSettings        WaAccountSettings?
   generateQr               GenerateQr[]
@@ -412,23 +412,26 @@ model SurveyStats {
 
 // Whatsapp session
 model WaSession {
-  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt             DateTime             @default(now())
-  phone                 String
-  surveyTeamMap         SurveyTeamMap?       @relation(fields: [surveyTeamMapId], references: [id])
-  surveyTeamMapId       String?              @db.Uuid
-  template              WaTemplate?          @relation(fields: [templateId], references: [id])
-  templateId            String?              @db.Uuid
-  currentQuestionId     String?
-  campaignParticipant   CampaignParticipant? @relation(fields: [campaignParticipantId], references: [id])
-  campaignParticipantId String?              @unique @db.Uuid
+  id                             String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt                      DateTime                      @default(now())
+  phone                          String
+  surveyTeamMap                  SurveyTeamMap?                @relation(fields: [surveyTeamMapId], references: [id])
+  surveyTeamMapId                String?                       @db.Uuid
+  template                       WaTemplate?                   @relation(fields: [templateId], references: [id])
+  templateId                     String?                       @db.Uuid
+  currentQuestionId              String?
+  campaignParticipant            CampaignParticipant?          @relation(fields: [campaignParticipantId], references: [id])
+  campaignParticipantId          String?                       @unique @db.Uuid
+  CampaignParticipantDripStage   CampaignParticipantDripStage? @relation(fields: [campaignParticipantDripStageId], references: [id])
+  campaignParticipantDripStageId String?                       @db.Uuid
+
   /// [PQuestionResponse]
-  responses             Json[]
-  language              String               @default("")
-  orgId                 String               @db.Uuid
-  ip                    String?
-  type                  String               @default("survey") // WaSessionType
-  tag                   String?              @default("")
+  responses Json[]
+  language  String  @default("")
+  orgId     String  @db.Uuid
+  ip        String?
+  type      String  @default("survey") // WaSessionType
+  tag       String? @default("")
 
   @@unique([phone, orgId])
 }
@@ -535,6 +538,7 @@ model Campaign {
   CampaignStats           CampaignStats?
   WhatsappSettings        WhatsappSettings?     @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
   whatsappSettingsPhoneId String?
+  CampaignDripStage       CampaignDripStage[]
 }
 
 model CampaignStats {
@@ -550,29 +554,72 @@ model CampaignStats {
 }
 
 model CampaignParticipant {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-
-  status      String    @default("PENDING") // enums.ts: CampaignParticipantStatus
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt   DateTime  @default(now())
+  status      String    @default("PENDING")
   sentAt      DateTime?
   respondedAt DateTime?
-  source      String    @default("INDIVIDUAL") // enums.ts: CampaignParticipantSource
+  source      String    @default("INDIVIDUAL")
 
-  campaign                        Campaign                          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  campaignId                      String                            @db.Uuid
-  contact                         Contact                           @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  contactId                       String                            @db.Uuid
-  contactGroup                    ContactGroup?                     @relation(fields: [contactGroupId], references: [id], onDelete: SetNull)
-  contactGroupId                  String?                           @db.Uuid
-  response                        SurveyResponse?                   @relation(fields: [responseId], references: [id], onDelete: SetNull)
-  responseId                      String?                           @db.Uuid
-  WaSession                       WaSession?
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String   @db.Uuid
+  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId  String   @db.Uuid
+
+  contactGroup   ContactGroup?   @relation(fields: [contactGroupId], references: [id], onDelete: SetNull)
+  contactGroupId String?         @db.Uuid
+  response       SurveyResponse? @relation(fields: [responseId], references: [id], onDelete: SetNull)
+  responseId     String?         @db.Uuid
+  WaSession      WaSession?
+
   errorMessage                    String?
   WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
   CampaignMessageQueue            CampaignMessageQueue[]
 
+  CampaignParticipantDripStage CampaignParticipantDripStage[]
+
   @@unique([campaignId, contactId], name: "campaign_contact_unique")
   @@index([contactId])
+}
+
+model CampaignDripStage {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  delay      Int
+  delayUnit  String // "days", "hours", etc.
+  sendAtTime String? // "16:00" for 4 PM, format: "HH:mm"
+
+  totalRead      Int @default(0)
+  totalSend      Int @default(0)
+  totalCompleted Int @default(0)
+  totalDelivered Int @default(0)
+  totalFailed    Int @default(0)
+
+  campaignId String   @db.Uuid
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  waTemplateId String     @db.Uuid
+  waTemplate   WaTemplate @relation(fields: [waTemplateId], references: [id], onDelete: Cascade)
+
+  CampaignParticipantDripStage CampaignParticipantDripStage[]
+}
+
+model CampaignParticipantDripStage {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt    DateTime  @default(now())
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  status       String    @default("PENDING") // "PENDING" | "SENT" | "FAILED"
+  errorMessage String?
+
+  participant   CampaignParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  participantId String              @db.Uuid
+
+  dripStage                       CampaignDripStage                 @relation(fields: [dripStageId], references: [id], onDelete: Cascade)
+  dripStageId                     String                            @db.Uuid
+  WaSession                       WaSession[]
+  WaMessageCampaginParticipantMap WaMessageCampaginParticipantMap[]
+
+  @@unique([participantId, dripStageId], name: "participant_stage_unique")
 }
 
 enum CampaignMessageQueueStatus {
@@ -693,7 +740,8 @@ model WaTemplate {
 
   LoyaltyAction LoyaltyAction[] @relation("customer_relation")
 
-  loyaltyRefereeActions LoyaltyAction[] @relation("referee_relation")
+  loyaltyRefereeActions LoyaltyAction[]     @relation("referee_relation")
+  CampaignDripStage     CampaignDripStage[]
 }
 
 model MenuLanding {
@@ -1184,10 +1232,12 @@ model WaMessage {
 }
 
 model WaMessageCampaginParticipantMap {
-  campaignParticipant   CampaignParticipant @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
-  campaignParticipantId String              @db.Uuid
-  waMessage             WaMessage           @relation(fields: [waMessageId], references: [id], onDelete: Cascade)
-  waMessageId           String              @unique @db.Uuid
+  campaignParticipant            CampaignParticipant           @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
+  campaignParticipantId          String                        @db.Uuid
+  waMessage                      WaMessage                     @relation(fields: [waMessageId], references: [id], onDelete: Cascade)
+  waMessageId                    String                        @unique @db.Uuid
+  CampaignParticipantDripStage   CampaignParticipantDripStage? @relation(fields: [campaignParticipantDripStageId], references: [id])
+  campaignParticipantDripStageId String?                       @db.Uuid
 }
 
 model WaAutomatedReply {
@@ -1251,7 +1301,7 @@ model Chatbot {
   id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   orgId            String  @db.Uuid
   org              Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  name             String @default("Default Chatbot")
+  name             String  @default("Default Chatbot")
   shortUrlId       String  @unique
   publicPageStatus String? @default("INACTIVE")
   enableWaChat     Boolean @default(false)

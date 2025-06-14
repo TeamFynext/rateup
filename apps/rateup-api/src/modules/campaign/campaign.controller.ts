@@ -22,19 +22,17 @@ import {
 } from "./campaign.service";
 import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
 import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema";
-import { CampaignStatus, SentCampaignEnum } from "../../types/enums";
+import {
+  CampaignStatus,
+  CampaignType,
+  SentCampaignEnum,
+} from "../../types/enums";
 import { log } from "../../utils/logger";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,
   reply: FastifyReply,
 ) {
-  const { waTemplateId } = request.body;
-  const dbTemplate = await getDbTemplate(waTemplateId);
-  if (!dbTemplate) {
-    return reply.status(400).send({ message: "Template not found" });
-  }
-
   const campaign = await createCampaign({
     ...request.body,
   });
@@ -94,10 +92,23 @@ export async function sendCampaignHandler(
     sentCampaignChoice,
     sendToStatuses,
     participantId,
+    type,
   } = request.body;
   const { campaignId } = request.params;
 
   try {
+    if (type === CampaignType.DRIP) {
+      await updateCampaign(campaignId, {
+        status,
+        campaignSentAt: null,
+        scheduledStatuses: [],
+        startedAt: new Date(),
+      });
+      return reply.status(200).send({
+        message: `Campaign status updated to ${status}`,
+        code: "MSG_SCHEDULED",
+      });
+    }
     if (status === CampaignStatus.INACTIVE) {
       await updateCampaign(campaignId, {
         status: CampaignStatus.DEQUEUING,
@@ -189,12 +200,14 @@ export async function getResponseByCampaignByIdHandler(
 export async function getResponseExcelByCampaignByIdHandler(
   request: FastifyRequest<{
     Params: ByCampaignIdParams;
+    Querystring: { selectedDripStage?: string };
   }>,
   reply: FastifyReply,
 ) {
   try {
     const { title, data } = await getResponseExcelByCampaignById(
       request.params.campaignId,
+      request.query.selectedDripStage,
     );
     reply.header("filename", `${encodeURIComponent(title)}.xlsx`);
     reply.header("Access-Control-Expose-Headers", "filename");
@@ -208,11 +221,15 @@ export async function getResponseExcelByCampaignByIdHandler(
 export async function getCampaignStatsHandler(
   request: FastifyRequest<{
     Params: ByCampaignIdParams;
+    Querystring: { selectedDripStage?: string };
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const stats = await getCampaginStatsById(request.params.campaignId);
+    const stats = await getCampaginStatsById(
+      request.params.campaignId,
+      request.query.selectedDripStage,
+    );
     reply.code(200).send(stats);
   } catch (e) {
     log.error("Error in getting campain stats", e);
