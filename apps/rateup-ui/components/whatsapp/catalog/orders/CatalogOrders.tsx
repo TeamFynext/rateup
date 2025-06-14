@@ -108,8 +108,8 @@ const CatalogOrders = ({ catalogId }) => {
   ];
 
   const { totalPrice, productItems } = useMemo(() => {
-    let productItems,
-      totalPrice = 0;
+    let productItems = [];
+    let totalPrice = 0;
     if (selectedOrder) {
       productItems = selectedOrder.products.map((item) => {
         totalPrice += item.price * item.quantity;
