@@ -55,7 +55,7 @@ export async function callWhatsappApi(
       ...headAuth,
       ...headerConfig,
     },
-    timeout: 15000,
+    family: 4,
     validateStatus: () => true, // don't throw error on non-2xx status
     ...otherConfig,
   };
