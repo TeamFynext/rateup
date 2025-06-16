@@ -14,6 +14,7 @@ import {
   CatalogProductIdsSchema,
 } from "./product.schema";
 import { CatalogIdParam } from "../catalog.schema";
+import { getWaCatalog } from "../catalog.service";
 
 export async function createCatalogProductsBatchHandler(
   request: FastifyRequest<{
@@ -26,7 +27,7 @@ export async function createCatalogProductsBatchHandler(
     const { type } = request.body;
     const { catalogId } = request.params;
     const { orgId } = request.user;
-    const catalogInfo = await getCatalogProducts(catalogId);
+    const catalogInfo = await getWaCatalog(catalogId);
     if (!catalogInfo) {
       return reply.code(404).send("No catalog found");
     }
@@ -34,7 +35,7 @@ export async function createCatalogProductsBatchHandler(
       orgId,
       type,
       request.body[type],
-      catalogInfo,
+      catalogId,
     );
     reply.code(200).send();
   } catch (e) {
