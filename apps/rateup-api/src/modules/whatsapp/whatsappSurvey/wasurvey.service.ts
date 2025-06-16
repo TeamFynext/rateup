@@ -105,6 +105,18 @@ export async function sendMessage(
     return { status: true, message: res?.data?.messages?.[0]?.id };
   } catch (e: any) {
     console.log("🚀 ~ e:", e);
+    await handleWaMessages(
+      "send",
+      messageData,
+      to,
+      orgId,
+      PlatformType.WHATSAPP,
+      waSettings.phone,
+      userName,
+      null,
+      userId,
+      true,
+    );
     log.error("Error sending message", e);
     let errorMessage = `Failed to send message`;
     if (e instanceof GraphApiError) {
