@@ -86,6 +86,7 @@ model User {
   pausedBy            String?
   prefLanguage        String?                   @default("English")
   deletedAt           DateTime?
+  lastLoggedInAt      DateTime?
   org                 Org[]
   orgMember           OrgMember[]
   teamMember          TeamMember[]
