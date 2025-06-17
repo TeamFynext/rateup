@@ -5,9 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "RateUp",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "scheme": "rateup",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
