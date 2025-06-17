@@ -91,6 +91,7 @@ import { columnSchemas } from "./modules/ticket/ticketColumn/column.schema";
 import { cardSchemas } from "./modules/ticket/ticketCard/card.schema";
 import { boardSchemas } from "./modules/ticket/ticketBoard/board.schema";
 import { loyaltyApiSettingSchemas } from "./modules/loyalty/apiSetting/apiSetting.schema";
+import { dashboardRoutes } from "./modules/dashboard/dashboard.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -205,4 +206,5 @@ export function registerRoutes(server: FastifyInstance): void {
   });
   server.register(integrationsRoutes, { prefix: "api/integrations" });
   server.register(loyaltyPublicRoutes, { prefix: "api/public/loyalty" });
+  server.register(dashboardRoutes, { prefix: "api/dashboard" });
 }

@@ -5,6 +5,7 @@ import {
   createUserSignup,
   getOrgIdAndRole,
   getUserRecipeName,
+  updateLastLoggedInTime,
 } from "./modules/user/user.service";
 import Dashboard from "supertokens-node/recipe/dashboard";
 import { getValueByKey } from "./utils/signUp";
@@ -109,6 +110,7 @@ export const SuperTokensConfig: TypeInput = {
 
               if (response.status === "OK" && input.session === undefined) {
                 // TODO: some post sign in logic
+                await updateLastLoggedInTime(response.user.id, new Date());
               }
 
               return response;
