@@ -42,7 +42,18 @@ export async function addNewWaMessage(
   componentParams?: any,
   messageId?: string,
   sendBy?: string,
+  failed: boolean = false,
 ) {
+  const initialStats = {
+    read: "",
+    sent: "",
+    failed: "",
+    delivered: "",
+  };
+
+  if (failed) {
+    initialStats.failed = waCreatedAt;
+  }
   const newMessage = prisma.waMessage.create({
     data: {
       messageBody: messageBody as any,
@@ -53,6 +64,7 @@ export async function addNewWaMessage(
       sendBy,
       sourcePlatform,
       sourceIdentifier,
+      ...(failed ? { stats: initialStats } : {}),
     },
   });
   return newMessage;

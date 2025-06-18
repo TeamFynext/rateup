@@ -541,3 +541,14 @@ export function getUserRecipeName(recipeId) {
       return UserRecipes.PasswordLess;
   }
 }
+
+export async function updateLastLoggedInTime(userId, date) {
+  await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      lastLoggedInAt: date,
+    },
+  });
+}

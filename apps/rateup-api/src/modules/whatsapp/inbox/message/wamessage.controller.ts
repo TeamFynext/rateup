@@ -69,6 +69,7 @@ export async function handleWaMessages(
   userName?: string,
   messageId?: string,
   userId?: string,
+  failed: boolean = false,
 ) {
   try {
     // Create the message body
@@ -124,6 +125,7 @@ export async function handleWaMessages(
       parameterData,
       messageId,
       userId,
+      failed,
     );
 
     // Send the message to the connected clients
@@ -134,6 +136,7 @@ export async function handleWaMessages(
         message: waMessage,
       },
     });
+    return waMessage;
   } catch (error) {
     log.error("Error in handleWaMessages: %o", error);
     log.error(error);

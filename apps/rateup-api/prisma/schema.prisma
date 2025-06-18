@@ -86,6 +86,7 @@ model User {
   pausedBy            String?
   prefLanguage        String?                   @default("English")
   deletedAt           DateTime?
+  lastLoggedInAt      DateTime?
   org                 Org[]
   orgMember           OrgMember[]
   teamMember          TeamMember[]
@@ -102,6 +103,7 @@ model User {
   ticketActivity      TicketActivity[]
   assignedTicketCards TicketCardAssignee[]
   assignedBoards      TicketBoardNotification[]
+  expoPushTokens      ExpoPushToken[]
 }
 
 model Org {
@@ -144,6 +146,7 @@ model Org {
   WaAutomatedReply         WaAutomatedReply[]
   whatsappQuickReplies     WhatsappQuickReply[]
   loyaltyApiSettings       LoyaltyApiSettings[]
+  expoPushTokens           ExpoPushToken[]
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
 }
@@ -464,6 +467,7 @@ model Contact {
   lastReceivedMessageTimeStamp DateTime?
   whatsappUserName             String?
   blockedOnWhatsApp            Boolean               @default(false)
+  waCatalogOrders              WaCatalogOrder[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -1560,6 +1564,21 @@ model LoyaltyApiSettings {
   @@index([orgId, feature])
 }
 
+model ExpoPushToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  expoToken String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
+
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId String @db.Uuid
+
+  @@index([userId])
+  @@index([orgId])
+}
+
 model WhatsappCatalog {
   catalogId  String @unique
   orgId     String  @db.Uuid
@@ -1567,9 +1586,39 @@ model WhatsappCatalog {
   vertical   String
   name       String?
   isWhatsappConnected   Boolean @default(false) 
-  ///[PWaCatalogProducts]
-  products   Json[]
-  ///[PWaCatalogOrders]
-  orders     Json[]
+  products   WaCatalogProduct[]
+  orders    WaCatalogOrder[]
   @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
+}
+
+model WaCatalogProduct {
+  productDbId  String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  catalogId  String  
+  catalog    WhatsappCatalog @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
+  type       String
+  retailer_id String?  
+  hotel_id    String?  
+  hotel_room_id String?
+  hotel_ratailer_id String?
+  productMetaId   String?
+  productProps    Json?
+  hotelProps      Json?
+  hotelRoomProps  Json?
+  @@unique([catalogId,retailer_id], name: "catalog_retailer_id_unique")
+  @@unique([catalogId,hotel_id], name: "catalog_hotel_id_unique")
+  @@unique([catalogId,hotel_ratailer_id, hotel_room_id], name: "catalog_hotel_room_id_unique")
+}
+
+model WaCatalogOrder {
+  id  String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  catalogId  String  
+  catalog    WhatsappCatalog @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
+  products   Json[]
+  contactId  String @db.Uuid
+  contact    Contact @relation(fields: [contactId], references: [id], onDelete:NoAction)
+  paymentMethod  String?
+  paymentStatus  String   @default("PENDING")
+  status         String   @default("PENDING")
+  transactionId  String?
+  createdAt  DateTime  @default(now())
 }

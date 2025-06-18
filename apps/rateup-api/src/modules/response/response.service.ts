@@ -901,24 +901,14 @@ export const generateResponse = async (body: GenerateBodyInput) => {
   return data;
 };
 
+// Improved syncResponseToGoogleSheet for better performance with large datasets
 export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   const { GoogleSpreadsheet } = await import("google-spreadsheet");
   const survey = await prisma.survey.findUnique({
-    where: {
-      id: surveyId,
-    },
+    where: { id: surveyId },
     select: {
       spreadSheetId: true,
-      teams: {
-        select: {
-          team: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
+      teams: { select: { team: { select: { id: true, name: true } } } },
       title: true,
       languages: true,
       questions: true,
@@ -930,8 +920,8 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     orgId,
     IntegratedApps.googlesheet,
   )) as unknown as GoogleSheetIntegration;
-  const token = tokenFromIntgration;
-  authClient.credentials.refresh_token = token.credential?.refreshToken;
+  authClient.credentials.refresh_token =
+    tokenFromIntgration.credential?.refreshToken;
   const drive = google.drive({ version: "v3", auth: authClient });
   const isDocExist = survey?.spreadSheetId
     ? await checkFileExistInDrive(survey?.spreadSheetId, drive)
@@ -962,7 +952,6 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
         fileId: fileId,
         fields: "parents",
       });
-      // Move the file to the new folder
       const previousParents = file.data.parents.join(",");
       await drive.files.update({
         fileId: fileId,
@@ -974,7 +963,8 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
     await saveSheetIdToSurvey(doc.spreadsheetId, surveyId);
   }
   await doc.loadInfo();
-  const allResponses = await getAllResponses(surveyId);
+
+  const BATCH_SIZE = 8000; // Tune this based on memory and Google API limits
   let flow = await getFlowBySurveyId(surveyId);
   const filteredSecondArray = flow?.json?.screens?.flatMap((screen) =>
     screen?.layout?.children?.filter(
@@ -986,31 +976,8 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
   if (checkVersion) {
     const languages = survey?.languages;
     let questions = survey?.questions as unknown as Array<Question>;
-    const formattedResByTeam = allResponses.map((res) => ({
-      team: res.team.name,
-      responses: res.responses,
-    }));
-    const languageWiseResponse = {};
-    languages.map((lang) => {
-      const teamAndResponse = [];
-      formattedResByTeam.map((teamRes) => {
-        const langRes = teamRes?.responses.filter(
-          (res) => res.language === lang,
-        );
-        teamAndResponse.push({
-          team: teamRes.team,
-          teamWiseResponses: langRes
-            .map((res) => ({
-              createdAt: res.createdAt,
-              responses: res.responses,
-              respondentPhone: res?.Contact?.phone,
-              tag: res?.tag,
-            }))
-            .sort((a, b) => dayjs(a.createdAt).diff(dayjs(b.createdAt))),
-        });
-      });
-      languageWiseResponse[lang] = teamAndResponse;
-    });
+    // Precompute question titles for each language
+    const languageQuestionTitles: Record<string, string[]> = {};
     for (const lang of languages) {
       let questionTitles = [];
       questions.map((q: Question, index: number) => {
@@ -1056,19 +1023,26 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           );
         } else questionTitles.push(qstnTitle);
       });
+      languageQuestionTitles[lang] = questionTitles;
+    }
+
+    // For each language, process responses in batches
+    for (const lang of languages) {
       const additionalColumns = ["Team", "Respondent's Mobile Number", "Tag"];
-      const totalColumnCount =
-        questionTitles.length + additionalColumns.length + 1;
-      const sheet =
+      const headerRow = [
+        "Created At",
+        ...languageQuestionTitles[lang],
+        ...additionalColumns,
+      ];
+      const totalColumnCount = headerRow.length;
+      let sheet =
         (await doc.sheetsByTitle[lang]) ??
         (await doc.addSheet({
           title: lang,
-          headerValues: ["Created At", ...questionTitles, ...additionalColumns],
+          headerValues: headerRow,
           gridProperties:
             totalColumnCount > 26
-              ? {
-                  columnCount: totalColumnCount,
-                }
+              ? { columnCount: totalColumnCount }
               : undefined,
         }));
       const initialRowCount = await sheet.rowCount;
@@ -1077,52 +1051,73 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           columnCount: totalColumnCount,
           rowCount: initialRowCount,
         });
-      await sheet.setHeaderRow([
-        "Created At",
-        ...questionTitles,
-        ...additionalColumns,
-      ]);
-      await sheet.loadCells();
-      const columnCount = await sheet.columnCount;
-      for (var i = 0; i < columnCount; i++) {
-        sheet.getCell(0, i).textFormat = { bold: true };
-      }
+      await sheet.setHeaderRow(headerRow);
       await sheet.saveUpdatedCells();
       await sheet.clearRows();
-      const responseForSheet = [];
-      for (const langRes of languageWiseResponse[lang]) {
-        langRes.teamWiseResponses.map((response) => {
-          const resObj = { Team: langRes.team };
-          resObj["Created At"] = dayjs(response.createdAt).format(
-            "DD-MM-YYYY hh:mm A",
-          );
-          response.responses.map((res: QuestionResponse) => {
-            let QIndex;
-            let qstn = questions.find((q: Question, index: number) => {
-              if (q.id === res.questionId) {
-                QIndex = index + 1;
-                return q;
-              }
-            });
-            if (qstn) {
-              let qsTitle =
-                qstn?.title[lang] ||
-                qstn?.description[lang] ||
-                qstn?.label?.[lang] ||
-                "";
-              let qstnTitle = QIndex + "_" + getContent(qsTitle)?.trim();
+
+      // Get all teamIds for this survey
+      const teamIds = survey.teams.map((t) => t.team.id);
+
+      // Count total responses for this language
+      const totalCount = await prisma.surveyResponse.count({
+        where: {
+          surveyTeamMap: { surveyId, teamId: { in: teamIds } },
+          language: lang,
+        },
+      });
+
+      // Process in batches
+      for (let skip = 0; skip < totalCount; skip += BATCH_SIZE) {
+        const responses = await prisma.surveyResponse.findMany({
+          where: {
+            surveyTeamMap: { surveyId, teamId: { in: teamIds } },
+            language: lang,
+          },
+          include: {
+            surveyTeamMap: {
+              select: {
+                team: { select: { name: true } },
+              },
+            },
+            Contact: { select: { phone: true } },
+          },
+          orderBy: { createdAt: "asc" },
+          skip,
+          take: BATCH_SIZE,
+        });
+
+        // Prepare rows for this batch
+        const responseForSheet = [];
+        for (const response of responses) {
+          const resObj: Record<string, any> = {
+            Team: response.surveyTeamMap.team.name,
+            "Created At": dayjs(response.createdAt).format("DD-MM-YYYY HH:mm"),
+          };
+          for (let i = 0; i < questions.length; i++) {
+            const q = questions[i];
+            if (
+              [QuestionType.InfoMessage, ...Object.values(PageType)].includes(
+                q.type,
+              )
+            )
+              continue;
+            let qsTitle =
+              q?.title[lang] || q?.description[lang] || q?.label?.[lang] || "";
+            const qstnTitle = i + 1 + "_" + getContent(qsTitle)?.trim();
+            const res = response.responses.find((r) => r.questionId === q.id);
+            if (res) {
               if (
                 [
                   QuestionType.Contact,
                   QuestionType.Email,
                   QuestionType.Phone,
-                ].includes(qstn.type)
+                ].includes(q.type)
               )
                 Object.entries(res.response[res.type]).map(
                   ([key, value]) =>
                     (resObj[(qstnTitle + ":" + key).trim()] = value),
                 );
-              else if (qstn.type === QuestionType.Testimonial)
+              else if (q.type === QuestionType.Testimonial)
                 Object.entries(res.response[res.type]).map(
                   ([key, value]) =>
                     (resObj[(qstnTitle + ":" + key).trim()] =
@@ -1130,12 +1125,12 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
                         ? `https://${process.env.AWS_CLOUDFRONT_DOMAIN}/${value}`
                         : value),
                 );
-              else if (qstn.type === QuestionType.MCQGrid)
+              else if (q.type === QuestionType.MCQGrid)
                 Object.entries(res.response[res.type]).map(
                   ([key, value]: [string, Choice]) =>
                     (resObj[(qstnTitle + ":" + key).trim()] = value?.value),
                 );
-              else if (qstn.type === QuestionType.MultiTextInput)
+              else if (q.type === QuestionType.MultiTextInput)
                 Object.entries(res.response[res.type]).map(
                   ([key, value]) =>
                     (resObj[(qstnTitle + ":" + key).trim()] = value),
@@ -1143,63 +1138,94 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
               else
                 resObj[qstnTitle] = getFormattedResponse(
                   res.response[res.type],
-                  qstn,
+                  q,
                   lang,
                 );
             }
-          });
-          resObj["Respondent's Mobile Number"] = response?.respondentPhone;
+          }
+          resObj["Respondent's Mobile Number"] = response?.Contact?.phone;
           resObj["Tag"] = response?.tag;
           responseForSheet.push(resObj);
-        });
+        }
+        // Add batch of rows
+        if (responseForSheet.length > 0) {
+          await sheet.addRows(responseForSheet);
+        }
       }
-
-      await sheet.addRows(responseForSheet);
-      const dateColumnIndex = sheet.headerValues.indexOf("Created At");
-      await sheet.loadCells();
-      for (var i = 0; i <= responseForSheet.length; i++) {
-        sheet.getCell(i, dateColumnIndex).numberFormat = {
-          type: "DATE",
-          pattern: 'dd-mm-yyyy hh:mm A/P"M"',
-        };
-      }
-      await sheet.saveUpdatedCells();
     }
   } else {
-    const responses =
-      (allResponses && allResponses?.flatMap((data) => data?.responses)) || [];
+    // WaFlow version 2
+    // Prepare header
+    const responsesCount = await prisma.surveyResponse.count({
+      where: { surveyTeamMap: { surveyId } },
+    });
+    const headerArray = filteredSecondArray.map((question) =>
+      markdownToPlainText(question?.header || question?.label || ""),
+    );
+    const createdAt = "Created At";
+    const responseTag = "Tag";
+    let whatsappRespondentNumber = "Respondent's Mobile Number";
+    let teamTag = "Team";
+    headerArray.unshift(createdAt);
+    filteredSecondArray.unshift(createdAt);
+    headerArray.push(whatsappRespondentNumber);
+    filteredSecondArray.push(whatsappRespondentNumber);
+    headerArray.push(responseTag);
+    filteredSecondArray.push(responseTag);
+    headerArray.push(teamTag);
+    filteredSecondArray.push(teamTag);
 
-    if (filteredSecondArray && responses) {
-      const headerArray = filteredSecondArray.map((question) =>
-        markdownToPlainText(question?.header || question?.label || ""),
-      );
-      const createdAt = "Created At";
-      const responseTag = "Tag";
-      let whatsappRespondentNumber = "Respondent's Mobile Number";
-      let teamTag = "Team";
-      headerArray.unshift(createdAt);
-      filteredSecondArray.unshift(createdAt);
-      headerArray.push(whatsappRespondentNumber);
-      filteredSecondArray.push(whatsappRespondentNumber);
-      headerArray.push(responseTag);
-      filteredSecondArray.push(responseTag);
-      headerArray.push(teamTag);
-      filteredSecondArray.push(teamTag);
+    const totalColumnCount = filteredSecondArray.length;
+    let lang = "en";
+    let sheet =
+      doc.sheetsByTitle[lang] ??
+      (await doc.addSheet({
+        title: lang,
+        headerValues: headerArray,
+        gridProperties:
+          totalColumnCount > 26 ? { columnCount: totalColumnCount } : undefined,
+      }));
+    const initialRowCount = sheet.rowCount;
+    if (totalColumnCount > sheet.columnCount)
+      await sheet.resize({
+        columnCount: totalColumnCount,
+        rowCount: initialRowCount,
+      });
+    await sheet.setHeaderRow(headerArray);
+    await sheet.clearRows();
+
+    // Process in batches
+    for (let skip = 0; skip < responsesCount; skip += BATCH_SIZE) {
+      const responses = await prisma.surveyResponse.findMany({
+        where: { surveyTeamMap: { surveyId } },
+        include: {
+          Contact: { select: { phone: true } },
+          surveyTeamMap: {
+            select: {
+              teamId: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+        skip,
+        take: BATCH_SIZE,
+      });
 
       const bodyArray: string[][] = [];
-      responses.forEach((response, answerIndex) => {
-        bodyArray.push([]);
+      for (const response of responses) {
+        const row: string[] = [];
         filteredSecondArray.forEach((question) => {
           const questionId = question.id;
-          const responseObj = response.responses.find(
-            (answerObj) => answerObj.questionId === questionId,
+          const responseObj: any = response.responses.find(
+            (answerObj: { questionId: string }) =>
+              answerObj.questionId === questionId,
           );
           let responseValue: string;
           if (responseObj) {
             responseValue = getCellData(responseObj.response, question);
           } else if (question === createdAt) {
             const createdAtFormatted = dayjs(response.createdAt).format(
-              "DD-MM-YYYY hh:mm A",
+              "DD-MM-YYYY HH:mm",
             );
             responseValue = createdAtFormatted;
           } else if (question === whatsappRespondentNumber) {
@@ -1207,50 +1233,29 @@ export async function syncResponseToGoogleSheet(surveyId: string, orgId) {
           } else if (question === responseTag) {
             responseValue = response.tag || "";
           } else if (question === teamTag) {
-            const teamName = survey.teams.find(
-              (t) => t.team.id === response.teamId,
-            ).team.name;
-            responseValue = teamName || "";
+            // Try to get team name from survey.teams
+            let teamName = "";
+            if (response?.surveyTeamMapId && survey.teams) {
+              const found = survey.teams.find(
+                (t) => t.team.id === response?.surveyTeamMap?.teamId,
+              );
+              teamName = found?.team?.name || "";
+            }
+            responseValue = teamName;
           } else {
             responseValue = "";
           }
-          bodyArray[answerIndex].push(responseValue);
+          row.push(responseValue);
         });
-      });
-
-      const totalColumnCount = filteredSecondArray.length;
-      let lang = "en";
-      const sheet =
-        (await doc.sheetsByTitle[lang]) ??
-        (await doc.addSheet({
-          title: lang,
-          headerValues: headerArray,
-          gridProperties:
-            totalColumnCount > 26
-              ? {
-                  columnCount: totalColumnCount,
-                }
-              : undefined,
-        }));
-      const initialRowCount = await sheet.rowCount;
-      if (totalColumnCount > sheet.columnCount)
-        await sheet.resize({
-          columnCount: totalColumnCount,
-          rowCount: initialRowCount,
-        });
-      await sheet.setHeaderRow(headerArray);
-      await sheet.loadCells();
-      const columnCount = await sheet.columnCount;
-      for (var i = 0; i < columnCount; i++) {
-        sheet.getCell(0, i).textFormat = { bold: true };
+        bodyArray.push(row);
       }
-      await sheet.saveUpdatedCells();
-      await sheet.clearRows();
-      await sheet.addRows(bodyArray);
-      await sheet.saveUpdatedCells();
+      if (bodyArray.length > 0) {
+        await sheet.addRows(bodyArray);
+      }
     }
+    await sheet.saveUpdatedCells();
   }
-  const sheetToRemove = await doc.sheetsByTitle["Sheet1"];
+  const sheetToRemove = doc.sheetsByTitle["Sheet1"];
   if (sheetToRemove) sheetToRemove.delete();
   return survey;
 }
@@ -1352,8 +1357,9 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
         team: team.name, // for old synced response
       };
       resObj["Created At"] = dayjs(response.createdAt).format(
-        "DD-MM-YYYY hh:mm A",
+        "DD-MM-YYYY HH:mm",
       );
+
       let flow = await getFlowBySurveyId(surveyId);
       const filteredSecondArray = flow?.json?.screens?.flatMap((screen) =>
         screen?.layout?.children?.filter(
@@ -1436,14 +1442,7 @@ export async function saveResponseToGoogleSheet(responseData: IsheetResponse) {
       resObj["Respondent's Mobile Number"] = respondent;
       resObj["Tag"] = tag;
       resObj["tag"] = tag; // for old synced response
-      const newRow = await sheet.addRow(resObj);
-      const dateColumnIndex = sheet.headerValues.indexOf("Created At");
-      await sheet.loadCells();
-      sheet.getCell(newRow.rowNumber - 1, dateColumnIndex).numberFormat = {
-        type: "DATE",
-        pattern: 'dd-mm-yyyy hh:mm A/P"M"',
-      };
-      await sheet.saveUpdatedCells();
+      await sheet.addRow(resObj);
     }
     return spreadSheetId;
   } catch (error) {

@@ -9,10 +9,12 @@ import {
   updateCatalogHandler,
 } from "./catalog.controller";
 import { $WC } from "./catalog.schema";
+import { waCatalogOrderRoutes } from "./orders/catalogOrder.route";
 
 export async function waCatalogRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   server.register(waCatalogProductRoutes, { prefix: "/products" });
+  server.register(waCatalogOrderRoutes, { prefix: "/orders" });
   server.put(
     "/:catalogId",
     {

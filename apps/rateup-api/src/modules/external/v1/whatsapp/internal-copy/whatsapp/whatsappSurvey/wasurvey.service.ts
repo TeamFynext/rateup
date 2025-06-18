@@ -84,6 +84,16 @@ export async function sendMessage(
     return { status: true, message: res?.data?.messages?.[0]?.id };
   } catch (e: any) {
     console.log("🚀 ~ e:", e);
+    await handleWaMessages(
+      "send",
+      messageData,
+      to,
+      orgId,
+      userName,
+      null,
+      userId,
+      true,
+    );
     log.error("Error sending message", e);
     return {
       status: false,

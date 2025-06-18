@@ -598,7 +598,6 @@ declare global {
   type WhatsappCatalog = {
     catalogId: string;
     orgId: string;
-    products: PWaCatalogProducts;
     vertical: string;
     name: string;
     isWhatsappConnected: boolean;
