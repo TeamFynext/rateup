@@ -103,6 +103,7 @@ model User {
   ticketActivity      TicketActivity[]
   assignedTicketCards TicketCardAssignee[]
   assignedBoards      TicketBoardNotification[]
+  expoPushTokens      ExpoPushToken[]
 }
 
 model Org {
@@ -145,6 +146,7 @@ model Org {
   WaAutomatedReply         WaAutomatedReply[]
   whatsappQuickReplies     WhatsappQuickReply[]
   loyaltyApiSettings       LoyaltyApiSettings[]
+  expoPushTokens           ExpoPushToken[]
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
 }
@@ -1560,6 +1562,21 @@ model LoyaltyApiSettings {
 
   @@unique([orgId, priority])
   @@index([orgId, feature])
+}
+
+model ExpoPushToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  expoToken String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
+
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId String @db.Uuid
+
+  @@index([userId])
+  @@index([orgId])
 }
 
 model WhatsappCatalog {

@@ -112,6 +112,10 @@ import {
 import { autoGenerateTicket } from "../../ticket/ticketCard/card.service";
 import { getAutomatedReplyById } from "../automatedReply/wa_automatedReply.service";
 import { handleWaOrderfromCatalog } from "../catalog/catalog.service";
+import {
+  getTokensByOrgId,
+  sendPushNotification,
+} from "../../mobileNotification/mobile.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -403,6 +407,13 @@ async function whatsappMessageHandler(
   if (type === WaMessageTypes.order) {
     await handleWaOrderfromCatalog(completeMessageObject, messageObj);
   }
+  const expoToken = await getTokensByOrgId(orgId);
+  await sendPushNotification(
+    expoToken,
+    "RateUp",
+    `New message from ${userName}`,
+    {},
+  );
   const message = tempMessage?.split("\n")?.slice(1)?.join(" ") || tempMessage;
   log.trace("message => %s", message);
   const messageLowerCase =

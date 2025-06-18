@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-
 import { orgRoutes } from "./modules/org/org.route";
 import { orgSchemas } from "./modules/org/org.schema";
 import { questionRoutes } from "./modules/question/question.route";
@@ -91,6 +90,8 @@ import { columnSchemas } from "./modules/ticket/ticketColumn/column.schema";
 import { cardSchemas } from "./modules/ticket/ticketCard/card.schema";
 import { boardSchemas } from "./modules/ticket/ticketBoard/board.schema";
 import { loyaltyApiSettingSchemas } from "./modules/loyalty/apiSetting/apiSetting.schema";
+import { mobileNotificationRoutes } from "./modules/mobileNotification/mobile.route";
+import { expoSchemas } from "./modules/mobileNotification/mobile.schema";
 import { dashboardRoutes } from "./modules/dashboard/dashboard.route";
 
 export function registerRoutes(server: FastifyInstance): void {
@@ -137,6 +138,7 @@ export function registerRoutes(server: FastifyInstance): void {
     columnSchemas,
     cardSchemas,
     loyaltyApiSettingSchemas,
+    expoSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -206,5 +208,8 @@ export function registerRoutes(server: FastifyInstance): void {
   });
   server.register(integrationsRoutes, { prefix: "api/integrations" });
   server.register(loyaltyPublicRoutes, { prefix: "api/public/loyalty" });
+  server.register(mobileNotificationRoutes, {
+    prefix: "api/mobilenotification",
+  });
   server.register(dashboardRoutes, { prefix: "api/dashboard" });
 }
