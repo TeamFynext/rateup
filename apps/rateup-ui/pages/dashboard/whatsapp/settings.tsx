@@ -218,7 +218,7 @@ const initFacebookSdk = () => {
         appId: "3634460296824137",
         autoLogAppEvents: true,
         xfbml: true,
-        version: "v21.0",
+        version: "v23.0",
       });
     };
   });
