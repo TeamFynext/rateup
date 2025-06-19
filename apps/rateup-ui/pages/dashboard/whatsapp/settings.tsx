@@ -218,7 +218,7 @@ const initFacebookSdk = () => {
         appId: "3634460296824137",
         autoLogAppEvents: true,
         xfbml: true,
-        version: "v21.0",
+        version: "v23.0",
       });
     };
   });
@@ -244,7 +244,7 @@ const fbLogin = (): Promise<FBLoginResponse> => {
         override_default_response_type: true,
         extras: {
           setup: {},
-          featureType: "",
+          featureType: "whatsapp_business_app_onboarding", // set to 'whatsapp_business_app_onboarding'
           sessionInfoVersion: "3",
         },
       },
