@@ -304,23 +304,33 @@ const MessageSendPanel = () => {
                 animationType="fade"
                 onRequestClose={() => setTemplateModalVisible(false)}
               >
-                <View className="flex-1 bg-black/40 items-center justify-center px-4">
-                  <ScrollView className="bg-white w-full rounded-xl max-h-[50%] min-h-[50%] p-4">
-                    <View className="flex-row justify-between items-center mb-4">
-                      <Text className="text-xl font-semibold text-black">
+                <View className="flex-1 bg-black/30 justify-center items-center px-4">
+                  <View className="bg-white w-full rounded-2xl overflow-hidden max-h-[80%] min-h-[50%] shadow-lg">
+                    <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 bg-rateUpGreen rounded-t-2xl">
+                      <Text className="text-white text-lg font-semibold">
                         Send Template
                       </Text>
                       <TouchableOpacity
                         onPress={() => setTemplateModalVisible(false)}
+                        className="w-8 h-8 rounded-full bg-white/20 items-center justify-center"
                       >
-                        <Text className="text-base text-red-600">Close</Text>
+                        <Text className="text-white text-xl font-bold">×</Text>
                       </TouchableOpacity>
                     </View>
-                    <TemplateSending
-                      onClose={() => setTemplateModalVisible(false)}
-                      contact={selectedContactId}
-                    />
-                  </ScrollView>
+
+                    <ScrollView
+                      contentContainerStyle={{
+                        padding: 16,
+                        paddingBottom: 32,
+                      }}
+                      className="bg-white"
+                    >
+                      <TemplateSending
+                        onClose={() => setTemplateModalVisible(false)}
+                        contact={selectedContactId}
+                      />
+                    </ScrollView>
+                  </View>
                 </View>
               </Modal>
 
