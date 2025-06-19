@@ -35,21 +35,23 @@ export async function registerBusinessClientHandler(
     const { code, phone_number_id, waba_id } = req.body;
     const { orgId } = req.user;
 
-    const existing = await prisma.whatsappSettings.findFirst({
-      where: {
-        phoneId: phone_number_id,
-        NOT: {
-          orgId: orgId,
+    if (phone_number_id) {
+      const existing = await prisma.whatsappSettings.findFirst({
+        where: {
+          phoneId: phone_number_id,
+          NOT: {
+            orgId: orgId,
+          },
         },
-      },
-    });
-    if (existing) {
-      log.error(
-        `Phone number ${phone_number_id} is already registered with another organization`,
-      );
-      return rep
-        .status(400)
-        .send({ message: "Phone number already registered" });
+      });
+      if (existing) {
+        log.error(
+          `Phone number ${phone_number_id} is already registered with another organization`,
+        );
+        return rep
+          .status(400)
+          .send({ message: "Phone number already registered" });
+      }
     }
 
     const accessToken = await getAccessTokenFromCode(code);
@@ -69,30 +71,35 @@ export async function registerBusinessClientHandler(
     log.trace("App subscription response: %o", subRes);
 
     // Registering phone number
-    const registerRes = await registerPhoneNumber(phone_number_id, accessToken);
-    log.trace("Phone registration response: %o", registerRes);
+    if (phone_number_id) {
+      const registerRes = await registerPhoneNumber(
+        phone_number_id,
+        accessToken,
+      );
+      log.trace("Phone registration response: %o", registerRes);
+    }
 
     // Setting up encryption keys
     const keys: WaEncryptionKeys = await generateKeyPairsForWaEncryption(
       crypto.randomBytes(16).toString("hex"),
     );
-    await setBusinessPublicKey(keys.publicKey, phone_number_id, accessToken);
+    await setBusinessPublicKey(keys.publicKey, phone?.id, accessToken);
     // Saving settings
     const waSetting = await prisma.whatsappSettings.findFirst({
       where: {
         orgId,
-        phoneId: phone_number_id,
+        phoneId: phone?.id,
       },
     });
     if (waSetting) {
-      await updateWaSettings(orgId, phone_number_id, {
+      await updateWaSettings(orgId, phone?.id, {
         accessToken,
       });
     } else {
       await createWaSettings(orgId, {
         wabaId: waba_id,
         phone: phone?.display_phone_number?.replace(/ /g, ""),
-        phoneId: phone_number_id,
+        phoneId: phone?.id,
         accessToken,
         type: WaConfigType.Automated,
         appId: process.env.wa_app_id,
