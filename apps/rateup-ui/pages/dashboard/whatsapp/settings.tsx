@@ -265,7 +265,7 @@ function MetaLoginButton() {
   const { translations } = useTranslations();
 
   useEffect(() => {
-    if (waData?.phone_number_id && waData?.waba_id && code) {
+    if (waData?.waba_id && code) {
       registerMutation.mutate({
         code,
         phone_number_id: waData.phone_number_id,
@@ -278,18 +278,19 @@ function MetaLoginButton() {
     initFacebookSdk();
 
     const handleMessage = (event) => {
-      if (
-        event.origin !== "https://www.facebook.com" &&
-        event.origin !== "https://web.facebook.com"
-      ) {
-        return;
-      }
+      if (!event.origin.endsWith("facebook.com")) return;
       try {
         const data = JSON.parse(event.data);
         if (data.type === "WA_EMBEDDED_SIGNUP") {
-          if (data.event === "FINISH") {
-            const { phone_number_id, waba_id } = data.data;
-            setWData({ phone_number_id, waba_id });
+          if (
+            ["FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING", "FINISH"].includes(
+              data.event,
+            )
+          ) {
+            setWData({
+              phone_number_id: data.data?.phone_number_id ?? "",
+              waba_id: data?.data?.waba_id,
+            });
           } else if (data.event === "CANCEL") {
             const { current_step } = data.data;
             setWData({ phone_number_id: "", waba_id: "" });
