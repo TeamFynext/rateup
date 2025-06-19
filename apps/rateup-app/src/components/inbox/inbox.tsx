@@ -190,10 +190,10 @@ export default function Inbox({
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
       ListEmptyComponent={
-      <View className="h-full flex items-center justify-center">
-        <Text className="text-gray-500">No contacts found.</Text>
-      </View>
-    }
+        <View className="h-full flex items-center justify-center">
+          <Text className="text-gray-500">No contacts found.</Text>
+        </View>
+      }
       onEndReached={() => {
         if (hasNextPage && !isFetchingNextPage) {
           fetchNextPage();

@@ -3,7 +3,7 @@ import { WaSettings, WaTemplate } from "../types";
 
 const TEMPLATES_URL = `/api/wa/templates`;
 
-export const getWaTemplates = async (templatType:any) => {
+export const getWaTemplates = async (templatType: any) => {
   const url = templatType
     ? `${TEMPLATES_URL}?templateType=${templatType}`
     : TEMPLATES_URL;
@@ -16,7 +16,7 @@ export async function sendWaTemplateToUser(
   phone: string,
   parameterData: any,
   teamId: string,
-  whatsappSettingsPhoneId: string,
+  whatsappSettingsPhoneId: string
 ) {
   return axios.post(`${TEMPLATES_URL}/${templateId}/send`, {
     templateId,

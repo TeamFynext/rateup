@@ -1,6 +1,5 @@
-import * as Notifications from 'expo-notifications';
-import { Alert } from 'react-native';
-
+import * as Notifications from "expo-notifications";
+import { Alert } from "react-native";
 
 async function getExpoPushTokenWithRetry(maxRetries = 5, delay = 1000) {
   let attempts = 0;
@@ -26,16 +25,20 @@ async function getExpoPushTokenWithRetry(maxRetries = 5, delay = 1000) {
 
 export async function registerForPushNotificationsAsync() {
   try {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
-    if (existingStatus !== 'granted') {
+    if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
 
-    if (finalStatus !== 'granted') {
-      Alert.alert("Permission denied", "Please enable notifications from settings");
+    if (finalStatus !== "granted") {
+      Alert.alert(
+        "Permission denied",
+        "Please enable notifications from settings"
+      );
     }
 
     const tokenData = await getExpoPushTokenWithRetry();

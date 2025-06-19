@@ -14,7 +14,6 @@ import IIcon from "@/assets/images/i-icon.svg";
 import RateupIcon from "@/assets/images/rateupstar-icon.svg";
 import SendIcon from "@/assets/images/send-wa-message-icon.svg";
 import PlusIcon from "@/assets/images/plus-icon.svg";
-import EmojiIcon from "@/assets/images/emoji-icon.svg"
 
 export {
   SearchIcon,
@@ -33,5 +32,4 @@ export {
   RateupIcon,
   SendIcon,
   PlusIcon,
-  EmojiIcon
 };

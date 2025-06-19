@@ -31,9 +31,9 @@ export default function SignInScreen({
   const handleSignIn = async () => {
     Keyboard.dismiss();
     setLoading(true);
-    if(!email || !password){
-      setError("Email and Password required")
-      setLoading(false)
+    if (!email || !password) {
+      setError("Email and Password required");
+      setLoading(false);
       return;
     }
     const response = await signIn(email, password);
@@ -47,9 +47,8 @@ export default function SignInScreen({
       setUserId(userId);
       setOrgId(orgId);
       const token = await registerForPushNotificationsAsync();
-      if(token){
-        await addToken(token)
-        console.log("Added Token");
+      if (token) {
+        await addToken(token);
       }
       router.replace("/protected/Home");
       setLoading(false);

@@ -15,6 +15,7 @@ import { closeChat } from "@/src/api/inbox/contacts/contacts.api";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useChatAssignStatusStore } from "@/src/utils/store";
+import { useToast } from "react-native-toast-notifications";
 
 const { width: screenWidth } = Dimensions.get("window");
 let userId: string;
@@ -164,6 +165,7 @@ const ChatHeader = ({
 
   const hoursLeft = Math.floor(diffInMinutes / 60);
   const minutesLeft = diffInMinutes % 60;
+  const toast = useToast();
 
   const handleProceedCloseChat = async () => {
     setIsLoading(true);
@@ -173,7 +175,7 @@ const ChatHeader = ({
       queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
       router.back();
     } catch (error) {
-      console.error("Error closing chat:", error);
+      toast.show("Error closing chat", { type: "danger" });
     } finally {
       setIsLoading(false);
     }

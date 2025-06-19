@@ -6,6 +6,8 @@ import { useRouter } from "expo-router";
 import { GoogleIcon } from "../constants/imageExports";
 import { loggedUserDetails } from "../api/api";
 import { useAuth } from "../context/AuthContext";
+import { registerForPushNotificationsAsync } from "../utils/notification";
+import { addToken } from "../api/notification";
 
 const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
   const router = useRouter();
@@ -28,6 +30,10 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
       const { userId, orgId } = userData;
       setUserId(userId);
       setOrgId(orgId);
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await addToken(token);
+      }
       router.replace("/protected/Home");
       setLoading(false);
     }

@@ -1,14 +1,19 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getWaSettings, getWaTemplates, sendWaTemplateToUser } from "./whatsapp.api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  getWaSettings,
+  getWaTemplates,
+  sendWaTemplateToUser,
+} from "./whatsapp.api";
+import { useToast } from "react-native-toast-notifications";
 
-export const useWaTemplates = (templateType?:any) =>
+export const useWaTemplates = (templateType?: any) =>
   useQuery({
     queryKey: ["watemplates", templateType],
     queryFn: () => getWaTemplates(templateType),
   });
 
 export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
-  // const queryClient = useQueryClient();
+  const toast = useToast();
   return useMutation({
     mutationFn: ({
       templateId,
@@ -26,19 +31,21 @@ export const useSendWaTemplateToUser = (phone: string, contactId: string) => {
         phone,
         parameterData,
         teamId,
-        whatsappSettingsPhoneId,
+        whatsappSettingsPhoneId
       ),
     onSuccess: () => {
-      // queryClient.invalidateQueries({ queryKey: ["wa-messages", contactId] });
-      // queryClient.invalidateQueries({ queryKey: ["wa-contacts"] });
-      // queryClient.invalidateQueries({ queryKey: ["wa-contact", contactId] });
-      console.log("Template sent successfully");
+      toast.show("Template sent successfully", {
+        type: "success",
+      });
     },
     onError: (error: any) => {
-       console.log(
+      toast.show(
         typeof error?.response?.data === "string"
           ? error?.response?.data
           : "Error sending template!",
+        {
+          type: "danger",
+        }
       );
     },
   });

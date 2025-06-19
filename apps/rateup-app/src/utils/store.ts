@@ -17,7 +17,7 @@ type SessionState = {
 
 type SelectedTabState = {
   selectedTab: string;
-  setSelectedTab: (tab:string) => void;
+  setSelectedTab: (tab: string) => void;
 };
 
 export const useChatAssignStatusStore = create<ChatState>((set: any) => ({
@@ -36,12 +36,10 @@ export const useContactIdStore = create<SelectedContactState>((set: any) => ({
     set({ selectedContactId: contactId }),
 }));
 
-export const useSessionActiveStore = create<SessionState>((set:any) => ({
+export const useSessionActiveStore = create<SessionState>((set: any) => ({
   isSessionActive: true,
-  setIsSessionActive: (session: boolean) =>
-    set({ isSessionActive: session }),
+  setIsSessionActive: (session: boolean) => set({ isSessionActive: session }),
 }));
-
 
 type ChatFilterStore = {
   filter: ChatFilter;
@@ -62,7 +60,6 @@ export const useChatFilterStore = create<ChatFilterStore>((set) => ({
   },
   setFilter: (value) => set({ filter: value }),
 }));
-
 
 type WaMedia = {
   type: string;
@@ -173,7 +170,6 @@ export const useLiveMessages = create<LiveMessageStore>((set) => ({
     })),
   clearMessages: () => set({ messages: [] }),
 }));
-
 
 type AuthState = {
   isAuthenticated: boolean | null;

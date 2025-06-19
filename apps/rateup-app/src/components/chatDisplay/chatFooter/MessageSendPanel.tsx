@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   TextInput,
@@ -21,10 +21,15 @@ import {
 import { useSendNewWaMessage } from "@/src/api/inbox/messages/message.query";
 import { uploadFile } from "@/src/utils/fileUpload";
 import VoiceRecorder, { useVoiceStore } from "./VoiceRecorder";
-import { ImageIcon, VideoIcon, MusicIcon, File } from "lucide-react-native"; // Import Lucide icons
-import { EmojiIcon, SendIcon, PlusIcon } from "@/src/constants/imageExports";
+import {
+  ImageIcon,
+  VideoIcon,
+  MusicIcon,
+  File,
+  Paperclip,
+} from "lucide-react-native"; // Import Lucide icons
+import { SendIcon, PlusIcon } from "@/src/constants/imageExports";
 import TemplateSending from "./TemplateSending";
-import { getContactById } from "@/src/api/inbox/contacts/contacts.api";
 
 const MessageSendPanel = () => {
   const selectedContactId = useContactIdStore((s) => s.selectedContactId);
@@ -33,7 +38,8 @@ const MessageSendPanel = () => {
   const voiceReset = useVoiceStore((s) => s.reset);
   //@ts-ignore
   const mutation = useSendNewWaMessage(selectedContactId);
-  let { isSessionActive } = useSessionActiveStore();
+  // let { isSessionActive } = useSessionActiveStore();
+  let isSessionActive = "true";
   //@ts-ignore
   isSessionActive = isSessionActive === "true";
 
@@ -43,6 +49,8 @@ const MessageSendPanel = () => {
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [templateOptionsVisible, setTemplateOptionsVisible] = useState(false);
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
+  const [mediaPanelVisible, setMediaPanelVisible] = useState(false);
+
   //@ts-ignore
   const isUploading = media.some((m) => m.uploading);
 
@@ -165,10 +173,7 @@ const MessageSendPanel = () => {
   return (
     <View className="bg-white pt-3 px-3">
       {isSessionActive ? (
-        <View
-          className="opacity-100"
-          pointerEvents="auto"
-        >
+        <View className="opacity-100" pointerEvents="auto">
           {media.length > 0 && (
             <View className="flex-row flex-wrap gap-2 mb-3 px-1">
               {media.map((item) => (
@@ -230,42 +235,44 @@ const MessageSendPanel = () => {
             </View>
           )}
 
-          <View className="flex-row justify-between px-1 mb-3">
-            <TouchableOpacity
-              onPress={() => pickMedia("image")}
-              className="items-center mx-2"
-            >
-              <ImageIcon size={30} color="black" strokeWidth={1.5} />
-            </TouchableOpacity>
+          {mediaPanelVisible && (
+            <View className="flex-row justify-between px-1 mb-3">
+              <TouchableOpacity
+                onPress={() => pickMedia("image")}
+                className="items-center mx-2"
+              >
+                <ImageIcon size={30} color="black" strokeWidth={1.5} />
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => pickMedia("video")}
-              className="items-center mx-2"
-            >
-              <VideoIcon size={30} color="black" strokeWidth={1.5} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => pickMedia("video")}
+                className="items-center mx-2"
+              >
+                <VideoIcon size={30} color="black" strokeWidth={1.5} />
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => pickMedia("document")}
-              className="items-center mx-2"
-            >
-              <File size={30} color="black" strokeWidth={1.5} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => pickMedia("document")}
+                className="items-center mx-2"
+              >
+                <File size={30} color="black" strokeWidth={1.5} />
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => pickMedia("audio")}
-              className="items-center mx-2"
-            >
-              <MusicIcon size={30} color="black" strokeWidth={1.5} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => pickMedia("audio")}
+                className="items-center mx-2"
+              >
+                <MusicIcon size={30} color="black" strokeWidth={1.5} />
+              </TouchableOpacity>
 
-            <VoiceRecorder
-              onRecordingUpload={({ key, url, name }) =>
-                //@ts-ignore
-                addMedia({ key, url, name, type: "audio", uploading: false })
-              }
-            />
-          </View>
+              <VoiceRecorder
+                onRecordingUpload={({ key, url, name }) =>
+                  //@ts-ignore
+                  addMedia({ key, url, name, type: "audio", uploading: false })
+                }
+              />
+            </View>
+          )}
 
           <View className="flex-row items-center justify-center">
             <View className="relative flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-3 py-2 space-x-2">
@@ -326,7 +333,11 @@ const MessageSendPanel = () => {
                 onChangeText={setMessage}
               />
 
-              <EmojiIcon />
+              <TouchableOpacity
+                onPress={() => setMediaPanelVisible((prev) => !prev)}
+              >
+                <Paperclip color={"black"} strokeWidth={1} />
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
@@ -374,40 +385,51 @@ const MessageSendPanel = () => {
                 animationType="fade"
                 onRequestClose={() => setTemplateModalVisible(false)}
               >
-                <View className="flex-1 bg-black/40 items-center justify-center px-4">
-                  <ScrollView className="bg-white w-full rounded-xl max-h-[50%] min-h-[50%] p-4">
-                    <View className="flex-row justify-between items-center mb-4">
-                      <Text className="text-xl font-semibold text-black">
+                <View className="flex-1 bg-black/30 justify-center items-center px-4">
+                  <View className="bg-white w-full rounded-2xl overflow-hidden max-h-[80%] min-h-[50%] shadow-lg">
+                    <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 bg-rateUpGreen rounded-t-2xl">
+                      <Text className="text-white text-lg font-semibold">
                         Send Template
                       </Text>
                       <TouchableOpacity
                         onPress={() => setTemplateModalVisible(false)}
+                        className="w-8 h-8 rounded-full bg-white/20 items-center justify-center"
                       >
-                        <Text className="text-base text-red-600">Close</Text>
+                        <Text className="text-white text-xl font-bold">×</Text>
                       </TouchableOpacity>
                     </View>
-                    <TemplateSending
-                      onClose={() => setTemplateModalVisible(false)}
-                      contact={selectedContactId}
-                    />
-                  </ScrollView>
+
+                    <ScrollView
+                      contentContainerStyle={{
+                        padding: 16,
+                        paddingBottom: 32,
+                      }}
+                      className="bg-white"
+                    >
+                      <TemplateSending
+                        onClose={() => setTemplateModalVisible(false)}
+                        contact={selectedContactId}
+                      />
+                    </ScrollView>
+                  </View>
                 </View>
               </Modal>
-              <View className="flex-row items-center flex-1 opacity-50" pointerEvents="none">
-              <TextInput
-                className="flex-1 text-base text-black max-h-28 text-center"
-                placeholder="Session expired"
-                placeholderTextColor="red"
-                multiline
-              />
-              <EmojiIcon />
+
+              <View
+                className="flex-row items-center flex-1 opacity-50"
+                pointerEvents="none"
+              >
+                <TextInput
+                  className="flex-1 text-base text-black max-h-28 text-center"
+                  placeholder="Session expired"
+                  placeholderTextColor="red"
+                  multiline
+                />
               </View>
             </View>
 
-            <TouchableOpacity
-              className="ml-2 w-10 h-10 items-center justify-center opacity-50"
-            >
-            <SendIcon/>
+            <TouchableOpacity className="ml-2 w-10 h-10 items-center justify-center opacity-50">
+              <SendIcon />
             </TouchableOpacity>
           </View>
         </View>

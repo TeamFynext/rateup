@@ -91,7 +91,9 @@ const FiltersScreen = () => {
             {/* Tags / Groups / Campaigns */}
             {Array.isArray(data) && data.length > 0 && (
               <View className="mt-4 space-y-2 border p-2 border-[#E2E5ED] rounded-full">
-                <Text className="text-[#E2E5ED]">Select Tags, Groups or Campaigns</Text>
+                <Text className="text-[#E2E5ED]">
+                  Select Tags, Groups or Campaigns
+                </Text>
 
                 <View className="flex-row flex-wrap gap-2">
                   {data
@@ -110,8 +112,7 @@ const FiltersScreen = () => {
                       ];
 
                       const isSelected = allSelected.some(
-                        (item) =>
-                          item.value === value && item.group === group
+                        (item) => item.value === value && item.group === group
                       );
 
                       return (

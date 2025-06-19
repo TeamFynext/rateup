@@ -35,51 +35,51 @@ export enum TemplateType {
   CAROUSEL = "CAROUSEL",
 }
 
- export type DbFlow = {
-    dbFlowId: string;
-    createdAt: Date;
-    flowId: string;
-    name: string;
-    status: WaFlowStatus;
-    json: WaFlowJson;
-    map: any;
-    logicJumps: {
-      [screenId: string]: any[];
-    };
-    orgId: string;
-    surveyId: string;
-    templateMessage: WaFlowTemplateMessage;
-    survey: any;
-    startMessageConfig: WaFlowStartMessageConfig;
-    pendingSave: boolean;
-    anonymous: boolean;
-    version: number;
-    ticketIssued: FlowTicket[];
+export type DbFlow = {
+  dbFlowId: string;
+  createdAt: Date;
+  flowId: string;
+  name: string;
+  status: WaFlowStatus;
+  json: WaFlowJson;
+  map: any;
+  logicJumps: {
+    [screenId: string]: any[];
   };
-   type FlowTicket = {
-    questionId: string;
-    type: any;
-    selectedColumnId?: string;
-    selectedBoardId?: string;
-    condition: {
-      minRating?: number;
-      minOpinion?: number;
-      reqOptions?: string[];
-      submissionTicket?: boolean;
-    };
+  orgId: string;
+  surveyId: string;
+  templateMessage: WaFlowTemplateMessage;
+  survey: any;
+  startMessageConfig: WaFlowStartMessageConfig;
+  pendingSave: boolean;
+  anonymous: boolean;
+  version: number;
+  ticketIssued: FlowTicket[];
+};
+type FlowTicket = {
+  questionId: string;
+  type: any;
+  selectedColumnId?: string;
+  selectedBoardId?: string;
+  condition: {
+    minRating?: number;
+    minOpinion?: number;
+    reqOptions?: string[];
+    submissionTicket?: boolean;
   };
-  export type WaFlowStartMessageConfig = {
+};
+export type WaFlowStartMessageConfig = {
   prefix: string;
   suffix: string;
 };
- type WaFlowTemplateMessage = {
-    header?: string;
-    headerImage?: string;
-    body: string;
-    footer?: string;
-    cta: string;
-  };
-  export enum WaFlowStatus {
+type WaFlowTemplateMessage = {
+  header?: string;
+  headerImage?: string;
+  body: string;
+  footer?: string;
+  cta: string;
+};
+export enum WaFlowStatus {
   PUBLISHED = "PUBLISHED",
   DRAFT = "DRAFT",
   DEPRECATED = "DEPRECATED",
@@ -178,7 +178,6 @@ export enum WaFlowFormElementType {
   chipsSelector = "ChipsSelector",
 }
 
-
 export type WaSettings = {
   wabaId: string;
   phone: string;
@@ -188,7 +187,6 @@ export type WaSettings = {
   appId: string;
   type: WaConfigType;
 }[];
-
 
 export enum WaConfigType {
   Manual = "Manual",

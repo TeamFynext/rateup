@@ -55,7 +55,7 @@ export const signIn = async (email: string, password: string) => {
 
 export const signOut = async () => {
   try {
-    const token = await registerForPushNotificationsAsync()
+    const token = await registerForPushNotificationsAsync();
     if (token) {
       await deleteToken(token);
     }

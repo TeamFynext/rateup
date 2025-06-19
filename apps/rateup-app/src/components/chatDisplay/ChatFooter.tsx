@@ -94,25 +94,20 @@ const ChatFooter = ({ id }: { id: string }) => {
 
   return (
     <View>
-          {!currentUserAssignment && (
-            <View className="bg-black flex-row py-3 px-1 items-center justify-center gap-1 flex-wrap">
-              <IIcon />
-              <Text className="text-white">
-                This chat is not assigned to you.
-              </Text>
-              {assignedData && (
-                <TouchableOpacity onPress={toggleModal}>
-                  <Text className="text-rateUpGreen underline">
-                    View Members?
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
+      {!currentUserAssignment && (
+        <View className="bg-black flex-row py-3 px-1 items-center justify-center gap-1 flex-wrap">
+          <IIcon />
+          <Text className="text-white">This chat is not assigned to you.</Text>
+          {assignedData && (
+            <TouchableOpacity onPress={toggleModal}>
+              <Text className="text-rateUpGreen underline">View Members?</Text>
+            </TouchableOpacity>
           )}
-
+        </View>
+      )}
 
       {currentUserAssignment && <MessageSendPanel />}
-        <AssignedUsersModal />
+      <AssignedUsersModal />
     </View>
   );
 };

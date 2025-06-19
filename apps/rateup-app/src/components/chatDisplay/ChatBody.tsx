@@ -41,7 +41,7 @@ const ChatBody = ({ id }: { id: string }) => {
   const lastVisibleIndex = useRef(0);
   const prevMessageCount = useRef(messages.length);
   const messageList = useMemo(() => messages, [messages]);
-  const {wsData} = useWsData()
+  const { wsData } = useWsData();
   React.useEffect(() => {
     if (
       messages.length > prevMessageCount.current &&
@@ -53,17 +53,15 @@ const ChatBody = ({ id }: { id: string }) => {
   }, [messages.length]);
 
   React.useEffect(() => {
-  if (
-    wsData?.type === "inbox" &&
-    wsData.inbox.contact.id === id // only for current chat
-  ) {
-    const isDuplicate = messageList.some(
-      (msg) => msg.id === wsData.inbox.message.id
-    );
-    if (!isDuplicate) {
-      queryClient.setQueryData(
-        ["wa-messages", id],
-        (oldData: any) => {
+    if (
+      wsData?.type === "inbox" &&
+      wsData.inbox.contact.id === id // only for current chat
+    ) {
+      const isDuplicate = messageList.some(
+        (msg) => msg.id === wsData.inbox.message.id
+      );
+      if (!isDuplicate) {
+        queryClient.setQueryData(["wa-messages", id], (oldData: any) => {
           if (!oldData) return oldData;
 
           const newPages = [...oldData.pages];
@@ -76,11 +74,10 @@ const ChatBody = ({ id }: { id: string }) => {
             ...oldData,
             pages: newPages,
           };
-        }
-      );
+        });
+      }
     }
-  }
-}, [wsData, id, messageList]);
+  }, [wsData, id, messageList]);
 
   const markedAsRead = useRef(new Set<string>());
 

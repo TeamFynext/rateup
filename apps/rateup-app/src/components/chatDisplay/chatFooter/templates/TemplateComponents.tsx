@@ -13,7 +13,7 @@ import {
   FlatList,
 } from "react-native";
 
-import { ReplyIcon,Divide } from "lucide-react-native"; // replace with your icon lib
+import { ReplyIcon, Divide } from "lucide-react-native"; // replace with your icon lib
 
 import {
   WaTemplateComponent,
@@ -69,7 +69,12 @@ export default function WaInboxTemplateComponents({
         />
       );
     case "BODY":
-      return <WaInboxTemplateBody parameterData={parameterData} templateComponent={templateComponent} />;
+      return (
+        <WaInboxTemplateBody
+          parameterData={parameterData}
+          templateComponent={templateComponent}
+        />
+      );
     case "FOOTER":
       return <WaInboxTemplateFooter {...templateComponent} />;
     case "BUTTONS":
@@ -83,9 +88,10 @@ export default function WaInboxTemplateComponents({
 const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
   const getUrlIfParameterIsPresent = (): string => {
     if (parameterData) {
-      const file = parameterData.parameters?.[0]?.[
-        templateComponent?.format?.toLowerCase()
-      ]?.link;
+      const file =
+        parameterData.parameters?.[0]?.[
+          templateComponent?.format?.toLowerCase()
+        ]?.link;
       if (file instanceof File) {
         return URL.createObjectURL(file);
       } else {
@@ -98,7 +104,11 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
 
   switch (templateComponent?.format) {
     case "TEXT":
-      return <Text style={{ fontWeight: "bold", fontSize: 16 }}>{templateComponent?.text}</Text>;
+      return (
+        <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+          {templateComponent?.text}
+        </Text>
+      );
     case "IMAGE":
       return (
         <Image
@@ -108,7 +118,9 @@ const WaInboxTemplateHeader = ({ parameterData, templateComponent }: Props) => {
       );
     case "DOCUMENT":
       return (
-        <TouchableOpacity onPress={() => Linking.openURL(getUrlIfParameterIsPresent())}>
+        <TouchableOpacity
+          onPress={() => Linking.openURL(getUrlIfParameterIsPresent())}
+        >
           <Text style={{ color: "blue", textDecorationLine: "underline" }}>
             View Document
           </Text>
@@ -134,7 +146,9 @@ const WaInboxTemplateBody = ({ parameterData, templateComponent }: Props) => {
 // ---------- Footer ----------
 const WaInboxTemplateFooter = (props: WaTemplateFetchBodyComponent) => {
   return (
-    <Text style={{ fontSize: 12, color: "gray", marginTop: 10 }}>{props?.text}</Text>
+    <Text style={{ fontSize: 12, color: "gray", marginTop: 10 }}>
+      {props?.text}
+    </Text>
   );
 };
 
@@ -196,7 +210,8 @@ export function AccountSelector({
     }
   }, [accountOptions, value]);
 
-  if (isError) return <Text className="text-red-500">Something went wrong!</Text>;
+  if (isError)
+    return <Text className="text-red-500">Something went wrong!</Text>;
 
   if (isPending) {
     return (

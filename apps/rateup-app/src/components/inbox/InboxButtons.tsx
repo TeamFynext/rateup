@@ -24,7 +24,8 @@ const InboxButtons = ({
     if (isRotating) return;
     setIsRotating(true);
     queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
-
+    const toekn = await registerForPushNotificationsAsync();
+    console.log(toekn);
     Animated.loop(
       Animated.timing(rotation, {
         toValue: 1,
