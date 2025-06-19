@@ -35,7 +35,7 @@ async function axiosWithRetry<T = any>(
   throw lastError!;
 }
 
-const WA_API_VERSION = "v22.0";
+const WA_API_VERSION = "v23.0";
 export async function callWhatsappApi(
   url: string,
   method: AxiosRequestConfig["method"],
