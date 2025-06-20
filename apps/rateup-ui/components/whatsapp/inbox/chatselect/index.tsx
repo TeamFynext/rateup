@@ -17,6 +17,7 @@ import {
   SegmentedControl,
   Stack,
   Text,
+  Transition,
 } from "@mantine/core";
 import {
   IconForbid2,
@@ -42,6 +43,7 @@ import {
   WaMessagePage,
 } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { AccountSelector } from "@/components/input/AccountSelector";
 import { useWsData } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
@@ -50,6 +52,7 @@ import useContactStore, {
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
+import { usePhoneIdStore } from "./accountSelectorStore";
 import AddUnknownContactModal from "./addUnknownContactModal";
 import WaInboxChatExport from "./chatExport";
 import WaInboxChatFilter, {
@@ -70,6 +73,7 @@ const WaInboxChatSelect = () => {
   const tab = (router.query?.tab as string) ?? "New";
   const { filter, setFilter } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
+  const { updatePhoneId, whatsappSettingsPhoneId } = usePhoneIdStore();
 
   const queryClient = useQueryClient();
 
@@ -336,50 +340,90 @@ const WaInboxChatSelect = () => {
       });
     }
   }, [router.query?.tab, filter]);
-
+  const [opened, setOpened] = useState(false);
   if (isContactLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading} />;
 
   return (
     <Stack className={classes.wrapper} gap={"xs"}>
-      <Group className={classes.chat_select_header} gap={"xs"}>
-        {/* <Indicator
-          inline
-          label={allFilteredContactsRow?.[0]?.total_contact_count || 6}
-          size={16}
-          color="red"
-          pos={"fixed"}
-          top={filter.messageType === "usermessages" ? 80 : 124}
-          left={100}
-          style={{ zIndex: 1000 }}
-          visibleFrom="sm"
-        /> */}
-        <ContainedTextField
-          leftSection={
-            <IconSearch style={{ marginLeft: "var(--mantine-spacing-xs)" }} />
+      <Group
+        className={classes.chat_select_header}
+        gap="xs"
+        align="center"
+        wrap="nowrap"
+      >
+        <ActionIcon
+          variant={opened ? "filled" : "light"}
+          h={30}
+          w={30}
+          radius="md"
+          onClick={() => setOpened((o) => !o)}
+          aria-label={
+            opened ? translations["Close search"] : translations["Open search"]
           }
-          rightSection={
-            filter.searchTerm && (
-              <IconSquareRoundedX
-                size={18}
-                style={{ marginRight: "var(--mantine-spacing-xs)" }}
-                onClick={() => setFilter({ ...filter, searchTerm: null })}
-              />
-            )
-          }
-          placeholder={translations["Search Contacts"]}
-          value={filter?.searchTerm || ""}
-          onChange={(e) =>
-            setFilter({ ...filter, searchTerm: e.currentTarget.value })
-          }
-          flex={1}
-        />
+        >
+          {opened ? <IconSquareRoundedX /> : <IconSearch />}
+        </ActionIcon>
+        <Transition
+          mounted={opened}
+          transition="slide-right"
+          duration={350}
+          timingFunction="cubic-bezier(0.4, 0, 0.2, 1)"
+          keepMounted
+        >
+          {(styles) => (
+            <ContainedTextField
+              style={styles}
+              rightSection={
+                filter.searchTerm ? (
+                  <ActionIcon
+                    size="sm"
+                    variant="subtle"
+                    color="gray"
+                    onClick={() => setFilter({ ...filter, searchTerm: "" })}
+                    aria-label={translations["Clear search"]}
+                  >
+                    <IconSquareRoundedX size={18} />
+                  </ActionIcon>
+                ) : null
+              }
+              placeholder={translations["Search Contacts"]}
+              value={filter?.searchTerm || ""}
+              onChange={(e) =>
+                setFilter({ ...filter, searchTerm: e.currentTarget.value })
+              }
+              autoFocus
+              flex={1}
+            />
+          )}
+        </Transition>
+        <Transition
+          mounted={!opened}
+          transition="slide-left"
+          duration={350}
+          timingFunction="cubic-bezier(0.4, 0, 0.2, 1)"
+          keepMounted
+        >
+          {(styles) => (
+            <AccountSelector
+              style={styles}
+              onChange={(phoneId) => {
+                updatePhoneId(phoneId);
+              }}
+              value={whatsappSettingsPhoneId}
+              flex={1}
+              labelProps={{
+                display: "none",
+              }}
+            />
+          )}
+        </Transition>
         <AddUnknownContactModal
           phone=""
           triggerType="action_button"
           successCallback={onUnknownContactAddSuccess}
         />
-        <Group className={classes.chat_select_filter_indicator_wrapper}>
+        <Group className={classes.chat_select_filter_indicator_wrapper} gap={4}>
           <ActionIcon
             h={30}
             w={30}
@@ -394,6 +438,7 @@ const WaInboxChatSelect = () => {
                 queryKey: ["contactInboxCount"],
               });
             }}
+            aria-label={translations["Refresh"]}
           >
             <IconRefresh />
           </ActionIcon>
