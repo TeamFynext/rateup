@@ -12,7 +12,12 @@ export async function createWaSettings(
   orgId: string,
   data: Omit<
     WhatsappSettings,
-    "accessToken_iv" | "encryption" | "orgId" | "phone" | "webhookPassword"
+    | "accessToken_iv"
+    | "encryption"
+    | "orgId"
+    | "phone"
+    | "webhookPassword"
+    | "createdAt"
   > & {
     phone?: string;
     webhookPassword?: string;

@@ -667,8 +667,9 @@ export async function sendMediaMessages(
   orgId,
   userId,
   caption = "",
+  whatsappSettingsPhoneId = "",
 ) {
-  for (var i = 0; i < media.length; i++) {
+  for (let i = 0; i < media.length; i++) {
     const item = media[i];
     const isLastItem = i === media.length - 1;
     let captionMsg = isLastItem ? caption : "";
@@ -696,7 +697,13 @@ export async function sendMediaMessages(
         break;
       }
     }
-    await sendMessage(orgId, messageBody, null, userId);
+    await sendMessage(
+      orgId,
+      messageBody,
+      null,
+      userId,
+      whatsappSettingsPhoneId,
+    );
     if (!isLastItem) wait(50);
   }
 }
@@ -720,6 +727,7 @@ export async function sendContactMessage(
   phone,
   orgId,
   userId,
+  whatsappSettingsPhoneId,
 ) {
   if (!contacts.contactIds && !contacts.groupIds) return;
   let filterCondition = {
@@ -759,10 +767,16 @@ export async function sendContactMessage(
   });
 
   const messageBody = createContactMessage(phone, contactsData);
-  await sendMessage(orgId, messageBody, null, userId);
+  await sendMessage(orgId, messageBody, null, userId, whatsappSettingsPhoneId);
 }
 
-export async function sendLocationMessage(location, phone, orgId, userId) {
+export async function sendLocationMessage(
+  location,
+  phone,
+  orgId,
+  userId,
+  whatsappSettingsPhoneId,
+) {
   const messageBody = createLocationMessage(phone, location);
-  await sendMessage(orgId, messageBody, null, userId);
+  await sendMessage(orgId, messageBody, null, userId, whatsappSettingsPhoneId);
 }
