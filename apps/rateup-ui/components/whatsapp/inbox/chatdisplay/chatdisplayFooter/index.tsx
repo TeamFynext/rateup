@@ -29,15 +29,16 @@ import {
   RateupButtonPrimary,
   RateupButtonSecondary,
 } from "../../../../Button/RateupButtons";
+import { usePhoneIdStore } from "../../chatselect/accountSelectorStore";
 import { AssignInbox } from "../chatdisplayHeader";
 import WaInboxFooterMenu from "./footerMenu";
 import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplayFooter({
   contact,
-}: {
+}: Readonly<{
   contact: ContactsWithLastMessage;
-}) {
+}>) {
   const inputRef = useRef(null);
   const submiRef = useRef(null);
   const { translations } = useTranslations();
@@ -46,6 +47,8 @@ export default function WaInboxChatDisplayFooter({
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
+  const { whatsappSettingsPhoneId } = usePhoneIdStore();
+
   const form = useForm({
     initialValues: {
       type: "text",
@@ -140,11 +143,14 @@ export default function WaInboxChatDisplayFooter({
     });
     resetMedia();
     setAudioUrl(null);
-    sendnewWaMessage.mutate(values, {
-      onSuccess: () => {
-        removeMessage(contact.id);
+    sendnewWaMessage.mutate(
+      { ...values, whatsappSettingsPhoneId },
+      {
+        onSuccess: () => {
+          removeMessage(contact.id);
+        },
       },
-    });
+    );
   }
   function insertEmoji(value: string) {
     const { selectionStart, selectionEnd } = inputRef.current;
