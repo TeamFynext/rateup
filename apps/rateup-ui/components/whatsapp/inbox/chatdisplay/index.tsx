@@ -24,18 +24,14 @@ import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplay({ smallScreen = false }) {
   const searchParams = useSearchParams();
-  const {
-    selectedContact: contact,
-    opened,
-    selectedTicket,
-  } = useContactStore();
+  const { selectedContact: contact } = useContactStore();
   const { data, error } = useGetMessagesByContactId(
-    (searchParams.get("contactId") as string) ?? contact?.id,
+    searchParams.get("contactId") ?? contact?.id,
   );
   const messages =
     data?.pages
       .map((page) =>
-        page.messages.sort(
+        page.messages.toSorted(
           (a, b) =>
             new Date(a.waCreatedAt).getTime() -
             new Date(b.waCreatedAt).getTime(),
