@@ -20,12 +20,10 @@ const InboxButtons = ({
   const rotation = useRef(new Animated.Value(0)).current;
   const [isRotating, setIsRotating] = useState(false);
 
-  const handleRefresh = async() => {
+  const handleRefresh = () => {
     if (isRotating) return;
     setIsRotating(true);
     queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
-    const toekn = await registerForPushNotificationsAsync();
-    console.log(toekn);
     Animated.loop(
       Animated.timing(rotation, {
         toValue: 1,
