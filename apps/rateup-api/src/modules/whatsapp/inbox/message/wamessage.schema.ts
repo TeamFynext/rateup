@@ -47,6 +47,7 @@ const NewWaMessageBody = z.object({
       address: z.string(),
     })
     .optional(),
+  whatsappSettingsPhoneId: z.string(),
 });
 
 const PaginateQuerySchema = z.object({

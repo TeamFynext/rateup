@@ -152,7 +152,7 @@ export async function sendNewWaMessageHandler(
 ) {
   try {
     const { contactId } = request.params;
-    const { type, contacts, location } = request.body;
+    const { type, contacts, location, whatsappSettingsPhoneId } = request.body;
     const { orgId, userId } = request.user;
     const contact = await getContactById(contactId);
     if (!contact) {
@@ -167,7 +167,14 @@ export async function sendNewWaMessageHandler(
           const text = request.body.text.body;
           const caption =
             typeof text === "string" ? text : parseToWhatsAppFormat(text);
-          await sendMediaMessages(media, contact.phone, orgId, userId, caption);
+          await sendMediaMessages(
+            media,
+            contact.phone,
+            orgId,
+            userId,
+            caption,
+            whatsappSettingsPhoneId,
+          );
           break;
         }
         const messageBody = createTextMessage(
@@ -175,18 +182,31 @@ export async function sendNewWaMessageHandler(
           "",
           request?.body?.text?.body,
         );
-        await sendMessage(orgId, messageBody, null, userId);
+        await sendMessage(
+          orgId,
+          messageBody,
+          null,
+          userId,
+          whatsappSettingsPhoneId,
+        );
         break;
       }
-      case "reaction":
+      case "reaction": {
         const { emoji, toWaMessageId } = request.body.reaction;
         const messageBody = createReactionMessage(
           contact.phone,
           toWaMessageId,
           emoji,
         );
-        await sendMessage(orgId, messageBody, null, userId);
+        await sendMessage(
+          orgId,
+          messageBody,
+          null,
+          userId,
+          whatsappSettingsPhoneId,
+        );
         break;
+      }
       case "media":
         if (request.body.media.length)
           await sendMediaMessages(
@@ -194,18 +214,32 @@ export async function sendNewWaMessageHandler(
             contact.phone,
             orgId,
             userId,
+            whatsappSettingsPhoneId,
           );
         break;
       case "contact": {
-        await sendContactMessage(contacts, contact.phone, orgId, userId);
+        await sendContactMessage(
+          contacts,
+          contact.phone,
+          orgId,
+          userId,
+          whatsappSettingsPhoneId,
+        );
         break;
       }
       case "location":
-        await sendLocationMessage(location, contact.phone, orgId, userId);
+        await sendLocationMessage(
+          location,
+          contact.phone,
+          orgId,
+          userId,
+          whatsappSettingsPhoneId,
+        );
         break;
     }
     reply.send("Message Sent");
   } catch (error) {
+    log.error("Error in getFilteredContactsHandler: %o", error);
     reply.status(500).send("Internal Server Error");
   }
 }
