@@ -73,8 +73,18 @@ export async function addNewWaMessage(
 export async function getWaMessagesByContactId(
   contactId: string,
   cursor: string | null,
+  phone?: string,
 ) {
   let messages: WaMessage[];
+  let sourceIdentifierCondition = phone &&
+    phone !== "all" && {
+      OR: [
+        { sourceIdentifier: phone },
+        {
+          sourceIdentifier: `+${phone}`,
+        },
+      ],
+    };
   if (cursor) {
     messages = await prisma.waMessage.findMany({
       skip: 1,
@@ -84,6 +94,7 @@ export async function getWaMessagesByContactId(
       },
       where: {
         contactId,
+        ...sourceIdentifierCondition,
       },
       include: {
         sender: {
@@ -102,6 +113,7 @@ export async function getWaMessagesByContactId(
       take: 300,
       where: {
         contactId,
+        ...sourceIdentifierCondition,
       },
       include: {
         sender: {
@@ -351,6 +363,19 @@ export async function filterChats(
       }
     }
 
+    // Filter by phone (sourceIdentifier)
+    if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
+      params.push(bodyFilterProps.phone);
+      params.push(`+${bodyFilterProps.phone}`);
+      filters.push(`EXISTS (
+      SELECT 1 FROM "WaMessage" wm
+      WHERE wm."contactId" = c.id
+      AND (
+        wm."sourceIdentifier" = $${paramIndex++}
+        OR wm."sourceIdentifier" = $${paramIndex++}
+      )
+      )`);
+    }
     if (bodyFilterProps?.blockedUsers) {
       filters?.push(`c."blockedOnWhatsApp" = TRUE`);
     } else {
