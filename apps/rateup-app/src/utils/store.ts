@@ -61,6 +61,31 @@ export const useChatFilterStore = create<ChatFilterStore>((set) => ({
   setFilter: (value) => set({ filter: value }),
 }));
 
+
+type FlowStatus = 'all' | 'PUBLISHED' | 'DRAFT';
+type AlphabeticalOrder = 'A-Z' | 'Z-A' | null;
+
+export const useFlowFilterStore = create<any>((set) => ({
+  teamId: 'all',
+  status: 'all' as FlowStatus,
+  sortByDate: 'latest' as 'latest' | 'oldest',
+  alphabetical: null as AlphabeticalOrder,
+
+  setTeamId: (id: string) => set({ teamId: id }),
+  setStatus: (status: FlowStatus) => set({ status }),
+  setSortByDate: (order: 'latest' | 'oldest') => set({ sortByDate: order }),
+  setAlphabetical: (order: AlphabeticalOrder) => set({ alphabetical: order }),
+
+  resetFilters: () =>
+    set({
+      teamId: 'all',
+      status: 'all',
+      sortByDate: 'latest',
+      alphabetical: null,
+    }),
+}));
+
+
 type WaMedia = {
   type: string;
   url: string;
