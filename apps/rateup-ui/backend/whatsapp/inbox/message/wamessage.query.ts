@@ -26,17 +26,21 @@ import {
   unblockWhatsAppUser,
 } from "./wamessage.api";
 
-export const useGetMessagesByContactId = (contactId: string) => {
+export const useGetMessagesByContactId = (
+  contactId: string,
+  selectedPhone: string,
+) => {
   return useInfiniteQuery({
-    queryKey: ["wa-messages", contactId],
+    queryKey: ["wa-messages", contactId, selectedPhone],
     initialPageParam: "",
-    queryFn: ({ pageParam }) => getMessagesByContactId(contactId, pageParam),
+    queryFn: ({ pageParam }) =>
+      getMessagesByContactId(contactId, pageParam, selectedPhone),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     select: (data) => ({
       pages: [...data.pages].reverse(),
       pageParams: [...data.pageParams].reverse(),
     }),
-    enabled: !!contactId,
+    enabled: !!contactId && !!selectedPhone,
   });
 };
 

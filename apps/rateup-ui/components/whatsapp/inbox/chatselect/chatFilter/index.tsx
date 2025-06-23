@@ -17,6 +17,7 @@ import { persist } from "zustand/middleware";
 
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
 import { useTeamsByUser } from "@/backend/team/team.query";
+import { AccountSelector } from "@/components/input/AccountSelector";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
@@ -38,6 +39,7 @@ export type ChatFilter = {
   blockedUsers: boolean;
   newStatuses: string[];
   assignedTeams: string[];
+  phone?: string;
 };
 interface Props {
   tab: string;
@@ -168,6 +170,25 @@ export default function WaInboxChatFilter({ tab }: Props) {
           <Button size="compact-xs" ml={"auto"} onClick={clearFilters}>
             {translations["clear filters"]}
           </Button>
+          <AccountSelector
+            onChange={(phone) => {
+              // updatePhoneId(phoneId);
+              setFilter({
+                ...filter,
+                phone,
+              });
+            }}
+            value={filter?.phone}
+            flex={1}
+            usePhoneNumber
+            withAllOption
+            styles={{
+              input: {
+                background: "var(--mantine-primary-color-filled)",
+                color: "white",
+              },
+            }}
+          />
           <ContainedMultiSelect
             maw={250}
             //TODO reimplement strict filter
@@ -259,6 +280,7 @@ export const useChatFilterStore = create<ChatFilterStore>()(
           WaMessageAssignStatus.UNASSIGNED,
         ],
         assignedTeams: [],
+        phone: "all",
       },
       setFilter: (value) => set({ filter: value }),
     }),

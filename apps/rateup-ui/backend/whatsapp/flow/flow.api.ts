@@ -128,8 +128,14 @@ export async function sendFlow(
   phone: string,
   teamId: string,
   flowId: string,
+  whatsappSettingsPhoneId: string,
 ) {
-  await axiosClient.post(`${BASE}/${dbFlowId}/send`, { phone, teamId, flowId });
+  await axiosClient.post(`${BASE}/${dbFlowId}/send`, {
+    phone,
+    teamId,
+    flowId,
+    whatsappSettingsPhoneId,
+  });
 }
 
 export async function updateFlowMetaData(

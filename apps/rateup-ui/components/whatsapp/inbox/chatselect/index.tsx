@@ -14,28 +14,22 @@ import {
   Divider,
   Group,
   Indicator,
-  SegmentedControl,
   Stack,
   Text,
-  Transition,
 } from "@mantine/core";
 import {
   IconForbid2,
-  IconMessage,
   IconMessageBolt,
   IconMessageCheck,
-  IconMessageUp,
   IconRefresh,
   IconSearch,
   IconSquareRoundedX,
   IconUserCheck,
   IconUserCircle,
-  IconUserX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import { WaMessageAssignStatus } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
 import {
   ContactsWithLastMessage,
@@ -43,7 +37,6 @@ import {
   WaMessagePage,
 } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { AccountSelector } from "@/components/input/AccountSelector";
 import { useWsData } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
@@ -52,7 +45,6 @@ import useContactStore, {
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
-import { usePhoneIdStore } from "./accountSelectorStore";
 import AddUnknownContactModal from "./addUnknownContactModal";
 import WaInboxChatExport from "./chatExport";
 import WaInboxChatFilter, {
@@ -63,17 +55,11 @@ import WaInboxChatSelectCard from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
 import classes from "./styles.module.css";
 
-enum TabsEnum {
-  all = "all",
-  // tickets = "tickets",
-}
-
 const WaInboxChatSelect = () => {
   const router = useRouter();
   const tab = (router.query?.tab as string) ?? "New";
   const { filter, setFilter } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
-  const { updatePhoneId, whatsappSettingsPhoneId } = usePhoneIdStore();
 
   const queryClient = useQueryClient();
 
@@ -283,8 +269,8 @@ const WaInboxChatSelect = () => {
   );
 
   const validateSearchStringAsMobileNumber = useCallback(
-    (searchString: string): Boolean => {
-      return searchString?.match(/^\d{10}$/) ? true : false;
+    (searchString: string): boolean => {
+      return !!RegExp(/^\d{10}$/).exec(searchString);
     },
     [],
   );
@@ -339,8 +325,8 @@ const WaInboxChatSelect = () => {
         blockedUsers: false,
       });
     }
-  }, [router.query?.tab, filter]);
-  const [opened, setOpened] = useState(false);
+  }, [router.query?.tab, filter, prepareFilters]);
+
   if (isContactLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading} />;
 
@@ -352,72 +338,29 @@ const WaInboxChatSelect = () => {
         align="center"
         wrap="nowrap"
       >
-        <ActionIcon
-          variant={opened ? "filled" : "light"}
-          h={30}
-          w={30}
-          radius="md"
-          onClick={() => setOpened((o) => !o)}
-          aria-label={
-            opened ? translations["Close search"] : translations["Open search"]
+        <ContainedTextField
+          leftSection={<IconSearch size={18} color="gray" stroke={1.5} />}
+          rightSection={
+            filter.searchTerm ? (
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                onClick={() => setFilter({ ...filter, searchTerm: "" })}
+                aria-label={translations["Clear search"]}
+              >
+                <IconSquareRoundedX size={18} />
+              </ActionIcon>
+            ) : null
           }
-        >
-          {opened ? <IconSquareRoundedX /> : <IconSearch />}
-        </ActionIcon>
-        <Transition
-          mounted={opened}
-          transition="slide-right"
-          duration={350}
-          timingFunction="cubic-bezier(0.4, 0, 0.2, 1)"
-          keepMounted
-        >
-          {(styles) => (
-            <ContainedTextField
-              style={styles}
-              rightSection={
-                filter.searchTerm ? (
-                  <ActionIcon
-                    size="sm"
-                    variant="subtle"
-                    color="gray"
-                    onClick={() => setFilter({ ...filter, searchTerm: "" })}
-                    aria-label={translations["Clear search"]}
-                  >
-                    <IconSquareRoundedX size={18} />
-                  </ActionIcon>
-                ) : null
-              }
-              placeholder={translations["Search Contacts"]}
-              value={filter?.searchTerm || ""}
-              onChange={(e) =>
-                setFilter({ ...filter, searchTerm: e.currentTarget.value })
-              }
-              autoFocus
-              flex={1}
-            />
-          )}
-        </Transition>
-        <Transition
-          mounted={!opened}
-          transition="slide-left"
-          duration={350}
-          timingFunction="cubic-bezier(0.4, 0, 0.2, 1)"
-          keepMounted
-        >
-          {(styles) => (
-            <AccountSelector
-              style={styles}
-              onChange={(phoneId) => {
-                updatePhoneId(phoneId);
-              }}
-              value={whatsappSettingsPhoneId}
-              flex={1}
-              labelProps={{
-                display: "none",
-              }}
-            />
-          )}
-        </Transition>
+          placeholder={translations["Search Contacts"]}
+          value={filter?.searchTerm || ""}
+          onChange={(e) =>
+            setFilter({ ...filter, searchTerm: e.currentTarget.value })
+          }
+          autoFocus
+          flex={1}
+        />
         <AddUnknownContactModal
           phone=""
           triggerType="action_button"
