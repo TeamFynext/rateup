@@ -460,12 +460,13 @@ export async function sendFlowHandler(
   try {
     const { orgId, userId } = request.user;
     const { dbFlowId } = request.params;
-    const { phone, teamId, flowId } = request.body;
+    const { phone, teamId, flowId, whatsappSettingsPhoneId } = request.body;
     const serviceParam = {
       orgId,
       dbFlowId,
       phone,
       userId,
+      whatsappSettingsPhoneId,
     };
     orgId && updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     const dbFlow = await getFlowWithSurveyTeamMapIds(orgId, flowId);

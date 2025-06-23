@@ -214,6 +214,7 @@ export async function sendNewWaMessageHandler(
             contact.phone,
             orgId,
             userId,
+            "",
             whatsappSettingsPhoneId,
           );
         break;
@@ -253,8 +254,9 @@ export async function getWaMessagesByContactIdHandler(
 ) {
   try {
     const cursor = request.query.cursor || null;
+    const phone = request.query.phone || null;
     const { contactId } = request.params;
-    const messages = await getWaMessagesByContactId(contactId, cursor);
+    const messages = await getWaMessagesByContactId(contactId, cursor, phone);
     reply.send(messages);
   } catch (error) {
     reply.status(500).send("Internal Server Error");
