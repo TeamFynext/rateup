@@ -38,6 +38,7 @@ import {
 } from "../../../../../types/global";
 import { formatDate, formatToCustomTime } from "../../../../../utils/dateTime";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
+import { useChatFilterStore } from "../../chatselect/chatFilter";
 import { useMessageStore } from "../chatdisplayFooter";
 import WaInboxAudio from "./components/audio";
 import WaInboxContact from "./components/contact";
@@ -55,17 +56,17 @@ interface Props {
   data: WaGetMessagesBody[];
   smallScreen?: boolean;
 }
-export default function WaInboxChatDisplayBody(props: Props) {
+export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
   const searchParams = useSearchParams();
-  let contactId = searchParams.get("contactId") as string;
+  let contactId = searchParams.get("contactId");
+  const { filter } = useChatFilterStore();
   const {
     error, // Error
     fetchNextPage,
     hasNextPage, // boolean
     isError,
     isFetchingNextPage,
-    isPending,
-  } = useGetMessagesByContactId(contactId);
+  } = useGetMessagesByContactId(contactId, filter?.phone);
 
   const [currentScrollPosition, setCurrentScrollPosition] = useState(0);
   const [currentScrollHeight, setCurrentScrollHeight] = useState(0);

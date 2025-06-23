@@ -6,12 +6,12 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
 import { create } from "zustand";
 
+import { AccountSelector } from "@/components/input/AccountSelector";
 import VoiceRecorder, {
   useVoiceRecordStore,
 } from "@/components/input/VoiceRecorder";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
-  parseJsonToReact,
   parseToWhatsAppFormat,
 } from "@/components/RichTextEditor/waTextEditor";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -47,7 +47,7 @@ export default function WaInboxChatDisplayFooter({
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
-  const { whatsappSettingsPhoneId } = usePhoneIdStore();
+  const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
 
   const form = useForm({
     initialValues: {
@@ -183,6 +183,22 @@ export default function WaInboxChatDisplayFooter({
   const SendMessageComponent = () => {
     return (
       <Group gap={"xs"}>
+        <AccountSelector
+          onChange={(phoneId) => {
+            updatePhoneId(phoneId);
+          }}
+          value={whatsappSettingsPhoneId}
+          w={150}
+          styles={{
+            input: {
+              background: "var(--mantine-primary-color-filled)",
+              color: "white",
+            },
+            label: {
+              display: "none",
+            },
+          }}
+        />
         <WaInboxFooterMenu
           sessionExpired={isSessionExpired}
           contact={contact}
