@@ -2,7 +2,6 @@
 import { useRouter } from "next/router";
 
 import {
-  Anchor,
   AppShell,
   Avatar,
   Box,
@@ -10,7 +9,6 @@ import {
   Flex,
   Group,
   HoverCard,
-  Image,
   ScrollAreaAutosize,
   Text,
   Title,
@@ -19,9 +17,9 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { IconLogout } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
+import SessionReact from "supertokens-auth-react/recipe/session";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
@@ -39,8 +37,6 @@ import useLocalStorage from "../../hooks/localStorage";
 import { useNotifyWsMessages } from "../../hooks/useNotifyWsMessages";
 import { orgWsMessage } from "../../types/global";
 import NavbarSkeleton from "../animation/skeleton/Navbar.Skeleton";
-import SessionAuth from "../SuperToken/SessionAuth";
-import ColorSchemaButton from "../theme/ColorSchemaButton";
 import { useChatFilterStore } from "../whatsapp/inbox/chatselect/chatFilter";
 import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
@@ -558,7 +554,7 @@ export default function Layout({ children, appProps }) {
   );
 
   return (
-    <SessionAuth>
+    <SessionReact.SessionAuth>
       <WebSocketHandler
         data={data}
         error={error}
@@ -615,6 +611,6 @@ export default function Layout({ children, appProps }) {
           </MainContent>
         </AppShell.Main>
       </AppShell>
-    </SessionAuth>
+    </SessionReact.SessionAuth>
   );
 }
