@@ -168,7 +168,7 @@ server.register(plugin);
 server.setErrorHandler(errorHandler() as any);
 async function main() {
   const port: number = parseInt(process.env.PORT || "3001");
-  const host: string = process.env.HOST || "0.0.0.0";
+  const host: string = process.env.HOST || "::";
   server
     .listen({
       port: port,
