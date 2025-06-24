@@ -13,11 +13,8 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { redirectToAuth } from "supertokens-auth-react";
-import SuperTokens from "supertokens-web-js";
-import Session from "supertokens-web-js/recipe/session";
+import Session from "supertokens-auth-react/recipe/session";
 
-import { frontendConfig } from "../config/frontendConfig";
 import { UserProvider } from "../context/UserContext";
 
 import "@mantine/core/styles.css";
@@ -34,8 +31,10 @@ import { useRouter } from "next/router";
 
 import { ModalsProvider } from "@mantine/modals";
 import axios from "axios";
+import SuperTokensReact, { SuperTokensWrapper } from "supertokens-auth-react";
 
-import CookieConsentBanner from "../components/Analytics/CookieConsentBanner";
+import { frontendConfig } from "@/config/frontendConfig";
+
 import FacebookPixel from "../components/Analytics/FacebookPixel";
 import GoogleAnalytics from "../components/Analytics/GoogleAnalytics";
 import { AdminPanelLayout } from "../components/Layout/admin/AdminLayout";
@@ -49,7 +48,7 @@ import { geist, notoColorEmogi } from "../utils/fonts";
 import { pageView } from "../utils/gtag";
 
 if (typeof window !== "undefined") {
-  SuperTokens.init(frontendConfig());
+  SuperTokensReact.init(frontendConfig());
 }
 
 // TODO: docs warns to not create this at file root level
@@ -131,7 +130,7 @@ export default function App({
           location.reload();
         } else {
           // user has been logged out
-          redirectToAuth();
+          SuperTokensReact.redirectToAuth();
         }
       }
     }
@@ -203,9 +202,11 @@ export default function App({
             <Notifications />
             <HydrationBoundary state={pageProps.dehydratedState}>
               <UserProvider>
-                <LayoutComponent {...(isLayoutNeeded ? { appProps } : {})}>
-                  <Component {...pageProps} />
-                </LayoutComponent>
+                <SuperTokensWrapper>
+                  <LayoutComponent {...(isLayoutNeeded ? { appProps } : {})}>
+                    <Component {...pageProps} />
+                  </LayoutComponent>
+                </SuperTokensWrapper>
               </UserProvider>
               {showQueryDevTools && (
                 <ReactQueryDevtools

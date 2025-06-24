@@ -14,6 +14,8 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import axios from "axios";
 import Session from "supertokens-web-js/recipe/session";
 
+import { UserProvider } from "@/context/UserContext";
+
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
@@ -76,7 +78,7 @@ export default function Providers({ children }) {
   return (
     <QueryClientProvider client={queryClient}>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        {children}
+        <UserProvider>{children}</UserProvider>
       </HydrationBoundary>
       <ReactQueryDevtools initialIsOpen={false} buttonPosition="top-right" />
     </QueryClientProvider>
