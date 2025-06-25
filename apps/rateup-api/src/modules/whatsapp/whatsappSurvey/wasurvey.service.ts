@@ -9,6 +9,7 @@ import {
   WaQuestions,
 } from "../../../types/enums";
 import {
+  LeadGenBody,
   WaMessageBody,
   WaSendMessageBody,
 } from "../../../types/whatsapp.types";
@@ -59,6 +60,7 @@ import {
 } from "./automation-logger.utils";
 import { processNextNode } from "./wasurvey.controller";
 import { waStatusQueue } from "../../../utils/redisConnection";
+import { assertNodeType, LeadgenNodeData, NodeData } from "./node-types";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -1030,5 +1032,70 @@ export async function aibotNodeCompletion(phone: string, orgId: string) {
         automationLog?.id,
       );
     }
+  }
+}
+
+export async function handleLeadGen(body: WaMessageBody) {
+  for (const lead of body.entry[0].changes) {
+    const { page_id, ad_id, leadgen_id } = lead.value as LeadGenBody;
+    const nodeType = "leadgenNode";
+    const result: any[] = await prisma.$queryRaw`
+  SELECT *
+  FROM "WaAutomatedReply"
+  WHERE EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements("matchData"->'nodes') AS node
+    WHERE 
+      node->>'type' = ${nodeType} AND
+      node->'data'->>'ad'->>'id' = ${ad_id} AND
+      node->'data'->>'fbPageId' = ${page_id}
+  )
+  LIMIT 1;
+`;
+    const automation: any = result?.length ? result[0] : null;
+    if (!automation) return;
+    const leadgenNode = automation.matchData?.json.nodes.find(
+      (node) => node.type === "leadgenNode",
+    );
+    const leadgenNodeData = leadgenNode.data as LeadgenNodeData;
+    let phone = leadgenNodeData.phone;
+    const res = await callWhatsappApi(
+      `/${leadgen_id}?access_token=${leadgenNodeData.pageAccessToken}`,
+      "GET",
+    );
+    if (res.data)
+      await prisma.$executeRaw`
+    UPDATE "MetaAssets"
+    SET "leads" = "leads" || ${JSON.stringify(res.data)}::jsonb
+    WHERE "orgId" = ${automation.orgId}
+  `;
+    if (leadgenNodeData.phoneField?.trim().length && res.data) {
+      const formValues = res.data.field_data;
+      const fieldValue = formValues.find(
+        (field) => field.name === leadgenNodeData.phoneField,
+      );
+      if (fieldValue) {
+        phone = fieldValue?.values[0];
+      }
+    }
+    const automationLog = await logAutomationAction({
+      phone,
+      nodeId: leadgenNode.id,
+      automationId: automation.id,
+      orgId: automation.orgId,
+      response: {
+        value: "lead generated",
+        action: "initial_interaction",
+      },
+    });
+
+    await processNextNode(
+      phone,
+      automation,
+      leadgenNode.id,
+      automation.orgId,
+      automationLog?.id,
+      leadgen_id,
+    );
   }
 }

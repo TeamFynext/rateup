@@ -8,6 +8,7 @@ import { getPhoneDetails } from "../auth/wa_auth.service";
 import { WaConfigType } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { PaginationQuery } from "./wa_settings.schema";
+import { callWhatsappApi } from "../wa_axios";
 
 export async function createWaSettings(
   orgId: string,
@@ -222,4 +223,124 @@ export async function getWaLogs(orgId: string, query: PaginationQuery) {
     take: limit ? Number(limit) : undefined,
   });
   return { totalCount, logs };
+}
+
+export async function getFbPagesFromWa(orgId) {
+  const { accessToken } = await getWaSettings(orgId);
+  if (!accessToken) {
+    throw new Error("accesstoken not found");
+  }
+  const url = `/me/accounts?fields=id,name,access_token&access_token=${accessToken}`;
+  const res = await callWhatsappApi(url, "GET");
+  return res.data?.data;
+}
+
+export async function getAdsFromWa(orgId, adAccountId) {
+  const { accessToken } = await getWaSettings(orgId);
+  if (!accessToken) {
+    throw new Error("accesstoken not found");
+  }
+  const url = `/${adAccountId}/ads?fields=id,name&access_token=${accessToken}`;
+  const res = await callWhatsappApi(url, "GET");
+  return res.data?.data;
+}
+
+export async function getAdAccountsFromWa(orgId) {
+  const { accessToken } = await getWaSettings(orgId);
+  if (!accessToken) {
+    throw new Error("accesstoken not found");
+  }
+  const url = `/me/adaccounts?fields=id,name&access_token=${accessToken}`;
+  const res = await callWhatsappApi(url, "GET");
+  const adAccounts = [...res.data?.data];
+  for (const acc of adAccounts) {
+    const ads = await callWhatsappApi(
+      `/${acc?.id}/ads?fields=id,name&access_token=${accessToken}`,
+      "GET",
+    );
+    acc.ads = ads.data.data;
+  }
+  return adAccounts;
+}
+
+export async function getLeadgenFormsFromWa(fbPageId, pageAccessToken) {
+  const url = `/${fbPageId}/leadgen_forms?fields=id,name,questions&access_token=${pageAccessToken}`;
+  const res = await callWhatsappApi(url, "GET");
+  return res.data.data;
+}
+
+export async function subscribeFieldtoPage(fbPageId, pageAccessToken, fields) {
+  const url = `/${fbPageId}/subscribed_apps?subscribed_fields=${fields.join(",")}&access_token=${pageAccessToken}`;
+  const res = await callWhatsappApi(url, "POST");
+  return res.data?.data;
+}
+
+export async function getLeadgenFormQuestionsFromWa(
+  fbPageId,
+  leadgenFormId,
+  pageAccessToken,
+) {
+  const url = `/${fbPageId}/${leadgenFormId}/leadgen_forms?fields=questions&access_token=${pageAccessToken}`;
+  const res = await callWhatsappApi(url, "GET");
+  return res.data?.data;
+}
+
+export async function syncMetaAssetstoDb(key, data, orgId) {
+  await prisma.metaAssets.upsert({
+    where: {
+      orgId,
+    },
+    create: {
+      orgId,
+      [key]: data,
+    },
+    update: {
+      [key]: data,
+    },
+  });
+}
+
+export interface MetaAsset {
+  orgId: string;
+  pages: {
+    id: string;
+    name: string;
+    access_token: string;
+  }[];
+  adAccounts: {
+    id: string;
+    name: string;
+    ads: {
+      id: string;
+      name: string;
+    }[];
+  }[];
+  leads: {
+    created_time: string;
+    id: string;
+    ad_id: string;
+    form_id: string;
+    field_data: {
+      name: string;
+      values: any[];
+    }[];
+  }[];
+  subscribedFields: {
+    pageId: string;
+    fields: string[];
+  }[];
+  leadgenForms: {
+    pageId: string;
+    id: string;
+    name: string;
+    questions: any[];
+  }[];
+}
+
+export async function getMetaAssets(orgId: string) {
+  return (await prisma.metaAssets.findUnique({
+    where: {
+      orgId,
+    },
+  })) as unknown as MetaAsset;
 }

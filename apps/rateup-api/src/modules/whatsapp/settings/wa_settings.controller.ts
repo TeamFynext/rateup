@@ -1,5 +1,8 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  ByAdAccountIdParamsSchema,
+  ByFbPageQuerySchema,
+  ByLeadGenFormIdParamsSchema,
   ByWaSettingsIdParamsSchema,
   ContactTagSchema,
   createWaSettingsInput,
@@ -11,10 +14,18 @@ import { Role } from "../../org/org.services";
 import {
   createWaSettings,
   deleteWaSettings,
+  getAdAccountsFromWa,
+  getAdsFromWa,
   getAllWaSettings,
   getContactTag,
+  getFbPagesFromWa,
+  getLeadgenFormQuestionsFromWa,
+  getLeadgenFormsFromWa,
+  getMetaAssets,
   getWaLogs,
   getWaSettings,
+  subscribeFieldtoPage,
+  syncMetaAssetstoDb,
   updateContactTag,
   updateWaSettings,
   upsertWaSettings,
@@ -156,6 +167,159 @@ export async function getWaLogsHandler(
     reply.code(200).send(data);
   } catch (error) {
     log.error("Error while getting wa logs", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function syncFbPagesHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const data = await getFbPagesFromWa(orgId);
+    const res = await syncMetaAssetstoDb("pages", data, orgId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error while getting fb pages %o", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function syncLeadgenFormsHandler(
+  request: FastifyRequest<{ Body: ByFbPageQuerySchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { fbPageId, pageAccessToken } = request.body;
+    const { orgId } = request.user;
+    const forms = await getLeadgenFormsFromWa(fbPageId, pageAccessToken);
+    const data = forms.map((form) => ({ ...form, pageId: fbPageId }));
+    const res = await syncMetaAssetstoDb("leadgenForms", data, orgId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error while getting leadgen forms %o", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function syncLeadgenFormQuestionsHandler(
+  request: FastifyRequest<{
+    Body: ByFbPageQuerySchema;
+    Params: ByLeadGenFormIdParamsSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { formId } = request.params;
+    const { orgId } = request.user;
+    const { fbPageId, pageAccessToken } = request.body;
+    const data = await getLeadgenFormQuestionsFromWa(
+      fbPageId,
+      formId,
+      pageAccessToken,
+    );
+    const assets = await getMetaAssets(orgId);
+    const newLeadgenForms = assets.leadgenForms.map((form) => {
+      if (form.id === formId) {
+        form["questions"] = data;
+      }
+      return form;
+    });
+    const res = await syncMetaAssetstoDb(
+      "leadgenForms",
+      newLeadgenForms,
+      orgId,
+    );
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error while getting leadgen form questions %o", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function syncAdAccountsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const data = await getAdAccountsFromWa(orgId);
+    const res = await syncMetaAssetstoDb("adAccounts", data, orgId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error while getting ad accounts %o", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function syncAdsByAdAccountHandler(
+  request: FastifyRequest<{ Params: ByAdAccountIdParamsSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { adAccountId } = request.params;
+    const data = await getAdsFromWa(orgId, adAccountId);
+    const assets = await getMetaAssets(orgId);
+    const newAdaccounts = assets.adAccounts.map((acc) => {
+      if (acc.id === adAccountId) {
+        acc["ads"] = data;
+      }
+      return acc;
+    });
+    const res = await syncMetaAssetstoDb("adAccounts", newAdaccounts, orgId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error while getting ads %o", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function subscribeFieldstoPageHandler(
+  request: FastifyRequest<{ Body: ByFbPageQuerySchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { fields, fbPageId, pageAccessToken } = request.body;
+    const { orgId } = request.user;
+    const data = await subscribeFieldtoPage(fbPageId, pageAccessToken, fields);
+    if (data.success) {
+      const assets = await getMetaAssets(orgId);
+
+      const newFields = [...assets.subscribedFields];
+      const index = newFields.findIndex((i) => i.pageId === fbPageId);
+      if (index !== -1) {
+        newFields[index] = {
+          ...newFields[index],
+          fields,
+        };
+      }
+      const res = await syncMetaAssetstoDb(
+        "subscribedFields",
+        newFields,
+        orgId,
+      );
+    } else {
+      return reply.code(400).send({ message: "Unable to subscribe" });
+    }
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error while subscribing fields %o", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function getMetaAssetsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const data = await getMetaAssets(orgId);
+    reply.code(200).send(data);
+  } catch (error) {
+    log.error("Error while getting meta assets %o", error);
     reply.code(500).send({ message: "Something went wrong" });
   }
 }

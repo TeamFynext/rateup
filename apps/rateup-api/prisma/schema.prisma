@@ -149,6 +149,7 @@ model Org {
   expoPushTokens           ExpoPushToken[]
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
+  MetaAssets               MetaAssets[]
 }
 
 model UsageStats {
@@ -1621,4 +1622,14 @@ model WaCatalogOrder {
   status         String   @default("PENDING")
   transactionId  String?
   createdAt  DateTime  @default(now())
+}
+
+model MetaAssets {
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId     String   @unique @db.Uuid
+  pages     Json[]
+  adAccounts  Json[]
+  leads        Json[] 
+  subscribedFields Json[]
+  leadgenForms  Json[]
 }

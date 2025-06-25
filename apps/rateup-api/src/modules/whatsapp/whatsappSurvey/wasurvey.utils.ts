@@ -62,6 +62,11 @@ export function getEventType(data: WaMessageBody) {
       return data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]
         ?.status as WaEvent;
     }
+    if (data.object === "page") {
+      if (data?.entry?.[0]?.changes?.[0]?.field === WaEvent.LEADGEN) {
+        return WaEvent.LEADGEN;
+      }
+    }
   }
   return null;
 }
