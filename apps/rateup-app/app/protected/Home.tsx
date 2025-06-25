@@ -19,6 +19,8 @@ import { namePreview } from "@/src/utils/chatbox_utils";
 import { useLoggedInUser } from "@/src/api/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Flow from "./flows/Flow";
+import WebForm from "./webForms/WebForm";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -56,10 +58,10 @@ export default function Home() {
     switch (selectedInterface) {
       case "inbox":
         return <InboxLayout />;
-      case "whatsapp":
-        return <Text className="flex-1">WhatsApp</Text>;
-      default:
-        return <Text className="flex-1">Nothing to show here</Text>;
+      case "flow":
+        return <Flow />
+      case "webform":
+        return <WebForm/>
     }
   }, [selectedInterface]);
 

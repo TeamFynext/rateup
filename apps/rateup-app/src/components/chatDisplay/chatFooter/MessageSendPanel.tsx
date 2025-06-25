@@ -38,8 +38,7 @@ const MessageSendPanel = () => {
   const voiceReset = useVoiceStore((s) => s.reset);
   //@ts-ignore
   const mutation = useSendNewWaMessage(selectedContactId);
-  // let { isSessionActive } = useSessionActiveStore();
-  let isSessionActive = "true";
+  let { isSessionActive } = useSessionActiveStore();
   //@ts-ignore
   isSessionActive = isSessionActive === "true";
 
