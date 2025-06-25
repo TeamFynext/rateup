@@ -29,3 +29,13 @@ export async function getResponsesBySurveyId(
   );
   return res.data;
 }
+
+export async function getSurveys() {
+  try {
+    let surveys: Array<any> = (await axios.get(SURVEYURL)).data;
+    return surveys;
+  } catch (e) {
+    console.error(e);
+    return { error: "Error Occured!" };
+  }
+}

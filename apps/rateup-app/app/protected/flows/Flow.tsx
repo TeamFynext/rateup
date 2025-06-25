@@ -25,7 +25,6 @@ const getStatusBadge = (status: string) => {
 const Flow = () => {
   const { data = [], isLoading } = useWaFlowsFromDb();
   const router = useRouter();
-
   
   const {
     teamId,
