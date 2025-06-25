@@ -65,6 +65,7 @@ const sendFlowBodySchema = z.object({
   phone: z.string(),
   teamId: z.string(),
   flowId: z.string(),
+  whatsappSettingsPhoneId: z.string().optional(),
 });
 export const { schemas: waFlowSchemas, $ref: $waFlow } = buildJsonSchemas(
   {
