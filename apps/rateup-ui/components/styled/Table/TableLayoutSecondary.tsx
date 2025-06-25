@@ -1,3 +1,5 @@
+import { JSX } from "react";
+
 import { ScrollAreaAutosize, Table } from "@mantine/core";
 
 import useTranslations from "@/dictionaries/useTranslation";

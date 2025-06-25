@@ -283,7 +283,10 @@ const CardCarousel = ({
                     dynamicVariables={parseStringWithVariables(card.body)}
                   />
                   <Textarea
-                    ref={(el) => (inputRefs.current[index] = el)}
+                    // ref={(el) => (inputRefs.current[index] = el)}
+                    ref={(el) => {
+                      inputRefs.current[index] = el;
+                    }}
                     styles={{
                       input: {
                         borderRadius: "0px 0px 12px 12px",

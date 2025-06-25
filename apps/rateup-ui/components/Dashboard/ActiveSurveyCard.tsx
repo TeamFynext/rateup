@@ -1,4 +1,4 @@
-import React from "react";
+import React, { JSX } from "react";
 import { useRouter } from "next/router";
 
 import { Badge, Group, Stack, Text, Title } from "@mantine/core";

@@ -1,3 +1,5 @@
+import { JSX } from "react";
+
 import { Badge } from "@mantine/core";
 
 import { SubscriptionFeaturePathName } from "../../../types/enums";

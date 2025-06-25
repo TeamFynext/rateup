@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { JSX } from "react";
 
 import { Center, Paper, Stack, Table, Text } from "@mantine/core";
 import {
