@@ -242,7 +242,8 @@ async function handleMessageEvent(body: WaMessageBody) {
 
   for (const entry of body.entry || []) {
     for (const change of entry.changes || []) {
-      const phoneId = change.value?.metadata?.phone_number_id;
+      const phoneId = (change.value as WaReceiveMessageBody)?.metadata
+        ?.phone_number_id;
       const waSettings = await getWaSettingsByPhoneId(phoneId);
 
       if (!waSettings) {
@@ -397,9 +398,9 @@ async function whatsappMessageHandler(
   let sourceIdentifier;
   if (waMessage.object === "whatsapp_business_account") {
     sourcePlatform = PlatformType.WHATSAPP;
-    sourceIdentifier =
-      waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata
-        ?.display_phone_number;
+    sourceIdentifier = (
+      waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
+    )?.metadata?.display_phone_number;
   }
 
   const messageObj = await handleWaMessages(
@@ -410,7 +411,8 @@ async function whatsappMessageHandler(
     sourcePlatform,
     sourceIdentifier,
     userName,
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
+    (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.statuses?.[0]
+      ?.id,
   );
   if (type === WaMessageTypes.order) {
     await handleWaOrderfromCatalog(completeMessageObject, messageObj);
