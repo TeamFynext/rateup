@@ -45,7 +45,7 @@ export function FlowEmbeddedLinkDetailedView() {
     initialValues: {
       text: selectedFormElement.text || "",
       type: nonInputTextType,
-      embeddedLinkScreenId: "" ?? "",
+      embeddedLinkScreenId: "",
     },
     validate: {
       text: (value) => {
