@@ -30,10 +30,11 @@ export type WaMessagePage = {
 export async function getMessagesByContactId(
   contactId: string,
   cursor: string,
+  selectedPhone: string,
 ) {
   return (
     await axiosClient.get(
-      `${WA_CONTACT_BASE_PATH}/${contactId}?cursor=${cursor}`,
+      `${WA_CONTACT_BASE_PATH}/${contactId}?cursor=${cursor}&phone=${selectedPhone}`,
     )
   ).data as WaMessagePage;
 }

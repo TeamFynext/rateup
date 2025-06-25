@@ -8,26 +8,34 @@ import useTranslations from "@/dictionaries/useTranslation";
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
 
 interface AccountSelectorProps extends SelectProps {
-  value?: string;
   onChange?: (teamId: string) => void;
-  label?: string;
+  usePhoneNumber?: boolean;
+  withAllOption?: boolean;
 }
 export function AccountSelector({
   value,
   onChange,
   label = "",
+  usePhoneNumber = false,
+  withAllOption = false,
   ...props
-}: AccountSelectorProps) {
+}: Readonly<AccountSelectorProps>) {
   const { data, isPending, isError } = useWaSettings();
 
   const { translations } = useTranslations();
 
-  const accountOptions = data
+  let accountOptions = data
     ? data.map((Account) => ({
-        value: Account.phoneId,
+        value: usePhoneNumber
+          ? Account?.phone?.replace("+", "")
+          : Account.phoneId,
         label: Account.phone,
       }))
     : [];
+
+  if (withAllOption) {
+    accountOptions = [{ value: "all", label: "All" }, ...accountOptions];
+  }
 
   useEffect(() => {
     if (value) return;
@@ -41,9 +49,9 @@ export function AccountSelector({
   }
   if (isPending) {
     return (
-      <Card h={40} w={240} radius={"md"} withBorder p={0}>
+      <Card h={40} w={props?.w ?? 240} radius={"md"} withBorder p={0}>
         <Group justify="space-between" w={"100%"} my={"auto"}>
-          <Skeleton w={100} h={17} ml={"xs"} />
+          <Skeleton w={props?.w ? 40 : 100} h={17} ml={"xs"} />
           <Skeleton w={20} h={17} mr={"xs"} />
         </Group>
       </Card>
@@ -54,7 +62,7 @@ export function AccountSelector({
     <ContainedSelection
       allowDeselect={false}
       data={accountOptions}
-      defaultValue={accountOptions[0].value}
+      defaultValue={accountOptions?.length && accountOptions[0]?.value}
       onChange={onChange}
       value={value}
       label={translations["Account"]}

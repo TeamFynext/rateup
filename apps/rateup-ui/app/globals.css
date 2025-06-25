@@ -21,6 +21,7 @@
   --secondary-color: #000000;
   --tertiary-color: #1c518e;
   --homepage-blue: #013553;
+  --shade-of-blue-1: #d0d9ee;
   --shade-of-blue: #edf2ff;
   --shade-of-blue-2: #3f5ba9;
   --shade-of-blue-3: #00397b;
@@ -38,10 +39,15 @@
   --shade-of-blue-15: #0197f6;
   --shade-of-blue-16: #387adf;
   --shade-of-blue-17: #50c4ed;
+  --shade-of-blue-18: #2942cc;
   --grey-color: #494949;
   --grey-color-2: #73737a;
   --grey-color-3: #595959;
   --grey-color-4: #9c9c9c;
+  --grey-color-4-5: #cacaca;
+  --grey-color-5: #f5f5f5;
+  --grey-color-6: #7a8289;
+  --grey-color-7: #343a40;
   --light-grey-color: #f0f0f0;
   --bg-grey-color: #f7f7f7;
   --shade-of-brown: #af6b2e;
@@ -50,6 +56,7 @@
   --shade-of-black: #161616;
   --orange-400: #f8951d;
   --light-blue-4: #e5f1ff;
+  --light-blue-5: #e2e5ed;
   --hover-border-color: rgba(28, 81, 142, 0.2);
   --light-grey-color-2: #efefef;
   --light-grey-color-3: #f4f4f4;
@@ -70,7 +77,19 @@
   --gift-grey-4: #848484;
   --gift-black: #2f2f2f;
   --sucess-green: #39c907;
+  --active-green-2: #69f0ae;
+  --pink: #cc2960;
   --text-color-sp: light-dark(var(--grey-color), white);
+  /* colors of ticket board */
+  --board-bg: #f5f5f5;
+  --board-text: oklch(0.985 0 0);
+  --board-scrollbar: #7a8289;
+  --board-card-over: var(--mantine-color-text);
+  --is-column-over: oklch(0.208 0.042 265.755);
+  --board-card-bg: white;
+  --board-card-text: black;
+  --ticket-bg: light-dark(var(--grey-color-5), var(--light-grey-color-5));
+  --board-card-shadow: #e5e5e5;
 }
 
 html {
@@ -91,13 +110,16 @@ html {
   padding: 0;
   width: 100%;
 }
-
 h1,
 h2,
 h3,
 h4,
 h5,
-h6,
+h6 {
+  font-weight: 500;
+  margin: 0;
+}
+
 p {
   margin: 0;
 }
@@ -139,6 +161,7 @@ p {
 body {
   background: light-dark(white, var(--mantine-color-body)) !important;
   color: light-dark(black, white) !important;
+  font-weight: 300;
 }
 .react-flow {
   --xy-edge-stroke-default: rgb(129, 126, 126) !important;
@@ -147,4 +170,10 @@ body {
     white,
     rgb(129, 126, 126)
   ) !important;
+}
+
+.button-edge__label {
+  position: absolute;
+  pointer-events: all;
+  transform-origin: center;
 }

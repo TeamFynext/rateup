@@ -14,6 +14,7 @@ import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { useIsChatDisplayOpen } from "../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import NothingFound from "../../../NothingFound/NothingFound";
+import { useChatFilterStore } from "../chatselect/chatFilter";
 import WaInboxChatDisplayBody from "./chatdisplayBody";
 import WaInboxChatDisplayFooter, {
   WaInboxAssignUserFooter,
@@ -25,8 +26,11 @@ import classes from "./styles.module.css";
 export default function WaInboxChatDisplay({ smallScreen = false }) {
   const searchParams = useSearchParams();
   const { selectedContact: contact } = useContactStore();
+  const { filter } = useChatFilterStore();
+
   const { data, error } = useGetMessagesByContactId(
     searchParams.get("contactId") ?? contact?.id,
+    filter?.phone,
   );
   const messages =
     data?.pages
@@ -52,6 +56,31 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   const { translations } = useTranslations();
   if (error) return <div>Error: {error.message}</div>;
 
+  let footerContent = null;
+  if (contact?.blockedOnWhatsApp) {
+    footerContent = <WaInboxBlockedContactFooter contact={contact} />;
+  } else if (!assignedUsers?.length) {
+    footerContent = (
+      <WaInboxAssignUserFooter contactId={contact?.id} user={user} />
+    );
+  } else if (isAssignedToMe) {
+    footerContent = <WaInboxChatDisplayFooter contact={contact} />;
+  } else {
+    footerContent = (
+      <Group
+        bg={"black"}
+        justify="center"
+        c={"white"}
+        color="white"
+        gap={2}
+        py={2}
+      >
+        <IconExclamationCircle size={"1rem"} />
+        <Text size="xs">This chat is not assigned to you</Text>
+      </Group>
+    );
+  }
+
   return (
     <div
       className={`${classes.wrapper} ${isChatDisplayOpen ? "chat-display-open" : ""}`}
@@ -63,25 +92,7 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
             smallScreen={smallScreen}
           />
           <WaInboxChatDisplayBody data={messages} smallScreen={smallScreen} />
-          {contact?.blockedOnWhatsApp ? (
-            <WaInboxBlockedContactFooter contact={contact} />
-          ) : !assignedUsers?.length ? (
-            <WaInboxAssignUserFooter contactId={contact?.id} user={user} />
-          ) : isAssignedToMe ? (
-            <WaInboxChatDisplayFooter contact={contact} />
-          ) : (
-            <Group
-              bg={"black"}
-              justify="center"
-              c={"white"}
-              color="white"
-              gap={2}
-              py={2}
-            >
-              <IconExclamationCircle size={"1rem"} />
-              <Text size="xs">This chat is not assigned to you</Text>
-            </Group>
-          )}
+          {footerContent}
         </div>
       ) : (
         <NothingFound text={translations["Select a chat to see messages"]} />

@@ -1,20 +1,26 @@
-import Session from "supertokens-web-js/recipe/session";
-import { appInfo } from "./appInfo";
 import Router from "next/router";
-import ThirdParty from "supertokens-web-js/recipe/thirdparty";
-import EmailPassword from "supertokens-web-js/recipe/emailpassword";
-import EmailVerification from "supertokens-web-js/recipe/emailverification";
-import Passwordless from "supertokens-web-js/recipe/passwordless";
 
-export const frontendConfig = () => {
+import { SuperTokensConfig } from "supertokens-auth-react/lib/build/types";
+import EmailPasswordReact from "supertokens-auth-react/recipe/emailpassword";
+import { EmailPasswordPreBuiltUI } from "supertokens-auth-react/recipe/emailpassword/prebuiltui";
+import EmailVerificationReact from "supertokens-auth-react/recipe/emailverification";
+import PasswordlessReact from "supertokens-auth-react/recipe/passwordless";
+import SessionReact from "supertokens-auth-react/recipe/session";
+import ThirdPartyReact from "supertokens-auth-react/recipe/thirdparty";
+
+import { appInfo } from "./appInfo";
+
+export const frontendConfig = (): SuperTokensConfig => {
   return {
     appInfo,
     recipeList: [
-      Session.init(),
-      ThirdParty.init(),
-      EmailPassword.init(),
-      Passwordless.init(),
-      EmailVerification.init(),
+      EmailPasswordReact.init(),
+      SessionReact.init(),
+      // ThirdPartyReact.init(),
+      // PasswordlessReact.init({
+      //   contactMethod: "EMAIL_OR_PHONE",
+      // }),
+      EmailVerificationReact.init(),
     ],
     windowHandler: (oI: any) => {
       return {
@@ -29,3 +35,9 @@ export const frontendConfig = () => {
     },
   };
 };
+
+export const recipeDetails = {
+  docsLink: "https://supertokens.com/docs/emailpassword/introduction",
+};
+
+export const PreBuiltUIList = [EmailPasswordPreBuiltUI];

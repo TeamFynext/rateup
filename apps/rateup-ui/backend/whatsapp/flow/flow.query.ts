@@ -214,11 +214,13 @@ export const useSendFlowToUser = (phone: string) => {
       dbFlowId,
       teamId,
       flowId,
+      whatsappSettingsPhoneId,
     }: {
       dbFlowId: string;
       teamId: string;
       flowId: string;
-    }) => sendFlow(dbFlowId, phone, teamId, flowId),
+      whatsappSettingsPhoneId: string;
+    }) => sendFlow(dbFlowId, phone, teamId, flowId, whatsappSettingsPhoneId),
     onSuccess: () => {
       showSuccessToast("Flow Sent Successfully");
     },
