@@ -223,6 +223,19 @@ export interface TicketNodeData extends BaseNodeData {
   };
 }
 
+export interface LeadgenNodeData extends BaseNodeData {
+  adAccountId: string;
+  ad: {
+    id: string;
+    name: string;
+  };
+  phone: string;
+  phoneField: string;
+  fbPageId: string;
+  leadgenFormId: string;
+  pageAccessToken: string;
+}
+
 // Map of node types to their data types
 export type NodeTypeMap = {
   textNode: TextNodeData;
@@ -253,6 +266,7 @@ export type NodeTypeMap = {
   flowNode: FlowNodeData;
   aibotNode: AiBotNodeData;
   ticketNode: TicketNodeData;
+  leadgenNode: LeadgenNodeData;
 };
 
 // Node type strings as a union type
@@ -282,7 +296,8 @@ export type NodeData =
   | ContactsNodeData
   | FlowNodeData
   | AiBotNodeData
-  | TicketNodeData;
+  | TicketNodeData
+  | LeadgenNodeData;
 
 // Extended Node type with typed data
 export type TypedNode<T extends NodeType = NodeType> = Omit<

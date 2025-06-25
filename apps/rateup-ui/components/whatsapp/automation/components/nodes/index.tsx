@@ -9,6 +9,7 @@ import EndNode from "./end-node";
 import FlowNode from "./flow-node";
 import ImageNode from "./image-node";
 import InputNode from "./input-node";
+import LeadgenNode from "./leadgen-node";
 import ListNode from "./list-node";
 import LocationNode from "./location-node";
 import StartNode from "./start-node";
@@ -41,4 +42,5 @@ export const nodeTypes = {
   flowNode: FlowNode,
   aibotNode: AiBotNode,
   ticketNode: ticketNode,
+  leadgenNode: LeadgenNode,
 };

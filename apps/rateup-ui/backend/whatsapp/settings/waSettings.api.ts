@@ -99,3 +99,81 @@ export const getWaLogs = async (
   const res = await axiosClient.get(url);
   return res.data as WaLogsRes;
 };
+
+export const syncFbPages = async () => {
+  const res = await axiosClient.post(`${SettingsUrl}/sync/pages`);
+  return res.data as { id: string; name: string; access_token: string }[];
+};
+
+export interface fbPageQuery {
+  fbPageId: string;
+  pageAccessToken: string;
+  fields?: string[];
+}
+
+export const syncMetaLeadgenForms = async (data: fbPageQuery) => {
+  const res = await axiosClient.post(`${SettingsUrl}/sync/leadgen-forms`, data);
+  return res.data as { id: string; name: string }[];
+};
+export const syncLeadgenFormQuestions = async (
+  formId: string,
+  data: fbPageQuery,
+) => {
+  const res = await axiosClient.post(
+    `${SettingsUrl}/sync/leadgen-form/${formId}`,
+    data,
+  );
+  return res.data as { questions: any[] };
+};
+export const syncAdAccounts = async () => {
+  const res = await axiosClient.post(`${SettingsUrl}/sync/ad-accounts`);
+  return res.data as { id: string; name: string }[];
+};
+export const syncAdsByAdAccount = async (adAccountId: string) => {
+  const res = await axiosClient.post(`${SettingsUrl}/sync/ads/${adAccountId}`);
+  return res.data as { id: string; name: string }[];
+};
+export const subscribeFieldtoPage = async (body: fbPageQuery) => {
+  const res = await axiosClient.post(`${SettingsUrl}/subscribe`, body);
+  return res.data;
+};
+export interface MetaAssets {
+  orgId: string;
+  pages: {
+    id: string;
+    name: string;
+    access_token: string;
+  }[];
+  adAccounts: {
+    id: string;
+    name: string;
+    ads: {
+      id: string;
+      name: string;
+    }[];
+  }[];
+  leads: {
+    created_time: string;
+    id: string;
+    ad_id: string;
+    form_id: string;
+    field_data: {
+      name: string;
+      values: any[];
+    }[];
+  }[];
+  subscribedFields: {
+    pageId: string;
+    fields: string[];
+  }[];
+  leadgenForms: {
+    pageId: string;
+    id: string;
+    name: string;
+    questions: any[];
+  }[];
+}
+export const getMetaAssets = async () => {
+  return (await axiosClient.get(`${SettingsUrl}/meta-assets`))
+    .data as MetaAssets;
+};

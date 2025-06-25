@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/router";
 
 import {
   ActionIcon,
@@ -8,32 +9,52 @@ import {
   FileButton,
   Group,
   Image,
+  Radio,
+  RadioGroup,
   Select,
   Stack,
   Switch,
   Text,
+  Tooltip,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
   IconDeviceFloppy,
   IconPlus,
+  IconRefresh,
   IconRestore,
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
+import axios from "axios";
 import dayjs from "dayjs";
 import { useImmer } from "use-immer";
 
+import { SubscriptionFeaturePathName } from "@/types/enums";
 import { useAllChatbots } from "@/backend/chatbot/chatbot.query";
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
+import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
+import { useMarkWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import {
+  useMetaAssets,
+  useSubscribeFieldToPage,
+  useSyncAdaccounts,
+  useSyncAdsByadAccounts,
+  useSyncFbPages,
+  useSyncLeadgenFormQuestions,
+  useSyncMetaLeadgenForms,
+} from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import {
   ContainedDatePickerInput,
   ContainedNumberInput,
   ContainedSelection,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor";
@@ -48,8 +69,10 @@ import {
   uploadFile,
 } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
+import { hasFeature } from "@/utils/subscription/subscription";
 
 import {
+  LeadgenNodeData,
   NodeData,
   NodeType,
   NodeTypeMap,
@@ -72,13 +95,22 @@ export default function NodeEditor({
 }: NodeEditorProps) {
   const { data: templates, isLoading } = useWaTemplates();
   const { data: flows, isPending } = useWaFlowsFromDb();
-  const { data: boardData, isPending: isBoardsPending } = useBoardsQueries();
+  const { data: subscription } = useSubscription();
+  const [hasTicketFeature, hasAIFeature] = useMemo(
+    () => [
+      hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+      hasFeature(subscription, SubscriptionFeaturePathName.AI),
+    ],
+    [subscription],
+  );
+  const { data: boardData, isLoading: isBoardsPending } =
+    useBoardsQueries(hasTicketFeature);
   const [nodeData, setNodeData] = useState<NodeData>(node.data);
   const {
     data: allChatbots,
     isLoading: isLoadingChatbots,
     isError: isErrorChatbots,
-  } = useAllChatbots();
+  } = useAllChatbots(hasAIFeature);
   const [selectedChatbotId, setSelectedChatbotId] = useState<string | null>(
     null,
   );
@@ -246,6 +278,13 @@ export default function NodeEditor({
             nodeData={nodeData as NodeTypeMap["aibotNode"]}
             handleInputChange={handleInputChange}
             allChatbots={allChatbots}
+          />
+        );
+      case "leadgenNode":
+        return (
+          <LeadgenNodeEditor
+            nodeData={nodeData as NodeTypeMap["leadgenNode"]}
+            handleInputChange={handleInputChange}
           />
         );
       default:
@@ -1065,10 +1104,33 @@ const TemplateNodeEditor: React.FC<
   let selectedTemplate = templates?.find(
     (t) => t.id === typedData?.template?.id,
   );
+  const router = useRouter();
+  let automatedId = router.query.waAutomatedReplyId as string;
+  const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
+  const isLeadAutomation = data && data?.commands[0] === "lead";
+  const { data: metaAssets, isLoading } = useMetaAssets(isLeadAutomation);
+  const leadgenData = useMemo(() => {
+    if (isLeadAutomation && metaAssets) {
+      const leadgenNode = data?.matchData?.json?.nodes.find(
+        (node) => node.type === "leadgen",
+      );
+      if (leadgenNode && leadgenNode.data.leadgenFormId.length) {
+        const leadgenForm = metaAssets?.leadgenForms.find(
+          (form) => form.id === leadgenNode?.data?.leadgenFormId,
+        );
+        return {
+          data: leadgenNode?.data,
+          formQuestions: leadgenForm.questions,
+        };
+      }
+    }
+  }, [metaAssets, isLeadAutomation]);
   // Update template parameters when they change
   useEffect(() => {
     handleInputChange("parameters", parameterData);
   }, [parameterData]);
+
+  if (isPending || isLoading) return <RateupLoader />;
 
   return (
     <Stack>
@@ -1107,6 +1169,7 @@ const TemplateNodeEditor: React.FC<
           setParameterData={setParameterData}
           template={selectedTemplate?.data}
           parameters={parameterData}
+          leadgenData={leadgenData}
         />
       )}
     </Stack>
@@ -1967,6 +2030,224 @@ const AibotNodeEditor: React.FC<
           });
         }}
         flex={1}
+      />
+    </Stack>
+  );
+};
+
+// LeadgenNode Component
+const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
+  nodeData,
+  handleInputChange,
+}) => {
+  const typedData = nodeData as LeadgenNodeData;
+  const { data: metaAssets, isLoading } = useMetaAssets();
+  const subscribeFieldMut = useSubscribeFieldToPage();
+  const syncfbpageMut = useSyncFbPages();
+  const syncAdAccMut = useSyncAdaccounts();
+  const syncAdsMut = useSyncAdsByadAccounts(typedData?.adAccountId);
+  const syncformQuestionsMut = useSyncLeadgenFormQuestions(
+    typedData?.leadgenFormId,
+  );
+  const syncLeadgenFormsMut = useSyncMetaLeadgenForms();
+  const { pages, adAccounts, leadgenForms, ads, formQuestions } =
+    useMemo(() => {
+      let pages = [],
+        adAccounts = [],
+        leadgenForms = [],
+        ads = [],
+        formQuestions = [];
+      if (metaAssets) {
+        pages = metaAssets.pages.map((page) => ({
+          label: page.name,
+          value: page.id,
+        }));
+        adAccounts = metaAssets.adAccounts.map((adAccount) => ({
+          label: adAccount.name,
+          value: adAccount.id,
+        }));
+        leadgenForms = metaAssets.leadgenForms.map((form) => ({
+          label: form.name,
+          value: form.id,
+        }));
+        ads =
+          metaAssets.adAccounts
+            .find((adacc) => adacc.id === typedData.adAccountId)
+            ?.ads?.map((ad) => ({
+              label: ad?.name,
+              value: ad?.id,
+            })) ?? [];
+        formQuestions =
+          metaAssets.leadgenForms
+            .find((form) => form.id === typedData?.leadgenFormId)
+            ?.questions?.map((question) => question?.key) ?? [];
+      }
+      return { pages, adAccounts, leadgenForms, ads, formQuestions };
+    }, [metaAssets]);
+
+  function subscribeTolead() {
+    if (!typedData?.fbPageId) {
+      showErrorToast("Select a page");
+      return;
+    }
+    subscribeFieldMut.mutate({
+      fbPageId: typedData?.fbPageId,
+      pageAccessToken: typedData?.pageAccessToken,
+      fields: ["leadgen"],
+    });
+  }
+  const [isFieldSubscribed, setIsFieldSubscribed] = useState(false);
+
+  useEffect(() => {
+    if (typedData?.fbPageId && metaAssets) {
+      const accessToken = metaAssets.pages?.find(
+        (page) => page?.id === typedData?.fbPageId,
+      )?.access_token;
+      handleInputChange("pageAccessToken", accessToken);
+      const fieldSub = metaAssets.subscribedFields.find(
+        (f) => f.pageId === typedData?.fbPageId,
+      );
+      if (fieldSub && fieldSub.fields.includes("leadgen")) {
+        setIsFieldSubscribed(true);
+      } else {
+        setIsFieldSubscribed(false);
+      }
+    }
+  }, [typedData?.fbPageId, metaAssets]);
+
+  if (isLoading) return <RateupLoader />;
+  return (
+    <Stack>
+      <Group gap={3}>
+        <ContainedSelection
+          data={pages}
+          value={typedData?.fbPageId}
+          label={"Select Page"}
+          onChange={(value) => {
+            handleInputChange("fbPageId", value);
+          }}
+          w={200}
+          nothingFoundMessage="nothing found"
+          searchable
+        />
+        <Tooltip label={"Sync pages if not found."}>
+          <ActionIcon
+            onClick={() => syncfbpageMut.mutate()}
+            mt={25}
+            variant="light"
+            loading={syncfbpageMut.isPending}
+          >
+            <IconRefresh />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+      {!isFieldSubscribed && (
+        <RateupButtonBlue
+          onClick={subscribeTolead}
+          title="Subscribe to Lead"
+          loading={subscribeFieldMut.isPending}
+        />
+      )}
+      <Group gap={2}>
+        <ContainedSelection
+          data={adAccounts}
+          value={typedData?.adAccountId}
+          onChange={(value) => handleInputChange("adAccountId", value)}
+          w={200}
+          label={"Select Ad account"}
+          nothingFoundMessage="nothing found"
+          searchable
+        />
+        <Tooltip label={"Sync ad accounts if not found."}>
+          <ActionIcon
+            onClick={() => syncAdAccMut.mutate()}
+            mt={25}
+            variant="light"
+            loading={syncAdAccMut.isPending}
+          >
+            <IconRefresh />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+
+      <Group gap={2}>
+        <ContainedSelection
+          data={leadgenForms}
+          onChange={(value) => handleInputChange("leadgenFormId", value)}
+          value={typedData?.leadgenFormId}
+          w={200}
+          label={"Select Leadgen Form"}
+          nothingFoundMessage="nothing found"
+          searchable
+        />
+        <Tooltip label={"Sync Leadgen Forms if not found."}>
+          <ActionIcon
+            onClick={() =>
+              syncLeadgenFormsMut.mutate({
+                fbPageId: typedData?.fbPageId,
+                pageAccessToken: typedData?.pageAccessToken,
+              })
+            }
+            mt={25}
+            variant="light"
+            loading={syncLeadgenFormsMut.isPending}
+          >
+            <IconRefresh />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+      <Group gap={2}>
+        <ContainedSelection
+          data={ads}
+          onChange={(value, option) =>
+            handleInputChange("ad", { id: option.value, name: option.label })
+          }
+          value={typedData?.ad?.id}
+          w={200}
+          label={"Select ad"}
+          nothingFoundMessage="nothing found"
+          searchable
+        />
+        <Tooltip label={"Sync Ads if not found."}>
+          <ActionIcon
+            onClick={() => syncAdsMut.mutate()}
+            mt={25}
+            variant="light"
+            loading={syncAdsMut.isPending}
+          >
+            <IconRefresh />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+      <Group gap={2}>
+        <ContainedSelection
+          data={formQuestions}
+          onChange={(value) => handleInputChange("phoneField", value)}
+          value={typedData?.phoneField}
+          w={200}
+          label={"Select phone question key"}
+          nothingFoundMessage="nothing found"
+          searchable
+        />
+        <Tooltip label={"Sync form questions if not found."}>
+          <ActionIcon
+            onClick={() =>
+              syncformQuestionsMut.mutate({
+                fbPageId: typedData?.fbPageId,
+                pageAccessToken: typedData?.pageAccessToken,
+              })
+            }
+            mt={25}
+            variant="light"
+            loading={syncformQuestionsMut.isPending}
+          >
+            <IconRefresh />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
+      <PhoneInputWithCountry
+        label="Default Phone number"
+        onChange={(value) => handleInputChange("phone", value)}
       />
     </Stack>
   );
