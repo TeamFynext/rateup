@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -12,20 +13,22 @@ import { createMaterialTopTabNavigator } from "@react-navigation/material-top-ta
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   useWaFlowFromDb,
-  useResponsesBySurvey,
 } from "@/src/api/whatsapp/flow/flow.query";
 import { ContactCard } from "@/src/components/flow/FlowResponseCard";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { BackIcon } from "@/src/constants/imageExports";
+import ChoiceWise from "@/src/components/flow/ChoiceWise";
+import { useResponseAnalytics, useResponsesBySurvey } from "@/src/api/response/response.query";
+import { useQuestions } from "@/src/api/question/question.query";
 
 dayjs.extend(relativeTime);
 
 const Tab = createMaterialTopTabNavigator();
 
-const OverviewTab = ({ flowId }: { flowId: string }) => {
-  const { data, isLoading, error } = useWaFlowFromDb(flowId);
-
+const OverviewTab = ({ surveyId,flow,version }: { surveyId?: string ,flow:any,version:number}) => {
+  const {data,isLoading} = useResponseAnalytics(surveyId,{});
+  const {data:question} =useQuestions(surveyId);
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
@@ -34,7 +37,7 @@ const OverviewTab = ({ flowId }: { flowId: string }) => {
     );
   }
 
-  if (error || !data) {
+  if (!data) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <Text className="text-red-500">Failed to load flow data.</Text>
@@ -43,19 +46,24 @@ const OverviewTab = ({ flowId }: { flowId: string }) => {
   }
 
   return (
-    <View className="p-4 bg-white">
-      <Text className="text-lg font-semibold text-gray-800 mb-2">
-        Flow ID: {flowId}
-      </Text>
-      <Text className="text-base text-gray-600">
-        Survey ID: {data.surveyId}
-      </Text>
-    </View>
+    <ScrollView className="p-4 bg-white h-full">
+      {Object.entries(data.choiceWise).map(([questionId, { data: choices }]) => (
+        <ChoiceWise
+          key={questionId}
+          questionId={questionId}
+          choices={choices}
+          questions={question}
+          version={version}
+          flow={flow}
+        />
+      ))}
+    </ScrollView>
   );
 };
 
 const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
   const { data: dat1, isLoading } = useResponsesBySurvey(surveyId, {});
+  const router = useRouter();
 
   if (isLoading) {
     return (
@@ -74,13 +82,15 @@ const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
   }
 
   return (
-    <View className="bg-white">
+    <View className="bg-white h-full">
       <FlatList
         data={dat1.responses}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16, gap: 12 }}
         renderItem={({ item }) => (
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push({
+            pathname:`/protected/flows/flowresponse/${item.id}`
+            }) }>
             <ContactCard item={item} />
           </TouchableOpacity>
         )}
@@ -103,6 +113,7 @@ const FlowPage = () => {
   }, [params]);
 
   const { data: flowData, isLoading: loadingFlow } = useWaFlowFromDb(flowId);
+  console.log("flowData:",flowData);
 
   if (loadingFlow) {
     return (
@@ -133,7 +144,7 @@ const FlowPage = () => {
         }}
       >
         <Tab.Screen name="Overview">
-          {() => <OverviewTab flowId={flowId} />}
+          {() => <OverviewTab surveyId={flowData?.surveyId} flow={flowData} version={flowData?.version} />}
         </Tab.Screen>
         <Tab.Screen name="Responses">
           {() => <ResponsesTab surveyId={flowData?.surveyId} />}

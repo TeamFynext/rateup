@@ -1,12 +1,12 @@
 import { View, Text, ActivityIndicator } from "react-native";
 import React, { useMemo } from "react";
-import { useSurveys } from "@/src/api/whatsapp/flow/flow.query";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import isToday from "dayjs/plugin/isToday";
 import { FlashList } from "@shopify/flash-list";
 import { useWebFormFilterStore } from "@/src/utils/store";
 import WebFormSearchBar from "@/src/components/webform/WebSearchbar";
+import { useSurveys } from "@/src/api/survey/survey.query";
 
 dayjs.extend(relativeTime);
 dayjs.extend(isToday);
