@@ -85,6 +85,27 @@ export const useFlowFilterStore = create<any>((set) => ({
     }),
 }));
 
+type WebFormStatus = 'all' | 'ACTIVE' | 'PAUSED';
+export const useWebFormFilterStore = create<any>((set) => ({
+  teamId: 'all',
+  status: 'all' as WebFormStatus,
+  sortByDate: 'latest' as 'latest' | 'oldest',
+  alphabetical: null as AlphabeticalOrder,
+
+  setTeamId: (id: string) => set({ teamId: id }),
+  setStatus: (status: WebFormStatus) => set({ status }),
+  setSortByDate: (order: 'latest' | 'oldest') => set({ sortByDate: order }),
+  setAlphabetical: (order: AlphabeticalOrder) => set({ alphabetical: order }),
+
+  resetFilters: () =>
+    set({
+      teamId: 'all',
+      status: 'all',
+      sortByDate: 'latest',
+      alphabetical: null,
+    }),
+}));
+
 
 type WaMedia = {
   type: string;

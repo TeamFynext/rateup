@@ -47,7 +47,7 @@ const FlowFilter = () => {
             <Pressable onPress={() => router.back()}>
               <BackIcon height={25} width={25} />
             </Pressable>
-            <Text className="text-black text-2xl font-bold">Edit</Text>
+            <Text className="text-black text-2xl font-bold">Filter</Text>
           </View>
 
       {/* Team Selector */}

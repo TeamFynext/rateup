@@ -20,6 +20,7 @@ import { useLoggedInUser } from "@/src/api/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Flow from "./flows/Flow";
+import WebForm from "./webForms/WebForm";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -59,8 +60,8 @@ export default function Home() {
         return <InboxLayout />;
       case "flow":
         return <Flow />
-      default:
-        return <Text className="flex-1">Nothing to show here</Text>;
+      case "webform":
+        return <WebForm/>
     }
   }, [selectedInterface]);
 

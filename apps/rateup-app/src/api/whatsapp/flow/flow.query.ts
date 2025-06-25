@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   getResponses,
   getResponsesBySurveyId,
+  getSurveys,
   getWaFlowFromDb,
   getWaFlowsFromDb,
 } from "./flow.api";
@@ -35,5 +36,13 @@ export const useWaFlowFromDb = (dbFlowId: string) =>
   return useQuery({
     queryFn: () => getResponsesBySurveyId(surveyId, filterQuery),
     queryKey: ["response", "survey", surveyId, filter],
+  });
+};
+
+export const useSurveys = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ["surveys"],
+    queryFn: getSurveys,
+    enabled,
   });
 };
