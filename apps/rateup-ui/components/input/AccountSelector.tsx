@@ -62,7 +62,7 @@ export function AccountSelector({
     <ContainedSelection
       allowDeselect={false}
       data={accountOptions}
-      defaultValue={accountOptions[0].value}
+      defaultValue={accountOptions?.length && accountOptions[0]?.value}
       onChange={onChange}
       value={value}
       label={translations["Account"]}
