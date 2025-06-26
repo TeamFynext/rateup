@@ -618,8 +618,9 @@ export async function handleAutomatedReply(
   // chatbot: Chatbot,
   automatedReplyId?: string,
 ) {
-  let phone_number_id =
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
+  let phone_number_id = (
+    waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
+  )?.metadata?.phone_number_id;
   try {
     // Case 1: User clicked a button in a previous message
     if (parsedMessage?.buttonId) {
