@@ -1630,6 +1630,5 @@ model MetaAssets {
   pages     Json[]
   adAccounts  Json[]
   leads        Json[] 
-  subscribedFields Json[]
   leadgenForms  Json[]
 }

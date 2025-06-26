@@ -177,7 +177,8 @@ export async function syncFbPagesHandler(
 ) {
   try {
     const { orgId } = request.user;
-    const data = await getFbPagesFromWa(orgId);
+    const pages = await getFbPagesFromWa(orgId);
+    const data = pages.map((page) => ({ ...page, subscribedFields: [] }));
     const res = await syncMetaAssetstoDb("pages", data, orgId);
     reply.code(200).send(data);
   } catch (error) {
@@ -287,19 +288,19 @@ export async function subscribeFieldstoPageHandler(
     if (data.success) {
       const assets = await getMetaAssets(orgId);
 
-      const newFields = [...assets.subscribedFields];
-      const index = newFields.findIndex((i) => i.pageId === fbPageId);
+      const newPages = [...assets.pages];
+      const index = newPages.findIndex((i) => i.id === fbPageId);
       if (index !== -1) {
-        newFields[index] = {
-          ...newFields[index],
-          fields,
+        newPages[index] = {
+          ...newPages[index],
+          subscribedFields: Array.from(
+            new Set([...newPages[index].subscribedFields, ...fields]),
+          ),
         };
+      } else {
+        return reply.code(404).send("Page not synced yet");
       }
-      const res = await syncMetaAssetstoDb(
-        "subscribedFields",
-        newFields,
-        orgId,
-      );
+      const res = await syncMetaAssetstoDb("pages", newPages, orgId);
     } else {
       return reply.code(400).send({ message: "Unable to subscribe" });
     }
