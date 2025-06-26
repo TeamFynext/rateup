@@ -143,6 +143,7 @@ export interface MetaAssets {
     id: string;
     name: string;
     access_token: string;
+    subscribedFields: string[];
   }[];
   adAccounts: {
     id: string;
@@ -161,10 +162,6 @@ export interface MetaAssets {
       name: string;
       values: any[];
     }[];
-  }[];
-  subscribedFields: {
-    pageId: string;
-    fields: string[];
   }[];
   leadgenForms: {
     pageId: string;

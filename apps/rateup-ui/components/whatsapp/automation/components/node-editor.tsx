@@ -586,7 +586,11 @@ const MediaNodeEditor: React.FC<
             </Button>
           )}
         </FileButton>
-        <ActionIcon variant="light" disabled={!file} onClick={clearFile}>
+        <ActionIcon
+          variant="light"
+          disabled={!file}
+          onClick={() => clearFile()}
+        >
           <IconRestore />
         </ActionIcon>
         {typedData?.link && (
@@ -609,7 +613,7 @@ const MediaNodeEditor: React.FC<
           <Button
             onClick={uploadFileData}
             disabled={loading}
-            leftIcon={<IconDeviceFloppy />}
+            leftSection={<IconDeviceFloppy />}
           >
             {loading ? "Uploading..." : "Upload"}
           </Button>
@@ -988,7 +992,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
           ))}
           <Button
             variant="light"
-            size="xs"
+            size="compact-xs"
             compact
             disabled={getTotalRowCount(typedData.sections || []) >= 10}
             onClick={() => {
@@ -2104,10 +2108,10 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
         (page) => page?.id === typedData?.fbPageId,
       )?.access_token;
       handleInputChange("pageAccessToken", accessToken);
-      const fieldSub = metaAssets.subscribedFields.find(
-        (f) => f.pageId === typedData?.fbPageId,
+      const fieldSub = metaAssets.pages.find(
+        (f) => f.id === typedData?.fbPageId,
       );
-      if (fieldSub && fieldSub.fields.includes("leadgen")) {
+      if (fieldSub && fieldSub.subscribedFields.includes("leadgen")) {
         setIsFieldSubscribed(true);
       } else {
         setIsFieldSubscribed(false);
