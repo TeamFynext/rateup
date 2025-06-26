@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   useCallback,
   useEffect,
@@ -14,27 +16,22 @@ import {
   Divider,
   Group,
   Indicator,
-  SegmentedControl,
   Stack,
   Text,
 } from "@mantine/core";
 import {
   IconForbid2,
-  IconMessage,
   IconMessageBolt,
   IconMessageCheck,
-  IconMessageUp,
   IconRefresh,
   IconSearch,
   IconSquareRoundedX,
   IconUserCheck,
   IconUserCircle,
-  IconUserX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import { WaMessageAssignStatus } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
 import {
   ContactsWithLastMessage,
@@ -59,11 +56,6 @@ import WaInboxChatFilter, {
 import WaInboxChatSelectCard from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
 import classes from "./styles.module.css";
-
-enum TabsEnum {
-  all = "all",
-  // tickets = "tickets",
-}
 
 const WaInboxChatSelect = () => {
   const router = useRouter();
@@ -279,8 +271,8 @@ const WaInboxChatSelect = () => {
   );
 
   const validateSearchStringAsMobileNumber = useCallback(
-    (searchString: string): Boolean => {
-      return searchString?.match(/^\d{10}$/) ? true : false;
+    (searchString: string): boolean => {
+      return !!RegExp(/^\d{10}$/).exec(searchString);
     },
     [],
   );
@@ -335,43 +327,40 @@ const WaInboxChatSelect = () => {
         blockedUsers: false,
       });
     }
-  }, [router.query?.tab, filter]);
+  }, [router.query?.tab, filter, prepareFilters]);
 
   if (isContactLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading} />;
 
   return (
     <Stack className={classes.wrapper} gap={"xs"}>
-      <Group className={classes.chat_select_header} gap={"xs"}>
-        {/* <Indicator
-          inline
-          label={allFilteredContactsRow?.[0]?.total_contact_count || 6}
-          size={16}
-          color="red"
-          pos={"fixed"}
-          top={filter.messageType === "usermessages" ? 80 : 124}
-          left={100}
-          style={{ zIndex: 1000 }}
-          visibleFrom="sm"
-        /> */}
+      <Group
+        className={classes.chat_select_header}
+        gap="xs"
+        align="center"
+        wrap="nowrap"
+      >
         <ContainedTextField
-          leftSection={
-            <IconSearch style={{ marginLeft: "var(--mantine-spacing-xs)" }} />
-          }
+          leftSection={<IconSearch size={18} color="gray" stroke={1.5} />}
           rightSection={
-            filter.searchTerm && (
-              <IconSquareRoundedX
-                size={18}
-                style={{ marginRight: "var(--mantine-spacing-xs)" }}
-                onClick={() => setFilter({ ...filter, searchTerm: null })}
-              />
-            )
+            filter.searchTerm ? (
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                onClick={() => setFilter({ ...filter, searchTerm: "" })}
+                aria-label={translations["Clear search"]}
+              >
+                <IconSquareRoundedX size={18} />
+              </ActionIcon>
+            ) : null
           }
           placeholder={translations["Search Contacts"]}
           value={filter?.searchTerm || ""}
           onChange={(e) =>
             setFilter({ ...filter, searchTerm: e.currentTarget.value })
           }
+          autoFocus
           flex={1}
         />
         <AddUnknownContactModal
@@ -379,7 +368,7 @@ const WaInboxChatSelect = () => {
           triggerType="action_button"
           successCallback={onUnknownContactAddSuccess}
         />
-        <Group className={classes.chat_select_filter_indicator_wrapper}>
+        <Group className={classes.chat_select_filter_indicator_wrapper} gap={4}>
           <ActionIcon
             h={30}
             w={30}
@@ -394,6 +383,7 @@ const WaInboxChatSelect = () => {
                 queryKey: ["contactInboxCount"],
               });
             }}
+            aria-label={translations["Refresh"]}
           >
             <IconRefresh />
           </ActionIcon>

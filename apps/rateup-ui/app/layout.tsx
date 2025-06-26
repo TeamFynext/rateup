@@ -6,6 +6,7 @@ import {
   MantineProvider,
 } from "@mantine/core";
 
+import "@mantine/core/styles.css";
 import "./globals.css";
 
 import { ModalsProvider } from "@mantine/modals";
@@ -14,7 +15,6 @@ import { Notifications } from "@mantine/notifications";
 import { theme } from "@/config/mantineTheme";
 import FacebookPixel from "@/components/Analytics/FacebookPixel";
 import GoogleAnalytics from "@/components/Analytics/GoogleAnalytics";
-import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider";
 import { isProduction } from "@/utils/constants";
 import { geist, notoColorEmogi } from "@/utils/fonts";
@@ -28,9 +28,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en" {...mantineHtmlProps}>
       <head>

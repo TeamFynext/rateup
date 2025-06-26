@@ -6,12 +6,12 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
 import { create } from "zustand";
 
+import { AccountSelector } from "@/components/input/AccountSelector";
 import VoiceRecorder, {
   useVoiceRecordStore,
 } from "@/components/input/VoiceRecorder";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
-  parseJsonToReact,
   parseToWhatsAppFormat,
 } from "@/components/RichTextEditor/waTextEditor";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -29,15 +29,16 @@ import {
   RateupButtonPrimary,
   RateupButtonSecondary,
 } from "../../../../Button/RateupButtons";
+import { usePhoneIdStore } from "../../chatselect/accountSelectorStore";
 import { AssignInbox } from "../chatdisplayHeader";
 import WaInboxFooterMenu from "./footerMenu";
 import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplayFooter({
   contact,
-}: {
+}: Readonly<{
   contact: ContactsWithLastMessage;
-}) {
+}>) {
   const inputRef = useRef(null);
   const submiRef = useRef(null);
   const { translations } = useTranslations();
@@ -46,6 +47,8 @@ export default function WaInboxChatDisplayFooter({
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
+  const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
+
   const form = useForm({
     initialValues: {
       type: "text",
@@ -140,11 +143,14 @@ export default function WaInboxChatDisplayFooter({
     });
     resetMedia();
     setAudioUrl(null);
-    sendnewWaMessage.mutate(values, {
-      onSuccess: () => {
-        removeMessage(contact.id);
+    sendnewWaMessage.mutate(
+      { ...values, whatsappSettingsPhoneId },
+      {
+        onSuccess: () => {
+          removeMessage(contact.id);
+        },
       },
-    });
+    );
   }
   function insertEmoji(value: string) {
     const { selectionStart, selectionEnd } = inputRef.current;
@@ -177,6 +183,22 @@ export default function WaInboxChatDisplayFooter({
   const SendMessageComponent = () => {
     return (
       <Group gap={"xs"}>
+        <AccountSelector
+          onChange={(phoneId) => {
+            updatePhoneId(phoneId);
+          }}
+          value={whatsappSettingsPhoneId}
+          w={150}
+          styles={{
+            input: {
+              background: "var(--mantine-primary-color-filled)",
+              color: "white",
+            },
+            label: {
+              display: "none",
+            },
+          }}
+        />
         <WaInboxFooterMenu
           sessionExpired={isSessionExpired}
           contact={contact}

@@ -15,6 +15,7 @@ import { WaFlowStatus } from "../../../../../../types/enums";
 import { RateupButtonPrimary } from "../../../../../Button/RateupButtons";
 import SimpleModalLayout from "../../../../../Modal/SimpleModalLayout";
 import NothingFound from "../../../../../NothingFound/NothingFound";
+import { usePhoneIdStore } from "../../../chatselect/accountSelectorStore";
 import WaInboxFlowSelectCard from "./flowSelectCard";
 import classes from "./styles.module.css";
 
@@ -29,6 +30,8 @@ export default function WaInboxFlowDisplayModal(props: Props) {
   const { data, isLoading, error } = useWaFlowsFromDb();
   const [teamId, setTeamId] = useState(null);
   const sendFlowToUser = useSendFlowToUser(props?.contact?.phone);
+  const { whatsappSettingsPhoneId } = usePhoneIdStore();
+
   const { translations } = useTranslations();
   function onClose() {
     setSelectedDbFlowId("");
@@ -40,6 +43,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
         dbFlowId: selectedDbFlowId,
         teamId,
         flowId: data?.find((f) => f.dbFlowId === selectedDbFlowId)?.flowId,
+        whatsappSettingsPhoneId,
       },
       {
         onSuccess: () => {
@@ -53,58 +57,56 @@ export default function WaInboxFlowDisplayModal(props: Props) {
     (flow) => flow?.status === WaFlowStatus.PUBLISHED,
   );
   return (
-    <>
-      <SimpleModalLayout
-        {...{
-          opened: props?.opened,
-          onClose,
-          title: "Send Flow",
-          centered: true,
-        }}
-      >
-        {isLoading && <Loader />}
-        {error && <Badge color="red">{translations["Error"]}</Badge>}
-        {data && acceptedFlows.length > 0 ? (
-          <>
-            <Stack className={classes.inner}>
-              <TeamSelector
-                label="Select Team"
-                placeholder="Select a team of the flow"
-                onChange={setTeamId}
-                value={teamId}
-              />
-              <Title order={4} fw={400} size={"sm"}>
-                Select a Flow
-              </Title>
-              <Radio.Group
-                value={selectedDbFlowId}
-                onChange={setSelectedDbFlowId}
-              >
-                {acceptedFlows?.map((flow) => (
-                  <WaInboxFlowSelectCard {...flow} />
-                ))}
-              </Radio.Group>
-            </Stack>
-            <Group className={classes.send_button_wrapper}>
-              <RateupButtonPrimary
-                title={translations["Send"]}
-                loading={sendFlowToUser.isPending}
-                onClick={handleSendFlow}
-                rightIcon={<IconSend />}
-                disabled={!selectedDbFlowId}
-              />
-            </Group>
-          </>
-        ) : (
-          <NothingFound
-            text={
-              translations[
-                "No flows found, If you already have a flow, check if its PUBLISHED"
-              ]
-            }
-          />
-        )}
-      </SimpleModalLayout>
-    </>
+    <SimpleModalLayout
+      {...{
+        opened: props?.opened,
+        onClose,
+        title: "Send Flow",
+        centered: true,
+      }}
+    >
+      {isLoading && <Loader />}
+      {error && <Badge color="red">{translations["Error"]}</Badge>}
+      {data && acceptedFlows.length > 0 ? (
+        <>
+          <Stack className={classes.inner}>
+            <TeamSelector
+              label="Select Team"
+              placeholder="Select a team of the flow"
+              onChange={setTeamId}
+              value={teamId}
+            />
+            <Title order={4} fw={400} size={"sm"}>
+              Select a Flow
+            </Title>
+            <Radio.Group
+              value={selectedDbFlowId}
+              onChange={setSelectedDbFlowId}
+            >
+              {acceptedFlows?.map((flow) => (
+                <WaInboxFlowSelectCard {...flow} />
+              ))}
+            </Radio.Group>
+          </Stack>
+          <Group className={classes.send_button_wrapper}>
+            <RateupButtonPrimary
+              title={translations["Send"]}
+              loading={sendFlowToUser.isPending}
+              onClick={handleSendFlow}
+              rightIcon={<IconSend />}
+              disabled={!selectedDbFlowId}
+            />
+          </Group>
+        </>
+      ) : (
+        <NothingFound
+          text={
+            translations[
+              "No flows found, If you already have a flow, check if its PUBLISHED"
+            ]
+          }
+        />
+      )}
+    </SimpleModalLayout>
   );
 }
