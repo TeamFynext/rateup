@@ -20,7 +20,7 @@ export function UnauthorizedPage() {
         <IconUserShield size={32} stroke={2} />
         <Title order={3}>Access Denied</Title>
       </Group>
-      <Text c="dimmed" size="lg" align="center" w={"50%"}>
+      <Text c="dimmed" size="lg" ta={"center"} w={"50%"}>
         You don't have permission to access this page. Please contact your super
         admin if you believe this is an error, or return to the homepage.
       </Text>

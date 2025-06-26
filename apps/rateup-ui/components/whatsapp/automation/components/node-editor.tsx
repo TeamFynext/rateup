@@ -993,7 +993,6 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
           <Button
             variant="light"
             size="compact-xs"
-            compact
             disabled={getTotalRowCount(typedData.sections || []) >= 10}
             onClick={() => {
               const newSections = [...(typedData.sections || [])];

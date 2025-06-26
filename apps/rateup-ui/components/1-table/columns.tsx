@@ -39,7 +39,7 @@ export const columns: ColumnDef<Task>[] = [
     ),
     cell: ({ row }) => (
       <Text size="sm" style={{ width: 80 }}>
-        {row.getValue("id")}
+        {row.getValue("id") as string}
       </Text>
     ),
     enableSorting: false,
@@ -57,7 +57,7 @@ export const columns: ColumnDef<Task>[] = [
         <Group gap="sm">
           {label && <Badge variant="outline">{label.label}</Badge>}
           <Text size="sm" fw={500} truncate style={{ maxWidth: 500 }}>
-            {row.getValue("title")}
+            {row.getValue("title") as string}
           </Text>
         </Group>
       );

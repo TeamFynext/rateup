@@ -40,7 +40,7 @@ export function BoardCard({
 
           <Menu.Dropdown>
             <Menu.Item
-              icon={<IconEdit size={14} />}
+              leftSection={<IconEdit size={14} />}
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(board.id);
@@ -49,7 +49,7 @@ export function BoardCard({
               Edit board
             </Menu.Item>
             <Menu.Item
-              icon={<IconTrash size={14} />}
+              leftSection={<IconTrash size={14} />}
               color="red"
               onClick={(e) => {
                 e.stopPropagation();

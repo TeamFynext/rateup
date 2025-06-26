@@ -12,6 +12,7 @@ import {
   Stack,
   Text,
   TextInput,
+  Title,
   Transition,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -233,7 +234,7 @@ const TicketInternalChatWaHeader = ({ close }) => {
       <Group gap="xs">
         <Avatar src={orgLogo} size={"sm"} />
         <Stack gap={0}>
-          <Text fw={500} truncate={"end"} w={110} order={4}>
+          <Text fw={500} truncate w={110}>
             {orgName}
           </Text>
           <Text size="sm">Internal Chat</Text>

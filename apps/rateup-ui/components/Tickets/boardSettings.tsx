@@ -204,7 +204,7 @@ export default function TicketSettings({
             <Button
               type="submit"
               loading={updateBoardMutation.isPending}
-              leftIcon={<IconBell size={18} />}
+              leftSection={<IconBell size={18} />}
             >
               Save Notification Settings
             </Button>

@@ -58,15 +58,15 @@ function ListNode(props: NodeProps & { data: ListNodeData }) {
             <Stack gap="xs" mt="xs">
               {data.sections.map((section, sectionIndex) => (
                 <Paper key={sectionIndex} p="xs" withBorder>
-                  <Text weight={600}>{section.title}</Text>
+                  <Text fw={600}>{section.title}</Text>
                   <Stack gap="xs" mt="xs">
                     {section.rows.map((row) => (
                       <div key={row.id} className={styles.button}>
-                        <Text size="sm" weight={500}>
+                        <Text size="sm" fw={500}>
                           {row.title}
                         </Text>
                         {row.description && (
-                          <Text size="xs" color="dimmed">
+                          <Text size="xs" c="dimmed">
                             {row.description}
                           </Text>
                         )}

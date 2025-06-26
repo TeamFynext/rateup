@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { JSX, memo } from "react";
 import type React from "react";
 
 import { ActionIcon, Text } from "@mantine/core";
@@ -62,7 +62,7 @@ function BaseNode({
         <div className={styles.header}>
           <div className={styles.icon}>{icon}</div>
           <Text className={styles.title} truncate={"end"}>
-            {data.label}
+            {data.label as string}
           </Text>
         </div>
 
