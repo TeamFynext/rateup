@@ -10,10 +10,21 @@ export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
   return automatedReplies;
 }
 
-export async function getAutomatedRepliesByOrgId(orgId: string) {
+export async function getAutomatedRepliesByOrgId(
+  orgId: string,
+  phone_number_id?: string,
+) {
   const automatedReplies = await prisma.waAutomatedReply.findMany({
     where: {
       orgId,
+      ...(phone_number_id
+        ? {
+            OR: [
+              { whatsappSettingsPhoneId: phone_number_id },
+              { whatsappSettingsPhoneId: null },
+            ],
+          }
+        : {}),
     },
     include: {
       WaAutomatedReplyCommands: {

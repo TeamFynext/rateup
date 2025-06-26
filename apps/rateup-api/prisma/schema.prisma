@@ -207,6 +207,7 @@ model WhatsappSettings {
   webhookPassword String?
 
   type             String // enums.ts: WaConfigType
+  createdAt        DateTime           @default(now())
   /// [PWaEncryptionKeys]
   encryption       Json? // for flow {publicKey: string, privateKey: string}
   Campaign         Campaign[]
@@ -1581,47 +1582,49 @@ model ExpoPushToken {
 }
 
 model WhatsappCatalog {
-  catalogId  String @unique
-  orgId     String  @db.Uuid
-  org       Org     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  vertical   String
-  name       String?
-  isWhatsappConnected   Boolean @default(false) 
-  products   WaCatalogProduct[]
-  orders    WaCatalogOrder[]
+  catalogId           String             @unique
+  orgId               String             @db.Uuid
+  org                 Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  vertical            String
+  name                String?
+  isWhatsappConnected Boolean            @default(false)
+  products            WaCatalogProduct[]
+  orders              WaCatalogOrder[]
+
   @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
 }
 
 model WaCatalogProduct {
-  productDbId  String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  catalogId  String  
-  catalog    WhatsappCatalog @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
-  type       String
-  retailer_id String?  
-  hotel_id    String?  
-  hotel_room_id String?
+  productDbId       String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  catalogId         String
+  catalog           WhatsappCatalog @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
+  type              String
+  retailer_id       String?
+  hotel_id          String?
+  hotel_room_id     String?
   hotel_ratailer_id String?
-  productMetaId   String?
-  productProps    Json?
-  hotelProps      Json?
-  hotelRoomProps  Json?
-  @@unique([catalogId,retailer_id], name: "catalog_retailer_id_unique")
-  @@unique([catalogId,hotel_id], name: "catalog_hotel_id_unique")
-  @@unique([catalogId,hotel_ratailer_id, hotel_room_id], name: "catalog_hotel_room_id_unique")
+  productMetaId     String?
+  productProps      Json?
+  hotelProps        Json?
+  hotelRoomProps    Json?
+
+  @@unique([catalogId, retailer_id], name: "catalog_retailer_id_unique")
+  @@unique([catalogId, hotel_id], name: "catalog_hotel_id_unique")
+  @@unique([catalogId, hotel_ratailer_id, hotel_room_id], name: "catalog_hotel_room_id_unique")
 }
 
 model WaCatalogOrder {
-  id  String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  catalogId  String  
-  catalog    WhatsappCatalog @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
-  products   Json[]
-  contactId  String @db.Uuid
-  contact    Contact @relation(fields: [contactId], references: [id], onDelete:NoAction)
-  paymentMethod  String?
-  paymentStatus  String   @default("PENDING")
-  status         String   @default("PENDING")
-  transactionId  String?
-  createdAt  DateTime  @default(now())
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  catalogId     String
+  catalog       WhatsappCatalog @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
+  products      Json[]
+  contactId     String          @db.Uuid
+  contact       Contact         @relation(fields: [contactId], references: [id], onDelete: NoAction)
+  paymentMethod String?
+  paymentStatus String          @default("PENDING")
+  status        String          @default("PENDING")
+  transactionId String?
+  createdAt     DateTime        @default(now())
 }
 
 model MetaAssets {

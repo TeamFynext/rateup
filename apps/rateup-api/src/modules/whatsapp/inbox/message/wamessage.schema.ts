@@ -47,12 +47,14 @@ const NewWaMessageBody = z.object({
       address: z.string(),
     })
     .optional(),
+  whatsappSettingsPhoneId: z.string(),
 });
 
 const PaginateQuerySchema = z.object({
   cursor: z.string().optional(),
   page: z.string().optional(),
   active: z.string().optional().nullable(),
+  phone: z.string().optional(),
 });
 
 const waMediaFileByMediaIdBody = z.object({
@@ -70,6 +72,7 @@ const WaChatFilterSchema = z.object({
   blockedUsers: z.boolean().optional(),
   newStatuses: z.array(z.string()).optional(),
   assignedTeams: z.array(z.string()).optional(),
+  phone: z.string(),
 });
 
 const waChatFilterQuerySchema = PaginateQuerySchema.extend({

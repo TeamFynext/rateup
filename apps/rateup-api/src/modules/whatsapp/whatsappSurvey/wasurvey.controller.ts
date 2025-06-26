@@ -384,6 +384,8 @@ async function whatsappMessageHandler(
   waMessage: WaMessageBody,
 ) {
   // check for '/start' command
+  // let phone_number_id =
+  //   waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
   const parsedMessage = parseMessage(waMessage);
   const { orgId } = waSettings;
   const {
@@ -616,6 +618,8 @@ export async function handleAutomatedReply(
   // chatbot: Chatbot,
   automatedReplyId?: string,
 ) {
+  let phone_number_id =
+    waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
   try {
     // Case 1: User clicked a button in a previous message
     if (parsedMessage?.buttonId) {
@@ -679,6 +683,9 @@ export async function handleAutomatedReply(
         } | null;
 
       if (automation) {
+        if (!automation?.whatsappSettingsPhoneId) {
+          automation.whatsappSettingsPhoneId = phone_number_id;
+        }
         // Start a new automation flow
         const startNode = automation?.matchData?.json?.nodes?.find(
           (node: any) => node.type === "startNode",

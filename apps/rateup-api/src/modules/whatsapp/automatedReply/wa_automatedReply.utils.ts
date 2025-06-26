@@ -1,38 +1,13 @@
-import { WaAutomatedReply } from "@prisma/client";
 import {
-  SubscriptionFeaturePathName,
   WaAutomatedReplyMatchType,
-  WaAutomatedReplyResponseType,
   WaTemplateComponentType,
 } from "../../../types/enums";
 import { WaMessageBody } from "../../../types/whatsapp.types";
-import {
-  WaParsedMessage,
-  createListMessage,
-  createReplyButtonsMessage,
-  createReplyImageMessage,
-  parseMessage,
-  parseToWhatsAppFormat,
-} from "../whatsappSurvey/wasurvey.utils";
+import { parseMessage } from "../whatsappSurvey/wasurvey.utils";
 import { getAutomatedRepliesByOrgId } from "./wa_automatedReply.service";
-import {
-  createSession,
-  deleteSession,
-  sendMessage,
-  sendTextMessage,
-} from "../whatsappSurvey/wasurvey.service";
 import { log } from "../../../utils/logger";
-import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller";
 import prisma from "../../../utils/prisma";
 import { templateData } from "../messageTemplates/wa_templates.service";
-import { updateMonthlyStat } from "../../stats/stats.service";
-import {
-  getFlowWithSurveyTeamMapIds,
-  getFlowWithSurveyTeamMapIdsWithDbFlowId,
-  sendFlow,
-} from "../flows/flow.service";
-import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
-import { autoGenerateTicket } from "../../ticket/ticketCard/card.service";
 
 export function validateAutomationMatchCondition(
   automation: {
@@ -88,7 +63,12 @@ export async function checkIfMessageMatchesAnyAutomation(
   waMessage: WaMessageBody,
 ) {
   const { message } = parseMessage(waMessage);
-  const automatedReplies = await getAutomatedRepliesByOrgId(orgId);
+  let phone_number_id =
+    waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
+  const automatedReplies = await getAutomatedRepliesByOrgId(
+    orgId,
+    phone_number_id,
+  );
 
   for (const automation of automatedReplies) {
     if (validateAutomationMatchCondition(automation, message)) {

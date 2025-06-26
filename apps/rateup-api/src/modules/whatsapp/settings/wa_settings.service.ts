@@ -14,7 +14,12 @@ export async function createWaSettings(
   orgId: string,
   data: Omit<
     WhatsappSettings,
-    "accessToken_iv" | "encryption" | "orgId" | "phone" | "webhookPassword"
+    | "accessToken_iv"
+    | "encryption"
+    | "orgId"
+    | "phone"
+    | "webhookPassword"
+    | "createdAt"
   > & {
     phone?: string;
     webhookPassword?: string;
@@ -66,6 +71,9 @@ export async function getAllWaSettings(orgId: string) {
     where: {
       orgId: orgId,
     },
+    orderBy: {
+      createdAt: "asc",
+    },
   });
 
   if (!res || res.length === 0) {
@@ -97,6 +105,9 @@ export async function getWaSettingsByPhoneId(phoneId: string) {
   const res = await prisma.whatsappSettings.findFirst({
     where: {
       phoneId,
+    },
+    orderBy: {
+      createdAt: "asc",
     },
   });
   return res;

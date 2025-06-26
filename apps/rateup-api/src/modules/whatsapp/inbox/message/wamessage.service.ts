@@ -73,8 +73,18 @@ export async function addNewWaMessage(
 export async function getWaMessagesByContactId(
   contactId: string,
   cursor: string | null,
+  phone?: string,
 ) {
   let messages: WaMessage[];
+  let sourceIdentifierCondition = phone &&
+    phone !== "all" && {
+      OR: [
+        { sourceIdentifier: phone },
+        {
+          sourceIdentifier: `+${phone}`,
+        },
+      ],
+    };
   if (cursor) {
     messages = await prisma.waMessage.findMany({
       skip: 1,
@@ -84,6 +94,7 @@ export async function getWaMessagesByContactId(
       },
       where: {
         contactId,
+        ...sourceIdentifierCondition,
       },
       include: {
         sender: {
@@ -102,6 +113,7 @@ export async function getWaMessagesByContactId(
       take: 300,
       where: {
         contactId,
+        ...sourceIdentifierCondition,
       },
       include: {
         sender: {
@@ -351,6 +363,19 @@ export async function filterChats(
       }
     }
 
+    // Filter by phone (sourceIdentifier)
+    if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
+      params.push(bodyFilterProps.phone);
+      params.push(`+${bodyFilterProps.phone}`);
+      filters.push(`EXISTS (
+      SELECT 1 FROM "WaMessage" wm
+      WHERE wm."contactId" = c.id
+      AND (
+        wm."sourceIdentifier" = $${paramIndex++}
+        OR wm."sourceIdentifier" = $${paramIndex++}
+      )
+      )`);
+    }
     if (bodyFilterProps?.blockedUsers) {
       filters?.push(`c."blockedOnWhatsApp" = TRUE`);
     } else {
@@ -667,8 +692,9 @@ export async function sendMediaMessages(
   orgId,
   userId,
   caption = "",
+  whatsappSettingsPhoneId = "",
 ) {
-  for (var i = 0; i < media.length; i++) {
+  for (let i = 0; i < media.length; i++) {
     const item = media[i];
     const isLastItem = i === media.length - 1;
     let captionMsg = isLastItem ? caption : "";
@@ -696,7 +722,13 @@ export async function sendMediaMessages(
         break;
       }
     }
-    await sendMessage(orgId, messageBody, null, userId);
+    await sendMessage(
+      orgId,
+      messageBody,
+      null,
+      userId,
+      whatsappSettingsPhoneId,
+    );
     if (!isLastItem) wait(50);
   }
 }
@@ -720,6 +752,7 @@ export async function sendContactMessage(
   phone,
   orgId,
   userId,
+  whatsappSettingsPhoneId,
 ) {
   if (!contacts.contactIds && !contacts.groupIds) return;
   let filterCondition = {
@@ -759,10 +792,16 @@ export async function sendContactMessage(
   });
 
   const messageBody = createContactMessage(phone, contactsData);
-  await sendMessage(orgId, messageBody, null, userId);
+  await sendMessage(orgId, messageBody, null, userId, whatsappSettingsPhoneId);
 }
 
-export async function sendLocationMessage(location, phone, orgId, userId) {
+export async function sendLocationMessage(
+  location,
+  phone,
+  orgId,
+  userId,
+  whatsappSettingsPhoneId,
+) {
   const messageBody = createLocationMessage(phone, location);
-  await sendMessage(orgId, messageBody, null, userId);
+  await sendMessage(orgId, messageBody, null, userId, whatsappSettingsPhoneId);
 }
