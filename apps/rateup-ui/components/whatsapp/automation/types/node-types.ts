@@ -229,10 +229,10 @@ export interface LeadgenNodeData extends BaseNodeData {
     id: string;
     name: string;
   };
-  phone: string;
-  phoneField: string;
+  phone?: string;
+  phoneField?: string;
   fbPageId: string;
-  leadgenFormId: string;
+  leadgenFormId?: string;
   pageAccessToken: string;
 }
 
@@ -855,6 +855,34 @@ export function validateNodeData(node: TypedNode): {
       }
       break;
     }
+
+    case "leadgenNode":
+      const data = node.data as NodeTypeMap["leadgenNode"];
+      if (!data.fbPageId.trim().length) {
+        return {
+          valid: false,
+          message: `${data.label}: Select Facebook page of the lead.`,
+        };
+      }
+      if (!data.ad.id.trim().length) {
+        return {
+          valid: false,
+          message: `${data.label}: Select Ad of the lead.`,
+        };
+      }
+      if (!data.phone.trim().length || !data.phoneField.trim().length) {
+        return {
+          valid: false,
+          message: `${data.label}: Phone number is required.Either provide phone number or phone number question key from the form.`,
+        };
+      }
+      if (!data.pageAccessToken.trim().length && data.fbPageId.trim().length) {
+        return {
+          valid: false,
+          message: `${data.label}: Something went wrong. Please deselect page and select again.`,
+        };
+      }
+      break;
   }
 
   // If we get here, all validations passed

@@ -117,21 +117,56 @@ export function AutomatedReplyForm({
   }
 
   function handleSubmitClick() {
-    const jsonData = matchDataForm.values.json;
+    let jsonData = matchDataForm.values.json;
 
-    // Update startMessage in all nodes of type "startNode"
-    jsonData.nodes = jsonData.nodes.map((node) => {
-      if (node.type === "startNode") {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            startMessage: rootForm?.values?.commands?.join(", "),
+    if (activetab === "leadgen" && !editMode) {
+      jsonData = {
+        nodes: [
+          {
+            id: `leadgenNode-${Date.now()}`,
+            type: "leadgenNode",
+            position: {
+              x: 225,
+              y: 45,
+            },
+            data: {
+              label: "Lead",
+              type: "leadgenNode",
+              fbPageId: "",
+              adAccountId: "",
+              ad: {
+                id: "",
+                name: "",
+              },
+              phone: "",
+              phoneField: "",
+              leadgenFormId: "",
+              pageAccessToken: "",
+            },
+            measured: {
+              width: 220,
+              height: 126,
+            },
           },
-        };
-      }
-      return node;
-    });
+        ],
+        edges: [],
+        viewport: {},
+      };
+    } else {
+      // Update startMessage in all nodes of type "startNode"
+      jsonData.nodes = jsonData.nodes.map((node) => {
+        if (node.type === "startNode") {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              startMessage: rootForm?.values?.commands?.join(", "),
+            },
+          };
+        }
+        return node;
+      });
+    }
 
     const data = {
       ...rootForm.values,
