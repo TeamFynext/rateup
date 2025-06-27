@@ -238,3 +238,27 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUserId: (userId) => set({ userId }),
   setOrgId: (orgId) => set({ orgId }),
 }));
+
+type SearchFlowState = {
+  search: string;
+  setSearch: (value: string) => void;
+  reset: () => void;
+};
+
+export const useSearchFlowStore = create<SearchFlowState>()((set) => ({
+  search: '',
+  setSearch: (value) => set({ search: value }),
+  reset: () => set({ search: '' }),
+}));
+
+type SearchWebFormState = {
+  search: string;
+  setSearch: (value: string) => void;
+  reset: () => void;
+};
+
+export const useSearchWebFormStore = create<SearchWebFormState>()((set) => ({
+  search: '',
+  setSearch: (value) => set({ search: value }),
+  reset: () => set({ search: '' }),
+}));

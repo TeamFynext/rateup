@@ -1,30 +1,43 @@
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   Pressable,
   Text,
-  TouchableOpacity,
   View,
+  ScrollView,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  useWaFlowFromDb,
-  useResponsesBySurvey,
-} from "@/src/api/whatsapp/flow/flow.query";
+import { useWaFlowFromDb } from "@/src/api/whatsapp/flow/flow.query";
 import { ContactCard } from "@/src/components/flow/FlowResponseCard";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { BackIcon } from "@/src/constants/imageExports";
+import ChoiceWise from "@/src/components/flow/ChoiceWise";
+import {
+  useResponseAnalytics,
+  useResponsesBySurvey,
+} from "@/src/api/response/response.query";
+import { useQuestions } from "@/src/api/question/question.query";
 
 dayjs.extend(relativeTime);
 
 const Tab = createMaterialTopTabNavigator();
 
-const OverviewTab = ({ flowId }: { flowId: string }) => {
-  const { data, isLoading, error } = useWaFlowFromDb(flowId);
+const OverviewTab = ({
+  surveyId,
+  flow,
+  version,
+}: {
+  surveyId?: string;
+  flow: any;
+  version: number;
+}) => {
+  const { data, isLoading } = useResponseAnalytics(surveyId, {});
+  const { data: question } = useQuestions(surveyId);
 
   if (isLoading) {
     return (
@@ -34,7 +47,7 @@ const OverviewTab = ({ flowId }: { flowId: string }) => {
     );
   }
 
-  if (error || !data) {
+  if (!data) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <Text className="text-red-500">Failed to load flow data.</Text>
@@ -42,20 +55,53 @@ const OverviewTab = ({ flowId }: { flowId: string }) => {
     );
   }
 
+  const totalResponses = Object.values(data.choiceWise).reduce(
+    (acc: number, curr: any) => acc + (curr?.responseCount || 0),
+    0
+  );
+
   return (
-    <View className="p-4 bg-white">
-      <Text className="text-lg font-semibold text-gray-800 mb-2">
-        Flow ID: {flowId}
-      </Text>
-      <Text className="text-base text-gray-600">
-        Survey ID: {data.surveyId}
-      </Text>
+    <View className="flex-1 bg-white">
+      {/* Response Count Header */}
+      <View className="px-4 py-3 border-b border-gray-200 bg-rateUpGreen20 flex-row items-center justify-between">
+        <Text className="text-base font-semibold text-rateUpGreen">
+          Total Responses
+        </Text>
+        <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
+          <Text className="text-white text-sm font-semibold">
+            {totalResponses}
+          </Text>
+        </View>
+      </View>
+
+      {/* Scrollable Content */}
+      <ScrollView className="flex-1 p-4">
+        {Object.keys(data.choiceWise).length === 0 ? (
+          <View className="items-center justify-center py-10">
+            <Text className="text-gray-500 text-base">No data available.</Text>
+          </View>
+        ) : (
+          Object.entries(data.choiceWise).map(
+            ([questionId, { data: choices }]) => (
+              <ChoiceWise
+                key={questionId}
+                questionId={questionId}
+                choices={choices}
+                questions={question}
+                version={version}
+                flow={flow}
+              />
+            )
+          )
+        )}
+      </ScrollView>
     </View>
   );
 };
 
 const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
   const { data: dat1, isLoading } = useResponsesBySurvey(surveyId, {});
+  const totalResponse = dat1?.totalCount || 0;
 
   if (isLoading) {
     return (
@@ -74,16 +120,24 @@ const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
   }
 
   return (
-    <View className="bg-white">
+    <View className="bg-white h-full">
+      {/* ✅ Response Count Header */}
+      <View className="px-4 py-3 border-b border-gray-200 bg-rateUpGreen20 flex-row items-center justify-between">
+        <Text className="text-base font-semibold text-rateUpGreen">
+          Total Responses
+        </Text>
+        <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
+          <Text className="text-white text-sm font-semibold">
+            {totalResponse}
+          </Text>
+        </View>
+      </View>
+
       <FlatList
         data={dat1.responses}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16, gap: 12 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity>
-            <ContactCard item={item} />
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => <ContactCard item={item} />}
       />
     </View>
   );
@@ -92,6 +146,8 @@ const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
 const FlowPage = () => {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const screenWidth = Dimensions.get("window").width;
+  const sw = Math.floor(screenWidth * 0.45);
 
   const { flowId, flowName } = useMemo(() => {
     const id = params?.flowId;
@@ -113,7 +169,7 @@ const FlowPage = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white p-2">
       {/* Header */}
       <View className="flex-row items-center mt-4 mb-4 gap-2">
         <Pressable onPress={() => router.back()}>
@@ -124,16 +180,45 @@ const FlowPage = () => {
 
       {/* Tabs */}
       <Tab.Navigator
-        screenOptions={{
-          tabBarIndicatorStyle: { backgroundColor: "#0f766e", height: 3 },
-          tabBarLabelStyle: { fontWeight: "600", textTransform: "capitalize" },
-          tabBarActiveTintColor: "#0f766e",
-          tabBarInactiveTintColor: "#9ca3af",
-          tabBarStyle: { backgroundColor: "#ffffff", elevation: 0 },
-        }}
+        screenOptions={({ route }) => ({
+          tabBarLabel: ({ focused }) => (
+            <View
+              style={{ width: sw }}
+              className={`mx-auto p-3 rounded-lg ${
+                focused ? "bg-rateUpGreen20" : "bg-white"
+              }`}
+            >
+              <Text
+                className={`text-base text-center font-semibold ${
+                  focused ? "text-rateUpGreen" : "text-gray-500"
+                }`}
+              >
+                {route.name}
+              </Text>
+            </View>
+          ),
+          tabBarItemStyle: {
+            flex: 1,
+            alignItems: "center",
+          },
+          tabBarStyle: {
+            backgroundColor: "#fff",
+            elevation: 0,
+            height: 60,
+          },
+          tabBarIndicatorStyle: {
+            backgroundColor: "transparent",
+          },
+        })}
       >
-        <Tab.Screen name="Overview">
-          {() => <OverviewTab flowId={flowId} />}
+        <Tab.Screen name="Analytics">
+          {() => (
+            <OverviewTab
+              surveyId={flowData?.surveyId}
+              flow={flowData}
+              version={flowData?.version}
+            />
+          )}
         </Tab.Screen>
         <Tab.Screen name="Responses">
           {() => <ResponsesTab surveyId={flowData?.surveyId} />}

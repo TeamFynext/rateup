@@ -4,7 +4,8 @@ import { FlashList } from "@shopify/flash-list";
 import { useWaFlowsFromDb } from "@/src/api/whatsapp/flow/flow.query";
 import FlowSearchBar from "@/src/components/flow/FlowSearchBar";
 import { useRouter } from "expo-router";
-import { useFlowFilterStore } from "@/src/utils/store"; 
+import { useFlowFilterStore, useSearchFlowStore } from "@/src/utils/store";
+import { MoveRight } from "lucide-react-native";
 
 const getStatusBadge = (status: string) => {
   const color = status === "PUBLISHED" ? "bg-green-500" : "bg-orange-400";
@@ -24,15 +25,11 @@ const getStatusBadge = (status: string) => {
 
 const Flow = () => {
   const { data = [], isLoading } = useWaFlowsFromDb();
+  const { search } = useSearchFlowStore();
   const router = useRouter();
-  
-  const {
-    teamId,
-    status,
-    latestFirst,
-    OldFirst,
-    alphabetical,
-  } = useFlowFilterStore();
+
+  const { teamId, status, latestFirst, OldFirst, alphabetical } =
+    useFlowFilterStore();
 
   const filteredAndSortedFlows = useMemo(() => {
     let flows = [...data];
@@ -49,6 +46,12 @@ const Flow = () => {
       flows = flows.filter((flow) => flow.status === status);
     }
 
+    if (search.trim()) {
+      flows = flows.filter((flow) =>
+        flow.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
     // Alphabetical sort
     if (alphabetical === "A-Z") {
       flows = flows.sort((a, b) => a.name.localeCompare(b.name));
@@ -59,16 +62,18 @@ const Flow = () => {
     // Sort by createdAt
     if (latestFirst) {
       flows = flows.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     } else if (OldFirst) {
       flows = flows.sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
     }
 
     return flows;
-  }, [data, teamId, status, latestFirst, OldFirst, alphabetical]);
+  }, [data, teamId, status, latestFirst, OldFirst, alphabetical, search]);
 
   if (isLoading) {
     return (
@@ -117,9 +122,12 @@ const Flow = () => {
         <View className="flex-row justify-between items-center mt-1">
           {getStatusBadge(item.status)}
           <View className="bg-rateUpLightGreen px-2 py-0.5 rounded-full">
-            <Text className="text-xs font-semibold text-rateUpGreen">
-              {item.responseCount ?? 0} Responses
-            </Text>
+            <View className="flex-row items-center justify-center gap-1">
+              <Text className="text-xs font-semibold text-rateUpGreen">
+                Response
+              </Text>
+              <MoveRight width={15} height={15} color={"black"} />
+            </View>
           </View>
         </View>
       </TouchableOpacity>
