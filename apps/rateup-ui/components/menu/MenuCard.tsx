@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Badge, Box, Flex, Group, Stack, Text } from "@mantine/core";

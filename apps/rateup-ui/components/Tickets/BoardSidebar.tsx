@@ -164,7 +164,7 @@ export function BoardSidebar({
                     <Menu.Dropdown>
                       {onEditBoard && (
                         <Menu.Item
-                          icon={<IconEdit size={14} />}
+                          leftSection={<IconEdit size={14} />}
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
@@ -180,7 +180,7 @@ export function BoardSidebar({
                       )}
                       {onDeleteBoard && (
                         <Menu.Item
-                          icon={<IconTrash size={14} />}
+                          leftSection={<IconTrash size={14} />}
                           color="red"
                           onClick={(e) => {
                             e.stopPropagation();

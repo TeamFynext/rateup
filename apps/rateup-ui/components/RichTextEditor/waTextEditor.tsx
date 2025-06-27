@@ -131,7 +131,6 @@ function WaTextEditor({
   return (
     <Box {...props}>
       <Text
-        htmlFor="editor"
         fz={12}
         c={
           "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))"

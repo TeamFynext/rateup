@@ -1,3 +1,5 @@
+import { JSX } from "react";
+
 import { Paper, PaperProps } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
 import clsx from "clsx";

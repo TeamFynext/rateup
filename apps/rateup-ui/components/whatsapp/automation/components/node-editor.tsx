@@ -547,7 +547,11 @@ const MediaNodeEditor: React.FC<
             </Button>
           )}
         </FileButton>
-        <ActionIcon variant="light" disabled={!file} onClick={clearFile}>
+        <ActionIcon
+          variant="light"
+          disabled={!file}
+          onClick={() => clearFile()}
+        >
           <IconRestore />
         </ActionIcon>
         {typedData?.link && (
@@ -570,7 +574,7 @@ const MediaNodeEditor: React.FC<
           <Button
             onClick={uploadFileData}
             disabled={loading}
-            leftIcon={<IconDeviceFloppy />}
+            leftSection={<IconDeviceFloppy />}
           >
             {loading ? "Uploading..." : "Upload"}
           </Button>
@@ -949,8 +953,7 @@ const ListNodeEditor: React.FC<NodeComponentProps<"listNode">> = ({
           ))}
           <Button
             variant="light"
-            size="xs"
-            compact
+            size="compact-xs"
             disabled={getTotalRowCount(typedData.sections || []) >= 10}
             onClick={() => {
               const newSections = [...(typedData.sections || [])];

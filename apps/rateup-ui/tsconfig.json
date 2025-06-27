@@ -32,7 +32,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "postcss.config.ts",
+    "postcss.config.mjs",
     "utils/encryption/index.ts",
     "fake-data.js",
     "prettier.config.js"

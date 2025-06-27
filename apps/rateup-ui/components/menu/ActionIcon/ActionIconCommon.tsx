@@ -1,3 +1,5 @@
+import { JSX } from "react";
+
 import { ActionIcon, Stack, Tooltip } from "@mantine/core";
 
 type ActionIconCommonProps = {
