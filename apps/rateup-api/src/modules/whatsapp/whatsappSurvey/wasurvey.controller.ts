@@ -647,18 +647,20 @@ export async function handleAutomatedReply(
       const nextNodes = automation?.matchData?.json?.edges.filter(
         (edge: any) => edge.sourceHandle === parsedMessage.buttonId,
       );
-      for (const node of nextNodes) {
-        if (node?.target) {
-          await processNextNode(
-            phone,
-            automation,
-            node.target,
-            orgId,
-            automationLog?.id,
-          );
-        } else {
-          log.warn(`No next node found for buttonId ${parsedMessage.buttonId}`);
+      if (nextNodes.length) {
+        for (const node of nextNodes) {
+          if (node?.target) {
+            await processNextNode(
+              phone,
+              automation,
+              node.target,
+              orgId,
+              automationLog?.id,
+            );
+          }
         }
+      } else {
+        log.warn(`No next node found for buttonId ${parsedMessage.buttonId}`);
       }
 
       // if (nextNode?.target) {
