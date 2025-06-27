@@ -2,9 +2,8 @@ import axios from "@/src/config/axios";
 
 const RESPONSE_URL = "/api/response";
 export async function getSurveyResponseAnalyics(surveyId, filter = "") {
-  return (
-    await axios.get(`${RESPONSE_URL}/analytics/${surveyId}?${filter}`)
-  ).data;
+  return (await axios.get(`${RESPONSE_URL}/analytics/${surveyId}?${filter}`))
+    .data;
 }
 
 export async function getResponses(surveyTeamMapId: string) {
@@ -14,10 +13,8 @@ export async function getResponses(surveyTeamMapId: string) {
 
 export async function getResponsesBySurveyId(
   surveyId: string,
-  filter: string = "",
+  filter: string = ""
 ) {
-  const res = await axios.get(
-    `${RESPONSE_URL}/survey/${surveyId}?${filter}`,
-  );
+  const res = await axios.get(`${RESPONSE_URL}/survey/${surveyId}?${filter}`);
   return res.data;
 }

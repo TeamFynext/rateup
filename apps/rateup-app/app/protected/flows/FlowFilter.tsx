@@ -1,19 +1,40 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTeamsByUser } from '@/src/api/teams/teams.query';
-import { useFlowFilterStore } from '@/src/utils/store';
-import { useRouter } from 'expo-router';
-import { BackIcon } from '@/src/constants/imageExports';
+import React, { useState, useMemo } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  Pressable,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useTeamsByUser } from "@/src/api/teams/teams.query";
+import { useFlowFilterStore } from "@/src/utils/store";
+import { useRouter } from "expo-router";
+import { BackIcon } from "@/src/constants/imageExports";
 
-const Button = ({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) => (
+const Button = ({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) => (
   <TouchableOpacity
     className={`px-4 py-2 rounded-md border ${
-      active ? 'bg-rateUpLightGreen border-rateUpGreen' : 'border-gray-300'
+      active ? "bg-rateUpLightGreen border-rateUpGreen" : "border-gray-300"
     }`}
     onPress={onPress}
   >
-    <Text className={`${active ? 'text-rateUpGreen font-semibold' : 'text-gray-700'}`}>{label}</Text>
+    <Text
+      className={`${
+        active ? "text-rateUpGreen font-semibold" : "text-gray-700"
+      }`}
+    >
+      {label}
+    </Text>
   </TouchableOpacity>
 );
 
@@ -36,19 +57,28 @@ const FlowFilter = () => {
 
   const teamList = useMemo(() => {
     if (!teamData?.data) return [];
-    return [{ id: 'all', name: 'All Teams' }, ...teamData.data];
+    return [{ id: "all", name: "All Teams" }, ...teamData.data];
   }, [teamData]);
 
-  const selectedTeamName = teamList.find((t) => t.id === teamId)?.name ?? 'All Teams';
+  const selectedTeamName =
+    teamList.find((t) => t.id === teamId)?.name ?? "All Teams";
 
   return (
-    <SafeAreaView className="flex-1 bg-white px-4">
-     <View className="flex-row items-center mb-8 gap-2">
-            <Pressable onPress={() => router.back()}>
-              <BackIcon height={25} width={25} />
-            </Pressable>
-            <Text className="text-black text-2xl font-bold">Filter</Text>
-          </View>
+    <SafeAreaView className="flex-1 bg-white p-4">
+      <View className="flex-row items-center mb-8 gap-2 justify-between">
+        <View className="flex-row gap-1 items-center justify-center">
+          <Pressable onPress={() => router.back()}>
+            <BackIcon height={25} width={25} />
+          </Pressable>
+          <Text className="text-black text-2xl font-bold">Filter</Text>
+        </View>
+        <TouchableOpacity
+          onPress={resetFilters}
+          className="rounded-full px-4 py-2 items-center justify-center bg-gray-200"
+        >
+          <Text className="text-black font-semibold">Reset</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Team Selector */}
       <Text className="mb-1 text-sm text-gray-700">Teams</Text>
@@ -61,10 +91,10 @@ const FlowFilter = () => {
 
       {/* Status Filter */}
       <View className="flex-row justify-between mb-4">
-        {['all', 'PUBLISHED', 'DRAFT'].map((s) => (
+        {["all", "PUBLISHED", "DRAFT"].map((s) => (
           <Button
             key={s}
-            label={s === 'all' ? 'All' : s}
+            label={s === "all" ? "All" : s}
             active={status === s}
             onPress={() => setStatus(s as any)}
           />
@@ -73,25 +103,47 @@ const FlowFilter = () => {
 
       {/* Date Sort */}
       <View className="flex-row justify-between mb-4">
-        <Button label="Latest First" active={sortByDate === 'latest'} onPress={() => setSortByDate('latest')} />
-        <Button label="Oldest First" active={sortByDate === 'oldest'} onPress={() => setSortByDate('oldest')} />
+        <Button
+          label="Latest First"
+          active={sortByDate === "latest"}
+          onPress={() => setSortByDate("latest")}
+        />
+        <Button
+          label="Oldest First"
+          active={sortByDate === "oldest"}
+          onPress={() => setSortByDate("oldest")}
+        />
       </View>
 
       {/* Alphabetical */}
       <View className="flex-row justify-between mb-4">
-        <Button label="A-Z" active={alphabetical === 'A-Z'} onPress={() => setAlphabetical('A-Z')} />
-        <Button label="Z-A" active={alphabetical === 'Z-A'} onPress={() => setAlphabetical('Z-A')} />
+        <Button
+          label="A-Z"
+          active={alphabetical === "A-Z"}
+          onPress={() => setAlphabetical("A-Z")}
+        />
+        <Button
+          label="Z-A"
+          active={alphabetical === "Z-A"}
+          onPress={() => setAlphabetical("Z-A")}
+        />
       </View>
 
       {/* Show Results */}
-      <TouchableOpacity 
-      onPress={()=> router.back()}
-      className="bg-rateUpGreen rounded-xl py-4 mt-auto mb-6 items-center justify-center">
+      <TouchableOpacity
+        onPress={() => router.back()}
+        className="bg-rateUpGreen rounded-xl py-4 mt-auto mb-6 items-center justify-center"
+      >
         <Text className="text-white font-semibold">Show results</Text>
       </TouchableOpacity>
 
       {/* Team Selector Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View className="flex-1 justify-end bg-black/30">
           <View className="bg-white rounded-t-2xl max-h-[60%] p-4">
             <Text className="text-lg font-semibold mb-3">Select a Team</Text>
@@ -106,7 +158,13 @@ const FlowFilter = () => {
                     setModalVisible(false);
                   }}
                 >
-                  <Text className={`text-base ${teamId === item.id ? 'text-rateUpGreen font-bold' : 'text-gray-800'}`}>
+                  <Text
+                    className={`text-base ${
+                      teamId === item.id
+                        ? "text-rateUpGreen font-bold"
+                        : "text-gray-800"
+                    }`}
+                  >
                     {item.name}
                   </Text>
                 </TouchableOpacity>

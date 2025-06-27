@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { View, Text } from "react-native";
+import { View, Text, FlatList } from "react-native";
 import { QuestionType2 } from "./enum";
 
 type ChoiceData = {
@@ -15,12 +15,25 @@ type Props = {
   flow: any;
 };
 
-const ChoiceWise = ({ questionId, choices, questions, version, flow }: Props) => {
-  const flowQuestions = useMemo(() => {
-    return flow?.json?.screens?.flatMap((screen:any) =>
-      screen.layout.children
+const ChoiceWise = ({
+  questionId,
+  choices,
+  questions,
+  version,
+  flow,
+}: Props) => {
+  const getLocalizedText = (input: any): string => {
+    if (typeof input === "string") return input;
+    if (typeof input === "object" && input !== null) {
+      return input.en || Object.values(input)[0] || "Untitled";
+    }
+    return "Untitled";
+  };
 
-        .filter((child:any) => child.type !== QuestionType2.Footer)
+  const flowQuestions = useMemo(() => {
+    return flow?.json?.screens?.flatMap((screen: any) =>
+      screen.layout.children
+        .filter((child: any) => child.type !== QuestionType2.Footer)
         //@ts-ignore
         .map(({ id, label, metaType, name, header }) => ({
           id,
@@ -28,8 +41,8 @@ const ChoiceWise = ({ questionId, choices, questions, version, flow }: Props) =>
           metaType,
           name,
           header,
-        })) 
-        .filter(({ name }) => name),
+        }))
+        .filter(({ name }) => name)
     );
   }, [flow]);
 
@@ -43,23 +56,36 @@ const ChoiceWise = ({ questionId, choices, questions, version, flow }: Props) =>
       type: version === 1 ? question?.type : question?.metaType,
       questionTitle:
         version === 1
-          ? question?.title || question?.label || "Untitled"
-          : question?.header || question?.label || "Untitled",
+          ? getLocalizedText(question?.title) ||
+            getLocalizedText(question?.label)
+          : getLocalizedText(question?.header) ||
+            getLocalizedText(question?.label),
     };
   }, [questionId, version, questions, flowQuestions]);
-
   return (
-    <View className="mb-6 border-b border-gray-200 pb-4">
-      <Text>{type}</Text>
-      <Text className="text-lg font-semibold text-gray-800 mb-2">
+    <View className="mb-4 mx-2 rounded-2xl bg-rateUpLightGreen shadow-sm p-4 shadow-black/10">
+      <Text className="text-lg font-semibold text-gray-800 mb-3">
         {questionTitle}
       </Text>
-      {choices.map((choiceData, index) => (
-        <View key={index} className="flex-row justify-between mb-1 px-2">
-          <Text className="text-base text-gray-700">{choiceData.choice}</Text>
-          <Text className="text-base font-medium text-gray-900">{choiceData.count}</Text>
-        </View>
-      ))}
+      <FlatList
+        data={choices}
+        keyExtractor={(_, index) => index.toString()}
+        scrollEnabled={false}
+        ItemSeparatorComponent={() => <View className="h-1" />}
+        renderItem={({ item }) => (
+          <View className="flex-row justify-between px-2">
+            <Text className="text-base text-gray-700">{item.choice}</Text>
+            <Text className="text-base font-medium text-gray-900">
+              {item.count}
+            </Text>
+          </View>
+        )}
+        ListEmptyComponent={
+          <Text className="text-base text-gray-500 text-center">
+            No question responses.
+          </Text>
+        }
+      />
     </View>
   );
 };

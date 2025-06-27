@@ -1,7 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { getResponses, getResponsesBySurveyId, getSurveyResponseAnalyics } from "./response.api";
+import {
+  getResponses,
+  getResponsesBySurveyId,
+  getSurveyResponseAnalyics,
+} from "./response.api";
 
-export const useResponseAnalytics = (surveyId:any, filter: any) => {
+export const useResponseAnalytics = (surveyId: any, filter: any) => {
   const filterQuery = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
@@ -12,7 +16,7 @@ export const useResponseAnalytics = (surveyId:any, filter: any) => {
   });
 };
 
-  export const useResponsesBySurvey = (surveyId:any, filter:any) => {
+export const useResponsesBySurvey = (surveyId: any, filter: any) => {
   const filterQuery = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");

@@ -11,3 +11,9 @@ export async function getSurveys() {
     return { error: "Error Occured!" };
   }
 }
+
+export async function getSurvey(surveyId: string) {
+  if (!surveyId) return undefined;
+  const res = await axios.get(`${SURVEYURL}/${surveyId}`);
+  return res.data;
+}

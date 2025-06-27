@@ -13,7 +13,7 @@ export const ContactCard = ({ item }: { item: any }) => {
     <View className="flex-row items-start gap-4 bg-white rounded-2xl p-4 border border-gray-200 shadow-md">
       {/* Avatar */}
       <View className="w-14 h-14 rounded-full bg-rateUpGreen20 items-center justify-center">
-        <Text className="text-rateUpGreen font-bold text-2xl">U</Text>
+        <Text className="text-rateUpGreen font-bold text-2xl">0</Text>
       </View>
 
       {/* Info */}
@@ -23,7 +23,7 @@ export const ContactCard = ({ item }: { item: any }) => {
             className="font-semibold text-base text-gray-900"
             numberOfLines={1}
           >
-            {item.phone}
+            {item.phone || "Respondent"}
           </Text>
           <Text className="text-xs text-gray-500">{time}</Text>
         </View>

@@ -1,8 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getWaFlowFromDb,
-  getWaFlowsFromDb,
-} from "./flow.api";
+import { getWaFlowFromDb, getWaFlowsFromDb } from "./flow.api";
 
 export const useWaFlowsFromDb = (enabled = true) =>
   useQuery({
