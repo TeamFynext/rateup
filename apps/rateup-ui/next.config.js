@@ -19,6 +19,10 @@ module.exports = withBundleAnalyzer({
         hostname: "djd7kjh9uwow0.cloudfront.net",
         port: "",
       },
+      {
+        protocol: "https",
+        hostname: "blog.rateup.app",
+      },
     ],
   },
   compiler:
