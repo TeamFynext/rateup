@@ -7,6 +7,7 @@ import {
   ScrollView,
   Dimensions,
   Pressable,
+  TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
@@ -20,6 +21,7 @@ import { useSurvey } from "@/src/api/survey/survey.query";
 import { useQuestions } from "@/src/api/question/question.query";
 import ChoiceWise from "@/src/components/flow/ChoiceWise";
 import { BackIcon } from "@/src/constants/imageExports";
+import { useWebFormResponseDataStore } from "@/src/utils/store";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -95,6 +97,8 @@ const AnalyticsTab = ({
 const ResponsesTab = ({ webformId }: { webformId?: string }) => {
   const { data: dat1, isLoading } = useResponsesBySurvey(webformId, {});
   const totalResponse = dat1?.totalCount || 0;
+  const {setData} = useWebFormResponseDataStore()
+  const router = useRouter();
 
   if (isLoading) {
     return (
@@ -130,7 +134,19 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
         data={dat1.responses}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16, gap: 12 }}
-        renderItem={({ item }) => <ContactCard item={item} />}
+        renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setData([item]);
+                      router.push({
+                        pathname:`/protected/webForms/webformresponse/${item.id}`,
+                        params:{webformId:webformId, respondent:item.phone}
+                      });
+                    }}
+                  >
+                    <ContactCard item={item} />
+                  </TouchableOpacity>
+                )}
       />
     </View>
   );

@@ -120,9 +120,9 @@ const WebForm = () => {
             </Text>
           </View>
 
-          <View className="px-2 py-1 rounded-full bg-blue-100">
+          <View className="px-2 py-1 rounded-full bg-rateUpLightGreen">
             <View className="flex-row justify-center items-center gap-1">
-              <Text className="text-xs font-semibold text-blue-700">
+              <Text className="text-xs font-semibold text-rateUpGreen">
                 Response
               </Text>
               <MoveRight width={15} height={15} color={"black"} />

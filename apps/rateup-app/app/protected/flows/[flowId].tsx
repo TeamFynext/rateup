@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -7,6 +7,7 @@ import {
   Text,
   View,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
@@ -22,6 +23,7 @@ import {
   useResponsesBySurvey,
 } from "@/src/api/response/response.query";
 import { useQuestions } from "@/src/api/question/question.query";
+import { useFlowResponseDataStore } from "@/src/utils/store";
 
 dayjs.extend(relativeTime);
 
@@ -102,6 +104,8 @@ const OverviewTab = ({
 const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
   const { data: dat1, isLoading } = useResponsesBySurvey(surveyId, {});
   const totalResponse = dat1?.totalCount || 0;
+  const router = useRouter();
+  const { setData } = useFlowResponseDataStore();
 
   if (isLoading) {
     return (
@@ -118,7 +122,6 @@ const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
       </View>
     );
   }
-
   return (
     <View className="bg-white h-full">
       {/* ✅ Response Count Header */}
@@ -137,7 +140,19 @@ const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
         data={dat1.responses}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16, gap: 12 }}
-        renderItem={({ item }) => <ContactCard item={item} />}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            onPress={() => {
+              setData([item]);
+              router.push({
+                pathname:`/protected/flows/flowresponse/${item.id}`,
+                params:{surveyId:surveyId, respondent:item.phone}
+              });
+            }}
+          >
+            <ContactCard item={item} />
+          </TouchableOpacity>
+        )}
       />
     </View>
   );

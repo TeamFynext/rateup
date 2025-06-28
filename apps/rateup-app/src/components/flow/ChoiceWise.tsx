@@ -22,12 +22,11 @@ const ChoiceWise = ({
   version,
   flow,
 }: Props) => {
-  const getLocalizedText = (input: any): string => {
+  const getLocalizedText = (input: any) => {
     if (typeof input === "string") return input;
     if (typeof input === "object" && input !== null) {
-      return input.en || Object.values(input)[0] || "Untitled";
+      return input.en || Object.values(input)[0];
     }
-    return "Untitled";
   };
 
   const flowQuestions = useMemo(() => {

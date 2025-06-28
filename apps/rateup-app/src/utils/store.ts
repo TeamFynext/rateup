@@ -262,3 +262,23 @@ export const useSearchWebFormStore = create<SearchWebFormState>()((set) => ({
   setSearch: (value) => set({ search: value }),
   reset: () => set({ search: '' }),
 }));
+
+type FlowResponseDataStore = {
+  data: any[];
+  setData: (newData: any[]) => void;
+};
+
+export const useFlowResponseDataStore = create<FlowResponseDataStore>((set) => ({
+  data: [],
+  setData: (newData) => set({ data: newData }),
+}));
+
+type WebFormResponseDataStore = {
+  data: any[];
+  setData: (newData: any[]) => void;
+};
+
+export const useWebFormResponseDataStore = create<WebFormResponseDataStore>((set) => ({
+  data: [],
+  setData: (newData) => set({ data: newData }),
+}));
