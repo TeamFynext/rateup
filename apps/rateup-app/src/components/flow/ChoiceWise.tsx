@@ -23,12 +23,14 @@ const ChoiceWise = ({
   flow,
 }: Props) => {
   const getLocalizedText = (input: any) => {
-    if (typeof input === "string") return input;
-    if (typeof input === "object" && input !== null) {
-      return input.en || Object.values(input)[0];
-    }
+    const rawText =
+      typeof input === "string"
+        ? input
+        : typeof input === "object" && input !== null
+        ? input.en || Object.values(input)[0]
+        : "";
+    return rawText.replace(/<[^>]+>/g, "").trim();
   };
-
   const flowQuestions = useMemo(() => {
     return flow?.json?.screens?.flatMap((screen: any) =>
       screen.layout.children
@@ -56,31 +58,43 @@ const ChoiceWise = ({
       questionTitle:
         version === 1
           ? getLocalizedText(question?.title) ||
-            getLocalizedText(question?.label)
+            getLocalizedText(question?.description)
           : getLocalizedText(question?.header) ||
             getLocalizedText(question?.label),
     };
   }, [questionId, version, questions, flowQuestions]);
   return (
-    <View className="mb-4 mx-2 rounded-2xl bg-rateUpLightGreen shadow-sm p-4 shadow-black/10">
-      <Text className="text-lg font-semibold text-gray-800 mb-3">
+    <View className="bg-white rounded-2xl shadow-md p-4">
+      {/* Top Label Row */}
+      <View className="flex-row items-center space-x-2 mb-3 gap-1">
+        <View className="w-6 h-6 rounded-full bg-rateUpGreen items-center justify-center">
+          <Text className="text-white text-xs font-semibold">Q</Text>
+        </View>
+        <Text className="text-xs font-medium text-white bg-rateUpGreen px-2 py-1 rounded-full">
+          {type}
+        </Text>
+      </View>
+
+      {/* Question Title */}
+      <Text className="text-base font-semibold text-gray-900 mb-3">
         {questionTitle}
       </Text>
+
+      {/* Choices List */}
       <FlatList
         data={choices}
         keyExtractor={(_, index) => index.toString()}
         scrollEnabled={false}
-        ItemSeparatorComponent={() => <View className="h-1" />}
         renderItem={({ item }) => (
-          <View className="flex-row justify-between px-2">
+          <View className="flex-row justify-between px-1">
             <Text className="text-base text-gray-700">{item.choice}</Text>
-            <Text className="text-base font-medium text-gray-900">
+            <Text className="text-base font-semibold text-gray-900">
               {item.count}
             </Text>
           </View>
         )}
         ListEmptyComponent={
-          <Text className="text-base text-gray-500 text-center">
+          <Text className="text-base text-gray-500 text-center mt-2">
             No question responses.
           </Text>
         }

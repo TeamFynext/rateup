@@ -7,6 +7,7 @@ import { useQuestions } from "@/src/api/question/question.query";
 import { BackIcon } from "@/src/constants/imageExports";
 
 const ResponseId = () => {
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
   const { webformresponseId, webformId, respondent } = useLocalSearchParams();
   const { data } = useWebFormResponseDataStore();
   const { data: questions } = useQuestions(webformId);
@@ -25,7 +26,9 @@ const ResponseId = () => {
   const questionMap = useMemo(() => {
     const map: Record<string, string> = {};
     questions?.forEach((q) => {
-      map[q.id] = q.title?.English || q.description?.English || q.label?.English || "";
+      const raw =
+        q.title?.English || q.description?.English || q.label?.English || "";
+      map[q.id] = stripHtml(raw);
     });
     return map;
   }, [questions]);
@@ -44,7 +47,9 @@ const ResponseId = () => {
         {/* Avatar + Name */}
         <View className="flex-row items-center space-x-4 mb-6 gap-3">
           <View className="w-14 h-14 rounded-full bg-rateUpLightGreen items-center justify-center">
-            <Text className="text-rateUpGreen font-bold text-2xl">{respondent?"0":"R"}</Text>
+            <Text className="text-rateUpGreen font-bold text-2xl">
+              {respondent ? "0" : "R"}
+            </Text>
           </View>
           <Text className="text-xl font-medium text-gray-900">
             {respondent || "Respondent"}
@@ -63,15 +68,17 @@ const ResponseId = () => {
 
           const value = item.response?.[responseType];
           const displayValue =
-            typeof value === "string"
-              ? value
+            typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+              ? String(value)
               : Array.isArray(value)
               ? value
                   .map((v) => (typeof v === "string" ? v : v?.value || ""))
                   .join(", ")
               : typeof value === "object" && value?.value
               ? value.value
-              : JSON.stringify(value);
+              : Object.entries(value)
+                  .map(([k, v]) => `${k}: ${v}`)
+                  .join("\n");
 
           return (
             <View className="flex justify-center mb-8">
@@ -90,15 +97,13 @@ const ResponseId = () => {
               {/* Question Title */}
               <View className="pl-8">
                 <Text className="text-md font-bold text-gray-800 mb-1">
-                {questionTitle}
-              </Text>
+                  {questionTitle}
+                </Text>
 
-              {/* Response Text / Badge */}
-              <Text
-                className="text-sm pl-3 text-gray-600"
-              >
-                {displayValue}
-              </Text>
+                {/* Response Text / Badge */}
+                <Text className="text-sm pl-3 text-gray-600">
+                  {displayValue}
+                </Text>
               </View>
             </View>
           );

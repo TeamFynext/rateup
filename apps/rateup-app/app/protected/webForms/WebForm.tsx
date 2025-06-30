@@ -80,7 +80,7 @@ const WebForm = () => {
   const renderItem = ({ item }: { item: any }) => {
     return (
       <TouchableOpacity
-        className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col space-y-2 mb-2"
+        className="bg-white p-4 rounded-xl shadow-sm flex flex-col space-y-2 mb-2"
         onPress={() =>
           router.push({
             pathname: `/protected/webForms/${item.id}`,

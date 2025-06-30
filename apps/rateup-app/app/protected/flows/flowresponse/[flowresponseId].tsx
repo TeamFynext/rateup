@@ -25,7 +25,6 @@ const ResponseId = () => {
   const questionMap = useMemo(() => {
     const map: Record<string, string> = {};
     questions?.forEach((q) => {
-      console.log(q);
       map[q.id] = q.title?.en || q.description?.en || q.label?.en || "";
     });
     return map;

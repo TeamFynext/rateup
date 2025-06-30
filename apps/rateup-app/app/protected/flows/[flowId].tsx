@@ -101,7 +101,7 @@ const OverviewTab = ({
   );
 };
 
-const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
+const ResponsesTab = ({ surveyId, version }: { surveyId?: string; version: number }) => {
   const { data: dat1, isLoading } = useResponsesBySurvey(surveyId, {});
   const totalResponse = dat1?.totalCount || 0;
   const router = useRouter();
@@ -122,6 +122,7 @@ const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
       </View>
     );
   }
+
   return (
     <View className="bg-white h-full">
       {/* ✅ Response Count Header */}
@@ -144,9 +145,13 @@ const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
           <TouchableOpacity
             onPress={() => {
               setData([item]);
+              const routeBase =
+                version === 1
+                  ? "/protected/flows/flowresponse"
+                  : "/protected/flows/flow2";
               router.push({
-                pathname:`/protected/flows/flowresponse/${item.id}`,
-                params:{surveyId:surveyId, respondent:item.phone}
+                pathname: `${routeBase}/${item.id}`,
+                params: { surveyId: surveyId, respondent: item.phone },
               });
             }}
           >
@@ -157,6 +162,7 @@ const ResponsesTab = ({ surveyId }: { surveyId?: string }) => {
     </View>
   );
 };
+
 
 const FlowPage = () => {
   const params = useLocalSearchParams();
@@ -236,7 +242,7 @@ const FlowPage = () => {
           )}
         </Tab.Screen>
         <Tab.Screen name="Responses">
-          {() => <ResponsesTab surveyId={flowData?.surveyId} />}
+          {() => <ResponsesTab surveyId={flowData?.surveyId} version={flowData?.version} />}
         </Tab.Screen>
       </Tab.Navigator>
     </SafeAreaView>
