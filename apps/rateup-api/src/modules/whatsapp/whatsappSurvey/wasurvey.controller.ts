@@ -158,7 +158,7 @@ export async function whatsappEventHandler(
     if (!eventType) {
       return;
     }
-
+    reply.code(200).send();
     switch (eventType) {
       case "captured":
         await handleCapturedEvent(body);
@@ -188,7 +188,6 @@ export async function whatsappEventHandler(
   } catch (error) {
     log.error("Error in whatsappEventHandler: %o", error);
   } finally {
-    reply.code(200).send();
   }
 }
 
