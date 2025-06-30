@@ -101,7 +101,7 @@ const Flow = () => {
 
     return (
       <TouchableOpacity
-        className="bg-white rounded-xl px-4 py-3 mb-3 border border-gray-200 shadow-md"
+        className="bg-white rounded-xl px-4 py-3 mb-3 shadow-md"
         onPress={() =>
           router.push({
             //@ts-ignore

@@ -24,6 +24,7 @@ import {
 } from "@/src/api/response/response.query";
 import { useQuestions } from "@/src/api/question/question.query";
 import { useFlowResponseDataStore } from "@/src/utils/store";
+import NPSOverview from "@/src/components/flow/NPSOverview";
 
 dayjs.extend(relativeTime);
 
@@ -56,9 +57,10 @@ const OverviewTab = ({
       </View>
     );
   }
-
-  const totalResponses = Object.values(data.choiceWise).reduce(
-    (acc: number, curr: any) => acc + (curr?.responseCount || 0),
+  const hasNPS = Object.keys(data.nps || {}).length > 0;
+  const hasChoiceWise = Object.keys(data.choiceWise || {}).length > 0;
+  const totalResponses = Object.values(data.choiceWise || {}).reduce(
+    (acc: number, curr: any) => acc + (curr?.responseCount ? 1 : 0),
     0
   );
 
@@ -67,7 +69,7 @@ const OverviewTab = ({
       {/* Response Count Header */}
       <View className="px-4 py-3 border-b border-gray-200 bg-rateUpGreen20 flex-row items-center justify-between">
         <Text className="text-base font-semibold text-rateUpGreen">
-          Total Responses
+          Total Responded Questions
         </Text>
         <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
           <Text className="text-white text-sm font-semibold">
@@ -77,31 +79,76 @@ const OverviewTab = ({
       </View>
 
       {/* Scrollable Content */}
-      <ScrollView className="flex-1 p-4">
-        {Object.keys(data.choiceWise).length === 0 ? (
-          <View className="items-center justify-center py-10">
-            <Text className="text-gray-500 text-base">No data available.</Text>
-          </View>
-        ) : (
-          Object.entries(data.choiceWise).map(
-            ([questionId, { data: choices }]) => (
-              <ChoiceWise
-                key={questionId}
-                questionId={questionId}
-                choices={choices}
-                questions={question}
-                version={version}
-                flow={flow}
-              />
-            )
-          )
-        )}
+      <ScrollView className="p-4">
+        <View className="flex-col gap-8">
+          {/* ✅ NPS Overview Section */}
+          {hasNPS && (
+            <View className="flex gap-2">
+              <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
+                NPS Overview
+              </Text>
+              {Object.entries(data.nps).map(([questionId, npsEntry]: any) => (
+                <NPSOverview
+                  key={questionId}
+                  questionId={questionId}
+                  questions={question}
+                  version={version}
+                  flow={flow}
+                  data={{
+                    npsScore: npsEntry.npsData.npsScore,
+                    csatScore: npsEntry.csatScore,
+                    promoters: npsEntry.npsData.promoters,
+                    passives: npsEntry.npsData.passives,
+                    detractors: npsEntry.npsData.detractors,
+                    total: npsEntry.npsData.total,
+                  }}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* ✅ ChoiceWise Response Section */}
+          {hasChoiceWise && (
+            <View className="flex gap-3">
+              <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
+                Question-wise Overview
+              </Text>
+              {Object.entries(data.choiceWise).map(
+                ([questionId, { data: choices }]) => (
+                  <ChoiceWise
+                    key={questionId}
+                    questionId={questionId}
+                    choices={choices}
+                    questions={question}
+                    version={version}
+                    flow={flow}
+                  />
+                )
+              )}
+            </View>
+          )}
+
+          {/* No data fallback */}
+          {!hasNPS && !hasChoiceWise && (
+            <View className="items-center justify-center py-10">
+              <Text className="text-gray-500 text-base">
+                No analytics data available.
+              </Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
 };
 
-const ResponsesTab = ({ surveyId, version }: { surveyId?: string; version: number }) => {
+const ResponsesTab = ({
+  surveyId,
+  version,
+}: {
+  surveyId?: string;
+  version: number;
+}) => {
   const { data: dat1, isLoading } = useResponsesBySurvey(surveyId, {});
   const totalResponse = dat1?.totalCount || 0;
   const router = useRouter();
@@ -162,7 +209,6 @@ const ResponsesTab = ({ surveyId, version }: { surveyId?: string; version: numbe
     </View>
   );
 };
-
 
 const FlowPage = () => {
   const params = useLocalSearchParams();
@@ -242,7 +288,12 @@ const FlowPage = () => {
           )}
         </Tab.Screen>
         <Tab.Screen name="Responses">
-          {() => <ResponsesTab surveyId={flowData?.surveyId} version={flowData?.version} />}
+          {() => (
+            <ResponsesTab
+              surveyId={flowData?.surveyId}
+              version={flowData?.version}
+            />
+          )}
         </Tab.Screen>
       </Tab.Navigator>
     </SafeAreaView>
