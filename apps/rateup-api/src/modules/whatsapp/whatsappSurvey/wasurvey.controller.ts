@@ -397,7 +397,7 @@ async function whatsappMessageHandler(
   }
   //handle dubplicate webhook
   const existingMessage = await getWaMessageByMessageId(
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
+    waMessage?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id,
     from,
   );
   if (existingMessage) {
@@ -413,7 +413,7 @@ async function whatsappMessageHandler(
     sourcePlatform,
     sourceIdentifier,
     userName,
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
+    waMessage?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id,
   );
   if (type === WaMessageTypes.order) {
     await handleWaOrderfromCatalog(completeMessageObject, messageObj);
