@@ -68,7 +68,9 @@ const ResponseId = () => {
 
           const value = item.response?.[responseType];
           const displayValue =
-            typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+            typeof value === "string" ||
+            typeof value === "number" ||
+            typeof value === "boolean"
               ? String(value)
               : Array.isArray(value)
               ? value

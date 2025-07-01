@@ -33,7 +33,6 @@ import {
   WaTemplateFetchBodyComponent,
 } from "@/src/context/type";
 import TextWithFormatting from "@/src/utils/TextFormatting";
-import { ScrollView } from "react-native";
 
 export default function WaInboxText({
   messageContent,

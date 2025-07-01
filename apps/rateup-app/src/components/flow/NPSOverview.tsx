@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { View, Text } from "react-native";
-import { CheckCircle, Minus, XCircle } from "lucide-react-native";
 import ProgressBar from "@/src/utils/Progressbar";
 import { QuestionType2 } from "./enum";
 
@@ -71,28 +70,31 @@ const NPSOverview = ({
     };
   }, [questionId, version, questions, flowQuestions]);
 
+  const npsColor = npsScore < 0 ? "#ef4444" : "#22c55e";
+  const npsTextColor = npsScore < 0 ? "text-red-600" : "text-green-600";
+
   return (
     <View className="bg-white rounded-xl shadow-md p-4 space-y-5 flex gap-6">
       {/* NPS Score */}
       <View className="flex-row items-center gap-2">
-          <View className="bg-rateUpGreen h-7 w-7 rounded-full flex justify-center items-center">
-            <Text className="font-bold text-white">Q</Text>
-            </View>
-          <Text className="text-xl font-bold text-gray-800 ">
-            {questionTitle}
-          </Text>
+        <View className="bg-rateUpGreen h-7 w-7 rounded-full flex justify-center items-center">
+          <Text className="font-bold text-white">Q</Text>
         </View>
+        <Text className="text-xl font-bold text-gray-800 ">
+          {questionTitle}
+        </Text>
+      </View>
       <View className="flex gap-2">
         <View className="space-y-2">
           <View className="flex-row justify-between items-center">
             <Text className="text-md font-semibold text-gray-600">
               NPS Score
             </Text>
-            <Text className="text-md font-semibold text-green-600">
-              +{npsScore}
+            <Text className={`text-md font-semibold ${npsTextColor}`}>
+              {Math.floor(npsScore)}%
             </Text>
           </View>
-          <ProgressBar progress={(npsScore + 100) / 2} barColor="#22c55e" />
+          <ProgressBar progress={npsScore} barColor={npsColor} />
         </View>
 
         {/* CSAT Score */}

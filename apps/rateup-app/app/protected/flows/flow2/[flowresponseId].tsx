@@ -1,4 +1,11 @@
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Alert,
+} from "react-native";
 import React, { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BackIcon } from "@/src/constants/imageExports";
@@ -12,6 +19,13 @@ import {
   SmileyResponseMap,
   YNResponseMap,
 } from "@/src/components/flow/enumMap";
+import RNFS from "react-native-fs";
+import FileViewer from "react-native-file-viewer";
+import { useToast } from "react-native-toast-notifications";
+import requestStoragePermission from "@/src/utils/permission";
+import { Download } from "lucide-react-native";
+import DocumentResponse from "@/src/components/flow/DocumentResponse";
+import ImageResponse from "@/src/components/flow/ImageResponse";
 
 const Flow2Response = () => {
   const { respondent } = useLocalSearchParams();
@@ -24,14 +38,23 @@ const Flow2Response = () => {
     return flowData[0]?.json?.screens?.flatMap((screen) =>
       screen.layout.children
         .filter((child) => child.type !== QuestionType2.Footer)
-        .map(({ id, label, metaType, name, "data-source": dataSource, header }) => ({
-          id,
-          label,
-          metaType,
-          dataSource,
-          name,
-          header,
-        }))
+        .map(
+          ({
+            id,
+            label,
+            metaType,
+            name,
+            "data-source": dataSource,
+            header,
+          }) => ({
+            id,
+            label,
+            metaType,
+            dataSource,
+            name,
+            header,
+          })
+        )
         .filter(({ name }) => name)
     );
   }, [flowData]);
@@ -77,7 +100,7 @@ const Flow2Response = () => {
             return (
               <View key={question.id} className="mb-8">
                 {/* Index & Type Pill */}
-                <View className="flex-row items-center space-x-2 mb-2">
+                <View className="flex-row items-center space-x-2 mb-2 gap-1">
                   <View className="w-6 h-6 rounded-full bg-rateUpGreen items-center justify-center">
                     <Text className="text-white text-xs font-semibold">
                       {index + 1}
@@ -114,6 +137,7 @@ export default Flow2Response;
 
 // Response Formatter
 export const getCellData = (info, question) => {
+  const toast = useToast();
   switch (question.metaType) {
     case WaQuestions.LD:
       return LDResponseMap[info] || "";
@@ -131,21 +155,27 @@ export const getCellData = (info, question) => {
     case WaQuestions.CheckboxGroup:
     case WaQuestions.ChipsSelector:
       return (
-        Array.isArray(info) &&
-        info
-          .map((i) => question.dataSource?.find((data) => data.id === i)?.title)
-          .filter(Boolean)
-          .join(", ")
-      ) || "";
+        (Array.isArray(info) &&
+          info
+            .map(
+              (i) => question.dataSource?.find((data) => data.id === i)?.title
+            )
+            .filter(Boolean)
+            .join(", ")) ||
+        ""
+      );
     case WaQuestions.DocumentPicker:
-      return info
-        ? `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${info}`
-        : "";
+      return <DocumentResponse info={info} />;
     case WaQuestions.DatePicker:
       return info ? dayjs(info).format("DD-MM-YYYY") : "";
     case WaQuestions.TextArea:
+      return info;
     case WaQuestions.PhotoPicker:
-      return "Photo/Media Response";
+      return (
+        <View>
+          <ImageResponse info={info} />
+        </View>
+      );
     default:
       return info?.toString?.() || "";
   }

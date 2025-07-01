@@ -148,14 +148,14 @@ const ResponsesTab = ({
   version,
 }: {
   surveyId?: string;
-  flow:any;
+  flow: any;
   version: number;
 }) => {
   const { data: dat1, isLoading } = useResponsesBySurvey(surveyId, {});
   const totalResponse = dat1?.totalCount || 0;
   const router = useRouter();
   const { setData } = useFlowResponseDataStore();
-  const {setFlowData} = useFlowDataStore();
+  const { setFlowData } = useFlowDataStore();
 
   if (isLoading) {
     return (
@@ -195,7 +195,7 @@ const ResponsesTab = ({
           <TouchableOpacity
             onPress={() => {
               setData([item]);
-              setFlowData([flow])
+              setFlowData([flow]);
               const routeBase =
                 version === 1
                   ? "/protected/flows/flowresponse"

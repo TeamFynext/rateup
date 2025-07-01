@@ -44,7 +44,9 @@ const ResponseId = () => {
         {/* Avatar + Name */}
         <View className="flex-row items-center space-x-4 mb-6 gap-3">
           <View className="w-14 h-14 rounded-full bg-rateUpLightGreen items-center justify-center">
-            <Text className="text-rateUpGreen font-bold text-2xl">{respondent?"0":"R"}</Text>
+            <Text className="text-rateUpGreen font-bold text-2xl">
+              {respondent ? "0" : "R"}
+            </Text>
           </View>
           <Text className="text-xl font-medium text-gray-900">
             {respondent || "Respondent"}
@@ -90,15 +92,13 @@ const ResponseId = () => {
               {/* Question Title */}
               <View className="pl-8">
                 <Text className="text-md font-bold text-gray-800 mb-1">
-                {questionTitle}
-              </Text>
+                  {questionTitle}
+                </Text>
 
-              {/* Response Text / Badge */}
-              <Text
-                className="text-sm pl-3 text-gray-600"
-              >
-                {displayValue}
-              </Text>
+                {/* Response Text / Badge */}
+                <Text className="text-sm pl-3 text-gray-600">
+                  {displayValue}
+                </Text>
               </View>
             </View>
           );
