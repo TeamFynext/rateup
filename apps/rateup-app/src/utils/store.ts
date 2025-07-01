@@ -273,6 +273,16 @@ export const useFlowResponseDataStore = create<FlowResponseDataStore>((set) => (
   setData: (newData) => set({ data: newData }),
 }));
 
+type FlowDataStore = {
+  flowData: any[];
+  setFlowData: (newData: any[]) => void;
+};
+
+export const useFlowDataStore = create<FlowDataStore>((set) => ({
+  flowData: [],
+  setFlowData: (newData) => set({ flowData: newData }),
+}));
+
 type WebFormResponseDataStore = {
   data: any[];
   setData: (newData: any[]) => void;

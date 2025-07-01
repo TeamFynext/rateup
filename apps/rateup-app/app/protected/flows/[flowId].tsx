@@ -23,7 +23,7 @@ import {
   useResponsesBySurvey,
 } from "@/src/api/response/response.query";
 import { useQuestions } from "@/src/api/question/question.query";
-import { useFlowResponseDataStore } from "@/src/utils/store";
+import { useFlowDataStore, useFlowResponseDataStore } from "@/src/utils/store";
 import NPSOverview from "@/src/components/flow/NPSOverview";
 
 dayjs.extend(relativeTime);
@@ -144,15 +144,18 @@ const OverviewTab = ({
 
 const ResponsesTab = ({
   surveyId,
+  flow,
   version,
 }: {
   surveyId?: string;
+  flow:any;
   version: number;
 }) => {
   const { data: dat1, isLoading } = useResponsesBySurvey(surveyId, {});
   const totalResponse = dat1?.totalCount || 0;
   const router = useRouter();
   const { setData } = useFlowResponseDataStore();
+  const {setFlowData} = useFlowDataStore();
 
   if (isLoading) {
     return (
@@ -192,6 +195,7 @@ const ResponsesTab = ({
           <TouchableOpacity
             onPress={() => {
               setData([item]);
+              setFlowData([flow])
               const routeBase =
                 version === 1
                   ? "/protected/flows/flowresponse"
@@ -292,6 +296,7 @@ const FlowPage = () => {
             <ResponsesTab
               surveyId={flowData?.surveyId}
               version={flowData?.version}
+              flow={flowData}
             />
           )}
         </Tab.Screen>
