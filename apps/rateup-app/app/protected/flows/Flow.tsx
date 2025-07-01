@@ -28,8 +28,7 @@ const Flow = () => {
   const { search } = useSearchFlowStore();
   const router = useRouter();
 
-  const { teamId, status, latestFirst, OldFirst, alphabetical } =
-    useFlowFilterStore();
+  const { teamId, status, sortByDate, alphabetical } = useFlowFilterStore();
 
   const filteredAndSortedFlows = useMemo(() => {
     let flows = [...data];
@@ -60,12 +59,12 @@ const Flow = () => {
     }
 
     // Sort by createdAt
-    if (latestFirst) {
+    if (sortByDate === "latest") {
       flows = flows.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-    } else if (OldFirst) {
+    } else if (sortByDate === "oldest") {
       flows = flows.sort(
         (a, b) =>
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -73,7 +72,7 @@ const Flow = () => {
     }
 
     return flows;
-  }, [data, teamId, status, latestFirst, OldFirst, alphabetical, search]);
+  }, [data, teamId, status, sortByDate, alphabetical, search]);
 
   if (isLoading) {
     return (
@@ -101,7 +100,7 @@ const Flow = () => {
 
     return (
       <TouchableOpacity
-        className="bg-white rounded-xl px-4 py-3 mb-3 border border-gray-200 shadow-md"
+        className="bg-white rounded-xl px-4 py-3 mb-3 shadow-md"
         onPress={() =>
           router.push({
             //@ts-ignore

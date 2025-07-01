@@ -7,6 +7,7 @@ import {
   ScrollView,
   Dimensions,
   Pressable,
+  TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
@@ -20,6 +21,8 @@ import { useSurvey } from "@/src/api/survey/survey.query";
 import { useQuestions } from "@/src/api/question/question.query";
 import ChoiceWise from "@/src/components/flow/ChoiceWise";
 import { BackIcon } from "@/src/constants/imageExports";
+import { useWebFormResponseDataStore } from "@/src/utils/store";
+import NPSOverview from "@/src/components/flow/NPSOverview";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -31,7 +34,7 @@ const AnalyticsTab = ({
   webform: any;
 }) => {
   const { data, isLoading } = useResponseAnalytics(webformId, {});
-  const { data: question } = useQuestions(webformId);
+  const { data: questions } = useQuestions(webformId);
 
   if (isLoading) {
     return (
@@ -50,16 +53,19 @@ const AnalyticsTab = ({
   }
 
   const totalResponses = Object.values(data.choiceWise || {}).reduce(
-    (acc: number, curr: any) => acc + (curr?.responseCount || 0),
+    (acc: number, curr: any) => acc + (curr?.responseCount ? 1 : 0),
     0
   );
 
+  const hasNPS = Object.keys(data.nps || {}).length > 0;
+  const hasChoiceWise = Object.keys(data.choiceWise || {}).length > 0;
+
   return (
     <View className="bg-white h-full flex-1">
-      {/* ✅ Response Count Header */}
+      {/* ✅ Header */}
       <View className="px-4 py-3 border-b border-gray-200 bg-rateUpGreen20 flex-row items-center justify-between">
         <Text className="text-base font-semibold text-rateUpGreen">
-          Total Responses
+          Total Responded Questions
         </Text>
         <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
           <Text className="text-white text-sm font-semibold">
@@ -69,24 +75,63 @@ const AnalyticsTab = ({
       </View>
 
       <ScrollView className="p-4">
-        {Object.keys(data.choiceWise || {}).length === 0 ? (
-          <View className="items-center justify-center py-10">
-            <Text className="text-gray-500 text-base">No data available.</Text>
-          </View>
-        ) : (
-          Object.entries(data.choiceWise).map(
-            ([questionId, { data: choices }]) => (
-              <ChoiceWise
-                key={questionId}
-                questionId={questionId}
-                choices={choices}
-                questions={question}
-                version={1}
-                flow={webform}
-              />
-            )
-          )
-        )}
+        <View className="flex-col gap-8">
+          {/* ✅ NPS Overview Section */}
+          {hasNPS && (
+            <View className="flex gap-2">
+              <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
+                NPS Overview
+              </Text>
+              {Object.entries(data.nps).map(([questionId, npsEntry]: any) => (
+                <NPSOverview
+                  key={questionId}
+                  questionId={questionId}
+                  questions={questions}
+                  version={1}
+                  flow={webform}
+                  data={{
+                    npsScore: npsEntry.npsData.npsScore,
+                    csatScore: npsEntry.csatScore,
+                    promoters: npsEntry.npsData.promoters,
+                    passives: npsEntry.npsData.passives,
+                    detractors: npsEntry.npsData.detractors,
+                    total: npsEntry.npsData.total,
+                  }}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* ✅ ChoiceWise Response Section */}
+          {hasChoiceWise && (
+            <View className="flex gap-3">
+              <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
+                Question-wise Overview
+              </Text>
+              {Object.entries(data.choiceWise).map(
+                ([questionId, { data: choices }]) => (
+                  <ChoiceWise
+                    key={questionId}
+                    questionId={questionId}
+                    choices={choices}
+                    questions={questions}
+                    version={1}
+                    flow={webform}
+                  />
+                )
+              )}
+            </View>
+          )}
+
+          {/* No data fallback */}
+          {!hasNPS && !hasChoiceWise && (
+            <View className="items-center justify-center py-10">
+              <Text className="text-gray-500 text-base">
+                No analytics data available.
+              </Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -95,7 +140,8 @@ const AnalyticsTab = ({
 const ResponsesTab = ({ webformId }: { webformId?: string }) => {
   const { data: dat1, isLoading } = useResponsesBySurvey(webformId, {});
   const totalResponse = dat1?.totalCount || 0;
-
+  const { setData } = useWebFormResponseDataStore();
+  const router = useRouter();
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
@@ -130,7 +176,19 @@ const ResponsesTab = ({ webformId }: { webformId?: string }) => {
         data={dat1.responses}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16, gap: 12 }}
-        renderItem={({ item }) => <ContactCard item={item} />}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            onPress={() => {
+              setData([item]);
+              router.push({
+                pathname: `/protected/webForms/webformresponse/${item.id}`,
+                params: { webformId: webformId, respondent: item.phone },
+              });
+            }}
+          >
+            <ContactCard item={item} />
+          </TouchableOpacity>
+        )}
       />
     </View>
   );

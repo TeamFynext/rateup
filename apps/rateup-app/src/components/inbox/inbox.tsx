@@ -206,7 +206,6 @@ export default function Inbox({
           <ActivityIndicator size="small" className="py-4" />
         ) : (
           <View className="items-center py-4">
-            <View className="w-1/2 h-0.5 bg-gray-300 rounded-full" />
           </View>
         )
       }

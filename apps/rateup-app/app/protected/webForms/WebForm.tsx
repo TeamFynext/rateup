@@ -80,7 +80,7 @@ const WebForm = () => {
   const renderItem = ({ item }: { item: any }) => {
     return (
       <TouchableOpacity
-        className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col space-y-2 mb-2"
+        className="bg-white p-4 rounded-xl shadow-md flex flex-col space-y-2 mb-2"
         onPress={() =>
           router.push({
             pathname: `/protected/webForms/${item.id}`,
@@ -120,9 +120,9 @@ const WebForm = () => {
             </Text>
           </View>
 
-          <View className="px-2 py-1 rounded-full bg-blue-100">
+          <View className="px-2 py-1 rounded-full bg-rateUpLightGreen">
             <View className="flex-row justify-center items-center gap-1">
-              <Text className="text-xs font-semibold text-blue-700">
+              <Text className="text-xs font-semibold text-rateUpGreen">
                 Response
               </Text>
               <MoveRight width={15} height={15} color={"black"} />

@@ -200,9 +200,9 @@ const ChatBody = ({ id }: { id: string }) => {
         contentContainerStyle={{
           paddingBottom: dynamicPaddingBottom,
         }}
-        initialNumToRender={20}
+        initialNumToRender={10}
         maxToRenderPerBatch={10}
-        updateCellsBatchingPeriod={50}
+        updateCellsBatchingPeriod={100}
         estimatedItemSize={80}
       />
       {showScrollToBottom && (

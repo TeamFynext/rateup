@@ -7,3 +7,8 @@ export async function getQuestions(surveyId: string) {
   const res = await axios.get(`${QUESTION_URL}/${surveyId}`);
   return res.data;
 }
+
+export async function getQuestionById(surveyId:string,qId:string){
+  const res = await axios.get(`${QUESTION_URL}/${surveyId}/${qId}`)
+  return res.data
+}

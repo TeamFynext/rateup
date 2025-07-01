@@ -23,3 +23,57 @@ export enum QuestionType2 {
   EmbeddedLink = "Embedded Link",
   ChipsSelector = "Chips Selector",
 }
+
+export enum WaQuestions {
+  Rating = "Rating",
+  Smiley = "Smiley",
+  LD = "LD",
+  YN = "YN",
+  Opinion = "Opinion",
+  TextHeading = "TextHeading",
+  TextSubheading = "TextSubheading",
+  TextBody = "TextBody",
+  TextCaption = "TextCaption",
+  TextInput = "TextInput",
+  TextArea = "TextArea",
+  CheckboxGroup = "CheckboxGroup",
+  RadioButtonsGroup = "RadioButtonsGroup",
+  Footer = "Footer",
+  Dropdown = "Dropdown",
+  OptIn = "OptIn",
+  DatePicker = "DatePicker",
+  Image = "Image",
+  DocumentPicker = "DocumentPicker",
+  PhotoPicker = "PhotoPicker",
+  RichText = "RichText",
+  EmbeddedLink = "EmbeddedLink",
+  ChipsSelector = "ChipsSelector",
+  // If = "If",
+  // Switch = "Switch",
+}
+
+export enum SmileyResponse2 {
+  VerySad = "😡",
+  Sad = "😕",
+  Neutral = "😐",
+  Happy = "😊",
+  VeryHappy = "😃",
+}
+
+export enum YNResponse {
+  Yes = "Yes",
+  No = "No",
+}
+
+export enum LDResponse2 {
+  Like = "👍",
+  Dislike = "👎",
+}
+
+export enum RatingScale {
+  VeryPoor = "⭐️",
+  Poor = "⭐️⭐️",
+  Average = "⭐️⭐️⭐️",
+  Good = "⭐️⭐️⭐️⭐️",
+  Excellent = "⭐️⭐️⭐️⭐️⭐️",
+}

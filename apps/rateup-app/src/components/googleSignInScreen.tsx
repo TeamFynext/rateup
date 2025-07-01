@@ -19,25 +19,44 @@ const GoogleLogin = ({ setError }: { setError: (msg: string) => void }) => {
   }, []);
 
   const handleLogin = async () => {
-    setLoading(true);
+  setLoading(true);
+  try {
     const res = await signInWithGoogle();
+
     if (!res.success) {
       setError(res.message);
       setLoading(false);
-    } else {
-      const userDetails = await loggedUserDetails();
-      const userData = userDetails.data;
-      const { userId, orgId } = userData;
-      setUserId(userId);
-      setOrgId(orgId);
+      return;
+    }
+
+    const userDetails = await loggedUserDetails();
+    const userData = userDetails.data;
+    const { userId, orgId } = userData;
+
+    setUserId(userId);
+    setOrgId(orgId);
+
+    try {
       const token = await registerForPushNotificationsAsync();
       if (token) {
         await addToken(token);
+      } else {
+        setError("Push notification setup failed. You may not recieve alerts");
       }
-      router.replace("/protected/Home");
-      setLoading(false);
+    } catch (tokenError) {
+      console.error("Push token registration error:", tokenError);
+      setError("Failed to enable push notifications");
     }
-  };
+
+    router.replace("/protected/Home");
+  } catch (error) {
+    console.error("Unexpected Google login error:", error);
+    setError("Something went wrong. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <View className="w-full flex items-center">

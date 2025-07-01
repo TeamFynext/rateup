@@ -11,7 +11,8 @@ module.exports = {
           rateUpGreen: "#009987",
           rateUpGreen20:"#00998714",
           rateUpLightGreen:"#EBF7F5",
-          rateUpTextGray:"#7A8289"
+          rateUpTextGray:"#7A8289",
+
         },
         
     },
