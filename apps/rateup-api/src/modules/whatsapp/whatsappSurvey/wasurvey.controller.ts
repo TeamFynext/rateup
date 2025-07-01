@@ -116,6 +116,7 @@ import {
   getTokensByOrgId,
   sendPushNotification,
 } from "../../mobileNotification/mobile.service";
+import { getWaMessageByMessageId } from "../inbox/message/wamessage.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -394,6 +395,15 @@ async function whatsappMessageHandler(
     sourceIdentifier =
       waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata
         ?.display_phone_number;
+  }
+  //handle dubplicate webhook
+  const existingMessage = await getWaMessageByMessageId(
+    waMessage?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
+    from,
+  );
+  if (existingMessage) {
+    log.trace("Message already received => %o", existingMessage);
+    return;
   }
 
   const messageObj = await handleWaMessages(
