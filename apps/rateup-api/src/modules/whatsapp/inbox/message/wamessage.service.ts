@@ -805,3 +805,17 @@ export async function sendLocationMessage(
   const messageBody = createLocationMessage(phone, location);
   await sendMessage(orgId, messageBody, null, userId, whatsappSettingsPhoneId);
 }
+
+export async function getWaMessageByMessageId(
+  messageId: string,
+  phone: string,
+) {
+  return await prisma.waMessage.findFirst({
+    where: {
+      messageId,
+      contact: {
+        phone,
+      },
+    },
+  });
+}
