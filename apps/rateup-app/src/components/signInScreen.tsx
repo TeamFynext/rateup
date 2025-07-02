@@ -29,31 +29,52 @@ export default function SignInScreen({
   const router = useRouter();
 
   const handleSignIn = async () => {
-    Keyboard.dismiss();
-    setLoading(true);
-    if(!email || !password){
-      setError("Email and Password required")
-      setLoading(false)
-      return;
-    }
+  Keyboard.dismiss();
+  setLoading(true);
+
+  if (!email || !password) {
+    setError("Email and Password required");
+    setLoading(false);
+    return;
+  }
+
+  try {
     const response = await signIn(email, password);
+
     if (!response.success) {
       setError(response.message);
       setLoading(false);
-    } else {
-      const userDetails = await loggedUserDetails();
-      const userData = userDetails.data;
-      const { userId, orgId } = userData;
-      setUserId(userId);
-      setOrgId(orgId);
-      // const token = await registerForPushNotificationsAsync();
-      // if(token){
-      //   await addToken(token)
-      // }
-      router.replace("/protected/Home");
-      setLoading(false);
+      return;
     }
-  };
+
+    const userDetails = await loggedUserDetails();
+    const userData = userDetails.data;
+    const { userId, orgId } = userData;
+
+    setUserId(userId);
+    setOrgId(orgId);
+
+    try {
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await addToken(token);
+      } else {
+        setError("Notification setup failed. You may not receive alerts.");
+      }
+    } catch (tokenError) {
+      console.error("Error registering for push notifications:", tokenError);
+      setError("Failed to enable notifications");
+    }
+
+    router.replace("/protected/Home");
+  } catch (err) {
+    console.error("Unexpected error during sign-in:", err);
+    setError("Something went wrong. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <View className="w-full px-2 relative">

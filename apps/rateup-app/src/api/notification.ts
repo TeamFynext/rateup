@@ -9,3 +9,12 @@ export const getToken = async () => {
   const res = await axios.get("/api/mobilenotification");
   return res.data;
 };
+
+export const deleteToken = async (token: string) => {
+  const res = await axios.delete("/api/mobilenotification", {
+    data: {
+      expoToken: token,
+    },
+  });
+  return res.data;
+};

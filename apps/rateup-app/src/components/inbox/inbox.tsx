@@ -190,10 +190,10 @@ export default function Inbox({
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
       ListEmptyComponent={
-      <View className="h-full flex items-center justify-center">
-        <Text className="text-gray-500">No contacts found.</Text>
-      </View>
-    }
+        <View className="h-full flex items-center justify-center">
+          <Text className="text-gray-500">No contacts found.</Text>
+        </View>
+      }
       onEndReached={() => {
         if (hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
@@ -206,7 +206,6 @@ export default function Inbox({
           <ActivityIndicator size="small" className="py-4" />
         ) : (
           <View className="items-center py-4">
-            <View className="w-1/2 h-0.5 bg-gray-300 rounded-full" />
           </View>
         )
       }

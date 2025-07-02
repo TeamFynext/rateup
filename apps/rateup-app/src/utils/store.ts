@@ -17,7 +17,7 @@ type SessionState = {
 
 type SelectedTabState = {
   selectedTab: string;
-  setSelectedTab: (tab:string) => void;
+  setSelectedTab: (tab: string) => void;
 };
 
 export const useChatAssignStatusStore = create<ChatState>((set: any) => ({
@@ -36,12 +36,10 @@ export const useContactIdStore = create<SelectedContactState>((set: any) => ({
     set({ selectedContactId: contactId }),
 }));
 
-export const useSessionActiveStore = create<SessionState>((set:any) => ({
+export const useSessionActiveStore = create<SessionState>((set: any) => ({
   isSessionActive: true,
-  setIsSessionActive: (session: boolean) =>
-    set({ isSessionActive: session }),
+  setIsSessionActive: (session: boolean) => set({ isSessionActive: session }),
 }));
-
 
 type ChatFilterStore = {
   filter: ChatFilter;
@@ -63,6 +61,49 @@ export const useChatFilterStore = create<ChatFilterStore>((set) => ({
   setFilter: (value) => set({ filter: value }),
 }));
 
+type FlowStatus = "all" | "PUBLISHED" | "DRAFT";
+type AlphabeticalOrder = "A-Z" | "Z-A" | null;
+
+export const useFlowFilterStore = create<any>((set) => ({
+  teamId: "all",
+  status: "all" as FlowStatus,
+  sortByDate: "latest" as "latest" | "oldest",
+  alphabetical: null as AlphabeticalOrder,
+
+  setTeamId: (id: string) => set({ teamId: id }),
+  setStatus: (status: FlowStatus) => set({ status }),
+  setSortByDate: (order: "latest" | "oldest") => set({ sortByDate: order }),
+  setAlphabetical: (order: AlphabeticalOrder) => set({ alphabetical: order }),
+
+  resetFilters: () =>
+    set({
+      teamId: "all",
+      status: "all",
+      sortByDate: "latest",
+      alphabetical: null,
+    }),
+}));
+
+type WebFormStatus = "all" | "ACTIVE" | "PAUSED";
+export const useWebFormFilterStore = create<any>((set) => ({
+  teamId: "all",
+  status: "all" as WebFormStatus,
+  sortByDate: "latest" as "latest" | "oldest",
+  alphabetical: null as AlphabeticalOrder,
+
+  setTeamId: (id: string) => set({ teamId: id }),
+  setStatus: (status: WebFormStatus) => set({ status }),
+  setSortByDate: (order: "latest" | "oldest") => set({ sortByDate: order }),
+  setAlphabetical: (order: AlphabeticalOrder) => set({ alphabetical: order }),
+
+  resetFilters: () =>
+    set({
+      teamId: "all",
+      status: "all",
+      sortByDate: "latest",
+      alphabetical: null,
+    }),
+}));
 
 type WaMedia = {
   type: string;
@@ -174,7 +215,6 @@ export const useLiveMessages = create<LiveMessageStore>((set) => ({
   clearMessages: () => set({ messages: [] }),
 }));
 
-
 type AuthState = {
   isAuthenticated: boolean | null;
   loading: boolean;
@@ -196,3 +236,61 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUserId: (userId) => set({ userId }),
   setOrgId: (orgId) => set({ orgId }),
 }));
+
+type SearchFlowState = {
+  search: string;
+  setSearch: (value: string) => void;
+  reset: () => void;
+};
+
+export const useSearchFlowStore = create<SearchFlowState>()((set) => ({
+  search: "",
+  setSearch: (value) => set({ search: value }),
+  reset: () => set({ search: "" }),
+}));
+
+type SearchWebFormState = {
+  search: string;
+  setSearch: (value: string) => void;
+  reset: () => void;
+};
+
+export const useSearchWebFormStore = create<SearchWebFormState>()((set) => ({
+  search: "",
+  setSearch: (value) => set({ search: value }),
+  reset: () => set({ search: "" }),
+}));
+
+type FlowResponseDataStore = {
+  data: any[];
+  setData: (newData: any[]) => void;
+};
+
+export const useFlowResponseDataStore = create<FlowResponseDataStore>(
+  (set) => ({
+    data: [],
+    setData: (newData) => set({ data: newData }),
+  })
+);
+
+type FlowDataStore = {
+  flowData: any[];
+  setFlowData: (newData: any[]) => void;
+};
+
+export const useFlowDataStore = create<FlowDataStore>((set) => ({
+  flowData: [],
+  setFlowData: (newData) => set({ flowData: newData }),
+}));
+
+type WebFormResponseDataStore = {
+  data: any[];
+  setData: (newData: any[]) => void;
+};
+
+export const useWebFormResponseDataStore = create<WebFormResponseDataStore>(
+  (set) => ({
+    data: [],
+    setData: (newData) => set({ data: newData }),
+  })
+);

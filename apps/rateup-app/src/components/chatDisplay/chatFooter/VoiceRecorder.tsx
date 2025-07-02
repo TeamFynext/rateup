@@ -12,6 +12,7 @@ import { Mic, CircleStop } from "lucide-react-native";
 import RNFS from "react-native-fs";
 import { uploadFile, getFileUrlFromKey } from "@/src/utils/fileUpload";
 import { create } from "zustand";
+import { useToast } from "react-native-toast-notifications";
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
 
@@ -73,6 +74,7 @@ const VoiceRecorder = ({
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const toast = useToast();
 
   const startRecording = async () => {
     if (!(await requestPermission())) return;
@@ -99,7 +101,7 @@ const VoiceRecorder = ({
       //@ts-ignore
       onRecordingUpload?.({ key, url, name });
     } catch (err) {
-      console.error("Voice upload failed", err);
+      toast.show("Voice upload failed", { type: "danger" });
     } finally {
       setIsUploading(false);
     }

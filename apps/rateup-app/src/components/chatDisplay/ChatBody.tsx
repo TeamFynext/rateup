@@ -41,7 +41,7 @@ const ChatBody = ({ id }: { id: string }) => {
   const lastVisibleIndex = useRef(0);
   const prevMessageCount = useRef(messages.length);
   const messageList = useMemo(() => messages, [messages]);
-  const {wsData} = useWsData()
+  const { wsData } = useWsData();
   React.useEffect(() => {
     if (
       messages.length > prevMessageCount.current &&
@@ -53,19 +53,15 @@ const ChatBody = ({ id }: { id: string }) => {
   }, [messages.length]);
 
   React.useEffect(() => {
-  if (
-    wsData?.type === "inbox" &&
-    wsData.inbox.contact.id === id // only for current chat
-  ) {
-    const isDuplicate = messageList.some(
-      (msg) => msg.id === wsData.inbox.message.id
-    );
-    if (!isDuplicate) {
-      // Optimistically push to FlashList by invalidating the query
-      // or by triggering a manual refetch, or you can prepend it manually
-      queryClient.setQueryData(
-        ["wa-messages", id],
-        (oldData: any) => {
+    if (
+      wsData?.type === "inbox" &&
+      wsData.inbox.contact.id === id // only for current chat
+    ) {
+      const isDuplicate = messageList.some(
+        (msg) => msg.id === wsData.inbox.message.id
+      );
+      if (!isDuplicate) {
+        queryClient.setQueryData(["wa-messages", id], (oldData: any) => {
           if (!oldData) return oldData;
 
           const newPages = [...oldData.pages];
@@ -78,11 +74,10 @@ const ChatBody = ({ id }: { id: string }) => {
             ...oldData,
             pages: newPages,
           };
-        }
-      );
+        });
+      }
     }
-  }
-}, [wsData, id, messageList]);
+  }, [wsData, id, messageList]);
 
   const markedAsRead = useRef(new Set<string>());
 
@@ -132,6 +127,8 @@ const ChatBody = ({ id }: { id: string }) => {
             isSent={item.messageBody.exchangeProcess === "send"}
             senderName={item.sender?.name || ""}
             messageType={parsed.messageType}
+            template={parsed.template} //if it is template
+            templateComponentParams={item.templateComponentParams}
           />
         </>
       );
@@ -203,9 +200,9 @@ const ChatBody = ({ id }: { id: string }) => {
         contentContainerStyle={{
           paddingBottom: dynamicPaddingBottom,
         }}
-        initialNumToRender={20}
+        initialNumToRender={10}
         maxToRenderPerBatch={10}
-        updateCellsBatchingPeriod={50}
+        updateCellsBatchingPeriod={100}
         estimatedItemSize={80}
       />
       {showScrollToBottom && (

@@ -5,9 +5,11 @@ import WaInboxText, {
   WaInboxDocument,
   WaInboxImage,
   WaInboxInteractive,
+  WaInboxTemplate,
   WaInboxVideo,
 } from "./messageBubbleTypes";
 import { namePreview } from "@/src/utils/chatbox_utils";
+import { WaTemplateComponent } from "@/src/context/type";
 
 type MessageBubbleProps = {
   messageContent: any;
@@ -16,6 +18,8 @@ type MessageBubbleProps = {
   isSent: boolean;
   messageType?: string;
   senderName?: string;
+  template: any;
+  templateComponentParams?: WaTemplateComponent[];
 };
 
 const MessageBubble = ({
@@ -25,6 +29,8 @@ const MessageBubble = ({
   messageType,
   senderName,
   interactive,
+  template,
+  templateComponentParams,
 }: MessageBubbleProps) => {
   const renderContent = useCallback(() => {
     switch (messageType) {
@@ -44,6 +50,14 @@ const MessageBubble = ({
         return <Text className="text-xl">{messageContent}</Text>;
       case "button":
         return <Text>buttons</Text>;
+      case "template":
+        return (
+          <WaInboxTemplate
+            templateBody={template}
+            parameters={templateComponentParams}
+          />
+          // <Text>template</Text>
+        );
       case "interactive":
         return (
           <WaInboxInteractive
@@ -78,8 +92,8 @@ const MessageBubble = ({
       >
         {isSent && (
           <Text className="text-blue-500 italic opacity-70 p-1">
-          {senderName}
-        </Text>
+            {senderName}
+          </Text>
         )}
         {renderContent()}
         {messageType !== "audio" && (

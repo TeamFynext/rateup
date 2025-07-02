@@ -14,27 +14,31 @@
     "android": {
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "transparent"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.rateupapp.rateup",
-      "googleServicesFile":"./android/app/google-services.json"
+      "googleServicesFile": "./android/app/google-services.json"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/logo.png"
+      "favicon": "./assets/images/icon.png"
     },
     "plugins": [
       "expo-router",
       "@react-native-google-signin/google-signin",
+      "expo-notifications",
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/logo.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "transparent"
+          "backgroudColor":"#FFFFFF",
+          "resizeMode":"cover",
+          "splashScreenStyle":"single-screen",
+          "light":{
+            "backgroudColor":"#FFFFFF"
+          }
         }
       ]
     ],
@@ -46,8 +50,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "349704fe-fb2c-40e3-b1e1-3bc33aecdb29"
+        "projectId": "62982a5a-c2c6-4de4-931a-6af66d273ba8"
       }
-    }
+    },
+    "owner": "rateup-app"
   }
 }

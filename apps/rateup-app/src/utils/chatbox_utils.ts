@@ -6,19 +6,17 @@ dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
 export const namePreview = (name_: string) => {
-  if(name_){
-    const name1= name_.trim();
+  if (name_) {
+    const name1 = name_.trim();
     const nameArray = name1.split(" ");
-  if (nameArray.length >= 2) {
-    return (nameArray[0][0] + nameArray[1][0]).toUpperCase();
-  }
-  return nameArray[0].slice(0, 2).toUpperCase();
-  }
-  else{
-    return 0
+    if (nameArray.length >= 2) {
+      return (nameArray[0][0] + nameArray[1][0]).toUpperCase();
+    }
+    return nameArray[0].slice(0, 2).toUpperCase();
+  } else {
+    return 0;
   }
 };
-
 
 export function isInboxSessionExpired(timeStamp: string) {
   if (!timeStamp) return true;

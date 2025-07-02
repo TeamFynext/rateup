@@ -53,6 +53,7 @@ export default function LayoutWrapper() {
                 type={toastOptions.type}
               />
             )}
+             offsetTop={40}
           >
             <ProtectedLayout />
           </ToastProvider>

@@ -1,7 +1,6 @@
 import { View, Text, Pressable } from "react-native";
 import React, { useState } from "react";
-import { MessageCircleMore, PanelsTopLeft } from "lucide-react-native";
-import WhatsAppIcon from "@/assets/images/whatsapp";
+import { MessageCircleMore, PanelsTopLeft, Activity } from "lucide-react-native";
 
 const MENU_ITEMS = [
   {
@@ -11,9 +10,9 @@ const MENU_ITEMS = [
     iconColor: "#004F98",
   },
   {
-    key: "whatsapp",
-    label: "WhatsApp",
-    Icon: WhatsAppIcon,
+    key: "flow",
+    label: "Flow",
+    Icon: Activity,
     iconColor: "#004F98",
   },
   {

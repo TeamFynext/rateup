@@ -1,9 +1,11 @@
+import { WaTemplateFetchBody } from "@/src/context/type";
 import { WaSendMessageBody } from "../types";
 
 export type ParsedWaMessageReturn = {
   timeStamp: string;
   messageType: string;
   messageContent: string;
+  template?: WaTemplateFetchBody;
   interactive?: WaSendMessageBody["interactive"];
 };
 
@@ -11,6 +13,7 @@ export function parseWaMessage_(messageBody: any): ParsedWaMessageReturn {
   let timeStamp: string = new Date().toLocaleTimeString();
   let messageType: string = "text";
   let messageContent: string = "No messages yet";
+  let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
   let interactive: WaSendMessageBody["interactive"] =
     {} as WaSendMessageBody["interactive"];
   if (messageBody?.exchangeProcess === "send") {
@@ -32,6 +35,10 @@ export function parseWaMessage_(messageBody: any): ParsedWaMessageReturn {
         break;
       case "audio":
         messageContent = `${send?.audio?.link}`;
+        break;
+      case "template":
+        messageContent = send.template?.name ?? "";
+        template = send.template;
         break;
       case "interactive":
         messageContent = "";
@@ -101,7 +108,7 @@ export function parseWaMessage_(messageBody: any): ParsedWaMessageReturn {
         messageContent = "Not Supported Yet";
     }
   }
-  return { timeStamp, messageType, messageContent, interactive };
+  return { timeStamp, messageType, messageContent, interactive, template };
 }
 
 export function returnMessageContentBasedOnParsedMessage(
