@@ -20,7 +20,7 @@ import RefreshButton from "../../components/Button/RefreshButton";
 import ConfirmationModal from "../../components/Modal/ConfirmationModal";
 import { SubscriptionFeaturePathName } from "../../types/enums";
 
-export default function () {
+export default function SubscriptionPage() {
   const {
     data: subscriptions,
     isLoading: isSubscriptionsLoading,
