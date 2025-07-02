@@ -15,6 +15,7 @@ import {
   NavItems,
 } from "@/components/ui/resizable-navbar";
 
+import CookieConsentBanner from "../Analytics/CookieConsentBanner";
 import { rateupLogoBlueTextUrl } from "../HomePage/constants";
 import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems";
 
@@ -182,6 +183,7 @@ export default function Layout({ children }: LayoutProps) {
       </Navbar>
 
       {children}
+      <CookieConsentBanner />
     </div>
   );
 }
