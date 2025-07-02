@@ -8,7 +8,7 @@ import { imagesPath } from "@/utils/constants";
 
 export default function IntegrationHero() {
   return (
-    <section className="bg-[#f4f7f3] sm:pt-12 pt-8 px-6 md:px-8 text-center">
+    <section className="bg-[#f4f7f3] sm:pt-12 py-8 px-6 md:px-8 text-center">
       <motion.div
         className="max-w-4xl mx-auto"
         initial={{ opacity: 0, y: 40 }}
@@ -42,7 +42,7 @@ export default function IntegrationHero() {
 
         <div className="relative z-10 flex items-center  justify-center px-4 sm:px-2">
           <Image
-            src={`${imagesPath}/INTEGRATION.png`}
+            src={`${imagesPath}/INTEGRATION (1).png`}
             alt="Marketing Hero"
             width={1200} // reduced width for a smaller visual size
             height={600}

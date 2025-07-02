@@ -1,11 +1,14 @@
-import LandingPageLayout from "../../components/HomePage/LandingPageLayout";
+import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter";
+import Layout from "@/components/RateupHomePage/Layout";
+
 import PrivacyPolicyPage from "../../components/HomePage/pages/PrivacyPolicy";
 
 function PrivacyPolicy() {
   return (
-    <LandingPageLayout>
+    <Layout>
       <PrivacyPolicyPage />
-    </LandingPageLayout>
+      <HomePageFooter />
+    </Layout>
   );
 }
 

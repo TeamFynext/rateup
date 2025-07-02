@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { useCheckSessionAppRouter } from "@/hooks/useCheckSessionAppRouter";
+import { useCheckSession } from "@/hooks/checkSession";
 import {
   MobileNav,
   MobileNavHeader,
@@ -23,7 +23,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const hasSession = useCheckSessionAppRouter();
+  const hasSession = useCheckSession();
   const navItems = [
     {
       name: "Pricing",
