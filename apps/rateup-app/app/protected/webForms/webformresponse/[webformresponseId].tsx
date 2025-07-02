@@ -1,4 +1,4 @@
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import React, { useMemo } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,13 +10,21 @@ const ResponseId = () => {
   const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
   const { webformresponseId, webformId, respondent } = useLocalSearchParams();
   const { data } = useWebFormResponseDataStore();
-  const { data: questions } = useQuestions(webformId);
+  const { data: questions, isLoading } = useQuestions(webformId);
   const router = useRouter();
 
   if (!data?.length || !data[0]?.responses) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white">
         <Text>No response found.</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size={"large"}/>
       </SafeAreaView>
     );
   }
