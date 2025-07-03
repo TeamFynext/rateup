@@ -423,3 +423,9 @@ export enum LoyaltyApiFeature {
   action = "action",
   reward = "reward",
 }
+
+export enum WaAssignedChatPermission {
+  All = "All",
+  TeamMembers = "TeamMembers",
+  Admins = "Admins",
+}

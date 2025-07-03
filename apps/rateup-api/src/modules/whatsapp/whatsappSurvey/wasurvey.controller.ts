@@ -160,6 +160,8 @@ export async function whatsappEventHandler(
       return;
     }
     reply.code(200).send();
+    console.log(body);
+    console.log(eventType);
     switch (eventType) {
       case "captured":
         await handleCapturedEvent(body);
@@ -241,6 +243,7 @@ async function handleMessageEvent(body: WaMessageBody) {
         log.error("WaSettings not found for phone_id: %s", phoneId);
         continue;
       }
+      console.log("waSettings", waSettings);
 
       await safeAsyncOperation(
         () => whatsappMessageHandler(waSettings, body),
@@ -400,10 +403,13 @@ async function whatsappMessageHandler(
     waMessage?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id,
     from,
   );
+  console.log("existingMessage", existingMessage);
   if (existingMessage) {
     log.trace("Message already received => %o", existingMessage);
     return;
   }
+
+  console.log("here");
 
   const messageObj = await handleWaMessages(
     "receive",
