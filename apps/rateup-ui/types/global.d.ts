@@ -1109,6 +1109,17 @@ export type WaAutomatedReply = {
   matchData: WaAutomatedReplyMatchData;
   matchType: WaAutomatedReplyMatchType;
   commands: Array<string>;
+  teamId: string;
+  assignedUserIds: Array<string>;
+  assignType: string;
+  memberChoice: string;
+  WaAutomatedReplyAssignedUser: Array<{
+    userId: string;
+  }>;
+  other: {
+    assignType: string;
+    choice: string;
+  };
 };
 
 //types related to wa inbox

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Box, Group, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -142,9 +142,7 @@ const RateupPlan = () => {
           getRowHeight={() => "auto"}
           disableColumnSelector
           disableDensitySelector
-          slots={{
-            toolbar: GridToolbar,
-          }}
+          showToolbar
           slotProps={{
             toolbar: {
               showQuickFilter: true,

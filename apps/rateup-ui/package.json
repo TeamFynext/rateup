@@ -22,7 +22,7 @@
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.0",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@hello-pangea/dnd": "^18.0.1",
     "@mantine/carousel": "^8.0.0",
     "@mantine/core": "^8.0.0",
@@ -34,9 +34,9 @@
     "@mantine/notifications": "^8.0.0",
     "@mantine/nprogress": "^8.0.0",
     "@mantine/tiptap": "^8.0.0",
-    "@mui/material": "^5.16.14",
-    "@mui/x-data-grid": "^6.20.4",
-    "@next/bundle-analyzer": "^15.3.2",
+    "@mui/material": "^7.2.0",
+    "@mui/x-data-grid": "^8.6.0",
+    "@next/bundle-analyzer": "^15.3.4",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
@@ -66,11 +66,8 @@
     "@tiptap/react": "^2.12.0",
     "@tiptap/starter-kit": "^2.12.0",
     "@types/libsodium-wrappers": "^0.7.13",
-    "@visx/scale": "^3.12.0",
-    "@visx/text": "^3.12.0",
-    "@visx/wordcloud": "^3.12.0",
     "@wavesurfer/react": "^1.0.11",
-    "@xyflow/react": "^12.4.4",
+    "@xyflow/react": "^12.8.1",
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "classnames": "^2.5.1",
@@ -87,7 +84,6 @@
     "embla-carousel-react": "^8.6.0",
     "emoji-picker-react": "^4.12.2",
     "file-saver": "^2.0.5",
-    "framer-motion": "^12.19.1",
     "html-react-parser": "^5.2.2",
     "immer": "^10.1.1",
     "jsonwebtoken": "^9.0.2",
@@ -96,8 +92,8 @@
     "libsodium-wrappers": "^0.7.13",
     "lucide-react": "^0.523.0",
     "mantine-form-zod-resolver": "^1.2.0",
-    "motion": "^11.18.2",
-    "next": "^15.3.2",
+    "motion": "^12.22.0",
+    "next": "^15.3.4",
     "pigeon-maps": "^0.21.3",
     "qrcode": "^1.5.3",
     "react": "^19.1.0",
@@ -127,7 +123,7 @@
     "uuid": "^9.0.1",
     "wavesurfer.js": "^7.9.4",
     "zod": "^3.25.63",
-    "zustand": "^5.0.4"
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.17.8",
@@ -152,7 +148,7 @@
     "@typescript-eslint/parser": "^5.30.0",
     "babel-loader": "^8.2.4",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^15.3.2",
+    "eslint-config-next": "^15.3.4",
     "husky": "^8.0.3",
     "lint-staged": "^14.0.1",
     "postcss": "^8.5.6",
@@ -166,17 +162,5 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,css,md}": "prettier --write"
-  },
-  "overrides": {
-    "@mui/x-data-grid": {
-      "react": "^19.1.0",
-      "react-dom": "^19.1.0"
-    },
-    "@visx/wordcloud": {
-      "react": "^19.1.0"
-    },
-    "@visx/text": {
-      "react": "^19.1.0"
-    }
   }
 }
