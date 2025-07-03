@@ -8,28 +8,36 @@ import {
   FileButton,
   Group,
   Image,
+  Radio,
+  RadioGroup,
+  SegmentedControl,
   Select,
   Stack,
   Switch,
   Text,
 } from "@mantine/core";
+import { isNotEmpty, useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import {
   IconDeviceFloppy,
+  IconExclamationCircle,
   IconPlus,
   IconRestore,
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { useImmer } from "use-immer";
 
 import { useAllChatbots } from "@/backend/chatbot/chatbot.query";
+import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import {
   ContainedDatePickerInput,
+  ContainedMultiSelect,
   ContainedNumberInput,
   ContainedSelection,
   ContainedTextField,
@@ -49,6 +57,7 @@ import {
 } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
 
+import { AssignInboxContent } from "../../inbox/chatdisplay/chatdisplayHeader";
 import {
   NodeData,
   NodeType,
@@ -69,16 +78,18 @@ export default function NodeEditor({
   node,
   onChange,
   onClose,
-}: NodeEditorProps) {
+}: Readonly<NodeEditorProps>) {
   const { data: templates, isLoading } = useWaTemplates();
   const { data: flows, isPending } = useWaFlowsFromDb();
   const { data: boardData, isPending: isBoardsPending } = useBoardsQueries();
+  const { data: teamMembers, isPending: isLoadingTeamMembers } =
+    useTeamsMembersOfOrg();
+  const session = useSessionContext() as {
+    userId: string;
+  };
+
   const [nodeData, setNodeData] = useState<NodeData>(node.data);
-  const {
-    data: allChatbots,
-    isLoading: isLoadingChatbots,
-    isError: isErrorChatbots,
-  } = useAllChatbots();
+  const { data: allChatbots } = useAllChatbots();
   const [selectedChatbotId, setSelectedChatbotId] = useState<string | null>(
     null,
   );
@@ -120,8 +131,9 @@ export default function NodeEditor({
 
   // Render different editor based on node type with proper type casting
   const renderEditor = () => {
-    const nodeType = node.type as NodeType;
-    if (isPending || isLoading || isBoardsPending) return <RateupLoader />;
+    const nodeType = node.type;
+    if (isPending || isLoading || isBoardsPending || isLoadingTeamMembers)
+      return <RateupLoader />;
 
     switch (nodeType) {
       case "textNode":
@@ -230,6 +242,14 @@ export default function NodeEditor({
             nodeData={nodeData as NodeTypeMap["ticketNode"]}
             handleInputChange={handleInputChange}
             options={boardData}
+          />
+        );
+      case "assignNode":
+        return (
+          <AssignNodeEditor
+            nodeData={nodeData as NodeTypeMap["assignNode"]}
+            handleInputChange={handleInputChange}
+            options={{ ...teamMembers, currentUserId: session?.userId }}
           />
         );
       case "flowNode":
@@ -1896,6 +1916,111 @@ const TicketNodeEditor: React.FC<
   );
 };
 
+// TicketNode Component
+const AssignNodeEditor: React.FC<
+  NodeComponentProps<"assignNode"> & { options: any }
+> = ({ nodeData, handleInputChange, options }) => {
+  const typedData = nodeData;
+
+  const form = useForm({
+    initialValues: {
+      teamId: "",
+      assignedUserIds: [],
+      choice: "manual",
+    },
+    validate: {
+      teamId: isNotEmpty("required"),
+      assignedUserIds: (value, values) =>
+        values.choice === "manual" ? isNotEmpty("required")(value) : undefined,
+    },
+    onValuesChange(values) {
+      if (form.validate().hasErrors) return;
+      handleInputChange("assign", {
+        ...typedData?.assign,
+        teamId: values.teamId,
+        assignedUserIds: values.assignedUserIds,
+        choice: values.choice,
+      });
+    },
+  });
+  const members = useMemo(
+    () =>
+      options?.data
+        ?.filter((user) =>
+          user.teams.some((t) => t.team_id === form.values.teamId),
+        )
+        .map((user) => ({ value: user.id, label: user.name })),
+    [options, form.values.teamId],
+  );
+
+  useEffect(() => {
+    form.setFieldValue("teamId", typedData.assign?.teamId);
+    form.setFieldValue(
+      "assignedUserIds",
+      typedData.assign?.assignedUserIds ?? [],
+    );
+    form.setFieldValue("choice", typedData.assign?.choice || "manual");
+  }, [
+    typedData.assign?.assignedUserIds,
+    typedData.assign?.choice,
+    typedData.assign?.teamId,
+  ]);
+
+  return (
+    <Stack gap="xs">
+      <SegmentedControl
+        value={typedData?.assign?.assignType}
+        onChange={(value) => {
+          if (value === "me") {
+            handleInputChange("assign", {
+              ...typedData?.assign,
+              assignType: value,
+              assignedUserIds: [options?.currentUserId], // set to current user
+            });
+          } else {
+            handleInputChange("assign", {
+              ...typedData?.assign,
+              assignType: value,
+            });
+          }
+        }}
+        data={[
+          { label: "Assign To Me", value: "me" },
+          { label: "Assign To Staff", value: "staff" },
+        ]}
+      />
+      {typedData?.assign?.assignType === "staff" && (
+        <>
+          <Group justify="center" gap={2}>
+            <IconExclamationCircle size={"1rem"} />
+            <Text size="xs">Assign the chat</Text>
+          </Group>
+          <Stack>
+            <TeamSelector
+              label="Select Team"
+              {...form.getInputProps("teamId")}
+            />
+            <RadioGroup {...form.getInputProps("choice")}>
+              <Group>
+                <Radio value={"all"} label={"All Members"} />
+                <Radio value={"manual"} label={"Select Manually"} />
+              </Group>
+            </RadioGroup>
+            {form.values?.choice === "manual" && (
+              <ContainedMultiSelect
+                data={members}
+                {...form.getInputProps("assignedUserIds")}
+                label={"Select Members"}
+                placeholder="click to select"
+                searchable
+              />
+            )}
+          </Stack>
+        </>
+      )}
+    </Stack>
+  );
+};
 // FlowNode Component
 const FlowNodeEditor: React.FC<
   NodeComponentProps<"flowNode"> & { flows: any }
@@ -1908,7 +2033,7 @@ const FlowNodeEditor: React.FC<
           flows?.map((t) => ({
             label: t.name,
             value: t.dbFlowId,
-          })) || []
+          })) ?? []
         }
         label="Flow"
         allowDeselect={false}
@@ -1957,7 +2082,7 @@ const AibotNodeEditor: React.FC<
           allChatbots?.map((bot) => ({
             label: bot.name,
             value: bot.id,
-          })) || []
+          })) ?? []
         }
         label="Select Chatbot"
         allowDeselect={false}
