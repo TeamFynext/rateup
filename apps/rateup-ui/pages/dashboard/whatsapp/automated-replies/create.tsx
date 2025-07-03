@@ -1,11 +1,35 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
-import { Button, Checkbox, Group, Radio, Stack, Tabs } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { IconMessageCircle, IconPhoto } from "@tabler/icons-react";
+import {
+  Button,
+  Card,
+  Checkbox,
+  Group,
+  Radio,
+  SegmentedControl,
+  Stack,
+  Tabs,
+  Text,
+} from "@mantine/core";
+import { isNotEmpty, useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import {
+  IconExclamationCircle,
+  IconMessageCircle,
+  IconPhoto,
+} from "@tabler/icons-react";
 
+import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "@/components/Button/RateupButtons";
 import { AccountSelector } from "@/components/input/AccountSelector";
+import {
+  AssignInbox,
+  AssignInboxContent,
+} from "@/components/whatsapp/inbox/chatdisplay/chatdisplayHeader";
 
 import {
   useCreateWaAutomatedReplyMutation,
@@ -20,6 +44,7 @@ import {
   WaAutomatedReply,
   WaAutomatedReplyMatchData,
 } from "../../../../types/global";
+import useContactStore from "../inbox/store";
 
 export default function CreateAutomatedReplyPage() {
   return (
@@ -31,7 +56,14 @@ export default function CreateAutomatedReplyPage() {
 }
 
 function getInitialValues(initialValues?: WaAutomatedReply) {
-  if (initialValues) return initialValues;
+  if (initialValues)
+    return {
+      ...initialValues,
+      assignedUserIds:
+        initialValues?.WaAutomatedReplyAssignedUser?.map(
+          (data) => data?.userId,
+        ) ?? [],
+    };
   return {
     name: "",
     matchType: WaAutomatedReplyMatchType.ContainsAnyOf,
@@ -64,6 +96,12 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
     },
     commands: [],
     whatsappSettingsPhoneId: "",
+    teamId: "",
+    assignedUserIds: [],
+    other: {
+      assignType: "me",
+      choice: "manual",
+    },
   };
 }
 
@@ -76,9 +114,15 @@ export function AutomatedReplyForm({
   initialValues,
   editMode,
   close,
-}: AutoPilotFormProps) {
+}: Readonly<AutoPilotFormProps>) {
+  const [memberChoice, setMemberChoice] = useState("manual");
+  const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
+
   const rootForm = useForm({
     initialValues: getInitialValues(initialValues),
+    validate: {
+      // assignedUserIds: memberChoice === "manual" && isNotEmpty("required"),
+    },
   });
 
   const matchDataForm = useForm<WaAutomatedReplyMatchData>({
@@ -90,6 +134,7 @@ export function AutomatedReplyForm({
     const init = getInitialValues(initialValues);
     rootForm.setInitialValues(init);
     matchDataForm.setInitialValues(init.matchData);
+    setMemberChoice(init.other?.choice ?? "manual");
   }, [initialValues]);
 
   const router = useRouter();
@@ -122,6 +167,10 @@ export function AutomatedReplyForm({
 
     const data = {
       ...rootForm.values,
+      other: {
+        ...rootForm.values.other,
+        choice: memberChoice,
+      },
       matchData: {
         ...matchDataForm.values,
         json: jsonData,
@@ -139,6 +188,16 @@ export function AutomatedReplyForm({
     }
   }
 
+  const members = useMemo(
+    () =>
+      teamMembers?.data
+        ?.filter((user) =>
+          user.teams.some((t) => t.team_id === rootForm.values.teamId),
+        )
+        .map((user) => ({ value: user.id, label: user.name })),
+    [teamMembers, rootForm.values.teamId],
+  );
+
   return (
     <form onSubmit={rootForm.onSubmit((values) => handleSubmitClick())}>
       <Stack>
@@ -152,6 +211,28 @@ export function AutomatedReplyForm({
         <AccountSelector
           {...rootForm.getInputProps("whatsappSettingsPhoneId")}
         />
+        <SegmentedControl
+          {...rootForm.getInputProps("other.assignType")}
+          data={[
+            { label: "Assign To Me", value: "me" },
+            { label: "Assign To Staff", value: "staff" },
+          ]}
+        />
+        {rootForm.values?.other?.assignType === "staff" && (
+          <Card withBorder radius={"lg"}>
+            <Group justify="center" gap={2}>
+              <IconExclamationCircle size={"1rem"} />
+              <Text size="xs">Assign the chat</Text>
+            </Group>
+            <AssignInboxContent
+              form={rootForm}
+              memberChoice={memberChoice}
+              setMemberChoice={setMemberChoice}
+              isLoading={isLoading}
+              members={members}
+            />
+          </Card>
+        )}
         <Tabs
           defaultValue="keywords"
           variant="pills"
