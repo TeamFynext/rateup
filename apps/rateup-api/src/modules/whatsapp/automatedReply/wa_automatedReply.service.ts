@@ -75,8 +75,13 @@ export async function createAutomatedReply(
   orgId: string,
   userId?: string,
 ) {
-  const { commands = [], teamId, ...restData } = data;
-  let assignedUserIds = data.assignedUserIds || [];
+  const {
+    commands = [],
+    teamId,
+    assignedUserIds: assignedUserIdsFromBody,
+    ...restData
+  } = data;
+  let assignedUserIds = assignedUserIdsFromBody || [];
   if (restData?.other?.assignType === "me") {
     assignedUserIds = [userId];
   } else if (restData?.other?.choice !== "manual") {
