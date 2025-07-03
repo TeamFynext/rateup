@@ -225,6 +225,14 @@ export interface TicketNodeData extends BaseNodeData {
     selectedBoardColumnName: string;
   };
 }
+export interface AssignNodeData extends BaseNodeData {
+  assign: {
+    choice: "manual" | "all";
+    assignType: "staff" | "me";
+    assignedUserIds: Array<string>;
+    teamId: string;
+  };
+}
 
 // Map of node types to their data types
 export type NodeTypeMap = {
@@ -256,6 +264,7 @@ export type NodeTypeMap = {
   flowNode: FlowNodeData;
   aibotNode: AiBotNodeData;
   ticketNode: TicketNodeData;
+  assignNode: AssignNodeData;
 };
 
 // Node type strings as a union type
@@ -285,7 +294,8 @@ export type NodeData =
   | ContactsNodeData
   | FlowNodeData
   | AiBotNodeData
-  | TicketNodeData;
+  | TicketNodeData
+  | AssignNodeData;
 
 // Extended Node type with typed data
 export type TypedNode<T extends NodeType = NodeType> = Omit<
