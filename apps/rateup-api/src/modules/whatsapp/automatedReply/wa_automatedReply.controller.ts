@@ -50,11 +50,7 @@ export async function createAutomatedReplyHandler(
   reply: FastifyReply,
 ) {
   try {
-    const automatedReply = await createAutomatedReply(
-      req.body,
-      req.user.orgId,
-      req.userId,
-    );
+    const automatedReply = await createAutomatedReply(req.body, req.user.orgId);
     reply.code(201).send(automatedReply);
   } catch (error) {
     if (error.code === "P2002") {
@@ -80,7 +76,6 @@ export async function updateAutomatedReplyHandler(
       req.params.waAutomatedReplyId,
       req.body,
       req.user.orgId,
-      req.userId,
     );
     reply.code(204).send();
   } catch (error) {
