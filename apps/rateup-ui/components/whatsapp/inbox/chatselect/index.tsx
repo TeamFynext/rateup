@@ -281,7 +281,7 @@ const WaInboxChatSelect = () => {
 
   const openChatDisplayForContact = useCallback(
     (data: Partial<ContactsData>) => {
-      router.push(`/dashboard/whatsapp/inbox?tab=&${tab}contactId=${data.id}`);
+      router.push(`/dashboard/whatsapp/inbox?tab=${tab}&contactId=${data.id}`);
     },
     [router],
   );
@@ -365,12 +365,6 @@ const WaInboxChatSelect = () => {
           autoFocus
           flex={1}
         />
-
-        {/* <AddUnknownContactModal
-          phone=""
-          triggerType="action_button"
-          successCallback={onUnknownContactAddSuccess}
-        /> */}
         <Group className={classes.chat_select_filter_indicator_wrapper} gap={4}>
           <ActionIcon
             h={30}
@@ -391,9 +385,10 @@ const WaInboxChatSelect = () => {
             <IconRefresh />
           </ActionIcon>
         </Group>
-        <InboxSettings tab={tab} />
-        {/* <WaInboxChatFilter tab={router.query?.tab as string} /> */}
-        {/* <WaInboxChatExport filter={filter} /> */}
+        <InboxSettings
+          tab={tab}
+          onUnknownContactAddSuccess={onUnknownContactAddSuccess}
+        />
       </Group>
       <div>
         {filteredContactsStatus === "pending" ? (

@@ -1,7 +1,14 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useRouter } from "next/router";
 
-import { ActionIcon, HoverCard, Stack, Tabs, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  HoverCard,
+  Indicator,
+  Stack,
+  Tabs,
+  Text,
+} from "@mantine/core";
 import {
   IconDownload,
   IconFilter,
@@ -24,31 +31,9 @@ import WaInboxChatFilter from "../chatFilter";
 import AutoAssignChat from "../permissions";
 import WaInboxPermissions from "../permissions";
 
-const InboxSettings = ({ tab }) => {
+const InboxSettings = ({ tab, onUnknownContactAddSuccess }) => {
   const { setSelectedContact, filterData } = useContactStore();
-  const router = useRouter();
-  const openChatDisplayForContact = useCallback(
-    (data: Partial<ContactsData>) => {
-      router.push(`/dashboard/whatsapp/inbox?tab=&${tab}contactId=${data.id}`);
-    },
-    [router],
-  );
-  const onUnknownContactAddSuccess = useCallback(
-    (contact: ContactsData) => {
-      setSelectedContact({
-        ...contact,
-        groups: [],
-        lastReceivedMessageTimeStamp: "",
-        lastMessage: {
-          messageBody: {} as WaInboxMessage,
-          waCreatedAt: "",
-        },
-        assignedUsers: [],
-      });
-      openChatDisplayForContact(contact);
-    },
-    [openChatDisplayForContact, setSelectedContact],
-  );
+  const [filterCount, setFilterCount] = useState(0);
   const { user } = useUser();
   return (
     <HoverCard shadow="md">
@@ -60,7 +45,19 @@ const InboxSettings = ({ tab }) => {
       <HoverCard.Dropdown p={0} w={670}>
         <Tabs defaultValue="filter" orientation="vertical" variant="pills">
           <Tabs.List bg={"var(--wa-gray)"}>
-            <Tabs.Tab value="filter" leftSection={<IconFilter size={18} />}>
+            <Tabs.Tab
+              value="filter"
+              leftSection={
+                <Indicator
+                  label={filterCount}
+                  color="var(--wa-green)"
+                  inline
+                  size={16}
+                >
+                  <IconFilter size={18} />
+                </Indicator>
+              }
+            >
               Filter
             </Tabs.Tab>
             <Tabs.Tab value="contact" leftSection={<IconUserPlus size={18} />}>
@@ -84,7 +81,7 @@ const InboxSettings = ({ tab }) => {
               <Text size="sm" fw={600}>
                 Filter Whatsapp Chats
               </Text>
-              <WaInboxChatFilter tab={tab} />
+              <WaInboxChatFilter tab={tab} setFilterCount={setFilterCount} />
             </Stack>
           </Tabs.Panel>
 

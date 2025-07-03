@@ -17,6 +17,7 @@ import {
 } from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import useTranslations from "@/dictionaries/useTranslation";
 import { importMethod } from "@/utils/enums";
 
@@ -33,7 +34,7 @@ export default function AddUnknownContactModal(
   props: UnknownContactModalProps,
 ) {
   const { successCallback, ...rest } = props;
-  const [opened, { open, close: onClose }] = useDisclosure(true);
+  const [opened, { open, close: onClose }] = useDisclosure(false);
   const { translations } = useTranslations();
 
   return (
@@ -45,7 +46,7 @@ export default function AddUnknownContactModal(
       )}
 
       {opened && (
-        <FormModalLayout
+        <SimpleModalLayout
           {...{
             opened,
             onClose,
@@ -53,49 +54,8 @@ export default function AddUnknownContactModal(
             centered: true,
             size: "md",
             withCloseButton: true,
-            // buttonTitle: translations["Add Contact"],
-            // cancelButtonTitle: translations["Cancel"],
-            // includeCancelButton: true,
-            // onSubmit: form.onSubmit((values) => onSubmit(values)),
           }}
         >
-          {/* <form onSubmit={form.onSubmit(onSubmit)}>
-          <Stack gap={5}>
-            <ContainedTextField
-              label={translations["Name"]}
-              withAsterisk
-              {...form.getInputProps("name")}
-            />
-            <Stack gap={0}>
-              <Group gap={3}>
-                <Text className={classes.inputLabel}>
-                  {translations["Phone Number"]}
-                </Text>
-                <Text c="red">*</Text>
-              </Group>
-              <PhoneInputWithCountrySelect
-                international
-                defaultCountry="IN"
-                countryCallingCodeEditable={false}
-                placeholder={translations["Enter phone number"]}
-                className={classes.inputPhone}
-                key={form.key("phone")}
-                {...form.getInputProps("phone")}
-              />
-              <Text size="sm" c={"red"}>
-                {form?.errors?.phone}
-              </Text>
-            </Stack>
-            <ContainedTextField
-              label={translations["Email"]}
-              {...form.getInputProps("email")}
-            />
-            <Group>
-              <RateupButtonSecondary title={translations["Cancel"]} variant="light"/>
-              <RateupButtonPrimary type={"submit"} title={translations["Add Contact"]}/>
-            </Group>
-          </Stack>
-        </form> */}
           <AddUnknownContactForm
             {...rest}
             successCallback={(data) => {
@@ -103,7 +63,7 @@ export default function AddUnknownContactModal(
               onClose();
             }}
           />
-        </FormModalLayout>
+        </SimpleModalLayout>
       )}
     </>
   );
