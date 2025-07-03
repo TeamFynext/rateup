@@ -1,11 +1,13 @@
-import LandingPageLayout from "../../components/HomePage/LandingPageLayout";
-import PricingPage from "../../components/HomePage/pages/Pricing";
+import PricingSection from "@/components/HomePage/pages/Pricing/PricingSection";
+import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter";
+import Layout from "@/components/RateupHomePage/Layout";
 
 function Pricing() {
   return (
-    <LandingPageLayout>
-      <PricingPage />
-    </LandingPageLayout>
+    <Layout>
+      <PricingSection />
+      <HomePageFooter />
+    </Layout>
   );
 }
 

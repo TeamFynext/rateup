@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { useCheckSessionAppRouter } from "@/hooks/useCheckSessionAppRouter";
+import { useCheckSession } from "@/hooks/checkSession";
 import {
   MobileNav,
   MobileNavHeader,
@@ -15,6 +15,7 @@ import {
   NavItems,
 } from "@/components/ui/resizable-navbar";
 
+import CookieConsentBanner from "../Analytics/CookieConsentBanner";
 import { rateupLogoBlueTextUrl } from "../HomePage/constants";
 import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems";
 
@@ -23,7 +24,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const hasSession = useCheckSessionAppRouter();
+  const hasSession = useCheckSession();
   const navItems = [
     {
       name: "Pricing",
@@ -182,6 +183,7 @@ export default function Layout({ children }: LayoutProps) {
       </Navbar>
 
       {children}
+      <CookieConsentBanner />
     </div>
   );
 }

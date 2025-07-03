@@ -34,7 +34,7 @@ import {
   gridFilteredSortedRowIdsSelector,
   GridPrintGetRowsToExportParams,
   GridRowId,
-  selectedGridRowsSelector,
+  gridRowSelectionIdsSelector,
 } from "@mui/x-data-grid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -248,7 +248,7 @@ const ShareSurvey = ({
   const getSelectedRowsToExport = ({
     apiRef,
   }: GridPrintGetRowsToExportParams): GridRowId[] => {
-    const selectedRowIds = selectedGridRowsSelector(apiRef);
+    const selectedRowIds = gridRowSelectionIdsSelector(apiRef);
     if (selectedRowIds.size > 0) {
       return Array.from(selectedRowIds.keys());
     }

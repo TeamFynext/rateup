@@ -3,7 +3,7 @@ import React from "react";
 import { Blockquote, Box, Group, Stack, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconInfoCircle } from "@tabler/icons-react";
-import { DataGrid, GridColDef, GridToolbar } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -63,9 +63,7 @@ const RazorpaySubscriptions = () => {
           getRowHeight={() => "auto"}
           disableColumnSelector
           disableDensitySelector
-          slots={{
-            toolbar: GridToolbar,
-          }}
+          showToolbar
           slotProps={{
             toolbar: {
               showQuickFilter: true,

@@ -1,6 +1,8 @@
 .privacy-policy-container {
   color: var(--grey-color);
   margin-top: 4.375rem;
+  margin-left: 4rem;
+  margin-right: 3rem;
   margin-bottom: 6.25rem;
 }
 

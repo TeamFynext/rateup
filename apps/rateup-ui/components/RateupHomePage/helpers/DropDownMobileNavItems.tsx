@@ -6,31 +6,35 @@ import Link from "next/link";
 const items = [
   {
     title: "Whatsapp Loyalty",
-    href: "/products/whatsapp-loyalty",
+    href: "https://products.rateup.app/products/whatsapp-loyalty",
   },
   {
     title: "Web Survey",
-    href: "/products/whatsapp-survey",
+    href: "https://products.rateup.app/products/whatsapp-survey",
   },
   {
     title: "Ticketing Menu",
-    href: "/products/ticketing",
+    href: "https://products.rateup.app/products/ticketing",
   },
   {
     title: "Product Packaging QR",
-    href: "/products/qr-studio",
+    href: "https://products.rateup.app/products/qr-studio",
   },
   {
     title: "Testimonial Gateway",
-    href: "/products/testimonial-gateway",
+    href: "https://products.rateup.app/products/testimonial-gateway",
   },
   {
     title: "Ai Review",
-    href: "/products/ai-review",
+    href: "https://products.rateup.app/products/ai-review",
   },
   {
     title: "Ai Automation",
-    href: "/products/ai-automation",
+    href: "https://products.rateup.app/products/ai-automation",
+  },
+  {
+    title: "Unified Inbox",
+    href: "https://products.rateup.app/products/ai-automation",
   },
 ];
 
@@ -41,9 +45,9 @@ export default function DropDownMobileNavItems() {
     <div className="w-full border-b border-gray-200">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left py-3 px-4 text-[#1c518e] text-lg font-semibold flex items-center justify-between"
+        className="w-full text-left py-3  text-[#1c518e] text-lg flex items-center justify-between"
       >
-        <span>Products</span>
+        <span className=" font-semibold">Products</span>
         <svg
           className={`w-5 h-5 transform transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""

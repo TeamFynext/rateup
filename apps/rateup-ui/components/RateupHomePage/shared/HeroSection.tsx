@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { SiMeta } from "react-icons/si";
 
 import { imagesPath } from "@/utils/constants";
@@ -115,7 +115,7 @@ export default function HeroSection() {
               alt="Star Accent"
               width={40}
               height={40}
-              className="absolute -right-8 -top-3 h-8 w-8 md:h-10 md:w-10"
+              className="absolute -right-2 -top-7 h-8 w-8 md:h-10 md:w-10"
             />
           </h1>
 
@@ -134,7 +134,7 @@ export default function HeroSection() {
           >
             <BookDemoModal>
               <button
-                className="text-white px-6 cursor-pointer sm:px-7 py-3 sm:py-3
+                className="text-white px-6 cursor-pointer sm:px-7 py-2.5
                  text-base sm:text-lg font-semibold rounded-md bg-gradient-to-r from-[#00397b]
                   via-[#1c518e] to-[#3f5ba9] hover:opacity-90"
                 aria-label="Book a Demo"
