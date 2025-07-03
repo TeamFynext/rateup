@@ -14,7 +14,7 @@ export default function VideoPlayer() {
         <button
           type="button"
           className="inline-flex items-center gap-2 rounded-full border cursor-pointer
-                      border-emerald-900 px-4 py-2 sm:px-6 sm:py-3 text-base font-semibold text-[#00397b] 
+                      border-emerald-900 px-4 py-2 sm:px-6 sm:py-2.5 text-base font-semibold text-[#00397b] 
                       transition hover:scale-105 "
         >
           <Play size={20} strokeWidth={2.5} />

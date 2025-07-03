@@ -1,11 +1,14 @@
-import LandingPageLayout from "../../components/HomePage/LandingPageLayout";
+import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter";
+import Layout from "@/components/RateupHomePage/Layout";
+
 import TermsOfServicePage from "../../components/HomePage/pages/TermsOfService";
 
 function TermsOfService() {
   return (
-    <LandingPageLayout>
+    <Layout>
       <TermsOfServicePage />
-    </LandingPageLayout>
+      <HomePageFooter />
+    </Layout>
   );
 }
 
