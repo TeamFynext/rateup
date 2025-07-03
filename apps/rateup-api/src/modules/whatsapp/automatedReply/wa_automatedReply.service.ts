@@ -1,4 +1,5 @@
 import prisma from "../../../utils/prisma";
+import { getTeamIdsByUserId } from "../../team/team.service";
 import { getUserIdsByTeamId } from "../../user/user.service";
 import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema";
 
@@ -77,13 +78,16 @@ export async function createAutomatedReply(
 ) {
   const {
     commands = [],
-    teamId,
+    teamId: teamIdFromBody,
     assignedUserIds: assignedUserIdsFromBody,
     ...restData
   } = data;
+  let teamId = teamIdFromBody || null;
   let assignedUserIds = assignedUserIdsFromBody || [];
   if (restData?.other?.assignType === "me") {
     assignedUserIds = [userId];
+    const teams = await getTeamIdsByUserId(userId);
+    teamId = teams?.[0] || null;
   } else if (restData?.other?.choice !== "manual") {
     const users = await getUserIdsByTeamId(teamId);
     assignedUserIds = users;
@@ -125,14 +129,17 @@ export async function updateAutomatedReply(
 ) {
   const {
     commands = [],
-    teamId,
+    teamId: teamIdFromBody,
     WaAutomatedReplyAssignedUser,
     assignedUserIds: assignedUserIdsFromBody,
     ...restData
   } = data;
+  let teamId = teamIdFromBody ?? null;
   let assignedUserIds = assignedUserIdsFromBody ?? [];
   if (restData?.other?.assignType === "me") {
     assignedUserIds = [userId];
+    const teams = await getTeamIdsByUserId(userId);
+    teamId = teams?.[0] || null;
   } else if (restData?.other?.choice !== "manual") {
     const users = await getUserIdsByTeamId(teamId);
     assignedUserIds = users;
