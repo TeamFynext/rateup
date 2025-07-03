@@ -320,24 +320,25 @@ export async function filterChats(
         );
 
         if (newStatuses.length) {
-          const normalizedStatuses = newStatuses.map((status) =>
-            status === "ASSIGNEDTOME" ? "ASSIGNED" : status,
+          params.push(
+            newStatuses.map((status) =>
+              status === "ASSIGNEDTOME" ? "ASSIGNED" : status,
+            ),
           );
-          params.push(normalizedStatuses);
 
           let newQuery = `(c."waMessageAssignStatus" = ANY($${paramIndex++}::TEXT[])`;
 
           if (newStatuses.includes("ASSIGNEDTOME")) {
             params.push(userId);
-            const assignmentCheck = `EXISTS (
+            const assignmentCondition = `EXISTS (
           SELECT 1 FROM "WaInboxAssign" winb 
           WHERE winb."contactId" = c.id 
           AND winb."assignedUserId" = $${paramIndex++}::uuid
         )`;
             newQuery +=
               newStatuses.length === 1
-                ? ` AND ${assignmentCheck})`
-                : ` OR ${assignmentCheck})`;
+                ? ` AND ${assignmentCondition})`
+                : ` OR ${assignmentCondition})`;
           } else {
             newQuery += `)`;
           }
@@ -397,7 +398,7 @@ export async function filterChats(
         filters.push(`c."waMessageAssignStatus" = $${paramIndex++}`);
 
         if (isAssignedToMe) {
-          const assignedQueryParts = [
+          const assignedQuery = [
             `winb."contactId" = c.id`,
             `winb."assignedUserId" = $${paramIndex++}::uuid`,
           ];
@@ -405,14 +406,12 @@ export async function filterChats(
 
           if (bodyFilterProps?.assignedTeams?.length) {
             params.push(bodyFilterProps.assignedTeams);
-            assignedQueryParts.push(
-              `winb."teamId" = ANY($${paramIndex++}::uuid[])`,
-            );
+            assignedQuery.push(`winb."teamId" = ANY($${paramIndex++}::uuid[])`);
           }
 
           filters.push(`EXISTS (
         SELECT 1 FROM "WaInboxAssign" winb 
-        WHERE ${assignedQueryParts.join(" AND ")}
+        WHERE ${assignedQuery.join(" AND ")}
       )`);
         } else if (assignedStatus === "ASSIGNED") {
           if (bodyFilterProps?.assignedTeams?.length) {
