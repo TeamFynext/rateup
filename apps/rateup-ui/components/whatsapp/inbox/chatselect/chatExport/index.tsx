@@ -117,6 +117,124 @@ export default function WaInboxChatExport({ filter }) {
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   return (
+    <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
+      <Stack className={classes.hovercard_dropdown_inner}>
+        <Text className={classes.hovercard_title}>
+          {translations["Export Whatsapp chats"]}
+        </Text>
+        <Divider />
+        <RadioGroup size="xs" {...form.getInputProps("date.type")}>
+          <Group>
+            <Radio
+              label={translations["Between"]}
+              size="xs"
+              value={DateType.BETWEEN}
+            />
+            <Radio
+              label={translations["Before"]}
+              size="xs"
+              value={DateType.BEFORE}
+            />
+            <Radio
+              label={translations["After"]}
+              size="xs"
+              value={DateType.AFTER}
+            />
+            <Radio label={translations["On"]} size="xs" value={DateType.ON} />
+          </Group>
+        </RadioGroup>
+        <Flex justify="center">
+          {form.values.date.type === DateType.ON && (
+            <CustomDatePicker
+              label={translations["on"]}
+              value={new Date(form.values.date.on)}
+              onChange={(value) =>
+                form.setFieldValue("date.on", dayjs(value).format("YYYY-MM-DD"))
+              }
+            />
+          )}
+          {form.values.date.type === DateType.BEFORE && (
+            <CustomDatePicker
+              label={translations["before"]}
+              value={new Date(form.values.date.before)}
+              onChange={(value) =>
+                form.setFieldValue(
+                  "date.before",
+                  dayjs(value).format("YYYY-MM-DD"),
+                )
+              }
+            />
+          )}
+          {form.values.date.type === DateType.AFTER && (
+            <CustomDatePicker
+              label={translations["after"]}
+              value={new Date(form.values.date.after)}
+              onChange={(value) =>
+                form.setFieldValue(
+                  "date.after",
+                  dayjs(value).format("YYYY-MM-DD"),
+                )
+              }
+            />
+          )}
+          {form.values.date.type === DateType.BETWEEN && (
+            <>
+              <CustomDatePicker
+                label={translations["from"]}
+                {...form.getInputProps("date.between.from")}
+                value={new Date(form.values.date.between.from)}
+                onChange={(value) =>
+                  form.setFieldValue(
+                    "date.between.from",
+                    dayjs(value).format("YYYY-MM-DD"),
+                  )
+                }
+              />
+              <CustomDatePicker
+                label={translations["to"]}
+                {...form.getInputProps("date.between.to")}
+                value={new Date(form.values.date.between.to)}
+                onChange={(value) =>
+                  form.setFieldValue(
+                    "date.between.to",
+                    dayjs(value).format("YYYY-MM-DD"),
+                  )
+                }
+              />
+            </>
+          )}
+        </Flex>
+        <Group justify="space-between">
+          <Checkbox
+            label={translations["Replies Only"]}
+            size="xs"
+            checked={form.values.repliesOnly}
+            {...form.getInputProps("repliesOnly")}
+          />
+          {form.values.date.type !== "between" &&
+            form.values.date.type !== "on" && (
+              <Checkbox
+                label={translations["Inclusive"]}
+                size="xs"
+                checked={form.values.date.inclusive}
+                {...form.getInputProps("date.inclusive")}
+              />
+            )}
+          <Button
+            type="submit"
+            variant="light"
+            size="compact-xs"
+            leftSection={<IconDownload size={15} />}
+            ml={"auto"}
+            disabled={chatsExporting || !form.isValid()}
+          >
+            {translations["Export"]}
+          </Button>
+        </Group>
+      </Stack>
+    </form>
+  );
+  return (
     <HoverCard position={isMobile ? "bottom-end" : "right-start"} withArrow>
       <HoverCardTarget>
         <ThemeIcon className={classes.theme_icon} variant="light">

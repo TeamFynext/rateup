@@ -155,7 +155,95 @@ export default function WaInboxChatFilter({ tab }: Props) {
     value: status,
     label: WaMessageAssignStatusTab[status],
   }));
+  return (
+    <Stack>
+      <Button size="compact-xs" ml={"auto"} onClick={clearFilters}>
+        {translations["clear filters"]}
+      </Button>
+      <AccountSelector
+        onChange={(phone) => {
+          // updatePhoneId(phoneId);
+          setFilter({
+            ...filter,
+            phone,
+          });
+        }}
+        value={filter?.phone}
+        flex={1}
+        usePhoneNumber
+        withAllOption
+        styles={{
+          input: {
+            background: "var(--mantine-primary-color-filled)",
+            color: "white",
+          },
+        }}
+      />
+      <ContainedMultiSelect
+        maw={250}
+        //TODO reimplement strict filter
 
+        // label={
+        //   <Switch
+        //     w={"100%"}
+        //     size="xs"
+        //     label={`${props?.filter?.strictFilter ? "Disable" : "Enable"} Strict filter`}
+        //     checked={props.filter.strictFilter}
+        //     onChange={(e) =>
+        //       setFilters("strictFilter", e.currentTarget.checked)
+        //     }
+        //   />
+        // }
+        placeholder="Tags, Groups, Campaigns"
+        data={data}
+        value={allMultiSelectFilters?.map(
+          (val) => `${val.group}|-${val.value}`,
+        )}
+        onChange={(value) => {
+          multiSelectOnChange(
+            filter,
+            value.map((val) => {
+              const grpname = val.split("|-")[0];
+              const grpval = val.split("|-")[1];
+              return {
+                group: grpname,
+                value: grpval,
+              };
+            }),
+          );
+        }}
+      />
+      {tab === "New" && (
+        <ContainedMultiSelect
+          data={statusData}
+          placeholder="statuses"
+          w={220}
+          value={filter.newStatuses}
+          onChange={(values) =>
+            setFilter({
+              ...filter,
+              newStatuses: values as WaMessageAssignStatus[],
+            })
+          }
+        />
+      )}
+      {["Assigned", "AssignedToMe"].includes(tab) && (
+        <ContainedMultiSelect
+          radius="md"
+          value={filter.assignedTeams || []}
+          onChange={(values) =>
+            setFilter({
+              ...filter,
+              assignedTeams: values,
+            })
+          }
+          placeholder={translations["Select teams (type in to search)"]}
+          data={teamOptions}
+          searchable
+        />
+      )}
+    </Stack>
+  );
   return (
     <HoverCard position={isMobile ? "bottom-end" : "right-start"}>
       <HoverCardTarget>
