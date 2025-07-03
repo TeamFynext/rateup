@@ -20,7 +20,6 @@ import axios from "axios";
 import {
   WaAssignedChatPermission,
   WaMessageAssignStatus,
-  WaMessageAssignStatusTab,
 } from "../../../../types/enums";
 import { updateContactById } from "../../../contact/contact.service";
 import { wait } from "../../whatsappSurvey/wasurvey.controller";
@@ -33,6 +32,7 @@ import {
   createContactMessage,
   createLocationMessage,
 } from "../../whatsappSurvey/wasurvey.utils";
+import { WaMessageAssignStatusTab } from "../../constants";
 import { Role } from "../../../org/org.services";
 import { getTeamIdsByUserId } from "../../../team/team.service";
 
@@ -296,153 +296,6 @@ export async function filterChats(
       paramIndex += 2;
     }
     // Filter by assignment status
-    // if (
-    //   bodyFilterProps?.waMessageAssignStatus &&
-    //   bodyFilterProps.waMessageAssignStatus !== "Sent"
-    // ) {
-    //   if (bodyFilterProps?.waMessageAssignStatus === "New") {
-    //     params.push(WaMessageAssignStatus.CLOSED);
-    //     filters.push(
-    //       `(c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours') AND NOT c."waMessageAssignStatus" = $${paramIndex++}::TEXT`,
-    //     );
-    //     const newStatuses = bodyFilterProps.newStatuses && bodyFilterProps.newStatuses.length ? bodyFilterProps.newStatuses : [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED];
-
-    //     if (newStatuses?.length) {
-    //       params.push(
-    //         newStatuses.map((status) =>
-    //           status === "ASSIGNEDTOME" ? "ASSIGNED" : status,
-    //         ),
-    //       );
-    //       let newQuery = `(c."waMessageAssignStatus" = ANY($${paramIndex++}::TEXT[])`;
-    //       if (bodyFilterProps.newStatuses.includes("ASSIGNEDTOME")) {
-    //         params.push(userId);
-    //         const assignmentCondition = `EXISTS (
-    //           SELECT 1 FROM "WaInboxAssign" winb
-    //           WHERE winb."contactId" = c.id
-    //           AND winb."assignedUserId" = $${paramIndex++}::uuid
-    //         )`;
-    //         newQuery +=
-    //           newStatuses.length === 1
-    //             ? ` AND ${assignmentCondition})`
-    //             : ` OR ${assignmentCondition})`;
-    //       } else {
-    //         newQuery += `)`;
-    //       }
-
-    //        if(newStatuses.includes("ASSIGNED")){
-
-    //       const { waAssignedChatPermission } = await prisma.org.findUnique({
-    //         where:{
-    //           id: orgId
-    //         },
-    //         select:{
-    //           waAssignedChatPermission: true
-    //         }
-    //       })
-    //       if(waAssignedChatPermission === WaAssignedChatPermission.TeamMembers){
-    //           const teamIds = await getTeamIdsByUserId(userId)
-    //           params.push(teamIds);
-    //           const condition = `EXISTS (
-    //             SELECT 1 FROM "WaInboxAssign" winb
-    //             WHERE winb."contactId" = c.id
-    //             AND winb."teamId" = ANY($${paramIndex++}::uuid[])
-    //           )`;
-    //           if(newStatuses.includes("UNASSIGNED")){
-    //             params.push(WaMessageAssignStatus.UNASSIGNED)
-    //             params.push(WaMessageAssignStatus.ASSIGNED)
-    //             newQuery += ` AND c."waMessageAssignStatus" = $${paramIndex++} OR (c."waMessageAssignStatus" = $${paramIndex++} AND ${condition})`
-    //           }else{
-    //             newQuery += ` AND ${condition}`
-    //           }
-    //        }else if(waAssignedChatPermission === WaAssignedChatPermission.Admins && role === Role.MEMBER){
-
-    //          if(newStatuses.length === 1) return []
-    //          else {
-    //           if(newStatuses.includes("ASSIGNEDTOME")){
-    //             if(!newStatuses.includes("UNASSIGNED")){
-    //               params.push(userId)
-    //               newQuery += ` AND EXISTS (
-    //               SELECT 1 FROM "WaInboxAssign" winb
-    //               WHERE winb."contactId" = c.id
-    //               AND winb."assignedUserId" = $${paramIndex++}::uuid
-    //             )`
-    //             }else {
-    //               params.push("UNASSIGNED")
-    //               params.push(userId)
-    //               newQuery += ` AND (c."waMessageAssignStatus" =  $${paramIndex++}::TEXT OR EXISTS (
-    //               SELECT 1 FROM "WaInboxAssign" winb
-    //               WHERE winb."contactId" = c.id
-    //               AND winb."assignedUserId" = $${paramIndex++}::uuid
-    //             ))`
-    //             }
-    //           }else {
-    //             params.push(WaMessageAssignStatus.ASSIGNED)
-    //             newQuery += ` AND c."waMessageAssignStatus" != $${paramIndex++}::TEXT`
-    //           }
-    //          }
-    //        }
-    //       }
-    //       filters.push(newQuery);
-    //     }
-    //   } else {
-    //     const isAssignedToMe =
-    //       bodyFilterProps?.waMessageAssignStatus === "AssignedToMe";
-    //     const assignedStatus =
-    //       WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
-
-    //     params.push(assignedStatus);
-    //     filters.push(`c."waMessageAssignStatus" = $${paramIndex++}`);
-
-    //     if (isAssignedToMe) {
-    //       params.push(userId);
-    //       let assignedQuery = [
-    //         `winb."contactId" = c.id
-    //       AND winb."assignedUserId" = $${paramIndex++}::uuid`,
-    //       ];
-    //       if (bodyFilterProps?.assignedTeams?.length) {
-    //         params.push(bodyFilterProps?.assignedTeams);
-    //         assignedQuery.push(`winb."teamId" = ANY($${paramIndex++}::uuid[])`);
-    //       }
-    //       filters.push(`EXISTS (
-    //       SELECT 1 FROM "WaInboxAssign" winb
-    //       WHERE ${assignedQuery.join(" AND ")}
-    //     )`);
-    //     } else if (
-    //       assignedStatus === "ASSIGNED" &&
-    //       bodyFilterProps?.assignedTeams?.length
-    //     ) {
-    //       params.push(bodyFilterProps?.assignedTeams);
-    //       filters.push(`EXISTS (
-    //         SELECT 1 FROM "WaInboxAssign" winb
-    //         WHERE winb."contactId" = c.id
-    //         AND winb."teamId" = ANY($${paramIndex++}::uuid[])
-    //       )`);
-    //     }
-    //     else if(assignedStatus === "ASSIGNED") {
-    //         const { waAssignedChatPermission } = await prisma.org.findUnique({
-    //         where:{
-    //           id: orgId
-    //         },
-    //         select:{
-    //           waAssignedChatPermission: true
-    //         }
-    //       })
-    //       if(waAssignedChatPermission === WaAssignedChatPermission.TeamMembers){
-    //           const teamIds = await getTeamIdsByUserId(userId)
-    //           params.push(teamIds);
-    //           filters.push(`EXISTS (
-    //             SELECT 1 FROM "WaInboxAssign" winb
-    //             WHERE winb."contactId" = c.id
-    //             AND winb."teamId" = ANY($${paramIndex++}::uuid[])
-    //           )`);
-    //       } else if(waAssignedChatPermission === WaAssignedChatPermission.Admins && role === Role.MEMBER){
-    //         return []
-    //       }
-    //     }
-    //   }
-    // }
-
-    //-------------------
 
     const org = await prisma.org.findUnique({
       where: { id: orgId },
@@ -489,7 +342,10 @@ export async function filterChats(
             newQuery += `)`;
           }
 
-          if (newStatuses.includes("ASSIGNED")) {
+          if (
+            newStatuses.includes("ASSIGNED") ||
+            newStatuses.includes("ASSIGNEDTOME")
+          ) {
             if (
               waAssignedChatPermission === WaAssignedChatPermission.TeamMembers
             ) {
@@ -512,7 +368,6 @@ export async function filterChats(
               waAssignedChatPermission === WaAssignedChatPermission.Admins &&
               role === Role.MEMBER
             ) {
-              // if (newStatuses.includes("ASSIGNEDTOME")) {
               if (!newStatuses.includes("UNASSIGNED")) {
                 params.push(userId);
                 newQuery += ` AND EXISTS (
@@ -529,11 +384,6 @@ export async function filterChats(
                 AND winb."assignedUserId" = $${paramIndex++}::uuid
               ))`;
               }
-              // }
-              // else {
-              //   params.push(WaMessageAssignStatus.ASSIGNED);
-              //   newQuery += ` AND c."waMessageAssignStatus" != $${paramIndex++}::TEXT`;
-              // }
             }
           }
 
@@ -593,7 +443,6 @@ export async function filterChats(
         }
       }
     }
-    //--------------
 
     // Filter by phone (sourceIdentifier)
     if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
@@ -923,6 +772,13 @@ export async function getContactsCountByInbox(
   FROM "WaInboxAssign"
   GROUP BY "teamId";
 `;
+
+  if (
+    count[0].new_assigned_count === 0 &&
+    count[0].new_assigned_to_me_count > 0
+  ) {
+    count[0].new_assigned_count = count[0].new_assigned_to_me_count;
+  }
 
   return {
     new: count[0].new_assigned_count + count[0].new_unassigned_count,

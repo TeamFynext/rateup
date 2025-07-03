@@ -83,6 +83,7 @@ import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 import {
   getContactByPhoneNumberAndOrgId,
+  getOrCreateContactByPhone,
   handleContactConsent,
 } from "../../contact/contact.service";
 import { getOrgById } from "../../org/org.services";
@@ -116,7 +117,10 @@ import {
   getTokensByOrgId,
   sendPushNotification,
 } from "../../mobileNotification/mobile.service";
-import { getWaMessageByMessageId } from "../inbox/message/wamessage.service";
+import {
+  assignWaMessageToUser,
+  getWaMessageByMessageId,
+} from "../inbox/message/wamessage.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -190,7 +194,6 @@ export async function whatsappEventHandler(
     }
   } catch (error) {
     log.error("Error in whatsappEventHandler: %o", error);
-  } finally {
   }
 }
 
@@ -678,7 +681,7 @@ export async function handleAutomatedReply(
       if (automatedReplyId)
         automation = await getAutomatedReplyById(automatedReplyId);
       // Check if message matches any automation rules
-      else
+      else {
         automation = (await checkIfMessageMatchesAnyAutomation(
           orgId,
           waMessage,
@@ -686,6 +689,17 @@ export async function handleAutomatedReply(
           id: string;
           matchData: { json: { nodes: any[]; edges: any[] } };
         } | null;
+        if (automation?.WaAutomatedReplyAssignedUser?.length > 0) {
+          const contact = await getOrCreateContactByPhone(phone, orgId);
+          await assignWaMessageToUser({
+            assignedUserIds: automation?.WaAutomatedReplyAssignedUser?.map(
+              (data) => data?.userId,
+            ),
+            teamId: automation?.teamId,
+            contactId: contact?.id,
+          });
+        }
+      }
 
       if (automation) {
         if (!automation?.whatsappSettingsPhoneId) {

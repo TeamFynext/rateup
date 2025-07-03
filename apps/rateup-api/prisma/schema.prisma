@@ -73,37 +73,39 @@ enum ContactGroupType {
 }
 
 model User {
-  id                  String                    @id @default(uuid()) @db.Uuid
-  createdAt           DateTime                  @default(now())
-  email               String                    @unique
-  name                String?
-  profilePhoto        String?
-  phone               String?
-  active              Boolean                   @default(true)
-  gender              Gender?
-  recipeName          UserRecipes?
-  isPaused            Boolean?                  @default(false)
-  pausedBy            String?
-  prefLanguage        String?                   @default("English")
-  deletedAt           DateTime?
-  lastLoggedInAt      DateTime?
-  org                 Org[]
-  orgMember           OrgMember[]
-  teamMember          TeamMember[]
-  surveys             Survey[]
-  Order               Order[]
-  assignedTicket      Ticket[]                  @relation("AssignedTicket")
-  createdTicket       Ticket[]                  @relation("CreatedTicket")
-  TicketComment       TicketComment[]
-  linktree            Linktree[]
-  generateQr          GenerateQr[]
-  landingPage         LandingPage[]
-  WaMessage           WaMessage[]
-  waInboxAssign       WaInboxAssign[]
-  ticketActivity      TicketActivity[]
-  assignedTicketCards TicketCardAssignee[]
-  assignedBoards      TicketBoardNotification[]
-  expoPushTokens      ExpoPushToken[]
+  id                           String                         @id @default(uuid()) @db.Uuid
+  createdAt                    DateTime                       @default(now())
+  email                        String                         @unique
+  name                         String?
+  profilePhoto                 String?
+  phone                        String?
+  active                       Boolean                        @default(true)
+  gender                       Gender?
+  recipeName                   UserRecipes?
+  isPaused                     Boolean?                       @default(false)
+  pausedBy                     String?
+  prefLanguage                 String?                        @default("English")
+  deletedAt                    DateTime?
+  lastLoggedInAt               DateTime?
+  org                          Org[]
+  orgMember                    OrgMember[]
+  teamMember                   TeamMember[]
+  surveys                      Survey[]
+  Order                        Order[]
+  assignedTicket               Ticket[]                       @relation("AssignedTicket")
+  createdTicket                Ticket[]                       @relation("CreatedTicket")
+  TicketComment                TicketComment[]
+  linktree                     Linktree[]
+  generateQr                   GenerateQr[]
+  landingPage                  LandingPage[]
+  WaMessage                    WaMessage[]
+  waInboxAssign                WaInboxAssign[]
+  ticketActivity               TicketActivity[]
+  assignedTicketCards          TicketCardAssignee[]
+  assignedBoards               TicketBoardNotification[]
+  expoPushTokens               ExpoPushToken[]
+  // Add relation for WaAutomatedReply many-to-many
+  WaAutomatedReplyAssignedUser WaAutomatedReplyAssignedUser[]
 }
 
 model Org {
@@ -211,7 +213,6 @@ model WhatsappSettings {
   /// [PWaEncryptionKeys]
   encryption       Json? // for flow {publicKey: string, privateKey: string}
   Campaign         Campaign[]
-  WaAutomatedReply WaAutomatedReply[]
   LoyaltyWaCommand LoyaltyWaCommand[]
 }
 
@@ -266,7 +267,8 @@ model Team {
   Ticket                 Ticket[]
   waInboxAssign          WaInboxAssign[]
 
-  ticketBoards TicketBoardTeam[]
+  ticketBoards     TicketBoardTeam[]
+  WaAutomatedReply WaAutomatedReply[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -1245,19 +1247,27 @@ model WaMessageCampaginParticipantMap {
   campaignParticipantDripStageId String?                       @db.Uuid
 }
 
+enum AssignType {
+  me
+  staff
+}
+
 model WaAutomatedReply {
-  id                      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                    String
-  createdAt               DateTime          @default(now())
+  createdAt               DateTime    @default(now())
   matchData               Json
   matchType               String // enums.ts: WaAutomatedReplyMatchType
-  orgId                   String?           @db.Uuid
-  org                     Org?              @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  WhatsappSettings        WhatsappSettings? @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
+  orgId                   String?     @db.Uuid
+  org                     Org?        @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId String?
+  teamId                  String?     @db.Uuid
+  team                    Team?       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  other                   Json?
 
-  waAutomatedReplyMessages WaAutomatedReplyMessage[]
-  WaAutomatedReplyCommands WaAutomatedReplyCommands[]
+  waAutomatedReplyMessages     WaAutomatedReplyMessage[]
+  WaAutomatedReplyCommands     WaAutomatedReplyCommands[]
+  WaAutomatedReplyAssignedUser WaAutomatedReplyAssignedUser[]
 }
 
 model WaAutomatedReplyCommands {
@@ -1625,4 +1635,13 @@ model WaCatalogOrder {
   status        String          @default("PENDING")
   transactionId String?
   createdAt     DateTime        @default(now())
+}
+
+model WaAutomatedReplyAssignedUser {
+  waAutomatedReply   WaAutomatedReply @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
+  waAutomatedReplyId String           @db.Uuid
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String           @db.Uuid
+
+  @@id([waAutomatedReplyId, userId])
 }
