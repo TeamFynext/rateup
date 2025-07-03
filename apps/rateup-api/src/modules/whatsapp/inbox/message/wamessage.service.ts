@@ -17,10 +17,7 @@ import { log } from "../../../../utils/logger";
 import { callWhatsappApi } from "../../wa_axios";
 import { getWaSettings } from "../../settings/wa_settings.service";
 import axios from "axios";
-import {
-  WaMessageAssignStatus,
-  WaMessageAssignStatusTab,
-} from "../../../../types/enums";
+import { WaMessageAssignStatus } from "../../../../types/enums";
 import { updateContactById } from "../../../contact/contact.service";
 import { wait } from "../../whatsappSurvey/wasurvey.controller";
 import { sendMessage } from "../../whatsappSurvey/wasurvey.service";
@@ -32,6 +29,7 @@ import {
   createContactMessage,
   createLocationMessage,
 } from "../../whatsappSurvey/wasurvey.utils";
+import { WaMessageAssignStatusTab } from "../../constants";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
