@@ -59,6 +59,10 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
   if (initialValues)
     return {
       ...initialValues,
+      other: {
+        ...initialValues.other,
+        assignType: initialValues?.other?.assignType ?? "",
+      },
       assignedUserIds:
         initialValues?.WaAutomatedReplyAssignedUser?.map(
           (data) => data?.userId,

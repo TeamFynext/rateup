@@ -1116,6 +1116,10 @@ export type WaAutomatedReply = {
   WaAutomatedReplyAssignedUser: Array<{
     userId: string;
   }>;
+  other: {
+    assignType: string;
+    choice: string;
+  };
 };
 
 //types related to wa inbox
