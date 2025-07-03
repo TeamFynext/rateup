@@ -1,11 +1,14 @@
-import LandingPageLayout from "../../components/HomePage/LandingPageLayout";
+import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter";
+import Layout from "@/components/RateupHomePage/Layout";
+
 import AboutUsPage from "../../components/HomePage/pages/AboutUs";
 
 function AboutUs() {
   return (
-    <LandingPageLayout className="about-us-landing-page-layout">
+    <Layout>
       <AboutUsPage />
-    </LandingPageLayout>
+      <HomePageFooter />
+    </Layout>
   );
 }
 

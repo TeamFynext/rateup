@@ -1,20 +1,14 @@
-import { Group } from "@mantine/core";
 import {
-  DataGrid,
-  GridPrintGetRowsToExportParams,
-  GridRowId,
-  GridToolbarColumnsButton,
-  GridToolbarContainer,
-  GridToolbarExport,
-  GridToolbarFilterButton,
-  GridToolbarQuickFilter,
-  gridFilteredSortedRowIdsSelector,
-  selectedGridRowsSelector,
+  QuickFilter,
+  QuickFilterClear,
+  QuickFilterControl,
+  QuickFilterTrigger,
+  Toolbar,
 } from "@mui/x-data-grid";
 
 function CustomGridToolbar() {
   return (
-    <GridToolbarContainer style={{ justifyContent: "space-between" }}>
+    <Toolbar style={{ justifyContent: "space-between" }}>
       {/* <Group>
         <GridToolbarColumnsButton />
         <GridToolbarFilterButton />
@@ -25,8 +19,13 @@ function CustomGridToolbar() {
           }}
         />
       </Group> */}
-      <GridToolbarQuickFilter />
-    </GridToolbarContainer>
+      <QuickFilter>
+        <QuickFilterTrigger />
+        <QuickFilterControl />
+        <QuickFilterClear />
+      </QuickFilter>
+      ;
+    </Toolbar>
   );
 }
 

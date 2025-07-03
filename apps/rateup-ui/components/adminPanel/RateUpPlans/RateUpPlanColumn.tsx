@@ -162,6 +162,7 @@ export const generateColumns = (
             label="Delete"
             onClick={handleDeleteClick(id)}
             color="inherit"
+            key={id + "delete-action"}
           />,
         ];
       },

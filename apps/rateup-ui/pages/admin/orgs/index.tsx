@@ -3,12 +3,7 @@ import { useRouter } from "next/router";
 
 import { ActionIcon, Box, Group, Stack, Title } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
-import {
-  DataGrid,
-  GridColDef,
-  GridRenderCellParams,
-  GridToolbar,
-} from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 
 import { useAllOrgs } from "../../../backend/org/org.query";
 import styles from "../../../components/adminPanel/admin.module.css";
@@ -128,9 +123,7 @@ export default function OrgDisplay() {
           getRowHeight={() => "auto"}
           disableColumnSelector
           disableDensitySelector
-          slots={{
-            toolbar: GridToolbar,
-          }}
+          showToolbar
           slotProps={{
             toolbar: {
               showQuickFilter: true,

@@ -1,11 +1,27 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
-import { Button, Checkbox, Group, Radio, Stack, Tabs } from "@mantine/core";
+import {
+  Button,
+  Card,
+  Checkbox,
+  Group,
+  Radio,
+  SegmentedControl,
+  Stack,
+  Tabs,
+  Text,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IconMessageCircle, IconPhoto } from "@tabler/icons-react";
+import {
+  IconExclamationCircle,
+  IconMessageCircle,
+  IconPhoto,
+} from "@tabler/icons-react";
 
+import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
+import { AssignInboxContent } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayHeader";
 
 import {
   useCreateWaAutomatedReplyMutation,
@@ -76,7 +92,7 @@ export function AutomatedReplyForm({
   initialValues,
   editMode,
   close,
-}: AutoPilotFormProps) {
+}: Readonly<AutoPilotFormProps>) {
   const rootForm = useForm({
     initialValues: getInitialValues(initialValues),
   });
@@ -152,6 +168,7 @@ export function AutomatedReplyForm({
         <AccountSelector
           {...rootForm.getInputProps("whatsappSettingsPhoneId")}
         />
+
         <Tabs
           defaultValue="keywords"
           variant="pills"

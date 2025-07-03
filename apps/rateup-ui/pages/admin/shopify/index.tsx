@@ -8,7 +8,6 @@ import {
   GridActionsCellItem,
   GridColDef,
   GridRenderCellParams,
-  GridToolbar,
 } from "@mui/x-data-grid";
 
 import { IntegratedApps } from "@/types/enums";
@@ -76,6 +75,7 @@ const index = () => {
           }}
           label={translations["Delete"]}
           showInMenu
+          key={params.id + "delete-action"}
         />,
       ],
     },
@@ -95,9 +95,7 @@ const index = () => {
         <DataGrid
           columns={columns}
           rows={rows}
-          slots={{
-            toolbar: GridToolbar,
-          }}
+          showToolbar
           slotProps={{
             toolbar: {
               showQuickFilter: true,

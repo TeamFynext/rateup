@@ -387,33 +387,51 @@ export const AssignInbox = ({ contactId, opened, close }) => {
       centered
       includeCancelButton
     >
-      <Stack>
-        <TeamSelector label="Select Team" {...form.getInputProps("teamId")} />
-        <RadioGroup value={memberChoice} onChange={setMemberChoice}>
-          <Group>
-            <Radio value={"all"} label={"All Members"} />
-            <Radio value={"manual"} label={"Select Manually"} />
-          </Group>
-        </RadioGroup>
-        {memberChoice === "manual" && (
-          <Skeleton visible={isLoading}>
-            <ContainedMultiSelect
-              data={members}
-              styles={{
-                label: {
-                  color:
-                    "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))",
-                  fontSize: 12,
-                },
-              }}
-              {...form.getInputProps("assignedUserIds")}
-              label={"Select Members"}
-              placeholder="click to select"
-              searchable
-            />
-          </Skeleton>
-        )}
-      </Stack>
+      <AssignInboxContent
+        form={form}
+        memberChoice={memberChoice}
+        setMemberChoice={setMemberChoice}
+        isLoading={isLoading}
+        members={members}
+      />
     </FormModalLayout>
+  );
+};
+
+export const AssignInboxContent = ({
+  form,
+  memberChoice,
+  setMemberChoice,
+  isLoading,
+  members,
+}) => {
+  return (
+    <Stack>
+      <TeamSelector label="Select Team" {...form.getInputProps("teamId")} />
+      <RadioGroup value={memberChoice} onChange={setMemberChoice}>
+        <Group>
+          <Radio value={"all"} label={"All Members"} />
+          <Radio value={"manual"} label={"Select Manually"} />
+        </Group>
+      </RadioGroup>
+      {memberChoice === "manual" && (
+        <Skeleton visible={isLoading}>
+          <ContainedMultiSelect
+            data={members}
+            styles={{
+              label: {
+                color:
+                  "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))",
+                fontSize: 12,
+              },
+            }}
+            {...form.getInputProps("assignedUserIds")}
+            label={"Select Members"}
+            placeholder="click to select"
+            searchable
+          />
+        </Skeleton>
+      )}
+    </Stack>
   );
 };
