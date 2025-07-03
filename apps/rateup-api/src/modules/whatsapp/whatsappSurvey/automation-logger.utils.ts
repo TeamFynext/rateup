@@ -45,6 +45,7 @@ export async function findRecentAutomation(
         select: {
           matchData: true,
           id: true,
+          whatsappSettingsPhoneId: true,
         },
       },
     },

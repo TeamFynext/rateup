@@ -121,6 +121,8 @@ import {
   assignWaMessageToUser,
   getWaMessageByMessageId,
 } from "../inbox/message/wamessage.service";
+import { getUserIdsByTeamId } from "../../user/user.service";
+import { getTeamIdsByUserId } from "../../team/team.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -633,6 +635,7 @@ export async function handleAutomatedReply(
       const automation = recentInteraction?.waAutomatedReply as {
         id: string;
         matchData: { json: { nodes: any[]; edges: any[] } };
+        whatsappSettingsPhoneId: string;
       };
       if (!automation) {
         log.warn(`No active automation found for button click from ${phone}`);
@@ -683,16 +686,6 @@ export async function handleAutomatedReply(
           id: string;
           matchData: { json: { nodes: any[]; edges: any[] } };
         } | null;
-        if (automation?.WaAutomatedReplyAssignedUser?.length > 0) {
-          const contact = await getOrCreateContactByPhone(phone, orgId);
-          await assignWaMessageToUser({
-            assignedUserIds: automation?.WaAutomatedReplyAssignedUser?.map(
-              (data) => data?.userId,
-            ),
-            teamId: automation?.teamId,
-            contactId: contact?.id,
-          });
-        }
       }
 
       if (automation) {
@@ -859,7 +852,25 @@ export async function processNextNode(
       case "delayNode":
         await wait((node?.data as NodeTypeMap["delayNode"])?.delayTime * 1000);
         break;
-
+      case "assignNode": {
+        const assignData = node?.data as NodeTypeMap["assignNode"];
+        const contact = await getOrCreateContactByPhone(userPhone, orgId);
+        let assignedUserIds = assignData?.assign?.assignedUserIds || [];
+        let teamId = assignData?.assign?.teamId || null;
+        if (assignData?.assign?.assignType === "me") {
+          const teams = await getTeamIdsByUserId(assignedUserIds?.[0]);
+          teamId = teams?.[0] || null;
+        } else if (assignData?.assign?.choice === "all") {
+          const users = await getUserIdsByTeamId(teamId);
+          assignedUserIds = users;
+        }
+        await assignWaMessageToUser({
+          assignedUserIds,
+          teamId,
+          contactId: contact?.id,
+        });
+        break;
+      }
       default:
         // For text, buttons, and other message types
         const waMessage: any = convertNodeToWhatsAppMessage(node, userPhone);

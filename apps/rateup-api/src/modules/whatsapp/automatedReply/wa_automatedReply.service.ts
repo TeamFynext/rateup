@@ -35,7 +35,6 @@ export async function getAutomatedRepliesByOrgId(
           command: true,
         },
       },
-      WaAutomatedReplyAssignedUser: true,
     },
     orderBy: {
       createdAt: "desc",
@@ -61,7 +60,6 @@ export async function getAutomatedReplyById(id: string) {
           command: true,
         },
       },
-      WaAutomatedReplyAssignedUser: true,
     },
   });
   const { WaAutomatedReplyCommands, ...rest } = automatedReply;
@@ -74,24 +72,9 @@ export async function getAutomatedReplyById(id: string) {
 export async function createAutomatedReply(
   data: CreateAutomatedReplySchema,
   orgId: string,
-  userId?: string,
 ) {
-  const {
-    commands = [],
-    teamId: teamIdFromBody,
-    assignedUserIds: assignedUserIdsFromBody,
-    ...restData
-  } = data;
-  let teamId = teamIdFromBody || null;
-  let assignedUserIds = assignedUserIdsFromBody || [];
-  if (restData?.other?.assignType === "me") {
-    assignedUserIds = [userId];
-    const teams = await getTeamIdsByUserId(userId);
-    teamId = teams?.[0] || null;
-  } else if (restData?.other?.choice !== "manual") {
-    const users = await getUserIdsByTeamId(teamId);
-    assignedUserIds = users;
-  }
+  const { commands = [], ...restData } = data;
+
   const automatedReply = await prisma.$transaction(async (prisma) => {
     const createdAutomatedReply = await prisma.waAutomatedReply.create({
       data: {
@@ -99,15 +82,8 @@ export async function createAutomatedReply(
         matchData: restData.matchData,
         matchType: restData.matchType,
         name: restData.name,
-        ...(teamId ? { teamId } : {}),
         ...restData,
       },
-    });
-    await prisma.waAutomatedReplyAssignedUser.createMany({
-      data: assignedUserIds.map((userId) => ({
-        userId,
-        waAutomatedReplyId: createdAutomatedReply.id,
-      })),
     });
     await prisma.waAutomatedReplyCommands.createMany({
       data: commands.map((c) => ({
@@ -125,25 +101,8 @@ export async function updateAutomatedReply(
   id: string,
   data: any,
   orgId: string,
-  userId?: string,
 ) {
-  const {
-    commands = [],
-    teamId: teamIdFromBody,
-    WaAutomatedReplyAssignedUser,
-    assignedUserIds: assignedUserIdsFromBody,
-    ...restData
-  } = data;
-  let teamId = teamIdFromBody ?? null;
-  let assignedUserIds = assignedUserIdsFromBody ?? [];
-  if (restData?.other?.assignType === "me") {
-    assignedUserIds = [userId];
-    const teams = await getTeamIdsByUserId(userId);
-    teamId = teams?.[0] || null;
-  } else if (restData?.other?.choice !== "manual") {
-    const users = await getUserIdsByTeamId(teamId);
-    assignedUserIds = users;
-  }
+  const { commands = [], ...restData } = data;
   return prisma.$transaction(async (prisma) => {
     const updatedAutomatedReply = await prisma.waAutomatedReply.update({
       where: {
@@ -151,24 +110,9 @@ export async function updateAutomatedReply(
       },
       data: {
         orgId,
-        ...(teamId ? { teamId } : {}),
         ...restData,
       },
     });
-    if (assignedUserIds?.length > 0) {
-      await prisma.waAutomatedReplyAssignedUser.deleteMany({
-        where: {
-          waAutomatedReplyId: id,
-        },
-      });
-
-      await prisma.waAutomatedReplyAssignedUser.createMany({
-        data: assignedUserIds?.map((userId) => ({
-          userId,
-          waAutomatedReplyId: id,
-        })),
-      });
-    }
     await prisma.waAutomatedReplyCommands.deleteMany({
       where: {
         waAutomatedReplyId: id,
