@@ -14,9 +14,9 @@ import {
   IconMenu,
   IconMusic,
   IconPlayCard,
-  IconRobot,
   IconRobotFace,
   IconSquare,
+  IconUser,
   IconUsers,
   IconVideo,
 } from "@tabler/icons-react";
@@ -82,6 +82,7 @@ const categories = [
     items: [
       { id: "ticketNode", label: "Ticket", icon: <IconGitMerge size={16} /> },
       { id: "aibotNode", label: "AiBot", icon: <IconRobotFace size={16} /> },
+      { id: "assignNode", label: "Assign", icon: <IconUser size={16} /> },
       { id: "leadgenNode", label: "Lead", icon: <IconAd size={16} /> },
     ],
   },
@@ -116,6 +117,7 @@ export default function ComponentSidebar() {
               <div
                 key={item.id}
                 className={styles.item}
+                role="none"
                 draggable
                 onDragStart={(event) =>
                   onDragStart(event, item.id, {

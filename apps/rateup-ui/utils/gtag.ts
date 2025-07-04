@@ -27,10 +27,15 @@ export const analyseEvent = ({
   });
 };
 
-export const setGAConsent = (access: "granted" | "denied") => {
-  window.gtag("consent", "update", {
-    analytics_storage: access,
-  });
+export const setGAConsent = (consent: "granted" | "denied") => {
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("consent", "update", {
+      ad_storage: consent,
+      analytics_storage: consent,
+    });
+  } else {
+    console.warn("gtag not loaded yet");
+  }
 };
 
 //For button click event

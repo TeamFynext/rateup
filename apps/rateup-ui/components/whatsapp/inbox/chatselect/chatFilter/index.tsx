@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import {
   Button,
   HoverCard,
@@ -43,9 +45,10 @@ export type ChatFilter = {
 };
 interface Props {
   tab: string;
+  setFilterCount: (value: number) => void;
 }
 
-export default function WaInboxChatFilter({ tab }: Props) {
+export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
   const { data, isLoading, error } = useChatFilterData();
   const { filter, setFilter } = useChatFilterStore();
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -56,6 +59,10 @@ export default function WaInboxChatFilter({ tab }: Props) {
     isError,
     error: teamsError,
   } = useTeamsByUser();
+
+  useEffect(() => {
+    setFilterCount(getFilterActiveCount());
+  }, [filter]);
   if (isLoading || teamsLoading) {
     return <Loader size={"xs"} />;
   }
@@ -157,104 +164,93 @@ export default function WaInboxChatFilter({ tab }: Props) {
   }));
 
   return (
-    <HoverCard position={isMobile ? "bottom-end" : "right-start"}>
-      <HoverCardTarget>
-        <Indicator label={getFilterActiveCount()} size={16}>
-          <ThemeIcon className={classes.theme_icon} variant="light">
-            <IconFilter />
-          </ThemeIcon>
-        </Indicator>
-      </HoverCardTarget>
-      <HoverCardDropdown>
-        <Stack>
-          <Button size="compact-xs" ml={"auto"} onClick={clearFilters}>
-            {translations["clear filters"]}
-          </Button>
-          <AccountSelector
-            onChange={(phone) => {
-              // updatePhoneId(phoneId);
-              setFilter({
-                ...filter,
-                phone,
-              });
-            }}
-            value={filter?.phone}
-            flex={1}
-            usePhoneNumber
-            withAllOption
-            styles={{
-              input: {
-                background: "var(--mantine-primary-color-filled)",
-                color: "white",
-              },
-            }}
-          />
-          <ContainedMultiSelect
-            maw={250}
-            //TODO reimplement strict filter
+    <Stack>
+      <Button size="compact-xs" ml={"auto"} onClick={clearFilters}>
+        {translations["clear filters"]}
+      </Button>
+      <AccountSelector
+        onChange={(phone) => {
+          // updatePhoneId(phoneId);
+          setFilter({
+            ...filter,
+            phone,
+          });
+        }}
+        value={filter?.phone}
+        flex={1}
+        usePhoneNumber
+        withAllOption
+        styles={{
+          input: {
+            background: "var(--mantine-primary-color-filled)",
+            color: "white",
+          },
+        }}
+      />
+      <ContainedMultiSelect
+        maw={250}
+        //TODO reimplement strict filter
 
-            // label={
-            //   <Switch
-            //     w={"100%"}
-            //     size="xs"
-            //     label={`${props?.filter?.strictFilter ? "Disable" : "Enable"} Strict filter`}
-            //     checked={props.filter.strictFilter}
-            //     onChange={(e) =>
-            //       setFilters("strictFilter", e.currentTarget.checked)
-            //     }
-            //   />
-            // }
-            placeholder="Tags, Groups, Campaigns"
-            data={data}
-            value={allMultiSelectFilters?.map(
-              (val) => `${val.group}|-${val.value}`,
-            )}
-            onChange={(value) => {
-              multiSelectOnChange(
-                filter,
-                value.map((val) => {
-                  const grpname = val.split("|-")[0];
-                  const grpval = val.split("|-")[1];
-                  return {
-                    group: grpname,
-                    value: grpval,
-                  };
-                }),
-              );
-            }}
-          />
-          {tab === "New" && (
-            <ContainedMultiSelect
-              data={statusData}
-              placeholder="statuses"
-              w={220}
-              value={filter.newStatuses}
-              onChange={(values) =>
-                setFilter({
-                  ...filter,
-                  newStatuses: values as WaMessageAssignStatus[],
-                })
-              }
-            />
-          )}
-          {["Assigned", "AssignedToMe"].includes(tab) && (
-            <ContainedMultiSelect
-              radius="md"
-              value={filter.assignedTeams || []}
-              onChange={(values) =>
-                setFilter({
-                  ...filter,
-                  assignedTeams: values,
-                })
-              }
-              placeholder={translations["Select teams (type in to search)"]}
-              data={teamOptions}
-              searchable
-            />
-          )}
-        </Stack>
-      </HoverCardDropdown>
-    </HoverCard>
+        // label={
+        //   <Switch
+        //     w={"100%"}
+        //     size="xs"
+        //     label={`${props?.filter?.strictFilter ? "Disable" : "Enable"} Strict filter`}
+        //     checked={props.filter.strictFilter}
+        //     onChange={(e) =>
+        //       setFilters("strictFilter", e.currentTarget.checked)
+        //     }
+        //   />
+        // }
+        placeholder="Tags, Groups, Campaigns"
+        data={data}
+        value={allMultiSelectFilters?.map(
+          (val) => `${val.group}|-${val.value}`,
+        )}
+        onChange={(value) => {
+          multiSelectOnChange(
+            filter,
+            value.map((val) => {
+              const grpname = val.split("|-")[0];
+              const grpval = val.split("|-")[1];
+              return {
+                group: grpname,
+                value: grpval,
+              };
+            }),
+          );
+        }}
+      />
+      {tab === "New" && (
+        <ContainedMultiSelect
+          data={statusData}
+          placeholder="statuses"
+          w={220}
+          value={filter.newStatuses}
+          onChange={(values) =>
+            setFilter({
+              ...filter,
+              newStatuses: values as WaMessageAssignStatus[],
+            })
+          }
+        />
+      )}
+      {["Assigned", "AssignedToMe"].includes(tab) && (
+        <ContainedMultiSelect
+          radius="md"
+          value={filter.assignedTeams || []}
+          onChange={(values) =>
+            setFilter({
+              ...filter,
+              assignedTeams: values,
+            })
+          }
+          placeholder={translations["Select teams (type in to search)"]}
+          data={teamOptions}
+          searchable
+        />
+      )}
+    </Stack>
   );
 }
 

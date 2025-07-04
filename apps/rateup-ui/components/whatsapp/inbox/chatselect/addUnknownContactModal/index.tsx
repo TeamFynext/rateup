@@ -11,8 +11,13 @@ import PhoneInputWithCountrySelect, {
 
 import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
+import {
+  RateupButtonPrimary,
+  RateupButtonSecondary,
+} from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import useTranslations from "@/dictionaries/useTranslation";
 import { importMethod } from "@/utils/enums";
 
@@ -28,10 +33,51 @@ interface UnknownContactModalProps {
 export default function AddUnknownContactModal(
   props: UnknownContactModalProps,
 ) {
+  const { successCallback, ...rest } = props;
+  const [opened, { open, close: onClose }] = useDisclosure(false);
+  const { translations } = useTranslations();
+
+  return (
+    <>
+      {!props.triggerType || props.triggerType === "card" ? (
+        <CardTrigger onClick={open} phone={props.phone} />
+      ) : (
+        <ActionButtonTrigger onClick={open} />
+      )}
+
+      {opened && (
+        <SimpleModalLayout
+          {...{
+            opened,
+            onClose,
+            title: translations["Add New Contact"],
+            centered: true,
+            size: "md",
+            withCloseButton: true,
+          }}
+        >
+          <AddUnknownContactForm
+            {...rest}
+            successCallback={(data) => {
+              successCallback(data);
+              onClose();
+            }}
+          />
+        </SimpleModalLayout>
+      )}
+    </>
+  );
+}
+
+export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
   const contactMutation = useCreateContactMutation();
-  const [opened, { open, close: onClose }] = useDisclosure();
   const [loading, setLoading] = useState(false);
   const { translations } = useTranslations();
+  useEffect(() => {
+    if (props.phone) {
+      form.setFieldValue("phone", "+" + form.values.countryCode + props.phone);
+    }
+  }, [props]);
   const form = useForm({
     initialValues: {
       name: "",
@@ -61,75 +107,56 @@ export default function AddUnknownContactModal(
         form.resetDirty();
         props.successCallback(data.data);
         setLoading(false);
-        onClose();
       },
       onError(error) {
         setLoading(false);
       },
     });
   }
-  useEffect(() => {
-    if (props) {
-      form.setFieldValue("phone", "+" + form.values.countryCode + props.phone);
-    }
-  }, [props]);
   return (
-    <>
-      {!props.triggerType || props.triggerType === "card" ? (
-        <CardTrigger onClick={open} phone={props.phone} />
-      ) : (
-        <ActionButtonTrigger onClick={open} />
-      )}
-
-      {opened && (
-        <FormModalLayout
-          {...{
-            opened,
-            onClose,
-            title: translations["Add New Contact"],
-            centered: true,
-            size: "md",
-            isLoading: loading,
-            withCloseButton: true,
-            buttonTitle: translations["Add Contact"],
-            cancelButtonTitle: translations["Cancel"],
-            includeCancelButton: true,
-            onSubmit: form.onSubmit((values) => onSubmit(values)),
-          }}
-        >
-          <Stack gap={5}>
-            <ContainedTextField
-              label={translations["Name"]}
-              withAsterisk
-              {...form.getInputProps("name")}
-            />
-            <Stack gap={0}>
-              <Group gap={3}>
-                <Text className={classes.inputLabel}>
-                  {translations["Phone Number"]}
-                </Text>
-                <Text c="red">*</Text>
-              </Group>
-              <PhoneInputWithCountrySelect
-                international
-                defaultCountry="IN"
-                countryCallingCodeEditable={false}
-                placeholder={translations["Enter phone number"]}
-                className={classes.inputPhone}
-                key={form.key("phone")}
-                {...form.getInputProps("phone")}
-              />
-              <Text size="sm" c={"red"}>
-                {form?.errors?.phone}
-              </Text>
-            </Stack>
-            <ContainedTextField
-              label={translations["Email"]}
-              {...form.getInputProps("email")}
-            />
-          </Stack>
-        </FormModalLayout>
-      )}
-    </>
+    <form onSubmit={form.onSubmit(onSubmit)}>
+      <Stack gap={5}>
+        <ContainedTextField
+          label={translations["Name"]}
+          withAsterisk
+          {...form.getInputProps("name")}
+        />
+        <Stack gap={0}>
+          <Group gap={3}>
+            <Text className={classes.inputLabel}>
+              {translations["Phone Number"]}
+            </Text>
+            <Text c="red">*</Text>
+          </Group>
+          <PhoneInputWithCountrySelect
+            international
+            defaultCountry="IN"
+            countryCallingCodeEditable={false}
+            placeholder={translations["Enter phone number"]}
+            className={classes.inputPhone}
+            key={form.key("phone")}
+            {...form.getInputProps("phone")}
+          />
+          <Text size="sm" c={"red"}>
+            {form?.errors?.phone}
+          </Text>
+        </Stack>
+        <ContainedTextField
+          label={translations["Email"]}
+          {...form.getInputProps("email")}
+        />
+        <Group>
+          <RateupButtonSecondary
+            title={translations["Cancel"]}
+            variant="light"
+          />
+          <RateupButtonPrimary
+            type={"submit"}
+            title={translations["Add Contact"]}
+            loading={loading}
+          />
+        </Group>
+      </Stack>
+    </form>
   );
-}
+};

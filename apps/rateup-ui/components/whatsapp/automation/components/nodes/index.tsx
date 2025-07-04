@@ -1,4 +1,5 @@
 import AiBotNode from "./aibot-node";
+import assignNode from "./assign-node";
 import AudioNode from "./audio-node";
 import ButtonNode from "./button-node";
 import ContactsNode from "./contacts-node";
@@ -42,5 +43,6 @@ export const nodeTypes = {
   flowNode: FlowNode,
   aibotNode: AiBotNode,
   ticketNode: ticketNode,
+  assignNode: assignNode,
   leadgenNode: LeadgenNode,
 };

@@ -70,6 +70,7 @@ export const completeInvite = (inviteToken: String) =>
   axiosClient({
     url: `/team/complete-invite/${inviteToken}`,
     method: "POST",
+    timeout: 30000,
   });
 
 export const deleteInviteById = (id: String) =>

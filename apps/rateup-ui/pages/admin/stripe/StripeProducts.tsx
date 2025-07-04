@@ -142,6 +142,7 @@ const StripeProducts = () => {
               openDeleteModal();
             }}
             color="inherit"
+            key={id + "delete-action"}
           />,
         ];
       },

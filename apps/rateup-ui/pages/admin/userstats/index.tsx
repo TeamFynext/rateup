@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 
-import { Badge, Flex, Group, Stack, Text, Title } from "@mantine/core";
+import { Badge, Box, Flex, Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
-import { Box } from "@mui/material";
 import {
   DataGrid,
   GridActionsCellItem,
   GridColDef,
   GridRenderCellParams,
-  GridToolbar,
 } from "@mui/x-data-grid";
 
 import useTranslations from "@/dictionaries/useTranslation";
@@ -136,6 +134,7 @@ const index = () => {
               : translations["Pause"]
           }
           showInMenu
+          key={params.id + "pause-action"}
         />,
       ],
     },
@@ -232,12 +231,7 @@ const index = () => {
         </PaperLayout>
       </Flex>
       <Title order={4}>{translations["Most Recent SignUps"]}</Title>
-      <Box
-        sx={{
-          height: "60vh",
-          width: "100%",
-        }}
-      >
+      <Box h={"60vh"} w={"100%"}>
         <DataGrid
           rows={rows}
           columns={columns}
@@ -246,9 +240,7 @@ const index = () => {
             setSelectedUser(user);
             open();
           }}
-          slots={{
-            toolbar: GridToolbar,
-          }}
+          showToolbar
           slotProps={{
             toolbar: {
               showQuickFilter: true,

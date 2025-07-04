@@ -13,7 +13,6 @@ import {
   GridActionsCellItem,
   GridColDef,
   GridPreProcessEditCellProps,
-  GridToolbar,
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 
@@ -135,6 +134,7 @@ const RazorpayPlans = () => {
               openDeleteModal();
             }}
             color="inherit"
+            key={id + "delete-action"}
           />,
         ];
       },
@@ -193,9 +193,7 @@ const RazorpayPlans = () => {
           getRowHeight={() => "auto"}
           disableColumnSelector
           disableDensitySelector
-          slots={{
-            toolbar: GridToolbar,
-          }}
+          showToolbar
           slotProps={{
             toolbar: {
               showQuickFilter: true,

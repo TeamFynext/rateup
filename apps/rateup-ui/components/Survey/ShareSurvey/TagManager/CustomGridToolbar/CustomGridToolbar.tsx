@@ -1,33 +1,36 @@
-import { Group, MantineThemeContext, useMantineTheme } from "@mantine/core";
+import { Group } from "@mantine/core";
 import {
-  GridToolbarContainer,
-  GridToolbarExport,
-  GridToolbarFilterButton,
-  GridToolbarQuickFilter,
+  ExportCsv,
+  ExportPrint,
+  QuickFilter,
+  QuickFilterClear,
+  QuickFilterControl,
+  QuickFilterTrigger,
+  Toolbar,
 } from "@mui/x-data-grid";
+
 import styles from "./CustomGridToolbar.module.css";
 
 function CustomGridToolbar() {
-  const theme = useMantineTheme();
-  const primaryColor = theme?.primaryColor;
-
   return (
-    <GridToolbarContainer className={styles["grid-toolbar-container"]}>
-      <GridToolbarQuickFilter />
+    <Toolbar className={styles["grid-toolbar-container"]}>
+      <QuickFilter>
+        <QuickFilterTrigger />
+        <QuickFilterControl />
+        <QuickFilterClear />
+      </QuickFilter>
       <Group>
         {/* <GridToolbarColumnsButton />
         <GridToolbarFilterButton /> */}
-        <GridToolbarExport
-          className={styles["export-btn"]}
-          style={{ backgroundColor: theme.colors[primaryColor][6] }}
-          printOptions={{
+        <ExportPrint
+          options={{
             hideFooter: true,
             hideToolbar: true,
-            disableToolbarButton: true,
           }}
         />
+        <ExportCsv />
       </Group>
-    </GridToolbarContainer>
+    </Toolbar>
   );
 }
 

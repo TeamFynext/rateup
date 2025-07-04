@@ -25,6 +25,7 @@ import { useRouter } from "next/router";
 
 import { useDebouncedCallback, useHotkeys } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
 import { WaAutomatedReply } from "@/types/global";
 import { useUpdateWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
@@ -58,9 +59,9 @@ function FlowEditorContent({
   waAutomationData,
   refetch,
 }: {
-  waAutomatedReplyId: string;
-  waAutomationData: WaAutomatedReply;
-  refetch: () => void;
+  readonly waAutomatedReplyId: string;
+  readonly waAutomationData: WaAutomatedReply;
+  readonly refetch: () => void;
 }) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const isLeadAutomation = waAutomationData?.commands[0] === "lead";
@@ -75,6 +76,9 @@ function FlowEditorContent({
   const [canRedo, setCanRedo] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const router = useRouter();
+  const session = useSessionContext() as {
+    userId: string;
+  };
 
   const isUndoRedoOperationRef = useRef(false);
   const lastSavedFlowRef = useRef<string | null>(null);
@@ -253,6 +257,14 @@ function FlowEditorContent({
           return;
         }
       }
+      if (type === "assignNode") {
+        if (!nodeData?.assign) {
+          nodeData.assign = {
+            assignedUserIds: [session.userId],
+            assignType: "me",
+          };
+        }
+      }
 
       const position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX - reactFlowBounds.left,
@@ -265,7 +277,7 @@ function FlowEditorContent({
         position,
         data: {
           ...nodeData,
-          label: nodeData.label || `New ${type}`,
+          label: nodeData.label ?? `New ${type}`,
         },
       };
 

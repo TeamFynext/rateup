@@ -41,8 +41,7 @@ export default function ETESettings() {
   const { translations } = useTranslations();
   const highlighted = !!searchParams.get("highlighted") === true;
   const { user } = useUser();
-  const [isLoading, setIsLoading] = useState(false);
-  const orgDetailsUpdate = useUpdateOrgDetailsMutation(setIsLoading);
+  const orgDetailsUpdate = useUpdateOrgDetailsMutation();
   const [eteModalOpened, { open: openEteModal, close: closeEteModal }] =
     useDisclosure(false);
   const [encryptionpassword, setEncryptionPassword] = useState("");
@@ -159,7 +158,7 @@ export default function ETESettings() {
             onChange={(e) => setEncryptionPassword(e.target.value)}
           />
           <RateupButtonBlue
-            loading={isLoading}
+            loading={orgDetailsUpdate.isPending}
             title={translations["Submit"]}
             onClick={() => triggerEndtoEndEncryptionUpdate(encryptionpassword)}
           />
@@ -187,7 +186,7 @@ export default function ETESettings() {
               {...passwordResetForm.getInputProps("newPassword")}
             />
             <RateupButtonBlue
-              loading={isLoading}
+              loading={orgDetailsUpdate.isPending}
               title={translations["Submit"]}
               type={"submit"}
               onClick={() =>

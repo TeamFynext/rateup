@@ -214,6 +214,15 @@ export interface AiBotNodeData extends BaseNodeData {
   };
 }
 
+export interface AssignNodeData extends BaseNodeData {
+  assign: {
+    choice: "manual" | "all";
+    assignType: "staff" | "me";
+    assignedUserIds: Array<string>;
+    teamId: string;
+  };
+}
+
 export interface TicketNodeData extends BaseNodeData {
   ticket: {
     selectedBoardId: string;
@@ -266,6 +275,7 @@ export type NodeTypeMap = {
   flowNode: FlowNodeData;
   aibotNode: AiBotNodeData;
   ticketNode: TicketNodeData;
+  assignNode: AssignNodeData;
   leadgenNode: LeadgenNodeData;
 };
 
@@ -297,6 +307,7 @@ export type NodeData =
   | FlowNodeData
   | AiBotNodeData
   | TicketNodeData
+  | AssignNodeData
   | LeadgenNodeData;
 
 // Extended Node type with typed data
