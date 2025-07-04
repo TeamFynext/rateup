@@ -1,5 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
+import { WaAssignedChatPermission } from "../../types/enums";
 
 const orgCore = {
   name: z
@@ -45,6 +46,7 @@ const updateOrgDetailsSchema = z.object({
       privateKey: z.string(),
     })
     .optional(),
+  waAssignedChatPermission: z.nativeEnum(WaAssignedChatPermission).optional(),
 });
 export const byOrgIdParams = z.object({
   orgId: z.string(),

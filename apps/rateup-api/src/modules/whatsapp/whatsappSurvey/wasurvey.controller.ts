@@ -405,6 +405,7 @@ async function whatsappMessageHandler(
     waMessage?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id,
     from,
   );
+
   if (existingMessage) {
     log.trace("Message already received => %o", existingMessage);
     return;

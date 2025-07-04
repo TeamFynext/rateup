@@ -172,7 +172,13 @@ export async function updateOrgLogo(
 }
 
 export async function updateOrgDetails(
-  { address, phone, name, encryptionKeys }: UpdateOrgDetailsInput,
+  {
+    address,
+    phone,
+    name,
+    encryptionKeys,
+    waAssignedChatPermission,
+  }: UpdateOrgDetailsInput,
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
@@ -187,6 +193,7 @@ export async function updateOrgDetails(
       phone,
       name,
       encryptionKeys,
+      waAssignedChatPermission,
     },
   });
   return org;

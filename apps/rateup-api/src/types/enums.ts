@@ -420,3 +420,9 @@ export enum AssignType {
   me = "me",
   staff = "staff",
 }
+
+export enum WaAssignedChatPermission {
+  All = "All",
+  TeamMembers = "TeamMembers",
+  Admins = "Admins",
+}
