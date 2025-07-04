@@ -1,3 +1,5 @@
+import { WaAssignedChatPermission } from "@/types/enums";
+
 import { axiosClient } from "../apiClient";
 
 export async function getTeamsMembersOfOrg() {
@@ -38,6 +40,7 @@ export interface IUpdateOrgDetails {
   phone: string;
   address: string;
   encryptionKeys: EncryptionKeys;
+  waAssignedChatPermission: WaAssignedChatPermission;
 }
 export const updateOrgDetails = (data: Partial<IUpdateOrgDetails>) =>
   axiosClient.put("/org/update-details", data);

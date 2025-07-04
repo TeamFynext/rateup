@@ -45,7 +45,6 @@ import styles from "./setting.module.css";
 const OrgSettings = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isLoadingUpload, setIsLoadingUpload] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState({
     url: "",
     name: "",
@@ -55,7 +54,7 @@ const OrgSettings = () => {
     openedCropDialog,
     { toggle: toggleCropDialog, close: closeCropDialog },
   ] = useDisclosure(false);
-  const orgDetailsUpdate = useUpdateOrgDetailsMutation(setIsLoading);
+  const orgDetailsUpdate = useUpdateOrgDetailsMutation();
   const { user } = useUser();
   const updateLogo = useUpdateOrgLogoMutation(setIsLoadingUpload);
   const { translations } = useTranslations();
@@ -75,7 +74,6 @@ const OrgSettings = () => {
     },
   });
   const onSubmit = (values) => {
-    setIsLoading(true);
     const data = {
       name: values.name,
       phone: values?.phone ?? "",
@@ -271,7 +269,7 @@ const OrgSettings = () => {
             <Flex justify="center">
               <RateupButtonBlue
                 type="submit"
-                loading={isLoading}
+                loading={orgDetailsUpdate.isPending}
                 size="sm"
                 title={translations["Save Changes"]}
               />

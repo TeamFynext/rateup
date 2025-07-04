@@ -553,3 +553,9 @@ export enum CatalogProductType {
   HOTEL = "HOTEL",
   HOTEL_ROOM = "HOTEL_ROOM",
 }
+
+export enum WaAssignedChatPermission {
+  All = "All",
+  TeamMembers = "TeamMembers",
+  Admins = "Admins",
+}
