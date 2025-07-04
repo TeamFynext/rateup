@@ -242,6 +242,7 @@ export async function getLoggedUserInfo(
       phone: true,
       encryptionKeys: true,
       isPaused: true,
+      waAssignedChatPermission: true,
     },
   });
   return {
@@ -261,6 +262,7 @@ export async function getLoggedUserInfo(
     pausedBy: profile?.pausedBy,
     isOrgPaused: orgData?.isPaused,
     prefLanguage: profile?.prefLanguage,
+    waAssignedChatPermission: orgData?.waAssignedChatPermission,
   };
 }
 
@@ -551,4 +553,16 @@ export async function updateLastLoggedInTime(userId, date) {
       lastLoggedInAt: date,
     },
   });
+}
+
+export async function getUserIdsByTeamId(teamId: string) {
+  const teamMembers = await prisma.teamMember.findMany({
+    where: {
+      teamId,
+    },
+    select: {
+      userId: true,
+    },
+  });
+  return teamMembers.map((member) => member.userId);
 }

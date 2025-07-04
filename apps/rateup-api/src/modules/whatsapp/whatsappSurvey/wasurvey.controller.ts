@@ -87,6 +87,7 @@ import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 import {
   getContactByPhoneNumberAndOrgId,
+  getOrCreateContactByPhone,
   handleContactConsent,
 } from "../../contact/contact.service";
 import { getOrgById } from "../../org/org.services";
@@ -120,6 +121,12 @@ import {
   getTokensByOrgId,
   sendPushNotification,
 } from "../../mobileNotification/mobile.service";
+import {
+  assignWaMessageToUser,
+  getWaMessageByMessageId,
+} from "../inbox/message/wamessage.service";
+import { getUserIdsByTeamId } from "../../user/user.service";
+import { getTeamIdsByUserId } from "../../team/team.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -162,7 +169,7 @@ export async function whatsappEventHandler(
     if (!eventType) {
       return;
     }
-
+    reply.code(200).send();
     switch (eventType) {
       case "captured":
         await handleCapturedEvent(body);
@@ -195,8 +202,6 @@ export async function whatsappEventHandler(
     }
   } catch (error) {
     log.error("Error in whatsappEventHandler: %o", error);
-  } finally {
-    reply.code(200).send();
   }
 }
 
@@ -404,6 +409,16 @@ async function whatsappMessageHandler(
       waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
     )?.metadata?.display_phone_number;
   }
+  //handle dubplicate webhook
+  const existingMessage = await getWaMessageByMessageId(
+    waMessage?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id,
+    from,
+  );
+
+  if (existingMessage) {
+    log.trace("Message already received => %o", existingMessage);
+    return;
+  }
 
   const messageObj = await handleWaMessages(
     "receive",
@@ -413,7 +428,7 @@ async function whatsappMessageHandler(
     sourcePlatform,
     sourceIdentifier,
     userName,
-    (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.statuses?.[0]
+    (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.messages?.[0]
       ?.id,
   );
   if (type === WaMessageTypes.order) {
@@ -632,6 +647,7 @@ export async function handleAutomatedReply(
       const automation = recentInteraction?.waAutomatedReply as {
         id: string;
         matchData: { json: { nodes: any[]; edges: any[] } };
+        whatsappSettingsPhoneId: string;
       };
       if (!automation) {
         log.warn(`No active automation found for button click from ${phone}`);
@@ -674,7 +690,7 @@ export async function handleAutomatedReply(
       if (automatedReplyId)
         automation = await getAutomatedReplyById(automatedReplyId);
       // Check if message matches any automation rules
-      else
+      else {
         automation = (await checkIfMessageMatchesAnyAutomation(
           orgId,
           waMessage,
@@ -682,6 +698,7 @@ export async function handleAutomatedReply(
           id: string;
           matchData: { json: { nodes: any[]; edges: any[] } };
         } | null;
+      }
 
       if (automation) {
         if (!automation?.whatsappSettingsPhoneId) {
@@ -868,7 +885,25 @@ export async function processNextNode(
       case "delayNode":
         await wait((node?.data as NodeTypeMap["delayNode"])?.delayTime * 1000);
         break;
-
+      case "assignNode": {
+        const assignData = node?.data as NodeTypeMap["assignNode"];
+        const contact = await getOrCreateContactByPhone(userPhone, orgId);
+        let assignedUserIds = assignData?.assign?.assignedUserIds || [];
+        let teamId = assignData?.assign?.teamId || null;
+        if (assignData?.assign?.assignType === "me") {
+          const teams = await getTeamIdsByUserId(assignedUserIds?.[0]);
+          teamId = teams?.[0] || null;
+        } else if (assignData?.assign?.choice === "all") {
+          const users = await getUserIdsByTeamId(teamId);
+          assignedUserIds = users;
+        }
+        await assignWaMessageToUser({
+          assignedUserIds,
+          teamId,
+          contactId: contact?.id,
+        });
+        break;
+      }
       default:
         // For text, buttons, and other message types
         const waMessage: any = convertNodeToWhatsAppMessage(node, userPhone);

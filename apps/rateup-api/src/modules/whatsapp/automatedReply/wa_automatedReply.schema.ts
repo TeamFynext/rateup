@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { WaAutomatedReplyMatchType } from "../../../types/enums";
+import { AssignType, WaAutomatedReplyMatchType } from "../../../types/enums";
 import { buildJsonSchemas } from "fastify-zod";
 
 const matchDataSchema = z.object({
@@ -7,7 +7,7 @@ const matchDataSchema = z.object({
   caseSensitive: z.boolean().optional(),
 });
 const createAutomatedReplySchema = z.object({
-  name: z.string(),
+  name: z.string().min(1),
   matchType: z.nativeEnum(WaAutomatedReplyMatchType),
   matchData: matchDataSchema,
   commands: z.array(z.string()),

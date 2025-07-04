@@ -1,4 +1,7 @@
 import prisma from "../../../utils/prisma";
+import { getTeamIdsByUserId } from "../../team/team.service";
+import { getUserIdsByTeamId } from "../../user/user.service";
+import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema";
 
 export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
   const automatedReplies = await prisma.waAutomatedReplyMessage.findMany({
@@ -66,11 +69,21 @@ export async function getAutomatedReplyById(id: string) {
   };
 }
 
-export async function createAutomatedReply(data: any, orgId: string) {
+export async function createAutomatedReply(
+  data: CreateAutomatedReplySchema,
+  orgId: string,
+) {
   const { commands = [], ...restData } = data;
+
   const automatedReply = await prisma.$transaction(async (prisma) => {
     const createdAutomatedReply = await prisma.waAutomatedReply.create({
-      data: { ...restData, orgId },
+      data: {
+        orgId,
+        matchData: restData.matchData,
+        matchType: restData.matchType,
+        name: restData.name,
+        ...restData,
+      },
     });
     await prisma.waAutomatedReplyCommands.createMany({
       data: commands.map((c) => ({
@@ -84,14 +97,21 @@ export async function createAutomatedReply(data: any, orgId: string) {
   return automatedReply;
 }
 
-export function updateAutomatedReply(id: string, data: any, orgId: string) {
+export async function updateAutomatedReply(
+  id: string,
+  data: any,
+  orgId: string,
+) {
   const { commands = [], ...restData } = data;
   return prisma.$transaction(async (prisma) => {
     const updatedAutomatedReply = await prisma.waAutomatedReply.update({
       where: {
         id,
       },
-      data: restData,
+      data: {
+        orgId,
+        ...restData,
+      },
     });
     await prisma.waAutomatedReplyCommands.deleteMany({
       where: {
