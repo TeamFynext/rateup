@@ -103,7 +103,7 @@ export function useUpdateOrgLogoMutation(setIsLoadingUpload) {
   });
 }
 
-export function useUpdateOrgDetailsMutation(setIsLoading) {
+export function useUpdateOrgDetailsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: Partial<IUpdateOrgDetails>) =>
@@ -120,7 +120,6 @@ export function useUpdateOrgDetailsMutation(setIsLoading) {
       });
       queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
-      setIsLoading(false);
     },
     onError: (error: any) => {
       console.error("Error in Organization Update:", error.message);
@@ -133,7 +132,6 @@ export function useUpdateOrgDetailsMutation(setIsLoading) {
         icon: <IconCheck size="1rem" />,
         autoClose: 3000,
       });
-      setIsLoading(false);
     },
   });
 }

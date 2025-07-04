@@ -25,6 +25,7 @@ import {
   IconMessageCheck,
   IconRefresh,
   IconSearch,
+  IconSettings,
   IconSquareRoundedX,
   IconUserCheck,
   IconUserCircle,
@@ -55,6 +56,7 @@ import WaInboxChatFilter, {
 } from "./chatFilter";
 import WaInboxChatSelectCard from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
+import InboxSettings from "./InboxSettings";
 import classes from "./styles.module.css";
 
 const WaInboxChatSelect = () => {
@@ -279,7 +281,7 @@ const WaInboxChatSelect = () => {
 
   const openChatDisplayForContact = useCallback(
     (data: Partial<ContactsData>) => {
-      router.push(`/dashboard/whatsapp/inbox?tab=&${tab}contactId=${data.id}`);
+      router.push(`/dashboard/whatsapp/inbox?tab=${tab}&contactId=${data.id}`);
     },
     [router],
   );
@@ -363,11 +365,6 @@ const WaInboxChatSelect = () => {
           autoFocus
           flex={1}
         />
-        <AddUnknownContactModal
-          phone=""
-          triggerType="action_button"
-          successCallback={onUnknownContactAddSuccess}
-        />
         <Group className={classes.chat_select_filter_indicator_wrapper} gap={4}>
           <ActionIcon
             h={30}
@@ -388,8 +385,10 @@ const WaInboxChatSelect = () => {
             <IconRefresh />
           </ActionIcon>
         </Group>
-        <WaInboxChatFilter tab={router.query?.tab as string} />
-        <WaInboxChatExport filter={filter} />
+        <InboxSettings
+          tab={tab}
+          onUnknownContactAddSuccess={onUnknownContactAddSuccess}
+        />
       </Group>
       <div>
         {filteredContactsStatus === "pending" ? (
