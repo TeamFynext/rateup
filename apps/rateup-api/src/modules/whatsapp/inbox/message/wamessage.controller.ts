@@ -58,6 +58,7 @@ import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
 import xlsx from "node-xlsx";
 import { WaMessageAssignStatus } from "../../../../types/enums";
 import { PlatformType } from "@prisma/client";
+import { Role } from "../../../../utils/enums";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
@@ -298,13 +299,14 @@ export async function getFilteredContactsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId, userId } = request.user;
+    const { orgId, userId, role } = request.user;
     const { page, filterData } = request.query;
     const contacts = await filterChats(
       orgId,
       parseInt(page),
       JSON.parse(decodeURIComponent(filterData)),
       userId,
+      role as Role,
     );
     reply.status(200).send({
       rows: contacts ?? [],
@@ -413,6 +415,7 @@ export async function getContactsCountByInboxTabHandler(
     const res = await getContactsCountByInbox(
       request.user.orgId,
       request.user.userId,
+      request.user.role,
     );
     reply.code(200).send(res);
   } catch (e) {

@@ -118,6 +118,7 @@ model Org {
   address                  String?
   encryptionKeys           Json? //{privateKey:string,publicKey:string}
   isPaused                 Boolean?                   @default(false)
+  waAssignedChatPermission String                     @default("All")
   members                  OrgMember[]
   teams                    Team[]
   invitations              Invitation[]

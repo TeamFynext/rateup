@@ -251,6 +251,7 @@ export async function getLoggedUserInfo(
       phone: true,
       encryptionKeys: true,
       isPaused: true,
+      waAssignedChatPermission: true,
     },
   });
   return {
@@ -270,6 +271,7 @@ export async function getLoggedUserInfo(
     pausedBy: profile?.pausedBy,
     isOrgPaused: orgData?.isPaused,
     prefLanguage: profile?.prefLanguage,
+    waAssignedChatPermission: orgData?.waAssignedChatPermission,
     status: profile?.orgMember?.[0]?.status,
   };
 }
