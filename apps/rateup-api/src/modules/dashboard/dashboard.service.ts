@@ -3,6 +3,7 @@ import { CampaignStatus, SurveyType, WaFlowStatus } from "../../types/enums";
 import prisma from "../../utils/prisma";
 import Session from "supertokens-node/recipe/session";
 import { updateLastLoggedInTime } from "../user/user.service";
+import { UserAvailabilityStatus } from "../user/user.schema";
 
 interface OverallStats {
   newMessagesCount: number;
@@ -75,13 +76,14 @@ interface TeamMember {
   lastLoggedInAt: string;
   assignedTicketsCount: number;
   assignedChatsCount: number;
+  status: UserAvailabilityStatus;
 }
 
 export async function getTeamMemberStats(
   teamId: string,
 ): Promise<TeamMember & { isOnline: boolean }[]> {
   const users: TeamMember[] =
-    await prisma.$queryRaw`SELECT u.id, u."name", u."email", u."profilePhoto", orm."role",u."lastLoggedInAt",
+    await prisma.$queryRaw`SELECT u.id, u."name", u."email", u."profilePhoto", orm."role", orm. "status", u."lastLoggedInAt",
     (
         SELECT COUNT(*)::INTEGER
         FROM "TicketCardAssignee" ticket
@@ -108,7 +110,10 @@ export async function getTeamMemberStats(
       user.lastLoggedInAt = dayjs(lastLoggedIn).utc().format();
       await updateLastLoggedInTime(user.id, user.lastLoggedInAt);
     }
-    members.push({ ...user, isOnline: sessionHandles.length > 0 });
+    members.push({
+      ...user,
+      isOnline: user.status === UserAvailabilityStatus.online,
+    });
   }
   return members as TeamMember & { isOnline: boolean }[];
 }

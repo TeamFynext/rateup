@@ -237,6 +237,7 @@ model OrgMember {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String   @db.Uuid
   role      Role
+  status    String   @default("online")
 
   @@unique([userId, orgId], name: "userId_orgId")
 }

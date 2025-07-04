@@ -68,6 +68,15 @@ const userEmailCheckSchema = z.object({
   email: z.string().email(),
 });
 
+export enum UserAvailabilityStatus {
+  offline = "offline",
+  online = "online",
+}
+
+const userStatusSchema = z.object({
+  status: z.nativeEnum(UserAvailabilityStatus),
+});
+
 export const { schemas: userSchemas, $ref: $UserRef } = buildJsonSchemas(
   {
     createUserSignupSchema,
@@ -78,6 +87,7 @@ export const { schemas: userSchemas, $ref: $UserRef } = buildJsonSchemas(
     updateUserLanguageSchema,
     userEmailCheckSchema,
     pauseUserSchema,
+    userStatusSchema,
   },
   { $id: "userSchema" },
 );
@@ -92,3 +102,4 @@ export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 export type UpdateProfilePhotoSchema = z.infer<typeof updateProfilePhotoSchema>;
 export type userEmailCheckSchemaInput = z.infer<typeof userEmailCheckSchema>;
 export type PauseUserInput = z.infer<typeof pauseUserSchema>;
+export type UserStatusSchema = z.infer<typeof userStatusSchema>;
