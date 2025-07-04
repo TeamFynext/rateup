@@ -411,7 +411,8 @@ async function whatsappMessageHandler(
   }
   //handle dubplicate webhook
   const existingMessage = await getWaMessageByMessageId(
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id,
+    (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)
+      ?.messages?.[0]?.id,
     from,
   );
 
