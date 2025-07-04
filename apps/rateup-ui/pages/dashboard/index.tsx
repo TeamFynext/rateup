@@ -53,6 +53,7 @@ export default function DashboardHome() {
               valueColor="#009987"
               icon={<IconMessage width={30} height={30} color="#009987" />}
               iconBgColor="#00998733"
+              OnClickAction={"/dashboard/whatsapp/inbox?tab=New"}
             />
             <StatCards
               label="Active Campaigns"
@@ -60,6 +61,7 @@ export default function DashboardHome() {
               valueColor="#009987"
               icon={<IconSpeakerphone width={30} height={30} color="#009987" />}
               iconBgColor="#00998733"
+              OnClickAction={"/dashboard/campaign"}
             />
             <StatCards
               label="Active Flows"
@@ -67,6 +69,7 @@ export default function DashboardHome() {
               valueColor="#009987"
               icon={<IconWaveSine width={30} height={30} color="#009987" />}
               iconBgColor="#00998733"
+              OnClickAction={"/dashboard/whatsapp/flows"}
             />
             <StatCards
               label="Active Automations"
@@ -74,6 +77,7 @@ export default function DashboardHome() {
               valueColor="#009987"
               icon={<IconAutomation width={30} height={30} color="#009987" />}
               iconBgColor="#00998733"
+              OnClickAction={"/dashboard/whatsapp/automated-replies"}
             />
             <StatCards
               label="Loyalty Customers"
@@ -81,6 +85,7 @@ export default function DashboardHome() {
               valueColor="#004F98"
               icon={<IconUsers width={30} height={30} color="#004F98" />}
               iconBgColor="#004F9833"
+              OnClickAction={"/dashboard/loyalty/customer"}
             />
             <StatCards
               label="Active Surveys"
@@ -88,6 +93,7 @@ export default function DashboardHome() {
               valueColor="#004F98"
               icon={<PanelsTopLeft width={30} height={30} color="#004F98" />}
               iconBgColor="#004F9833"
+              OnClickAction={"/dashboard/surveys"}
             />
             <StatCards
               label="New Tickets"
@@ -95,6 +101,7 @@ export default function DashboardHome() {
               valueColor="#004F98"
               icon={<IconTicket width={30} height={30} color="#004F98" />}
               iconBgColor="#004F9833"
+              OnClickAction={"/dashboard/tickets"}
             />
             <StatCards
               label="Teams Created"
@@ -102,6 +109,7 @@ export default function DashboardHome() {
               valueColor="#004F98"
               icon={<IconUsersGroup width={30} height={30} color="#004F98" />}
               iconBgColor="#004F9833"
+              OnClickAction={"/dashboard/teams"}
             />
           </div>
         )}
@@ -133,6 +141,7 @@ export default function DashboardHome() {
                         createdAt={item.createdAt}
                         responseCount={item.responseCount}
                         type="flow"
+                        OnClickAction={"/dashboard/whatsapp/flows"}
                       />
                     ))}
                 </GridWrapper>
@@ -185,6 +194,7 @@ export default function DashboardHome() {
                         createdAt={item.createdAt}
                         responseCount={item.responseCount}
                         type="web"
+                        OnClickAction={"/dashboard/surveys"}
                       />
                     ))}
                 </GridWrapper>

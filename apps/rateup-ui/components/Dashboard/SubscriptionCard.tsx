@@ -1,4 +1,5 @@
 import React from "react";
+import { useRouter } from "next/router";
 
 import { Button } from "@mantine/core";
 import dayjs from "dayjs";
@@ -9,6 +10,7 @@ import useTranslations from "@/dictionaries/useTranslation";
 const SubscriptionCard = () => {
   const { data: subscription, isLoading } = useSubscription();
   const { translations } = useTranslations();
+  const router = useRouter();
 
   if (isLoading || !subscription) {
     return (
@@ -88,7 +90,11 @@ const SubscriptionCard = () => {
           </div>
 
           <div className="w-full flex justify-center items-center">
-            <Button>
+            <Button
+              onClick={() =>
+                router.push("/dashboard/settings?tab=account&view=billing")
+              }
+            >
               <div className="text-white text-sm font-medium">
                 {translations["Manage Subscription"] || "Manage Subscription"}
               </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useRouter } from "next/router";
 
 interface StatCardProps {
   label: string;
@@ -6,6 +7,7 @@ interface StatCardProps {
   icon: React.ReactNode;
   valueColor: string;
   iconBgColor: string;
+  OnClickAction?: any;
 }
 
 export const StatCards = ({
@@ -14,9 +16,14 @@ export const StatCards = ({
   icon,
   valueColor,
   iconBgColor,
+  OnClickAction,
 }: StatCardProps) => {
+  const router = useRouter();
   return (
-    <div className="bg-white shadow rounded-lg p-4 flex items-center border border-[#E2E5ED] justify-between transition-all duration-300 hover:border-[rgba(0,79,152,0.3)] hover:shadow-[0_0_2px_1px_rgba(0,79,152,0.3)]">
+    <div
+      className="bg-white cursor-pointer shadow rounded-lg p-4 flex items-center border border-[#E2E5ED] justify-between transition-all duration-300 hover:border-[rgba(0,79,152,0.3)] hover:shadow-[0_0_2px_1px_rgba(0,79,152,0.3)]"
+      onClick={() => router.push(`${OnClickAction}`)}
+    >
       <div>
         <div className="text-sm font-semibold text-[#343A40] mt-1">{label}</div>
         <div className={`text-4xl font-bold`} style={{ color: valueColor }}>
