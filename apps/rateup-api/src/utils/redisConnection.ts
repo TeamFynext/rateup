@@ -17,3 +17,5 @@ export const waCampaignDequeue = new Queue("waCampaignDequeue", { connection });
 
 export const waMessageQueue = new Queue("waMessageQueue", { connection });
 export const waStatusQueue = new Queue("wa-status-queue", { connection });
+
+export default connection;
