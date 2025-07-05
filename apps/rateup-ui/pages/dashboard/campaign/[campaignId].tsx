@@ -352,8 +352,8 @@ const StartCampaignCard = ({
   const schema = z
     .object({
       campaignSentAt: z.date().nullable(),
-      sentCampaignChoice: z.nativeEnum(SentCampaignEnum),
-      statuses: z.array(z.nativeEnum(CampaignParticipantStatus)).optional(),
+      sentCampaignChoice: z.enum(SentCampaignEnum),
+      statuses: z.array(z.enum(CampaignParticipantStatus)).optional(),
     })
     .check((ctx) => {
       const { value: values } = ctx;
@@ -776,7 +776,10 @@ function SendCampaignModal({
               placeholder={translations["Date"]}
               label={translations["Sent Campaign At"]}
               withAsterisk
-              {...form.getInputProps("campaignSentAt")}
+              value={form.values.campaignSentAt}
+              onChange={(date) =>
+                form.setFieldValue("campaignSentAt", new Date(date))
+              }
               minDate={new Date()}
             />
             <Text c="red" size="xs">
