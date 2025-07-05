@@ -6,7 +6,7 @@ import { updateLastLoggedInTime } from "../user/user.service";
 import { UserAvailabilityStatus } from "../user/user.schema";
 
 interface OverallStats {
-  newMessagesCount: number;
+  newChatCount: number;
   activeCampaignsCount: number;
   publishedFlowsCount: number;
   automationsCount: number;
@@ -20,11 +20,8 @@ export async function getOverallStats(
   userId: string,
 ): Promise<OverallStats> {
   const counts = await prisma.$queryRaw`SELECT
-  (SELECT COUNT(*)::INTEGER FROM "WaMessage" wm JOIN "Contact" c ON wm."contactId" = c.id 
-   WHERE c."orgId" = ${orgId}::uuid AND NOT(${userId}::TEXT = ANY(wm."readUsers"))
-   AND wm."waCreatedAt" > NOW() - INTERVAL '24 hours'
-   ) 
-   AS "newMessagesCount",
+  (SELECT COUNT(*)::INTEGER FROM "Contact" c WHERE c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."orgId" = ${orgId}::uuid) 
+   AS "newChatCount",
   (SELECT COUNT(*)::INTEGER FROM "Campaign" cp JOIN "Team" t ON cp."teamId" = t.id WHERE t."orgId" = ${orgId}::uuid AND cp."status" = ${CampaignStatus.ACTIVE}) AS "activeCampaignsCount",
   (SELECT COUNT(*)::INTEGER FROM "WaFlow" WHERE "orgId"=${orgId}::uuid AND "status" = ${WaFlowStatus.PUBLISHED}) AS "publishedFlowsCount",
   (SELECT COUNT(*)::INTEGER FROM "WaAutomatedReply" WHERE "orgId" = ${orgId}::uuid) AS "automationsCount",
