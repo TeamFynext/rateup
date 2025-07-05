@@ -1927,6 +1927,8 @@ const AssignNodeEditor: React.FC<
       teamId: "",
       assignedUserIds: [],
       choice: "manual",
+      teamName: "",
+      roundRobin: false,
     },
     validate: {
       teamId: isNotEmpty("required"),
@@ -1935,14 +1937,20 @@ const AssignNodeEditor: React.FC<
     },
     onValuesChange(values) {
       if (form.validate().hasErrors) return;
+      const teamName =
+        options?.data
+          ?.flatMap((user) => user.teams)
+          ?.find((team) => team.team_id === values.teamId)?.team_name ?? "";
       handleInputChange("assign", {
         ...typedData?.assign,
         teamId: values.teamId,
         assignedUserIds: values.assignedUserIds,
         choice: values.choice,
+        teamName: teamName,
       });
     },
   });
+
   const members = useMemo(
     () =>
       options?.data
@@ -1960,11 +1968,9 @@ const AssignNodeEditor: React.FC<
       typedData.assign?.assignedUserIds ?? [],
     );
     form.setFieldValue("choice", typedData.assign?.choice || "manual");
-  }, [
-    typedData.assign?.assignedUserIds,
-    typedData.assign?.choice,
-    typedData.assign?.teamId,
-  ]);
+    form.setFieldValue("teamName", typedData.assign?.teamName || "");
+    form.setFieldValue("roundRobin", typedData.assign?.roundRobin || false);
+  }, [typedData.assign]);
 
   return (
     <Stack gap="xs">
@@ -2015,6 +2021,17 @@ const AssignNodeEditor: React.FC<
                 searchable
               />
             )}
+            <Switch
+              label="Enable Round Robin Assignment"
+              checked={typedData.assign?.roundRobin ?? false}
+              onChange={(e) => {
+                handleInputChange("assign", {
+                  ...typedData.assign,
+                  roundRobin: e.target.checked,
+                });
+              }}
+              description="Assign chats to team members in a round robin fashion"
+            />
           </Stack>
         </>
       )}

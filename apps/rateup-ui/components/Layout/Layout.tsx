@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import {
@@ -108,9 +109,7 @@ const SubNavLinks = ({ links, activeSubLink, setActiveSubLink, router }) => {
           data-active={link.link === activeSubLink || undefined}
           w={60}
         >
-          <Box h={35} w={22} mx={"auto"}>
-            <link.icon size={22} stroke={1.5} />
-          </Box>
+          <link.icon size={22} stroke={1.5} />
         </UnstyledButton>
       </Tooltip>
     ));
@@ -118,7 +117,7 @@ const SubNavLinks = ({ links, activeSubLink, setActiveSubLink, router }) => {
   const linksText = links
     .filter((d) => !d?.disabled)
     .map((link, index) => (
-      <a
+      <Link
         className={classes.link}
         data-active={link.link === activeSubLink || undefined}
         href="#"
@@ -131,7 +130,7 @@ const SubNavLinks = ({ links, activeSubLink, setActiveSubLink, router }) => {
         style={{ paddingLeft: 0 }}
       >
         {link.label}
-      </a>
+      </Link>
     ));
 
   return { linksIcon, linksText };
