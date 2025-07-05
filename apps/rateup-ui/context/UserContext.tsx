@@ -1,4 +1,7 @@
 import { createContext, ReactNode, useContext, useState } from "react";
+
+import { UserAvailabilityStatus } from "@/backend/user/user.api";
+
 import { orgWsMessage } from "../types/global";
 
 export interface User {
@@ -17,6 +20,7 @@ export interface User {
     publicKey: string;
     privateKey: string;
   };
+  status: UserAvailabilityStatus;
 }
 
 interface UserContextProps {

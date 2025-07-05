@@ -4,12 +4,18 @@ import { useRouter } from "next/router";
 import {
   AppShell,
   Avatar,
+  Badge,
   Box,
   Burger,
+  Divider,
   Flex,
   Group,
   HoverCard,
+  Indicator,
+  rgba,
   ScrollAreaAutosize,
+  Stack,
+  Switch,
   Text,
   Title,
   Tooltip,
@@ -29,8 +35,14 @@ import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
 import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
-import { IUserInfoApiResponse } from "../../backend/user/user.api";
-import { useUserInfo } from "../../backend/user/user.query";
+import {
+  IUserInfoApiResponse,
+  UserAvailabilityStatus,
+} from "../../backend/user/user.api";
+import {
+  useUpdateUserAvailabilityStatus,
+  useUserInfo,
+} from "../../backend/user/user.query";
 import { NavControlContext } from "../../context/NavControlContext";
 import { useUser, useWsData } from "../../context/UserContext";
 import useLocalStorage from "../../hooks/localStorage";
@@ -231,41 +243,106 @@ const Navbar = ({
   isPending,
   user,
 }) => {
+  const updateUserStatus = useUpdateUserAvailabilityStatus();
   if (isPending) return <NavbarSkeleton />;
   return (
     <nav className={classes.navbar}>
       <div className={classes.wrapper}>
         <div className={classes.aside}>
           <div>
-            <div className={classes.logo}>
-              <HoverCard width={280} shadow="md">
-                <HoverCard.Target>
-                  <Avatar
-                    name={user?.orgName}
-                    color="initials"
-                    src={getFileUrlFromKey(user?.orgLogo)}
-                  />
-                </HoverCard.Target>
-                <HoverCard.Dropdown>
-                  <Box>
-                    <Text fw={500} size="sm" mb={"xs"}>
-                      {user?.userName || "User"}
-                    </Text>
+            <Stack gap={0} pb={"sm"}>
+              <div className={classes.logo}>
+                <HoverCard width={280} shadow="md">
+                  <HoverCard.Target>
+                    <Indicator
+                      color={
+                        user?.status === UserAvailabilityStatus.online
+                          ? "#69f0ae"
+                          : "#cacaca"
+                      }
+                      processing={
+                        user?.status === UserAvailabilityStatus.online
+                      }
+                      size={8}
+                    >
+                      <Avatar
+                        name={user?.orgName}
+                        color="initials"
+                        src={getFileUrlFromKey(user?.orgLogo)}
+                      />
+                    </Indicator>
+                  </HoverCard.Target>
+                  <HoverCard.Dropdown>
                     <Box>
-                      <Text size="xs" c="dimmed">
-                        Email: {user?.email}
+                      <Text fw={500} size="sm" mb={"xs"}>
+                        {user?.userName || "User"}
                       </Text>
-                      <Text size="xs" c="dimmed">
-                        Org: {user?.orgName || "No organization"}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        Role: {user?.role || "User"}
-                      </Text>
+                      <Box>
+                        <Text size="xs" c="dimmed">
+                          Email: {user?.email}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          Org: {user?.orgName || "No organization"}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          Role: {user?.role || "User"}
+                        </Text>
+                      </Box>
                     </Box>
-                  </Box>
-                </HoverCard.Dropdown>
-              </HoverCard>
-            </div>
+                  </HoverCard.Dropdown>
+                </HoverCard>
+              </div>
+              <Stack justify="center" align="center" gap={3} p={0}>
+                <Switch
+                  color={
+                    user?.status === UserAvailabilityStatus.online
+                      ? "#099268"
+                      : "grey"
+                  }
+                  size="xs"
+                  styles={{
+                    track: {
+                      backgroundColor:
+                        user?.status === UserAvailabilityStatus.online &&
+                        rgba("#099268", 0.15),
+                      width: 40,
+                    },
+                    thumb: {
+                      backgroundColor:
+                        user?.status === UserAvailabilityStatus.online &&
+                        "#099268",
+                    },
+                  }}
+                  checked={user?.status === UserAvailabilityStatus.online}
+                  onChange={(e) => {
+                    if (e.currentTarget.checked) {
+                      updateUserStatus.mutate({
+                        status: UserAvailabilityStatus.online,
+                      });
+                    } else {
+                      updateUserStatus.mutate({
+                        status: UserAvailabilityStatus.offline,
+                      });
+                    }
+                  }}
+                />
+                <Badge
+                  w={50}
+                  tt={"capitalize"}
+                  color={
+                    user?.status === UserAvailabilityStatus.online
+                      ? "#099268"
+                      : "grey"
+                  }
+                  radius={"xs"}
+                  size={"xs"}
+                  variant="light"
+                >
+                  {user?.status}
+                </Badge>
+              </Stack>
+              <Divider />
+            </Stack>
             <ScrollAreaAutosize mah={"calc(100dvh - 150px)"}>
               {mainLinks}
             </ScrollAreaAutosize>
