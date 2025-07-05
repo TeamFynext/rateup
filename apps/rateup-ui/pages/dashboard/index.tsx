@@ -35,7 +35,7 @@ export default function DashboardHome() {
   const { data: overallData, isLoading: overallStatsLoading } =
     useOverallStats();
   return (
-    <div className="px-2">
+    <div className="px-2 pt-4 md:pt-0 lg:pt-0">
       <div className="text-[#343A40] text-xl font-semibold">Overview</div>
       <div className="space-y-10">
         {/* dashboard stats */}
@@ -115,109 +115,123 @@ export default function DashboardHome() {
         )}
 
         {/* Active Flows Section */}
-        <section>
-          <div className="flex items-center gap-1 mb-2">
-            <div className="p-1.5 rounded-md bg-[#00998733]">
-              <IconWaveSine color="#009987" />
+        {activeSurveyLoading ||
+        activeSurveyData?.filter((item: any) => item.type === "waFlow").length >
+          0 ? (
+          <section>
+            <div className="flex items-center gap-1 mb-2">
+              <div className="p-1.5 rounded-md bg-[#00998733]">
+                <IconWaveSine color="#009987" />
+              </div>
+              <h2 className="text-xl font-semibold text-black">Active Flows</h2>
             </div>
-            <h2 className="text-xl font-semibold text-black">Active Flows</h2>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            {activeSurveyLoading ? (
-              <GridWrapper>
-                {Array.from({ length: 10 }).map((_, idx) => (
-                  <SurveyDashCardSkeleton key={`flow-skeleton-${idx}`} />
-                ))}
-              </GridWrapper>
-            ) : (
-              <>
+
+            <div className="flex flex-col items-center gap-2">
+              {activeSurveyLoading ? (
                 <GridWrapper>
-                  {activeSurveyData
-                    ?.filter((item: any) => item.type === "waFlow")
-                    .map((item: any) => (
-                      <SurveyDashCard
-                        key={item.id}
-                        title={item.title}
-                        createdAt={item.createdAt}
-                        responseCount={item.responseCount}
-                        type="flow"
-                        OnClickAction={"/dashboard/whatsapp/flows"}
-                      />
-                    ))}
+                  {Array.from({ length: 10 }).map((_, idx) => (
+                    <SurveyDashCardSkeleton key={`flow-skeleton-${idx}`} />
+                  ))}
                 </GridWrapper>
-                <div className="mt-4 flex justify-center">
-                  <Button
-                    variant="filled"
-                    color="#009987"
-                    radius="md"
-                    size="sm"
-                    className="bg-[#009987] hover:bg-[#00b29f]"
-                    onClick={() => router.push("/dashboard/whatsapp/flows")}
-                  >
-                    <div className="flex items-center gap-1">
-                      Go to All Flows
-                      <span>
-                        <MoveRight color="white" />
-                      </span>
-                    </div>
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </section>
+              ) : (
+                <>
+                  <GridWrapper>
+                    {activeSurveyData
+                      ?.filter((item: any) => item.type === "waFlow")
+                      .map((item: any) => (
+                        <SurveyDashCard
+                          key={item.id}
+                          title={item.title}
+                          createdAt={item.createdAt}
+                          responseCount={item.responseCount}
+                          type="flow"
+                          OnClickAction={"/dashboard/whatsapp/flows"}
+                        />
+                      ))}
+                  </GridWrapper>
+
+                  <div className="mt-4 flex justify-center">
+                    <Button
+                      variant="filled"
+                      color="#009987"
+                      radius="md"
+                      size="sm"
+                      className="bg-[#009987] hover:bg-[#00b29f]"
+                      onClick={() => router.push("/dashboard/whatsapp/flows")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Go to All Flows
+                        <span>
+                          <MoveRight color="white" />
+                        </span>
+                      </div>
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+        ) : null}
 
         {/* Active Surveys Section */}
-        <section>
-          <div className="flex items-center gap-1 mb-2">
-            <div className="p-1.5 rounded-md bg-[#004F9833]">
-              <PanelsTopLeft color="#004F98" />
+        {activeSurveyLoading ||
+        activeSurveyData?.filter((item: any) => item.type === "web").length >
+          0 ? (
+          <section>
+            <div className="flex items-center gap-1 mb-2">
+              <div className="p-1.5 rounded-md bg-[#004F9833]">
+                <PanelsTopLeft color="#004F98" />
+              </div>
+              <h2 className="text-xl font-semibold text-black">
+                Active Surveys
+              </h2>
             </div>
-            <h2 className="text-xl font-semibold text-black">Active Surveys</h2>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            {activeSurveyLoading ? (
-              <GridWrapper>
-                {Array.from({ length: 10 }).map((_, idx) => (
-                  <SurveyDashCardSkeleton key={`web-skeleton-${idx}`} />
-                ))}
-              </GridWrapper>
-            ) : (
-              <>
+
+            <div className="flex flex-col items-center gap-2">
+              {activeSurveyLoading ? (
                 <GridWrapper>
-                  {activeSurveyData
-                    ?.filter((item: any) => item.type === "web")
-                    .map((item: any) => (
-                      <SurveyDashCard
-                        key={item.id}
-                        title={item.title}
-                        createdAt={item.createdAt}
-                        responseCount={item.responseCount}
-                        type="web"
-                        OnClickAction={"/dashboard/surveys"}
-                      />
-                    ))}
+                  {Array.from({ length: 10 }).map((_, idx) => (
+                    <SurveyDashCardSkeleton key={`web-skeleton-${idx}`} />
+                  ))}
                 </GridWrapper>
-                <div className="mt-4 flex justify-center">
-                  <Button
-                    variant="filled"
-                    radius="md"
-                    size="sm"
-                    className="bg-[#004f98] hover:bg-[#0063b1]"
-                    onClick={() => router.push("/dashboard/surveys")}
-                  >
-                    <div className="flex items-center gap-1">
-                      Go to All Surveys
-                      <span>
-                        <MoveRight color="white" />
-                      </span>
-                    </div>
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </section>
+              ) : (
+                <>
+                  <GridWrapper>
+                    {activeSurveyData
+                      ?.filter((item: any) => item.type === "web")
+                      .map((item: any) => (
+                        <SurveyDashCard
+                          key={item.id}
+                          title={item.title}
+                          createdAt={item.createdAt}
+                          responseCount={item.responseCount}
+                          type="web"
+                          OnClickAction={"/dashboard/surveys"}
+                        />
+                      ))}
+                  </GridWrapper>
+
+                  <div className="mt-4 flex justify-center">
+                    <Button
+                      variant="filled"
+                      radius="md"
+                      size="sm"
+                      className="bg-[#004f98] hover:bg-[#0063b1]"
+                      onClick={() => router.push("/dashboard/surveys")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Go to All Surveys
+                        <span>
+                          <MoveRight color="white" />
+                        </span>
+                      </div>
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+        ) : null}
 
         <div className="flex flex-col lg:flex-row gap-4 w-full">
           <div className="w-full lg:w-[65%]">
