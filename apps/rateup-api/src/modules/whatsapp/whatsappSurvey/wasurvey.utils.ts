@@ -30,6 +30,9 @@ import {
   WhatsAppMessage,
 } from "./node-types";
 import { ContactCore } from "../../contact/contact.schema";
+import connection from "../../../utils/redisConnection";
+import crypto from "crypto";
+
 dayjs.extend(customParseFormat);
 
 const smileyEmojiMap = {
@@ -1181,3 +1184,32 @@ export enum WA_SUBSCRIBE_STATUS {
   SUBSCRIBE = "subscribe",
   STOP = "stop",
 }
+
+function getHashForMembers(memberIds) {
+  return crypto.createHash("md5").update(memberIds.join(",")).digest("hex");
+}
+
+export const assignChat = async (
+  teamId: string,
+  memberIds: string[],
+  automationId: string,
+) => {
+  const memberHash = getHashForMembers(memberIds);
+  const pointerKey = `round_robin_index:${teamId}:${automationId}:${memberHash}`;
+  // Get current index from Redis, or start from 0
+  let indexStr = await connection.get(pointerKey);
+  let index = indexStr ? parseInt(indexStr) : 0;
+
+  // Fallback safety check
+  if (index >= memberIds.length) {
+    index = 0;
+    await connection.set(pointerKey, index);
+  }
+  // Pick member
+  const assignedMember = memberIds[index];
+
+  // Increment index and store back in Redis
+  await connection.set(pointerKey, (index + 1) % memberIds.length);
+
+  return assignedMember;
+};

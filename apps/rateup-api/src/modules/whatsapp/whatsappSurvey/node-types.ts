@@ -231,6 +231,8 @@ export interface AssignNodeData extends BaseNodeData {
     assignType: "staff" | "me";
     assignedUserIds: Array<string>;
     teamId: string;
+    teamName?: string; // Optional team name for display purposes
+    roundRobin: boolean;
   };
 }
 
