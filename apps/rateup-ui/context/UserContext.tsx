@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useContext, useState } from "react";
 
+import { WaAssignedChatPermission } from "@/types/enums";
 import { UserAvailabilityStatus } from "@/backend/user/user.api";
 
 import { orgWsMessage } from "../types/global";
@@ -20,6 +21,7 @@ export interface User {
     publicKey: string;
     privateKey: string;
   };
+  waAssignedChatPermission: WaAssignedChatPermission;
   status: UserAvailabilityStatus;
 }
 

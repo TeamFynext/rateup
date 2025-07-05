@@ -19,6 +19,7 @@ import {
   StripeProductType,
   SurveyType,
   SurveyVariableType,
+  WaAssignedChatPermission,
   WaAutomatedReplyMatchType,
   WaAutomatedReplyResponseType,
   WaFlowFormElementType,
@@ -363,6 +364,7 @@ declare global {
     isPaused?: boolean;
     pausedBy?: string;
     isOrgPaused?: boolean;
+    waAssignedChatPermission: WaAssignedChatPermission;
     status: UserAvailabilityStatus;
   };
 
