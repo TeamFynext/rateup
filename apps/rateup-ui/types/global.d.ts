@@ -1,4 +1,6 @@
 // Any modification to this file should be reflected in the backend
+import { UserAvailabilityStatus } from "@/backend/user/user.api";
+
 import { WaGetMessagesBody } from "../backend/whatsapp/inbox/message/wamessage.api";
 import {
   CampaignStatus,
@@ -363,6 +365,7 @@ declare global {
     pausedBy?: string;
     isOrgPaused?: boolean;
     waAssignedChatPermission: WaAssignedChatPermission;
+    status: UserAvailabilityStatus;
   };
 
   interface UserInfoQueryData {

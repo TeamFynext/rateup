@@ -86,9 +86,6 @@
   justify-content: center;
   height: 60px;
   padding-top: var(--mantine-spacing-md);
-  border-bottom: 1px solid
-    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-7));
-  margin-bottom: var(--mantine-spacing-xs);
   background-color: var(--mantine-color-body);
 }
 

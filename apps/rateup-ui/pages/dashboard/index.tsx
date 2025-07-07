@@ -48,8 +48,8 @@ export default function DashboardHome() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCards
-              label="New Messages"
-              value={overallData?.newMessagesCount ?? 0}
+              label="New Conversations"
+              value={overallData?.newChatCount ?? 0}
               valueColor="#009987"
               icon={<IconMessage width={30} height={30} color="#009987" />}
               iconBgColor="#00998733"
