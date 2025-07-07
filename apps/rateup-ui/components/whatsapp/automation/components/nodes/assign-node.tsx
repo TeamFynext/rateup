@@ -28,6 +28,26 @@ function AssignNode(props: NodeProps & { data: AssignNodeData }) {
             </Text>
             <Text size="sm">{data.assign?.choice}</Text>
           </Group>
+          {data.assign?.assignType === "staff" && (
+            <>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  Team Name:
+                </Text>
+                <Text size="sm">{data.assign?.teamName}</Text>
+              </Group>
+              {data.assign?.choice === "all" && (
+                <Group justify="space-between">
+                  <Text size="sm" c="dimmed">
+                    Round Robin:
+                  </Text>
+                  <Text size="sm">
+                    {data.assign?.roundRobin ? "Yes" : "No"}
+                  </Text>
+                </Group>
+              )}
+            </>
+          )}
         </Stack>
       </Box>
     </BaseNode>

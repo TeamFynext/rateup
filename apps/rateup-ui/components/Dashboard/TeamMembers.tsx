@@ -17,7 +17,11 @@ function TeamMembers() {
   const { data: teamMemberData } = useTeamsByUser();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const teams = useMemo(() => teamMemberData?.data || [], [teamMemberData]);
-  const { data: teamData, isLoading } = useTeamMemberStats(selectedTeamId);
+  const {
+    data: teamData,
+    isLoading,
+    isFetching,
+  } = useTeamMemberStats(selectedTeamId);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -71,8 +75,8 @@ function TeamMembers() {
             </tr>
           </thead>
           <tbody>
-            {isLoading
-              ? Array.from({ length: 5 }).map((_, i) => (
+            {isLoading || isFetching
+              ? Array.from({ length: 4 }).map((_, i) => (
                   <TeamMemberRowSkeleton key={`skeleton-${i}`} />
                 ))
               : teamData?.map((member, index) => (

@@ -4,7 +4,11 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { showErrorToast, showSuccessToast } from "../../utils/notifications";
+import {
+  showErrorToast,
+  showLoadingToast,
+  showSuccessToast,
+} from "../../utils/notifications";
 import {
   changeUserPassword,
   checkEmailExist,
@@ -19,10 +23,12 @@ import {
   IUpdateUserLanguage,
   updateActiveStatus,
   updateRecipeName,
+  updateUserAvailabilityStatus,
   updateUserLanguage,
   updateUserPause,
   updateUserProfile,
   updateUserProfilePhoto,
+  UserAvailabilityStatus,
 } from "./user.api";
 
 export const useGetUserProfile = () =>
@@ -290,6 +296,30 @@ export const useUpdateUserPause = () => {
     },
     onError: () => {
       showErrorToast("Error in updating pause status");
+    },
+  });
+};
+
+export const useUpdateUserAvailabilityStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { status: UserAvailabilityStatus }) => {
+      showLoadingToast("Updating status...", "user-status", true, "Updating");
+      return updateUserAvailabilityStatus(data);
+    },
+    onSuccess: () => {
+      showSuccessToast("Status updated", "user-status", <IconCheck />, true);
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["team-member-stats"] });
+    },
+    onError: () => {
+      showErrorToast(
+        "Error in updating status",
+        "user-status",
+        <IconX />,
+        true,
+      );
     },
   });
 };
