@@ -97,15 +97,20 @@ export async function getTeamMemberStats(
    WHERE tm."teamId" = ${teamId}::uuid;`;
   const members = [];
   for (const user of users) {
-    const sessionHandles = await Session.getAllSessionHandlesForUser(user.id);
-    if (!user.lastLoggedInAt) {
+    let sessionHandles = await Session.getAllSessionHandlesForUser(user.id);
+    if (!user.lastLoggedInAt || dayjs(user.lastLoggedInAt).year() <= 2020) {
       let lastLoggedIn = 0;
       for (const session of sessionHandles) {
         const res = await Session.getSessionInformation(session);
         lastLoggedIn = Math.max(lastLoggedIn, res.timeCreated);
       }
-      user.lastLoggedInAt = dayjs(lastLoggedIn).utc().format();
-      await updateLastLoggedInTime(user.id, user.lastLoggedInAt);
+      const lastLoggedInAt = lastLoggedIn
+        ? dayjs(lastLoggedIn).utc().format()
+        : null;
+      if (lastLoggedInAt || (user.lastLoggedInAt && !lastLoggedInAt))
+        await updateLastLoggedInTime(user.id, lastLoggedInAt);
+
+      user.lastLoggedInAt = lastLoggedInAt;
     }
     members.push({
       ...user,
