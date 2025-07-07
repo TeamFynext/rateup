@@ -120,6 +120,7 @@ import {
 } from "../../mobileNotification/mobile.service";
 import {
   assignWaMessageToUser,
+  getAssignedUsersCountForContactByTeam,
   getWaMessageByMessageId,
 } from "../inbox/message/wamessage.service";
 import { getUserIdsByTeamId } from "../../user/user.service";
@@ -866,6 +867,17 @@ export async function processNextNode(
           assignData?.assign?.choice === "all" &&
           (assignData?.assign?.roundRobin || false)
         ) {
+          const assignedCount = await getAssignedUsersCountForContactByTeam(
+            contact.id,
+            teamId,
+          );
+          if (assignedCount > 0) {
+            log.warn(
+              `Skipping assignment: Contact ${contact.id} already has assigned users in team ${teamId}`,
+            );
+            assignedUserIds = [];
+            return;
+          }
           const users = await getUserIdsByTeamId(teamId);
           const assigned = await assignChat(teamId, users, automation?.id);
           assignedUserIds = [assigned];
@@ -873,6 +885,17 @@ export async function processNextNode(
           assignData?.assign?.choice === "manual" &&
           (assignData?.assign?.roundRobin || false)
         ) {
+          const assignedCount = await getAssignedUsersCountForContactByTeam(
+            contact.id,
+            teamId,
+          );
+          if (assignedCount > 0) {
+            log.warn(
+              `Skipping assignment: Contact ${contact.id} already has assigned users in team ${teamId}`,
+            );
+            assignedUserIds = [];
+            return;
+          }
           const assigned = await assignChat(
             teamId,
             assignedUserIds,
