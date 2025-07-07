@@ -680,6 +680,18 @@ export async function getAssignedUserForContact(contactId) {
   });
 }
 
+export async function getAssignedUsersCountForContactByTeam(
+  contactId: string,
+  teamId: string,
+) {
+  return await prisma.waInboxAssign.count({
+    where: {
+      contactId,
+      teamId,
+    },
+  });
+}
+
 export async function deleteAssignedUsersforContact(contactId) {
   return await prisma.waInboxAssign.deleteMany({
     where: {
