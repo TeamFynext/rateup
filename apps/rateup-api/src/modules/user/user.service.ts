@@ -6,6 +6,7 @@ import {
   updateUserLanguageSchema,
   UpdateProfileSchema,
   userInfoParams,
+  UserAvailabilityStatus,
 } from "./user.schema";
 import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
@@ -216,6 +217,14 @@ export async function getLoggedUserInfo(
       isPaused: true,
       pausedBy: true,
       prefLanguage: true,
+      orgMember: {
+        where: {
+          orgId,
+        },
+        select: {
+          status: true,
+        },
+      },
     },
   });
 
@@ -263,6 +272,7 @@ export async function getLoggedUserInfo(
     isOrgPaused: orgData?.isPaused,
     prefLanguage: profile?.prefLanguage,
     waAssignedChatPermission: orgData?.waAssignedChatPermission,
+    status: profile?.orgMember?.[0]?.status,
   };
 }
 
@@ -283,6 +293,16 @@ export async function getLoggedUserProfile(
 
   let profile = await prisma.user.findUnique({
     where: { id: userId },
+    include: {
+      orgMember: {
+        where: {
+          orgId: accessTokenPayload.orgId,
+        },
+        select: {
+          status: true,
+        },
+      },
+    },
   });
   //let passwordlessLogin = await PasswordLess.getUserById({ userId });
   //STT  update above code
@@ -290,10 +310,12 @@ export async function getLoggedUserProfile(
   let passwordlessLogin = null;
 
   //userInfo = await supertokens.getUser(userId)
+  const { orgMember, ...rest } = profile;
 
   let userProfileData = {
     role,
-    ...profile,
+    ...rest,
+    status: orgMember[0]?.status,
     passwordlessLogin: !!passwordlessLogin,
   };
 
@@ -565,4 +587,22 @@ export async function getUserIdsByTeamId(teamId: string) {
     },
   });
   return teamMembers.map((member) => member.userId);
+}
+
+export async function updateUserAvailablityStatus(
+  userId: string,
+  orgId: string,
+  status: UserAvailabilityStatus,
+) {
+  await prisma.orgMember.update({
+    where: {
+      userId_orgId: {
+        userId,
+        orgId,
+      },
+    },
+    data: {
+      status,
+    },
+  });
 }

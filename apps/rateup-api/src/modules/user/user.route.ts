@@ -11,11 +11,13 @@ import {
   updateProfilePhotoHandler,
   updateRecipeNameHandler,
   updateUserActiveStatusHandler,
+  updateUserAvailabilityStatusHandler,
   updateUserPrefLanguageHandler,
 } from "./user.controller";
 import { $UserRef } from "./user.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
 import { $Sref } from "../survey/survey.schema";
+import { checkSession } from "../../utils/checkSession";
 
 export async function userRoutes(server: FastifyInstance) {
   server.get(
@@ -123,5 +125,16 @@ export async function userRoutes(server: FastifyInstance) {
       },
     },
     pauseUserHandler,
+  );
+
+  server.put(
+    "/status",
+    {
+      preHandler: [checkSession],
+      schema: {
+        body: $UserRef("userStatusSchema"),
+      },
+    },
+    updateUserAvailabilityStatusHandler,
   );
 }
