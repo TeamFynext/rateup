@@ -659,7 +659,7 @@ export async function assignWaMessageToUser(
 
   const newUsers = data.assignedUserIds.filter(async (userId) => {
     if (!existingUsers.some((user) => user.assignedUserId === userId)) {
-      if (!data.assignOfflineUsers) {
+      if (data.assignIfOnline) {
         const user = await prisma.orgMember.findUnique({
           where: {
             userId_orgId: {
