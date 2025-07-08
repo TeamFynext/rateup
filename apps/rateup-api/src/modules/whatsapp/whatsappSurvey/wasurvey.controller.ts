@@ -908,11 +908,15 @@ export async function processNextNode(
         }
         // Only assign if we have user IDs and a team
         if (assignedUserIds.length > 0 && teamId && contact?.id) {
-          await assignWaMessageToUser({
-            assignedUserIds,
-            teamId,
-            contactId: contact.id,
-          });
+          await assignWaMessageToUser(
+            {
+              assignedUserIds,
+              teamId,
+              contactId: contact.id,
+              assignIfOnline: assignData?.assign?.assignIfOnline ?? true,
+            },
+            orgId,
+          );
         } else {
           log.warn(
             `Assignment skipped: assignedUserIds=${JSON.stringify(

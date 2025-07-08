@@ -389,7 +389,7 @@ export async function assignWaMessageHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await assignWaMessageToUser(request.body);
+    const res = await assignWaMessageToUser(request.body, request.user.orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
