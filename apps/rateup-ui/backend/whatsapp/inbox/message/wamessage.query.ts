@@ -97,6 +97,8 @@ export const useAssignInboxToUer = (filterData) => {
       qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
       qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
       qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      qc.invalidateQueries({ queryKey: ["notification"] });
+      qc.invalidateQueries({ queryKey: ["notificationCount"] });
       showSuccessToast("Assigned successfully");
     },
     onError: (e) => {

@@ -2,6 +2,7 @@
 import { useRouter } from "next/router";
 
 import {
+  ActionIcon,
   AppShell,
   Avatar,
   Box,
@@ -155,7 +156,7 @@ const LastLinks = ({
     >
       <UnstyledButton
         onClick={() => {
-          if (link?.label !== "Dark Mode") {
+          if (link?.label !== "Dark Mode" && link?.label !== "Notifications") {
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
             router.push(link?.children[0]?.link);
