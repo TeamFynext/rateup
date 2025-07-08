@@ -243,6 +243,20 @@ const Navbar = ({
   user,
 }) => {
   const updateUserStatus = useUpdateUserAvailabilityStatus();
+  const [status, setStatus] = useState(user?.status);
+  useEffect(() => {
+    if (status !== user?.status) {
+      updateUserStatus.mutate({
+        status,
+      });
+    }
+  }, [status]);
+
+  useEffect(() => {
+    if (user?.status && user?.status !== status) {
+      setStatus(user?.status);
+    }
+  }, [user]);
   if (isPending) return <NavbarSkeleton />;
   return (
     <nav className={classes.navbar}>
@@ -294,7 +308,7 @@ const Navbar = ({
               <Stack justify="center" align="center" gap={3} p={0}>
                 <Switch
                   color={
-                    user?.status === UserAvailabilityStatus.online
+                    status === UserAvailabilityStatus.online
                       ? "#099268"
                       : "grey"
                   }
@@ -302,34 +316,29 @@ const Navbar = ({
                   styles={{
                     track: {
                       backgroundColor:
-                        user?.status === UserAvailabilityStatus.online &&
+                        status === UserAvailabilityStatus.online &&
                         rgba("#099268", 0.15),
                       width: 40,
                     },
                     thumb: {
                       backgroundColor:
-                        user?.status === UserAvailabilityStatus.online &&
-                        "#099268",
+                        status === UserAvailabilityStatus.online && "#099268",
                     },
                   }}
-                  checked={user?.status === UserAvailabilityStatus.online}
+                  checked={status === UserAvailabilityStatus.online}
                   onChange={(e) => {
-                    if (e.currentTarget.checked) {
-                      updateUserStatus.mutate({
-                        status: UserAvailabilityStatus.online,
-                      });
-                    } else {
-                      updateUserStatus.mutate({
-                        status: UserAvailabilityStatus.offline,
-                      });
-                    }
+                    setStatus(
+                      e.currentTarget.checked
+                        ? UserAvailabilityStatus.online
+                        : UserAvailabilityStatus.offline,
+                    );
                   }}
                 />
                 <Badge
                   w={50}
                   tt={"capitalize"}
                   color={
-                    user?.status === UserAvailabilityStatus.online
+                    status === UserAvailabilityStatus.online
                       ? "#099268"
                       : "grey"
                   }
@@ -337,7 +346,7 @@ const Navbar = ({
                   size={"xs"}
                   variant="light"
                 >
-                  {user?.status}
+                  {status}
                 </Badge>
               </Stack>
               <Divider />
