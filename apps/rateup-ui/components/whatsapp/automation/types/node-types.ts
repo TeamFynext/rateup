@@ -222,6 +222,7 @@ export interface AssignNodeData extends BaseNodeData {
     teamId: string;
     teamName?: string; // Optional team name for display purposes
     roundRobin: boolean;
+    assignIfOnline: boolean;
   };
 }
 

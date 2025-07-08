@@ -24,6 +24,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import SessionReact from "supertokens-auth-react/recipe/session";
@@ -55,6 +56,19 @@ import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
 import { getNavTopData } from "./Navbar/navbar.constants";
 
+const showOfflineNotification = (status) => {
+  if (status === UserAvailabilityStatus.offline) {
+    notifications.show({
+      color: "yellow",
+      title: "You are offline",
+      message:
+        "You are currently offline. Please switch to online to continue.",
+      withCloseButton: true,
+      position: "top-center",
+      id: "offline-notification",
+    });
+  }
+};
 // Define interface for link items
 interface NavLinkItem {
   label: string;
@@ -71,6 +85,7 @@ const MainNavLinks = ({
   router,
   open,
   setActiveSubLink,
+  status,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -84,6 +99,7 @@ const MainNavLinks = ({
         onClick={() => {
           setActiveMainLink(link.label);
           setActiveSubLink(link?.children[0]?.link);
+          showOfflineNotification(status);
           open();
           if (link.link && !link?.disabled) {
             router.push(link.link);
@@ -155,6 +171,7 @@ const LastLinks = ({
   setActiveMainLink,
   setActiveSubLink,
   router,
+  status,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -169,6 +186,7 @@ const LastLinks = ({
           if (link?.label !== "Dark Mode") {
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
+            showOfflineNotification(status);
             router.push(link?.children[0]?.link);
           }
         }}
@@ -243,6 +261,20 @@ const Navbar = ({
   user,
 }) => {
   const updateUserStatus = useUpdateUserAvailabilityStatus();
+  const [status, setStatus] = useState(user?.status);
+  useEffect(() => {
+    if (status !== user?.status) {
+      updateUserStatus.mutate({
+        status,
+      });
+    }
+  }, [status]);
+
+  useEffect(() => {
+    if (user?.status && user?.status !== status) {
+      setStatus(user?.status);
+    }
+  }, [user]);
   if (isPending) return <NavbarSkeleton />;
   return (
     <nav className={classes.navbar}>
@@ -294,7 +326,7 @@ const Navbar = ({
               <Stack justify="center" align="center" gap={3} p={0}>
                 <Switch
                   color={
-                    user?.status === UserAvailabilityStatus.online
+                    status === UserAvailabilityStatus.online
                       ? "#099268"
                       : "grey"
                   }
@@ -302,34 +334,29 @@ const Navbar = ({
                   styles={{
                     track: {
                       backgroundColor:
-                        user?.status === UserAvailabilityStatus.online &&
+                        status === UserAvailabilityStatus.online &&
                         rgba("#099268", 0.15),
                       width: 40,
                     },
                     thumb: {
                       backgroundColor:
-                        user?.status === UserAvailabilityStatus.online &&
-                        "#099268",
+                        status === UserAvailabilityStatus.online && "#099268",
                     },
                   }}
-                  checked={user?.status === UserAvailabilityStatus.online}
+                  checked={status === UserAvailabilityStatus.online}
                   onChange={(e) => {
-                    if (e.currentTarget.checked) {
-                      updateUserStatus.mutate({
-                        status: UserAvailabilityStatus.online,
-                      });
-                    } else {
-                      updateUserStatus.mutate({
-                        status: UserAvailabilityStatus.offline,
-                      });
-                    }
+                    setStatus(
+                      e.currentTarget.checked
+                        ? UserAvailabilityStatus.online
+                        : UserAvailabilityStatus.offline,
+                    );
                   }}
                 />
                 <Badge
                   w={50}
                   tt={"capitalize"}
                   color={
-                    user?.status === UserAvailabilityStatus.online
+                    status === UserAvailabilityStatus.online
                       ? "#099268"
                       : "grey"
                   }
@@ -337,7 +364,7 @@ const Navbar = ({
                   size={"xs"}
                   variant="light"
                 >
-                  {user?.status}
+                  {status}
                 </Badge>
               </Stack>
               <Divider />
@@ -609,6 +636,7 @@ export default function Layout({ children, appProps }) {
       router={router}
       open={open}
       setActiveSubLink={setActiveSubLink}
+      status={userInfo?.data?.status || UserAvailabilityStatus.offline}
     />
   );
 
@@ -626,6 +654,7 @@ export default function Layout({ children, appProps }) {
       setActiveMainLink={setActiveMainLink}
       setActiveSubLink={setActiveSubLink}
       router={router}
+      status={userInfo?.data?.status || UserAvailabilityStatus.offline}
     />
   );
 
