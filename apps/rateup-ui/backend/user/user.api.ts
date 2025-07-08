@@ -126,3 +126,14 @@ export async function updateRecipeName() {
 export async function updateUserPause({ userId, data }) {
   return await axiosClient.put(`user/pause/${userId}`, data);
 }
+
+export enum UserAvailabilityStatus {
+  offline = "offline",
+  online = "online",
+}
+
+export async function updateUserAvailabilityStatus(data: {
+  status: UserAvailabilityStatus;
+}) {
+  return await axiosClient.put(`user/status`, data);
+}

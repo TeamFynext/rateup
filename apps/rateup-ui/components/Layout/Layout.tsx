@@ -1,16 +1,23 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import {
   ActionIcon,
   AppShell,
   Avatar,
+  Badge,
   Box,
   Burger,
+  Divider,
   Flex,
   Group,
   HoverCard,
+  Indicator,
+  rgba,
   ScrollAreaAutosize,
+  Stack,
+  Switch,
   Text,
   Title,
   Tooltip,
@@ -18,6 +25,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import SessionReact from "supertokens-auth-react/recipe/session";
@@ -30,8 +38,14 @@ import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "../../backend/org/ws/org.ws.api";
 import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
-import { IUserInfoApiResponse } from "../../backend/user/user.api";
-import { useUserInfo } from "../../backend/user/user.query";
+import {
+  IUserInfoApiResponse,
+  UserAvailabilityStatus,
+} from "../../backend/user/user.api";
+import {
+  useUpdateUserAvailabilityStatus,
+  useUserInfo,
+} from "../../backend/user/user.query";
 import { NavControlContext } from "../../context/NavControlContext";
 import { useUser, useWsData } from "../../context/UserContext";
 import useLocalStorage from "../../hooks/localStorage";
@@ -43,6 +57,19 @@ import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
 import { getNavTopData } from "./Navbar/navbar.constants";
 
+const showOfflineNotification = (status) => {
+  if (status === UserAvailabilityStatus.offline) {
+    notifications.show({
+      color: "yellow",
+      title: "You are offline",
+      message:
+        "You are currently offline. Please switch to online to continue.",
+      withCloseButton: true,
+      position: "top-center",
+      id: "offline-notification",
+    });
+  }
+};
 // Define interface for link items
 interface NavLinkItem {
   label: string;
@@ -59,6 +86,7 @@ const MainNavLinks = ({
   router,
   open,
   setActiveSubLink,
+  status,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -72,6 +100,7 @@ const MainNavLinks = ({
         onClick={() => {
           setActiveMainLink(link.label);
           setActiveSubLink(link?.children[0]?.link);
+          showOfflineNotification(status);
           open();
           if (link.link && !link?.disabled) {
             router.push(link.link);
@@ -109,9 +138,7 @@ const SubNavLinks = ({ links, activeSubLink, setActiveSubLink, router }) => {
           data-active={link.link === activeSubLink || undefined}
           w={60}
         >
-          <Box h={35} w={22} mx={"auto"}>
-            <link.icon size={22} stroke={1.5} />
-          </Box>
+          <link.icon size={22} stroke={1.5} />
         </UnstyledButton>
       </Tooltip>
     ));
@@ -119,7 +146,7 @@ const SubNavLinks = ({ links, activeSubLink, setActiveSubLink, router }) => {
   const linksText = links
     .filter((d) => !d?.disabled)
     .map((link, index) => (
-      <a
+      <Link
         className={classes.link}
         data-active={link.link === activeSubLink || undefined}
         href="#"
@@ -132,7 +159,7 @@ const SubNavLinks = ({ links, activeSubLink, setActiveSubLink, router }) => {
         style={{ paddingLeft: 0 }}
       >
         {link.label}
-      </a>
+      </Link>
     ));
 
   return { linksIcon, linksText };
@@ -145,6 +172,7 @@ const LastLinks = ({
   setActiveMainLink,
   setActiveSubLink,
   router,
+  status,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -159,6 +187,7 @@ const LastLinks = ({
           if (link?.label !== "Dark Mode" && link?.label !== "Notifications") {
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
+            showOfflineNotification(status);
             router.push(link?.children[0]?.link);
           }
         }}
@@ -232,41 +261,115 @@ const Navbar = ({
   isPending,
   user,
 }) => {
+  const updateUserStatus = useUpdateUserAvailabilityStatus();
+  const [status, setStatus] = useState(user?.status);
+  useEffect(() => {
+    if (status !== user?.status) {
+      updateUserStatus.mutate({
+        status,
+      });
+    }
+  }, [status]);
+
+  useEffect(() => {
+    if (user?.status && user?.status !== status) {
+      setStatus(user?.status);
+    }
+  }, [user]);
   if (isPending) return <NavbarSkeleton />;
   return (
     <nav className={classes.navbar}>
       <div className={classes.wrapper}>
         <div className={classes.aside}>
           <div>
-            <div className={classes.logo}>
-              <HoverCard width={280} shadow="md">
-                <HoverCard.Target>
-                  <Avatar
-                    name={user?.orgName}
-                    color="initials"
-                    src={getFileUrlFromKey(user?.orgLogo)}
-                  />
-                </HoverCard.Target>
-                <HoverCard.Dropdown>
-                  <Box>
-                    <Text fw={500} size="sm" mb={"xs"}>
-                      {user?.userName || "User"}
-                    </Text>
+            <Stack gap={0} pb={"sm"}>
+              <div className={classes.logo}>
+                <HoverCard width={280} shadow="md">
+                  <HoverCard.Target>
+                    <Indicator
+                      color={
+                        user?.status === UserAvailabilityStatus.online
+                          ? "#69f0ae"
+                          : "#cacaca"
+                      }
+                      processing={
+                        user?.status === UserAvailabilityStatus.online
+                      }
+                      size={8}
+                    >
+                      <Avatar
+                        name={user?.orgName}
+                        color="initials"
+                        src={getFileUrlFromKey(user?.orgLogo)}
+                      />
+                    </Indicator>
+                  </HoverCard.Target>
+                  <HoverCard.Dropdown>
                     <Box>
-                      <Text size="xs" c="dimmed">
-                        Email: {user?.email}
+                      <Text fw={500} size="sm" mb={"xs"}>
+                        {user?.userName || "User"}
                       </Text>
-                      <Text size="xs" c="dimmed">
-                        Org: {user?.orgName || "No organization"}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        Role: {user?.role || "User"}
-                      </Text>
+                      <Box>
+                        <Text size="xs" c="dimmed">
+                          Email: {user?.email}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          Org: {user?.orgName || "No organization"}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          Role: {user?.role || "User"}
+                        </Text>
+                      </Box>
                     </Box>
-                  </Box>
-                </HoverCard.Dropdown>
-              </HoverCard>
-            </div>
+                  </HoverCard.Dropdown>
+                </HoverCard>
+              </div>
+              <Stack justify="center" align="center" gap={3} p={0}>
+                <Switch
+                  color={
+                    status === UserAvailabilityStatus.online
+                      ? "#099268"
+                      : "grey"
+                  }
+                  size="xs"
+                  styles={{
+                    track: {
+                      backgroundColor:
+                        status === UserAvailabilityStatus.online &&
+                        rgba("#099268", 0.15),
+                      width: 40,
+                    },
+                    thumb: {
+                      backgroundColor:
+                        status === UserAvailabilityStatus.online && "#099268",
+                    },
+                  }}
+                  checked={status === UserAvailabilityStatus.online}
+                  onChange={(e) => {
+                    setStatus(
+                      e.currentTarget.checked
+                        ? UserAvailabilityStatus.online
+                        : UserAvailabilityStatus.offline,
+                    );
+                  }}
+                />
+                <Badge
+                  w={50}
+                  tt={"capitalize"}
+                  color={
+                    status === UserAvailabilityStatus.online
+                      ? "#099268"
+                      : "grey"
+                  }
+                  radius={"xs"}
+                  size={"xs"}
+                  variant="light"
+                >
+                  {status}
+                </Badge>
+              </Stack>
+              <Divider />
+            </Stack>
             <ScrollAreaAutosize mah={"calc(100dvh - 150px)"}>
               {mainLinks}
             </ScrollAreaAutosize>
@@ -534,6 +637,7 @@ export default function Layout({ children, appProps }) {
       router={router}
       open={open}
       setActiveSubLink={setActiveSubLink}
+      status={userInfo?.data?.status || UserAvailabilityStatus.offline}
     />
   );
 
@@ -551,6 +655,7 @@ export default function Layout({ children, appProps }) {
       setActiveMainLink={setActiveMainLink}
       setActiveSubLink={setActiveSubLink}
       router={router}
+      status={userInfo?.data?.status || UserAvailabilityStatus.offline}
     />
   );
 

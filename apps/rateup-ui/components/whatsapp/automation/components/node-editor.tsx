@@ -1927,6 +1927,9 @@ const AssignNodeEditor: React.FC<
       teamId: "",
       assignedUserIds: [],
       choice: "manual",
+      teamName: "",
+      roundRobin: false,
+      assignIfOnline: true,
     },
     validate: {
       teamId: isNotEmpty("required"),
@@ -1935,14 +1938,22 @@ const AssignNodeEditor: React.FC<
     },
     onValuesChange(values) {
       if (form.validate().hasErrors) return;
+      const teamName =
+        options?.data
+          ?.flatMap((user) => user.teams)
+          ?.find((team) => team.team_id === values.teamId)?.team_name ?? "";
       handleInputChange("assign", {
         ...typedData?.assign,
         teamId: values.teamId,
         assignedUserIds: values.assignedUserIds,
         choice: values.choice,
+        teamName: teamName,
+        roundRobin: values.roundRobin,
+        assignIfOnline: values.assignIfOnline,
       });
     },
   });
+
   const members = useMemo(
     () =>
       options?.data
@@ -1960,14 +1971,23 @@ const AssignNodeEditor: React.FC<
       typedData.assign?.assignedUserIds ?? [],
     );
     form.setFieldValue("choice", typedData.assign?.choice || "manual");
-  }, [
-    typedData.assign?.assignedUserIds,
-    typedData.assign?.choice,
-    typedData.assign?.teamId,
-  ]);
+    form.setFieldValue("teamName", typedData.assign?.teamName || "");
+    form.setFieldValue("roundRobin", typedData.assign?.roundRobin ?? false);
+    form.setFieldValue(
+      "assignIfOnline",
+      typedData.assign?.assignIfOnline ?? true,
+    );
+  }, [typedData.assign]);
 
   return (
     <Stack gap="xs">
+      {typedData?.assign?.assignType === "staff" && (
+        <Switch
+          label="Assign only if assignee is online"
+          {...form.getInputProps("assignIfOnline", { type: "checkbox" })}
+          description="If enabled, assignment will only happen when the assignee is online. If disabled, assignment happens regardless of online status."
+        />
+      )}
       <SegmentedControl
         value={typedData?.assign?.assignType}
         onChange={(value) => {
@@ -1989,6 +2009,7 @@ const AssignNodeEditor: React.FC<
           { label: "Assign To Staff", value: "staff" },
         ]}
       />
+
       {typedData?.assign?.assignType === "staff" && (
         <>
           <Group justify="center" gap={2}>
@@ -2015,6 +2036,11 @@ const AssignNodeEditor: React.FC<
                 searchable
               />
             )}
+            <Switch
+              label="Enable Round Robin Assignment"
+              {...form.getInputProps("roundRobin", { type: "checkbox" })}
+              description="Assign chats to team members in a round robin fashion"
+            />
           </Stack>
         </>
       )}
