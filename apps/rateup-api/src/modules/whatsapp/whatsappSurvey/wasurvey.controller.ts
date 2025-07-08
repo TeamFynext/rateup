@@ -913,6 +913,7 @@ export async function processNextNode(
               assignedUserIds,
               teamId,
               contactId: contact.id,
+              assignIfOnline: assignData?.assign?.assignIfOnline ?? true,
             },
             orgId,
           );
