@@ -1929,6 +1929,7 @@ const AssignNodeEditor: React.FC<
       choice: "manual",
       teamName: "",
       roundRobin: false,
+      assignIfOnline: true,
     },
     validate: {
       teamId: isNotEmpty("required"),
@@ -1947,6 +1948,8 @@ const AssignNodeEditor: React.FC<
         assignedUserIds: values.assignedUserIds,
         choice: values.choice,
         teamName: teamName,
+        roundRobin: values.roundRobin,
+        assignIfOnline: values.assignIfOnline,
       });
     },
   });
@@ -1969,11 +1972,22 @@ const AssignNodeEditor: React.FC<
     );
     form.setFieldValue("choice", typedData.assign?.choice || "manual");
     form.setFieldValue("teamName", typedData.assign?.teamName || "");
-    form.setFieldValue("roundRobin", typedData.assign?.roundRobin || false);
+    form.setFieldValue("roundRobin", typedData.assign?.roundRobin ?? false);
+    form.setFieldValue(
+      "assignIfOnline",
+      typedData.assign?.assignIfOnline ?? true,
+    );
   }, [typedData.assign]);
 
   return (
     <Stack gap="xs">
+      {typedData?.assign?.assignType === "staff" && (
+        <Switch
+          label="Assign only if assignee is online"
+          {...form.getInputProps("assignIfOnline", { type: "checkbox" })}
+          description="If enabled, assignment will only happen when the assignee is online. If disabled, assignment happens regardless of online status."
+        />
+      )}
       <SegmentedControl
         value={typedData?.assign?.assignType}
         onChange={(value) => {
@@ -1995,6 +2009,7 @@ const AssignNodeEditor: React.FC<
           { label: "Assign To Staff", value: "staff" },
         ]}
       />
+
       {typedData?.assign?.assignType === "staff" && (
         <>
           <Group justify="center" gap={2}>
@@ -2023,13 +2038,7 @@ const AssignNodeEditor: React.FC<
             )}
             <Switch
               label="Enable Round Robin Assignment"
-              checked={typedData.assign?.roundRobin ?? false}
-              onChange={(e) => {
-                handleInputChange("assign", {
-                  ...typedData.assign,
-                  roundRobin: e.target.checked,
-                });
-              }}
+              {...form.getInputProps("roundRobin", { type: "checkbox" })}
               description="Assign chats to team members in a round robin fashion"
             />
           </Stack>

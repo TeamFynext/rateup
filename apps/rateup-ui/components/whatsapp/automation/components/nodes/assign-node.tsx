@@ -28,6 +28,16 @@ function AssignNode(props: NodeProps & { data: AssignNodeData }) {
             </Text>
             <Text size="sm">{data.assign?.choice}</Text>
           </Group>
+          <Group justify="space-between">
+            <Text size="xs" c="dimmed">
+              Assign If Online:
+            </Text>
+            <Text size="sm">
+              {data.assign.assignIfOnline
+                ? "Only if online"
+                : "Regardless of status"}
+            </Text>
+          </Group>
           {data.assign?.assignType === "staff" && (
             <>
               <Group justify="space-between">
