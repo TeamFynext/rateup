@@ -35,6 +35,10 @@ import {
 import { WaMessageAssignStatusTab } from "../../constants";
 import { Role } from "../../../org/org.services";
 import { getTeamIdsByUserId } from "../../../team/team.service";
+import {
+  createNotification,
+  getNotificationSettings,
+} from "../../../notification/notification.service";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -644,8 +648,19 @@ export async function exportWhatsapChats(
 }
 
 export async function assignWaMessageToUser(data: WaMessageAssignBody) {
+  const existingUsers = await prisma.waInboxAssign.findMany({
+    where: {
+      contactId: data.contactId,
+      assignedUserId: {
+        in: data.assignedUserIds,
+      },
+    },
+  });
+  const newUsers = data.assignedUserIds.filter(
+    (user) => !existingUsers.some((u) => u.assignedUserId === user),
+  );
   const res = await prisma.waInboxAssign.createMany({
-    data: data.assignedUserIds.map((userId) => ({
+    data: newUsers.map((userId) => ({
       contactId: data.contactId,
       assignedUserId: userId,
       teamId: data.teamId,
@@ -660,9 +675,28 @@ export async function assignWaMessageToUser(data: WaMessageAssignBody) {
       },
     },
   });
-  await updateContactById(data.contactId, {
+  const updatedContact = await updateContactById(data.contactId, {
     waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
   });
+
+  for (const userId of newUsers) {
+    const notificationSetting = await getNotificationSettings(
+      userId,
+      updatedContact.orgId,
+    );
+    if (notificationSetting.waMessageAssignNotification) {
+      await createNotification(
+        userId,
+        updatedContact.orgId,
+        "whatsapp",
+        "chat-assigned",
+        {
+          contactId: updatedContact.id,
+          contactName: updatedContact.name,
+        },
+      );
+    }
+  }
 }
 
 export async function getAssignedUserForContact(contactId) {
