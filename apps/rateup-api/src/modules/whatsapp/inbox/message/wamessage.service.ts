@@ -656,10 +656,11 @@ export async function assignWaMessageToUser(
       },
     },
   });
-
-  const newUsers = data.assignedUserIds.filter(async (userId) => {
+  const assignIfOnline = data.assignIfOnline ?? true;
+  const newUsers = [];
+  for (const userId of data.assignedUserIds) {
     if (!existingUsers.some((user) => user.assignedUserId === userId)) {
-      if (data.assignIfOnline) {
+      if (assignIfOnline) {
         const user = await prisma.orgMember.findUnique({
           where: {
             userId_orgId: {
@@ -668,14 +669,14 @@ export async function assignWaMessageToUser(
             },
           },
         });
-        if (user.status === UserAvailabilityStatus.online) return true;
-        return false;
+        if (user?.status === UserAvailabilityStatus.online) {
+          newUsers.push(userId);
+        }
+      } else {
+        newUsers.push(userId);
       }
-      return true;
     }
-    return false;
-  });
-
+  }
   const res = await prisma.waInboxAssign.createMany({
     data: newUsers.map((userId) => ({
       contactId: data.contactId,
