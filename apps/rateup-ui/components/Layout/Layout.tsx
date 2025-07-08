@@ -24,6 +24,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import SessionReact from "supertokens-auth-react/recipe/session";
@@ -55,6 +56,19 @@ import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
 import { getNavTopData } from "./Navbar/navbar.constants";
 
+const showOfflineNotification = (status) => {
+  if (status === UserAvailabilityStatus.offline) {
+    notifications.show({
+      color: "yellow",
+      title: "You are offline",
+      message:
+        "You are currently offline. Please switch to online to continue.",
+      withCloseButton: true,
+      position: "top-center",
+      id: "offline-notification",
+    });
+  }
+};
 // Define interface for link items
 interface NavLinkItem {
   label: string;
@@ -71,6 +85,7 @@ const MainNavLinks = ({
   router,
   open,
   setActiveSubLink,
+  status,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -84,6 +99,7 @@ const MainNavLinks = ({
         onClick={() => {
           setActiveMainLink(link.label);
           setActiveSubLink(link?.children[0]?.link);
+          showOfflineNotification(status);
           open();
           if (link.link && !link?.disabled) {
             router.push(link.link);
@@ -155,6 +171,7 @@ const LastLinks = ({
   setActiveMainLink,
   setActiveSubLink,
   router,
+  status,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -169,6 +186,7 @@ const LastLinks = ({
           if (link?.label !== "Dark Mode") {
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
+            showOfflineNotification(status);
             router.push(link?.children[0]?.link);
           }
         }}
@@ -618,6 +636,7 @@ export default function Layout({ children, appProps }) {
       router={router}
       open={open}
       setActiveSubLink={setActiveSubLink}
+      status={userInfo?.data?.status || UserAvailabilityStatus.offline}
     />
   );
 
@@ -635,6 +654,7 @@ export default function Layout({ children, appProps }) {
       setActiveMainLink={setActiveMainLink}
       setActiveSubLink={setActiveSubLink}
       router={router}
+      status={userInfo?.data?.status || UserAvailabilityStatus.offline}
     />
   );
 
