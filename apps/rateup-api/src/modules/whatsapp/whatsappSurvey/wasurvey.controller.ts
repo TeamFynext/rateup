@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import {
   WA_SUBSCRIBE_STATUS,
   WaParsedMessage,
+  assignChat,
   convertNodeToWhatsAppMessage,
   createListMessage,
   createReplyButtonsMessage,
@@ -119,6 +120,7 @@ import {
 } from "../../mobileNotification/mobile.service";
 import {
   assignWaMessageToUser,
+  getAssignedUsersCountForContactByTeam,
   getWaMessageByMessageId,
 } from "../inbox/message/wamessage.service";
 import { getUserIdsByTeamId } from "../../user/user.service";
@@ -861,15 +863,67 @@ export async function processNextNode(
         if (assignData?.assign?.assignType === "me") {
           const teams = await getTeamIdsByUserId(assignedUserIds?.[0]);
           teamId = teams?.[0] || null;
+        } else if (
+          assignData?.assign?.choice === "all" &&
+          (assignData?.assign?.roundRobin || false)
+        ) {
+          const assignedCount = await getAssignedUsersCountForContactByTeam(
+            contact.id,
+            teamId,
+          );
+          if (assignedCount > 0) {
+            log.warn(
+              `Skipping assignment: Contact ${contact.id} already has assigned users in team ${teamId}`,
+            );
+            assignedUserIds = [];
+            return;
+          }
+          const users = await getUserIdsByTeamId(teamId);
+          const assigned = await assignChat(teamId, users, automation?.id);
+          assignedUserIds = [assigned];
+        } else if (
+          assignData?.assign?.choice === "manual" &&
+          (assignData?.assign?.roundRobin || false)
+        ) {
+          const assignedCount = await getAssignedUsersCountForContactByTeam(
+            contact.id,
+            teamId,
+          );
+          if (assignedCount > 0) {
+            log.warn(
+              `Skipping assignment: Contact ${contact.id} already has assigned users in team ${teamId}`,
+            );
+            assignedUserIds = [];
+            return;
+          }
+          const assigned = await assignChat(
+            teamId,
+            assignedUserIds,
+            automation?.id,
+          );
+          assignedUserIds = [assigned];
         } else if (assignData?.assign?.choice === "all") {
           const users = await getUserIdsByTeamId(teamId);
           assignedUserIds = users;
         }
-        await assignWaMessageToUser({
-          assignedUserIds,
-          teamId,
-          contactId: contact?.id,
-        });
+        // Only assign if we have user IDs and a team
+        if (assignedUserIds.length > 0 && teamId && contact?.id) {
+          await assignWaMessageToUser(
+            {
+              assignedUserIds,
+              teamId,
+              contactId: contact.id,
+              assignIfOnline: assignData?.assign?.assignIfOnline ?? true,
+            },
+            orgId,
+          );
+        } else {
+          log.warn(
+            `Assignment skipped: assignedUserIds=${JSON.stringify(
+              assignedUserIds,
+            )}, teamId=${teamId}, contactId=${contact?.id}`,
+          );
+        }
         break;
       }
       default:

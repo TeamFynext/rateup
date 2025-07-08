@@ -354,7 +354,10 @@ export async function exportWhatsappChatsHandler(
     const constraintsDecoded: WaChatExportConstraints = JSON.parse(
       decodeURIComponent(constraints),
     );
-    const filterfilterDataDecoded = JSON.parse(decodeURIComponent(filterData));
+
+    const filterfilterDataDecoded = JSON.parse(
+      decodeURIComponent(filterData?.replace(/(^"|"$)/g, "")),
+    );
     const dataToExport = await exportWhatsapChats(
       orgId,
       constraintsDecoded,
@@ -386,7 +389,7 @@ export async function assignWaMessageHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await assignWaMessageToUser(request.body);
+    const res = await assignWaMessageToUser(request.body, request.user.orgId);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

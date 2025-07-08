@@ -16,6 +16,7 @@ import {
 import { ByTeamIdParams } from "../../team/team.schema";
 import { log } from "../../../utils/logger";
 import { handleAutomatedReply } from "../whatsappSurvey/wasurvey.controller";
+import connection from "../../../utils/redisConnection";
 
 export async function getAutomatedRepliesMessagIdHandler(
   req: FastifyRequest<{ Params: { id: string } }>,
@@ -94,9 +95,12 @@ export async function deleteAutomatedReplyHandler(
   req: FastifyRequest<{ Params: ByWaAutomatedReplyIdParams }>,
   reply: FastifyReply,
 ) {
-  const automatedReply = await deleteAutomatedReply(
-    req.params.waAutomatedReplyId,
-  );
+  const automationId = req.params.waAutomatedReplyId;
+  const automatedReply = await deleteAutomatedReply(automationId);
+  const keys = await connection.keys(`round_robin_index:*:${automationId}:*`);
+  if (keys.length) {
+    await connection.del(...keys);
+  }
   reply.send(automatedReply);
 }
 

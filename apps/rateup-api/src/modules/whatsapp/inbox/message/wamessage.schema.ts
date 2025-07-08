@@ -102,6 +102,7 @@ const waMessageAssignBody = z.object({
   contactId: z.string(),
   assignedUserIds: z.array(z.string()),
   teamId: z.string(),
+  assignIfOnline: z.boolean().default(true),
 });
 
 const blockUserSchema = z.object({

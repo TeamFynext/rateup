@@ -35,6 +35,7 @@ import {
 import { WaMessageAssignStatusTab } from "../../constants";
 import { Role } from "../../../org/org.services";
 import { getTeamIdsByUserId } from "../../../team/team.service";
+import { UserAvailabilityStatus } from "../../../user/user.schema";
 import {
   createNotification,
   getNotificationSettings,
@@ -647,7 +648,10 @@ export async function exportWhatsapChats(
   }>;
 }
 
-export async function assignWaMessageToUser(data: WaMessageAssignBody) {
+export async function assignWaMessageToUser(
+  data: WaMessageAssignBody,
+  orgId: string,
+) {
   const existingUsers = await prisma.waInboxAssign.findMany({
     where: {
       contactId: data.contactId,
@@ -656,9 +660,28 @@ export async function assignWaMessageToUser(data: WaMessageAssignBody) {
       },
     },
   });
-  const newUsers = data.assignedUserIds.filter(
-    (user) => !existingUsers.some((u) => u.assignedUserId === user),
-  );
+  const assignIfOnline = data.assignIfOnline ?? true;
+  const newUsers = [];
+  for (const userId of data.assignedUserIds) {
+    if (!existingUsers.some((user) => user.assignedUserId === userId)) {
+      if (assignIfOnline) {
+        const user = await prisma.orgMember.findUnique({
+          where: {
+            userId_orgId: {
+              userId,
+              orgId,
+            },
+          },
+        });
+        if (user?.status === UserAvailabilityStatus.online) {
+          newUsers.push(userId);
+        }
+      } else {
+        newUsers.push(userId);
+      }
+    }
+  }
+
   const res = await prisma.waInboxAssign.createMany({
     data: newUsers.map((userId) => ({
       contactId: data.contactId,
@@ -710,6 +733,18 @@ export async function getAssignedUserForContact(contactId) {
           name: true,
         },
       },
+    },
+  });
+}
+
+export async function getAssignedUsersCountForContactByTeam(
+  contactId: string,
+  teamId: string,
+) {
+  return await prisma.waInboxAssign.count({
+    where: {
+      contactId,
+      teamId,
     },
   });
 }
