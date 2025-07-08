@@ -354,7 +354,10 @@ export async function exportWhatsappChatsHandler(
     const constraintsDecoded: WaChatExportConstraints = JSON.parse(
       decodeURIComponent(constraints),
     );
-    const filterfilterDataDecoded = JSON.parse(decodeURIComponent(filterData));
+
+    const filterfilterDataDecoded = JSON.parse(
+      decodeURIComponent(filterData?.replace(/(^"|"$)/g, "")),
+    );
     const dataToExport = await exportWhatsapChats(
       orgId,
       constraintsDecoded,
