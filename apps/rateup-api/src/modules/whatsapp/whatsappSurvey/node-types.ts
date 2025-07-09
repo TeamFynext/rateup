@@ -237,6 +237,19 @@ export interface AssignNodeData extends BaseNodeData {
   };
 }
 
+export interface LeadgenNodeData extends BaseNodeData {
+  adAccountId: string;
+  ad: {
+    id: string;
+    name: string;
+  };
+  phone: string;
+  phoneField: string;
+  fbPageId: string;
+  leadgenFormId: string;
+  pageAccessToken: string;
+}
+
 // Map of node types to their data types
 export type NodeTypeMap = {
   textNode: TextNodeData;
@@ -268,6 +281,7 @@ export type NodeTypeMap = {
   aibotNode: AiBotNodeData;
   ticketNode: TicketNodeData;
   assignNode: AssignNodeData;
+  leadgenNode: LeadgenNodeData;
 };
 
 // Node type strings as a union type

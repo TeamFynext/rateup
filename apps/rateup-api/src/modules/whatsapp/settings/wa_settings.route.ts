@@ -3,8 +3,15 @@ import {
   createWaSettingsHandler,
   deleteWaSettingsHandler,
   getContactTagHandler,
+  getMetaAssetsHandler,
   getWaLogsHandler,
   getWaSettingsHandler,
+  subscribeFieldstoPageHandler,
+  syncAdAccountsHandler,
+  syncAdsByAdAccountHandler,
+  syncFbPagesHandler,
+  syncLeadgenFormQuestionsHandler,
+  syncLeadgenFormsHandler,
   updateContactTagHandler,
   upsertWaSettingsHandler,
 } from "./wa_settings.controller";
@@ -70,4 +77,51 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     },
     getWaLogsHandler,
   );
+
+  server.post("/sync/pages", syncFbPagesHandler);
+
+  server.post(
+    "/sync/leadgen-forms",
+    {
+      schema: {
+        body: $WASettingsref("byFbPageQuerySchema"),
+      },
+    },
+    syncLeadgenFormsHandler,
+  );
+
+  server.post(
+    "/sync/leadgen-form/:formId",
+    {
+      schema: {
+        body: $WASettingsref("byFbPageQuerySchema"),
+        params: $WASettingsref("byLeadGenFormIdParamsSchema"),
+      },
+    },
+    syncLeadgenFormQuestionsHandler,
+  );
+
+  server.post("/sync/ad-accounts", syncAdAccountsHandler);
+
+  server.post(
+    "/sync/ads/:adAccountId",
+    {
+      schema: {
+        params: $WASettingsref("byAdAccountIdParamsSchema"),
+      },
+    },
+    syncAdsByAdAccountHandler,
+  );
+
+  server.post(
+    "/subscribe",
+    {
+      schema: {
+        body: $WASettingsref("byFbPageQuerySchema"),
+      },
+    },
+    subscribeFieldstoPageHandler,
+  );
+
+  server.get("/meta-assets", getMetaAssetsHandler);
 }
