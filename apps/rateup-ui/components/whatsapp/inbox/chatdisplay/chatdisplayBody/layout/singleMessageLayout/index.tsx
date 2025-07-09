@@ -92,8 +92,8 @@ export default function WaInboxSingleMessageLayout(props: Props) {
   function sendReaction(emoji: string) {
     const messageId =
       exchangeProcess === "receive"
-        ? props.messageObject.messageBody.receive.messages[0].id
-        : props.messageObject.messageId;
+        ? props?.messageObject?.messageBody?.receive?.messages[0]?.id
+        : props?.messageObject?.messageId;
     const reaction = {
       emoji,
       toWaMessageId: messageId,
