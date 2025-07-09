@@ -80,19 +80,22 @@ export default function WaInboxChatSelectCard({
             <Tooltip
               position="bottom-start"
               label={
-                parseWaMessage(lastMessage?.messageBody).messageContent ??
-                "No messages yet"
+                lastMessage
+                  ? parseWaMessage(lastMessage?.messageBody).messageContent
+                  : "No messages yet"
               }
             >
               <Text className={classes.latest_chat} truncate maw={200}>
-                {returnMessageContentBasedOnParsedMessage(
-                  parseWaMessage(lastMessage?.messageBody),
-                  lastMessage.messageBody.exchangeProcess,
-                )}
+                {lastMessage &&
+                  returnMessageContentBasedOnParsedMessage(
+                    parseWaMessage(lastMessage?.messageBody),
+                    lastMessage.messageBody.exchangeProcess,
+                  )}
               </Text>
             </Tooltip>
             <Text className={classes.chat_time}>
-              {dayjs.utc(contact?.lastMessage?.waCreatedAt).fromNow()}
+              {contact?.lastMessage &&
+                dayjs.utc(contact?.lastMessage?.waCreatedAt).fromNow()}
             </Text>
           </Group>
         </Stack>
