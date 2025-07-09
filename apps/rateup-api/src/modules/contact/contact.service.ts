@@ -274,7 +274,10 @@ export async function updateContactById(
         assignee.assignedUserId,
         user.orgId,
       );
-      if (notificationSetting.waMessageClosedNotification) {
+      if (
+        notificationSetting &&
+        notificationSetting.waMessageClosedNotification
+      ) {
         await createNotification(
           assignee.assignedUserId,
           user.orgId,

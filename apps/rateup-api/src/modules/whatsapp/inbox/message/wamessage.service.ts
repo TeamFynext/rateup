@@ -707,7 +707,10 @@ export async function assignWaMessageToUser(
       userId,
       updatedContact.orgId,
     );
-    if (notificationSetting.waMessageAssignNotification) {
+    if (
+      notificationSetting &&
+      notificationSetting.waMessageAssignNotification
+    ) {
       await createNotification(
         userId,
         updatedContact.orgId,

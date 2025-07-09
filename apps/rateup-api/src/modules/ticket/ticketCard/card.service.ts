@@ -289,7 +289,7 @@ export async function updateCard(
 
   for await (const user of users) {
     const notificationSetting = await getNotificationSettings(user.id, orgId);
-    if (notificationSetting.ticketAssignNotification) {
+    if (notificationSetting && notificationSetting.ticketAssignNotification) {
       await createNotification(user.id, orgId, "ticket", "ticket-assigned", {
         board_name: board.title,
         column_name: column.title,
