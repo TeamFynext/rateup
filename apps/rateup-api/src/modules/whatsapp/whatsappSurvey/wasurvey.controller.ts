@@ -24,6 +24,7 @@ import {
   deleteSession,
   getAiBotActiveStatus,
   getSession,
+  handleLeadGen,
   handleMessageStatusUpdate,
   handleTestimonialReply,
   sendMessage,
@@ -50,7 +51,10 @@ import {
   updateTemplateInDb,
   getDbTemplate,
 } from "../messageTemplates/wa_templates.service";
-import { getWaSettingsByPhoneId } from "../settings/wa_settings.service";
+import {
+  getMetaAssets,
+  getWaSettingsByPhoneId,
+} from "../settings/wa_settings.service";
 import {
   WaMessageBody,
   WaMessageTypes,
@@ -191,6 +195,10 @@ export async function whatsappEventHandler(
         await handleMessageStatusEvent(body, eventType);
         break;
 
+      case WaEvent.LEADGEN:
+        await handleLeadGen(body);
+        break;
+
       default:
         log.warn("Unhandled event type: %s", eventType);
     }
@@ -241,7 +249,8 @@ async function handleMessageEvent(body: WaMessageBody) {
 
   for (const entry of body.entry || []) {
     for (const change of entry.changes || []) {
-      const phoneId = change.value?.metadata?.phone_number_id;
+      const phoneId = (change.value as WaReceiveMessageBody)?.metadata
+        ?.phone_number_id;
       const waSettings = await getWaSettingsByPhoneId(phoneId);
 
       if (!waSettings) {
@@ -398,13 +407,14 @@ async function whatsappMessageHandler(
   let sourceIdentifier;
   if (waMessage.object === "whatsapp_business_account") {
     sourcePlatform = PlatformType.WHATSAPP;
-    sourceIdentifier =
-      waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata
-        ?.display_phone_number;
+    sourceIdentifier = (
+      waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
+    )?.metadata?.display_phone_number;
   }
   //handle dubplicate webhook
   const existingMessage = await getWaMessageByMessageId(
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id,
+    (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)
+      ?.messages?.[0]?.id,
     from,
   );
 
@@ -421,7 +431,8 @@ async function whatsappMessageHandler(
     sourcePlatform,
     sourceIdentifier,
     userName,
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.id,
+    (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.messages?.[0]
+      ?.id,
   );
   if (type === WaMessageTypes.order) {
     await handleWaOrderfromCatalog(completeMessageObject, messageObj);
@@ -625,8 +636,9 @@ export async function handleAutomatedReply(
   // chatbot: Chatbot,
   automatedReplyId?: string,
 ) {
-  let phone_number_id =
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
+  let phone_number_id = (
+    waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
+  )?.metadata?.phone_number_id;
   try {
     // Case 1: User clicked a button in a previous message
     if (parsedMessage?.buttonId) {
@@ -761,6 +773,7 @@ export async function processNextNode(
   nodeId: string,
   orgId: string,
   automationMessageId: string,
+  leadId?: string,
 ) {
   try {
     if (!nodeId || !automation?.matchData?.json?.nodes) {
@@ -790,7 +803,7 @@ export async function processNextNode(
     }
 
     // Skip processing for special nodes
-    if (["endNode", "startNode"].includes(node?.type)) {
+    if (["endNode", "startNode", "leadgenNode"].includes(node?.type)) {
       // For start node, just move to the next node
       const nextEdges = automation.matchData?.json?.edges.filter(
         (edge: any) => edge.source === nodeId,
@@ -808,6 +821,7 @@ export async function processNextNode(
             nextEdge.target,
             orgId,
             automationMessageId,
+            leadId,
           );
         }
       }
@@ -830,11 +844,30 @@ export async function processNextNode(
         break;
 
       case "templateNode":
+        let parameters = node?.data?.parameters;
+        if (leadId) {
+          const metaAssets = await getMetaAssets(automation.orgId);
+          parameters = node?.data?.parameters?.map((param) => {
+            if (
+              typeof param !== "string" &&
+              param.type === "leadgenform-question-key"
+            ) {
+              const lead = metaAssets.leads.find((lead) => lead.id === leadId);
+              if (!lead) return "NA";
+              return (
+                lead.field_data.find((field) => field.name === param.value)
+                  ?.values[0] ?? "NA"
+              );
+            }
+            return param;
+          });
+        }
+
         await sendTemplateToUserCore(
           orgId,
           node?.data?.template?.id,
           userPhone,
-          node?.data?.parameters ?? [],
+          parameters ?? [],
           node?.data?.teamId,
           undefined,
           undefined,
@@ -969,6 +1002,7 @@ export async function processNextNode(
             nextEdge.target,
             orgId,
             automationMessageId,
+            leadId,
           );
         }
       }

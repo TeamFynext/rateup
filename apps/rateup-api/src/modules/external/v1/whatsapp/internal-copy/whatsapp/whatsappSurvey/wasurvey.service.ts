@@ -23,6 +23,7 @@ import {
 import {
   WaSendMessageBody,
   WaMessageBody,
+  WaReceiveMessageBody,
 } from "../../../../../../../types/whatsapp.types";
 import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
@@ -539,7 +540,8 @@ export async function handleTestimonialReply(
   } else if (features?.rating && !response.rating) {
     //assume its rating
     const rating = Number.parseInt(
-      reply.entry[0].changes[0].value.messages[0].interactive.list_reply.id,
+      (reply.entry[0].changes[0].value as WaReceiveMessageBody).messages[0]
+        .interactive.list_reply.id,
     );
     if (rating < 1 || rating > 5) isValid = false;
     else response.rating = rating;

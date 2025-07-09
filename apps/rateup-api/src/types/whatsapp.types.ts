@@ -16,7 +16,7 @@ export type WaMessageBody = {
       id: string; // waba_id
       changes: [
         {
-          value: WaReceiveMessageBody;
+          value: WaReceiveMessageBody | LeadGenBody;
           field: string;
         },
       ];
@@ -100,6 +100,15 @@ export interface WaReceiveMessageBody {
       errors?: any;
     },
   ];
+}
+
+export interface LeadGenBody {
+  leadgen_id: string;
+  page_id: string;
+  form_id: string;
+  adgroup_id: string;
+  ad_id: string;
+  created_time: string;
 }
 export interface WaSendMessageBody {
   messaging_product: "whatsapp";

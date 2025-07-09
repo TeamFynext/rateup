@@ -9,6 +9,7 @@ import {
 import {
   WaMessageBody,
   WaMessageTypes,
+  WaReceiveMessageBody,
   WaSendMessageBody,
 } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
@@ -50,20 +51,31 @@ export function getEventType(data: WaMessageBody) {
       return WaEvent.TemplateStatusChange;
     } else if (
       data.entry[0].changes[0].field === WaEvent.Message &&
-      data.entry[0].changes[0].value.messages?.length > 0
+      (data.entry[0].changes[0].value as WaReceiveMessageBody).messages
+        ?.length > 0
     ) {
       return WaEvent.Message;
     } else if (
-      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status ===
-        "captured" &&
-      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.payment?.transaction
-        ?.status === "success" &&
-      data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.type === "payment"
+      (data.entry[0].changes[0].value as WaReceiveMessageBody).statuses?.[0]
+        ?.status === "captured" &&
+      (data.entry[0].changes[0].value as WaReceiveMessageBody)?.statuses?.[0]
+        ?.payment?.transaction?.status === "success" &&
+      (data.entry[0].changes[0].value as WaReceiveMessageBody)?.statuses?.[0]
+        ?.type === "payment"
     ) {
-      return data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status;
-    } else if (data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.status) {
-      return data?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]
-        ?.status as WaEvent;
+      return (data.entry[0].changes[0].value as WaReceiveMessageBody)
+        ?.statuses?.[0]?.status;
+    } else if (
+      (data.entry[0].changes[0].value as WaReceiveMessageBody)?.statuses?.[0]
+        ?.status
+    ) {
+      return (data.entry[0].changes[0].value as WaReceiveMessageBody)
+        ?.statuses?.[0]?.status as WaEvent;
+    }
+    if ((data as any).object === "page") {
+      if (data?.entry?.[0]?.changes?.[0]?.field === WaEvent.LEADGEN) {
+        return WaEvent.LEADGEN;
+      }
     }
   }
   return null;
@@ -364,18 +376,22 @@ export const handlePaymentConfirmation = async (
   await sendMessage(orgId, templateMessage);
 };
 export function getMessageObject(data: WaMessageBody) {
-  if (data.entry[0].changes[0].value.messages.length > 1) {
+  if (
+    (data.entry[0].changes[0].value as WaReceiveMessageBody).messages.length > 1
+  ) {
     // TODO: Find out when this happens
     throw new Error(
       "This shouldn't have occured. Multiple messages not supported",
     );
   }
-  const message = data.entry[0].changes[0].value.messages[0];
+  const message = (data.entry[0].changes[0].value as WaReceiveMessageBody)
+    .messages[0];
   const completeMessageObject = data.entry[0].changes[0].value;
   return { message, completeMessageObject };
 }
 export function getUserName(data: WaMessageBody) {
-  return data.entry[0].changes[0].value.contacts[0].profile.name;
+  return (data.entry[0].changes[0].value as WaReceiveMessageBody).contacts[0]
+    .profile.name;
 }
 export type WaParsedMessage = {
   from: string;
@@ -1010,12 +1026,12 @@ export async function parseResponse(
       case Q.Email:
         return { email: message };
       case Q.Smiley:
-        return waMessage.entry[0].changes[0].value.messages[0].interactive
-          .list_reply.id;
+        return (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)
+          .messages[0].interactive.list_reply.id;
       case Q.Rating:
         return Number.parseInt(
-          waMessage.entry[0].changes[0].value.messages[0].interactive.list_reply
-            .id,
+          (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)
+            .messages[0].interactive.list_reply.id,
         );
       case Q.Date:
         if (!dayjs(message, "DD/MM/YYYY", true).isValid()) {

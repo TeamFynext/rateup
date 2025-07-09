@@ -2,7 +2,10 @@ import {
   WaAutomatedReplyMatchType,
   WaTemplateComponentType,
 } from "../../../types/enums";
-import { WaMessageBody } from "../../../types/whatsapp.types";
+import {
+  WaMessageBody,
+  WaReceiveMessageBody,
+} from "../../../types/whatsapp.types";
 import { parseMessage } from "../whatsappSurvey/wasurvey.utils";
 import { getAutomatedRepliesByOrgId } from "./wa_automatedReply.service";
 import { log } from "../../../utils/logger";
@@ -63,8 +66,9 @@ export async function checkIfMessageMatchesAnyAutomation(
   waMessage: WaMessageBody,
 ) {
   const { message } = parseMessage(waMessage);
-  let phone_number_id =
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
+  let phone_number_id = (
+    waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
+  )?.metadata?.phone_number_id;
   const automatedReplies = await getAutomatedRepliesByOrgId(
     orgId,
     phone_number_id,
