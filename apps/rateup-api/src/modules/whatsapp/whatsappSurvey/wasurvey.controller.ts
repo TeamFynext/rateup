@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import {
   WA_SUBSCRIBE_STATUS,
   WaParsedMessage,
+  assignChat,
   convertNodeToWhatsAppMessage,
   createListMessage,
   createReplyButtonsMessage,
@@ -23,6 +24,7 @@ import {
   deleteSession,
   getAiBotActiveStatus,
   getSession,
+  handleLeadGen,
   handleMessageStatusUpdate,
   handleTestimonialReply,
   sendMessage,
@@ -49,7 +51,10 @@ import {
   updateTemplateInDb,
   getDbTemplate,
 } from "../messageTemplates/wa_templates.service";
-import { getWaSettingsByPhoneId } from "../settings/wa_settings.service";
+import {
+  getMetaAssets,
+  getWaSettingsByPhoneId,
+} from "../settings/wa_settings.service";
 import {
   WaMessageBody,
   WaMessageTypes,
@@ -83,6 +88,7 @@ import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 import {
   getContactByPhoneNumberAndOrgId,
+  getOrCreateContactByPhone,
   handleContactConsent,
 } from "../../contact/contact.service";
 import { getOrgById } from "../../org/org.services";
@@ -116,6 +122,13 @@ import {
   getTokensByOrgId,
   sendPushNotification,
 } from "../../mobileNotification/mobile.service";
+import {
+  assignWaMessageToUser,
+  getAssignedUsersCountForContactByTeam,
+  getWaMessageByMessageId,
+} from "../inbox/message/wamessage.service";
+import { getUserIdsByTeamId } from "../../user/user.service";
+import { getTeamIdsByUserId } from "../../team/team.service";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -158,7 +171,7 @@ export async function whatsappEventHandler(
     if (!eventType) {
       return;
     }
-
+    reply.code(200).send();
     switch (eventType) {
       case "captured":
         await handleCapturedEvent(body);
@@ -182,13 +195,15 @@ export async function whatsappEventHandler(
         await handleMessageStatusEvent(body, eventType);
         break;
 
+      case WaEvent.LEADGEN:
+        await handleLeadGen(body);
+        break;
+
       default:
         log.warn("Unhandled event type: %s", eventType);
     }
   } catch (error) {
     log.error("Error in whatsappEventHandler: %o", error);
-  } finally {
-    reply.code(200).send();
   }
 }
 
@@ -234,7 +249,8 @@ async function handleMessageEvent(body: WaMessageBody) {
 
   for (const entry of body.entry || []) {
     for (const change of entry.changes || []) {
-      const phoneId = change.value?.metadata?.phone_number_id;
+      const phoneId = (change.value as WaReceiveMessageBody)?.metadata
+        ?.phone_number_id;
       const waSettings = await getWaSettingsByPhoneId(phoneId);
 
       if (!waSettings) {
@@ -391,9 +407,20 @@ async function whatsappMessageHandler(
   let sourceIdentifier;
   if (waMessage.object === "whatsapp_business_account") {
     sourcePlatform = PlatformType.WHATSAPP;
-    sourceIdentifier =
-      waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata
-        ?.display_phone_number;
+    sourceIdentifier = (
+      waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
+    )?.metadata?.display_phone_number;
+  }
+  //handle dubplicate webhook
+  const existingMessage = await getWaMessageByMessageId(
+    (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)
+      ?.messages?.[0]?.id,
+    from,
+  );
+
+  if (existingMessage) {
+    log.trace("Message already received => %o", existingMessage);
+    return;
   }
 
   const messageObj = await handleWaMessages(
@@ -404,7 +431,8 @@ async function whatsappMessageHandler(
     sourcePlatform,
     sourceIdentifier,
     userName,
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id,
+    (waMessage.entry[0].changes[0].value as WaReceiveMessageBody)?.messages?.[0]
+      ?.id,
   );
   if (type === WaMessageTypes.order) {
     await handleWaOrderfromCatalog(completeMessageObject, messageObj);
@@ -608,8 +636,9 @@ export async function handleAutomatedReply(
   // chatbot: Chatbot,
   automatedReplyId?: string,
 ) {
-  let phone_number_id =
-    waMessage?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
+  let phone_number_id = (
+    waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
+  )?.metadata?.phone_number_id;
   try {
     // Case 1: User clicked a button in a previous message
     if (parsedMessage?.buttonId) {
@@ -621,6 +650,7 @@ export async function handleAutomatedReply(
       const automation = recentInteraction?.waAutomatedReply as {
         id: string;
         matchData: { json: { nodes: any[]; edges: any[] } };
+        whatsappSettingsPhoneId: string;
       };
       if (!automation) {
         log.warn(`No active automation found for button click from ${phone}`);
@@ -666,7 +696,7 @@ export async function handleAutomatedReply(
       if (automatedReplyId)
         automation = await getAutomatedReplyById(automatedReplyId);
       // Check if message matches any automation rules
-      else
+      else {
         automation = (await checkIfMessageMatchesAnyAutomation(
           orgId,
           waMessage,
@@ -674,6 +704,7 @@ export async function handleAutomatedReply(
           id: string;
           matchData: { json: { nodes: any[]; edges: any[] } };
         } | null;
+      }
 
       if (automation) {
         if (!automation?.whatsappSettingsPhoneId) {
@@ -745,6 +776,7 @@ export async function processNextNode(
   nodeId: string,
   orgId: string,
   automationMessageId: string,
+  leadId?: string,
 ) {
   try {
     if (!nodeId || !automation?.matchData?.json?.nodes) {
@@ -774,7 +806,7 @@ export async function processNextNode(
     }
 
     // Skip processing for special nodes
-    if (["endNode", "startNode"].includes(node?.type)) {
+    if (["endNode", "startNode", "leadgenNode"].includes(node?.type)) {
       // For start node, just move to the next node
       const nextEdges = automation.matchData?.json?.edges.filter(
         (edge: any) => edge.source === nodeId,
@@ -792,6 +824,7 @@ export async function processNextNode(
             nextEdge.target,
             orgId,
             automationMessageId,
+            leadId,
           );
         }
       }
@@ -814,11 +847,30 @@ export async function processNextNode(
         break;
 
       case "templateNode":
+        let parameters = node?.data?.parameters;
+        if (leadId) {
+          const metaAssets = await getMetaAssets(automation.orgId);
+          parameters = node?.data?.parameters?.map((param) => {
+            if (
+              typeof param !== "string" &&
+              param.type === "leadgenform-question-key"
+            ) {
+              const lead = metaAssets.leads.find((lead) => lead.id === leadId);
+              if (!lead) return "NA";
+              return (
+                lead.field_data.find((field) => field.name === param.value)
+                  ?.values[0] ?? "NA"
+              );
+            }
+            return param;
+          });
+        }
+
         await sendTemplateToUserCore(
           orgId,
           node?.data?.template?.id,
           userPhone,
-          node?.data?.parameters ?? [],
+          parameters ?? [],
           node?.data?.teamId,
           undefined,
           undefined,
@@ -839,7 +891,77 @@ export async function processNextNode(
       case "delayNode":
         await wait((node?.data as NodeTypeMap["delayNode"])?.delayTime * 1000);
         break;
-
+      case "assignNode": {
+        const assignData = node?.data as NodeTypeMap["assignNode"];
+        const contact = await getOrCreateContactByPhone(userPhone, orgId);
+        let assignedUserIds = assignData?.assign?.assignedUserIds || [];
+        let teamId = assignData?.assign?.teamId || null;
+        if (assignData?.assign?.assignType === "me") {
+          const teams = await getTeamIdsByUserId(assignedUserIds?.[0]);
+          teamId = teams?.[0] || null;
+        } else if (
+          assignData?.assign?.choice === "all" &&
+          (assignData?.assign?.roundRobin || false)
+        ) {
+          const assignedCount = await getAssignedUsersCountForContactByTeam(
+            contact.id,
+            teamId,
+          );
+          if (assignedCount > 0) {
+            log.warn(
+              `Skipping assignment: Contact ${contact.id} already has assigned users in team ${teamId}`,
+            );
+            assignedUserIds = [];
+            return;
+          }
+          const users = await getUserIdsByTeamId(teamId);
+          const assigned = await assignChat(teamId, users, automation?.id);
+          assignedUserIds = [assigned];
+        } else if (
+          assignData?.assign?.choice === "manual" &&
+          (assignData?.assign?.roundRobin || false)
+        ) {
+          const assignedCount = await getAssignedUsersCountForContactByTeam(
+            contact.id,
+            teamId,
+          );
+          if (assignedCount > 0) {
+            log.warn(
+              `Skipping assignment: Contact ${contact.id} already has assigned users in team ${teamId}`,
+            );
+            assignedUserIds = [];
+            return;
+          }
+          const assigned = await assignChat(
+            teamId,
+            assignedUserIds,
+            automation?.id,
+          );
+          assignedUserIds = [assigned];
+        } else if (assignData?.assign?.choice === "all") {
+          const users = await getUserIdsByTeamId(teamId);
+          assignedUserIds = users;
+        }
+        // Only assign if we have user IDs and a team
+        if (assignedUserIds.length > 0 && teamId && contact?.id) {
+          await assignWaMessageToUser(
+            {
+              assignedUserIds,
+              teamId,
+              contactId: contact.id,
+              assignIfOnline: assignData?.assign?.assignIfOnline ?? true,
+            },
+            orgId,
+          );
+        } else {
+          log.warn(
+            `Assignment skipped: assignedUserIds=${JSON.stringify(
+              assignedUserIds,
+            )}, teamId=${teamId}, contactId=${contact?.id}`,
+          );
+        }
+        break;
+      }
       default:
         // For text, buttons, and other message types
         const waMessage: any = convertNodeToWhatsAppMessage(node, userPhone);
@@ -883,6 +1005,7 @@ export async function processNextNode(
             nextEdge.target,
             orgId,
             automationMessageId,
+            leadId,
           );
         }
       }

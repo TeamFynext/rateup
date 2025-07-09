@@ -8,6 +8,7 @@ import {
   getUserRecipeName,
   pauseUser,
   updateUserActiveStatus,
+  updateUserAvailablityStatus,
   updateUserPrefLanguage,
   updateUserProfile,
   updateUserProfilePhoto,
@@ -21,6 +22,7 @@ import {
   UpdateProfileSchema,
   updateUserLanguageSchema,
   userEmailCheckSchemaInput,
+  UserStatusSchema,
 } from "./user.schema";
 import supertokens from "supertokens-node";
 import PasswordLess from "supertokens-node/recipe/passwordless";
@@ -323,5 +325,20 @@ export async function deleteUserFromSuperTokenHandler(
     reply.code(200).send("Success");
   } catch (e) {
     reply.code(500).send(e);
+  }
+}
+
+export async function updateUserAvailabilityStatusHandler(
+  request: FastifyRequest<{ Body: UserStatusSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { userId, orgId } = request.user;
+    const { status } = request.body;
+    const res = await updateUserAvailablityStatus(userId, orgId, status);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ message: "Unable to update status" });
   }
 }

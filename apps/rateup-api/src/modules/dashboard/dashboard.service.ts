@@ -3,9 +3,10 @@ import { CampaignStatus, SurveyType, WaFlowStatus } from "../../types/enums";
 import prisma from "../../utils/prisma";
 import Session from "supertokens-node/recipe/session";
 import { updateLastLoggedInTime } from "../user/user.service";
+import { UserAvailabilityStatus } from "../user/user.schema";
 
 interface OverallStats {
-  newMessagesCount: number;
+  newChatCount: number;
   activeCampaignsCount: number;
   publishedFlowsCount: number;
   automationsCount: number;
@@ -19,11 +20,8 @@ export async function getOverallStats(
   userId: string,
 ): Promise<OverallStats> {
   const counts = await prisma.$queryRaw`SELECT
-  (SELECT COUNT(*)::INTEGER FROM "WaMessage" wm JOIN "Contact" c ON wm."contactId" = c.id 
-   WHERE c."orgId" = ${orgId}::uuid AND NOT(${userId}::TEXT = ANY(wm."readUsers"))
-   AND wm."waCreatedAt" > NOW() - INTERVAL '24 hours'
-   ) 
-   AS "newMessagesCount",
+  (SELECT COUNT(*)::INTEGER FROM "Contact" c WHERE c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."orgId" = ${orgId}::uuid) 
+   AS "newChatCount",
   (SELECT COUNT(*)::INTEGER FROM "Campaign" cp JOIN "Team" t ON cp."teamId" = t.id WHERE t."orgId" = ${orgId}::uuid AND cp."status" = ${CampaignStatus.ACTIVE}) AS "activeCampaignsCount",
   (SELECT COUNT(*)::INTEGER FROM "WaFlow" WHERE "orgId"=${orgId}::uuid AND "status" = ${WaFlowStatus.PUBLISHED}) AS "publishedFlowsCount",
   (SELECT COUNT(*)::INTEGER FROM "WaAutomatedReply" WHERE "orgId" = ${orgId}::uuid) AS "automationsCount",
@@ -75,13 +73,14 @@ interface TeamMember {
   lastLoggedInAt: string;
   assignedTicketsCount: number;
   assignedChatsCount: number;
+  status: UserAvailabilityStatus;
 }
 
 export async function getTeamMemberStats(
   teamId: string,
 ): Promise<TeamMember & { isOnline: boolean }[]> {
   const users: TeamMember[] =
-    await prisma.$queryRaw`SELECT u.id, u."name", u."email", u."profilePhoto", orm."role",u."lastLoggedInAt",
+    await prisma.$queryRaw`SELECT u.id, u."name", u."email", u."profilePhoto", orm."role", orm. "status", u."lastLoggedInAt",
     (
         SELECT COUNT(*)::INTEGER
         FROM "TicketCardAssignee" ticket
@@ -98,17 +97,25 @@ export async function getTeamMemberStats(
    WHERE tm."teamId" = ${teamId}::uuid;`;
   const members = [];
   for (const user of users) {
-    const sessionHandles = await Session.getAllSessionHandlesForUser(user.id);
-    if (!user.lastLoggedInAt) {
+    let sessionHandles = await Session.getAllSessionHandlesForUser(user.id);
+    if (!user.lastLoggedInAt || dayjs(user.lastLoggedInAt).year() <= 2020) {
       let lastLoggedIn = 0;
       for (const session of sessionHandles) {
         const res = await Session.getSessionInformation(session);
         lastLoggedIn = Math.max(lastLoggedIn, res.timeCreated);
       }
-      user.lastLoggedInAt = dayjs(lastLoggedIn).utc().format();
-      await updateLastLoggedInTime(user.id, user.lastLoggedInAt);
+      const lastLoggedInAt = lastLoggedIn
+        ? dayjs(lastLoggedIn).utc().format()
+        : null;
+      if (lastLoggedInAt || (user.lastLoggedInAt && !lastLoggedInAt))
+        await updateLastLoggedInTime(user.id, lastLoggedInAt);
+
+      user.lastLoggedInAt = lastLoggedInAt;
     }
-    members.push({ ...user, isOnline: sessionHandles.length > 0 });
+    members.push({
+      ...user,
+      isOnline: user.status === UserAvailabilityStatus.online,
+    });
   }
   return members as TeamMember & { isOnline: boolean }[];
 }

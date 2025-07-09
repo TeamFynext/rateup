@@ -225,6 +225,30 @@ export interface TicketNodeData extends BaseNodeData {
     selectedBoardColumnName: string;
   };
 }
+export interface AssignNodeData extends BaseNodeData {
+  assign: {
+    choice: "manual" | "all";
+    assignType: "staff" | "me";
+    assignedUserIds: Array<string>;
+    teamId: string;
+    teamName?: string; // Optional team name for display purposes
+    roundRobin: boolean;
+    assignIfOnline: boolean;
+  };
+}
+
+export interface LeadgenNodeData extends BaseNodeData {
+  adAccountId: string;
+  ad: {
+    id: string;
+    name: string;
+  };
+  phone: string;
+  phoneField: string;
+  fbPageId: string;
+  leadgenFormId: string;
+  pageAccessToken: string;
+}
 
 // Map of node types to their data types
 export type NodeTypeMap = {
@@ -256,6 +280,8 @@ export type NodeTypeMap = {
   flowNode: FlowNodeData;
   aibotNode: AiBotNodeData;
   ticketNode: TicketNodeData;
+  assignNode: AssignNodeData;
+  leadgenNode: LeadgenNodeData;
 };
 
 // Node type strings as a union type
@@ -285,7 +311,8 @@ export type NodeData =
   | ContactsNodeData
   | FlowNodeData
   | AiBotNodeData
-  | TicketNodeData;
+  | TicketNodeData
+  | AssignNodeData;
 
 // Extended Node type with typed data
 export type TypedNode<T extends NodeType = NodeType> = Omit<

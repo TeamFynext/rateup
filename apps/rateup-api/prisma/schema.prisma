@@ -104,6 +104,7 @@ model User {
   assignedTicketCards TicketCardAssignee[]
   assignedBoards      TicketBoardNotification[]
   expoPushTokens      ExpoPushToken[]
+  // Add relation for WaAutomatedReply many-to-many
 }
 
 model Org {
@@ -117,6 +118,7 @@ model Org {
   address                  String?
   encryptionKeys           Json? //{privateKey:string,publicKey:string}
   isPaused                 Boolean?                   @default(false)
+  waAssignedChatPermission String                     @default("All")
   members                  OrgMember[]
   teams                    Team[]
   invitations              Invitation[]
@@ -149,6 +151,7 @@ model Org {
   expoPushTokens           ExpoPushToken[]
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
+  MetaAssets               MetaAssets[]
 }
 
 model UsageStats {
@@ -210,7 +213,6 @@ model WhatsappSettings {
   /// [PWaEncryptionKeys]
   encryption       Json? // for flow {publicKey: string, privateKey: string}
   Campaign         Campaign[]
-  WaAutomatedReply WaAutomatedReply[]
   LoyaltyWaCommand LoyaltyWaCommand[]
 }
 
@@ -237,6 +239,7 @@ model OrgMember {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String   @db.Uuid
   role      Role
+  status    String   @default("online")
 
   @@unique([userId, orgId], name: "userId_orgId")
 }
@@ -1244,15 +1247,19 @@ model WaMessageCampaginParticipantMap {
   campaignParticipantDripStageId String?                       @db.Uuid
 }
 
+enum AssignType {
+  me
+  staff
+}
+
 model WaAutomatedReply {
-  id                      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                    String
-  createdAt               DateTime          @default(now())
+  createdAt               DateTime @default(now())
   matchData               Json
   matchType               String // enums.ts: WaAutomatedReplyMatchType
-  orgId                   String?           @db.Uuid
-  org                     Org?              @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  WhatsappSettings        WhatsappSettings? @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
+  orgId                   String?  @db.Uuid
+  org                     Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId String?
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
@@ -1624,4 +1631,12 @@ model WaCatalogOrder {
   status        String          @default("PENDING")
   transactionId String?
   createdAt     DateTime        @default(now())
+}
+model MetaAssets {
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId     String   @unique @db.Uuid
+  pages     Json[]
+  adAccounts  Json[]
+  leads        Json[] 
+  leadgenForms  Json[]
 }

@@ -192,6 +192,7 @@ export enum WaEvent {
   SENT = "sent",
   FAILED = "failed",
   READ = "read",
+  LEADGEN = "leadgen",
 }
 
 // Changes to these enums should be reflected in schema.prisma defaultValues
@@ -411,15 +412,18 @@ export enum WaMessageAssignStatus {
   CLOSED = "CLOSED",
 }
 
-export enum WaMessageAssignStatusTab {
-  New = "NEW",
-  UnAssigned = "UNASSIGNED",
-  Assigned = "ASSIGNED",
-  AssignedToMe = "ASSIGNED",
-  Closed = "CLOSED",
-}
-
 export enum LoyaltyApiFeature {
   action = "action",
   reward = "reward",
+}
+
+export enum AssignType {
+  me = "me",
+  staff = "staff",
+}
+
+export enum WaAssignedChatPermission {
+  All = "All",
+  TeamMembers = "TeamMembers",
+  Admins = "Admins",
 }
