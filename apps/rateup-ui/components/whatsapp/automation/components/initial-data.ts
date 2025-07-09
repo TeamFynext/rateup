@@ -13,5 +13,26 @@ export const initialNodes: Node[] = [
   },
 ];
 
+export const leadAutomationinitialNodes: Node[] = [
+  {
+    id: "leadgen-1",
+    type: "leadgenNode",
+    position: { x: 250, y: 50 },
+    data: {
+      label: "Lead",
+      fbPageId: "",
+      adAccountId: "",
+      ad: {
+        id: "",
+        name: "",
+      },
+      phone: "",
+      phoneField: "",
+      leadgenFormId: "",
+      pageAccessToken: "",
+    },
+  },
+];
+
 // Initial edges for the flow
 export const initialEdges: Edge[] = [];

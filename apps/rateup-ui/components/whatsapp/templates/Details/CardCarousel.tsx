@@ -95,7 +95,7 @@ const CardCarousel = ({
   const { translations } = useTranslations();
   const [selectedText, setSelectedText] = useState("");
   const contentHistory = useRef([]); // Ref to store content history
-  const inputRefs = useRef([]);
+  const inputRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
 
   const applyFormatting = (style, index) => {
     let content = form.values.mediaCarousel[index].body;

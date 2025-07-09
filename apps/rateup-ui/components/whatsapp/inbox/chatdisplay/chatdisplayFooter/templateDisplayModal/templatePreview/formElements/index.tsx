@@ -4,6 +4,8 @@ import { Divider, Paper, Stack, Text } from "@mantine/core";
 import { Updater } from "use-immer";
 
 import { WaTemplateFetchBody } from "@/types/global";
+import { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
+import { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import WaTemplateFormComponents from "./components";
@@ -13,6 +15,10 @@ interface Props {
   setParameterData: Updater<any>;
   template: WaTemplateFetchBody;
   parameters?: Array<any>;
+  leadgenData?: {
+    data: LeadgenNodeData;
+    formQuestions: MetaAssets["leadgenForms"][number]["questions"];
+  };
 }
 export default function WaTemplateFormElements(props: Props) {
   const { translations } = useTranslations();
@@ -79,7 +85,6 @@ export default function WaTemplateFormElements(props: Props) {
         let exampleParams = props.parameters?.find(
           (data) => data.type === component.type?.toLowerCase(),
         )?.parameters;
-
         switch (component.type) {
           case "HEADER":
             return (
@@ -125,6 +130,7 @@ export default function WaTemplateFormElements(props: Props) {
                         ? exampleParams?.map((ep) => ep?.text)
                         : component?.example?.body_text?.[0]
                     }
+                    leadgenData={props?.leadgenData}
                   />
                 ) : (
                   <NoParams type={"Body"} />

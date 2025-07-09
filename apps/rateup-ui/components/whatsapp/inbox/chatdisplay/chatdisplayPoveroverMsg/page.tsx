@@ -12,6 +12,7 @@ import {
   Stack,
   Text,
   TextInput,
+  Title,
   Transition,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";

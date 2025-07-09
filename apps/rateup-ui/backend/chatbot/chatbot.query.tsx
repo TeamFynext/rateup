@@ -138,8 +138,8 @@ export const useGetChatbotDetails = (chatbotId: string | null) => {
   });
 };
 
-export const useAllChatbots = () =>
-  useQuery({ queryKey: ["all-chatbots"], queryFn: getAllChatbots });
+export const useAllChatbots = (enabled = true) =>
+  useQuery({ queryKey: ["all-chatbots"], queryFn: getAllChatbots, enabled });
 
 export const useCreateChatbot = () => {
   const queryClient = useQueryClient();
