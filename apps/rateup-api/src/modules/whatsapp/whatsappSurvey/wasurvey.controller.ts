@@ -640,10 +640,7 @@ export async function handleAutomatedReply(
         },
       });
 
-      // Find the next node based on the button clicked
-      // const nextNode = automation?.matchData?.json?.edges.find(
-      //   (edge: any) => edge.sourceHandle === parsedMessage.buttonId,
-      // );
+      // Find the next nodes based on the button clicked
       const nextNodes = automation?.matchData?.json?.edges.filter(
         (edge: any) => edge.sourceHandle === parsedMessage.buttonId,
       );
@@ -662,18 +659,6 @@ export async function handleAutomatedReply(
       } else {
         log.warn(`No next node found for buttonId ${parsedMessage.buttonId}`);
       }
-
-      // if (nextNode?.target) {
-      //   await processNextNode(
-      //     phone,
-      //     automation,
-      //     nextNode.target,
-      //     orgId,
-      //     automationLog?.id,
-      //   );
-      // } else {
-      //   log.warn(`No next node found for buttonId ${parsedMessage.buttonId}`);
-      // }
     }
     // Case 2: New message from user
     else {
