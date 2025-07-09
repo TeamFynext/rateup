@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
+  IconBrandMeta,
   IconExclamationCircle,
   IconMessageCircle,
   IconPhoto,
@@ -100,12 +101,20 @@ export function AutomatedReplyForm({
   const matchDataForm = useForm<WaAutomatedReplyMatchData>({
     initialValues: getInitialValues(initialValues).matchData,
   });
+  const [activetab, setActiveTab] = useState("keywords");
 
   useEffect(() => {
     if (!initialValues) return;
     const init = getInitialValues(initialValues);
     rootForm.setInitialValues(init);
     matchDataForm.setInitialValues(init.matchData);
+    setActiveTab(
+      initialValues?.commands.includes("*")
+        ? "allOthers"
+        : initialValues?.commands.includes("lead")
+          ? "leadgen"
+          : "keywords",
+    );
   }, [initialValues]);
 
   const router = useRouter();
@@ -120,21 +129,56 @@ export function AutomatedReplyForm({
   }
 
   function handleSubmitClick() {
-    const jsonData = matchDataForm.values.json;
+    let jsonData = matchDataForm.values.json;
 
-    // Update startMessage in all nodes of type "startNode"
-    jsonData.nodes = jsonData.nodes.map((node) => {
-      if (node.type === "startNode") {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            startMessage: rootForm?.values?.commands?.join(", "),
+    if (activetab === "leadgen" && !editMode) {
+      jsonData = {
+        nodes: [
+          {
+            id: `leadgenNode-${Date.now()}`,
+            type: "leadgenNode",
+            position: {
+              x: 225,
+              y: 45,
+            },
+            data: {
+              label: "Lead",
+              type: "leadgenNode",
+              fbPageId: "",
+              adAccountId: "",
+              ad: {
+                id: "",
+                name: "",
+              },
+              phone: "",
+              phoneField: "",
+              leadgenFormId: "",
+              pageAccessToken: "",
+            },
+            measured: {
+              width: 220,
+              height: 126,
+            },
           },
-        };
-      }
-      return node;
-    });
+        ],
+        edges: [],
+        viewport: {},
+      };
+    } else {
+      // Update startMessage in all nodes of type "startNode"
+      jsonData.nodes = jsonData.nodes.map((node) => {
+        if (node.type === "startNode") {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              startMessage: rootForm?.values?.commands?.join(", "),
+            },
+          };
+        }
+        return node;
+      });
+    }
 
     const data = {
       ...rootForm.values,
@@ -175,10 +219,14 @@ export function AutomatedReplyForm({
           onChange={(e) => {
             if (e === "allOthers") {
               rootForm.setFieldValue("commands", ["*"]);
+            } else if (e === "leadgen") {
+              rootForm.setFieldValue("commands", ["lead"]);
             } else {
               rootForm.setFieldValue("commands", []);
             }
+            setActiveTab(e);
           }}
+          value={activetab}
         >
           <Tabs.List>
             <Tabs.Tab
@@ -186,6 +234,9 @@ export function AutomatedReplyForm({
               leftSection={<IconMessageCircle size={12} />}
             >
               Keywords
+            </Tabs.Tab>
+            <Tabs.Tab value="leadgen" leftSection={<IconBrandMeta size={12} />}>
+              Lead generation
             </Tabs.Tab>
             <Tabs.Tab value="allOthers" leftSection={<IconPhoto size={12} />}>
               All Others
@@ -247,6 +298,17 @@ export function AutomatedReplyForm({
           </Tabs.Panel>
 
           <Tabs.Panel value="allOthers">
+            <ContainedTagInput
+              required
+              readOnly
+              disabled
+              label="Keywords"
+              placeholder="Enter keywords"
+              {...rootForm.getInputProps("commands")}
+            />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="leadgen">
             <ContainedTagInput
               required
               readOnly

@@ -118,7 +118,13 @@ const MainNavLinks = ({
 };
 
 // SubNavLinks Component
-const SubNavLinks = ({ links, activeSubLink, setActiveSubLink, router }) => {
+const SubNavLinks = ({
+  links,
+  activeSubLink,
+  setActiveSubLink,
+  router,
+  status,
+}) => {
   const linksIcon = links
     .filter((d) => !d?.disabled)
     .map((link, index) => (
@@ -132,6 +138,7 @@ const SubNavLinks = ({ links, activeSubLink, setActiveSubLink, router }) => {
         <UnstyledButton
           onClick={() => {
             setActiveSubLink(link.link);
+            showOfflineNotification(status);
             router.push(link.link);
           }}
           className={classes.link}
@@ -646,6 +653,7 @@ export default function Layout({ children, appProps }) {
     activeSubLink,
     setActiveSubLink,
     router,
+    status: userInfo?.data?.status || UserAvailabilityStatus.offline,
   });
 
   const lastLinks = (

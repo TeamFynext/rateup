@@ -1,11 +1,34 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { Badge, Divider, Group, Paper, rem, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Divider,
+  Group,
+  Paper,
+  Radio,
+  RadioGroup,
+  rem,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { Dropzone, IMAGE_MIME_TYPE, PDF_MIME_TYPE } from "@mantine/dropzone";
 import { useForm } from "@mantine/form";
-import { IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
+import { useListState } from "@mantine/hooks";
+import { IconPhoto, IconRefresh, IconUpload, IconX } from "@tabler/icons-react";
 
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
+import { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
+import {
+  useMetaAssets,
+  useSyncLeadgenFormQuestions,
+} from "@/backend/whatsapp/settings/waSettings.query";
+import {
+  ContainedSelection,
+  ContainedTextField,
+} from "@/components/input/ContainedInput/ContainedInput";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+import { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import classes from "./styles.module.css";
@@ -18,6 +41,10 @@ interface Props {
     component_data: any,
   ) => void;
   exampleParams?: Array<{ type: string }> | string[];
+  leadgenData?: {
+    data: LeadgenNodeData;
+    formQuestions: MetaAssets["leadgenForms"][number]["questions"];
+  };
 }
 export default function WaTemplateFormComponents(props: Props) {
   let header = props.exampleParams?.find(
@@ -58,6 +85,7 @@ export default function WaTemplateFormComponents(props: Props) {
           <WaBodyVariableInputComponent
             buildtemplatequerycomponent={props?.buildtemplatequerycomponent}
             exampleParams={props.exampleParams}
+            leadgenData={props?.leadgenData}
           />
         </Paper>
       );
@@ -204,14 +232,20 @@ function WaLocationInputComponent({
 function WaBodyVariableInputComponent({
   buildtemplatequerycomponent,
   exampleParams,
+  leadgenData,
 }: {
   buildtemplatequerycomponent: (
     component_type: "BODY",
     component_format: "TEXT",
     component_data: any,
   ) => void;
-  exampleParams?: Array<{ type: string }> | string[];
+  exampleParams?: Array<{ type: string; value?: string }> | string[];
+  leadgenData?: {
+    data: LeadgenNodeData;
+    formQuestions: MetaAssets["leadgenForms"][number]["questions"];
+  };
 }) {
+  const [paramChoice, setParamChoice] = useListState([]);
   const form = useForm({
     initialValues: {
       dynamicTags: exampleParams || [],
@@ -220,17 +254,112 @@ function WaBodyVariableInputComponent({
       buildtemplatequerycomponent("BODY", "TEXT", e.dynamicTags);
     },
   });
+  useEffect(() => {
+    if (exampleParams.length) {
+      exampleParams.forEach((param, index) => {
+        if (
+          typeof param === "string" ||
+          param.type !== "leadgenform-question-key"
+        ) {
+          setParamChoice.setItem(index, "default");
+        } else {
+          setParamChoice.setItem(index, "leadgenform-question-key");
+        }
+      });
+    }
+  }, [exampleParams]);
   const { translations } = useTranslations();
   return (
     <>
-      {exampleParams?.map((_, i) => (
-        <ContainedTextField
-          key={i}
-          label={`{{${i + 1}}}`}
-          placeholder={translations["select a dynamic tag value"]}
-          {...form.getInputProps(`dynamicTags.${i}`)}
-        />
-      ))}
+      {exampleParams?.map((_, i) =>
+        leadgenData ? (
+          <Stack key={i}>
+            <RadioGroup
+              value={paramChoice[i]}
+              onChange={(value) => setParamChoice.setItem(i, value)}
+            >
+              <Group>
+                <Radio value={"default"} label={"Manual"} />
+                <Radio
+                  value={"leadgenform-question-key"}
+                  label={"Select from lead form"}
+                />
+              </Group>
+            </RadioGroup>
+            {paramChoice[i] === "manual" && (
+              <ContainedTextField
+                key={i}
+                label={`{{${i + 1}}}`}
+                placeholder={translations["select a dynamic tag value"]}
+                {...form.getInputProps(`dynamicTags.${i}`)}
+              />
+            )}
+            {paramChoice[i] === "leadgenform-question-key" && (
+              <LeadFormQuestionsInputComponent
+                leadgenData={leadgenData}
+                value={form.values.dynamicTags[i]["value"] ?? ""}
+                onChange={(value) =>
+                  form.setFieldValue(`dynamicTags.${i}`, {
+                    type: "leadgenform-question-key",
+                    value,
+                  })
+                }
+                label={`{{${i + 1}}}`}
+              />
+            )}
+          </Stack>
+        ) : (
+          <ContainedTextField
+            key={i}
+            label={`{{${i + 1}}}`}
+            placeholder={translations["select a dynamic tag value"]}
+            {...form.getInputProps(`dynamicTags.${i}`)}
+          />
+        ),
+      )}
     </>
+  );
+}
+
+interface LeadFormQuestionsInputComponentProps {
+  leadgenData: {
+    data: LeadgenNodeData;
+    formQuestions: MetaAssets["leadgenForms"][number]["questions"];
+  };
+  value: string;
+  onChange: (value) => void;
+  label: string;
+}
+function LeadFormQuestionsInputComponent(
+  props: LeadFormQuestionsInputComponentProps,
+) {
+  const syncformQuestionsMut = useSyncLeadgenFormQuestions(
+    props.leadgenData.data.leadgenFormId,
+  );
+  const data = props.leadgenData.formQuestions.map((q) => q.key);
+  return (
+    <Group>
+      <ContainedSelection
+        label={"Form question key for " + props.label}
+        data={data}
+        value={props.value}
+        onChange={props.onChange}
+      />
+      <Tooltip label={"Sync form questions if not found."}>
+        <ActionIcon
+          onClick={() =>
+            syncformQuestionsMut.mutate({
+              fbPageId: props.leadgenData.data.fbPageId,
+              pageAccessToken: props.leadgenData.data.pageAccessToken,
+            })
+          }
+          mt={25}
+          variant="light"
+          loading={syncformQuestionsMut.isPending}
+        >
+          <IconRefresh />
+        </ActionIcon>
+      </Tooltip>
+    </Group>
   );
 }
