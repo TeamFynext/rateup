@@ -17,6 +17,7 @@ import WaTextEditor, {
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
+import { showErrorToast } from "@/utils/notifications";
 
 import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
@@ -263,6 +264,9 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
     useDisclosure(false);
 
   function handleAssignToMe() {
+    if (!user) {
+      return showErrorToast("failed!try again");
+    }
     assignMut.mutate({
       contactId,
       assignedUserIds: [user.userId],
