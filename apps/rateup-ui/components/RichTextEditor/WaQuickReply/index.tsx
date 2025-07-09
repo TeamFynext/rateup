@@ -47,8 +47,10 @@ const WaQuickReplyControl = () => {
       <Popover.Dropdown>
         <WaQuickReply
           handleSelectQuickReply={(value) => {
-            editor.commands.insertContent(value);
-            setOpened((o) => !o);
+            if (editor) {
+              editor.commands.insertContent(value);
+              setOpened((o) => !o);
+            }
           }}
         />
       </Popover.Dropdown>
