@@ -66,6 +66,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
     hasNextPage, // boolean
     isError,
     isFetchingNextPage,
+    isLoading,
   } = useGetMessagesByContactId(contactId, filter?.phone);
 
   const [currentScrollPosition, setCurrentScrollPosition] = useState(0);
@@ -174,14 +175,16 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
     const wa_id =
       exchangeProcess === "send"
         ? message.messageId
-        : message.messageBody.receive.messages[0].id;
+        : message.messageBody?.receive &&
+          message.messageBody.receive?.messages[0].id;
     const reactionMsg = props.data?.findLast((msg) => {
       const { messageType, messageContent } = parseWaMessage(msg.messageBody);
       return (
         messageType === "reaction" &&
         wa_id ===
           (msg.messageBody.exchangeProcess === "receive"
-            ? msg.messageBody.receive?.messages[0].reaction.message_id
+            ? msg.messageBody?.receive &&
+              msg.messageBody.receive?.messages[0].reaction.message_id
             : msg.messageBody.send.reaction.message_id)
       );
     });
@@ -212,7 +215,11 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
           ...(props.smallScreen ? { padding: 0, paddingLeft: 10 } : {}),
         }}
       >
-        {props?.data && hasNextPage ? (
+        {isLoading ? (
+          <Center>
+            <Loader size={"xs"} my="auto" />
+          </Center>
+        ) : props?.data && hasNextPage ? (
           <div ref={paginateTargetRef}></div>
         ) : (
           <EndofConversationComponent />
