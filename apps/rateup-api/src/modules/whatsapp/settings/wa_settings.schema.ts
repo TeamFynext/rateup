@@ -56,7 +56,21 @@ const contactTagSchema = z.object({
 const byWaSettingsIdParamsSchema = z.object({
   phoneId: z.string(),
 });
-
+const byLeadGenFormIdParamsSchema = z.object({
+  formId: z.string(),
+});
+const byAdAccountIdParamsSchema = z.object({
+  adAccountId: z.string(),
+});
+// const sourceQuery = z.object({
+//   source: z.string()
+// })
+const byFbPageQuerySchema = z.object({
+  fbPageId: z.string(),
+  pageAccessToken: z.string(),
+  fields: z.array(z.string()).optional(),
+});
+// .merge(sourceQuery);
 export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
   buildJsonSchemas(
     {
@@ -66,6 +80,10 @@ export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
       contactTagSchema,
       paginationQuery,
       byWaSettingsIdParamsSchema,
+      byLeadGenFormIdParamsSchema,
+      byFbPageQuerySchema,
+      byAdAccountIdParamsSchema,
+      // sourceQuery
     },
     { $id: "waSettingsSchema" },
   );
@@ -76,3 +94,13 @@ export type PaginationQuery = z.infer<typeof paginationQuery>;
 export type ByWaSettingsIdParamsSchema = z.infer<
   typeof byWaSettingsIdParamsSchema
 >;
+export type ByLeadGenFormIdParamsSchema = z.infer<
+  typeof byLeadGenFormIdParamsSchema
+>;
+export type ByFbPageQuerySchema = z.infer<typeof byFbPageQuerySchema>;
+export type ByAdAccountIdParamsSchema = z.infer<
+  typeof byAdAccountIdParamsSchema
+>;
+// export type SourceQuerySchema = z.infer<
+//   typeof sourceQuery
+// >;
