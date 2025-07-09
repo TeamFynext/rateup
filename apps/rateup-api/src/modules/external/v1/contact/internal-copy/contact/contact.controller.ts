@@ -15,7 +15,7 @@ import {
   getContactsByOrgId,
   updateContactById,
 } from "./contact.service";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../../../../../../generated/prisma/client";
 import { log } from "../../../../../../utils/logger";
 
 export async function createContactHandler(

@@ -34,7 +34,10 @@ import { getWaSettingsByPhoneId } from "../settings/wa_settings.service";
 import { handleStaticFlowReply, sendFlow } from "../flows/flow.service";
 
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
-import { CampaignParticipant, Contact, WhatsappSettings } from "@prisma/client";
+import {
+  CampaignParticipant,
+  Contact,
+} from "../../../../../../../../generated/prisma/client";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 import {
   WaEvent,

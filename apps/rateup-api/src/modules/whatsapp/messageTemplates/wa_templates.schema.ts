@@ -5,7 +5,7 @@ import {
   WaButtonType,
   WaTemplateCategory,
 } from "../../../types/enums";
-import { TemplateType } from "@prisma/client";
+import { TemplateType } from "../../../../generated/prisma/client";
 
 const waTemplateInput = {
   id: z.string().optional(),

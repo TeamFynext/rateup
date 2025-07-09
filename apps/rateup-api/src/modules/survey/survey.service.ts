@@ -37,7 +37,7 @@ import { hasFeature } from "../subscription/subscription.service";
 import { updateQuestionsOnSurvey } from "../question/question.service";
 import { createStats } from "../stats/stats.service";
 import dayjs from "dayjs";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../../generated/prisma/client";
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string

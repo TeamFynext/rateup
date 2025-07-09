@@ -29,7 +29,7 @@ import {
 } from "../settings/settings.service";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
 import { ContactCore, PaginationQuery } from "../../contact/contact.schema";
-import { ContactGroupType } from "@prisma/client";
+import { ContactGroupType } from "../../../../generated/prisma/client";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
 
 export async function createLCustomerHandler(

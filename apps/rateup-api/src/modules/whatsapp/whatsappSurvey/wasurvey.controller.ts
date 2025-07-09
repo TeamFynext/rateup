@@ -83,7 +83,7 @@ import {
   Contact,
   PlatformType,
   WhatsappSettings,
-} from "@prisma/client";
+} from "../../../../generated/prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 import {

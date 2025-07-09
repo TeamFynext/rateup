@@ -1,5 +1,5 @@
 import { MultipartFile } from "@fastify/multipart";
-import { TemplateType } from "@prisma/client";
+import { TemplateType } from "../../../../../../../../generated/prisma/client";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";
 import { CreateWaTemplateInput } from "./wa_templates.schema";

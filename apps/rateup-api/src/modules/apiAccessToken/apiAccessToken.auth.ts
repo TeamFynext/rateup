@@ -3,7 +3,7 @@ import { log } from "../../utils/logger";
 import { ByOrgIdParams } from "../org/org.schema";
 import { verifyApiAccessToken } from "./apiAccessToken.service";
 import { getOrgById } from "../org/org.services";
-import { Role } from "@prisma/client";
+import { Role } from "../../../generated/prisma/client";
 
 /**
  * Verifies that the api-access-key is valid & sets orgId on the request.user object.

@@ -1,4 +1,4 @@
-import { Survey, WaFlow } from "@prisma/client";
+import { Survey, WaFlow } from "../../../../generated/prisma/client";
 import { WaSendMessageBody } from "../../../types/whatsapp.types";
 import {
   LDResponse,

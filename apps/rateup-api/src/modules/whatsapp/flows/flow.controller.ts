@@ -42,7 +42,7 @@ import {
   WaFlowStatus,
 } from "../../../types/enums";
 import { createSurvey, deleteSurveyById } from "../../survey/survey.service";
-import { Survey } from "@prisma/client";
+import { Survey } from "../../../../generated/prisma/client";
 import { GraphApiError, callWhatsappApi } from "../wa_axios";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { getGraphApiErrorMessage } from "../wa_error_handler";

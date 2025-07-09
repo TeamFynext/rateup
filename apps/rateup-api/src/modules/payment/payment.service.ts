@@ -3,7 +3,7 @@ import {
   PaymentPlanStatus,
   PaymentStatus,
   SubscriptionStatus,
-} from "@prisma/client";
+} from "../../../generated/prisma/client";
 import axios from "axios";
 import {
   CreateCheckoutInput,

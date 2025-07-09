@@ -32,8 +32,7 @@ import {
   LoyaltyAction,
   LoyaltyCustomer,
   LoyaltyWaCommand,
-} from "@prisma/client";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+} from "../../../../generated/prisma/client";
 import {
   createContact,
   getOrcreateContact,
@@ -51,6 +50,7 @@ import { getContactGroupById } from "../../contact/contactGroup/contactGroup.ser
 import { AddNewContactsToGroupInput } from "../../contact/contactGroup/contactGroup.schema";
 import { getContactTag } from "../../whatsapp/settings/wa_settings.service";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
+import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace";
 
 let includeContact = {
   Contact: {

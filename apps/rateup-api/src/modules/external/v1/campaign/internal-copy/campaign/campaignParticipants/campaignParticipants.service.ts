@@ -1,4 +1,4 @@
-import { CampaignParticipant } from "@prisma/client";
+import { CampaignParticipant } from "../../../../../../../../generated/prisma/client";
 import {
   CreateCampaignParticipantsFromContactsInput,
   CreateCampaignParticipantsFromGroupsInput,

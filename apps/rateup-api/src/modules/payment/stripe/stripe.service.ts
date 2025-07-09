@@ -1,4 +1,8 @@
-import { OrderStatus, PaymentStatus, SubscriptionStatus } from "@prisma/client";
+import {
+  OrderStatus,
+  PaymentStatus,
+  SubscriptionStatus,
+} from "../../../../generated/prisma/client";
 import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
 import axios from "axios";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated";
