@@ -49,7 +49,7 @@ import {
   UpdateSurveyPassword,
 } from "./survey.schema";
 import Session from "supertokens-node/recipe/session";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../../generated/prisma/client";
 import { BySurveyTeamMapIdParams, ByTeamIdParams } from "../team/team.schema";
 import { getTeamIdsByUserId } from "../team/team.service";
 // import { createDefaultSurveyTheme } from "../surveyTheme/surveyTheme.service";

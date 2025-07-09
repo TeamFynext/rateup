@@ -10,7 +10,7 @@ import {
   reorderCards,
   getCardTeamMembersById,
 } from "./card.service";
-import { TicketType } from "@prisma/client";
+import { TicketType } from "../../../../generated/prisma/client";
 import { UpdateCardRequest } from "./card.schema";
 
 export async function createCardHandler(

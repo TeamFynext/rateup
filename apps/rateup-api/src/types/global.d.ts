@@ -5,7 +5,7 @@ import {
   Prisma,
   Role,
   WaMessage,
-} from "@prisma/client";
+} from "../../../generated/prisma/client";
 import {
   QuestionType,
   SmileyResponse,

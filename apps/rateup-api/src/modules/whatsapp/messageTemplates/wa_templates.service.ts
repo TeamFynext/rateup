@@ -23,7 +23,7 @@ import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
 import { SendTemplateHeaderComponent } from "../../external/v1/whatsapp/template/wa_templates.external.schema";
 import { WaTemplateComponent } from "../../../types/whatsapp.types";
-import { $Enums, TemplateType } from "@prisma/client";
+import { $Enums, TemplateType } from "../../../../generated/prisma/client";
 
 /**
  * fetches templates from WhatsApp Business API

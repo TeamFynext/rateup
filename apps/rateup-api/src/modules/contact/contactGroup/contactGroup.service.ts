@@ -9,7 +9,7 @@ import {
   UpdateContactGroupInput,
 } from "./contactGroup.schema";
 import { BATCH_SIZE } from "../../../utils/constants/constants";
-import { ContactGroupType } from "@prisma/client";
+import { ContactGroupType } from "../../../../generated/prisma/client";
 
 export async function getContactGroupById(contactGroupId: string) {
   const contactGroup = await prisma.contactGroup.findUnique({

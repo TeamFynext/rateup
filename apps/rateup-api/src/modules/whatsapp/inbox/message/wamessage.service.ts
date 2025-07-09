@@ -5,7 +5,7 @@ import {
   PlatformType,
   WaAccountSettings,
   WaMessage,
-} from "@prisma/client";
+} from "../../../../../generated/prisma/client";
 import prisma from "../../../../utils/prisma";
 import {
   DateType,

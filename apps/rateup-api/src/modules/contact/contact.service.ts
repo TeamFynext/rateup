@@ -1,4 +1,4 @@
-import { Contact, ContactGroupType } from "@prisma/client";
+import { Contact, ContactGroupType } from "../../../generated/prisma/client";
 import { log } from "../../utils/logger";
 import prisma from "../../utils/prisma";
 import {

@@ -1,4 +1,7 @@
-import { PlatformType, ResponsePlatform } from "@prisma/client";
+import {
+  PlatformType,
+  ResponsePlatform,
+} from "../../../../generated/prisma/client";
 import {
   CampaignParticipantStatus,
   LogicAction,

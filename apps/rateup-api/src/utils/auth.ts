@@ -1,12 +1,12 @@
 import prisma from "./prisma";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ContactGroupType, Role } from "@prisma/client";
 import { log } from "./logger";
 import { getSubscription } from "../modules/subscription/subscription.service";
 import { SubscriptionFeaturePathName, UserRecipes } from "../types/enums";
 import dayjs from "dayjs";
 import { UnlimitedAccess } from "../modules/subscription/subscription.data";
 import { getNestedProperty } from "./misc/obj.utils";
+import { ContactGroupType, Role } from "../../generated/prisma/client";
 
 export async function hasAccessToSurvey(surveyId: string, userId: string) {
   try {

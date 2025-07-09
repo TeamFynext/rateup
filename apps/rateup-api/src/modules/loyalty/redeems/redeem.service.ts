@@ -6,7 +6,7 @@ import {
 } from "../customer/customer.service";
 
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
-import { LoyaltyWaCommand } from "@prisma/client";
+import { LoyaltyWaCommand } from "../../../../generated/prisma/client";
 import { replacedContentByDynamicVariable } from "../settings/settings.service";
 import { WaAutomatedReplyResponseType } from "../../../types/enums";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";

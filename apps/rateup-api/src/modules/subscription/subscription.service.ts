@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import prisma from "../../utils/prisma";
 import { FreePlanSubscriptionFeatures } from "./subscription.data";
 import { updateSubscriptionInput } from "./subscription.schema";
-import { PaymentPlanType } from "@prisma/client";
+import { PaymentPlanType } from "../../../generated/prisma/client";
 import { createStats } from "../stats/stats.service";
 import { SubscriptionFeaturePathName } from "../../types/enums";
 import { getNestedProperty } from "../../utils/misc/obj.utils";

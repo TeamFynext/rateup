@@ -19,7 +19,7 @@ import { getWaSettings } from "../settings/wa_settings.service";
 import { getFileUrlFromKey, uploadFile } from "../../../utils/upload/s3Upload";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { TemplateType, WaSession } from "@prisma/client";
+import { TemplateType, WaSession } from "../../../../generated/prisma/client";
 import { sendMessage } from "./wasurvey.service";
 import prisma from "../../../utils/prisma";
 import {

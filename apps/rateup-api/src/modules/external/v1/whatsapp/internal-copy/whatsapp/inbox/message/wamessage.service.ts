@@ -1,4 +1,7 @@
-import { Contact, WaMessage } from "@prisma/client";
+import {
+  Contact,
+  WaMessage,
+} from "../../../../../../../../../generated/prisma/client";
 import prisma from "../../../../../../../../utils/prisma";
 
 export async function addNewWaMessage(

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../generated/prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { customAlphabet } from "nanoid";
 import { nolookalikesSafe } from "nanoid-dictionary";

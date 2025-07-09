@@ -74,7 +74,7 @@ import { autoGenerateTicket } from "../ticket/ticketCard/card.service";
 import { getCampaignParticipantsByCampaignId } from "../campaign/campaignParticipants/campaignParticipants.service";
 import { getTeamIdsByUserId } from "../team/team.service";
 import { BATCH_SIZE } from "../../utils/constants/constants";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../../generated/prisma/client";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

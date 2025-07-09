@@ -10,8 +10,6 @@ import { log } from "../../utils/logger";
 import dayjs from "dayjs";
 import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
 import xlsx from "node-xlsx";
-import { getCampaignParticipantsByCampaignId } from "./campaignParticipants/campaignParticipants.service";
-import { Prisma } from "@prisma/client";
 
 import {
   WaTemplateComponent,
@@ -266,21 +264,6 @@ export async function getCampaignsByTeamId(teamId: string) {
   });
   return campaigns;
 }
-
-type CampaignWithExtras = Prisma.CampaignGetPayload<{
-  include: {
-    team: {
-      select: {
-        name: true;
-      };
-    };
-    _count: {
-      select: {
-        campaignParticipants: true;
-      };
-    };
-  };
-}> & { flowVersion?: string };
 
 export async function getCampaignsByOrgId(orgId: string) {
   const campaigns = await prisma.$queryRaw`SELECT 
