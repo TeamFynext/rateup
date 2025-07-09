@@ -1,3 +1,5 @@
+import type { NextConfig } from "next";
+
 import withBundleAnalyzer from "@next/bundle-analyzer";
 import { withSentryConfig } from "@sentry/nextjs";
 
@@ -5,7 +7,7 @@ const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
-const nextConfig = bundleAnalyzer({
+const nextConfig: NextConfig = bundleAnalyzer({
   i18n: {
     locales: ["en", "de", "fr", "ar", "hi"],
     defaultLocale: "en",
@@ -33,6 +35,9 @@ const nextConfig = bundleAnalyzer({
           removeConsole: true,
         }
       : {},
+  experimental: {
+    reactCompiler: true,
+  },
   webpack: (config) => {
     // '...' is important here – it keeps the default webpack conditionNames
     config.resolve.conditionNames = ["require", "..."];

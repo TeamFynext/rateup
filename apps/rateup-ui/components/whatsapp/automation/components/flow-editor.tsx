@@ -27,6 +27,7 @@ import { useDebouncedCallback, useHotkeys } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 
+import { WaAutomatedReply } from "@/types/global";
 import { useUpdateWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 
 import { TypedNode, validateNodeData } from "../types/node-types";
@@ -35,7 +36,11 @@ import { HistoryManager } from "../utils/history";
 import ComponentSidebar from "./component-sidebar";
 import CustomEdge from "./CustomEdge";
 import styles from "./flow-editor.module.css";
-import { initialEdges, initialNodes } from "./initial-data";
+import {
+  initialEdges,
+  initialNodes,
+  leadAutomationinitialNodes,
+} from "./initial-data";
 import NodeEditor from "./node-editor";
 import { nodeTypes } from "./nodes";
 import Toolbar from "./toolbar";
@@ -55,11 +60,14 @@ function FlowEditorContent({
   refetch,
 }: {
   readonly waAutomatedReplyId: string;
-  readonly waAutomationData: any;
+  readonly waAutomationData: WaAutomatedReply;
   readonly refetch: () => void;
 }) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const isLeadAutomation = waAutomationData?.commands[0] === "lead";
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    isLeadAutomation ? leadAutomationinitialNodes : initialNodes,
+  );
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<TypedNode | null>(null);
@@ -346,31 +354,69 @@ function FlowEditorContent({
       const startNodes = allNodes.filter(
         (node: Node) => node.type === "startNode",
       );
-      if (startNodes.length === 0) {
-        !silent &&
-          notifications.show({
-            title: "Validation Error",
-            message: "Flow must have a start node.",
-            color: "red",
-          });
-        return false;
-      } else if (startNodes.length > 1) {
-        !silent &&
-          notifications.show({
-            title: "Validation Error",
-            message: "Flow must have exactly one start node.",
-            color: "red",
-          });
-        return false;
+      const leadgenNodes = allNodes.filter(
+        (node: Node) => node.type === "leadgenNode",
+      );
+      if (isLeadAutomation) {
+        if (leadgenNodes.length > 1) {
+          !silent &&
+            notifications.show({
+              title: "Validation Error",
+              message: "Only one Lead node is allowed",
+              color: "red",
+            });
+          return false;
+        }
+        if (allNodes[0].type !== "leadgenNode") {
+          !silent &&
+            notifications.show({
+              title: "Validation Error",
+              message: "First node should be a Lead Node.",
+              color: "red",
+            });
+          return false;
+        }
+      }
+
+      if (!isLeadAutomation) {
+        if (startNodes.length === 0) {
+          !silent &&
+            notifications.show({
+              title: "Validation Error",
+              message: "Flow must have a start node.",
+              color: "red",
+            });
+          return false;
+        } else if (startNodes.length > 1) {
+          !silent &&
+            notifications.show({
+              title: "Validation Error",
+              message: "Flow must have exactly one start node.",
+              color: "red",
+            });
+          return false;
+        }
+        if (leadgenNodes.length) {
+          !silent &&
+            notifications.show({
+              title: "Validation Error",
+              message: "Lead node is only allowed lead automation",
+              color: "red",
+            });
+          return false;
+        }
       }
 
       // Check if all nodes (except start) have incoming connections
       const nodesWithIncomingEdges = new Set(
         allEdges.map((edge: any) => edge.target),
       );
+
       const nodesWithoutIncoming = allNodes.filter(
         (node: Node) =>
-          node.type !== "startNode" && !nodesWithIncomingEdges.has(node.id),
+          node.type !== "startNode" &&
+          node.type !== "leadgenNode" &&
+          !nodesWithIncomingEdges.has(node.id),
       );
 
       if (nodesWithoutIncoming.length > 0) {
@@ -609,7 +655,7 @@ export default function FlowEditor({
   refetch,
 }: {
   waAutomatedReplyId: string;
-  data: any;
+  data: WaAutomatedReply;
   refetch: () => void;
 }) {
   return (

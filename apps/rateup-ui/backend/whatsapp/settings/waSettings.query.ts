@@ -6,10 +6,18 @@ import {
   createWaSettings,
   deleteWaSettings,
   deRegisterBusinessClient,
+  fbPageQuery,
   getContactTags,
+  getMetaAssets,
   getWaLogs,
   getWaSettings,
   registerBusinessClient,
+  subscribeFieldtoPage,
+  syncAdAccounts,
+  syncAdsByAdAccount,
+  syncFbPages,
+  syncLeadgenFormQuestions,
+  syncMetaLeadgenForms,
   updateContactTags,
   upsertWaSettings,
 } from "./waSettings.api";
@@ -125,3 +133,94 @@ export const useWaLogs = (pagination, search, sort, columnFilters) =>
     queryKey: ["waLogs", pagination, search, sort, columnFilters],
     queryFn: () => getWaLogs(pagination, search, sort, columnFilters),
   });
+
+export const useMetaAssets = (enabled = true) =>
+  useQuery({
+    queryKey: ["metaAssets"],
+    queryFn: getMetaAssets,
+    enabled,
+  });
+
+export const useSyncFbPages = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: syncFbPages,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["metaAssets"] });
+      showSuccessToast("success");
+    },
+    onError: () => {
+      showErrorToast("error");
+    },
+  });
+};
+
+export const useSyncMetaLeadgenForms = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: syncMetaLeadgenForms,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["metaAssets"] });
+      showSuccessToast("success");
+    },
+    onError: () => {
+      showErrorToast("error");
+    },
+  });
+};
+
+export const useSyncLeadgenFormQuestions = (formId) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: fbPageQuery) => syncLeadgenFormQuestions(formId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["metaAssets"] });
+      showSuccessToast("success");
+    },
+    onError: () => {
+      showErrorToast("error");
+    },
+  });
+};
+
+export const useSyncAdaccounts = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: syncAdAccounts,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["metaAssets"] });
+      showSuccessToast("success");
+    },
+    onError: () => {
+      showErrorToast("error");
+    },
+  });
+};
+
+export const useSyncAdsByadAccounts = (adAccountId) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => syncAdsByAdAccount(adAccountId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["metaAssets"] });
+      showSuccessToast("success");
+    },
+    onError: () => {
+      showErrorToast("error");
+    },
+  });
+};
+
+export const useSubscribeFieldToPage = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: subscribeFieldtoPage,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["metaAssets"] });
+      showSuccessToast("success");
+    },
+    onError: () => {
+      showErrorToast("error");
+    },
+  });
+};

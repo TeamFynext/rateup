@@ -4,6 +4,7 @@ import type React from "react";
 import { useCallback } from "react";
 
 import {
+  IconAd,
   IconExternalLink,
   IconFile,
   IconGitMerge,
@@ -82,6 +83,7 @@ const categories = [
       { id: "ticketNode", label: "Ticket", icon: <IconGitMerge size={16} /> },
       { id: "aibotNode", label: "AiBot", icon: <IconRobotFace size={16} /> },
       { id: "assignNode", label: "Assign", icon: <IconUser size={16} /> },
+      { id: "leadgenNode", label: "Lead", icon: <IconAd size={16} /> },
     ],
   },
 ];
