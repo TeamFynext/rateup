@@ -6,6 +6,7 @@ import {
   IconApps,
   IconAutomation,
   IconAward,
+  IconBell,
   IconBrandHipchat,
   IconBrandTeams,
   IconBrandWhatsapp,
@@ -61,6 +62,7 @@ import {
   SubscriptionFeaturePathName,
 } from "../../../types/enums";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
+import NotificationBellIcon from "../Notification";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
 //navbar interface
@@ -398,6 +400,7 @@ export function getNavTopData(
       : []),
   ];
   const lastLinksData = [
+    { icon: NotificationBellIcon, label: "Notifications" },
     ...(process.env.NEXT_PUBLIC_EXPERIMENT
       ? [{ icon: ColorSchemaButton, label: "Dark Mode" }]
       : []),
