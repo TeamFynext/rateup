@@ -142,10 +142,11 @@ export default function DashboardHome() {
                         <SurveyDashCard
                           key={item.id}
                           title={item.title}
+                          itemId={item.dbFlowId}
                           createdAt={item.createdAt}
                           responseCount={item.responseCount}
                           type="flow"
-                          OnClickAction={"/dashboard/whatsapp/flows"}
+                          OnClickAction={`/dashboard/whatsapp/flows/v${item.version}`}
                         />
                       ))}
                   </GridWrapper>
@@ -203,6 +204,7 @@ export default function DashboardHome() {
                         <SurveyDashCard
                           key={item.id}
                           title={item.title}
+                          itemId={item.id}
                           createdAt={item.createdAt}
                           responseCount={item.responseCount}
                           type="web"
