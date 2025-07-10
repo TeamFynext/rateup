@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
-import { TicketPriority, TicketStatus, TicketType } from "@prisma/client";
+import {
+  TicketPriority,
+  TicketType,
+} from "../../../../generated/prisma/client";
 
 // Base schema for card
 const cardCore = {

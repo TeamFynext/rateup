@@ -27,7 +27,7 @@ import {
 import supertokens from "supertokens-node";
 import PasswordLess from "supertokens-node/recipe/passwordless";
 import Session from "supertokens-node/recipe/session";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../../generated/prisma/client";
 import { log } from "../../utils/logger";
 import EmailPassword from "supertokens-node/recipe/emailpassword";
 import { IdParamInput } from "../survey/survey.schema";

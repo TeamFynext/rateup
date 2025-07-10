@@ -2,12 +2,14 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  moduleFormat    = "commonjs"
+  previewFeatures = ["queryCompiler", "driverAdapters"]
 }
 
 // for having typed Json fields
 // TODO: remove this when prisma allows types for Json
-// https://github.com/prisma/prisma/issues/3219
 generator json {
   provider  = "prisma-json-types-generator"
   namespace = "PrismaJson"

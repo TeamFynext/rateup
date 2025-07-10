@@ -9,7 +9,7 @@ import {
   getFlowFromDb,
   handleDecryptedFlowRequest,
 } from "../flows/flow.service";
-import { WhatsappSettings } from "@prisma/client";
+import { WhatsappSettings } from "../../../../../../../../generated/prisma/client";
 import { log } from "../../../../../../../utils/logger";
 
 export function generateKeyPairsForWaEncryption(passphrase: string) {

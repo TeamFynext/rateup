@@ -46,7 +46,7 @@ import {
   Org,
   PaymentStatus,
   SubscriptionStatus,
-} from "@prisma/client";
+} from "../../../../generated/prisma/client";
 import { getSubscription } from "../../subscription/subscription.service";
 import dayjs from "dayjs";
 import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated";

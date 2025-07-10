@@ -83,7 +83,7 @@ import {
   Contact,
   PlatformType,
   WhatsappSettings,
-} from "@prisma/client";
+} from "../../../../generated/prisma/client";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
 import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
 import {
@@ -670,19 +670,22 @@ export async function handleAutomatedReply(
         },
       });
 
-      // Find the next node based on the button clicked
-      const nextNode = automation?.matchData?.json?.edges.find(
+      // Find the next nodes based on the button clicked
+      const nextNodes = automation?.matchData?.json?.edges.filter(
         (edge: any) => edge.sourceHandle === parsedMessage.buttonId,
       );
-
-      if (nextNode?.target) {
-        await processNextNode(
-          phone,
-          automation,
-          nextNode.target,
-          orgId,
-          automationLog?.id,
-        );
+      if (nextNodes.length) {
+        for (const node of nextNodes) {
+          if (node?.target) {
+            await processNextNode(
+              phone,
+              automation,
+              node.target,
+              orgId,
+              automationLog?.id,
+            );
+          }
+        }
       } else {
         log.warn(`No next node found for buttonId ${parsedMessage.buttonId}`);
       }

@@ -1,4 +1,4 @@
-import { ResponsePlatform } from "@prisma/client";
+import { ResponsePlatform } from "../../../../../../../../generated/prisma/client";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { callWhatsappApi } from "../wa_axios";

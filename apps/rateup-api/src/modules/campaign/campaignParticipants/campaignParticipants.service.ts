@@ -1,4 +1,3 @@
-import { CampaignParticipant } from "@prisma/client";
 import {
   CampaignParticipantSource,
   CampaignParticipantStatus,
@@ -11,6 +10,7 @@ import {
 } from "./campaignParticipants.schema";
 import { mapStatuses } from "../../whatsapp/whatsappSurvey/wasurvey.utils";
 import { PaginationQuery } from "../../contact/contact.schema";
+import { CampaignParticipant } from "../../../../generated/prisma/client";
 
 export async function createCampaignParticipantsFromGroup(
   campaignId: string,

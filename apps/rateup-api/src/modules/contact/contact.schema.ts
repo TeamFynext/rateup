@@ -1,4 +1,4 @@
-import { ContactGroupType } from "@prisma/client";
+import { ContactGroupType } from "../../../generated/prisma/client";
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import { WaMessageAssignStatus } from "../../types/enums";

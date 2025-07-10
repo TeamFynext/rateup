@@ -19,7 +19,7 @@ import { getLoyaltyActionById } from "../actions/actions.service";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
 import { updateMonthlyStat } from "../../stats/stats.service";
 import { log } from "../../../utils/logger";
-import { LoyaltyWaCommand } from "@prisma/client";
+import { LoyaltyWaCommand } from "../../../../generated/prisma/client";
 import {
   createRedeem,
   handleIssuedRewardsCommand,

@@ -1,4 +1,8 @@
-import { Contact, WaMessage, WhatsappSettings } from "@prisma/client";
+import {
+  Contact,
+  WaMessage,
+  WhatsappSettings,
+} from "../../../../generated/prisma/client";
 import prisma from "../../../utils/prisma";
 import { callWhatsappApi } from "../wa_axios";
 import { UpdateCatalogSchema } from "./catalog.schema";
