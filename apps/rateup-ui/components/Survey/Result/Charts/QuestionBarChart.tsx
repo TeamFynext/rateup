@@ -32,6 +32,7 @@ interface QuestionBarChartProps {
   questionType: QuestionType | WaQuestions;
   no: number;
   responseCount: number;
+  version?: number;
 }
 interface CustomTooltipProps {
   active?: boolean;
@@ -97,6 +98,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
   questionType,
   no,
   responseCount,
+  version = 1,
 }) => {
   const { translations } = useTranslations();
 
@@ -133,6 +135,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
             totalResponses={responseCount}
             questionType={questionType}
             choiceCounts={data}
+            version={version}
           />
         </Stack>
         <Stack style={{ flex: 1 }} align="center">
