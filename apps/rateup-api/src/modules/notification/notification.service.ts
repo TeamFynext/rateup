@@ -1,0 +1,109 @@
+import prisma from "../../utils/prisma";
+import { NotificationSettingSchema } from "./notification.schema";
+
+export async function getNotifications(userId: string, orgId: string) {
+  return await prisma.notification.findMany({
+    where: {
+      orgMember: {
+        userId,
+        orgId,
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+export async function getNotificationsCount(userId: string, orgId: string) {
+  return await prisma.notification.count({
+    where: {
+      orgMember: {
+        userId,
+        orgId,
+      },
+    },
+  });
+}
+
+export async function updateNotificationSettings(
+  userId: string,
+  orgId: string,
+  data: NotificationSettingSchema,
+) {
+  const { id } = await prisma.orgMember.findUnique({
+    where: {
+      userId_orgId: {
+        userId,
+        orgId,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+  await prisma.notificationSetting.upsert({
+    where: {
+      orgMemberId: id,
+    },
+    create: {
+      orgMemberId: id,
+      ...data,
+    },
+    update: data,
+  });
+}
+
+export async function getNotificationSettings(userId, orgId) {
+  return await prisma.notificationSetting.findFirst({
+    where: {
+      orgMember: {
+        userId,
+        orgId,
+      },
+    },
+  });
+}
+
+export async function createNotification(
+  userId,
+  orgId,
+  source,
+  subSource,
+  data,
+) {
+  await prisma.notification.create({
+    data: {
+      orgMember: {
+        connect: {
+          userId_orgId: {
+            userId,
+            orgId,
+          },
+        },
+      },
+      source,
+      subSource,
+      data,
+    },
+  });
+}
+
+export async function deleteNotificationById(notificationId: string) {
+  await prisma.notification.delete({
+    where: {
+      id: notificationId,
+    },
+  });
+}
+
+export async function deleteAllNotificationsByUser(userId, orgId) {
+  await prisma.notification.deleteMany({
+    where: {
+      orgMember: {
+        userId,
+        orgId,
+      },
+    },
+  });
+}

@@ -36,6 +36,10 @@ import { WaMessageAssignStatusTab } from "../../constants";
 import { Role } from "../../../org/org.services";
 import { getTeamIdsByUserId } from "../../../team/team.service";
 import { UserAvailabilityStatus } from "../../../user/user.schema";
+import {
+  createNotification,
+  getNotificationSettings,
+} from "../../../notification/notification.service";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -681,6 +685,7 @@ export async function assignWaMessageToUser(
       }
     }
   }
+
   const res = await prisma.waInboxAssign.createMany({
     data: newUsers.map((userId) => ({
       contactId: data.contactId,
@@ -697,9 +702,31 @@ export async function assignWaMessageToUser(
       },
     },
   });
-  await updateContactById(data.contactId, {
+  const updatedContact = await updateContactById(data.contactId, {
     waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
   });
+
+  for (const userId of newUsers) {
+    const notificationSetting = await getNotificationSettings(
+      userId,
+      updatedContact.orgId,
+    );
+    if (
+      notificationSetting &&
+      notificationSetting.waMessageAssignNotification
+    ) {
+      await createNotification(
+        userId,
+        updatedContact.orgId,
+        "whatsapp",
+        "chat-assigned",
+        {
+          contactId: updatedContact.id,
+          contactName: updatedContact.name,
+        },
+      );
+    }
+  }
 }
 
 export async function getAssignedUserForContact(contactId) {

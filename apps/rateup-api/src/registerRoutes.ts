@@ -93,6 +93,8 @@ import { loyaltyApiSettingSchemas } from "./modules/loyalty/apiSetting/apiSettin
 import { mobileNotificationRoutes } from "./modules/mobileNotification/mobile.route";
 import { expoSchemas } from "./modules/mobileNotification/mobile.schema";
 import { dashboardRoutes } from "./modules/dashboard/dashboard.route";
+import { notificationRoutes } from "./modules/notification/notification.route";
+import { notificationSchema } from "./modules/notification/notification.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -139,6 +141,7 @@ export function registerRoutes(server: FastifyInstance): void {
     cardSchemas,
     loyaltyApiSettingSchemas,
     expoSchemas,
+    notificationSchema,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -212,4 +215,5 @@ export function registerRoutes(server: FastifyInstance): void {
     prefix: "api/mobilenotification",
   });
   server.register(dashboardRoutes, { prefix: "api/dashboard" });
+  server.register(notificationRoutes, { prefix: "api/notification" });
 }

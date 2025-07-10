@@ -234,14 +234,16 @@ model WaLogs {
 }
 
 model OrgMember {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now())
-  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId     String   @db.Uuid
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String   @db.Uuid
-  role      Role
-  status    String   @default("online")
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt           DateTime             @default(now())
+  org                 Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId               String               @db.Uuid
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String               @db.Uuid
+  role                Role
+  status              String               @default("online")
+  notifications       Notification[]
+  notificationSetting NotificationSetting?
 
   @@unique([userId, orgId], name: "userId_orgId")
 }
@@ -1642,4 +1644,22 @@ model MetaAssets {
   adAccounts   Json[]
   leads        Json[]
   leadgenForms Json[]
+}
+
+model Notification {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgMemberId String    @db.Uuid
+  orgMember   OrgMember @relation(fields: [orgMemberId], references: [id], onDelete: Cascade)
+  data        Json
+  source      String
+  subSource   String
+  createdAt   DateTime  @default(now())
+}
+
+model NotificationSetting {
+  orgMemberId                 String    @unique @db.Uuid
+  orgMember                   OrgMember @relation(fields: [orgMemberId], references: [id], onDelete: Cascade)
+  ticketAssignNotification    Boolean   @default(false)
+  waMessageAssignNotification Boolean   @default(false)
+  waMessageClosedNotification Boolean   @default(false)
 }
