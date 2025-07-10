@@ -28,15 +28,16 @@ export const useAllSubscriptions = () =>
 export const useUpdateSubscriptionMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      orgId,
-      updatedData,
-      isMenuPlanChange,
-    }: {
+    mutationFn: (data: {
       orgId: string;
       updatedData: object;
       isMenuPlanChange?: boolean;
-    }) => updateSubscription(orgId, updatedData, isMenuPlanChange),
+    }) =>
+      updateSubscription(
+        data?.orgId,
+        data?.updatedData,
+        data?.isMenuPlanChange,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
