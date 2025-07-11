@@ -232,6 +232,8 @@ export function useUpdateBoardMutation() {
     mutationFn: updateBoard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ["notification"] });
+      queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
       showSuccessToast("Board updated successfully!", "update-board-success");
     },
     onError: () => {

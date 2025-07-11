@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import {
+  ActionIcon,
   AppShell,
   Avatar,
   Badge,
@@ -190,7 +191,7 @@ const LastLinks = ({
     >
       <UnstyledButton
         onClick={() => {
-          if (link?.label !== "Dark Mode") {
+          if (link?.label !== "Dark Mode" && link?.label !== "Notifications") {
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
             showOfflineNotification(status);

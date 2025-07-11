@@ -28,8 +28,8 @@ export const createWaSettings = async (settings) => {
   const res = await axiosClient.post(SettingsUrl, settings);
   return res.data;
 };
-export const deleteWaSettings = async () => {
-  const res = await axiosClient.delete(SettingsUrl);
+export const deleteWaSettings = async (phoneId) => {
+  const res = await axiosClient.delete(`${SettingsUrl}/${phoneId}`);
   return res.data;
 };
 
