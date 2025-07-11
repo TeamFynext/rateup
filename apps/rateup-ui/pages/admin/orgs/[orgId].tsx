@@ -44,7 +44,7 @@ export default function OrgById() {
     isLoading: isSubLoading,
     isError: isSubErr,
   } = useSubscriptionByOrgId(orgId);
-  const { data: orgs } = useAllOrgs();
+  const { data: orgs, isLoading: isOrgsLoading } = useAllOrgs();
   const { data: stats, isLoading, isError } = useOrgStats(orgId);
   const [orgDetails, setOrgDetails] = useState<Org>(null);
   const updatePauseStatus = useUpdateOrgPause();
@@ -59,7 +59,7 @@ export default function OrgById() {
   const handleOrgPauseStatus = () => {
     updatePauseStatus.mutate({
       orgId,
-      data: { isPaused: !orgDetails.isPaused },
+      data: { isPaused: !orgDetails?.isPaused },
     });
   };
 
@@ -80,7 +80,8 @@ export default function OrgById() {
   }, [subscription]);
 
   if (isError || isSubErr) return <div>error occured</div>;
-  if (isLoading || !stats || isSubLoading) return <RateupLoader h={"100dvh"} />;
+  if (isLoading || isOrgsLoading || !stats || isSubLoading)
+    return <RateupLoader h={"100dvh"} />;
 
   return (
     <Stack>
