@@ -215,7 +215,7 @@ const initFacebookSdk = () => {
   return new Promise((resolve, reject) => {
     window.fbAsyncInit = function () {
       window.FB.init({
-        appId: "3634460296824137",
+        appId: process.env.NEXT_PUBLIC_META_APP_ID,
         autoLogAppEvents: true,
         xfbml: true,
         version: "v23.0",
@@ -239,7 +239,7 @@ const fbLogin = (): Promise<FBLoginResponse> => {
         resolve(response);
       },
       {
-        config_id: "1570807597035749", // configuration ID obtained in the previous step goes here
+        config_id: process.env.NEXT_PUBLIC_META_CONFIG_ID,
         response_type: "code", // must be set to 'code' for System User access token
         override_default_response_type: true,
         extras: {

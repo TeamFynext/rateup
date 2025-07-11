@@ -11,10 +11,10 @@
 # next.js
 /.next/
 /out/
-
+.scannerwork/
 # production
 /build
-
+# .vscode/
 # misc
 .DS_Store
 *.pem
