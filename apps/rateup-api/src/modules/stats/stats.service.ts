@@ -46,6 +46,13 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
           stat === SubscriptionFeaturePathName.Whatsapp
             ? { increment: 1 }
             : undefined,
+        ...(stat === SubscriptionFeaturePathName.WhatsAppTemplate
+          ? {
+              templateMessagesCount: { increment: 1 },
+              monthlyTemplateMessageCount: { increment: 1 },
+              annualTemplateMessageCount: { increment: 1 },
+            }
+          : {}),
       },
       create: {
         orgId: orgId,
@@ -69,6 +76,17 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
           stat === SubscriptionFeaturePathName.LoyaltyCustomer ? 1 : 0,
         annualMessageCount:
           stat === SubscriptionFeaturePathName.Whatsapp ? 1 : 0,
+        ...(stat === SubscriptionFeaturePathName.WhatsAppTemplate
+          ? {
+              templateMessagesCount: 1,
+              monthlyTemplateMessageCount: 1,
+              annualTemplateMessageCount: 1,
+            }
+          : {
+              templateMessagesCount: 0,
+              monthlyTemplateMessageCount: 0,
+              annualTemplateMessageCount: 0,
+            }),
         //TODO: improve
         // Add other fields with default values as needed
       },
@@ -316,8 +334,8 @@ export async function decrementStatsCount(orgId, stat) {
 }
 
 export async function updateUsageStatsLastReset(orgId, renewedAt) {
-  const difference = dayjs().diff(dayjs(renewedAt), "D") % 30;
-  const lastMonthlyResettedDate = dayjs().subtract(difference, "D").toDate();
+  const difference = dayjs().diff(dayjs(renewedAt), "day") % 30;
+  const lastMonthlyResettedDate = dayjs().subtract(difference, "day").toDate();
 
   return await prisma.usageStats.update({
     where: {

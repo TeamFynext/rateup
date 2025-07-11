@@ -57,7 +57,7 @@ export async function getActiveSurveyStats(
   LEFT JOIN "SurveyResponse" sr ON sr."surveyTeamMapId" = st.id
   LEFT JOIN "TeamMember" tm ON st."teamId" = tm."teamId"
   WHERE tm."userId" = ${userId}::uuid AND s."active" = TRUE 
-  GROUP BY s.id, wf."dbFlowId") 
+  GROUP BY s.id, wf."dbFlowId" ORDER BY s."createdAt" DESC) 
   (SELECT * FROM filtered_surveys WHERE "type" = ${SurveyType.Web} LIMIT 10)
    UNION ALL 
   (SELECT * FROM filtered_surveys WHERE "type" = ${SurveyType.WaFlow} LIMIT 10)

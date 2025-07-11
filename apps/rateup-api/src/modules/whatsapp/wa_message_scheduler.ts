@@ -137,7 +137,9 @@ export async function sendSchedulesWaMessages() {
           },
         });
         await updateMonthlyStat(
-          SubscriptionFeaturePathName.Whatsapp,
+          schedule.waTemplateId
+            ? SubscriptionFeaturePathName.WhatsAppTemplate
+            : SubscriptionFeaturePathName.Whatsapp,
           schedule.orgId,
         );
       }),

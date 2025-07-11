@@ -107,28 +107,28 @@ export async function verifyMessageMonthlyLimitRestrictionForCampaign(
 
     if (
       subscription?.isAnnualMessageLimit &&
-      (usage.annualMessageCount ?? 0) + newMessagesCount > annualLimit
+      (usage.annualTemplateMessageCount ?? 0) + newMessagesCount > annualLimit
     ) {
       let errorMessage =
-        usage.annualMessageCount >= annualLimit
+        usage.annualTemplateMessageCount >= annualLimit
           ? "You have reached the maximum annual limit of messages."
           : `Sending messages to all participants will exceed the annual limit. Please reduce the number of messages by ${
-              annualLimit - usage.annualMessageCount
+              annualLimit - usage.annualTemplateMessageCount
             } to proceed.`;
       return reply.code(403).send({
         message: errorMessage,
         displayMessageInClient: true,
       });
     } else if (
-      (usage.monthlyMessagesCount ?? 0) + newMessagesCount >
+      (usage.monthlyTemplateMessageCount ?? 0) + newMessagesCount >
       monthlyMessageLimit
     ) {
       return reply.code(403).send({
         message:
-          usage.monthlyMessagesCount >= monthlyMessageLimit
+          usage.monthlyTemplateMessageCount >= monthlyMessageLimit
             ? "You have reached the maximum monthly limit of messages."
             : `Sending messages to all participants will exceed the monthly limit. Please reduce the number of messages by ${
-                monthlyMessageLimit - usage.monthlyMessagesCount
+                monthlyMessageLimit - usage.monthlyTemplateMessageCount
               } to proceed.`,
         displayMessageInClient: true,
       });

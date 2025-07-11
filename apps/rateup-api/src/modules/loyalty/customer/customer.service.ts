@@ -51,6 +51,8 @@ import { AddNewContactsToGroupInput } from "../../contact/contactGroup/contactGr
 import { getContactTag } from "../../whatsapp/settings/wa_settings.service";
 import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
 import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace";
+import { getSubscription } from "../../subscription/subscription.service";
+import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth";
 
 let includeContact = {
   Contact: {
@@ -870,6 +872,8 @@ export async function handleSendTemplate(
       text: data,
     })),
   });
+  const subscription = await getSubscription(orgId);
+  await verifyTemplateMessageLimit(subscription);
   await sendTemplateToUserCore(orgId, waTemplateId, phone, components);
 }
 
