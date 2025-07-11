@@ -24,7 +24,7 @@ import {
   addExistingContactsToMultipleGroups,
   deleteManyContactGroups,
 } from "./contactGroup.service";
-import { Prisma, Role } from "@prisma/client";
+import { Prisma, Role } from "../../../../../../../../generated/prisma/client";
 import { verifyRole } from "../../../../../../../utils/auth";
 import { log } from "../../../../../../../utils/logger";
 

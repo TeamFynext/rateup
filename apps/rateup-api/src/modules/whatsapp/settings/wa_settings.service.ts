@@ -1,4 +1,4 @@
-import { WhatsappSettings } from "@prisma/client";
+import { WhatsappSettings } from "../../../../generated/prisma/client";
 import {
   aes_decrypt,
   aes_encrypt,

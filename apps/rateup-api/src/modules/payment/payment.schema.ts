@@ -1,4 +1,4 @@
-import { PaymentPlanStatus } from "@prisma/client";
+import { PaymentPlanStatus } from "../../../generated/prisma/client";
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import { PaymentPlanType } from "./payment.service";

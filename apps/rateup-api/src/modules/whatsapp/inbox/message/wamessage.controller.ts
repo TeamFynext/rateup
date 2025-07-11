@@ -57,7 +57,7 @@ import {
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
 import xlsx from "node-xlsx";
 import { WaMessageAssignStatus } from "../../../../types/enums";
-import { PlatformType } from "@prisma/client";
+import { PlatformType } from "../../../../../generated/prisma/client";
 import { Role } from "../../../../utils/enums";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(

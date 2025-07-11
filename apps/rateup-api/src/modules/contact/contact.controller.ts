@@ -19,7 +19,7 @@ import {
   importCSVContacts,
   updateContactById,
 } from "./contact.service";
-import { ContactGroupType, Prisma } from "@prisma/client";
+import { ContactGroupType, Prisma } from "../../../generated/prisma/client";
 import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import {

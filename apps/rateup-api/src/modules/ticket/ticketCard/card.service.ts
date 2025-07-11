@@ -1,4 +1,4 @@
-import { TicketType } from "@prisma/client";
+import { TicketType } from "../../../../generated/prisma/client";
 import { getShortUrlId } from "../../../utils/commonUtils";
 import prisma from "../../../utils/prisma";
 import { UpdateCardRequest } from "./card.schema";
@@ -8,6 +8,10 @@ import {
   sendTicketCreateEmail,
   sendTicketCreateWaMessage,
 } from "../ticket.service";
+import {
+  createNotification,
+  getNotificationSettings,
+} from "../../notification/notification.service";
 
 export interface CardInput {
   title?: string;
@@ -284,6 +288,15 @@ export async function updateCard(
   });
 
   for await (const user of users) {
+    const notificationSetting = await getNotificationSettings(user.id, orgId);
+    if (notificationSetting && notificationSetting.ticketAssignNotification) {
+      await createNotification(user.id, orgId, "ticket", "ticket-assigned", {
+        board_name: board.title,
+        column_name: column.title,
+        cardId: card.id,
+        ticketId: card.ticketId,
+      });
+    }
     if (board.ticketAssignedEmail)
       await sendTicketAssignedEmail({
         board_name: board.title,

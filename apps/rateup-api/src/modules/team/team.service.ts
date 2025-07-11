@@ -17,7 +17,7 @@ import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import EmailPassword from "supertokens-node/recipe/emailpassword";
 
 import { FastifyReply, FastifyRequest } from "fastify";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../../generated/prisma/client";
 import {
   createHubSpotContact,
   getHubSpotCompanyByOwnerEmail,

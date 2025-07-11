@@ -36,7 +36,7 @@ import {
   createSurveyFromFlow,
   getFlowJsonWithTitleAndDescription,
 } from "./flow.utils";
-import { Survey } from "@prisma/client";
+import { Survey } from "../../../../../../../../generated/prisma/client";
 import { callWhatsappApi } from "../wa_axios";
 import { getWaSettings } from "../settings/wa_settings.service";
 import { SurveyType, WaFlowStatus } from "../../../../../../../types/enums";

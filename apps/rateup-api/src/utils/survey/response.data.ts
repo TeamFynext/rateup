@@ -5,7 +5,7 @@ import {
   SmileyResponse,
   YNResponse,
 } from "../../types/enums";
-import { ResponsePlatform } from "@prisma/client";
+import { ResponsePlatform } from "../../../generated/prisma/client";
 import { load } from "cheerio";
 
 export const generateResponseData = (surveyTeamMapId, survey) => {

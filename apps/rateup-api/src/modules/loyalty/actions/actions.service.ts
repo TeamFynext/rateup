@@ -1,4 +1,3 @@
-import { LoyaltyAction } from "@prisma/client";
 import prisma from "../../../utils/prisma";
 import {
   lActionUpdateInput,

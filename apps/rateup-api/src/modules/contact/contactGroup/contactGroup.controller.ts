@@ -28,7 +28,7 @@ import {
   getContactsByContactGroupIdWithPagination,
 } from "./contactGroup.service";
 import { verifyRole } from "../../../utils/auth";
-import { Prisma, Role } from "@prisma/client";
+import { Prisma, Role } from "../../../../generated/prisma/client";
 import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
 import { createMultipleContacts, importCSVContacts } from "../contact.service";
 import { PaginationQuery } from "../contact.schema";

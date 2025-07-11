@@ -1,4 +1,4 @@
-import { Role, TemplateType } from "@prisma/client";
+import { Role, TemplateType } from "../../../../generated/prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   SubscriptionFeaturePathName,

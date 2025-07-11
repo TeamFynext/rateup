@@ -11,7 +11,7 @@ import {
   parseResponseFromCurrentScreenResponse,
   removeIdFromFlowJson,
 } from "./flow.utils";
-import { WaFlow } from "@prisma/client";
+import { WaFlow } from "../../../../../../../../generated/prisma/client";
 import { UpdateFlowInput } from "./flow.schema";
 import FormData from "form-data";
 import {

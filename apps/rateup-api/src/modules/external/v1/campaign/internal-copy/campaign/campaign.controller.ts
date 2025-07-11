@@ -15,9 +15,9 @@ import {
   sendCampaign,
   updateCampaign,
 } from "./campaign.service";
-import { Role } from "@prisma/client";
 import { getDbTemplate } from "../../../whatsapp/internal-copy/whatsapp/messageTemplates/wa_templates.service";
 import { verifyRole } from "../../../../../../utils/auth";
+import { Role } from "../../../../../../../generated/prisma/client";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,

@@ -1,4 +1,7 @@
-import { Survey, WaFlow } from "@prisma/client";
+import {
+  Survey,
+  WaFlow,
+} from "../../../../../../../../generated/prisma/client";
 import {
   WaFlowStatus,
   WaFlowFormElementType,

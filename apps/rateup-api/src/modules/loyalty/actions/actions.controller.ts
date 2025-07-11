@@ -31,7 +31,6 @@ import {
   handleLCustomerAction,
   handleSendTemplate,
 } from "../customer/customer.service";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { isLReferralAction } from "../util";
 import { getReferralCodeByActionAndCustomer } from "../settings/settings.service";
 import {
@@ -40,6 +39,7 @@ import {
   getLoyaltyCustomersFromGroup,
 } from "../../contact/contactGroup/contactGroup.service";
 import { ContactGroupType } from "../../contact/contactGroup/contactGroup.schema";
+import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace";
 
 export async function createLoyaltyActionHandler(
   request: FastifyRequest<{ Body: loyaltyActionInput }>,

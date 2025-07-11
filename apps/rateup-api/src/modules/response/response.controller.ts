@@ -37,7 +37,6 @@ import {
   getTeamIdsBySurveyMapId,
   getTeamIdsByUserId,
 } from "../team/team.service";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { QuestionType } from "../../types/enums";
 import { createTestimonial } from "../testimonial/testimonial.service";
 import { getQuestionsBySurveyId } from "../question/question.service";
@@ -46,6 +45,7 @@ import prisma from "../../utils/prisma";
 import { getSubscription } from "../subscription/subscription.service";
 import { getFlowFromDb } from "../whatsapp/flows/flow.service";
 import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema";
+import { PrismaClientKnownRequestError } from "../../../generated/prisma/internal/prismaNamespace";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{

@@ -1,4 +1,4 @@
-import { Contact, ContactGroupType } from "@prisma/client";
+import { Contact, ContactGroupType } from "../../../generated/prisma/client";
 import { log } from "../../utils/logger";
 import prisma from "../../utils/prisma";
 import {
@@ -19,8 +19,15 @@ import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants";
 import { AddNewContactsToGroupInput } from "./contactGroup/contactGroup.schema";
 import { WaMessageAssignStatus } from "../../types/enums";
-import { deleteAssignedUsersforContact } from "../whatsapp/inbox/message/wamessage.service";
+import {
+  deleteAssignedUsersforContact,
+  getAssignedUserForContact,
+} from "../whatsapp/inbox/message/wamessage.service";
 import { getChatbotDetails } from "../chatbot/chatbot.service";
+import {
+  createNotification,
+  getNotificationSettings,
+} from "../notification/notification.service";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
@@ -260,7 +267,29 @@ export async function updateContactById(
     },
   });
   if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
+    const assignedUsers = await getAssignedUserForContact(user.id);
     await deleteAssignedUsersforContact(user.id);
+    for (const assignee of assignedUsers) {
+      const notificationSetting = await getNotificationSettings(
+        assignee.assignedUserId,
+        user.orgId,
+      );
+      if (
+        notificationSetting &&
+        notificationSetting.waMessageClosedNotification
+      ) {
+        await createNotification(
+          assignee.assignedUserId,
+          user.orgId,
+          "whatsapp",
+          "chat-closed",
+          {
+            contactId: user.id,
+            contactName: user.name,
+          },
+        );
+      }
+    }
   }
   return user;
 }
