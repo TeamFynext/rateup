@@ -377,7 +377,7 @@ const Navbar = ({
               </Stack>
               <Divider />
             </Stack>
-            <ScrollAreaAutosize mah={"calc(100dvh - 150px)"}>
+            <ScrollAreaAutosize mah={"calc(100dvh - 300px)"} scrollbarSize={6}>
               {mainLinks}
             </ScrollAreaAutosize>
           </div>
