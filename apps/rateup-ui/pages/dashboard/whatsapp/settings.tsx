@@ -97,7 +97,7 @@ function WhatsAppManualConfiguration({ waSettings }) {
     upsertMutation.mutate(values);
   };
   const handleDelete = () => {
-    deleteMutation.mutate();
+    deleteMutation.mutate(waSettings?.phoneId);
   };
   const { translations } = useTranslations();
   const webhookUrl = `${process.env.NEXT_PUBLIC_API_URL}/api${WHATSAPP_URL}/webhook`;
@@ -113,7 +113,7 @@ function WhatsAppManualConfiguration({ waSettings }) {
         >
           <Stack px="md">
             <ContainedTextField
-              label={translations["WABA ID"]}
+              label={"WABA ID"}
               placeholder={
                 translations["Enter your Whatsapp Business Account ID"]
               }

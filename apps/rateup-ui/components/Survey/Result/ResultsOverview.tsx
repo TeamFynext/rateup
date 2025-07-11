@@ -239,6 +239,7 @@ const ResultsOverview = ({
                                   ...c,
                                   fill: stringToColour(c.choice),
                                 }))}
+                                version={version}
                               />
                               {subIndex <
                                 Object.entries(question.subData).length - 1 && (
@@ -274,6 +275,7 @@ const ResultsOverview = ({
                                 ch.value.toString() === c.choice.toString(),
                             )?.color ?? stringToColour(c.choice),
                         }))}
+                        version={version}
                       />
                     )}
                     {index < choiceWiseOverView.length - 1 && (

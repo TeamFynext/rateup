@@ -42,7 +42,7 @@ export default function SubscriptionPage() {
     updateSubscriptionMutation.mutate({
       orgId: updatedField?.orgId,
       updatedData: {
-        basePlanId: updatedField.basePlanId,
+        basePlanId: updatedField?.basePlanId,
         renewedAt: new Date(),
       },
     });
