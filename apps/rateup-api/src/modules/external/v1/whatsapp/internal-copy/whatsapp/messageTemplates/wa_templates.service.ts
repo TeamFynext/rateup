@@ -516,7 +516,10 @@ export async function sendTemplateToPhone({
     log.trace("Template schedule created successfully");
   } else {
     res = await sendMessage(orgId, templateMessage);
-    await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    await updateMonthlyStat(
+      SubscriptionFeaturePathName.WhatsAppTemplate,
+      orgId,
+    );
     log.trace("Template send to user successfully");
   }
   return res;
@@ -867,5 +870,5 @@ export async function sendTemplateToUserCore(
     templateMessage = createTemplateMessage(phone, templateQuery);
   }
   await sendMessage(orgId, templateMessage, null, userId);
-  await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+  await updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppTemplate, orgId);
 }

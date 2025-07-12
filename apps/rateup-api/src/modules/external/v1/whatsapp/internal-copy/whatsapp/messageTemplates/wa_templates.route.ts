@@ -17,6 +17,7 @@ import fastifyMultipart from "@fastify/multipart";
 import { SubscriptionFeaturePathName } from "../../../../../../../types/enums";
 import { getVerifySubscriptionHandler } from "../../../../../../../utils/auth";
 import { checkSession } from "../../../../../../../utils/checkSession";
+import { verifyMessageMonthlyLimitRestriction } from "../../../../../../whatsapp/messageTemplates/wa_templates.auth";
 
 export async function waTemplatesRoutes(server: FastifyInstance) {
   server.register(fastifyMultipart, {
@@ -100,6 +101,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.post(
     "/:templateId/send",
     {
+      preHandler: verifyMessageMonthlyLimitRestriction,
       schema: {
         params: $WTref("byTemplateIdParamsSchema"),
         body: $WTref("waUserSendTemplateBodySchema"),
