@@ -195,8 +195,8 @@ export const WhatsappStats = ({ stats, subscription }) => {
     {
       Icon: IconClockFilled as unknown as string,
       count: subscription?.isAnnualMessageLimit
-        ? stats?.annualMessageCount
-        : stats?.monthlyMessagesCount,
+        ? stats?.annualTemplateMessageCount
+        : stats?.monthlyTemplateMessageCount,
       totalCount: subscription?.isAnnualMessageLimit
         ? subscription?.features?.whatsapp?.count?.monthlyMessageLimit * 12
         : subscription?.features?.whatsapp?.count?.monthlyMessageLimit,
@@ -206,7 +206,7 @@ export const WhatsappStats = ({ stats, subscription }) => {
     },
     {
       Icon: IconMessage as unknown as string,
-      count: stats?.messagesCount,
+      count: stats?.templateMessagesCount,
       stats: "Total Message",
     },
     {
