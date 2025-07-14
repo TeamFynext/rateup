@@ -109,6 +109,9 @@ export async function getConnectedWaCatalog(orgId) {
       orgId,
       isWhatsappConnected: true,
     },
+    include: {
+      products: true,
+    },
   });
 }
 
