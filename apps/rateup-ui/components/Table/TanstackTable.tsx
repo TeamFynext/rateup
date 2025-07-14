@@ -1,3 +1,5 @@
+"use no memo";
+
 import React, { useCallback, useContext, useEffect, useMemo } from "react";
 
 import { Box, Divider, Flex, Group } from "@mantine/core";

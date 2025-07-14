@@ -9,6 +9,7 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 
 import { useWaLogs } from "@/backend/whatsapp/settings/waSettings.query";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
@@ -17,6 +18,8 @@ import ContactTable from "@/components/Table/ContactTable";
 import useTranslations from "@/dictionaries/useTranslation";
 import { PAGE_SIZE } from "@/utils/constants";
 import { showLoadingToast, showSuccessToast } from "@/utils/notifications";
+
+dayjs.extend(utc);
 
 const Logs = () => {
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
@@ -40,6 +43,7 @@ const Logs = () => {
       header: () => "Time",
       accessorKey: "createdAt",
       cell: (info) =>
+        info.getValue() &&
         dayjs.utc(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
     },
     {
