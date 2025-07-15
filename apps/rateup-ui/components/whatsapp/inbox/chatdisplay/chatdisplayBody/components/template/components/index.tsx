@@ -15,7 +15,7 @@ interface Props {
   templateComponent: WaTemplateFetchBodyComponent;
   parameterData: WaTemplateComponent;
 }
-export default function WaInboxTemplateComponents(props: Props) {
+export default function WaInboxTemplateComponents(props: Readonly<Props>) {
   switch (props?.templateComponent?.type) {
     case "HEADER":
       return (
