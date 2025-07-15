@@ -84,7 +84,7 @@ export type createFlowInput = {
 };
 export async function createFlow(data: createFlowInput) {
   try {
-    await axiosClient.post(`${BASE}`, data);
+    return (await axiosClient.post(`${BASE}`, data))?.data;
   } catch (error) {
     throw Error(error?.response?.data);
   }
