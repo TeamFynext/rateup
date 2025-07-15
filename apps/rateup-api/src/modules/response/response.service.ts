@@ -393,7 +393,7 @@ export async function downloadExcelResponse(
             !tempArray.includes({ [answerIndex]: questionId })
           ) {
             tempArray.push({ [answerIndex]: questionId });
-            Object.values(responseValue)?.map((value) =>
+            Object.values(responseValue || {})?.map((value) =>
               bodyArray[answerIndex].push(value),
             );
             flag = false;
@@ -455,8 +455,8 @@ export async function downloadExcelResponse(
                   : responseValue?.value;
             } else if (typeof responseValue === "object") {
               responseValue = responseValue?.value
-                ? Object.values(responseValue?.value).join(", ")
-                : Object.values(responseValue).join(", ");
+                ? Object.values(responseValue?.value || {}).join(", ")
+                : Object.values(responseValue || {}).join(", ");
             }
           }
         } else if (question === createdAt) {
@@ -487,7 +487,7 @@ export async function downloadExcelResponse(
             );
             flag = false;
           } else if (question.type === QuestionType.Contact) {
-            Object.values(question.features?.[defaultLanguage]).forEach(
+            Object.values(question.features?.[defaultLanguage] || {}).forEach(
               (key: any) => {
                 if (key?.isEnabled) bodyArray[answerIndex].push("");
               },
@@ -497,7 +497,7 @@ export async function downloadExcelResponse(
             bodyArray[answerIndex].push("", "");
             const features = question.features?.[defaultLanguage];
             if (features) {
-              Object.values(features).forEach((key: any) => {
+              Object.values(features ?? {}).forEach((key: any) => {
                 if (key) bodyArray[answerIndex].push("");
               });
               flag = false;
