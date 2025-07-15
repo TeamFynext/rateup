@@ -30,6 +30,7 @@ import WaResponses from "../Response/WaResponses";
 import styles from "./Result.module.css";
 import ResultComparison from "./ResultComparison";
 import ResultsOverview from "./ResultsOverview";
+import ResultsOverview1 from "./ResultsOverview1";
 import SurveyStats from "./SurveyStats";
 import WaResultsOverviewV2 from "./WaResultsOverview";
 
@@ -161,7 +162,7 @@ const Result = ({
           )}
         </Tabs.Panel>
         <Tabs.Panel value="analytics">
-          <ResultsOverview
+          <ResultsOverview1
             surveyId={survey?.id}
             aiResponseSummary={survey?.aiResponseSummary}
             survey={survey}
@@ -170,6 +171,15 @@ const Result = ({
             flowQuestions={flowQuestions}
             questions={questions}
           />
+          {/* <ResultsOverview
+            surveyId={survey?.id}
+            aiResponseSummary={survey?.aiResponseSummary}
+            survey={survey}
+            flowId={flowId}
+            version={version}
+            flowQuestions={flowQuestions}
+            questions={questions}
+          /> */}
         </Tabs.Panel>
         <Tabs.Panel value="comparison">
           <ResultComparison

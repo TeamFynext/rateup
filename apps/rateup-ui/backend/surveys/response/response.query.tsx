@@ -17,10 +17,12 @@ import {
   exportContactResponseToContacts,
   generateResponse,
   getAllResponses,
+  getHappyIndex,
   getLargeTextResponseSummaryByAI,
   getResponseForComparison,
   getResponses,
   getResponsesBySurveyId,
+  getSurveyHappyResponseAnalytics,
   getSurveyResponseAnalyics,
   getSurveyResponseCount,
   resetResponsesStats,
@@ -306,3 +308,24 @@ export const useResponseForComparison = (surveyId) => {
     enabled: !!surveyId,
   });
 };
+
+export function useSurveyHappyResponseAnalytics(
+  surveyId: string,
+  timeFilter?: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ["survey-happy-response-analytics", surveyId, timeFilter],
+    queryFn: () =>
+      getSurveyHappyResponseAnalytics(surveyId, `timeFilter=${timeFilter}`),
+    enabled: !!surveyId && enabled,
+  });
+}
+
+export function useHappyIndex(surveyId: string) {
+  return useQuery({
+    queryKey: ["happy-index", surveyId],
+    queryFn: () => getHappyIndex(surveyId),
+    enabled: !!surveyId,
+  });
+}
