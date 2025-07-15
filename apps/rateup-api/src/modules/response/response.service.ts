@@ -161,6 +161,11 @@ export async function getAllResponses(
           surveyTeamMap: {
             select: {
               teamId: true,
+              team: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           Contact: {
@@ -191,10 +196,12 @@ export async function getAllResponses(
               .filter((data) => contactIds.includes(data.contactId))
               .map(({ surveyTeamMap, ...restD }) => ({
                 ...restD,
+                teamName: surveyTeamMap.team.name,
                 teamId: surveyTeamMap.teamId,
               }))
           : responses.map(({ surveyTeamMap, ...restD }) => ({
               ...restD,
+              teamName: surveyTeamMap.team.name,
               teamId: surveyTeamMap.teamId,
             })),
     };
@@ -330,10 +337,15 @@ export async function downloadExcelResponse(
     const createdAt = "Date";
     const responseTag = "tag";
     let whatsappRespondentNumber = "Respondent's Mobile Number";
+    const teamNameColumn = "Team Name";
     if (visibleColumn.includes("createdAt")) {
       headerArray.unshift(createdAt);
       filteredSecondArray.unshift(createdAt);
     }
+    // Add team name column before tags
+    headerArray.push(teamNameColumn);
+    filteredSecondArray.push(teamNameColumn);
+
     if (
       platform === "WHATSAPP" &&
       visibleColumn.includes(whatsappRespondentNumber)
@@ -353,8 +365,8 @@ export async function downloadExcelResponse(
       responses.forEach((response, answerIndex) => {
         bodyArray.push([]);
 
-        const responses = response.responses;
-        const responseObj = responses.find(
+        const responsesArr = response.responses;
+        const responseObj = responsesArr.find(
           (answerObj) => answerObj.questionId === questionId,
         );
         let responseValue;
@@ -393,9 +405,29 @@ export async function downloadExcelResponse(
             !tempArray.includes({ [answerIndex]: questionId })
           ) {
             tempArray.push({ [answerIndex]: questionId });
-            Object.values(responseValue || {})?.map((value) =>
-              bodyArray[answerIndex].push(value),
-            );
+            // Modified: handle both single value and multiple values for contact type
+            if (
+              responseValue &&
+              typeof responseValue === "object" &&
+              !Array.isArray(responseValue)
+            ) {
+              // If responseValue is an object, push values in header order
+              Object.entries(
+                question.features?.[defaultLanguage] || {},
+              ).forEach(([key, feature]) => {
+                if ((feature as { isEnabled?: boolean })?.isEnabled) {
+                  bodyArray[answerIndex].push(responseValue[key] ?? "");
+                }
+              });
+            } else if (
+              typeof responseValue === "string" ||
+              typeof responseValue === "number"
+            ) {
+              // If responseValue is a single value, push it
+              bodyArray[answerIndex].push(responseValue);
+            } else {
+              bodyArray[answerIndex].push("");
+            }
             flag = false;
           } else if (
             QuestionType.MCQGrid === responseType &&
@@ -464,6 +496,8 @@ export async function downloadExcelResponse(
             .tz(tz)
             .format("DD-MM-YYYY hh:mm A");
           responseValue = createdAtFormatted;
+        } else if (question === teamNameColumn) {
+          responseValue = response.teamName || "";
         } else if (question === "Respondent's Mobile Number") {
           responseValue = response?.Contact?.phone;
         } else if (question === responseTag) {
@@ -487,9 +521,9 @@ export async function downloadExcelResponse(
             );
             flag = false;
           } else if (question.type === QuestionType.Contact) {
-            Object.values(question.features?.[defaultLanguage] || {}).forEach(
-              (key: any) => {
-                if (key?.isEnabled) bodyArray[answerIndex].push("");
+            Object.entries(question.features?.[defaultLanguage] || {}).forEach(
+              ([key, feature]: any) => {
+                if (feature?.isEnabled) bodyArray[answerIndex].push("");
               },
             );
             flag = false;
