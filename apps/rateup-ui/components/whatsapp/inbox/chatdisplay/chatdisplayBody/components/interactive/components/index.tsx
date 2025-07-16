@@ -1,14 +1,17 @@
 import { Button, Group, Image, Text } from "@mantine/core";
-import { WaSendMessageBody } from "../../../../../../../../types/global";
-import classes from "./styles.module.css";
-import WaInboxText from "../../text";
 import { IconCircleDashedCheck } from "@tabler/icons-react";
+import { CornerUpLeft } from "lucide-react";
+
+import { WaSendMessageBody } from "../../../../../../../../types/global";
+import WaInboxText from "../../text";
+import classes from "./styles.module.css";
 
 interface Props {
   interactiveBody: WaSendMessageBody["interactive"];
   messageContent: string;
 }
-export default function WaInboxInteractiveComponents(props: Props) {
+export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
+  console.log("🚀 ~ WaInboxInteractiveComponents ~ props:", props);
   return (
     <>
       {props?.messageContent && (
@@ -35,15 +38,24 @@ export default function WaInboxInteractiveComponents(props: Props) {
           {props?.interactiveBody?.footer?.text}
         </Text>
       )}
-      {props?.interactiveBody?.action && (
-        <Button className={classes.button}>
+      {props?.interactiveBody?.action?.buttons?.map((button) => (
+        <Button
+          key={button?.reply?.id}
+          leftSection={<CornerUpLeft size={16} />}
+          variant="light"
+        >
+          {button?.reply?.title || button?.reply?.id}
+        </Button>
+      ))}
+
+      {props?.interactiveBody?.action?.parameters?.flow_cta && (
+        <Button variant="light">
           {props?.interactiveBody?.action?.parameters?.flow_cta}
         </Button>
       )}
     </>
   );
 }
-
 const WaInboxInteractiveHeader = (props: Omit<Props, "messageContent">) => {
   switch (props?.interactiveBody?.header?.type) {
     case "text":

@@ -4,17 +4,15 @@ import Link from "next/link";
 import { PasswordInput, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { IconPhone } from "@tabler/icons-react";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { AnimatePresence, motion } from "motion/react";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { z } from "zod/v4";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { SAVE_HOTKEY } from "../../utils/constants";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons";
+import { RateupButtonBlue } from "../Button/RateupButtons";
 import styles from "./AuthForm.module.css";
 import GoogleSignInButton from "./GoogleSigninButton";
 import LoginSignupLInks from "./LoginSignupLinks";
@@ -23,45 +21,48 @@ import { signUpType } from "./SignupForm";
 
 function LoginForm({ setIsLoading, signIn, isLoading }) {
   const { translations } = useTranslations();
+  const [signUpTypeValue, setSignUpTypeValue] = useState("");
+
+  // Define Zod schema for form validation
+  const loginSchema = z.object(
+    signUpTypeValue === signUpType.SIGNUP_WITH_PHONE
+      ? {
+          phoneNumber: z
+            .string()
+            .refine(
+              (val) =>
+                signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE ||
+                isValidPhoneNumber(val),
+              {
+                error: translations["Enter a valid phone number"],
+              },
+            ),
+        }
+      : {
+          email: z.email().min(1, translations["Email is required"]),
+          password: z
+            .string()
+            .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
+              error:
+                translations[
+                  "Password should contain at least one letter and one number"
+                ],
+            })
+            .min(
+              5,
+              translations["Password should be at least 5 characters long"],
+            ),
+        },
+  );
+
   const loginForm = useForm({
     initialValues: {
       email: "",
       password: "",
       phoneNumber: "",
     },
-
-    validate: {
-      email: (value) => {
-        if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-
-        if (!value) return translations["Email is required"];
-        else
-          return /^\S+@\S+$/.test(value) ? null : translations["Invalid email"];
-      },
-      password: (value) => {
-        if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-        if (!value) {
-          return translations["Password is required"];
-        }
-        if (value.length < 5) {
-          return translations["Password should be at least 5 characters long"];
-        }
-        if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-          return translations[
-            "Password should contain at least one letter and one number"
-          ];
-        }
-        return null; // Validation passed
-      },
-      phoneNumber: (value) => {
-        if (signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE) return null;
-        if (!isValidPhoneNumber(value)) {
-          return translations["Enter a valid phone number"];
-        } else return null;
-      },
-    },
+    validate: zod4Resolver(loginSchema),
   });
-  const [signUpTypeValue, setSignUpTypeValue] = useState("");
 
   const handleSubmit = (values) => {
     localStorage.removeItem("selected_plan");

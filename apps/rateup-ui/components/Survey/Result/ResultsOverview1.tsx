@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 
+import { Badge, Divider, Flex, Stack, Text } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { Range } from "react-date-range";
@@ -34,11 +35,12 @@ import NothingFound from "../../NothingFound/NothingFound";
 import Heading from "../../styled/Heading/Heading";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
-import QuestionBarChart from "./Charts/QuestionBarChart";
+import QuestionBarChart1 from "./Charts/QuestionBarChart1";
 import QuestionPieChart from "./Charts/QuestionPieChart";
 import HappyIndex from "./HappyIndex";
 import LargeTextResponseSummary from "./LargeTextResponseSummary";
 import styles from "./ResultsOverview.module.css";
+import SurveyQuestion from "./SurveyQuestion";
 import { ResponseGraphBySurvey, SurveyResponseStats } from "./SurveyStats";
 import SurveyStats1 from "./SurveyStats1";
 
@@ -94,8 +96,6 @@ const ResultsOverview1 = ({
           ],
   });
 
-  const { data: stats, isLoading, isFetching } = useHappyIndex(surveyId);
-
   useEffect(() => {
     if (ranges.length === 0) {
       setRange([{ key: "selction" }]);
@@ -113,24 +113,19 @@ const ResultsOverview1 = ({
     [responseAnalytics],
   );
 
-  function getQuestion(questionId) {
-    const question =
-      version === 1
-        ? questions?.find((question) => question?.id === questionId)
-        : flowQuestions.find((q) => q.id === questionId);
-    return {
-      type: version === 1 ? question.type : question.metaType,
-      questionTitle:
-        version === 1
-          ? question.title || question.label
-          : question.header || question.label,
-    };
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <SurveyStats1 translations={translations} surveyId={surveyId} />
       <HappyIndex translations={translations} surveyId={surveyId} />
+      <SurveyQuestion
+        choiceWise={choiceWiseOverView}
+        NPS={npsOverView}
+        flowQuestions={flowQuestions}
+        questions={questions}
+        version={version}
+        surveyId={surveyId}
+        defaultLanguage={defaultLanguage}
+      />
     </div>
   );
 };

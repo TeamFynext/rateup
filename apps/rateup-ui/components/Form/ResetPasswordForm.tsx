@@ -11,7 +11,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { isEmail, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import {
   IconArrowAutofitLeft,
@@ -67,7 +67,7 @@ const ResetPasswordForm = ({ mode }) => {
     },
 
     validate: {
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
+      email: isEmail("Email is required"),
     },
   });
 

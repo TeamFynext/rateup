@@ -10,9 +10,17 @@ import {
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 
 import { QuestionType, WaQuestions } from "../../../types/enums";
-import { getResponseArrayByQuestionType } from "../../../utils/response";
+import {
+  getResponseArrayByQuestionType,
+  getResponseArrayByQuestionTypeV2,
+} from "../../../utils/response";
 
-const SurveySummaryNew = ({ questionType, choiceCounts, totalResponses }) => {
+const SurveySummaryNew = ({
+  questionType,
+  choiceCounts,
+  totalResponses,
+  version = 1,
+}) => {
   const responseArray = choiceCounts?.map((choice) => {
     const count = choice?.count;
     const percentage =
@@ -215,9 +223,13 @@ const SurveySummaryNew = ({ questionType, choiceCounts, totalResponses }) => {
       );
 
     case QuestionType.Smiley:
+      const smileyResponseArray =
+        version === 2
+          ? getResponseArrayByQuestionTypeV2(questionType)
+          : getResponseArrayByQuestionType(questionType);
       return (
         <SimpleGrid cols={1} verticalSpacing={"xs"}>
-          {getResponseArrayByQuestionType(questionType)?.map((item) => {
+          {smileyResponseArray?.map((item) => {
             const resObj = responseArray.find(
               (res) => res?.response == item?.value,
             );

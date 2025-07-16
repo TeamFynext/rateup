@@ -291,7 +291,7 @@ const Navbar = ({
           <div>
             <Stack gap={0} pb={"sm"}>
               <div className={classes.logo}>
-                <HoverCard width={280} shadow="md">
+                <HoverCard width={280} shadow="md" position="right-end">
                   <HoverCard.Target>
                     <Indicator
                       color={
@@ -377,7 +377,7 @@ const Navbar = ({
               </Stack>
               <Divider />
             </Stack>
-            <ScrollAreaAutosize mah={"calc(100dvh - 150px)"}>
+            <ScrollAreaAutosize mah={"calc(100dvh - 300px)"} scrollbarSize={6}>
               {mainLinks}
             </ScrollAreaAutosize>
           </div>

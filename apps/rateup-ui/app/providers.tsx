@@ -77,9 +77,11 @@ export default function Providers({ children }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <UserProvider>{children}</UserProvider>
-      </HydrationBoundary>
+      <UserProvider>
+        <HydrationBoundary state={dehydrate(queryClient)}>
+          {children}
+        </HydrationBoundary>
+      </UserProvider>
       <ReactQueryDevtools initialIsOpen={false} buttonPosition="top-right" />
     </QueryClientProvider>
   );

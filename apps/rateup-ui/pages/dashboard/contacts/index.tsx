@@ -92,8 +92,18 @@ export default function Contacts() {
   const { translations } = useTranslations();
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
-      ? contactGroupData
-      : contactGroupData?.filter((group) => group?.teamId === selectedTeamID);
+      ? contactGroupData?.filter(
+          (group) =>
+            !searchTerm ||
+            group?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+        )
+      : contactGroupData
+          ?.filter((group) => group?.teamId === selectedTeamID)
+          ?.filter(
+            (group) =>
+              !searchTerm ||
+              group?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+          );
 
   const column = useMemo(
     () => [

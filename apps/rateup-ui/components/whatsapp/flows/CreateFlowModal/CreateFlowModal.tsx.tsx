@@ -1,9 +1,11 @@
 import { useCallback } from "react";
+import { useRouter } from "next/router";
 
 import { Box, Button, Modal, MultiSelect, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 
+import { useTeamsByUser } from "@/backend/team/team.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useCreateFlowMutation } from "../../../../backend/whatsapp/flow/flow.query";
@@ -21,7 +23,7 @@ function CreateFlowModal({ opened, onClose }) {
     initialValues: {
       name: "",
       categories: [],
-      teamId: "",
+      teamId: [],
     },
     validate: {
       name: (value) => (value.length === 0 ? "Please enter a name" : null),
@@ -30,6 +32,12 @@ function CreateFlowModal({ opened, onClose }) {
     },
   });
   const { translations } = useTranslations();
+  const router = useRouter();
+  const { data: teamRes } = useTeamsByUser();
+  const teamOptions = teamRes?.data?.map((team) => ({
+    value: team?.id,
+    label: team?.name,
+  }));
   const handleModalClose = useCallback(() => {
     form.reset();
     onClose();
@@ -41,11 +49,13 @@ function CreateFlowModal({ opened, onClose }) {
       {
         name: form.values.name,
         categories: form.values.categories,
-        teamIds: [form.values.teamId],
+        teamIds: form.values.teamId,
       },
       {
-        onSuccess: () => {
+        onSettled: (id) => {
           handleModalClose();
+          if (!id && typeof id !== "string") return;
+          router.push(`/dashboard/whatsapp/flows/v2/${id}`);
         },
         onError: (error) => {
           console.error(error);
@@ -83,10 +93,18 @@ function CreateFlowModal({ opened, onClose }) {
           data={flowsCategories}
           {...form.getInputProps("categories")}
         />
-        <TeamSelector // TODO: add multi select
+        {/* <TeamSelector // TODO: add multi select
           label={translations["Team"]}
           value={form.values.teamId}
           onChange={(value) => form.setFieldValue("teamId", value)}
+        /> */}
+        <MultiSelect
+          radius="md"
+          label={translations["Select Teams"]}
+          placeholder={translations["Select teams"]}
+          data={teamOptions}
+          {...form.getInputProps("teamId")}
+          error={form.errors.teamId}
         />
       </Box>
 

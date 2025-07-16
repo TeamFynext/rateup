@@ -1,3 +1,5 @@
+"use no memo";
+
 import React, { useEffect, useMemo } from "react";
 
 import { ActionIcon, Box, Divider, Flex, Group, Tooltip } from "@mantine/core";
