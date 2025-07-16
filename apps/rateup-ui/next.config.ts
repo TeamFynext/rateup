@@ -36,7 +36,7 @@ const nextConfig: NextConfig = bundleAnalyzer({
         }
       : {},
   experimental: {
-    reactCompiler: true,
+    // reactCompiler: true,
   },
   webpack: (config) => {
     // '...' is important here – it keeps the default webpack conditionNames
