@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 
+import { Progress } from "@mantine/core";
+import { IconMoodHappy, IconTarget, IconUsers } from "@tabler/icons-react";
 import {
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
   ResponsiveContainer,
   Tooltip,
@@ -10,11 +13,15 @@ import {
   YAxis,
 } from "recharts";
 
+import { stringToColour } from "@/utils/essential";
+import { getResponseArrayByQuestionType } from "@/utils/response";
+
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
+import SurveyResultByType from "./SurveySummaryNew1";
 
 type SurveyQuestionProps = {
-  choiceWise: [string, any][];
-  NPS: [string, any][];
+  choiceWise: any;
+  NPS: any;
   version?: number;
   flowQuestions?: any[];
   questions?: any[];
@@ -33,21 +40,22 @@ const SurveyQuestion = ({
 }: SurveyQuestionProps) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  const getQuestion = (questionId: string) => {
+  function getQuestion(questionId) {
     const question =
       version === 1
-        ? questions?.find((q) => q?.id === questionId)
-        : flowQuestions?.find((q) => q?.id === questionId);
+        ? questions?.find((question) => question?.id === questionId)
+        : flowQuestions.find((q) => q.id === questionId);
     return {
+      type: version === 1 ? question.type : question.metaType,
       questionTitle:
         version === 1
-          ? question?.title || question?.label
-          : question?.header || question?.label,
+          ? question.title || question.label
+          : question.header || question.label,
     };
-  };
+  }
 
   const getPercentage = (count: number, total: number) =>
-    total > 0 ? ((count / total) * 100).toFixed(2) : "0.00";
+    total > 0 ? Math.round((count / total) * 100) : "0";
 
   const CustomTooltip = ({
     active,
@@ -68,142 +76,212 @@ const SurveyQuestion = ({
   };
 
   return (
-    <div className="space-y-8 border border-[#E2E5ED] p-4">
-      <h2 className="font-bold text-lg mb-2">Survey Question Breakdown</h2>
+    <div className="space-y-8 border border-[#E2E5ED] rounded-md shadow-sm">
+      <h2 className="font-bold text-md p-4">Survey Question Breakdown</h2>
+      <div className="py-8 px-14 h-full flex flex-col gap-14">
+        {choiceWise.map(([questionId, questionData], index) => {
+          const questionDetails = getQuestion(questionId);
+          const npsEntry = NPS.find(([id]) => id === questionId)?.[1];
+          const responseCount = questionData?.responseCount || 0;
+          const npsScore = npsEntry?.npsData?.npsScore ?? 0;
+          const promoters = npsEntry?.npsData?.promoters ?? 0;
+          const passives = npsEntry?.npsData?.passives ?? 0;
+          const detractors = npsEntry?.npsData?.detractors ?? 0;
+          const total = promoters + passives + detractors;
+          const happinessIndex =
+            total > 0 ? ((promoters / total) * 10).toFixed(1) : 0;
 
-      {choiceWise.map(([questionId, questionData], index) => {
-        const questionDetails = getQuestion(questionId);
-        const npsEntry = NPS.find(([id]) => id === questionId)?.[1];
-        const data = questionData?.data || [];
-        const responseCount = questionData?.responseCount || 0;
-        const npsScore = npsEntry?.npsData?.npsScore ?? 0;
-        const promoters = npsEntry?.npsData?.promoters ?? 0;
-        const passives = npsEntry?.npsData?.passives ?? 0;
-        const detractors = npsEntry?.npsData?.detractors ?? 0;
+          const chartData = questionData?.data.map((item) => {
+            const color =
+              getResponseArrayByQuestionType(
+                questionDetails?.type as any,
+              )?.find((ch) => ch.value.toString() === item.choice.toString())
+                ?.color ?? stringToColour(item.choice);
 
-        const chartData = data.map((item) => ({
-          ...item,
-          percentage: getPercentage(item.count, responseCount),
-        }));
+            return {
+              ...item,
+              percentage: getPercentage(item.count, responseCount),
+              fill: color,
+            };
+          });
 
-        return (
-          <div
-            key={questionId}
-            className="flex flex-col gap-4 border-b border-[#E2E5ED] pb-6"
-          >
-            {/* Question Row */}
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
-              {/* Left: Question + Choices */}
-              <div className="w-full md:w-[40%] space-y-2">
-                <div className="font-semibold text-sm">
-                  <span>{index + 1}. </span>
-                  <span>
-                    {typeof questionDetails?.questionTitle === "object"
-                      ? getReplacedTitleFromVariable({
-                          title:
-                            questionDetails?.questionTitle[defaultLanguage],
-                          surveyId,
-                        })
-                      : questionDetails?.questionTitle}
-                  </span>
-                </div>
-
-                {chartData.map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex justify-between items-center border px-3 py-1 rounded text-sm"
-                  >
-                    <span>{item.choice}</span>
-                    <span>
-                      {item.count} votes ({item.percentage}%)
+          return (
+            <div key={questionId}>
+              <div className="flex flex-col md:flex-row md:gap-4 md:items-center md:justify-center px-2">
+                {/* Left: Question + Choices */}
+                <div className="w-full md:w-[40%] space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-[#004F98] rounded-full flex justify-center items-center w-5 h-5 text-xs text-white p-2">
+                      {index + 1}
+                    </div>
+                    <span className="text-sm font-bold">
+                      {typeof questionDetails?.questionTitle === "object"
+                        ? getReplacedTitleFromVariable({
+                            title:
+                              questionDetails?.questionTitle[defaultLanguage],
+                            surveyId,
+                          })
+                        : questionDetails?.questionTitle}
                     </span>
                   </div>
-                ))}
-              </div>
 
-              {/* Right: Graph + NPS */}
-              <div className="flex-1 flex flex-col gap-4">
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={chartData}
-                      barSize={20}
-                      barGap={2}
-                      barCategoryGap="10%"
-                      onMouseLeave={() => setActiveIndex(null)}
-                      onMouseMove={(e) => {
-                        if (e?.activeTooltipIndex !== undefined) {
-                          setActiveIndex(e.activeTooltipIndex);
-                        }
-                      }}
-                    >
-                      <XAxis dataKey="choice" />
-                      <YAxis />
-                      <Tooltip
-                        content={<CustomTooltip />}
-                        cursor={{ fill: "transparent" }}
-                      />
-                      <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                        {chartData.map((_, i) => (
-                          <Cell
-                            key={`cell-${i}`}
-                            fill={i === activeIndex ? "#C4D7F5" : "#7A8289"}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <SurveyResultByType
+                    questionType={questionDetails?.type}
+                    chartData={chartData}
+                  />
                 </div>
 
-                {/* NPS Stats */}
-                {NPS.length > 0 && (
-                  <div>
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div>
-                        <p className="text-gray-500 text-sm">Responses</p>
-                        <p className="font-semibold text-lg">{responseCount}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-sm">NPS Score</p>
-                        <p className="font-semibold text-lg">{npsScore}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-sm">Happiness Index</p>
-                        <p className="font-semibold text-lg">
-                          {(7 + npsScore / 20).toFixed(1)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap justify-between gap-4 text-sm">
-                      <div className="flex-1 border-l-4 border-green-500 pl-4">
-                        <p className="text-gray-500">Promoters</p>
-                        <p className="font-semibold">
-                          {getPercentage(promoters, responseCount)}% (
-                          {promoters})
-                        </p>
-                      </div>
-                      <div className="flex-1 border-l-4 border-yellow-500 pl-4">
-                        <p className="text-gray-500">Passives</p>
-                        <p className="font-semibold">
-                          {getPercentage(passives, responseCount)}% ({passives})
-                        </p>
-                      </div>
-                      <div className="flex-1 border-l-4 border-red-500 pl-4">
-                        <p className="text-gray-500">Detractors</p>
-                        <p className="font-semibold">
-                          {getPercentage(detractors, responseCount)}% (
-                          {detractors})
-                        </p>
-                      </div>
-                    </div>
+                {/* Right: Graph + NPS */}
+                <div className="flex flex-col gap-4 w-[50%]">
+                  <div className="h-[300px] w-[100%] rounded-md border border-gray-200 bg-white px-4 pt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={chartData}
+                        barSize={30}
+                        barGap={4}
+                        barCategoryGap="15%"
+                        onMouseLeave={() => setActiveIndex(null)}
+                        onMouseMove={(e) => {
+                          if (e?.activeTooltipIndex !== undefined) {
+                            setActiveIndex(e.activeTooltipIndex);
+                          }
+                        }}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="#e0e0e0"
+                        />
+                        <XAxis dataKey="choice" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          cursor={{ fill: "transparent" }}
+                        />
+                        <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                          {chartData.map((_, i) => (
+                            <Cell
+                              key={`cell-${i}`}
+                              fill={i === activeIndex ? "#82B1FF" : "#607D8B"}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
-                )}
+
+                  {/* NPS Stats */}
+                  {NPS.length > 0 && (
+                    <div className="flex flex-col gap-6">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="border border-[#F5F5F5] bg-[#FAFAFA] rounded-sm shadow-sm flex items-center justify-between px-2 py-0.5">
+                          <div>
+                            <p className="text-[#343A40] text-[10px] font-semibold">
+                              Responses
+                            </p>
+                            <p className="font-bold text-2xl text-[#004F98]">
+                              {responseCount}
+                            </p>
+                          </div>
+                          <div className="bg-[#2B82DE1F] self-start p-1 rounded-md">
+                            <IconUsers color="#2B82DE" size={18} />
+                          </div>
+                        </div>
+                        <div className="border border-[#F5F5F5] bg-[#FAFAFA] rounded-sm shadow-sm flex items-center justify-between px-2 py-0.5">
+                          <div>
+                            <p className="text-[#343A40] text-[10px] font-semibold">
+                              NPS
+                            </p>
+                            <p className="font-bold text-2xl text-[#004F98]">
+                              {npsScore >= 0 ? `+${npsScore}` : npsScore}
+                            </p>
+                          </div>
+                          <div className="bg-[#2B82DE1F] self-start p-1 rounded-md">
+                            <IconTarget color="#2B82DE" size={20} />
+                          </div>
+                        </div>
+                        <div className="border border-[#F5F5F5] bg-[#FAFAFA] rounded-sm shadow-sm flex items-center justify-between px-2 py-0.5">
+                          <div>
+                            <p className="text-[#343A40] text-[10px] font-semibold">
+                              Happiness Index
+                            </p>
+                            <p className="font-bold text-2xl text-[#004F98]">
+                              {happinessIndex}
+                            </p>
+                          </div>
+                          <div className="bg-[#2B82DE1F] self-start p-1 rounded-md">
+                            <IconMoodHappy color="#2B82DE" size={20} />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Progress.Root size="xl" radius={50}>
+                          <Progress.Section
+                            value={Number(
+                              getPercentage(promoters, responseCount),
+                            )}
+                            color="#00BF83"
+                          ></Progress.Section>
+                          <Progress.Section
+                            value={Number(
+                              getPercentage(passives, responseCount),
+                            )}
+                            color="#FFC107"
+                          ></Progress.Section>
+                          <Progress.Section
+                            value={Number(
+                              getPercentage(detractors, responseCount),
+                            )}
+                            color="#FF6161"
+                          ></Progress.Section>
+                        </Progress.Root>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <div className="flex flex-col items-center justify-center">
+                          <p className="text-xs font-semibold text-[#343A40]">
+                            Promoters
+                          </p>
+                          <p className="font-bold text-[#00BF83] text-2xl">
+                            {getPercentage(promoters, responseCount)}%
+                          </p>
+                          <p className="text-[#7A8289] text-xs">
+                            {promoters} Responses
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-center justify-center">
+                          <p className="text-xs font-semibold text-[#343A40]">
+                            Passives
+                          </p>
+                          <p className="font-bold text-[#FFC107] text-2xl">
+                            {getPercentage(passives, responseCount)}%
+                          </p>
+                          <p className="text-[#7A8289] text-xs">
+                            {passives} Responses
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-center justify-center">
+                          <p className="text-xs font-semibold text-[#343A40]">
+                            Detractors
+                          </p>
+                          <p className="font-bold text-[#FF6161] text-2xl">
+                            {getPercentage(detractors, responseCount)}%
+                          </p>
+                          <p className="text-[#7A8289] text-xs">
+                            {detractors} Responses
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+              <div className="w-full border border-gray-200 mt-10" />
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 };
