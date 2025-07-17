@@ -11,7 +11,6 @@ interface Props {
   messageContent: string;
 }
 export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
-  console.log("🚀 ~ WaInboxInteractiveComponents ~ props:", props);
   return (
     <>
       {props?.messageContent && (

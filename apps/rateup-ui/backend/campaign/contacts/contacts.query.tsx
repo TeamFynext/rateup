@@ -49,7 +49,7 @@ export const useCreateContactMutation = () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       queryClient.invalidateQueries({
-        queryKey: ["contacts", "last-message"],
+        queryKey: ["contacts", "filtered"],
       });
       showSuccessToast(
         "Contact created successfully.",
@@ -96,7 +96,7 @@ export const useImportCSVContactMutation = () => {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({
-        queryKey: ["contacts", "last-message"],
+        queryKey: ["contacts", "filtered"],
       });
       showSuccessToast(
         "Contacts imported successfully",
