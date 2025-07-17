@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
 
 import {
@@ -26,7 +27,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { useQueryClient } from "@tanstack/react-query";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import SessionReact from "supertokens-auth-react/recipe/session";
 
@@ -47,7 +48,7 @@ import {
   useUserInfo,
 } from "../../backend/user/user.query";
 import { NavControlContext } from "../../context/NavControlContext";
-import { useUser, useWsData } from "../../context/UserContext";
+import { useUser } from "../../context/UserContext";
 import useLocalStorage from "../../hooks/localStorage";
 import { useNotifyWsMessages } from "../../hooks/useNotifyWsMessages";
 import { orgWsMessage } from "../../types/global";
@@ -206,49 +207,164 @@ const LastLinks = ({
     </Tooltip>
   ));
 };
+const handleWebSocketMessage = ({
+  newMessagePayload,
+  queryClient,
+  urlContactId,
+}: {
+  newMessagePayload: orgWsMessage;
+  queryClient: QueryClient;
+  urlContactId?: string;
+}) => {
+  if (newMessagePayload.type !== "inbox") return;
 
-// WebSocketHandler Component
-const WebSocketHandler = ({ data, error, setWsData, notifyWsMessages }) => {
-  const connectionRef = useRef<WebSocket | null>(null);
+  const newMessage = newMessagePayload.inbox.message;
+  const contactId = newMessagePayload.inbox.contact.id;
 
-  useEffect(() => {
-    if (data?.afterAuthId && !error) {
-      if (connectionRef.current) {
-        connectionRef.current.close();
-        connectionRef.current = null;
+  // Update contact list if first message differs
+  queryClient.setQueriesData(
+    {
+      queryKey: ["contacts", "filtered"],
+      exact: false,
+    },
+    (old: any) => {
+      if (!old || !Array.isArray(old.pages)) return old;
+
+      let contactFound = false;
+
+      const updatedPages = old.pages.map((page) => {
+        const rows = page.rows ?? [];
+
+        const updatedRows = rows.map((row) => {
+          if (row.id === contactId) {
+            contactFound = true;
+            return {
+              ...row,
+              lastMessage: newMessage,
+              lastReceivedMessageTimeStamp: newMessage.waCreatedAt,
+            };
+          }
+          return row;
+        });
+
+        return {
+          ...page,
+          rows: updatedRows,
+        };
+      });
+
+      // Insert new contact if not found
+      if (!contactFound) {
+        const newContactRow = {
+          id: contactId,
+          lastMessage: newMessage,
+          lastReceivedMessageTimeStamp: newMessage.waCreatedAt,
+          name: newMessagePayload.inbox?.contact?.name,
+          phone: newMessagePayload.inbox?.contact?.phone,
+        };
+
+        // Insert into first page (if pages exist), otherwise create one
+        if (updatedPages.length > 0) {
+          updatedPages[0] = {
+            ...updatedPages[0],
+            rows: [newContactRow, ...(updatedPages[0].rows ?? [])],
+          };
+        } else {
+          updatedPages.push({
+            rows: [newContactRow],
+          });
+        }
       }
 
+      return {
+        ...old,
+        pages: updatedPages,
+      };
+    },
+  );
+
+  if (!urlContactId || urlContactId !== contactId) return;
+
+  // Update wa-messages only if first message differs
+  queryClient.setQueriesData(
+    { queryKey: ["wa-messages", contactId], exact: false },
+    (old: any) => {
+      if (!old) return old;
+
+      const firstMessage = old.pages?.[0]?.messages?.[0];
+      if (firstMessage?.messageId === newMessage.messageId) return old;
+
+      const updatedFirstPage = {
+        ...(old?.pages?.[0] ?? {}),
+        messages: [newMessage, ...(old?.pages?.[0]?.messages ?? [])],
+      };
+
+      return {
+        ...old,
+        pages: [updatedFirstPage, ...(old?.pages?.slice(1) ?? [])],
+      };
+    },
+  );
+};
+
+// WebSocketHandler Component
+const WebSocketHandler = ({ data, error, notifyWsMessages }) => {
+  const connectionRef = useRef<WebSocket | null>(null);
+  const retryCountRef = useRef(0);
+  const maxRetries = 5;
+  const queryClient = useQueryClient();
+
+  const searchParms = useSearchParams();
+  const contactId = searchParms?.get("contactId");
+  useEffect(() => {
+    if (!data?.afterAuthId || error) return;
+
+    const connectWebSocket = () => {
       const socket = new WebSocket(
-        `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${data?.afterAuthId}`,
+        `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${data.afterAuthId}`,
       );
+
       connectionRef.current = socket;
+
       socket.onopen = () => {
-        console.log("Connected to websocket");
+        console.log("✅ WebSocket connected");
+        retryCountRef.current = 0;
       };
 
       socket.onmessage = (event) => {
-        const newMessage: orgWsMessage = JSON.parse(event.data);
-        setWsData(newMessage);
+        const newMessage = JSON.parse(event.data);
+        handleWebSocketMessage({
+          newMessagePayload: newMessage,
+          queryClient,
+          urlContactId: contactId,
+        });
         notifyWsMessages(newMessage);
       };
 
       socket.onclose = () => {
-        console.log("Disconnected from websocket");
-        if (connectionRef.current === socket) connectionRef.current = null;
-      };
-
-      socket.onerror = () => {
-        console.error("error in socket");
-      };
-
-      return () => {
-        if (connectionRef.current === socket) {
-          connectionRef.current.close();
-          connectionRef.current = null;
+        console.log("❌ WebSocket closed");
+        if (retryCountRef.current < maxRetries) {
+          const timeout = Math.pow(2, retryCountRef.current) * 1000;
+          retryCountRef.current += 1;
+          setTimeout(connectWebSocket, timeout);
         }
       };
-    }
-  }, [data?.afterAuthId]);
+
+      socket.onerror = (err) => {
+        console.error("⚠️ WebSocket error", err);
+        socket.close(); // force reconnect
+      };
+    };
+
+    connectWebSocket();
+
+    return () => {
+      if (connectionRef.current) {
+        connectionRef.current.close();
+        connectionRef.current = null;
+      }
+    };
+  }, [contactId, data?.afterAuthId]);
 
   return null;
 };
@@ -463,7 +579,7 @@ export default function Layout({ children, appProps }) {
     null,
   );
   const { setUser } = useUser();
-  const { setWsData } = useWsData();
+  // const { setWsData } = useWsData();
   const queryClient = useQueryClient();
   const {
     isLoading: isLoadingUserInfo,
@@ -672,7 +788,7 @@ export default function Layout({ children, appProps }) {
       <WebSocketHandler
         data={data}
         error={error}
-        setWsData={setWsData}
+        // setWsData={setWsData}
         notifyWsMessages={notifyWsMessages}
       />
 

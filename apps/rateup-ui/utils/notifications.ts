@@ -7,6 +7,7 @@ export function showInfoToast(
   message: string,
   icon?: React.ReactNode,
   onClick?: () => void,
+  id?: string,
 ) {
   notifications.show({
     color: "teal",
@@ -16,6 +17,7 @@ export function showInfoToast(
     loading: false,
     icon,
     onClick: onClick,
+    id,
   });
 }
 export function showSuccessToast(

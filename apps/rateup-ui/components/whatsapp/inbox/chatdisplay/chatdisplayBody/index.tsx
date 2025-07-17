@@ -163,7 +163,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
       user.userId &&
       props?.data?.find(
         (message) =>
-          message.messageBody.exchangeProcess === "receive" &&
+          message?.messageBody?.exchangeProcess === "receive" &&
           !message?.readUsers?.includes(user.userId),
       )
     )
@@ -171,7 +171,8 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
   }, [contactId]);
 
   function getReactionMessage(message: WaGetMessagesBody) {
-    const exchangeProcess = message.messageBody.exchangeProcess;
+    const exchangeProcess = message?.messageBody?.exchangeProcess;
+    if (!exchangeProcess) return null;
     const wa_id =
       exchangeProcess === "send"
         ? message.messageId
