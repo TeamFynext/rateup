@@ -31,6 +31,7 @@ import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import SessionReact from "supertokens-auth-react/recipe/session";
 
+import { WaMessageAssignStatus } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -210,78 +211,84 @@ const LastLinks = ({
 const handleWebSocketMessage = ({
   newMessagePayload,
   queryClient,
-  urlContactId,
+  searchParms,
 }: {
   newMessagePayload: orgWsMessage;
   queryClient: QueryClient;
-  urlContactId?: string;
+  searchParms: URLSearchParams;
 }) => {
   if (newMessagePayload.type !== "inbox") return;
 
   const newMessage = newMessagePayload.inbox.message;
-  const contactId = newMessagePayload.inbox.contact.id;
+  const contact = newMessagePayload.inbox.contact;
+  const contactId = contact.id;
+  const urlContactId = searchParms?.get("contactId");
+  const urlTab = searchParms?.get("tab");
+  const waMessageAssignStatus = contact.waMessageAssignStatus;
+  const blockedOnWhatsApp = contact.blockedOnWhatsApp;
 
-  // Update contact list if first message differs
-  queryClient.setQueriesData(
-    {
-      queryKey: ["contacts", "filtered"],
-      exact: false,
-    },
-    (old: any) => {
-      if (!old || !Array.isArray(old.pages)) return old;
+  // Only update contact list if tab matches relevant status
+  const tabMatches =
+    urlTab &&
+    (["New", "All", "Sent"].includes(urlTab) ||
+      (urlTab === "UnAssigned" &&
+        waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED) ||
+      (urlTab === "Assigned" &&
+        waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED) ||
+      (urlTab === "Closed" &&
+        waMessageAssignStatus === WaMessageAssignStatus.CLOSED) ||
+      (urlTab === "blocked" && blockedOnWhatsApp));
 
-      let contactFound = false;
+  if (tabMatches) {
+    queryClient.setQueriesData(
+      { queryKey: ["contacts", "filtered"], exact: false },
+      (old: any) => {
+        if (!old || !Array.isArray(old.pages)) return old;
 
-      const updatedPages = old.pages.map((page) => {
-        const rows = page.rows ?? [];
-
-        const updatedRows = rows.map((row) => {
-          if (row.id === contactId) {
-            contactFound = true;
-            return {
-              ...row,
-              lastMessage: newMessage,
-              lastReceivedMessageTimeStamp: newMessage.waCreatedAt,
-            };
-          }
-          return row;
+        let contactFound = false;
+        const updatedPages = old.pages.map((page) => {
+          const updatedRows = (page.rows ?? []).map((row) => {
+            if (row.id === contactId) {
+              contactFound = true;
+              return {
+                ...row,
+                lastMessage: newMessage,
+                lastReceivedMessageTimeStamp: newMessage.waCreatedAt,
+              };
+            }
+            return row;
+          });
+          return { ...page, rows: updatedRows };
         });
 
-        return {
-          ...page,
-          rows: updatedRows,
-        };
-      });
-
-      // Insert new contact if not found
-      if (!contactFound) {
-        const newContactRow = {
-          id: contactId,
-          lastMessage: newMessage,
-          lastReceivedMessageTimeStamp: newMessage.waCreatedAt,
-          name: newMessagePayload.inbox?.contact?.name,
-          phone: newMessagePayload.inbox?.contact?.phone,
-        };
-
-        // Insert into first page (if pages exist), otherwise create one
-        if (updatedPages.length > 0) {
-          updatedPages[0] = {
-            ...updatedPages[0],
-            rows: [newContactRow, ...(updatedPages[0].rows ?? [])],
+        // If contact not found, add to first page or create new page
+        if (!contactFound) {
+          const newContactRow = {
+            id: contactId,
+            lastMessage: newMessage,
+            lastReceivedMessageTimeStamp: newMessage.waCreatedAt,
+            name: contact.name,
+            phone: contact.phone,
           };
-        } else {
-          updatedPages.push({
-            rows: [newContactRow],
-          });
+          if (updatedPages.length > 0) {
+            updatedPages[0] = {
+              ...updatedPages[0],
+              rows: [newContactRow, ...(updatedPages[0].rows ?? [])],
+            };
+          } else {
+            updatedPages.push({ rows: [newContactRow] });
+          }
         }
-      }
 
-      return {
-        ...old,
-        pages: updatedPages,
-      };
-    },
-  );
+        return { ...old, pages: updatedPages };
+      },
+    );
+  } else if (urlTab === "AssignedToMe") {
+    queryClient.invalidateQueries({
+      queryKey: ["contacts", "filtered"],
+      exact: false,
+    });
+  }
 
   if (!urlContactId || urlContactId !== contactId) return;
 
@@ -315,7 +322,6 @@ const WebSocketHandler = ({ data, error, notifyWsMessages }) => {
   const queryClient = useQueryClient();
 
   const searchParms = useSearchParams();
-  const contactId = searchParms?.get("contactId");
   useEffect(() => {
     if (!data?.afterAuthId || error) return;
 
@@ -336,7 +342,7 @@ const WebSocketHandler = ({ data, error, notifyWsMessages }) => {
         handleWebSocketMessage({
           newMessagePayload: newMessage,
           queryClient,
-          urlContactId: contactId,
+          searchParms,
         });
         notifyWsMessages(newMessage);
       };
@@ -364,7 +370,7 @@ const WebSocketHandler = ({ data, error, notifyWsMessages }) => {
         connectionRef.current = null;
       }
     };
-  }, [contactId, data?.afterAuthId]);
+  }, [searchParms, data?.afterAuthId]);
 
   return null;
 };
