@@ -37,8 +37,11 @@ export async function sendViaWstoOrgHandler(
   message: orgWsMessage,
 ) {
   const connections = connectionManager.getConnectionsBasedOnOrgId(orgId);
-  connections.forEach((connection) => {
-    log.info("🚀 ~ connection:", JSON.stringify(message));
-    connection.send(JSON.stringify(message));
-  });
+  for await (const connection of connections) {
+    try {
+      connection.send(JSON.stringify(message));
+    } catch (err) {
+      log.error("WebSocket send error: %s", err);
+    }
+  }
 }

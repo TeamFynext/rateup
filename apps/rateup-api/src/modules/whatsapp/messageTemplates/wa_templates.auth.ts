@@ -1,44 +1,45 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import prisma from "../../../utils/prisma";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
+import { getUsageStat } from "../../stats/stats.service";
 
 export async function verifyMessageMonthlyLimitRestriction(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  let orgId = request.user.orgId;
-  const usage = await prisma.usageStats.findUnique({
-    where: {
-      orgId: orgId,
-    },
-  });
+  try {
+    let orgId = request.user.orgId;
+    const subscription = await prisma.subscription.findUnique({
+      where: {
+        orgId: orgId,
+      },
+    });
+    await verifyTemplateMessageLimit(subscription);
+  } catch (e) {
+    return reply.code(403).send({
+      message: e,
+      displayMessageInClient: true,
+    });
+  }
+}
 
-  const subscription = await prisma.subscription.findUnique({
-    where: {
-      orgId: orgId,
-    },
-  });
-
+export async function verifyTemplateMessageLimit(subscription) {
+  const usage = await getUsageStat(subscription.orgId);
   if (
+    usage &&
     subscription?.isAnnualMessageLimit &&
-    usage.annualMessageCount >=
+    usage.annualTemplateMessageCount >=
       subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
         ?.monthlyMessageLimit *
         12
   ) {
-    return reply.code(403).send({
-      message: "You have reached the maximum annual limit of messages.",
-      displayMessageInClient: true,
-    });
+    throw new Error("You have reached the maximum annual limit of messages.");
   }
   if (
-    usage?.monthlyMessagesCount >=
+    usage?.monthlyTemplateMessageCount >=
     subscription.features?.[SubscriptionFeaturePathName.Whatsapp].count
       ?.monthlyMessageLimit
   ) {
-    reply.code(403).send({
-      message: "You have reached the maximum monthly limit of messages.",
-      displayMessageInClient: true,
-    });
+    throw new Error("You have reached the maximum monthly limit of messages.");
   }
 }

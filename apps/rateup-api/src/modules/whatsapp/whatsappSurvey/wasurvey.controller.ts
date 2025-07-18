@@ -129,6 +129,7 @@ import {
 } from "../inbox/message/wamessage.service";
 import { getUserIdsByTeamId } from "../../user/user.service";
 import { getTeamIdsByUserId } from "../../team/team.service";
+import { verifyTemplateMessageLimit } from "../messageTemplates/wa_templates.auth";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -865,7 +866,8 @@ export async function processNextNode(
             return param;
           });
         }
-
+        const subscription = await getSubscription(orgId);
+        await verifyTemplateMessageLimit(subscription);
         await sendTemplateToUserCore(
           orgId,
           node?.data?.template?.id,
@@ -1741,13 +1743,13 @@ async function _sendCampaignToParticipants(
 
   if (
     subscription?.isAnnualMessageLimit &&
-    (usage.annualMessageCount ?? 0) + newMessagesCount > annualLimit
+    (usage.annualTemplateMessageCount ?? 0) + newMessagesCount > annualLimit
   ) {
     let errorMessage =
-      usage.annualMessageCount >= annualLimit
+      usage.annualTemplateMessageCount >= annualLimit
         ? "You have reached the maximum annual limit of messages."
         : `Sending messages to all participants will exceed the annual limit. Please reduce the number of messages by ${
-            annualLimit - usage.annualMessageCount
+            annualLimit - usage.annualTemplateMessageCount
           } to proceed.`;
     await updateCampaign(campaign?.id, {
       status: CampaignStatus.INACTIVE,
@@ -1756,14 +1758,14 @@ async function _sendCampaignToParticipants(
     log.error(errorMessage, "in _sendCampaignToParticipants", orgId);
     return;
   } else if (
-    (usage.monthlyMessagesCount ?? 0) + newMessagesCount >
+    (usage.monthlyTemplateMessageCount ?? 0) + newMessagesCount >
     monthlyMessageLimit
   ) {
     let errorMessage =
-      usage.monthlyMessagesCount >= monthlyMessageLimit
+      usage.monthlyTemplateMessageCount >= monthlyMessageLimit
         ? "You have reached the maximum monthly limit of messages."
         : `Sending messages to all participants will exceed the monthly limit. Please reduce the number of messages by ${
-            monthlyMessageLimit - usage.monthlyMessagesCount
+            monthlyMessageLimit - usage.monthlyTemplateMessageCount
           } to proceed.`;
     await updateCampaign(campaign.id, {
       status: CampaignStatus.INACTIVE,
@@ -1881,7 +1883,7 @@ async function _sendCampaignToParticipants(
       }
     }
 
-    updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    updateMonthlyStat(SubscriptionFeaturePathName.WhatsAppTemplate, orgId);
     await wait(50); // wait 50ms (throughput will be ~20 messages per second)
     sendMessage(orgId, templateMessage, null, userId)
       .then(sendCampaignCallback)

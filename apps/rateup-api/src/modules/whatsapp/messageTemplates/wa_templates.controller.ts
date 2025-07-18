@@ -1149,7 +1149,10 @@ export async function sendTemplateToUserCore(
       userId,
       whatsappSettingsPhoneId,
     );
-    await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
+    await updateMonthlyStat(
+      SubscriptionFeaturePathName.WhatsAppTemplate,
+      orgId,
+    );
     log.trace("Template send to user successfully");
   }
   return res;

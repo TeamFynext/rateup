@@ -62,6 +62,7 @@ import {
 } from "../../loyalty/customer/customer.service";
 import { processActionWebhook } from "../../external/v1/loyalty/action/internal-copy/actions/actions.service";
 import { processRedeemWebhook } from "../../external/v1/loyalty/redeem/internal-copy/redeems/redeem.service";
+import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -337,6 +338,8 @@ export async function sendShopifySurveyCronAction() {
           }
         }
         if (tobeSent) {
+          const subscription = await getSubscription(orgId);
+          await verifyTemplateMessageLimit(subscription);
           const res = await sendTemplateToUserCore(
             orgId,
             waTemplateId,
@@ -474,9 +477,13 @@ export async function sendWhatsAppTemplateToCustomer(
       components: templateComponents,
     };
     const templateMessage = createTemplateMessage(phone, templateQuery);
-    await updateMonthlyStat(SubscriptionFeaturePathName.Whatsapp, orgId);
     await wait(50);
-    return await sendMessage(orgId, templateMessage, customerName);
+    const res = await sendMessage(orgId, templateMessage, customerName);
+    await updateMonthlyStat(
+      SubscriptionFeaturePathName.WhatsAppTemplate,
+      orgId,
+    );
+    return res;
   } catch (e) {
     console.error(e);
     // log.error(e);
@@ -1084,8 +1091,9 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
                 });
             });
         }
-
+        const subscription = await getSubscription(orgId);
         sentNowCheckoutList.map(async (checkout) => {
+          await verifyTemplateMessageLimit(subscription);
           const res = await sendTemplateToUserCore(
             orgId,
             waTemplateId,
