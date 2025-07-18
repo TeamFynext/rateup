@@ -1,13 +1,12 @@
 import { useRouter } from "next/router";
+
+import { IconBrandWhatsapp } from "@tabler/icons-react";
+
 import { orgWsMessage } from "../types/global";
 import { showInfoToast } from "../utils/notifications";
-import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { WaMessagePage } from "../backend/whatsapp/inbox/message/wamessage.api";
 
 export function useNotifyWsMessages() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   return (message: orgWsMessage) => {
     const audio = new Audio("/sounds/noti.wav");
     const pathnamesMap = {
@@ -29,28 +28,11 @@ export function useNotifyWsMessages() {
                 `${pathnamesMap.inbox}?contactId=${message.inbox.contact.id}`,
               );
             },
+            message.inbox.message.messageId,
           );
-          queryClient.invalidateQueries({
-            queryKey: ["contacts", "last-message"],
+          audio.play().catch((e) => {
+            console.warn("Audio playback failed:", e);
           });
-          const currentData: {
-            pages: WaMessagePage[];
-            pageParams: string[];
-          } = queryClient.getQueryData([
-            "wa-messages",
-            message.inbox.contact.id,
-          ]);
-          if (currentData) {
-            const newData = { ...currentData };
-            if (!newData.pages[0].messages.includes(message.inbox.message)) {
-              newData.pages[0].messages.push(message.inbox.message);
-              queryClient.setQueryData(
-                ["wa-messages", message.inbox.contact.id],
-                newData,
-              );
-            }
-          }
-          audio.play();
         }
       }
     }

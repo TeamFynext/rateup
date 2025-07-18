@@ -175,7 +175,7 @@ export default function ContactGroup() {
                     variant="default"
                     disabled={loadingState}
                   >
-                    {translations["Edit Profile"]}
+                    {translations["Edit"]}
                   </Button>
                   <FormModalLayout
                     centered

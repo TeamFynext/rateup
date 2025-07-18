@@ -14,10 +14,12 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconChevronLeft, IconMail } from "@tabler/icons-react";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { AnimatePresence, motion } from "motion/react";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
+import { z } from "zod/v4";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -44,6 +46,41 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
 
   const [termsPrivacyAgreed, setTermsPrivacyAgreed] = useState(true);
 
+  const signUpSchema =
+    signUpTypeValue === signUpType.SIGNUP_WITH_PHONE
+      ? z.object({
+          phoneNumber: z
+            .string()
+            .refine(
+              (val) =>
+                signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE ||
+                isValidPhoneNumber(val),
+              {
+                error: translations["Enter a valid phone number"],
+              },
+            ),
+        })
+      : z.object({
+          email: z.email().min(1, translations["Email is required"]),
+          password: z
+            .string()
+            .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
+              error:
+                translations[
+                  "Password should contain at least one letter and one number"
+                ],
+            })
+            .min(
+              5,
+              translations["Password should be at least 5 characters long"],
+            ),
+          name: z.string().min(1, translations["Name is required"]),
+          orgName: z
+            .string()
+            .min(1, translations["Organization name is required"]),
+          phoneNumber: z.string().optional(),
+        });
+
   const signUpForm = useForm({
     initialValues: {
       email: "",
@@ -53,51 +90,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
       phoneNumber: "",
     },
 
-    validate: {
-      email: (value) => {
-        if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-        if (!value) return translations["Email is required"];
-        else
-          return /^\S+@\S+$/.test(value) ? null : translations["Invalid email"];
-      },
-      password: (value) => {
-        if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-        if (!value) {
-          return translations["Password is required"];
-        }
-        if (value.length < 5) {
-          return translations["Password should be at least 5 characters long"];
-        }
-        if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-          return translations[
-            "Password should contain at least one letter and one number"
-          ];
-        }
-        return null; // Validation passed
-      },
-      name: (value) => {
-        if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-        if (!value.length) {
-          return translations["Name is required"];
-        }
-        return null; // Validation passed
-      },
-      orgName: (value) => {
-        if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) return null;
-        if (!value.length) {
-          return translations["Organization name is required"];
-        }
-        return null; // Validation passed
-      },
-      phoneNumber: (value) => {
-        // if (signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE) return null;
-        if (!value) return null;
-
-        if (!isValidPhoneNumber(value)) {
-          return translations["Enter a valid phone number"];
-        } else return null;
-      },
-    },
+    validate: zod4Resolver(signUpSchema),
   });
 
   const hasPhoneInputErr = signUpForm.errors?.phoneNumber;

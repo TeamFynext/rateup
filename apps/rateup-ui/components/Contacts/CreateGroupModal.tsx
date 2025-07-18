@@ -199,9 +199,7 @@ const CreateGroupModal = ({
             onClick={groupClose}
           ></RateupButtonSecondary>
           <RateupButtonBlue
-            title={
-              isEdit ? translations["Edit Group"] : translations["Create Group"]
-            }
+            title={isEdit ? translations["Save"] : translations["Create Group"]}
             onClick={handleSubmit}
             loading={isCreating}
             disabled={isUploading}
