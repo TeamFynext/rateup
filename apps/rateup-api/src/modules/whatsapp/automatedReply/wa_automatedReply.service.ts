@@ -20,6 +20,7 @@ export async function getAutomatedRepliesByOrgId(
   const automatedReplies = await prisma.waAutomatedReply.findMany({
     where: {
       orgId,
+      isEnabled: true,
       ...(phone_number_id
         ? {
             OR: [
