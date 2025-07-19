@@ -1118,6 +1118,7 @@ export type WaAutomatedReply = {
   assignedUserIds: Array<string>;
   assignType: string;
   memberChoice: string;
+  isEnabled: boolean;
   WaAutomatedReplyAssignedUser: Array<{
     userId: string;
   }>;
