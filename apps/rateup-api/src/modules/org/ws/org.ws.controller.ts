@@ -11,24 +11,50 @@ export async function orgWsAuthCheckHandler(
   const afterAuthId = connectionManager.generateAfterAuthIdforOrgId(orgId);
   reply.send({ afterAuthId });
 }
+type Client = {
+  socket: WebSocket;
+};
+
+const orgClientsMap = new Map<string, Map<string, Client>>();
 
 export async function handleWebSocketConnection(
   connection: any,
   request: FastifyRequest<{ Params: { afterAuthId: string } }>,
 ) {
-  const afterAuthId = request.params.afterAuthId;
-  connectionManager.addConnection(afterAuthId, connection);
+  const browserId = request.params.afterAuthId;
+  const orgId = request.user.orgId;
+  if (!orgId || !browserId) {
+    connection.close();
+    return;
+  }
+  const client: Client = { socket: connection };
 
-  connection.on("message", (message) => {
-    console.log("Received message: ", message);
+  if (!orgClientsMap.has(orgId)) {
+    orgClientsMap.set(orgId, new Map());
+  }
+
+  const browserMap = orgClientsMap.get(orgId)!;
+
+  // If there's already a connection for this browserId, close the old one
+  const existingClient = browserMap.get(browserId);
+  if (existingClient?.socket?.readyState === WebSocket.OPEN) {
+    existingClient.socket.close(); // Cleanly close old connection
+  }
+
+  browserMap.set(browserId, client);
+
+  connection.on("message", (msg) => {
+    console.log("Received message: ", msg);
   });
 
   connection.on("close", () => {
-    connectionManager.removeConnection(afterAuthId, connection);
-  });
-
-  connection.on("error", (error) => {
-    console.error("WebSocket error: ", error);
+    const browserMap = orgClientsMap.get(orgId);
+    if (browserMap) {
+      browserMap.delete(browserId);
+      if (browserMap.size === 0) {
+        orgClientsMap.delete(orgId);
+      }
+    }
   });
 }
 
@@ -36,12 +62,16 @@ export async function sendViaWstoOrgHandler(
   orgId: string,
   message: orgWsMessage,
 ) {
-  const connections = connectionManager.getConnectionsBasedOnOrgId(orgId);
-  for await (const connection of connections) {
-    try {
-      connection.send(JSON.stringify(message));
-    } catch (err) {
-      log.error("WebSocket send error: %s", err);
+  const browserMap = orgClientsMap.get(orgId);
+  if (!browserMap) return;
+
+  for (const client of browserMap.values()) {
+    if (client.socket.readyState === client.socket.OPEN) {
+      try {
+        client.socket.send(JSON.stringify(message));
+      } catch (err) {
+        log.error("WebSocket send error: %s", err);
+      }
     }
   }
 }
