@@ -40,6 +40,8 @@ const SurveyQuestion = ({
 }: SurveyQuestionProps) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
+  if (choiceWise.length === 0) return null;
+
   function getQuestion(questionId) {
     const question =
       version === 1
@@ -79,7 +81,7 @@ const SurveyQuestion = ({
     <div className="space-y-8 border border-[#E2E5ED] rounded-md shadow-sm">
       <h2 className="font-bold text-md p-4">Survey Question Breakdown</h2>
       <div className="py-8 px-14 h-full flex flex-col gap-14">
-        {choiceWise.map(([questionId, questionData], index) => {
+        {choiceWise?.map(([questionId, questionData], index) => {
           const questionDetails = getQuestion(questionId);
           const npsEntry = NPS.find(([id]) => id === questionId)?.[1];
           const responseCount = questionData?.responseCount || 0;
@@ -152,8 +154,12 @@ const SurveyQuestion = ({
                           vertical={false}
                           stroke="#e0e0e0"
                         />
-                        <XAxis dataKey="choice" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        <XAxis
+                          dataKey="choice"
+                          tick={{ fontSize: 12 }}
+                          tickLine={false}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} tickLine={false} />
                         <Tooltip
                           content={<CustomTooltip />}
                           cursor={{ fill: "transparent" }}

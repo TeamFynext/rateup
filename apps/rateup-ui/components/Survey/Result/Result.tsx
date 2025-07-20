@@ -162,24 +162,27 @@ const Result = ({
           )}
         </Tabs.Panel>
         <Tabs.Panel value="analytics">
-          <ResultsOverview1
-            surveyId={survey?.id}
-            aiResponseSummary={survey?.aiResponseSummary}
-            survey={survey}
-            flowId={flowId}
-            version={version}
-            flowQuestions={flowQuestions}
-            questions={questions}
-          />
-          {/* <ResultsOverview
-            surveyId={survey?.id}
-            aiResponseSummary={survey?.aiResponseSummary}
-            survey={survey}
-            flowId={flowId}
-            version={version}
-            flowQuestions={flowQuestions}
-            questions={questions}
-          /> */}
+          {flowId ? (
+            <ResultsOverview
+              surveyId={survey?.id}
+              aiResponseSummary={survey?.aiResponseSummary}
+              survey={survey}
+              flowId={flowId}
+              version={version}
+              flowQuestions={flowQuestions}
+              questions={questions}
+            />
+          ) : (
+            <ResultsOverview1
+              surveyId={survey?.id}
+              aiResponseSummary={survey?.aiResponseSummary}
+              survey={survey}
+              flowId={flowId}
+              version={version}
+              flowQuestions={flowQuestions}
+              questions={questions}
+            />
+          )}
         </Tabs.Panel>
         <Tabs.Panel value="comparison">
           <ResultComparison

@@ -106,7 +106,7 @@ const SurveyStats1 = ({ translations, surveyId }) => {
 
   return (
     <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map(({ title, value, badge, icon }) => (
+      {stats?.map(({ title, value, badge, icon }) => (
         <div
           key={title}
           className="flex justify-between items-center bg-[#FAFAFA] border border-[#E2E5ED] rounded-md p-2 shadow-sm"

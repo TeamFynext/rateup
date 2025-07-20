@@ -5,6 +5,7 @@ import {
   Center,
   Progress,
   RingProgress,
+  Skeleton,
   Text,
   Title,
 } from "@mantine/core";
@@ -23,43 +24,43 @@ import { useHappyIndex } from "@/backend/surveys/response/response.query";
 
 const HappyIndex = ({ surveyId, translations }) => {
   const { data, isLoading } = useHappyIndex(surveyId);
-  const h_index = Number((data?.happinessIndex / 10).toFixed(1));
+  const h_index = Number(((data?.happinessIndex ?? 0) / 10).toFixed(1));
 
-  if (isLoading || !data) return <Text>Loading...</Text>;
+  if (isLoading || !data) return <HappyIndexSkeleton />;
 
   const moodList = [
     {
       label: "Very Happy",
-      value: data.veryHappy,
-      percentage: data.veryHappyPercentage,
+      value: data.veryHappy ?? 0,
+      percentage: data.veryHappyPercentage ?? 0,
       icon: IconMoodHappy,
       color: "#00BF83",
     },
     {
       label: "Happy",
-      value: data.happy,
-      percentage: data.happyPercentage,
+      value: data.happy ?? 0,
+      percentage: data.happyPercentage ?? 0,
       icon: IconMoodSmile,
       color: "#66BF00",
     },
     {
       label: "Neutral",
-      value: data.neutral,
-      percentage: data.neutralPercentage,
+      value: data.neutral ?? 0,
+      percentage: data.neutralPercentage ?? 0,
       icon: IconMoodNeutral,
       color: "#FFC107",
     },
     {
       label: "Unhappy",
-      value: data.sad,
-      percentage: data.sadPercentage,
+      value: data.sad ?? 0,
+      percentage: data.sadPercentage ?? 0,
       icon: IconMoodSad,
       color: "#FF8B07",
     },
     {
       label: "Very Unhappy",
-      value: data.verySad,
-      percentage: data.verySadPercentage,
+      value: data.verySad ?? 0,
+      percentage: data.verySadPercentage ?? 0,
       icon: IconMoodCry,
       color: "#FF6161",
     },
@@ -68,24 +69,24 @@ const HappyIndex = ({ surveyId, translations }) => {
   const npsList = [
     {
       label: "Promoters",
-      percentage: data.promoterPercentage,
-      value: data.promoters,
+      percentage: data.promoterPercentage ?? 0,
+      value: data.promoters ?? 0,
       color: "#00BF83",
       icon: IconMoodHappy,
       bg: "#00BF831F",
     },
     {
       label: "Passives",
-      percentage: data.passivePercentage,
-      value: data.passives,
+      percentage: data.passivePercentage ?? 0,
+      value: data.passives ?? 0,
       color: "#FFC107",
       icon: IconMoodEmpty,
       bg: "#FFC1071F",
     },
     {
       label: "Detractors",
-      percentage: data.detractorPercentage,
-      value: data.detractors,
+      percentage: data.detractorPercentage ?? 0,
+      value: data.detractors ?? 0,
       color: "#FF6161",
       icon: IconMoodAngry,
       bg: "#FF61611F",
@@ -125,14 +126,17 @@ const HappyIndex = ({ surveyId, translations }) => {
             size={230}
             thickness={20}
             sections={[
-              { value: data.happinessIndex, color: happyIndexStatusBg },
+              {
+                value: Number(data.happinessIndex ?? 0),
+                color: happyIndexStatusBg,
+              },
             ]}
             label={
               <Center>
                 <div className="text-center flex flex-col justify-between items-center gap-2">
                   <div>
                     <div className="text-4xl font-bold">
-                      {(data.happinessIndex / 10).toFixed(1)}
+                      {(Number(data?.happinessIndex ?? 0) / 10).toFixed(1)}
                     </div>
                     <Text size="xs" c="dimmed">
                       Out of 10
@@ -149,42 +153,44 @@ const HappyIndex = ({ surveyId, translations }) => {
             }
           />
           <div className="flex flex-col gap-4 w-full">
-            {moodList.map(({ label, value, percentage, icon: Icon, color }) => (
-              <div key={label} className="flex items-center gap-2 w-full">
-                <div className="bg-[#004F981F] rounded-full p-0.5">
-                  <Icon color={"#004F98"} size={45} />
-                </div>
-                <div className="flex w-full flex-col justify-center gap-2 items-start">
-                  <div className="flex w-full justify-between">
-                    <Text size="xs" c={"#343A40"} style={{ fontWeight: 700 }}>
-                      {label}
-                    </Text>
-                    <div className="flex items-center justify-center gap-1">
-                      <Text size="xs" c="#7A8289">
-                        ({value})
+            {moodList?.map(
+              ({ label, value, percentage, icon: Icon, color }) => (
+                <div key={label} className="flex items-center gap-2 w-full">
+                  <div className="bg-[#004F981F] rounded-full p-0.5">
+                    <Icon color={"#004F98"} size={45} />
+                  </div>
+                  <div className="flex w-full flex-col justify-center gap-2 items-start">
+                    <div className="flex w-full justify-between">
+                      <Text size="xs" c={"#343A40"} style={{ fontWeight: 700 }}>
+                        {label}
                       </Text>
-                      <div className="bg-[#004F98] max-w-10 px-3 py-0.5 rounded-full flex items-center justify-center">
-                        <Text size="xs" c="white">
-                          {Math.round(percentage)}%
+                      <div className="flex items-center justify-center gap-1">
+                        <Text size="xs" c="#7A8289">
+                          ({value ?? 0})
                         </Text>
+                        <div className="bg-[#004F98] max-w-10 px-3 py-0.5 rounded-full flex items-center justify-center">
+                          <Text size="xs" c="white">
+                            {Math.round(percentage)}%
+                          </Text>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 w-full">
-                    <Progress
-                      color={color}
-                      value={percentage}
-                      className="flex-1"
-                    />
+                    <div className="flex items-center gap-2 w-full">
+                      <Progress
+                        color={color}
+                        value={percentage}
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </div>
       </Card>
 
-      {/* NPS Overview - 40% */}
+      {/* NPS Overview  */}
       <Card
         shadow="sm"
         radius="md"
@@ -199,7 +205,7 @@ const HappyIndex = ({ surveyId, translations }) => {
             detractors={data.detractors}
           />
           <div className="flex justify-around w-full mt-4">
-            {npsList.map(
+            {npsList?.map(
               ({ label, percentage, value, color, icon: Icon, bg }) => (
                 <div key={label} className="flex flex-col items-center">
                   <div className="rounded-full" style={{ backgroundColor: bg }}>
@@ -307,7 +313,7 @@ const NPSGaugeWithNeedle = ({ nps, promoters, passives, detractors }) => {
           fontWeight="bold"
           fill="#343A40"
         >
-          {nps >= 0 ? `+${nps}` : nps}
+          {(nps >= 0 ? `+${nps}` : nps) ?? 0}
         </text>
       </svg>
 
@@ -333,6 +339,57 @@ const NPSGaugeWithNeedle = ({ nps, promoters, passives, detractors }) => {
                 : "Poor"}
         </span>
       </div>
+    </div>
+  );
+};
+
+const HappyIndexSkeleton = () => {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      {/* Happiness Index Skeleton */}
+      <Card
+        shadow="sm"
+        radius="md"
+        className="p-4 border border-[#E2E5ED] col-span-1 lg:col-span-3"
+      >
+        <Title order={4}>Happiness Index</Title>
+        <div className="flex gap-4 items-center px-12 py-4">
+          <Skeleton height={230} circle />
+          <div className="flex flex-col gap-4 w-full">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="flex items-center gap-2 w-full">
+                <Skeleton height={45} width={45} radius="xl" />
+                <div className="flex w-full flex-col gap-2">
+                  <Skeleton height={8} width="60%" />
+                  <Skeleton height={8} width="100%" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* NPS Overview Skeleton */}
+      <Card
+        shadow="sm"
+        radius="md"
+        className="p-4 border border-[#E2E5ED] col-span-1 lg:col-span-2"
+      >
+        <Title order={4}>NPS Overview</Title>
+        <div className="flex flex-col items-center justify-center mt-4 gap-4">
+          <Skeleton width={220} height={140} />
+          <div className="flex justify-around w-full mt-4 gap-2">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="flex flex-col items-center gap-2">
+                <Skeleton circle height={30} width={30} />
+                <Skeleton height={12} width={60} />
+                <Skeleton height={24} width={40} />
+                <Skeleton height={12} width={80} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };

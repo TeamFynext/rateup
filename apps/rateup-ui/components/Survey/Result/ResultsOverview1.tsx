@@ -9,13 +9,19 @@ import React, {
 
 import { Badge, Divider, Flex, Stack, Text } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { Range } from "react-date-range";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
+import {
+  useAllResponseForGraph,
+  useAllResponseNPSForGraph,
+} from "@/backend/surveys/surveys.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
+import OverallResponseGraph1 from "@/components/Graph/OverallResponseGraph1";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -61,8 +67,6 @@ const ResultsOverview1 = ({
   const { translations } = useTranslations();
   const contentDivRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
-  const { data: subscription } = useSubscription();
-
   const handleExportToPdf = useCallback(async () => {
     const reactToPdf = await import("react-to-pdf");
     const generatePDF = reactToPdf.default;
@@ -95,6 +99,19 @@ const ResultsOverview1 = ({
             ranges[0]?.endDate.toISOString(),
           ],
   });
+  const [timePeriod, setTimePeriod] = useState("daily");
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const {
+    data: graphResponse,
+    isLoading: isrLoading,
+    isRefetching: isrRefetching,
+  } = useAllResponseNPSForGraph(
+    timePeriod,
+    userTimeZone,
+    surveyId,
+    filterTeams,
+  );
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (ranges.length === 0) {
@@ -115,8 +132,30 @@ const ResultsOverview1 = ({
 
   return (
     <div className="flex flex-col gap-6">
-      <SurveyStats1 translations={translations} surveyId={surveyId} />
+      {!flowId && (
+        <SurveyStats1 translations={translations} surveyId={surveyId} />
+      )}
       <HappyIndex translations={translations} surveyId={surveyId} />
+      <OverallResponseGraph1
+        data={graphResponse}
+        timePeriod={timePeriod}
+        setTimePeriod={setTimePeriod}
+        isLoading={isrLoading || isrRefetching}
+        onRefresh={async () => {
+          await queryClient.invalidateQueries({
+            queryKey: [
+              [
+                "reponse-nps",
+                "graph-nps",
+                timePeriod,
+                userTimeZone,
+                surveyId,
+                filterTeams,
+              ],
+            ],
+          });
+        }}
+      />
       <SurveyQuestion
         choiceWise={choiceWiseOverView}
         NPS={npsOverView}

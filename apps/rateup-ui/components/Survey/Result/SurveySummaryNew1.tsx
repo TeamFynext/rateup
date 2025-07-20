@@ -20,7 +20,7 @@ const SurveyResultByType = ({ questionType, chartData, version = 1 }) => {
   const getVoteText = (count) => (count > 1 ? "votes" : "vote");
 
   const getMostVotedChoice = () => {
-    const maxCount = Math.max(...chartData.map((c) => c.count));
+    const maxCount = Math.max(...chartData?.map((c) => c.count));
     return chartData.find((c) => c.count === maxCount)?.choice;
   };
 
@@ -82,7 +82,7 @@ const SurveyResultByType = ({ questionType, chartData, version = 1 }) => {
     case WaQuestions.Dropdown:
     case WaQuestions.CheckboxGroup:
       return renderAll(() =>
-        responseArray.map((item) => {
+        responseArray?.map((item) => {
           const res = getResObj(item.value);
           return renderStatRow({
             label: item.value,
@@ -96,7 +96,7 @@ const SurveyResultByType = ({ questionType, chartData, version = 1 }) => {
     // Rating
     case QuestionType.Rating:
       return renderAll(() =>
-        responseArray.map((item) => {
+        responseArray?.map((item) => {
           const res = getResObj(item.value);
           return renderStatRow({
             label: (
@@ -118,14 +118,14 @@ const SurveyResultByType = ({ questionType, chartData, version = 1 }) => {
     case QuestionType.LD:
     case WaQuestions.LD:
       return renderAll(() =>
-        responseArray.map((item) => {
+        responseArray?.map((item) => {
           const res = getResObj(item.value);
           const isMost = item.value === mostVotedChoice;
           const icon =
             item.value === "Like" ? (
-              <IconThumbUpFilled color="teal" />
+              <IconThumbUpFilled color="#00BF83" />
             ) : (
-              <IconThumbDownFilled color="red" />
+              <IconThumbDownFilled color="#FF6161" />
             );
           return renderStatRow({
             label: (
@@ -145,7 +145,7 @@ const SurveyResultByType = ({ questionType, chartData, version = 1 }) => {
     case QuestionType.YN:
     case WaQuestions.YN:
       return renderAll(() =>
-        responseArray.map((item) => {
+        responseArray?.map((item) => {
           const res = getResObj(item.value);
           return renderStatRow({
             label: item.value,
@@ -159,13 +159,13 @@ const SurveyResultByType = ({ questionType, chartData, version = 1 }) => {
     // Smiley
     case QuestionType.Smiley:
       return renderAll(() =>
-        responseArray.map((item) => {
+        responseArray?.map((item) => {
           const res = getResObj(item.value);
           const Icon = item.Icon;
           return renderStatRow({
             label: (
               <div className="flex items-center gap-2">
-                <Icon size="1.25rem" color={item.color} stroke={2} />
+                <Icon size={20} color={item.color} stroke={2} />
                 <span>{item.value}</span>
               </div>
             ),
