@@ -18,6 +18,7 @@ export async function orgWsRoutes(server: FastifyInstance) {
   server.get(
     "/:afterAuthId",
     {
+      preHandler: checkSession,
       websocket: true,
       schema: {
         params: $orgWsRef("afterAuthIdParamsSchema"),
