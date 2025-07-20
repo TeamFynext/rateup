@@ -36,18 +36,18 @@ type GetLoginStatusCallback = (response: {
 
 type GetLoginStatus = (
   callback: GetLoginStatusCallback,
-  force: boolean=fasle,
+  force?: boolean,
 ) => void;
 type FBLoginResponse = {
   status: "connected" | "not_authorized" | "unknown";
   authResponse?: {
-    accessToken: string;  
+    accessToken: string;
     expiresIn: string;
     signedRequest: string;
     userID: string;
     code: string;
   };
-}
+};
 
 // Type for FB.login
 type LoginCallback = (response: FBLoginResponse) => void;

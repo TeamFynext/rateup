@@ -32,6 +32,7 @@ import { AnimatePresence, motion } from "motion/react";
 import SessionReact from "supertokens-auth-react/recipe/session";
 
 import { WaMessageAssignStatus } from "@/types/enums";
+import { useChatSocket } from "@/hooks/useChatSocket";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -208,22 +209,23 @@ const LastLinks = ({
     </Tooltip>
   ));
 };
-const handleWebSocketMessage = ({
+export const handleWebSocketMessage = ({
   newMessagePayload,
   queryClient,
-  searchParms,
 }: {
   newMessagePayload: orgWsMessage;
   queryClient: QueryClient;
-  searchParms: URLSearchParams;
 }) => {
   if (newMessagePayload.type !== "inbox") return;
 
   const newMessage = newMessagePayload.inbox.message;
   const contact = newMessagePayload.inbox.contact;
   const contactId = contact.id;
-  const urlContactId = searchParms?.get("contactId");
-  const urlTab = searchParms?.get("tab");
+
+  const urlContactId = new URLSearchParams(window.location?.search)?.get(
+    "contactId",
+  );
+  const urlTab = new URLSearchParams(window.location?.search)?.get("tab");
   const waMessageAssignStatus = contact.waMessageAssignStatus;
   const blockedOnWhatsApp = contact.blockedOnWhatsApp;
 
@@ -315,63 +317,8 @@ const handleWebSocketMessage = ({
 };
 
 // WebSocketHandler Component
-const WebSocketHandler = ({ data, error, notifyWsMessages }) => {
-  const connectionRef = useRef<WebSocket | null>(null);
-  const retryCountRef = useRef(0);
-  const maxRetries = 5;
-  const queryClient = useQueryClient();
-
-  const searchParms = useSearchParams();
-  useEffect(() => {
-    if (!data?.afterAuthId || error) return;
-
-    const connectWebSocket = () => {
-      const socket = new WebSocket(
-        `${WA_INBOX_WEBSOCKET_CONNECTION_STRING}/${data.afterAuthId}`,
-      );
-
-      connectionRef.current = socket;
-
-      socket.onopen = () => {
-        console.log("✅ WebSocket connected");
-        retryCountRef.current = 0;
-      };
-
-      socket.onmessage = (event) => {
-        const newMessage = JSON.parse(event.data);
-        handleWebSocketMessage({
-          newMessagePayload: newMessage,
-          queryClient,
-          searchParms,
-        });
-        notifyWsMessages(newMessage);
-      };
-
-      socket.onclose = () => {
-        console.log("❌ WebSocket closed");
-        if (retryCountRef.current < maxRetries) {
-          const timeout = Math.pow(2, retryCountRef.current) * 1000;
-          retryCountRef.current += 1;
-          setTimeout(connectWebSocket, timeout);
-        }
-      };
-
-      socket.onerror = (err) => {
-        console.error("⚠️ WebSocket error", err);
-        socket.close(); // force reconnect
-      };
-    };
-
-    connectWebSocket();
-
-    return () => {
-      if (connectionRef.current) {
-        connectionRef.current.close();
-        connectionRef.current = null;
-      }
-    };
-  }, [searchParms, data?.afterAuthId]);
-
+const WebSocketHandler = () => {
+  useChatSocket();
   return null;
 };
 
@@ -791,12 +738,7 @@ export default function Layout({ children, appProps }) {
 
   return (
     <SessionReact.SessionAuth>
-      <WebSocketHandler
-        data={data}
-        error={error}
-        // setWsData={setWsData}
-        notifyWsMessages={notifyWsMessages}
-      />
+      <WebSocketHandler />
 
       <AppShell
         navbar={{
