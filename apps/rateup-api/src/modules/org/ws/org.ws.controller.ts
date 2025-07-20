@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { connectionManager } from "./org.ws.class";
 import { orgWsMessage } from "../../../types/global";
 import { log } from "../../../utils/logger";
+import redisConnection from "../../../utils/redisConnection";
 
 export async function orgWsAuthCheckHandler(
   request: FastifyRequest,
@@ -13,9 +14,17 @@ export async function orgWsAuthCheckHandler(
 }
 type Client = {
   socket: WebSocket;
+  orgId: string;
+  browserId: string;
 };
 
-const orgClientsMap = new Map<string, Map<string, Client>>();
+// Store active connections in memory for direct socket access
+const activeConnections = new Map<string, Client>();
+
+// Redis key helpers
+const getOrgConnectionsKey = (orgId: string) => `org:${orgId}:connections`;
+const getConnectionKey = (orgId: string, browserId: string) =>
+  `conn:${orgId}:${browserId}`;
 
 export async function handleWebSocketConnection(
   connection: any,
@@ -27,33 +36,64 @@ export async function handleWebSocketConnection(
     connection.close();
     return;
   }
-  const client: Client = { socket: connection };
 
-  if (!orgClientsMap.has(orgId)) {
-    orgClientsMap.set(orgId, new Map());
+  const connectionId = `${orgId}:${browserId}`;
+  const client: Client = { socket: connection, orgId, browserId };
+
+  // Check for existing connection in Redis
+  const existingConnectionId = await redisConnection.hget(
+    getOrgConnectionsKey(orgId),
+    browserId,
+  );
+  if (existingConnectionId) {
+    // Close existing connection if it exists in memory
+    const existingClient = activeConnections.get(existingConnectionId);
+    if (existingClient?.socket?.readyState === WebSocket.OPEN) {
+      existingClient.socket.close();
+    }
+    activeConnections.delete(existingConnectionId);
   }
 
-  const browserMap = orgClientsMap.get(orgId)!;
+  // Store new connection
+  activeConnections.set(connectionId, client);
+  await redisConnection.hset(
+    getOrgConnectionsKey(orgId),
+    browserId,
+    connectionId,
+  );
 
-  // If there's already a connection for this browserId, close the old one
-  const existingClient = browserMap.get(browserId);
-  if (existingClient?.socket?.readyState === WebSocket.OPEN) {
-    existingClient.socket.close(); // Cleanly close old connection
-  }
+  // Set TTL of 24 hours (86400 seconds) for both keys
+  const ttlSeconds = 24 * 60 * 60; // 24 hours
 
-  browserMap.set(browserId, client);
+  await redisConnection.setex(
+    getConnectionKey(orgId, browserId),
+    ttlSeconds,
+    JSON.stringify({
+      orgId,
+      browserId,
+      connectedAt: new Date().toISOString(),
+    }),
+  );
 
   connection.on("message", (msg) => {
     console.log("Received message: ", msg);
   });
 
-  connection.on("close", () => {
-    const browserMap = orgClientsMap.get(orgId);
-    if (browserMap) {
-      browserMap.delete(browserId);
-      if (browserMap.size === 0) {
-        orgClientsMap.delete(orgId);
+  connection.on("close", async () => {
+    try {
+      activeConnections.delete(connectionId);
+      await redisConnection.hdel(getOrgConnectionsKey(orgId), browserId);
+      await redisConnection.del(getConnectionKey(orgId, browserId));
+
+      // Clean up org key if no more connections
+      const remainingConnections = await redisConnection.hlen(
+        getOrgConnectionsKey(orgId),
+      );
+      if (remainingConnections === 0) {
+        await redisConnection.del(getOrgConnectionsKey(orgId));
       }
+    } catch (err) {
+      log.error("Error cleaning up connection: %s", err);
     }
   });
 }
@@ -62,16 +102,22 @@ export async function sendViaWstoOrgHandler(
   orgId: string,
   message: orgWsMessage,
 ) {
-  const browserMap = orgClientsMap.get(orgId);
-  if (!browserMap) return;
+  try {
+    const connectionIds = await redisConnection.hvals(
+      getOrgConnectionsKey(orgId),
+    );
 
-  for (const client of browserMap.values()) {
-    if (client.socket.readyState === client.socket.OPEN) {
-      try {
-        client.socket.send(JSON.stringify(message));
-      } catch (err) {
-        log.error("WebSocket send error: %s", err);
+    for (const connectionId of connectionIds) {
+      const client = activeConnections.get(connectionId);
+      if (client && client.socket.readyState === client.socket.OPEN) {
+        try {
+          client.socket.send(JSON.stringify(message));
+        } catch (err) {
+          log.error("WebSocket send error: %s", err);
+        }
       }
     }
+  } catch (err) {
+    log.error("Error sending message to org %s: %s", orgId, err);
   }
 }
