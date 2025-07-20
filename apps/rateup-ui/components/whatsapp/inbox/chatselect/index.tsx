@@ -25,7 +25,6 @@ import {
   IconMessageCheck,
   IconRefresh,
   IconSearch,
-  IconSettings,
   IconSquareRoundedX,
   IconUserCheck,
   IconUserCircle,
@@ -34,13 +33,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { WaInboxMessage } from "@/types/global";
-import {
-  ContactsWithLastMessage,
-  WaGetMessagesBody,
-  WaMessagePage,
-} from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useWsData } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
   useChatContactCountStore,
@@ -49,11 +42,7 @@ import useContactStore, {
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
 import AddUnknownContactModal from "./addUnknownContactModal";
-import WaInboxChatExport from "./chatExport";
-import WaInboxChatFilter, {
-  ChatFilter,
-  useChatFilterStore,
-} from "./chatFilter";
+import { ChatFilter, useChatFilterStore } from "./chatFilter";
 import WaInboxChatSelectCard from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
 import InboxSettings from "./InboxSettings";
@@ -156,84 +145,60 @@ const WaInboxChatSelect = () => {
     contactRowVirtualizer.getVirtualItems(), // This is the key change - use getVirtualItems()
   ]);
 
-  const { wsData } = useWsData();
+  // const { wsData } = useWsData();
 
-  const findAndReturnTheIndexOfTheContact = useCallback(
-    (list: ContactsWithLastMessage[], contactId: string) => {
-      return list.findIndex((contact) => contact.id === contactId);
-    },
-    [],
-  );
+  // const findAndReturnTheIndexOfTheContact = useCallback(
+  //   (list: ContactsWithLastMessage[], contactId: string) => {
+  //     return list.findIndex((contact) => contact.id === contactId);
+  //   },
+  //   [],
+  // );
 
-  const updateTheContactObject = useCallback(
-    (cObj: ContactsWithLastMessage, newMessage: WaGetMessagesBody) => {
-      return {
-        ...cObj,
-        lastMessage: newMessage,
-        lastReceivedMessageTimeStamp:
-          newMessage.messageBody.exchangeProcess === "receive"
-            ? newMessage.waCreatedAt
-            : cObj?.lastReceivedMessageTimeStamp,
-      };
-    },
-    [],
-  );
+  // const updateTheContactObject = useCallback(
+  //   (cObj: ContactsWithLastMessage, newMessage: WaGetMessagesBody) => {
+  //     return {
+  //       ...cObj,
+  //       lastMessage: newMessage,
+  //       lastReceivedMessageTimeStamp:
+  //         newMessage.messageBody.exchangeProcess === "receive"
+  //           ? newMessage.waCreatedAt
+  //           : cObj?.lastReceivedMessageTimeStamp,
+  //     };
+  //   },
+  //   [],
+  // );
 
-  const updateWaContactsList = useCallback(
-    (newMessage: { contact: ContactsData; message: WaGetMessagesBody }) => {
-      let updatedContacts = [...allFilteredContactsRow];
-      const contactIndex = findAndReturnTheIndexOfTheContact(
-        updatedContacts,
-        newMessage.contact.id,
-      );
-      const contactId = useContactStore.getState().selectedContact?.id;
-      if (
-        contactIndex !== -1 &&
-        contactId === updatedContacts?.[contactIndex]?.id
-      ) {
-        let data = updateTheContactObject(
-          updatedContacts[contactIndex],
-          newMessage.message,
-        );
-        if (data) setSelectedContact(data);
-      } else {
-        queryClient.invalidateQueries({
-          queryKey: ["contacts", "last-message"],
-        });
-      }
-    },
-    [
-      findAndReturnTheIndexOfTheContact,
-      allFilteredContactsRow,
-      queryClient,
-      setSelectedContact,
-      updateTheContactObject,
-    ],
-  );
-
-  useEffect(() => {
-    if (wsData && wsData.type === "inbox") {
-      updateWaContactsList(wsData.inbox);
-      const currentData: {
-        pages: WaMessagePage[];
-        pageParams: string[];
-      } = queryClient.getQueryData(["wa-messages", wsData.inbox.contact.id]);
-      if (currentData) {
-        const newData = { ...currentData };
-        if (
-          !newData.pages[0].messages.find(
-            (message) => message.id === wsData.inbox.message.id,
-          )
-        ) {
-          newData.pages[0].messages.push(wsData.inbox.message);
-          queryClient.setQueryData(
-            ["wa-messages", wsData.inbox.contact.id],
-            newData,
-          );
-        }
-      }
-    }
-  }, [wsData, updateWaContactsList, queryClient]);
+  // const updateWaContactsList = useCallback(
+  //   (newMessage: { contact: ContactsData; message: WaGetMessagesBody }) => {
+  //     let updatedContacts = [...allFilteredContactsRow];
+  //     const contactIndex = findAndReturnTheIndexOfTheContact(
+  //       updatedContacts,
+  //       newMessage.contact.id,
+  //     );
+  //     const contactId = useContactStore.getState().selectedContact?.id;
+  //     if (
+  //       contactIndex !== -1 &&
+  //       contactId === updatedContacts?.[contactIndex]?.id
+  //     ) {
+  //       let data = updateTheContactObject(
+  //         updatedContacts[contactIndex],
+  //         newMessage.message,
+  //       );
+  //       if (data) setSelectedContact(data);
+  //     } else {
+  //       queryClient.invalidateQueries({
+  //         queryKey: ["contacts", "filtered"],
+  //       });
+  //     }
+  //   },
+  //   [
+  //     findAndReturnTheIndexOfTheContact,
+  //     allFilteredContactsRow,
+  //     queryClient,
+  //     setSelectedContact,
+  //     updateTheContactObject,
+  //   ],
+  // );
 
   const searchParams = useSearchParams();
 

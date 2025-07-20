@@ -9,6 +9,7 @@ import {
   Radio,
   SegmentedControl,
   Stack,
+  Switch,
   Tabs,
   Text,
 } from "@mantine/core";
@@ -29,6 +30,7 @@ import {
   useUpdateWaAutomatedReplyMutation,
 } from "../../../../backend/whatsapp/automated-reply/automatedReply.query";
 import {
+  ContainedSwitchInput,
   ContainedTagInput,
   ContainedTextField,
 } from "../../../../components/input/ContainedInput/ContainedInput";
@@ -81,6 +83,7 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
     },
     commands: [],
     whatsappSettingsPhoneId: "",
+    isEnabled: true,
   };
 }
 
@@ -273,6 +276,12 @@ export function AutomatedReplyForm({
                 />
               </Group>
             </Radio.Group>
+            <ContainedSwitchInput
+              label="Enable WhatsApp Automation"
+              {...rootForm.getInputProps("isEnabled", { type: "checkbox" })}
+              defaultChecked={true}
+              my={"xs"}
+            />
             <Group>
               <ContainedTagInput
                 required

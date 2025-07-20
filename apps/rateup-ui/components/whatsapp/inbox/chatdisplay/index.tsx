@@ -35,7 +35,7 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   const messages =
     data?.pages
       .map((page) =>
-        page.messages.toSorted(
+        page?.messages?.toSorted(
           (a, b) =>
             new Date(a.waCreatedAt).getTime() -
             new Date(b.waCreatedAt).getTime(),

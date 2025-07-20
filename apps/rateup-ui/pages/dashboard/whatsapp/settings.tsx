@@ -224,14 +224,6 @@ const initFacebookSdk = () => {
   });
 };
 
-const getFacebookLoginStatus = () => {
-  return new Promise((resolve, reject) => {
-    window.FB.getLoginStatus((response) => {
-      resolve(response);
-    });
-  });
-};
-
 const fbLogin = (): Promise<FBLoginResponse> => {
   return new Promise((resolve, reject) => {
     window.FB.login(
