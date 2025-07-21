@@ -106,7 +106,7 @@ export const useDeregisterBusinessClientMutation = () => {
 export function useUpdateContactTagsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (values: { tags: string[] }) => updateContactTags(values),
+    mutationFn: updateContactTags,
     onSuccess: () => {
       showSuccessToast(
         "Contact tags updated successfully",
