@@ -30,7 +30,7 @@ import WaResponses from "../Response/WaResponses";
 import styles from "./Result.module.css";
 import ResultComparison from "./ResultComparison";
 import ResultsOverview from "./ResultsOverview";
-import ResultsOverview1 from "./ResultsOverview1";
+import ResultsOverviewWebForm from "./ResultsOverviewWebForm";
 import SurveyStats from "./SurveyStats";
 import WaResultsOverviewV2 from "./WaResultsOverview";
 
@@ -173,7 +173,7 @@ const Result = ({
               questions={questions}
             />
           ) : (
-            <ResultsOverview1
+            <ResultsOverviewWebForm
               surveyId={survey?.id}
               aiResponseSummary={survey?.aiResponseSummary}
               survey={survey}

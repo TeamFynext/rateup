@@ -1,4 +1,4 @@
-import { Rating } from "@mantine/core"; // Rating kept for simplicity
+import { Rating } from "@mantine/core"; // Rating
 import { IconThumbDownFilled, IconThumbUpFilled } from "@tabler/icons-react";
 
 import { QuestionType, WaQuestions } from "../../../types/enums";

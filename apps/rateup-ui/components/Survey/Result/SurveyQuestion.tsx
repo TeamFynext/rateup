@@ -17,7 +17,7 @@ import { stringToColour } from "@/utils/essential";
 import { getResponseArrayByQuestionType } from "@/utils/response";
 
 import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
-import SurveyResultByType from "./SurveySummaryNew1";
+import SurveyResultByType from "./SurveySummaryNewWebForm";
 
 type SurveyQuestionProps = {
   choiceWise: any;

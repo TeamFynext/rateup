@@ -20,7 +20,7 @@ import {
   YAxis,
 } from "recharts";
 
-const OverallResponseGraph1 = ({
+const OverallResponseGraphWebForm = ({
   data,
   timePeriod,
   setTimePeriod,
@@ -171,7 +171,7 @@ const CustomTooltip = ({
         ? `Today ${label}`
         : timePeriod === "weekly"
           ? `Week ${label}`
-          : `${dayjs(d?.date).format("MMMM Do, YYYY")}`;
+          : `${dayjs(d?.date).format("MMMM Do")}`;
 
     const total = d.total ?? 0;
     const promoters = d.promoters ?? 0;
@@ -182,44 +182,51 @@ const CustomTooltip = ({
     const happinessIndex = d.happinessIndex ?? 0;
 
     return (
-      <div className="bg-white rounded-xl shadow-xl border border-gray-200 px-4 py-3 min-w-[300px] text-[13px] text-gray-800">
-        <p className="text-sm font-semibold mb-3">{labelFormatted}</p>
+      <div className="bg-white rounded-xl shadow-xl border border-gray-200 px-4 py-3 min-w-[300px] text-[13px] text-gray-800 flex flex-col gap-2 items-stretch justify-between">
+        <p className="text-sm font-semibold self-start">{labelFormatted}</p>
 
-        {/* Main Metric Grid */}
         <div className="grid grid-cols-2 gap-y-3 gap-x-6">
           {/* NPS Score */}
-          <div className="flex items-center gap-2 text-blue-600">
-            <IconTargetArrow size={18} className="text-blue-500" />
-            <span className="text-gray-700">NPS Score</span>
-          </div>
-          <div className="text-right font-bold text-blue-600">
-            {npsScore > 0 ? `+${npsScore}` : npsScore}
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-2 text-blue-600">
+              <IconTargetArrow size={18} className="text-blue-500" />
+              <span className="text-gray-700">NPS Score</span>
+            </div>
+            <div className="text-right font-bold text-blue-600">
+              {npsScore > 0 ? `+${npsScore}` : npsScore}
+            </div>
           </div>
 
           {/* Average Rating */}
-          <div className="flex items-center gap-2 text-blue-600">
-            <IconStarFilled size={18} className="text-blue-500" />
-            <span className="text-gray-700">Average NPS Rating</span>
-          </div>
-          <div className="text-right font-bold text-blue-600">
-            {averageNPSRating.toFixed(1)}
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-2 text-blue-600">
+              <IconStarFilled size={18} className="text-blue-500" />
+              <span className="text-gray-700">Average NPS Rating</span>
+            </div>
+            <div className="text-right font-bold text-blue-600">
+              {averageNPSRating.toFixed(1)}
+            </div>
           </div>
 
           {/* Happiness Index */}
-          <div className="flex items-center gap-2 text-blue-600">
-            <IconMoodSmile size={18} className="text-blue-500" />
-            <span className="text-gray-700">Happiness Index</span>
-          </div>
-          <div className="text-right font-bold text-blue-600">
-            {happinessIndex.toFixed(1)}
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-2 text-blue-600">
+              <IconMoodSmile size={18} className="text-blue-500" />
+              <span className="text-gray-700">Happiness Index</span>
+            </div>
+            <div className="text-right font-bold text-blue-600">
+              {happinessIndex.toFixed(1)}
+            </div>
           </div>
 
           {/* Total Responses */}
-          <div className="flex items-center gap-2 text-blue-600">
-            <IconUsersGroup size={18} className="text-blue-500" />
-            <span className="text-gray-700">Total Responses</span>
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-2 text-blue-600">
+              <IconUsersGroup size={18} className="text-blue-500" />
+              <span className="text-gray-700">Total Responses</span>
+            </div>
+            <div className="text-right font-bold text-blue-600">{total}</div>
           </div>
-          <div className="text-right font-bold text-blue-600">{total}</div>
         </div>
 
         {/* Breakdown */}
@@ -252,4 +259,4 @@ const CustomTooltip = ({
   return null;
 };
 
-export default React.memo(OverallResponseGraph1);
+export default React.memo(OverallResponseGraphWebForm);

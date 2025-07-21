@@ -7,50 +7,21 @@ import React, {
   useState,
 } from "react";
 
-import { Badge, Divider, Flex, Stack, Text } from "@mantine/core";
-import { IconTableExport } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import dayjs from "dayjs";
 import { Range } from "react-date-range";
 
-import { useSubscription } from "@/backend/subscription/subscription.query";
-import {
-  useAllResponseForGraph,
-  useAllResponseNPSForGraph,
-} from "@/backend/surveys/surveys.query";
-import ErrorComponent from "@/components/404/ErrorComponent";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
-import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
-import OverallResponseGraph1 from "@/components/Graph/OverallResponseGraph1";
-import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
+import { useAllResponseNPSForGraph } from "@/backend/surveys/surveys.query";
+import OverallResponseGraphWebForm from "@/components/Graph/OverallResponseGraphWebForm";
 import useTranslations from "@/dictionaries/useTranslation";
 
-import { useQuestions } from "../../../backend/surveys/questions/questions.query";
-import {
-  useHappyIndex,
-  useResponseAnalytics,
-  useSurveyHappyResponseAnalytics,
-} from "../../../backend/surveys/response/response.query";
+import { useResponseAnalytics } from "../../../backend/surveys/response/response.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import SurveyContext from "../../../context/SurveyContext";
-import { QuestionType, WaQuestions } from "../../../types/enums";
-import { stringToColour } from "../../../utils/essential";
-import { getResponseArrayByQuestionType } from "../../../utils/response";
-import RateupLoader from "../../Loaders/RateupLoader";
-import NothingFound from "../../NothingFound/NothingFound";
-import Heading from "../../styled/Heading/Heading";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
-import { getReplacedTitleFromVariable } from "../TakeSurvey/TakeSurveyComponent/util";
-import QuestionBarChart1 from "./Charts/QuestionBarChart1";
-import QuestionPieChart from "./Charts/QuestionPieChart";
 import HappyIndex from "./HappyIndex";
-import LargeTextResponseSummary from "./LargeTextResponseSummary";
-import styles from "./ResultsOverview.module.css";
 import SurveyQuestion from "./SurveyQuestion";
-import { ResponseGraphBySurvey, SurveyResponseStats } from "./SurveyStats";
-import SurveyStats1 from "./SurveyStats1";
+import SurveyStatsWebForm from "./SurveyStatsWebForm";
 
-const ResultsOverview1 = ({
+const ResultsOverviewWebForm = ({
   surveyId,
   aiResponseSummary,
   survey,
@@ -133,10 +104,10 @@ const ResultsOverview1 = ({
   return (
     <div className="flex flex-col gap-6">
       {!flowId && (
-        <SurveyStats1 translations={translations} surveyId={surveyId} />
+        <SurveyStatsWebForm translations={translations} surveyId={surveyId} />
       )}
       <HappyIndex translations={translations} surveyId={surveyId} />
-      <OverallResponseGraph1
+      <OverallResponseGraphWebForm
         data={graphResponse}
         timePeriod={timePeriod}
         setTimePeriod={setTimePeriod}
@@ -169,4 +140,4 @@ const ResultsOverview1 = ({
   );
 };
 
-export default React.memo(ResultsOverview1);
+export default React.memo(ResultsOverviewWebForm);

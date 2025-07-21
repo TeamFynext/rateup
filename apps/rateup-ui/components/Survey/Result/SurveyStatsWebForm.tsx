@@ -11,7 +11,7 @@ import { useResponseCount } from "@/backend/surveys/response/response.query";
 import { useGetSurveyStats } from "@/backend/surveys/surveys.query";
 import SurveyContext from "@/context/SurveyContext";
 
-const SurveyStats1 = ({ translations, surveyId }) => {
+const SurveyStatsWebForm = ({ translations, surveyId }) => {
   const { filterTeams } = useContext(SurveyContext);
 
   const { data: responseCountData, isPending: isPendingCount } =
@@ -125,4 +125,4 @@ const SurveyStats1 = ({ translations, surveyId }) => {
   );
 };
 
-export default SurveyStats1;
+export default SurveyStatsWebForm;
