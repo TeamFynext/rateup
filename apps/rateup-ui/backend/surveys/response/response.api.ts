@@ -158,3 +158,20 @@ export async function getSurveyResponseAnalyics(surveyId, filter = "") {
 export async function getResponseForComparison(surveyId) {
   return (await axiosClient.get(`${RESPONSE_URL}/comparison/${surveyId}`)).data;
 }
+
+export async function getSurveyHappyResponseAnalytics(
+  surveyId,
+  timeFilter = "",
+) {
+  return (
+    await axiosClient.get(
+      `${RESPONSE_URL}/npsanalytics/${surveyId}?${timeFilter}`,
+    )
+  ).data;
+}
+
+export async function getHappyIndex(surveyId) {
+  return (
+    await axiosClient.get(`${RESPONSE_URL}/analytics/happyindex/${surveyId}`)
+  ).data;
+}

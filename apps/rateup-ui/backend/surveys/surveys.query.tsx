@@ -14,6 +14,7 @@ import {
   deleteSurveyVariable,
   getActiveSurveysSummary,
   getLandingpage,
+  getNPSSurveyResponseForGraph,
   getPhoneNumberFromSurveyTeamMapId,
   getPublicSurvey,
   getPublicSurveyGoogleLink,
@@ -651,5 +652,30 @@ export const useAllResponseForGraph = (
     ],
     queryFn: () =>
       getSurveyResponseForGraph(timePeriod, userTimeZone, surveyId, teamMapIds),
+  });
+};
+
+export const useAllResponseNPSForGraph = (
+  timePeriod,
+  userTimeZone,
+  surveyId = "",
+  teamMapIds = [],
+) => {
+  return useQuery({
+    queryKey: [
+      "reponse-nps",
+      "graph-nps",
+      timePeriod,
+      userTimeZone,
+      surveyId,
+      teamMapIds,
+    ],
+    queryFn: () =>
+      getNPSSurveyResponseForGraph(
+        timePeriod,
+        userTimeZone,
+        surveyId,
+        teamMapIds,
+      ),
   });
 };

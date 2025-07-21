@@ -20,7 +20,10 @@ import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Cust
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
-import { useResponseAnalytics } from "../../../backend/surveys/response/response.query";
+import {
+  useResponseAnalytics,
+  useSurveyHappyResponseAnalytics,
+} from "../../../backend/surveys/response/response.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import SurveyContext from "../../../context/SurveyContext";
 import { QuestionType, WaQuestions } from "../../../types/enums";
@@ -130,6 +133,13 @@ const ResultsOverview = ({
 
   return (
     <Stack className={styles["results-overview-root-div"]} p={3}>
+      {/* {
+        isLoading?("loading"):(
+          <div>
+            analytics:{JSON.stringify(happyAnalytics)}
+          </div>
+        )
+      } */}
       <Flex gap={"xs"} direction={flowId ? "column" : "row"}>
         {!flowId && (
           <SurveyResponseStats
@@ -207,81 +217,82 @@ const ResultsOverview = ({
               {choiceWiseOverView.map(([questionId, question], index) => {
                 const questionDetails = getQuestion(questionId);
                 return (
-                  <Stack key={questionId}>
-                    {question?.subData ? (
-                      <Stack>
-                        <Flex justify="space-between">
-                          <Flex gap={"xs"} w={"85%"}>
-                            <Text fw={800} c={"dark.3"}>
-                              {index + 1}.{" "}
-                            </Text>
-                            <Text fw={800} c={"dark.3"}>
-                              {getReplacedTitleFromVariable({
-                                title:
-                                  questionDetails?.questionTitle[
-                                    defaultLanguage
-                                  ],
-                                surveyId,
-                              })}
-                            </Text>
+                  <>
+                    <Stack key={questionId}>
+                      {question?.subData ? (
+                        <Stack>
+                          <Flex justify="space-between">
+                            <Flex gap={"xs"} w={"85%"}>
+                              <Text fw={800} c={"dark.3"}>
+                                {index + 1}.{" "}
+                              </Text>
+                              <Text fw={800} c={"dark.3"}>
+                                {getReplacedTitleFromVariable({
+                                  title:
+                                    questionDetails?.questionTitle[
+                                      defaultLanguage
+                                    ],
+                                  surveyId,
+                                })}
+                              </Text>
+                            </Flex>
+                            <Badge variant="dot">{questionDetails?.type}</Badge>
                           </Flex>
-                          <Badge variant="dot">{questionDetails?.type}</Badge>
-                        </Flex>
-                        {Object.entries(question.subData).map(
-                          ([subq, data], subIndex) => (
-                            <Stack px={"sm"} key={subq}>
-                              <QuestionBarChart
-                                no={subIndex + 1}
-                                questionType={questionDetails?.type}
-                                responseCount={question?.responseCount}
-                                question={subq}
-                                data={data.map((c) => ({
-                                  ...c,
-                                  fill: stringToColour(c.choice),
-                                }))}
-                                version={version}
-                              />
-                              {subIndex <
-                                Object.entries(question.subData).length - 1 && (
-                                <Divider my="md" />
-                              )}
-                            </Stack>
-                          ),
-                        )}
-                      </Stack>
-                    ) : (
-                      <QuestionBarChart
-                        no={index + 1}
-                        questionType={questionDetails?.type}
-                        responseCount={question?.responseCount}
-                        question={
-                          typeof questionDetails?.questionTitle === "object"
-                            ? getReplacedTitleFromVariable({
-                                title:
-                                  questionDetails.questionTitle[
-                                    defaultLanguage
-                                  ],
-                                surveyId,
-                              })
-                            : questionDetails?.questionTitle
-                        }
-                        data={question.data.map((c) => ({
-                          ...c,
-                          fill:
-                            getResponseArrayByQuestionType(
-                              questionDetails?.type as any,
-                            )?.find(
-                              (ch) =>
-                                ch.value.toString() === c.choice.toString(),
-                            )?.color ?? stringToColour(c.choice),
-                        }))}
-                        version={version}
-                      />
-                    )}
-                    {index < choiceWiseOverView.length - 1 && (
-                      <Divider my="md" />
-                    )}
-                  </Stack>
+                          {Object.entries(question.subData).map(
+                            ([subq, data], subIndex) => (
+                              <Stack px={"sm"} key={subq}>
+                                <QuestionBarChart
+                                  no={subIndex + 1}
+                                  questionType={questionDetails?.type}
+                                  responseCount={question?.responseCount}
+                                  question={subq}
+                                  data={data.map((c) => ({
+                                    ...c,
+                                    fill: stringToColour(c.choice),
+                                  }))}
+                                  version={version}
+                                />
+                                {subIndex <
+                                  Object.entries(question.subData).length -
+                                    1 && <Divider my="md" />}
+                              </Stack>
+                            ),
+                          )}
+                        </Stack>
+                      ) : (
+                        <QuestionBarChart
+                          no={index + 1}
+                          questionType={questionDetails?.type}
+                          responseCount={question?.responseCount}
+                          question={
+                            typeof questionDetails?.questionTitle === "object"
+                              ? getReplacedTitleFromVariable({
+                                  title:
+                                    questionDetails.questionTitle[
+                                      defaultLanguage
+                                    ],
+                                  surveyId,
+                                })
+                              : questionDetails?.questionTitle
+                          }
+                          data={question.data.map((c) => ({
+                            ...c,
+                            fill:
+                              getResponseArrayByQuestionType(
+                                questionDetails?.type as any,
+                              )?.find(
+                                (ch) =>
+                                  ch.value.toString() === c.choice.toString(),
+                              )?.color ?? stringToColour(c.choice),
+                          }))}
+                          version={version}
+                        />
+                      )}
+                      {index < choiceWiseOverView.length - 1 && (
+                        <Divider my="md" />
+                      )}
+                    </Stack>
+                  </>
                 );
               })}
             </PaperLayout>
