@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -56,6 +56,7 @@ export default function Contacts() {
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const [selectedTeamID, setSelectedTeamID] = useState("");
   const [contactTags, setContactTags] = useState([]);
+  const [contactGroupTags, setContactGroupTags] = useState([]);
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
   const [sortingGroup, setSortingGroup] = useState<SortingState>([
     CONTACT_SORT,
@@ -104,6 +105,11 @@ export default function Contacts() {
               !searchTerm ||
               group?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
           );
+
+  useEffect(() => {
+    setContactTags(cTags?.contactTags ?? []);
+    setContactGroupTags(cTags?.contactGroupTags ?? []);
+  }, [cTags]);
 
   const column = useMemo(
     () => [
@@ -238,13 +244,21 @@ export default function Contacts() {
                   }
                   w={"25rem"}
                   onChange={setContactTags}
-                  defaultValue={cTags?.contactTags}
+                  value={contactTags}
+                />
+                <ContainedTagInput
+                  placeholder={translations["Type field name and press enter"]}
+                  label={"Add Tags to Contact Groups"}
+                  w={"25rem"}
+                  onChange={setContactGroupTags}
+                  value={contactGroupTags}
                 />
                 <RateupButtonPrimary
                   title={translations["Update"]}
                   onClick={() => {
                     updateContactTagsMutation.mutate({
                       tags: contactTags,
+                      groupTags: contactGroupTags,
                     });
                     showLoadingToast(
                       translations["Contact tags updated successfully"],
