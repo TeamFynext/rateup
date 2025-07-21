@@ -1,29 +1,17 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import { Badge, Divider, Flex, Stack, Text } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
-import dayjs from "dayjs";
 import { Range } from "react-date-range";
+import { Margin, usePDF } from "react-to-pdf";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
-import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import useTranslations from "@/dictionaries/useTranslation";
 
-import { useQuestions } from "../../../backend/surveys/questions/questions.query";
-import {
-  useResponseAnalytics,
-  useSurveyHappyResponseAnalytics,
-} from "../../../backend/surveys/response/response.query";
+import { useResponseAnalytics } from "../../../backend/surveys/response/response.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import SurveyContext from "../../../context/SurveyContext";
 import { QuestionType, WaQuestions } from "../../../types/enums";
@@ -55,25 +43,13 @@ const ResultsOverview = ({
   );
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
   const { translations } = useTranslations();
-  const contentDivRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
   const { data: subscription } = useSubscription();
-
-  const handleExportToPdf = useCallback(async () => {
-    const reactToPdf = await import("react-to-pdf");
-    const generatePDF = reactToPdf.default;
-    const options = {
-      page: {
-        // margin is in MM, default is Margin.NONE = 0
-        margin: reactToPdf.Margin.MEDIUM,
-      },
-    };
-    if (contentDivRef.current) {
-      setIsExporting(true);
-      await generatePDF(contentDivRef, options);
-      setIsExporting(false);
-    }
-  }, [contentDivRef]);
+  const { toPDF, targetRef } = usePDF({
+    page: {
+      margin: Margin.MEDIUM,
+    },
+  });
 
   const {
     data: responseAnalytics,
@@ -158,7 +134,7 @@ const ResultsOverview = ({
       <PaperLayout p={"md"}>
         <Flex justify={"space-between"}>
           <RateupButtonPrimary
-            onClick={handleExportToPdf}
+            onClick={() => toPDF()}
             loading={isExporting}
             leftIcon={<IconTableExport size={"1rem"} />}
             title="Export to Pdf"
@@ -166,7 +142,7 @@ const ResultsOverview = ({
           <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
         </Flex>
       </PaperLayout>
-      <Stack ref={contentDivRef}>
+      <Stack ref={targetRef}>
         {isPending ? (
           <RateupLoader />
         ) : isError ? (

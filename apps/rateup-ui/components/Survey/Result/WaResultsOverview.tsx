@@ -1,15 +1,10 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import { ActionIcon, Divider, Flex, Stack, Tooltip } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { Range } from "react-date-range";
+import { Margin, usePDF } from "react-to-pdf";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
@@ -55,6 +50,12 @@ const WaResultsOverviewV2 = ({
   const [isAllowedQnsPresent, setIsAllowedQnsPresent] = useState(false);
   const { filterTeams, filterTags } = useContext(SurveyContext);
   const [ranges, setRange] = useState<Range[]>([]);
+  const { toPDF, targetRef } = usePDF({
+    page: {
+      margin: Margin.MEDIUM,
+    },
+  });
+
   let chartData;
   const {
     isLoading,
@@ -68,7 +69,6 @@ const WaResultsOverviewV2 = ({
   );
 
   const { translations } = useTranslations();
-  const contentDivRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
   const { data: subscription } = useSubscription();
 
@@ -105,22 +105,6 @@ const WaResultsOverviewV2 = ({
       setIsAllowedQnsPresent(hasAllowedQuestions);
     }
   }, [questions]);
-
-  const handleExportToPdf = useCallback(async () => {
-    const reactToPdf = await import("react-to-pdf");
-    const generatePDF = reactToPdf.default;
-    const options = {
-      page: {
-        // margin is in MM, default is Margin.NONE = 0
-        margin: reactToPdf.Margin.MEDIUM,
-      },
-    };
-    if (contentDivRef.current) {
-      setIsExporting(true);
-      await generatePDF(contentDivRef, options);
-      setIsExporting(false);
-    }
-  }, [contentDivRef]);
 
   const { filteredResponsesByTeam } = getFilteredResponsesUsingTeam(
     filterTeams,
@@ -275,24 +259,24 @@ const WaResultsOverviewV2 = ({
     <Stack className={styles["results-overview-root-div"]} h={"100%"} p={3}>
       {chartData?.length > 0 && (
         <Stack>
-          <Stack p={5} ref={contentDivRef}>
-            <PaperLayout p={"md"}>
-              <Flex justify={"space-between"}>
-                <Tooltip label={"Export to Pdf"}>
-                  <ActionIcon
-                    onClick={handleExportToPdf}
-                    loading={isExporting}
-                    variant="subtle"
-                  >
-                    <IconTableExport size={"1.5rem"} />
-                  </ActionIcon>
-                </Tooltip>
-                <DateRangePickerButton
-                  onChange={(r) => setRange(r ? [r["selection"]] : [])}
-                  ranges={ranges}
-                />
-              </Flex>
-            </PaperLayout>
+          <PaperLayout p={"md"}>
+            <Flex justify={"space-between"}>
+              <Tooltip label={"Export to Pdf"}>
+                <ActionIcon
+                  onClick={() => toPDF()}
+                  loading={isExporting}
+                  variant="subtle"
+                >
+                  <IconTableExport size={"1.5rem"} />
+                </ActionIcon>
+              </Tooltip>
+              <DateRangePickerButton
+                onChange={(r) => setRange(r ? [r["selection"]] : [])}
+                ranges={ranges}
+              />
+            </Flex>
+          </PaperLayout>
+          <Stack p={5} ref={targetRef}>
             {isAllowedQnsPresent && enablewholeNpsAnalytics && (
               <>
                 <Heading subtitle={translations["NPS Overview"]} />

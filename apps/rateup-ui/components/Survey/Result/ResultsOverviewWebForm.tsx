@@ -1,11 +1,4 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { Range } from "react-date-range";
@@ -36,23 +29,6 @@ const ResultsOverviewWebForm = ({
   );
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
   const { translations } = useTranslations();
-  const contentDivRef = useRef(null);
-  const [isExporting, setIsExporting] = useState(false);
-  const handleExportToPdf = useCallback(async () => {
-    const reactToPdf = await import("react-to-pdf");
-    const generatePDF = reactToPdf.default;
-    const options = {
-      page: {
-        // margin is in MM, default is Margin.NONE = 0
-        margin: reactToPdf.Margin.MEDIUM,
-      },
-    };
-    if (contentDivRef.current) {
-      setIsExporting(true);
-      await generatePDF(contentDivRef, options);
-      setIsExporting(false);
-    }
-  }, [contentDivRef]);
 
   const {
     data: responseAnalytics,
