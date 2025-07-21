@@ -38,6 +38,11 @@ import { updateQuestionsOnSurvey } from "../question/question.service";
 import { createStats } from "../stats/stats.service";
 import dayjs from "dayjs";
 import { Prisma } from "../../../generated/prisma/client";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -1465,4 +1470,199 @@ export async function getSurveyResponseCountForGraph(
   }
 
   return res;
+}
+
+const NPS_TYPES = new Set([
+  "Rating",
+  "Smiley",
+  "Like or Dislike",
+  "Yes or No",
+  "Opinion Scale",
+]);
+
+interface CategorizeResponse {
+  response: Record<string, string | number>;
+}
+
+type CategorizeResult = "promoter" | "passive" | "detractor" | null;
+
+const OPINION_SCALE_PROMOTER_THRESHOLD = 9;
+const OPINION_SCALE_PASSIVE_THRESHOLD = 7;
+const HAPPINESS_INDEX_MULTIPLIER = 10;
+
+function categorize(response: CategorizeResponse): CategorizeResult {
+  const [type, data] = Object.entries(response.response)[0];
+
+  switch (type) {
+    case "Rating":
+      if (data === 5) return "promoter";
+      if (data === 4) return "passive";
+      return "detractor";
+
+    case "Smiley":
+      if (["Very Happy", "Happy"].includes(data.toString())) return "promoter";
+      if (data === "Neutral") return "passive";
+      return "detractor";
+
+    case "Like or Dislike":
+      return data === "Like" ? "promoter" : "detractor";
+
+    case "Yes or No":
+      return data === "Yes" ? "promoter" : "detractor";
+
+    case "Opinion Scale":
+      if (Number(data) >= OPINION_SCALE_PROMOTER_THRESHOLD) return "promoter";
+      if (Number(data) >= OPINION_SCALE_PASSIVE_THRESHOLD) return "passive";
+      return "detractor";
+
+    default:
+      return null;
+  }
+}
+
+export async function getNPSResponsesForGraph(
+  orgId: string,
+  userTimeZone: string,
+  timePeriod: "hourly" | "daily" | "weekly" | string,
+  surveyId = "",
+  teamMapIds: string[] = [],
+) {
+  let rawResponses = await prisma.$queryRaw<any>`
+    SELECT 
+      sr."createdAt",
+      sr."responses"
+    FROM "SurveyResponse" sr
+    LEFT JOIN "SurveyTeamMap" st ON sr."surveyTeamMapId" = st.id
+    LEFT JOIN "Survey" s ON st."surveyId" = s.id
+    WHERE s."orgId" = ${orgId}::uuid
+      ${surveyId.length ? Prisma.sql`AND st."surveyId" = ${surveyId}::uuid` : Prisma.empty}
+      ${teamMapIds.length ? Prisma.sql`AND st.id = ANY(${teamMapIds}::uuid[])` : Prisma.empty}
+      AND sr."createdAt" >= CURRENT_DATE - INTERVAL '1 year'
+  `;
+
+  const resultMap = new Map<
+    string,
+    {
+      date: string;
+      promoters: number;
+      passives: number;
+      detractors: number;
+      total: number;
+      totalScore: number;
+      totalNPSResponses: number;
+    }
+  >();
+
+  // Group data by time bucket
+  for (const res of rawResponses) {
+    const bucket =
+      timePeriod === "hourly"
+        ? dayjs(res.createdAt).tz(userTimeZone).format("hh A")
+        : timePeriod === "daily"
+          ? dayjs(res.createdAt).tz(userTimeZone).format("MMM DD")
+          : `${dayjs().diff(dayjs(res.createdAt), "week")}`; // weeks ago
+
+    if (!resultMap.has(bucket)) {
+      resultMap.set(bucket, {
+        date: bucket,
+        promoters: 0,
+        passives: 0,
+        detractors: 0,
+        total: 0,
+        totalScore: 0,
+        totalNPSResponses: 0,
+      });
+    }
+
+    const filtered = res.responses.filter((r) => NPS_TYPES.has(r.type));
+
+    for (const r of filtered) {
+      const cat = categorize(r);
+      const bucketData = resultMap.get(bucket)!;
+
+      if (cat === "promoter") bucketData.promoters++;
+      else if (cat === "passive") bucketData.passives++;
+      else if (cat === "detractor") bucketData.detractors++;
+
+      if (typeof r.value === "number") {
+        bucketData.totalScore += r.value;
+        bucketData.totalNPSResponses++;
+      }
+
+      bucketData.total++;
+    }
+  }
+
+  const finalResult: {
+    date: string;
+    promoters: number;
+    passives: number;
+    detractors: number;
+    total: number;
+    npsScore: number;
+    happinessIndex: number;
+    avgNPSRating: number;
+  }[] = [];
+
+  const fill = (date: string) => {
+    const d = resultMap.get(date);
+    if (!d) {
+      return {
+        date,
+        promoters: 0,
+        passives: 0,
+        detractors: 0,
+        total: 0,
+        npsScore: 0,
+        happinessIndex: 0,
+        avgNPSRating: 0,
+      };
+    }
+
+    const {
+      promoters,
+      passives,
+      detractors,
+      total,
+      totalScore,
+      totalNPSResponses,
+    } = d;
+    const npsScore = total > 0 ? ((promoters - detractors) / total) * 100 : 0;
+    const happinessIndex =
+      total > 0 ? (promoters * HAPPINESS_INDEX_MULTIPLIER) / total : 0;
+    const avgNPSRating =
+      totalNPSResponses > 0 ? totalScore / totalNPSResponses : 0;
+
+    return {
+      date: d.date,
+      promoters,
+      passives,
+      detractors,
+      total,
+      npsScore,
+      happinessIndex,
+      avgNPSRating,
+    };
+  };
+
+  if (timePeriod === "hourly") {
+    for (let i = 0; i < 24; i++) {
+      const date = dayjs().hour(i).format("hh A");
+      finalResult.push(fill(date));
+    }
+  } else if (timePeriod === "daily") {
+    for (let i = 30; i > 0; i--) {
+      const date = dayjs()
+        .subtract(i - 1, "day")
+        .format("MMM DD");
+      finalResult.push(fill(date));
+    }
+  } else if (timePeriod === "weekly") {
+    for (let i = 52; i >= 0; i--) {
+      const date = `${i}`;
+      finalResult.push(fill(date));
+    }
+  }
+
+  return finalResult;
 }
