@@ -58,6 +58,7 @@ export async function updateContactTags(tags) {
 }
 type getContactTagsRes = {
   contactTags: string[];
+  contactGroupTags: string[];
 };
 export async function getContactTags() {
   return (await axiosClient.get(`${SettingsUrl}/contact_tag`))
