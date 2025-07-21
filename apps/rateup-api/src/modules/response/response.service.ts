@@ -2645,7 +2645,7 @@ const MAX_SCORE = 10;
 
 export async function happyIndexResponsesBySurveyId(
   surveyId: string,
-  teamMapIds: string[] | undefined,
+  teamMapIds: string[] | any,
   teamIds: string[],
 ) {
   const where = {
