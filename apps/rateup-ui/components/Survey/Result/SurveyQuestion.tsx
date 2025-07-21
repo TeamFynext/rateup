@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 
 import { Progress } from "@mantine/core";
 import { IconMoodHappy, IconTarget, IconUsers } from "@tabler/icons-react";
@@ -38,8 +38,6 @@ const SurveyQuestion = ({
   surveyId,
   defaultLanguage,
 }: SurveyQuestionProps) => {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-
   if (choiceWise.length === 0) return null;
 
   function getQuestion(questionId) {
@@ -110,7 +108,7 @@ const SurveyQuestion = ({
           return (
             <div key={questionId}>
               <div className="flex flex-col md:flex-row md:gap-4 md:items-center md:justify-center px-2">
-                {/* Left: Question + Choices */}
+                {/* Left */}
                 <div className="w-full md:w-[40%] space-y-2">
                   <div className="flex items-center gap-2">
                     <div className="bg-[#004F98] rounded-full flex justify-center items-center w-5 h-5 text-xs text-white p-2">
@@ -133,7 +131,7 @@ const SurveyQuestion = ({
                   />
                 </div>
 
-                {/* Right: Graph + NPS */}
+                {/* Right */}
                 <div className="flex flex-col gap-4 w-[50%]">
                   <div className="h-[300px] w-[100%] rounded-md border border-gray-200 bg-white px-4 pt-4">
                     <ResponsiveContainer width="100%" height="100%">
@@ -142,12 +140,6 @@ const SurveyQuestion = ({
                         barSize={30}
                         barGap={4}
                         barCategoryGap="15%"
-                        onMouseLeave={() => setActiveIndex(null)}
-                        onMouseMove={(e) => {
-                          if (e?.activeTooltipIndex !== undefined) {
-                            setActiveIndex(e.activeTooltipIndex);
-                          }
-                        }}
                       >
                         <CartesianGrid
                           strokeDasharray="3 3"
@@ -166,10 +158,7 @@ const SurveyQuestion = ({
                         />
                         <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                           {chartData.map((_, i) => (
-                            <Cell
-                              key={`cell-${i}`}
-                              fill={i === activeIndex ? "#82B1FF" : "#607D8B"}
-                            />
+                            <Cell key={`cell-${i}`} fill={"#607D8B"} />
                           ))}
                         </Bar>
                       </BarChart>

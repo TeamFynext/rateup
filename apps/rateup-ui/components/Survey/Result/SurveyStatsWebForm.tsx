@@ -14,9 +14,7 @@ import SurveyContext from "@/context/SurveyContext";
 const SurveyStatsWebForm = ({ translations, surveyId }) => {
   const { filterTeams } = useContext(SurveyContext);
 
-  const { data: responseCountData, isPending: isPendingCount } =
-    useResponseCount(surveyId);
-
+  const { data: responseCountData } = useResponseCount(surveyId);
   const responseCount = useMemo(
     () =>
       filterTeams?.length
@@ -28,14 +26,12 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
     [responseCountData, filterTeams],
   );
 
-  const { data: surveyStats, isPending: isStatsLoading } =
-    useGetSurveyStats(surveyId);
-
+  const { data: surveyStats } = useGetSurveyStats(surveyId);
   const { visited, started } = useMemo(() => {
     let filteredStats = surveyStats ? [...surveyStats] : [];
     if (filterTeams?.length > 0) {
       filteredStats = surveyStats?.filter((team) =>
-        filterTeams?.includes(team?.surveyTeamMapId),
+        filterTeams.includes(team?.surveyTeamMapId),
       );
     }
     return filteredStats?.reduce(
@@ -48,27 +44,8 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
     );
   }, [surveyStats, filterTeams]);
 
-  const responseRate =
-    visited > 0 ? ((responseCount / visited) * 100).toFixed(1) : 0;
-
-  const responseRatePercentage = `${responseRate}%`;
-  let responseRateStatus;
-  const statusColorMap = {
-    Great: "#66BF00",
-    Good: "#FFC107",
-    Low: "#FF8B07",
-    "Too Low": "#FF6161",
-  };
-
-  if (Number(responseRate) >= 70) {
-    responseRateStatus = "Great";
-  } else if (Number(responseRate) >= 50) {
-    responseRateStatus = "Good";
-  } else if (Number(responseRate) >= 30) {
-    responseRateStatus = "Low";
-  } else {
-    responseRateStatus = "Too Low";
-  }
+  const { responseRatePercentage, responseRateStatus, responseRateColor } =
+    getResponseRateInfo(responseCount, visited);
 
   const stats = [
     {
@@ -94,8 +71,8 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
       value: responseRatePercentage,
       badge: (
         <span
-          className={`ml-2 px-2 py-0.5 text-xs rounded text-white`}
-          style={{ backgroundColor: statusColorMap[responseRateStatus] }}
+          className="ml-2 px-2 py-0.5 text-xs rounded text-white"
+          style={{ backgroundColor: responseRateColor }}
         >
           {responseRateStatus}
         </span>
@@ -106,7 +83,7 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
 
   return (
     <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats?.map(({ title, value, badge, icon }) => (
+      {stats.map(({ title, value, badge, icon }) => (
         <div
           key={title}
           className="flex justify-between items-center bg-[#FAFAFA] border border-[#E2E5ED] rounded-md p-2 shadow-sm"
@@ -126,3 +103,29 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
 };
 
 export default SurveyStatsWebForm;
+
+function getResponseRateInfo(responseCount: number, visited: number) {
+  const rate =
+    visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0;
+
+  let status = "Too Low";
+  if (rate >= 70) status = "Great";
+  else if (rate >= 50) status = "Good";
+  else if (rate >= 30) status = "Low";
+
+  const percentage = `${rate}%`;
+
+  const colorMap = {
+    Great: "#66BF00",
+    Good: "#FFC107",
+    Low: "#FF8B07",
+    "Too Low": "#FF6161",
+  };
+
+  return {
+    responseRate: rate,
+    responseRatePercentage: percentage,
+    responseRateStatus: status,
+    responseRateColor: colorMap[status],
+  };
+}

@@ -86,7 +86,7 @@ const ResultsOverviewWebForm = ({
 
   useEffect(() => {
     if (ranges.length === 0) {
-      setRange([{ key: "selction" }]);
+      setRange([{ key: "selection" }]);
     }
   }, [ranges]);
 
