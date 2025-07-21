@@ -38,6 +38,11 @@ import { updateQuestionsOnSurvey } from "../question/question.service";
 import { createStats } from "../stats/stats.service";
 import dayjs from "dayjs";
 import { Prisma } from "../../../generated/prisma/client";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -1467,12 +1472,6 @@ export async function getSurveyResponseCountForGraph(
   return res;
 }
 
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
 const NPS_TYPES = new Set([
   "Rating",
   "Smiley",
@@ -1481,7 +1480,17 @@ const NPS_TYPES = new Set([
   "Opinion Scale",
 ]);
 
-function categorize(response) {
+interface CategorizeResponse {
+  response: Record<string, string | number>;
+}
+
+type CategorizeResult = "promoter" | "passive" | "detractor" | null;
+
+const OPINION_SCALE_PROMOTER_THRESHOLD = 9;
+const OPINION_SCALE_PASSIVE_THRESHOLD = 7;
+const HAPPINESS_INDEX_MULTIPLIER = 10;
+
+function categorize(response: CategorizeResponse): CategorizeResult {
   const [type, data] = Object.entries(response.response)[0];
 
   switch (type) {
@@ -1502,8 +1511,8 @@ function categorize(response) {
       return data === "Yes" ? "promoter" : "detractor";
 
     case "Opinion Scale":
-      if (Number(data) >= 9) return "promoter";
-      if (Number(data) >= 7) return "passive";
+      if (Number(data) >= OPINION_SCALE_PROMOTER_THRESHOLD) return "promoter";
+      if (Number(data) >= OPINION_SCALE_PASSIVE_THRESHOLD) return "passive";
       return "detractor";
 
     default:
@@ -1619,7 +1628,8 @@ export async function getNPSResponsesForGraph(
       totalNPSResponses,
     } = d;
     const npsScore = total > 0 ? ((promoters - detractors) / total) * 100 : 0;
-    const happinessIndex = total > 0 ? (promoters * 10) / total : 0;
+    const happinessIndex =
+      total > 0 ? (promoters * HAPPINESS_INDEX_MULTIPLIER) / total : 0;
     const avgNPSRating =
       totalNPSResponses > 0 ? totalScore / totalNPSResponses : 0;
 

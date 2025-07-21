@@ -2633,10 +2633,20 @@ export function getResponseObjectByQuestionType(questionType, version) {
   }
 }
 
+const smileyMap = {
+  "Very Sad": 0,
+  Sad: 2,
+  Neutral: 5,
+  Happy: 8,
+  "Very Happy": 10,
+};
+
+const MAX_SCORE = 10;
+
 export async function happyIndexResponsesBySurveyId(
   surveyId: string,
-  teamMapIds,
-  teamIds,
+  teamMapIds: string[] | undefined,
+  teamIds: string[],
 ) {
   const where = {
     surveyTeamMap: {
@@ -2674,7 +2684,7 @@ export async function happyIndexResponsesBySurveyId(
   });
   if (responses.length === 0) return {};
   let scoreSum = 0;
-  const maxScore = 10;
+  const maxScore = MAX_SCORE;
   let promoters = 0,
     detractors = 0,
     passives = 0,
@@ -2706,13 +2716,6 @@ export async function happyIndexResponsesBySurveyId(
 
       if (r.type === QuestionType.Smiley) {
         const val = r.response[QuestionType.Smiley];
-        const smileyMap = {
-          "Very Sad": 0,
-          Sad: 2,
-          Neutral: 5,
-          Happy: 8,
-          "Very Happy": 10,
-        };
         score = smileyMap[val] ?? null;
       }
 
