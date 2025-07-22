@@ -1,3 +1,4 @@
+import { Carousel } from "@mantine/carousel";
 import {
   ActionIcon,
   Box,
@@ -19,7 +20,6 @@ import {
   IconCamera,
   IconChevronRight,
   IconDotsVertical,
-  IconFile,
   IconFileText,
   IconX,
 } from "@tabler/icons-react";
@@ -272,6 +272,36 @@ export function FlowImagePreview({
   );
 }
 
+export function FlowImageCarouselPreview({
+  label = "Label",
+  fe,
+}: {
+  label?: string;
+  fe: any;
+}) {
+  console.log(fe, "fe");
+
+  return (
+    <Box>
+      <Text>{label}</Text>
+      <Carousel withIndicators>
+        {fe.images?.map((img, idx) => (
+          <Carousel.Slide key={idx}>
+            <Image
+              src={`data:image/png;base64,${img.src}`}
+              alt={img["alt-text"]}
+              // maw={200}
+              mah={200}
+              style={{
+                aspectRatio: fe?.["aspect-ratio"] || "4/3",
+              }}
+            />
+          </Carousel.Slide>
+        ))}
+      </Carousel>
+    </Box>
+  );
+}
 /**
  * The popup that appears when you click on the "Open" button in the FlowChatPreview.
  * @param param0
@@ -414,6 +444,8 @@ export function FlowFormElementPreview({ fe }: FlowFormElementPreviewProps) {
           }
         />
       );
+    case WaFlowFormElementType.imageCarousel:
+      return <FlowImageCarouselPreview label={label} fe={fe} />;
     default:
       throw new Error("Invalid form element type");
   }

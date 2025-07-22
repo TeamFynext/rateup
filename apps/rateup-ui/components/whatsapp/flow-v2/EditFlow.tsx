@@ -45,7 +45,7 @@ function EditFlow() {
         data: {
           json: {
             screens: getScreens() as any,
-            version: "6.3",
+            version: "7.2",
           },
           ticketIssued:
             ticketIssued && !_.isEqual(dbFlow.ticketIssued, ticketIssued)
@@ -84,6 +84,25 @@ function EditFlow() {
     ) {
       return showErrorToast(
         "Using both PhotoPicker and DocumentPicker components on a single screen is not allowed per screen",
+        "error-max-screen-elements",
+      );
+    } else if (
+      type === QuestionType2.ImageCarousel &&
+      formElementChildren.filter((c) => c.type === ("ImageCarousel" as any))
+        .length >= 2
+    ) {
+      return showErrorToast(
+        "Maximum of 2 ImageCarousel components allowed per screen",
+        "error-max-screen-elements",
+      );
+    } else if (
+      type === QuestionType2.ImageCarousel &&
+      getScreens()
+        .flatMap((screen) => screen.layout.children)
+        .filter((child) => child.type === ("ImageCarousel" as any)).length >= 3
+    ) {
+      return showErrorToast(
+        "Maximum of 3 ImageCarousel components allowed per flow",
         "error-max-screen-elements",
       );
     }

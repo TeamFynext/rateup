@@ -66,6 +66,7 @@ import { hasFeature } from "@/utils/subscription/subscription";
 
 import { EditFlowContext } from "../../flows/FlowPage/EditFlow/EditFlowContext";
 import { DataSourceInput } from "../input/DataSource";
+import ImageCarouselInput from "../input/imageCarouselInput";
 import ImageInput from "../input/ImageInput";
 import InitInput from "../input/InitInput";
 import TiptapMarkdown from "../input/TiptapMarkdown";
@@ -84,6 +85,7 @@ const FieldComponentMap = {
   image: memo(ImageInput),
   checkbox: memo(RateupSwitch),
   init: memo(InitInput),
+  imageCarousel: memo(ImageCarouselInput),
 };
 
 function ElementEditor() {
@@ -165,7 +167,12 @@ function ElementEditor() {
     return (
       <Grid.Col
         key={field}
-        span={field === "data-source" || fieldType === "richText" ? 12 : 6}
+        span={
+          field === "data-source" ||
+          ["richText", "imageCarousel"].includes(fieldType)
+            ? 12
+            : 6
+        }
       >
         <FieldComponent
           label={
