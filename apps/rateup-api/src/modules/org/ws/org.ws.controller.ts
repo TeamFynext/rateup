@@ -3,6 +3,7 @@ import { connectionManager } from "./org.ws.class";
 import { orgWsMessage } from "../../../types/global";
 import { log } from "../../../utils/logger";
 import redisConnection from "../../../utils/redisConnection";
+import { WebSocket } from "@fastify/websocket";
 
 export async function orgWsAuthCheckHandler(
   request: FastifyRequest,
@@ -33,7 +34,7 @@ export async function handleWebSocketConnection(
   const browserId = request.params.afterAuthId;
   const orgId = request.user.orgId;
   if (!orgId || !browserId) {
-    connection.close();
+    connection?.close();
     return;
   }
 
