@@ -121,7 +121,7 @@ const HappyIndex = ({ surveyId, translations }) => {
         className="p-4 border border-[#E2E5ED] col-span-1 lg:col-span-3"
       >
         <Title order={4}>Happiness Index</Title>
-        <div className="flex gap-4 items-center px-12 py-4">
+        <div className="flex flex-col gap-4 items-center px-12 py-4 md:flex-row lg:flex-row">
           <RingProgress
             size={230}
             thickness={20}
