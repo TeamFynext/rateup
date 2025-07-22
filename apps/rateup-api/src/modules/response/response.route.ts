@@ -14,6 +14,7 @@ import {
   resetResponsesHandler,
   summarizeResponseHandler,
   syncResponseToGoogleSheetHandler,
+  getHappyIndexResponsesHandler,
 } from "./response.controller";
 import { verifyAccess } from "./response.auth";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
@@ -117,5 +118,6 @@ export async function responseRoutes(server: FastifyInstance) {
   );
 
   server.get("/analytics/:surveyId", getResponseAnalyticsForGraphHandler);
+  server.get("/analytics/happyindex/:surveyId", getHappyIndexResponsesHandler);
   server.get("/comparison/:surveyId", getResponseCountForCamparisonHandler);
 }

@@ -223,9 +223,10 @@ model WhatsappSettings {
 }
 
 model WaAccountSettings {
-  org         Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId       String   @unique @db.Uuid
-  contactTags String[] @default([])
+  org              Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId            String   @unique @db.Uuid
+  contactTags      String[] @default([])
+  contactGroupTags String[] @default([])
 }
 
 model WaLogs {

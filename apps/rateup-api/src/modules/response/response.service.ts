@@ -2632,3 +2632,168 @@ export function getResponseObjectByQuestionType(questionType, version) {
     }
   }
 }
+
+const smileyMap = {
+  "Very Sad": 0,
+  Sad: 2,
+  Neutral: 5,
+  Happy: 8,
+  "Very Happy": 10,
+};
+
+const MAX_SCORE = 10;
+
+export async function happyIndexResponsesBySurveyId(
+  surveyId: string,
+  teamMapIds: string[] | any,
+  teamIds: string[],
+) {
+  const where = {
+    surveyTeamMap: {
+      surveyId,
+      teamId: { in: teamIds },
+      ...(teamMapIds?.length && { id: { in: teamMapIds } }),
+    },
+  };
+
+  const surveyInfo = await prisma.surveyTeamMap.findFirst({
+    where: { surveyId },
+    select: {
+      survey: {
+        select: {
+          type: true,
+          questions: true,
+          WaFlow: {
+            select: {
+              version: true,
+              json: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!surveyInfo) return {};
+  const responses = await prisma.surveyResponse.findMany({
+    where,
+    select: {
+      responses: true,
+      createdAt: true,
+    },
+  });
+  if (responses.length === 0) return {};
+  let scoreSum = 0;
+  const maxScore = MAX_SCORE;
+  let promoters = 0,
+    detractors = 0,
+    passives = 0,
+    npsCount = 0;
+  let totalCount = 0,
+    veryHappy = 0,
+    happy = 0,
+    neutral = 0,
+    sad = 0,
+    verySad = 0;
+
+  responses.forEach((resp) => {
+    resp.responses.forEach((r) => {
+      let score = null;
+
+      if (r.type === QuestionType.Opinion) {
+        const val = r.response[QuestionType.Opinion];
+        if (typeof val === "number") score = val;
+      }
+
+      if (r.type === QuestionType.Rating) {
+        const val = r.response[QuestionType.Rating];
+        if (val === 5) score = 10;
+        else if (val === 4) score = 9;
+        else if (val === 3) score = 6;
+        else if (val === 2) score = 5;
+        else score = 0;
+      }
+
+      if (r.type === QuestionType.Smiley) {
+        const val = r.response[QuestionType.Smiley];
+        score = smileyMap[val] ?? null;
+      }
+
+      if (r.type === QuestionType.LD) {
+        const val = r.response[QuestionType.LD];
+        if (val === "Like") score = 10;
+        else if (val === "Dislike") score = 0;
+      }
+
+      if (r.type === QuestionType.YN) {
+        const val = r.response[QuestionType.YN];
+        if (val === "Yes") score = 10;
+        else if (val === "No") score = 0;
+      }
+
+      if (score !== null) {
+        if (score >= 9) {
+          promoters++;
+        } else if (score >= 6) {
+          passives++;
+        } else {
+          detractors++;
+        }
+
+        if (score >= 9) veryHappy++;
+        else if (score >= 7) happy++;
+        else if (score >= 5) neutral++;
+        else if (score >= 2) sad++;
+        else verySad++;
+
+        npsCount++;
+        scoreSum += score;
+        totalCount++;
+      }
+    });
+  });
+
+  const nps = npsCount > 0 ? ((promoters - detractors) / npsCount) * 100 : null;
+  const promoterPercentage =
+    npsCount > 0 ? Math.round((promoters / npsCount) * 100) : null;
+  const passivePercentage =
+    npsCount > 0 ? Math.round((passives / npsCount) * 100) : null;
+  const detractorPercentage =
+    npsCount > 0 ? Math.round((detractors / npsCount) * 100) : null;
+  const happinessIndex =
+    totalCount > 0
+      ? Math.round((scoreSum / (totalCount * maxScore)) * 100)
+      : null;
+  const veryHappyPercentage =
+    totalCount > 0 ? +((veryHappy / totalCount) * 100).toFixed(2) : null;
+  const happyPercentage =
+    totalCount > 0 ? +((happy / totalCount) * 100).toFixed(2) : null;
+  const neutralPercentage =
+    totalCount > 0 ? +((neutral / totalCount) * 100).toFixed(2) : null;
+  const sadPercentage =
+    totalCount > 0 ? +((sad / totalCount) * 100).toFixed(2) : null;
+  const verySadPercentage =
+    totalCount > 0 ? +((verySad / totalCount) * 100).toFixed(2) : null;
+
+  return {
+    promoters,
+    passives,
+    detractors,
+    veryHappy,
+    happy,
+    neutral,
+    sad,
+    verySad,
+    nps: nps !== null ? Math.round(nps) : null,
+    totalCount,
+    promoterPercentage,
+    passivePercentage,
+    detractorPercentage,
+    veryHappyPercentage,
+    happyPercentage,
+    neutralPercentage,
+    sadPercentage,
+    verySadPercentage,
+    happinessIndex,
+  };
+}

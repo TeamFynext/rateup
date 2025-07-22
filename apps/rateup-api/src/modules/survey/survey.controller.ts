@@ -32,6 +32,7 @@ import {
   deleteSurveyVariable,
   getSurveyResponseCountForGraph,
   getSurveyStats,
+  getNPSResponsesForGraph,
 } from "./survey.service";
 import {
   CloneSurveyInput,
@@ -645,6 +646,26 @@ export async function getSurveyResponseCountForGraphHandler(
   try {
     const { userTimeZone, timePeriod, surveyId, teamMapIds } = request.query;
     const res = await getSurveyResponseCountForGraph(
+      request.user.orgId,
+      userTimeZone,
+      timePeriod,
+      surveyId,
+      teamMapIds?.length ? teamMapIds?.split(",") : [],
+    );
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function getNPSGraphHandler(
+  request: FastifyRequest<{ Querystring: GraphResponseParams }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { userTimeZone, timePeriod, surveyId, teamMapIds } = request.query;
+    const res = await getNPSResponsesForGraph(
       request.user.orgId,
       userTimeZone,
       timePeriod,

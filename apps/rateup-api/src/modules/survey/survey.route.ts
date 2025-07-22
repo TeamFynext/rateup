@@ -24,6 +24,7 @@ import {
   deleteSurveyVariableHandler,
   getSurveyResponseCountForGraphHandler,
   getSurveyStatsHandler,
+  getNPSGraphHandler,
 } from "./survey.controller";
 import { $Sref } from "./survey.schema";
 import {
@@ -67,6 +68,8 @@ export async function surveyRoutes(server: FastifyInstance) {
 
   //get survey response for graph
   server.get("/summary/response", getSurveyResponseCountForGraphHandler);
+
+  server.get("/summary/response/nps", getNPSGraphHandler);
 
   // get all surveys summary from user
   server.get("/summary/all", getSurveysSummaryHandler);

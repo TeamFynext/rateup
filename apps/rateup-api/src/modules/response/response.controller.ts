@@ -30,6 +30,7 @@ import {
   sendResponseToWebhook,
   syncResponseToGoogleSheet,
   updateResponse,
+  happyIndexResponsesBySurveyId,
 } from "./response.service";
 import { fetchLocation } from "../../utils/location";
 import { getIp } from "../../utils/http";
@@ -428,5 +429,26 @@ export async function getResponseCountForCamparisonHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function getHappyIndexResponsesHandler(
+  request: FastifyRequest<{
+    Params: { surveyId: string; surveyTeamMapId?: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { surveyId, surveyTeamMapId } = request.params;
+    const teamIds = await getTeamIdsByUserId(request.userId);
+    const result = await happyIndexResponsesBySurveyId(
+      surveyId,
+      surveyTeamMapId,
+      teamIds,
+    );
+    reply.send(result);
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send(e.message);
   }
 }

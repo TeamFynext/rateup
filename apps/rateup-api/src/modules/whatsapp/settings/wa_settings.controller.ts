@@ -147,7 +147,7 @@ export async function updateContactTagHandler(
 ) {
   try {
     const { orgId } = request.user;
-    await updateContactTag(orgId, request.body.tags);
+    await updateContactTag(orgId, request.body.tags, request.body.groupTags);
     reply.code(204).send();
   } catch (error) {
     log.error("Error while updating contact tags", error);
