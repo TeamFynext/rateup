@@ -108,7 +108,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
         <Flex gap={"xs"} w={"85%"}>
           <Text fw={800} c={"dark.3"}>
             {" "}
-            {no}.{" "}
+            {no}
           </Text>
           <Text fw={800} c={"dark.3"}>
             {getContent(question)}

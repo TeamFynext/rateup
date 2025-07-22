@@ -290,3 +290,16 @@ export async function getSurveyResponseForGraph(
     )
   ).data;
 }
+
+export async function getNPSSurveyResponseForGraph(
+  timePeriod,
+  userTimeZone,
+  surveyId,
+  teamMapIds,
+) {
+  return (
+    await axiosClient.get(
+      `${SURVEYURL}/summary/response/nps?timePeriod=${timePeriod}&userTimeZone=${userTimeZone}&surveyId=${surveyId}&teamMapIds=${teamMapIds}`,
+    )
+  ).data;
+}

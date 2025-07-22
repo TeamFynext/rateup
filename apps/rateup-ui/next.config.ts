@@ -35,11 +35,12 @@ const nextConfig: NextConfig = bundleAnalyzer({
           removeConsole: true,
         }
       : {},
+  turbopack: { resolveAlias: { html2canvas: "html2canvas-pro" } },
   experimental: {
     // reactCompiler: true,
   },
   webpack: (config) => {
-    // '...' is important here – it keeps the default webpack conditionNames
+    config.resolve.alias["html2canvas"] = "html2canvas-pro";
     config.resolve.conditionNames = ["require", "..."];
     return config;
   },

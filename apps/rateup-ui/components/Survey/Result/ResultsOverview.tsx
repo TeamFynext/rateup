@@ -1,25 +1,16 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import { Badge, Divider, Flex, Stack, Text } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
-import dayjs from "dayjs";
 import { Range } from "react-date-range";
+import { Margin, usePDF } from "react-to-pdf";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
-import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import useTranslations from "@/dictionaries/useTranslation";
 
-import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { useResponseAnalytics } from "../../../backend/surveys/response/response.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import SurveyContext from "../../../context/SurveyContext";
@@ -52,25 +43,13 @@ const ResultsOverview = ({
   );
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
   const { translations } = useTranslations();
-  const contentDivRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
   const { data: subscription } = useSubscription();
-
-  const handleExportToPdf = useCallback(async () => {
-    const reactToPdf = await import("react-to-pdf");
-    const generatePDF = reactToPdf.default;
-    const options = {
-      page: {
-        // margin is in MM, default is Margin.NONE = 0
-        margin: reactToPdf.Margin.MEDIUM,
-      },
-    };
-    if (contentDivRef.current) {
-      setIsExporting(true);
-      await generatePDF(contentDivRef, options);
-      setIsExporting(false);
-    }
-  }, [contentDivRef]);
+  const { toPDF, targetRef } = usePDF({
+    page: {
+      margin: Margin.MEDIUM,
+    },
+  });
 
   const {
     data: responseAnalytics,
@@ -130,6 +109,13 @@ const ResultsOverview = ({
 
   return (
     <Stack className={styles["results-overview-root-div"]} p={3}>
+      {/* {
+        isLoading?("loading"):(
+          <div>
+            analytics:{JSON.stringify(happyAnalytics)}
+          </div>
+        )
+      } */}
       <Flex gap={"xs"} direction={flowId ? "column" : "row"}>
         {!flowId && (
           <SurveyResponseStats
@@ -148,7 +134,7 @@ const ResultsOverview = ({
       <PaperLayout p={"md"}>
         <Flex justify={"space-between"}>
           <RateupButtonPrimary
-            onClick={handleExportToPdf}
+            onClick={() => toPDF()}
             loading={isExporting}
             leftIcon={<IconTableExport size={"1rem"} />}
             title="Export to Pdf"
@@ -156,7 +142,7 @@ const ResultsOverview = ({
           <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
         </Flex>
       </PaperLayout>
-      <Stack ref={contentDivRef}>
+      <Stack ref={targetRef}>
         {isPending ? (
           <RateupLoader />
         ) : isError ? (
@@ -207,81 +193,82 @@ const ResultsOverview = ({
               {choiceWiseOverView.map(([questionId, question], index) => {
                 const questionDetails = getQuestion(questionId);
                 return (
-                  <Stack key={questionId}>
-                    {question?.subData ? (
-                      <Stack>
-                        <Flex justify="space-between">
-                          <Flex gap={"xs"} w={"85%"}>
-                            <Text fw={800} c={"dark.3"}>
-                              {index + 1}.{" "}
-                            </Text>
-                            <Text fw={800} c={"dark.3"}>
-                              {getReplacedTitleFromVariable({
-                                title:
-                                  questionDetails?.questionTitle[
-                                    defaultLanguage
-                                  ],
-                                surveyId,
-                              })}
-                            </Text>
+                  <>
+                    <Stack key={questionId}>
+                      {question?.subData ? (
+                        <Stack>
+                          <Flex justify="space-between">
+                            <Flex gap={"xs"} w={"85%"}>
+                              <Text fw={800} c={"dark.3"}>
+                                {index + 1}.{" "}
+                              </Text>
+                              <Text fw={800} c={"dark.3"}>
+                                {getReplacedTitleFromVariable({
+                                  title:
+                                    questionDetails?.questionTitle[
+                                      defaultLanguage
+                                    ],
+                                  surveyId,
+                                })}
+                              </Text>
+                            </Flex>
+                            <Badge variant="dot">{questionDetails?.type}</Badge>
                           </Flex>
-                          <Badge variant="dot">{questionDetails?.type}</Badge>
-                        </Flex>
-                        {Object.entries(question.subData).map(
-                          ([subq, data], subIndex) => (
-                            <Stack px={"sm"} key={subq}>
-                              <QuestionBarChart
-                                no={subIndex + 1}
-                                questionType={questionDetails?.type}
-                                responseCount={question?.responseCount}
-                                question={subq}
-                                data={data.map((c) => ({
-                                  ...c,
-                                  fill: stringToColour(c.choice),
-                                }))}
-                                version={version}
-                              />
-                              {subIndex <
-                                Object.entries(question.subData).length - 1 && (
-                                <Divider my="md" />
-                              )}
-                            </Stack>
-                          ),
-                        )}
-                      </Stack>
-                    ) : (
-                      <QuestionBarChart
-                        no={index + 1}
-                        questionType={questionDetails?.type}
-                        responseCount={question?.responseCount}
-                        question={
-                          typeof questionDetails?.questionTitle === "object"
-                            ? getReplacedTitleFromVariable({
-                                title:
-                                  questionDetails.questionTitle[
-                                    defaultLanguage
-                                  ],
-                                surveyId,
-                              })
-                            : questionDetails?.questionTitle
-                        }
-                        data={question.data.map((c) => ({
-                          ...c,
-                          fill:
-                            getResponseArrayByQuestionType(
-                              questionDetails?.type as any,
-                            )?.find(
-                              (ch) =>
-                                ch.value.toString() === c.choice.toString(),
-                            )?.color ?? stringToColour(c.choice),
-                        }))}
-                        version={version}
-                      />
-                    )}
-                    {index < choiceWiseOverView.length - 1 && (
-                      <Divider my="md" />
-                    )}
-                  </Stack>
+                          {Object.entries(question.subData).map(
+                            ([subq, data], subIndex) => (
+                              <Stack px={"sm"} key={subq}>
+                                <QuestionBarChart
+                                  no={subIndex + 1}
+                                  questionType={questionDetails?.type}
+                                  responseCount={question?.responseCount}
+                                  question={subq}
+                                  data={data.map((c) => ({
+                                    ...c,
+                                    fill: stringToColour(c.choice),
+                                  }))}
+                                  version={version}
+                                />
+                                {subIndex <
+                                  Object.entries(question.subData).length -
+                                    1 && <Divider my="md" />}
+                              </Stack>
+                            ),
+                          )}
+                        </Stack>
+                      ) : (
+                        <QuestionBarChart
+                          no={index + 1}
+                          questionType={questionDetails?.type}
+                          responseCount={question?.responseCount}
+                          question={
+                            typeof questionDetails?.questionTitle === "object"
+                              ? getReplacedTitleFromVariable({
+                                  title:
+                                    questionDetails.questionTitle[
+                                      defaultLanguage
+                                    ],
+                                  surveyId,
+                                })
+                              : questionDetails?.questionTitle
+                          }
+                          data={question.data.map((c) => ({
+                            ...c,
+                            fill:
+                              getResponseArrayByQuestionType(
+                                questionDetails?.type as any,
+                              )?.find(
+                                (ch) =>
+                                  ch.value.toString() === c.choice.toString(),
+                              )?.color ?? stringToColour(c.choice),
+                          }))}
+                          version={version}
+                        />
+                      )}
+                      {index < choiceWiseOverView.length - 1 && (
+                        <Divider my="md" />
+                      )}
+                    </Stack>
+                  </>
                 );
               })}
             </PaperLayout>
