@@ -82,13 +82,13 @@ const SurveyResultByType = ({ questionType, chartData, version = 1 }) => {
     case WaQuestions.Dropdown:
     case WaQuestions.CheckboxGroup:
       return renderAll(() =>
-        responseArray?.map((item) => {
-          const res = getResObj(item.value);
+        chartData?.map((item) => {
+          const res = getResObj(item.choice);
           return renderStatRow({
-            label: item.value,
+            label: item.choice,
             value: getValue(res),
-            isMostVoted: item.value.toString() === mostVotedChoice?.toString(),
-            badge: item.value,
+            isMostVoted: item.choice.toString() === mostVotedChoice?.toString(),
+            badge: item.choice,
           });
         }),
       );
