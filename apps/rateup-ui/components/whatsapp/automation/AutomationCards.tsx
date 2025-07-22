@@ -97,9 +97,13 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
             size="xs"
           >{`Type: ${automation.matchType}`}</Badge>
           <Switch
-            checked={automation.matchData?.caseSensitive}
+            checked={automation?.isEnabled}
             readOnly
-            label={"caseSensitive"}
+            label={
+              automation.isEnabled
+                ? translations["Enabled"]
+                : translations["Disabled"]
+            }
             size="xs"
             styles={{
               label: {

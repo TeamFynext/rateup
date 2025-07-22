@@ -729,7 +729,7 @@ export default function WhatsappTemplateById() {
                           <ContainedSelection
                             label={
                               <>
-                                <Text fz={14} fw={500}>
+                                <Text fz={14} fw={500} w={"max-content"}>
                                   {translations["Broadcast header"]}{" "}
                                   {requiredIcon}
                                 </Text>

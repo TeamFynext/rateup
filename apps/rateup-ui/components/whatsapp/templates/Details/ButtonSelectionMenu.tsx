@@ -90,10 +90,7 @@ export const ButtonSelection = ({
         <Menu.Dropdown>
           <Menu.Label>{translations["Rateup Interactive Buttons"]}</Menu.Label>
           <Tooltip
-            label={
-              (btnLen > 0 || flowBtn) &&
-              "Remove all button to add a flow button"
-            }
+            label={(btnLen > 0 || flowBtn) && "Already added"}
             display={btnLen === 0 ? "none" : "block"}
           >
             <Box>
@@ -110,8 +107,6 @@ export const ButtonSelection = ({
           </Tooltip>
           <Tooltip
             label={
-              (flowBtn &&
-                translations["Remove flow button to add other buttons"]) ||
               (mpmBtn &&
                 translations["Remove MPM button to add other buttons"]) ||
               (checkoutBtn && "Remove Checkout button to add other buttons") ||
@@ -120,16 +115,14 @@ export const ButtonSelection = ({
               (spmBtn && "Remove SPM button to add other buttons")
             }
             display={
-              !flowBtn && !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
+              !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
                 ? "none"
                 : "block"
             }
           >
             <Box>
               <Menu.Item
-                disabled={
-                  flowBtn || mpmBtn || checkoutBtn || catalogBtn || spmBtn
-                }
+                disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
                 leftSection={
                   <IconWorld style={{ width: rem(14), height: rem(14) }} />
                 }
@@ -145,21 +138,17 @@ export const ButtonSelection = ({
           <Menu.Label>{translations["Quick Reply Buttons"]}</Menu.Label>
           <Tooltip
             label={
-              (flowBtn &&
-                translations["Remove flow button to add other buttons"]) ||
               (mpmBtn &&
                 translations["Remove MPM button to add other buttons"]) ||
               (catalogBtn &&
                 "Remove View Catalog button to add other buttons") ||
               (spmBtn && "Remove SPM button to add other buttons")
             }
-            display={
-              !flowBtn && !mpmBtn && !catalogBtn && !spmBtn ? "none" : "block"
-            }
+            display={!mpmBtn && !catalogBtn && !spmBtn ? "none" : "block"}
           >
             <Box>
               <Menu.Item
-                disabled={flowBtn || mpmBtn || catalogBtn || spmBtn}
+                disabled={mpmBtn || catalogBtn || spmBtn}
                 leftSection={
                   <IconAdjustments
                     style={{ width: rem(14), height: rem(14) }}
@@ -178,8 +167,6 @@ export const ButtonSelection = ({
           <Menu.Label>{translations["Call-To-Action Buttons"]}</Menu.Label>
           <Tooltip
             label={
-              (flowBtn &&
-                translations["Remove flow button to add other buttons"]) ||
               (mpmBtn &&
                 translations["Remove MPM button to add other buttons"]) ||
               (checkoutBtn && "Remove Checkout button to add other buttons") ||
@@ -188,16 +175,14 @@ export const ButtonSelection = ({
               (spmBtn && "Remove SPM button to add other buttons")
             }
             display={
-              !flowBtn && !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
+              !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
                 ? "none"
                 : "block"
             }
           >
             <Box>
               <Menu.Item
-                disabled={
-                  flowBtn || mpmBtn || checkoutBtn || catalogBtn || spmBtn
-                }
+                disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
                 leftSection={
                   <IconPhone style={{ width: rem(14), height: rem(14) }} />
                 }
@@ -211,8 +196,6 @@ export const ButtonSelection = ({
           </Tooltip>
           <Tooltip
             label={
-              (flowBtn &&
-                translations["Remove flow button to add other buttons"]) ||
               (mpmBtn &&
                 translations["Remove MPM button to add other buttons"]) ||
               (checkoutBtn && "Remove Checkout button to add other buttons") ||
@@ -221,16 +204,14 @@ export const ButtonSelection = ({
               (spmBtn && "Remove SPM button to add other buttons")
             }
             display={
-              !flowBtn && !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
+              !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
                 ? "none"
                 : "block"
             }
           >
             <Box>
               <Menu.Item
-                disabled={
-                  flowBtn || mpmBtn || checkoutBtn || catalogBtn || spmBtn
-                }
+                disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
                 leftSection={
                   <IconCopy style={{ width: rem(14), height: rem(14) }} />
                 }
@@ -244,8 +225,6 @@ export const ButtonSelection = ({
           </Tooltip>
           <Tooltip
             label={
-              (flowBtn &&
-                translations["Remove flow button to add other buttons"]) ||
               (mpmBtn &&
                 translations["Remove MPM button to add other buttons"]) ||
               (checkoutBtn && "Remove Checkout button to add other buttons") ||
@@ -254,16 +233,14 @@ export const ButtonSelection = ({
               (spmBtn && "Remove SPM button to add other buttons")
             }
             display={
-              !flowBtn && !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
+              !mpmBtn && !checkoutBtn && !catalogBtn && !spmBtn
                 ? "none"
                 : "block"
             }
           >
             <Box>
               <Menu.Item
-                disabled={
-                  flowBtn || mpmBtn || checkoutBtn || catalogBtn || spmBtn
-                }
+                disabled={mpmBtn || checkoutBtn || catalogBtn || spmBtn}
                 leftSection={
                   <IconLink style={{ width: rem(14), height: rem(14) }} />
                 }
