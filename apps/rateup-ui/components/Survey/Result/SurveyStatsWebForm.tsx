@@ -105,6 +105,15 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
 export default SurveyStatsWebForm;
 
 function getResponseRateInfo(responseCount: number, visited: number) {
+  if (responseCount > visited) {
+    return {
+      responseRate: "NA",
+      responseRatePercentage: "NA",
+      responseRateStatus: "NA",
+      responseRateColor: "#BDBDBD",
+    };
+  }
+
   const rate =
     visited > 0 ? Number(((responseCount / visited) * 100).toFixed(1)) : 0;
 

@@ -1,10 +1,19 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
+import { Flex } from "@mantine/core";
+import { IconTableExport } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Range } from "react-date-range";
+import { Margin, usePDF } from "react-to-pdf";
 
 import { useAllResponseNPSForGraph } from "@/backend/surveys/surveys.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import OverallResponseGraphWebForm from "@/components/Graph/OverallResponseGraphWebForm";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
+import NothingFound from "@/components/NothingFound/NothingFound";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useResponseAnalytics } from "../../../backend/surveys/response/response.query";
@@ -29,6 +38,12 @@ const ResultsOverviewWebForm = ({
   );
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
   const { translations } = useTranslations();
+  const [isExporting, setIsExporting] = useState(false);
+  const { toPDF, targetRef } = usePDF({
+    page: {
+      margin: Margin.MEDIUM,
+    },
+  });
 
   const {
     data: responseAnalytics,
@@ -79,6 +94,16 @@ const ResultsOverviewWebForm = ({
 
   return (
     <div className="flex flex-col gap-6">
+      {isPending ? (
+        <RateupLoader />
+      ) : isError ? (
+        <ErrorComponent refetch={refetch} isRefetching={isRefetching} />
+      ) : (
+        !npsOverView.length &&
+        !choiceWiseOverView.length && (
+          <NothingFound text={translations["No Data available for Analysis"]} />
+        )
+      )}
       {!flowId && (
         <SurveyStatsWebForm translations={translations} surveyId={surveyId} />
       )}
@@ -103,15 +128,28 @@ const ResultsOverviewWebForm = ({
           });
         }}
       />
-      <SurveyQuestion
-        choiceWise={choiceWiseOverView}
-        NPS={npsOverView}
-        flowQuestions={flowQuestions}
-        questions={questions}
-        version={version}
-        surveyId={surveyId}
-        defaultLanguage={defaultLanguage}
-      />
+      <PaperLayout p={"md"}>
+        <Flex justify={"space-between"}>
+          <RateupButtonPrimary
+            onClick={() => toPDF()}
+            loading={isExporting}
+            leftIcon={<IconTableExport size={"1rem"} />}
+            title="Export to Pdf"
+          />
+          <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
+        </Flex>
+      </PaperLayout>
+      <div ref={targetRef}>
+        <SurveyQuestion
+          choiceWise={choiceWiseOverView}
+          NPS={npsOverView}
+          flowQuestions={flowQuestions}
+          questions={questions}
+          version={version}
+          surveyId={surveyId}
+          defaultLanguage={defaultLanguage}
+        />
+      </div>
     </div>
   );
 };
