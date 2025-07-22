@@ -49,7 +49,7 @@ export async function handleWebSocketConnection(
   if (existingConnectionId) {
     // Close existing connection if it exists in memory
     const existingClient = activeConnections.get(existingConnectionId);
-    if (existingClient?.socket?.readyState === WebSocket.OPEN) {
+    if (existingClient?.socket?.readyState === 1) {
       existingClient.socket.close();
     }
     activeConnections.delete(existingConnectionId);
