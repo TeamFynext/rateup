@@ -17,6 +17,7 @@ import {
   IconCaretDownFilled,
   IconClick,
   IconFileFilled,
+  IconImageInPicture,
   IconLink,
   IconListCheck,
   IconListDetails,
@@ -153,6 +154,7 @@ const questionIcons = {
   [QuestionType2.OptIn]: IconLink,
   [QuestionType2.RichText]: IconLink,
   [QuestionType2.ChipsSelector]: IconPokerChip,
+  [QuestionType2.ImageCarousel]: IconImageInPicture,
 };
 
 export { questionIcons };

@@ -92,6 +92,7 @@ export enum QuestionType2 {
   RichText = "RichText",
   EmbeddedLink = "Embedded Link",
   ChipsSelector = "Chips Selector",
+  ImageCarousel = "Image Carousel",
   // If = "If",
   // Switch = "Switch",
 }
@@ -306,7 +307,7 @@ export enum WaFlowFormElementType {
   textCaption = "TextCaption",
   image = "Image",
   embeddedLink = "EmbeddedLink",
-
+  imageCarousel = "ImageCarousel",
   // interactive
   textInput = "TextInput",
   textArea = "TextArea",

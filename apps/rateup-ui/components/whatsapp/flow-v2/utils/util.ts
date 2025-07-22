@@ -167,6 +167,22 @@ export const getValidationSchema = (type: QuestionType2) => {
         "alt-text": z.string().optional(),
       };
       break;
+    case QuestionType2.ImageCarousel:
+      schema = {
+        type: z.string(),
+        images: z
+          .array(
+            z.object({
+              src: z.string().min(1, "Image required"),
+              "alt-text": z.string().trim().min(1, "Alt text required"),
+            }),
+          )
+          .min(1, { message: "At least one image is required" })
+          .max(3, { message: "Maximum 3 images allowed" }),
+        "aspect-ratio": z.enum(["4:3", "16:9"]).default("4:3"),
+        "scale-type": z.enum(["contain", "cover"]).default("contain"),
+      };
+      break;
     case QuestionType2.PhotoPicker:
       schema = {
         type: z.string(),
@@ -776,6 +792,37 @@ export const getInitialValues = (type: QuestionType2) => {
         },
         "aspect-ratio": { type: "number", value: 1 },
         "alt-text": { type: "text", value: "" },
+      };
+      break;
+    case QuestionType2.ImageCarousel:
+      initialValues = {
+        id: { type: "hidden", value: generateId },
+        type: { type: "hidden", value: "ImageCarousel" },
+        metaType: {
+          type: "hidden",
+          value: Object.keys(QuestionType2).find(
+            (k) => QuestionType2[k as keyof typeof QuestionType2] === type,
+          ),
+        },
+        images: {
+          type: "imageCarousel",
+          value: [],
+          extra: {
+            maxImages: 3,
+            aspectRatioOptions: ["4:3", "16:9"],
+            scaleTypeOptions: ["contain", "cover"],
+          },
+        },
+        "aspect-ratio": {
+          type: "select",
+          value: "4:3",
+          extra: { data: ["4:3", "16:9"] },
+        },
+        "scale-type": {
+          type: "select",
+          value: "contain",
+          extra: { data: ["contain", "cover"] },
+        },
       };
       break;
     case QuestionType2.PhotoPicker:
