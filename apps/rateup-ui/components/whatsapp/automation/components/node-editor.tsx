@@ -338,7 +338,7 @@ export default function NodeEditor({
       </div>
 
       <div className={styles.editorFooter}>
-        <Button onClick={handleDone}>Done</Button>
+        <Button onClick={handleDone}>Save</Button>
       </div>
     </div>
   );
