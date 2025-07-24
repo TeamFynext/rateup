@@ -501,9 +501,9 @@ const MediaNodeEditor: React.FC<
       case "imageNode":
         return 5000000; // 5MB
       case "videoNode":
-        return 16000000; // 16MB
+        return 10000000; // 10MB - WhatsApp limit is 16MB, but we use 10MB
       case "audioNode":
-        return 16000000; // 16MB
+        return 10000000; // 10MB - WhatsApp limit is 16MB, but we use 10MB
       case "documentNode":
         return 100000000; // 100MB
       default:

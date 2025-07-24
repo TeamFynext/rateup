@@ -16,7 +16,11 @@ export const frontendConfig = (): SuperTokensConfig => {
     recipeList: [
       EmailPasswordReact.init(),
       SessionReact.init(),
-      // ThirdPartyReact.init(),
+      ThirdPartyReact.init({
+        signInAndUpFeature: {
+          providers: [ThirdPartyReact.Google.init()],
+        },
+      }),
       // PasswordlessReact.init({
       //   contactMethod: "EMAIL_OR_PHONE",
       // }),

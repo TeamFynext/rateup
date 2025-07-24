@@ -7,8 +7,11 @@ import useTranslations from "@/dictionaries/useTranslation";
 import { useDeleteCampaignMutation } from "../../backend/campaign/campaign.query";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 
-export const CampaignMenu = ({ teamId, id }) => {
-  const deleteCampaignMutation = useDeleteCampaignMutation(teamId);
+export const CampaignMenu = ({ teamId, id, campaignType }) => {
+  const deleteCampaignMutation = useDeleteCampaignMutation(
+    teamId,
+    campaignType,
+  );
   const { translations } = useTranslations();
   const openDeleteModal = (e) => {
     e.stopPropagation();

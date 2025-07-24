@@ -3,8 +3,8 @@ import { saveAs } from "file-saver";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
 import { axiosClient } from "../apiClient";
 
-export const getCampaigns = async () => {
-  let res = await axiosClient.get("/campaign/");
+export const getCampaigns = async (type) => {
+  let res = await axiosClient.get(`/campaign/?type=${type}`);
   return res;
 };
 
