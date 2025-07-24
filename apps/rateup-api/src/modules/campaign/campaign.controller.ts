@@ -52,7 +52,7 @@ export async function getCampaignsHandler(
     res = await getCampaignsByTeamId(request.query.teamId);
   } else {
     // get all contact groups for all teams
-    res = await getCampaignsByOrgId(request.user.orgId);
+    res = await getCampaignsByOrgId(request.user.orgId, request.query?.type);
   }
   return reply.code(200).send(res);
 }

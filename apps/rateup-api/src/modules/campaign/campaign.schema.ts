@@ -81,6 +81,7 @@ const byFlowIdParamsSchema = z.object({
 const getCampaignsQuerySchema = z.object({
   campaignId: z.string().optional(),
   teamId: z.string().optional(),
+  type: z.nativeEnum(CampaignType).optional(),
 });
 const responseSchema = z.object({
   type: z.string(),
