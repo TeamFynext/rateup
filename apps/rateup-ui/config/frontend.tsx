@@ -26,12 +26,12 @@ export const frontendConfig = (): SuperTokensConfig => {
     appInfo,
     recipeList: [
       EmailPasswordReact.init(),
-      // ThirdPartyReact.init({
-      //   signInAndUpFeature: {
-      //     providers: [ThirdPartyReact.Google.init()],
-      //   },
-      // }),
-      // EmailVerificationReact.init(),
+      ThirdPartyReact.init({
+        signInAndUpFeature: {
+          providers: [ThirdPartyReact.Google.init()],
+        },
+      }),
+      EmailVerificationReact.init(),
       // Passwordless.init(),
       Session.init(),
     ],

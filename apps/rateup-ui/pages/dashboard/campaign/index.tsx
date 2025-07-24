@@ -12,6 +12,7 @@ import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 
+import { CampaignType } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
 import {
   useCampaignData,
@@ -42,7 +43,7 @@ export default function CampaignList() {
     isRefetching: isRefetchingAllCampaign,
     refetch: refetchAllkCampaign,
     error,
-  } = useCampaignData();
+  } = useCampaignData(CampaignType.WHATSAPP);
 
   const filteredCampaignsdata =
     selectedTeam == "all" || !selectedTeam // filtering by team
@@ -99,7 +100,11 @@ export default function CampaignList() {
           size={"lg"}
           radius={"md"}
         >
-          <CreateCampaignModal close={close} isEdit={false} />
+          <CreateCampaignModal
+            close={close}
+            isEdit={false}
+            campaignType={CampaignType.WHATSAPP}
+          />
         </Modal>
       </Stack>
     </MantineProvider>

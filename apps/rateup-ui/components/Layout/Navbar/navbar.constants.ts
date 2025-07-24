@@ -164,6 +164,11 @@ export function getNavTopData(
                 icon: IconSpeakerphone,
               },
               {
+                label: "Drip Campaigns",
+                link: "/dashboard/drip-campaigns",
+                icon: IconMessageBolt,
+              },
+              {
                 label: translations["Contacts"],
                 link: "/dashboard/contacts",
                 icon: IconAddressBook,

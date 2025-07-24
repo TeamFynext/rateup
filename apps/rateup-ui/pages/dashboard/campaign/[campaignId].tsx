@@ -317,7 +317,11 @@ const CampaignById = () => {
                 </Title>
               }
             >
-              <AddParticipantModal close={close} campaign={campaignData} />
+              <AddParticipantModal
+                close={close}
+                campaign={campaignData}
+                campaignType={CampaignType.WHATSAPP}
+              />
             </Modal>
           </Tabs.Panel>
         </Tabs>
@@ -608,6 +612,7 @@ const StartCampaignCardRightSection = ({
           campaign={campaign}
           close={closeEditModal}
           dynamicVariables={dynamicVariables}
+          campaignType={CampaignType.WHATSAPP}
         />
       </Modal>
     </>

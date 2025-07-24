@@ -17,10 +17,10 @@ import {
   updateCampaign,
 } from "./campaign.api";
 
-export const useCampaignData = () => {
+export const useCampaignData = (type: string) => {
   return useQuery({
-    queryKey: ["campaigns"],
-    queryFn: () => getCampaigns(),
+    queryKey: ["campaigns", type],
+    queryFn: () => getCampaigns(type),
   });
 };
 
@@ -32,12 +32,12 @@ export const useCampaignDataByTeam = (teamId: string, enabled: boolean) => {
   });
 };
 
-export const useCreateCampaignMutation = (teamId) => {
+export const useCreateCampaignMutation = (teamId, type) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createCampaign,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns", type] });
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
       showSuccessToast(
         "Campaign created successfully",
@@ -75,13 +75,14 @@ export const useUpdateCampaignMutation = (
   campaignId,
   teamId,
   complete = () => {},
+  type,
 ) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateCampaign,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignById", campaignId] });
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns", type] });
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
       showSuccessToast(
         "Campaign updated successfully",
@@ -101,13 +102,13 @@ export const useUpdateCampaignMutation = (
   });
 };
 
-export const useDeleteCampaignMutation = (teamId) => {
+export const useDeleteCampaignMutation = (teamId, type) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteCampaign,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaignsbyTeam", teamId] });
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns", type] });
       showSuccessToast(
         "Campaign deleted successfully.",
         "campaign-delete",

@@ -16,7 +16,7 @@ import { rankItem } from "@tanstack/match-sorter-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
-import { CampaignParticipantStatus } from "../../../types/enums";
+import { CampaignParticipantStatus, CampaignType } from "../../../types/enums";
 import { fallbackImage } from "../../../utils/constants";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
@@ -231,20 +231,20 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     accessorKey: "name",
     cell: (info) => info.getValue(),
   },
-  {
-    header: () => "Type",
-    accessorKey: "type",
-    cell: (info) => {
-      const type = info.getValue() as string;
-      const color =
-        type === "WHATSAPP" ? "blue" : type === "DRIP" ? "orange" : "gray";
-      return (
-        <Badge variant="light" color={color}>
-          {type}
-        </Badge>
-      );
-    },
-  },
+  // {
+  //   header: () => "Type",
+  //   accessorKey: "type",
+  //   cell: (info) => {
+  //     const type = info.getValue() as string;
+  //     const color =
+  //       type === "WHATSAPP" ? "blue" : type === "DRIP" ? "orange" : "gray";
+  //     return (
+  //       <Badge variant="light" color={color}>
+  //         {type}
+  //       </Badge>
+  //     );
+  //   },
+  // },
   {
     header: () => "Team",
     accessorKey: "teamName",
@@ -322,6 +322,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
       <CampaignMenu
         teamId={info?.row?.original?.team?.name}
         id={info?.row?.original?.id}
+        campaignType={CampaignType.WHATSAPP}
       />
     ),
   },
