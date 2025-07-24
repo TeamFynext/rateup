@@ -65,17 +65,9 @@ export const useDeleteWaAutomatedReplyMutation = () => {
   });
 };
 
-export const useUpdateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
-  const qc = useQueryClient();
-
+export const useUpdateWaAutomatedReplyMutation = () => {
   return useMutation({
     mutationFn: ({ id, ...data }: any) => updateWaAutomatedReply(id, data),
-    onSuccess: (res) => {
-      // qc.invalidateQueries({
-      //   queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
-      // });
-      showSuccessToast("Automated Reply Updated Successfully");
-    },
     onError: (error: any) => {
       showErrorToast(error?.response?.data ?? "Error Updating Automated Reply");
     },

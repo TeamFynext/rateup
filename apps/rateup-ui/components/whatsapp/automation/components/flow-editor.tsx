@@ -85,8 +85,7 @@ function FlowEditorContent({
   const isMountedRef = useRef(true);
   const isInitialLoadRef = useRef(true);
 
-  const updateWaAutomatedReplyMutation =
-    useUpdateWaAutomatedReplyMutation(waAutomatedReplyId);
+  const updateWaAutomatedReplyMutation = useUpdateWaAutomatedReplyMutation();
 
   // Initialize history manager
   const historyManagerRef = useRef(new HistoryManager());
@@ -632,6 +631,7 @@ function FlowEditorContent({
               validateFlow={validateFlow}
               saveDisabled={!hasUnsavedChanges}
               refetch={refetch}
+              isPending={updateWaAutomatedReplyMutation.isPending}
             />
           </Panel>
         </ReactFlow>

@@ -30,6 +30,7 @@ import {
   IconPin,
   IconPinned,
   IconQrcode,
+  IconRobot,
   IconRobotFace,
   IconSettings,
   IconSocial,
@@ -195,7 +196,7 @@ export function getNavTopData(
               {
                 label: translations["Automation"],
                 link: "/dashboard/whatsapp/automated-replies",
-                icon: IconAutomation,
+                icon: IconRobot,
               },
               ...(hasFeature(sfpn.WhatsAppTemplate)
                 ? [
