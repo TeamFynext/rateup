@@ -1,6 +1,14 @@
 import { useEffect, useRef } from "react";
 
-import { ActionIcon, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Flex,
+  Group,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
@@ -183,36 +191,45 @@ export default function WaInboxChatDisplayFooter({
 
   const SendMessageComponent = () => {
     return (
-      <Group gap={"xs"}>
-        <AccountSelector
-          onChange={(phoneId) => {
-            updatePhoneId(phoneId);
-          }}
-          value={whatsappSettingsPhoneId}
-          w={150}
-          styles={{
-            input: {
-              background: "var(--mantine-primary-color-filled)",
-              color: "white",
-            },
-            label: {
-              display: "none",
-            },
-          }}
-        />
-        <WaInboxFooterMenu
-          sessionExpired={isSessionExpired}
-          contact={contact}
-        />
-        <VoiceRecorder />
-        <Tooltip label={translations["Send"]}>
-          <ActionIcon
-            onClick={handleSendMessage}
-            disabled={isSessionExpired || isRecording}
-          >
-            <IconSend size={16} />
-          </ActionIcon>
-        </Tooltip>
+      <Group gap={"xs"} w={"82%"} justify={"space-between"}>
+        <Group>
+          <AccountSelector
+            onChange={(phoneId) => {
+              updatePhoneId(phoneId);
+            }}
+            value={whatsappSettingsPhoneId}
+            w={150}
+            size="xs"
+            styles={{
+              input: {
+                background: "var(--mantine-primary-color-light)",
+                color: "var(--mantine-primary-color-filled)",
+                borderRadius: "5px",
+                fontWeight: "400",
+              },
+              label: {
+                display: "none",
+              },
+            }}
+          />
+          <WaInboxFooterMenu
+            sessionExpired={isSessionExpired}
+            contact={contact}
+          />
+        </Group>
+        <Group>
+          <VoiceRecorder />
+          <Tooltip label={translations["Send"]}>
+            <Button
+              rightSection={<IconSend size={16} />}
+              size="xs"
+              onClick={handleSendMessage}
+              disabled={isSessionExpired || isRecording}
+            >
+              Send
+            </Button>
+          </Tooltip>
+        </Group>
       </Group>
     );
   };
@@ -248,6 +265,7 @@ export default function WaInboxChatDisplayFooter({
                 !audioUrl &&
                 body.type === "text"
               }
+              placeholder="Type a message..."
               customHeaders={<SendMessageComponent />}
             />
           </div>
