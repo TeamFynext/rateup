@@ -244,7 +244,7 @@ function WaTextEditor({
           <RichTextEditor.Content mih={mih} />
         </ScrollAreaAutosize>
         {customHeaders ? (
-          <Flex wrap={"wrap"} flex={1} w={"100%"} pr={"4"}>
+          <Flex wrap={"wrap"} flex={1} w={"100%"} pr={"xs"}>
             <WaTextCharacterCount editor={editor} max={max} />
             {customHeaders}
           </Flex>

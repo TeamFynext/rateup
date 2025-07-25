@@ -191,7 +191,7 @@ export default function WaInboxChatDisplayFooter({
 
   const SendMessageComponent = () => {
     return (
-      <Group gap={"xs"} w={"82%"} justify={"space-between"}>
+      <Group gap={"xs"} flex={1} justify={"space-between"}>
         <Group>
           <AccountSelector
             onChange={(phoneId) => {
