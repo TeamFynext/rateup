@@ -14,14 +14,19 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDots, IconPencil, IconTrash } from "@tabler/icons-react";
+import { IconClock, IconDots, IconTrash } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { WaAutomatedReply } from "@/types/global";
 import { useTimeSince } from "@/hooks/timeSince";
-import { useDeleteWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import {
+  useDeleteWaAutomatedReplyMutation,
+  useUpdateWaAutomatedReplyMutation,
+} from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import useTranslations from "@/dictionaries/useTranslation";
+import { showLoadingToast, showSuccessToast } from "@/utils/notifications";
 
 import classes from "./styles.module.css";
 
@@ -32,11 +37,7 @@ export function WaAutomationCards({ data }: WaAutomationCardsProps) {
   if (!data || !Array.isArray(data)) return null;
 
   return (
-    <SimpleGrid
-      p={"0.875rem"}
-      spacing={"lg"}
-      cols={{ base: 1, xs: 2, sm: 3, md: 4, lg: 4 }}
-    >
+    <SimpleGrid p={"0.875rem"} spacing={"lg"} cols={{ base: 1, xs: 2, sm: 3 }}>
       {data.map((automation) => (
         <AutomationCard key={automation.id} automation={automation} />
       ))}
@@ -50,7 +51,38 @@ interface WaAutomationCardProps {
 function AutomationCard({ automation }: WaAutomationCardProps) {
   const timeSince = useTimeSince(automation.createdAt);
   const router = useRouter();
+  const qc = useQueryClient();
   const { translations } = useTranslations();
+  const updateMutation = useUpdateWaAutomatedReplyMutation();
+
+  const handleQuickUpdate = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showLoadingToast(
+      `Updating Automated Reply ${automation.isEnabled ? "Disabling" : "Enabling"}...`,
+      "automated-reply-toggle",
+    );
+    updateMutation.mutate(
+      {
+        id: automation.id,
+        isEnabled: !automation.isEnabled,
+        commands: automation.commands,
+      },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({
+            queryKey: ["allWaAutomatedReplies"],
+          });
+          showSuccessToast(
+            `Automated Reply ${automation.isEnabled ? "Disabled" : "Enabled"} Successfully`,
+            "automated-reply-toggle",
+            undefined,
+            true,
+          );
+        },
+      },
+    );
+  };
   return (
     <PaperLayout
       p="md"
@@ -71,8 +103,8 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
           </CardMenu>
         </Group>
         <Group justify="space-between">
-          <Text fz="sm" c="dimmed">
-            {` ${translations["Created"]} ${timeSince}`}
+          <Text fz="sm" c="dimmed" className="flex gap-2 items-center">
+            <IconClock size={20} /> {` ${translations["Created"]} ${timeSince}`}
           </Text>
           {automation?.commands?.includes("*") && (
             <Badge size="xs" color="green">
@@ -96,21 +128,22 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
             variant="light"
             size="xs"
           >{`Type: ${automation.matchType}`}</Badge>
-          <Switch
-            checked={automation?.isEnabled}
-            readOnly
-            label={
-              automation.isEnabled
-                ? translations["Enabled"]
-                : translations["Disabled"]
-            }
-            size="xs"
-            styles={{
-              label: {
-                paddingLeft: 2,
-              },
-            }}
-          />
+          <Stack p={"sm"} onClick={handleQuickUpdate}>
+            <Switch
+              checked={automation?.isEnabled}
+              label={
+                automation.isEnabled
+                  ? translations["Enabled"]
+                  : translations["Disabled"]
+              }
+              size="xs"
+              styles={{
+                label: {
+                  paddingLeft: 2,
+                },
+              }}
+            />
+          </Stack>
         </Group>
       </Stack>
     </PaperLayout>

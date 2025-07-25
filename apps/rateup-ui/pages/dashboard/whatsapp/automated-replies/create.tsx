@@ -20,10 +20,12 @@ import {
   IconMessageCircle,
   IconPhoto,
 } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { AssignInboxContent } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayHeader";
+import { showSuccessToast } from "@/utils/notifications";
 
 import {
   useCreateWaAutomatedReplyMutation,
@@ -120,10 +122,11 @@ export function AutomatedReplyForm({
     );
   }, [initialValues]);
 
+  const qc = useQueryClient();
   const router = useRouter();
-  let automatedId = router.query.waAutomatedReplyId as string;
+  let waAutomatedReplyId = router.query.waAutomatedReplyId as string;
   const createMutation = useCreateWaAutomatedReplyMutation();
-  const updateMutation = useUpdateWaAutomatedReplyMutation(automatedId);
+  const updateMutation = useUpdateWaAutomatedReplyMutation();
 
   function handleCancelClick() {
     rootForm.reset();
@@ -192,7 +195,14 @@ export function AutomatedReplyForm({
     };
 
     if (editMode) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(data, {
+        onSuccess: () => {
+          qc.invalidateQueries({
+            queryKey: ["waAutomatedReply", { waAutomatedReplyId }],
+          });
+          showSuccessToast("Automated Reply Updated Successfully");
+        },
+      });
     } else {
       createMutation.mutate(data, {
         onSettled: () => {
@@ -203,7 +213,7 @@ export function AutomatedReplyForm({
   }
 
   return (
-    <form onSubmit={rootForm.onSubmit((values) => handleSubmitClick())}>
+    <form onSubmit={rootForm.onSubmit(handleSubmitClick)}>
       <Stack>
         <ContainedTextField
           label="Name"
@@ -337,7 +347,7 @@ export function AutomatedReplyForm({
             type="submit"
             loading={createMutation.isPending || updateMutation.isPending}
           >
-            Submit
+            Save
           </Button>
         </Group>
       </Stack>

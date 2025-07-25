@@ -38,7 +38,7 @@ import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import RateupLoader from "../Loaders/RateupLoader";
 import PaperLayout from "../styled/Layouts/PaperLayout";
 
-const AddParticipantModal = ({ close, campaign }) => {
+const AddParticipantModal = ({ close, campaign, campaignType }) => {
   const [selectedTab, setSelectedTab] = useState(
     CampaignParticipantSource.INDIVIDUAL,
   );
@@ -59,7 +59,7 @@ const AddParticipantModal = ({ close, campaign }) => {
   const { data: contactGroup, isLoading: groupIsLoading } =
     useContactGroupsByTeamId(campaign?.teamId);
   const { data: campaignData, isPending: isAllCampaignLoading } =
-    useCampaignData();
+    useCampaignData(campaignType);
   const addCampaignParticipants = useAddCampaignParticipants(
     campaign?.id,
     () => {

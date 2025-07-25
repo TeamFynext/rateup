@@ -338,7 +338,7 @@ export default function NodeEditor({
       </div>
 
       <div className={styles.editorFooter}>
-        <Button onClick={handleDone}>Done</Button>
+        <Button onClick={handleDone}>Save</Button>
       </div>
     </div>
   );
@@ -501,9 +501,9 @@ const MediaNodeEditor: React.FC<
       case "imageNode":
         return 5000000; // 5MB
       case "videoNode":
-        return 16000000; // 16MB
+        return 10000000; // 10MB - WhatsApp limit is 16MB, but we use 10MB
       case "audioNode":
-        return 16000000; // 16MB
+        return 10000000; // 10MB - WhatsApp limit is 16MB, but we use 10MB
       case "documentNode":
         return 100000000; // 100MB
       default:

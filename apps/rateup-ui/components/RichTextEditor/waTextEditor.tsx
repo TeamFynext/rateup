@@ -7,6 +7,7 @@ import {
   BoxComponentProps,
   Flex,
   Group,
+  Image,
   Indicator,
   Modal,
   ScrollArea,
@@ -161,6 +162,7 @@ function WaTextEditor({
                 size={16}
                 color="red"
                 inline
+                key={me?.key}
               >
                 <Stack
                   w={50}
@@ -176,7 +178,7 @@ function WaTextEditor({
                   }}
                 >
                   {me.type === "image" && (
-                    <img src={me.url} width={48} height={48} alt={me.name} />
+                    <Image src={me.url} width={48} height={48} alt={me.name} />
                   )}
                   {me.type === "video" && (
                     <video src={me.url} width={48} height={48} />
@@ -218,6 +220,8 @@ function WaTextEditor({
               <RichTextEditor.ControlsGroup>
                 <InsertEmoji />
               </RichTextEditor.ControlsGroup>
+            </Group>
+            <Group>
               {inbox && (
                 <>
                   <RichTextEditor.ControlsGroup>
@@ -234,15 +238,21 @@ function WaTextEditor({
                 </>
               )}
             </Group>
-            {customHeaders}
           </Group>
         </RichTextEditor.Toolbar>
         <ScrollAreaAutosize mah={mah}>
           <RichTextEditor.Content mih={mih} />
         </ScrollAreaAutosize>
-        <Flex justify={"flex-end"} pr={"lg"}>
-          <WaTextCharacterCount editor={editor} max={max} />
-        </Flex>
+        {customHeaders ? (
+          <Flex wrap={"wrap"} flex={1} w={"100%"} pr={"xs"}>
+            <WaTextCharacterCount editor={editor} max={max} />
+            {customHeaders}
+          </Flex>
+        ) : (
+          <Flex justify={"flex-end"} pr={"lg"}>
+            <WaTextCharacterCount editor={editor} max={max} />
+          </Flex>
+        )}
       </RichTextEditor>
     </Box>
   );

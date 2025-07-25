@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionIcon, Menu, Tooltip } from "@mantine/core";
+import { ActionIcon, Group, Loader, Menu, Text, Tooltip } from "@mantine/core";
 import {
   IconArrowBackUp,
   IconArrowForwardUp,
@@ -29,6 +29,7 @@ interface ToolbarProps {
   validateFlow: (slient?: boolean) => void;
   saveDisabled?: boolean;
   refetch?: () => void;
+  isPending?: boolean;
 }
 
 export default function Toolbar({
@@ -44,6 +45,7 @@ export default function Toolbar({
   validateFlow,
   saveDisabled = false,
   refetch,
+  isPending = false,
 }: ToolbarProps) {
   return (
     <div className={styles.toolbar}>
@@ -55,7 +57,7 @@ export default function Toolbar({
           disabled={saveDisabled}
           size={"lg"}
         >
-          <IconDeviceFloppy />
+          {isPending ? <Loader size="xs" /> : <IconDeviceFloppy />}
         </ActionIcon>
       </Tooltip>
 

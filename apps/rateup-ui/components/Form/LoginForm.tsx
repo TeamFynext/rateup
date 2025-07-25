@@ -114,10 +114,10 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
           className={styles["login-signup-form-submit-btn"]}
         />
 
-        <GoogleSignInButton
+        {/* <GoogleSignInButton
           className={styles["login-signup-with-google-btn"]}
           buttonText={translations["Login with Google"]}
-        />
+        /> */}
         {/* <RateupButtonSecondary
           type="button"
           title="Login with Phone Number"

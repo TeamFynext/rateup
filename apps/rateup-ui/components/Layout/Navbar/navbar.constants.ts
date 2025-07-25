@@ -30,6 +30,7 @@ import {
   IconPin,
   IconPinned,
   IconQrcode,
+  IconRobot,
   IconRobotFace,
   IconSettings,
   IconSocial,
@@ -164,6 +165,11 @@ export function getNavTopData(
                 icon: IconSpeakerphone,
               },
               {
+                label: "Drip Campaigns",
+                link: "/dashboard/drip-campaigns",
+                icon: IconMessageBolt,
+              },
+              {
                 label: translations["Contacts"],
                 link: "/dashboard/contacts",
                 icon: IconAddressBook,
@@ -190,7 +196,7 @@ export function getNavTopData(
               {
                 label: translations["Automation"],
                 link: "/dashboard/whatsapp/automated-replies",
-                icon: IconAutomation,
+                icon: IconRobot,
               },
               ...(hasFeature(sfpn.WhatsAppTemplate)
                 ? [

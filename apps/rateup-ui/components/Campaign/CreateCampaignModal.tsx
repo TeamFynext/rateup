@@ -62,6 +62,7 @@ interface CreateCampaignProps {
   isEdit?: boolean;
   campaign?;
   dynamicVariables?: string[];
+  campaignType: CampaignType;
 }
 
 const CreateCampaignModal = ({
@@ -69,6 +70,7 @@ const CreateCampaignModal = ({
   isEdit,
   campaign,
   dynamicVariables,
+  campaignType = CampaignType.WHATSAPP,
 }: CreateCampaignProps) => {
   const [activeTab, setActiveTab] = useState("basic");
   const { translations } = useTranslations();
@@ -110,7 +112,7 @@ const CreateCampaignModal = ({
   const form = useForm<z.infer<typeof schema>>({
     initialValues: {
       name: campaign?.name || "",
-      type: campaign?.type || CampaignType.WHATSAPP,
+      type: campaignType,
       teamId: campaign?.teamId || "",
       surveyTeamMapId: campaign?.surveyTeamMapId || "",
       waTemplateId: campaign?.waTemplateId || "",
@@ -136,7 +138,7 @@ const CreateCampaignModal = ({
     if (campaign) {
       form.setValues({
         name: campaign?.name || "",
-        type: campaign?.type || CampaignType.WHATSAPP,
+        type: campaignType,
         teamId: campaign?.teamId || "",
         surveyTeamMapId: campaign?.surveyTeamMapId || "",
         waTemplateId: campaign?.waTemplateId || "",
@@ -217,10 +219,15 @@ const CreateCampaignModal = ({
     [templates],
   );
 
-  const createCampaignMutation = useCreateCampaignMutation(form.values.teamId);
+  const createCampaignMutation = useCreateCampaignMutation(
+    form.values.teamId,
+    campaignType,
+  );
   const updateCampaignMutation = useUpdateCampaignMutation(
     campaign?.id,
     campaign?.teamId,
+    () => {},
+    campaignType,
   );
 
   // Memoize form validation to prevent infinite loops
@@ -433,26 +440,6 @@ const CreateCampaignModal = ({
           placeholder={translations["Enter campaign name"]}
           withAsterisk
           {...form.getInputProps("name")}
-        />
-
-        <ContainedSelection
-          label={translations["Campaign Type"]}
-          withAsterisk
-          placeholder={translations["Select Campaign Type"]}
-          allowDeselect={false}
-          data={[
-            {
-              value: CampaignType.WHATSAPP,
-              label: "Normal WhatsApp",
-              // description: "Send immediate messages to contacts"
-            },
-            {
-              value: CampaignType.DRIP,
-              label: "Drip Campaign",
-              // description: "Automated sequence of messages over time"
-            },
-          ]}
-          {...form.getInputProps("type")}
         />
 
         <AccountSelector {...form.getInputProps("whatsappSettingsPhoneId")} />

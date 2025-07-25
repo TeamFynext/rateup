@@ -274,7 +274,8 @@ const VoiceRecorder = () => {
       )}
       {!isRecording ? (
         <ActionIcon
-          variant="subtle"
+          variant="light"
+          radius={"lg"}
           onClick={async () => {
             if (audioUrl) {
               await deleteUploadedAudio();
