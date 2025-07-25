@@ -747,16 +747,7 @@ export async function handleAutomatedReply(
       // }
       // Case 3: No matching automation rules found
       else {
-        // Check if user has interacted within the last 24 hours\
-        const recentActivity = await findRecentAutomation(phone, orgId, {
-          timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-        });
-
-        // Only respond if this is the first message in 24 hours
-        if (!recentActivity) {
-          // Send default welcome automation if available
-          await handleInitialInteraction(orgId, phone, parsedMessage.message);
-        }
+        await handleInitialInteraction(orgId, phone, parsedMessage.message);
       }
     }
   } catch (error) {
@@ -1125,6 +1116,21 @@ async function handleInitialInteraction(
     if (!wildcardAutomation?.waAutomatedReply) {
       log.info(`No wildcard automation found for org ${orgId}`);
       return;
+    }
+
+    // Check if wildcard automation has an AI bot node
+    const aiBotNode = (
+      wildcardAutomation?.waAutomatedReply?.matchData as any
+    )?.json?.nodes?.find((node: any) => node?.type === "aibotNode");
+
+    if (!aiBotNode) {
+      // If there's no AI bot node, check for recent activity
+      const recentActivity = await findRecentAutomation(phone, orgId, {
+        timeWindow: 24 * 60 * 60 * 1000, // 24 hours
+      });
+
+      // If there's recent activity, stop the flow
+      if (recentActivity) return;
     }
 
     const automation = wildcardAutomation.waAutomatedReply as {
