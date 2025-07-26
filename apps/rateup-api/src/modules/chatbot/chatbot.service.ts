@@ -181,11 +181,16 @@ export async function createChatbot(orgId: string, name: string) {
   });
 }
 
-export async function getChatbotDetails(orgId: string, chatbotId?: string) {
+export async function getChatbotDetails(
+  orgId: string,
+  chatbotId?: string,
+  onlyEnabled = false,
+) {
   return await prisma.chatbot.findFirst({
     where: {
       id: chatbotId,
       orgId,
+      ...(onlyEnabled && { enableAllWaChat: true, enableWaChat: true }),
     },
   });
 }

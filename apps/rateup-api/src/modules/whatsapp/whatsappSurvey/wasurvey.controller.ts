@@ -459,7 +459,7 @@ async function whatsappMessageHandler(
   const { isAiBotActive, chatbotId } = await getAiBotActiveStatus(from, orgId);
 
   if (isAiBotActive) {
-    const chatbot = await getChatbotDetails(orgId, chatbotId);
+    const chatbot = await getChatbotDetails(orgId, chatbotId, true);
 
     await handleAiWaChat(chatbot, message, orgId, from, chatbotId);
     return; // Stop normal flow if AI bot is active
