@@ -29,10 +29,10 @@ const getConnectionKey = (orgId: string, browserId: string) =>
 
 export async function handleWebSocketConnection(
   connection: any,
-  request: FastifyRequest<{ Params: { afterAuthId: string } }>,
+  request: FastifyRequest<{ Params: { afterAuthId: string; orgId?: string } }>,
 ) {
   const browserId = request.params.afterAuthId;
-  const orgId = request.user.orgId;
+  const orgId = request.user?.orgId || request.params.orgId;
   if (!orgId || !browserId) {
     connection?.close();
     return;
