@@ -26,4 +26,12 @@ export async function orgWsRoutes(server: FastifyInstance) {
     },
     handleWebSocketConnection,
   );
+
+  server.get(
+    "/:afterAuthId/ws/:orgId",
+    {
+      websocket: true,
+    },
+    handleWebSocketConnection,
+  );
 }
