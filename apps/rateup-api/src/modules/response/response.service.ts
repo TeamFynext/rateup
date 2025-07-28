@@ -2640,6 +2640,18 @@ const smileyMap = {
   Happy: 8,
   "Very Happy": 10,
 };
+const smileyMap2 = {
+  1: 0,
+  2: 2,
+  3: 5,
+  4: 8,
+  5: 10,
+};
+
+const likeDislikeAndYNMap = {
+  1: 10,
+  2: 0,
+};
 
 const MAX_SCORE = 10;
 
@@ -2696,17 +2708,43 @@ export async function happyIndexResponsesBySurveyId(
     sad = 0,
     verySad = 0;
 
+  const isFlow = surveyInfo.survey.type === SurveyType.WaFlow;
+  const version = !isFlow || surveyInfo.survey.WaFlow?.version === 1;
+  const questions = version
+    ? surveyInfo.survey.questions.filter((q) =>
+        barGraphQuestions.includes(q.type),
+      )
+    : (surveyInfo.survey.WaFlow.json.screens.flatMap((screen) =>
+        screen.layout.children.filter(
+          (child) =>
+            barGraphQuestions2.includes(
+              (child as any).metaType as WaQuestions,
+            ) && child.name,
+        ),
+      ) as unknown as Question2[]);
+
   responses.forEach((resp) => {
     resp.responses.forEach((r) => {
       let score = null;
+      const matchedQuestion = questions.find((q) => q.id === r.questionId);
+      if (!matchedQuestion) return;
 
-      if (r.type === QuestionType.Opinion) {
-        const val = r.response[QuestionType.Opinion];
-        if (typeof val === "number") score = val;
+      const questionType =
+        "metaType" in matchedQuestion && matchedQuestion.metaType
+          ? QuestionType[matchedQuestion.metaType]
+          : matchedQuestion.type;
+
+      if (questionType === QuestionType.Opinion) {
+        const val = version
+          ? Number(r.response[QuestionType.Opinion])
+          : Number(r.response);
+        if (!isNaN(val)) score = val;
       }
 
-      if (r.type === QuestionType.Rating) {
-        const val = r.response[QuestionType.Rating];
+      if (questionType === QuestionType.Rating) {
+        const val = version
+          ? r.response[QuestionType.Rating]
+          : Number(r.response);
         if (val === 5) score = 10;
         else if (val === 4) score = 9;
         else if (val === 3) score = 6;
@@ -2714,21 +2752,36 @@ export async function happyIndexResponsesBySurveyId(
         else score = 0;
       }
 
-      if (r.type === QuestionType.Smiley) {
-        const val = r.response[QuestionType.Smiley];
-        score = smileyMap[val] ?? null;
+      if (questionType === QuestionType.Smiley) {
+        if (version) {
+          const val = r.response[QuestionType.Smiley];
+          score = smileyMap[val] ?? null;
+        } else {
+          const val = Number(r.response);
+          score = smileyMap2[val] ?? null;
+        }
       }
 
-      if (r.type === QuestionType.LD) {
-        const val = r.response[QuestionType.LD];
-        if (val === "Like") score = 10;
-        else if (val === "Dislike") score = 0;
+      if (questionType === QuestionType.LD) {
+        if (version) {
+          const val = r.response[QuestionType.LD];
+          if (val === "Like") score = 10;
+          else if (val === "Dislike") score = 0;
+        } else {
+          const val = Number(r.response);
+          score = likeDislikeAndYNMap[val] ?? null;
+        }
       }
 
-      if (r.type === QuestionType.YN) {
-        const val = r.response[QuestionType.YN];
-        if (val === "Yes") score = 10;
-        else if (val === "No") score = 0;
+      if (questionType === QuestionType.YN) {
+        if (version) {
+          const val = r.response[QuestionType.YN];
+          if (val === "Yes") score = 10;
+          else if (val === "No") score = 0;
+        } else {
+          const val = Number(r.response);
+          score = likeDislikeAndYNMap[val] ?? null;
+        }
       }
 
       if (score !== null) {
