@@ -127,6 +127,7 @@ const SurveyQuestion = ({
                   <SurveyResultByType
                     questionType={questionDetails?.type}
                     chartData={chartData}
+                    version={version}
                   />
                 </div>
 
