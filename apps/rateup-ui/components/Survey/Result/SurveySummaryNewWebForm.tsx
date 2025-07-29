@@ -7,7 +7,7 @@ import {
   getResponseArrayByQuestionTypeV2,
 } from "../../../utils/response";
 
-const SurveyResultByType = ({ questionType, chartData, version = 1 }) => {
+const SurveyResultByType = ({ questionType, chartData, version }) => {
   const isSmiley = questionType === QuestionType.Smiley;
   const responseArray =
     version === 2 && isSmiley
@@ -158,14 +158,16 @@ const SurveyResultByType = ({ questionType, chartData, version = 1 }) => {
 
     // Smiley
     case QuestionType.Smiley:
-      return renderAll(() =>
-        responseArray?.map((item) => {
+      return renderAll(() => {
+        return responseArray?.map((item) => {
           const res = getResObj(item.value);
           const Icon = item.Icon;
           return renderStatRow({
             label: (
               <div className="flex items-center gap-2">
-                <Icon size={20} color={item.color} stroke={2} />
+                {version !== 2 && (
+                  <Icon size={20} color={item.color} stroke={2} />
+                )}
                 <span>{item.value}</span>
               </div>
             ),
@@ -173,8 +175,8 @@ const SurveyResultByType = ({ questionType, chartData, version = 1 }) => {
             isMostVoted: item.value === mostVotedChoice,
             badge: null,
           });
-        }),
-      );
+        });
+      });
 
     // Fallback
     default:
