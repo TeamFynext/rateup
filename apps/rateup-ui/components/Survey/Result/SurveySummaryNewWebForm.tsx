@@ -95,49 +95,74 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
 
     // Rating
     case QuestionType.Rating:
-      return renderAll(() =>
-        responseArray?.map((item) => {
-          const res = getResObj(item.value);
-          return renderStatRow({
-            label: (
-              <Rating
-                value={Number(item.value)}
-                count={Number(item.value)}
-                readOnly
-                color="blue"
-              />
-            ),
-            value: getValue(res),
-            isMostVoted: item.value.toString() === mostVotedChoice?.toString(),
-            badge: null,
-          });
-        }),
-      );
+    case WaQuestions.Rating:
+      return renderAll(() => {
+        return chartData?.map((item) => {
+          const res = getResObj(item.choice);
+          if (version === 2) {
+            return renderStatRow({
+              label: item.choice,
+              value: getValue(res),
+              isMostVoted:
+                item.choice.toString() === mostVotedChoice?.toString(),
+              badge: null,
+            });
+          } else {
+            return renderStatRow({
+              label: (
+                <Rating
+                  value={Number(item.choice)}
+                  count={Number(item.choice)}
+                  readOnly
+                  color="blue"
+                />
+              ),
+              value: getValue(res),
+              isMostVoted:
+                item.choice.toString() === mostVotedChoice?.toString(),
+              badge: null,
+            });
+          }
+        });
+      });
 
     // Like / Dislike
     case QuestionType.LD:
     case WaQuestions.LD:
       return renderAll(() =>
-        responseArray?.map((item) => {
-          const res = getResObj(item.value);
-          const isMost = item.value === mostVotedChoice;
+        chartData?.map((item) => {
+          const res = getResObj(item.choice);
+          const isMost = item.choice === mostVotedChoice;
           const icon =
-            item.value === "Like" ? (
+            item.choice === "Like" ? (
               <IconThumbUpFilled color="#00BF83" />
             ) : (
               <IconThumbDownFilled color="#FF6161" />
             );
-          return renderStatRow({
-            label: (
-              <div className="flex items-center gap-1">
-                {icon}
-                <span>{item.value}</span>
-              </div>
-            ),
-            value: getValue(res),
-            isMostVoted: isMost,
-            badge: null,
-          });
+          if (version === 2) {
+            return renderStatRow({
+              label: (
+                <div className="flex items-center gap-1">
+                  <span>{item.choice}</span>
+                </div>
+              ),
+              value: getValue(res),
+              isMostVoted: isMost,
+              badge: null,
+            });
+          } else {
+            return renderStatRow({
+              label: (
+                <div className="flex items-center gap-1">
+                  {icon}
+                  <span>{item.choice}</span>
+                </div>
+              ),
+              value: getValue(res),
+              isMostVoted: isMost,
+              badge: null,
+            });
+          }
         }),
       );
 
