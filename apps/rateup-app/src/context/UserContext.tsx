@@ -29,7 +29,7 @@ const WS_URL = `${WEBSOCKET_URL}/api${ORG_WS_BASE_PATH}`;
 const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [wsData, setWsData] = useState<orgWsMessage>({} as orgWsMessage);
-  const { isAuthenticated } = useAuth();
+  const { orgId, isAuthenticated } = useAuth();
 
   const { data, error } = useOrgWsAuthCheck(isAuthenticated);
 
@@ -42,12 +42,13 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
       connectionRef.current ||
       !isAuthenticated ||
       !data?.afterAuthId ||
+      !orgId ||
       error
     ) {
       return;
     }
 
-    const socket = new WebSocket(`${WS_URL}/${data.afterAuthId}`);
+    const socket = new WebSocket(`${WS_URL}/${data.afterAuthId}/ws/${orgId}`);
     connectionRef.current = socket;
 
     socket.onopen = () => {
@@ -100,7 +101,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
         reconnectTimeoutRef.current = null;
       }
     };
-  }, [isAuthenticated, data?.afterAuthId, error]);
+  }, [isAuthenticated, data?.afterAuthId, error, orgId]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {

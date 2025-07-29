@@ -7,8 +7,6 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import SearchBar from "@/src/components/inbox/InboxSearchBar";
-import Inbox from "@/src/components/inbox/Inbox";
 import { useIsFocused } from "@react-navigation/native";
 
 import {
@@ -23,6 +21,8 @@ import {
 import { useContactCounts } from "@/src/api/inbox/contacts/contacts.query";
 import InboxButtons from "@/src/components/inbox/InboxButtons";
 import { useChatFilterStore, useSelectedTabStore } from "@/src/utils/store";
+import Inbox from "@/src/components/inbox/inbox";
+import SearchBar from "@/src/components/inbox/inboxSearchBar";
 
 const Tab = createMaterialTopTabNavigator();
 

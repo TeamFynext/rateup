@@ -334,7 +334,7 @@ const MessageSendPanel = () => {
               </Modal>
 
               <TextInput
-                className="flex-1 text-base text-black max-h-28"
+                className="flex-1 text-base text-black max-h-28 px-1"
                 placeholder="Type a message or '/' for commands"
                 placeholderTextColor="#7A8289"
                 multiline
