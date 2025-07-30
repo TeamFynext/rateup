@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+  getHappyIndex,
+  getNPSSurveyResponseForGraph,
   getResponses,
   getResponsesBySurveyId,
   getSurveyResponseAnalyics,
+  getSurveyResponseCount,
 } from "./response.api";
 
 export const useResponseAnalytics = (surveyId: any, filter: any) => {
@@ -32,3 +35,45 @@ export const useResponses = (surveyTeamMapId: string) =>
     queryFn: () => getResponses(surveyTeamMapId),
     enabled: !!surveyTeamMapId,
   });
+
+  export const useResponseCount = (surveyId:string) => {
+  return useQuery({
+    queryFn: () => getSurveyResponseCount(surveyId),
+    queryKey: ["responseCount", surveyId],
+    enabled: !!surveyId,
+  });
+};
+
+export function useHappyIndex(surveyId: string) {
+  return useQuery({
+    queryKey: ["happy-index", surveyId],
+    queryFn: () => getHappyIndex(surveyId),
+    enabled: !!surveyId,
+  });
+}
+
+
+export const useAllResponseNPSForGraph = (
+  timePeriod,
+  userTimeZone,
+  surveyId = "",
+  teamMapIds = [],
+) => {
+  return useQuery({
+    queryKey: [
+      "reponse-nps",
+      "graph-nps",
+      timePeriod,
+      userTimeZone,
+      surveyId,
+      teamMapIds,
+    ],
+    queryFn: () =>
+      getNPSSurveyResponseForGraph(
+        timePeriod,
+        userTimeZone,
+        surveyId,
+        teamMapIds,
+      ),
+  });
+};

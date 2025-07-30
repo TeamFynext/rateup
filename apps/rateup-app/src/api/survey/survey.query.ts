@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSurvey, getSurveys } from "./survey.api";
+import { getSurvey, getSurveys, getSurveyStats } from "./survey.api";
 
 export const useSurveys = (enabled: boolean = true) => {
   return useQuery({
@@ -15,5 +15,13 @@ export const useSurvey = (surveyId: string) => {
     enabled: !!surveyId,
     queryFn: () => getSurvey(surveyId),
     refetchOnWindowFocus: "always",
+  });
+};
+
+export const useGetSurveyStats = (surveyId:string) => {
+  return useQuery({
+    queryFn: () => getSurveyStats(surveyId),
+    queryKey: ["SurveyStats", surveyId],
+    enabled: !!surveyId,
   });
 };
