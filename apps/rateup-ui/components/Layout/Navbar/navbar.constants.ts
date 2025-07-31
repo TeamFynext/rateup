@@ -193,11 +193,15 @@ export function getNavTopData(
                     },
                   ]
                 : []),
-              {
-                label: translations["Automation"],
-                link: "/dashboard/whatsapp/automated-replies",
-                icon: IconRobot,
-              },
+              ...(hasFeature(sfpn.WhatsAppAutomation)
+                ? [
+                    {
+                      label: translations["Automation"],
+                      link: "/dashboard/whatsapp/automated-replies",
+                      icon: IconRobot,
+                    },
+                  ]
+                : []),
               ...(hasFeature(sfpn.WhatsAppTemplate)
                 ? [
                     {

@@ -48,7 +48,8 @@ export const useCreateWaAutomatedReplyMutation = () => {
       showSuccessToast("Automated Reply Created Successfully");
     },
     onError: (error: any) => {
-      showErrorToast(error?.response?.data ?? "Error Creating Automated Reply");
+      if (!(error?.response?.data?.displayMessageInClient ?? false))
+        showErrorToast(error?.response?.data, "Error Creating Automated Reply");
     },
   });
 };
