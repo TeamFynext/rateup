@@ -22,6 +22,7 @@ import {
   getContactById,
   getOrCreateContactByPhone,
 } from "../../../../../contact/internal-copy/contact/contact.service";
+import { WaSendMessageBody } from "../../../../../../../../types/whatsapp.types";
 
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
@@ -60,7 +61,7 @@ export async function handleWaMessages(
             orgId,
           );
           parameterData = messageBody.template.components;
-          waMessageBody.send.template = template.data;
+          (waMessageBody.send as WaSendMessageBody).template = template.data;
         }
       }
       case "receive": {

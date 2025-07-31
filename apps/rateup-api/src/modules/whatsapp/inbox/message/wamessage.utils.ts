@@ -9,11 +9,12 @@ export async function handleWaReceivedImages(
 ): Promise<WaInboxMessageBody> {
   if (
     messageBody?.exchangeProcess === "receive" &&
-    messageBody?.receive?.messages[0]?.type === "image"
+    (messageBody?.receive as WaReceiveMessageBody)?.messages[0]?.type ===
+      "image"
   ) {
     const uniqueImageId = await downloadAndUpload(
       orgId,
-      messageBody?.receive?.messages[0]?.image?.id,
+      (messageBody?.receive as WaReceiveMessageBody)?.messages[0]?.image?.id,
     );
     return {
       ...messageBody,
@@ -21,9 +22,10 @@ export async function handleWaReceivedImages(
         ...messageBody.receive,
         messages: [
           {
-            ...messageBody.receive.messages[0],
+            ...(messageBody?.receive as WaReceiveMessageBody).messages[0],
             image: {
-              ...messageBody.receive.messages[0].image,
+              ...(messageBody?.receive as WaReceiveMessageBody).messages[0]
+                .image,
               link: uniqueImageId,
             },
           },

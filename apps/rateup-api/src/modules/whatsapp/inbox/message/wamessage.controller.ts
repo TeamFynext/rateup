@@ -68,7 +68,7 @@ export async function handleWaMessages(
   messageBody: any,
   from: string,
   orgId: string,
-  sourcePlatform: PlatformType,
+  sourcePlatform: PlatformType = PlatformType.WHATSAPP,
   sourceIdentifier: string,
   userName?: string,
   messageId?: string,
@@ -139,7 +139,9 @@ export async function handleWaMessages(
         break;
       }
       case "receive": {
-        // waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
+        if (sourcePlatform === "WHATSAPP") {
+          waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
+        }
         if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED)
           await updateContactById(contact.id, {
             waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
