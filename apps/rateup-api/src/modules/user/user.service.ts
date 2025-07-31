@@ -252,6 +252,11 @@ export async function getLoggedUserInfo(
       encryptionKeys: true,
       isPaused: true,
       waAssignedChatPermission: true,
+      WhatsappSettings: {
+        select: {
+          appId: true,
+        },
+      },
     },
   });
   return {
@@ -273,6 +278,7 @@ export async function getLoggedUserInfo(
     prefLanguage: profile?.prefLanguage,
     waAssignedChatPermission: orgData?.waAssignedChatPermission,
     status: profile?.orgMember?.[0]?.status,
+    hasWhatsAppSettings: !!orgData?.WhatsappSettings?.[0]?.appId,
   };
 }
 
