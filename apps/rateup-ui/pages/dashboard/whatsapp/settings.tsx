@@ -164,51 +164,52 @@ function WhatsAppManualConfiguration({ waSettings }) {
               required
               {...form.getInputProps("webhookPassword")}
             />
-            <Skeleton visible={isLoading}>
-              <Group gap={"xs"}>
-                <ContainedSelection
-                  data={fbPages}
-                  value={form.values.fbPageId}
-                  label={"Instagram Connected Facebook Page"}
-                  onChange={(value) => {
-                    if (!value) {
-                      form.setFieldValue("fbPageId", null);
-                      form.setFieldValue("pageAccessToken", null);
-                      form.setFieldValue("ibaId", null);
-                      return;
-                    }
-                    const page = metaAssets.pages.find(
-                      (page) => page.id === value,
-                    );
-                    if (!page.instagram_business_account) {
-                      return showErrorToast(
-                        "Instagram account not found.Try after syncing page or choose another page",
+            {waSettings.accessToken && (
+              <Skeleton visible={isLoading}>
+                <Group gap={"xs"}>
+                  <ContainedSelection
+                    data={fbPages}
+                    value={form.values.fbPageId}
+                    label={"Instagram Connected Facebook Page"}
+                    onChange={(value) => {
+                      if (!value) {
+                        form.setFieldValue("fbPageId", null);
+                        form.setFieldValue("pageAccessToken", null);
+                        form.setFieldValue("ibaId", null);
+                        return;
+                      }
+                      const page = metaAssets.pages.find(
+                        (page) => page.id === value,
                       );
-                    }
-                    const data = {
-                      fbPageId: page.id,
-                      pageAccessToken: page.access_token,
-                      ibaId: page.instagram_business_account?.id,
-                    };
-                    form.setValues({
-                      ...form.values,
-                      ...data,
-                    });
-                  }}
-                />
-                <Tooltip label={"Sync FB pages"}>
-                  <ActionIcon
-                    variant="light"
-                    mt={20}
-                    onClick={() => syncfbpageMut.mutate()}
-                    loading={syncfbpageMut.isPending}
-                  >
-                    <IconRefresh size={20} />
-                  </ActionIcon>
-                </Tooltip>
-              </Group>
-            </Skeleton>
-
+                      if (!page.instagram_business_account) {
+                        return showErrorToast(
+                          "Instagram account not found.Try after syncing page or choose another page",
+                        );
+                      }
+                      const data = {
+                        fbPageId: page.id,
+                        pageAccessToken: page.access_token,
+                        ibaId: page.instagram_business_account?.id,
+                      };
+                      form.setValues({
+                        ...form.values,
+                        ...data,
+                      });
+                    }}
+                  />
+                  <Tooltip label={"Sync FB pages"}>
+                    <ActionIcon
+                      variant="light"
+                      mt={20}
+                      onClick={() => syncfbpageMut.mutate()}
+                      loading={syncfbpageMut.isPending}
+                    >
+                      <IconRefresh size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+              </Skeleton>
+            )}
             <Group justify={"space-between"}>
               <Button
                 color="red"

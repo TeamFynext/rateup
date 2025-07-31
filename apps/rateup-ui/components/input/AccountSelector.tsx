@@ -44,15 +44,6 @@ export function AccountSelector({
       }
   }
 
-  // let accountOptions = data
-  //   ? data.map((Account) => ({
-  //       value: usePhoneNumber
-  //         ? Account?.phone?.replace("+", "")
-  //         : Account.phoneId,
-  //       label: Account.phone,
-  //     }))
-  //   : [];
-
   if (withAllOption) {
     accountOptions = [{ value: "all", label: "All" }, ...accountOptions];
   }
