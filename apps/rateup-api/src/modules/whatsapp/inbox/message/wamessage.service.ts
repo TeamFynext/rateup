@@ -3,6 +3,7 @@ import {
   Contact,
   ContactGroup,
   PlatformType,
+  Prisma,
   WaAccountSettings,
   WaMessage,
 } from "../../../../../generated/prisma/client";
@@ -93,53 +94,131 @@ export async function getWaMessagesByContactId(
         },
       ],
     };
-  if (cursor) {
-    messages = await prisma.waMessage.findMany({
-      skip: 1,
-      take: 300,
-      cursor: {
-        id: cursor,
-      },
-      where: {
-        contactId,
-        ...sourceIdentifierCondition,
-      },
-      include: {
-        sender: {
-          select: {
-            name: true,
-            profilePhoto: true,
-          },
-        },
-      },
-      orderBy: {
-        waCreatedAt: "desc",
-      },
-    });
-  } else {
-    messages = await prisma.waMessage.findMany({
-      take: 300,
-      where: {
-        contactId,
-        ...sourceIdentifierCondition,
-      },
-      include: {
-        sender: {
-          select: {
-            name: true,
-            profilePhoto: true,
-          },
-        },
-      },
-      orderBy: {
-        waCreatedAt: "desc",
-      },
-    });
-  }
-  const nextCursor =
-    messages.length > 0 ? messages[messages.length - 1].id : null;
 
-  return { messages, nextCursor };
+  const filter = [`w1."contactId" = $1`];
+  let paramIndex = 2;
+  const params = [contactId];
+
+  if (cursor) {
+    const [waCreatedAt, id] = Buffer.from(cursor, "base64")
+      .toString()
+      .split(":");
+    params.push(waCreatedAt);
+    let createdAtIndex = paramIndex++;
+    params.push(id);
+    filter.push(
+      `w1."waCreatedAt" < $${createdAtIndex} OR (w1."waCreatedAt" = $${createdAtIndex} AND w1."id" < $${paramIndex++})`,
+    );
+  }
+
+  if (phone && phone !== "all") {
+    params.push(phone);
+    params.push(`+${phone}`);
+    filter.push(
+      `w1."sourceIdentifier" = $${paramIndex++} OR w1."sourceIdentifier" = $${paramIndex++}`,
+    );
+  }
+  let query = `SELECT w1.*,
+  ( SELECT json_build_object('messageBody',w2."messageBody",'createdAt', w2."waCreatedAt", 'sender',
+    CASE WHEN u2."id" IS NOT NULL THEN json_build_object('name', u2."name", 'profile_photo', u2."profilePhoto") ELSE NULL END
+   ) as "reaction"
+   FROM "WaMessage" w2
+  LEFT JOIN "User" u2 ON u2."id" = w2."sendBy" WHERE (
+   (
+    w1."sourcePlatform" = 'INSTAGRAM' AND
+    w2."sourcePlatform" = 'INSTAGRAM' AND
+    (
+      (w2."messageBody"->>'exchangeProcess' = 'receive' AND w2."messageBody"->'receive'->'reaction'->>'action' = 'react' AND w1."messageId" = (w2."messageBody"->'receive'->'reaction'->>'mid')::TEXT) OR
+      (w2."messageBody"->>'exchangeProcess' = 'send' AND w2."messageBody"->'send'->>'sender_action' = 'react' AND w1."messageId" = (w2."messageBody"->'send'->'payload'->>'message_id')::TEXT)
+    )
+  )
+  OR
+  (
+    w1."sourcePlatform" != 'INSTAGRAM' AND
+    w2."sourcePlatform" != 'INSTAGRAM' AND
+    w1."messageBody"->>'exchangeProcess' = 'send' AND
+    (
+      (w2."messageBody"->>'exchangeProcess' = 'receive' AND w1."messageId" = (w2."messageBody"->'receive'->'messages'->0->'reaction'->>'message_id')::TEXT) OR
+      (w2."messageBody"->>'exchangeProcess' = 'send' AND w1."messageId" = (w2."messageBody"->'send'->'reaction'->>'message_id')::TEXT)
+    )
+  )
+  OR
+  (
+    w1."sourcePlatform" != 'INSTAGRAM' AND
+    w2."sourcePlatform" != 'INSTAGRAM' AND
+    w1."messageBody"->>'exchangeProcess' = 'receive' AND
+    (
+      (w2."messageBody"->>'exchangeProcess' = 'send' AND (w1."messageBody"->'receive'->'messages'->0->>'id')::TEXT = (w2."messageBody"->'send'->'reaction'->>'message_id')::TEXT) OR
+      (w2."messageBody"->>'exchangeProcess' = 'receive' AND (w1."messageBody"->'receive'->'messages'->0->>'id')::TEXT = (w2."messageBody"->'receive'->'messages'->0->'reaction'->>'message_id')::TEXT)
+    )
+  )
+  ) ORDER BY w2."waCreatedAt" DESC LIMIT 1
+) AS "reactionMessage",
+CASE WHEN u."id" IS NOT NULL THEN json_build_object('name', u."name", 'profile_photo', u."profilePhoto") ELSE NULL END AS "sender" 
+ FROM "WaMessage" w1 
+ LEFT JOIN "User" u ON u."id" = w1."sendBy" 
+   WHERE ${filter.join(" AND ")} 
+ORDER BY w1."waCreatedAt" DESC, w1."id" DESC
+LIMIT 300;`;
+
+  messages = await prisma.$queryRawUnsafe(query, ...params);
+  //  console.log("messages",messages)
+
+  // if (cursor) {
+  //   messages = await prisma.waMessage.findMany({
+  //     skip: 1,
+  //     take: 300,
+  //     cursor: {
+  //       id: cursor,
+  //     },
+  //     where: {
+  //       contactId,
+  //       ...sourceIdentifierCondition,
+  //     },
+  //     include: {
+  //       sender: {
+  //         select: {
+  //           name: true,
+  //           profilePhoto: true,
+  //         },
+  //       },
+  //     },
+  //     orderBy: {
+  //       waCreatedAt: "desc",
+  //     },
+  //   });
+  // } else {
+  //   messages = await prisma.waMessage.findMany({
+  //     take: 300,
+  //     where: {
+  //       contactId,
+  //       ...sourceIdentifierCondition,
+  //     },
+  //     include: {
+  //       sender: {
+  //         select: {
+  //           name: true,
+  //           profilePhoto: true,
+  //         },
+  //       },
+  //     },
+  //     orderBy: {
+  //       waCreatedAt: "desc",
+  //     },
+  //   });
+  // }
+  let nextCursor = null;
+  let hasNextPage = messages.length === 300;
+  if (hasNextPage && messages.length > 0) {
+    const lastMessage = messages[messages.length - 1];
+    nextCursor = Buffer.from(
+      `${lastMessage.waCreatedAt}:${lastMessage.id}`,
+    ).toString("base64");
+  }
+
+  console.log(cursor);
+
+  return { messages, nextCursor, hasNextPage };
 }
 
 export async function generateChatFilterData(orgId: string) {
@@ -484,6 +563,11 @@ export async function filterChats(
         c."consent",
         c."whatsappUserName",
         c."blockedOnWhatsApp",
+        c."source",
+        c."igsId",
+        c."profilePic",
+        c."followerCount",
+        c."isIgVerifiedUser",
         COALESCE(c.tags, '{}'::jsonb) as tags,
         (
           SELECT COUNT(*)::INTEGER FROM "WaMessage" w WHERE w."contactId" = c.id
@@ -501,7 +585,8 @@ export async function filterChats(
         (
           SELECT jsonb_build_object(
             'messageBody', w."messageBody",
-            'waCreatedAt', w."waCreatedAt"
+            'waCreatedAt', w."waCreatedAt",
+            'sourcePlatform', w."sourcePlatform"
           )
           FROM "WaMessage" w
           WHERE w."contactId" = c.id
@@ -847,7 +932,7 @@ export async function getContactsCountByInbox(
   FROM "WaInboxAssign"
   GROUP BY "teamId";
 `;
-
+  // console.log(count[0])
   if (
     count[0].new_assigned_count === 0 &&
     count[0].new_assigned_to_me_count > 0
@@ -868,7 +953,7 @@ export async function getContactsCountByInbox(
   };
 }
 
-type WaMedia = {
+export type WaMedia = {
   type?: "audio" | "image" | "document" | "video";
   url?: string;
   name?: string;
@@ -876,9 +961,10 @@ type WaMedia = {
 
 export async function sendMediaMessages(
   media: WaMedia[],
-  phone,
+  to,
   orgId,
   userId,
+  platform: PlatformType,
   caption = "",
   whatsappSettingsPhoneId = "",
 ) {
@@ -889,12 +975,17 @@ export async function sendMediaMessages(
     let messageBody;
     switch (item.type) {
       case "image": {
-        messageBody = createReplyImageMessage(phone, item.url, captionMsg);
+        messageBody = createReplyImageMessage(
+          to,
+          item.url,
+          platform,
+          captionMsg,
+        );
         break;
       }
       case "document": {
         messageBody = createDocumentMessage(
-          phone,
+          to,
           item.url,
           item.name,
           captionMsg,
@@ -902,17 +993,18 @@ export async function sendMediaMessages(
         break;
       }
       case "video": {
-        messageBody = createVideoMessage(phone, item.url, captionMsg);
+        messageBody = createVideoMessage(to, item.url, platform, captionMsg);
         break;
       }
       case "audio": {
-        messageBody = createAudioMessage(phone, item.url);
+        messageBody = createAudioMessage(to, item.url, platform);
         break;
       }
     }
     await sendMessage(
       orgId,
       messageBody,
+      platform,
       null,
       userId,
       whatsappSettingsPhoneId,
@@ -996,14 +1088,41 @@ export async function sendLocationMessage(
 
 export async function getWaMessageByMessageId(
   messageId: string,
-  phone: string,
-) {
+): Promise<WaMessage> {
   return await prisma.waMessage.findFirst({
     where: {
       messageId,
-      contact: {
-        phone,
-      },
     },
   });
+}
+
+export async function updateWaMessageByMessageId(
+  messageId: string,
+  data: Partial<WaMessage>,
+  id?: string,
+) {
+  if (id)
+    return await prisma.waMessage.update({
+      where: {
+        id,
+      },
+      data,
+    });
+  if (messageId) {
+    const message = await prisma.waMessage.findFirst({
+      where: {
+        messageId,
+      },
+    });
+    if (!message) {
+      log.trace("Message not found on id: %s", messageId);
+      return null;
+    }
+    return await prisma.waMessage.update({
+      where: {
+        id: message.id,
+      },
+      data,
+    });
+  }
 }

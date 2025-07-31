@@ -153,7 +153,6 @@ model Org {
   expoPushTokens           ExpoPushToken[]
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
-  MetaAssets               MetaAssets[]
 }
 
 model UsageStats {
@@ -203,16 +202,21 @@ model UsageStats {
 }
 
 model WhatsappSettings {
+  id   String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId String @db.Uuid
 
   accessToken     String // encrypted
-  accessToken_iv  String
-  wabaId          String // WhatsApp Business Account ID
-  phoneId         String  @unique
-  phone           String  @unique
+  accessToken_iv  String?
+  wabaId          String? // WhatsApp Business Account ID
+  phoneId         String?  @unique
+  phone           String?  @unique
   appId           String
   webhookPassword String?
+  fbPageId        String?  @unique //Facebook Page ID
+  ibaId           String?  @unique //Instagram Business Account ID
+  pageAccessToken String?  //Facebook Page access token
+  igUserName      String?
 
   type             String // enums.ts: WaConfigType
   createdAt        DateTime           @default(now())
@@ -220,6 +224,7 @@ model WhatsappSettings {
   encryption       Json? // for flow {publicKey: string, privateKey: string}
   Campaign         Campaign[]
   LoyaltyWaCommand LoyaltyWaCommand[]
+  metaAssets       MetaAssets[]
 }
 
 model WaAccountSettings {
@@ -459,6 +464,7 @@ model Contact {
   phone  String?
   source String?
 
+
   org                          Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                        String                @db.Uuid
   responses                    SurveyResponse[]
@@ -477,9 +483,13 @@ model Contact {
   waMessageAssignStatus        String                @default("UNASSIGNED")
   waInboxAssign                WaInboxAssign[]
   lastReceivedMessageTimeStamp DateTime?
-  whatsappUserName             String?
+  whatsappUserName             String?  //whatsapp or instagram username
   blockedOnWhatsApp            Boolean               @default(false)
   waCatalogOrders              WaCatalogOrder[]
+  igsId       String?  //Instagram Scoped User ID
+  profilePic   String?       
+  followerCount   Int?
+  isIgVerifiedUser      Boolean?
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -487,6 +497,7 @@ model Contact {
   @@index([orgId, id])
   @@index([orgId, waMessageAssignStatus])
   @@index([lastReceivedMessageTimeStamp])
+  @@unique([igsId, orgId], name: "contact_igsid_org_id_unique")
 }
 
 model WaInboxAssign {
@@ -1222,6 +1233,8 @@ enum PlatformType {
   INSTAGRAM
 }
 
+//update message body for instagram -- include reaction in messagebody, update read
+
 model WaMessage {
   id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt                       DateTime                          @default(now())
@@ -1245,6 +1258,23 @@ model WaMessage {
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
 }
+
+// model InstagramMessage {
+//    messageId  String  @unique
+//    ibaId      String
+//    instagramSetting InstagramSettings @relation(fields: [ibaId], references: [ibaId], onDelete: Cascade)
+//    igCreatedAt  DateTime?                 //time from message webhook
+//    messageBody  Json
+//    seenAt       DateTime?
+//    contactId  String  @db.Uuid
+//    Contact  Contact @relation(fields: [instaUserId], references: [id], onDelete: Cascade)
+//    exchangeProcess String   @default("receive")
+//    sentUserId    String?
+//    sentUser      User?    @relation(fields: [sentUserId],references: [id])
+//    createdAt     DateTime           @default(now())
+//    reaction     Json?
+// }
+
 
 model WaMessageCampaginParticipantMap {
   campaignParticipant            CampaignParticipant           @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
@@ -1642,8 +1672,8 @@ model WaCatalogOrder {
 }
 
 model MetaAssets {
-  org          Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId        String @unique @db.Uuid
+  whatsappSettings         WhatsappSettings    @relation(fields: [whatsappSettingsId], references: [id], onDelete: Cascade)
+  whatsappSettingsId       String @unique @db.Uuid
   pages        Json[]
   adAccounts   Json[]
   leads        Json[]
@@ -1667,3 +1697,31 @@ model NotificationSetting {
   waMessageAssignNotification Boolean   @default(false)
   waMessageClosedNotification Boolean   @default(false)
 }
+
+// model InstagramSettings {
+//   id   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+//   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+//   orgId String @db.Uuid
+
+//   accessToken     String // encrypted
+//   fbPageId        String?  @unique
+//   ibaId           String?  @unique //Instagram business accountid
+//   pageAccessToken String?    
+//   messages         InstagramMessage[]
+//   createdAt       DateTime           @default(now())
+// }
+
+// model InstagramUser {
+//   id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+//   isuid  String 
+//   orgId  String @db.Uuid
+//   org    Org   @relation(fields:[orgId], references: [id], onDelete: Cascade)
+//   messages InstagramMessage[]
+//   name    String?
+//   userName   String?
+//   profilePic   String?
+//   followerCount   Int?
+//   isFollower  Boolean?
+//   isFollowing Boolean?
+//   @@unique([orgId,isuid], name: "orgid_isuid_unique_index")
+// }

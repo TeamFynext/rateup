@@ -1,3 +1,5 @@
+import { PlatformType } from "../../../../../generated/prisma/enums";
+import { WaReceiveMessageBody } from "../../../../types/whatsapp.types";
 import { downloadAndUpload } from "../../whatsappSurvey/wasurvey.utils";
 import dayjs from "dayjs";
 
@@ -34,9 +36,17 @@ export async function handleWaReceivedImages(
 
 export async function returnAppropriateTimeStamp(
   messageBody: WaInboxMessageBody,
+  platform: PlatformType,
 ) {
   if (messageBody.exchangeProcess === "receive") {
-    const unixTimeStamp = parseInt(messageBody.receive.messages[0].timestamp);
+    if (platform === PlatformType.INSTAGRAM) {
+      return new Date(
+        (messageBody.receive as IgReceiveMessageBody).timestamp,
+      ).toISOString();
+    }
+    const unixTimeStamp = parseInt(
+      (messageBody.receive as WaReceiveMessageBody).messages[0].timestamp,
+    );
     const utcTimeStamp = dayjs.unix(unixTimeStamp).utc().format();
     return utcTimeStamp;
   }

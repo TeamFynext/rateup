@@ -51,19 +51,22 @@ import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.s
 import { log } from "../../../../utils/logger";
 import {
   getContactById,
+  getOrCreateContactByIgsId,
   getOrCreateContactByPhone,
   updateContactById,
 } from "../../../contact/contact.service";
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
 import xlsx from "node-xlsx";
 import { WaMessageAssignStatus } from "../../../../types/enums";
-import { PlatformType } from "../../../../../generated/prisma/client";
+import { Contact, PlatformType } from "../../../../../generated/prisma/client";
 import { Role } from "../../../../utils/enums";
+import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service";
+import { WaSendMessageBody } from "../../../../types/whatsapp.types";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
   messageBody: any,
-  phone: string,
+  from: string,
   orgId: string,
   sourcePlatform: PlatformType,
   sourceIdentifier: string,
@@ -72,6 +75,7 @@ export async function handleWaMessages(
   userId?: string,
   failed: boolean = false,
 ) {
+  console.log("sourcePlatform", sourcePlatform);
   try {
     // Create the message body
     let waMessageBody: WaInboxMessageBody = {
@@ -80,16 +84,46 @@ export async function handleWaMessages(
       receive: type === "receive" ? messageBody : null,
     };
     // Create the contact core
+    const waTimeStamp = await returnAppropriateTimeStamp(
+      waMessageBody,
+      sourcePlatform,
+    );
     const contactCore: ContactCore = {
       name: userName,
-      phone: phone,
-      source: "whatsapp",
+      phone: from,
+      source: sourcePlatform.toLowerCase(),
+    };
+    let additionalData = {};
+    if (sourcePlatform === "INSTAGRAM" && type === "receive") {
+      try {
+        const userDetails = await getIgUserDetailsFromMeta(
+          from,
+          sourceIdentifier,
+        );
+        additionalData = {
+          ...additionalData,
+          name: userDetails?.name ?? undefined,
+          whatsappUserName: userDetails?.username ?? undefined,
+          followerCount: userDetails?.follower_count,
+          isIgVerifiedUser: userDetails?.is_verified_user,
+        };
+      } catch (e) {
+        log.error(`error in getting insta user detail => %o`, e);
+      }
+    }
+    const contactData = {
+      lastReceivedMessageTimeStamp: waTimeStamp,
+      ...contactCore,
+      ...additionalData,
     };
     // create contact if it does not exist
-    const contact = await getOrCreateContactByPhone(phone, orgId, contactCore);
+    const contact =
+      sourcePlatform === PlatformType.INSTAGRAM
+        ? await getOrCreateContactByIgsId(from, orgId, contactData)
+        : await getOrCreateContactByPhone(from, orgId, contactData);
 
     let parameterData = {};
-    const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody);
+    // const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody);
     switch (type) {
       case "send": {
         //condition to add template body to messageData if type is template
@@ -99,20 +133,17 @@ export async function handleWaMessages(
             orgId,
           );
           parameterData = messageBody.template.components;
-          waMessageBody.send.template = template.data as unknown as any;
+          (waMessageBody.send as WaSendMessageBody).template =
+            template.data as unknown as any;
         }
         break;
       }
       case "receive": {
-        waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
-        const isChangeStatus =
-          contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED;
-        await updateContactById(contact.id, {
-          waMessageAssignStatus: isChangeStatus
-            ? WaMessageAssignStatus.UNASSIGNED
-            : undefined,
-          lastReceivedMessageTimeStamp: waTimeStamp,
-        });
+        // waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
+        if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED)
+          await updateContactById(contact.id, {
+            waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+          });
         break;
       }
     }
@@ -153,9 +184,12 @@ export async function sendNewWaMessageHandler(
 ) {
   try {
     const { contactId } = request.params;
-    const { type, contacts, location, whatsappSettingsPhoneId } = request.body;
+    const { type, contacts, location, whatsappSettingsPhoneId, platform } =
+      request.body;
     const { orgId, userId } = request.user;
     const contact = await getContactById(contactId);
+    const to =
+      platform === PlatformType.INSTAGRAM ? contact.igsId : contact.phone;
     if (!contact) {
       log.error("Contact not found with id %s", contactId);
       reply.status(404).send("Contact not found");
@@ -179,30 +213,40 @@ export async function sendNewWaMessageHandler(
           break;
         }
         const messageBody = createTextMessage(
-          contact.phone,
+          to,
           "",
           request?.body?.text?.body,
+          platform as PlatformType,
         );
+        console.log("messageBody", messageBody);
+        console.log("platform", platform);
+        console.log("platform as platformty", platform as PlatformType);
         await sendMessage(
           orgId,
           messageBody,
-          null,
+          platform as PlatformType,
+          undefined,
           userId,
           whatsappSettingsPhoneId,
         );
         break;
       }
       case "reaction": {
-        const { emoji, toWaMessageId } = request.body.reaction;
+        const { emoji, toWaMessageId, reaction } = request.body.reaction;
         const messageBody = createReactionMessage(
-          contact.phone,
+          to,
           toWaMessageId,
           emoji,
+          reaction,
+          platform,
         );
+        console.log("whatsappSettingsPhoneId", whatsappSettingsPhoneId);
+        console.log("messageBody", messageBody);
         await sendMessage(
           orgId,
           messageBody,
-          null,
+          platform as PlatformType,
+          undefined,
           userId,
           whatsappSettingsPhoneId,
         );
@@ -212,9 +256,10 @@ export async function sendNewWaMessageHandler(
         if (request.body.media.length)
           await sendMediaMessages(
             request.body.media,
-            contact.phone,
+            to,
             orgId,
             userId,
+            platform as PlatformType,
             "",
             whatsappSettingsPhoneId,
           );
@@ -241,7 +286,8 @@ export async function sendNewWaMessageHandler(
     }
     reply.send("Message Sent");
   } catch (error) {
-    log.error("Error in getFilteredContactsHandler: %o", error);
+    console.log(error);
+    log.error("Error in sendNewWaMessageHandler: %o", error);
     reply.status(500).send("Internal Server Error");
   }
 }
@@ -260,6 +306,7 @@ export async function getWaMessagesByContactIdHandler(
     const messages = await getWaMessagesByContactId(contactId, cursor, phone);
     reply.send(messages);
   } catch (error) {
+    log.error(error);
     reply.status(500).send("Internal Server Error");
   }
 }

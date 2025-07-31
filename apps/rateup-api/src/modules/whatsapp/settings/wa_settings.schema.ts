@@ -37,10 +37,18 @@ const updateWaSettingsInputSchema = z.object({
   phoneId: z.string().optional(),
   appId: z.string().optional(),
   webhookPassword: z.string().optional(),
+  fbPageId: z.string().optional(),
+  pageAccessToken: z.string().optional(),
+  ibaId: z.string().optional(),
+});
+
+const whatsappSettingsIdParamSchema = z.object({
+  whatsappSettingsId: z.string(),
 });
 
 const getWaSettingsResponseSchema = z.array(
   z.object({
+    id: z.string(),
     phone: z.string(),
     wabaId: z.string(),
     appId: z.string(),
@@ -48,6 +56,10 @@ const getWaSettingsResponseSchema = z.array(
     webhookPassword: z.string().optional(),
     accessToken: z.string(),
     type: z.nativeEnum(WaConfigType),
+    fbPageId: z.string().optional(),
+    ibaId: z.string().optional(),
+    pageAccessToken: z.string().optional(),
+    igUserName: z.string().optional(),
   }),
 );
 const contactTagSchema = z.object({
@@ -62,15 +74,12 @@ const byLeadGenFormIdParamsSchema = z.object({
 const byAdAccountIdParamsSchema = z.object({
   adAccountId: z.string(),
 });
-// const sourceQuery = z.object({
-//   source: z.string()
-// })
 const byFbPageQuerySchema = z.object({
   fbPageId: z.string(),
   pageAccessToken: z.string(),
   fields: z.array(z.string()).optional(),
 });
-// .merge(sourceQuery);
+
 export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
   buildJsonSchemas(
     {
@@ -83,7 +92,7 @@ export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
       byLeadGenFormIdParamsSchema,
       byFbPageQuerySchema,
       byAdAccountIdParamsSchema,
-      // sourceQuery
+      whatsappSettingsIdParamSchema,
     },
     { $id: "waSettingsSchema" },
   );
@@ -101,6 +110,6 @@ export type ByFbPageQuerySchema = z.infer<typeof byFbPageQuerySchema>;
 export type ByAdAccountIdParamsSchema = z.infer<
   typeof byAdAccountIdParamsSchema
 >;
-// export type SourceQuerySchema = z.infer<
-//   typeof sourceQuery
-// >;
+export type whatsappSettingsIdParamSchema = z.infer<
+  typeof whatsappSettingsIdParamSchema
+>;

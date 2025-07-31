@@ -33,6 +33,8 @@ import {
 import { ContactCore } from "../../contact/contact.schema";
 import connection from "../../../utils/redisConnection";
 import crypto from "crypto";
+import { PlatformType } from "../../../../generated/prisma/enums";
+import { WaMedia } from "../inbox/message/wamessage.service";
 
 dayjs.extend(customParseFormat);
 
@@ -75,6 +77,8 @@ export function getEventType(data: WaMessageBody) {
     if ((data as any).object === "page") {
       if (data?.entry?.[0]?.changes?.[0]?.field === WaEvent.LEADGEN) {
         return WaEvent.LEADGEN;
+      } else if (data?.entry?.[0]?.changes?.[0]?.field === WaEvent.Message) {
+        return WaEvent.Message;
       }
     }
   }
@@ -452,11 +456,46 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
     buttonId,
   };
 }
+
+export function createMediaAttachmentMessage(
+  media: WaMedia[],
+  to,
+): IgSendMessageBody {
+  return {
+    recipient: {
+      id: to,
+    },
+    message: {
+      attachments: media.map((m) => ({
+        type: m.type,
+        payload: {
+          url: m.url,
+        },
+      })),
+    },
+  };
+}
 export function createReplyImageMessage(
   to: string,
   imageId: string,
+  platform: PlatformType = PlatformType.WHATSAPP,
   caption?: string,
-): WaSendMessageBody {
+): WaSendMessageBody | IgSendMessageBody {
+  if (platform === PlatformType.INSTAGRAM) {
+    return {
+      recipient: {
+        id: to,
+      },
+      message: {
+        attachment: {
+          type: "image",
+          payload: {
+            url: imageId,
+          },
+        },
+      },
+    };
+  }
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -637,7 +676,24 @@ export function createTextMessage(
   to: string,
   title: string,
   description = "",
-): WaSendMessageBody {
+  platform: PlatformType = PlatformType.WHATSAPP,
+): WaSendMessageBody | IgSendMessageBody {
+  if (platform === PlatformType.INSTAGRAM) {
+    return {
+      recipient: {
+        id: to,
+      },
+      message: {
+        text:
+          (title ? `*${title}*\n\n` : "") +
+          `${
+            typeof description === "string"
+              ? description
+              : parseToWhatsAppFormat(description)
+          }`,
+      },
+    } as IgSendMessageBody;
+  }
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -759,7 +815,26 @@ export function createNativeListMessage(
   };
 }
 
-export function createReactionMessage(to, to_wa_id, emoji): WaSendMessageBody {
+export function createReactionMessage(
+  to,
+  to_wa_id,
+  emoji,
+  reaction,
+  platform,
+): WaSendMessageBody | IgSendMessageBody {
+  //do the instagram type
+
+  if (platform === PlatformType.INSTAGRAM)
+    return {
+      recipient: {
+        id: to,
+      },
+      sender_action: "react",
+      payload: {
+        message_id: to_wa_id,
+        reaction,
+      },
+    };
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -791,7 +866,28 @@ export function createDocumentMessage(
   };
 }
 
-export function createVideoMessage(to, link, caption): WaSendMessageBody {
+export function createVideoMessage(
+  to,
+  link,
+  platform,
+  caption,
+): WaSendMessageBody | IgSendMessageBody {
+  if (platform === PlatformType.INSTAGRAM) {
+    return {
+      recipient: {
+        id: to,
+      },
+      message: {
+        attachment: {
+          type: "video",
+          payload: {
+            url: link,
+          },
+          is_reusable: true,
+        },
+      },
+    };
+  }
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -804,7 +900,27 @@ export function createVideoMessage(to, link, caption): WaSendMessageBody {
   };
 }
 
-export function createAudioMessage(to, link): WaSendMessageBody {
+export function createAudioMessage(
+  to,
+  link,
+  platform,
+): WaSendMessageBody | IgSendMessageBody {
+  if (platform === PlatformType.INSTAGRAM) {
+    return {
+      recipient: {
+        id: to,
+      },
+      message: {
+        attachment: {
+          type: "audio",
+          payload: {
+            url: link,
+          },
+          is_reusable: true,
+        },
+      },
+    };
+  }
   return {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -934,7 +1050,7 @@ export async function generateMessageDataFromQuestion(
   } else {
     // text question
     if ([Q.Text, Q.Email, Q.Photo, Q.Date, Q.Number].includes(question.type)) {
-      return createTextMessage(to, title, description);
+      return createTextMessage(to, title, description) as WaSendMessageBody;
     } else if ([Q.MSQ, Q.MCQ, Q.CustomNPS].includes(question.type)) {
       let bodyText = description;
       // Displaying choices in `index) choice` format
@@ -951,7 +1067,7 @@ export async function generateMessageDataFromQuestion(
         bodyText =
           bodyText + "\n\nPlease enter your choice indices separated by space";
       }
-      return createTextMessage(to, title, bodyText);
+      return createTextMessage(to, title, bodyText) as WaSendMessageBody;
     } else if (question.type === Q.Phone) {
       // TODO: Allow user to enter phone number
       return createReplyButtonsMessage(to, title, description, [

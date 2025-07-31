@@ -166,6 +166,7 @@ export async function whatsappEventHandler(
 ) {
   try {
     const body = request.body as WaMessageBody;
+    console.log("body", body);
     log.trace("WaEvent => %o", body); // Log the entire event payload
 
     const eventType = getEventType(body);
@@ -416,7 +417,6 @@ async function whatsappMessageHandler(
   const existingMessage = await getWaMessageByMessageId(
     (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)
       ?.messages?.[0]?.id,
-    from,
   );
 
   if (existingMessage) {

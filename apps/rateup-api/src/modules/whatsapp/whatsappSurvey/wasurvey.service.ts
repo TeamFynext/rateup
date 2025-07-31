@@ -1,6 +1,7 @@
 import {
   PlatformType,
   ResponsePlatform,
+  WhatsappSettings,
 } from "../../../../generated/prisma/client";
 import {
   CampaignParticipantStatus,
@@ -38,7 +39,10 @@ import {
   updateVisitedSurvey,
 } from "../../survey/survey.service";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
-import { getWaSettings } from "../settings/wa_settings.service";
+import {
+  getWaSettings,
+  getWaSettingsByIbaId,
+} from "../settings/wa_settings.service";
 import { GraphApiError, callWhatsappApi } from "../wa_axios";
 import {
   createCTAButtonMessage,
@@ -81,31 +85,77 @@ export const toBeIncludedWaSessionRelations = {
 
 export async function sendMessage(
   orgId: string,
-  messageData: WaSendMessageBody,
+  messageData: WaSendMessageBody | IgSendMessageBody,
+  platform: PlatformType = PlatformType.WHATSAPP,
   userName?: string,
   userId?: string,
   whatsappSettingsPhoneId?: string,
 ) {
-  const waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
-  const { to } = messageData;
-  log.trace(`sending message to %s \n%o`, messageData.to, messageData);
+  console.log("platform", platform);
+  // {
+  // object: 'instagram',
+  // entry: [
+  //   {
+  //     time: 1753940203842,
+  //     id: '17841476126718028',
+  //     messaging: [
+  //       {
+  //         sender: { id: '1741212203201498' },
+  //         recipient: { id: '17841476126718028' },
+  //         timestamp: 1753940202497,
+  //         message: {
+  //           mid: 'aWdfZAG1faXRlbToxOklHTWVzc2FnZAUlEOjE3ODQxNDc2MTI2NzE4MDI4OjM0MDI4MjM2Njg0MTcxMDMwMTI0NDI3NjAxNzgyOTQwNjYyNjYyMzozMjM1NDQ4NjAzNjA2MTQzMDc3Mjk0OTkzNjQyNzIzNzM3NgZDZD',
+  //           attachments: [ { type: 'ephemeral' } ]
+  //         }
+  //       }
+  //     ]
+  //   }
+  // ]
+  // }
+  let waSettings: Omit<WhatsappSettings, "accessToken_iv">;
+  let to: string;
+  let configId: string;
+  let accessToken: string;
+  let sourceIdentifier: string;
+  if (platform === PlatformType.INSTAGRAM) {
+    waSettings = await getWaSettingsByIbaId(whatsappSettingsPhoneId);
+    to = (messageData as IgSendMessageBody).recipient.id;
+    configId = "me";
+    accessToken = waSettings.pageAccessToken;
+    sourceIdentifier = waSettings.ibaId;
+  } else {
+    waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
+    to = (messageData as WaSendMessageBody).to;
+    configId = waSettings.phoneId;
+    accessToken = waSettings.accessToken;
+    sourceIdentifier = waSettings.phone;
+  }
+  console.log("waSettings", waSettings);
+  log.trace(`sending message to %s \n%o`, to, messageData);
   try {
     const res = await callWhatsappApi(
-      `/${waSettings.phoneId}/messages`,
+      `/${configId}/messages`,
       "POST",
-      waSettings.accessToken,
+      platform === PlatformType.INSTAGRAM ? null : accessToken,
       messageData,
+      platform === PlatformType.INSTAGRAM
+        ? { params: { access_token: accessToken } }
+        : {},
     );
     log.trace(`sent successfully %o %o `, res.data, res.statusText);
+    console.log("res", res);
+    console.log("res?.data?.message_id", res?.data?.message_id);
     await handleWaMessages(
       "send",
       messageData,
       to,
       orgId,
-      PlatformType.WHATSAPP,
-      waSettings.phone,
+      platform,
+      sourceIdentifier,
       userName,
-      res?.data?.messages?.[0]?.id,
+      platform === PlatformType.INSTAGRAM
+        ? res?.data?.message_id
+        : res?.data?.messages?.[0]?.id,
       userId,
     );
     return { status: true, message: res?.data?.messages?.[0]?.id };
@@ -116,8 +166,8 @@ export async function sendMessage(
       messageData,
       to,
       orgId,
-      PlatformType.WHATSAPP,
-      waSettings.phone,
+      platform,
+      sourceIdentifier,
       userName,
       null,
       userId,
