@@ -1,4 +1,5 @@
 import {
+  SubscriptionFeaturePathName,
   WaAutomatedReplyMatchType,
   WaTemplateComponentType,
 } from "../../../types/enums";
@@ -11,6 +12,8 @@ import { getAutomatedRepliesByOrgId } from "./wa_automatedReply.service";
 import { log } from "../../../utils/logger";
 import prisma from "../../../utils/prisma";
 import { templateData } from "../messageTemplates/wa_templates.service";
+import { FastifyReply, FastifyRequest } from "fastify";
+import { getNestedProperty } from "../../../utils/misc/obj.utils";
 
 export function validateAutomationMatchCondition(
   automation: {
@@ -225,4 +228,36 @@ export enum ReplyComponentType {
   List = "List",
   Ticket = "Ticket",
   AiBot = "AiBot",
+}
+
+export async function verifyAutomationLimit(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    let orgId = request.user.orgId;
+    const subscription = request.subscription;
+    if (!subscription) throw new Error("Subscription not found");
+
+    const automatedReplyCount = await prisma.waAutomatedReply.count({
+      where: {
+        orgId: orgId,
+      },
+    });
+
+    const whatsappAutomationFeature = getNestedProperty(
+      subscription.features as any,
+      SubscriptionFeaturePathName.WhatsAppAutomation,
+    );
+    if (automatedReplyCount >= whatsappAutomationFeature?.count?.max) {
+      throw new Error(
+        `You have reached the maximum limit of ${whatsappAutomationFeature?.count?.max} automated replies.`,
+      );
+    }
+  } catch (e) {
+    return reply.code(403).send({
+      message: e?.message,
+      displayMessageInClient: true,
+    });
+  }
 }

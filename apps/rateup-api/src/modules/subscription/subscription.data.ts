@@ -44,6 +44,7 @@ function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {
           max: 0,
         },
       },
+      automation: { active: true, count: { max: 0 } },
     },
     reputationManagement: { count: { max: count }, active: true },
     ticket: { count: { max: count }, active: true },
@@ -73,7 +74,7 @@ function getFreeSubscriptionFeatures(): SubscriptionFeatures {
       active: true,
     },
     webSurvey: {
-      count: { max: 2, monthlyResponseLimit: 100 },
+      count: { max: 5, monthlyResponseLimit: 1000 },
       active: true,
       encryption: { active: false },
       googleReview: { active: false },
@@ -84,7 +85,7 @@ function getFreeSubscriptionFeatures(): SubscriptionFeatures {
       active: true,
       count: {
         max: 0,
-        monthlyMessageLimit: 100,
+        monthlyMessageLimit: 1000,
       },
       survey: {
         active: true,
@@ -95,21 +96,22 @@ function getFreeSubscriptionFeatures(): SubscriptionFeatures {
       campaign: {
         active: true,
         count: {
-          max: 0,
+          max: 1,
         },
       },
       flow: {
         active: true,
         count: {
-          max: 0,
+          max: 1,
         },
       },
       template: {
         active: true,
         count: {
-          max: 0,
+          max: 1,
         },
       },
+      automation: { active: true, count: { max: 1 } },
     },
     reputationManagement: { count: { max: 0 }, active: false },
     ticket: { count: { max: 0 }, active: false },

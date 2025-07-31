@@ -50,3 +50,28 @@ export async function updateUsageStatsTemplateMessageCount() {
     });
   }
 }
+export async function updateSubscriptionAutomation() {
+  const subscriptions: any = await prisma.subscription.findMany();
+
+  for await (const subscription of subscriptions) {
+    const features = {
+      ...subscription?.features,
+      whatsapp: {
+        ...subscription?.features?.whatsapp,
+        automation: { count: { max: 10 }, active: true },
+      },
+    };
+
+    const updatedSubscription = await prisma.subscription.update({
+      where: {
+        orgId: subscription.orgId,
+      },
+      data: {
+        features,
+      },
+    });
+    log.info(
+      `Updated subscription automation for orgId: ${updatedSubscription.orgId}`,
+    );
+  }
+}

@@ -11,10 +11,7 @@ import {
   updateSubscriptionInput,
 } from "./subscription.schema";
 import { getRateuplanById } from "../payment/payment.service";
-import {
-  FreePlanSubscriptionFeatures,
-  UnlimitedAccess,
-} from "./subscription.data";
+import { FreePlanSubscriptionFeatures } from "./subscription.data";
 import dayjs from "dayjs";
 import {
   updateAnnualMessageCount,
@@ -58,7 +55,7 @@ export async function updateSubscriptionHandler(
         .code(403)
         .send({ message: "You cannot change to Razorpay plans manually" });
     else if (rateupPlan.name === "RATEUP TRIAL")
-      updatedData.features = UnlimitedAccess;
+      updatedData.features = FreePlanSubscriptionFeatures;
     else updatedData.features = rateupPlan?.features;
     updatedData.expiresAt = dayjs().add(30, "days").toDate();
   }
