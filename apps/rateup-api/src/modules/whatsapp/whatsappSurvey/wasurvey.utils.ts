@@ -19,7 +19,11 @@ import { getWaSettings } from "../settings/wa_settings.service";
 import { getFileUrlFromKey, uploadFile } from "../../../utils/upload/s3Upload";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { TemplateType, WaSession } from "../../../../generated/prisma/client";
+import {
+  Contact,
+  TemplateType,
+  WaSession,
+} from "../../../../generated/prisma/client";
 import { sendMessage } from "./wasurvey.service";
 import prisma from "../../../utils/prisma";
 import {
@@ -818,7 +822,7 @@ export function createAudioMessage(to, link): WaSendMessageBody {
 
 export function createContactMessage(
   to,
-  contactsData: (ContactCore & { org: { name: string } })[],
+  contactsData: (Partial<Contact> & { org: { name: string } })[],
 ): WaSendMessageBody {
   return {
     messaging_product: "whatsapp",
@@ -830,8 +834,9 @@ export function createContactMessage(
         : undefined,
       emails: contact?.email ? [{ email: contact.email }] : undefined,
       name: {
-        formatted_name: contact.name,
-        first_name: contact.name,
+        formatted_name:
+          contact.name ?? contact.whatsappUserName ?? contact.phone,
+        first_name: contact.name ?? contact.whatsappUserName ?? contact.phone,
       },
       org: {
         company: contact.org.name,
