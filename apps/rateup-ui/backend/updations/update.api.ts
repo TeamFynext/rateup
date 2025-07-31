@@ -9,3 +9,9 @@ export async function updateUsageStats() {
     timeout: 60000,
   });
 }
+
+export async function automationSubscription() {
+  return await axiosClient.put(`${baseUrl}/update-subscription`, null, {
+    timeout: 60000,
+  });
+}
