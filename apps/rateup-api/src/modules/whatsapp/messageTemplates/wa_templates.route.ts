@@ -57,7 +57,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
-      preHandler: verifyTemplateSubscriptionLimit,
+      // preHandler: verifyTemplateSubscriptionLimit,
       schema: {
         body: $WTref("waTemplateInputSchema"),
       },
@@ -67,7 +67,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.post(
     "/save-as-draft",
     {
-      preHandler: verifyTemplateSubscriptionLimit,
+      // preHandler: verifyTemplateSubscriptionLimit,
       schema: {
         body: $WTref("waTemplateInputSchema"),
       },
