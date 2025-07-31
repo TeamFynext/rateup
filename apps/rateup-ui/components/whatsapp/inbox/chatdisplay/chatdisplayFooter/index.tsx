@@ -14,6 +14,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
 import { create } from "zustand";
 
+import { MessagePlatform } from "@/types/enums";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import VoiceRecorder, {
   useVoiceRecordStore,
@@ -51,12 +52,20 @@ export default function WaInboxChatDisplayFooter({
   const inputRef = useRef(null);
   const submiRef = useRef(null);
   const { translations } = useTranslations();
-  const sendnewWaMessage = useSendNewWaMessage(contact.id);
+  const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
+  const platform =
+    contact.source.toUpperCase() !== MessagePlatform.INSTAGRAM
+      ? MessagePlatform.WHATSAPP
+      : MessagePlatform.INSTAGRAM;
+  const sendnewWaMessage = useSendNewWaMessage(
+    contact.id,
+    whatsappSettingsPhoneId,
+    platform,
+  );
   const { addMessage, removeMessage } = useMessageStore();
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
-  const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
 
   const form = useForm({
     initialValues: {
@@ -134,6 +143,10 @@ export default function WaInboxChatDisplayFooter({
   }, [audioUrl]);
   function handleSendMessage() {
     if (form.validate().hasErrors) return;
+    if (!whatsappSettingsPhoneId) {
+      showErrorToast("Select a account to send the message");
+      return;
+    }
     const values = { ...form.values };
     form.reset();
     resetBody();
@@ -153,7 +166,7 @@ export default function WaInboxChatDisplayFooter({
     resetMedia();
     setAudioUrl(null);
     sendnewWaMessage.mutate(
-      { ...values, whatsappSettingsPhoneId },
+      { ...values },
       {
         onSuccess: () => {
           removeMessage(contact.id);
@@ -211,6 +224,7 @@ export default function WaInboxChatDisplayFooter({
                 display: "none",
               },
             }}
+            platform={platform}
           />
           <WaInboxFooterMenu
             sessionExpired={isSessionExpired}
@@ -235,6 +249,7 @@ export default function WaInboxChatDisplayFooter({
   };
 
   if (isSessionExpired) {
+    if (platform === MessagePlatform.INSTAGRAM) return null;
     return (
       <Flex className={classes.wrapper} justify="flex-start">
         <WaInboxFooterMenu

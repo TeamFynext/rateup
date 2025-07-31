@@ -560,3 +560,8 @@ export enum WaAssignedChatPermission {
   TeamMembers = "TeamMembers",
   Admins = "Admins",
 }
+
+export enum MessagePlatform {
+  INSTAGRAM = "INSTAGRAM",
+  WHATSAPP = "WHATSAPP",
+}

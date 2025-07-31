@@ -134,17 +134,17 @@ export const useWaLogs = (pagination, search, sort, columnFilters) =>
     queryFn: () => getWaLogs(pagination, search, sort, columnFilters),
   });
 
-export const useMetaAssets = (enabled = true) =>
+export const useMetaAssets = (waSettingsId: string) =>
   useQuery({
     queryKey: ["metaAssets"],
-    queryFn: getMetaAssets,
-    enabled,
+    queryFn: () => getMetaAssets(waSettingsId),
+    enabled: !!waSettingsId,
   });
 
-export const useSyncFbPages = () => {
+export const useSyncFbPages = (waSettingsId) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: syncFbPages,
+    mutationFn: () => syncFbPages(waSettingsId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["metaAssets"] });
       showSuccessToast("success");
@@ -155,10 +155,10 @@ export const useSyncFbPages = () => {
   });
 };
 
-export const useSyncMetaLeadgenForms = () => {
+export const useSyncMetaLeadgenForms = (waSettingsId) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: syncMetaLeadgenForms,
+    mutationFn: (data: fbPageQuery) => syncMetaLeadgenForms(waSettingsId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["metaAssets"] });
       showSuccessToast("success");
@@ -169,10 +169,11 @@ export const useSyncMetaLeadgenForms = () => {
   });
 };
 
-export const useSyncLeadgenFormQuestions = (formId) => {
+export const useSyncLeadgenFormQuestions = (formId, waSettingsId) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: fbPageQuery) => syncLeadgenFormQuestions(formId, data),
+    mutationFn: (data: fbPageQuery) =>
+      syncLeadgenFormQuestions(formId, waSettingsId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["metaAssets"] });
       showSuccessToast("success");
@@ -183,10 +184,10 @@ export const useSyncLeadgenFormQuestions = (formId) => {
   });
 };
 
-export const useSyncAdaccounts = () => {
+export const useSyncAdaccounts = (waSettingsId) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: syncAdAccounts,
+    mutationFn: () => syncAdAccounts(waSettingsId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["metaAssets"] });
       showSuccessToast("success");
@@ -197,10 +198,10 @@ export const useSyncAdaccounts = () => {
   });
 };
 
-export const useSyncAdsByadAccounts = (adAccountId) => {
+export const useSyncAdsByadAccounts = (adAccountId, waSettingsId) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => syncAdsByAdAccount(adAccountId),
+    mutationFn: () => syncAdsByAdAccount(adAccountId, waSettingsId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["metaAssets"] });
       showSuccessToast("success");
@@ -211,10 +212,10 @@ export const useSyncAdsByadAccounts = (adAccountId) => {
   });
 };
 
-export const useSubscribeFieldToPage = () => {
+export const useSubscribeFieldToPage = (waSettingsId) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: subscribeFieldtoPage,
+    mutationFn: (data: fbPageQuery) => subscribeFieldtoPage(waSettingsId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["metaAssets"] });
       showSuccessToast("success");

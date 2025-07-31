@@ -186,6 +186,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
             color: "white",
           },
         }}
+        platform="all"
       />
       <ContainedMultiSelect
         maw={250}

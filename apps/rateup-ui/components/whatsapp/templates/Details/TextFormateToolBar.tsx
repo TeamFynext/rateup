@@ -17,6 +17,7 @@ import {
   IconPlus,
   IconStrikethrough,
 } from "@tabler/icons-react";
+import { EmojiClickData } from "emoji-picker-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -116,7 +117,7 @@ export const PopoverEmojiPicker = ({
   showIcon,
   size = "xs",
 }: {
-  onEmojiClick: (emoji: string) => void;
+  onEmojiClick: (emoji: string, emojiObject: EmojiClickData) => void;
   showIcon?: React.ReactNode;
   size?: "xs" | "sm" | "md" | "lg";
 }) => {
@@ -148,7 +149,12 @@ export const PopoverEmojiPicker = ({
             </div>
           }
         >
-          <EmojiPicker onEmojiClick={(emoji) => onEmojiClick(emoji.emoji)} />
+          <EmojiPicker
+            onEmojiClick={(emoji) => {
+              console.log("emoji", emoji);
+              onEmojiClick(emoji.emoji, emoji);
+            }}
+          />
         </Suspense>
       </Popover.Dropdown>
     </Popover>

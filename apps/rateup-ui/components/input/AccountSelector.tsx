@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { Card, Group, SelectProps, Skeleton, Text } from "@mantine/core";
 
+import { MessagePlatform } from "@/types/enums";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
@@ -11,6 +12,7 @@ interface AccountSelectorProps extends SelectProps {
   onChange?: (teamId: string) => void;
   usePhoneNumber?: boolean;
   withAllOption?: boolean;
+  platform?: MessagePlatform | "all";
 }
 export function AccountSelector({
   value,
@@ -18,20 +20,38 @@ export function AccountSelector({
   label = "",
   usePhoneNumber = false,
   withAllOption = false,
+  platform = MessagePlatform.WHATSAPP,
   ...props
 }: Readonly<AccountSelectorProps>) {
   const { data, isPending, isError } = useWaSettings();
 
   const { translations } = useTranslations();
-
-  let accountOptions = data
-    ? data.map((Account) => ({
+  let accountOptions = [];
+  for (const account of data ?? []) {
+    if (platform === "all" || platform === MessagePlatform.WHATSAPP)
+      accountOptions.push({
         value: usePhoneNumber
-          ? Account?.phone?.replace("+", "")
-          : Account.phoneId,
-        label: Account.phone,
-      }))
-    : [];
+          ? account?.phone?.replace("+", "")
+          : account.phoneId,
+        label: account.phone,
+      });
+    if (platform === "all" || platform === MessagePlatform.INSTAGRAM)
+      if (account.ibaId) {
+        accountOptions.push({
+          value: account.ibaId,
+          label: account.igUserName ?? account.ibaId,
+        });
+      }
+  }
+
+  // let accountOptions = data
+  //   ? data.map((Account) => ({
+  //       value: usePhoneNumber
+  //         ? Account?.phone?.replace("+", "")
+  //         : Account.phoneId,
+  //       label: Account.phone,
+  //     }))
+  //   : [];
 
   if (withAllOption) {
     accountOptions = [{ value: "all", label: "All" }, ...accountOptions];

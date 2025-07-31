@@ -17,10 +17,15 @@ import {
   IconClock,
   IconExclamationCircleFilled,
 } from "@tabler/icons-react";
+import { EmojiClickData } from "emoji-picker-react";
 
+import { MessagePlatform } from "@/types/enums";
+import { WaReceiveMessageBody, WaSendMessageBody } from "@/types/global";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+import { showErrorToast } from "@/utils/notifications";
 
 import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import { formatToCustomTime } from "../../../../../../../utils/dateTime";
@@ -32,16 +37,27 @@ interface Props {
   children: any;
   forPreview?: boolean;
   reaction?: {
-    emoji: string;
+    emoji?: string;
     pos: IndicatorProps["position"];
-    from: string;
+    reaction?: string;
+    from?: string;
+    reactedAt?: string;
   };
 }
 export default function WaInboxSingleMessageLayout(props: Props) {
   const { exchangeProcess } = props;
   const [isHovered, setIsHovered] = useState(false);
   const { selectedContact } = useContactStore();
-  const sendnewWaMessage = useSendNewWaMessage(selectedContact.id);
+  const { whatsappSettingsPhoneId } = usePhoneIdStore();
+  const platform =
+    selectedContact.source.toUpperCase() !== MessagePlatform.INSTAGRAM
+      ? MessagePlatform.WHATSAPP
+      : MessagePlatform.INSTAGRAM;
+  const sendnewWaMessage = useSendNewWaMessage(
+    selectedContact.id,
+    whatsappSettingsPhoneId,
+    platform,
+  );
 
   function getWrapperProps() {
     if (exchangeProcess === "send") {
@@ -89,13 +105,38 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     if (statusObj?.sent) return <IconCheck size={14} color="gray" />;
     return <IconClock size={13} color="gray" />;
   };
-  function sendReaction(emoji: string) {
+
+  function emojiReactionMap(emoji) {
+    switch (emoji) {
+      case "❤":
+        return "love";
+      default:
+        return null;
+    }
+  }
+  function sendReaction(emoji: string, emojiObject: EmojiClickData) {
+    if (!whatsappSettingsPhoneId) {
+      showErrorToast("Select a account to send the message");
+      return;
+    }
+    let reactionText;
+    if (platform === MessagePlatform.INSTAGRAM) {
+      reactionText = emojiReactionMap(emoji);
+      if (!reactionText) {
+        showErrorToast(`${emoji} not supported`);
+        return;
+      }
+    }
     const messageId =
-      exchangeProcess === "receive"
-        ? props?.messageObject?.messageBody?.receive?.messages[0]?.id
-        : props?.messageObject?.messageId;
+      platform === MessagePlatform.INSTAGRAM
+        ? props?.messageObject.messageId
+        : exchangeProcess === "receive"
+          ? (props?.messageObject?.messageBody?.receive as WaReceiveMessageBody)
+              ?.messages[0]?.id
+          : props?.messageObject?.messageId;
     const reaction = {
-      emoji,
+      reaction: reactionText,
+      emoji: platform === MessagePlatform.INSTAGRAM ? undefined : emoji,
       toWaMessageId: messageId,
     };
     sendnewWaMessage.mutate({ reaction, type: "reaction" });
@@ -160,6 +201,13 @@ export default function WaInboxSingleMessageLayout(props: Props) {
   );
 }
 
+function reactionEmojiMap(reaction) {
+  switch (reaction) {
+    case "love":
+      return "❤";
+  }
+}
+
 const ReactionPopOver = ({ reaction, bg }) => {
   return (
     <Popover width={200} position="bottom" withArrow shadow="md">
@@ -175,7 +223,7 @@ const ReactionPopOver = ({ reaction, bg }) => {
           mr={reaction.pos === "bottom-end" && "xl"}
           ml={reaction.pos === "bottom-start" && "xl"}
         >
-          {reaction?.emoji}
+          {reaction?.emoji || reactionEmojiMap(reaction?.reaction)}
         </Text>
       </Popover.Target>
       <Popover.Dropdown p={"xs"}>
@@ -184,7 +232,7 @@ const ReactionPopOver = ({ reaction, bg }) => {
             <Avatar size={"sm"} />
             <Text size="xs">{reaction.from}</Text>
           </Group>
-          <Text>{reaction?.emoji}</Text>
+          <Text>{reaction?.emoji || reactionEmojiMap(reaction?.reaction)}</Text>
         </Group>
       </Popover.Dropdown>
     </Popover>

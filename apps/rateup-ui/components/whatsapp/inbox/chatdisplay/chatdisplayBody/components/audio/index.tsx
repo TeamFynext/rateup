@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { JSX, useRef } from "react";
 
 import { ActionIcon, Group } from "@mantine/core";
 import { IconDeviceAudioTape, IconDownload } from "@tabler/icons-react";
@@ -10,11 +10,16 @@ interface Props {
   messageContent: string;
 }
 
-export default function WaInboxAudio({ messageContent }: Props) {
+export default function WaInboxAudio({ messageContent }: Props): JSX.Element {
   const { mutate, isPending } = useGetMediaFile();
   const [id, caption] = messageContent.split("_caption_");
   const audioRef = useRef<HTMLAudioElement>(null);
-  const link = id.startsWith("http") ? id : null;
+  console.log("messageContent", messageContent);
+  const link = messageContent.startsWith("http")
+    ? messageContent
+    : id.startsWith("http")
+      ? id
+      : null;
 
   const handleAudioError = () => {
     showErrorToast(

@@ -6,6 +6,7 @@ const SettingsUrl = `${WHATSAPP_URL}/settings`;
 const authUrl = `${WHATSAPP_URL}/auth`;
 
 type WaSettings = {
+  id: string;
   wabaId: string;
   phone: string;
   phoneId: string;
@@ -13,6 +14,10 @@ type WaSettings = {
   webhookPassword: string;
   appId: string;
   type: WaConfigType;
+  fbPageId: string;
+  ibaId: string;
+  pageAccessToken: string;
+  igUserName: string;
 }[];
 export const getWaSettings = async () => {
   const res = await axiosClient.get(SettingsUrl);
@@ -101,8 +106,10 @@ export const getWaLogs = async (
   return res.data as WaLogsRes;
 };
 
-export const syncFbPages = async () => {
-  const res = await axiosClient.post(`${SettingsUrl}/sync/pages`);
+export const syncFbPages = async (waSettingsId) => {
+  const res = await axiosClient.post(
+    `${SettingsUrl}/sync/pages/${waSettingsId}`,
+  );
   return res.data as { id: string; name: string; access_token: string }[];
 };
 
@@ -112,39 +119,56 @@ export interface fbPageQuery {
   fields?: string[];
 }
 
-export const syncMetaLeadgenForms = async (data: fbPageQuery) => {
-  const res = await axiosClient.post(`${SettingsUrl}/sync/leadgen-forms`, data);
+export const syncMetaLeadgenForms = async (waSettingsId, data: fbPageQuery) => {
+  const res = await axiosClient.post(
+    `${SettingsUrl}/sync/leadgen-forms/${waSettingsId}`,
+    data,
+  );
   return res.data as { id: string; name: string }[];
 };
 export const syncLeadgenFormQuestions = async (
   formId: string,
+  waSettingsId: string,
   data: fbPageQuery,
 ) => {
   const res = await axiosClient.post(
-    `${SettingsUrl}/sync/leadgen-form/${formId}`,
+    `${SettingsUrl}/sync/leadgen-form/${formId}?whatsappSettingsId=${waSettingsId}`,
     data,
   );
   return res.data as { questions: any[] };
 };
-export const syncAdAccounts = async () => {
-  const res = await axiosClient.post(`${SettingsUrl}/sync/ad-accounts`);
+export const syncAdAccounts = async (waSettingsId) => {
+  const res = await axiosClient.post(
+    `${SettingsUrl}/sync/ad-accounts/${waSettingsId}`,
+  );
   return res.data as { id: string; name: string }[];
 };
-export const syncAdsByAdAccount = async (adAccountId: string) => {
-  const res = await axiosClient.post(`${SettingsUrl}/sync/ads/${adAccountId}`);
+export const syncAdsByAdAccount = async (
+  adAccountId: string,
+  waSettingsId: string,
+) => {
+  const res = await axiosClient.post(
+    `${SettingsUrl}/sync/ads/${adAccountId}?whatsappSettingsId=${waSettingsId}`,
+  );
   return res.data as { id: string; name: string }[];
 };
-export const subscribeFieldtoPage = async (body: fbPageQuery) => {
-  const res = await axiosClient.post(`${SettingsUrl}/subscribe`, body);
+export const subscribeFieldtoPage = async (waSettingsId, body: fbPageQuery) => {
+  const res = await axiosClient.post(
+    `${SettingsUrl}/subscribe/${waSettingsId}`,
+    body,
+  );
   return res.data;
 };
 export interface MetaAssets {
-  orgId: string;
+  waSettingsId: string;
   pages: {
     id: string;
     name: string;
     access_token: string;
     subscribedFields: string[];
+    instagram_business_account: {
+      id: string;
+    };
   }[];
   adAccounts: {
     id: string;
@@ -171,7 +195,7 @@ export interface MetaAssets {
     questions: any[];
   }[];
 }
-export const getMetaAssets = async () => {
-  return (await axiosClient.get(`${SettingsUrl}/meta-assets`))
+export const getMetaAssets = async (waSettingsId) => {
+  return (await axiosClient.get(`${SettingsUrl}/meta-assets/${waSettingsId}`))
     .data as MetaAssets;
 };

@@ -1,7 +1,16 @@
 import dayjs from "dayjs";
 
+import { MessagePlatform } from "@/types/enums";
+
 import { WA_INBOX_BASE_PATH } from "..";
-import { WaInboxMessage, WaTemplateComponent } from "../../../../types/global";
+import {
+  IgReceiveMessageBody,
+  IgSendMessageBody,
+  WaInboxMessage,
+  WaReceiveMessageBody,
+  WaSendMessageBody,
+  WaTemplateComponent,
+} from "../../../../types/global";
 import { axiosClient } from "../../../apiClient";
 
 const WA_CONTACT_BASE_PATH = `${WA_INBOX_BASE_PATH}/message`;
@@ -20,11 +29,22 @@ export type WaGetMessagesBody = {
   };
   messageId?: string;
   readUsers?: string[];
+  reactionMessage?: {
+    id: string;
+    messageBody: any;
+    createdAt: string;
+    sender?: {
+      name?: string;
+      profile_photo?: string;
+    };
+  };
+  sourcePlatform: MessagePlatform;
 };
 
 export type WaMessagePage = {
   messages: WaGetMessagesBody[];
   nextCursor: string;
+  hasNextPage: boolean;
 };
 
 export async function getMessagesByContactId(
@@ -51,6 +71,7 @@ export type ContactsWithLastMessage = ContactsData & {
   lastMessage: {
     waCreatedAt: string;
     messageBody: WaInboxMessage;
+    sourcePlatform: MessagePlatform;
   };
   lastReceivedMessageTimeStamp: string;
   total_contact_count?: string;

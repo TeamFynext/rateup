@@ -580,6 +580,10 @@ declare global {
     waMessageAssignStatus: WaMessageAssignStatus;
     whatsappUserName?: string;
     blockedOnWhatsApp: boolean;
+    igsId: string;
+    isIgVerifiedUser: boolean;
+    followerCount: number;
+    profilePic: string;
     loyaltyCustomer?: {
       id: string;
       email?: string;
@@ -1404,10 +1408,127 @@ type WaInteractiveMessageAction = {
     mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
   };
 };
+
+//--- instagram
+export type InstagramWebhookBody = {
+  object: "instagram";
+  entry: [
+    {
+      time: number;
+      id: string; //ID of your Instagram Professional account
+      messaging: [
+        {
+          sender: {
+            id: string; // Instagram-scoped ID for the customer
+          };
+          recipient: {
+            id: string; //  recipient INSTAGRAM PAGE ID
+          };
+          timestamp: number;
+          message?: {
+            mid: string;
+            text?: string;
+            attachments?: [
+              // Included when a customer sends multiple media attachments or a URL for a story mention or share
+              {
+                type:
+                  | "image"
+                  | "video"
+                  | "audio"
+                  | "file"
+                  | "reel"
+                  | "ig_reel"
+                  | "share"
+                  | "story_mention";
+                payload: { url: string };
+              },
+            ];
+            is_deleted?: boolean; // Included when a customer deletes a message
+
+            is_echo?: boolean; // Included when your business sends a message to the customer
+
+            is_unsupported?: boolean; // Included when a customer sends a message with unsupported media
+
+            quick_reply?: {
+              // Included when a customer clicks a quick reply
+              payload: any; // The payload with the option selected by the customer
+            };
+
+            referral?: {
+              // Included when a customer clicks an Instagram Shop product
+              product: {
+                id: string;
+              };
+            };
+
+            referral?: {
+              // Included when a customer clicks an CTD ad
+              ref: any;
+              ad_id: string;
+              source: "ADS";
+              type: "OPEN_THREAD";
+              ads_context_data: {
+                ad_title: string;
+                photo_url: string;
+                video_url: string;
+              };
+            };
+
+            reply_to?: {
+              // Included when a customer sends an inline reply
+              mid: string;
+            };
+
+            reply_to?: {
+              // Included when a customer replies to a story
+              story: {
+                url: string; //CDN-URL
+                id: string;
+              };
+            };
+          };
+          reaction?: {
+            mid: string;
+            action: "react" | "unreact";
+            reaction?: string;
+            emoji?: string;
+          };
+          read?: {
+            mid: string;
+          };
+        },
+      ];
+    },
+  ];
+};
+
+export type IgSendMessageBody = {
+  recipient: {
+    id: string;
+  };
+  message?: {
+    text?: string;
+    attachment: {
+      type: string;
+      payload?: { id?: string; attachment_id?: string; url?: string };
+      is_reusable?: boolean;
+    };
+  };
+  sender_action?: "react" | "unreact";
+  payload?: {
+    message_id: string;
+    reaction?: string;
+    emoji?: string;
+  };
+};
+export type IgReceiveMessageBody =
+  InstagramWebhookBody["entry"][0]["messaging"][0];
+//---instagram
+
 export type WaInboxMessage = {
   exchangeProcess: "send" | "receive";
-  send?: WaSendMessageBody;
-  receive?: WaReceiveMessageBody;
+  send?: WaSendMessageBody | IgSendMessageBody;
+  receive?: WaReceiveMessageBody | IgReceiveMessageBody;
 };
 
 export type WaTemplateFetchBody = {
