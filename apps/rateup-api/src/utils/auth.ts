@@ -4,7 +4,7 @@ import { log } from "./logger";
 import { getSubscription } from "../modules/subscription/subscription.service";
 import { SubscriptionFeaturePathName, UserRecipes } from "../types/enums";
 import dayjs from "dayjs";
-import { UnlimitedAccess } from "../modules/subscription/subscription.data";
+import { FreePlanSubscriptionFeatures } from "../modules/subscription/subscription.data";
 import { getNestedProperty } from "./misc/obj.utils";
 import { ContactGroupType, Role } from "../../generated/prisma/client";
 
@@ -118,11 +118,11 @@ export function getVerifySubscriptionHandler(
         log.trace(
           "Creating subscription with unlimited access\nrequest.user => %o\n%o",
           request.user,
-          UnlimitedAccess,
+          FreePlanSubscriptionFeatures,
         );
         request.subscription = (await prisma.subscription.create({
           data: {
-            features: UnlimitedAccess as any,
+            features: FreePlanSubscriptionFeatures,
             orgId: request.user.orgId,
             expiresAt: dayjs().add(100, "year").toDate(),
           },

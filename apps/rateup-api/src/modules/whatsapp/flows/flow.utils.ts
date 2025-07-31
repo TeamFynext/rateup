@@ -5,6 +5,7 @@ import {
   LogicCondition,
   QuestionType as qt,
   SmileyResponse,
+  SubscriptionFeaturePathName,
   SurveyType,
   WaFlowFormElementType,
   WaFlowStatus,
@@ -19,6 +20,9 @@ import { createQuestion } from "../../question/question.service";
 import { log } from "../../../utils/logger";
 import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
+import { FastifyReply, FastifyRequest } from "fastify";
+import prisma from "../../../utils/prisma";
+import { getNestedProperty } from "../../../utils/misc/obj.utils";
 
 interface generateFlowMessageDataProps {
   to: string;
@@ -1024,5 +1028,37 @@ export function transformFlowAndLogicJumps(transformedFlow, logicJump) {
   if (flag) {
     transformedFlow["routing_model"] = routing_model;
     transformedFlow["data_api_version"] = "3.0";
+  }
+}
+
+export async function verifyFlowSubscriptionLimit(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    let orgId = request.user.orgId;
+    const subscription = request.subscription;
+    if (!subscription) throw new Error("Subscription not found");
+
+    const flowCount = await prisma.waFlow.count({
+      where: {
+        orgId: orgId,
+      },
+    });
+
+    const whatsappFlowFeatures = getNestedProperty(
+      subscription.features as any,
+      SubscriptionFeaturePathName.WhatsAppFlow,
+    );
+    if (flowCount >= whatsappFlowFeatures?.count?.max) {
+      throw new Error(
+        `You have reached the maximum limit of ${whatsappFlowFeatures?.count?.max} Flows.`,
+      );
+    }
+  } catch (e) {
+    return reply.code(403).send({
+      message: e?.message,
+      displayMessageInClient: true,
+    });
   }
 }

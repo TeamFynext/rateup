@@ -71,11 +71,11 @@ export const SuperTokensConfig: TypeInput = {
           return {
             ...originalImplementation,
             signUp: async function (input) {
-              if (process.env.NODE_ENV === "development") {
-                if (!input.email.includes("999")) {
-                  throw new Error("Not a RATEUP EMPLOYEE");
-                }
-              }
+              // if (process.env.NODE_ENV === "development") {
+              //   if (!input.email.includes("999")) {
+              //     throw new Error("Not a RATEUP EMPLOYEE");
+              //   }
+              // }
               let existingUsers = await supertokens.listUsersByAccountInfo(
                 input.tenantId,
                 {
