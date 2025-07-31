@@ -457,24 +457,6 @@ export function parseMessage(data: WaMessageBody): WaParsedMessage {
   };
 }
 
-export function createMediaAttachmentMessage(
-  media: WaMedia[],
-  to,
-): IgSendMessageBody {
-  return {
-    recipient: {
-      id: to,
-    },
-    message: {
-      attachments: media.map((m) => ({
-        type: m.type,
-        payload: {
-          url: m.url,
-        },
-      })),
-    },
-  };
-}
 export function createReplyImageMessage(
   to: string,
   imageId: string,
