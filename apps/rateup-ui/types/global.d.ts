@@ -1130,6 +1130,7 @@ export type WaAutomatedReply = {
     assignType: string;
     choice: string;
   };
+  whatsappSettingsPhoneId: string;
 };
 
 //types related to wa inbox

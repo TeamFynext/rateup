@@ -32,6 +32,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
+import { MessagePlatform } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -260,6 +261,7 @@ const WaInboxChatSelect = () => {
         lastMessage: {
           messageBody: {} as WaInboxMessage,
           waCreatedAt: "",
+          sourcePlatform: MessagePlatform.WHATSAPP,
         },
         assignedUsers: [],
       });
