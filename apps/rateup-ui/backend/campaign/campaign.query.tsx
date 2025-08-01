@@ -46,11 +46,12 @@ export const useCreateCampaignMutation = (teamId, type) => {
       );
     },
     onError: (error: any) => {
-      showErrorToast(
-        `Error creating campaign: ${error?.response?.data?.error}`,
-        "campaign-create",
-        <IconX />,
-      );
+      if (!(error?.response?.data?.displayMessageInClient ?? false))
+        showErrorToast(
+          `Error creating campaign: ${error?.response?.data?.error}`,
+          "campaign-create",
+          <IconX />,
+        );
     },
   });
 };

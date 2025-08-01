@@ -36,8 +36,10 @@ const WaInboxContact = ({
       <Group gap={"xs"}>
         <Avatar size={"sm"} />
         <Text>
-          {contacts[0].name.formatted_name} and {contacts.length - 1} other
-          contacts
+          {contacts[0].name
+            ? contacts[0].name.formatted_name
+            : contacts[0].phones[0].phone}{" "}
+          and {contacts.length - 1} other contacts
         </Text>
       </Group>
       <Divider />
@@ -71,7 +73,7 @@ const Contact = ({
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const initialValues = {
-    name: contact.name.formatted_name,
+    name: contact.name ? contact.name.formatted_name : "",
     phone: contact.phones[0].phone.trim().replaceAll(" ", ""),
     email: contact.emails?.[0]?.email ?? "",
     dob: contact.birthday,
@@ -88,7 +90,11 @@ const Contact = ({
         <Group justify="space-between">
           <Group gap={"xs"} p={"5px"}>
             <Avatar size={"sm"} />
-            <Text>{contact.name.formatted_name}</Text>
+            <Text>
+              {contact.name
+                ? contact.name.formatted_name
+                : contact.phones[0].phone}
+            </Text>
           </Group>
           <Popover position="right" zIndex={2}>
             <Popover.Target>
@@ -151,7 +157,11 @@ const ContactInfo = ({
       <Group justify="space-between">
         <Group gap={"xs"}>
           <Avatar size={"sm"} />
-          <Text>{contact.name.formatted_name}</Text>
+          <Text>
+            {contact.name
+              ? contact.name.formatted_name
+              : contact.phones[0].phone}
+          </Text>
         </Group>
         {showAddtoContact && (
           <Button

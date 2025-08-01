@@ -272,6 +272,7 @@ export enum SubscriptionFeaturePathName {
   WhatsAppCampaign = "whatsapp.campaign",
   WhatsAppFlow = "whatsapp.flow",
   WhatsAppTemplate = "whatsapp.template",
+  WhatsAppAutomation = "whatsapp.automation",
   Menu = "menu",
   ReputationManagement = "reputationManagement",
   Team = "team",

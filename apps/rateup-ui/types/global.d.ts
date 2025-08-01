@@ -366,6 +366,7 @@ declare global {
     isOrgPaused?: boolean;
     waAssignedChatPermission: WaAssignedChatPermission;
     status: UserAvailabilityStatus;
+    hasWhatsAppSettings: boolean;
   };
 
   interface UserInfoQueryData {
