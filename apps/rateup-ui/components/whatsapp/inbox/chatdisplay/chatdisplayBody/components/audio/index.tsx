@@ -14,7 +14,6 @@ export default function WaInboxAudio({ messageContent }: Props): JSX.Element {
   const { mutate, isPending } = useGetMediaFile();
   const [id, caption] = messageContent.split("_caption_");
   const audioRef = useRef<HTMLAudioElement>(null);
-  console.log("messageContent", messageContent);
   const link = messageContent.startsWith("http")
     ? messageContent
     : id.startsWith("http")

@@ -114,7 +114,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
         return null;
     }
   }
-  function sendReaction(emoji: string, emojiObject: EmojiClickData) {
+  function sendReaction(emoji: string) {
     if (!whatsappSettingsPhoneId) {
       showErrorToast("Select a account to send the message");
       return;

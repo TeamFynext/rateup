@@ -117,7 +117,7 @@ export const PopoverEmojiPicker = ({
   showIcon,
   size = "xs",
 }: {
-  onEmojiClick: (emoji: string, emojiObject: EmojiClickData) => void;
+  onEmojiClick: (emoji: string) => void;
   showIcon?: React.ReactNode;
   size?: "xs" | "sm" | "md" | "lg";
 }) => {
@@ -149,12 +149,7 @@ export const PopoverEmojiPicker = ({
             </div>
           }
         >
-          <EmojiPicker
-            onEmojiClick={(emoji) => {
-              console.log("emoji", emoji);
-              onEmojiClick(emoji.emoji, emoji);
-            }}
-          />
+          <EmojiPicker onEmojiClick={(emoji) => onEmojiClick(emoji.emoji)} />
         </Suspense>
       </Popover.Dropdown>
     </Popover>

@@ -22,10 +22,8 @@ const WaInboxAttachments = ({
     text?: string;
   };
 }) => {
-  console.log("messageContent.attachments", messageContent.attachments);
   if (!messageContent.attachments.length) return;
   function getMediaComponent(attachment) {
-    console.log("attachment", attachment);
     switch (attachment?.type) {
       case "audio":
         return <WaInboxAudio messageContent={attachment?.content} />;
@@ -78,7 +76,6 @@ const WaInboxAttachments = ({
   return (
     <Stack>
       {messageContent?.attachments?.map((at, index) => {
-        console.log(getMediaComponent(at));
         return (
           <React.Fragment key={index}>{getMediaComponent(at)}</React.Fragment>
         );

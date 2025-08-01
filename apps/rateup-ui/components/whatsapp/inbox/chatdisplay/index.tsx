@@ -27,7 +27,6 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   const searchParams = useSearchParams();
   const { selectedContact: contact } = useContactStore();
   const { filter } = useChatFilterStore();
-  console.log("contact?.id", searchParams.get("contactId") ?? contact?.id);
   const { data, error } = useGetMessagesByContactId(
     searchParams.get("contactId") ?? contact?.id,
     filter?.phone,

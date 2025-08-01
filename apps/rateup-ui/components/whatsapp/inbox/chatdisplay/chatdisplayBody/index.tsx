@@ -101,8 +101,6 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
   const { translations } = useTranslations();
   const { messages } = useMessageStore();
 
-  console.log("messages", props.data);
-
   const singleMessage = (message: WaGetMessagesBody) => {
     const { messageContent, messageType, template, interactive } =
       parseWaMessage(message);
@@ -184,49 +182,6 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
       markAsRead.mutate();
   }, [contactId]);
 
-  // function getReactionMessage(message: WaGetMessagesBody) {
-  //   const exchangeProcess = message?.messageBody?.exchangeProcess;
-  //   if (!exchangeProcess) return null;
-  //   const wa_id =
-  //     exchangeProcess === "send"
-  //       ? message.messageId
-  //       : message.messageBody?.receive &&
-  //         (message.messageBody.receive as WaReceiveMessageBody).messages[0].id;
-  //   const reactionMsg = props.data?.findLast((msg) => {
-  //     const { messageType, messageContent } = parseWaMessage(
-  //       msg
-  //     );
-  //     return (
-  //       messageType === "reaction" &&
-  //       wa_id ===
-  //         (msg.messageBody.exchangeProcess === "receive"
-  //           ? msg.messageBody?.receive &&
-  //             (message.messageBody.receive as WaReceiveMessageBody).messages[0]
-  //               .reaction.message_id
-  //           : (message.messageBody.send as WaSendMessageBody).reaction
-  //               .message_id)
-  //     );
-  //   });
-
-  //   const isSendReactionMsg =
-  //     reactionMsg && reactionMsg.messageBody.exchangeProcess === "send";
-  //   if (reactionMsg)
-  //     return {
-  //       emoji: isSendReactionMsg
-  //         ? (reactionMsg.messageBody.send as WaSendMessageBody).reaction.emoji
-  //         : (reactionMsg.messageBody.receive as WaReceiveMessageBody)
-  //             .messages[0].reaction.emoji,
-  //       from: isSendReactionMsg
-  //         ? reactionMsg.sender?.name
-  //         : (reactionMsg.messageBody.receive as WaReceiveMessageBody)
-  //             .contacts[0].profile.name,
-  //       pos:
-  //         exchangeProcess === "receive"
-  //           ? "bottom-start"
-  //           : ("bottom-end" as IndicatorProps["position"]),
-  //     };
-  // }
-
   return (
     <div className={classes.wrapper}>
       <div
@@ -304,7 +259,6 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
 }
 
 const TempMessageBody = ({ body, timestamp }) => {
-  console.log("body", body);
   return (
     <Stack align="flex-end">
       <Group gap={4}>
