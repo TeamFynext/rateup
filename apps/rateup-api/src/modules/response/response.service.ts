@@ -161,6 +161,11 @@ export async function getAllResponses(
           surveyTeamMap: {
             select: {
               teamId: true,
+              team: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           Contact: {
@@ -191,10 +196,12 @@ export async function getAllResponses(
               .filter((data) => contactIds.includes(data.contactId))
               .map(({ surveyTeamMap, ...restD }) => ({
                 ...restD,
+                teamName: surveyTeamMap.team.name,
                 teamId: surveyTeamMap.teamId,
               }))
           : responses.map(({ surveyTeamMap, ...restD }) => ({
               ...restD,
+              teamName: surveyTeamMap.team.name,
               teamId: surveyTeamMap.teamId,
             })),
     };
@@ -330,10 +337,15 @@ export async function downloadExcelResponse(
     const createdAt = "Date";
     const responseTag = "tag";
     let whatsappRespondentNumber = "Respondent's Mobile Number";
+    const teamNameColumn = "Team Name";
     if (visibleColumn.includes("createdAt")) {
       headerArray.unshift(createdAt);
       filteredSecondArray.unshift(createdAt);
     }
+    // Add team name column before tags
+    headerArray.push(teamNameColumn);
+    filteredSecondArray.push(teamNameColumn);
+
     if (
       platform === "WHATSAPP" &&
       visibleColumn.includes(whatsappRespondentNumber)
@@ -353,8 +365,8 @@ export async function downloadExcelResponse(
       responses.forEach((response, answerIndex) => {
         bodyArray.push([]);
 
-        const responses = response.responses;
-        const responseObj = responses.find(
+        const responsesArr = response.responses;
+        const responseObj = responsesArr.find(
           (answerObj) => answerObj.questionId === questionId,
         );
         let responseValue;
@@ -393,9 +405,29 @@ export async function downloadExcelResponse(
             !tempArray.includes({ [answerIndex]: questionId })
           ) {
             tempArray.push({ [answerIndex]: questionId });
-            Object.values(responseValue)?.map((value) =>
-              bodyArray[answerIndex].push(value),
-            );
+            // Modified: handle both single value and multiple values for contact type
+            if (
+              responseValue &&
+              typeof responseValue === "object" &&
+              !Array.isArray(responseValue)
+            ) {
+              // If responseValue is an object, push values in header order
+              Object.entries(
+                question.features?.[defaultLanguage] || {},
+              ).forEach(([key, feature]) => {
+                if ((feature as { isEnabled?: boolean })?.isEnabled) {
+                  bodyArray[answerIndex].push(responseValue[key] ?? "");
+                }
+              });
+            } else if (
+              typeof responseValue === "string" ||
+              typeof responseValue === "number"
+            ) {
+              // If responseValue is a single value, push it
+              bodyArray[answerIndex].push(responseValue);
+            } else {
+              bodyArray[answerIndex].push("");
+            }
             flag = false;
           } else if (
             QuestionType.MCQGrid === responseType &&
@@ -455,8 +487,8 @@ export async function downloadExcelResponse(
                   : responseValue?.value;
             } else if (typeof responseValue === "object") {
               responseValue = responseValue?.value
-                ? Object.values(responseValue?.value).join(", ")
-                : Object.values(responseValue).join(", ");
+                ? Object.values(responseValue?.value || {}).join(", ")
+                : Object.values(responseValue || {}).join(", ");
             }
           }
         } else if (question === createdAt) {
@@ -464,6 +496,8 @@ export async function downloadExcelResponse(
             .tz(tz)
             .format("DD-MM-YYYY hh:mm A");
           responseValue = createdAtFormatted;
+        } else if (question === teamNameColumn) {
+          responseValue = response.teamName || "";
         } else if (question === "Respondent's Mobile Number") {
           responseValue = response?.Contact?.phone;
         } else if (question === responseTag) {
@@ -487,9 +521,9 @@ export async function downloadExcelResponse(
             );
             flag = false;
           } else if (question.type === QuestionType.Contact) {
-            Object.values(question.features?.[defaultLanguage]).forEach(
-              (key: any) => {
-                if (key?.isEnabled) bodyArray[answerIndex].push("");
+            Object.entries(question.features?.[defaultLanguage] || {}).forEach(
+              ([key, feature]: any) => {
+                if (feature?.isEnabled) bodyArray[answerIndex].push("");
               },
             );
             flag = false;
@@ -497,7 +531,7 @@ export async function downloadExcelResponse(
             bodyArray[answerIndex].push("", "");
             const features = question.features?.[defaultLanguage];
             if (features) {
-              Object.values(features).forEach((key: any) => {
+              Object.values(features ?? {}).forEach((key: any) => {
                 if (key) bodyArray[answerIndex].push("");
               });
               flag = false;
@@ -2597,4 +2631,222 @@ export function getResponseObjectByQuestionType(questionType, version) {
       return null;
     }
   }
+}
+
+const smileyMap = {
+  "Very Sad": 0,
+  Sad: 2,
+  Neutral: 5,
+  Happy: 8,
+  "Very Happy": 10,
+};
+const smileyMap2 = {
+  1: 0,
+  2: 2,
+  3: 5,
+  4: 8,
+  5: 10,
+};
+
+const likeDislikeAndYNMap = {
+  1: 10,
+  2: 0,
+};
+
+const MAX_SCORE = 10;
+
+export async function happyIndexResponsesBySurveyId(
+  surveyId: string,
+  teamMapIds: string[] | any,
+  teamIds: string[],
+) {
+  const where = {
+    surveyTeamMap: {
+      surveyId,
+      teamId: { in: teamIds },
+      ...(teamMapIds?.length && { id: { in: teamMapIds } }),
+    },
+  };
+
+  const surveyInfo = await prisma.surveyTeamMap.findFirst({
+    where: { surveyId },
+    select: {
+      survey: {
+        select: {
+          type: true,
+          questions: true,
+          WaFlow: {
+            select: {
+              version: true,
+              json: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!surveyInfo) return {};
+  const responses = await prisma.surveyResponse.findMany({
+    where,
+    select: {
+      responses: true,
+      createdAt: true,
+    },
+  });
+  if (responses.length === 0) return {};
+  let scoreSum = 0;
+  const maxScore = MAX_SCORE;
+  let promoters = 0,
+    detractors = 0,
+    passives = 0,
+    npsCount = 0;
+  let totalCount = 0,
+    veryHappy = 0,
+    happy = 0,
+    neutral = 0,
+    sad = 0,
+    verySad = 0;
+
+  const isFlow = surveyInfo.survey.type === SurveyType.WaFlow;
+  const version = !isFlow || surveyInfo.survey.WaFlow?.version === 1;
+  const questions = version
+    ? surveyInfo.survey.questions.filter((q) =>
+        barGraphQuestions.includes(q.type),
+      )
+    : (surveyInfo.survey.WaFlow.json.screens.flatMap((screen) =>
+        screen.layout.children.filter(
+          (child) =>
+            barGraphQuestions2.includes(
+              (child as any).metaType as WaQuestions,
+            ) && child.name,
+        ),
+      ) as unknown as Question2[]);
+
+  responses.forEach((resp) => {
+    resp.responses.forEach((r) => {
+      let score = null;
+      const matchedQuestion = questions.find((q) => q.id === r.questionId);
+      if (!matchedQuestion) return;
+
+      const questionType =
+        "metaType" in matchedQuestion && matchedQuestion.metaType
+          ? QuestionType[matchedQuestion.metaType]
+          : matchedQuestion.type;
+
+      if (questionType === QuestionType.Opinion) {
+        const val = version
+          ? Number(r.response[QuestionType.Opinion])
+          : Number(r.response);
+        if (!isNaN(val)) score = val;
+      }
+
+      if (questionType === QuestionType.Rating) {
+        const val = version
+          ? r.response[QuestionType.Rating]
+          : Number(r.response);
+        if (val === 5) score = 10;
+        else if (val === 4) score = 9;
+        else if (val === 3) score = 6;
+        else if (val === 2) score = 5;
+        else score = 0;
+      }
+
+      if (questionType === QuestionType.Smiley) {
+        if (version) {
+          const val = r.response[QuestionType.Smiley];
+          score = smileyMap[val] ?? null;
+        } else {
+          const val = Number(r.response);
+          score = smileyMap2[val] ?? null;
+        }
+      }
+
+      if (questionType === QuestionType.LD) {
+        if (version) {
+          const val = r.response[QuestionType.LD];
+          if (val === "Like") score = 10;
+          else if (val === "Dislike") score = 0;
+        } else {
+          const val = Number(r.response);
+          score = likeDislikeAndYNMap[val] ?? null;
+        }
+      }
+
+      if (questionType === QuestionType.YN) {
+        if (version) {
+          const val = r.response[QuestionType.YN];
+          if (val === "Yes") score = 10;
+          else if (val === "No") score = 0;
+        } else {
+          const val = Number(r.response);
+          score = likeDislikeAndYNMap[val] ?? null;
+        }
+      }
+
+      if (score !== null) {
+        if (score >= 9) {
+          promoters++;
+        } else if (score >= 6) {
+          passives++;
+        } else {
+          detractors++;
+        }
+
+        if (score >= 9) veryHappy++;
+        else if (score >= 7) happy++;
+        else if (score >= 5) neutral++;
+        else if (score >= 2) sad++;
+        else verySad++;
+
+        npsCount++;
+        scoreSum += score;
+        totalCount++;
+      }
+    });
+  });
+
+  const nps = npsCount > 0 ? ((promoters - detractors) / npsCount) * 100 : null;
+  const promoterPercentage =
+    npsCount > 0 ? Math.round((promoters / npsCount) * 100) : null;
+  const passivePercentage =
+    npsCount > 0 ? Math.round((passives / npsCount) * 100) : null;
+  const detractorPercentage =
+    npsCount > 0 ? Math.round((detractors / npsCount) * 100) : null;
+  const happinessIndex =
+    totalCount > 0
+      ? Math.round((scoreSum / (totalCount * maxScore)) * 100)
+      : null;
+  const veryHappyPercentage =
+    totalCount > 0 ? +((veryHappy / totalCount) * 100).toFixed(2) : null;
+  const happyPercentage =
+    totalCount > 0 ? +((happy / totalCount) * 100).toFixed(2) : null;
+  const neutralPercentage =
+    totalCount > 0 ? +((neutral / totalCount) * 100).toFixed(2) : null;
+  const sadPercentage =
+    totalCount > 0 ? +((sad / totalCount) * 100).toFixed(2) : null;
+  const verySadPercentage =
+    totalCount > 0 ? +((verySad / totalCount) * 100).toFixed(2) : null;
+
+  return {
+    promoters,
+    passives,
+    detractors,
+    veryHappy,
+    happy,
+    neutral,
+    sad,
+    verySad,
+    nps: nps !== null ? Math.round(nps) : null,
+    totalCount,
+    promoterPercentage,
+    passivePercentage,
+    detractorPercentage,
+    veryHappyPercentage,
+    happyPercentage,
+    neutralPercentage,
+    sadPercentage,
+    verySadPercentage,
+    happinessIndex,
+  };
 }

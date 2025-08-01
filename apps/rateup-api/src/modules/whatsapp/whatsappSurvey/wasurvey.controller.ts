@@ -116,7 +116,10 @@ import {
   findRecentAutomation,
 } from "./automation-logger.utils";
 import { autoGenerateTicket } from "../../ticket/ticketCard/card.service";
-import { getAutomatedReplyById } from "../automatedReply/wa_automatedReply.service";
+import {
+  getAutomatedReplyById,
+  getCommandByOrgIdAndCommand,
+} from "../automatedReply/wa_automatedReply.service";
 import { handleWaOrderfromCatalog } from "../catalog/catalog.service";
 import {
   getTokensByOrgId,
@@ -450,20 +453,64 @@ async function whatsappMessageHandler(
     type === "text" || type === "interactive"
       ? message?.trim()?.toLocaleLowerCase()
       : "";
+
+  // Handle button click interactions first
+  if (parsedMessage?.buttonId) {
+    await handleButtonClickInteraction(from, parsedMessage, orgId);
+    return;
+  }
+
+  const { isAiBotActive, chatbotId } = await getAiBotActiveStatus(from, orgId);
+
+  if (isAiBotActive) {
+    try {
+      // Check for automated reply commands
+      const automatedReplyCommand = await getCommandByOrgIdAndCommand(
+        orgId,
+        messageLowerCase,
+      );
+
+      if (automatedReplyCommand?.waAutomatedReply) {
+        await startAutomationFlow(
+          from,
+          automatedReplyCommand.waAutomatedReply,
+          parsedMessage,
+          orgId,
+        );
+        return;
+      }
+
+      // Process AI chatbot interaction
+      if (!chatbotId) {
+        log.warn(
+          `Active AI bot found but no chatbot ID for phone: ${from} in org: ${orgId}`,
+        );
+        await setAiBotActiveStatus(from, orgId, false, "");
+        return;
+      }
+      const chatbot = await getChatbotDetails(orgId, chatbotId, true);
+      if (chatbot) {
+        await handleAiWaChat(chatbot, message, orgId, from, chatbotId);
+        return;
+      } else {
+        log.warn(
+          `Active AI bot found but no chatbot details for ID: ${chatbotId}`,
+        );
+        await setAiBotActiveStatus(from, orgId, false, "");
+      }
+    } catch (error) {
+      log.error(`Error handling AI bot interaction: ${error.message}`);
+      await sendTextMessage(
+        { phone: from, orgId },
+        null,
+        "Sorry, I'm having trouble processing your request right now.",
+      );
+    }
+  }
   const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(
     orgId,
     message,
   );
-  // let chatbot = "";
-  const { isAiBotActive, chatbotId } = await getAiBotActiveStatus(from, orgId);
-
-  if (isAiBotActive) {
-    const chatbot = await getChatbotDetails(orgId, chatbotId);
-
-    await handleAiWaChat(chatbot, message, orgId, from, chatbotId);
-    return; // Stop normal flow if AI bot is active
-  }
-
   if (loyaltyWaCommand) {
     await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand);
   } else if (!!parseStartMessage(message)) {
@@ -640,127 +687,135 @@ export async function handleAutomatedReply(
     waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
   )?.metadata?.phone_number_id;
   try {
-    // Case 1: User clicked a button in a previous message
-    if (parsedMessage?.buttonId) {
-      // Use the utility function instead of duplicating the query
-      const recentInteraction = await findRecentAutomation(phone, orgId, {
-        timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-      });
-
-      const automation = recentInteraction?.waAutomatedReply as {
+    // Case 1: New message from user
+    let automation;
+    if (automatedReplyId)
+      automation = await getAutomatedReplyById(automatedReplyId);
+    // Check if message matches any automation rules
+    else {
+      automation = (await checkIfMessageMatchesAnyAutomation(
+        orgId,
+        waMessage,
+      )) as {
         id: string;
         matchData: { json: { nodes: any[]; edges: any[] } };
-        whatsappSettingsPhoneId: string;
-      };
-      if (!automation) {
-        log.warn(`No active automation found for button click from ${phone}`);
-        return;
-      }
-
-      // Log button click action using the utility function
-      const automationLog = await logAutomationAction({
-        phone,
-        nodeId: recentInteraction.currentNode,
-        automationId: automation.id,
-        orgId,
-        response: {
-          value: parsedMessage?.message,
-          buttonId: parsedMessage.buttonId,
-          action: "button_click",
-        },
-      });
-
-      // Find the next nodes based on the button clicked
-      const nextNodes = automation?.matchData?.json?.edges.filter(
-        (edge: any) => edge.sourceHandle === parsedMessage.buttonId,
-      );
-      if (nextNodes.length) {
-        for (const node of nextNodes) {
-          if (node?.target) {
-            await processNextNode(
-              phone,
-              automation,
-              node.target,
-              orgId,
-              automationLog?.id,
-            );
-          }
-        }
-      } else {
-        log.warn(`No next node found for buttonId ${parsedMessage.buttonId}`);
-      }
+      } | null;
     }
-    // Case 2: New message from user
+
+    if (automation) {
+      if (!automation?.whatsappSettingsPhoneId) {
+        automation.whatsappSettingsPhoneId = phone_number_id;
+      }
+      await startAutomationFlow(phone, automation, parsedMessage, orgId);
+    }
+    // else if (chatbot?.enableWaChat && chatbot?.enableAllWaChat) {
+    //   // Handle AI chat if enabled
+    //   await handleAiWaChat(chatbot, parsedMessage.message, orgId, phone);
+    // }
+    // Case 3: No matching automation rules found
     else {
-      let automation;
-      if (automatedReplyId)
-        automation = await getAutomatedReplyById(automatedReplyId);
-      // Check if message matches any automation rules
-      else {
-        automation = (await checkIfMessageMatchesAnyAutomation(
-          orgId,
-          waMessage,
-        )) as {
-          id: string;
-          matchData: { json: { nodes: any[]; edges: any[] } };
-        } | null;
-      }
-
-      if (automation) {
-        if (!automation?.whatsappSettingsPhoneId) {
-          automation.whatsappSettingsPhoneId = phone_number_id;
-        }
-        // Start a new automation flow
-        const startNode = automation?.matchData?.json?.nodes?.find(
-          (node: any) => node.type === "startNode",
-        );
-
-        if (!startNode) {
-          log.error(`No start node found in automation ${automation.id}`);
-          return;
-        }
-
-        // Create record of this interaction using the utility function
-        const automationLog = await logAutomationAction({
-          phone,
-          nodeId: startNode.id,
-          automationId: automation.id,
-          orgId,
-          response: {
-            value: parsedMessage?.message,
-            action: "initial_interaction",
-          },
-        });
-
-        await processNextNode(
-          phone,
-          automation,
-          startNode.id,
-          orgId,
-          automationLog?.id,
-        );
-      }
-      // else if (chatbot?.enableWaChat && chatbot?.enableAllWaChat) {
-      //   // Handle AI chat if enabled
-      //   await handleAiWaChat(chatbot, parsedMessage.message, orgId, phone);
-      // }
-      // Case 3: No matching automation rules found
-      else {
-        // Check if user has interacted within the last 24 hours\
-        const recentActivity = await findRecentAutomation(phone, orgId, {
-          timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-        });
-
-        // Only respond if this is the first message in 24 hours
-        if (!recentActivity) {
-          // Send default welcome automation if available
-          await handleInitialInteraction(orgId, phone, parsedMessage.message);
-        }
-      }
+      await handleInitialInteraction(orgId, phone, parsedMessage.message);
     }
   } catch (error) {
     log.error("Error handling automated reply: %o", error);
   }
+}
+
+export async function handleButtonClickInteraction(
+  phone: string,
+  parsedMessage: WaParsedMessage,
+  orgId: string,
+) {
+  // Use the utility function instead of duplicating the query
+  const recentInteraction = await findRecentAutomation(phone, orgId, {
+    timeWindow: 24 * 60 * 60 * 1000, // 24 hours
+  });
+
+  const automation = recentInteraction?.waAutomatedReply as {
+    id: string;
+    matchData: { json: { nodes: any[]; edges: any[] } };
+    whatsappSettingsPhoneId: string;
+  };
+  if (!automation) {
+    log.warn(`No active automation found for button click from ${phone}`);
+    return;
+  }
+
+  // Log button click action using the utility function
+  const automationLog = await logAutomationAction({
+    phone,
+    nodeId: recentInteraction.currentNode,
+    automationId: automation.id,
+    orgId,
+    response: {
+      value: parsedMessage?.message,
+      buttonId: parsedMessage.buttonId,
+      action: "button_click",
+    },
+  });
+
+  // Find the next nodes based on the button clicked
+  const nextNodes = automation?.matchData?.json?.edges.filter(
+    (edge: any) => edge.sourceHandle === parsedMessage.buttonId,
+  );
+  if (nextNodes.length) {
+    for (const node of nextNodes) {
+      if (node?.target) {
+        await processNextNode(
+          phone,
+          automation,
+          node.target,
+          orgId,
+          automationLog?.id,
+        );
+      }
+    }
+  } else {
+    log.warn(`No next node found for buttonId ${parsedMessage.buttonId}`);
+  }
+}
+/**
+ * Starts an automation flow from the beginning (start node)
+ * @param phone User's phone number
+ * @param automation The automation flow data
+ * @param parsedMessage Parsed message data from WhatsApp
+ * @param orgId Organization ID
+ * @returns Promise that resolves when the automation has started
+ */
+async function startAutomationFlow(
+  phone: string,
+  automation: any,
+  parsedMessage: WaParsedMessage,
+  orgId: string,
+) {
+  const startNode = automation?.matchData?.json?.nodes?.find(
+    (node: any) => node.type === "startNode",
+  );
+
+  if (!startNode) {
+    log.error(`No start node found in automation ${automation.id}`);
+    return;
+  }
+
+  // Create record of this interaction using the utility function
+  const automationLog = await logAutomationAction({
+    phone,
+    nodeId: startNode.id,
+    automationId: automation.id,
+    orgId,
+    response: {
+      value: parsedMessage?.message,
+      action: "initial_interaction",
+    },
+  });
+
+  await processNextNode(
+    phone,
+    automation,
+    startNode.id,
+    orgId,
+    automationLog?.id,
+  );
 }
 
 /**
@@ -1124,6 +1179,21 @@ async function handleInitialInteraction(
     if (!wildcardAutomation?.waAutomatedReply) {
       log.info(`No wildcard automation found for org ${orgId}`);
       return;
+    }
+
+    // Check if wildcard automation has an AI bot node
+    const aiBotNode = (
+      wildcardAutomation?.waAutomatedReply?.matchData as any
+    )?.json?.nodes?.find((node: any) => node?.type === "aibotNode");
+
+    if (!aiBotNode) {
+      // If there's no AI bot node, check for recent activity
+      const recentActivity = await findRecentAutomation(phone, orgId, {
+        timeWindow: 24 * 60 * 60 * 1000, // 24 hours
+      });
+
+      // If there's recent activity, stop the flow
+      if (recentActivity) return;
     }
 
     const automation = wildcardAutomation.waAutomatedReply as {

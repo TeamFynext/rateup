@@ -22,6 +22,7 @@ export async function getAutomatedRepliesByOrgId(
       orgId,
       ...(phone_number_id
         ? {
+            isEnabled: true,
             OR: [
               { whatsappSettingsPhoneId: phone_number_id },
               { whatsappSettingsPhoneId: null },
@@ -148,4 +149,28 @@ export async function getAutomatedRepliesByKeyWeords(orgId, keyword) {
       },
     },
   });
+}
+
+export async function getCommandByOrgIdAndCommand(
+  orgId: string,
+  command: string,
+) {
+  const AutomatedReplyCommand =
+    await prisma.waAutomatedReplyCommands.findUnique({
+      where: {
+        command_org_id_unique: {
+          orgId,
+          command,
+        },
+        waAutomatedReply: {
+          isEnabled: true,
+        },
+      },
+      select: {
+        command: true,
+        waAutomatedReplyId: true,
+        waAutomatedReply: true,
+      },
+    });
+  return AutomatedReplyCommand;
 }

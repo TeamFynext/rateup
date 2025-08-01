@@ -354,6 +354,7 @@ declare global {
         monthlyMessageLimit: number;
         max: number;
       };
+      automation: subscriptionWithActiveAndCount;
     };
     [sfpn.ReputationManagement]: subscriptionActiveField &
       subscriptionCountRestriction;

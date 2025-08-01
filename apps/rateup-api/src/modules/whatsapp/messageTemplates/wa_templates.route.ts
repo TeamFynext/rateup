@@ -18,6 +18,7 @@ import { SubscriptionFeaturePathName } from "../../../types/enums";
 import { getVerifySubscriptionHandler } from "../../../utils/auth";
 import fastifyMultipart from "@fastify/multipart";
 import { verifyMessageMonthlyLimitRestriction } from "./wa_templates.auth";
+import { verifyTemplateSubscriptionLimit } from "./wa_templates.utils";
 
 export async function waTemplatesRoutes(server: FastifyInstance) {
   server.register(fastifyMultipart, {
@@ -56,6 +57,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
+      // preHandler: verifyTemplateSubscriptionLimit,
       schema: {
         body: $WTref("waTemplateInputSchema"),
       },
@@ -65,6 +67,7 @@ export async function waTemplatesRoutes(server: FastifyInstance) {
   server.post(
     "/save-as-draft",
     {
+      // preHandler: verifyTemplateSubscriptionLimit,
       schema: {
         body: $WTref("waTemplateInputSchema"),
       },

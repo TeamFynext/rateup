@@ -20,6 +20,7 @@ import {
   waCampaignDequeue,
   waCampaignEnqueue,
 } from "../../utils/redisConnection";
+import { Prisma } from "../../../generated/prisma/client";
 
 export interface WaMessageStats {
   read?: boolean;
@@ -265,21 +266,22 @@ export async function getCampaignsByTeamId(teamId: string) {
   return campaigns;
 }
 
-export async function getCampaignsByOrgId(orgId: string) {
+export async function getCampaignsByOrgId(orgId: string, type?: string) {
   const campaigns = await prisma.$queryRaw`SELECT 
-  c.id,
-  c."name",
-  c."createdAt",
-  c."status",
-  c."teamId",
-  c.type,
-  t."name" AS "teamName",
+    c.id,
+    c."name",
+    c."createdAt",
+    c."status",
+    c."teamId",
+    c.type,
+    t."name" AS "teamName",
   COUNT(cp.id)::INTEGER AS "campaignParticipantsCount"
-FROM "Campaign" c
-LEFT JOIN "Team" t ON c."teamId" = t.id
-LEFT JOIN "CampaignParticipant" cp ON c.id = cp."campaignId"
-WHERE t."orgId" = ${orgId}::uuid
-GROUP BY c.id, c."name", c."createdAt", c."status", c."teamId",t."name";`;
+  FROM "Campaign" c
+  LEFT JOIN "Team" t ON c."teamId" = t.id
+  LEFT JOIN "CampaignParticipant" cp ON c.id = cp."campaignId"
+  WHERE t."orgId" = ${orgId}::uuid
+  ${type ? Prisma.sql`AND c.type = ${type}` : Prisma.empty}
+  GROUP BY c.id, c."name", c."createdAt", c."status", c."teamId",t."name";`;
   return campaigns;
 }
 

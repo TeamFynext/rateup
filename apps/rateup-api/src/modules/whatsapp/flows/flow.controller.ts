@@ -194,11 +194,11 @@ export async function createFlowHandler(
       req,
     )) as Survey;
     log.trace("creating flow copy in db %s", name);
-    await createFlowCopyInDb({
+    const dbFlow = await createFlowCopyInDb({
       orgId,
       flowId,
       json: {
-        version: "6.3",
+        version: "7.2",
         screens: [],
       } as WaFlowJson,
       flowMap: {},
@@ -206,6 +206,7 @@ export async function createFlowHandler(
       status: WaFlowStatus.DRAFT,
       name: name,
     });
+    return res.status(200).send(dbFlow?.dbFlowId);
   } catch (error) {
     let message = "Creating flow Error";
     if (error instanceof GraphApiError) {

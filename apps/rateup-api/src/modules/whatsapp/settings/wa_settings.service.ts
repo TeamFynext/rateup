@@ -244,12 +244,17 @@ export async function getContactTag(orgId: string) {
     },
     select: {
       contactTags: true,
+      contactGroupTags: true,
     },
   });
   return res;
 }
 
-export async function updateContactTag(orgId: string, tags: string[]) {
+export async function updateContactTag(
+  orgId: string,
+  tags: string[],
+  groupTags: string[],
+) {
   const res = await prisma.waAccountSettings.upsert({
     where: {
       orgId,
@@ -257,9 +262,11 @@ export async function updateContactTag(orgId: string, tags: string[]) {
     create: {
       orgId,
       contactTags: tags,
+      contactGroupTags: groupTags,
     },
     update: {
       contactTags: tags,
+      contactGroupTags: groupTags,
     },
   });
   return res;

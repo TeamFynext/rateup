@@ -18,10 +18,19 @@ export async function orgWsRoutes(server: FastifyInstance) {
   server.get(
     "/:afterAuthId",
     {
+      preHandler: checkSession,
       websocket: true,
       schema: {
         params: $orgWsRef("afterAuthIdParamsSchema"),
       },
+    },
+    handleWebSocketConnection,
+  );
+
+  server.get(
+    "/:afterAuthId/ws/:orgId",
+    {
+      websocket: true,
     },
     handleWebSocketConnection,
   );

@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import prisma from "../../utils/prisma";
+import { log } from "../../utils/logger";
 
 export async function updateUsageStatsTemplateMessageCount() {
   const subscriptions = await prisma.subscription.findMany();
@@ -32,12 +33,45 @@ export async function updateUsageStatsTemplateMessageCount() {
       JOIN "Contact" c ON wm."contactId" = c.id
       WHERE (wm."messageBody"::jsonb)->>'exchangeProcess' = 'send'
       AND (wm."messageBody"::jsonb)->'send'->>'type' = 'template' AND c."orgId"=${subscription.orgId}::uuid;`;
-    console.log(res[0]);
+    const usageStats = await prisma.usageStats.findUnique({
+      where: {
+        orgId: subscription.orgId,
+      },
+    });
+    if (!usageStats) {
+      log.trace("usage stats not found for orgId: %s", subscription.orgId);
+      continue;
+    }
     await prisma.usageStats.update({
       where: {
         orgId: subscription.orgId,
       },
       data: res[0],
     });
+  }
+}
+export async function updateSubscriptionAutomation() {
+  const subscriptions: any = await prisma.subscription.findMany();
+
+  for await (const subscription of subscriptions) {
+    const features = {
+      ...subscription?.features,
+      whatsapp: {
+        ...subscription?.features?.whatsapp,
+        automation: { count: { max: 10 }, active: true },
+      },
+    };
+
+    const updatedSubscription = await prisma.subscription.update({
+      where: {
+        orgId: subscription.orgId,
+      },
+      data: {
+        features,
+      },
+    });
+    log.info(
+      `Updated subscription automation for orgId: ${updatedSubscription.orgId}`,
+    );
   }
 }

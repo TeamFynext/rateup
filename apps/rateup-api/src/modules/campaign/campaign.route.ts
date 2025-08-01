@@ -15,7 +15,10 @@ import { campaignParticipantRoutes } from "./campaignParticipants/campaignPartic
 import { checkSession } from "../../utils/checkSession";
 import { getVerifySubscriptionHandler } from "../../utils/auth";
 import { SubscriptionFeaturePathName } from "../../types/enums";
-import { verifyMessageMonthlyLimitRestrictionForCampaign } from "./campaign.auth";
+import {
+  verifyCampaignMaxCountRestriction,
+  verifyMessageMonthlyLimitRestrictionForCampaign,
+} from "./campaign.auth";
 import { $surveyThemeRef } from "../surveyTheme/surveyTheme.schema";
 
 export async function campaignRoutes(server: FastifyInstance) {
@@ -33,6 +36,7 @@ export async function campaignRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
+      preHandler: verifyCampaignMaxCountRestriction,
       schema: {
         body: $campaignRef("createCampaignInputSchema"),
       },

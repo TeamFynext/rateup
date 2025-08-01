@@ -228,9 +228,10 @@ model WhatsappSettings {
 }
 
 model WaAccountSettings {
-  org         Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId       String   @unique @db.Uuid
-  contactTags String[] @default([])
+  org              Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId            String   @unique @db.Uuid
+  contactTags      String[] @default([])
+  contactGroupTags String[] @default([])
 }
 
 model WaLogs {
@@ -518,6 +519,7 @@ model ContactGroup {
 
   name String
   icon String?
+  tags Json?
 
   contacts             ContactGroupMap[]
   team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -1281,6 +1283,7 @@ model WaAutomatedReply {
   orgId                   String?  @db.Uuid
   org                     Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId String?
+  isEnabled               Boolean  @default(true)
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]

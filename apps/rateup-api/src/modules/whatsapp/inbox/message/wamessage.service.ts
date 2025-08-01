@@ -1016,6 +1016,7 @@ export async function sendContactMessage(
       phone: true,
       dob: true,
       email: true,
+      whatsappUserName: true,
       org: {
         select: {
           name: true,

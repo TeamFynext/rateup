@@ -25,6 +25,7 @@ import { log } from "../../../utils/logger";
 import { verifyMessageMonthlyLimitRestriction } from "../messageTemplates/wa_templates.auth";
 import { getVerifySubscriptionHandler } from "../../../utils/auth";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
+import { verifyFlowSubscriptionLimit } from "./flow.utils";
 
 export async function flowRoutes(server: FastifyInstance) {
   server.addHook("onError", (req, res, err, done) => {
@@ -89,6 +90,7 @@ export async function flowRoutes(server: FastifyInstance) {
   server.post(
     "/",
     {
+      preHandler: verifyFlowSubscriptionLimit,
       schema: {
         body: $waFlow("createFlowInput"),
       },

@@ -14,6 +14,7 @@ import {
   SubscriptionFeaturePathName,
   SurveyType,
   SurveyVariableType,
+  WaQuestions,
 } from "../../types/enums";
 import {
   getShortUrlId,
@@ -38,6 +39,12 @@ import { updateQuestionsOnSurvey } from "../question/question.service";
 import { createStats } from "../stats/stats.service";
 import dayjs from "dayjs";
 import { Prisma } from "../../../generated/prisma/client";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+import { barGraphQuestions, barGraphQuestions2 } from "../../utils/enumMap";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // TODO: fix return type
 // should throw error on error instead of returning error message as string
@@ -1465,4 +1472,252 @@ export async function getSurveyResponseCountForGraph(
   }
 
   return res;
+}
+
+type CategorizeResult = "promoter" | "passive" | "detractor" | null;
+
+const OPINION_SCALE_PROMOTER_THRESHOLD = 9;
+const OPINION_SCALE_PASSIVE_THRESHOLD = 7;
+const HAPPINESS_INDEX_MULTIPLIER = 10;
+
+function categorize(r, q, version): CategorizeResult {
+  const questionType = "metaType" in q ? QuestionType[q.metaType] : q.type;
+  if (questionType === QuestionType.Opinion) {
+    const val = version
+      ? Number(r.response[QuestionType.Opinion])
+      : Number(r.response);
+    if (Number(val) >= OPINION_SCALE_PROMOTER_THRESHOLD) return "promoter";
+    if (Number(val) >= OPINION_SCALE_PASSIVE_THRESHOLD) return "passive";
+    return "detractor";
+  }
+
+  if (questionType === QuestionType.Rating) {
+    const val = version ? r.response[QuestionType.Rating] : Number(r.response);
+    if (val === 5) return "promoter";
+    if (val === 4) return "passive";
+    return "detractor";
+  }
+
+  if (questionType === QuestionType.Smiley) {
+    if (version) {
+      const val = r.response[QuestionType.Smiley];
+      if (["Very Happy", "Happy"].includes(val.toString())) return "promoter";
+      else if (["Neutral"].includes(val.toString())) return "passive";
+      return "detractor";
+    } else {
+      const val = Number(r.response);
+      if ([5, 4].includes(val)) return "promoter";
+      else if ([3].includes(val)) return "passive";
+      else return "detractor";
+    }
+  }
+
+  if (questionType === QuestionType.LD) {
+    if (version) {
+      const val = r.response[QuestionType.LD];
+      return val === "Like" ? "promoter" : "detractor";
+    } else {
+      const val = Number(r.response);
+      return val === 1 ? "promoter" : "detractor";
+    }
+  }
+
+  if (questionType === QuestionType.YN) {
+    if (version) {
+      const val = r.response[QuestionType.YN];
+      return val === "Yes" ? "promoter" : "detractor";
+    } else {
+      const val = Number(r.response);
+      return val === 1 ? "promoter" : "detractor";
+    }
+  }
+}
+
+export async function getNPSResponsesForGraph(
+  orgId: string,
+  userTimeZone: string,
+  timePeriod: "hourly" | "daily" | "weekly" | string,
+  surveyId = "",
+  teamMapIds: string[] = [],
+) {
+  const surveyInfo = await prisma.surveyTeamMap.findFirst({
+    where: { surveyId },
+    select: {
+      survey: {
+        select: {
+          type: true,
+          questions: true,
+          WaFlow: {
+            select: {
+              version: true,
+              json: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!surveyInfo) return { e: "no response" };
+
+  const isFlow = surveyInfo.survey.type === SurveyType.WaFlow;
+  const version = !isFlow || surveyInfo.survey.WaFlow?.version === 1;
+  const questions = version
+    ? surveyInfo.survey.questions.filter((q) =>
+        barGraphQuestions.includes(q.type),
+      )
+    : (surveyInfo.survey.WaFlow.json.screens.flatMap((screen) =>
+        screen.layout.children.filter(
+          (child) =>
+            barGraphQuestions2.includes(
+              (child as any).metaType as WaQuestions,
+            ) && child.name,
+        ),
+      ) as unknown as Question2[]);
+  let rawResponses = await prisma.$queryRaw<any>`
+    SELECT 
+      sr."createdAt",
+      sr."responses"
+    FROM "SurveyResponse" sr
+    LEFT JOIN "SurveyTeamMap" st ON sr."surveyTeamMapId" = st.id
+    LEFT JOIN "Survey" s ON st."surveyId" = s.id
+    WHERE s."orgId" = ${orgId}::uuid
+      ${surveyId.length ? Prisma.sql`AND st."surveyId" = ${surveyId}::uuid` : Prisma.empty}
+      ${teamMapIds.length ? Prisma.sql`AND st.id = ANY(${teamMapIds}::uuid[])` : Prisma.empty}
+      AND sr."createdAt" >= CURRENT_DATE - INTERVAL '1 year'
+  `;
+  const resultMap = new Map<
+    string,
+    {
+      date: string;
+      promoters: number;
+      passives: number;
+      detractors: number;
+      total: number;
+      totalScore: number;
+      totalNPSResponses: number;
+    }
+  >();
+
+  // Group data by time bucket
+  for (const res of rawResponses) {
+    const bucket =
+      timePeriod === "hourly"
+        ? dayjs(res.createdAt).tz(userTimeZone).format("hh A")
+        : timePeriod === "daily"
+          ? dayjs(res.createdAt).tz(userTimeZone).format("MMM DD")
+          : `${dayjs().diff(dayjs(res.createdAt), "week")}`; // weeks ago
+
+    if (!resultMap.has(bucket)) {
+      resultMap.set(bucket, {
+        date: bucket,
+        promoters: 0,
+        passives: 0,
+        detractors: 0,
+        total: 0,
+        totalScore: 0,
+        totalNPSResponses: 0,
+      });
+    }
+
+    for (const r of res.responses) {
+      const matchedQuestion = questions.find((q) => q.id === r.questionId);
+
+      if (!matchedQuestion) continue;
+
+      const bucketData = resultMap.get(bucket)!;
+      const category = categorize(r, matchedQuestion, version);
+
+      if (category === "promoter") bucketData.promoters++;
+      else if (category === "passive") bucketData.passives++;
+      else if (category === "detractor") bucketData.detractors++;
+
+      const value = extractNumericValue(r.response);
+      if (typeof value === "number") {
+        bucketData.totalScore += value;
+        bucketData.totalNPSResponses++;
+      }
+
+      bucketData.total++;
+    }
+  }
+
+  const finalResult: {
+    date: string;
+    promoters: number;
+    passives: number;
+    detractors: number;
+    total: number;
+    npsScore: number;
+    happinessIndex: number;
+    avgNPSRating: number;
+  }[] = [];
+
+  const fill = (date: string) => {
+    const d = resultMap.get(date);
+    if (!d) {
+      return {
+        date,
+        promoters: 0,
+        passives: 0,
+        detractors: 0,
+        total: 0,
+        npsScore: 0,
+        happinessIndex: 0,
+        avgNPSRating: 0,
+      };
+    }
+
+    const {
+      promoters,
+      passives,
+      detractors,
+      total,
+      totalScore,
+      totalNPSResponses,
+    } = d;
+    const npsScore = total > 0 ? ((promoters - detractors) / total) * 100 : 0;
+    const happinessIndex =
+      total > 0 ? (promoters * HAPPINESS_INDEX_MULTIPLIER) / total : 0;
+    const avgNPSRating =
+      totalNPSResponses > 0 ? totalScore / totalNPSResponses : 0;
+
+    return {
+      date: d.date,
+      promoters,
+      passives,
+      detractors,
+      total,
+      npsScore,
+      happinessIndex,
+      avgNPSRating,
+    };
+  };
+
+  if (timePeriod === "hourly") {
+    for (let i = 0; i < 24; i++) {
+      const date = dayjs().hour(i).format("hh A");
+      finalResult.push(fill(date));
+    }
+  } else if (timePeriod === "daily") {
+    for (let i = 30; i > 0; i--) {
+      const date = dayjs()
+        .subtract(i - 1, "day")
+        .format("MMM DD");
+      finalResult.push(fill(date));
+    }
+  } else if (timePeriod === "weekly") {
+    for (let i = 52; i >= 0; i--) {
+      const date = `${i}`;
+      finalResult.push(fill(date));
+    }
+  }
+
+  return finalResult;
+}
+
+function extractNumericValue(response: any): number | null {
+  if (typeof response === "number") return response;
+  if (typeof response === "string" && !isNaN(Number(response)))
+    return Number(response);
+  return null;
 }
