@@ -13,7 +13,6 @@ export async function instagramWebhookEventHandler(
     }
     reply.code(200).send();
     const data = request.body as InstagramWebhookBody;
-    console.dir(request.body, { depth: null }); // remove later
     await handleInstagramWebhook(data);
   } catch (e) {
     log.error(e);

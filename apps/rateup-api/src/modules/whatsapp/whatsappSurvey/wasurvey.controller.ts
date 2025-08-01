@@ -166,7 +166,6 @@ export async function whatsappEventHandler(
 ) {
   try {
     const body = request.body as WaMessageBody;
-    console.log("body", body);
     log.trace("WaEvent => %o", body); // Log the entire event payload
 
     const eventType = getEventType(body);

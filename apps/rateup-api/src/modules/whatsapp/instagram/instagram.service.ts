@@ -39,7 +39,6 @@ export async function handleInstagramWebhook(data: InstagramWebhookBody) {
   for (const entry of data.entry) {
     const waSettings = await getWaSettingsByIbaId(entry.id);
     if (!waSettings) {
-      // console.log(`No instagram settings found for instagram business account id: ${data.entry[0].id}`)
       log.trace(
         "No instagram settings found for instagram business account id: %s",
         entry.id,
@@ -218,7 +217,6 @@ export async function getFbPages(settingsId) {
     `/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`,
     "GET",
   );
-  console.log(res);
   return res.data.data.map((i) => ({
     fbPageId: i.id,
     ibaId: i.instagram_business_account.id,

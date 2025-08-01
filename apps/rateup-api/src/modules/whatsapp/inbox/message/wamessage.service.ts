@@ -162,51 +162,7 @@ ORDER BY w1."waCreatedAt" DESC, w1."id" DESC
 LIMIT 300;`;
 
   messages = await prisma.$queryRawUnsafe(query, ...params);
-  //  console.log("messages",messages)
 
-  // if (cursor) {
-  //   messages = await prisma.waMessage.findMany({
-  //     skip: 1,
-  //     take: 300,
-  //     cursor: {
-  //       id: cursor,
-  //     },
-  //     where: {
-  //       contactId,
-  //       ...sourceIdentifierCondition,
-  //     },
-  //     include: {
-  //       sender: {
-  //         select: {
-  //           name: true,
-  //           profilePhoto: true,
-  //         },
-  //       },
-  //     },
-  //     orderBy: {
-  //       waCreatedAt: "desc",
-  //     },
-  //   });
-  // } else {
-  //   messages = await prisma.waMessage.findMany({
-  //     take: 300,
-  //     where: {
-  //       contactId,
-  //       ...sourceIdentifierCondition,
-  //     },
-  //     include: {
-  //       sender: {
-  //         select: {
-  //           name: true,
-  //           profilePhoto: true,
-  //         },
-  //       },
-  //     },
-  //     orderBy: {
-  //       waCreatedAt: "desc",
-  //     },
-  //   });
-  // }
   let nextCursor = null;
   let hasNextPage = messages.length === 300;
   if (hasNextPage && messages.length > 0) {
@@ -215,9 +171,6 @@ LIMIT 300;`;
       `${lastMessage.waCreatedAt}:${lastMessage.id}`,
     ).toString("base64");
   }
-
-  console.log(cursor);
-
   return { messages, nextCursor, hasNextPage };
 }
 
@@ -932,7 +885,7 @@ export async function getContactsCountByInbox(
   FROM "WaInboxAssign"
   GROUP BY "teamId";
 `;
-  // console.log(count[0])
+
   if (
     count[0].new_assigned_count === 0 &&
     count[0].new_assigned_to_me_count > 0

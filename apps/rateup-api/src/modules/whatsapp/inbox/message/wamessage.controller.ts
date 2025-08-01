@@ -75,7 +75,6 @@ export async function handleWaMessages(
   userId?: string,
   failed: boolean = false,
 ) {
-  console.log("sourcePlatform", sourcePlatform);
   try {
     // Create the message body
     let waMessageBody: WaInboxMessageBody = {
@@ -220,9 +219,6 @@ export async function sendNewWaMessageHandler(
           request?.body?.text?.body,
           platform as PlatformType,
         );
-        console.log("messageBody", messageBody);
-        console.log("platform", platform);
-        console.log("platform as platformty", platform as PlatformType);
         await sendMessage(
           orgId,
           messageBody,
@@ -242,8 +238,6 @@ export async function sendNewWaMessageHandler(
           reaction,
           platform,
         );
-        console.log("whatsappSettingsPhoneId", whatsappSettingsPhoneId);
-        console.log("messageBody", messageBody);
         await sendMessage(
           orgId,
           messageBody,
@@ -288,7 +282,6 @@ export async function sendNewWaMessageHandler(
     }
     reply.send("Message Sent");
   } catch (error) {
-    console.log(error);
     log.error("Error in sendNewWaMessageHandler: %o", error);
     reply.status(500).send("Internal Server Error");
   }

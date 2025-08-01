@@ -91,27 +91,6 @@ export async function sendMessage(
   userId?: string,
   whatsappSettingsPhoneId?: string,
 ) {
-  console.log("platform", platform);
-  // {
-  // object: 'instagram',
-  // entry: [
-  //   {
-  //     time: 1753940203842,
-  //     id: '17841476126718028',
-  //     messaging: [
-  //       {
-  //         sender: { id: '1741212203201498' },
-  //         recipient: { id: '17841476126718028' },
-  //         timestamp: 1753940202497,
-  //         message: {
-  //           mid: 'aWdfZAG1faXRlbToxOklHTWVzc2FnZAUlEOjE3ODQxNDc2MTI2NzE4MDI4OjM0MDI4MjM2Njg0MTcxMDMwMTI0NDI3NjAxNzgyOTQwNjYyNjYyMzozMjM1NDQ4NjAzNjA2MTQzMDc3Mjk0OTkzNjQyNzIzNzM3NgZDZD',
-  //           attachments: [ { type: 'ephemeral' } ]
-  //         }
-  //       }
-  //     ]
-  //   }
-  // ]
-  // }
   let waSettings: Omit<WhatsappSettings, "accessToken_iv">;
   let to: string;
   let configId: string;
@@ -130,7 +109,6 @@ export async function sendMessage(
     accessToken = waSettings.accessToken;
     sourceIdentifier = waSettings.phone;
   }
-  console.log("waSettings", waSettings);
   log.trace(`sending message to %s \n%o`, to, messageData);
   try {
     const res = await callWhatsappApi(
@@ -143,8 +121,6 @@ export async function sendMessage(
         : {},
     );
     log.trace(`sent successfully %o %o `, res.data, res.statusText);
-    console.log("res", res);
-    console.log("res?.data?.message_id", res?.data?.message_id);
     await handleWaMessages(
       "send",
       messageData,

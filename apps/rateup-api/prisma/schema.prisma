@@ -1233,8 +1233,6 @@ enum PlatformType {
   INSTAGRAM
 }
 
-//update message body for instagram -- include reaction in messagebody, update read
-
 model WaMessage {
   id                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt                       DateTime                          @default(now())
@@ -1258,22 +1256,6 @@ model WaMessage {
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
 }
-
-// model InstagramMessage {
-//    messageId  String  @unique
-//    ibaId      String
-//    instagramSetting InstagramSettings @relation(fields: [ibaId], references: [ibaId], onDelete: Cascade)
-//    igCreatedAt  DateTime?                 //time from message webhook
-//    messageBody  Json
-//    seenAt       DateTime?
-//    contactId  String  @db.Uuid
-//    Contact  Contact @relation(fields: [instaUserId], references: [id], onDelete: Cascade)
-//    exchangeProcess String   @default("receive")
-//    sentUserId    String?
-//    sentUser      User?    @relation(fields: [sentUserId],references: [id])
-//    createdAt     DateTime           @default(now())
-//    reaction     Json?
-// }
 
 
 model WaMessageCampaginParticipantMap {
@@ -1697,31 +1679,3 @@ model NotificationSetting {
   waMessageAssignNotification Boolean   @default(false)
   waMessageClosedNotification Boolean   @default(false)
 }
-
-// model InstagramSettings {
-//   id   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-//   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-//   orgId String @db.Uuid
-
-//   accessToken     String // encrypted
-//   fbPageId        String?  @unique
-//   ibaId           String?  @unique //Instagram business accountid
-//   pageAccessToken String?    
-//   messages         InstagramMessage[]
-//   createdAt       DateTime           @default(now())
-// }
-
-// model InstagramUser {
-//   id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-//   isuid  String 
-//   orgId  String @db.Uuid
-//   org    Org   @relation(fields:[orgId], references: [id], onDelete: Cascade)
-//   messages InstagramMessage[]
-//   name    String?
-//   userName   String?
-//   profilePic   String?
-//   followerCount   Int?
-//   isFollower  Boolean?
-//   isFollowing Boolean?
-//   @@unique([orgId,isuid], name: "orgid_isuid_unique_index")
-// }

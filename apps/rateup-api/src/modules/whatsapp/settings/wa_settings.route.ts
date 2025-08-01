@@ -3,7 +3,6 @@ import {
   createWaSettingsHandler,
   deleteWaSettingsHandler,
   getContactTagHandler,
-  getFbPagesFromMetaHandler,
   getMetaAssetsHandler,
   getWaLogsHandler,
   getWaSettingsHandler,
@@ -141,6 +140,4 @@ export async function waSettingsRoutes(server: FastifyInstance) {
   );
 
   server.get("/meta-assets/:whatsappSettingsId", getMetaAssetsHandler);
-
-  // server.get("/:settingsId/fbpages", getFbPagesFromMetaHandler);
 }

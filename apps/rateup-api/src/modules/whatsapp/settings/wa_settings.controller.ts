@@ -379,20 +379,3 @@ export async function getMetaAssetsHandler(
     reply.code(500).send({ message: "Something went wrong" });
   }
 }
-
-//update from meta assets
-//update meta asset
-export async function getFbPagesFromMetaHandler(
-  request: FastifyRequest<{ Params: whatsappSettingsIdParamSchema }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { whatsappSettingsId } = request.params;
-    const res = await getFbPages(whatsappSettingsId);
-    console.log(res);
-    reply.code(200).send(res);
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send();
-  }
-}
