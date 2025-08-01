@@ -5,19 +5,10 @@ import {
   getWaSettingsById,
 } from "../settings/wa_settings.service";
 import { log } from "../../../utils/logger";
-import {
-  getOrCreateContactByIgsId,
-  updateContactById,
-} from "../../contact/contact.service";
-import {
-  addNewWaMessage,
-  getWaMessageByMessageId,
-  updateWaMessageByMessageId,
-} from "../inbox/message/wamessage.service";
+import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service";
 import { PlatformType } from "../../../../generated/prisma/enums";
 import { getInstagramWebhookEvent } from "./instagram.util";
-import { InstagramEvent, WaMessageAssignStatus } from "../../../types/enums";
-import { WhatsappSettings } from "../../../../generated/prisma/client";
+import { InstagramEvent } from "../../../types/enums";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 
 export async function getIgUserDetailsFromMeta(igsId, ibaId) {
@@ -87,52 +78,6 @@ export async function handleInstagramMessages(
   );
 }
 
-// {
-//   object: 'instagram',
-//   entry: [
-//     {
-//       time: 1753704741836,
-//       id: '17841476126718028',
-//       messaging: [
-//         {
-//           sender: { id: '1741212203201498' },
-//           recipient: { id: '17841476126718028' },
-//           timestamp: 1753704740623,
-//           read: {
-//             mid: 'aWdfZAG1faXRlbToxOklHTWVzc2FnZAUlEOjE3ODQxNDc2MTI2NzE4MDI4OjM0MDI4MjM2Njg0MTcxMDMwMTI0NDI3NjAxNzgyOTQwNjYyNjYyMzozMjM1MDE0MjUxMTYxNTE1MTM5NDMyNjcxMDc5OTMwMjY1NgZDZD'
-//           }
-//         }
-//       ]
-//     }
-//   ]
-// }
-
-export async function handleIgSendMessages(
-  data: IgSendMessageBody,
-  recipientId: string,
-  messageId: string,
-  waSettings: WhatsappSettings,
-) {
-  const contact = await getOrCreateContactByIgsId(
-    recipientId,
-    waSettings.orgId,
-  );
-  const messageBody = {
-    send: data,
-    receive: null,
-    exchangeProcess: "send",
-  } as WaInboxMessageBody;
-  const newMessage = await addNewWaMessage(
-    messageBody,
-    contact.id,
-    new Date().toISOString(),
-    PlatformType.INSTAGRAM,
-    waSettings.ibaId,
-    {},
-    messageId,
-  );
-}
-
 export async function handleInstagramMessageSeen(data: InstagramWebhookBody) {
   const messaginObj = data.entry[0].messaging[0];
   const { timestamp, read } = messaginObj;
@@ -149,25 +94,6 @@ export async function handleInstagramMessageReaction(
   const messaginObj = data.entry[0].messaging[0];
   const { sender } = messaginObj;
   const { orgId, ibaId } = waSettings;
-  // const reactedAt = new Date(timestamp).toISOString();
-  // const reactionObj = {
-  //   reaction: rest,
-  //   ...restMessaging,
-  //   reactedAt,
-  // };
-  // const message = await getWaMessageByMessageId(mid)
-  // const { exchangeProcess, receive, send, ...restProps } = message.messageBody
-  // if(exchangeProcess === "send"){
-  //   send["reactionMessage"] = reactionObj
-  // }else {
-  //   receive["reactionMessage"] = reactionObj
-  // }
-  // const updateData = {
-  //   ...restProps,
-  //   exchangeProcess,
-  //   send,
-  //   receive
-  // }
   await handleWaMessages(
     "receive",
     messaginObj,
@@ -175,39 +101,6 @@ export async function handleInstagramMessageReaction(
     orgId,
     PlatformType.INSTAGRAM,
     ibaId,
-  );
-  // await updateWaMessageByMessageId(mid, {  messageBody: updateData })
-}
-
-export async function sendInstagramMessage(
-  recipientId: string,
-  contactId: string,
-  ibaId: string,
-  message: IgSendMessageBody,
-  sendBy: string,
-) {
-  const waSettings = await getWaSettingsByIbaId(ibaId);
-  const url = `/me/messages?access_token=${waSettings.pageAccessToken}`;
-  const data = {
-    recipient: {
-      id: recipientId,
-    },
-    message,
-  };
-  const res = await callWhatsappApi(url, "POST", null, data);
-  const newMessage = await addNewWaMessage(
-    {
-      exchangeProcess: "receive",
-      receive: null,
-      send: message,
-    },
-    contactId,
-    new Date().toISOString(),
-    PlatformType.INSTAGRAM,
-    ibaId,
-    null,
-    res.data.message_id,
-    sendBy,
   );
 }
 
