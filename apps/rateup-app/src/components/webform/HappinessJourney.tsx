@@ -181,8 +181,8 @@ const HappinessJourney = ({ surveyId }: { surveyId: string }) => {
           <Text className="text-[#00BF83] font-bold text-xl">
             {selectedPoint
               ? selectedPoint.npsScore > 0
-                ? `+${selectedPoint.npsScore}`
-                : selectedPoint.npsScore
+                ? `+${selectedPoint.npsScore.toFixed(1)}`
+                : selectedPoint.npsScore.toFixed(1)
               : 0}
           </Text>
         </View>
@@ -196,7 +196,7 @@ const HappinessJourney = ({ surveyId }: { surveyId: string }) => {
             </Text>
           </View>
           <Text className="text-[#00BF83] font-bold text-xl">
-            {selectedPoint ? selectedPoint.avgNPSRating : 0}
+            {selectedPoint ? selectedPoint.avgNPSRating.toFixed(1) : 0}
           </Text>
         </View>
         <View className="flex-row justify-between items-center">
