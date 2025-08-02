@@ -622,6 +622,8 @@ declare global {
     icon: string;
     createdAt: string;
     type: string;
+    tags: string[];
+    contactType: string[];
     _count: {
       contacts: number;
       LoyaltyCustomerMap: number;

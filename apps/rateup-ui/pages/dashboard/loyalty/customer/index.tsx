@@ -129,7 +129,7 @@ export default function Contacts() {
                 <ContactTable
                   columns={columnGroup}
                   data={contactGroups}
-                  cTags={cTags?.contactTags}
+                  tags={cTags}
                   tab={activeTab}
                   refetch={refetchGroups}
                   setSorting={setSortingGroup}

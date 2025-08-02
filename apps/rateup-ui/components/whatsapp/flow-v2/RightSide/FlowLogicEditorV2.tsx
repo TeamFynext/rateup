@@ -133,11 +133,11 @@ export const FlowLogicEditorV2 = () => {
 
   const handleSave = () => {
     let { success, error } = arraySchema.safeParse(logicJumpsComponentLevel);
-    let message =
-      "Invalid input" === error[0].message
-        ? "All field must be filled"
-        : error[0]?.message;
     if (!success) {
+      let message =
+        "Invalid input" === error?.[0]?.message
+          ? "All field must be filled"
+          : error?.[0]?.message;
       showErrorToast(message, "error-invalid-logic-jumps");
     }
 
