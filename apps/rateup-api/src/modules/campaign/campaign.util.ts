@@ -1,0 +1,38 @@
+import { FastifyReply, FastifyRequest } from "fastify";
+import { SubscriptionFeaturePathName } from "../../types/enums";
+import { getNestedProperty } from "../../utils/misc/obj.utils";
+import prisma from "../../utils/prisma";
+
+export async function verifyCampaignMaxLimit(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    let orgId = request.user.orgId;
+    const subscription = request.subscription;
+    if (!subscription) throw new Error("Subscription not found");
+
+    const campaignCount = await prisma.campaign.count({
+      where: {
+        team: {
+          orgId,
+        },
+      },
+    });
+
+    const whatsappCampaignFeature = getNestedProperty(
+      subscription.features as any,
+      SubscriptionFeaturePathName.WhatsAppCampaign,
+    );
+    if (campaignCount >= whatsappCampaignFeature?.count?.max) {
+      throw new Error(
+        `You have reached the maximum limit of ${whatsappCampaignFeature?.count?.max} campaigns.`,
+      );
+    }
+  } catch (e) {
+    return reply.code(403).send({
+      message: e?.message,
+      displayMessageInClient: true,
+    });
+  }
+}

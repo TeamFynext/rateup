@@ -1,4 +1,6 @@
+import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  SubscriptionFeaturePathName,
   WaTemplateCategory,
   WaTemplateComponentType,
   WaTemplateComponentTypeUpperCase,
@@ -16,6 +18,8 @@ import {
   CreateWaTemplateInput,
 } from "./wa_templates.schema";
 import { getTemplateByIdAndOrgId } from "./wa_templates.service";
+import { getNestedProperty } from "../../../utils/misc/obj.utils";
+import prisma from "../../../utils/prisma";
 
 export function generateTemplate(
   input: CreateWaTemplateInput,
@@ -300,4 +304,36 @@ export function getFlowIdFromTemplateComponents(
     ?.flow_id?.toString();
 
   return flowId;
+}
+
+export async function verifyTemplateSubscriptionLimit(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    let orgId = request.user.orgId;
+    const subscription = request.subscription;
+    if (!subscription) throw new Error("Subscription not found");
+
+    const templateCount = await prisma.waTemplate.count({
+      where: {
+        orgId: orgId,
+      },
+    });
+
+    const whatsappTemplateFeature = getNestedProperty(
+      subscription.features as any,
+      SubscriptionFeaturePathName.WhatsAppTemplate,
+    );
+    if (templateCount >= whatsappTemplateFeature?.count?.max) {
+      throw new Error(
+        `You have reached the maximum limit of ${whatsappTemplateFeature?.count?.max} templates.`,
+      );
+    }
+  } catch (e) {
+    return reply.code(403).send({
+      message: e?.message,
+      displayMessageInClient: true,
+    });
+  }
 }
