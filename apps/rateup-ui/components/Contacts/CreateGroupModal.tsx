@@ -5,8 +5,10 @@ import {
   Avatar,
   Box,
   Button,
+  Checkbox,
   FileButton,
   Group,
+  Paper,
   SimpleGrid,
   Stack,
   Text,
@@ -30,7 +32,9 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
+import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
+import PaperLayout from "../styled/Layouts/PaperLayout";
 
 interface GroupModalProps {
   groupClose: () => void;
@@ -38,6 +42,7 @@ interface GroupModalProps {
   isEdit?: boolean;
   groupDetails?: ContactGroup;
   type?: ContactGroupType;
+  gTags?: string[];
 }
 
 const CreateGroupModal = ({
@@ -46,6 +51,7 @@ const CreateGroupModal = ({
   isEdit,
   groupDetails,
   type,
+  gTags = [],
 }: GroupModalProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -54,11 +60,15 @@ const CreateGroupModal = ({
   const router = useRouter();
   const { translations } = useTranslations();
   const form = useForm({
-    initialValues: groupDetails || {
-      name: "",
-      icon: "",
-      teamId: "",
-    },
+    initialValues: groupDetails
+      ? { ...groupDetails, contactType: gTags ?? [] }
+      : {
+          name: "",
+          icon: "",
+          teamId: "",
+          contactType: gTags ?? [],
+          tags: {},
+        },
     validate: {
       name: (value) => (value.length ? null : translations["Cannot be empty"]),
       teamId: (value) =>
@@ -87,7 +97,21 @@ const CreateGroupModal = ({
       return;
     }
     setIsCreating(true);
-    let updatedValues = { ...form.values, type };
+
+    // Process tags for selected contact types
+    const result = {};
+    for (const key of form.values.contactType) {
+      if (form.values?.tags?.hasOwnProperty(key)) {
+        result[key] = form.values?.tags?.[key];
+      }
+    }
+
+    let updatedValues = {
+      ...form.values,
+      type,
+      tags: result,
+    };
+
     if (isEdit) {
       editContactGroupMutation.mutate(updatedValues, {
         onSuccess: () => {
@@ -147,35 +171,36 @@ const CreateGroupModal = ({
         onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
       >
         <SimpleGrid cols={2}>
-          <TextInput
-            label={translations["Group Name"]}
-            placeholder={translations["Enter group name"]}
-            {...form.getInputProps("name")}
-            size="md"
-            radius={"md"}
-            required
-          />
-          {!isEdit ? (
-            <Stack gap={0}>
-              <Text>{translations["Select Team"]}</Text>
-              <TeamSelector
-                value={selectedTeamId}
-                onChange={(value) => setSelectedTeamId(value)}
-              ></TeamSelector>
-            </Stack>
-          ) : (
-            <Stack></Stack>
-          )}
-          <Stack gap={0}>
-            <Text>{translations["Upload Profile Picture"]}</Text>
+          <Stack>
+            <ContainedTextField
+              required
+              label={translations["Group Name"]}
+              placeholder={translations["Enter group name"]}
+              {...form.getInputProps("name")}
+            />
+            <TeamSelector
+              value={selectedTeamId}
+              onChange={(value) => setSelectedTeamId(value)}
+              label={translations["Select Team"]}
+              readOnly={isEdit}
+            />
+          </Stack>
+          <Stack>
+            <Avatar
+              size={"xl"}
+              color="initials"
+              name={form?.values?.name}
+              src={form?.values?.icon && getFileUrlFromKey(form.values.icon)}
+              radius={"sm"}
+              mx={"auto"}
+            />
             <FileButton onChange={setFile} accept="image/png,image/jpeg">
               {(props) => (
                 <Button
-                  size="xl"
-                  radius="lg"
+                  size="md"
+                  radius="md"
                   {...props}
                   variant="outline"
-                  color="grey"
                   leftSection={<IconUpload size={15}></IconUpload>}
                 >
                   <Text size="sm">{translations["Upload Icon"]}</Text>
@@ -183,27 +208,54 @@ const CreateGroupModal = ({
               )}
             </FileButton>
           </Stack>
-          <Avatar
-            radius={"xl"}
-            src={
-              form?.values?.icon
-                ? getFileUrlFromKey(form.values.icon)
-                : `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/user-group-icon-t.png`
-            }
-            size={"xl"}
-          ></Avatar>
         </SimpleGrid>
+        {gTags?.length > 0 && (
+          <PaperLayout p={"xs"} mt={"md"} radius={"md"}>
+            <Checkbox.Group
+              label={translations["Contact Types"]}
+              {...form.getInputProps("contactType")}
+            >
+              <Group>
+                {gTags?.map((data) => (
+                  <Checkbox
+                    value={data}
+                    label={data}
+                    key={data}
+                    tt={"capitalize"}
+                  />
+                ))}
+              </Group>
+            </Checkbox.Group>
+          </PaperLayout>
+        )}
+
+        {form.values.contactType?.length > 0 && (
+          <SimpleGrid cols={2}>
+            {form.values.contactType?.map(
+              (data) =>
+                data !== "phone" && (
+                  <ContainedTextField
+                    key={data}
+                    label={data}
+                    placeholder={`Enter ${data}`}
+                    {...form.getInputProps(`tags.${data}`)}
+                  />
+                ),
+            )}
+          </SimpleGrid>
+        )}
+
         <Group justify="flex-end" mt={"md"}>
           <RateupButtonSecondary
             title={translations["cancel"]}
             onClick={groupClose}
-          ></RateupButtonSecondary>
+          />
           <RateupButtonBlue
             title={isEdit ? translations["Save"] : translations["Create Group"]}
             onClick={handleSubmit}
             loading={isCreating}
             disabled={isUploading}
-          ></RateupButtonBlue>
+          />
         </Group>
       </form>
     </Box>

@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 
 import {
+  Avatar,
   Badge,
   Box,
   Checkbox,
@@ -122,18 +123,14 @@ export const contactGroupColumn = [
     header: () => "image",
     accessorKey: "icon",
     size: 10,
-    cell: (info) =>
-      info.getValue() ? (
-        <Image
-          src={getFileUrlFromKey(info.getValue())}
-          alt="group image"
-          h={50}
-          w={50}
-          fallbackSrc={fallbackImage}
-        />
-      ) : (
-        <IconUsersGroup />
-      ),
+    cell: (info) => (
+      <Avatar
+        color="initials"
+        name={info.getValue()}
+        src={info.getValue() && getFileUrlFromKey(info.getValue())}
+        radius={"sm"}
+      />
+    ),
   },
   ...contactDetailsColumn,
   {

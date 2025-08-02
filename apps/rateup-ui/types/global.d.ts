@@ -366,6 +366,7 @@ declare global {
     isOrgPaused?: boolean;
     waAssignedChatPermission: WaAssignedChatPermission;
     status: UserAvailabilityStatus;
+    hasWhatsAppSettings: boolean;
   };
 
   interface UserInfoQueryData {
@@ -621,6 +622,8 @@ declare global {
     icon: string;
     createdAt: string;
     type: string;
+    tags: string[];
+    contactType: string[];
     _count: {
       contacts: number;
       LoyaltyCustomerMap: number;

@@ -20,6 +20,7 @@ import {
 } from "@tanstack/react-table";
 
 import { ContactGroupType } from "@/types/enums";
+import { GetContactTagsRes } from "@/backend/whatsapp/settings/waSettings.api";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
@@ -51,7 +52,7 @@ function ContactTable({
   enableFilter = true,
   enablePagination = true,
   enableColumnSelection = true,
-  cTags = [],
+  tags = { contactTags: [], contactGroupTags: [] },
   tab = WhatsappTableType.CONTACTS,
   open = () => {},
   groupId = "",
@@ -75,7 +76,7 @@ function ContactTable({
   enableFilter?: boolean;
   enablePagination?: boolean;
   enableColumnSelection?: boolean;
-  cTags?: string[];
+  tags?: GetContactTagsRes;
   tab?: string;
   open?: () => void;
   groupId?: string;
@@ -273,7 +274,7 @@ function ContactTable({
               ) : (
                 <Group gap={"sm"}>
                   <OpenCreateMenu
-                    tags={cTags ?? []}
+                    tags={tags}
                     tab={tab}
                     toggle={open}
                     isPending={isPending}
