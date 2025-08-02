@@ -5,6 +5,7 @@ import { contactCoreSchema } from "../contact.schema";
 const coreContactGroupSchema = z.object({
   name: z.string(),
   icon: z.string().optional(),
+  tags: z.any(),
 });
 export enum ContactGroupType {
   NORMAL = "NORMAL",
@@ -19,6 +20,7 @@ const createContactGroupInputSchema = coreContactGroupSchema.extend({
 const updateContactGroupInputSchema = z.object({
   name: z.string().optional(),
   icon: z.string().optional(),
+  tags: z.any(),
 });
 
 const byContactGroupIdParamsSchema = z.object({

@@ -113,6 +113,7 @@ export async function createContactGroup(
       icon: contactGroup.icon,
       teamId: contactGroup.teamId,
       type: contactGroup.type,
+      tags: contactGroup.tags,
     },
   });
 }
