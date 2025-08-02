@@ -122,7 +122,6 @@ export async function handleWaMessages(
         : await getOrCreateContactByPhone(from, orgId, contactData);
 
     let parameterData = {};
-    // const waTimeStamp = await returnAppropriateTimeStamp(waMessageBody);
     switch (type) {
       case "send": {
         //condition to add template body to messageData if type is template
