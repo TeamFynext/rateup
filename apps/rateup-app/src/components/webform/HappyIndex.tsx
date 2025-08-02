@@ -71,11 +71,33 @@ const HappyIndex = ({ surveyId }: { surveyId: string }) => {
   }
   if (isLoading) {
     return (
-      <View>
-        <Text>loading...</Text>
+      <View className="bg-white p-4 flex-1 space-y-6">
+        {/* Heading */}
+
+        {/* Circle Chart Placeholder */}
+        <View className="flex items-center gap-6">
+          <View className="w-[170px] h-[170px] rounded-full bg-gray-200" />
+
+          {/* Mood list placeholders */}
+          <View className="flex space-y-4">
+            {[...Array(5)].map((_, index) => (
+              <View key={index} className="flex-row items-center gap-2 w-full">
+                <View className="w-10 h-10 rounded-full bg-gray-200" />
+                <View className="flex-1 space-y-2">
+                  <View className="flex-row justify-between">
+                    <View className="h-3 w-20 bg-gray-200 rounded" />
+                    <View className="h-4 w-12 bg-gray-300 rounded-full" />
+                  </View>
+                  <View className="h-2 bg-gray-200 rounded-full w-full" />
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
       </View>
     );
   }
+
   return (
     <View className="bg-white p-4 lg:col-span-3 w-full flex-1 h-full">
       <Text className="text-lg font-semibold mb-4">Happiness Index</Text>

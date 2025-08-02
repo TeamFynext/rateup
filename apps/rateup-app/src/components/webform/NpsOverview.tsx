@@ -34,8 +34,36 @@ const NpsOverview = ({ surveyId }: { surveyId: string }) => {
   ];
 
   if (isLoading) {
-    return <RNText>Loading...</RNText>;
+    return (
+      <View className="p-4 bg-white flex-1 space-y-4">
+        {/* Title Placeholder */}
+        <View className="h-6 w-32 bg-gray-200 rounded" />
+
+        {/* Gauge Placeholder */}
+        <View className="w-[220px] h-[140px] bg-gray-200 rounded-full self-center" />
+
+        {/* Response Boxes Placeholder */}
+        <View className="space-y-3 mt-4">
+          {[...Array(3)].map((_, i) => (
+            <View
+              key={i}
+              className="flex-row items-center justify-between bg-[#FAFAFA] p-3 rounded"
+            >
+              <View className="flex-row items-center space-x-3">
+                <View className="w-10 h-10 bg-gray-200 rounded-full" />
+                <View>
+                  <View className="h-4 w-24 bg-gray-200 rounded mb-1" />
+                  <View className="h-3 w-20 bg-gray-200 rounded" />
+                </View>
+              </View>
+              <View className="h-6 w-10 bg-gray-200 rounded" />
+            </View>
+          ))}
+        </View>
+      </View>
+    );
   }
+
   return (
     <View className="p-4 bg-white flex-1">
       <RNText className="text-lg font-semibold">NPS Overview</RNText>
@@ -51,20 +79,23 @@ const NpsOverview = ({ surveyId }: { surveyId: string }) => {
         <View className="flex bg-white justify-around w-full mt-4 gap-4">
           {npsList.map(
             ({ label, percentage, value, color, bg, icon: Icon }, index) => (
-              <View key={index} className="flex flex-row items-center space-y-1 bg-[#FAFAFA] justify-between p-3">
+              <View
+                key={index}
+                className="flex flex-row items-center space-y-1 bg-[#FAFAFA] justify-between p-3"
+              >
                 <View className="flex flex-row items-center justify-center">
-                    <View
-                  className="rounded-full p-2"
-                  style={{ backgroundColor: bg }}
-                >
-                  <Icon color={color} width={30} height={30} />
-                </View>
-               <View className="flex items-start px-1">
-                 <RNText className="text-lg font-medium">{label}</RNText>
-                <RNText className="text-sm text-[#7A8289] font-medium">
-                  {value} Responses
-                </RNText>
-               </View>
+                  <View
+                    className="rounded-full p-2"
+                    style={{ backgroundColor: bg }}
+                  >
+                    <Icon color={color} width={30} height={30} />
+                  </View>
+                  <View className="flex items-start px-1">
+                    <RNText className="text-lg font-medium">{label}</RNText>
+                    <RNText className="text-sm text-[#7A8289] font-medium">
+                      {value} Responses
+                    </RNText>
+                  </View>
                 </View>
                 <RNText className="text-3xl font-bold" style={{ color }}>
                   {percentage}%
@@ -120,6 +151,13 @@ const NPSGaugeWithNeedle = ({
   passives: number;
   detractors: number;
 }) => {
+  nps = typeof nps === "number" && !isNaN(nps) ? nps : 0;
+  promoters =
+    typeof promoters === "number" && !isNaN(promoters) ? promoters : 0;
+  passives = typeof passives === "number" && !isNaN(passives) ? passives : 0;
+  detractors =
+    typeof detractors === "number" && !isNaN(detractors) ? detractors : 0;
+
   const total = promoters + passives + detractors || 1; // avoid divide by zero
 
   const promoterPercent = (promoters / total) * 100;

@@ -61,7 +61,8 @@ const AnalyticsTab = ({
       <SurveyStatsWebForm surveyId={webformId} />
       <SubTab.Navigator
         screenOptions={({ route }) => ({
-           tabBarScrollEnabled: true,
+          lazy: true,
+          tabBarScrollEnabled: true,
           tabBarLabel: ({ focused }) => (
             <Text
               className={`text-md font-bold ${
@@ -75,14 +76,13 @@ const AnalyticsTab = ({
             backgroundColor: "#fff",
             elevation: 0,
             height: 48,
-            width:"100%"
+            width: "100%",
           },
           tabBarIndicatorStyle: {
             backgroundColor: "#4A90E2",
             height: 2,
           },
-        })
-      }
+        })}
       >
         <SubTab.Screen name="Happiness Index">
           {() => <HappyIndex surveyId={webformId} />}
@@ -96,7 +96,7 @@ const AnalyticsTab = ({
           {() => <HappinessJourney surveyId={webformId} />}
         </SubTab.Screen>
 
-        <SubTab.Screen name="Question-wise Overview">
+        <SubTab.Screen name="Survey Questions Breakdown">
           {() => (
             <ScrollView className="p-4 bg-white">
               {Object.entries(data.choiceWise).map(
