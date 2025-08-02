@@ -146,8 +146,8 @@ export default function ContactGroup() {
         body={createNewContactsFromCSV?.error?.response?.data}
         isError={createNewContactsFromCSV.isError}
       />
-      <Stack h={"100%"}>
-        <PaperLayout style={{ overflow: "visible" }}>
+      <Stack h={"100%"} mx={"xs"}>
+        <PaperLayout mt={2}>
           <Group justify="space-between">
             <Group>
               <Avatar
@@ -157,9 +157,9 @@ export default function ContactGroup() {
                 alt={translations["profile pic"]}
                 size={"xl"}
                 radius={"md"}
-              >
-                <IconUsersGroup size={40} />
-              </Avatar>
+                color="initials"
+                name={groupDetails?.name}
+              />
               <Stack gap={0}>
                 <Title>
                   {loadingState ? (
@@ -188,6 +188,7 @@ export default function ContactGroup() {
                       groupClose={closeEditModal}
                       isEdit={true}
                       groupDetails={groupDetails}
+                      gTags={cTags?.contactGroupTags}
                     />
                   </FormModalLayout>
 
@@ -226,7 +227,7 @@ export default function ContactGroup() {
             </Group>
           </Group>
         </PaperLayout>
-        <Stack mt={"xs"} flex={1}>
+        <Stack flex={1} mb={"xs"}>
           <Group justify="space-between">
             <Title order={2}>{translations["Members"]}</Title>
             <TextInput
@@ -246,7 +247,7 @@ export default function ContactGroup() {
             <ContactTable
               columns={column}
               data={groupDetails?.contacts}
-              cTags={cTags?.contactTags}
+              tags={cTags}
               tab={WhatsappTableType.MEMBERS}
               open={open}
               groupId={groupDetails?.id}

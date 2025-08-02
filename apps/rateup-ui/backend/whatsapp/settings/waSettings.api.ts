@@ -56,13 +56,13 @@ export const deRegisterBusinessClient = async (phoneId: string) => {
 export async function updateContactTags(tags) {
   return await axiosClient.post(`${SettingsUrl}/contact_tag`, tags);
 }
-type getContactTagsRes = {
+export type GetContactTagsRes = {
   contactTags: string[];
   contactGroupTags: string[];
 };
 export async function getContactTags() {
   return (await axiosClient.get(`${SettingsUrl}/contact_tag`))
-    ?.data as getContactTagsRes;
+    ?.data as GetContactTagsRes;
 }
 type WaLogsRes = {
   logs: {
