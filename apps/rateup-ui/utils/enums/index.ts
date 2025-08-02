@@ -192,6 +192,8 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Campaign";
     case sfpn.WhatsAppTemplate:
       return "Template";
+    case sfpn.WhatsAppAutomation:
+      return "Automation";
     case sfpn.Ticket:
       return "Ticket";
     case sfpn.AI:
