@@ -1,5 +1,3 @@
-// TODO
-
 import { FastifyRequest, FastifyReply } from "fastify";
 import prisma from "../../utils/prisma";
 import {
@@ -8,30 +6,6 @@ import {
 } from "../../types/enums";
 import { ByCampaignIdParams, SendCampaignInput } from "./campaign.schema";
 import { log } from "../../utils/logger";
-//not using
-export async function verifyCampaignMaxCountRestriction(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  const campaignCount = await prisma.campaign.count({
-    where: {
-      team: {
-        orgId: request.user.orgId,
-      },
-    },
-  });
-
-  if (
-    campaignCount >=
-    request.subscription.features[SubscriptionFeaturePathName.WhatsAppCampaign]
-      .count.max
-  ) {
-    reply.code(403).send({
-      message: "You have reached the maximum limit of Campaigns",
-      displayMessageInClient: true,
-    });
-  }
-}
 
 export async function getUsageStats(orgId: string) {
   return prisma.usageStats.findUnique({
@@ -82,11 +56,9 @@ export async function verifyMessageMonthlyLimitRestrictionForCampaign(
       ],
     } = request.body;
     const { campaignId } = request.params;
+    const subscription = request.subscription;
 
-    const [usage, subscription] = await Promise.all([
-      getUsageStats(orgId),
-      getSubscription(orgId),
-    ]);
+    const usage = await getUsageStats(orgId);
 
     if (!usage || !subscription) {
       return reply
