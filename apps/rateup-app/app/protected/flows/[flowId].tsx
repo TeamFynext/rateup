@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -6,7 +6,6 @@ import {
   Pressable,
   Text,
   View,
-  ScrollView,
   TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -17,18 +16,17 @@ import { ContactCard } from "@/src/components/flow/FlowResponseCard";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { BackIcon } from "@/src/constants/imageExports";
-import ChoiceWise from "@/src/components/flow/ChoiceWise";
 import {
   useResponseAnalytics,
   useResponsesBySurvey,
 } from "@/src/api/response/response.query";
 import { useQuestions } from "@/src/api/question/question.query";
 import { useFlowDataStore, useFlowResponseDataStore } from "@/src/utils/store";
-import NPSOverview from "@/src/components/flow/NPSOverview";
 import SurveyStatsWebForm from "@/src/components/webform/SurveyStats";
 import HappyIndex from "@/src/components/webform/HappyIndex";
 import NpsOverview from "@/src/components/webform/NpsOverview";
 import HappinessJourney from "@/src/components/webform/HappinessJourney";
+import SurveyQuestions from "@/src/components/flow/SurveyQuestions";
 
 dayjs.extend(relativeTime);
 
@@ -45,7 +43,15 @@ const OverviewTab = ({
   version: number;
 }) => {
   const { data, isLoading } = useResponseAnalytics(surveyId, {});
-  const { data: question } = useQuestions(surveyId);
+  const { data: questions } = useQuestions(surveyId);
+
+  const [npsOverView, choiceWiseOverView] = useMemo(
+    () =>
+      data
+        ? [Object.entries(data?.nps), Object.entries(data?.choiceWise)]
+        : [[], []],
+    [data]
+  );
 
   if (isLoading) {
     return (
@@ -145,67 +151,60 @@ const OverviewTab = ({
   //     </ScrollView>
   //   </View>
   // );
-   return (
-      <View className="flex-1 bg-white h-full">
-        <SurveyStatsWebForm surveyId={surveyId} />
-        <SubTab.Navigator
-          screenOptions={({ route }) => ({
-            lazy: true,
-            tabBarScrollEnabled: true,
-            tabBarLabel: ({ focused }) => (
-              <Text
-                className={`text-md font-bold ${
-                  focused ? "text-rateUpBlue" : "text-gray-400"
-                }`}
-              >
-                {route.name}
-              </Text>
-            ),
-            tabBarStyle: {
-              backgroundColor: "#fff",
-              elevation: 0,
-              height: 48,
-              width: "100%",
-            },
-            tabBarIndicatorStyle: {
-              backgroundColor: "#4A90E2",
-              height: 2,
-            },
-          })}
-        >
-          <SubTab.Screen name="Happiness Index">
-            {() => <HappyIndex surveyId={surveyId} />}
-          </SubTab.Screen>
-  
-          <SubTab.Screen name="NPS Overview">
-            {() => <NpsOverview surveyId={surveyId} />}
-          </SubTab.Screen>
-  
-          <SubTab.Screen name="Happiness Journey">
-            {() => <HappinessJourney surveyId={surveyId} />}
-          </SubTab.Screen>
-  
-          <SubTab.Screen name="Survey Questions Breakdown">
-            {() => (
-              <ScrollView className="p-4 bg-white">
-                {Object.entries(data.choiceWise).map(
-                  ([questionId, { data: choices }]) => (
-                   <ChoiceWise
-                    key={questionId}
-                    questionId={questionId}
-                    choices={choices}
-                    questions={question}
-                    version={version}
-                    flow={flow}
-                  />
-                  )
-                )}
-              </ScrollView>
-            )}
-          </SubTab.Screen>
-        </SubTab.Navigator>
-      </View>
-    );
+  return (
+    <View className="flex-1 bg-white h-full">
+      <SurveyStatsWebForm surveyId={surveyId} />
+      <SubTab.Navigator
+        screenOptions={({ route }) => ({
+          lazy: true,
+          tabBarScrollEnabled: true,
+          tabBarLabel: ({ focused }) => (
+            <Text
+              className={`text-md font-bold ${
+                focused ? "text-rateUpBlue" : "text-gray-400"
+              }`}
+            >
+              {route.name}
+            </Text>
+          ),
+          tabBarStyle: {
+            backgroundColor: "#fff",
+            elevation: 0,
+            height: 48,
+            width: "100%",
+          },
+          tabBarIndicatorStyle: {
+            backgroundColor: "#4A90E2",
+            height: 2,
+          },
+        })}
+      >
+        <SubTab.Screen name="Happiness Index">
+          {() => <HappyIndex surveyId={surveyId} />}
+        </SubTab.Screen>
+
+        <SubTab.Screen name="NPS Overview">
+          {() => <NpsOverview surveyId={surveyId} />}
+        </SubTab.Screen>
+
+        <SubTab.Screen name="Happiness Journey">
+          {() => <HappinessJourney surveyId={surveyId} />}
+        </SubTab.Screen>
+
+        <SubTab.Screen name="Survey Questions Breakdown">
+          {() => (
+            <SurveyQuestions
+              choiceWise={choiceWiseOverView}
+              NPS={npsOverView}
+              version={version}
+              questions={questions}
+              flow={flow}
+            />
+          )}
+        </SubTab.Screen>
+      </SubTab.Navigator>
+    </View>
+  );
 };
 
 const ResponsesTab = ({
@@ -318,6 +317,7 @@ const FlowPage = () => {
       {/* Tabs */}
       <Tab.Navigator
         screenOptions={({ route }) => ({
+          swipeEnabled:false,
           tabBarLabel: ({ focused }) => (
             <View
               style={{ width: sw }}

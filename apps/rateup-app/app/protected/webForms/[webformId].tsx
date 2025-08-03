@@ -26,6 +26,7 @@ import SurveyStatsWebForm from "@/src/components/webform/SurveyStats";
 import HappyIndex from "@/src/components/webform/HappyIndex";
 import NpsOverview from "@/src/components/webform/NpsOverview";
 import HappinessJourney from "@/src/components/webform/HappinessJourney";
+import SurveyQuestions from "@/src/components/flow/SurveyQuestions";
 
 const Tab = createMaterialTopTabNavigator();
 const SubTab = createMaterialTopTabNavigator();
@@ -39,6 +40,14 @@ const AnalyticsTab = ({
 }) => {
   const { data, isLoading } = useResponseAnalytics(webformId, {});
   const { data: questions } = useQuestions(webformId);
+
+  const [npsOverView, choiceWiseOverView] = useMemo(
+    () =>
+      data
+        ? [Object.entries(data?.nps), Object.entries(data?.choiceWise)]
+        : [[], []],
+    [data]
+  );
 
   if (isLoading) {
     return (
@@ -98,20 +107,13 @@ const AnalyticsTab = ({
 
         <SubTab.Screen name="Survey Questions Breakdown">
           {() => (
-            <ScrollView className="p-4 bg-white">
-              {Object.entries(data.choiceWise).map(
-                ([questionId, { data: choices }]) => (
-                  <ChoiceWise
-                    key={questionId}
-                    questionId={questionId}
-                    choices={choices}
-                    questions={questions}
-                    version={1}
-                    flow={webform}
-                  />
-                )
-              )}
-            </ScrollView>
+            <SurveyQuestions
+              choiceWise={choiceWiseOverView}
+              NPS={npsOverView}
+              version={1}
+              questions={questions}
+              flow={null}
+            />
           )}
         </SubTab.Screen>
       </SubTab.Navigator>
@@ -202,6 +204,7 @@ const WebFormPage = () => {
 
       <Tab.Navigator
         screenOptions={({ route }) => ({
+          swipeEnabled: false,
           tabBarLabel: ({ focused }) => (
             <View
               style={{ width: sw }}

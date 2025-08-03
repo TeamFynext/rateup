@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text, FlatList } from "react-native";
 import { QuestionType2 } from "./enum";
+import { Rating, renderChoiceItem } from "@/src/util";
 
 type ChoiceData = {
   choice: string;
@@ -13,6 +14,7 @@ type Props = {
   questions: any[]; // for version 1
   version: number;
   flow: any;
+  index?: number;
 };
 
 const ChoiceWise = ({
@@ -21,6 +23,7 @@ const ChoiceWise = ({
   questions,
   version,
   flow,
+  index,
 }: Props) => {
   const getLocalizedText = (input: any) => {
     const rawText =
@@ -68,7 +71,7 @@ const ChoiceWise = ({
       {/* Top Label Row */}
       <View className="flex-row items-center space-x-2 mb-3 gap-1">
         <View className="w-6 h-6 rounded-full bg-rateUpGreen items-center justify-center">
-          <Text className="text-white text-xs font-semibold">Q</Text>
+          <Text className="text-white text-xs font-semibold">{index + 1}</Text>
         </View>
         <Text className="text-xs font-medium text-white bg-rateUpGreen px-2 py-1 rounded-full">
           {type}
@@ -81,7 +84,7 @@ const ChoiceWise = ({
       </Text>
 
       {/* Choices List */}
-      <FlatList
+      {/* <FlatList
         data={choices}
         keyExtractor={(_, index) => index.toString()}
         scrollEnabled={false}
@@ -98,7 +101,17 @@ const ChoiceWise = ({
             No question responses.
           </Text>
         }
-      />
+      /> */}
+
+      <View className="space-y-2 mt-2">
+        {choices.length > 0 ? (
+          choices.map((item, idx) => renderChoiceItem(type, item, idx))
+        ) : (
+          <Text className="text-base text-gray-500 text-center mt-2">
+            No question responses.
+          </Text>
+        )}
+      </View>
     </View>
   );
 };
