@@ -19,7 +19,6 @@ import {
 import { ContactCard } from "@/src/components/flow/FlowResponseCard";
 import { useSurvey } from "@/src/api/survey/survey.query";
 import { useQuestions } from "@/src/api/question/question.query";
-import ChoiceWise from "@/src/components/flow/ChoiceWise";
 import { BackIcon } from "@/src/constants/imageExports";
 import { useWebFormResponseDataStore } from "@/src/utils/store";
 import SurveyStatsWebForm from "@/src/components/webform/SurveyStats";

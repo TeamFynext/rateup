@@ -11,7 +11,7 @@ interface StarRowProps {
 
 const Rating: React.FC<StarRowProps> = ({
   count,
-  color = "blue",
+  color = "#004F98",
   size = 20,
 }) => {
   const stars = Array.from({ length: count }, (_, index) => (
@@ -44,43 +44,41 @@ export const renderChoiceItem = (
   mostVotedChoice: string,
   version: any
 ) => {
-  const choiceLower = item.choice.toLowerCase();
-  const isMostVoted = item.choice === mostVotedChoice;
+  const choiceLower = item?.choice.toLowerCase();
+  const isMostVoted = item?.choice === mostVotedChoice;
 
   const getVoteText = (count: number) => (count > 1 ? "votes" : "vote");
-  const valueText = `${item.count} ${getVoteText(item.count)} ${
-    item.percentage
-  }`;
-
+  const valueText = `${item?.count} ${getVoteText(item.count)}`;
+  const perc =
+    typeof item?.percentage === "number" ? item.percentage.toFixed(1) : "0.0";
   const renderStatRow = (
     label: React.ReactNode,
     badge: React.ReactNode = null
   ) => (
     <View
       key={index}
-      className="flex-row justify-between items-center rounded-md px-3 py-2 bg-white"
+      className="flex-row justify-between gap-10 items-center rounded-md px-6 py-2 bg-white"
     >
       <View className="flex-row items-center gap-3">
         {badge ? (
           <View
-            className={`min-w-[36px] h-[28px] px-2 border border-blue-900 text-blue-900 rounded-sm text-sm font-semibold flex justify-center items-center
-              ${isMostVoted ? "bg-blue-100" : ""}`}
+            className={`min-w-[36px] h-[28px] px-2 border border-rateUpBlue text-rateUpBlue rounded-sm text-sm font-bold flex justify-center items-center
+              ${isMostVoted ? "bg-[#C4D7F5]" : ""}`}
           >
             {badge}
           </View>
         ) : (
-          <View className="flex-row items-center gap-2">{label}</View>
+          <View>{label}</View>
         )}
       </View>
-      <View className="flex-row items-center gap-2">
-        <Text className="bg-gray-100 px-2 py-0.5 rounded-full text-xs font-semibold text-gray-900">
-          {valueText}
+      {isMostVoted && (
+        <Text className="text-rateUpBlue bg-[#C4D7F5] text-sm px-3 py-1 rounded-full font-semibold">
+          Most Voted
         </Text>
-        {isMostVoted && (
-          <Text className="text-blue-900 bg-blue-100 text-[10px] px-2 py-0.5 rounded-full font-semibold">
-            Most Voted
-          </Text>
-        )}
+      )}
+      <View className="flex-row items-center bg-[#F5F5F5] rounded-full justify-center gap-1 px-3 py-1">
+        <Text className="text-sm font-semibold text-gray-900">{valueText}</Text>
+        <Text className="text-sm font-semibold text-gray-900">({perc}%)</Text>
       </View>
     </View>
   );
@@ -100,7 +98,15 @@ export const renderChoiceItem = (
 
     case QuestionType2.Opinion:
     case WaQuestions.Opinion:
-      return renderStatRow(<Text>{item.choice}</Text>);
+      return renderStatRow(
+        <View
+          className={`border border-rateUpBlue px-2 py-2 w-10 h-10 flex items-center justify-center rounded-md  ${
+            isMostVoted ? "bg-[#C4D7F5]" : ""
+          }`}
+        >
+          <Text className="text-sm">{item.choice}</Text>
+        </View>
+      );
 
     case QuestionType2.Smiley:
     case WaQuestions.Smiley:

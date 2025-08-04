@@ -1,5 +1,14 @@
-import { View, Text, ScrollView } from "react-native";
-import React, { useMemo } from "react";
+import { View, Text, ScrollView, Pressable } from "react-native";
+import React, { useMemo, useState } from "react";
+import {
+  AngryIcon,
+  ChevronDown,
+  ChevronUp,
+  LaughIcon,
+  MehIcon,
+  TargetIcon,
+  Users,
+} from "lucide-react-native";
 import { QuestionType2 } from "./enum";
 import { renderChoiceItem } from "@/src/util";
 
@@ -18,13 +27,24 @@ const SurveyQuestions = ({
   version,
   questions,
 }: SurveyQuestionProps) => {
-  if (choiceWise.length === 0) return null;
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggleExpand = (id: string) => {
+    setExpanded((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
 
   const flowQuestions = useMemo(() => {
     return flow?.json?.screens?.flatMap((screen: any) =>
       screen.layout.children
         .filter((child: any) => child.type !== QuestionType2.Footer)
-        //@ts-ignore
         .map(({ id, label, metaType, name, header }) => ({
           id,
           label,
@@ -35,24 +55,29 @@ const SurveyQuestions = ({
         .filter(({ name }: { name: any }) => name)
     );
   }, [flow]);
-  function getQuestion(questionId: any) {
+
+  const getQuestion = (questionId: any) => {
     const question =
       version === 1
-        ? questions?.find((question) => question?.id === questionId)
+        ? questions?.find((q) => q?.id === questionId)
         : flowQuestions.find((q: any) => q.id === questionId);
+
     return {
-      type: version === 1 ? question.type : question.metaType,
+      type: version === 1 ? question?.type : question?.metaType,
       questionTitle:
         version === 1
-          ? question.title || question.label
-          : question.header || question.label,
+          ? question?.title || question?.label
+          : question?.header || question?.label,
     };
-  }
+  };
+
   const getPercentage = (count: number, total: number) =>
     total > 0 ? Math.round((count / total) * 100) : "0";
+
+  if (choiceWise.length === 0) return null;
+
   return (
-    <ScrollView>
-      {/* @ts-ignore */}
+    <ScrollView className="flex-1 bg-white">
       {choiceWise?.map(([questionId, questionData], index) => {
         const questionDetails = getQuestion(questionId);
         const type = questionDetails?.type as QuestionType2;
@@ -65,58 +90,141 @@ const SurveyQuestions = ({
         const passives = npsEntry?.npsData?.passives ?? 0;
         const detractors = npsEntry?.npsData?.detractors ?? 0;
         const total = promoters + passives + detractors;
-        const happinessIndex =
-          total > 0 ? ((promoters / total) * 10).toFixed(1) : 0;
-
-        const chartData = questionData?.data.map((item: any, index: number) => {
-          return {
+        const chartData = questionData?.data.map(
+          (item: any, index: number) => ({
             ...item,
-            percentage: getPercentage(item.count, responseCount),
-          };
-        });
-
-        const getMostVotedChoice = () => {
-          const maxCount = Math.max(...chartData?.map((c: any) => c.count));
-          return chartData.find((c: any) => c.count === maxCount)?.choice;
-        };
-
-        const mostVotedChoice = getMostVotedChoice();
+            percentage: getPercentage(item?.count, responseCount),
+          })
+        );
+        const maxCount = Math.max(...chartData.map((c: any) => c.count));
+        const mostVotedChoice = chartData.find(
+          (c: any) => c.count === maxCount
+        )?.choice;
+        const isExpanded = expanded.has(questionId);
 
         return (
-          <View
-            key={questionId}
-            className="bg-white rounded-2xl shadow-md p-4 mb-4"
-          >
-            <Text className="text-base font-semibold text-gray-900 mb-2">
-              {index + 1}. {getLocalizedText(title)}
-            </Text>
-
-            <View className="space-y-2">
-              {questionData.data?.length > 0 ? (
-                chartData.map((item: any, idx: number) =>
-                  renderChoiceItem(type, item, idx, mostVotedChoice, version)
-                )
-              ) : (
-                <Text className="text-gray-500 text-center">
-                  No responses yet.
-                </Text>
-              )}
-            </View>
-
-            {npsEntry && (
-              <View className="mt-3">
-                <Text className="text-sm text-gray-600">
-                  NPS Score: {npsScore}
-                </Text>
-                <Text className="text-sm text-gray-600">
-                  Happiness Index: {happinessIndex}
-                </Text>
-                <Text className="text-sm text-gray-600">
-                  Promoters: {promoters}, Passives: {passives}, Detractors:{" "}
-                  {detractors}
+          <View key={questionId} className="bg-white rounded-2xl">
+            <Pressable
+              onPress={() => toggleExpand(questionId)}
+              className="flex-row justify-between items-center px-4 py-5"
+            >
+              <View className="flex-row items-center justify-center gap-2">
+                <View className="bg-rateUpBlue rounded-full w-6 h-6 flex justify-center items-center">
+                  <Text className="text-sm font-semibold text-white p-1">
+                    {index + 1}
+                  </Text>
+                </View>
+                <Text className=" font-semibold text-md">
+                  {getLocalizedText(title)}
                 </Text>
               </View>
+              <View>
+                {isExpanded ? (
+                  <ChevronUp size={20} color="#4B5563" />
+                ) : (
+                  <ChevronDown size={20} color="#4B5563" />
+                )}
+              </View>
+            </Pressable>
+
+            {isExpanded && (
+              <View className="flex gap-8">
+                <View>
+                  {chartData?.length > 0 ? (
+                    chartData.map((item: any, idx: number) =>
+                      renderChoiceItem(
+                        type,
+                        item,
+                        idx,
+                        mostVotedChoice,
+                        version
+                      )
+                    )
+                  ) : (
+                    <Text className="text-gray-500 text-center">
+                      No responses yet.
+                    </Text>
+                  )}
+                </View>
+
+                {npsEntry && (
+                  <View className="px-4 py-1 flex justify-center gap-2">
+                    <View className="flex-row justify-between items-center">
+                      <View className="flex-row gap-2 items-center justify-between">
+                        <View className="rounded-lg p-1 bg-[#2B82DE1F]">
+                          <TargetIcon
+                            color={"#2B82DE"}
+                            width={25}
+                            height={25}
+                          />
+                        </View>
+                        <Text className="text-rateUpTextGray font-semibold text-md">
+                          NPS Score
+                        </Text>
+                      </View>
+                      <Text className="text-[#00BF83] font-bold text-xl">
+                        {npsScore > 0
+                          ? `+${Math.round(npsScore)}`
+                          : Math.round(npsScore)}
+                      </Text>
+                    </View>
+                    <View className="flex-row justify-between items-center">
+                      <View className="flex-row gap-2 items-center justify-between">
+                        <View className="rounded-lg p-1 bg-[#2B82DE1F]">
+                          <Users color={"#2B82DE"} width={25} height={25} />
+                        </View>
+                        <Text className="text-rateUpTextGray font-semibold text-md">
+                          Total Responses
+                        </Text>
+                      </View>
+                      <Text className="text-[#00BF83] font-bold text-xl">
+                        {total}
+                      </Text>
+                    </View>
+                    <View className="flex-row justify-between items-center">
+                      <View className="flex-row gap-2 items-center justify-between">
+                        <View className="rounded-full p-1 bg-[#00BF831F]">
+                          <LaughIcon color={"#00BF83"} width={25} height={25} />
+                        </View>
+                        <Text className="text-rateUpTextGray font-semibold text-md">
+                          Promoters
+                        </Text>
+                      </View>
+                      <Text className="text-[#00BF83] font-bold text-xl">
+                        {promoters}
+                      </Text>
+                    </View>
+                    <View className="flex-row justify-between items-center">
+                      <View className="flex-row gap-2 items-center justify-between">
+                        <View className="rounded-full p-1 bg-[#FFC1071F]">
+                          <MehIcon color={"#FFC107"} width={25} height={25} />
+                        </View>
+                        <Text className="text-rateUpTextGray font-semibold text-md">
+                          Passives
+                        </Text>
+                      </View>
+                      <Text className="text-[#FFC107] font-bold text-xl">
+                        {passives}
+                      </Text>
+                    </View>
+                    <View className="flex-row justify-between items-center">
+                      <View className="flex-row gap-2 items-center justify-between">
+                        <View className="rounded-full p-1 bg-[#FF61611F]">
+                          <AngryIcon color={"#FF6161"} width={25} height={25} />
+                        </View>
+                        <Text className="text-rateUpTextGray font-semibold text-md">
+                          Detractors
+                        </Text>
+                      </View>
+                      <Text className="text-[#FF6161] font-bold text-xl">
+                        {detractors}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </View>
             )}
+            <View className="border-b border-b-[#E2E5ED]" />
           </View>
         );
       })}
