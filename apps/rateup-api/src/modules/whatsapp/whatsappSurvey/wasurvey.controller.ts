@@ -1170,6 +1170,9 @@ async function handleInitialInteraction(
             command: "*",
             orgId: orgId,
           },
+          waAutomatedReply: {
+            isEnabled: true,
+          },
         },
         include: {
           waAutomatedReply: true,
