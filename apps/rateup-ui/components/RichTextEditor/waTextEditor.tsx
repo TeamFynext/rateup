@@ -119,7 +119,7 @@ function WaTextEditor({
     useMediaStore();
   const { selectedContact } = useContactStore();
   const platform =
-    selectedContact.source.toUpperCase() !== MessagePlatform.INSTAGRAM
+    selectedContact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
       ? MessagePlatform.WHATSAPP
       : MessagePlatform.INSTAGRAM;
 

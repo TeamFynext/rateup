@@ -16,7 +16,14 @@ export const uploadFile = async (
   formData.append("file", file);
   formData.append("metadata", JSON.stringify(data));
   try {
-    showLoadingToast("Uploading file...", "upload-file");
+    showLoadingToast(
+      "Uploading file...",
+      "upload-file",
+      true,
+      undefined,
+      undefined,
+      false,
+    );
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/api/public/upload/${
         withThumbnails ? "fileWithThumb" : "file"
