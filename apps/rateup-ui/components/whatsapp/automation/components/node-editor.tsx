@@ -50,6 +50,7 @@ import {
   useSyncFbPages,
   useSyncLeadgenFormQuestions,
   useSyncMetaLeadgenForms,
+  useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
@@ -1127,9 +1128,16 @@ const TemplateNodeEditor: React.FC<
   );
   const router = useRouter();
   let automatedId = router.query.waAutomatedReplyId as string;
+  const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
   const isLeadAutomation = data && data?.commands[0] === "lead";
-  const { data: metaAssets, isLoading } = useMetaAssets(isLeadAutomation);
+  const waSetting =
+    waSettings &&
+    (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ??
+      waSettings[0]);
+  const waSettingsId =
+    data && isLeadAutomation && waSetting ? waSetting.id : null;
+  const { data: metaAssets, isLoading } = useMetaAssets(waSettingsId);
   const leadgenData = useMemo(() => {
     if (isLeadAutomation && metaAssets) {
       const leadgenNode = data?.matchData?.json?.nodes.find(
@@ -1151,7 +1159,7 @@ const TemplateNodeEditor: React.FC<
     handleInputChange("parameters", parameterData);
   }, [parameterData]);
 
-  if (isPending || isLoading) return <RateupLoader />;
+  if (isPending || isLoading || isSettingsLoading) return <RateupLoader />;
 
   return (
     <Stack>
@@ -2193,15 +2201,30 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   handleInputChange,
 }) => {
   const typedData = nodeData as LeadgenNodeData;
-  const { data: metaAssets, isLoading } = useMetaAssets();
-  const subscribeFieldMut = useSubscribeFieldToPage();
-  const syncfbpageMut = useSyncFbPages();
-  const syncAdAccMut = useSyncAdaccounts();
-  const syncAdsMut = useSyncAdsByadAccounts(typedData?.adAccountId);
+  const router = useRouter();
+  let automatedId = router.query.waAutomatedReplyId as string;
+  const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
+  const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
+  const isLeadAutomation = data && data?.commands[0] === "lead";
+  const waSetting =
+    waSettings &&
+    (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ??
+      waSettings[0]);
+  const waSettingsId =
+    data && isLeadAutomation && waSetting ? waSetting.id : null;
+  const { data: metaAssets, isLoading } = useMetaAssets(waSettingsId);
+  const subscribeFieldMut = useSubscribeFieldToPage(waSettingsId);
+  const syncfbpageMut = useSyncFbPages(waSettingsId);
+  const syncAdAccMut = useSyncAdaccounts(waSettingsId);
+  const syncAdsMut = useSyncAdsByadAccounts(
+    typedData?.adAccountId,
+    waSettingsId,
+  );
   const syncformQuestionsMut = useSyncLeadgenFormQuestions(
     typedData?.leadgenFormId,
+    waSettingsId,
   );
-  const syncLeadgenFormsMut = useSyncMetaLeadgenForms();
+  const syncLeadgenFormsMut = useSyncMetaLeadgenForms(waSettingsId);
   const { pages, adAccounts, leadgenForms, ads, formQuestions } =
     useMemo(() => {
       let pages = [],
@@ -2267,7 +2290,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
     }
   }, [typedData?.fbPageId, metaAssets]);
 
-  if (isLoading) return <RateupLoader />;
+  if (isLoading || isPending || isSettingsLoading) return <RateupLoader />;
   return (
     <Stack>
       <Group gap={3}>

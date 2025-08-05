@@ -10,6 +10,7 @@ import {
   Divider,
   Flex,
   Group,
+  Modal,
   Skeleton,
   Stack,
   Switch,
@@ -20,11 +21,13 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import {
+  IconBrandInstagram,
   IconCheck,
   IconChecks,
   IconCopy,
   IconHelp,
   IconLogout,
+  IconRefresh,
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
@@ -34,6 +37,7 @@ import {
   useUpdateChatbot,
 } from "@/backend/chatbot/chatbot.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
+import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import PremiumFeature from "@/components/Premium/PremiumFeature";
 import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast, showWarnToast } from "@/utils/notifications";
@@ -43,15 +47,19 @@ import { WHATSAPP_URL } from "../../../backend/whatsapp";
 import {
   useDeleteWaSettingsMutation,
   useDeregisterBusinessClientMutation,
+  useMetaAssets,
   useRegisterBusinessClientMutation,
+  useSyncFbPages,
   useUpsertWaSettingsMutation,
   useWaSettings,
 } from "../../../backend/whatsapp/settings/waSettings.query";
 import {
+  RateupButtonBlue,
   RateupButtonPrimary,
   RateupButtonSecondary,
 } from "../../../components/Button/RateupButtons";
 import {
+  ContainedSelection,
   ContainedTextArea,
   ContainedTextField,
 } from "../../../components/input/ContainedInput/ContainedInput";
@@ -66,6 +74,8 @@ import { SAVE_HOTKEY } from "../../../utils/constants";
 import styles from "./settings.style.module.css";
 
 function WhatsAppManualConfiguration({ waSettings }) {
+  const { data: metaAssets, isLoading } = useMetaAssets(waSettings.id);
+  const syncfbpageMut = useSyncFbPages(waSettings.id);
   const form = useForm({
     initialValues: {
       wabaId: "",
@@ -73,6 +83,9 @@ function WhatsAppManualConfiguration({ waSettings }) {
       accessToken: "",
       webhookPassword: "",
       appId: "",
+      fbPageId: "",
+      ibaId: "",
+      pageAccessToken: "",
     },
     validate: {
       wabaId: isNotEmpty("BusnessId is required"),
@@ -100,7 +113,11 @@ function WhatsAppManualConfiguration({ waSettings }) {
     deleteMutation.mutate(waSettings?.phoneId);
   };
   const { translations } = useTranslations();
+  const fbPages = metaAssets
+    ? metaAssets.pages.map((page) => ({ value: page.id, label: page.name }))
+    : [];
   const webhookUrl = `${process.env.NEXT_PUBLIC_API_URL}/api${WHATSAPP_URL}/webhook`;
+  const instaWebhhokUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/instagram/webhook`;
   return (
     <>
       <Flex w="100%" align="stretch" gap={"sm"}>
@@ -147,6 +164,52 @@ function WhatsAppManualConfiguration({ waSettings }) {
               required
               {...form.getInputProps("webhookPassword")}
             />
+            {waSettings.accessToken && (
+              <Skeleton visible={isLoading}>
+                <Group gap={"xs"}>
+                  <ContainedSelection
+                    data={fbPages}
+                    value={form.values.fbPageId}
+                    label={"Instagram Connected Facebook Page"}
+                    onChange={(value) => {
+                      if (!value) {
+                        form.setFieldValue("fbPageId", null);
+                        form.setFieldValue("pageAccessToken", null);
+                        form.setFieldValue("ibaId", null);
+                        return;
+                      }
+                      const page = metaAssets.pages.find(
+                        (page) => page.id === value,
+                      );
+                      if (!page.instagram_business_account) {
+                        return showErrorToast(
+                          "Instagram account not found.Try after syncing page or choose another page",
+                        );
+                      }
+                      const data = {
+                        fbPageId: page.id,
+                        pageAccessToken: page.access_token,
+                        ibaId: page.instagram_business_account?.id,
+                      };
+                      form.setValues({
+                        ...form.values,
+                        ...data,
+                      });
+                    }}
+                  />
+                  <Tooltip label={"Sync FB pages"}>
+                    <ActionIcon
+                      variant="light"
+                      mt={20}
+                      onClick={() => syncfbpageMut.mutate()}
+                      loading={syncfbpageMut.isPending}
+                    >
+                      <IconRefresh size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+              </Skeleton>
+            )}
             <Group justify={"space-between"}>
               <Button
                 color="red"
@@ -205,6 +268,39 @@ function WhatsAppManualConfiguration({ waSettings }) {
               }
             />
           </Box>
+          {waSettings.fbPageId && (
+            <Box>
+              <Group>
+                <Text>Instagram Webhook URL</Text>
+                <Tooltip
+                  label={
+                    "Paste this url in your facebook app under webhook -> instagram product configuration @developers.facebook.com/apps/"
+                  }
+                >
+                  <ActionIcon variant="transparent" color="gray">
+                    <IconHelp />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+              <ContainedTextField
+                readOnly
+                value={instaWebhhokUrl}
+                rightSection={
+                  <CopyButton value={instaWebhhokUrl}>
+                    {({ copied, copy }) => (
+                      <ActionIcon
+                        variant={copied ? "filled" : "transparent"}
+                        color={copied ? "teal" : "blue"}
+                        onClick={copy}
+                      >
+                        {copied ? <IconChecks /> : <IconCopy />}
+                      </ActionIcon>
+                    )}
+                  </CopyButton>
+                }
+              />
+            </Box>
+          )}
         </Stack>
       </Flex>
     </>
@@ -417,6 +513,11 @@ function MetaLoginStatus({ waSettings }) {
   const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [openDeleteConfirmation, { open, close }] = useDisclosure(false);
   const { translations } = useTranslations();
+  const [selectedWaSettings, setSelectedWaSettings] = useState(null);
+  const [
+    openedInstaConfigModal,
+    { open: openInstaConfigModal, close: closeInstaConfigModal },
+  ] = useDisclosure(false);
 
   function handleDeRegister() {
     console.log(
@@ -430,6 +531,94 @@ function MetaLoginStatus({ waSettings }) {
   const handleLogoutAccount = (accountId) => {
     setSelectedAccountId(accountId);
     open();
+  };
+  const InstagramConfigModal = ({ opened, close }) => {
+    if (!selectedWaSettings) return null;
+    const { data: metaAssets, isLoading } = useMetaAssets(
+      selectedWaSettings?.id,
+    );
+    const { id, ...rest } = selectedWaSettings;
+    const upsertMutation = useUpsertWaSettingsMutation();
+    const syncfbpageMut = useSyncFbPages(selectedWaSettings?.id);
+    const initialConfig = {
+      fbPageId: null,
+      pageAccessToken: null,
+      ibaId: null,
+    };
+    const [config, setConfig] = useState(initialConfig);
+
+    useEffect(() => {
+      if (selectedWaSettings) {
+        setConfig({
+          fbPageId: selectedWaSettings.fbPageId,
+          pageAccessToken: selectedWaSettings.pageAccessToken,
+          ibaId: selectedWaSettings.ibaId,
+        });
+      }
+    }, [selectedWaSettings]);
+
+    const fbPages = metaAssets
+      ? metaAssets.pages.map((page) => ({ value: page.id, label: page.name }))
+      : [];
+
+    return (
+      <Modal
+        opened={opened}
+        title="Connected Instagram account - FB Page"
+        centered
+        onClose={close}
+      >
+        <Stack>
+          <Skeleton visible={isLoading}>
+            <Group gap={"xs"}>
+              <ContainedSelection
+                data={fbPages}
+                value={config.fbPageId}
+                label={"Instagram Connected Facebook Page"}
+                onChange={(value) => {
+                  if (!value) {
+                    setConfig(initialConfig);
+                    return;
+                  }
+                  const page = metaAssets.pages.find(
+                    (page) => page.id === value,
+                  );
+                  if (!page.instagram_business_account) {
+                    return showErrorToast(
+                      "Instagram account not found.Try after syncing page or choose another page",
+                    );
+                  }
+                  const data = {
+                    fbPageId: page.id,
+                    pageAccessToken: page.access_token,
+                    ibaId: page.instagram_business_account?.id,
+                  };
+                  setConfig(data);
+                }}
+              />
+              <Tooltip label={"Sync FB pages"}>
+                <ActionIcon
+                  variant="light"
+                  mt={20}
+                  onClick={() => syncfbpageMut.mutate()}
+                  loading={syncfbpageMut.isPending}
+                >
+                  <IconRefresh size={20} />
+                </ActionIcon>
+              </Tooltip>
+            </Group>
+          </Skeleton>
+          <Flex justify={"flex-end"}>
+            <RateupButtonBlue
+              w={"fit-content"}
+              title="connect"
+              onClick={() => upsertMutation.mutate({ ...config, ...rest })}
+              loading={upsertMutation.isPending}
+            />
+          </Flex>
+        </Stack>
+      </Modal>
+    );
   };
 
   if (waSettings?.length > 0) {
@@ -452,29 +641,44 @@ function MetaLoginStatus({ waSettings }) {
                 label={`Setting ${index + 1}`}
                 labelPosition="center"
               />
-              <Group align="flex-end" justify="apart">
-                <Group gap={"xl"}>
-                  <ContainedTextField
-                    label={translations["WhatsApp Business ID"]}
-                    value={setting.wabaId}
-                    readOnly
-                  />
-                  <ContainedTextField
-                    label={translations["WhatsApp Phone Number"]}
-                    value={setting.phone}
-                    readOnly
-                  />
+              <Stack w={"100%"}>
+                <Group align="flex-end" justify="apart">
+                  <Group gap={"xl"}>
+                    <ContainedTextField
+                      label={translations["WhatsApp Business ID"]}
+                      value={setting.wabaId}
+                      readOnly
+                    />
+                    <ContainedTextField
+                      label={translations["WhatsApp Phone Number"]}
+                      value={setting.phone}
+                      readOnly
+                    />
+                  </Group>
+                  <Tooltip label={"Logout from this WhatsApp Business Account"}>
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      onClick={() => handleLogoutAccount(setting.phoneId)}
+                    >
+                      <IconLogout />
+                    </ActionIcon>
+                  </Tooltip>
                 </Group>
-                <Tooltip label={"Logout from this WhatsApp Business Account"}>
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    onClick={() => handleLogoutAccount(setting.phoneId)}
-                  >
-                    <IconLogout />
-                  </ActionIcon>
-                </Tooltip>
-              </Group>
+
+                <RateupButtonBlue
+                  w={"fit-content"}
+                  title="Connect Instagram"
+                  variant="gradient"
+                  gradient={{ from: "#f09433", to: "#bc1888", deg: 45 }}
+                  radius={"md"}
+                  leftIcon={<IconBrandInstagram />}
+                  onClick={() => {
+                    setSelectedWaSettings(setting);
+                    openInstaConfigModal();
+                  }}
+                />
+              </Stack>
             </Box>
           ))}
           <ConfirmationModal
@@ -490,6 +694,10 @@ function MetaLoginStatus({ waSettings }) {
             confirmLabel={translations["DeRegister"]}
             headerLabel={translations["DeRegister WhatsApp Business Account"]}
             headerTitle={translations["Confirmation Dialog"]}
+          />
+          <InstagramConfigModal
+            opened={openedInstaConfigModal}
+            close={closeInstaConfigModal}
           />
 
           <Divider my="md" label={"Add New Account"} labelPosition="center" />

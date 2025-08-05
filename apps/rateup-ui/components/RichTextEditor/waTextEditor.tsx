@@ -24,6 +24,9 @@ import { Extension, generateHTML, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 
+import { MessagePlatform } from "@/types/enums";
+import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter";
 import InboxContactsControl from "./InboxContactMessage";
 import InboxLocationControl from "./InboxLocation";
@@ -114,6 +117,11 @@ function WaTextEditor({
   });
   const { media, setSelectedMedia, selectedMedia, removeMedia } =
     useMediaStore();
+  const { selectedContact } = useContactStore();
+  const platform =
+    selectedContact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
+      ? MessagePlatform.WHATSAPP
+      : MessagePlatform.INSTAGRAM;
 
   useEffect(() => {
     if (editor) {
@@ -225,15 +233,21 @@ function WaTextEditor({
               {inbox && (
                 <>
                   <RichTextEditor.ControlsGroup>
-                    <InsertInboxFile />
+                    {platform !== MessagePlatform.INSTAGRAM && (
+                      <InsertInboxFile />
+                    )}
                     <InsertInboxImage />
                     <InsertInboxVideo />
                     <InsertInboxAudio />
                   </RichTextEditor.ControlsGroup>
                   <RichTextEditor.ControlsGroup>
                     <WaQuickReplyControl />
-                    <InboxContactsControl />
-                    <InboxLocationControl />
+                    {platform !== MessagePlatform.INSTAGRAM && (
+                      <>
+                        <InboxContactsControl />
+                        <InboxLocationControl />
+                      </>
+                    )}
                   </RichTextEditor.ControlsGroup>
                 </>
               )}

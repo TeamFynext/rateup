@@ -27,21 +27,23 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   const searchParams = useSearchParams();
   const { selectedContact: contact } = useContactStore();
   const { filter } = useChatFilterStore();
-
   const { data, error } = useGetMessagesByContactId(
     searchParams.get("contactId") ?? contact?.id,
     filter?.phone,
   );
-  const messages =
-    data?.pages
-      .map((page) =>
-        page?.messages?.toSorted(
-          (a, b) =>
-            new Date(a.waCreatedAt).getTime() -
-            new Date(b.waCreatedAt).getTime(),
-        ),
-      )
-      .flat() || [];
+  const messages = useMemo(
+    () =>
+      data?.pages
+        .map((page) =>
+          page?.messages?.toSorted(
+            (a, b) =>
+              new Date(a.waCreatedAt).getTime() -
+              new Date(b.waCreatedAt).getTime(),
+          ),
+        )
+        .flat() || [],
+    [data],
+  );
 
   const { data: assignedUsers } = useGetAssignedUserForContact(contact?.id);
   const { user } = useUser();

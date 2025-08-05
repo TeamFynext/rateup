@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/router";
 
 import {
   ActionIcon,
@@ -18,10 +19,12 @@ import { useForm } from "@mantine/form";
 import { useListState } from "@mantine/hooks";
 import { IconPhoto, IconRefresh, IconUpload, IconX } from "@tabler/icons-react";
 
+import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
 import {
   useMetaAssets,
   useSyncLeadgenFormQuestions,
+  useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import {
   ContainedSelection,
@@ -333,10 +336,30 @@ interface LeadFormQuestionsInputComponentProps {
 function LeadFormQuestionsInputComponent(
   props: LeadFormQuestionsInputComponentProps,
 ) {
+  const router = useRouter();
+  let automatedId = router.query.waAutomatedReplyId as string;
+  const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
+  const {
+    data: automatedReply,
+    isPending,
+    refetch,
+  } = useWaAutomatedReplyById(automatedId);
+  const isLeadAutomation =
+    automatedReply && automatedReply?.commands[0] === "lead";
+  const waSetting =
+    waSettings &&
+    (waSettings.find(
+      (w) => w.phoneId === automatedReply.whatsappSettingsPhoneId,
+    ) ??
+      waSettings[0]);
+  const waSettingsId =
+    automatedReply && isLeadAutomation && waSetting ? waSetting.id : null;
   const syncformQuestionsMut = useSyncLeadgenFormQuestions(
     props.leadgenData.data.leadgenFormId,
+    waSettingsId,
   );
   const data = props.leadgenData.formQuestions.map((q) => q.key);
+  if (isPending || isSettingsLoading) return <RateupLoader />;
   return (
     <Group>
       <ContainedSelection

@@ -34,9 +34,11 @@ export default function WaInboxSessionBadge({
 export function WaInboxSessionAvatar({
   timeStamp,
   title,
+  profile,
 }: {
   timeStamp: string;
   title: string;
+  profile?: string;
 }) {
   const { translations } = useTranslations();
   let sessionExiped = isInboxSessionExpired(timeStamp);
@@ -56,6 +58,7 @@ export function WaInboxSessionAvatar({
       >
         <Avatar
           name={title}
+          src={profile}
           color="var(--mantine-primary-color-6)"
           // bd={`2px solid ${sessionExiped ? "#CC292C33" : "#69F0AE"}`}
         />

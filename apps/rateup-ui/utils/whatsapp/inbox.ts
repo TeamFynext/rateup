@@ -1,10 +1,18 @@
+import { IndicatorProps } from "@mantine/core";
 import dayjs from "dayjs";
 
-import { WaTemplateComponentTypeUpperCase } from "@/types/enums";
+import {
+  MessagePlatform,
+  WaTemplateComponentTypeUpperCase,
+} from "@/types/enums";
+import { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 
 import { WaTemplateDefaultValues } from "../../components/whatsapp/templates/Schema/templateSchema";
 import {
+  IgReceiveMessageBody,
+  IgSendMessageBody,
   WaInboxMessage,
+  WaReceiveMessageBody,
   WaSendMessageBody,
   WaTemplateComponent,
   WaTemplateFetchBody,
@@ -17,102 +25,208 @@ export type ParsedWaMessageReturn = {
   messageContent: any;
   template?: WaTemplateFetchBody;
   interactive?: WaSendMessageBody["interactive"];
+  reaction?: {
+    emoji?: string;
+    reaction?: string;
+    from?: string;
+    reactedAt?: string;
+    pos: IndicatorProps["position"];
+  };
 };
 export function parseWaMessage(
-  messageBody: WaInboxMessage,
+  message: Partial<WaGetMessagesBody>,
 ): ParsedWaMessageReturn {
-  let timeStamp: string = new Date().toLocaleTimeString();
+  const { messageBody, waCreatedAt, reactionMessage } = message;
+  let reaction;
+  let timeStamp: string = waCreatedAt ?? new Date().toLocaleTimeString();
   let messageType: string = "text";
   let messageContent = "No messages yet" as any;
   let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
   let interactive: WaSendMessageBody["interactive"] =
     {} as WaSendMessageBody["interactive"];
-  if (messageBody?.exchangeProcess === "send") {
-    const { send } = messageBody;
-    messageType = send.type;
-    switch (messageType) {
-      case "text":
-        messageContent = send?.text?.body;
-        break;
-      case "image":
-        messageContent = `${send?.image?.link}_caption_${send?.image?.caption ?? ""}`;
-        break;
-      case "video":
-        messageContent = `${send?.video?.link}_caption_${send?.video?.caption ?? ""}`;
-        break;
-      case "audio":
-        messageContent = `${send?.audio?.link}`;
-        break;
-      case "template":
-        messageContent = send.template?.name ?? "";
-        template = send.template;
-        break;
-      case "interactive":
-        messageContent = "";
-        interactive = send.interactive;
-        break;
-      case "reaction":
-        messageContent = send.reaction.emoji;
-        break;
-      case "document":
-        messageContent = `${send?.document.link}_caption_${send?.document.filename}_caption_${send?.document.caption ?? ""}`;
-        break;
-      case "contacts":
-        messageContent = [...send.contacts];
-        break;
-      case "location":
-        messageContent = { ...send.location };
-        break;
-    }
-  }
-  if (messageBody?.exchangeProcess === "receive") {
-    const { receive } = messageBody;
-    timeStamp = receive.messages[0].timestamp;
-    messageType = receive.messages[0].type;
-    switch (messageType) {
-      case "text":
-        messageContent = receive.messages[0].text.body;
-        break;
-      case "image":
-        messageContent = `${receive.messages[0].image?.link}_caption_${receive.messages[0].image?.caption ?? ""}`;
-        break;
-      case "button":
-        messageContent = receive.messages[0].button.text;
-        break;
-      case "audio":
-        messageContent = `${receive.messages[0].audio?.id}_caption_${receive.messages[0].audio?.caption ?? ""}`;
-        break;
-      case "video":
-        messageContent = `${receive.messages[0].video?.id}_caption_${receive.messages[0].video?.caption ?? ""}`;
-        break;
-      case "document":
-        messageContent = `${receive.messages[0].document.id}_caption_${receive.messages[0].document.filename}_caption_${receive.messages[0].document.caption ?? ""}`;
-        break;
-      case "interactive":
-        switch (receive.messages[0].interactive.type) {
-          case "button_reply":
-            messageContent = receive.messages[0].interactive.button_reply.title;
-            break;
-          case "list_reply":
-            messageContent = receive.messages[0].interactive.list_reply.title;
-            break;
-          case "nfm_reply":
-            messageContent = receive.messages[0].interactive.nfm_reply.name;
-            break;
+  if (message.sourcePlatform === MessagePlatform.INSTAGRAM) {
+    let reactionSend =
+      reactionMessage &&
+      (reactionMessage.messageBody.send as IgSendMessageBody);
+    let reactionReceive =
+      reactionMessage &&
+      (reactionMessage.messageBody.receive as IgReceiveMessageBody);
+    let reactedAt = reactionMessage && reactionMessage.createdAt;
+    if (messageBody?.exchangeProcess === "send") {
+      const { send } = messageBody as { send: IgSendMessageBody };
+      const { message, sender_action, payload } = send;
+      if (message) {
+        if (message.attachment) {
+          messageContent =
+            message.attachment.payload.id ||
+            message.attachment.payload.url ||
+            message.attachment.payload.attachment_id;
+
+          messageType = message.attachment.type;
+        } else if (message.text) {
+          messageType = "text";
+          messageContent = message.text;
         }
-        break;
-      case "reaction":
-        messageContent = receive.messages[0].reaction.emoji;
-        break;
-      case "contacts":
-        messageContent = [...receive.messages[0].contacts];
-        break;
-      case "location":
-        messageContent = { ...receive.messages[0].location };
-        break;
+      } else if (sender_action && sender_action === "react") {
+        messageType = "reaction";
+        messageContent = payload.emoji || payload.reaction;
+      }
+    }
+    if (messageBody?.exchangeProcess === "receive") {
+      const { receive } = messageBody as { receive: IgReceiveMessageBody };
+      if (receive.message) {
+        if (receive.message.attachments) {
+          messageContent = {
+            attachments: receive.message.attachments.map((r) => ({
+              content: r.payload ? r.payload.url : "",
+              type: r.type,
+            })),
+            text: receive.message.text,
+          };
+          messageType = "attachments";
+        } else if (receive.message.text) {
+          messageContent = receive.message.text;
+          messageType = "text";
+        } else if (receive.message.quick_reply) {
+          messageContent = receive.message.quick_reply.payload;
+          messageType = "quickreply";
+        }
+      } else if (receive.reaction && receive.reaction.action === "react") {
+        messageContent = receive.reaction.emoji || receive.reaction.reaction;
+        messageType = "reaction";
+      }
+    }
+    if (reactionMessage) {
+      reaction = {
+        reaction:
+          reactionSend?.payload?.reaction ||
+          reactionReceive?.reaction?.reaction,
+        emoji: reactionSend?.payload?.emoji || reactionReceive?.reaction?.emoji,
+        reactedAt,
+        pos:
+          messageBody?.exchangeProcess === "send"
+            ? "bottom-end"
+            : "bottom-start",
+        from: reactionSend && reactionMessage.sender.name,
+      };
+    }
+  } else {
+    let reactionSend =
+      reactionMessage &&
+      (reactionMessage.messageBody.send as WaSendMessageBody);
+    let reactionReceive =
+      reactionMessage &&
+      (reactionMessage.messageBody.receive as WaReceiveMessageBody);
+    let reactedAt = reactionMessage && reactionMessage.createdAt;
+    if (messageBody?.exchangeProcess === "send") {
+      const { send } = messageBody as { send: WaSendMessageBody };
+      messageType = send.type;
+      switch (messageType) {
+        case "text":
+          messageContent = send?.text?.body;
+          break;
+        case "image":
+          messageContent = `${send?.image?.link}_caption_${send?.image?.caption ?? ""}`;
+          break;
+        case "video":
+          messageContent = `${send?.video?.link}_caption_${send?.video?.caption ?? ""}`;
+          break;
+        case "audio":
+          messageContent = `${send?.audio?.link}`;
+          break;
+        case "template":
+          messageContent = send.template?.name ?? "";
+          template = send.template;
+          break;
+        case "interactive":
+          messageContent = "";
+          interactive = send.interactive;
+          break;
+        case "reaction":
+          messageContent = send.reaction.emoji;
+          break;
+        case "document":
+          messageContent = `${send?.document.link}_caption_${send?.document.filename}_caption_${send?.document.caption ?? ""}`;
+          break;
+        case "contacts":
+          messageContent = [...send.contacts];
+          break;
+        case "location":
+          messageContent = { ...send.location };
+          break;
+      }
+    }
+    if (messageBody?.exchangeProcess === "receive") {
+      const { receive } = messageBody as { receive: WaReceiveMessageBody };
+      timeStamp = receive.messages[0].timestamp;
+      messageType = receive.messages[0].type;
+      switch (messageType) {
+        case "text":
+          messageContent = receive.messages[0].text.body;
+          break;
+        case "image":
+          messageContent = `${receive.messages[0].image?.link}_caption_${receive.messages[0].image?.caption ?? ""}`;
+          break;
+        case "button":
+          messageContent = receive.messages[0].button.text;
+          break;
+        case "audio":
+          messageContent = `${receive.messages[0].audio?.id}_caption_${receive.messages[0].audio?.caption ?? ""}`;
+          break;
+        case "video":
+          messageContent = `${receive.messages[0].video?.id}_caption_${receive.messages[0].video?.caption ?? ""}`;
+          break;
+        case "document":
+          messageContent = `${receive.messages[0].document.id}_caption_${receive.messages[0].document.filename}_caption_${receive.messages[0].document.caption ?? ""}`;
+          break;
+        case "interactive":
+          switch (receive.messages[0].interactive.type) {
+            case "button_reply":
+              messageContent =
+                receive.messages[0].interactive.button_reply.title;
+              break;
+            case "list_reply":
+              messageContent = receive.messages[0].interactive.list_reply.title;
+              break;
+            case "nfm_reply":
+              messageContent = receive.messages[0].interactive.nfm_reply.name;
+              break;
+          }
+          break;
+        case "reaction":
+          messageContent = receive.messages[0].reaction.emoji;
+          break;
+        case "contacts":
+          messageContent = [...receive.messages[0].contacts];
+          break;
+        case "location":
+          messageContent = { ...receive.messages[0].location };
+          break;
+      }
+    }
+    if (reactionMessage) {
+      reaction = {
+        emoji:
+          reactionSend?.reaction?.emoji ||
+          reactionReceive?.messages[0].reaction?.emoji,
+        reactedAt,
+        pos:
+          messageBody?.exchangeProcess === "send"
+            ? "bottom-end"
+            : "bottom-start",
+        from: reactionSend && reactionMessage.sender.name,
+      };
     }
   }
-  return { timeStamp, messageType, messageContent, template, interactive };
+
+  return {
+    timeStamp,
+    messageType,
+    messageContent,
+    template,
+    interactive,
+    reaction,
+  };
 }
 
 export function returnMessageContentBasedOnParsedMessage(
@@ -147,8 +261,16 @@ export function returnMessageContentBasedOnParsedMessage(
     return "Interactive Message";
   } else if (parsedMessage.messageType === "reaction") {
     return exchangeProcess === "send"
-      ? `You reacted ${parsedMessage.messageContent}`
-      : `Reacted ${parsedMessage.messageContent}`;
+      ? parsedMessage.messageContent === "love"
+        ? "You Liked a message"
+        : `You reacted ${parsedMessage.messageContent}`
+      : parsedMessage.messageContent === "love"
+        ? "Liked a message"
+        : `Reacted ${parsedMessage.messageContent}`;
+  } else if (parsedMessage.messageType === "attachments") {
+    return parsedMessage.messageContent.attachments[
+      parsedMessage.messageContent.attachments.length - 1
+    ].type;
   } else {
     return "Unsupported message type";
   }
