@@ -1,5 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
+import { PlatformType } from "../../../../../generated/prisma/enums";
 
 enum WaChatLastMessageTypes {
   "usermessages",
@@ -17,7 +18,8 @@ const WaMessageText = z.object({
 });
 const WaReaction = z.object({
   toWaMessageId: z.string(),
-  emoji: z.string(),
+  emoji: z.string().optional(), //used in whatsapp
+  reaction: z.string().optional(), //used in instagram
 });
 
 const WaMedia = z.array(
@@ -48,6 +50,7 @@ const NewWaMessageBody = z.object({
     })
     .optional(),
   whatsappSettingsPhoneId: z.string(),
+  platform: z.string(),
 });
 
 const PaginateQuerySchema = z.object({

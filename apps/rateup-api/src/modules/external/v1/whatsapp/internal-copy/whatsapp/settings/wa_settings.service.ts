@@ -18,6 +18,11 @@ export async function createWaSettings(
     | "phone"
     | "webhookPassword"
     | "createdAt"
+    | "fbPageId"
+    | "pageAccessToken"
+    | "ibaId"
+    | "igUserName"
+    | "id"
   > & {
     phone?: string;
     webhookPassword?: string;

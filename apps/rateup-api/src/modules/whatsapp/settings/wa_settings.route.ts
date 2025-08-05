@@ -13,6 +13,7 @@ import {
   syncLeadgenFormQuestionsHandler,
   syncLeadgenFormsHandler,
   updateContactTagHandler,
+  updateWaSettingsByIdHandler,
   upsertWaSettingsHandler,
 } from "./wa_settings.controller";
 import { $WASettingsref } from "./wa_settings.schema";
@@ -49,6 +50,18 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     },
     upsertWaSettingsHandler,
   );
+
+  server.put(
+    "/:settingsId",
+    {
+      schema: {
+        params: $WASettingsref("whatsappSettingsIdParamSchema"),
+        body: $WASettingsref("updateWaSettingsInputSchema"),
+      },
+    },
+    updateWaSettingsByIdHandler,
+  );
+
   server.delete(
     "/:phoneId",
     {
@@ -78,10 +91,10 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     getWaLogsHandler,
   );
 
-  server.post("/sync/pages", syncFbPagesHandler);
+  server.post("/sync/pages/:whatsappSettingsId", syncFbPagesHandler);
 
   server.post(
-    "/sync/leadgen-forms",
+    "/sync/leadgen-forms/:whatsappSettingsId",
     {
       schema: {
         body: $WASettingsref("byFbPageQuerySchema"),
@@ -96,32 +109,35 @@ export async function waSettingsRoutes(server: FastifyInstance) {
       schema: {
         body: $WASettingsref("byFbPageQuerySchema"),
         params: $WASettingsref("byLeadGenFormIdParamsSchema"),
+        querystring: $WASettingsref("whatsappSettingsIdParamSchema"),
       },
     },
     syncLeadgenFormQuestionsHandler,
   );
 
-  server.post("/sync/ad-accounts", syncAdAccountsHandler);
+  server.post("/sync/ad-accounts/:whatsappSettingsId", syncAdAccountsHandler);
 
   server.post(
     "/sync/ads/:adAccountId",
     {
       schema: {
         params: $WASettingsref("byAdAccountIdParamsSchema"),
+        querystring: $WASettingsref("whatsappSettingsIdParamSchema"),
       },
     },
     syncAdsByAdAccountHandler,
   );
 
   server.post(
-    "/subscribe",
+    "/subscribe/:whatsappSettingsId",
     {
       schema: {
         body: $WASettingsref("byFbPageQuerySchema"),
+        params: $WASettingsref("whatsappSettingsIdParamSchema"),
       },
     },
     subscribeFieldstoPageHandler,
   );
 
-  server.get("/meta-assets", getMetaAssetsHandler);
+  server.get("/meta-assets/:whatsappSettingsId", getMetaAssetsHandler);
 }

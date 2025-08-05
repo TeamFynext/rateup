@@ -419,7 +419,6 @@ async function whatsappMessageHandler(
   const existingMessage = await getWaMessageByMessageId(
     (waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody)
       ?.messages?.[0]?.id,
-    from,
   );
 
   if (existingMessage) {
