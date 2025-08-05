@@ -114,7 +114,7 @@ const SurveyQuestions = ({
                     {index + 1}
                   </Text>
                 </View>
-                <Text className=" font-semibold text-md">
+                <Text className=" font-semibold text-md max-w-[86%] min-w-[86%]">
                   {getLocalizedText(title)}
                 </Text>
               </View>
