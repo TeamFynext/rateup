@@ -17,6 +17,7 @@ import {
   IconPlus,
   IconStrikethrough,
 } from "@tabler/icons-react";
+import { EmojiClickData } from "emoji-picker-react";
 
 import useTranslations from "@/dictionaries/useTranslation";
 

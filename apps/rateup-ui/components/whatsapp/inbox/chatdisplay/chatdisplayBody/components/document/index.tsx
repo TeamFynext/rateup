@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ActionIcon, Group, Stack, Text } from "@mantine/core";
 import {
@@ -20,6 +20,12 @@ export default function WaInboxDocument({ messageContent }: Props) {
   const { mutate, isPending } = useGetMediaFile();
   const [documentSrc, setDocumentSrc] = useState<string | null>(null);
   const [link, filename, caption] = messageContent.split("_caption_");
+
+  useEffect(() => {
+    if (messageContent && messageContent.startsWith("http")) {
+      setDocumentSrc(messageContent);
+    }
+  }, [messageContent]);
 
   const handleDownload = () => {
     mutate(link, {

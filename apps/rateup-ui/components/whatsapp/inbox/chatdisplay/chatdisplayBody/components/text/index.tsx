@@ -1,4 +1,4 @@
-import { Text } from "@mantine/core";
+import { Anchor, Text } from "@mantine/core";
 
 import classes from "./styles.module.css";
 
@@ -11,12 +11,18 @@ export default function WaInboxText(props: Props) {
   const parts = props?.messageContent?.split(urlRegex).filter(Boolean);
 
   return (
-    <Text className={classes.text}>
+    <Text className={classes.text} maw={"300px"} truncate>
       {parts?.map((text, index) =>
         urlRegex.test(text) ? (
-          <a key={index} href={text} target="_blank" rel="noopener noreferrer">
+          <Anchor
+            className={classes.text}
+            key={index}
+            href={text}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             {text}
-          </a>
+          </Anchor>
         ) : (
           <span key={index}>{text}</span>
         ),

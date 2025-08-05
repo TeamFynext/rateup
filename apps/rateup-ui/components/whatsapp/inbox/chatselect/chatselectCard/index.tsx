@@ -10,9 +10,10 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
-import { WaMessageAssignStatus } from "@/types/enums";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
@@ -56,6 +57,7 @@ export default function WaInboxChatSelectCard({
         <WaInboxSessionAvatar
           timeStamp={contact?.lastReceivedMessageTimeStamp}
           title={contact?.name}
+          profile={contact?.profilePic}
         />
         <Stack className={classes.inner} flex={1}>
           <Group className={classes.chat_card_header}>
@@ -63,10 +65,18 @@ export default function WaInboxChatSelectCard({
               className={classes.chat_recepient_name}
               title={contact?.name}
               truncate
-              tt={"capitalize"}
+              // tt={"capitalize"}
               fw={500}
             >
-              {contact?.name || contact?.whatsappUserName || contact?.phone}
+              {contact?.name ||
+                contact?.whatsappUserName ||
+                contact?.phone ||
+                contact?.igsId}{" "}
+              <span>
+                {contact?.isIgVerifiedUser && (
+                  <IconRosetteDiscountCheckFilled color="blue" size={"1rem"} />
+                )}
+              </span>
             </Text>
             <Group gap="xs">
               {contact.unReadMessageCount &&
@@ -81,14 +91,14 @@ export default function WaInboxChatSelectCard({
               position="bottom-start"
               label={
                 lastMessage
-                  ? parseWaMessage(lastMessage?.messageBody).messageContent
+                  ? parseWaMessage(lastMessage).messageContent
                   : "No messages yet"
               }
             >
               <Text className={classes.latest_chat} truncate maw={200}>
                 {lastMessage &&
                   returnMessageContentBasedOnParsedMessage(
-                    parseWaMessage(lastMessage?.messageBody),
+                    parseWaMessage(lastMessage),
                     lastMessage.messageBody.exchangeProcess,
                   )}
               </Text>

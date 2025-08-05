@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
+import { MessagePlatform } from "@/types/enums";
 import {
   showErrorToast,
   showSuccessToast,
@@ -35,7 +36,8 @@ export const useGetMessagesByContactId = (
     initialPageParam: "",
     queryFn: ({ pageParam }) =>
       getMessagesByContactId(contactId, pageParam, selectedPhone),
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasNextPage ? lastPage.nextCursor : undefined,
     select: (data) => ({
       pages: [...data.pages].reverse(),
       pageParams: [...data.pageParams].reverse(),
@@ -44,10 +46,19 @@ export const useGetMessagesByContactId = (
   });
 };
 
-export const useSendNewWaMessage = (contactId: string) => {
+export const useSendNewWaMessage = (
+  contactId: string,
+  whatsappSettingsPhoneId: string,
+  platform = MessagePlatform.WHATSAPP,
+) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (message: any) => sendNewWaMessage(contactId, message),
+    mutationFn: (message: any) =>
+      sendNewWaMessage(contactId, {
+        ...message,
+        whatsappSettingsPhoneId,
+        platform,
+      }),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
     },

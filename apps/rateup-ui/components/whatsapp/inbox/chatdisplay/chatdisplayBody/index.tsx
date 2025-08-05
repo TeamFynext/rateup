@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 
 import {
   ActionIcon,
@@ -21,7 +22,9 @@ import {
   IconSquareRoundedChevronDown,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useLocation } from "react-use";
 
+import { MessagePlatform } from "@/types/enums";
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
 import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
@@ -33,13 +36,17 @@ import {
   useMarkWaMessagesAsRead,
 } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import {
+  IgReceiveMessageBody,
   WaInboxMessage,
+  WaReceiveMessageBody,
+  WaSendMessageBody,
   WaTemplateComponent,
 } from "../../../../../types/global";
 import { formatDate, formatToCustomTime } from "../../../../../utils/dateTime";
 import { parseWaMessage } from "../../../../../utils/whatsapp/inbox";
 import { useChatFilterStore } from "../../chatselect/chatFilter";
 import { useMessageStore } from "../chatdisplayFooter";
+import WaInboxAttachments from "./components/attachments";
 import WaInboxAudio from "./components/audio";
 import WaInboxContact from "./components/contact";
 import WaInboxDocument from "./components/document";
@@ -59,6 +66,8 @@ interface Props {
 export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
   const searchParams = useSearchParams();
   let contactId = searchParams.get("contactId");
+  const { filterData, selectedContact } = useContactStore();
+
   const { filter } = useChatFilterStore();
   const {
     error, // Error
@@ -67,7 +76,10 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
     isError,
     isFetchingNextPage,
     isLoading,
-  } = useGetMessagesByContactId(contactId, filter?.phone);
+  } = useGetMessagesByContactId(
+    contactId ?? selectedContact?.id,
+    filter?.phone,
+  );
 
   const [currentScrollPosition, setCurrentScrollPosition] = useState(0);
   const [currentScrollHeight, setCurrentScrollHeight] = useState(0);
@@ -88,15 +100,13 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
   });
   const { translations } = useTranslations();
   const { messages } = useMessageStore();
-  const { filterData } = useContactStore();
-  const singleMessage = (
-    messageBody: WaInboxMessage,
-    templateComponentParams: WaTemplateComponent[],
-  ) => {
+
+  const singleMessage = (message: WaGetMessagesBody) => {
     const { messageContent, messageType, template, interactive } =
-      parseWaMessage(messageBody);
+      parseWaMessage(message);
     switch (messageType) {
       case "text":
+      case "quickreply":
         return <WaInboxText messageContent={messageContent} />;
       case "image":
         return <WaInboxImage messageContent={messageContent} />;
@@ -106,7 +116,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
         return (
           <WaInboxTemplate
             templateBody={template}
-            parameters={templateComponentParams}
+            parameters={message.templateComponentParams}
           />
         );
       case "interactive":
@@ -126,6 +136,8 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
         return <WaInboxContact messageContent={messageContent} />;
       case "location":
         return <WaInboxLocation messageContent={messageContent} />;
+      case "attachments":
+        return <WaInboxAttachments messageContent={messageContent} />;
       default:
         return (
           <Text fz={"xs"} c={"red"}>
@@ -170,43 +182,6 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
       markAsRead.mutate();
   }, [contactId]);
 
-  function getReactionMessage(message: WaGetMessagesBody) {
-    const exchangeProcess = message?.messageBody?.exchangeProcess;
-    if (!exchangeProcess) return null;
-    const wa_id =
-      exchangeProcess === "send"
-        ? message.messageId
-        : message.messageBody?.receive &&
-          message.messageBody.receive?.messages[0].id;
-    const reactionMsg = props.data?.findLast((msg) => {
-      const { messageType, messageContent } = parseWaMessage(msg.messageBody);
-      return (
-        messageType === "reaction" &&
-        wa_id ===
-          (msg.messageBody.exchangeProcess === "receive"
-            ? msg.messageBody?.receive &&
-              msg.messageBody.receive?.messages[0].reaction.message_id
-            : msg.messageBody.send.reaction.message_id)
-      );
-    });
-
-    const isSendReactionMsg =
-      reactionMsg && reactionMsg.messageBody.exchangeProcess === "send";
-    if (reactionMsg)
-      return {
-        emoji: isSendReactionMsg
-          ? reactionMsg.messageBody.send.reaction.emoji
-          : reactionMsg.messageBody.receive.messages[0].reaction.emoji,
-        from: isSendReactionMsg
-          ? reactionMsg.sender?.name
-          : reactionMsg.messageBody.receive.contacts[0].profile.name,
-        pos:
-          exchangeProcess === "receive"
-            ? "bottom-start"
-            : ("bottom-end" as IndicatorProps["position"]),
-      };
-  }
-
   return (
     <div className={classes.wrapper}>
       <div
@@ -236,8 +211,15 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
           </Center>
         )}
         {props?.data?.map((message, index) => {
-          if (parseWaMessage(message?.messageBody)?.messageType === "reaction")
-            return false;
+          const { exchangeProcess, receive } = message.messageBody;
+          const { messageType, reaction } = parseWaMessage(message);
+          if (messageType === "reaction") return null;
+          if (
+            message.sourcePlatform === MessagePlatform.INSTAGRAM &&
+            exchangeProcess === "receive" &&
+            (receive as IgReceiveMessageBody)?.message?.is_deleted
+          )
+            return null;
           const previousMessage = index > 0 ? props.data[index - 1] : null;
           const showDate =
             !previousMessage ||
@@ -245,7 +227,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
               dayjs(previousMessage.waCreatedAt),
               "day",
             );
-          const reaction = getReactionMessage(message);
+
           return (
             <React.Fragment key={message?.id}>
               {showDate && <DateComponent date={message?.waCreatedAt} />}
@@ -254,10 +236,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
                 messageObject={message}
                 reaction={reaction}
               >
-                {singleMessage(
-                  message?.messageBody,
-                  message?.templateComponentParams,
-                )}
+                {singleMessage(message)}
               </WaInboxSingleMessageLayout>
             </React.Fragment>
           );
