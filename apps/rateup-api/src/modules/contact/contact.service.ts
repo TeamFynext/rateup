@@ -293,11 +293,11 @@ export async function updateContactById(
   }
   return user;
 }
-
+//update
 export async function getOrCreateContactByPhone(
   phone: string,
   orgId: string,
-  additionalData?: Partial<Contact>,
+  additionalData?: updateContactSchema,
 ) {
   try {
     const contact = await prisma.contact.findFirst({
@@ -334,6 +334,48 @@ export async function getOrCreateContactByPhone(
           ...additionalData,
           aiWaChat,
           phone,
+          orgId,
+        },
+      });
+    }
+  } catch (e) {
+    log.error(e);
+  }
+}
+
+export async function getOrCreateContactByIgsId(
+  igsId: string,
+  orgId: string,
+  additionalData?: updateContactSchema,
+) {
+  try {
+    const contact = await prisma.contact.findUnique({
+      where: {
+        contact_igsid_org_id_unique: {
+          igsId,
+          orgId,
+        },
+      },
+    });
+
+    if (contact) {
+      if (!additionalData) return contact;
+      return await prisma.contact.update({
+        where: {
+          id: contact.id,
+        },
+        data: {
+          ...additionalData,
+        },
+      });
+    } else {
+      const chatbot = await getChatbotDetails(orgId);
+      const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
+      return await prisma.contact.create({
+        data: {
+          ...additionalData,
+          aiWaChat,
+          igsId,
           orgId,
         },
       });

@@ -63,6 +63,7 @@ import {
 import { processActionWebhook } from "../../external/v1/loyalty/action/internal-copy/actions/actions.service";
 import { processRedeemWebhook } from "../../external/v1/loyalty/redeem/internal-copy/redeems/redeem.service";
 import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth";
+import { PlatformType } from "../../../../generated/prisma/enums";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -478,7 +479,12 @@ export async function sendWhatsAppTemplateToCustomer(
     };
     const templateMessage = createTemplateMessage(phone, templateQuery);
     await wait(50);
-    const res = await sendMessage(orgId, templateMessage, customerName);
+    const res = await sendMessage(
+      orgId,
+      templateMessage,
+      PlatformType.WHATSAPP,
+      customerName,
+    );
     await updateMonthlyStat(
       SubscriptionFeaturePathName.WhatsAppTemplate,
       orgId,

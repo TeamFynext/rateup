@@ -23,6 +23,12 @@ const updateContactSchema = z.object({
   aiWaChat: z.boolean().optional(),
   waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus).optional(),
   lastReceivedMessageTimeStamp: z.string().optional(),
+  whatsappUserName: z.string().optional(),
+  followerCount: z.number().optional(),
+  isIgVerifiedUser: z.boolean().optional(),
+  igsId: z.string().optional(),
+  profilePic: z.string().optional(),
+  source: z.string().optional(),
 });
 
 export const paginationQuery = z.object({

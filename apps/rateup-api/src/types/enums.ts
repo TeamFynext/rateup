@@ -428,3 +428,9 @@ export enum WaAssignedChatPermission {
   TeamMembers = "TeamMembers",
   Admins = "Admins",
 }
+
+export enum InstagramEvent {
+  MESSAGE = "MESSAGE",
+  MESSAGE_REACTION = "MESSAGE_REACTION",
+  MESSAGE_SEEN = "MESSAGE_SEEN",
+}
