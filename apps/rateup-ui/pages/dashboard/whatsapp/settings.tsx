@@ -74,8 +74,8 @@ import { SAVE_HOTKEY } from "../../../utils/constants";
 import styles from "./settings.style.module.css";
 
 function WhatsAppManualConfiguration({ waSettings }) {
-  const { data: metaAssets, isLoading } = useMetaAssets(waSettings.id);
-  const syncfbpageMut = useSyncFbPages(waSettings.id);
+  const { data: metaAssets, isLoading } = useMetaAssets(waSettings?.id);
+  const syncfbpageMut = useSyncFbPages(waSettings?.id);
   const form = useForm({
     initialValues: {
       wabaId: "",
@@ -164,7 +164,7 @@ function WhatsAppManualConfiguration({ waSettings }) {
               required
               {...form.getInputProps("webhookPassword")}
             />
-            {waSettings.accessToken && (
+            {waSettings?.accessToken && (
               <Skeleton visible={isLoading}>
                 <Group gap={"xs"}>
                   <ContainedSelection
@@ -268,7 +268,7 @@ function WhatsAppManualConfiguration({ waSettings }) {
               }
             />
           </Box>
-          {waSettings.fbPageId && (
+          {waSettings?.fbPageId && (
             <Box>
               <Group>
                 <Text>Instagram Webhook URL</Text>
