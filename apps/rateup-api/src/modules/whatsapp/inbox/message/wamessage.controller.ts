@@ -90,7 +90,7 @@ export async function handleWaMessages(
     const contactCore: ContactCore = {
       name: userName,
       phone: from,
-      source: sourcePlatform.toLowerCase(),
+      source: sourcePlatform?.toLowerCase(),
     };
     let additionalData = {};
     if (sourcePlatform === "INSTAGRAM" && type === "receive") {
