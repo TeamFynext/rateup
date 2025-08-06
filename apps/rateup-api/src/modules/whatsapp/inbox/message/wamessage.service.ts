@@ -85,24 +85,13 @@ export async function getWaMessagesByContactId(
   phone?: string,
 ) {
   let messages: WaMessage[];
-  let sourceIdentifierCondition = phone &&
-    phone !== "all" && {
-      OR: [
-        { sourceIdentifier: phone },
-        {
-          sourceIdentifier: `+${phone}`,
-        },
-      ],
-    };
-
   const filter = [`w1."contactId" = $1`];
   let paramIndex = 2;
   const params = [contactId];
-
   if (cursor) {
-    const [waCreatedAt, id] = Buffer.from(cursor, "base64")
-      .toString()
-      .split(":");
+    const { waCreatedAt, id } = JSON.parse(
+      Buffer.from(cursor, "base64").toString(),
+    );
     params.push(waCreatedAt);
     let createdAtIndex = paramIndex++;
     params.push(id);
@@ -148,7 +137,7 @@ reaction_with_user AS (
         WHEN u2."id" IS NOT NULL THEN json_build_object('name', u2."name", 'profile_photo', u2."profilePhoto")
         ELSE NULL
       END
-    ) AS reactionMessage,
+    ) AS "reactionMessage",
     r.reactionCreatedAt
   FROM latest_reactions r
   LEFT JOIN "User" u2 ON u2."id" = r.reactionSenderId
@@ -164,7 +153,7 @@ SELECT
     WHEN u."id" IS NOT NULL THEN json_build_object('name', u."name", 'profile_photo', u."profilePhoto")
     ELSE NULL
   END AS sender,
-  rr.reactionMessage
+  rr."reactionMessage"
 FROM "WaMessage" w1
 LEFT JOIN "User" u ON u."id" = w1."sendBy"
 LEFT JOIN ranked_reactions rr ON rr.reactedMessageId = COALESCE(
@@ -173,9 +162,8 @@ LEFT JOIN ranked_reactions rr ON rr.reactedMessageId = COALESCE(
 ) AND rr.rn = 1
 WHERE ${filter.join(" AND ")}
 ORDER BY w1."waCreatedAt" DESC, w1."id" DESC
-LIMIT 250;
+LIMIT 300;
 `;
-
   messages = await prisma.$queryRawUnsafe(query, ...params);
 
   let nextCursor = null;
@@ -183,7 +171,10 @@ LIMIT 250;
   if (hasNextPage && messages.length > 0) {
     const lastMessage = messages[messages.length - 1];
     nextCursor = Buffer.from(
-      `${lastMessage.waCreatedAt}:${lastMessage.id}`,
+      JSON.stringify({
+        waCreatedAt: lastMessage.waCreatedAt,
+        id: lastMessage.id,
+      }),
     ).toString("base64");
   }
   return { messages, nextCursor, hasNextPage };
