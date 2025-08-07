@@ -773,6 +773,7 @@ export default function Layout({ children, appProps }) {
     // Add your logic here to check if user has WhatsApp settings
     // This could be checking userInfo data or making an API call
     // For now, returning false to demonstrate the modal
+    if (userInfo?.message !== "Success") return false;
     const hasWhatsAppSettings = userInfo?.data?.hasWhatsAppSettings || false;
 
     if (!hasWhatsAppSettings) {
