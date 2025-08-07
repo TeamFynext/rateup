@@ -72,6 +72,7 @@ import { WHATSAPP_BUTTON_TYPE } from "../../../types/whatsapp.types";
 import { isEmptyString } from "../../../utils/commonUtils";
 import { getConnectedWaCatalog } from "../catalog/catalog.service";
 import dayjs from "dayjs";
+import { PlatformType } from "../../../../generated/prisma/enums";
 
 export async function getTemplatesHandler(
   request: FastifyRequest<{
@@ -1145,7 +1146,7 @@ export async function sendTemplateToUserCore(
     res = await sendMessage(
       orgId,
       templateMessage,
-      null,
+      PlatformType.WHATSAPP,
       userId,
       whatsappSettingsPhoneId,
     );
