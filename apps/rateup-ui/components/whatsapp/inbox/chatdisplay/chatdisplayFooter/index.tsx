@@ -54,7 +54,7 @@ export default function WaInboxChatDisplayFooter({
   const { translations } = useTranslations();
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
   const platform =
-    contact.source.toUpperCase() !== MessagePlatform.INSTAGRAM
+    contact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
       ? MessagePlatform.WHATSAPP
       : MessagePlatform.INSTAGRAM;
   const sendnewWaMessage = useSendNewWaMessage(
