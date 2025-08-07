@@ -1244,6 +1244,25 @@ export async function updateCompletedSurvey(id: string) {
   return surveyStats;
 }
 
+export async function updateReviewLinkVisitedOnSurvey(id: string) {
+  let surveyStats;
+  try {
+    surveyStats = await prisma.surveyStats.upsert({
+      where: { surveyTeamMapId: id },
+      update: { reviewLinkVisited: { increment: 1 } },
+      create: {
+        surveyTeamMapId: id,
+        visited: 1,
+        started: 1,
+        reviewLinkVisited: 1,
+      },
+    });
+  } catch (error: any) {
+    throw error;
+  }
+  return surveyStats;
+}
+
 export async function saveSheetIdToSurvey(sheetId: string, surveyId) {
   let res = await prisma.survey.update({
     where: {

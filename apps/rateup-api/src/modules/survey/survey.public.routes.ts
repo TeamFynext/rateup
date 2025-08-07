@@ -6,6 +6,7 @@ import {
   getPhoneFromSurveyTeamMapIdHandler,
   getPublicSurveyByIdHandler,
   getSurveyVariablesHandler,
+  reviewPageVisitedOnSurveyHandler,
   startedSurveyHandler,
   verifySurveyPasswordHandler,
   visitedSurveyHandler,
@@ -64,6 +65,16 @@ export async function surveyPublicRoutes(server: FastifyInstance) {
       },
     },
     completedSurveyHandler,
+  );
+
+  server.post(
+    "/:id/review/visited",
+    {
+      schema: {
+        params: $Sref("idParamsSchema"),
+      },
+    },
+    reviewPageVisitedOnSurveyHandler,
   );
 
   server.get(
