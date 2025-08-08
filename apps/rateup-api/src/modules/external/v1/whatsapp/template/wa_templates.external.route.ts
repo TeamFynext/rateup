@@ -109,6 +109,11 @@ export async function extWaTemplateRoutes(server: FastifyInstance) {
                 },
               ],
             },
+            from: {
+              type: "string",
+              description:
+                "WhatsApp phone number with country code (e.g. 1234567890)",
+            },
           },
         },
         tags: ["WhatsApp/Template"],

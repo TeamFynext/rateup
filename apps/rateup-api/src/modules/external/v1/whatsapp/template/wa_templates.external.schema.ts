@@ -1,6 +1,7 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
 import { byTemplateIdParamsSchema } from "../internal-copy/whatsapp/messageTemplates/wa_templates.schema";
+import { from } from "form-data";
 
 const dbTemplateResponse = z.object({
   id: z.string(),
@@ -80,6 +81,7 @@ const sendTemplateByNameToPhone = scheduleTemplate.extend({
       }),
     )
     .optional(),
+  from: z.number().optional(),
 });
 const sendTemplateWithFile = z.object({
   templateName: z.string(),
@@ -97,6 +99,7 @@ const sendTemplateWithFile = z.object({
     size: z.number(),
     data: z.any(),
   }),
+  from: z.number().optional(),
 });
 
 const sendTemplateToContactParams = z.object({

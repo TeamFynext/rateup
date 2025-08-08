@@ -33,6 +33,7 @@ import {
   getSurveyResponseCountForGraph,
   getSurveyStats,
   getNPSResponsesForGraph,
+  updateReviewLinkVisitedOnSurvey,
 } from "./survey.service";
 import {
   CloneSurveyInput,
@@ -528,6 +529,26 @@ export async function completedSurveyHandler(
   try {
     const updateCompleted = await updateCompletedSurvey(request.params.id);
     if (!updateCompleted) {
+      reply.code(404);
+    } else {
+      reply.code(200).send({ status: "success" });
+    }
+  } catch (e) {
+    reply.code(500).send({ status: "error", message: e });
+  }
+}
+
+export async function reviewPageVisitedOnSurveyHandler(
+  request: FastifyRequest<{
+    Params: IdParamInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const updateVisited = await updateReviewLinkVisitedOnSurvey(
+      request.params.id,
+    );
+    if (!updateVisited) {
       reply.code(404);
     } else {
       reply.code(200).send({ status: "success" });

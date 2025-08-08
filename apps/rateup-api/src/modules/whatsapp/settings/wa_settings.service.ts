@@ -21,7 +21,7 @@ export async function createWaSettings(
         data.phoneId,
         accessToken,
       );
-      data.phone = display_phone_number;
+      data.phone = display_phone_number?.replace(/\s+/g, "");
     }
     const encryptedToken = aes_encrypt(
       accessToken,
@@ -411,4 +411,15 @@ export async function getMetaAssets(whatsappSettingsId: string) {
       whatsappSettingsId,
     },
   })) as unknown as MetaAsset;
+}
+
+export async function getWaSettingsByPhone(phone: string) {
+  return await prisma.whatsappSettings.findFirst({
+    where: {
+      phone,
+    },
+    select: {
+      phoneId: true,
+    },
+  });
 }
