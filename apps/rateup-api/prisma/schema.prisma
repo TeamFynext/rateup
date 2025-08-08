@@ -429,6 +429,7 @@ model SurveyStats {
   visited         Int           @default(0)
   started         Int           @default(0)
   completed       Int           @default(0)
+  reviewLinkVisited  Int      @default(0)
 }
 
 // Whatsapp session
