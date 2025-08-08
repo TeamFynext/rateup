@@ -11,7 +11,7 @@ export default function WaInboxText(props: Props) {
   const parts = props?.messageContent?.split(urlRegex).filter(Boolean);
 
   return (
-    <Text className={classes.text} maw={"300px"} truncate>
+    <Text className={classes.text} maw={"300px"}>
       {parts?.map((text, index) =>
         urlRegex.test(text) ? (
           <Anchor
