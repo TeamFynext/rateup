@@ -376,6 +376,7 @@ export async function sendTemplateByNameToPhoneHandler(
       body_variables,
       parameterData,
       tag,
+      from,
     } = req.body;
     log.info("🚀 ~ req.body - external: %o", req.body);
     const orgId = req.user.orgId;
@@ -384,6 +385,17 @@ export async function sendTemplateByNameToPhoneHandler(
     let phone = parsePhoneNumber(reqNumber);
     if (phone.isValid() === false) {
       return rep.code(400).send("Invalid phone number.");
+    }
+    let whatsappSettingsPhoneId = undefined;
+    if (from && from > 0) {
+      let fromString = String(from);
+      let whatsappPhone = fromString.startsWith("+")
+        ? fromString
+        : "+" + fromString;
+      const waSettings = await getWaSettingsByPhone(whatsappPhone);
+      if (waSettings) {
+        whatsappSettingsPhoneId = waSettings.phoneId;
+      }
     }
     let phoneNumber = phone.number.replace("+", "");
     let header: any = [];
@@ -422,6 +434,7 @@ export async function sendTemplateByNameToPhoneHandler(
       timeDelay,
       true,
       tag,
+      whatsappSettingsPhoneId,
     );
     rep
       .code(200)
@@ -443,6 +456,7 @@ export async function sendTemplateByNameToPhoneHandler(
 }
 import FormData from "form-data";
 import { getWaSettings } from "../settings/wa_settings.service";
+import { getWaSettingsByPhone } from "../../../../../../whatsapp/settings/wa_settings.service";
 
 export async function sendTemplateByNameToPhoneWithFileHandler(
   req: FastifyRequest<{
@@ -461,6 +475,7 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
       headerType,
       filename,
       file,
+      from,
     } = req.body;
     const orgId = req.user.orgId;
     if (!orgId)
@@ -551,6 +566,17 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
         }),
       });
     }
+    let whatsappSettingsPhoneId = undefined;
+    if (from && from > 0) {
+      let fromString = String(from);
+      let whatsappPhone = fromString.startsWith("+")
+        ? fromString
+        : "+" + fromString;
+      const waSettings = await getWaSettingsByPhone(whatsappPhone);
+      if (waSettings) {
+        whatsappSettingsPhoneId = waSettings.phoneId;
+      }
+    }
     const response = await sendTemplateToUserCore(
       orgId,
       templateName,
@@ -561,6 +587,7 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
       timeDelay,
       true,
       tag,
+      whatsappSettingsPhoneId,
     );
     rep
       .code(200)
