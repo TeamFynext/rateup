@@ -32,6 +32,7 @@ import {
   getWhatsappSurveys,
   sendEmail,
   sendOTPEmail,
+  updateReviewLinkStatsOnSurvey,
   updateSurvey,
   updateSurveyCompleted,
   updateSurveyGoogleLink,
@@ -487,6 +488,16 @@ export function useUpdateCompletedMutation(surveyId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => updateSurveyCompleted(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
+    },
+  });
+}
+
+export function useUpdateReviewLinkStatsOnSurveyMutation(surveyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => updateReviewLinkStatsOnSurvey(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
     },

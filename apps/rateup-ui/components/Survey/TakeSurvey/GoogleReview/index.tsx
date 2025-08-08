@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
+import { useUpdateReviewLinkStatsOnSurveyMutation } from "@/backend/surveys/surveys.query";
 import useTranslations from "@/dictionaries/useTranslation";
 
 import { useDeleteReviewSuggestionMutation } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
@@ -73,8 +74,12 @@ function GoogleReview({
     surveyTeamMapId,
     true,
   );
+  const updateReviewPageVisits = useUpdateReviewLinkStatsOnSurveyMutation(
+    survey?.id,
+  );
   // if user clicks on go to review page, delete the last copied review
   function handleGoToReviewPage() {
+    updateReviewPageVisits.mutate(surveyTeamMapId);
     lastCopiedReview &&
       deleteReviewMutation.mutate(lastCopiedReview.id, {
         onSuccess: () => {

@@ -498,35 +498,29 @@ const EditTicket = ({
 
             <Group gap={4} mx={8}>
               <Text size="sm">Created Date:</Text>
-              <Badge variant="transparent" c={"gray.7"} radius="xs">
+              <Badge variant="light" c={"gray.7"} radius="xs">
                 {formatDate(ticket.createdAt)}
               </Badge>
             </Group>
-
-            <Group px="xs">
-              <ShareLink />
-            </Group>
           </Group>
-
-          {saveStatus !== "idle" && (
-            <Badge
-              color={saveStatus === "saved" ? "teal" : "blue"}
-              variant="light"
-              size="sm"
-              aria-live="polite"
-            >
-              {saveStatus === "saved" ? "Changes saved" : "Saving..."}
-            </Badge>
-          )}
+          <Group>
+            {saveStatus !== "idle" && (
+              <Badge
+                color={saveStatus === "saved" ? "teal" : "blue"}
+                variant="light"
+                size="sm"
+                aria-live="polite"
+              >
+                {saveStatus === "saved" ? "Changes saved" : "Saving..."}
+              </Badge>
+            )}
+            <ShareLink />
+          </Group>
         </Group>
       </Container>
 
       <Container>
-        <SimpleGrid
-          mx={{ base: 0, md: 16 }}
-          cols={{ base: 2, md: 3 }}
-          spacing="md"
-        >
+        <SimpleGrid cols={{ base: 2, lg: 4 }} spacing="sm">
           <ContainedTextField
             fw={500}
             label="Ticket Name"
@@ -556,7 +550,7 @@ const EditTicket = ({
 
           <ContainedDatePickerInput
             label={translations["Deadline:"]}
-            placeholder={translations["Select a deadline for the ticket"]}
+            placeholder={"mm/dd/yyyy"}
             rightSection={
               <IconCalendar color="var(--mantine-color-blue-4)" size={19} />
             }
@@ -566,7 +560,7 @@ const EditTicket = ({
             {...form.getInputProps("deadline")}
           />
 
-          <Box mt={22} mx={12}>
+          <Box>
             <Button
               type="button"
               variant="light"
@@ -581,18 +575,17 @@ const EditTicket = ({
             </Button>
           </Box>
         </SimpleGrid>
+        <Collapse in={showEditor}>
+          <Box mt="md">
+            <Text className={styles.label}>Description</Text>
+            <TicketTextEditor
+              content={form.values.description}
+              onUpdate={handleDescriptionUpdate}
+              placeholder="Add a description..."
+            />
+          </Box>
+        </Collapse>
       </Container>
-
-      <Collapse in={showEditor}>
-        <Box mt="md">
-          <Text className={styles.label}>Description</Text>
-          <TicketTextEditor
-            content={form.values.description}
-            onUpdate={handleDescriptionUpdate}
-            placeholder="Add a description..."
-          />
-        </Box>
-      </Collapse>
     </form>
   );
 };
