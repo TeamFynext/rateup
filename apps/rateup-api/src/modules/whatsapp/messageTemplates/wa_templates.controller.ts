@@ -1146,7 +1146,7 @@ export async function sendTemplateToUserCore(
     res = await sendMessage(
       orgId,
       templateMessage,
-      PlatformType.WHATSAPP,
+      null,
       userId,
       whatsappSettingsPhoneId,
     );
