@@ -132,6 +132,7 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
         <GoogleReview
           orgLogoUrl={survey?.webSurveyTheme?.surveyTheme?.logo?.logo}
           survey={survey}
+          surveyTeamMapId={survey?.surveyTeamMapId}
         />
       ) : (
         <TakeSurveyLayoutWeb survey={survey}>

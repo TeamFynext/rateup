@@ -228,6 +228,12 @@ export async function updateSurveyCompleted(surveyTeamMapId: string) {
   );
 }
 
+export async function updateReviewLinkStatsOnSurvey(surveyTeamMapId: string) {
+  return await axiosClient.post(
+    `${SURVEY_PUBLIC_URL}/${surveyTeamMapId}/review/visited`,
+  );
+}
+
 export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
   const res = await axiosClient.get(
     `${SURVEYURL}/surveyStats/${surveyTeamMapId}`,
