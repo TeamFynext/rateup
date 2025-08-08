@@ -86,10 +86,10 @@ export const toBeIncludedWaSessionRelations = {
 export async function sendMessage(
   orgId: string,
   messageData: WaSendMessageBody | IgSendMessageBody,
-  platform: PlatformType = PlatformType.WHATSAPP,
   userName?: string,
   userId?: string,
   whatsappSettingsPhoneId?: string,
+  platform: PlatformType = PlatformType.WHATSAPP,
 ) {
   let waSettings: Omit<WhatsappSettings, "accessToken_iv">;
   let to: string;

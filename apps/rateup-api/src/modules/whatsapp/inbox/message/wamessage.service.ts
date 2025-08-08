@@ -963,10 +963,10 @@ export async function sendMediaMessages(
     await sendMessage(
       orgId,
       messageBody,
-      platform,
       null,
       userId,
       whatsappSettingsPhoneId,
+      platform,
     );
     if (!isLastItem) wait(50);
   }

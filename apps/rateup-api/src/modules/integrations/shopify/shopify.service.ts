@@ -479,12 +479,7 @@ export async function sendWhatsAppTemplateToCustomer(
     };
     const templateMessage = createTemplateMessage(phone, templateQuery);
     await wait(50);
-    const res = await sendMessage(
-      orgId,
-      templateMessage,
-      PlatformType.WHATSAPP,
-      customerName,
-    );
+    const res = await sendMessage(orgId, templateMessage, customerName);
     await updateMonthlyStat(
       SubscriptionFeaturePathName.WhatsAppTemplate,
       orgId,
