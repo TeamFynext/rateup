@@ -221,10 +221,10 @@ export async function sendNewWaMessageHandler(
         await sendMessage(
           orgId,
           messageBody,
-          platform as PlatformType,
           undefined,
           userId,
           whatsappSettingsPhoneId,
+          platform as PlatformType,
         );
         break;
       }
@@ -240,10 +240,10 @@ export async function sendNewWaMessageHandler(
         await sendMessage(
           orgId,
           messageBody,
-          platform as PlatformType,
           undefined,
           userId,
           whatsappSettingsPhoneId,
+          platform as PlatformType,
         );
         break;
       }
