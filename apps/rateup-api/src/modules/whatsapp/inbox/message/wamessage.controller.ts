@@ -281,6 +281,7 @@ export async function sendNewWaMessageHandler(
     }
     reply.send("Message Sent");
   } catch (error) {
+    console.error(error);
     log.error("Error in sendNewWaMessageHandler: %o", error);
     reply.status(500).send("Internal Server Error");
   }
