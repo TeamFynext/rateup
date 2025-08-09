@@ -19,12 +19,16 @@ import {
 import { ContactCard } from "@/src/components/flow/FlowResponseCard";
 import { useSurvey } from "@/src/api/survey/survey.query";
 import { useQuestions } from "@/src/api/question/question.query";
-import ChoiceWise from "@/src/components/flow/ChoiceWise";
 import { BackIcon } from "@/src/constants/imageExports";
 import { useWebFormResponseDataStore } from "@/src/utils/store";
-import NPSOverview from "@/src/components/flow/NPSOverview";
+import SurveyStatsWebForm from "@/src/components/webform/SurveyStats";
+import HappyIndex from "@/src/components/webform/HappyIndex";
+import NpsOverview from "@/src/components/webform/NpsOverview";
+import HappinessJourney from "@/src/components/webform/HappinessJourney";
+import SurveyQuestions from "@/src/components/flow/SurveyQuestions";
 
 const Tab = createMaterialTopTabNavigator();
+const SubTab = createMaterialTopTabNavigator();
 
 const AnalyticsTab = ({
   webformId,
@@ -35,6 +39,14 @@ const AnalyticsTab = ({
 }) => {
   const { data, isLoading } = useResponseAnalytics(webformId, {});
   const { data: questions } = useQuestions(webformId);
+
+  const [npsOverView, choiceWiseOverView] = useMemo(
+    () =>
+      data
+        ? [Object.entries(data?.nps), Object.entries(data?.choiceWise)]
+        : [[], []],
+    [data]
+  );
 
   if (isLoading) {
     return (
@@ -52,87 +64,58 @@ const AnalyticsTab = ({
     );
   }
 
-  const totalResponses = Object.values(data.choiceWise || {}).reduce(
-    (acc: number, curr: any) => acc + (curr?.responseCount ? 1 : 0),
-    0
-  );
-
-  const hasNPS = Object.keys(data.nps || {}).length > 0;
-  const hasChoiceWise = Object.keys(data.choiceWise || {}).length > 0;
-
   return (
-    <View className="bg-white h-full flex-1">
-      {/* ✅ Header */}
-      <View className="px-4 py-3 border-b border-gray-200 bg-rateUpGreen20 flex-row items-center justify-between">
-        <Text className="text-base font-semibold text-rateUpGreen">
-          Total Responded Questions
-        </Text>
-        <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
-          <Text className="text-white text-sm font-semibold">
-            {totalResponses}
-          </Text>
-        </View>
-      </View>
+    <View className="flex-1 bg-white h-full">
+      <SurveyStatsWebForm surveyId={webformId} />
+      <SubTab.Navigator
+        screenOptions={({ route }) => ({
+          lazy: true,
+          tabBarScrollEnabled: true,
+          tabBarLabel: ({ focused }) => (
+            <Text
+              className={`text-md font-bold ${
+                focused ? "text-rateUpBlue" : "text-gray-400"
+              }`}
+            >
+              {route.name}
+            </Text>
+          ),
+          tabBarStyle: {
+            backgroundColor: "#fff",
+            elevation: 0,
+            height: 48,
+            width: "100%",
+          },
+          tabBarIndicatorStyle: {
+            backgroundColor: "#4A90E2",
+            height: 2,
+          },
+        })}
+      >
+        <SubTab.Screen name="Happiness Index">
+          {() => <HappyIndex surveyId={webformId} />}
+        </SubTab.Screen>
 
-      <ScrollView className="p-4">
-        <View className="flex-col gap-8">
-          {/* ✅ NPS Overview Section */}
-          {hasNPS && (
-            <View className="flex gap-2">
-              <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
-                NPS Overview
-              </Text>
-              {Object.entries(data.nps).map(([questionId, npsEntry]: any) => (
-                <NPSOverview
-                  key={questionId}
-                  questionId={questionId}
-                  questions={questions}
-                  version={1}
-                  flow={webform}
-                  data={{
-                    npsScore: npsEntry.npsData.npsScore,
-                    csatScore: npsEntry.csatScore,
-                    promoters: npsEntry.npsData.promoters,
-                    passives: npsEntry.npsData.passives,
-                    detractors: npsEntry.npsData.detractors,
-                    total: npsEntry.npsData.total,
-                  }}
-                />
-              ))}
-            </View>
-          )}
+        <SubTab.Screen name="NPS Overview">
+          {() => <NpsOverview surveyId={webformId} />}
+        </SubTab.Screen>
 
-          {/* ✅ ChoiceWise Response Section */}
-          {hasChoiceWise && (
-            <View className="flex gap-3">
-              <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
-                Question-wise Overview
-              </Text>
-              {Object.entries(data.choiceWise).map(
-                ([questionId, { data: choices }]) => (
-                  <ChoiceWise
-                    key={questionId}
-                    questionId={questionId}
-                    choices={choices}
-                    questions={questions}
-                    version={1}
-                    flow={webform}
-                  />
-                )
-              )}
-            </View>
-          )}
+        <SubTab.Screen name="Happiness Journey">
+          {() => <HappinessJourney surveyId={webformId} />}
+        </SubTab.Screen>
 
-          {/* No data fallback */}
-          {!hasNPS && !hasChoiceWise && (
-            <View className="items-center justify-center py-10">
-              <Text className="text-gray-500 text-base">
-                No analytics data available.
-              </Text>
-            </View>
+        <SubTab.Screen name="Survey Questions Breakdown">
+          {() => (
+            <SurveyQuestions
+              choiceWise={choiceWiseOverView}
+              NPS={npsOverView}
+              version={1}
+              questions={questions}
+              flow={null}
+            />
           )}
-        </View>
-      </ScrollView>
+        </SubTab.Screen>
+      </SubTab.Navigator>
     </View>
   );
 };
@@ -220,16 +203,17 @@ const WebFormPage = () => {
 
       <Tab.Navigator
         screenOptions={({ route }) => ({
+          swipeEnabled: false,
           tabBarLabel: ({ focused }) => (
             <View
               style={{ width: sw }}
               className={`mx-auto p-3 rounded-lg ${
-                focused ? "bg-rateUpGreen20" : "bg-white"
+                focused ? "bg-[#C4D7F5]" : "bg-white"
               }`}
             >
               <Text
                 className={`text-base text-center font-semibold ${
-                  focused ? "text-rateUpGreen" : "text-gray-500"
+                  focused ? "text-rateUpBlue" : "text-gray-500"
                 }`}
               >
                 {route.name}

@@ -11,7 +11,8 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
-import DocumentPicker from "react-native-document-picker";
+// import DocumentPicker from "react-native-document-picker";
+import * as DocumentPicker from "expo-document-picker";
 import {
   useContactIdStore,
   useMediaStore,
@@ -65,31 +66,28 @@ const MessageSendPanel = () => {
 
   const pickMedia = async (type: "image" | "video" | "audio" | "document") => {
     try {
-      const typeMap = {
-        image: [DocumentPicker.types.images],
-        video: [DocumentPicker.types.video],
-        audio: [DocumentPicker.types.audio],
-        document: [
-          DocumentPicker.types.pdf,
-          DocumentPicker.types.plainText,
-          DocumentPicker.types.allFiles,
-        ],
-      };
-
-      const res = await DocumentPicker.pick({
-        type: typeMap[type],
-        allowMultiSelection: true,
+      const res = await DocumentPicker.getDocumentAsync({
+        type:
+          type === "image"
+            ? "image/*"
+            : type === "video"
+            ? "video/*"
+            : type === "audio"
+            ? "audio/*"
+            : "*/*",
+        multiple: true,
+        copyToCacheDirectory: false,
       });
 
-      for (const file of res) {
+      // Handle cancelation
+      if (res?.canceled || !res?.assets?.length) return;
+
+      for (const file of res.assets) {
         const tempKey = `${file.name}-${Date.now()}`;
-        //@ts-ignore
         addMedia({
           key: tempKey,
           type,
-          //@ts-ignore
           name: file.name,
-          //@ts-ignore
           url: null,
           uploading: true,
         });
@@ -98,17 +96,15 @@ const MessageSendPanel = () => {
           const uploadable = {
             uri: file.uri,
             name: file.name,
-            type: file.type || "application/octet-stream",
+            type: file.mimeType || "application/octet-stream",
           };
-          //@ts-ignore
+
           const key = await uploadFile(uploadable);
           const cloudUrl = `${process.env.EXPO_PUBLIC_AWS_CLOUDFRONT_URL}${key}`;
           removeMedia(tempKey);
-          //@ts-ignore
           addMedia({
             key,
             type,
-            //@ts-ignore
             name: file.name,
             url: cloudUrl,
             uploading: false,
@@ -120,7 +116,7 @@ const MessageSendPanel = () => {
 
       togglePanel();
     } catch (err) {
-      if (!DocumentPicker.isCancel(err)) console.error("Picker Error:", err);
+      console.error("expo-document-picker error:", err);
     }
   };
 

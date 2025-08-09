@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -6,7 +6,6 @@ import {
   Pressable,
   Text,
   View,
-  ScrollView,
   TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -17,18 +16,22 @@ import { ContactCard } from "@/src/components/flow/FlowResponseCard";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { BackIcon } from "@/src/constants/imageExports";
-import ChoiceWise from "@/src/components/flow/ChoiceWise";
 import {
   useResponseAnalytics,
   useResponsesBySurvey,
 } from "@/src/api/response/response.query";
 import { useQuestions } from "@/src/api/question/question.query";
 import { useFlowDataStore, useFlowResponseDataStore } from "@/src/utils/store";
-import NPSOverview from "@/src/components/flow/NPSOverview";
+import SurveyStatsWebForm from "@/src/components/webform/SurveyStats";
+import HappyIndex from "@/src/components/webform/HappyIndex";
+import NpsOverview from "@/src/components/webform/NpsOverview";
+import HappinessJourney from "@/src/components/webform/HappinessJourney";
+import SurveyQuestions from "@/src/components/flow/SurveyQuestions";
 
 dayjs.extend(relativeTime);
 
 const Tab = createMaterialTopTabNavigator();
+const SubTab = createMaterialTopTabNavigator();
 
 const OverviewTab = ({
   surveyId,
@@ -40,7 +43,15 @@ const OverviewTab = ({
   version: number;
 }) => {
   const { data, isLoading } = useResponseAnalytics(surveyId, {});
-  const { data: question } = useQuestions(surveyId);
+  const { data: questions } = useQuestions(surveyId);
+
+  const [npsOverView, choiceWiseOverView] = useMemo(
+    () =>
+      data
+        ? [Object.entries(data?.nps), Object.entries(data?.choiceWise)]
+        : [[], []],
+    [data]
+  );
 
   if (isLoading) {
     return (
@@ -57,87 +68,141 @@ const OverviewTab = ({
       </View>
     );
   }
-  const hasNPS = Object.keys(data.nps || {}).length > 0;
-  const hasChoiceWise = Object.keys(data.choiceWise || {}).length > 0;
-  const totalResponses = Object.values(data.choiceWise || {}).reduce(
-    (acc: number, curr: any) => acc + (curr?.responseCount ? 1 : 0),
-    0
-  );
+  // const hasNPS = Object.keys(data.nps || {}).length > 0;
+  // const hasChoiceWise = Object.keys(data.choiceWise || {}).length > 0;
+  // const totalResponses = Object.values(data.choiceWise || {}).reduce(
+  //   (acc: number, curr: any) => acc + (curr?.responseCount ? 1 : 0),
+  //   0
+  // );
 
+  // return (
+  //   <View className="flex-1 bg-white">
+  //     {/* Response Count Header */}
+  //     <View className="px-4 py-3 border-b border-gray-200 bg-rateUpGreen20 flex-row items-center justify-between">
+  //       <Text className="text-base font-semibold text-rateUpGreen">
+  //         Total Responded Questions
+  //       </Text>
+  //       <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
+  //         <Text className="text-white text-sm font-semibold">
+  //           {totalResponses}
+  //         </Text>
+  //       </View>
+  //     </View>
+
+  //     {/* Scrollable Content */}
+  //     <ScrollView className="p-4">
+  //       <View className="flex-col gap-8">
+  //         {/* ✅ NPS Overview Section */}
+  //         {hasNPS && (
+  //           <View className="flex gap-2">
+  //             <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
+  //               NPS Overview
+  //             </Text>
+  //             {Object.entries(data.nps).map(([questionId, npsEntry]: any) => (
+  //               <NPSOverview
+  //                 key={questionId}
+  //                 questionId={questionId}
+  //                 questions={question}
+  //                 version={version}
+  //                 flow={flow}
+  //                 data={{
+  //                   npsScore: npsEntry.npsData.npsScore,
+  //                   csatScore: npsEntry.csatScore,
+  //                   promoters: npsEntry.npsData.promoters,
+  //                   passives: npsEntry.npsData.passives,
+  //                   detractors: npsEntry.npsData.detractors,
+  //                   total: npsEntry.npsData.total,
+  //                 }}
+  //               />
+  //             ))}
+  //           </View>
+  //         )}
+
+  //         {/* ✅ ChoiceWise Response Section */}
+  //         {hasChoiceWise && (
+  //           <View className="flex gap-3">
+  //             <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
+  //               Question-wise Overview
+  //             </Text>
+  //             {Object.entries(data.choiceWise).map(
+  //               ([questionId, { data: choices }]) => (
+  //                 <ChoiceWise
+  //                   key={questionId}
+  //                   questionId={questionId}
+  //                   choices={choices}
+  //                   questions={question}
+  //                   version={version}
+  //                   flow={flow}
+  //                 />
+  //               )
+  //             )}
+  //           </View>
+  //         )}
+
+  //         {/* No data fallback */}
+  //         {!hasNPS && !hasChoiceWise && (
+  //           <View className="items-center justify-center py-10">
+  //             <Text className="text-gray-500 text-base">
+  //               No analytics data available.
+  //             </Text>
+  //           </View>
+  //         )}
+  //       </View>
+  //     </ScrollView>
+  //   </View>
+  // );
   return (
-    <View className="flex-1 bg-white">
-      {/* Response Count Header */}
-      <View className="px-4 py-3 border-b border-gray-200 bg-rateUpGreen20 flex-row items-center justify-between">
-        <Text className="text-base font-semibold text-rateUpGreen">
-          Total Responded Questions
-        </Text>
-        <View className="bg-rateUpGreen px-2.5 py-1 rounded-full">
-          <Text className="text-white text-sm font-semibold">
-            {totalResponses}
-          </Text>
-        </View>
-      </View>
+    <View className="flex-1 bg-white h-full">
+      <SurveyStatsWebForm surveyId={surveyId} />
+      <SubTab.Navigator
+        screenOptions={({ route }) => ({
+          lazy: true,
+          tabBarScrollEnabled: true,
+          tabBarLabel: ({ focused }) => (
+            <Text
+              className={`text-md font-bold ${
+                focused ? "text-rateUpBlue" : "text-gray-400"
+              }`}
+            >
+              {route.name}
+            </Text>
+          ),
+          tabBarStyle: {
+            backgroundColor: "#fff",
+            elevation: 0,
+            height: 48,
+            width: "100%",
+          },
+          tabBarIndicatorStyle: {
+            backgroundColor: "#4A90E2",
+            height: 2,
+          },
+        })}
+      >
+        <SubTab.Screen name="Happiness Index">
+          {() => <HappyIndex surveyId={surveyId} />}
+        </SubTab.Screen>
 
-      {/* Scrollable Content */}
-      <ScrollView className="p-4">
-        <View className="flex-col gap-8">
-          {/* ✅ NPS Overview Section */}
-          {hasNPS && (
-            <View className="flex gap-2">
-              <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
-                NPS Overview
-              </Text>
-              {Object.entries(data.nps).map(([questionId, npsEntry]: any) => (
-                <NPSOverview
-                  key={questionId}
-                  questionId={questionId}
-                  questions={question}
-                  version={version}
-                  flow={flow}
-                  data={{
-                    npsScore: npsEntry.npsData.npsScore,
-                    csatScore: npsEntry.csatScore,
-                    promoters: npsEntry.npsData.promoters,
-                    passives: npsEntry.npsData.passives,
-                    detractors: npsEntry.npsData.detractors,
-                    total: npsEntry.npsData.total,
-                  }}
-                />
-              ))}
-            </View>
-          )}
+        <SubTab.Screen name="NPS Overview">
+          {() => <NpsOverview surveyId={surveyId} />}
+        </SubTab.Screen>
 
-          {/* ✅ ChoiceWise Response Section */}
-          {hasChoiceWise && (
-            <View className="flex gap-3">
-              <Text className="text-xl font-bold text-gray-800 border-l-4 border-rateUpGreen pl-3">
-                Question-wise Overview
-              </Text>
-              {Object.entries(data.choiceWise).map(
-                ([questionId, { data: choices }]) => (
-                  <ChoiceWise
-                    key={questionId}
-                    questionId={questionId}
-                    choices={choices}
-                    questions={question}
-                    version={version}
-                    flow={flow}
-                  />
-                )
-              )}
-            </View>
-          )}
+        <SubTab.Screen name="Happiness Journey">
+          {() => <HappinessJourney surveyId={surveyId} />}
+        </SubTab.Screen>
 
-          {/* No data fallback */}
-          {!hasNPS && !hasChoiceWise && (
-            <View className="items-center justify-center py-10">
-              <Text className="text-gray-500 text-base">
-                No analytics data available.
-              </Text>
-            </View>
+        <SubTab.Screen name="Survey Questions Breakdown">
+          {() => (
+            <SurveyQuestions
+              choiceWise={choiceWiseOverView}
+              NPS={npsOverView}
+              version={version}
+              questions={questions}
+              flow={flow}
+            />
           )}
-        </View>
-      </ScrollView>
+        </SubTab.Screen>
+      </SubTab.Navigator>
     </View>
   );
 };
@@ -252,6 +317,7 @@ const FlowPage = () => {
       {/* Tabs */}
       <Tab.Navigator
         screenOptions={({ route }) => ({
+          swipeEnabled:false,
           tabBarLabel: ({ focused }) => (
             <View
               style={{ width: sw }}

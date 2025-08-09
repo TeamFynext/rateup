@@ -32,6 +32,18 @@ function ProtectedLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="webForms"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="flows"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
