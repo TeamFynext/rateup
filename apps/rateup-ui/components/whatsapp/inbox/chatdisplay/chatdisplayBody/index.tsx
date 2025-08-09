@@ -37,6 +37,7 @@ import {
 } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import {
   IgReceiveMessageBody,
+  IgSendMessageBody,
   WaInboxMessage,
   WaReceiveMessageBody,
   WaSendMessageBody,
@@ -56,7 +57,9 @@ import WaInboxLocation from "./components/location";
 import WaInboxTemplate from "./components/template";
 import WaInboxText from "./components/text";
 import WaInboxVideo from "./components/video";
-import WaInboxSingleMessageLayout from "./layout/singleMessageLayout";
+import WaInboxSingleMessageLayout, {
+  reactionEmojiMap,
+} from "./layout/singleMessageLayout";
 import classes from "./styles.module.css";
 
 interface Props {
@@ -147,6 +150,67 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
         );
     }
   };
+
+  function getReactionMessage(message: WaGetMessagesBody) {
+    const exchangeProcess = message?.messageBody?.exchangeProcess;
+    const isInsta = message?.sourcePlatform == MessagePlatform.INSTAGRAM;
+    if (!exchangeProcess) return null;
+    const wa_id =
+      exchangeProcess === "send" || isInsta
+        ? message?.messageId
+        : (message.messageBody.receive as WaReceiveMessageBody)?.messages[0].id;
+    const reactionMsg = props.data?.find((msg) => {
+      const { messageType } = parseWaMessage(msg);
+      if (messageType === "reaction") {
+        const reactedMessageId =
+          msg.messageBody.exchangeProcess === "receive"
+            ? !isInsta
+              ? (msg.messageBody.receive as WaReceiveMessageBody).messages[0]
+                  .reaction?.message_id
+              : (msg.messageBody.receive as IgReceiveMessageBody).reaction.mid
+            : !isInsta
+              ? (msg.messageBody.send as WaSendMessageBody).reaction?.message_id
+              : (msg.messageBody.send as IgSendMessageBody).payload.message_id;
+        return wa_id === reactedMessageId;
+      }
+      return false;
+    });
+
+    const isSendReactionMsg =
+      reactionMsg && reactionMsg.messageBody.exchangeProcess === "send";
+    if (reactionMsg)
+      return {
+        emoji: isSendReactionMsg
+          ? !isInsta
+            ? (reactionMsg.messageBody.send as WaSendMessageBody).reaction.emoji
+            : ((reactionMsg.messageBody.send as IgSendMessageBody).payload
+                .emoji ??
+              reactionEmojiMap(
+                (reactionMsg.messageBody.send as IgSendMessageBody).payload
+                  .reaction,
+              ))
+          : !isInsta
+            ? (reactionMsg.messageBody.receive as WaReceiveMessageBody)
+                .messages[0].reaction.emoji
+            : ((reactionMsg.messageBody.receive as IgReceiveMessageBody)
+                .reaction.emoji ??
+              reactionEmojiMap(
+                (reactionMsg.messageBody.receive as IgReceiveMessageBody)
+                  .reaction.reaction,
+              )),
+        from: isSendReactionMsg
+          ? reactionMsg.sender?.name
+          : (selectedContact.name ??
+            selectedContact.whatsappUserName ??
+            selectedContact.phone ??
+            selectedContact.igsId),
+        pos:
+          exchangeProcess === "receive"
+            ? "bottom-start"
+            : ("bottom-end" as IndicatorProps["position"]),
+      };
+  }
+
   useEffect(() => {
     scrollIntoView();
   }, [targetRef.current]);
@@ -212,7 +276,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
         )}
         {props?.data?.map((message, index) => {
           const { exchangeProcess, receive } = message.messageBody;
-          const { messageType, reaction } = parseWaMessage(message);
+          const { messageType } = parseWaMessage(message);
           if (messageType === "reaction") return null;
           if (
             message.sourcePlatform === MessagePlatform.INSTAGRAM &&
@@ -227,6 +291,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
               dayjs(previousMessage.waCreatedAt),
               "day",
             );
+          const reaction = getReactionMessage(message);
 
           return (
             <React.Fragment key={message?.id}>
