@@ -106,22 +106,22 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     return <IconClock size={13} color="gray" />;
   };
 
-  function emojiReactionMap(emoji) {
-    switch (emoji) {
-      case "❤":
+  function emojiReactionMap(emojiUnified) {
+    switch (emojiUnified) {
+      case "2764-fe0f":
         return "love";
       default:
         return null;
     }
   }
-  function sendReaction(emoji: string) {
+  function sendReaction(emoji: string, emojiData: EmojiClickData) {
     if (!whatsappSettingsPhoneId) {
       showErrorToast("Select a account to send the message");
       return;
     }
     let reactionText;
     if (platform === MessagePlatform.INSTAGRAM) {
-      reactionText = emojiReactionMap(emoji);
+      reactionText = emojiReactionMap(emojiData.unified);
       if (!reactionText) {
         showErrorToast(`${emoji} not supported`);
         return;
@@ -201,10 +201,12 @@ export default function WaInboxSingleMessageLayout(props: Props) {
   );
 }
 
-function reactionEmojiMap(reaction) {
+export function reactionEmojiMap(reaction) {
   switch (reaction) {
     case "love":
       return "❤";
+    default:
+      return "�";
   }
 }
 

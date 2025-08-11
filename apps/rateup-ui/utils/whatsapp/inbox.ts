@@ -25,18 +25,11 @@ export type ParsedWaMessageReturn = {
   messageContent: any;
   template?: WaTemplateFetchBody;
   interactive?: WaSendMessageBody["interactive"];
-  reaction?: {
-    emoji?: string;
-    reaction?: string;
-    from?: string;
-    reactedAt?: string;
-    pos: IndicatorProps["position"];
-  };
 };
 export function parseWaMessage(
   message: Partial<WaGetMessagesBody>,
 ): ParsedWaMessageReturn {
-  const { messageBody, waCreatedAt, reactionMessage } = message;
+  const { messageBody, waCreatedAt } = message;
   let reaction;
   let timeStamp: string = waCreatedAt ?? new Date().toLocaleTimeString();
   let messageType: string = "text";
@@ -45,13 +38,6 @@ export function parseWaMessage(
   let interactive: WaSendMessageBody["interactive"] =
     {} as WaSendMessageBody["interactive"];
   if (message.sourcePlatform === MessagePlatform.INSTAGRAM) {
-    let reactionSend =
-      reactionMessage &&
-      (reactionMessage.messageBody.send as IgSendMessageBody);
-    let reactionReceive =
-      reactionMessage &&
-      (reactionMessage.messageBody.receive as IgReceiveMessageBody);
-    let reactedAt = reactionMessage && reactionMessage.createdAt;
     if (messageBody?.exchangeProcess === "send") {
       const { send } = messageBody as { send: IgSendMessageBody };
       const { message, sender_action, payload } = send;
@@ -96,28 +82,7 @@ export function parseWaMessage(
         messageType = "reaction";
       }
     }
-    if (reactionMessage) {
-      reaction = {
-        reaction:
-          reactionSend?.payload?.reaction ||
-          reactionReceive?.reaction?.reaction,
-        emoji: reactionSend?.payload?.emoji || reactionReceive?.reaction?.emoji,
-        reactedAt,
-        pos:
-          messageBody?.exchangeProcess === "send"
-            ? "bottom-end"
-            : "bottom-start",
-        from: reactionSend && reactionMessage.sender.name,
-      };
-    }
   } else {
-    let reactionSend =
-      reactionMessage &&
-      (reactionMessage.messageBody.send as WaSendMessageBody);
-    let reactionReceive =
-      reactionMessage &&
-      (reactionMessage.messageBody.receive as WaReceiveMessageBody);
-    let reactedAt = reactionMessage && reactionMessage.createdAt;
     if (messageBody?.exchangeProcess === "send") {
       const { send } = messageBody as { send: WaSendMessageBody };
       messageType = send.type;
@@ -204,19 +169,6 @@ export function parseWaMessage(
           break;
       }
     }
-    if (reactionMessage) {
-      reaction = {
-        emoji:
-          reactionSend?.reaction?.emoji ||
-          reactionReceive?.messages[0].reaction?.emoji,
-        reactedAt,
-        pos:
-          messageBody?.exchangeProcess === "send"
-            ? "bottom-end"
-            : "bottom-start",
-        from: reactionSend && reactionMessage.sender.name,
-      };
-    }
   }
 
   return {
@@ -225,7 +177,6 @@ export function parseWaMessage(
     messageContent,
     template,
     interactive,
-    reaction,
   };
 }
 

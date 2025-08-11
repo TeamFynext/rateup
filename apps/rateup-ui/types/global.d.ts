@@ -1512,7 +1512,7 @@ export type IgSendMessageBody = {
   };
   message?: {
     text?: string;
-    attachment: {
+    attachment?: {
       type: string;
       payload?: { id?: string; attachment_id?: string; url?: string };
       is_reusable?: boolean;
