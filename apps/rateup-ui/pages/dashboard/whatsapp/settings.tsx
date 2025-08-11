@@ -614,7 +614,11 @@ function MetaLoginStatus({ waSettings }) {
             <RateupButtonBlue
               w={"fit-content"}
               title="connect"
-              onClick={() => upsertMutation.mutate({ ...config, ...rest })}
+              onClick={() => {
+                if (!selectedWaSettings.fbPageId && !config.fbPageId)
+                  return showWarnToast("Please select a page");
+                upsertMutation.mutate({ ...config, ...rest });
+              }}
               loading={upsertMutation.isPending}
             />
           </Flex>
