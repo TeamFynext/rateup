@@ -149,8 +149,8 @@ export const useSyncFbPages = (waSettingsId) => {
       qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
       showSuccessToast("success");
     },
-    onError: () => {
-      showErrorToast("error");
+    onError: (e) => {
+      showErrorToastFromError(e, "something went wrong");
     },
   });
 };
