@@ -7,12 +7,12 @@ export function showErrorToastFromError(
   fallbackMessage: string = "Error updating settings!",
 ) {
   if (e instanceof AxiosError) {
-    if (e?.response?.data?.message) {
-      showErrorToast(e.response.data.message);
-      return;
-    }
     if (typeof e?.response?.data === "string") {
       showErrorToast(e.response.data);
+      return;
+    }
+    if (e?.response?.data?.message) {
+      showErrorToast(e.response.data.message);
       return;
     }
   }
