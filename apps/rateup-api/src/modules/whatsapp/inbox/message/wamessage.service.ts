@@ -85,99 +85,58 @@ export async function getWaMessagesByContactId(
   phone?: string,
 ) {
   let messages: WaMessage[];
-  const filter = [`w1."contactId" = $1`];
-  let paramIndex = 2;
-  const params = [contactId];
+  const sourceIdentifierCondition =
+    phone && phone !== "all"
+      ? {
+          OR: [{ sourceIdentifier: phone }, { sourceIdentifier: `+${phone}` }],
+        }
+      : {};
   if (cursor) {
-    const { waCreatedAt, id } = JSON.parse(
-      Buffer.from(cursor, "base64").toString(),
-    );
-    params.push(waCreatedAt);
-    let createdAtIndex = paramIndex++;
-    params.push(id);
-    filter.push(
-      `w1."waCreatedAt" < $${createdAtIndex} OR (w1."waCreatedAt" = $${createdAtIndex} AND w1."id" < $${paramIndex++})`,
-    );
+    messages = await prisma.waMessage.findMany({
+      skip: 1,
+      take: 300,
+      cursor: {
+        id: cursor,
+      },
+      where: {
+        contactId,
+        ...sourceIdentifierCondition,
+      },
+      include: {
+        sender: {
+          select: {
+            name: true,
+            profilePhoto: true,
+          },
+        },
+      },
+      orderBy: {
+        waCreatedAt: "desc",
+      },
+    });
+  } else {
+    messages = await prisma.waMessage.findMany({
+      take: 300,
+      where: {
+        contactId,
+        ...sourceIdentifierCondition,
+      },
+      include: {
+        sender: {
+          select: {
+            name: true,
+            profilePhoto: true,
+          },
+        },
+      },
+      orderBy: {
+        waCreatedAt: "desc",
+      },
+    });
   }
-
-  if (phone && phone !== "all") {
-    params.push(phone);
-    params.push(`+${phone}`);
-    filter.push(
-      `w1."sourceIdentifier" = $${paramIndex++} OR w1."sourceIdentifier" = $${paramIndex++}`,
-    );
-  }
-
-  let query = `WITH latest_reactions AS (
-  SELECT
-    w2."id" AS reactionId,
-    w2."waCreatedAt" AS reactionCreatedAt,
-    w2."sendBy" AS reactionSenderId,
-    COALESCE(
-      (w2."messageBody"->'receive'->'reaction'->>'mid')::text,
-      (w2."messageBody"->'send'->'payload'->>'message_id')::text,
-      (w2."messageBody"->'receive'->'messages'->0->'reaction'->>'message_id')::text,
-      (w2."messageBody"->'send'->'reaction'->>'message_id')::text
-    ) AS reactedMessageId,
-    w2."messageBody" AS reactionBody,
-    w2."sourcePlatform"
-  FROM "WaMessage" w2
-  WHERE w2."messageBody"->'receive'->'reaction'->>'action' = 'react' OR
-      w2."messageBody"->'send'->'reaction' IS NOT NULL OR
-      w2."messageBody"->'receive'->'messages'->0->'reaction' IS NOT NULL OR
-      w2."messageBody"->'send'->>'sender_action' = 'react'
-),
-reaction_with_user AS (
-  SELECT
-    r.reactedMessageId,
-    json_build_object(
-      'messageBody', r.reactionBody,
-      'createdAt', r.reactionCreatedAt,
-      'sender', CASE
-        WHEN u2."id" IS NOT NULL THEN json_build_object('name', u2."name", 'profile_photo', u2."profilePhoto")
-        ELSE NULL
-      END
-    ) AS "reactionMessage",
-    r.reactionCreatedAt
-  FROM latest_reactions r
-  LEFT JOIN "User" u2 ON u2."id" = r.reactionSenderId
-),
-ranked_reactions AS (
-  SELECT *,
-         ROW_NUMBER() OVER (PARTITION BY reactedMessageId ORDER BY reactionCreatedAt DESC) AS rn
-  FROM reaction_with_user
-)
-SELECT
-  w1.*,
-  CASE
-    WHEN u."id" IS NOT NULL THEN json_build_object('name', u."name", 'profile_photo', u."profilePhoto")
-    ELSE NULL
-  END AS sender,
-  rr."reactionMessage"
-FROM "WaMessage" w1
-LEFT JOIN "User" u ON u."id" = w1."sendBy"
-LEFT JOIN ranked_reactions rr ON rr.reactedMessageId = COALESCE(
-  w1."messageId",
-  (w1."messageBody"->'receive'->'messages'->0->>'id')::text
-) AND rr.rn = 1
-WHERE ${filter.join(" AND ")}
-ORDER BY w1."waCreatedAt" DESC, w1."id" DESC
-LIMIT 300;
-`;
-  messages = await prisma.$queryRawUnsafe(query, ...params);
-
-  let nextCursor = null;
-  let hasNextPage = messages.length === 300;
-  if (hasNextPage && messages.length > 0) {
-    const lastMessage = messages[messages.length - 1];
-    nextCursor = Buffer.from(
-      JSON.stringify({
-        waCreatedAt: lastMessage.waCreatedAt,
-        id: lastMessage.id,
-      }),
-    ).toString("base64");
-  }
-  return { messages, nextCursor, hasNextPage };
+  const hasNextpage = messages.length === 300;
+  const nextCursor = hasNextpage ? messages[messages.length - 1].id : null;
+  return { messages, nextCursor, hasNextpage };
 }
 
 export async function generateChatFilterData(orgId: string) {
