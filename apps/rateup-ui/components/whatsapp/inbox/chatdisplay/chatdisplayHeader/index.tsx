@@ -99,7 +99,12 @@ export default function WaInboxChatDisplayHeader({
   }
 
   if (!contact) return null;
-
+  let display_phone_numbera =
+    (contact?.lastMessage?.messageBody?.receive as any)?.metadata
+      ?.display_phone_number ||
+    (contact?.lastMessage?.messageBody?.send as any)?.metadata
+      ?.display_phone_number ||
+    "";
   return (
     <div
       className={classes.wrapper}
@@ -154,6 +159,11 @@ export default function WaInboxChatDisplayHeader({
       </Stack>
 
       <Group gap={"sm"}>
+        {display_phone_numbera && (
+          <Badge variant="light" size="sm">
+            {display_phone_numbera}
+          </Badge>
+        )}
         {hasAIFeature && chatbot?.enableWaChat && chatbot?.enableAllWaChat && (
           <Switch
             size="xs"
