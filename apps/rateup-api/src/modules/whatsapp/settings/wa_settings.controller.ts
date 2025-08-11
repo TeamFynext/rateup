@@ -207,6 +207,8 @@ export async function syncFbPagesHandler(
   try {
     const { whatsappSettingsId } = request.params;
     const pages = await getFbPagesFromWa(whatsappSettingsId);
+    if (!pages || !pages?.length)
+      return reply.code(404).send("No fb pages found");
     const data = pages.map((page) => ({ ...page, subscribedFields: [] }));
     const res = await syncMetaAssetstoDb("pages", data, whatsappSettingsId);
     reply.code(200).send(data);
