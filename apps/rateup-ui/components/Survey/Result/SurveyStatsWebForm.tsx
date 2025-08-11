@@ -1,6 +1,7 @@
 import React, { useContext, useMemo } from "react";
 
 import {
+  IconBrandGoogle,
   IconMessageDots,
   IconPlayerPlayFilled,
   IconUsersGroup,
@@ -27,7 +28,7 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
   );
 
   const { data: surveyStats } = useGetSurveyStats(surveyId);
-  const { visited, started } = useMemo(() => {
+  const { visited, started, reviewLinkVisited } = useMemo(() => {
     let filteredStats = surveyStats ? [...surveyStats] : [];
     if (filterTeams?.length > 0) {
       filteredStats = surveyStats?.filter((team) =>
@@ -38,9 +39,10 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
       (acc, curr) => {
         acc.visited += curr?.visited ?? 0;
         acc.started += curr?.started ?? 0;
+        acc.reviewLinkVisited += curr?.reviewLinkVisited ?? 0;
         return acc;
       },
-      { visited: 0, started: 0 },
+      { visited: 0, started: 0, reviewLinkVisited: 0 },
     );
   }, [surveyStats, filterTeams]);
 
@@ -67,6 +69,12 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
       icon: <IconUsersGroup className="text-[#2B82DE]" size={24} />,
     },
     {
+      title: "Google Review Redirects",
+      value: reviewLinkVisited ?? "NA",
+      badge: null,
+      icon: <IconBrandGoogle className="text-[#2B82DE]" size={24} />,
+    },
+    {
       title: "Response Rate",
       value: responseRatePercentage,
       badge: (
@@ -82,7 +90,7 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
   ];
 
   return (
-    <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       {stats.map(({ title, value, badge, icon }) => (
         <div
           key={title}
