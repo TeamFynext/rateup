@@ -66,7 +66,12 @@ export default function WaInboxChatDisplayFooter({
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
-
+  let phone_number_id =
+    (contact?.lastMessage?.messageBody?.receive as any)?.metadata
+      ?.phone_number_id ||
+    (contact?.lastMessage?.messageBody?.send as any)?.metadata
+      ?.phone_number_id ||
+    "";
   const form = useForm({
     initialValues: {
       type: "text",
@@ -201,6 +206,10 @@ export default function WaInboxChatDisplayFooter({
   useEffect(() => {
     resetMedia();
   }, [contact]);
+
+  if (!whatsappSettingsPhoneId && phone_number_id) {
+    updatePhoneId(phone_number_id);
+  }
 
   const SendMessageComponent = () => {
     return (
