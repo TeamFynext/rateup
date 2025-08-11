@@ -309,19 +309,13 @@ export async function getOrCreateContactByPhone(
     });
 
     if (contact) {
-      if (
-        additionalData?.name &&
-        (!contact.whatsappUserName ||
-          additionalData.name !== contact.whatsappUserName ||
-          !contact.name)
-      ) {
-        await prisma.contact.update({
+      if (additionalData) {
+        return await prisma.contact.update({
           where: {
             id: contact.id,
           },
           data: {
-            whatsappUserName: additionalData.name,
-            ...(!contact.name ? { name: additionalData.name } : {}),
+            ...additionalData,
           },
         });
       }

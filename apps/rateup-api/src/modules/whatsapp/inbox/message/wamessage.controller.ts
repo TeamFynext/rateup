@@ -111,7 +111,9 @@ export async function handleWaMessages(
       }
     }
     const contactData = {
-      lastReceivedMessageTimeStamp: waTimeStamp,
+      ...(type === "receive"
+        ? { lastReceivedMessageTimeStamp: waTimeStamp }
+        : {}),
       ...contactCore,
       ...additionalData,
     };
