@@ -300,6 +300,7 @@ export async function getFbPagesFromWa(settingsId) {
   }
   const url = `/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`;
   const res = await callWhatsappApi(url, "GET");
+  log.info("Pages fetched from meta:%o", res?.data);
   return res.data?.data;
 }
 
