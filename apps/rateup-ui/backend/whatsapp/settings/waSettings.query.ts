@@ -136,7 +136,7 @@ export const useWaLogs = (pagination, search, sort, columnFilters) =>
 
 export const useMetaAssets = (waSettingsId: string) =>
   useQuery({
-    queryKey: ["metaAssets"],
+    queryKey: ["metaAssets", waSettingsId],
     queryFn: () => getMetaAssets(waSettingsId),
     enabled: !!waSettingsId,
   });
@@ -146,7 +146,7 @@ export const useSyncFbPages = (waSettingsId) => {
   return useMutation({
     mutationFn: () => syncFbPages(waSettingsId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["metaAssets"] });
+      qc.invalidateQueries({ queryKey: ["metaAssets", waSettingsId] });
       showSuccessToast("success");
     },
     onError: () => {

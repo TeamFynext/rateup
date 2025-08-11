@@ -574,6 +574,8 @@ function MetaLoginStatus({ waSettings }) {
               <ContainedSelection
                 data={fbPages}
                 value={config.fbPageId}
+                placeholder="Select Page"
+                nothingFoundMessage={"No Pages found"}
                 label={"Instagram Connected Facebook Page"}
                 onChange={(value) => {
                   if (!value) {
