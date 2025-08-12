@@ -186,14 +186,11 @@ function WhatsAppManualConfiguration({ waSettings }) {
                           "Instagram account not found.Try after syncing page or choose another page",
                         );
                       }
-                      const data = {
+                      form.setValues({
+                        ...form.values,
                         fbPageId: page.id,
                         pageAccessToken: page.access_token,
                         ibaId: page.instagram_business_account?.id,
-                      };
-                      form.setValues({
-                        ...form.values,
-                        ...data,
                       });
                     }}
                   />
@@ -560,7 +557,6 @@ function MetaLoginStatus({ waSettings }) {
     const fbPages = metaAssets
       ? metaAssets.pages.map((page) => ({ value: page.id, label: page.name }))
       : [];
-
     return (
       <Modal
         opened={opened}
@@ -615,9 +611,22 @@ function MetaLoginStatus({ waSettings }) {
               w={"fit-content"}
               title="connect"
               onClick={() => {
-                if (!selectedWaSettings.fbPageId && !config.fbPageId)
+                const data = {
+                  ...rest,
+                  fbPageId: config.fbPageId,
+                  ibaId: config.ibaId,
+                  pageAccessToken: config.pageAccessToken,
+                };
+                if (
+                  !selectedWaSettings.fbPageId?.length &&
+                  !data.fbPageId?.length
+                )
                   return showWarnToast("Please select a page");
-                upsertMutation.mutate({ ...config, ...rest });
+                upsertMutation.mutate(data, {
+                  onSuccess: () => {
+                    close();
+                  },
+                });
               }}
               loading={upsertMutation.isPending}
             />
