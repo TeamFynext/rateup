@@ -218,6 +218,11 @@ export async function upsertWaSettings(
       );
       data.igUserName = igData.data.username;
     }
+    if (!data.fbPageId?.length && existingSettings.fbPageId?.length) {
+      data.fbPageId = null;
+      data.ibaId = null;
+      data.pageAccessToken = null;
+    }
     return await updateWaSettings(orgId, phoneId, data);
   } else {
     return await createWaSettings(orgId, {
