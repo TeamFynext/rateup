@@ -8,6 +8,7 @@ import {
   useGetAssignedUserForContact,
   useGetMessagesByContactId,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { useUser } from "@/context/UserContext";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
@@ -85,20 +86,22 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
 
   return (
     <div
-      className={`${classes.wrapper} ${isChatDisplayOpen ? "chat-display-open" : ""}`}
+      className={`${classes.wrapper} ${isChatDisplayOpen ? "chat-display-open" : ""} p-1`}
     >
-      {messages?.length >= 0 && contact ? (
-        <div className={classes.inner_animated}>
-          <WaInboxChatDisplayHeader
-            contact={contact}
-            smallScreen={smallScreen}
-          />
-          <WaInboxChatDisplayBody data={messages} smallScreen={smallScreen} />
-          {footerContent}
-        </div>
-      ) : (
-        <NothingFound text={translations["Select a chat to see messages"]} />
-      )}
+      <PaperLayout p={0} className="h-full">
+        {messages?.length >= 0 && contact ? (
+          <div className={classes.inner_animated}>
+            <WaInboxChatDisplayHeader
+              contact={contact}
+              smallScreen={smallScreen}
+            />
+            <WaInboxChatDisplayBody data={messages} smallScreen={smallScreen} />
+            {footerContent}
+          </div>
+        ) : (
+          <NothingFound text={translations["Select a chat to see messages"]} />
+        )}
+      </PaperLayout>
     </div>
   );
 }

@@ -19,6 +19,7 @@ import {
   getAssignedUserForContact,
   getChatFilterData,
   getFilteredContacts,
+  getInboxAnalytics,
   getInboxUserCount,
   getMessagesByContactId,
   getWaChatMediaFile,
@@ -168,5 +169,31 @@ export const useUnBlockWhatsAppUser = (filterData) => {
     onError: (e) => {
       showErrorToast("Unable to unblock users");
     },
+  });
+};
+
+interface AssignedUserCount {
+  userId: string;
+  assignCount: number;
+  createdAt: string;
+  userName: string;
+}
+
+interface InboxAnalytics {
+  newChatCount: number;
+  waMessageCount: number;
+  unassignedContactCount: number;
+  assignedContactCount: number;
+  newContactCount: number;
+  closedContactCount: number;
+  blockedContactCount: number;
+  waInboxAssignedCount: number;
+  assignedUserCounts: AssignedUserCount[];
+}
+
+export const useGetInboxAnalytics = () => {
+  return useQuery<InboxAnalytics>({
+    queryKey: ["inboxAnalytics"],
+    queryFn: getInboxAnalytics,
   });
 };

@@ -35,6 +35,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { MessagePlatform } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
   useChatContactCountStore,
@@ -302,145 +303,151 @@ const WaInboxChatSelect = () => {
     return <WhatsAppInboxLoader isLoading={isContactLoading} />;
 
   return (
-    <Stack className={classes.wrapper} gap={"xs"}>
-      <Group
-        className={classes.chat_select_header}
-        gap="xs"
-        align="center"
-        wrap="nowrap"
-      >
-        <ContainedTextField
-          leftSection={<IconSearch size={18} color="gray" stroke={1.5} />}
-          rightSection={
-            filter.searchTerm ? (
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="gray"
-                onClick={() => setFilter({ ...filter, searchTerm: "" })}
-                aria-label={translations["Clear search"]}
-              >
-                <IconSquareRoundedX size={18} />
-              </ActionIcon>
-            ) : null
-          }
-          placeholder={translations["Search Contacts"]}
-          value={filter?.searchTerm || ""}
-          onChange={(e) =>
-            setFilter({ ...filter, searchTerm: e.currentTarget.value })
-          }
-          autoFocus
-          flex={1}
-        />
-        <Group className={classes.chat_select_filter_indicator_wrapper} gap={4}>
-          <ActionIcon
-            h={30}
-            w={30}
-            variant="light"
-            radius="md"
-            loading={
-              isFilteredContactsFetchingNextPage || isRefetchingFilteredContacts
+    <PaperLayout p={0} className="h-full">
+      <Stack className={classes.wrapper} gap={"xs"}>
+        <Group
+          className={classes.chat_select_header}
+          gap="xs"
+          align="center"
+          wrap="nowrap"
+        >
+          <ContainedTextField
+            leftSection={<IconSearch size={18} color="gray" stroke={1.5} />}
+            rightSection={
+              filter.searchTerm ? (
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="gray"
+                  onClick={() => setFilter({ ...filter, searchTerm: "" })}
+                  aria-label={translations["Clear search"]}
+                >
+                  <IconSquareRoundedX size={18} />
+                </ActionIcon>
+              ) : null
             }
-            onClick={() => {
-              refetchFilteredContacts();
-              queryClient.invalidateQueries({
-                queryKey: ["contactInboxCount"],
-              });
-            }}
-            aria-label={translations["Refresh"]}
+            placeholder={translations["Search Contacts"]}
+            value={filter?.searchTerm || ""}
+            onChange={(e) =>
+              setFilter({ ...filter, searchTerm: e.currentTarget.value })
+            }
+            autoFocus
+            flex={1}
+          />
+          <Group
+            className={classes.chat_select_filter_indicator_wrapper}
+            gap={4}
           >
-            <IconRefresh />
-          </ActionIcon>
+            <ActionIcon
+              h={30}
+              w={30}
+              variant="light"
+              radius="md"
+              loading={
+                isFilteredContactsFetchingNextPage ||
+                isRefetchingFilteredContacts
+              }
+              onClick={() => {
+                refetchFilteredContacts();
+                queryClient.invalidateQueries({
+                  queryKey: ["contactInboxCount"],
+                });
+              }}
+              aria-label={translations["Refresh"]}
+            >
+              <IconRefresh />
+            </ActionIcon>
+          </Group>
+          <InboxSettings
+            tab={tab}
+            onUnknownContactAddSuccess={onUnknownContactAddSuccess}
+          />
         </Group>
-        <InboxSettings
-          tab={tab}
-          onUnknownContactAddSuccess={onUnknownContactAddSuccess}
-        />
-      </Group>
-      <div>
-        {filteredContactsStatus === "pending" ? (
-          <Text px={"md"}>Loading...</Text>
-        ) : filteredContactsStatus === "error" ? (
-          <Text px={"md"}>Error: {filteredContactsError?.message}</Text>
-        ) : (
-          <div
-            ref={parentRef}
-            className="List"
-            style={{
-              height: `calc(100dvh - 130px)`,
-              width: `100%`,
-              overflow: "auto",
-            }}
-          >
-            <Divider />
+        <div>
+          {filteredContactsStatus === "pending" ? (
+            <Text px={"md"}>Loading...</Text>
+          ) : filteredContactsStatus === "error" ? (
+            <Text px={"md"}>Error: {filteredContactsError?.message}</Text>
+          ) : (
             <div
+              ref={parentRef}
+              className="List"
               style={{
-                height: `${contactRowVirtualizer.getTotalSize()}px`,
-                width: "100%",
-                position: "relative",
+                height: `calc(100dvh - 130px)`,
+                width: `100%`,
+                overflow: "auto",
               }}
             >
-              {contactRowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const isLoaderRow =
-                  virtualRow.index > allFilteredContactsRow.length - 1;
-                const post = allFilteredContactsRow[virtualRow.index];
+              <Divider />
+              <div
+                style={{
+                  height: `${contactRowVirtualizer.getTotalSize()}px`,
+                  width: "100%",
+                  position: "relative",
+                }}
+              >
+                {contactRowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const isLoaderRow =
+                    virtualRow.index > allFilteredContactsRow.length - 1;
+                  const post = allFilteredContactsRow[virtualRow.index];
 
-                return (
-                  <div
-                    key={virtualRow.index}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: `${virtualRow.size}px`,
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
-                    {isLoaderRow ? (
-                      hasNextPageFilteredContacts ? (
-                        "Loading more..."
+                  return (
+                    <div
+                      key={virtualRow.index}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: `${virtualRow.size}px`,
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      {isLoaderRow ? (
+                        hasNextPageFilteredContacts ? (
+                          "Loading more..."
+                        ) : (
+                          "Nothing more to load"
+                        )
                       ) : (
-                        "Nothing more to load"
-                      )
-                    ) : (
-                      <WaInboxChatSelectCard contact={post} />
-                    )}
-                    <Divider />
-                  </div>
-                );
-              })}
-              {contactRowVirtualizer.getVirtualItems()?.length === 0 &&
-                (validateSearchStringAsMobileNumber(filter.searchTerm) ? (
-                  <AddUnknownContactModal
-                    phone={filter.searchTerm}
-                    successCallback={(contact) => {
-                      setFilter({
-                        ...filter,
-                        searchTerm: "",
-                      });
-                      onUnknownContactAddSuccess(contact);
-                    }}
-                  />
-                ) : isContactLoading || isFetching ? (
-                  <ChatSelectSkeletonCardList />
-                ) : (
-                  <Card component={Group}>
-                    <Text c="dimmed" size="sm" ta="center">
-                      {translations["No chats found"]} <br />
-                      {
-                        translations[
-                          "search for a valid phone number or contact name"
-                        ]
-                      }
-                    </Text>
-                  </Card>
-                ))}
+                        <WaInboxChatSelectCard contact={post} />
+                      )}
+                      <Divider />
+                    </div>
+                  );
+                })}
+                {contactRowVirtualizer.getVirtualItems()?.length === 0 &&
+                  (validateSearchStringAsMobileNumber(filter.searchTerm) ? (
+                    <AddUnknownContactModal
+                      phone={filter.searchTerm}
+                      successCallback={(contact) => {
+                        setFilter({
+                          ...filter,
+                          searchTerm: "",
+                        });
+                        onUnknownContactAddSuccess(contact);
+                      }}
+                    />
+                  ) : isContactLoading || isFetching ? (
+                    <ChatSelectSkeletonCardList />
+                  ) : (
+                    <Card component={Group}>
+                      <Text c="dimmed" size="sm" ta="center">
+                        {translations["No chats found"]} <br />
+                        {
+                          translations[
+                            "search for a valid phone number or contact name"
+                          ]
+                        }
+                      </Text>
+                    </Card>
+                  ))}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-    </Stack>
+          )}
+        </div>
+      </Stack>
+    </PaperLayout>
   );
 };
 
