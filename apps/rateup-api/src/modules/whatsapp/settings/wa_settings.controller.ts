@@ -37,7 +37,6 @@ import { getPhoneDetails } from "../auth/wa_auth.service";
 import { WaConfigType } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { callWhatsappApi } from "../wa_axios";
-import { getFbPages } from "../instagram/instagram.service";
 
 export async function createWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,
@@ -97,19 +96,24 @@ export async function upsertWaSettingsHandler(
   req: FastifyRequest<{ Body: updateWaSettingsInput }>,
   res: FastifyReply,
 ) {
-  const org = await getOrgIdAndRole({ id: req.userId });
-  if (org.role !== Role.SUPER_ADMIN) {
-    return res.status(403).send({
-      statusCode: 403,
-      message: "You are not authorized to perform this action",
-    });
+  try {
+    const org = await getOrgIdAndRole({ id: req.userId });
+    if (org.role !== Role.SUPER_ADMIN) {
+      return res.status(403).send({
+        statusCode: 403,
+        message: "You are not authorized to perform this action",
+      });
+    }
+    const waSettings = await upsertWaSettings(
+      org.orgId,
+      req.body?.phoneId,
+      req.body as any,
+    );
+    return res.status(200).send(waSettings);
+  } catch (e) {
+    log.error(e);
+    res.code(500).send(e);
   }
-  const waSettings = await upsertWaSettings(
-    org.orgId,
-    req.body?.phoneId,
-    req.body as any,
-  );
-  return res.status(200).send(waSettings);
 }
 
 export async function updateWaSettingsByIdHandler(
@@ -122,11 +126,19 @@ export async function updateWaSettingsByIdHandler(
   try {
     const { whatsappSettingsId } = request.params;
     const settings = await getWaSettingsById(whatsappSettingsId);
-    if (request.body.fbPageId && settings.fbPageId !== request.body.fbPageId) {
+    if (
+      request.body.fbPageId?.length &&
+      settings.fbPageId !== request.body.fbPageId
+    ) {
       const res = await callWhatsappApi(
         `/${request.body.fbPageId}/subscribed_apps?subscribed_fields=messages&access_token=${request.body.pageAccessToken}`,
         "GET",
       );
+      const igData = await callWhatsappApi(
+        `/${request.body.ibaId}?fields=username&access_token=${settings?.accessToken}`,
+        "GET",
+      );
+      request.body.igUserName = igData.data.username;
     }
     await updateWaSettingsById(whatsappSettingsId, request.body);
     reply.code(200).send();
