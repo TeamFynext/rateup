@@ -208,7 +208,7 @@ export async function upsertWaSettings(
     if (data.fbPageId?.length && existingSettings.fbPageId !== data.fbPageId) {
       const res = await callWhatsappApi(
         `/${data.fbPageId}/subscribed_apps?subscribed_fields=messages&access_token=${data.pageAccessToken}`,
-        "GET",
+        "POST",
       );
       const { accessToken } =
         getWaSettingsWithAccessTokenDecrypted(existingSettings);

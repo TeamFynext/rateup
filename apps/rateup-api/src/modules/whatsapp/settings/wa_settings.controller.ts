@@ -132,7 +132,7 @@ export async function updateWaSettingsByIdHandler(
     ) {
       const res = await callWhatsappApi(
         `/${request.body.fbPageId}/subscribed_apps?subscribed_fields=messages&access_token=${request.body.pageAccessToken}`,
-        "GET",
+        "POST",
       );
       const igData = await callWhatsappApi(
         `/${request.body.ibaId}?fields=username&access_token=${settings?.accessToken}`,
