@@ -205,7 +205,7 @@ export async function upsertWaSettings(
   });
 
   if (existingSettings) {
-    if (data.fbPageId && existingSettings.fbPageId !== data.fbPageId) {
+    if (data.fbPageId?.length && existingSettings.fbPageId !== data.fbPageId) {
       const res = await callWhatsappApi(
         `/${data.fbPageId}/subscribed_apps?subscribed_fields=messages&access_token=${data.pageAccessToken}`,
         "GET",
