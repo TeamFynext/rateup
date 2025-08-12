@@ -140,6 +140,11 @@ export async function updateWaSettingsByIdHandler(
       );
       request.body.igUserName = igData.data.username;
     }
+    if (!request.body.fbPageId?.length && settings.fbPageId?.length) {
+      request.body.fbPageId = null;
+      request.body.ibaId = null;
+      request.body.pageAccessToken = null;
+    }
     await updateWaSettingsById(whatsappSettingsId, request.body);
     reply.code(200).send();
   } catch (e) {
