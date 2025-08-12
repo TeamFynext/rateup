@@ -107,6 +107,7 @@ model User {
   assignedBoards      TicketBoardNotification[]
   expoPushTokens      ExpoPushToken[]
   // Add relation for WaAutomatedReply many-to-many
+  UserAssignedCount   UserAssignedCount[]
 }
 
 model Org {
@@ -153,6 +154,7 @@ model Org {
   expoPushTokens           ExpoPushToken[]
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
+  UserAssignedCount        UserAssignedCount[]
 }
 
 model UsageStats {
@@ -202,20 +204,20 @@ model UsageStats {
 }
 
 model WhatsappSettings {
-  id   String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId String @db.Uuid
 
   accessToken     String // encrypted
   accessToken_iv  String?
   wabaId          String? // WhatsApp Business Account ID
-  phoneId         String?  @unique
-  phone           String?  @unique
+  phoneId         String? @unique
+  phone           String? @unique
   appId           String
   webhookPassword String?
-  fbPageId        String?  @unique //Facebook Page ID
-  ibaId           String?  @unique //Instagram Business Account ID
-  pageAccessToken String?  //Facebook Page access token
+  fbPageId        String? @unique //Facebook Page ID
+  ibaId           String? @unique //Instagram Business Account ID
+  pageAccessToken String? //Facebook Page access token
   igUserName      String?
 
   type             String // enums.ts: WaConfigType
@@ -423,13 +425,13 @@ model SurveyResponse {
 }
 
 model SurveyStats {
-  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  surveyTeamMap   SurveyTeamMap @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
-  surveyTeamMapId String        @unique @db.Uuid
-  visited         Int           @default(0)
-  started         Int           @default(0)
-  completed       Int           @default(0)
-  reviewLinkVisited  Int      @default(0)
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  surveyTeamMap     SurveyTeamMap @relation(fields: [surveyTeamMapId], references: [id], onDelete: Cascade)
+  surveyTeamMapId   String        @unique @db.Uuid
+  visited           Int           @default(0)
+  started           Int           @default(0)
+  completed         Int           @default(0)
+  reviewLinkVisited Int           @default(0)
 }
 
 // Whatsapp session
@@ -466,7 +468,6 @@ model Contact {
   phone  String?
   source String?
 
-
   org                          Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId                        String                @db.Uuid
   responses                    SurveyResponse[]
@@ -485,21 +486,21 @@ model Contact {
   waMessageAssignStatus        String                @default("UNASSIGNED")
   waInboxAssign                WaInboxAssign[]
   lastReceivedMessageTimeStamp DateTime?
-  whatsappUserName             String?  //whatsapp or instagram username
+  whatsappUserName             String? //whatsapp or instagram username
   blockedOnWhatsApp            Boolean               @default(false)
   waCatalogOrders              WaCatalogOrder[]
-  igsId       String?  //Instagram Scoped User ID
-  profilePic   String?       
-  followerCount   Int?
-  isIgVerifiedUser      Boolean?
+  igsId                        String? //Instagram Scoped User ID
+  profilePic                   String?
+  followerCount                Int?
+  isIgVerifiedUser             Boolean?
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
+  @@unique([igsId, orgId], name: "contact_igsid_org_id_unique")
   @@index([orgId])
   @@index([orgId, id])
   @@index([orgId, waMessageAssignStatus])
   @@index([lastReceivedMessageTimeStamp])
-  @@unique([igsId, orgId], name: "contact_igsid_org_id_unique")
 }
 
 model WaInboxAssign {
@@ -512,6 +513,17 @@ model WaInboxAssign {
 
   @@unique([contactId, assignedUserId], name: "contact_id_assigned_user_id_unique")
   @@index([contactId, assignedUserId])
+}
+
+model UserAssignedCount {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String @db.Uuid
+  orgId       String @db.Uuid
+  assignCount Int    @default(0)
+  createdAt   DateTime @default(now())
+  org         Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, orgId], name: "user_org_unique")
 }
 
 model ContactGroup {
@@ -1260,7 +1272,6 @@ model WaMessage {
   @@index([contactId])
 }
 
-
 model WaMessageCampaginParticipantMap {
   campaignParticipant            CampaignParticipant           @relation(fields: [campaignParticipantId], references: [id], onDelete: Cascade)
   campaignParticipantId          String                        @db.Uuid
@@ -1658,12 +1669,12 @@ model WaCatalogOrder {
 }
 
 model MetaAssets {
-  whatsappSettings         WhatsappSettings    @relation(fields: [whatsappSettingsId], references: [id], onDelete: Cascade)
-  whatsappSettingsId       String @unique @db.Uuid
-  pages        Json[]
-  adAccounts   Json[]
-  leads        Json[]
-  leadgenForms Json[]
+  whatsappSettings   WhatsappSettings @relation(fields: [whatsappSettingsId], references: [id], onDelete: Cascade)
+  whatsappSettingsId String           @unique @db.Uuid
+  pages              Json[]
+  adAccounts         Json[]
+  leads              Json[]
+  leadgenForms       Json[]
 }
 
 model Notification {

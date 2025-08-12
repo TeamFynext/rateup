@@ -23,6 +23,7 @@ import {
   markMessagesAsRead,
   sendContactMessage,
   sendLocationMessage,
+  generateChatAnalytics,
 } from "./wamessage.service";
 import {
   ByContactIdParams,
@@ -502,5 +503,19 @@ export async function unblockWhatsappUserHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function generateChatAnalyticsHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const orgId = request.user.orgId;
+    const analyticsData = await generateChatAnalytics(orgId);
+    reply.status(200).send(analyticsData);
+  } catch (error) {
+    log.error("Error in generateChatAnalyticsHandler: %o", error);
+    reply.status(500).send("Internal Server Error");
   }
 }

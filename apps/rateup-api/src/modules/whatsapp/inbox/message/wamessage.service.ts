@@ -470,7 +470,7 @@ export async function filterChats(
 
     const whereClause = filters.join(" AND ");
 
-    // Simplified and optimized query
+    // Simplified and optimized query with last received message
     const query = `SELECT 
         c.id,
         c."name",
@@ -510,7 +510,16 @@ export async function filterChats(
           WHERE w."contactId" = c.id
           ORDER BY w."waCreatedAt" DESC
           LIMIT 1
-        ) as "lastMessage" FROM "Contact" c
+        ) as "lastMessage",
+      (
+        SELECT w."messageBody"->'receive'->'metadata'
+        FROM "WaMessage" w
+        WHERE w."contactId" = c.id
+        AND w."messageBody"->>'exchangeProcess' = 'receive'
+        ORDER BY w."waCreatedAt" DESC
+        LIMIT 1
+      ) as "metadata"
+      FROM "Contact" c
          LEFT JOIN "WaInboxAssign" wb ON wb."contactId" = c.id
          LEFT JOIN "User" u ON wb."assignedUserId" = u.id
       WHERE ${whereClause}
@@ -687,6 +696,24 @@ export async function assignWaMessageToUser(
         newUsers.push(userId);
       }
     }
+    await prisma.userAssignedCount.upsert({
+      where: {
+        user_org_unique: {
+          userId,
+          orgId,
+        },
+      },
+      update: {
+        assignCount: {
+          increment: 1,
+        },
+      },
+      create: {
+        userId,
+        orgId,
+        assignCount: 1,
+      },
+    });
   }
 
   const res = await prisma.waInboxAssign.createMany({
@@ -697,6 +724,7 @@ export async function assignWaMessageToUser(
     })),
     skipDuplicates: true,
   });
+
   const contact = await prisma.waInboxAssign.deleteMany({
     where: {
       contactId: data.contactId,
@@ -1044,4 +1072,48 @@ export async function updateWaMessageByMessageId(
       data,
     });
   }
+}
+
+export async function generateChatAnalytics(orgId: string) {
+  const analytics = await prisma.$queryRaw`
+    SELECT
+      (SELECT COUNT(*)::INTEGER FROM "Contact" c WHERE c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."orgId" = ${orgId}::uuid) 
+        AS "newChatCount",
+      (SELECT COUNT(*)::INTEGER FROM "WaMessage" wm 
+        JOIN "Contact" c ON wm."contactId" = c.id 
+        WHERE c."orgId" = ${orgId}::uuid) 
+        AS "waMessageCount",
+      (SELECT COUNT(*)::INTEGER FROM "Contact" c 
+        WHERE c."orgId" = ${orgId}::uuid AND c."waMessageAssignStatus" = 'UNASSIGNED') 
+        AS "unassignedContactCount",
+      (SELECT COUNT(*)::INTEGER FROM "Contact" c 
+        WHERE c."orgId" = ${orgId}::uuid AND c."waMessageAssignStatus" = 'ASSIGNED') 
+        AS "assignedContactCount",
+      (SELECT COUNT(*)::INTEGER FROM "Contact" c 
+        WHERE c."orgId" = ${orgId}::uuid AND c."waMessageAssignStatus" = 'NEW') 
+        AS "newContactCount",
+      (SELECT COUNT(*)::INTEGER FROM "Contact" c 
+        WHERE c."orgId" = ${orgId}::uuid AND c."waMessageAssignStatus" = 'CLOSED') 
+        AS "closedContactCount",
+      (SELECT COUNT(*)::INTEGER FROM "Contact" c 
+        WHERE c."orgId" = ${orgId}::uuid AND c."blockedOnWhatsApp" = true) 
+        AS "blockedContactCount",
+      (SELECT COUNT(*)::INTEGER FROM "WaInboxAssign" wa 
+        JOIN "Contact" c ON wa."contactId" = c.id 
+        WHERE c."orgId" = ${orgId}::uuid AND c."waMessageAssignStatus" != 'UNASSIGNED') 
+        AS "waInboxAssignedCount"
+  `;
+  const assignedUserCounts = await prisma.$queryRaw`
+      SELECT 
+        uac."userId",
+        uac."assignCount"::INTEGER,
+        uac."createdAt"::TIMESTAMP AS "createdAt",
+        u."name" as "userName"
+      FROM "UserAssignedCount" uac
+      JOIN "User" u ON uac."userId" = u.id
+      WHERE uac."orgId" = ${orgId}::uuid
+      ORDER BY uac."createdAt" DESC
+  `;
+
+  return { ...analytics?.[0], assignedUserCounts };
 }
