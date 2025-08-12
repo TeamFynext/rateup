@@ -73,6 +73,10 @@ export type ContactsWithLastMessage = ContactsData & {
     messageBody: WaInboxMessage;
     sourcePlatform: MessagePlatform;
   };
+  metadata?: {
+    display_phone_number?: string;
+    phone_number_id?: string;
+  };
   lastReceivedMessageTimeStamp: string;
   total_contact_count?: string;
   unReadMessageCount?: number;
@@ -195,4 +199,8 @@ export async function unblockWhatsAppUser(data: {
 }) {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/unblock-user`, data))
     .data;
+}
+
+export async function getInboxAnalytics() {
+  return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/analytics`)).data;
 }
