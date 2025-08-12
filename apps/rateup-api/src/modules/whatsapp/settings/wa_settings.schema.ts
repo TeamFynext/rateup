@@ -40,6 +40,7 @@ const updateWaSettingsInputSchema = z.object({
   fbPageId: z.string().optional(),
   pageAccessToken: z.string().optional(),
   ibaId: z.string().optional(),
+  igUserName: z.string().optional(),
 });
 
 const whatsappSettingsIdParamSchema = z.object({
