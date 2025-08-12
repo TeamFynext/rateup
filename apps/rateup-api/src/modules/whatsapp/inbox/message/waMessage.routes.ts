@@ -3,6 +3,7 @@ import {
   assignWaMessageHandler,
   blockWhatsappUserHandler,
   exportWhatsappChatsHandler,
+  generateChatAnalyticsHandler,
   generateChatFilterDataHandler,
   getAssignedUserForContactHandler,
   getContactsCountByInboxTabHandler,
@@ -112,4 +113,6 @@ export async function waMessageRoutes(server: FastifyInstance) {
     },
     unblockWhatsappUserHandler,
   );
+
+  server.get("/analytics", generateChatAnalyticsHandler);
 }
