@@ -11,6 +11,9 @@ export async function orgWsRoutes(server: FastifyInstance) {
     "/auth",
     {
       preHandler: checkSession,
+      schema: {
+        deprecated: true,
+      },
     },
     orgWsAuthCheckHandler,
   );
