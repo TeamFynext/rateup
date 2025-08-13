@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import {
   Badge,
   Card,
+  Flex,
   Group,
   Skeleton,
   Stack,
@@ -14,6 +15,7 @@ import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
+import { cn } from "@/lib/utils";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
@@ -60,11 +62,13 @@ export default function WaInboxChatSelectCard({
           profile={contact?.profilePic}
         />
         <Stack className={classes.inner} flex={1}>
-          <Group className={classes.chat_card_header}>
+          <Flex className={classes.chat_card_header}>
             <Text
-              className={classes.chat_recepient_name}
+              className={cn(
+                classes.chat_recepient_name,
+                "line-clamp-1 break-all ",
+              )}
               title={contact?.name}
-              truncate
               // tt={"capitalize"}
               fw={500}
             >
@@ -78,15 +82,15 @@ export default function WaInboxChatSelectCard({
                 )}
               </span>
             </Text>
-            <Group gap="xs">
+            <Group gap="xs" justify="flex-end" flex={1}>
               {contact.unReadMessageCount &&
                 contact?.id !== selectedContact?.id && (
                   <Badge radius={"xl"}>{contact?.unReadMessageCount}</Badge>
                 )}
               <AssignedStatusBadge contact={contact} />
             </Group>
-          </Group>
-          <Group justify="space-between">
+          </Flex>
+          <Flex justify="space-between">
             <Tooltip
               position="bottom-start"
               label={
@@ -95,7 +99,7 @@ export default function WaInboxChatSelectCard({
                   : "No messages yet"
               }
             >
-              <Text className={classes.latest_chat} truncate maw={200}>
+              <Text className={cn(classes.latest_chat, "line-clamp-1 break")}>
                 {lastMessage &&
                   returnMessageContentBasedOnParsedMessage(
                     parseWaMessage(lastMessage),
@@ -107,7 +111,7 @@ export default function WaInboxChatSelectCard({
               {contact?.lastMessage &&
                 dayjs.utc(contact?.lastMessage?.waCreatedAt).fromNow()}
             </Text>
-          </Group>
+          </Flex>
         </Stack>
       </Group>
     </Card>
@@ -121,13 +125,13 @@ const AssignedStatusBadge = ({
 }) => {
   if (contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED)
     return (
-      <Group>
+      <Flex gap={"xs"}>
         {contact?.assignedUsers?.map((u) => (
           <Badge variant="light" size="xs" radius={"xs"} key={u?.id}>
             {u?.name}
           </Badge>
         ))}
-      </Group>
+      </Flex>
     );
   return (
     <Badge variant="light" size="xs" radius={"xs"}>
