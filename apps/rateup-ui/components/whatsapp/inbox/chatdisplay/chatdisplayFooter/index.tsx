@@ -207,7 +207,6 @@ export default function WaInboxChatDisplayFooter({
       updatePhoneId(phone_number_id);
     }
   }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
-  console.count();
   const SendMessageComponent = () => {
     return (
       <Group gap={"xs"} flex={1} justify={"space-between"}>
