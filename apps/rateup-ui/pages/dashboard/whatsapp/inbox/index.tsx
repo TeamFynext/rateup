@@ -34,7 +34,6 @@ export default function WhatsAppInbox() {
               autoSaveId="inbox-panel-group"
               className="w-full h-full"
             >
-              {/* defaultSize={350} maxSize={350} minSize={25} */}
               <ResizablePanel
                 defaultSize={100}
                 maxSize={350}
@@ -44,7 +43,7 @@ export default function WhatsAppInbox() {
                 <WaInboxChatSelect />
               </ResizablePanel>
               <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={350} maxSize={350} minSize={30}>
+              <ResizablePanel defaultSize={350} maxSize={350} minSize={39}>
                 <WaInboxChatDisplay />
               </ResizablePanel>
             </ResizablePanelGroup>

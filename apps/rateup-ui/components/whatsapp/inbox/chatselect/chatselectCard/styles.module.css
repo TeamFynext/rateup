@@ -26,11 +26,11 @@
 }
 .chat_recepient_name {
   flex: 1;
-  max-width: 250px;
 }
 .latest_chat {
   font-size: var(--mantine-font-size-xs);
   font-weight: 100;
+  flex: 1;
 }
 .chat_time_wrapper {
   justify-content: space-between;
