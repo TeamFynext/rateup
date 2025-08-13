@@ -83,10 +83,11 @@ export default function WaInboxChatSelectCard({
               </span>
             </Text>
             <Flex gap="xs" justify="flex-end" flex={1}>
-              {contact.unReadMessageCount &&
-                contact?.id !== selectedContact?.id && (
-                  <Badge radius={"xl"}>{contact?.unReadMessageCount}</Badge>
-                )}
+              {contact.unReadMessageCount
+                ? contact?.id !== selectedContact?.id && (
+                    <Badge radius={"xl"}>{contact?.unReadMessageCount}</Badge>
+                  )
+                : null}
               <AssignedStatusBadge contact={contact} />
             </Flex>
           </Flex>
