@@ -99,12 +99,7 @@ export default function WaInboxChatDisplayHeader({
   }
 
   if (!contact) return null;
-  let display_phone_numbera =
-    (contact?.lastMessage?.messageBody?.receive as any)?.metadata
-      ?.display_phone_number ||
-    (contact?.lastMessage?.messageBody?.send as any)?.metadata
-      ?.display_phone_number ||
-    "";
+  const display_phone_numbera = contact?.metadata?.display_phone_number || "";
   return (
     <div
       className={classes.wrapper}
