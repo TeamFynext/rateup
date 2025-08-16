@@ -24,6 +24,7 @@ import { IconDownload } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
 import useTranslations from "@/dictionaries/useTranslation";
+import { showLoadingToast } from "@/utils/notifications";
 
 import { useExportWaChats } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import classes from "./styles.module.css";
@@ -88,6 +89,14 @@ export default function WaInboxChatExport({ filter }) {
   });
   function handleSubmit(values: typeof form.values) {
     setChatsExporting(true);
+    showLoadingToast(
+      "Exporting chats...",
+      "export-chats",
+      true,
+      undefined,
+      undefined,
+      false,
+    );
     exportChats.mutate(
       {
         constraints: encodeURIComponent(JSON.stringify(values)),

@@ -143,7 +143,7 @@ export async function exportWaChats({
     await axiosClient.post(
       `${WA_CONTACT_BASE_PATH}/exportmessages?constraints=${constraints}&filterData=${filterData}`,
       {},
-      { responseType: "arraybuffer" },
+      { responseType: "arraybuffer", timeout: 0 },
     )
   ).data;
 }

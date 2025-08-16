@@ -89,8 +89,17 @@ export const useFilteredContacts = (filterData: string) => {
 export const useExportWaChats = () => {
   return useMutation({
     mutationFn: exportWaChats,
+    onSuccess: (data) => {
+      showSuccessToast(
+        "Chats exported successfully",
+        "export-chats",
+        undefined,
+        true,
+      );
+    },
     onError: (error) => {
       console.error("Error exporting chats", error);
+      showErrorToast("Error exporting chats", "export-chats", undefined, true);
     },
   });
 };
