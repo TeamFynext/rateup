@@ -116,6 +116,13 @@ export async function upsertWaSettingsHandler(
   }
 }
 
+export async function subscribePageToApp(pageId, pageAccessToken, fields) {
+  const res = await callWhatsappApi(
+    `/${pageId}/subscribed_apps?subscribed_fields=${fields.join(",")}&access_token=${pageAccessToken}`,
+    "POST",
+  );
+}
+
 export async function updateWaSettingsByIdHandler(
   request: FastifyRequest<{
     Params: whatsappSettingsIdParamSchema;
@@ -130,9 +137,10 @@ export async function updateWaSettingsByIdHandler(
       request.body.fbPageId?.length &&
       settings.fbPageId !== request.body.fbPageId
     ) {
-      const res = await callWhatsappApi(
-        `/${request.body.fbPageId}/subscribed_apps?subscribed_fields=messages&access_token=${request.body.pageAccessToken}`,
-        "POST",
+      await subscribePageToApp(
+        request.body.fbPageId,
+        request.body.pageAccessToken,
+        ["messages", "message_reads", "message_reactions"],
       );
       const igData = await callWhatsappApi(
         `/${request.body.ibaId}?fields=username&access_token=${settings?.accessToken}`,
