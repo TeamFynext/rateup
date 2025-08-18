@@ -9,3 +9,8 @@
   max-width: 100%;
   width: 600px;
 }
+
+.link_input {
+  font-size: var(--mantine-font-size-xs);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4));
+}
