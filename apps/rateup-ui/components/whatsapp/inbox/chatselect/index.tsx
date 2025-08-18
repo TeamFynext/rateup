@@ -35,6 +35,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { MessagePlatform } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
@@ -85,6 +86,8 @@ const WaInboxChatSelect = () => {
     isLoading: isContactLoading,
     isFetching,
   } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
+
+  const { data: waSettings, isLoading } = useWaSettings();
 
   const {
     setSelectedContact,
@@ -263,6 +266,7 @@ const WaInboxChatSelect = () => {
           messageBody: {} as WaInboxMessage,
           waCreatedAt: "",
           sourcePlatform: MessagePlatform.WHATSAPP,
+          sourceIdentifier: "",
         },
         assignedUsers: [],
       });
@@ -299,8 +303,8 @@ const WaInboxChatSelect = () => {
     }
   }, [router.query?.tab, filter, prepareFilters]);
 
-  if (isContactLoading)
-    return <WhatsAppInboxLoader isLoading={isContactLoading} />;
+  if (isContactLoading || isLoading)
+    return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
 
   return (
     <PaperLayout p={0} className="h-full">
@@ -410,7 +414,10 @@ const WaInboxChatSelect = () => {
                           "Nothing more to load"
                         )
                       ) : (
-                        <WaInboxChatSelectCard contact={post} />
+                        <WaInboxChatSelectCard
+                          contact={post}
+                          waSettings={waSettings}
+                        />
                       )}
                       <Divider />
                     </div>

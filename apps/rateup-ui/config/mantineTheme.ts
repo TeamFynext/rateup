@@ -28,6 +28,19 @@ const whatsappGreen: MantineColorsTuple = [
   "#128c7e",
 ];
 
+const instaPink: MantineColorsTuple = [
+  "#fcecf7",
+  "#f8d4ec",
+  "#f3b6de",
+  "#ed91cc",
+  "#e76bb9",
+  "#e148a7",
+  "#d52c97",
+  "#c91d8d",
+  "#c01a89",
+  "#bc1888",
+];
+
 export const theme = createTheme({
   fontFamily: `${geist.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
   primaryColor: "rateup-blue",
@@ -40,4 +53,11 @@ export const whatsappTheme = createTheme({
   fontFamily: `${geist.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
   primaryShade: 9,
   colors: { "whatsapp-green": whatsappGreen },
+});
+
+export const instaTheme = createTheme({
+  primaryColor: "insta-pink",
+  fontFamily: `${geist.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
+  primaryShade: 9,
+  colors: { "insta-pink": instaPink },
 });
