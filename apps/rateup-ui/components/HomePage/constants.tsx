@@ -83,7 +83,7 @@ const headerNavLinks = [
     linkText: "About Us",
   },
   {
-    href: "https://blog.rateup.app/",
+    href: "/blog",
     linkText: "Blog",
   },
 ];

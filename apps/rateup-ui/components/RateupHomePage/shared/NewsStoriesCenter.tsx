@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 import { motion } from "motion/react";
 
@@ -12,7 +13,7 @@ export const blogPosts = [
       "Discover how businesses can create interactive applications that run directly inside WhatsApp conversations using WhatsApp Flows.",
     imageUrl:
       "https://blog.rateup.app/content/images/size/w1000/2024/09/How-to-Handle-Customer-Feedback.jpg",
-    link: "https://blog.rateup.app/whatsapp-flows/",
+    link: "/blog/whatsapp-flows/",
   },
   {
     title: "Customer Feedback Loop: Importance, Steps, and Best Practices",
@@ -20,7 +21,7 @@ export const blogPosts = [
       "Explore why businesses need a customer feedback loop and the steps and best practices for its successful implementation.",
     imageUrl:
       "https://blog.rateup.app/content/images/size/w1000/2024/09/Analyze-Customer-Feedback-for-FREE.jpg",
-    link: "https://blog.rateup.app/customer-feedback-loop/",
+    link: "/blog/customer-feedback-loop/",
   },
   {
     title:
@@ -29,7 +30,7 @@ export const blogPosts = [
       "Learn how SMB founders can achieve double-digit ROI by implementing an automated customer feedback management platform.",
     imageUrl:
       "https://blog.rateup.app/content/images/size/w1000/2024/09/Automate-Customer-Feedback-Management.jpg",
-    link: "https://blog.rateup.app/automate-customer-feedback-roi/",
+    link: "/blog/automate-customer-feedback-roi/",
   },
 ];
 
@@ -53,7 +54,7 @@ export default function NewsStoriesCenter() {
 
         <p className="text-gray-600 max-w-xl text-center mx-auto text-sm sm:text-lg">
           Explore insightful content that keeps you ahead of the curve to the
-          pulse of what's happening.
+          pulse of what&pos;s happening.
         </p>
       </div>
 
@@ -98,14 +99,13 @@ export default function NewsStoriesCenter() {
                   {post.description}
                 </p>
               </div>
-              <a
+              <Link
                 href={post.link}
-                target="_blank"
                 rel="noopener noreferrer"
                 className="self-start bg-[#3f5ba9] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#1c518e] transition-colors"
               >
                 Read more
-              </a>
+              </Link>
             </div>
           </motion.div>
         ))}
