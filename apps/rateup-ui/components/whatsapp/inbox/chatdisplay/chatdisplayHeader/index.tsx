@@ -172,11 +172,6 @@ export default function WaInboxChatDisplayHeader({
       </Stack>
 
       <Group gap={"sm"}>
-        {display_phone_numbera && (
-          <Badge variant="light" size="sm">
-            {display_phone_numbera}
-          </Badge>
-        )}
         {hasAIFeature && chatbot?.enableWaChat && chatbot?.enableAllWaChat && (
           <Switch
             size="xs"
