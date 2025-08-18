@@ -206,6 +206,12 @@ export default function WaInboxChatDisplayFooter({
     if (!whatsappSettingsPhoneId && phone_number_id) {
       updatePhoneId(phone_number_id);
     }
+    if (
+      platform === MessagePlatform.INSTAGRAM &&
+      whatsappSettingsPhoneId !== contact?.lastMessage?.sourceIdentifier
+    ) {
+      updatePhoneId(contact.lastMessage.sourceIdentifier);
+    }
   }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
   const SendMessageComponent = () => {
     return (
@@ -230,6 +236,7 @@ export default function WaInboxChatDisplayFooter({
               },
             }}
             platform={platform}
+            disabled={platform === MessagePlatform.INSTAGRAM}
           />
           {platform !== MessagePlatform.INSTAGRAM && (
             <WaInboxFooterMenu
