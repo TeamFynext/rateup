@@ -15,6 +15,7 @@ export async function getIgUserDetailsFromMeta(igsId, ibaId) {
   const { pageAccessToken } = await getWaSettingsByIbaId(ibaId);
   const url = `/${igsId}?fields=name,username,profile_pic,follower_count,is_verified_user,is_user_follow_business,is_business_follow_user&access_token=${pageAccessToken}`;
   const res = await callWhatsappApi(url, "GET");
+  log.info("Instagram user details: %o", res.data);
   return res.data as {
     name: string;
     username: string;
