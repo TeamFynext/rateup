@@ -231,10 +231,12 @@ export default function WaInboxChatDisplayFooter({
             }}
             platform={platform}
           />
-          <WaInboxFooterMenu
-            sessionExpired={isSessionExpired}
-            contact={contact}
-          />
+          {platform !== MessagePlatform.INSTAGRAM && (
+            <WaInboxFooterMenu
+              sessionExpired={isSessionExpired}
+              contact={contact}
+            />
+          )}
         </Group>
         <Group>
           <VoiceRecorder />

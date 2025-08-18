@@ -12,12 +12,14 @@ import {
   Stack,
   Switch,
   Text,
+  ThemeIcon,
   Tooltip,
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconArrowLeft,
+  IconBrandInstagram,
   IconDotsVertical,
   IconForbid2,
   IconHandOff,
@@ -28,6 +30,7 @@ import {
 } from "@tabler/icons-react";
 
 import {
+  MessagePlatform,
   SubscriptionFeaturePathName,
   WaMessageAssignStatus,
 } from "@/types/enums";
@@ -100,6 +103,10 @@ export default function WaInboxChatDisplayHeader({
 
   if (!contact) return null;
   const display_phone_numbera = contact?.metadata?.display_phone_number || "";
+  const platform =
+    contact.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
+      ? MessagePlatform.WHATSAPP
+      : MessagePlatform.INSTAGRAM;
   return (
     <div
       className={classes.wrapper}
@@ -126,11 +133,22 @@ export default function WaInboxChatDisplayHeader({
         />
         <Stack className={classes.name_phone_wrapper}>
           <Text className={classes.name} fw={600}>
-            {contact.name}
+            {contact.name ?? contact.whatsappUserName}
           </Text>
           {contact.whatsappUserName && (
             <Tooltip label={"WhatsApp User Name"}>
-              <Text size="xs">{contact.whatsappUserName}</Text>
+              {platform === MessagePlatform.INSTAGRAM ? (
+                <Badge
+                  leftSection={<InstagramIcon />}
+                  tt={"initial"}
+                  variant="light"
+                  color="#bc1888"
+                  radius={"xs"}
+                  p={1}
+                >{`@${contact.whatsappUserName}`}</Badge>
+              ) : (
+                <Text size="xs">{contact.whatsappUserName}</Text>
+              )}
             </Tooltip>
           )}
           <Text className={classes.phone}>{contact.phone}</Text>
@@ -438,5 +456,17 @@ export const AssignInboxContent = ({
         </Skeleton>
       )}
     </Stack>
+  );
+};
+
+export const InstagramIcon = ({ size = "xs" }: { size?: string | number }) => {
+  return (
+    <ThemeIcon
+      variant="gradient"
+      size={size}
+      gradient={{ from: "#f09433", to: "#bc1888", deg: 45 }}
+    >
+      <IconBrandInstagram />
+    </ThemeIcon>
   );
 };

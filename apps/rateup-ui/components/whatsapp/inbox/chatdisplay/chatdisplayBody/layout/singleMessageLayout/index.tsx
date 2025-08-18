@@ -71,7 +71,12 @@ export default function WaInboxSingleMessageLayout(props: Props) {
 
   function getInnerProps() {
     if (exchangeProcess === "send") {
-      return { bg: "light-dark(#dcf0e4,rgb(82, 190, 127)" };
+      return {
+        bg:
+          platform === MessagePlatform.INSTAGRAM
+            ? "#D6297614"
+            : "light-dark(#dcf0e4,rgb(82, 190, 127)",
+      };
     }
     return { bg: "light-dark(#ffffff, var(--mantine-color-dark-6))" };
   }
