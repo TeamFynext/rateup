@@ -91,6 +91,7 @@ export async function handleWaMessages(
     const contactCore: ContactCore = {
       name: userName,
       phone: from,
+      igsId: sourcePlatform === PlatformType.INSTAGRAM ? from : undefined,
       source: sourcePlatform?.toLowerCase(),
     };
     let additionalData = {};

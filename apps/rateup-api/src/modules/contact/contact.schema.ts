@@ -12,6 +12,7 @@ export const contactCoreSchema = z.object({
   dob: z.date().optional().nullable(),
   external_id: z.string().optional(),
   aiWaChat: z.boolean().optional(),
+  igsId: z.string().optional(),
 });
 
 export const createMultipleContactSchema = z.array(contactCoreSchema);
