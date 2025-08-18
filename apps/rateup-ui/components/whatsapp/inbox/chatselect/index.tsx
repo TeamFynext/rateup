@@ -124,7 +124,7 @@ const WaInboxChatSelect = () => {
       ? allFilteredContactsRow.length + 1
       : allFilteredContactsRow.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 70,
+    estimateSize: () => 82,
     overscan: 5,
   });
   useEffect(() => {
