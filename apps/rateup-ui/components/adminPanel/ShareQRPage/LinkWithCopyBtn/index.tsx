@@ -5,16 +5,18 @@ import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./LinkWithCopyBtn.module.css";
 
-function LinkWithCopyBtn({ link }) {
+function LinkWithCopyBtn({ link, label }: { link: string; label?: string }) {
   const { translations } = useTranslations();
   return (
     <div className={styles["link-input-copy-btn-container"]}>
       <TextInput
         value={link}
         readOnly
+        label={label}
         classNames={{
           wrapper: styles["link-input-wrapper"],
           input: styles["link-input"],
+          label: styles.link_input,
         }}
       />
 
@@ -24,6 +26,7 @@ function LinkWithCopyBtn({ link }) {
             variant={copied ? "outline" : "filled"}
             onClick={copy}
             rightSection={<IconCopy />}
+            mt={label ? 25 : 0}
           >
             {copied ? translations["Copied url"] : translations["Copy url"]}
           </Button>
