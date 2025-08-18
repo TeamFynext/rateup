@@ -40,7 +40,7 @@ export default function Layout({ children }: LayoutProps) {
     },
     {
       name: "Blog",
-      link: "https://blog.rateup.app/",
+      link: "/blog",
     },
   ];
 

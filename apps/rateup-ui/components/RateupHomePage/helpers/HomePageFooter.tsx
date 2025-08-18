@@ -94,10 +94,7 @@ const HomePageFooter = () => {
               </Link>
             </li>
             <li>
-              <Link
-                href="https://blog.rateup.app/"
-                className="hover:text-black transition"
-              >
+              <Link href="/blog" className="hover:text-black transition">
                 Blog
               </Link>
             </li>
