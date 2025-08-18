@@ -9,6 +9,7 @@ import { WaConfigType } from "../../../types/enums";
 import { log } from "../../../utils/logger";
 import { PaginationQuery, updateWaSettingsInput } from "./wa_settings.schema";
 import { callWhatsappApi } from "../wa_axios";
+import { subscribePageToApp } from "./wa_settings.controller";
 
 export async function createWaSettings(
   orgId: string,
@@ -206,10 +207,11 @@ export async function upsertWaSettings(
 
   if (existingSettings) {
     if (data.fbPageId?.length && existingSettings.fbPageId !== data.fbPageId) {
-      const res = await callWhatsappApi(
-        `/${data.fbPageId}/subscribed_apps?subscribed_fields=messages&access_token=${data.pageAccessToken}`,
-        "POST",
-      );
+      await subscribePageToApp(data.fbPageId, data.pageAccessToken, [
+        "messages",
+        "message_reads",
+        "message_reactions",
+      ]);
       const { accessToken } =
         getWaSettingsWithAccessTokenDecrypted(existingSettings);
       const igData = await callWhatsappApi(

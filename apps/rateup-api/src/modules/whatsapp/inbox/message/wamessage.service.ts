@@ -504,7 +504,8 @@ export async function filterChats(
           SELECT jsonb_build_object(
             'messageBody', w."messageBody",
             'waCreatedAt', w."waCreatedAt",
-            'sourcePlatform', w."sourcePlatform"
+            'sourcePlatform', w."sourcePlatform",
+            'sourceIdentifier',w."sourceIdentifier"
           )
           FROM "WaMessage" w
           WHERE w."contactId" = c.id
