@@ -683,7 +683,11 @@ function MetaLoginStatus({ waSettings }) {
 
                 <RateupButtonBlue
                   w={"fit-content"}
-                  title="Connect Instagram"
+                  title={
+                    setting?.igUserName?.length
+                      ? `@${setting?.igUserName}`
+                      : "Connect Instagram"
+                  }
                   variant="gradient"
                   gradient={{ from: "#f09433", to: "#bc1888", deg: 45 }}
                   radius={"md"}

@@ -72,6 +72,7 @@ export type ContactsWithLastMessage = ContactsData & {
     waCreatedAt: string;
     messageBody: WaInboxMessage;
     sourcePlatform: MessagePlatform;
+    sourceIdentifier: string;
   };
   metadata?: {
     display_phone_number?: string;

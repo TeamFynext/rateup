@@ -5,7 +5,7 @@ import { axiosClient } from "../../apiClient";
 const SettingsUrl = `${WHATSAPP_URL}/settings`;
 const authUrl = `${WHATSAPP_URL}/auth`;
 
-type WaSettings = {
+export type WaSettings = {
   id: string;
   wabaId: string;
   phone: string;

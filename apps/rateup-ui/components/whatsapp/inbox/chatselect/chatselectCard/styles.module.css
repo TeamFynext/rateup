@@ -19,7 +19,7 @@
   );
 }
 .inner {
-  gap: 5px;
+  gap: 1px;
 }
 .chat_card_header {
   justify-content: space-between;

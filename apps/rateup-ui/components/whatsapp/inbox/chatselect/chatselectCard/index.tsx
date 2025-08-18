@@ -11,12 +11,16 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
+import {
+  IconBrandWhatsappFilled,
+  IconRosetteDiscountCheckFilled,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { cn } from "@/lib/utils";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
+import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
@@ -26,14 +30,17 @@ import {
   returnMessageContentBasedOnParsedMessage,
 } from "@/utils/whatsapp/inbox";
 
+import { InstagramIcon } from "../../chatdisplay/chatdisplayHeader";
 import { WaInboxSessionAvatar } from "./sessionBadge";
 import classes from "./styles.module.css";
 
 interface WaInboxChatSelectCardProps {
   contact: ContactsWithLastMessage;
+  waSettings: WaSettings;
 }
 export default function WaInboxChatSelectCard({
   contact,
+  waSettings,
 }: WaInboxChatSelectCardProps) {
   const params = useSearchParams();
   const lastMessage = contact?.lastMessage;
@@ -43,6 +50,19 @@ export default function WaInboxChatSelectCard({
     useContactStore();
   let tab = params.get("tab") ?? "New";
 
+  const platform =
+    contact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
+      ? MessagePlatform.WHATSAPP
+      : MessagePlatform.INSTAGRAM;
+  const isInsta = platform === MessagePlatform.INSTAGRAM;
+
+  function getIgUserName(sourceIdentifier) {
+    const igUsername = waSettings?.find(
+      (settings) => settings.ibaId === sourceIdentifier,
+    )?.igUserName;
+    if (igUsername) return `@${igUsername}`;
+    return "";
+  }
   return (
     <Card
       component={Link}
@@ -83,11 +103,6 @@ export default function WaInboxChatSelectCard({
               </span>
             </Text>
             <Flex gap="xs" justify="flex-end" flex={1}>
-              {contact.unReadMessageCount
-                ? contact?.id !== selectedContact?.id && (
-                    <Badge radius={"xl"}>{contact?.unReadMessageCount}</Badge>
-                  )
-                : null}
               <AssignedStatusBadge contact={contact} />
             </Flex>
           </Flex>
@@ -113,6 +128,39 @@ export default function WaInboxChatSelectCard({
                 dayjs.utc(contact?.lastMessage?.waCreatedAt).fromNow()}
             </Text>
           </Flex>
+          {lastMessage && (
+            <Flex justify={"space-between"}>
+              <Badge
+                tt={"initial"}
+                size="xs"
+                radius={"sm"}
+                p={1}
+                variant="light"
+                color={isInsta ? "#cc2960" : "#25D366"}
+                leftSection={
+                  isInsta ? (
+                    <InstagramIcon size={13} />
+                  ) : (
+                    <IconBrandWhatsappFilled size={13} color="#25D366" />
+                  )
+                }
+              >
+                {isInsta
+                  ? getIgUserName(lastMessage.sourceIdentifier)
+                  : lastMessage?.sourceIdentifier}
+              </Badge>
+              {contact.unReadMessageCount
+                ? contact?.id !== selectedContact?.id && (
+                    <Badge
+                      color={isInsta ? "#cc2960" : "#128c7e"}
+                      radius={"xl"}
+                    >
+                      {contact?.unReadMessageCount}
+                    </Badge>
+                  )
+                : null}
+            </Flex>
+          )}
         </Stack>
       </Group>
     </Card>

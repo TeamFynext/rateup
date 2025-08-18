@@ -69,7 +69,7 @@ export const contactColumn = (contactTags = []) => {
     ...selectCheckBox,
     ...contactDetailsColumn,
     {
-      header: () => "Phone",
+      header: () => "Phone/IGSID",
       accessorKey: "phone",
       cell: (info) => info.getValue(),
     },
