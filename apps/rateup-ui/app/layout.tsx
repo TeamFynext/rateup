@@ -11,10 +11,10 @@ import "./globals.css";
 
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
+import { GoogleTagManager } from "@next/third-parties/google";
 
 import { theme } from "@/config/mantineTheme";
 import FacebookPixel from "@/components/Analytics/FacebookPixel";
-import GoogleAnalytics from "@/components/Analytics/GoogleAnalytics";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider";
 import { isProduction } from "@/utils/constants";
 import { geist, notoColorEmogi } from "@/utils/fonts";
@@ -42,7 +42,6 @@ export default function RootLayout({
         />
         {isProduction && (
           <>
-            <GoogleAnalytics />
             <FacebookPixel />
           </>
         )}
@@ -53,6 +52,7 @@ export default function RootLayout({
             <Notifications />
             <SuperTokensProvider>
               <Providers>{children}</Providers>
+              {/* <GoogleTagManager gtmId="GTM-NDC3D7DP" /> */}
             </SuperTokensProvider>
           </ModalsProvider>
         </MantineProvider>

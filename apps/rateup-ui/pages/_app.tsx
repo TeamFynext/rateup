@@ -6,6 +6,7 @@ import Head from "next/head";
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { nprogress } from "@mantine/nprogress";
+import { GoogleTagManager } from "@next/third-parties/google";
 import {
   HydrationBoundary,
   QueryCache,
@@ -36,7 +37,6 @@ import SuperTokensReact, { SuperTokensWrapper } from "supertokens-auth-react";
 import { frontendConfig } from "@/config/frontendConfig";
 
 import FacebookPixel from "../components/Analytics/FacebookPixel";
-import GoogleAnalytics from "../components/Analytics/GoogleAnalytics";
 import { AdminPanelLayout } from "../components/Layout/admin/AdminLayout";
 import Layout from "../components/Layout/Layout";
 import { allModalManagerModalsObj } from "../components/Modal/ModalManagerModals/allModalManagerModalsObj";
@@ -191,7 +191,6 @@ export default function App({
       </Head>
       {isProduction && (
         <>
-          <GoogleAnalytics />
           <FacebookPixel />
         </>
       )}
@@ -205,6 +204,7 @@ export default function App({
                 <SuperTokensWrapper>
                   <LayoutComponent {...(isLayoutNeeded ? { appProps } : {})}>
                     <Component {...pageProps} />
+                    <GoogleTagManager gtmId="GTM-NDC3D7DP" />
                   </LayoutComponent>
                 </SuperTokensWrapper>
               </UserProvider>
