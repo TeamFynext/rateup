@@ -78,12 +78,12 @@ export function getEventType(data: WaMessageBody) {
       return (data.entry[0].changes[0].value as WaReceiveMessageBody)
         ?.statuses?.[0]?.status as WaEvent;
     }
-    if ((data as any).object === "page") {
-      if (data?.entry?.[0]?.changes?.[0]?.field === WaEvent.LEADGEN) {
-        return WaEvent.LEADGEN;
-      } else if (data?.entry?.[0]?.changes?.[0]?.field === WaEvent.Message) {
-        return WaEvent.Message;
-      }
+  }
+  if ((data as any).object === "page") {
+    if (data?.entry?.[0]?.changes?.[0]?.field === WaEvent.LEADGEN) {
+      return WaEvent.LEADGEN;
+    } else if (data?.entry?.[0]?.changes?.[0]?.field === WaEvent.Message) {
+      return WaEvent.Message;
     }
   }
   return null;
