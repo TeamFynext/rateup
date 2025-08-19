@@ -356,7 +356,7 @@ export async function getLeadgenFormQuestionsFromWa(
   leadgenFormId,
   pageAccessToken,
 ) {
-  const url = `/${fbPageId}/${leadgenFormId}/leadgen_forms?fields=questions&access_token=${pageAccessToken}`;
+  const url = `/${fbPageId}/${leadgenFormId}?fields=questions&access_token=${pageAccessToken}`;
   const res = await callWhatsappApi(url, "GET");
   return res.data?.data;
 }
