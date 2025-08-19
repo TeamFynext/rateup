@@ -1067,25 +1067,40 @@ export async function aibotNodeCompletion(phone: string, orgId: string) {
 }
 
 export async function handleLeadGen(body: WaMessageBody) {
+  log.info("Handling Leadgen webhook");
   for (const lead of body.entry[0].changes) {
     const { page_id, ad_id, leadgen_id } = lead.value as LeadGenBody;
     const nodeType = "leadgenNode";
-    const result: any[] = await prisma.$queryRaw`
-  SELECT *
-  FROM "WaAutomatedReply"
-  WHERE EXISTS (
-    SELECT 1
-    FROM jsonb_array_elements("matchData"->'nodes') AS node
-    WHERE 
-      node->>'type' = ${nodeType} AND
-      node->'data'->>'ad'->>'id' = ${ad_id} AND
-      node->'data'->>'fbPageId' = ${page_id}
-  )
-  LIMIT 1;
-`;
-    const automation: any = result?.length ? result[0] : null;
-    if (!automation) return;
-    const leadgenNode = automation.matchData?.json.nodes.find(
+    const automation = await prisma.waAutomatedReply.findFirst({
+      where: {
+        matchData: {
+          path: ["json", "nodes"],
+          array_contains: [
+            {
+              type: nodeType,
+              data: {
+                ad: {
+                  id: ad_id,
+                },
+                fbPageId: page_id,
+              },
+            },
+          ],
+        },
+      },
+    });
+    if (!automation) {
+      log.trace(
+        "No lead automation found for pageid:%s and ad id: %s",
+        page_id,
+        ad_id,
+      );
+      return;
+    }
+    const matchData = automation.matchData as {
+      json: { edges: any[]; nodes: any };
+    };
+    const leadgenNode = matchData?.json.nodes.find(
       (node) => node.type === "leadgenNode",
     );
     const leadgenNodeData = leadgenNode.data as LeadgenNodeData;
@@ -1095,11 +1110,19 @@ export async function handleLeadGen(body: WaMessageBody) {
       "GET",
     );
     if (res.data)
-      await prisma.$executeRaw`
-    UPDATE "MetaAssets"
-    SET "leads" = "leads" || ${JSON.stringify(res.data)}::jsonb
-    WHERE "orgId" = ${automation.orgId}
-  `;
+      await prisma.metaAssets.updateMany({
+        where: {
+          whatsappSettings: {
+            phoneId: automation.whatsappSettingsPhoneId,
+            orgId: automation.orgId,
+          },
+        },
+        data: {
+          leads: {
+            push: res.data,
+          },
+        },
+      });
     if (leadgenNodeData.phoneField?.trim().length && res.data) {
       const formValues = res.data.field_data;
       const fieldValue = formValues.find(
@@ -1115,7 +1138,7 @@ export async function handleLeadGen(body: WaMessageBody) {
       automationId: automation.id,
       orgId: automation.orgId,
       response: {
-        value: "lead generated",
+        value: `lead generated ID:${leadgen_id}`,
         action: "initial_interaction",
       },
     });
