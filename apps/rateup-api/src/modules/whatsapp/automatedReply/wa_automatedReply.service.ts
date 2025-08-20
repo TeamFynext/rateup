@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import prisma from "../../../utils/prisma";
 import { getTeamIdsByUserId } from "../../team/team.service";
 import { getUserIdsByTeamId } from "../../user/user.service";
@@ -89,7 +90,7 @@ export async function createAutomatedReply(
     await prisma.waAutomatedReplyCommands.createMany({
       data: commands.map((c) => ({
         orgId,
-        command: c,
+        command: c === "lead" ? `${c}_${dayjs().unix()}` : c,
         waAutomatedReplyId: createdAutomatedReply.id,
       })),
     });

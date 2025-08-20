@@ -904,7 +904,10 @@ export async function processNextNode(
       case "templateNode":
         let parameters = node?.data?.parameters;
         if (leadId) {
-          const metaAssets = await getMetaAssets(automation.orgId);
+          const whatsappSettings = await getWaSettingsByPhoneId(
+            automation.whatsappSettingsPhoneId,
+          );
+          const metaAssets = await getMetaAssets(whatsappSettings.id);
           parameters = node?.data?.parameters?.map((param) => {
             if (
               typeof param !== "string" &&
