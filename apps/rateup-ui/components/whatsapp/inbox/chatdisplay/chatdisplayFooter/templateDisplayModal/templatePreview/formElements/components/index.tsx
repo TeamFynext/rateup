@@ -345,7 +345,7 @@ function LeadFormQuestionsInputComponent(
     refetch,
   } = useWaAutomatedReplyById(automatedId);
   const isLeadAutomation =
-    automatedReply && automatedReply?.commands[0] === "lead";
+    automatedReply && automatedReply?.commands[0]?.startsWith("lead");
   const waSetting =
     waSettings &&
     (waSettings.find(

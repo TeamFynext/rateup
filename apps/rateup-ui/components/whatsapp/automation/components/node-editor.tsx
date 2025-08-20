@@ -1130,7 +1130,7 @@ const TemplateNodeEditor: React.FC<
   let automatedId = router.query.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
-  const isLeadAutomation = data && data?.commands[0] === "lead";
+  const isLeadAutomation = data && data?.commands[0]?.startsWith("lead");
   const waSetting =
     waSettings &&
     (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ??
@@ -2205,7 +2205,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   let automatedId = router.query.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
-  const isLeadAutomation = data && data?.commands[0] === "lead";
+  const isLeadAutomation = data && data?.commands[0]?.startsWith("lead");
   const waSetting =
     waSettings &&
     (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ??
