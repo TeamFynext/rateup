@@ -84,8 +84,8 @@ const CookieConsentBanner = () => {
           size={isMobile ? "calc(100vw - 32px)" : "420px"}
           position={{
             bottom: isMobile ? 16 : 24,
-            right: isMobile ? 16 : 24,
-            left: isMobile ? 16 : undefined,
+            right: isMobile ? 16 : undefined,
+            left: isMobile ? 16 : 24,
           }}
           zIndex={1000}
           style={styles}
