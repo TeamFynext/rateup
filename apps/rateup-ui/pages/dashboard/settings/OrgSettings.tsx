@@ -31,11 +31,11 @@ import { uploadFile } from "../../../utils/file-upload/upload";
 
 import "react-phone-number-input/style.css";
 
+import { useTranslations } from "next-intl";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
 
-import useTranslations from "@/dictionaries/useTranslation";
 import { UserRole } from "@/utils/enums";
 
 import { SAVE_HOTKEY } from "../../../utils/constants";
@@ -57,7 +57,7 @@ const OrgSettings = () => {
   const orgDetailsUpdate = useUpdateOrgDetailsMutation();
   const { user } = useUser();
   const updateLogo = useUpdateOrgLogoMutation(setIsLoadingUpload);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const orgForm = useForm({
     initialValues: {
       name: "",
@@ -65,10 +65,10 @@ const OrgSettings = () => {
       address: "",
     },
     validate: {
-      name: isNotEmpty(translations["Name cannot be blank"]),
+      name: isNotEmpty(translations("Name cannot be blank")),
       phone: (value) => {
         if (value && !isValidPhoneNumber(value))
-          return translations["Invalid phone number"];
+          return translations("Invalid phone number");
         return null;
       },
     },
@@ -82,8 +82,8 @@ const OrgSettings = () => {
     notifications.show({
       id: "load-data",
       loading: true,
-      title: translations["Updating Organization info"],
-      message: translations["Hold on, Organization info is getting updated.."],
+      title: translations("Updating Organization info"),
+      message: translations("Hold on, Organization info is getting updated.."),
       autoClose: false,
       withCloseButton: false,
     });
@@ -100,8 +100,8 @@ const OrgSettings = () => {
           notifications.show({
             id: "load-data",
             loading: true,
-            title: translations["Uploading Logo"],
-            message: translations["Hold on, changing your organization Logo"],
+            title: translations("Uploading Logo"),
+            message: translations("Hold on, changing your organization Logo"),
             autoClose: false,
             withCloseButton: false,
           });
@@ -156,7 +156,7 @@ const OrgSettings = () => {
         image={selectedImage.url}
         aspect={4 / 3}
       />
-      <Title order={2}>{translations["Organization Settings"]}</Title>
+      <Title order={2}>{translations("Organization Settings")}</Title>
       <Flex direction={"row"} wrap="wrap" justify="space-around" h={"100%"}>
         <Flex
           direction={"column"}
@@ -181,7 +181,7 @@ const OrgSettings = () => {
           </Paper>
           <Group>
             <RateupButtonSecondary
-              title={translations["Remove Image"]}
+              title={translations("Remove Image")}
               size="sm"
               variant="outline"
               onClick={removePhoto}
@@ -194,7 +194,7 @@ const OrgSettings = () => {
             >
               {(props) => (
                 <RateupButtonBlue
-                  title={translations["Change Image"]}
+                  title={translations("Change Image")}
                   size="sm"
                   onClick={removePhoto}
                   {...props}
@@ -204,10 +204,10 @@ const OrgSettings = () => {
           </Group>
           <Stack align={"center"}>
             <Text size={"28px"} fw={500}>
-              {user?.orgName ?? translations["Organization"]}
+              {user?.orgName ?? translations("Organization")}
             </Text>
-            <Text> {user?.orgPhone ?? translations["Phone"]}</Text>
-            <Text size="sm">{user?.orgAddress ?? translations["Address"]}</Text>
+            <Text> {user?.orgPhone ?? translations("Phone")}</Text>
+            <Text size="sm">{user?.orgAddress ?? translations("Address")}</Text>
           </Stack>
         </Flex>
         <Divider orientation={"vertical"} />
@@ -219,7 +219,7 @@ const OrgSettings = () => {
           miw="300px"
         >
           <Text size="lg" fw={500}>
-            {translations["Edit Info"]}
+            {translations("Edit Info")}
           </Text>
           <form
             onSubmit={orgForm.onSubmit(onSubmit)}
@@ -232,23 +232,23 @@ const OrgSettings = () => {
               <Grid.Col span={{ xs: 10 }}>
                 <ContainedTextField
                   w={"100%"}
-                  label={translations["Organization Name"]}
-                  placeholder={translations["Enter your organization name"]}
+                  label={translations("Organization Name")}
+                  placeholder={translations("Enter your organization name")}
                   {...orgForm.getInputProps("name")}
                   withAsterisk
                 />
               </Grid.Col>
               <Grid.Col span={{ xs: 10, lg: 4 }}>
                 <Text fz={12} c={"#495057"} mt={6}>
-                  {translations["Phone Number"]}
+                  {translations("Phone Number")}
                 </Text>
                 <PhoneInputWithCountrySelect
                   defaultCountry="IN"
                   international
                   countryCallingCodeEditable={false}
-                  placeholder={
-                    translations["Enter your organization phone number"]
-                  }
+                  placeholder={translations(
+                    "Enter your organization phone number",
+                  )}
                   value={orgForm?.values?.phone || null}
                   {...orgForm?.getInputProps("phone")}
                   className={styles.inputPhone}
@@ -260,8 +260,8 @@ const OrgSettings = () => {
               <Grid.Col span={{ xs: 10, lg: 6 }}>
                 <ContainedTextField
                   withAsterisk
-                  label={translations["Address"]}
-                  placeholder={translations["eg. Kerala, Ernakulam, Kochi"]}
+                  label={translations("Address")}
+                  placeholder={translations("eg. Kerala, Ernakulam, Kochi")}
                   {...orgForm?.getInputProps("address")}
                 />
               </Grid.Col>
@@ -271,7 +271,7 @@ const OrgSettings = () => {
                 type="submit"
                 loading={orgDetailsUpdate.isPending}
                 size="sm"
-                title={translations["Save Changes"]}
+                title={translations("Save Changes")}
               />
             </Flex>
           </form>

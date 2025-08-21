@@ -4,13 +4,13 @@ import { useRouter } from "next/router";
 import { Box, Flex, ScrollArea, Stack, Tabs, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
 import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import SurveyContext from "../../../context/SurveyContext";
@@ -136,9 +136,9 @@ const Result = ({
       <Box className={styles["result-page-tabs-container"]}>
         <ScrollArea offsetScrollbars={true}>
           <Tabs.List classNames={{ list: styles["result-page-tabs-list"] }}>
-            <Tabs.Tab value="responses">{translations["Response"]}</Tabs.Tab>
-            <Tabs.Tab value="analytics">{translations["Analytics"]}</Tabs.Tab>
-            <Tabs.Tab value="comparison">{translations["Comparison"]}</Tabs.Tab>
+            <Tabs.Tab value="responses">{translations("Response")}</Tabs.Tab>
+            <Tabs.Tab value="analytics">{translations("Analytics")}</Tabs.Tab>
+            <Tabs.Tab value="comparison">{translations("Comparison")}</Tabs.Tab>
           </Tabs.List>
         </ScrollArea>
       </Box>
@@ -208,7 +208,7 @@ function EncryptionPasswordModal({
   const {
     user: { encryptionKeys },
   } = useUser();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const router = useRouter();
   const [encryptionpassword, setEncryptionPassword] = useState("");
 
@@ -222,7 +222,7 @@ function EncryptionPasswordModal({
       pushToSessionStorage(`${surveyId}_ete_passkey`, encryptionpassword);
       setPassword(encryptionpassword);
     } else {
-      showErrorToast(translations["Invalid Password"]);
+      showErrorToast(translations("Invalid Password"));
     }
   }, [
     encryptionpassword,
@@ -242,26 +242,26 @@ function EncryptionPasswordModal({
       centered
       opened={passwordModalOpened}
       onClose={close}
-      title={translations["Enter the password"]}
+      title={translations("Enter the password")}
       withCloseButton={false}
     >
       <Stack>
         <Text>
-          {translations["Enter the password to view the survey data"]}
+          {translations("Enter the password to view the survey data")}
         </Text>
         <ContainedPasswordInput
-          label={translations["Password"]}
+          label={translations("Password")}
           value={encryptionpassword}
           onChange={(e) => setEncryptionPassword(e.target.value)}
         />
         <Flex style={{ justifyContent: "center", gap: "40px" }}>
           <RateupButtonSecondary
-            title={translations["Go back"]}
+            title={translations("Go back")}
             leftIcon={<IconArrowLeft />}
             onClick={handleGoback}
           />
           <RateupButtonBlue
-            title={translations["Submit"]}
+            title={translations("Submit")}
             onClick={onSubmitPassword}
           />
         </Flex>

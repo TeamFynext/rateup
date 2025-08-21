@@ -16,12 +16,11 @@ import { getHotkeyHandler } from "@mantine/hooks";
 import { IconChevronLeft, IconMail } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
 import { z } from "zod/v4";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { SAVE_HOTKEY } from "../../utils/constants";
 import {
@@ -41,7 +40,7 @@ export const signUpType = {
 
 function SignupForm({ setIsLoading, signUp, isLoading }) {
   const [signUpTypeValue, setSignUpTypeValue] = useState("");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const phoneInputContainerRef = useRef(null);
 
   const [termsPrivacyAgreed, setTermsPrivacyAgreed] = useState(true);
@@ -56,28 +55,27 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
                 signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE ||
                 isValidPhoneNumber(val),
               {
-                error: translations["Enter a valid phone number"],
+                error: translations("Enter a valid phone number"),
               },
             ),
         })
       : z.object({
-          email: z.email().min(1, translations["Email is required"]),
+          email: z.email().min(1, translations("Email is required")),
           password: z
             .string()
             .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
-              error:
-                translations[
-                  "Password should contain at least one letter and one number"
-                ],
+              error: translations(
+                "Password should contain at least one letter and one number",
+              ),
             })
             .min(
               5,
-              translations["Password should be at least 5 characters long"],
+              translations("Password should be at least 5 characters long"),
             ),
-          name: z.string().min(1, translations["Name is required"]),
+          name: z.string().min(1, translations("Name is required")),
           orgName: z
             .string()
-            .min(1, translations["Organization name is required"]),
+            .min(1, translations("Organization name is required")),
           phoneNumber: z.string().optional(),
         });
 
@@ -117,7 +115,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
     <>
       <RateupButtonSecondary
         type="button"
-        title={translations["SignUp with Email"]}
+        title={translations("SignUp with Email")}
         loading={isLoading}
         onClick={() => setSignUpTypeValue(signUpType.SIGNUP_WITH_EMAIL)}
         className={styles["login-signup-form-submit-btn"]}
@@ -148,7 +146,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         form={signUpForm}
         isLoading={isLoading}
         setSignUpTypeValue={setSignUpTypeValue}
-        title={translations["Sign Up"]}
+        title={translations("Sign Up")}
       />
     );
   } else if (signUpTypeValue === signUpType.SIGNUP_WITH_EMAIL) {
@@ -158,7 +156,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           <TextInput
             classNames={styles}
             withAsterisk
-            placeholder={translations["Name"]}
+            placeholder={translations("Name")}
             {...signUpForm.getInputProps("name")}
           />
         </Grid.Col>
@@ -166,7 +164,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           <TextInput
             classNames={styles}
             withAsterisk
-            placeholder={translations["Organization Name"]}
+            placeholder={translations("Organization Name")}
             {...signUpForm.getInputProps("orgName")}
           />
         </Grid.Col>
@@ -174,14 +172,14 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           <TextInput
             classNames={styles}
             withAsterisk
-            placeholder={translations["Email ID"]}
+            placeholder={translations("Email ID")}
             {...signUpForm.getInputProps("email")}
           />
         </Grid.Col>
         <Grid.Col>
           <PasswordInput
             classNames={styles}
-            placeholder={translations["Enter Password"]}
+            placeholder={translations("Enter Password")}
             {...signUpForm.getInputProps("password")}
           />
         </Grid.Col>
@@ -194,7 +192,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
               defaultCountry="IN"
               // international
               countryCallingCodeEditable={false}
-              placeholder={translations["Enter Mobile Number (Optional)"]}
+              placeholder={translations("Enter Mobile Number (Optional)")}
               value={signUpForm?.getValues()?.phoneNumber || null}
               {...signUpForm?.getInputProps("phoneNumber")}
               className={styles.inputPhone}
@@ -224,13 +222,13 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
             }
             label={
               <>
-                {translations["I accept"]}{" "}
+                {translations("I accept")}{" "}
                 <Link href="/terms-of-service">
-                  {translations["terms of service"]}
+                  {translations("terms of service")}
                 </Link>{" "}
-                {translations["and"]}{" "}
+                {translations("and")}{" "}
                 <Link href="/privacy-policy">
-                  {translations["privacy policy"]}
+                  {translations("privacy policy")}
                 </Link>
               </>
             }
@@ -243,7 +241,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         >
           <RateupButtonSecondary
             type="button"
-            title={translations["Go Back"]}
+            title={translations("Go Back")}
             onClick={() => setSignUpTypeValue("")}
             className={styles["login-signup-form-submit-btn"]}
             leftIcon={<IconChevronLeft size={18} />}
@@ -257,7 +255,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           <RateupButtonBlue
             disabled={!termsPrivacyAgreed}
             type="submit"
-            title={translations["Sign Up"]}
+            title={translations("Sign Up")}
             loading={isLoading}
             className={styles["login-signup-form-submit-btn"]}
           />
@@ -274,8 +272,8 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           `}
         order={2}
       >
-        <span>{translations["SignUp now &"]}</span>
-        <span>{translations["Start engaging with your Customers"]}</span>
+        <span>{translations("SignUp now &")}</span>
+        <span>{translations("Start engaging with your Customers")}</span>
       </Title>
 
       <LoginSignupLinks isSignup />

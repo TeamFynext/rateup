@@ -22,8 +22,8 @@ import { useForm } from "@mantine/form";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconDownload } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 
-import useTranslations from "@/dictionaries/useTranslation";
 import { showLoadingToast } from "@/utils/notifications";
 
 import { useExportWaChats } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
@@ -38,7 +38,7 @@ enum DateType {
 export default function WaInboxChatExport({ filter }) {
   const [chatsExporting, setChatsExporting] = useState(false);
   const exportChats = useExportWaChats();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       date: {
@@ -120,33 +120,33 @@ export default function WaInboxChatExport({ filter }) {
     <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
       <Stack className={classes.hovercard_dropdown_inner}>
         <Text className={classes.hovercard_title}>
-          {translations["Export Whatsapp chats"]}
+          {translations("Export Whatsapp chats")}
         </Text>
         <Divider />
         <RadioGroup size="xs" {...form.getInputProps("date.type")}>
           <Group>
             <Radio
-              label={translations["Between"]}
+              label={translations("Between")}
               size="xs"
               value={DateType.BETWEEN}
             />
             <Radio
-              label={translations["Before"]}
+              label={translations("Before")}
               size="xs"
               value={DateType.BEFORE}
             />
             <Radio
-              label={translations["After"]}
+              label={translations("After")}
               size="xs"
               value={DateType.AFTER}
             />
-            <Radio label={translations["On"]} size="xs" value={DateType.ON} />
+            <Radio label={translations("On")} size="xs" value={DateType.ON} />
           </Group>
         </RadioGroup>
         <Flex justify="center">
           {form.values.date.type === DateType.ON && (
             <CustomDatePicker
-              label={translations["on"]}
+              label={translations("on")}
               value={new Date(form.values.date.on)}
               onChange={(value) =>
                 form.setFieldValue("date.on", dayjs(value).format("YYYY-MM-DD"))
@@ -155,7 +155,7 @@ export default function WaInboxChatExport({ filter }) {
           )}
           {form.values.date.type === DateType.BEFORE && (
             <CustomDatePicker
-              label={translations["before"]}
+              label={translations("before")}
               value={new Date(form.values.date.before)}
               onChange={(value) =>
                 form.setFieldValue(
@@ -167,7 +167,7 @@ export default function WaInboxChatExport({ filter }) {
           )}
           {form.values.date.type === DateType.AFTER && (
             <CustomDatePicker
-              label={translations["after"]}
+              label={translations("after")}
               value={new Date(form.values.date.after)}
               onChange={(value) =>
                 form.setFieldValue(
@@ -180,7 +180,7 @@ export default function WaInboxChatExport({ filter }) {
           {form.values.date.type === DateType.BETWEEN && (
             <>
               <CustomDatePicker
-                label={translations["from"]}
+                label={translations("from")}
                 {...form.getInputProps("date.between.from")}
                 value={new Date(form.values.date.between.from)}
                 onChange={(value) =>
@@ -191,7 +191,7 @@ export default function WaInboxChatExport({ filter }) {
                 }
               />
               <CustomDatePicker
-                label={translations["to"]}
+                label={translations("to")}
                 {...form.getInputProps("date.between.to")}
                 value={new Date(form.values.date.between.to)}
                 onChange={(value) =>
@@ -206,7 +206,7 @@ export default function WaInboxChatExport({ filter }) {
         </Flex>
         <Group justify="space-between">
           <Checkbox
-            label={translations["Replies Only"]}
+            label={translations("Replies Only")}
             size="xs"
             checked={form.values.repliesOnly}
             {...form.getInputProps("repliesOnly")}
@@ -214,7 +214,7 @@ export default function WaInboxChatExport({ filter }) {
           {form.values.date.type !== "between" &&
             form.values.date.type !== "on" && (
               <Checkbox
-                label={translations["Inclusive"]}
+                label={translations("Inclusive")}
                 size="xs"
                 checked={form.values.date.inclusive}
                 {...form.getInputProps("date.inclusive")}
@@ -228,7 +228,7 @@ export default function WaInboxChatExport({ filter }) {
             ml={"auto"}
             disabled={chatsExporting || !form.isValid()}
           >
-            {translations["Export"]}
+            {translations("Export")}
           </Button>
         </Group>
       </Stack>

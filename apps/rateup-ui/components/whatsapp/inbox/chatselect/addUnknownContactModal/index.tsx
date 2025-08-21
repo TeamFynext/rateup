@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import { useTranslations } from "next-intl";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
@@ -18,7 +19,6 @@ import {
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 import { importMethod } from "@/utils/enums";
 
 import ActionButtonTrigger from "./actionButtonTrigger";
@@ -35,7 +35,7 @@ export default function AddUnknownContactModal(
 ) {
   const { successCallback, ...rest } = props;
   const [opened, { open, close: onClose }] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   return (
     <>
@@ -50,7 +50,7 @@ export default function AddUnknownContactModal(
           {...{
             opened,
             onClose,
-            title: translations["Add New Contact"],
+            title: translations("Add New Contact"),
             centered: true,
             size: "md",
             withCloseButton: true,
@@ -72,7 +72,7 @@ export default function AddUnknownContactModal(
 export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
   const contactMutation = useCreateContactMutation();
   const [loading, setLoading] = useState(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (props.phone) {
       form.setFieldValue("phone", "+" + form.values.countryCode + props.phone);
@@ -88,12 +88,12 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
     },
     validate: {
       name: (value) =>
-        value.length ? null : translations["Name cannot be blank"],
+        value.length ? null : translations("Name cannot be blank"),
       phone: (value) =>
         !value
-          ? translations["Phone Number cannot be blank"]
+          ? translations("Phone Number cannot be blank")
           : !isValidPhoneNumber(value)
-            ? translations["Invalid phone number"]
+            ? translations("Invalid phone number")
             : null,
     },
   });
@@ -117,14 +117,14 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
     <form onSubmit={form.onSubmit(onSubmit)}>
       <Stack gap={5}>
         <ContainedTextField
-          label={translations["Name"]}
+          label={translations("Name")}
           withAsterisk
           {...form.getInputProps("name")}
         />
         <Stack gap={0}>
           <Group gap={3}>
             <Text className={classes.inputLabel}>
-              {translations["Phone Number"]}
+              {translations("Phone Number")}
             </Text>
             <Text c="red">*</Text>
           </Group>
@@ -132,7 +132,7 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
             international
             defaultCountry="IN"
             countryCallingCodeEditable={false}
-            placeholder={translations["Enter phone number"]}
+            placeholder={translations("Enter phone number")}
             className={classes.inputPhone}
             key={form.key("phone")}
             {...form.getInputProps("phone")}
@@ -142,17 +142,17 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
           </Text>
         </Stack>
         <ContainedTextField
-          label={translations["Email"]}
+          label={translations("Email")}
           {...form.getInputProps("email")}
         />
         <Group>
           <RateupButtonSecondary
-            title={translations["Cancel"]}
+            title={translations("Cancel")}
             variant="light"
           />
           <RateupButtonPrimary
             type={"submit"}
-            title={translations["Add Contact"]}
+            title={translations("Add Contact")}
             loading={loading}
           />
         </Group>

@@ -1,8 +1,8 @@
 import { Checkbox, Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
+import { useTranslations } from "next-intl";
 
 import { useReferralLoyaltyAction } from "@/backend/loyalty/actions/actions.query";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import {
   ContainedNumberInput,
@@ -13,7 +13,7 @@ import { LASelector } from "../LoyaltyComponents/utils";
 import FormModalLayout from "../Modal/FormModalLayout";
 
 const ReferralAction = ({ opened, close }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       referralCode: "",
@@ -24,11 +24,11 @@ const ReferralAction = ({ opened, close }) => {
       issuePurchasePoints: false,
     },
     validate: {
-      referralCode: isNotEmpty(translations["Referral Code required"]),
-      refereePhone: isNotEmpty(translations["Phone number required"]),
+      referralCode: isNotEmpty(translations("Referral Code required")),
+      refereePhone: isNotEmpty(translations("Phone number required")),
       actionIds: (value, { issuePurchasePoints }) =>
         issuePurchasePoints && !value.length
-          ? translations["Select action"]
+          ? translations("Select action")
           : null,
     },
   });
@@ -55,7 +55,7 @@ const ReferralAction = ({ opened, close }) => {
       }}
       title=""
       onSubmit={handleRefer}
-      buttonTitle={translations["Refer"]}
+      buttonTitle={translations("Refer")}
       includeCancelButton
       cancelOnClick={() => {
         form.reset();
@@ -66,29 +66,29 @@ const ReferralAction = ({ opened, close }) => {
     >
       <Stack>
         <PhoneInputWithCountry
-          label={translations["Phone Number"]}
+          label={translations("Phone Number")}
           {...form.getInputProps("refereePhone")}
         />
         <ContainedTextField
-          label={translations["Name"]}
+          label={translations("Name")}
           {...form.getInputProps("refereeName")}
         />
         <ContainedTextField
-          label={translations["Referral Code"]}
+          label={translations("Referral Code")}
           {...form.getInputProps("referralCode")}
         />
         <ContainedNumberInput
-          label={translations["Amount"]}
+          label={translations("Amount")}
           {...form.getInputProps("amount")}
         />
         <Checkbox
           {...form.getInputProps("issuePurchasePoints")}
-          label={translations["Issue Direct Purchase Points"]}
+          label={translations("Issue Direct Purchase Points")}
         />
         <LASelector
           multiSelect={true}
           multiSelectProps={{
-            label: translations["Select Actions"],
+            label: translations("Select Actions"),
             display: form.values.issuePurchasePoints ? "block" : "none",
             ...form.getInputProps("actionIds"),
             mb: "sm",

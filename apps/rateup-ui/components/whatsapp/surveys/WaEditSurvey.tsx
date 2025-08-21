@@ -1,8 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 
 import { Center, Flex, Tabs, Text } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useQuestionCreateMutation } from "../../../backend/surveys/questions/questions.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
@@ -69,7 +68,7 @@ export function EditWhatsappSurvey({
       setActiveTab(QuestionTabsEnum.Edit);
     });
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Flex w={"100%"} h={"100%"} p={5} gap={10} className={classes.root}>
       <PaperLayout
@@ -142,7 +141,7 @@ export function EditWhatsappSurvey({
           <Tabs.Panel value={QuestionTabsEnum.None}>
             <Center style={{ height: "100%" }}>
               <Text c="dimmed">
-                {translations["Select a question to edit"]}
+                {translations("Select a question to edit")}
               </Text>
             </Center>
           </Tabs.Panel>

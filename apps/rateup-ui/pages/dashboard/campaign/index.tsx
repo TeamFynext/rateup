@@ -11,6 +11,7 @@ import {
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 
 import { CampaignType } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
@@ -26,7 +27,6 @@ import { TeamSelector } from "@/components/input/TeamSelector";
 import Heading from "@/components/styled/Heading/Heading";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TanstackTable from "@/components/Table/TanstackTable";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./campaign.module.css";
 
@@ -34,7 +34,7 @@ export default function CampaignList() {
   const [searchText, setSearchText] = useDebouncedState("", 200);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const {
     data: campaignData,
@@ -70,7 +70,7 @@ export default function CampaignList() {
       <Stack gap={"sm"} h={"100%"} mx={4}>
         <Flex justify={"space-between"}>
           <SearchInput
-            placeholder={translations["Search Campaign"]}
+            placeholder={translations("Search Campaign")}
             searchText={searchText}
             setSearchText={setSearchText}
           />
@@ -86,7 +86,7 @@ export default function CampaignList() {
           <TanstackTable
             columns={column}
             data={filteredCampaigns}
-            btnTitle={translations["Create"]}
+            btnTitle={translations("Create")}
             toggle={open}
             disableFuzzyFnCustom={true}
             detailBtn

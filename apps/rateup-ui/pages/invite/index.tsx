@@ -17,9 +17,8 @@ import {
 import { notifications } from "@mantine/notifications";
 import { IconArrowAutofitLeft, IconCheck } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { signOut } from "supertokens-web-js/recipe/session";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { completeInvite } from "../../backend/team/team.api";
 import { RateupButtonPrimary } from "../../components/Button/RateupButtons";
@@ -30,7 +29,7 @@ const Invite = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { type, token } = router.query;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   let title = "";
   if (type === "team") title = "Team";
   else if (type === "org") title = "Organization";
@@ -50,7 +49,7 @@ const Invite = () => {
           color: "teal",
           title: "Success",
           loading: false,
-          message: translations["Invite Accepted successfully."],
+          message: translations("Invite Accepted successfully."),
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
@@ -75,8 +74,8 @@ const Invite = () => {
       notifications.show({
         id: "load-data",
         loading: true,
-        title: translations["Accepting Invite"],
-        message: translations["Hold on, while validating your invite."],
+        title: translations("Accepting Invite"),
+        message: translations("Hold on, while validating your invite."),
         autoClose: false,
         withCloseButton: false,
       });
@@ -130,11 +129,11 @@ const Invite = () => {
             style={{ color: "var(--tertiary-color)" }}
             fw={600}
           >
-            {title} {translations["Invitation"]}
+            {title} {translations("Invitation")}
           </Text>
 
           {!type || !token ? (
-            <Container>{translations["Invite is not valid."]}</Container>
+            <Container>{translations("Invite is not valid.")}</Container>
           ) : (
             <Container>
               {updateInviteMutation?.isPending || !updateInviteMutation.data ? (
@@ -179,12 +178,12 @@ const Invite = () => {
 
                   <Text ta={"center"}>
                     {updateInviteMutation.data?.data.data.isUser
-                      ? translations[
-                          "Login to your existing account in this email and continue using the app."
-                        ]
-                      : translations[
-                          "Your account is ready, Create a new password and login to start using the app."
-                        ]}
+                      ? translations(
+                          "Login to your existing account in this email and continue using the app.",
+                        )
+                      : translations(
+                          "Your account is ready, Create a new password and login to start using the app.",
+                        )}
                   </Text>
 
                   {updateInviteMutation.data?.data.data.isUser ? (
@@ -192,7 +191,7 @@ const Invite = () => {
                       onClick={() => {
                         router.push("/login");
                       }}
-                      title={translations["Continue"]}
+                      title={translations("Continue")}
                     />
                   ) : (
                     <RateupButtonPrimary
@@ -201,7 +200,7 @@ const Invite = () => {
                           `${updateInviteMutation.data?.data.data.redirectLink}&type=invite`,
                         );
                       }}
-                      title={translations["Continue"]}
+                      title={translations("Continue")}
                     />
                   )}
                 </Flex>
@@ -211,7 +210,7 @@ const Invite = () => {
 
           {updateInviteMutation.error && (
             <Stack>
-              <Text>{translations["Failed..! Try another invitation."]}</Text>
+              <Text>{translations("Failed..! Try another invitation.")}</Text>
 
               <Space h="xl" />
               <Space h="xl" />
@@ -227,7 +226,7 @@ const Invite = () => {
                 >
                   <Link href="/login" style={{ textDecoration: "none" }}>
                     <NavLink
-                      label={translations["Go to Login"]}
+                      label={translations("Go to Login")}
                       leftSection={
                         <IconArrowAutofitLeft size="1rem" stroke={1.5} />
                       }

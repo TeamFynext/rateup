@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Tabs } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useRouteAndCartStore } from "../../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
 import StyledTabs from "../../../components/styled/StyledTabs/StyledTabs";
@@ -16,7 +15,7 @@ import ProfileSettings from "./UserSettings";
 
 const Settings = () => {
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const session = useCheckSession();
   const { user } = useUser();
   if (!session || !user) return;
@@ -30,11 +29,11 @@ const Settings = () => {
         w="100%"
       >
         <Tabs.List mb="md">
-          <Tabs.Tab value="user">{translations["User"]}</Tabs.Tab>
+          <Tabs.Tab value="user">{translations("User")}</Tabs.Tab>
           <Tabs.Tab value="organization">
-            {translations["Organization"]}
+            {translations("Organization")}
           </Tabs.Tab>
-          <Tabs.Tab value="account">{translations["Account"]}</Tabs.Tab>
+          <Tabs.Tab value="account">{translations("Account")}</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="user">
           <ProfileSettings />

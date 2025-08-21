@@ -18,9 +18,8 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { useTranslations } from "next-intl";
 import { useImmer } from "use-immer";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useUpdateCollection } from "../../backend/testimonials/testimonial.query";
 import { Testimonial, TestimonialStyleType } from "../../types/global";
@@ -56,7 +55,7 @@ const TestimonialEditModal = ({
   theme,
 }: TestimonialEditModalProps) => {
   const [currentStyle, setCurrentstyle] = useImmer<TestimonialStyleType>(theme);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const testimonialSample: Testimonial = {
     testimonial: {
       name: "Profile Name",
@@ -252,7 +251,7 @@ const TestimonialEditModal = ({
           <ScrollArea h={430}>
             <Stack justify="flex-start">
               <Stack>
-                <Title order={3}>{translations["Change Color"]}</Title>
+                <Title order={3}>{translations("Change Color")}</Title>
                 <TabsCommon
                   value={activeBlockTab}
                   onChange={(value) => setActiveBlockTab(value as BlockTabEnum)}
@@ -274,7 +273,7 @@ const TestimonialEditModal = ({
                 </TabsCommon>
               </Stack>
               <Stack w={470}>
-                <Title order={3}>{translations["Change Font"]}</Title>
+                <Title order={3}>{translations("Change Font")}</Title>
                 {fonts.map((f) => (
                   <Group justify="space-between" key={f?.name}>
                     <Text>{f.name}</Text>
@@ -311,7 +310,7 @@ const TestimonialEditModal = ({
                 ))}
               </Stack>
               <Stack w={450}>
-                <Title order={3}>{translations["Change Layout"]}</Title>
+                <Title order={3}>{translations("Change Layout")}</Title>
                 <Radio.Group
                   value={currentStyle?.layout}
                   onChange={(value) => handleLayout(value)}
@@ -321,7 +320,7 @@ const TestimonialEditModal = ({
                       <Radio
                         icon={CheckIcon}
                         value={"horizontal"}
-                        label={translations["Horizontal"]}
+                        label={translations("Horizontal")}
                       />
                       <Carousel
                         color="#E2E5ED"
@@ -344,7 +343,7 @@ const TestimonialEditModal = ({
                       <Radio
                         icon={CheckIcon}
                         value="vertical"
-                        label={translations["Vertical"]}
+                        label={translations("Vertical")}
                       />
                       <SimpleGrid
                         cols={4}
@@ -369,14 +368,14 @@ const TestimonialEditModal = ({
           </ScrollArea>
           <Flex gap={"sm"} mt={"xl"}>
             <RateupButtonSecondary
-              title={translations["cancel"]}
+              title={translations("cancel")}
               onClick={() => {
                 setCurrentstyle(theme);
                 onClose();
               }}
             />
             <RateupButtonBlue
-              title={translations["Save"]}
+              title={translations("Save")}
               onClick={handleUpdate}
             />
           </Flex>
@@ -390,7 +389,7 @@ const TestimonialEditModal = ({
             />
             <Stack mt="xl">
               <Checkbox
-                label={translations["Remove Rating"]}
+                label={translations("Remove Rating")}
                 styles={{
                   label: {
                     fontWeight: "bold",
@@ -406,7 +405,7 @@ const TestimonialEditModal = ({
                 }}
               />
               <Checkbox
-                label={translations["Remove Date"]}
+                label={translations("Remove Date")}
                 radius={"xl"}
                 styles={{
                   label: {
@@ -422,7 +421,7 @@ const TestimonialEditModal = ({
                 }}
               />
               <Checkbox
-                label={translations["Remove Profile Picture"]}
+                label={translations("Remove Profile Picture")}
                 radius={"xl"}
                 styles={{
                   label: {

@@ -13,8 +13,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconFileBroken, IconListDetails } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useSurveyTemplates } from "../../backend/surveys/surveys.query";
 import SurveyTemplates from "../../pages/dashboard/surveys/templates/surveyTemplates";
@@ -59,12 +58,12 @@ const SurveyTemplatesModal = ({
   const bgTemp = {
     backgroundColor: "#fff",
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Box>
       <FormModalLayout
         opened={opened}
-        title={translations["Create Survey"]}
+        title={translations("Create Survey")}
         onClose={close}
         centered
         size="auto"
@@ -83,12 +82,12 @@ const SurveyTemplatesModal = ({
               }}
               size="md"
               variant="outline"
-              title={translations["Start Blank"]}
+              title={translations("Start Blank")}
               leftIcon={<IconFileBroken size={20} />}
             />
 
             <RateupButtonPrimary
-              title={translations["Choose Template"]}
+              title={translations("Choose Template")}
               size="md"
               variant="outline"
               color="var(--tertiary-color)"
@@ -103,7 +102,7 @@ const SurveyTemplatesModal = ({
           >
             <Stack>
               <Title order={3} mb="sm">
-                {translations["Choose Template"]}
+                {translations("Choose Template")}
               </Title>
               <Group
                 justify="center"
@@ -179,7 +178,7 @@ const SurveyTemplatesModal = ({
                   </Tabs>
                 ) : (
                   <NothingFound
-                    text={translations["No templates available..!!"]}
+                    text={translations("No templates available..!!")}
                   />
                 )}
               </Group>
@@ -196,13 +195,13 @@ const SurveyTemplatesModal = ({
                     openCreateSurvey();
                   }}
                   fullWidth
-                  title={translations["Start Blank"]}
+                  title={translations("Start Blank")}
                 />
               </Group>
 
               <Group>
                 <RateupButtonSecondary
-                  title={translations["Cancel"]}
+                  title={translations("Cancel")}
                   size="sm"
                   variant="outline"
                   color="var(--tertiary-color)"
@@ -214,7 +213,7 @@ const SurveyTemplatesModal = ({
                     close();
                     openCreateSurvey();
                   }}
-                  title={translations["Start"]}
+                  title={translations("Start")}
                   disabled={!selectedTemplate || categorires.length < 1}
                 />
               </Group>

@@ -13,8 +13,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useSurveyTemplates } from "../../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
@@ -40,7 +39,7 @@ const Templates = ({ survey }) => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const router = useRouter();
   const [opened, { open, close }] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [
     createSurveyOpened,
     { open: openCreateSurvey, close: closeCreateSurvey },
@@ -92,7 +91,7 @@ const Templates = ({ survey }) => {
       >
         <FormModalLayout
           opened={opened}
-          title={translations["Create Survey from Template"]}
+          title={translations("Create Survey from Template")}
           onClose={close}
           centered
           size={"lg"}
@@ -102,7 +101,7 @@ const Templates = ({ survey }) => {
               order={3}
               style={{ alignItems: "center", color: "var(--shade-of-blue-3)" }}
             >
-              {selectedTemplate?.title || translations["Template"]}
+              {selectedTemplate?.title || translations("Template")}
             </Title>
             <Text
               style={{
@@ -111,14 +110,12 @@ const Templates = ({ survey }) => {
                 marginBottom: "1rem",
               }}
             >
-              {
-                translations[
-                  "Customize and deploy this survey effortlessly to uncover actionable data that drives informed decisions and enhances your business strategies"
-                ]
-              }
+              {translations(
+                "Customize and deploy this survey effortlessly to uncover actionable data that drives informed decisions and enhances your business strategies",
+              )}
             </Text>
             <RateupButtonPrimary
-              title={translations["Try this Template"]}
+              title={translations("Try this Template")}
               onClick={() => {
                 setSelectedTemplate(selectedTemplate);
                 close();
@@ -142,7 +139,7 @@ const Templates = ({ survey }) => {
       <Group gap="md" justify="space-between">
         <Group ml="md">
           <Heading
-            title={translations["Survey Templates"]}
+            title={translations("Survey Templates")}
             titleprops={{ w: "500px" }}
           />
           <InfoButton docUrl={`${docsPath}/webSurvey/surveyTemplates`} />
@@ -153,15 +150,15 @@ const Templates = ({ survey }) => {
             miw={"10.9375rem"}
             mr={"200px"}
             rightIcon={<IconPlus />}
-            title={translations["Start Blank"]}
+            title={translations("Start Blank")}
             onClick={() => {
               router.push(`/dashboard/surveys?action=create`);
               notifications.show({
                 id: "blank-survey",
                 color: "teal",
-                title: translations["Setting up Blank Template.."],
+                title: translations("Setting up Blank Template.."),
                 loading: true,
-                message: translations["Hold.. your survey is getting setup.."],
+                message: translations("Hold.. your survey is getting setup.."),
                 autoClose: 2000,
               });
             }}
@@ -179,7 +176,7 @@ const Templates = ({ survey }) => {
       {allTemplates && (
         <Box m="lg" pb="xl">
           {Object?.entries(allTemplates)?.length < 1 && (
-            <NothingFound text={translations["No templates found..!!"]} />
+            <NothingFound text={translations("No templates found..!!")} />
           )}
 
           {Object?.entries(allTemplates)?.map(

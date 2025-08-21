@@ -5,22 +5,21 @@ import { Anchor, Center, Stack, Text } from "@mantine/core";
 import { IconMoodSad, IconReload } from "@tabler/icons-react";
 import { RateupButtonBlue } from "components/Button/RateupButtons";
 import PaperLayout from "components/styled/Layouts/PaperLayout";
+import { useTranslations } from "next-intl";
 import { API_URL } from "utils/constants";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 const ShopifyCallbackRetry = () => {
   const router = useRouter();
   const { shop } = router.query as { shop: string };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Center h={"100vh"}>
       <PaperLayout w={400} p={"xl"}>
         <Stack justify="center" align="center">
           <IconMoodSad size={"5rem"} stroke={1} />
-          <Text>{translations["Something went wrong.."]}</Text>
+          <Text>{translations("Something went wrong..")}</Text>
           <RateupButtonBlue
-            title={translations["Retry"]}
+            title={translations("Retry")}
             onClick={() => {
               const regex = /^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com/;
               if (!shop || !regex.test(shop)) {
@@ -34,7 +33,7 @@ const ShopifyCallbackRetry = () => {
             leftIcon={<IconReload size={"1rem"} />}
           />
           <Anchor component={Link} href="/login">
-            {translations["Go Back"]}
+            {translations("Go Back")}
           </Anchor>
         </Stack>
       </PaperLayout>

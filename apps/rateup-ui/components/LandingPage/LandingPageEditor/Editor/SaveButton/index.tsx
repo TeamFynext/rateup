@@ -2,9 +2,9 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Button, Flex } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 import { useUpdateLandingPageMutation } from "@/backend/landingPage/landingPage.query";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useTiptapEditorInstance } from "../../LandingPageContext/LandingPageContext";
 import styles from "./SaveButton.module.css";
@@ -19,7 +19,7 @@ function SaveButton() {
   } = useRouter();
   const { mutateAsync: landingPageUpdateMutateAsync } =
     useUpdateLandingPageMutation(shortUrlId);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleSaveBtnClick = useCallback(async () => {
     setIsSaving(true);
     if (editorInstance) {
@@ -42,7 +42,7 @@ function SaveButton() {
         onClick={handleSaveBtnClick}
         loading={isSaving}
       >
-        {translations["Save"]}
+        {translations("Save")}
       </Button>
     </Flex>
   );

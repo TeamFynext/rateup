@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
+import { useTranslations } from "next-intl";
 import { useImmer } from "use-immer";
 
-import useTranslations from "@/dictionaries/useTranslation";
 import { getUniqueRandomAlphaId } from "@/utils/misc/random.utils";
 
 import { useQuestions } from "../../../../backend/surveys/questions/questions.query";
@@ -58,7 +58,7 @@ function FlowPage() {
   const [selectedLang, setSelectedLang] = useState("en");
   const [tab, setTab] = useState(FlowTabEnum.Edit);
   const { update } = useRouteParams();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   // initial data
   useEffect(() => {

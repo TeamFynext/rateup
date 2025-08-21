@@ -36,6 +36,7 @@ import {
   IconWand,
 } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { CampaignType } from "@/types/enums";
@@ -44,7 +45,6 @@ import {
   useCreateCampaignMutation,
   useUpdateCampaignMutation,
 } from "@/backend/campaign/campaign.query";
-import useTranslations from "@/dictionaries/useTranslation";
 import { SAVE_HOTKEY } from "@/utils/constants";
 
 import { RateupButtonPrimary } from "../Button/RateupButtons";
@@ -73,7 +73,7 @@ const CreateCampaignModal = ({
   campaignType = CampaignType.WHATSAPP,
 }: CreateCampaignProps) => {
   const [activeTab, setActiveTab] = useState("basic");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const schema = z
     .object({
@@ -378,8 +378,8 @@ const CreateCampaignModal = ({
         <Box>
           <Title order={1} size="h2" mb="xs">
             {isEdit
-              ? translations["Edit Campaign"]
-              : translations["Create New Campaign"]}
+              ? translations("Edit Campaign")
+              : translations("Create New Campaign")}
           </Title>
           <Text c="dimmed" size="sm">
             {isEdit
@@ -426,8 +426,8 @@ const CreateCampaignModal = ({
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
         {!isEdit && (
           <TeamSelector
-            label={translations["Select Team"]}
-            placeholder={translations["Select Team"]}
+            label={translations("Select Team")}
+            placeholder={translations("Select Team")}
             withAsterisk
             allowDeselect={false}
             {...form.getInputProps("teamId")}
@@ -436,8 +436,8 @@ const CreateCampaignModal = ({
         )}
 
         <ContainedTextField
-          label={translations["Campaign Name"]}
-          placeholder={translations["Enter campaign name"]}
+          label={translations("Campaign Name")}
+          placeholder={translations("Enter campaign name")}
           withAsterisk
           {...form.getInputProps("name")}
         />
@@ -582,9 +582,9 @@ const CreateCampaignModal = ({
       ) : (
         <SimpleGrid cols={1} spacing="lg">
           <ContainedSelection
-            label={translations["Choose Template"]}
+            label={translations("Choose Template")}
             withAsterisk
-            placeholder={translations["Select Template"]}
+            placeholder={translations("Select Template")}
             {...form.getInputProps("waTemplateId")}
             data={templatesData}
             searchable
@@ -794,13 +794,13 @@ const CreateCampaignModal = ({
             style={{ borderTop: "1px solid var(--mantine-color-gray-3)" }}
           >
             <RateupButtonPrimary
-              title={translations["Cancel"]}
+              title={translations("Cancel")}
               variant="outline"
               onClick={close}
             />
             <RateupButtonPrimary
               loading={updateCampaignMutation.isPending}
-              title={translations["Update Campaign"] ?? "Update Campaign"}
+              title={translations("Update Campaign") ?? "Update Campaign"}
               type="submit"
             />
           </Group>
@@ -859,14 +859,14 @@ const CreateCampaignModal = ({
 
             <Group>
               <RateupButtonPrimary
-                title={translations["Cancel"]}
+                title={translations("Cancel")}
                 variant="outline"
                 onClick={close}
               />
 
               {activeTab === "review" ? (
                 <RateupButtonPrimary
-                  title={translations["Create Campaign"]}
+                  title={translations("Create Campaign")}
                   loading={createCampaignMutation.isPending}
                   type="submit"
                   disabled={!isFormValid}

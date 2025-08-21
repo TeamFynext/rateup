@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { useTranslations } from "next-intl";
 import { v4 as uuid } from "uuid";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { generateWaMessageUrl } from "../../../utils/whatsapp/wa_url";
 import ShareQR from "../../Survey/ShareSurvey/ShareQR";
@@ -15,7 +14,7 @@ const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
 function ShareQRPage() {
   const [resource, setResource] = useState<string>("Web Survey");
   const [link, setLink] = useState(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleGenerateBtnClick = useCallback(() => {
     switch (resource) {
       case "Web Survey": {
@@ -46,7 +45,7 @@ function ShareQRPage() {
 
   return (
     <div className={styles["share-qr-page-container"]}>
-      <h1>{translations["Share QR"]}</h1>
+      <h1>{translations("Share QR")}</h1>
       <ResourceSelector
         resource={resource}
         setResource={setResource}

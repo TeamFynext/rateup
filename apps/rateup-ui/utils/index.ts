@@ -130,11 +130,11 @@ export function getUserRoleColor(role) {
 export function getUserRoleLabel(role, translations) {
   switch (role) {
     case UserRole.SUPADM:
-      return translations["Super Admin"];
+      return translations("Super Admin");
     case UserRole.ADM:
-      return translations["Admin"];
+      return translations("Admin");
     case UserRole.MEMBER:
-      return translations["Staff"];
+      return translations("Staff");
   }
 }
 

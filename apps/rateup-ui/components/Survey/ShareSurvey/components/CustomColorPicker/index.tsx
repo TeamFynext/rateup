@@ -3,8 +3,7 @@ import { useCallback, useState } from "react";
 import { Box, Button, ColorPicker, Flex, Popover, Text } from "@mantine/core";
 import { useEyeDropper, useMediaQuery } from "@mantine/hooks";
 import { IconColorPicker } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import styles from "./CustomColorPicker.module.css";
 import buttonStyles from "./MantineButtonStyles.module.css";
@@ -67,7 +66,7 @@ function CustomColorPicker({
       handleInputChange(sRGBHex);
     } catch (e) {}
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Popover opened={isColorPickerOpen} onChange={setIsColorPickerOpen}>
       <Popover.Target>
@@ -108,7 +107,7 @@ function CustomColorPicker({
                 onClick={pickEyeDropperColor}
                 classNames={buttonStyles}
               >
-                {translations["Eye Dropper"]}
+                {translations("Eye Dropper")}
               </Button>
             )}
           </Flex>

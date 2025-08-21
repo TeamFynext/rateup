@@ -1,9 +1,9 @@
 import React from "react";
 
 import { Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 import { WaQuestions } from "@/types/enums";
-import useTranslations from "@/dictionaries/useTranslation";
 
 export const WaHoverCardComponent = ({
   content,
@@ -13,7 +13,7 @@ export const WaHoverCardComponent = ({
   lineClamp = 1,
   type,
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <HoverCard
       width={"fit-content"}
@@ -29,7 +29,7 @@ export const WaHoverCardComponent = ({
             w={30}
             h={40}
             loading="lazy"
-            alt={translations["answer image of question"]}
+            alt={translations("answer image of question")}
           />
         ) : (
           <Text c={c} miw={200} maw={200} fw={fw} fz={fz} lineClamp={lineClamp}>
@@ -43,7 +43,7 @@ export const WaHoverCardComponent = ({
             <Image
               src={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${content}`}
               w={200}
-              alt={translations["answer image of question"]}
+              alt={translations("answer image of question")}
               loading="lazy"
             />
           ) : (

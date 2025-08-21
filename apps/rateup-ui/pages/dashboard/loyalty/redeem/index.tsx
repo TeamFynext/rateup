@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { Badge, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { createColumnHelper } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 
 import { useGetLoyaltyRedeems } from "@/backend/loyalty/redeems/redeems.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
@@ -12,7 +13,6 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import UpdateRedeemStatusModal from "@/components/LoyaltyComponents/Redeem/UpdateRedeemStatusModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TanstackTable from "@/components/Table/TanstackTable";
-import useTranslations from "@/dictionaries/useTranslation";
 import { formatDateWithTime } from "@/utils/dateTime";
 
 export default function Redeems() {
@@ -71,24 +71,24 @@ type Redeem = {
 function generateColumns(open, setRedeem) {
   const columnHelper = createColumnHelper<Redeem>();
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const defaultColumns = [
     columnHelper.accessor((row) => row.customer.Contact.name, {
       id: "name",
-      header: () => <span>{translations["Name"]}</span>,
+      header: () => <span>{translations("Name")}</span>,
     }),
     columnHelper.accessor((row) => row.customer.Contact.phone, {
       id: "phone",
-      header: translations["Phone"],
+      header: translations("Phone"),
     }),
     columnHelper.accessor((row) => row.code, {
       id: "code",
-      header: translations["Redeem Code"],
+      header: translations("Redeem Code"),
     }),
     columnHelper.accessor((row) => row.reward, {
       id: "rewardName",
-      header: translations["Reward"],
+      header: translations("Reward"),
       cell: ({ getValue }) => {
         return (
           <Text
@@ -104,11 +104,11 @@ function generateColumns(open, setRedeem) {
     }),
     columnHelper.accessor((row) => row.reward.points, {
       id: "points",
-      header: translations["Required Points"],
+      header: translations("Required Points"),
     }),
     columnHelper.accessor((row) => row, {
       id: "status",
-      header: translations["Status"],
+      header: translations("Status"),
       cell: ({ getValue }) => {
         return (
           <Badge
@@ -126,7 +126,7 @@ function generateColumns(open, setRedeem) {
     }),
     columnHelper.accessor((row) => formatDateWithTime(row.createdAt), {
       id: "createdAt",
-      header: translations["Redeemed On"],
+      header: translations("Redeemed On"),
     }),
   ];
 

@@ -24,8 +24,7 @@ import {
   IconSelector,
 } from "@tabler/icons-react";
 import { flexRender, Header, Table as TableType } from "@tanstack/react-table";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { PAGE_SIZE } from "../../utils/constants";
 import {
@@ -105,7 +104,7 @@ const TableLayout = ({
   isPending,
 }: TableLayoutProps) => {
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack className={styles["table-and-pagination-container"]}>
       <Stack justify="space-between" className={styles["table-container"]}>
@@ -300,7 +299,7 @@ const TableLayout = ({
             </Pagination.Root>
           )}
           <Group className={styles["rows-per-page-text-dd-container"]}>
-            <Text fz="sm">{translations["Rows Per page"]}</Text>
+            <Text fz="sm">{translations("Rows Per page")}</Text>
             <ContainedSelection
               onChange={(value) => {
                 table.setPageSize(Number(value));
@@ -318,7 +317,7 @@ const TableLayout = ({
           </Group>
         </Group>
         <Text className="pagination-total-rows-text" pr={"xs"} fw={600}>
-          {translations["Total Rows: "]}
+          {translations("Total Rows: ")}
           {(isPending ? 0 : table.getRowCount()) ?? 0}
         </Text>
       </Flex>

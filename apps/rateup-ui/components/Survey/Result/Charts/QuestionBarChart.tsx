@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 
 import { Badge, Flex, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -10,8 +11,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import {
@@ -44,7 +43,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   payload,
   label,
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   if (active && payload && payload.length) {
     return (
       <Paper
@@ -55,7 +54,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
         <Stack>
           <Title order={5}> {label} </Title>
           <Text>
-            {translations["Count: "]}
+            {translations("Count: ")}
             {payload[0]?.value}
           </Text>
         </Stack>
@@ -100,7 +99,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
   responseCount,
   version = 1,
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   return (
     <Stack miw={300}>
@@ -127,7 +126,7 @@ const QuestionBarChart: React.FC<QuestionBarChartProps> = ({
                 titleprops={{ w: "fit-content" }}
               />
               <Text c={"dimmed"} fw={900} size="sm">
-                {translations["Responses"]}
+                {translations("Responses")}
               </Text>
             </Stack>
           </PaperLayout>
@@ -181,7 +180,7 @@ export const QuestionBarChart2 = ({
       choicesToUse = getResponseArrayByQuestionType(questionType);
     }
   }
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const choiceCounts = choicesToUse?.map((choice) => ({
     name: choice?.label,
     count: data?.filter((item) =>
@@ -213,7 +212,7 @@ export const QuestionBarChart2 = ({
                 titleprops={{ w: "fit-content" }}
               />
               <Text c={"dimmed"} fw={900} size="sm">
-                {translations["Responses"]}
+                {translations("Responses")}
               </Text>
             </Stack>
           </PaperLayout>

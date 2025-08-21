@@ -2,8 +2,7 @@ import React from "react";
 
 import { Anchor, Box, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 type CreditsCardProps = {
   enableCredits: boolean;
@@ -30,7 +29,7 @@ export const CreditsCard = ({
     username = params.get("username");
   }
   const isMobile = useMediaQuery("(max-width: 480px)");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Box pos={"relative"} p={0} m={0} w={"100%"} h={"100%"} style={sx}>
       {children}
@@ -48,7 +47,7 @@ export const CreditsCard = ({
           }}
           pl={pl}
         >
-          {translations["Photo by"]}
+          {translations("Photo by")}
           <Anchor
             href={`https://unsplash.com/@${username}?utm_source=Rateup&utm_medium=referral`}
             target="_blank"
@@ -56,13 +55,13 @@ export const CreditsCard = ({
           >
             {author}
           </Anchor>{" "}
-          {translations["on"]}
+          {translations("on")}
           <Anchor
             href={"https://unsplash.com/?utm_source=Rateup&utm_medium=referral"}
             target="_blank"
             fz={fz}
           >
-            {translations["Unsplash"]}
+            {translations("Unsplash")}
           </Anchor>
         </Text>
       )}

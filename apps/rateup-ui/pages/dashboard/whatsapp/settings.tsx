@@ -31,6 +31,7 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import {
   useGetChatbotDetails,
@@ -39,7 +40,6 @@ import {
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import PremiumFeature from "@/components/Premium/PremiumFeature";
-import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast, showWarnToast } from "@/utils/notifications";
 import { hasFeature } from "@/utils/subscription/subscription";
 
@@ -112,7 +112,7 @@ function WhatsAppManualConfiguration({ waSettings }) {
   const handleDelete = () => {
     deleteMutation.mutate(waSettings?.phoneId);
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const fbPages = metaAssets
     ? metaAssets.pages.map((page) => ({ value: page.id, label: page.name }))
     : [];
@@ -131,27 +131,27 @@ function WhatsAppManualConfiguration({ waSettings }) {
           <Stack px="md">
             <ContainedTextField
               label={"WABA ID"}
-              placeholder={
-                translations["Enter your Whatsapp Business Account ID"]
-              }
+              placeholder={translations(
+                "Enter your Whatsapp Business Account ID",
+              )}
               {...form.getInputProps("wabaId")}
               required
             />
             <ContainedTextField
-              label={translations["Phone ID"]}
-              placeholder={translations["Enter your phone ID"]}
+              label={translations("Phone ID")}
+              placeholder={translations("Enter your phone ID")}
               required
               {...form.getInputProps("phoneId")}
             />
             <ContainedTextField
-              label={translations["App Id"]}
-              placeholder={translations["Enter your app ID"]}
+              label={translations("App Id")}
+              placeholder={translations("Enter your app ID")}
               required
               {...form.getInputProps("appId")}
             />
             <ContainedTextArea
-              label={translations["Access Token"]}
-              placeholder={translations["Enter your access token"]}
+              label={translations("Access Token")}
+              placeholder={translations("Enter your access token")}
               autosize
               minRows={2}
               maxRows={4}
@@ -159,8 +159,8 @@ function WhatsAppManualConfiguration({ waSettings }) {
               {...form.getInputProps("accessToken")}
             />
             <ContainedTextField
-              label={translations["Webhook Password"]}
-              placeholder={translations["Create a webhook password"]}
+              label={translations("Webhook Password")}
+              placeholder={translations("Create a webhook password")}
               required
               {...form.getInputProps("webhookPassword")}
             />
@@ -216,11 +216,11 @@ function WhatsAppManualConfiguration({ waSettings }) {
                 radius="lg"
                 disabled={!waSettings}
               >
-                {translations["Delete Configuration"]}
+                {translations("Delete Configuration")}
               </Button>
               <RateupButtonPrimary
                 type="submit"
-                title={translations["Save Changes"]}
+                title={translations("Save Changes")}
               />
             </Group>
           </Stack>
@@ -234,13 +234,11 @@ function WhatsAppManualConfiguration({ waSettings }) {
         <Stack style={{ flexGrow: 1 }} px="md">
           <Box>
             <Group>
-              <Text>{translations["Webhook URL"]}</Text>
+              <Text>{translations("Webhook URL")}</Text>
               <Tooltip
-                label={
-                  translations[
-                    "Paste this url in your facebook app under whatsapp configuration @developers.facebook.com/apps/"
-                  ]
-                }
+                label={translations(
+                  "Paste this url in your facebook app under whatsapp configuration @developers.facebook.com/apps/",
+                )}
               >
                 <ActionIcon variant="transparent" color="gray">
                   <IconHelp />
@@ -347,7 +345,7 @@ function MetaLoginButton() {
     setWData({ phone_number_id: "", waba_id: "" });
     setCode("");
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   useEffect(() => {
     if (waData?.waba_id && code) {
@@ -432,7 +430,7 @@ function MetaLoginButton() {
       }}
       loading={registerMutation.isPending}
     >
-      {translations["Login with Facebook"]}
+      {translations("Login with Facebook")}
     </Button>
   );
 }
@@ -440,7 +438,7 @@ function MetaLoginButton() {
 export default function WhatsAppSettingsPage() {
   const { data: waSettings, isLoading } = useWaSettings();
   const [tab, setTab] = useState<WaConfigType>(WaConfigType.Automated);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (waSettings) {
       setTab(waSettings?.[0]?.type);
@@ -467,29 +465,29 @@ export default function WhatsAppSettingsPage() {
           <Tooltip
             label={
               isManual
-                ? translations[
-                    "You need to delete the manually configured details to switch to Automated Configuration"
-                  ]
-                : translations["Automated Configuration"]
+                ? translations(
+                    "You need to delete the manually configured details to switch to Automated Configuration",
+                  )
+                : translations("Automated Configuration")
             }
             openDelay={300}
           >
             <Tabs.Tab value={WaConfigType.Automated} disabled={isManual}>
-              {translations["Automated"]}
+              {translations("Automated")}
             </Tabs.Tab>
           </Tooltip>
           <Tooltip
             label={
               isAutomated
-                ? translations[
-                    "You need to de-register from the automated onboarding through fb-login to switch to manual configuration"
-                  ]
-                : translations["Manually Configure WhatsApp Business Account"]
+                ? translations(
+                    "You need to de-register from the automated onboarding through fb-login to switch to manual configuration",
+                  )
+                : translations("Manually Configure WhatsApp Business Account")
             }
             openDelay={300}
           >
             <Tabs.Tab value={WaConfigType.Manual} disabled={isAutomated}>
-              {translations["Manual"]}
+              {translations("Manual")}
             </Tabs.Tab>
           </Tooltip>
         </Tabs.List>
@@ -509,7 +507,7 @@ function MetaLoginStatus({ waSettings }) {
   const deRegisterMutation = useDeregisterBusinessClientMutation();
   const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [openDeleteConfirmation, { open, close }] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [selectedWaSettings, setSelectedWaSettings] = useState(null);
   const [
     openedInstaConfigModal,
@@ -647,7 +645,7 @@ function MetaLoginStatus({ waSettings }) {
             }}
             c="dimmed"
           >
-            {translations["Linked WhatsApp Business Account"]}
+            {translations("Linked WhatsApp Business Account")}
           </Text>
           {waSettings.map((setting, index) => (
             <Box key={index} mb="md">
@@ -660,12 +658,12 @@ function MetaLoginStatus({ waSettings }) {
                 <Group align="flex-end" justify="apart">
                   <Group gap={"xl"}>
                     <ContainedTextField
-                      label={translations["WhatsApp Business ID"]}
+                      label={translations("WhatsApp Business ID")}
                       value={setting.wabaId}
                       readOnly
                     />
                     <ContainedTextField
-                      label={translations["WhatsApp Phone Number"]}
+                      label={translations("WhatsApp Phone Number")}
                       value={setting.phone}
                       readOnly
                     />
@@ -702,17 +700,15 @@ function MetaLoginStatus({ waSettings }) {
           ))}
           <ConfirmationModal
             forDeleteFunctionality
-            deleteQuotion={
-              translations[
-                "Are you sure you want to DeRegister this WhatsApp Business Account?"
-              ]
-            }
+            deleteQuotion={translations(
+              "Are you sure you want to DeRegister this WhatsApp Business Account?",
+            )}
             opened={openDeleteConfirmation}
             onClose={close}
             onConfirm={handleDeRegister}
-            confirmLabel={translations["DeRegister"]}
-            headerLabel={translations["DeRegister WhatsApp Business Account"]}
-            headerTitle={translations["Confirmation Dialog"]}
+            confirmLabel={translations("DeRegister")}
+            headerLabel={translations("DeRegister WhatsApp Business Account")}
+            headerTitle={translations("Confirmation Dialog")}
           />
           <InstagramConfigModal
             opened={openedInstaConfigModal}
@@ -760,7 +756,7 @@ function MetaLoginStatusLoaderSkeleton() {
 
 export function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
   const { data: chatbot, isLoading } = useGetChatbotDetails(selectedChatbotId);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const updateChatbotdetMut = useUpdateChatbot();
   const { data: subscription } = useSubscription();
 
@@ -816,10 +812,10 @@ export function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
           <PaperLayout>
             <Stack>
               <Text fw={500} c="var(--grey-color-6)">
-                {translations["Configure WhatsApp with AI Chat"]}
+                {translations("Configure WhatsApp with AI Chat")}
               </Text>
               <Switch
-                label={translations["Enable AI Chat in WhatsApp"]}
+                label={translations("Enable AI Chat in WhatsApp")}
                 checked={chatbot?.enableWaChat}
                 onChange={handleEnableWaAIChat}
               />
@@ -844,14 +840,14 @@ export function WhatsAppAIChatConfiguration({ selectedChatbotId }) {
                     }
                   >
                     <ContainedTextField
-                      label={translations["Bot Command"]}
+                      label={translations("Bot Command")}
                       placeholder={"eg: @bot"}
                       {...form.getInputProps("waCommand")}
                       disabled={chatbot?.enableAllWaChat}
                     />
                   </Tooltip>
                   <ContainedTextArea
-                    label={translations["Bot Prompt"]}
+                    label={translations("Bot Prompt")}
                     {...form.getInputProps("waPrompt")}
                     rows={5}
                   />

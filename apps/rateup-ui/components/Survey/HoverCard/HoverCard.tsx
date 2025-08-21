@@ -8,8 +8,7 @@ import {
   ScrollAreaAutosize,
   Text,
 } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { QuestionType } from "../../../types/enums";
 import { extractText, isHtml } from "../../../utils";
@@ -23,11 +22,11 @@ export const HoverCardComponent = ({
   lineClamp = 1,
   questionType = null,
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   if (questionType && !Object.values(QuestionType).includes(questionType))
     return (
       <Badge variant={"light"} color="red">
-        {translations["Not Available"]}
+        {translations("Not Available")}
       </Badge>
     );
   return (
@@ -52,7 +51,7 @@ export const HoverCardComponent = ({
             <Image
               src={getFileUrlFromKey(content?.value?.image)}
               w={30}
-              alt={translations["answer image of question"]}
+              alt={translations("answer image of question")}
             />
           ) : (
             <Text
@@ -92,7 +91,7 @@ export const HoverCardComponent = ({
                 <Image
                   src={getFileUrlFromKey(content?.value?.image)}
                   w={200}
-                  alt={translations["answer image of question"]}
+                  alt={translations("answer image of question")}
                 />
                 <Text c={c} truncate="end" miw={200} maw={200} fw={fw} fz={fz}>
                   {content?.value?.value}

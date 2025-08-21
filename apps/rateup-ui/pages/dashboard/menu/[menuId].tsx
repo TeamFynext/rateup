@@ -8,8 +8,7 @@ import {
   IconLayersSubtract,
   IconPlus,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useCategories,
@@ -45,7 +44,7 @@ export default function MenuById({ categories: initialCategories }) {
   const { menuId } = router.query as { menuId: string };
   const [searchText, setSearchText] = useState("");
   const { update } = useRouteParams();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [openCreateModal, { close, open }] = useDisclosure(false);
   const [openUploadCsv, { close: closeUploadCsv, toggle }] =
     useDisclosure(false);
@@ -118,13 +117,13 @@ export default function MenuById({ categories: initialCategories }) {
           </Grid.Col>
           <Grid.Col span={6}>
             <Tabs.List>
-              <Tabs.Tab value={TabEnum.Menu}>{translations["Menu"]}</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Menu}>{translations("Menu")}</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Settings}>
-                {translations["Settings"]}
+                {translations("Settings")}
               </Tabs.Tab>
-              <Tabs.Tab value={TabEnum.Share}>{translations["Share"]}</Tabs.Tab>
+              <Tabs.Tab value={TabEnum.Share}>{translations("Share")}</Tabs.Tab>
               <Tabs.Tab value={TabEnum.Analytics}>
-                {translations["Analytics"]}
+                {translations("Analytics")}
               </Tabs.Tab>
             </Tabs.List>
           </Grid.Col>
@@ -141,14 +140,14 @@ export default function MenuById({ categories: initialCategories }) {
               <Flex justify={"space-between"} wrap={"wrap"} pt={"0.3125rem"}>
                 <Group>
                   <RateupButtonPrimary
-                    title={translations["Add Category"]}
+                    title={translations("Add Category")}
                     rightIcon={<IconPlus />}
                     radius="xl"
                     size="md"
                     onClick={handleCreateCategory}
                   />
                   <RateupButtonPrimary
-                    title={translations["Import Menu"]}
+                    title={translations("Import Menu")}
                     rightIcon={<IconFileImport size={16} />}
                     radius="xl"
                     size="md"
@@ -166,7 +165,7 @@ export default function MenuById({ categories: initialCategories }) {
                   }}
                 />
                 <RateupButtonPrimary
-                  title={translations["Manage Banners"]}
+                  title={translations("Manage Banners")}
                   rightIcon={
                     <IconLayersSubtract
                       style={{ width: rem(18), height: rem(18) }}
@@ -197,7 +196,7 @@ export default function MenuById({ categories: initialCategories }) {
                 mah={800}
               >
                 {filteredCategory?.length === 0 ? (
-                  <NothingFound text={translations["No Category available."]} />
+                  <NothingFound text={translations("No Category available.")} />
                 ) : (
                   filteredCategory?.map((category) => (
                     <CategoryCard

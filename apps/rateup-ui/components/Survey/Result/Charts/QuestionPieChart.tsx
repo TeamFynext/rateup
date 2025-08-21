@@ -9,6 +9,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { useTranslations } from "next-intl";
 import {
   Cell,
   Legend,
@@ -17,8 +18,6 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { getContent } from "../../../../utils";
 import Heading from "../../../styled/Heading/Heading";
@@ -114,7 +113,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
   data,
   csatScore,
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const chartData = [
     { name: "Detractors", value: data?.detractors, color: "#FF5C55" },
     { name: "Passives", value: data?.passives, color: "#FEDC4E" },
@@ -127,25 +126,25 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
 
   const getCSATColor = (score) => {
     if (score >= 90) {
-      return { color: "green", message: translations["Excellent"] };
+      return { color: "green", message: translations("Excellent") };
     } else if (score >= 70) {
-      return { color: "lime", message: translations["Good"] };
+      return { color: "lime", message: translations("Good") };
     } else if (score >= 50) {
-      return { color: "orange", message: translations["Fair"] };
+      return { color: "orange", message: translations("Fair") };
     } else if (score < 50) {
-      return { color: "red", message: translations["Needs Improvement"] };
+      return { color: "red", message: translations("Needs Improvement") };
     } else {
-      return { color: "gray", message: translations["Neutral"] };
+      return { color: "gray", message: translations("Neutral") };
     }
   };
 
   const getNPSScoreColor = (score) => {
     if (score < 0) {
-      return { color: "red", message: translations["Needs Improvement"] };
+      return { color: "red", message: translations("Needs Improvement") };
     } else if (score > 0) {
-      return { color: "green", message: translations["Good"] };
+      return { color: "green", message: translations("Good") };
     } else {
-      return { color: "gray", message: translations["Neutral"] };
+      return { color: "gray", message: translations("Neutral") };
     }
   };
 
@@ -170,7 +169,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
               titleprops={{ w: "fit-content" }}
             />
             <Text c={"dimmed"} fw={900} size="sm">
-              {translations["Responses"]}
+              {translations("Responses")}
             </Text>
           </Stack>
         </PaperLayout>
@@ -195,7 +194,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
               }
             />
             <Text c="dimmed" fw={900} size="sm" ta="center">
-              {translations["NPS Score"]}
+              {translations("NPS Score")}
             </Text>
           </Stack>
           <Stack gap={0} align="center" w={250}>
@@ -218,7 +217,7 @@ const QuestionPieChart: React.FC<QuestionPieChartProps> = ({
               }
             />
             <Text c="dimmed" fw={900} size="sm" ta="center">
-              {translations["CSAT Score"]}
+              {translations("CSAT Score")}
               {isNaN(csatScore)
                 ? null
                 : `(${getCSATColor(csatScore)?.message})`}

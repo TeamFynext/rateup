@@ -10,11 +10,11 @@ import {
   Text,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { useTranslations } from "next-intl";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { useNavControlContext } from "@/context/NavControlContext";
 import { SurveyContextProvider } from "@/context/SurveyObjContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast } from "@/utils/notifications";
 
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
@@ -90,7 +90,7 @@ export default function SurveyID() {
   const [filterTags, setFilterTags] = useState([]);
   const [encryptionpassword, setEncryptionPassword] = useState("");
   const [variables, setVariables] = useState([]);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const [
     funToRunBeforeSurveyIdPageHeaderTabsChange,
@@ -105,19 +105,17 @@ export default function SurveyID() {
       const { haveUnsavedChanges, feedbackElement, toastMessage } = data || {};
       if (haveUnsavedChanges && feedbackElement === "modal") {
         modals.openConfirmModal({
-          title: translations["Discard unsaved changes?"],
+          title: translations("Discard unsaved changes?"),
           children: (
             <Text className={modalStyles["are-you-sure-text"]}>
-              {
-                translations[
-                  "Are you sure, you want to discard unsaved changes?"
-                ]
-              }
+              {translations(
+                "Are you sure, you want to discard unsaved changes?",
+              )}
             </Text>
           ),
           labels: {
-            confirm: translations["Discard"],
-            cancel: translations["Cancel"],
+            confirm: translations("Discard"),
+            cancel: translations("Cancel"),
           },
           className: modalStyles["delete-confirmation-modal"],
           centered: true,
@@ -260,7 +258,7 @@ export default function SurveyID() {
                   value={filterTeams}
                   onChange={setFilterTeams}
                   placeholder={
-                    filterTeams.length > 0 ? "" : translations["All Teams"]
+                    filterTeams.length > 0 ? "" : translations("All Teams")
                   }
                 />
               </Group>

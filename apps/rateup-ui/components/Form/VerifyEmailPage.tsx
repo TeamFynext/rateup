@@ -6,24 +6,21 @@ import {
   IconChevronRight,
   IconSend,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import styles from "./AuthForm.module.css";
 
 function VerifyEmailPage({ sendEmail }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <Title order={2} className={styles["login-signup-form-heading"]}>
-        {translations["Verify your email address"]}
+        {translations("Verify your email address")}
       </Title>
       <Text className={styles["verify-email-para"]}>
-        {
-          translations[
-            "Please click on the link in the email we just sent you to confirm your email address."
-          ]
-        }
+        {translations(
+          "Please click on the link in the email we just sent you to confirm your email address.",
+        )}
       </Text>
 
       <Group justify="center" py="xl">
@@ -39,7 +36,7 @@ function VerifyEmailPage({ sendEmail }) {
         className={styles["resend-change-email-navlink-component"]}
         onClick={sendEmail}
         component="div"
-        label={translations["Resend or change email"]}
+        label={translations("Resend or change email")}
         leftSection={<IconSend size="1rem" stroke={1.5} />}
         rightSection={<IconChevronRight size="0.8rem" stroke={1.5} />}
         variant="subtle"
@@ -49,7 +46,7 @@ function VerifyEmailPage({ sendEmail }) {
         <NavLink
           component="div"
           style={{ fontWeight: 620 }}
-          label={translations["Logout"]}
+          label={translations("Logout")}
           leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
           variant="subtle"
         />

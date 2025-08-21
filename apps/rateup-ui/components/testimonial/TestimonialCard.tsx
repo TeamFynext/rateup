@@ -12,8 +12,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { Testimonial } from "../../types/global";
 import { formatDate } from "../../utils/dateTime";
@@ -76,7 +75,7 @@ const TestimonialContent = ({
   close,
 }) => {
   const isProfileRemoved = currentStyle?.profileBlock.profilePic.isRemoved;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack gap={0} bg={currentStyle?.root?.bg}>
       <Stack bg={currentStyle?.profileBlock.bg} gap={0}>
@@ -127,7 +126,7 @@ const TestimonialContent = ({
         </Text>
         {!isModal && testimonial?.testimonial.testimonial?.length >= 80 && (
           <Anchor onClick={open} size="sm">
-            {translations["Read more"]}
+            {translations("Read more")}
           </Anchor>
         )}
       </Stack>

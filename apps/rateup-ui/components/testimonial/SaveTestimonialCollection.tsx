@@ -3,8 +3,7 @@ import { useRouter } from "next/router";
 import { Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useTeamsByUser } from "../../backend/team/team.query";
 import { useCreateTestimonialCollection } from "../../backend/testimonials/testimonial.query";
@@ -26,7 +25,7 @@ const SaveTestimonialCollection = ({ opened, close }) => {
     value: team?.id,
     label: team?.name,
   }));
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       name: "",
@@ -34,8 +33,8 @@ const SaveTestimonialCollection = ({ opened, close }) => {
       theme: defaultTestimonialStyle,
     },
     validate: {
-      name: isNotEmpty(translations["Name cannot be blank"]),
-      teamId: isNotEmpty(translations["Please select a team"]),
+      name: isNotEmpty(translations("Name cannot be blank")),
+      teamId: isNotEmpty(translations("Please select a team")),
     },
   });
 
@@ -46,8 +45,8 @@ const SaveTestimonialCollection = ({ opened, close }) => {
     notifications.show({
       id: "create-collection",
       loading: true,
-      title: translations["Creating survey.."],
-      message: translations["Hold on, your collection is getting created..."],
+      title: translations("Creating survey.."),
+      message: translations("Hold on, your collection is getting created..."),
       autoClose: false,
       withCloseButton: true,
     });
@@ -63,10 +62,10 @@ const SaveTestimonialCollection = ({ opened, close }) => {
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={translations["Create Collection"]}
+      title={translations("Create Collection")}
       centered
       onSubmit={onSubmit}
-      buttonTitle={translations["Save"]}
+      buttonTitle={translations("Save")}
       includeCancelButton
       cancelOnClick={() => {
         form.reset();
@@ -75,9 +74,9 @@ const SaveTestimonialCollection = ({ opened, close }) => {
     >
       <Stack>
         <ContainedTextField
-          label={translations["Name your collection"]}
+          label={translations("Name your collection")}
           {...form.getInputProps("name")}
-          placeholder={translations["Enter collection name "]}
+          placeholder={translations("Enter collection name ")}
           styles={{
             label: {
               fontWeight: "bold",
@@ -88,9 +87,9 @@ const SaveTestimonialCollection = ({ opened, close }) => {
         <ContainedSelection
           allowDeselect={false}
           data={teamOptions}
-          label={translations["Select Team"]}
+          label={translations("Select Team")}
           {...form.getInputProps("teamId")}
-          placeholder={translations["Select Team"]}
+          placeholder={translations("Select Team")}
         />
       </Stack>
     </FormModalLayout>

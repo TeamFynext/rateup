@@ -6,10 +6,9 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { SAVE_HOTKEY } from "../../utils/constants";
 import { RateupButtonBlue } from "../Button/RateupButtons";
@@ -20,7 +19,7 @@ import PhoneNumberForm from "./phoneNumberForm";
 import { signUpType } from "./SignupForm";
 
 function LoginForm({ setIsLoading, signIn, isLoading }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [signUpTypeValue, setSignUpTypeValue] = useState("");
 
   // Define Zod schema for form validation
@@ -34,23 +33,22 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
                 signUpTypeValue !== signUpType.SIGNUP_WITH_PHONE ||
                 isValidPhoneNumber(val),
               {
-                error: translations["Enter a valid phone number"],
+                error: translations("Enter a valid phone number"),
               },
             ),
         }
       : {
-          email: z.email().min(1, translations["Email is required"]),
+          email: z.email().min(1, translations("Email is required")),
           password: z
             .string()
             .refine((val) => /[A-Za-z]/.test(val) && /\d/.test(val), {
-              error:
-                translations[
-                  "Password should contain at least one letter and one number"
-                ],
+              error: translations(
+                "Password should contain at least one letter and one number",
+              ),
             })
             .min(
               5,
-              translations["Password should be at least 5 characters long"],
+              translations("Password should be at least 5 characters long"),
             ),
         },
   );
@@ -83,7 +81,7 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
         form={loginForm}
         isLoading={isLoading}
         setSignUpTypeValue={setSignUpTypeValue}
-        title={translations["Login"]}
+        title={translations("Login")}
       />
     );
   } else {
@@ -91,12 +89,12 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
       <>
         <TextInput
           classNames={styles}
-          placeholder={translations["Email ID"]}
+          placeholder={translations("Email ID")}
           {...loginForm.getInputProps("email")}
         />
         <PasswordInput
           classNames={styles}
-          placeholder={translations["Enter Password"]}
+          placeholder={translations("Enter Password")}
           {...loginForm.getInputProps("password")}
         />
         <div className={styles["forgot-password-container"]}>
@@ -104,19 +102,19 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
             className={styles["login-form-forgot-password-link"]}
             href="/login/reset-password"
           >
-            {translations["Forgot password?"]}
+            {translations("Forgot password?")}
           </Link>
         </div>
         <RateupButtonBlue
           type="submit"
-          title={translations["Login"]}
+          title={translations("Login")}
           loading={isLoading}
           className={styles["login-signup-form-submit-btn"]}
         />
 
         {/* <GoogleSignInButton
           className={styles["login-signup-with-google-btn"]}
-          buttonText={translations["Login with Google"]}
+          buttonText={translations("Login with Google")}
         /> */}
         {/* <RateupButtonSecondary
           type="button"
@@ -134,7 +132,7 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
   return (
     <>
       <Title className={styles["login-signup-form-heading"]} order={2}>
-        {translations["Welcome Back"]}
+        {translations("Welcome Back")}
       </Title>
       <LoginSignupLInks isLogin />
 

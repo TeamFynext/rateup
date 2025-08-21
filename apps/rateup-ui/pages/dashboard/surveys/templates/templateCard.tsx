@@ -1,8 +1,8 @@
 import { BackgroundImage, Flex, Stack, Text } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 import { PageType } from "@/types/enums";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { CreditsCard } from "../../../../components/Card/CreditsCard";
 import { getBgImgAndBgColor } from "../../../../components/Layout/TakeSurveyLayout/utils";
@@ -14,7 +14,7 @@ export default function TemplateCard({ survey }) {
   const surveyThemeObj = survey?.webSurveyTheme?.theme;
   const questionsArr = survey?.questions;
   const selectedPreview = useSelectedPreview();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const shouldUseSurveyTheme =
     webSurveyPagesTheme["welcomeTheme"]?.useSurveyTheme;
   const requiredThemeObj = shouldUseSurveyTheme
@@ -22,10 +22,10 @@ export default function TemplateCard({ survey }) {
     : webSurveyPagesTheme["welcomeTheme"];
 
   const defaultTitleSubtitleStartButtonTexts = {
-    titleText: translations["Welcome"] || "Welcome",
+    titleText: translations("Welcome") || "Welcome",
     subtitleText:
-      translations["Welcome to the survey"] || "Welcome to the survey",
-    startButtonText: translations["Start Survey"] || "Start Survey",
+      translations("Welcome to the survey") || "Welcome to the survey",
+    startButtonText: translations("Start Survey") || "Start Survey",
   };
   const welcomeTypeQuestionObj =
     questionsArr?.find((question) => question.type === PageType.Welcome) ||

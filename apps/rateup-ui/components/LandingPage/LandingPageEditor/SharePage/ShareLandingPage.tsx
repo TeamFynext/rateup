@@ -2,9 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Group, Stack } from "@mantine/core";
+import { useTranslations } from "next-intl";
 import { useImmerReducer } from "use-immer";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useUpdateLandingPageMutation } from "../../../../backend/landingPage/landingPage.query";
 import { uploadFile } from "../../../../utils/file-upload/upload";
@@ -24,7 +23,7 @@ function ShareLandingPage({ url, isPublished, title }) {
     logoTabPanelReducer,
     initialLogoTabPanelState,
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const {
     query: { shortUrlId },
   } = useRouter();
@@ -63,7 +62,7 @@ function ShareLandingPage({ url, isPublished, title }) {
         });
       } catch (err) {
         showErrorToast(
-          translations["Unable to save settings, Please try again later"],
+          translations("Unable to save settings, Please try again later"),
         );
       }
     }
@@ -85,7 +84,7 @@ function ShareLandingPage({ url, isPublished, title }) {
           />
           <RateupButtonBlue
             loading={isSavingSettings}
-            title={translations["Save Settings"]}
+            title={translations("Save Settings")}
             onClick={handleSaveOfShareSettings}
           />
         </Stack>

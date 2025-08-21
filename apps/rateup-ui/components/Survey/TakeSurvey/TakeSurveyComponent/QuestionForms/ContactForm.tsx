@@ -9,7 +9,7 @@ import classes from "../TakeSurvey.module.css";
 
 import "react-phone-number-input/style.css";
 
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
 import { handleInputScrollIntoView } from "../util";
@@ -20,7 +20,7 @@ const ContactForm = ({ features }) => {
   const selectedLanguage = useContext(SelectedLanguageContext).selectedLanguage;
   const selectedFeature = features?.[selectedLanguage];
   const theme = useMantineTheme();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack w={"100%"} gap={"lg"}>
       {selectedFeature?.name.isEnabled && (
@@ -30,7 +30,7 @@ const ContactForm = ({ features }) => {
           </Text>
           <FormPaperLayout>
             <TextInput
-              placeholder={translations["Enter name"]}
+              placeholder={translations("Enter name")}
               value={response?.name || ""}
               onChange={(e) =>
                 updateResponse({ ...response, name: e.currentTarget.value })
@@ -55,7 +55,7 @@ const ContactForm = ({ features }) => {
               defaultCountry="IN"
               international
               countryCallingCodeEditable={false}
-              placeholder={translations["Enter phone number"]}
+              placeholder={translations("Enter phone number")}
               value={response?.phone || null}
               onChange={(value) =>
                 updateResponse({ ...response, phone: value })
@@ -73,7 +73,7 @@ const ContactForm = ({ features }) => {
           </Text>
           <FormPaperLayout>
             <TextInput
-              placeholder={translations["Enter email"]}
+              placeholder={translations("Enter email")}
               value={response?.email || ""}
               onChange={(e) =>
                 updateResponse({ ...response, email: e.currentTarget.value })

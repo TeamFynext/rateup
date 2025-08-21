@@ -3,12 +3,12 @@ import React, { useContext, useEffect, useState } from "react";
 import { ActionIcon, Divider, Flex, Stack, Tooltip } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 import { Margin, usePDF } from "react-to-pdf";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useAllResponses } from "../../../backend/surveys/response/response.query";
 import SurveyContext from "../../../context/SurveyContext";
@@ -68,7 +68,7 @@ const WaResultsOverviewV2 = ({
     ),
   );
 
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [isExporting, setIsExporting] = useState(false);
   const { data: subscription } = useSubscription();
 
@@ -147,7 +147,7 @@ const WaResultsOverviewV2 = ({
 
   if (!isAllowedQnsPresent) {
     return (
-      <NothingFound text={translations["No Data available for Analysis"]} />
+      <NothingFound text={translations("No Data available for Analysis")} />
     );
   }
 
@@ -253,7 +253,7 @@ const WaResultsOverviewV2 = ({
     chartData?.filter((item) => item.enableNpsAnalytics === true)?.length > 0;
 
   if (!filteredResponsesByTags.length)
-    return <NothingFound text={translations["No responses yet"]} />;
+    return <NothingFound text={translations("No responses yet")} />;
 
   return (
     <Stack className={styles["results-overview-root-div"]} h={"100%"} p={3}>
@@ -279,7 +279,7 @@ const WaResultsOverviewV2 = ({
           <Stack p={5} ref={targetRef}>
             {isAllowedQnsPresent && enablewholeNpsAnalytics && (
               <>
-                <Heading subtitle={translations["NPS Overview"]} />
+                <Heading subtitle={translations("NPS Overview")} />
                 <PaperLayout p={"xl"}>
                   {chartData
                     ?.filter(
@@ -309,7 +309,7 @@ const WaResultsOverviewV2 = ({
                 </PaperLayout>
               </>
             )}
-            <Heading subtitle={translations["Question Wise Overview"]} />
+            <Heading subtitle={translations("Question Wise Overview")} />
             <PaperLayout p={"xl"}>
               {chartData
                 ?.filter(

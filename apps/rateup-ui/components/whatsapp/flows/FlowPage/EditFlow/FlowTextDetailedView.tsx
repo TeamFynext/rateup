@@ -12,8 +12,7 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   WaFlowFormElementType,
@@ -60,7 +59,7 @@ export function FlowTextDetailedView() {
       },
     },
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (form.isValid()) handleSaveElement();
   }, [form.values]);
@@ -73,7 +72,7 @@ export function FlowTextDetailedView() {
   function handleSaveElement() {
     const res = form.validate();
     if (res.hasErrors) {
-      showErrorToast(translations["Fix errors before saving"]);
+      showErrorToast(translations("Fix errors before saving"));
       return "error";
     } else {
       const flowForm = getFormObjFromScreenId(
@@ -113,22 +112,22 @@ export function FlowTextDetailedView() {
             data={[
               {
                 value: WaFlowFormElementType.textHeading,
-                label: translations["Large Heading"],
+                label: translations("Large Heading"),
               },
               {
                 value: WaFlowFormElementType.textSubHeading,
-                label: translations["Sub Heading"],
+                label: translations("Sub Heading"),
               },
               {
                 value: WaFlowFormElementType.textBody,
-                label: translations["Body"],
+                label: translations("Body"),
               },
               {
                 value: WaFlowFormElementType.textCaption,
-                label: translations["Caption"],
+                label: translations("Caption"),
               },
             ]}
-            placeholder={translations["Select text type"]}
+            placeholder={translations("Select text type")}
             value={nonInputTextType}
             onChange={(e) => setNonInputTextType(e as any)}
             allowDeselect={false}
@@ -154,27 +153,27 @@ export function FlowTextDetailedView() {
                 <Group mt="xs">
                   <Radio
                     value={WhatsappFlowFontWeight.bold}
-                    label={translations["Bold"]}
+                    label={translations("Bold")}
                     size="xs"
                   />
                   <Radio
                     value={WhatsappFlowFontWeight.italic}
-                    label={translations["Italics"]}
+                    label={translations("Italics")}
                     size="xs"
                   />
                   <Radio
                     value={WhatsappFlowFontWeight.boldAndItalic}
-                    label={translations["Bold and italic"]}
+                    label={translations("Bold and italic")}
                   />
                   <Radio
                     value={WhatsappFlowFontWeight.normal}
-                    label={translations["Normal"]}
+                    label={translations("Normal")}
                     size="xs"
                   />
                 </Group>
               </Radio.Group>
               <Switch
-                label={translations["Strike Through"]}
+                label={translations("Strike Through")}
                 {...form.getInputProps("strikethrough")}
                 defaultChecked={form.values?.strikethrough}
                 size="xs"
@@ -203,7 +202,7 @@ export function FlowTextDetailedView() {
         <Divider />
         <Group justify="flex-end" p="xs" px={"sm"}>
           <RateupButtonPrimary
-            title={translations["Save"]}
+            title={translations("Save")}
             size="md"
             leftIcon={<IconDeviceSdCard />}
             onClick={handleSaveElement}
@@ -223,7 +222,7 @@ function FlowTextElementEditor(
   },
 ) {
   const { fontNormal, fontSize, ...otherProp } = props;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <TextareaWithLengthTracker
       fz={fontSize}
@@ -238,7 +237,7 @@ function FlowTextElementEditor(
       }}
       variant="unstyled"
       autosize
-      placeholder={translations["Enter your text here *"]}
+      placeholder={translations("Enter your text here *")}
       {...otherProp}
     />
   );

@@ -5,8 +5,7 @@ import { Box, Button, Center, Group, Loader, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useGetAllGeneratedQrsQuery } from "backend/generateQr/generateQr.query";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import RefreshButton from "../Button/RefreshButton";
 import SortDropdown, { sortData } from "../Dashboard/SortDropDown";
@@ -28,7 +27,7 @@ function GenerateQr() {
   } = useGetAllGeneratedQrsQuery();
 
   const [sortOption, setSortOption] = useState("latest");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleSortChange = (value) => {
     setSortOption(value);
   };
@@ -49,13 +48,13 @@ function GenerateQr() {
   } else if (isError) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <p>{translations["Unable to get data, please try again later."]}</p>
+        <p>{translations("Unable to get data, please try again later.")}</p>
       </Center>
     );
   } else if (!isPending && !isError && !generatedQrs.length) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <NothingFound text={translations["No QRs Found."]} />
+        <NothingFound text={translations("No QRs Found.")} />
       </Center>
     );
   } else {
@@ -73,7 +72,7 @@ function GenerateQr() {
             rightSection={<IconPlus />}
             onClick={createQrModalHandlers.open}
           >
-            {translations["Create QR"]}
+            {translations("Create QR")}
           </Button>
           <RefreshButton queryKeys={["generatedQrs"]} />
         </Group>

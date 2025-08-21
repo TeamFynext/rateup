@@ -3,6 +3,7 @@ import { useSearchParams } from "next/navigation";
 
 import { Group, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import {
   useGetAssignedUserForContact,
@@ -10,7 +11,6 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { useUser } from "@/context/UserContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { useIsChatDisplayOpen } from "../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
@@ -56,7 +56,7 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   );
 
   const isChatDisplayOpen = useIsChatDisplayOpen();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   if (error) return <div>Error: {error.message}</div>;
 
   let footerContent = null;
@@ -99,7 +99,7 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
             {footerContent}
           </div>
         ) : (
-          <NothingFound text={translations["Select a chat to see messages"]} />
+          <NothingFound text={translations("Select a chat to see messages")} />
         )}
       </PaperLayout>
     </div>

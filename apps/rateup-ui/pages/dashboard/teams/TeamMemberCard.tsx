@@ -22,6 +22,7 @@ import {
   IconSend,
   IconTrash,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { getUserRoleLabel } from "@/utils";
 import { FRONTEND_URL } from "@/utils/constants";
@@ -32,7 +33,6 @@ import {
 } from "../../../backend/team/team.query";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useUser } from "../../../context/UserContext";
-import useTranslations from "../../../dictionaries/useTranslation";
 import { UserRole } from "../../../utils/enums";
 import { showErrorToast } from "../../../utils/notifications";
 import { MemberEditFormModal } from "../members";
@@ -53,7 +53,7 @@ const TeamMemberCard = ({
 }) => {
   const { user } = useUser();
   const [memberModalOpenId, setMemberModalOpenedId] = useState("");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <PaperLayout>
@@ -164,36 +164,34 @@ export default TeamMemberCard;
 function TeamMemberMenu({ status, inviteId, teamID }) {
   const { mutate, isPending, isError } = userResendInviteTeamMutation();
   const deleteInviteMutation = useDeleteInviteMutation(teamID);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   if (deleteInviteMutation?.isPending || isPending) {
     notifications.show({
       id: deleteInviteMutation?.isPending
         ? "load-data-deleting"
         : "load-data-invitaion",
       loading: true,
-      title:
-        translations[
-          deleteInviteMutation?.isPending
-            ? "Deleting Invite.."
-            : "Resending Invitation.."
-        ],
-      message:
-        translations[
-          deleteInviteMutation?.isPending
-            ? "Hold on, Staff invite is getting deleted."
-            : "Hold on, Team Invitation Resending."
-        ],
+      title: translations(
+        deleteInviteMutation?.isPending
+          ? "Deleting Invite.."
+          : "Resending Invitation..",
+      ),
+      message: translations(
+        deleteInviteMutation?.isPending
+          ? "Hold on, Staff invite is getting deleted."
+          : "Hold on, Team Invitation Resending.",
+      ),
       autoClose: false,
       withCloseButton: false,
     });
   }
   if (isError || deleteInviteMutation?.isError) {
     showErrorToast(
-      translations[
+      translations(
         isError
           ? "Team Invitation Resend Failed"
-          : "Team Invitation Deletion Failed"
-      ],
+          : "Team Invitation Deletion Failed",
+      ),
       isError ? "load-data-invitaion" : "load-data-deleting",
       "",
       true,
@@ -226,7 +224,7 @@ function TeamMemberMenu({ status, inviteId, teamID }) {
               mutate(inviteId);
             }}
           >
-            {translations["Resend Invite"]}
+            {translations("Resend Invite")}
           </Menu.Item>
         )}
         {status === "PENDING" && (
@@ -237,7 +235,7 @@ function TeamMemberMenu({ status, inviteId, teamID }) {
               deleteInviteMutation?.mutate(inviteId);
             }}
           >
-            {translations["Delete Invite"]}
+            {translations("Delete Invite")}
           </Menu.Item>
         )}
       </Menu.Dropdown>

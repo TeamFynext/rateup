@@ -18,8 +18,7 @@ import {
   IconTrash,
   IconWashDrycleanOff,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { fallbackImage } from "../../../../utils/constants";
 import { getImageValue } from "../../../../utils/file-upload/upload";
@@ -40,7 +39,7 @@ const TableRow = ({
   currency = "0",
 }) => {
   const [dialogOpened, { toggle, close }] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Table.Tr opacity={item?.disabled ? 0.5 : 1}>
       <Table.Td>
@@ -114,16 +113,17 @@ const TableRow = ({
             forDeleteFunctionality
             opened={dialogOpened}
             onClose={close}
-            headerLabel={translations["Are you sure to delete this Menu Item?"]}
-            headerTitle={translations["Delete Menu Item?"]}
-            confirmLabel={translations["Delete"]}
+            headerLabel={translations("Are you sure to delete this Menu Item?")}
+            headerTitle={translations("Delete Menu Item?")}
+            confirmLabel={translations("Delete")}
             onConfirm={(e) => {
               notifications.show({
                 id: "delete-data-menu-item",
                 loading: true,
-                title: translations["Deleting menu item.."],
-                message:
-                  translations["Hold on, menu item is getting deleted..."],
+                title: translations("Deleting menu item.."),
+                message: translations(
+                  "Hold on, menu item is getting deleted...",
+                ),
                 autoClose: false,
                 withCloseButton: false,
               });
@@ -157,16 +157,16 @@ const TableRow = ({
             }}
           >
             {item?.disabled ? (
-              <Tooltip label={translations["Enable Item"]}>
+              <Tooltip label={translations("Enable Item")}>
                 <IconWashDrycleanOff />
               </Tooltip>
             ) : (
-              <Tooltip label={translations["Disable Item"]}>
+              <Tooltip label={translations("Disable Item")}>
                 <IconCircleCheckFilled />
               </Tooltip>
             )}
           </ActionIcon>
-          <ActionIconCommon handleClick={toggle} label={translations["Delete"]}>
+          <ActionIconCommon handleClick={toggle} label={translations("Delete")}>
             <IconTrash />
           </ActionIconCommon>
         </Flex>
@@ -175,7 +175,7 @@ const TableRow = ({
         <Stack pr={"sm"}>
           <ActionIconCommon
             handleClick={toggleSwapOrder}
-            label={translations["Swap Order"]}
+            label={translations("Swap Order")}
           >
             <IconReplace size={18} />
           </ActionIconCommon>

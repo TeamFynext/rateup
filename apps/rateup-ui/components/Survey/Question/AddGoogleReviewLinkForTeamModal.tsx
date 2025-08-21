@@ -4,8 +4,7 @@ import { ActionIcon, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useEditTeamMutation } from "../../../backend/team/team.query";
 import { ContainedTextField } from "../../input/ContainedInput/ContainedInput";
@@ -13,7 +12,7 @@ import FormModalLayout from "../../Modal/FormModalLayout";
 import { ReviewPagePlatform } from "./QuestionReviewPageEditor";
 
 const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       url: team?.reviewPageLinks?.[platform] ?? "",
@@ -22,7 +21,7 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
       url: (value) =>
         value.startsWith("https://") || value === ""
           ? null
-          : translations["Please enter a valid url (https://...)"],
+          : translations("Please enter a valid url (https://...)"),
     },
   });
   const [opened, { open, close }] = useDisclosure(false);
@@ -98,7 +97,7 @@ const AddGoogleReviewLinkForTeamModal = ({ team, surveyId, platform }) => {
           close();
         }}
         centered
-        buttonTitle={translations["Save"]}
+        buttonTitle={translations("Save")}
         includeCancelButton
         onSubmit={handleSubmit}
         size="md"

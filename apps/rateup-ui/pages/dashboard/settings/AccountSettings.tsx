@@ -14,8 +14,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconInfoCircle } from "@tabler/icons-react";
 import dayjs from "dayjs";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useCreateCheckoutSession,
@@ -62,7 +61,7 @@ const AccountSettings = () => {
   const createCheckout = useCreateCheckoutSession(setIsLoading, setOrder);
   const { user } = useUser();
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const {
     data: subscription,
     isPending,
@@ -132,7 +131,7 @@ const AccountSettings = () => {
     );
 
     if (!res) {
-      alert(translations["Razropay failed to load!!"]);
+      alert(translations("Razropay failed to load!!"));
       return;
     }
 
@@ -140,11 +139,11 @@ const AccountSettings = () => {
       var options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_API_KEY,
         subscription_id: order?.subscriptionId,
-        name: translations["RateUp Payment"],
-        description: translations["Subscription Plans in Rateup"],
+        name: translations("RateUp Payment"),
+        description: translations("Subscription Plans in Rateup"),
         image: "https://djd7kjh9uwow0.cloudfront.net/images/logo.svg",
         handler: function (response) {
-          console.log(translations["Payment Successful...!"]);
+          console.log(translations("Payment Successful...!"));
           setProcessingPayment(false);
           openSummary();
           refreshOrders();
@@ -267,10 +266,10 @@ const AccountSettings = () => {
         centered
         title={
           enablePurchase
-            ? translations["Confirm your Order"]
-            : translations["Buy Rateup Premium"]
+            ? translations("Confirm your Order")
+            : translations("Buy Rateup Premium")
         }
-        buttonTitle={enablePurchase && translations["Continue to Payment"]}
+        buttonTitle={enablePurchase && translations("Continue to Payment")}
         includeCancelButton={enablePurchase}
         isLoading={isLoading}
         size="auto"
@@ -313,7 +312,7 @@ const AccountSettings = () => {
               </Title>
             </Stack>
             <Stack mr="xl">
-              <Title order={5}>{translations["Plan Features"]} </Title>
+              <Title order={5}>{translations("Plan Features")} </Title>
               {cart?.description && generateListItems(cart?.description)}
             </Stack>
           </Group>
@@ -322,17 +321,15 @@ const AccountSettings = () => {
             <Blockquote color="blue" icon={<IconInfoCircle />} mt="lg">
               <Text>
                 {" "}
-                {
-                  translations[
-                    "You have an active Base Plan already. So you cannot buy another Rateup base plan. But you can buy the available ADDON rateup plan to get more features."
-                  ]
-                }
+                {translations(
+                  "You have an active Base Plan already. So you cannot buy another Rateup base plan. But you can buy the available ADDON rateup plan to get more features.",
+                )}
               </Text>
             </Blockquote>
 
             <Group ml="xl" my="xl">
               <Title order={4} style={{ minWidth: "140px" }}>
-                {translations["Current Plan :"]}
+                {translations("Current Plan :")}
               </Title>
               <Text> {subscription?.basePlan?.name} </Text>
             </Group>
@@ -350,8 +347,8 @@ const AccountSettings = () => {
           reset();
         }}
         centered
-        title={translations["Order Processing Started 🎉"]}
-        buttonTitle={translations["Continue"]}
+        title={translations("Order Processing Started 🎉")}
+        buttonTitle={translations("Continue")}
         isLoading={isLoading}
         onSubmit={() => {
           closeSummary();
@@ -366,22 +363,18 @@ const AccountSettings = () => {
         >
           <Stack>
             <Text c="green" fw={500}>
-              {translations["Your payment was successful..!"]}
+              {translations("Your payment was successful..!")}
             </Text>
             <Text>
-              {
-                translations[
-                  "Thank you for choosing Rateup Premium subscription."
-                ]
-              }
+              {translations(
+                "Thank you for choosing Rateup Premium subscription.",
+              )}
               <br /> <br />
-              {
-                translations[
-                  "You can enjoy Rateup Premium features once your order is processed successfully."
-                ]
-              }
+              {translations(
+                "You can enjoy Rateup Premium features once your order is processed successfully.",
+              )}
               <br />
-              {translations["You will be notified by email shortly."]}
+              {translations("You will be notified by email shortly.")}
             </Text>
           </Stack>
         </Group>

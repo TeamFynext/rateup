@@ -2,14 +2,13 @@ import React from "react";
 
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconBook } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 const InfoButton = ({ docUrl, className = "" }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Tooltip
-      label={translations["Visit documentation"]}
+      label={translations("Visit documentation")}
       position="top"
       withArrow
     >

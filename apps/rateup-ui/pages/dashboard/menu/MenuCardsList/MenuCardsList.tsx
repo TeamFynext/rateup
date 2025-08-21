@@ -3,6 +3,7 @@ import React, { useContext } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import clsx from "clsx";
+import { useTranslations } from "next-intl";
 
 import { useAllMenus } from "@/backend/menu/menu.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
@@ -11,13 +12,12 @@ import { sortData } from "@/components/Dashboard/SortDropDown";
 import { MenuCard } from "@/components/menu/MenuCard";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import SelectedTeamContext from "@/context/SelectedTeam";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./MenuCardsList.module.css";
 
 function MenuCardsList({ handleEditClick, sortOption }) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { isError, isPending, data: menus, refetch } = useAllMenus();
   const smallScreen = useMediaQuery("(max-width: 40em)");
   if (isPending) return <MenuCardListSkeleton />;
@@ -55,7 +55,7 @@ function MenuCardsList({ handleEditClick, sortOption }) {
             gridColumn: smallScreen ? 1 : 2,
           }}
         >
-          <NothingFound text={translations["No menus available."]} />
+          <NothingFound text={translations("No menus available.")} />
         </Stack>
       )}
     </Box>

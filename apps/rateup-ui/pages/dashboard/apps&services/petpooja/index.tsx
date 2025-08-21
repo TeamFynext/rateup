@@ -11,6 +11,7 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { IntegratedApps, ShopifySendAfter } from "@/types/enums";
 import {
@@ -32,7 +33,6 @@ import { ActionIconCommon } from "@/components/menu/ActionIcon/ActionIconCommon"
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TableLayoutSecondary from "@/components/styled/Table/TableLayoutSecondary";
-import useTranslations from "@/dictionaries/useTranslation";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
 import { showLoadingToast } from "@/utils/notifications";
 
@@ -43,7 +43,7 @@ const index = () => {
   const updateIntegration = useUpdateIntegrationMutation(
     IntegratedApps.petpooja,
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   return (
     <Stack>
@@ -209,11 +209,11 @@ const WaTemplateSendSettings = ({
       <Stack>
         <Title order={4}>WhatsApp Template Config to Send on Order</Title>
         <TeamSelector
-          placeholder={translations["Select Team"]}
+          placeholder={translations("Select Team")}
           withAsterisk
           {...form.getInputProps("teamId")}
           searchable
-          label={translations["Team"]}
+          label={translations("Team")}
           enableDefaultValue={false}
         />
         <WaTemplateSelector
@@ -223,7 +223,7 @@ const WaTemplateSendSettings = ({
           teamId={form.values.teamId}
         />
         <ContainedNumberInput
-          label={translations["Time Delay (in minutes)"]}
+          label={translations("Time Delay (in minutes)")}
           {...form.getInputProps("timeDelay")}
           allowDecimal={false}
           allowNegative={false}

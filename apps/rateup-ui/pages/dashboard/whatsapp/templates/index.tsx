@@ -14,6 +14,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import {
@@ -34,7 +35,6 @@ import WaPageTourSteps from "@/components/WelcomeTour/components/WaPageTourSteps
 import WelcomeTour from "@/components/WelcomeTour/WelcomeTour";
 import { SyncTemplatesButton } from "@/components/whatsapp/templates/SyncTemplates";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge";
-import useTranslations from "@/dictionaries/useTranslation";
 import { docsPath } from "@/utils/constants";
 
 export default function Template() {
@@ -43,7 +43,7 @@ export default function Template() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [deleteDialogOpened, { toggle, close }] = useDisclosure();
   const { data, isPending: waSettingsPending } = useWaSettings();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const templateDeleteMutation = useDeleteWaTemplateMutation(
     () => {
       setSelectedTemplate(null);
@@ -87,17 +87,15 @@ export default function Template() {
           wrap="wrap"
         >
           <Tooltip
-            label={
-              translations[
-                "Connect a WhatsApp number in settings to create a Template"
-              ]
-            }
+            label={translations(
+              "Connect a WhatsApp number in settings to create a Template",
+            )}
             disabled={!!data}
           >
             <Box>
               <RateupButtonBlue
                 className={styles["create-template-button"]}
-                title={translations["Create Templates"]}
+                title={translations("Create Templates")}
                 rightIcon={<IconPlus size={"1rem"} />}
                 onClick={handleCreateClick}
                 disabled={isPending || !data}
@@ -124,11 +122,9 @@ export default function Template() {
             />
           </div>
           <Tooltip
-            label={
-              translations[
-                "Connect a WhatsApp number in settings to sync Template"
-              ]
-            }
+            label={translations(
+              "Connect a WhatsApp number in settings to sync Template",
+            )}
             disabled={!!data}
           >
             <Box>
@@ -150,18 +146,18 @@ export default function Template() {
         forDeleteFunctionality
         opened={deleteDialogOpened}
         onClose={close}
-        headerLabel={
-          translations["Are you sure you want to delete this Template?"]
-        }
-        headerTitle={translations["Delete Template"]}
-        confirmLabel={translations["Delete"]}
+        headerLabel={translations(
+          "Are you sure you want to delete this Template?",
+        )}
+        headerTitle={translations("Delete Template")}
+        confirmLabel={translations("Delete")}
         onConfirm={() => {
           if (selectedTemplate) {
             notifications.show({
               id: "template-delete",
               loading: true,
-              title: translations["Deleting Template"],
-              message: translations["Hold on, Template is getting Deleted..."],
+              title: translations("Deleting Template"),
+              message: translations("Hold on, Template is getting Deleted..."),
               autoClose: false,
               withCloseButton: false,
             });
