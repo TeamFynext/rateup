@@ -20,6 +20,7 @@ import {
 } from "@mantine/core";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconAddressBook } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
@@ -32,7 +33,6 @@ import { ContainedTextField } from "@/components/input/ContainedInput/ContainedI
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { useMessageBodyStore } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter";
-import useTranslations from "@/dictionaries/useTranslation";
 import { PAGE_SIZE } from "@/utils/constants";
 
 import classes from "./ContactSelect.module.css";
@@ -94,7 +94,7 @@ const SelectContacts = ({
   contactIds = [],
   groupIds = [],
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [selectedTab, setSelectedTab] = useState(ContactMethods.Individual);
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({
@@ -168,7 +168,7 @@ const SelectContacts = ({
       />
       <Group justify="space-between" mb={4}>
         <Title order={6}>
-          {translations["Select"]} {selectedTab?.toLowerCase()} (Max 100
+          {translations("Select")} {selectedTab?.toLowerCase()} (Max 100
           contacts/members)
         </Title>
       </Group>
@@ -188,7 +188,7 @@ const SelectContacts = ({
                 })}
               </Checkbox.Group>
             ) : (
-              <Text>{translations["No contacts found"]}</Text>
+              <Text>{translations("No contacts found")}</Text>
             )}
           </Tabs.Panel>
           <Tabs.Panel value={ContactMethods.Group}>
@@ -202,7 +202,7 @@ const SelectContacts = ({
                 ))}
               </Checkbox.Group>
             ) : (
-              <Text>{translations["No group found"]}</Text>
+              <Text>{translations("No group found")}</Text>
             )}
           </Tabs.Panel>
         </Tabs>

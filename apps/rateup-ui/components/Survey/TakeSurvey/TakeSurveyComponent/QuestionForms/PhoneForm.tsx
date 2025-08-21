@@ -8,21 +8,21 @@ import classes from "../TakeSurvey.module.css";
 
 import "react-phone-number-input/style.css";
 
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import FormPaperLayout from "./layout/FormPaperLayout";
 
 export function PhoneForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <FormPaperLayout>
       <PhoneInput
         defaultCountry="IN"
         international
         countryCallingCodeEditable={false}
-        placeholder={translations["Enter phone number"]}
+        placeholder={translations("Enter phone number")}
         value={response?.length > 0 ? response : ""}
         onChange={updateResponse}
         className={classes.inputPhone}

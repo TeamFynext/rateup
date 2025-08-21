@@ -19,6 +19,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import styles from "components/Graph/graph.module.css";
+import { useTranslations } from "next-intl";
 
 import { QuestionType } from "@/types/enums";
 import { useGenerateLargeTextResponseSummaryByAI } from "@/backend/surveys/response/response.query";
@@ -28,7 +29,6 @@ import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { FormElement } from "@/components/whatsapp/flow-v2/utils/store";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 import SurveyContext from "@/context/SurveyContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import {
   showErrorToast,
   showLoadingToast,
@@ -66,7 +66,7 @@ const LargeTextResponseSummary = ({
   const { teams } = useContext(SurveyContext);
   const ref = useRef(null);
   const [height, setHeight] = useState(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const getResponseSummary = (questionId, teamId?) => {
     if (getSummary.isPending) return;
     showLoadingToast("loading", "summary", true, "", "", false);
@@ -78,7 +78,7 @@ const LargeTextResponseSummary = ({
       {
         onSuccess: () => {
           showSuccessToast(
-            translations["Summary generated successfully"],
+            translations("Summary generated successfully"),
             "summary",
             <IconCheck />,
             true,
@@ -87,7 +87,7 @@ const LargeTextResponseSummary = ({
         onError(error: any, variables, context) {
           console.log(error);
           showErrorToast(
-            ` ${translations["Summary generation failed:"]} ${error?.response?.data ?? ""}`,
+            ` ${translations("Summary generation failed:")} ${error?.response?.data ?? ""}`,
             "summary",
             <IconX />,
             true,
@@ -123,7 +123,7 @@ const LargeTextResponseSummary = ({
             <IconArrowLeft />
           </ActionIcon>
           <Text fw={800} c={"dark.3"}>
-            {translations["Back"]}
+            {translations("Back")}
           </Text>
         </Group>
         <Stack p={"xl"}>
@@ -144,7 +144,7 @@ const LargeTextResponseSummary = ({
                 <Flex justify={"flex-end"} gap={"sm"}>
                   <Badge variant="light">{team.label}</Badge>
                   <Tooltip
-                    label={`${translations["Generate"]} ${team.label} ${translations["Summary by AI"]}`}
+                    label={`${translations("Generate")} ${team.label} ${translations("Summary by AI")}`}
                   >
                     <Button
                       rightSection={
@@ -161,15 +161,13 @@ const LargeTextResponseSummary = ({
                         getResponseSummary(selectedQuestion.id, team.value)
                       }
                     >
-                      {translations["Generate"]}
+                      {translations("Generate")}
                     </Button>
                   </Tooltip>
                   <Tooltip
-                    label={
-                      translations[
-                        "Summary will updated only if there are responses after summary generation"
-                      ]
-                    }
+                    label={translations(
+                      "Summary will updated only if there are responses after summary generation",
+                    )}
                   >
                     <IconInfoCircle size={"1rem"} color="gray" />
                   </Tooltip>
@@ -191,7 +189,7 @@ const LargeTextResponseSummary = ({
 
   return (
     <Stack>
-      <Heading subtitle={translations["Large Text Summary"]} />
+      <Heading subtitle={translations("Large Text Summary")} />
       <PaperLayout>
         {summaryTab === ResponseSummaryType.Team ? (
           <LargeTextTeamwiseSummary />
@@ -212,7 +210,7 @@ const LargeTextResponseSummary = ({
                         })
                       : question?.label}
                   </Text>
-                  <Tooltip label={translations["Generate Summary by AI"]}>
+                  <Tooltip label={translations("Generate Summary by AI")}>
                     <Button
                       rightSection={
                         <IconBrandOpenai
@@ -226,15 +224,13 @@ const LargeTextResponseSummary = ({
                       size="sm"
                       onClick={() => getResponseSummary(question.id)}
                     >
-                      {translations["Generate"]}
+                      {translations("Generate")}
                     </Button>
                   </Tooltip>
                   <Tooltip
-                    label={
-                      translations[
-                        "Summary will updated only if there are responses after summary generation"
-                      ]
-                    }
+                    label={translations(
+                      "Summary will updated only if there are responses after summary generation",
+                    )}
                   >
                     <IconInfoCircle size={"1rem"} color="gray" />
                   </Tooltip>
@@ -248,7 +244,7 @@ const LargeTextResponseSummary = ({
                       </Text>
                     </Flex>
                     <RateupButtonSecondary
-                      title={translations["Generate Team wise summary"]}
+                      title={translations("Generate Team wise summary")}
                       onClick={() => {
                         setSelectedQuestion(question);
                         setSummaryTab(ResponseSummaryType.Team);

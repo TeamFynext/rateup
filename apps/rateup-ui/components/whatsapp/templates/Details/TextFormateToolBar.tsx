@@ -18,8 +18,7 @@ import {
   IconStrikethrough,
 } from "@tabler/icons-react";
 import { EmojiClickData } from "emoji-picker-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
@@ -35,7 +34,7 @@ export const TextFormateToolBar = ({
   dynamicVariables: any[];
 }) => {
   const [variableCount, setVariableCount] = useState(1);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (dynamicVariables?.length) {
       setVariableCount(dynamicVariables?.length + 1);
@@ -54,7 +53,7 @@ export const TextFormateToolBar = ({
       >
         <PopoverEmojiPicker onEmojiClick={insertValue} />
         <Divider size="sm" orientation="vertical" />
-        <Tooltip label={translations["Bold"]}>
+        <Tooltip label={translations("Bold")}>
           <ActionIcon
             variant={"transparent"}
             size={"xs"}
@@ -63,7 +62,7 @@ export const TextFormateToolBar = ({
             <IconBold color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={translations["Italic"]}>
+        <Tooltip label={translations("Italic")}>
           <ActionIcon
             variant={"transparent"}
             size={"xs"}
@@ -72,7 +71,7 @@ export const TextFormateToolBar = ({
             <IconItalic color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={translations["StikeThough"]}>
+        <Tooltip label={translations("StikeThough")}>
           <ActionIcon
             variant={"transparent"}
             size={"xs"}
@@ -81,7 +80,7 @@ export const TextFormateToolBar = ({
             <IconStrikethrough color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={translations["Monospace"]}>
+        <Tooltip label={translations("Monospace")}>
           <ActionIcon
             variant={"transparent"}
             size={"xs"}
@@ -90,7 +89,7 @@ export const TextFormateToolBar = ({
             <IconCode color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={translations["Add Variable"]}>
+        <Tooltip label={translations("Add Variable")}>
           <ActionIcon
             variant={"transparent"}
             size={"xs"}
@@ -102,7 +101,7 @@ export const TextFormateToolBar = ({
             <IconPlus color="var(--grey-color)" size={14} />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={translations["Undo the last text formating"]}>
+        <Tooltip label={translations("Undo the last text formating")}>
           <ActionIcon variant={"transparent"} size={"xs"} onClick={undo}>
             <IconArrowBackUp color="var(--grey-color)" size={14} />
           </ActionIcon>
@@ -121,11 +120,11 @@ export const PopoverEmojiPicker = ({
   showIcon?: React.ReactNode;
   size?: "xs" | "sm" | "md" | "lg";
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Popover withArrow shadow="md" floatingStrategy="fixed">
       <Popover.Target>
-        <Tooltip label={translations["Insert an emoji"]}>
+        <Tooltip label={translations("Insert an emoji")}>
           {showIcon ?? (
             <ActionIcon variant={"transparent"} size={size}>
               <IconMoodHappy

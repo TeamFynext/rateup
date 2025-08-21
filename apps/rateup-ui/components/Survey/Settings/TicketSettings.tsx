@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Box, Flex, Group, Select, Stack } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import PremiumFeature from "@/components/Premium/PremiumFeature";
 import RateupSwitch from "@/components/Switch/RateupSwitch";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useEditSurveyMutation } from "../../../backend/surveys/surveys.query";
 import PaperLayout from "../../styled/Layouts/PaperLayout";
@@ -25,7 +25,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
   );
   const [enableTicketWaMessageAlerts, setEnableTicketWaMessageAlerts] =
     useState(survey?.enableTicketWaMessageAlerts);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const editSurvey = useEditSurveyMutation(surveyId);
 
   useEffect(() => {
@@ -76,8 +76,8 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
         <PremiumFeature isSubscribed={enabledModules.includes("tickets")}>
           <Group>
             <RateupSwitch
-              offMessage={translations["Click here to enable ticketing"]}
-              onMessage={translations["Click here to disable ticketing"]}
+              offMessage={translations("Click here to enable ticketing")}
+              onMessage={translations("Click here to disable ticketing")}
               checked={enableTickets}
               onChange={() => {
                 editSurvey.mutate({
@@ -86,21 +86,17 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
               }}
             />
             <Box className={"switch-heading-and-desc-container"}>
-              <h3>{translations["Enable Ticketing"]}</h3>
+              <h3>{translations("Enable Ticketing")}</h3>
             </Box>
           </Group>
           <Group>
             <RateupSwitch
-              offMessage={
-                translations[
-                  "Click here to enable auto-generate Tickets on response"
-                ]
-              }
-              onMessage={
-                translations[
-                  "Click here to disable auto-generate Tickets on response"
-                ]
-              }
+              offMessage={translations(
+                "Click here to enable auto-generate Tickets on response",
+              )}
+              onMessage={translations(
+                "Click here to disable auto-generate Tickets on response",
+              )}
               checked={enableAutoGenerateTicket}
               onChange={() => {
                 editSurvey.mutate({
@@ -109,7 +105,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
               }}
             />
             <Box className={"switch-heading-and-desc-container"}>
-              <h3>{translations["Enable Auto-Generate Ticket"]}</h3>
+              <h3>{translations("Enable Auto-Generate Ticket")}</h3>
             </Box>
           </Group>
           {enableAutoGenerateTicket && (
@@ -140,15 +136,9 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
             <Group>
               <RateupSwitch
                 offMessage={
-                  translations[
-                    "Click here to enable Ticket WhatsApp Message Alerts"
-                  ]
-                }
+                  translations("Click here to enable Ticket WhatsApp Message Alerts")                }
                 onMessage={
-                  translations[
-                    "Click here to disable Ticket WhatsApp Message Alerts"
-                  ]
-                }
+                  translations("Click here to disable Ticket WhatsApp Message Alerts")                }
                 checked={enableTicketWaMessageAlerts}
                 onChange={() => {
                   editSurvey.mutate({
@@ -157,17 +147,17 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
                 }}
               />
               <Box className={"switch-heading-and-desc-container"}>
-                <h3>{translations["Enable Ticket WhatsApp Message Alerts"]}</h3>
+                <h3>{translations("Enable Ticket WhatsApp Message Alerts")}</h3>
               </Box>
             </Group>
           )}
           <Group>
             <RateupSwitch
               offMessage={
-                translations["Click here to enable Ticket Email Alerts"]
+                translations("Click here to enable Ticket Email Alerts")
               }
               onMessage={
-                translations["Click here to disable Ticket Email Alerts"]
+                translations("Click here to disable Ticket Email Alerts")
               }
               checked={enableTicketEmailAlerts}
               onChange={() => {
@@ -177,7 +167,7 @@ const TicketSettings = ({ survey, surveyId, enabledModules }) => {
               }}
             />
             <Box className={"switch-heading-and-desc-container"}>
-              <h3>{translations["Enable Ticket Email Alerts"]}</h3>
+              <h3>{translations("Enable Ticket Email Alerts")}</h3>
             </Box>
           </Group> */}
         </PremiumFeature>

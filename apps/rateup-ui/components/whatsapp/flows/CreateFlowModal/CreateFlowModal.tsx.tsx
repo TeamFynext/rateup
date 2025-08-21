@@ -4,9 +4,9 @@ import { useRouter } from "next/router";
 import { Box, Button, Modal, MultiSelect, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
+import { useTranslations } from "next-intl";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useCreateFlowMutation } from "../../../../backend/whatsapp/flow/flow.query";
 import { SAVE_HOTKEY } from "../../../../utils/constants";
@@ -31,7 +31,7 @@ function CreateFlowModal({ opened, onClose }) {
         value.length === 0 ? "Please select a category" : null,
     },
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const router = useRouter();
   const { data: teamRes } = useTeamsByUser();
   const teamOptions = teamRes?.data?.map((team) => ({
@@ -68,7 +68,7 @@ function CreateFlowModal({ opened, onClose }) {
     <Modal
       opened={opened}
       onClose={handleModalClose}
-      title={translations["Create Flow"]}
+      title={translations("Create Flow")}
       centered
       classNames={{
         title: styles["modal-title"],
@@ -83,25 +83,25 @@ function CreateFlowModal({ opened, onClose }) {
     >
       <Box className={styles["create-flow-modal-body"]}>
         <ContainedTextField
-          label={translations["Name"]}
-          placeholder={translations["Enter Name"]}
+          label={translations("Name")}
+          placeholder={translations("Enter Name")}
           {...form.getInputProps("name")}
         />
         <ContainedMultiSelect
-          label={translations["Categories"]}
-          placeholder={translations["Select Categories"]}
+          label={translations("Categories")}
+          placeholder={translations("Select Categories")}
           data={flowsCategories}
           {...form.getInputProps("categories")}
         />
         {/* <TeamSelector // TODO: add multi select
-          label={translations["Team"]}
+          label={translations("Team")}
           value={form.values.teamId}
           onChange={(value) => form.setFieldValue("teamId", value)}
         /> */}
         <MultiSelect
           radius="md"
-          label={translations["Select Teams"]}
-          placeholder={translations["Select teams"]}
+          label={translations("Select Teams")}
+          placeholder={translations("Select teams")}
           data={teamOptions}
           {...form.getInputProps("teamId")}
           error={form.errors.teamId}
@@ -110,13 +110,13 @@ function CreateFlowModal({ opened, onClose }) {
 
       <Box className={styles["create-flow-modal-footer"]}>
         <Button variant="default" onClick={handleModalClose}>
-          {translations["Cancel"]}
+          {translations("Cancel")}
         </Button>
         <Button
           loading={createFlowMutation.isPending}
           onClick={handleSubmitBtnClick}
         >
-          {translations["Submit"]}
+          {translations("Submit")}
         </Button>
       </Box>
     </Modal>

@@ -4,8 +4,7 @@ import { Card, Flex, Stack, Text } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { IconGripVertical } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import classes from "../../../menu/category/sortDrawer/DndListHandle.module.css";
 import FormModalLayout from "../../../Modal/FormModalLayout";
@@ -101,15 +100,15 @@ const SortDrawerFlow = ({
 
     close();
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={translations["Swap the order of flow screens"]}
+      title={translations("Swap the order of flow screens")}
       centered
       onSubmit={handleSortOrder}
-      buttonTitle={translations["Save"]}
+      buttonTitle={translations("Save")}
       size={"lg"}
       includeCancelButton={true}
     >

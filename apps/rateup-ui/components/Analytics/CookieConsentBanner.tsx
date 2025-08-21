@@ -14,8 +14,7 @@ import {
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconCookie, IconShieldCheck, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { fbConsent } from "../../utils/fbpixel";
 import { setGAConsent } from "../../utils/gtag";
@@ -29,7 +28,7 @@ const CookieConsentBanner = () => {
   const [cookieConsent, setCookieConsent] = useState<boolean | null>(null);
   const [mounted, setMounted] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   useEffect(() => {
     setMounted(true);
@@ -106,7 +105,10 @@ const CookieConsentBanner = () => {
                 <Group gap="xs" align="center">
                   <IconCookie size={24} color="var(--mantine-color-blue-6)" />
                   <Text fw={600} size="lg" c="dark">
-                    {translations["Cookie Preferences"] || "Cookie Preferences"}
+                    {
+                      // translations("Cookie Preferences") ||
+                      "Cookie Preferences"
+                    }
                   </Text>
                 </Group>
                 <ActionIcon
@@ -121,15 +123,16 @@ const CookieConsentBanner = () => {
 
               <Stack gap="xs">
                 <Text size="sm" c="dimmed" lh={1.5}>
-                  {translations[
+                  {
+                    // translations("We use cookies to enhance your browsing experience and analyze our traffic.") ||
                     "We use cookies to enhance your browsing experience and analyze our traffic."
-                  ] ||
-                    "We use cookies to enhance your browsing experience and analyze our traffic."}
+                  }
                 </Text>
 
                 <Group gap={4} wrap="wrap">
                   <Text size="sm" c="dimmed">
-                    {translations["Read our"] || "Read our"}
+                    {/* {translations("Read our") || */}
+                    Read our
                   </Text>
                   <Link
                     href="/privacy-policy"
@@ -139,12 +142,10 @@ const CookieConsentBanner = () => {
                       // fontWeight: 500,
                     }}
                   >
-                    <Text size="sm">
-                      {translations["Privacy Policy"] || "Privacy Policy"}
-                    </Text>
+                    <Text size="sm">Privacy Policy</Text>
                   </Link>
                   <Text size="sm" c="dimmed">
-                    {translations["for more details."] || "for more details."}
+                    for more details.
                   </Text>
                 </Group>
               </Stack>
@@ -153,7 +154,7 @@ const CookieConsentBanner = () => {
 
               <Group gap="sm" justify={isMobile ? "stretch" : "flex-end"}>
                 <RateupButtonSecondary
-                  title={translations["Decline"] || "Decline"}
+                  title={translations("Decline")}
                   variant="light"
                   size={isMobile ? "sm" : "sm"}
                   onClick={() => handleConsent(false)}
@@ -161,7 +162,7 @@ const CookieConsentBanner = () => {
                   leftIcon={<IconX size={16} />}
                 />
                 <RateupButtonBlue
-                  title={translations["Accept All"] || "Accept All"}
+                  title={"Accept All"}
                   size={isMobile ? "sm" : "sm"}
                   onClick={() => handleConsent(true)}
                   styles={{ flex: isMobile ? 1 : undefined }}

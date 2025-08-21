@@ -14,9 +14,9 @@ import { useForm, UseFormReturnType } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconAlertOctagon, IconEye } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import HTMLEditor from "@/components/RichTextEditor/HTMLEditor";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import {
@@ -93,7 +93,7 @@ export function QuestionDetailedView({
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { data: subscription } = useSubscription();
   const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] =
     useState(false);
@@ -149,16 +149,16 @@ export function QuestionDetailedView({
         !form.values.title[selectedLanguage] ||
         form.values.title[selectedLanguage] == ""
       ) {
-        showErrorToast(translations["Question title is missing"]);
+        showErrorToast(translations("Question title is missing"));
         setIsSaved(false);
         return "error";
       } else {
         if (getIncompleteLanguages().length > 0) {
           setSelectedLanguage(getIncompleteLanguages()[0]);
           showErrorToast(
-            translations[
-              "Please Enter heading and choices for all languages before saving."
-            ],
+            translations(
+              "Please Enter heading and choices for all languages before saving.",
+            ),
           );
           setIsSaved(false);
           return "error";
@@ -185,9 +185,10 @@ export function QuestionDetailedView({
           notifications.show({
             id: "load-data",
             loading: true,
-            title: translations["updating question"],
-            message:
-              translations["Hold on, your changes are getting updated..."],
+            title: translations("updating question"),
+            message: translations(
+              "Hold on, your changes are getting updated...",
+            ),
             autoClose: false,
             withCloseButton: false,
           });
@@ -300,7 +301,7 @@ export function QuestionDetailedView({
             label={
               <>
                 <IconEye size={12} />
-                <Box ml={5}>{translations["Preview"]}</Box>
+                <Box ml={5}>{translations("Preview")}</Box>
               </>
             }
           />
@@ -426,22 +427,21 @@ function ExtraProps({
 }
 
 const SurveyIssueAlert = ({ isSaved }: { isSaved: boolean }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   if (isSaved) {
     return null;
   }
 
-  const issueMessage =
-    translations[
-      "The survey contains incomplete questions. Please fix the issue."
-    ];
+  const issueMessage = translations(
+    "The survey contains incomplete questions. Please fix the issue.",
+  );
 
   return (
     <Alert
       variant="light"
       color="red"
-      title={translations["Issue with your survey"]}
+      title={translations("Issue with your survey")}
       icon={<IconAlertOctagon />}
       m={"xs"}
     >

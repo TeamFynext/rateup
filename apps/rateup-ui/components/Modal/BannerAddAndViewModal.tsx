@@ -20,6 +20,7 @@ import {
   IconInfoCircle,
   IconPlus,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { MenuItemPriceType } from "@/types/enums";
 import {
@@ -28,7 +29,6 @@ import {
   useMenuBannerQuery,
   useUpdateMenuBannerMutation,
 } from "@/backend/menu/Banner/banner.query";
-import useTranslations from "@/dictionaries/useTranslation";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
 
@@ -61,7 +61,7 @@ export const BannerAddAndViewModal = ({
     decrement();
   });
   const { data, isPending } = useMenuBannerQuery(menuId);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (data) {
       handleCarouselControl(1, data?.length);
@@ -154,15 +154,13 @@ export const BannerAddAndViewModal = ({
       title={
         <Stack pl={"xl"} gap={0}>
           <Group align="center" gap={4}>
-            <Title order={3}>{translations["Manage Banners"]}</Title>
+            <Title order={3}>{translations("Manage Banners")}</Title>
             {bannerInfo}
           </Group>
           <Text fz={"md"} c={"var(--grey-color-4)"}>
-            {
-              translations[
-                "Sliding banners to be shown in top of menu. You can add upto 4 banners."
-              ]
-            }
+            {translations(
+              "Sliding banners to be shown in top of menu. You can add upto 4 banners.",
+            )}
           </Text>
         </Stack>
       }
@@ -192,10 +190,10 @@ export const BannerAddAndViewModal = ({
             </Group>
 
             <Text fz={"lg"} c={"var(--grey-color-4)"}>
-              {translations["No Banners are added"]}
+              {translations("No Banners are added")}
             </Text>
             <RateupButtonPrimary
-              title={translations["Add Banner"]}
+              title={translations("Add Banner")}
               rightIcon={<IconPlus />}
               radius="xl"
               size="md"
@@ -209,7 +207,7 @@ export const BannerAddAndViewModal = ({
           <>
             <Group justify="space-between" mt={2}>
               <RateupButtonPrimary
-                title={translations["Add Banner"]}
+                title={translations("Add Banner")}
                 rightIcon={<IconPlus />}
                 radius="xl"
                 size="md"
@@ -217,9 +215,9 @@ export const BannerAddAndViewModal = ({
                 onClick={() => {
                   if (!data?.[data?.length - 1]?.id) {
                     showErrorToast(
-                      translations[
-                        "Save the form you just made, then click Add Banner button to make a new form."
-                      ],
+                      translations(
+                        "Save the form you just made, then click Add Banner button to make a new form.",
+                      ),
                     );
                     return;
                   }

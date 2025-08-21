@@ -14,6 +14,7 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { WaFlowStatus } from "@/types/enums";
 import {
@@ -27,7 +28,6 @@ import { ContainedSelection } from "@/components/input/ContainedInput/ContainedI
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./FlowCard.module.css";
 
@@ -74,13 +74,13 @@ function FlowCard({
       teamId: (values) => (values?.length ? null : "Must contain one team"),
     },
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const onSubmit = (values: typeof cloneForm.values) => {
     notifications.show({
       id: "copy",
       loading: true,
-      title: translations["Clonning Flow.."],
-      message: translations["Hold on, your flow is getting clonned..."],
+      title: translations("Clonning Flow.."),
+      message: translations("Hold on, your flow is getting clonned..."),
       autoClose: false,
       withCloseButton: false,
     });
@@ -110,9 +110,9 @@ function FlowCard({
               forDeleteFunctionality
               opened={dialogOpened}
               onClose={closeDialog}
-              headerLabel={translations["Are you sure to delete this Flow?"]}
-              headerTitle={translations["Delete Flow?"]}
-              confirmLabel={translations["Delete"]}
+              headerLabel={translations("Are you sure to delete this Flow?")}
+              headerTitle={translations("Delete Flow?")}
+              confirmLabel={translations("Delete")}
               onConfirm={(e) => {
                 if (status === WaFlowStatus.DRAFT) {
                   deleteMutation.mutate(dbFlowId);
@@ -126,22 +126,19 @@ function FlowCard({
               forDeleteFunctionality
               opened={cloneAandRenewOpened}
               onClose={closeCloneAndRenew}
-              headerLabel={
-                translations[
-                  "Attention! Copying and renewing this workflow will permanently disable the original one. A new, identical copy will be created, but you won't be able to use the old one anymore. Think carefully before confirming!"
-                ]
-              }
-              headerTitle={translations["Copy & Renew Flow"]}
-              confirmLabel={translations["Copy & Renew Flow"]}
+              headerLabel={translations(
+                "Attention! Copying and renewing this workflow will permanently disable the original one. A new, identical copy will be created, but you won't be able to use the old one anymore. Think carefully before confirming!",
+              )}
+              headerTitle={translations("Copy & Renew Flow")}
+              confirmLabel={translations("Copy & Renew Flow")}
               onConfirm={(e) => {
                 notifications.show({
                   id: "copy-renew",
                   loading: true,
-                  title: translations["Copy & Renew whatapp flow"],
-                  message:
-                    translations[
-                      "Hold.. your flow data is getting Coping & Renew..."
-                    ],
+                  title: translations("Copy & Renew whatapp flow"),
+                  message: translations(
+                    "Hold.. your flow data is getting Coping & Renew...",
+                  ),
                   autoClose: false,
                   withCloseButton: false,
                 });
@@ -165,7 +162,7 @@ function FlowCard({
                 closeClone();
                 cloneForm.reset();
               }}
-              title={translations["Clone Whatsapp Flow"]}
+              title={translations("Clone Whatsapp Flow")}
               centered
               onSubmit={cloneForm.onSubmit(onSubmit)}
               buttonTitle={"Clone"}
@@ -173,15 +170,13 @@ function FlowCard({
             >
               <Stack>
                 <Text c="dimmed">
-                  {
-                    translations[
-                      "Select the team in which the whatsapp flow copy to be created."
-                    ]
-                  }
+                  {translations(
+                    "Select the team in which the whatsapp flow copy to be created.",
+                  )}
                 </Text>
                 <ContainedSelection
                   radius="md"
-                  placeholder={translations["Select team (type in to search)"]}
+                  placeholder={translations("Select team (type in to search)")}
                   data={teamOptions}
                   searchable
                   styles={{ root: { width: "100%" } }}
@@ -197,10 +192,10 @@ function FlowCard({
               <Tooltip
                 label={
                   status !== WaFlowStatus.DRAFT
-                    ? translations[
-                        "It will be deprecated and will be removed from the system"
-                      ]
-                    : translations["Delete Flow"]
+                    ? translations(
+                        "It will be deprecated and will be removed from the system",
+                      )
+                    : translations("Delete Flow")
                 }
               >
                 <Box>
@@ -210,7 +205,7 @@ function FlowCard({
                     leftSection={<IconTrash size={16} />}
                     onClick={toggle}
                   >
-                    {translations["Delete"]}
+                    {translations("Delete")}
                   </Menu.Item>
                 </Box>
               </Tooltip>
@@ -221,17 +216,17 @@ function FlowCard({
                     onClick={toggleClone}
                     disabled={status === WaFlowStatus.DEPRECATED}
                   >
-                    {translations["Clone"]}
+                    {translations("Clone")}
                   </Menu.Item>
                 </Box>
               </Tooltip>
               <Tooltip
                 label={
                   status !== WaFlowStatus.PUBLISHED
-                    ? translations[
-                        "You can only Copy & Renew Flow in PUBLISHED state"
-                      ]
-                    : translations["Copy & Renew Flow"]
+                    ? translations(
+                        "You can only Copy & Renew Flow in PUBLISHED state",
+                      )
+                    : translations("Copy & Renew Flow")
                 }
               >
                 <Box>
@@ -240,7 +235,7 @@ function FlowCard({
                     onClick={toggleCloneAndRenew}
                     disabled={status !== WaFlowStatus.PUBLISHED}
                   >
-                    {translations["Copy & Renew Flow"]}
+                    {translations("Copy & Renew Flow")}
                   </Menu.Item>
                 </Box>
               </Tooltip>

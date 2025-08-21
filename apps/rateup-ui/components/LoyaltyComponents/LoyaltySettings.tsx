@@ -14,6 +14,7 @@ import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { createColumnHelper } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 
 import { TemplateType, WaAutomatedReplyResponseType } from "@/types/enums";
 import {
@@ -24,7 +25,6 @@ import {
 } from "@/backend/loyalty/settings/settings.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { AccountSelector } from "../input/AccountSelector";
 import {
@@ -45,7 +45,7 @@ const LoyaltySettings = () => {
     useDisclosure(false);
 
   const [selectedConfig, setSelectedConfig] = useState(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const columns = generateColumnsForLoyaltyTemplate(
     setSelectedConfig,
@@ -61,7 +61,7 @@ const LoyaltySettings = () => {
       <Group>
         <Title order={4}>Loyalty WhatsApp Command Configuration</Title>
         <RateupButtonBlue
-          title={translations["New"]}
+          title={translations("New")}
           leftIcon={<IconPlus />}
           onClick={open}
         />
@@ -85,11 +85,11 @@ const LoyaltySettings = () => {
         forDeleteFunctionality
         opened={dialogOpened}
         onClose={closeDialog}
-        headerLabel={
-          translations["Are you sure to delete this Command Configuration?"]
-        }
-        headerTitle={translations["Delete Command"]}
-        confirmLabel={translations["Delete"]}
+        headerLabel={translations(
+          "Are you sure to delete this Command Configuration?",
+        )}
+        headerTitle={translations("Delete Command")}
+        confirmLabel={translations("Delete")}
         onConfirm={(e) => {
           deleteMutation.mutate(selectedConfig?.id, {
             onSettled: () => {
@@ -124,7 +124,7 @@ export const LoyaltyWaTemplateConfig = ({
 }) => {
   const templateMut = useCreateLoyaltyTemplate();
   const updateTempMut = useUpdateLoyaltyTemplate(config?.id);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   let initialValues = {
     type: LoyaltyTemplateTypes.CustomerRegistration,
@@ -144,17 +144,17 @@ export const LoyaltyWaTemplateConfig = ({
         values.type !== LoyaltyTemplateTypes.Referral &&
         values.responseType === WaAutomatedReplyResponseType.Template &&
         !value?.length
-          ? translations["whatsApp Template"] + translations["required"]
+          ? translations("whatsApp Template") + translations("required")
           : null,
       content: (value, values) =>
         values.type !== LoyaltyTemplateTypes.Referral &&
         values.responseType === WaAutomatedReplyResponseType.Text &&
         !value
-          ? translations["content cannot be blank"]
+          ? translations("content cannot be blank")
           : null,
       actionId: (value, values) =>
         values.type === LoyaltyTemplateTypes.Referral && !value?.length
-          ? translations["Select action"]
+          ? translations("Select action")
           : null,
       whatsappSettingsPhoneId: isNotEmpty("required"),
     },
@@ -207,7 +207,7 @@ export const LoyaltyWaTemplateConfig = ({
         close();
       }}
       title=""
-      buttonTitle={translations["Save"]}
+      buttonTitle={translations("Save")}
       cancelOnClick={() => {
         form.reset();
         close();
@@ -220,17 +220,17 @@ export const LoyaltyWaTemplateConfig = ({
     >
       <Stack>
         <Title order={4} ta={"center"}>
-          {translations["Loyalty WhatsApp Command Configuration"]}
+          {translations("Loyalty WhatsApp Command Configuration")}
         </Title>
         <ContainedSelection
           data={typeData}
           {...form.getInputProps("type")}
-          label={translations["Service Type"]}
+          label={translations("Service Type")}
           disabled={!!config}
         />
         <AccountSelector {...form.getInputProps("whatsappSettingsPhoneId")} />
         <ContainedTextField
-          label={translations["Request Message"]}
+          label={translations("Request Message")}
           {...form.getInputProps("requestMessage")}
         />
         {form.values.type !== LoyaltyTemplateTypes.Referral ? (
@@ -263,7 +263,7 @@ export const LoyaltyWaTemplateConfig = ({
               />
             ) : (
               <Stack gap={1}>
-                <Text size="sm">{translations["Reply Message"]}</Text>
+                <Text size="sm">{translations("Reply Message")}</Text>
                 <Text size="xs" c="dimmed">
                   {
                     getLoyaltyTemplateLabel(form.values.type, translations)
@@ -282,7 +282,7 @@ export const LoyaltyWaTemplateConfig = ({
         ) : (
           <LReferralSelector
             {...form.getInputProps("actionId")}
-            label={translations["Referral Action"]}
+            label={translations("Referral Action")}
           />
         )}
       </Stack>
@@ -294,33 +294,33 @@ function getLoyaltyTemplateLabel(type, translations) {
   switch (type) {
     case LoyaltyTemplateTypes.CustomerRegistration:
       return {
-        label: translations["Customer Registration"],
-        templateLabel:
-          translations[
-            "WhatsApp Template for Successfull Customer Registration"
-          ],
-        templateDescription: `Dynamic variables - {{1}} - ${translations["customer name"]}`,
+        label: translations("Customer Registration"),
+        templateLabel: translations(
+          "WhatsApp Template for Successful Customer Registration",
+        ),
+        templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")}`,
       };
     case LoyaltyTemplateTypes.PointInformation:
       return {
-        label: translations["Point Information"],
-        templateLabel: translations["WhatsApp Template for Point Information"],
-        templateDescription: `Dynamic variables - {{1}} - ${translations["Current point balance"]} , {{2}} - ${translations["Redeemed points"]}, {{3}} - ${translations["Total earned points"]}`,
+        label: translations("Point Information"),
+        templateLabel: translations("WhatsApp Template for Point Information"),
+        templateDescription: `Dynamic variables - {{1}} - ${translations("Current point balance")} , {{2}} - ${translations("Redeemed points")}, {{3}} - ${translations("Total earned points")}`,
       };
     case LoyaltyTemplateTypes.Referral:
       return {
-        label: translations["Referral"],
+        label: translations("Referral"),
       };
     case LoyaltyTemplateTypes.CustomerRemoval:
       return {
-        label: translations["Customer Removal from Loyalty"],
+        label: translations("Customer Removal from Loyalty"),
       };
     case LoyaltyTemplateTypes.RewardsIssued:
       return {
-        label: translations["Issued Rewards Information"],
-        templateLabel:
-          translations["WhatsApp Template for Issued Rewards Information"],
-        templateDescription: `Dynamic variables - {{1}} - ${translations["customer name"]} , {{2}} ${translations["Numbered list of All the issued rewards to the customer with redeem code"]} `,
+        label: translations("Issued Rewards Information"),
+        templateLabel: translations(
+          "WhatsApp Template for Issued Rewards Information",
+        ),
+        templateDescription: `Dynamic variables - {{1}} - ${translations("customer name")} , {{2}} ${translations("Numbered list of All the issued rewards to the customer with redeem code")} `,
       };
     default:
       return {
@@ -354,11 +354,11 @@ function generateColumnsForLoyaltyTemplate(
     ),
     columnHelper.accessor((row) => row.requestMessage, {
       id: "requestMessage",
-      header: translations["Request Message"],
+      header: translations("Request Message"),
     }),
     columnHelper.accessor((row) => row.responseType, {
       id: "responseType",
-      header: () => <span>{translations["Response Type"]}</span>,
+      header: () => <span>{translations("Response Type")}</span>,
       cell: ({ getValue }) => {
         return (
           <Badge variant="light" color={getResponseTypeColor(getValue())}>

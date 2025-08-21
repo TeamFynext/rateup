@@ -14,13 +14,13 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconFilter } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
@@ -52,7 +52,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
   const { data, isLoading, error } = useChatFilterData();
   const { filter, setFilter } = useChatFilterStore();
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const {
     data: teamRes,
     isLoading: teamsLoading,
@@ -69,7 +69,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
   if (error) {
     return (
       <Text size="xs" c={"red"}>
-        {translations["Failed to fetch filter data"]}
+        {translations("Failed to fetch filter data")}
       </Text>
     );
   }
@@ -166,7 +166,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
   return (
     <Stack>
       <Button size="compact-xs" ml={"auto"} onClick={clearFilters}>
-        {translations["clear filters"]}
+        {translations("clear filters")}
       </Button>
       <AccountSelector
         onChange={(phone) => {
@@ -246,7 +246,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
               assignedTeams: values,
             })
           }
-          placeholder={translations["Select teams (type in to search)"]}
+          placeholder={translations("Select teams (type in to search)")}
           data={teamOptions}
           searchable
         />

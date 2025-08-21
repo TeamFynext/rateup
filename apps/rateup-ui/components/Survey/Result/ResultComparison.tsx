@@ -7,6 +7,7 @@ import {
   IconChartPieFilled,
   IconChartRadar,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -22,8 +23,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import { TeamWiseResponses } from "../../../backend/surveys/response/response.api";
@@ -67,7 +66,7 @@ export default function ResultComparison({
     SelectedLanguageContext,
   );
   const allQuestions = version === 1 ? questions : flowQuestions;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const {
     data: responseCountData,
     isPending: isPendingCount,
@@ -91,7 +90,7 @@ export default function ResultComparison({
   if (countError) return <div>Error...</div>;
   if (responseCountData?.all === 0)
     return (
-      <NothingFound text={translations["No responses found for comparison"]} />
+      <NothingFound text={translations("No responses found for comparison")} />
     );
   return (
     <PaperLayout
@@ -102,9 +101,9 @@ export default function ResultComparison({
       style={{ flexDirection: "column" }}
     >
       <Stack style={{ overflow: "auto", flex: 1 }} mt={"md"} p={10}>
-        <Heading subtitle={translations["Team Response Activity"]} />
+        <Heading subtitle={translations("Team Response Activity")} />
         <TeamResponseActivitySection data={data} />
-        <Heading subtitle={translations["Team Question Activity"]} />
+        <Heading subtitle={translations("Team Question Activity")} />
         {teamWiseComparison?.map((q, i) => {
           const question = allQuestions.find(
             (ques) => ques.id === q.questionId,
@@ -182,7 +181,7 @@ const TeamResponseActivitySection = ({
 }: {
   data: { teamCode: string; count: number }[];
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   enum ActivePlot {
     Radar = "radar",
@@ -198,13 +197,13 @@ const TeamResponseActivitySection = ({
     >
       <Tabs.List>
         <Tabs.Tab value={ActivePlot.Bar} leftSection={<IconAntennaBars4 />}>
-          {translations["Bar"]}
+          {translations("Bar")}
         </Tabs.Tab>
         <Tabs.Tab value={ActivePlot.Pie} leftSection={<IconChartPieFilled />}>
-          {translations["Pie"]}
+          {translations("Pie")}
         </Tabs.Tab>
         <Tabs.Tab value={ActivePlot.Radar} leftSection={<IconChartRadar />}>
-          {translations["Radar"]}
+          {translations("Radar")}
         </Tabs.Tab>
       </Tabs.List>
       <Tabs.Panel value={ActivePlot.Bar}>
@@ -267,7 +266,7 @@ const CombinedChart = ({
   questionResponses,
   question,
 }: CombinedChartProps) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const data = teams.map(({ code, id }) => {
     const responses = getResponseObjectByQuestionType(
       question.type as QuestionType,
@@ -289,7 +288,7 @@ const CombinedChart = ({
     return (
       <Stack h={400}>
         <NothingFound
-          text={translations["No response activity for this question yet"]}
+          text={translations("No response activity for this question yet")}
         />
       </Stack>
     );

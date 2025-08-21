@@ -4,6 +4,7 @@ import { ActionIcon, Box, Group, Skeleton, Stack, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconTrash } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { IntegratedApps } from "@/types/enums";
@@ -19,7 +20,6 @@ import {
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 import { showLoadingToast } from "@/utils/notifications";
 
 const WpAmelia = () => {
@@ -36,7 +36,7 @@ const WpAmelia = () => {
   const deleteIntegrationMutation = useDeleteIntegrationMutation(
     IntegratedApps.amelia,
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const schema = z.object({
     apiKey: z.string(),
     baseUrl: z.string().trim().url(),
@@ -82,7 +82,7 @@ const WpAmelia = () => {
   };
   return (
     <Stack p={"xl"}>
-      <Title order={3}>{translations["Amelia Config"]}</Title>
+      <Title order={3}>{translations("Amelia Config")}</Title>
       <PaperLayout>
         {isPending ||
         createIntegrationMutation?.isPending ||
@@ -91,26 +91,26 @@ const WpAmelia = () => {
         ) : (
           <Stack w={500}>
             <ContainedTextField
-              label={translations["Amelia"]}
-              placeholder={translations["Enter your api key"]}
+              label={translations("Amelia")}
+              placeholder={translations("Enter your api key")}
               {...form.getInputProps("apiKey")}
             />
 
             <ContainedTextField
-              label={translations["Amelia base url"]}
-              placeholder={translations["Enter your base url"]}
+              label={translations("Amelia base url")}
+              placeholder={translations("Enter your base url")}
               type="url"
               {...form.getInputProps("baseUrl")}
             />
             <ContainedNumberInput
-              label={translations["serviceId"]}
-              placeholder={translations["Enter serviceId"]}
+              label={translations("serviceId")}
+              placeholder={translations("Enter serviceId")}
               {...form.getInputProps("serviceId")}
               min={0}
             />
             <Group justify="space-between">
               <RateupButtonPrimary
-                title={translations["save"]}
+                title={translations("save")}
                 onClick={handleSave}
                 disabled={!form.isDirty()}
               />
@@ -119,7 +119,7 @@ const WpAmelia = () => {
                 disabled={!data?.credential?.apiKey && !data?.credential?.base}
                 onClick={() => {
                   showLoadingToast(
-                    translations["Deleting.."],
+                    translations("Deleting.."),
                     "integration-delete",
                     true,
                     "",

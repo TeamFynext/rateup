@@ -12,9 +12,9 @@ import {
 import { useForm } from "@mantine/form";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconVideo } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { isYouTubeLink } from "../utils";
 
@@ -29,7 +29,7 @@ function InsertVideo() {
     },
   });
   const ref = useRef(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleImageVideo = () => {
     try {
       const url = form.getValues().src;
@@ -57,7 +57,7 @@ function InsertVideo() {
       <Popover.Target>
         <RichTextEditor.Control
           aria-label="Insert video"
-          title={translations["Insert video"]}
+          title={translations("Insert video")}
           ref={ref}
         >
           <IconVideo size={16} />
@@ -67,20 +67,20 @@ function InsertVideo() {
         <Stack justify="center">
           <Group>
             <Tooltip
-              label={translations["Enable Custom size"]}
+              label={translations("Enable Custom size")}
               refProp="rootRef"
             >
               <Switch {...form.getInputProps("customSize")} mt={"lg"} />
             </Tooltip>
             <NumberInput
-              label={translations["height"]}
+              label={translations("height")}
               w={100}
               disabled={!form.getValues().customSize}
               min={0}
               {...form.getInputProps("height")}
             />
             <NumberInput
-              label={translations["width"]}
+              label={translations("width")}
               w={100}
               min={0}
               disabled={!form.getValues().customSize}
@@ -90,11 +90,11 @@ function InsertVideo() {
 
           <TextInput
             type="url"
-            placeholder={translations["Enter the url of video"]}
+            placeholder={translations("Enter the url of video")}
             {...form.getInputProps("src")}
           />
           <RateupButtonPrimary
-            title={translations["submit"]}
+            title={translations("submit")}
             onClick={handleImageVideo}
           />
         </Stack>

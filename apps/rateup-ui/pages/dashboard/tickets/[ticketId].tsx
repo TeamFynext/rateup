@@ -41,6 +41,7 @@ import {
 } from "@tabler/icons-react";
 import parse from "html-react-parser";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { QuestionType2 } from "@/types/enums";
@@ -64,7 +65,6 @@ import ShareLink from "@/components/Tickets/ShareLink";
 import SurveyResponsesView from "@/components/Tickets/SingleTicket/SurveyResponsesView";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
 import { useUser } from "@/context/UserContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import { formatDate, formatToRelativeTime } from "@/utils/dateTime";
 import { TicketPriority, TicketType } from "@/utils/enums/ticket";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
@@ -386,7 +386,7 @@ const EditTicket = ({
   router: NextRouter;
   ticketId: string;
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { mutate } = useUpdateCardMutation();
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "idle">(
     "idle",
@@ -524,7 +524,7 @@ const EditTicket = ({
           <ContainedTextField
             fw={500}
             label="Ticket Name"
-            placeholder={translations["Enter Ticket Name"]}
+            placeholder={translations("Enter Ticket Name")}
             required
             classNames={styles}
             aria-required="true"
@@ -539,8 +539,8 @@ const EditTicket = ({
           <ContainedSelection
             allowDeselect={false}
             data={Object.values(TicketPriority)}
-            label={translations["Priority"]}
-            placeholder={translations["Select priority for the ticket"]}
+            label={translations("Priority")}
+            placeholder={translations("Select priority for the ticket")}
             {...form.getInputProps("priority")}
             rightSection={<IconChevronDown size={16} />}
             classNames={{
@@ -549,7 +549,7 @@ const EditTicket = ({
           />
 
           <ContainedDatePickerInput
-            label={translations["Deadline:"]}
+            label={translations("Deadline:")}
             placeholder={"mm/dd/yyyy"}
             rightSection={
               <IconCalendar color="var(--mantine-color-blue-4)" size={19} />

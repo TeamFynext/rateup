@@ -1,8 +1,7 @@
 import { JSX } from "react";
 
 import { ScrollAreaAutosize, Table } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 const TableLayoutSecondary = ({
   columns,
@@ -22,7 +21,7 @@ const TableLayoutSecondary = ({
   minHeight?: string | number;
   headerStyle?: any;
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <ScrollAreaAutosize mah={maxHeight} mih={minHeight}>
       <Table highlightOnHover stickyHeader striped verticalSpacing={"md"}>
@@ -39,7 +38,7 @@ const TableLayoutSecondary = ({
           {!rows?.length ? (
             <Table.Tr>
               <Table.Td colSpan={9} align="center">
-                {translations["Nothing Found"]}
+                {translations("Nothing Found")}
               </Table.Td>
             </Table.Tr>
           ) : (

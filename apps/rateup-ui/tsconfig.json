@@ -14,6 +14,7 @@
     "incremental": true,
     "strict": false,
     "typeRoots": ["./types", "node_modules/@types"],
+    "allowArbitraryExtensions": true,
     "types": ["gtag.js"],
     "jsx": "preserve",
     "baseUrl": ".",

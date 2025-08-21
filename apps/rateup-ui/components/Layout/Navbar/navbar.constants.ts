@@ -75,14 +75,11 @@ export interface NavbarLinkProps {
   submenus?: NavbarLinkProps[];
   role?: string;
 }
-interface Translations {
-  [key: string]: string; // Allows for any string key with string values
-}
 
 //data Array consisting of NavbarTopData
 export function getNavTopData(
   subscription?: Subscription,
-  translations?: Translations,
+  translations?: any,
   role?: string,
 ) {
   function hasFeature(featurePath: SubscriptionFeaturePathName) {
@@ -93,7 +90,7 @@ export function getNavTopData(
   const navLinks = [
     {
       icon: IconHome2,
-      label: translations["Home"],
+      label: translations("Home"),
       link: "/dashboard",
       children: [
         {
@@ -108,50 +105,50 @@ export function getNavTopData(
       ? [
           {
             icon: IconBrandHipchat,
-            label: translations["Inbox"],
+            label: translations("Inbox"),
             children: [
               {
-                label: translations["New"],
+                label: translations("New"),
                 link: "/dashboard/whatsapp/inbox?tab=New",
                 icon: NewInboxIcon,
               },
               {
-                label: translations["UnAssigned"],
+                label: translations("UnAssigned"),
                 link: "/dashboard/whatsapp/inbox?tab=UnAssigned",
                 icon: IconUserX,
               },
               {
-                label: translations["Assigned"],
+                label: translations("Assigned"),
                 link: "/dashboard/whatsapp/inbox?tab=Assigned",
                 icon: AssignedInboxIcon,
               },
               {
-                label: translations["Assigned to Me"],
+                label: translations("Assigned to Me"),
                 link: "/dashboard/whatsapp/inbox?tab=AssignedToMe",
                 icon: AssignedToMeInboxIcon,
               },
               {
-                label: translations["Closed"],
+                label: translations("Closed"),
                 link: "/dashboard/whatsapp/inbox?tab=Closed",
                 icon: ClosedInboxIcon,
               },
               {
-                label: translations["Sent"],
+                label: translations("Sent"),
                 link: "/dashboard/whatsapp/inbox?tab=Sent",
                 icon: IconMessageUp,
               },
               {
-                label: translations["All"],
+                label: translations("All"),
                 link: "/dashboard/whatsapp/inbox?tab=All",
                 icon: IconMessage,
               },
               {
-                label: translations["Blocked"],
+                label: translations("Blocked"),
                 link: "/dashboard/whatsapp/inbox?tab=blocked",
                 icon: BlockedInboxIcon,
               },
               {
-                label: translations["Analytics"],
+                label: translations("Analytics"),
                 link: "/dashboard/whatsapp/inbox?tab=analytics",
                 icon: IconFileAnalytics,
               },
@@ -163,10 +160,10 @@ export function getNavTopData(
       ? [
           {
             icon: IconSpeakerphone,
-            label: translations["Campaigns"],
+            label: translations("Campaigns"),
             children: [
               {
-                label: translations["Campaigns"],
+                label: translations("Campaigns"),
                 link: "/dashboard/campaign",
                 icon: IconSpeakerphone,
               },
@@ -176,7 +173,7 @@ export function getNavTopData(
                 icon: IconMessageBolt,
               },
               {
-                label: translations["Contacts"],
+                label: translations("Contacts"),
                 link: "/dashboard/contacts",
                 icon: IconAddressBook,
               },
@@ -188,12 +185,12 @@ export function getNavTopData(
       ? [
           {
             icon: IconBrandWhatsapp,
-            label: translations["WhatsApp"],
+            label: translations("WhatsApp"),
             children: [
               ...(hasFeature(sfpn.WhatsAppFlow)
                 ? [
                     {
-                      label: translations["Flow"],
+                      label: translations("Flow"),
                       link: "/dashboard/whatsapp/flows",
                       icon: IconWaveSine,
                     },
@@ -202,7 +199,7 @@ export function getNavTopData(
               ...(hasFeature(sfpn.WhatsAppAutomation)
                 ? [
                     {
-                      label: translations["Automation"],
+                      label: translations("Automation"),
                       link: "/dashboard/whatsapp/automated-replies",
                       icon: IconRobot,
                     },
@@ -211,7 +208,7 @@ export function getNavTopData(
               ...(hasFeature(sfpn.WhatsAppTemplate)
                 ? [
                     {
-                      label: translations["Templates"],
+                      label: translations("Templates"),
                       link: "/dashboard/whatsapp/templates",
                       icon: IconTemplate,
                     },
@@ -223,12 +220,12 @@ export function getNavTopData(
                 icon: IconBuildingStore,
               },
               {
-                label: translations["Logs"],
+                label: translations("Logs"),
                 link: "/dashboard/whatsapp/logs",
                 icon: IconLogs,
               },
               {
-                label: translations["Settings"],
+                label: translations("Settings"),
                 link: "/dashboard/whatsapp/settings",
                 icon: IconSettings,
               },
@@ -240,30 +237,30 @@ export function getNavTopData(
       ? [
           {
             icon: IconGift,
-            label: translations["Loyalty"],
+            label: translations("Loyalty"),
             children: [
               {
-                label: translations["Dashboard"],
+                label: translations("Dashboard"),
                 link: "/dashboard/loyalty/dashboard",
                 icon: IconDashboard,
               },
               {
-                label: translations["Customers"],
+                label: translations("Customers"),
                 link: "/dashboard/loyalty/customer",
                 icon: IconUsers,
               },
               {
-                label: translations["Actions"],
+                label: translations("Actions"),
                 link: "/dashboard/loyalty/actions",
                 icon: IconActivity,
               },
               {
-                label: translations["Rewards"],
+                label: translations("Rewards"),
                 link: "/dashboard/loyalty/rewards",
                 icon: IconAward,
               },
               {
-                label: translations["Settings"],
+                label: translations("Settings"),
                 link: "/dashboard/loyalty/settings",
                 icon: IconSettings,
               },
@@ -280,22 +277,22 @@ export function getNavTopData(
       ? [
           {
             icon: IconBrowser,
-            label: translations["Web Forms"],
+            label: translations("Web Forms"),
             children: [
               {
-                label: translations["Surveys"],
+                label: translations("Surveys"),
                 link: "/dashboard/surveys",
                 icon: IconBrowser,
               },
               {
-                label: translations["Templates"],
+                label: translations("Templates"),
                 link: "/dashboard/surveys/templates",
                 icon: IconTemplate,
               },
               ...(!hiddenModules.includes("testimonial")
                 ? [
                     {
-                      label: translations["Testimonial"],
+                      label: translations("Testimonial"),
                       link: "/dashboard/testimonial",
                       icon: IconMessageChatbot,
                     },
@@ -309,11 +306,11 @@ export function getNavTopData(
       ? [
           {
             icon: IconTicket,
-            label: translations["Tickets"],
+            label: translations("Tickets"),
             link: "/dashboard/tickets",
             children: [
               {
-                label: translations["Tickets"],
+                label: translations("Tickets"),
                 link: "/dashboard/tickets",
                 icon: IconTicket,
                 disabled: true,
@@ -325,12 +322,12 @@ export function getNavTopData(
 
     {
       icon: IconBrandTeams,
-      label: translations["Teams"],
+      label: translations("Teams"),
       link: "/dashboard/teams",
       disabled: role !== "SUPER_ADMIN",
       children: [
         {
-          label: translations["Teams"],
+          label: translations("Teams"),
           link: "/dashboard/teams",
           icon: IconSocial,
           disabled: role !== "SUPER_ADMIN",
@@ -338,7 +335,7 @@ export function getNavTopData(
         ...(role === "SUPER_ADMIN"
           ? [
               {
-                label: translations["All Members"],
+                label: translations("All Members"),
                 link: "/dashboard/members",
                 icon: IconUsers,
               },
@@ -348,20 +345,20 @@ export function getNavTopData(
     },
     {
       icon: IconQrcode,
-      label: translations["QR Studio"],
+      label: translations("QR Studio"),
       children: [
         {
-          label: translations["QR Creator"],
+          label: translations("QR Creator"),
           link: "/dashboard/qrCreator",
           icon: IconCirclePlus,
         },
         {
-          label: translations["Access Links"],
+          label: translations("Access Links"),
           link: "/dashboard/quickAccessLinks",
           icon: IconLinkPlus,
         },
         {
-          label: translations["Landing Pages"],
+          label: translations("Landing Pages"),
           link: "/dashboard/landingPages",
           icon: IconWallpaper,
         },
@@ -386,11 +383,11 @@ export function getNavTopData(
       : []),
     {
       icon: IconApps,
-      label: translations["Apps & Services"],
+      label: translations("Apps & Services"),
       link: "/dashboard/apps&services",
       children: [
         {
-          label: translations["Apps & Services"],
+          label: translations("Apps & Services"),
           link: "/dashboard/apps&services",
           icon: IconApps,
           disabled: true,
@@ -401,11 +398,11 @@ export function getNavTopData(
       ? [
           {
             icon: IconFileDescription,
-            label: translations["Digital Menu"],
+            label: translations("Digital Menu"),
             link: "/dashboard/menu",
             children: [
               {
-                label: translations["Menu"],
+                label: translations("Menu"),
                 link: "/dashboard/menu",
                 icon: IconFileDescription,
                 disabled: true,
@@ -433,24 +430,24 @@ export function getNavTopData(
     },
     {
       icon: IconUser,
-      label: translations["Account"],
+      label: translations("Account"),
       children: [
         {
-          label: translations["Account"],
+          label: translations("Account"),
           link: "/dashboard/settings",
           icon: IconUserShare,
         },
         ...(subscription?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
           ? [
               {
-                label: translations["Admin"],
+                label: translations("Admin"),
                 link: "/admin",
                 icon: IconTerminal2,
               },
             ]
           : []),
         {
-          label: translations["Logout"],
+          label: translations("Logout"),
           link: "/logout",
           icon: IconLogout,
         },
@@ -459,13 +456,3 @@ export function getNavTopData(
   ];
   return [navLinks, lastLinksData];
 }
-
-//data Array consisting of NavbarBottomData
-const navBottomData = (translations?: Translations): Array<NavbarLinkProps> => [
-  {
-    Icon: IconSettings,
-    label: translations["Settings"],
-    href: "/dashboard/settings",
-  },
-  { Icon: IconLogout, label: translations["Logout"], href: "/logout" },
-];

@@ -1,9 +1,9 @@
 import { Box, Button, Center } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 import classNames from "classnames/bind";
+import { useTranslations } from "next-intl";
 
 import { useNavControlContext } from "@/context/NavControlContext";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons";
 import styles from "./SurveyTheme.module.css";
@@ -20,14 +20,14 @@ function SurveyTheme({
 }) {
   const { theme: surveyTheme } = survey?.webSurveyTheme;
 
-  const { translations, loadingTranslations } = useTranslations();
+  const translations = useTranslations();
 
   const { navOpened, setNavOpened } = useNavControlContext();
 
   if (!surveyTheme)
     return (
       <Center h={"100%"}>
-        <p>{translations["Unable to get theme, please try again later"]}</p>
+        <p>{translations("Unable to get theme, please try again later")}</p>
       </Center>
     );
 

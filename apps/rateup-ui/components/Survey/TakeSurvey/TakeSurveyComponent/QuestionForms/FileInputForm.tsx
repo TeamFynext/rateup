@@ -13,8 +13,7 @@ import {
 } from "@mantine/core";
 import { Dropzone, DropzoneProps } from "@mantine/dropzone";
 import { IconFileFilled, IconUpload, IconX } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import {
@@ -33,7 +32,7 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState("");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const themePrimaryColor = theme.colors.primaryColor
     ? theme.colors.primaryColor[5]
     : "#1C518E";
@@ -125,10 +124,10 @@ const FileInputForm = ({ isPreview, ...dropzoneprops }: FileInputFormProps) => {
           </Dropzone.Idle>
           <div>
             <Text size="md" inline c={dragFileTextColor}>
-              {translations["Drag file here or click to select file"]}
+              {translations("Drag file here or click to select file")}
             </Text>
             <Text size="xs" c="dimmed" inline mt={7}>
-              {translations["File should not exceed 10mb"]}
+              {translations("File should not exceed 10mb")}
             </Text>
           </div>
         </Group>

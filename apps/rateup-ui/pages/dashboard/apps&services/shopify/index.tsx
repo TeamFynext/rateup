@@ -18,6 +18,7 @@ import {
   IconSettingsFilled,
   IconX,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { IntegratedApps } from "@/types/enums";
 import { ShopifyIntegration } from "@/types/global";
@@ -28,7 +29,6 @@ import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import ShopifySchedules from "@/components/shopify/ShopifySchedules";
 import ShopifySettings from "@/components/shopify/ShopifySettings";
-import useTranslations from "@/dictionaries/useTranslation";
 import {
   showErrorToast,
   showLoadingToast,
@@ -45,10 +45,10 @@ interface ActiveBadgeProps extends BadgeProps {
   active: boolean;
 }
 export const ActiveStatusBadge = ({ active, ...props }: ActiveBadgeProps) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Badge color={active ? "var(--active-green-2)" : "red"} {...props}>
-      {active ? translations["ACTIVE"] : translations["INACTIVE"]}
+      {active ? translations("ACTIVE") : translations("INACTIVE")}
     </Badge>
   );
 };
@@ -65,7 +65,7 @@ const Shopify = () => {
   ) as { data: ShopifyIntegration; isLoading: boolean };
   const { data: templates, isPending, isError, refetch } = useWaTemplates();
   const { data: teams } = useTeamsByUser();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const session = shopifyInfo?.credential?.session;
   const [shopifyProducts, setShopifyProducts] = useState([]);
 
@@ -76,21 +76,21 @@ const Shopify = () => {
   const handleLoadProducts = async () => {
     try {
       showLoadingToast(
-        translations["Syncing Shopify products"],
+        translations("Syncing Shopify products"),
         "shopify-products",
         true,
       );
       const products = await getProductsFromShopify();
       setShopifyProducts(products ?? []);
       showSuccessToast(
-        translations["Products loaded successfully"],
+        translations("Products loaded successfully"),
         "shopify-products",
         <IconCheck />,
         true,
       );
     } catch (e) {
       showErrorToast(
-        translations["Product syncing failed"],
+        translations("Product syncing failed"),
         "shopify-products",
         <IconX />,
         true,
@@ -106,7 +106,7 @@ const Shopify = () => {
         <Stack>
           <Image src={"../../../images/shopifystore.jpeg"} />
           <RateupButtonBlue
-            title={translations["Connect with shopify store"]}
+            title={translations("Connect with shopify store")}
             leftIcon={<IconPlus />}
             onClick={() =>
               window.open("https://apps.shopify.com/rateup", "_blank")
@@ -120,7 +120,7 @@ const Shopify = () => {
     <Stack>
       <Group justify="flex-end">
         <RateupButtonSecondary
-          title={translations["Sync products"]}
+          title={translations("Sync products")}
           onClick={handleLoadProducts}
         />
         <Tooltip

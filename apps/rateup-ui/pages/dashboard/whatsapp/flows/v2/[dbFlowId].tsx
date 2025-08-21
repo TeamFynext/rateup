@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 import { SubscriptionFeaturePathName } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
@@ -20,7 +21,6 @@ import FlowPageHeader, {
 } from "@/components/whatsapp/flows/FlowPage/FlowPageHeader";
 import { useRouteParams } from "@/context/RouteParamsContext";
 import SurveyContext from "@/context/SurveyContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import { hasFeature } from "@/utils/subscription/subscription";
 
 import styles from "./FlowPage.module.css";
@@ -44,7 +44,7 @@ const Flow = () => {
   const { tab: tabView } = router.query;
 
   const { update } = useRouteParams();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     update({ dbFlowId: flow?.name });
   }, [flow, update]);

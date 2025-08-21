@@ -9,8 +9,7 @@ import {
   GridColDef,
   GridRenderCellParams,
 } from "@mui/x-data-grid";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useAllOrgs } from "../../../backend/org/org.query";
 import {
@@ -39,7 +38,7 @@ const index = () => {
   const { data: users } = useGetAllUsers();
   const updateRecipeMutation = useUpdateRecipeNameMutation();
   const updatePauseStatus = useUpdateUserPause();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const rows = users
     ? users?.map((user) => ({
         id: user?.email,
@@ -69,16 +68,16 @@ const index = () => {
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: translations["Email ID"], width: 300 },
-    { field: "name", headerName: translations["Name"], width: 200 },
+    { field: "id", headerName: translations("Email ID"), width: 300 },
+    { field: "name", headerName: translations("Name"), width: 200 },
     {
       field: "orgName",
-      headerName: translations["Organization"],
+      headerName: translations("Organization"),
       width: 200,
     },
     {
       field: "role",
-      headerName: translations["Role"],
+      headerName: translations("Role"),
       renderCell: (params: GridRenderCellParams<any, any>) => {
         const role = params.value;
         return (
@@ -91,19 +90,19 @@ const index = () => {
     },
     {
       field: "signupDate",
-      headerName: translations["SignUp Date"],
+      headerName: translations("SignUp Date"),
       width: 200,
     },
-    { field: "recipeName", headerName: translations["Recipe"], width: 200 },
-    { field: "isPaused", headerName: translations["Is Paused"], width: 200 },
+    { field: "recipeName", headerName: translations("Recipe"), width: 200 },
+    { field: "isPaused", headerName: translations("Is Paused"), width: 200 },
     {
       field: "status",
-      headerName: translations["Status"],
+      headerName: translations("Status"),
       renderCell: (params) => {
         const active = params.value;
         return (
           <Badge color={active ? "green" : "red"}>
-            {active ? translations["Active"] : translations["Inactive"]}
+            {active ? translations("Active") : translations("Inactive")}
           </Badge>
         );
       },
@@ -111,7 +110,7 @@ const index = () => {
     },
     {
       field: "action",
-      headerName: translations["Actions"],
+      headerName: translations("Actions"),
       type: "actions",
       width: 200,
       getActions: (params) => [
@@ -130,8 +129,8 @@ const index = () => {
           }}
           label={
             params.row.isPaused === "YES"
-              ? translations["Resume"]
-              : translations["Pause"]
+              ? translations("Resume")
+              : translations("Pause")
           }
           showInMenu
           key={params.id + "pause-action"}
@@ -150,7 +149,7 @@ const index = () => {
 
   const handleUpdateUserRecipe = () => {
     showLoadingToast(
-      translations["Recipes getting updated"],
+      translations("Recipes getting updated"),
       "user-recipe",
       true,
       "Updating..",
@@ -187,23 +186,23 @@ const index = () => {
     <Stack gap={"xs"}>
       <Flex gap={"xl"} pr={"lg"}>
         <Group flex={1} align="flex-start">
-          <Title order={2}>{translations["User Stats"]}</Title>
+          <Title order={2}>{translations("User Stats")}</Title>
           <RefreshButton queryKeys={["allUsers", "org"]} />
         </Group>
         <RateupButtonBlue
-          title={translations["Update User Recipe"]}
+          title={translations("Update User Recipe")}
           onClick={handleUpdateUserRecipe}
           disabled={isUpdatedRecipe}
         />
         <PaperLayout w={300}>
-          <Title order={5}>{translations["Total"]}</Title>
+          <Title order={5}>{translations("Total")}</Title>
           <Group justify="space-between" px={"sm"}>
             <CountStatsCard
-              label={translations["Organizations"]}
+              label={translations("Organizations")}
               count={orgs?.length}
             />
             <CountStatsCard
-              label={translations["Users"]}
+              label={translations("Users")}
               count={users?.length}
             />
           </Group>
@@ -212,25 +211,25 @@ const index = () => {
           <Title order={5}>User Stats</Title>
           <Group justify="space-between" px={"sm"}>
             <CountStatsCard
-              label={translations["Today"]}
+              label={translations("Today")}
               count={userStats.today}
             />
             <CountStatsCard
-              label={translations["Yesterday"]}
+              label={translations("Yesterday")}
               count={userStats.yesterday}
             />
             <CountStatsCard
-              label={translations["Last 7 days"]}
+              label={translations("Last 7 days")}
               count={userStats.lastWeek}
             />
             <CountStatsCard
-              label={translations["This Month"]}
+              label={translations("This Month")}
               count={userStats.thisMonth}
             />
           </Group>
         </PaperLayout>
       </Flex>
-      <Title order={4}>{translations["Most Recent SignUps"]}</Title>
+      <Title order={4}>{translations("Most Recent SignUps")}</Title>
       <Box h={"60vh"} w={"100%"}>
         <DataGrid
           rows={rows}
@@ -263,14 +262,14 @@ const index = () => {
         confirmLabel="Yes"
         headerTitle={
           selectedUser?.isPaused
-            ? translations["Resume User"]
-            : translations["Pause User"]
+            ? translations("Resume User")
+            : translations("Pause User")
         }
         onConfirm={() => {
           handleUserStatus();
         }}
-        headerLabel={` ${translations["Are you sure to"]} ${selectedUser?.isPaused ? translations["resume"] : translations["pause"]} ${translations["this user?"]}`}
-        closeLabel={translations["cancel"]}
+        headerLabel={` ${translations("Are you sure to")} ${selectedUser?.isPaused ? translations("resume") : translations("pause")} ${translations("this user?")}`}
+        closeLabel={translations("cancel")}
       />
     </Stack>
   );

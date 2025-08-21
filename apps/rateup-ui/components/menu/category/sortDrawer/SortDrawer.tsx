@@ -4,8 +4,7 @@ import { Card, Flex, Image, LoadingOverlay, Stack, Text } from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { IconGripVertical } from "@tabler/icons-react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useUpdateSortOrderMenuCategoryMutation } from "../../../../backend/menu/category/mCategory.query";
 import { useUpdateSortOrderMenuItemMutation } from "../../../../backend/menu/item/mItem.query";
@@ -113,19 +112,19 @@ const SortDrawer = ({
       });
     }
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <FormModalLayout
       opened={opened}
       onClose={close}
       title={
         categoryOrNot
-          ? translations["Swap Order of Categories"]
-          : translations["Swap Order of Items"]
+          ? translations("Swap Order of Categories")
+          : translations("Swap Order of Items")
       }
       centered
       onSubmit={handleSortOrder}
-      buttonTitle={translations["Save"]}
+      buttonTitle={translations("Save")}
       size={"lg"}
       includeCancelButton={true}
     >

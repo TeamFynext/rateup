@@ -10,12 +10,12 @@ import {
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { useTranslations } from "next-intl";
 
 import { useWaLogs } from "@/backend/whatsapp/settings/waSettings.query";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
-import useTranslations from "@/dictionaries/useTranslation";
 import { PAGE_SIZE } from "@/utils/constants";
 import { showLoadingToast, showSuccessToast } from "@/utils/notifications";
 
@@ -36,7 +36,7 @@ const Logs = () => {
     sorting?.[0],
     columnFilters,
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const columns: ColumnDef<any>[] = [
     {
@@ -68,19 +68,19 @@ const Logs = () => {
     },
   ];
   const refreshButton = (
-    <Tooltip label={translations["Refresh"]}>
+    <Tooltip label={translations("Refresh")}>
       <ActionIcon
         variant="light"
         onClick={async () => {
           showLoadingToast(
-            translations["Data getting loaded..."],
+            translations("Data getting loaded..."),
             "contacts",
             true,
-            translations["Loading"],
+            translations("Loading"),
           );
           await refetch();
           showSuccessToast(
-            translations["Data updated"],
+            translations("Data updated"),
             "contacts",
             <IconCheck />,
             true,

@@ -13,6 +13,7 @@ import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 
 import { CampaignType } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
@@ -25,7 +26,6 @@ import { DETAIL_BTN } from "@/components/Contacts/utils/utils";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TanstackTable from "@/components/Table/TanstackTable";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./campaign.module.css";
 
@@ -98,7 +98,7 @@ export default function DripCampaignList() {
   const [searchText, setSearchText] = useDebouncedState("", 200);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const {
     data: campaignData,
@@ -149,7 +149,7 @@ export default function DripCampaignList() {
           <TanstackTable
             columns={column}
             data={filteredCampaigns}
-            btnTitle={translations["Create"]}
+            btnTitle={translations("Create")}
             toggle={open}
             disableFuzzyFnCustom={true}
             detailBtn

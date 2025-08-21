@@ -11,8 +11,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { ChatbotResourses } from "../../backend/chatbot/chatbot.api";
 import {
@@ -33,7 +32,7 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
     enableApi,
     selectedChatbotId,
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [selectedSources, setSelectedSources] = useState<ChatbotResourses[]>(
     [],
   );
@@ -42,20 +41,20 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
   const deleteManySourceMutation = useDeleteManyChatborResource();
   const handleDelete = (source) => {
     showLoadingToast(
-      translations["Hold on..Source getting deleted"],
+      translations("Hold on..Source getting deleted"),
       "source",
       true,
-      translations["Deleting"],
+      translations("Deleting"),
     );
     deleteSourceMutation.mutate(source);
   };
   const handleDeleteMany = () => {
     if (!selectedSources.length) return;
     showLoadingToast(
-      translations["Hold on..Sources getting deleted"],
+      translations("Hold on..Sources getting deleted"),
       "source",
       true,
-      translations["Deleting"],
+      translations("Deleting"),
     );
     deleteManySourceMutation.mutate(selectedSources, {
       onSettled: () => {
@@ -75,7 +74,7 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
     >
       <Table.Td>
         <Checkbox
-          aria-label={translations["Select row"]}
+          aria-label={translations("Select row")}
           checked={selectedSources.some(
             (src) => src.contentSource == source.contentSource,
           )}
@@ -115,14 +114,14 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
       <Flex justify={"flex-end"} gap={"sm"}>
         {selectedSources.length > 0 ? (
           <RateupButtonBlue
-            title={translations["Delete Resources"]}
+            title={translations("Delete Resources")}
             color="red"
             rightIcon={<IconTrash size={"1rem"} />}
             onClick={handleDeleteMany}
           />
         ) : null}
         <RateupButtonBlue
-          title={translations["Upload New"]}
+          title={translations("Upload New")}
           rightIcon={<IconPlus />}
           onClick={open}
         />
@@ -134,16 +133,16 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th />
-                  <Table.Th>{translations["Source"]}</Table.Th>
-                  <Table.Th>{translations["Type"]}</Table.Th>
-                  <Table.Th>{translations["Action"]}</Table.Th>
+                  <Table.Th>{translations("Source")}</Table.Th>
+                  <Table.Th>{translations("Type")}</Table.Th>
+                  <Table.Th>{translations("Action")}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>{rows}</Table.Tbody>
             </Table>
           </ScrollAreaAutosize>
         ) : (
-          <NothingFound text={translations["No Resources uploaded"]} />
+          <NothingFound text={translations("No Resources uploaded")} />
         )}
       </PaperLayout>
       <UploadChatbotSource

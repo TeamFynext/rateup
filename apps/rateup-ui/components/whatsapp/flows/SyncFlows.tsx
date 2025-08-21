@@ -20,8 +20,7 @@ import {
   IconChevronRight,
   IconRefresh,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useImportFlowsMutation,
@@ -104,7 +103,7 @@ export function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const flow = flows[currentFlowIndex];
   const importMutation = useImportFlowsMutation();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function handleNext() {
     if (currentFlowIndex !== flows.length - 1) {
       setCurrentFlowIndex(currentFlowIndex + 1);
@@ -151,7 +150,7 @@ export function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
       <TeamSelector
         value={selectedTeam}
         onChange={setSelectedTeam}
-        label={translations["Import Flows To"]}
+        label={translations("Import Flows To")}
       />
       <Group
         justify="space-between"
@@ -167,7 +166,7 @@ export function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
           disabled={currentFlowIndex === 0}
           onClick={handlePrevious}
         >
-          {translations["Previous"]}
+          {translations("Previous")}
         </Button>
         <Button
           rightSection={isLastFlow ? undefined : <IconChevronRight size={20} />}
@@ -175,7 +174,7 @@ export function ImportFlows({ flows, handleClose }: ImportFlowsProps) {
           onClick={handleNext}
           loading={importMutation.isPending}
         >
-          {isLastFlow ? translations["Import Flows"] : translations["Next"]}
+          {isLastFlow ? translations("Import Flows") : translations("Next")}
         </Button>
       </Group>
     </Stack>
@@ -193,7 +192,7 @@ function ConfigureFlow({
   handleNext: () => void;
 }) {
   const { data: flowJson, isLoading, error, isError } = useWaFlowJson(flow.id);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (flowJson) {
       let interactiveQCount = 0;
@@ -231,11 +230,11 @@ function ConfigureFlow({
   return (
     <>
       <ContainedTextField
-        label={translations["Flow Name"]}
+        label={translations("Flow Name")}
         value={flow.name}
         disabled
       />
-      <InputLabel>{translations["Assign valid question types"]}</InputLabel>
+      <InputLabel>{translations("Assign valid question types")}</InputLabel>
       <Stack
         bg="whitesmoke"
         p="md"
@@ -395,7 +394,7 @@ function DisplayTemplates({
     }
   }
   const allChecked = selectedTemplates.length === unregisteredTemplates?.length;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Flex direction={"column"} h="80vh">
       <Table.ScrollContainer
@@ -425,7 +424,7 @@ function DisplayTemplates({
                   }
                 />
               </Table.Th>
-              <Table.Th>{translations["Template"]}</Table.Th>
+              <Table.Th>{translations("Template")}</Table.Th>
               <Table.Th>Status</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -457,9 +456,9 @@ function DisplayTemplates({
         }}
         pt="xs"
       >
-        <Button variant="outline">{translations["Cancel"]}</Button>
+        <Button variant="outline">{translations("Cancel")}</Button>
         <Button disabled={selectedTemplates.length === 0} onClick={onImport}>
-          {translations["Import"]}
+          {translations("Import")}
         </Button>
       </Group>
     </Flex>
@@ -479,7 +478,7 @@ export function SyncFlowsButton({ disabled = false }) {
     showErrorToast("Error syncing templates");
     console.error(error);
   }
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <Button
@@ -493,7 +492,7 @@ export function SyncFlowsButton({ disabled = false }) {
         radius={"lg"}
         disabled={disabled}
       >
-        {translations["Sync"]}
+        {translations("Sync")}
       </Button>
       <SyncTemplatesModal
         opened={openModal && !isLoading && !isError}

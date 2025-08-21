@@ -3,8 +3,7 @@
 import { useEffect } from "react";
 
 import { Card, Group, SelectProps, Skeleton, Text } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useTeamsByUser } from "../../backend/team/team.query";
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
@@ -32,7 +31,7 @@ export function TeamSelector({
     error,
   } = useTeamsByUser();
 
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const teams = teamRes?.data;
 
@@ -45,7 +44,7 @@ export function TeamSelector({
   if (enableAll && teamOptions.length)
     teamOptions.unshift({
       value: "all",
-      label: translations["All Teams"] || "All Teams",
+      label: translations("All Teams") || "All Teams",
     });
 
   useEffect(() => {
@@ -59,7 +58,7 @@ export function TeamSelector({
   }, [teamOptions, value]);
 
   if (isError) {
-    return <Text>{translations["Something went wrong!"]}</Text>;
+    return <Text>{translations("Something went wrong!")}</Text>;
   }
   if (teamsLoading) {
     return (
@@ -80,7 +79,7 @@ export function TeamSelector({
       onChange={onChange}
       label={label}
       value={value}
-      nothingFoundMessage={translations["No teams found!"]}
+      nothingFoundMessage={translations("No teams found!")}
       {...props}
     />
   );

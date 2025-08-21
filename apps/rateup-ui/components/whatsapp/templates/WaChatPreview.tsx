@@ -13,14 +13,13 @@ import {
   IconWifi,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { SendMessageMock } from "../MessageComponents";
 
 const WaChatPreview = ({ children }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <PaperLayout p={7} h={"100%"} maw={280}>
       <BackgroundImage
@@ -66,11 +65,9 @@ const WaChatPreview = ({ children }) => {
               }}
             >
               <IconInfoCircle size={8} />
-              {
-                translations[
-                  "This business uses a secure service from Meta to manage this chat. Tap to learn more"
-                ]
-              }
+              {translations(
+                "This business uses a secure service from Meta to manage this chat. Tap to learn more",
+              )}
             </Text>
             {children}
           </ScrollAreaAutosize>

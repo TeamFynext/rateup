@@ -11,9 +11,9 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { useHandleNextPrevFuncs } from "@/context/NextPrevFuncsContext";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { CurrentResponsesContext } from "../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../context/SelectedLanguage";
@@ -54,7 +54,7 @@ function NextPrev({
     submitBtnLabel = "Submit";
   }
   const selectedQuestionPosition = getSelectedQPos(survey, selectedQ);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const themeStyles = surveyThemeData?.surveyTheme?.button?.styles;
   const inputColor = surveyThemeData?.surveyTheme?.input?.primaryColor;
 
@@ -124,13 +124,13 @@ function NextPrev({
               className={styles["message-p"]}
               c={themeStyles?.backgroundColor}
             >
-              {translations["*Choose an option or answer to proceed!"]}
+              {translations("*Choose an option or answer to proceed!")}
             </Text>
           )}
 
           {errorMsg && isErrorInput && (
             <Text className={styles["message-p"]} c={"red"}>
-              {translations["Note: *"]} {errorMsg}
+              {translations("Note: *")} {errorMsg}
             </Text>
           )}
         </Portal>

@@ -3,10 +3,10 @@ import { useRouter } from "next/router";
 import { Group, Menu, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconTrash } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
 import { CardMenu } from "@/components/whatsapp/automation/AutomationCards";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useDeleteRewardMutation } from "../../../backend/loyalty/reward/reward.query";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
@@ -47,23 +47,23 @@ function RewardCardMenuItems({ rewardId }) {
       onSuccess: close,
     });
   }
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <Menu.Dropdown>
         <Menu.Item leftSection={<IconTrash />} onClick={open}>
-          {translations["Delete"]}
+          {translations("Delete")}
         </Menu.Item>
       </Menu.Dropdown>
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
         onClose={close}
-        headerLabel={
-          translations["Are you sure you want to delete this Reward?"]
-        }
-        headerTitle={translations["Delete Reward"]}
-        confirmLabel={translations["Delete"]}
+        headerLabel={translations(
+          "Are you sure you want to delete this Reward?",
+        )}
+        headerTitle={translations("Delete Reward")}
+        confirmLabel={translations("Delete")}
         onConfirm={handleDelete}
       />
     </>

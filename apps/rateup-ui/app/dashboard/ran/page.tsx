@@ -1,11 +1,13 @@
 import React from "react";
 
 import { Button } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 const Ran = () => {
+  const t = useTranslations();
   return (
     <div>
-      <Button>Ran</Button>
+      <Button>{t("Create")}</Button>
     </div>
   );
 };

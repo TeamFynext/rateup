@@ -2,17 +2,17 @@ import { useRouter } from "next/router";
 
 import { Badge, Button, Loader, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useTranslations } from "next-intl";
 
 import { getTeamIdByCode } from ".";
 import { useReviewSuggestionsCount } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
 import { ReviewSuggestionModal } from "../../../../components/reviewSuggestion/ReviewSuggestionModal";
-import useTranslations from "../../../../dictionaries/useTranslation";
 
 export default function GoogleReviewSuggestionsEditorPage() {
   const router = useRouter();
   const { team_code } = router.query;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const {
     isLoading: isLoadingTeamsUser,
     data: teamsDataUser,
@@ -33,7 +33,7 @@ export default function GoogleReviewSuggestionsEditorPage() {
   return (
     <Stack>
       <Button variant="light" onClick={openReviewModal}>
-        {translations["Manage review suggestions"]}
+        {translations("Manage review suggestions")}
         {isLoading || !(typeof count === "number") ? (
           <Loader size={"xs"} ml="xs" type="bars" />
         ) : (

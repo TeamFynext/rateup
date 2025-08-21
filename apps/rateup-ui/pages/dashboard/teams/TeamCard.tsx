@@ -2,8 +2,7 @@ import React from "react";
 import { useRouter } from "next/router";
 
 import { Badge, Flex, Stack, Text } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useUser } from "../../../context/UserContext";
@@ -15,7 +14,7 @@ interface TeamCardProps {
 const TeamCard = ({ team }: TeamCardProps) => {
   const { user } = useUser();
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <PaperLayout
       hoveractive={user?.role === UserRole.SUPADM}
@@ -43,7 +42,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
             {team._count.members}
           </Text>
           <Text fz="sm" c="var(--tertiary-color)" fw={"400"}>
-            {translations["Staff"]}
+            {translations("Staff")}
           </Text>
         </Stack>
       </Flex>

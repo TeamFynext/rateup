@@ -15,6 +15,7 @@ import {
   IconTrendingUp,
   IconUserFilled,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { useLoyaltyCustomers } from "@/backend/loyalty/customer/customer.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
@@ -23,7 +24,6 @@ import { ContainedSelection } from "@/components/input/ContainedInput/ContainedI
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 import { SearchInput } from "@/pages/dashboard/campaign";
 import { PAGE_SIZE } from "@/utils/constants";
 
@@ -116,7 +116,7 @@ function getSortValue(id) {
 
 const LCustomerPage = () => {
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [date, setDate] = useState<Date | null>(null);
   const [sorting, setSorting] = useState({
     value: SortMenu.LatestFirst,
@@ -193,7 +193,7 @@ const LCustomerPage = () => {
               <SearchInput
                 searchText={searchTerm}
                 setSearchText={setSearchTerm}
-                placeholder={translations["Search"]}
+                placeholder={translations("Search")}
               />
             </Group>
             <Group>
@@ -224,7 +224,7 @@ const LCustomerPage = () => {
           </Group>
           <Box h={"49vh"} p={0}>
             {customers?.length === 0 ? (
-              <NothingFound text={translations["No customer found"]} />
+              <NothingFound text={translations("No customer found")} />
             ) : (
               <ScrollAreaAutosize h={"100%"}>
                 <SimpleGrid cols={4} p={"sm"}>

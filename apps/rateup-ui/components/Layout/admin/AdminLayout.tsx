@@ -16,8 +16,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft, IconTerminal2, IconX } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useUserInfo } from "../../../backend/user/user.query";
 import RateupLoader from "../../Loaders/RateupLoader";
@@ -30,7 +29,7 @@ export function AdminPanelLayout({ children }) {
   const theme = useMantineTheme();
   const primaryColor = theme.colors[theme.primaryColor][6];
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function handleBackToDashboard() {
     if (typeof window !== "undefined") {
       // Ensure the code is executed only on the client-side
@@ -88,7 +87,7 @@ export function AdminPanelLayout({ children }) {
                     onClick={handleBackToDashboard}
                     radius={"xl"}
                   >
-                    {translations["Dashboard"]}
+                    {translations("Dashboard")}
                   </Button>
                 </Stack>
               </AppShell.Section>
@@ -98,10 +97,10 @@ export function AdminPanelLayout({ children }) {
             <Group pl="sm" h="100%" align="center" justify="space-between">
               <Group>
                 <IconTerminal2 />
-                <Title>{translations["Admin Panel"]}</Title>
+                <Title>{translations("Admin Panel")}</Title>
               </Group>
               <Group p="xs">
-                <Tooltip label={translations["Toggle Navbar"]}>
+                <Tooltip label={translations("Toggle Navbar")}>
                   <Burger opened={opened} onClick={toggle} />
                 </Tooltip>
               </Group>

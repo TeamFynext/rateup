@@ -4,8 +4,7 @@ import { luminance, useMantineTheme } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useOs } from "@mantine/hooks";
 import { IconCalendarEvent } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useIsSurveyThemePreview } from "../../../SurveyTheme/components/previewcomponents/surveytheme/isSurveyThemePreviewContext";
@@ -31,7 +30,7 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
     os === "android" || os === "ios" || selectedPreview === "mobile";
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const takeSurveyLayoutWebDomNodeRef = useRef(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     const takeSurveyLayoutWebRootDiv = document.querySelector(
       ".take-survey-layout-web-root-div",
@@ -44,7 +43,7 @@ export function DateForm({ isPreview }: { isPreview?: boolean }) {
       <DatePickerInput
         value={isPreview ? value : response}
         onChange={isPreview ? setValue : updateResponse}
-        placeholder={translations["Select date"]}
+        placeholder={translations("Select date")}
         defaultLevel="decade"
         maw={400}
         mx="auto"

@@ -1,9 +1,9 @@
 import { useRouter } from "next/router";
 
 import { Avatar, Group, SimpleGrid, Text, Title } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 import { IntegratedApps } from "@/types/enums";
-import useTranslations from "@/dictionaries/useTranslation";
 import { getIntegrationDisplayName } from "@/utils/integration";
 
 import PaperLayout from "../styled/Layouts/PaperLayout";
@@ -11,7 +11,7 @@ import classes from "./ActionGrid.module.css";
 
 export function ActionsGrid({ getAppIconImageUrl }) {
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const items = Object.entries(IntegratedApps).map(([key, value]) => {
     const { src } = getAppIconImageUrl(value);
     return (
@@ -35,7 +35,7 @@ export function ActionsGrid({ getAppIconImageUrl }) {
   return (
     <PaperLayout className={classes.card}>
       <Group justify="space-between">
-        <Title order={4}>{translations["Apps"]}</Title>
+        <Title order={4}>{translations("Apps")}</Title>
       </Group>
       <SimpleGrid cols={4} mt="md">
         {items}

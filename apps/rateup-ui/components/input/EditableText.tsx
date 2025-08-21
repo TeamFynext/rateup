@@ -10,8 +10,7 @@ import {
 } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconCheck, IconPencil } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { SAVE_HOTKEY } from "../../utils/constants";
 
@@ -47,7 +46,7 @@ export function EditableText({
 }: EditableTextProps) {
   const [tempText, setTempText] = useState(text ?? "");
   const [focusTrapToggle, setfocusTrapToggle] = useState(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   function handleSave() {
     setfocusTrapToggle(false);
@@ -61,9 +60,9 @@ export function EditableText({
         label={
           editMode
             ? handleOnFunction
-              ? translations["Enter the title"]
-              : translations["Enter the footer label"]
-            : translations["Double click to edit"]
+              ? translations("Enter the title")
+              : translations("Enter the footer label")
+            : translations("Double click to edit")
         }
         openDelay={500}
       >

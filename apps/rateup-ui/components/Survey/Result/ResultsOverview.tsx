@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import { Badge, Divider, Flex, Stack, Text } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 import { Margin, usePDF } from "react-to-pdf";
 
@@ -9,7 +10,6 @@ import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useResponseAnalytics } from "../../../backend/surveys/response/response.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
@@ -42,7 +42,7 @@ const ResultsOverview = ({
     SelectedLanguageContext,
   );
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [isExporting, setIsExporting] = useState(false);
   const { data: subscription } = useSubscription();
   const { toPDF, targetRef } = usePDF({
@@ -151,13 +151,13 @@ const ResultsOverview = ({
           !npsOverView.length &&
           !choiceWiseOverView.length && (
             <NothingFound
-              text={translations["No Data available for Analysis"]}
+              text={translations("No Data available for Analysis")}
             />
           )
         )}
         {npsOverView.length > 0 && (
           <>
-            <Heading subtitle={translations["NPS Overview"]} />
+            <Heading subtitle={translations("NPS Overview")} />
             <PaperLayout>
               {npsOverView.map(([questionId, question], index) => {
                 const questionDetails = getQuestion(questionId);
@@ -188,7 +188,7 @@ const ResultsOverview = ({
         )}
         {choiceWiseOverView.length > 0 && (
           <>
-            <Heading subtitle={translations["Question Wise Overview"]} />
+            <Heading subtitle={translations("Question Wise Overview")} />
             <PaperLayout>
               {choiceWiseOverView.map(([questionId, question], index) => {
                 const questionDetails = getQuestion(questionId);

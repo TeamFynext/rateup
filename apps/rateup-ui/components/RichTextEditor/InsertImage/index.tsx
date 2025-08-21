@@ -11,16 +11,16 @@ import {
 import { useForm } from "@mantine/form";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconPhoto } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { uploadFile } from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/SaveChangesBtn/uploadFile";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./InsertImage.module.css";
 
 function InsertImage() {
   const { editor } = useRichTextEditorContext();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [isPopoveOpen, setIsPopoverOpen] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
 
@@ -35,11 +35,11 @@ function InsertImage() {
     validate: {
       imageUrlTextInput: (value, values) => {
         const chooseImageDDState = values.chooseImageDDState;
-        if (chooseImageDDState === translations["Enter Image Url"]) {
+        if (chooseImageDDState === translations("Enter Image Url")) {
           try {
             new URL(value);
           } catch (err) {
-            return translations["Please enter a valid URL"];
+            return translations("Please enter a valid URL");
           }
         } else {
           return null;
@@ -48,21 +48,21 @@ function InsertImage() {
       uploadImageFileInputValue: (value, values) => {
         const chooseImageDDState = values.chooseImageDDState;
         if (chooseImageDDState === "Upload Image") {
-          if (!value) return translations["Please Choose an image to upload"];
+          if (!value) return translations("Please Choose an image to upload");
         } else {
           return null;
         }
       },
       imgWidth: (value) => {
         if (!value) {
-          return translations["Please enter image width"];
+          return translations("Please enter image width");
         } else {
           return null;
         }
       },
       imgHeight: (value) => {
         if (!value) {
-          return translations["Please enter image height"];
+          return translations("Please enter image height");
         } else {
           return null;
         }
@@ -137,7 +137,7 @@ function InsertImage() {
       <Popover.Target>
         <RichTextEditor.Control
           aria-label="Insert image"
-          title={translations["Insert image"]}
+          title={translations("Insert image")}
           onClick={() => {
             if (!isUploadingFile) {
               setIsPopoverOpen(!isPopoveOpen);
@@ -156,7 +156,7 @@ function InsertImage() {
           onReset={form.onReset}
         >
           <Select
-            label={translations["Choose Image:"]}
+            label={translations("Choose Image:")}
             data={["Enter Image Url", "Upload Image"]}
             comboboxProps={{
               withinPortal: false,
@@ -169,15 +169,15 @@ function InsertImage() {
           {form.getValues().chooseImageDDState === "Enter Image Url" ? (
             <TextInput
               className={styles["image-url-text-input"]}
-              label={translations["Enter Image Url"]}
-              placeholder={translations["Enter the url of image"]}
+              label={translations("Enter Image Url")}
+              placeholder={translations("Enter the url of image")}
               withAsterisk
               {...form.getInputProps("imageUrlTextInput")}
             />
           ) : (
             <FileInput
-              label={translations["Upload Image"]}
-              placeholder={translations["Choose Image to Upload"]}
+              label={translations("Upload Image")}
+              placeholder={translations("Choose Image to Upload")}
               withAsterisk
               {...form.getInputProps("uploadImageFileInputValue")}
             />
@@ -189,16 +189,16 @@ function InsertImage() {
             align="flex-start"
           >
             <NumberInput
-              label={translations["Width"]}
-              placeholder={translations["width"]}
+              label={translations("Width")}
+              placeholder={translations("width")}
               min={300}
               withAsterisk
               {...form.getInputProps("imgWidth")}
             />
 
             <NumberInput
-              label={translations["Height"]}
-              placeholder={translations["height"]}
+              label={translations("Height")}
+              placeholder={translations("height")}
               min={300}
               withAsterisk
               {...form.getInputProps("imgHeight")}
@@ -207,7 +207,7 @@ function InsertImage() {
 
           <RateupButtonPrimary
             loading={isUploadingFile}
-            title={translations["submit"]}
+            title={translations("submit")}
             type="submit"
           />
         </form>

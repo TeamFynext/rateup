@@ -37,9 +37,9 @@ import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
 import "react-phone-number-input/style.css";
 
 import { DatePickerInput } from "@mantine/dates";
+import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./contact.module.css";
 
@@ -61,7 +61,7 @@ const CreateContactModal = ({
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const createContactMutation = useCreateContactMutation();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     mode: "uncontrolled",
     initialValues: initialValues ?? {
@@ -80,14 +80,14 @@ const CreateContactModal = ({
       phone: (value, values) => {
         if (values.source == importMethod.MANUAL)
           return !value
-            ? translations["Phone Number cannot be blank"]
+            ? translations("Phone Number cannot be blank")
             : !isValidPhoneNumber(value)
-              ? translations["Invalid phone number"]
+              ? translations("Invalid phone number")
               : null;
       },
       name: (value, values) =>
         values.source == importMethod.MANUAL &&
-        (value.length ? null : translations["Name cannot be blank"]),
+        (value.length ? null : translations("Name cannot be blank")),
     },
   });
   const handleSubmit = async () => {
@@ -168,18 +168,18 @@ const CreateContactModal = ({
           <Group justify="space-between">
             <Radio.Group
               name="importMethod"
-              label={translations["Import Contacts"]}
+              label={translations("Import Contacts")}
               key={form.key("source")}
               {...form.getInputProps("source")}
             >
               <Group>
                 <Radio
                   value={importMethod.MANUAL}
-                  label={translations["Manual"]}
+                  label={translations("Manual")}
                 />
                 <Radio
                   value={importMethod.CSV}
-                  label={translations["Import CSV/XLSX"]}
+                  label={translations("Import CSV/XLSX")}
                 />
               </Group>
             </Radio.Group>
@@ -207,8 +207,8 @@ const CreateContactModal = ({
           {form.getValues().source == importMethod.MANUAL && (
             <SimpleGrid cols={2}>
               <TextInput
-                label={translations["Name"]}
-                placeholder={translations["Enter name"]}
+                label={translations("Name")}
+                placeholder={translations("Enter name")}
                 radius={"md"}
                 size="md"
                 required
@@ -217,7 +217,7 @@ const CreateContactModal = ({
               />
               <Stack gap={0}>
                 <Group gap={3}>
-                  <Text>{translations["Phone Number"]}</Text>
+                  <Text>{translations("Phone Number")}</Text>
                   <Text c="red">*</Text>
                 </Group>
                 <Box
@@ -227,7 +227,7 @@ const CreateContactModal = ({
                     defaultCountry="IN"
                     international
                     countryCallingCodeEditable={false}
-                    placeholder={translations["Enter phone number"]}
+                    placeholder={translations("Enter phone number")}
                     value={form.values.phone}
                     {...form.getInputProps("phone")}
                     className={styles.inputPhone}
@@ -240,24 +240,24 @@ const CreateContactModal = ({
               {type === ContactGroupType.LOYALTY && (
                 <>
                   <TextInput
-                    label={translations["email"]}
-                    placeholder={translations["Enter the email"]}
+                    label={translations("email")}
+                    placeholder={translations("Enter the email")}
                     radius={"md"}
                     size="md"
                     type="email"
                     {...form.getInputProps("email")}
                   />
                   <DatePickerInput
-                    label={translations["dob"]}
-                    placeholder={translations["Enter the dob"]}
+                    label={translations("dob")}
+                    placeholder={translations("Enter the dob")}
                     radius={"md"}
                     size="md"
                     maxDate={new Date()}
                     {...form.getInputProps("dob")}
                   />
                   <TextInput
-                    label={translations["External ID"]}
-                    placeholder={translations["Enter External ID"]}
+                    label={translations("External ID")}
+                    placeholder={translations("Enter External ID")}
                     radius={"md"}
                     size="md"
                     {...form.getInputProps("external_id")}
@@ -290,14 +290,12 @@ const CreateContactModal = ({
                 iconSize={40}
                 mx={"lg"}
               >
-                {
-                  translations[
-                    "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone"
-                  ]
-                }
+                {translations(
+                  "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone",
+                )}
                 <NavLink
                   href={getFileUrlFromKey("/File/contact/demo.csv", false)}
-                  label={translations["Download Demo Csv File"]}
+                  label={translations("Download Demo Csv File")}
                   leftSection={<IconDownload size="1rem" stroke={1.5} />}
                   download
                   active
@@ -307,16 +305,16 @@ const CreateContactModal = ({
               </Blockquote>
               <Switch
                 mx={"lg"}
-                label={translations["Update the existing data while importing"]}
+                label={translations("Update the existing data while importing")}
                 key={form.key("updateExisting")}
                 {...form.getInputProps("updateExisting")}
               />
               <ContainedFileInput
                 mx={"lg"}
                 label=""
-                placeholder={
-                  translations["Upload a csv file (.csv) or excel file (.xlsx)"]
-                }
+                placeholder={translations(
+                  "Upload a csv file (.csv) or excel file (.xlsx)",
+                )}
                 accept=".csv,.xlsx"
                 multiple={false}
                 onChange={setCsvfile}
@@ -336,8 +334,8 @@ const CreateContactModal = ({
             <RateupButtonBlue
               title={
                 form.getValues().source == importMethod.MANUAL
-                  ? translations["Add Contact"]
-                  : translations["Import Contacts"]
+                  ? translations("Add Contact")
+                  : translations("Import Contacts")
               }
               type="button"
               loading={isCreating}

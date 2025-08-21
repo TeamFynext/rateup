@@ -5,6 +5,7 @@ import { Anchor, Badge, Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEye } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 
 import {
   ShopifyIntegration,
@@ -12,7 +13,6 @@ import {
   ShopifySurvey,
 } from "@/types/global";
 import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
-import useTranslations from "@/dictionaries/useTranslation";
 import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { shopifyEventData } from "@/utils/constants";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
@@ -44,7 +44,7 @@ const ShopifySchedules = ({
     useDisclosure(false);
   const [selectedSchedule, setSelectedSchedule] =
     useState<ShopifySchedule>(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const templateAndteam = {
     templateName: waTemplates?.find(
       (t) => t.id === selectedShopifySurveyEvent?.waTemplateId,
@@ -60,13 +60,13 @@ const ShopifySchedules = ({
   };
 
   const columns = [
-    { key: "phone", value: translations["Customer Phone Number"] },
-    { key: "scheduleTime", value: translations["Scheduled At"] },
-    { key: "sentAt", value: translations["Sent At"] },
-    { key: "status", value: translations["Status"] },
+    { key: "phone", value: translations("Customer Phone Number") },
+    { key: "scheduleTime", value: translations("Scheduled At") },
+    { key: "sentAt", value: translations("Sent At") },
+    { key: "status", value: translations("Status") },
     {
       key: "actionStatus",
-      value: translations["Loyalty Action Status"],
+      value: translations("Loyalty Action Status"),
       renderCell: (value) =>
         !value ? (
           <Text>----</Text>
@@ -90,7 +90,7 @@ const ShopifySchedules = ({
       renderCell: (value) => (
         <RateupButtonSecondary
           variant="light"
-          title={translations["view"]}
+          title={translations("view")}
           size="xs"
           onClick={() => {
             setSelectedShopifySurveyEvent(value);
@@ -106,7 +106,7 @@ const ShopifySchedules = ({
       renderCell: (value) => (
         <RateupButtonSecondary
           variant="light"
-          title={translations["view"]}
+          title={translations("view")}
           size="xs"
           onClick={() => {
             setSelectedSchedule(value);
@@ -142,7 +142,7 @@ const ShopifySchedules = ({
   return (
     <Stack p={"sm"} mt={"lg"}>
       <Group>
-        <Title order={3}>{translations["Schedules"]}</Title>
+        <Title order={3}>{translations("Schedules")}</Title>
         <RefreshButton queryKeys={["shopifySchedules"]} />
       </Group>
       <PaperLayout>
@@ -170,12 +170,12 @@ const EventDetailsModal = ({
   shopifySurvey,
   templateAndTeam,
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <FormModalLayout opened={opened} onClose={close} title="" centered>
       <Stack>
         <Title order={4}>
-          {translations["Event :"]}{" "}
+          {translations("Event :")}{" "}
           {
             shopifyEventData.find(
               (event) => event.value == shopifySurvey?.event,
@@ -183,7 +183,7 @@ const EventDetailsModal = ({
           }
         </Title>
         <Text>
-          {translations["WhatsApp Template :"]}{" "}
+          {translations("WhatsApp Template :")}{" "}
           <Anchor
             href={`/dashboard/whatsapp/templates/${shopifySurvey?.waTemplateId}`}
             component={Link}
@@ -192,26 +192,26 @@ const EventDetailsModal = ({
           </Anchor>
         </Text>
         <Text>
-          {translations["Scheduled To Send"]} :{" "}
-          {translations["After a delay of"]} {shopifySurvey?.timeDelay}{" "}
-          {translations["minutes"]}
+          {translations("Scheduled To Send")} :{" "}
+          {translations("After a delay of")} {shopifySurvey?.timeDelay}{" "}
+          {translations("minutes")}
         </Text>
         <Text>
-          {translations["Team : "]}
+          {translations("Team : ")}
           {templateAndTeam?.teamName}
         </Text>
         {shopifySurvey?.isProductSpecific && (
           <Text>
-            {translations["Sent Only if"]} {templateAndTeam?.product}{" "}
-            {translations["found"]}
+            {translations("Sent Only if")} {templateAndTeam?.product}{" "}
+            {translations("found")}
           </Text>
         )}
         <Text>
-          {translations["Status : "]}
+          {translations("Status : ")}
           <ActiveStatusBadge active={shopifySurvey?.active} />
         </Text>
         <Text>
-          {translations["Created At : "]}
+          {translations("Created At : ")}
           {formatIsoDateStringWithTime(shopifySurvey?.createdAt)}{" "}
         </Text>
       </Stack>

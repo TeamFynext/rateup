@@ -13,9 +13,9 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 import { useCreateAuthToken } from "@/backend/appsIntegration/integration.query";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { RateupButtonBlue } from "../../components/Button/RateupButtons";
 import { useCheckSession } from "../../hooks/checkSession";
@@ -24,7 +24,7 @@ export default function AuthCallBack() {
   const router = useRouter();
   const { code, error } = router.query;
   const [callbackRoute, setCallBackRoute] = useState("/dashboard/settings");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [isLoading, setIsLoading] = useState(true);
   const mut = useCreateAuthToken();
   const session = useCheckSession();
@@ -58,17 +58,17 @@ export default function AuthCallBack() {
       <Flex justify={"center"} align={"center"} mt={200}>
         {isLoading ? (
           <Stack justify="center" align="center">
-            <Text> {translations["Please wait.."]}</Text>
+            <Text> {translations("Please wait..")}</Text>
             <Loader />
           </Stack>
         ) : (
           <Paper withBorder p={"xl"} shadow="xl">
             <Title order={2}>
-              {translations["Your accout has been synced with RateUp"]}
+              {translations("Your accout has been synced with RateUp")}
             </Title>
             <Flex justify="center" mt={"xl"}>
               <RateupButtonBlue
-                title={translations["Go Back"]}
+                title={translations("Go Back")}
                 onClick={() => {
                   router.push(callbackRoute);
                 }}

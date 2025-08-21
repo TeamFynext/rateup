@@ -3,8 +3,7 @@ import { useRouter } from "next/router";
 
 import { Box, Image, Switch } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useUpdateLandingPageMutation } from "../../../../backend/landingPage/landingPage.query";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
@@ -28,7 +27,7 @@ function SharePage() {
     useUpdateLandingPageMutation(shortUrlId);
 
   const editorInstance = useTiptapEditorInstance();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [
     isNoContentFoundModalOpen,
     { open: openNoContentFoundModal, close: closeNoContentFoundModal },
@@ -55,19 +54,19 @@ function SharePage() {
         <Switch
           onClick={handlePublishSwitchClick}
           size="lg"
-          label={translations["Published"]}
+          label={translations("Published")}
           checked={isPublished}
         />
       </PaperLayout>
 
       <PaperLayout className={styles["share-options-container"]}>
         <Box className={styles["landingPage-link-container"]}>
-          <h2>{translations["Share Landing Page"]}</h2>
+          <h2>{translations("Share Landing Page")}</h2>
           <CopyLinkComponent value={shareUrl} disabled={!isPublished} />
         </Box>
 
         <Box className={styles["social-media-share-container"]}>
-          <h2>{translations["How Would you like to survey people?"]}</h2>
+          <h2>{translations("How Would you like to survey people?")}</h2>
           <SocialMediaLinks
             landingPageName={name}
             landingPageShareUrl={shareUrl}
@@ -77,7 +76,7 @@ function SharePage() {
       </PaperLayout>
 
       <PaperLayout className={styles["share-qr-card"]}>
-        <h2>{translations["Share QR Code"]}</h2>
+        <h2>{translations("Share QR Code")}</h2>
         <ShareLandingPage
           url={shareUrl}
           isPublished={isPublished}

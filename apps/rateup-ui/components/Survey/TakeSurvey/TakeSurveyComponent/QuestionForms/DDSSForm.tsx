@@ -2,8 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 
 import { Select, useMantineTheme } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
@@ -27,7 +26,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   const selectedPreview = useSelectedPreview();
   const isMobile =
     useMediaQuery("(max-width: 480px)") || selectedPreview === "mobile";
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const takeSurveyLayoutWebDomNodeRef = useRef(null);
   const isSurveyThemePreview = useIsSurveyThemePreview();
   const { response, updateResponse } = useContext(CurrentResponsesContext);
@@ -61,7 +60,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
   return !isMobile ? (
     <FormPaperLayout>
       <Select
-        placeholder={translations["Select one / type in to search"]}
+        placeholder={translations("Select one / type in to search")}
         data={data}
         value={selectedOp}
         onChange={handleSelectedOp}
@@ -92,7 +91,7 @@ export function DDSSForm({ previewChoices }: MCQFormProps) {
     <CustomSelectForMobile
       value={selectedOp}
       data={data}
-      placeholder={translations["Select one"]}
+      placeholder={translations("Select one")}
       onChange={handleSelectedOp}
       portalProps={{
         target: takeSurveyLayoutWebDomNodeRef.current,

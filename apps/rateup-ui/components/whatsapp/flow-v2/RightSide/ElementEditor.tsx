@@ -32,6 +32,7 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslations } from "next-intl";
 
 import { QuestionType2, SubscriptionFeaturePathName } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
@@ -48,7 +49,6 @@ import {
   ContainedTextInputWithCounter,
 } from "@/components/input/ContainedInput/ContainedInput";
 import RateupSwitch from "@/components/Switch/RateupSwitch";
-import useTranslations from "@/dictionaries/useTranslation";
 import {
   flowNonInputElements2,
   SAVE_HOTKEY,
@@ -96,7 +96,7 @@ function ElementEditor() {
     currentElementType,
     setDetailActiveEditor,
   } = useFlowStore();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const element = getCurrentElement();
   const initialValues = useMemo(
     () => getInitialValues(currentElementType),
@@ -231,7 +231,7 @@ function ElementEditor() {
           <Group>
             {form2?.values?.required?.toString() && (
               <Checkbox
-                label={translations["Required"]}
+                label={translations("Required")}
                 fw={600}
                 {...form2.getInputProps("required", { type: "checkbox" })}
               />
@@ -240,7 +240,7 @@ function ElementEditor() {
               form2.getValues().metaType as QuestionType2,
             ) && (
               <Checkbox
-                label={translations["NPS Analytics"]}
+                label={translations("NPS Analytics")}
                 fw={600}
                 {...form2.getInputProps("enableNpsAnalytics", {
                   type: "checkbox",
@@ -275,7 +275,7 @@ const FlowElementActions = ({
   currentElementType: QuestionType2;
   element: FormElement;
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { data: subscription } = useSubscription();
   const [isGoogleReviewFeatureActive, setIsGoogleReviewFeatureActive] =
     useState(false);
@@ -311,7 +311,7 @@ const FlowElementActions = ({
           rightSection={<IconChevronDown size="1rem" />}
         >
           <Text size="sm" c={"var(--text-color-sp)"} fw="700">
-            {translations["Actions"]}
+            {translations("Actions")}
           </Text>
         </Button>
       </Menu.Target>
@@ -320,7 +320,7 @@ const FlowElementActions = ({
         {logicSupportedTypes3.includes(currentElementType) && (
           <Menu.Item>
             <RateupButtonSecondary
-              title={translations["Logic Jump"]}
+              title={translations("Logic Jump")}
               fullWidth
               leftIcon={
                 <Image
@@ -343,7 +343,7 @@ const FlowElementActions = ({
           <Menu.Item>
             {isGoogleReviewFeatureActive ? (
               <RateupButtonPrimary
-                title={translations["Google Review"]}
+                title={translations("Google Review")}
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
                 size="sm"
                 variant="outline"
@@ -353,7 +353,7 @@ const FlowElementActions = ({
               />
             ) : (
               <Tooltip
-                label={translations["Upgrade your Plan for this feature."]}
+                label={translations("Upgrade your Plan for this feature.")}
                 disabled={isGoogleReviewFeatureActive}
                 color="yellow"
               >
@@ -375,7 +375,7 @@ const FlowElementActions = ({
             element?.id &&
             !survey?.enableAutoGenerateTicket ? (
               <RateupButtonSecondary
-                title={translations["Create Tickets"]}
+                title={translations("Create Tickets")}
                 leftIcon={<IconTicket stroke={4} size={"1rem"} />}
                 size="sm"
                 fullWidth
@@ -387,12 +387,12 @@ const FlowElementActions = ({
               <Tooltip
                 label={
                   !isTicketFeatureActive
-                    ? translations["Upgrade your Plan for this feature."]
+                    ? translations("Upgrade your Plan for this feature.")
                     : survey?.enableAutoGenerateTicket
-                      ? translations[
-                          "Aut-Generate Ticket is enabled on this flow"
-                        ]
-                      : translations["Save the element to create ticket"]
+                      ? translations(
+                          "Aut-Generate Ticket is enabled on this flow",
+                        )
+                      : translations("Save the element to create ticket")
                 }
                 color={!isTicketFeatureActive ? "yellow" : "black"}
               >
@@ -402,7 +402,7 @@ const FlowElementActions = ({
                   onClick={(event) => event.preventDefault()}
                   leftSection={<IconTicket stroke={4} size={"1rem"} />}
                 >
-                  {translations["Create Tickets"]}
+                  {translations("Create Tickets")}
                 </Button>
               </Tooltip>
             )}

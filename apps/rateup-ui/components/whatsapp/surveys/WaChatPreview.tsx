@@ -15,8 +15,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { SendMessageMock } from "../MessageComponents";
@@ -28,7 +27,7 @@ export const WhatsappChatPreview = ({ selectedQ }) => {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const theme = useMantineTheme();
   const sections = selectedQ?.sections?.[selectedLanguage];
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <Title
@@ -40,7 +39,7 @@ export const WhatsappChatPreview = ({ selectedQ }) => {
         order={3}
         c={"white"}
       >
-        {translations["Preview"]}
+        {translations("Preview")}
       </Title>
       <ScrollArea h={"100%"}>
         <Stack
@@ -117,7 +116,7 @@ export const WhatsappChatPreview = ({ selectedQ }) => {
                     justifySelf: "center",
                   }}
                 >
-                  {translations["View Options"]}
+                  {translations("View Options")}
                 </Text>
               </Group>
               <Stack
@@ -132,7 +131,7 @@ export const WhatsappChatPreview = ({ selectedQ }) => {
               </Stack>
               <Center>
                 <Text c="dimmed" fz="xs" p="sm">
-                  {translations["Tap to select an item"]}
+                  {translations("Tap to select an item")}
                 </Text>
               </Center>
             </Stack>
