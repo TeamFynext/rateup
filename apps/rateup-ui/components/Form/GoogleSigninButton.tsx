@@ -1,8 +1,7 @@
 import { Button } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-web-js/recipe/thirdparty";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { showErrorToast } from "../../utils/notifications";
 import { GoogleIcon } from "../Button/GoogleIcon";
@@ -13,7 +12,7 @@ type GoogleSignInButtonProps = {
 };
 
 function GoogleSignInButton({ buttonText, className }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   async function googleSignInClicked() {
     try {
       const authUrl = await getAuthorisationURLWithQueryParamsAndSetState({
@@ -37,7 +36,7 @@ function GoogleSignInButton({ buttonText, className }) {
         showErrorToast(err.message, "load-data", <IconX size="1rem" />);
       } else {
         showErrorToast(
-          translations["Oops! Something went wrong..."] + err,
+          translations("Oops! Something went wrong...") + err,
           "load-data",
           <IconX size="1rem" />,
         );

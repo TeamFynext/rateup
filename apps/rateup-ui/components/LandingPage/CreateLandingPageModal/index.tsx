@@ -2,8 +2,7 @@ import { useCallback, useRef } from "react";
 
 import { Box, Button, Modal, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useCreateLandingPageMutation,
@@ -19,7 +18,7 @@ function CreateLandingPageModal({
   shortUrlId,
   initialName,
 }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       name: initialName || "",
@@ -29,9 +28,9 @@ function CreateLandingPageModal({
       name: (value) =>
         /^[a-zA-Z][a-zA-Z0-9_\s]{2,}$/.test(value)
           ? null
-          : translations[
-              "Name should be alphanumeric, length should be greater than 2 characters"
-            ],
+          : translations(
+              "Name should be alphanumeric, length should be greater than 2 characters",
+            ),
     },
   });
 
@@ -68,8 +67,8 @@ function CreateLandingPageModal({
       onClose={onClose}
       title={
         mode === "create"
-          ? translations["Create LandingPage"]
-          : translations["Rename Landing Page"]
+          ? translations("Create LandingPage")
+          : translations("Rename Landing Page")
       }
       centered
       classNames={{
@@ -90,8 +89,8 @@ function CreateLandingPageModal({
         >
           <TextInput
             className={styles["name-text-input"]}
-            label={translations["Name"]}
-            placeholder={translations["Enter name of Landing Page"]}
+            label={translations("Name")}
+            placeholder={translations("Enter name of Landing Page")}
             onClick={(e) => e.stopPropagation()}
             {...form.getInputProps("name")}
           />
@@ -107,12 +106,12 @@ function CreateLandingPageModal({
           onClick={handleCancelBtnClick}
           className={modalStyles["cancel-btn"]}
         >
-          {translations["Cancel"]}
+          {translations("Cancel")}
         </Button>
         <Button onClick={handleCreateLinkBtnClick}>
           {mode === "create"
-            ? translations["Create"]
-            : translations["Save changes"]}
+            ? translations("Create")
+            : translations("Save changes")}
         </Button>
       </Box>
     </Modal>

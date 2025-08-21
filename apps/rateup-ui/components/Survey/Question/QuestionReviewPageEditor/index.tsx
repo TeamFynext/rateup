@@ -16,6 +16,7 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import classNames from "classnames/bind";
+import { useTranslations } from "next-intl";
 
 import { QuestionType } from "@/types/enums";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
@@ -24,7 +25,6 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "@/components/Button/RateupButtons";
-import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import { QuestionTabsEnum } from "../../EditSurvey";
@@ -81,7 +81,7 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
     },
   });
 
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const { data: teamsRes } = useTeamsByUser();
   const teamsToDisplay = teamsRes?.data?.filter((t) =>
@@ -282,12 +282,12 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
         justify="space-between"
       >
         <RateupButtonSecondary
-          title={translations["Cancel"]}
+          title={translations("Cancel")}
           size="md"
           onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
         />
         <RateupButtonBlue
-          title={translations["Save"]}
+          title={translations("Save")}
           size="md"
           onClick={handleSave}
           disabled={!selectedQ?.reviewPageOptions}

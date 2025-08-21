@@ -5,8 +5,7 @@ import {
   TextInputProps,
 } from "@mantine/core";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 interface LinkCopyElementProps extends TextInputProps {
   link: string;
@@ -16,10 +15,10 @@ export function LinkCopyElement({
   label,
   ...props
 }: LinkCopyElementProps) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <TextInput
-      label={label ?? translations["Register URL"]}
+      label={label ?? translations("Register URL")}
       readOnly
       value={link}
       rightSection={

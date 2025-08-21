@@ -31,6 +31,7 @@ import {
 } from "@tabler/icons-react";
 import axios from "axios";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { useImmer } from "use-immer";
 
@@ -69,7 +70,6 @@ import { FileConverter } from "@/components/whatsapp/flow-v2/input/DataSource";
 import WaTemplateFormElements, {
   NoParams,
 } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayFooter/templateDisplayModal/templatePreview/formElements";
-import useTranslations from "@/dictionaries/useTranslation";
 import {
   deleteUploadedFiles,
   getFileUrlFromKey,
@@ -477,7 +477,7 @@ const MediaNodeEditor: React.FC<
   const [media, setMedia] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mediaError, setMediaError] = useState("");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [file, setFile] = useState<File | null>(null);
   const resetRef = useRef<() => void>(null);
 
@@ -543,7 +543,7 @@ const MediaNodeEditor: React.FC<
       setFile(file);
     } catch (error) {
       showErrorToast(
-        translations["Error converting file to Base64:"] +
+        translations("Error converting file to Base64:") +
           JSON.stringify(error),
         "file-converting",
       );
@@ -562,7 +562,7 @@ const MediaNodeEditor: React.FC<
     } catch (error) {
       setLoading(false);
       showErrorToast(
-        translations["Error uploading file to server:"] + JSON.stringify(error),
+        translations("Error uploading file to server:") + JSON.stringify(error),
         "file-uploading",
       );
     }

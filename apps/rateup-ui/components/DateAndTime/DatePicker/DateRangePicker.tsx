@@ -16,9 +16,9 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
 import { IconCalendar, IconX } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
-import useTranslations from "@/dictionaries/useTranslation";
 
 export function DateRangePickerButton({
   onChange,
@@ -28,7 +28,7 @@ export function DateRangePickerButton({
   ranges: Range[];
 }) {
   const [opened, { open, close }] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <Group align="center">
@@ -39,7 +39,7 @@ export function DateRangePickerButton({
           onClick={open}
           readOnly
           w="120px"
-          label={translations["Start date"]}
+          label={translations("Start date")}
           classNames={classes}
           leftSection={<IconCalendar size={"1rem"} />}
         />
@@ -49,11 +49,11 @@ export function DateRangePickerButton({
           value={ranges[0] ? dayjs(ranges[0].endDate).format("DD/MM/YYYY") : ""}
           onClick={open}
           readOnly
-          label={translations["End date"]}
+          label={translations("End date")}
           classNames={classes}
           leftSection={<IconCalendar size={"1rem"} />}
         />
-        <Tooltip label={translations["Clear Date Filter"]}>
+        <Tooltip label={translations("Clear Date Filter")}>
           <ActionIcon
             onClick={() => onChange(undefined)}
             variant="light"
@@ -74,12 +74,12 @@ export function DateRangePickerButton({
 }
 
 export const DateRangePickerModal = ({ opened, onChange, ranges, close }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Modal
       opened={opened}
       onClose={close}
-      title={translations["Date range picker"]}
+      title={translations("Date range picker")}
       size={"auto"}
     >
       <DateRangePicker
@@ -94,9 +94,9 @@ export const DateRangePickerModal = ({ opened, onChange, ranges, close }) => {
           onClick={() => onChange(undefined)}
           variant="outline"
           color="red"
-          title={translations["Clear"]}
+          title={translations("Clear")}
         />
-        <RateupButtonPrimary onClick={close} title={translations["Done"]} />
+        <RateupButtonPrimary onClick={close} title={translations("Done")} />
       </Group>
     </Modal>
   );

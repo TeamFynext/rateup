@@ -20,6 +20,7 @@ import {
   IconTrash,
   IconUserEdit,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { getUserRoleLabel } from "@/utils";
 
@@ -36,7 +37,6 @@ import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { useUser } from "../../../context/UserContext";
-import useTranslations from "../../../dictionaries/useTranslation";
 import { UserRole } from "../../../utils/enums";
 
 const Members = () => {
@@ -60,11 +60,11 @@ const Members = () => {
     <Stack m={"xs"}>
       <Group justify="space-between">
         {/* <ContainedTextField
-          placeholder={translations["Search in all members"]}
+          placeholder={translations("Search in all members")}
           disabled
           style={{ flex: 1 }}
         />
-        <ContainedSelection disabled placeholder={translations["Sort"]} /> */}
+        <ContainedSelection disabled placeholder={translations("Sort")} /> */}
       </Group>
       <PaperLayout>
         {isLoadingTeamsUser ? (
@@ -112,7 +112,7 @@ const SmallMemberCard = ({
 }: {
   member: { name: string; role: string; email: string };
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Group justify="space-between">
       <Stack gap={0}>
@@ -134,7 +134,7 @@ const SmallMemberCard = ({
         variant="light"
         size="lg"
       >
-        {translations["Active"]}
+        {translations("Active")}
       </Badge>
     </Group>
   );
@@ -154,15 +154,15 @@ export const MemberEditFormModal = ({
   const [newRole, setNewRole] = React.useState(member?.role);
   const updateRole = useUpdateRoleMutation();
   const { user } = useUser();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function onChangeRole(id: string, role: string) {
     const data = { memberId: id, body: { role: role } };
     updateRole.mutate(data);
     notifications.show({
       id: "load-data",
       loading: true,
-      title: translations["Updating role.."],
-      message: translations["Hold on, your changes are getting updated..."],
+      title: translations("Updating role.."),
+      message: translations("Hold on, your changes are getting updated..."),
       autoClose: false,
       withCloseButton: false,
     });
@@ -175,22 +175,22 @@ export const MemberEditFormModal = ({
       includeCancelButton
       opened={id !== ""}
       onClose={onClose}
-      title={translations["Edit Staff"]}
-      buttonTitle={translations["Save"]}
+      title={translations("Edit Staff")}
+      buttonTitle={translations("Save")}
       onSubmit={() => onChangeRole(member?.id, newRole)}
     >
       <Stack gap={"xl"}>
         <SmallMemberCard member={member} />
         <Group justify="space-between">
-          <Text fw={900}>{translations["Change Role"]}</Text>
+          <Text fw={900}>{translations("Change Role")}</Text>
           <ContainedSelection
-            placeholder={translations["Select Role"]}
+            placeholder={translations("Select Role")}
             disabled={user.role !== "SUPER_ADMIN" || member.id === user.userId}
             defaultValue={member?.role}
             data={[
-              { value: UserRole.SUPADM, label: translations["Super Admin"] },
-              { value: UserRole.ADM, label: translations["Admin"] },
-              { value: UserRole.MEMBER, label: translations["Staff"] },
+              { value: UserRole.SUPADM, label: translations("Super Admin") },
+              { value: UserRole.ADM, label: translations("Admin") },
+              { value: UserRole.MEMBER, label: translations("Staff") },
             ]}
             onChange={(value) => setNewRole(value)}
           />
@@ -221,7 +221,7 @@ const LongMemberCard = ({
   const [pauseModalOpened, { open: openPauseModal, close: closePauseModal }] =
     useDisclosure();
   const { user } = useUser();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const updateStatus = useUpdateActiveStatusMutation();
   const updatePauseStatus = useUpdateUserPause();
   function onUpdateStatus() {
@@ -229,8 +229,8 @@ const LongMemberCard = ({
     notifications.show({
       id: "load-data",
       loading: true,
-      title: translations["Deleting User.."],
-      message: translations["Hold on, your changes are getting updated..."],
+      title: translations("Deleting User.."),
+      message: translations("Hold on, your changes are getting updated..."),
       autoClose: false,
       withCloseButton: false,
     });
@@ -270,12 +270,12 @@ const LongMemberCard = ({
             {member?.email}
           </Text>
           {member.isPaused && (
-            <Badge color="red">{translations["Paused"]}</Badge>
+            <Badge color="red">{translations("Paused")}</Badge>
           )}
         </Stack>
         <Stack style={{ flex: 1 }} gap={5}>
           <Text size="xs" fw={400} c={"dimmed"}>
-            {translations["Teams joined"]} :
+            {translations("Teams joined")} :
           </Text>
           <ScrollArea
             style={{ flex: 1 }}
@@ -294,7 +294,7 @@ const LongMemberCard = ({
         </Stack>
         <Group>
           <Tooltip
-            label={translations["Edit staff role"]}
+            label={translations("Edit staff role")}
             position="top"
             withArrow
           >
@@ -307,7 +307,7 @@ const LongMemberCard = ({
             </Button>
           </Tooltip>
           <Tooltip
-            label={translations["Delete Staff"]}
+            label={translations("Delete Staff")}
             position="top"
             withArrow
           >
@@ -323,8 +323,8 @@ const LongMemberCard = ({
           <Tooltip
             label={
               member.isPaused
-                ? translations["Resume Staff"]
-                : translations["Pause staff"]
+                ? translations("Resume Staff")
+                : translations("Pause staff")
             }
             position="top"
             withArrow
@@ -346,9 +346,9 @@ const LongMemberCard = ({
       <ConfirmationModal
         forDeleteFunctionality
         opened={modalOpened}
-        confirmLabel={translations["Delete"]}
-        headerTitle={translations["Delete Staff"]}
-        headerLabel={translations["Are you sure to delete this team staff?"]}
+        confirmLabel={translations("Delete")}
+        headerTitle={translations("Delete Staff")}
+        headerLabel={translations("Are you sure to delete this team staff?")}
         onConfirm={onUpdateStatus}
         onClose={close}
       />
@@ -357,10 +357,10 @@ const LongMemberCard = ({
         confirmLabel="Yes"
         headerTitle={
           member?.isPaused
-            ? translations["Resume User"]
-            : translations["Pause User"]
+            ? translations("Resume User")
+            : translations("Pause User")
         }
-        headerLabel={`${translations["Are you sure to"]} ${member?.isPaused ? translations["resume"] : translations["pause"]}  ${translations["this user?"]}`}
+        headerLabel={`${translations("Are you sure to")} ${member?.isPaused ? translations("resume") : translations("pause")}  ${translations("this user?")}`}
         onConfirm={handleUserStatus}
         onClose={closePauseModal}
       />

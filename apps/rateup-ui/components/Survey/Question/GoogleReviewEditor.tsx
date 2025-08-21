@@ -17,11 +17,11 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconEdit, IconInfoCircle, IconX } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import useFlowStore, {
   EditorType,
 } from "@/components/whatsapp/flow-v2/utils/store";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useQuestionUpdateMutation } from "../../../backend/surveys/questions/questions.query";
 import { useSurvey } from "../../../backend/surveys/surveys.query";
@@ -77,7 +77,7 @@ const GoogleReviewEditor = ({
   const updateGoogleReview = (googleReview: any) => {
     selectedQ && setSelectedQ({ ...selectedQ, googleReview });
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const switchCondition = waFlowSave ? selectedQ?.metaType : selectedQ?.type;
   useEffect(() => {
     if (
@@ -129,8 +129,8 @@ const GoogleReviewEditor = ({
       notifications.show({
         id: "load-data",
         color: "var(--color-tertiary)",
-        title: translations["Configure Google Review"],
-        message: translations["Enter condition and Google page URL"],
+        title: translations("Configure Google Review"),
+        message: translations("Enter condition and Google page URL"),
         icon: <IconInfoCircle size="3rem" />,
         autoClose: 3000,
       });
@@ -155,7 +155,7 @@ const GoogleReviewEditor = ({
       notifications.show({
         color: "red",
         title: "Failed",
-        message: translations["Please enter Google Review links for all teams"],
+        message: translations("Please enter Google Review links for all teams"),
         icon: <IconX size="1rem" />,
         autoClose: 2000,
       });
@@ -165,8 +165,8 @@ const GoogleReviewEditor = ({
       notifications.show({
         id: "load-data",
         loading: true,
-        title: translations["Enabling google review"],
-        message: translations["Hold on, your changes are getting updated.."],
+        title: translations("Enabling google review"),
+        message: translations("Hold on, your changes are getting updated.."),
         autoClose: false,
         withCloseButton: false,
       });
@@ -183,8 +183,8 @@ const GoogleReviewEditor = ({
     notifications.show({
       id: "load-data",
       color: "red",
-      title: translations["Failed"],
-      message: `${translations["Failed to update.. try again. Error:"]} ${error.message}`,
+      title: translations("Failed"),
+      message: `${translations("Failed to update.. try again. Error:")} ${error.message}`,
       icon: <IconX size="1rem" />,
       autoClose: 2000,
     });
@@ -218,8 +218,8 @@ const GoogleReviewEditor = ({
         <Stack px="lg" h="100%">
           <>
             <Switch
-              label={translations["Google Reviews"]}
-              description={translations["Setup Google Page review for users."]}
+              label={translations("Google Reviews")}
+              description={translations("Setup Google Page review for users.")}
               labelPosition="left"
               checked={enableGoogleReview}
               onChange={(event) => handleSwitch(event)}
@@ -242,11 +242,9 @@ const GoogleReviewEditor = ({
                           return (
                             <SimpleGrid cols={3} spacing={30}>
                               <Text fw={500}>
-                                {
-                                  translations[
-                                    "Select the emojis for which Google Review to be enabled:"
-                                  ]
-                                }
+                                {translations(
+                                  "Select the emojis for which Google Review to be enabled:",
+                                )}
                               </Text>
                               <Text fw={500}> : </Text>
                               <Group style={{ minWidth: "250px" }}>
@@ -278,11 +276,9 @@ const GoogleReviewEditor = ({
                           return (
                             <SimpleGrid cols={3} spacing={30}>
                               <Text fw={500}>
-                                {
-                                  translations[
-                                    "Select minimum rating for enabling Google Review:"
-                                  ]
-                                }
+                                {translations(
+                                  "Select minimum rating for enabling Google Review:",
+                                )}
                               </Text>
                               <Text fw={500}> : </Text>
                               <Stack align="center">
@@ -293,7 +289,7 @@ const GoogleReviewEditor = ({
                                 />
                                 <Text>
                                   {" "}
-                                  {minRating} {translations["stars and above."]}
+                                  {minRating} {translations("stars and above.")}
                                 </Text>
                               </Stack>
                             </SimpleGrid>
@@ -303,11 +299,9 @@ const GoogleReviewEditor = ({
                             <SimpleGrid cols={3} spacing={30}>
                               <Text fw={500}>
                                 {" "}
-                                {
-                                  translations[
-                                    "Select minimum scale value for enabling Google Review:"
-                                  ]
-                                }{" "}
+                                {translations(
+                                  "Select minimum scale value for enabling Google Review:",
+                                )}{" "}
                               </Text>
                               <Text fw={500}> : </Text>
                               <Stack>
@@ -356,7 +350,7 @@ const GoogleReviewEditor = ({
                 </Stack>
                 <Divider m="sm" />
                 <Text fw={600} size="1.1rem" my="xs">
-                  {translations["Google Review Links"]}
+                  {translations("Google Review Links")}
                 </Text>
                 <Stack p="sm">
                   {teamsToDisplay &&
@@ -377,12 +371,12 @@ const GoogleReviewEditor = ({
       <Divider m="xs" />
       <Group justify="space-between" pb={"sm"} px={"sm"}>
         <RateupButtonSecondary
-          title={translations["Cancel"]}
+          title={translations("Cancel")}
           size="md"
           onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
         />
         <RateupButtonBlue
-          title={translations["Save"]}
+          title={translations("Save")}
           size="md"
           onClick={handleSave}
           loading={questionUpdateMutation.isPending}

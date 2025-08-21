@@ -30,6 +30,7 @@ import {
   IconWorld,
   IconX,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
@@ -42,7 +43,6 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput";
 import { LengthTracker } from "@/components/input/LengthTracker";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
-import useTranslations from "@/dictionaries/useTranslation";
 import { parseStringWithVariables } from "@/pages/dashboard/whatsapp/templates/[templateId]";
 import {
   WHATSAPP_BUTTON_TYPE,
@@ -92,7 +92,7 @@ const CardCarousel = ({
       product_reatiler_id: "",
     });
   }
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [selectedText, setSelectedText] = useState("");
   const contentHistory = useRef([]); // Ref to store content history
   const inputRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
@@ -270,11 +270,9 @@ const CardCarousel = ({
                     </sup>
                   </Text>
                   <Text fz={13}>
-                    {
-                      translations[
-                        "Make your messages personal using variables and get more replies!"
-                      ]
-                    }
+                    {translations(
+                      "Make your messages personal using variables and get more replies!",
+                    )}
                   </Text>
                   <TextFormateToolBar
                     applyFormatting={(style) => applyFormatting(style, index)}
@@ -296,7 +294,7 @@ const CardCarousel = ({
                         width: "fit-content",
                       },
                     }}
-                    placeholder={translations["Enter the text"]}
+                    placeholder={translations("Enter the text")}
                     autosize
                     minRows={3}
                     onSelect={handleSelect}
@@ -313,7 +311,7 @@ const CardCarousel = ({
                 {parseStringWithVariables(card.body).map((data, _index) => (
                   <ContainedTextField
                     key={data}
-                    placeholder={`${translations["Enter the content for"]} {{${data}}}`}
+                    placeholder={`${translations("Enter the content for")} {{${data}}}`}
                     {...form.getInputProps(
                       `mediaCarousel.${index}.example.${_index}`,
                     )}
@@ -377,7 +375,7 @@ const CardCarousel = ({
                         searchable
                         label={
                           <Text fz={14} fw={500}>
-                            {translations["Web Survey"]}
+                            {translations("Web Survey")}
                           </Text>
                         }
                         comboboxProps={{ position: "top" }}
@@ -439,7 +437,7 @@ const CardCarousel = ({
                   )}
                   label={
                     <Text fz={14} fw={500}>
-                      {translations["Type of action"]}
+                      {translations("Type of action")}
                     </Text>
                   }
                   placeholder="Select a action"
@@ -471,7 +469,7 @@ const CardCarousel = ({
                   readOnly={card.button.type === WHATSAPP_BUTTON_TYPE.SPM}
                   label={
                     <Text fz={14} fw={500}>
-                      {translations["Button text"]}
+                      {translations("Button text")}
                     </Text>
                   }
                 />
@@ -487,7 +485,7 @@ const CardCarousel = ({
                     }
                     label={
                       <Text fz={14} fw={500}>
-                        {translations["Website Url"]}
+                        {translations("Website Url")}
                       </Text>
                     }
                   />
@@ -499,7 +497,7 @@ const CardCarousel = ({
                     searchable
                     label={
                       <Text fz={14} fw={500}>
-                        {translations["Web Survey"]}
+                        {translations("Web Survey")}
                       </Text>
                     }
                     comboboxProps={{ position: "top" }}

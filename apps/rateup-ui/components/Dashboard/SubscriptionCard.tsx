@@ -3,13 +3,13 @@ import { useRouter } from "next/router";
 
 import { Button } from "@mantine/core";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import useTranslations from "@/dictionaries/useTranslation";
 
 const SubscriptionCard = () => {
   const { data: subscription, isLoading } = useSubscription();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const router = useRouter();
 
   if (isLoading || !subscription) {
@@ -37,7 +37,7 @@ const SubscriptionCard = () => {
     <div className="bg-white shadow rounded-lg p-6 w-full border border-[#E2E5ED] h-full">
       <div className="flex justify-between items-start mb-4">
         <h2 className="text-lg font-semibold text-gray-800">
-          {translations["Subscription"] || "Subscription"}
+          {translations("Subscription") || "Subscription"}
         </h2>
         <span
           className={`text-xs font-semibold px-3 py-1 rounded-full
@@ -50,14 +50,14 @@ const SubscriptionCard = () => {
         <div className="text-sm text-gray-600 space-y-4 mb-6 flex flex-col gap-4">
           <div className="space-y-1">
             <p className="text-xs uppercase text-gray-400">
-              {translations["Plan Name"] || "Plan Name"}
+              {translations("Plan Name") || "Plan Name"}
             </p>
             <p className="text-4xl font-bold text-gray-800">{basePlan?.name}</p>
           </div>
 
           <div className="space-y-1">
             <p className="text-xs text-gray-500">
-              {translations["Start Date"] || "Start Date"}
+              {translations("Start Date") || "Start Date"}
             </p>
             <p className="text-md text-gray-800 font-normal">
               {dayjs(createdAt).format("DD MMM YYYY")}
@@ -66,7 +66,7 @@ const SubscriptionCard = () => {
 
           <div className="space-y-1">
             <p className="text-xs text-gray-500">
-              {translations["Renewal Date"] || "Renewal Date"}
+              {translations("Renewal Date") || "Renewal Date"}
             </p>
             <p className="text-md text-gray-800 font-normal">
               {dayjs(expiresAt).format("DD MMM YYYY")}
@@ -75,7 +75,7 @@ const SubscriptionCard = () => {
 
           <div className="space-y-1">
             <p className="text-xs text-gray-500">
-              {translations["Days Remaining"] || "Days Remaining"}
+              {translations("Days Remaining") || "Days Remaining"}
             </p>
             <p className="text-4xl font-bold text-gray-800">{daysRemaining}</p>
           </div>
@@ -96,7 +96,7 @@ const SubscriptionCard = () => {
               }
             >
               <div className="text-white text-sm font-medium">
-                {translations["Manage Subscription"] || "Manage Subscription"}
+                {translations("Manage Subscription") || "Manage Subscription"}
               </div>
             </Button>
           </div>

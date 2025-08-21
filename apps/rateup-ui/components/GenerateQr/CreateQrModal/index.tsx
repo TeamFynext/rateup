@@ -6,14 +6,13 @@ import {
   useCreateQrMutation,
   useUpdateQrMutation,
 } from "backend/generateQr/generateQr.query";
+import { useTranslations } from "next-intl";
 import modalStyles from "styles/commonCssModules/modal.module.css";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./CreateQrModal.module.css";
 
 function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       name: initialName || "",
@@ -24,9 +23,9 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
       name: (value) =>
         /^[a-zA-Z][a-zA-Z0-9_\s]{2,}$/.test(value)
           ? null
-          : translations[
-              "Name should be alphanumeric, length should be greater than 2 characters"
-            ],
+          : translations(
+              "Name should be alphanumeric, length should be greater than 2 characters",
+            ),
       url: (value) => {
         if (mode === "create") {
           if (value) {
@@ -34,10 +33,10 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
             try {
               url = new URL(value);
             } catch (_) {
-              return translations["Please enter a valid url."];
+              return translations("Please enter a valid url.");
             }
           } else {
-            return translations["URL is required."];
+            return translations("URL is required.");
           }
         }
       },
@@ -86,8 +85,8 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
       onClose={onClose}
       title={
         mode === "create"
-          ? translations["Create QR"]
-          : translations["Rename QR"]
+          ? translations("Create QR")
+          : translations("Rename QR")
       }
       centered
       classNames={{
@@ -108,8 +107,8 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
         >
           <TextInput
             className={styles["name-text-input"]}
-            label={translations["Name"]}
-            placeholder={translations["Enter name of QR"]}
+            label={translations("Name")}
+            placeholder={translations("Enter name of QR")}
             onClick={(e) => e.stopPropagation()}
             {...form.getInputProps("name")}
             withAsterisk
@@ -117,8 +116,8 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
           {mode === "create" && (
             <TextInput
               className={styles["url-text-input"]}
-              label={translations["URL"]}
-              placeholder={translations["Enter URL"]}
+              label={translations("URL")}
+              placeholder={translations("Enter URL")}
               onClick={(e) => e.stopPropagation()}
               {...form.getInputProps("url")}
               withAsterisk
@@ -136,12 +135,12 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
           onClick={handleCancelBtnClick}
           className={modalStyles["cancel-btn"]}
         >
-          {translations["Cancel"]}
+          {translations("Cancel")}
         </Button>
         <Button onClick={handleCreateBtnClick}>
           {mode === "create"
-            ? translations["Create"]
-            : translations["Save changes"]}
+            ? translations("Create")
+            : translations("Save changes")}
         </Button>
       </Box>
     </Modal>

@@ -3,8 +3,7 @@ import React, { useState } from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconCheck, IconRefresh } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 
@@ -19,15 +18,15 @@ const RefreshButton = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const handleRefresh = async () => {
     setLoading(true);
     showLoadingToast(
-      translations["Hold on..Data is refreshing"],
+      translations("Hold on..Data is refreshing"),
       "refresh",
       true,
-      translations["Refreshing"],
+      translations("Refreshing"),
     );
     if (onClick) onClick();
     else {
@@ -36,7 +35,7 @@ const RefreshButton = ({
     }
     setLoading(false);
     showSuccessToast(
-      translations["Data Updated Successfully"],
+      translations("Data Updated Successfully"),
       "refresh",
       <IconCheck />,
       true,
@@ -44,7 +43,7 @@ const RefreshButton = ({
   };
 
   return (
-    <Tooltip label={translations["Refresh data"]} position="top" withArrow>
+    <Tooltip label={translations("Refresh data")} position="top" withArrow>
       <ActionIcon
         variant="light"
         aria-label="Refresh"

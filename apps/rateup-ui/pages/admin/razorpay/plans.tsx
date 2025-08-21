@@ -15,8 +15,7 @@ import {
   GridPreProcessEditCellProps,
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useDeletePaymentPlanMutation,
@@ -38,7 +37,7 @@ const RazorpayPlans = () => {
   const syncPlans = usePlanSyncMutation();
   const planUpdateMutate = usePaymentPlanUpdate();
   const { data: rateupPlans, isPending } = useRateupPaymentsPlans();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleUpdatePlans = (updatedData) => {
     planUpdateMutate.mutate(updatedData);
   };
@@ -58,7 +57,7 @@ const RazorpayPlans = () => {
       rateupPlans?.find((plan) => plan.paymentPlanId === planIdLocal);
     if (planInrateupPlans) {
       showErrorToast(
-        translations["Unable to delete.Plan is in use in rateup plan"],
+        translations("Unable to delete.Plan is in use in rateup plan"),
         "plan",
         <IconX />,
         true,
@@ -73,19 +72,19 @@ const RazorpayPlans = () => {
   const columns: GridColDef[] = [
     {
       field: "id",
-      headerName: translations["Razorpay_Plan_ID"],
+      headerName: translations("Razorpay_Plan_ID"),
       width: 220,
       cellClassName: styles.idCell,
     },
-    { field: "name", headerName: translations["Name"], width: 200 },
-    { field: "createdAt", headerName: translations["Created At"], width: 150 },
-    { field: "amount", headerName: translations["Amount"], width: 100 },
-    { field: "currency", headerName: translations["Currency"], width: 100 },
-    { field: "period", headerName: translations["Period"], width: 100 },
-    { field: "interval", headerName: translations["Interval"], width: 100 },
+    { field: "name", headerName: translations("Name"), width: 200 },
+    { field: "createdAt", headerName: translations("Created At"), width: 150 },
+    { field: "amount", headerName: translations("Amount"), width: 100 },
+    { field: "currency", headerName: translations("Currency"), width: 100 },
+    { field: "period", headerName: translations("Period"), width: 100 },
+    { field: "interval", headerName: translations("Interval"), width: 100 },
     {
       field: "status",
-      headerName: translations["Status"],
+      headerName: translations("Status"),
       width: 150,
       editable: true,
       type: "singleSelect",
@@ -111,20 +110,20 @@ const RazorpayPlans = () => {
     },
     {
       field: "description",
-      headerName: translations["Description"],
+      headerName: translations("Description"),
       width: 150,
     },
     {
       field: "actions",
       type: "actions",
-      headerName: translations["Actions"],
+      headerName: translations("Actions"),
       width: 100,
       cellClassName: "actions",
       getActions: ({ id, row }) => {
         return [
           <GridActionsCellItem
             icon={<IconTrash />}
-            label={translations["Delete"]}
+            label={translations("Delete")}
             disabled={[
               PaymentPlanStatus.ACTIVE,
               PaymentPlanStatus.LIVE,
@@ -142,7 +141,7 @@ const RazorpayPlans = () => {
   ];
 
   const { data: plans, isLoading, isError } = usePaymentsPlans();
-  if (isError) return <div>{translations["error occured"]}</div>;
+  if (isError) return <div>{translations("error occured")}</div>;
   if (isLoading) return <RateupLoader h={"100dvh"} />;
 
   const rows = Array.isArray(plans?.data)
@@ -166,7 +165,7 @@ const RazorpayPlans = () => {
       <Blockquote color="blue" icon={<IconInfoCircle />} p={"md"}>
         <Group justify="space-between">
           <Group gap={"xs"}>
-            <Text>{translations["List of plans from Razorpay DB"]}</Text>
+            <Text>{translations("List of plans from Razorpay DB")}</Text>
             <RefreshButton queryKeys={["paymentPlansQuery"]} />
           </Group>
 
@@ -205,19 +204,19 @@ const RazorpayPlans = () => {
         opened={openedDeleteModal}
         onClose={closeDeleteModal}
         forDeleteFunctionality
-        confirmLabel={translations["Delete"]}
-        headerTitle={translations["Delete RazorPay Plan"]}
+        confirmLabel={translations("Delete")}
+        headerTitle={translations("Delete RazorPay Plan")}
         onConfirm={() => {
           showLoadingToast(
-            translations["Hold on..Plan is getting deleted"],
+            translations("Hold on..Plan is getting deleted"),
             "plan",
             true,
-            translations["Deleting Plan"],
+            translations("Deleting Plan"),
           );
           handleDeleteClick();
         }}
-        headerLabel={translations["Are you sure to delete this plan?"]}
-        closeLabel={translations["cancel"]}
+        headerLabel={translations("Are you sure to delete this plan?")}
+        closeLabel={translations("cancel")}
       />
     </Stack>
   );

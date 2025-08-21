@@ -1,10 +1,10 @@
 import { Badge } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
-import useTranslations from "@/dictionaries/useTranslation";
 import { getTypeLabel } from "@/utils/enums";
 
 function QuestionDetailedViewBadge({ question }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Badge
       variant={getTypeLabel(question.type) ? "outline" : "light"}
@@ -14,7 +14,7 @@ function QuestionDetailedViewBadge({ question }) {
     >
       {getTypeLabel(question.type)
         ? getTypeLabel(question.type)
-        : translations["Not Available"]}
+        : translations("Not Available")}
     </Badge>
   );
 }

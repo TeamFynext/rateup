@@ -12,6 +12,7 @@ import "./globals.css";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { GoogleTagManager } from "@next/third-parties/google";
+import { getLocale } from "next-intl/server";
 
 import { theme } from "@/config/mantineTheme";
 import FacebookPixel from "@/components/Analytics/FacebookPixel";
@@ -26,13 +27,14 @@ export const metadata: Metadata = {
   description: "Welcome to Rateup",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="en" {...mantineHtmlProps}>
+    <html lang={locale} {...mantineHtmlProps}>
       <head>
         <ColorSchemeScript />
         <link rel="shortcut icon" href="/favicon.png" />
@@ -52,7 +54,7 @@ export default function RootLayout({
             <Notifications />
             <SuperTokensProvider>
               <Providers>{children}</Providers>
-              {/* <GoogleTagManager gtmId="GTM-NDC3D7DP" /> */}
+              <GoogleTagManager gtmId="GTM-NDC3D7DP" />
             </SuperTokensProvider>
           </ModalsProvider>
         </MantineProvider>

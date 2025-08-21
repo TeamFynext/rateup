@@ -12,8 +12,7 @@ import {
 import { isNotEmpty, matches, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useCreateSurveyVariableMutation,
@@ -45,13 +44,13 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
   const handleDeleteVariable = (variable: SurveyVariable) => {
     deleteVariable.mutate({ variableId: variable.id });
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack w={"100%"}>
       <ScrollAreaAutosize h={430} scrollbarSize={6}>
         <Stack gap={"sm"} p={"sm"}>
           <PaperLayout p={"sm"}>
-            <Title order={5}>{translations["Default Variables"]}</Title>
+            <Title order={5}>{translations("Default Variables")}</Title>
             <Group gap={"xs"} pt={"sm"}>
               {variables
                 ?.filter(
@@ -66,9 +65,9 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
           </PaperLayout>
           <PaperLayout p={"sm"}>
             <Group justify="space-between">
-              <Title order={5}>{translations["Custom Variables"]}</Title>
+              <Title order={5}>{translations("Custom Variables")}</Title>
               <RateupButtonSecondary
-                title={translations["Add Variable"]}
+                title={translations("Add Variable")}
                 leftIcon={<IconPlus size={"1rem"} />}
                 onClick={openCreateVariable}
               />
@@ -107,7 +106,7 @@ const SurveyVariableEditor = ({ setActiveTab }) => {
       </ScrollAreaAutosize>
       <Group justify="space-between" pb={"xl"}>
         <RateupButtonSecondary
-          title={translations["Cancel"]}
+          title={translations("Cancel")}
           size="md"
           variant="outline"
           color="var(--tertiary-color)"
@@ -143,7 +142,7 @@ const CreateSurveyVariableModal = ({
   const { surveyId, variables } = useContext(SurveyContext);
   const variableCreation = useCreateSurveyVariableMutation(surveyId);
   const variableUpdation = useUpdateSurveyVariableMutation(surveyId);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       name: variable?.name || "",
@@ -152,9 +151,9 @@ const CreateSurveyVariableModal = ({
     validate: {
       name: matches(
         /^[a-zA-Z0-9_]+$/,
-        translations[
-          "Variable name can only have letters, numbers and underscore"
-        ],
+        translations(
+          "Variable name can only have letters, numbers and underscore",
+        ),
       ),
       value: isNotEmpty("Assign a value to variable"),
     },
@@ -212,11 +211,11 @@ const CreateSurveyVariableModal = ({
       onClose={close}
       title={
         isEdit
-          ? translations["Update Variable"]
-          : translations["Create Variable"]
+          ? translations("Update Variable")
+          : translations("Create Variable")
       }
       includeCancelButton
-      buttonTitle={isEdit ? translations["Update"] : translations["Create"]}
+      buttonTitle={isEdit ? translations("Update") : translations("Create")}
       cancelOnClick={() => {
         form.reset();
         close();

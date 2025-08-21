@@ -7,10 +7,9 @@ import { RateupButtonPrimary } from "components/Button/RateupButtons";
 import { ImageCropModal } from "components/Modal/ImageCropModal";
 import { ImageUploadMethodModal } from "components/Modal/ImageUploadMethodModal";
 import { UnsplashModal } from "components/Modal/UnsplashModal";
+import { useTranslations } from "next-intl";
 import { MAX_FILE_SIZE_IN_BYTE, MAX_FILE_SIZE_IN_MB } from "utils/constants";
 import { showErrorToast } from "utils/notifications";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { ActionIconCommon } from "../ActionIcon/ActionIconCommon";
 
@@ -28,7 +27,7 @@ const ImageUploadSettings = ({
   const [imageType, setImageType] = useState("");
   const imageUploadBtnRef = useRef<HTMLButtonElement>(null);
   const resetLogoRef = useRef(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [
     openedMethodSelectionDialog,
     { toggle: toggleMethodSelectionDialog, close: closeMethodSelectionDialog },
@@ -180,12 +179,12 @@ const ImageUploadSettings = ({
       />
       <Box>
         <Text size="xs" lineClamp={1} h={17} c={labelColor}>
-          {translations["Default Banner Image"]}
+          {translations("Default Banner Image")}
         </Text>
         <Group>
           <RateupButtonPrimary
             leftIcon={<IconUpload size={16} />}
-            title={translations["Upload Mobile Image"]}
+            title={translations("Upload Mobile Image")}
             size="sm"
             variant="light"
             onClick={handlePictureMobileBackground}
@@ -193,7 +192,7 @@ const ImageUploadSettings = ({
           <ActionIconCommon
             handleClick={() => resetImage("mobileBackgroundImage")}
             disabled={!form?.values?.mobileBackgroundImage}
-            label={translations["Delete"]}
+            label={translations("Delete")}
           >
             <IconTrash />
           </ActionIconCommon>
@@ -209,12 +208,12 @@ const ImageUploadSettings = ({
       </Box>
       <Box>
         <Text size="xs" lineClamp={1} h={17} c={labelColor}>
-          {translations["Default Banner Image"]}
+          {translations("Default Banner Image")}
         </Text>
         <Group>
           <RateupButtonPrimary
             leftIcon={<IconUpload size={16} />}
-            title={translations["Upload Tablet Image"]}
+            title={translations("Upload Tablet Image")}
             size="sm"
             variant="light"
             onClick={handlePictureBackground}
@@ -222,7 +221,7 @@ const ImageUploadSettings = ({
           <ActionIconCommon
             handleClick={() => resetImage("backgroundImage")}
             disabled={!form?.values?.backgroundImage}
-            label={translations["Delete"]}
+            label={translations("Delete")}
           >
             <IconTrash />
           </ActionIconCommon>
@@ -238,7 +237,7 @@ const ImageUploadSettings = ({
       </Box>
       <Box>
         <Text size="xs" lineClamp={1} h={17} c={labelColor}>
-          {translations["Logo"]}
+          {translations("Logo")}
         </Text>
         <Group>
           <FileButton
@@ -249,7 +248,7 @@ const ImageUploadSettings = ({
             {(props) => (
               <RateupButtonPrimary
                 leftIcon={<IconUpload size={16} />}
-                title={translations["Upload Logo"]}
+                title={translations("Upload Logo")}
                 size="sm"
                 variant="light"
                 {...props}
@@ -259,7 +258,7 @@ const ImageUploadSettings = ({
           <ActionIconCommon
             handleClick={() => resetImage("logo")}
             disabled={!form?.values?.logo}
-            label={translations["Delete"]}
+            label={translations("Delete")}
           >
             <IconTrash />
           </ActionIconCommon>

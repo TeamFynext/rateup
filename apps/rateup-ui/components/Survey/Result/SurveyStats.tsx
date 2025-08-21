@@ -91,15 +91,15 @@ export const SurveyResponseStats = ({
     );
     return [
       {
-        label: translations["Visited"] ?? "Visited",
+        label: translations("Visited") ?? "Visited",
         count: surveyStats ? totalStats?.visited : "NA",
       },
       {
-        label: translations["Started"] ?? "Started",
+        label: translations("Started") ?? "Started",
         count: surveyStats ? totalStats?.started : "NA",
       },
       {
-        label: translations["Completed"] ?? "Completed",
+        label: translations("Completed") ?? "Completed",
         count: surveyStats ? totalStats?.completed : "NA",
       },
     ];
@@ -109,8 +109,8 @@ export const SurveyResponseStats = ({
     <PaperLayout className={styles["user-stats-card-div"]} w={"fit-content"}>
       <Stack gap={0}>
         <Group>
-          <Heading subtitle={translations["User Stats"]} />
-          <Tooltip label={translations["Refresh stats"]}>
+          <Heading subtitle={translations("User Stats")} />
+          <Tooltip label={translations("Refresh stats")}>
             <RefreshButton
               onClick={async () => {
                 refetchStats();
@@ -127,8 +127,8 @@ export const SurveyResponseStats = ({
           >
             {responseCount ?? 0} &nbsp;
             {responseCount > 1
-              ? translations["Responses"]
-              : translations["Response"]}
+              ? translations("Responses")
+              : translations("Response")}
           </Text>
           {surveyStatsCountArray.length > 0 &&
             surveyStatsCountArray?.map(({ count, label }) => (
@@ -270,21 +270,21 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
   const surveyStatsCountArray = [];
   if (flowMetrics) {
     surveyStatsCountArray.push({
-      label: translations["Flow Visited"],
+      label: translations("Flow Visited"),
       count: flowMetrics?.metric?.data_points?.[0]?.value ?? 0,
     });
   } else if (!flowId) {
     surveyStatsCountArray.push(
       {
-        label: translations["Visited"],
+        label: translations("Visited"),
         count: returnSurveyStats()?.visited ?? 0,
       },
       {
-        label: translations["Started"],
+        label: translations("Started"),
         count: returnSurveyStats()?.started ?? 0,
       },
       {
-        label: translations["Completed"],
+        label: translations("Completed"),
         count: returnSurveyStats()?.completed ?? 0,
       },
     );
@@ -295,8 +295,8 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
         <PaperLayout className={styles["user-stats-card-div"]}>
           <Stack gap={0}>
             <Group>
-              <Heading subtitle={translations["User Stats"]} />
-              <Tooltip label={translations["Refresh stats"]}>
+              <Heading subtitle={translations("User Stats")} />
+              <Tooltip label={translations("Refresh stats")}>
                 <RefreshButton
                   onClick={async () => {
                     await queryClient.invalidateQueries({
@@ -316,13 +316,13 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
               >
                 {responseCount ?? 0} &nbsp;
                 {responseCount > 1
-                  ? translations["Responses"]
-                  : translations["Response"]}
+                  ? translations("Responses")
+                  : translations("Response")}
               </Text>
               {surveyStatsCountArray?.length === 0 ? (
                 <PaperLayout className={styles["stats-card"]}>
                   <Text fw="900">
-                    {translations["Minimum 250+ response for metrics"]}
+                    {translations("Minimum 250+ response for metrics")}
                   </Text>
                 </PaperLayout>
               ) : (
@@ -347,7 +347,7 @@ const SurveyStats = ({ survey, flowId = null, translations }) => {
               <PaperLayout h="350px">
                 <Stack>
                   <Group justify="space-between">
-                    <Heading subtitle={translations["Top Traffic By:"]} />
+                    <Heading subtitle={translations("Top Traffic By:")} />
                     <ContainedSelection
                       maw={100}
                       radius={"xl"}

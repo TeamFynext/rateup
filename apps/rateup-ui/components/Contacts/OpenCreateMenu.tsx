@@ -1,8 +1,8 @@
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useImportCSVContactMutation } from "../../backend/campaign/contacts/contacts.query";
 import { ContactTabs } from "../../pages/dashboard/contacts";
@@ -28,7 +28,7 @@ const OpenCreateMenu = ({
   const [groupOpened, { open: groupOpen, close: groupClose }] =
     useDisclosure(false);
   const importCSVContactMutation = useImportCSVContactMutation();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <ContactImportErrorModal
@@ -38,8 +38,8 @@ const OpenCreateMenu = ({
       <RateupButtonBlue
         title={
           tab === WhatsappTableType.MEMBERS
-            ? translations["Add Members"]
-            : translations["Create"]
+            ? translations("Add Members")
+            : translations("Create")
         }
         rightIcon={<IconPlus size={20} />}
         disabled={isPending}
@@ -57,7 +57,7 @@ const OpenCreateMenu = ({
         centered
         opened={contactOpened}
         onClose={contactClose}
-        title={translations["Create contact"]}
+        title={translations("Create contact")}
         size={"xl"}
       >
         <CreateContactModal
@@ -74,7 +74,7 @@ const OpenCreateMenu = ({
         title={
           type === ContactGroupType.LOYALTY
             ? "Create Customer Group"
-            : translations["Create contact group"]
+            : translations("Create contact group")
         }
         size="lg"
       >

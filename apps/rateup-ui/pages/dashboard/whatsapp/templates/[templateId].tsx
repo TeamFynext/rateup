@@ -26,6 +26,7 @@ import {
   IconInfoCircle,
 } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { OrderType, TemplateType, WaTemplateStatus } from "@/types/enums";
@@ -72,7 +73,6 @@ import {
 import WaChatPreview from "@/components/whatsapp/templates/WaChatPreview";
 import WaTemplateStatusBadge from "@/components/whatsapp/templates/WaTemplateStatusBadge";
 import { useRouteParams } from "@/context/RouteParamsContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import { getErrorMessage } from "@/utils";
 import {
   SAVE_HOTKEY,
@@ -90,7 +90,7 @@ import styles from "./templateId.module.css";
 export default function WhatsappTemplateById() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const router = useRouter();
   let templateId = router.query.templateId as string;
   templateId = templateId === "create" ? "" : templateId;
@@ -276,14 +276,14 @@ export default function WhatsappTemplateById() {
     if (dynamicVariableArray?.length > 0) {
       if (!isArrayInCorrectOrder(dynamicVariableArray)) {
         showErrorToast(
-          translations["Dynamic variables name should is numberic order"],
+          translations("Dynamic variables name should is numberic order"),
         );
         return;
       } else if (
         form.values?.example?.length !== dynamicVariableArray?.length
       ) {
         showErrorToast(
-          translations["Dynamic variables example values should be given"],
+          translations("Dynamic variables example values should be given"),
         );
         return;
       }
@@ -291,7 +291,7 @@ export default function WhatsappTemplateById() {
     const values = form.values;
     if (values?.buttons?.length > 12) {
       showErrorToast(
-        translations["Max number of button in buttons should be 12"],
+        translations("Max number of button in buttons should be 12"),
       );
       return;
     }
@@ -301,12 +301,12 @@ export default function WhatsappTemplateById() {
         if (dynamicVariableArr.length > 0) {
           if (!isArrayInCorrectOrder(dynamicVariableArr)) {
             showErrorToast(
-              translations["Dynamic variables name should is numberic order"],
+              translations("Dynamic variables name should is numberic order"),
             );
             return;
           } else if (card.example?.length !== dynamicVariableArr?.length) {
             showErrorToast(
-              translations["Dynamic variables example values should be given"],
+              translations("Dynamic variables example values should be given"),
             );
             return;
           }
@@ -386,9 +386,9 @@ export default function WhatsappTemplateById() {
       if (editingItem?.data?.id) {
         if (editingItem.data.status === WaTemplateStatus.PENDING) {
           showWarnToast(
-            translations[
-              "Cannot edit pending template. Please wait for approval"
-            ],
+            translations(
+              "Cannot edit pending template. Please wait for approval",
+            ),
           );
           setIsSubmitting(false);
           return;
@@ -575,7 +575,7 @@ export default function WhatsappTemplateById() {
             <Title order={2} c={"var(--grey-color)"}>
               {editingItem
                 ? editingItem?.data?.name
-                : translations["Create Template"]}
+                : translations("Create Template")}
             </Title>
             <Flex
               mih={50}
@@ -587,14 +587,14 @@ export default function WhatsappTemplateById() {
             >
               {editingItem?.data?.id && value ? (
                 <RateupButtonPrimary
-                  title={translations["Edit"]}
+                  title={translations("Edit")}
                   onClick={toggle}
                 />
               ) : (
                 <React.Fragment>
                   {!isOrderCreate && (
                     <RateupButtonPrimary
-                      title={translations["Save as draft"]}
+                      title={translations("Save as draft")}
                       loading={isSubmittingDraft}
                       variant="outline"
                       onClick={() => handleSubmit(true)}
@@ -602,7 +602,7 @@ export default function WhatsappTemplateById() {
                   )}
 
                   <RateupButtonPrimary
-                    title={translations["Save & Submit"]}
+                    title={translations("Save & Submit")}
                     loading={isSubmitting}
                     onClick={() => handleSubmit(false)}
                   />
@@ -645,7 +645,7 @@ export default function WhatsappTemplateById() {
                       <LinkCopyElement
                         link={editingItem?.data?.id}
                         value={editingItem?.data?.id}
-                        label={translations["Template ID"]}
+                        label={translations("Template ID")}
                         style={{
                           zIndex: 11,
                         }}
@@ -658,10 +658,10 @@ export default function WhatsappTemplateById() {
                     <ContainedTextField
                       label={
                         <Text fz={14} fw={500}>
-                          {translations["Template Name"]} {requiredIcon}
+                          {translations("Template Name")} {requiredIcon}
                         </Text>
                       }
-                      placeholder={translations["Name"]}
+                      placeholder={translations("Name")}
                       {...form.getInputProps("name")}
                       rightSection={
                         <LengthTracker
@@ -678,7 +678,7 @@ export default function WhatsappTemplateById() {
                           TemplateType {requiredIcon}
                         </Text>
                       }
-                      placeholder={translations["TemplateType"]}
+                      placeholder={translations("TemplateType")}
                       {...form.getInputProps("templateType")}
                       data={Object.values(TemplateType)}
                       allowDeselect={false}
@@ -693,7 +693,7 @@ export default function WhatsappTemplateById() {
                               Category {requiredIcon}
                             </Text>
                           }
-                          placeholder={translations["Category"]}
+                          placeholder={translations("Category")}
                           {...form.getInputProps("category")}
                           data={WHATSAPP_TEMPLATE_CATEGORY}
                           allowDeselect={false}
@@ -710,10 +710,10 @@ export default function WhatsappTemplateById() {
                     <ContainedSelection
                       label={
                         <Text fz={14} fw={500}>
-                          {translations["Language"]} {requiredIcon}
+                          {translations("Language")} {requiredIcon}
                         </Text>
                       }
-                      placeholder={translations["Language"]}
+                      placeholder={translations("Language")}
                       {...form.getInputProps("language")}
                       searchable
                       data={WHATSAPP_TEMPLATE_LANGUAGE}
@@ -730,19 +730,17 @@ export default function WhatsappTemplateById() {
                             label={
                               <>
                                 <Text fz={14} fw={500} w={"max-content"}>
-                                  {translations["Broadcast header"]}{" "}
+                                  {translations("Broadcast header")}{" "}
                                   {requiredIcon}
                                 </Text>
                                 <Text fz={13}>
-                                  {
-                                    translations[
-                                      "Highlight your brand here, use images or videos, to stand out"
-                                    ]
-                                  }
+                                  {translations(
+                                    "Highlight your brand here, use images or videos, to stand out",
+                                  )}
                                 </Text>
                               </>
                             }
-                            placeholder={translations["Broadcast Type"]}
+                            placeholder={translations("Broadcast Type")}
                             onChange={(e) => {
                               if (
                                 e === WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT &&
@@ -791,14 +789,12 @@ export default function WhatsappTemplateById() {
                     <ReadonlyOverlay />
 
                     <Text fz={14} fw={500}>
-                      {translations["Body"]} {requiredIcon}
+                      {translations("Body")} {requiredIcon}
                     </Text>
                     <Text fz={13}>
-                      {
-                        translations[
-                          "Make your messages personal using variables and get more replies!"
-                        ]
-                      }
+                      {translations(
+                        "Make your messages personal using variables and get more replies!",
+                      )}
                     </Text>
                     <TextFormateToolBar
                       applyFormatting={applyFormatting}
@@ -817,7 +813,7 @@ export default function WhatsappTemplateById() {
                           width: "fit-content",
                         },
                       }}
-                      placeholder={translations["Enter the text"]}
+                      placeholder={translations("Enter the text")}
                       autosize
                       minRows={3}
                       onSelect={handleSelect}
@@ -836,7 +832,7 @@ export default function WhatsappTemplateById() {
                     {dynamicVariables?.map((data, index) => (
                       <ContainedTextField
                         key={data}
-                        placeholder={`${translations["Enter the content for"]} {{${data}}}`}
+                        placeholder={`${translations("Enter the content for")} {{${data}}}`}
                         {...form.getInputProps(`example.${index}`)}
                       />
                     ))}
@@ -849,18 +845,16 @@ export default function WhatsappTemplateById() {
                             label={
                               <>
                                 <Text fz={14} fw={500}>
-                                  {translations["Footer (Optional)"]}
+                                  {translations("Footer (Optional)")}
                                 </Text>
                                 <Text fz={13}>
-                                  {
-                                    translations[
-                                      "Footers are great to add any disclaimers or to add a thoughtful PS"
-                                    ]
-                                  }
+                                  {translations(
+                                    "Footers are great to add any disclaimers or to add a thoughtful PS",
+                                  )}
                                 </Text>
                               </>
                             }
-                            placeholder={translations["Footer"]}
+                            placeholder={translations("Footer")}
                             {...form.getInputProps("footer")}
                             rightSection={
                               <LengthTracker
@@ -900,12 +894,12 @@ export default function WhatsappTemplateById() {
                           {isOrderCreate && (
                             <>
                               <Text fz={14} fw={500}>
-                                {translations["Config"]} {requiredIcon}
+                                {translations("Config")} {requiredIcon}
                               </Text>
                               <ContainedTextField
                                 label={
                                   <Text fz={14} fw={500}>
-                                    {translations["Name"]} {requiredIcon}
+                                    {translations("Name")} {requiredIcon}
                                   </Text>
                                 }
                                 placeholder={"name"}
@@ -914,30 +908,30 @@ export default function WhatsappTemplateById() {
                               <ContainedNumberInput
                                 label={
                                   <Text fz={14} fw={500}>
-                                    {translations["Price"]} {requiredIcon}
+                                    {translations("Price")} {requiredIcon}
                                   </Text>
                                 }
-                                placeholder={translations["price"]}
+                                placeholder={translations("price")}
                                 min={0}
                                 {...configForm.getInputProps("price")}
                               />
                               <ContainedNumberInput
                                 label={
                                   <Text fz={14} fw={500}>
-                                    {translations["Tax"]} {requiredIcon}
+                                    {translations("Tax")} {requiredIcon}
                                   </Text>
                                 }
-                                placeholder={translations["tax"]}
+                                placeholder={translations("tax")}
                                 min={0}
                                 {...configForm.getInputProps("tax")}
                               />
                               <ContainedSelection
                                 label={
                                   <Text fz={14} fw={500}>
-                                    {translations["OrderType"]}
+                                    {translations("OrderType")}
                                   </Text>
                                 }
-                                placeholder={translations["order type"]}
+                                placeholder={translations("order type")}
                                 data={Object.values(OrderType)}
                                 description={
                                   'When this field is passed in we hide the "Review and Pay" button and only show the "Pay Now" button in the order details bubble'
@@ -958,7 +952,7 @@ export default function WhatsappTemplateById() {
               <Card withBorder h={"min(80dvh,660px)"} radius={"lg"}>
                 <Stack h={"100%"} align="center" gap={0}>
                   <Text fz="24px" fw={500}>
-                    {translations["Preview"]}
+                    {translations("Preview")}
                   </Text>
                   <WaChatPreview>
                     <Stack miw="200px" gap={3} p={"md"}>
@@ -968,7 +962,7 @@ export default function WhatsappTemplateById() {
                           display={isOrderCreate ? "block" : "none"}
                         >
                           <Text fz={"xs"}>
-                            {translations["ORDER"]} #{"{{Order number}}"}
+                            {translations("ORDER")} #{"{{Order number}}"}
                           </Text>
                           <Divider variant="dashed" color={"black"} />
 
@@ -977,13 +971,13 @@ export default function WhatsappTemplateById() {
                             <Box>
                               <Text fz={"xs"}>{"{{Product name}}"}</Text>
                               <Text fz={"xs"}>
-                                {translations["Quantity"]} {"{{#}}"}
+                                {translations("Quantity")} {"{{#}}"}
                               </Text>
                             </Box>
                           </Group>
                           <Divider variant="dashed" color={"black"} />
                           <Group justify="space-between">
-                            <Text fz={"xs"}>{translations["Total"]}</Text>
+                            <Text fz={"xs"}>{translations("Total")}</Text>
                             <Text fz={"xs"}>${"{{}}"}</Text>
                           </Group>
                         </Box>
@@ -1032,7 +1026,7 @@ export default function WhatsappTemplateById() {
                         ))}
                       {form.values?.buttons?.length > 2 && (
                         <QuickReplyButton
-                          text={translations["See all options"]}
+                          text={translations("See all options")}
                         />
                       )}
                       <ScrollAreaAutosize maw={"220px"}>

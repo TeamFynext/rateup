@@ -3,8 +3,8 @@ import { useCallback, useState } from "react";
 import { Button, Group, Text } from "@mantine/core";
 import { useHotkeys } from "@mantine/hooks";
 import _ from "lodash";
+import { useTranslations } from "next-intl";
 
-import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast } from "@/utils/notifications";
 
 import { useUpdateSurveyTheme } from "../../../../../backend/surveyTheme/surveyTheme.query";
@@ -43,7 +43,7 @@ function SaveButton({
   }
 
   const [isSaving, setIsSaving] = useState(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const updateSurveyTheme = useUpdateSurveyTheme(
     themeObjBeingEdited?.id,
     survey?.id,
@@ -96,10 +96,10 @@ function SaveButton({
         onClick={handleSaveTheme}
       >
         {isThemeObjBeingEditedDefaultTheme
-          ? translations["Apply"]
+          ? translations("Apply")
           : selectedPageTab === ThemeTabEnum.SURVEY
-            ? translations["Save & Apply"]
-            : translations["Save"]}
+            ? translations("Save & Apply")
+            : translations("Save")}
       </Button>
     </Group>
   );

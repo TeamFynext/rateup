@@ -2,8 +2,7 @@ import { FormEventHandler } from "react";
 
 import { Group, Modal, Space, Stack, Title } from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { SAVE_HOTKEY } from "../../utils/constants";
 import {
@@ -49,7 +48,7 @@ export default function FormModalLayout({
   submitBtnColor,
   submitButtonLeftIcon,
 }: FormModalLayoutProps) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Modal
       centered={centered}
@@ -100,7 +99,7 @@ export default function FormModalLayout({
               variant="subtle"
               onClick={cancelOnClick ? cancelOnClick : onClose}
               title={
-                cancelButtonTitle ? cancelButtonTitle : translations["Cancel"]
+                cancelButtonTitle ? cancelButtonTitle : translations("Cancel")
               }
             />
           )}

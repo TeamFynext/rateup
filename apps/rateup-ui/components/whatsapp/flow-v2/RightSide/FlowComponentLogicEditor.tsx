@@ -13,8 +13,8 @@ import {
   TextInput,
 } from "@mantine/core";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
-import useTranslations from "@/dictionaries/useTranslation";
 import { getResponses2 } from "@/utils/survey/logic/logic.utils";
 
 import useFlowStore from "../utils/store";
@@ -39,7 +39,7 @@ const logicalOperators = [
 
 export const FlowLogicComponentEditor = ({ blocks, setBlocks }) => {
   const { getCurrentScreen, currentScreenId } = useFlowStore();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const filteredQuestions = getCurrentScreen().layout.children.filter(
     ({ label, type }) => label && type !== "Footer",
@@ -454,7 +454,7 @@ export const FlowLogicComponentEditor = ({ blocks, setBlocks }) => {
           flexShrink: 0,
         }}
       >
-        {translations["Add Logic Jump"]}
+        {translations("Add Logic Jump")}
       </Button>
     </Stack>
   );

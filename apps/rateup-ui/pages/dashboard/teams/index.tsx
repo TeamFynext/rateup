@@ -20,6 +20,7 @@ import {
   IconReload,
   IconSelector,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import {
   useCreateTeamMutation,
@@ -40,14 +41,13 @@ import TeamTourSteps from "../../../components/WelcomeTour/components/TeamTourSt
 import styles from "../../../components/WelcomeTour/components/Tour.module.css";
 import WelcomeTour from "../../../components/WelcomeTour/WelcomeTour";
 import { useUser } from "../../../context/UserContext";
-import useTranslations from "../../../dictionaries/useTranslation";
 import { docsPath } from "../../../utils/constants";
 import { retrieveRole } from "../../../utils/essential";
 import TeamCard from "./TeamCard";
 import style from "./Teams.module.css";
 
 export default function Teams() {
-  const { translations, loadingTranslations } = useTranslations();
+  const translations = useTranslations();
   const [opened, { open, close }] = useDisclosure(false);
   const [sortOption, setSortOption] = useState("");
   const { action } = useRouter().query;
@@ -65,13 +65,13 @@ export default function Teams() {
     validate: {
       name: (value) => {
         if (value.length < 3) {
-          return translations["Team Name should be at least 3 characters long"];
+          return translations("Team Name should be at least 3 characters long");
         }
         return null; // Validation passed
       },
       code: (value) => {
         if (value.length < 2) {
-          return translations["Team Code should be at least 2 characters long"];
+          return translations("Team Code should be at least 2 characters long");
         }
         return null; // Validation passed
       },
@@ -105,8 +105,8 @@ export default function Teams() {
     notifications.show({
       id: "load-data",
       loading: true,
-      title: translations["Creating Team.."],
-      message: `${translations["Hold on, Your team"]} '${values?.name}' ${translations["is getting created."]}`,
+      title: translations("Creating Team.."),
+      message: `${translations("Hold on, Your team")} '${values?.name}' ${translations("is getting created.")}`,
       autoClose: false,
       withCloseButton: false,
     });
@@ -135,33 +135,29 @@ export default function Teams() {
     }
   };
 
-  if (loadingTranslations) {
-    return <Loader type="bars" />;
-  }
-
   return (
     <div className={style["teams-container"]}>
       <FormModalLayout
         centered
         onClose={close}
         opened={opened}
-        title={translations["Add Team"]}
-        buttonTitle={translations["Add Team"]}
+        title={translations("Add Team")}
+        buttonTitle={translations("Add Team")}
         isLoading={isCreating}
         onSubmit={createTeamForm.onSubmit(onSubmit)}
       >
         <Box>
           <ContainedTextField
             withAsterisk
-            label={translations["Team Name"]}
-            placeholder={translations["Enter team name"]}
+            label={translations("Team Name")}
+            placeholder={translations("Enter team name")}
             {...createTeamForm.getInputProps("name")}
           />
           <Space h="lg" />
           <ContainedTextField
             withAsterisk
-            label={translations["Team Code"]}
-            placeholder={translations["Enter team code"]}
+            label={translations("Team Code")}
+            placeholder={translations("Enter team code")}
             {...createTeamForm.getInputProps("code")}
           />
         </Box>
@@ -171,7 +167,7 @@ export default function Teams() {
           {retrieveRole(user?.role) === "Super Admin" && (
             <RateupButtonBlue
               className={styles["create-team-button"]}
-              title={translations["Create Team"]}
+              title={translations("Create Team")}
               rightIcon={<IconPlus />}
               onClick={open}
             />
@@ -195,11 +191,11 @@ export default function Teams() {
             teamsData?.message
           ) : (
             <>
-              {translations["Error... Try Refreshing..."]}
+              {translations("Error... Try Refreshing...")}
               <RateupButtonOutline
                 onClick={refetchTeams}
                 rightIcon={<IconReload size="1rem" />}
-                title={translations["Refresh"]}
+                title={translations("Refresh")}
                 size="xs"
               />
             </>

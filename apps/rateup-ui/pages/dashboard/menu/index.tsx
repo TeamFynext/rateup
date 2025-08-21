@@ -3,8 +3,7 @@ import React, { useState } from "react";
 import { Group, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import InfoButton from "../../../components/Button/InfoButton";
 import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
@@ -29,7 +28,7 @@ export default function MenuPage() {
   const [sortOption, setSortOption] = useState("latest");
   const { user } = useUser();
   const tourSteps = DigitalMenuTourSteps({ styles });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function handleEditClick(menu: Menu) {
     setEditingItem(menu);
     open();
@@ -53,7 +52,7 @@ export default function MenuPage() {
           {user?.role !== UserRole.MEMBER && (
             <RateupButtonBlue
               className={styles["create-menu-button"]}
-              title={translations["Create Menu"]}
+              title={translations("Create Menu")}
               rightIcon={<IconPlus />}
               onClick={handleCreateClick}
             />

@@ -1,5 +1,5 @@
 import React, { ReactElement, ReactNode, useEffect } from "react";
-import { NextPage } from "next";
+import { GetStaticPropsContext, NextPage } from "next";
 import { AppProps } from "next/app";
 import Head from "next/head";
 
@@ -14,6 +14,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import set from "lodash/set";
 import Session from "supertokens-auth-react/recipe/session";
 
 import { UserProvider } from "../context/UserContext";
@@ -32,6 +33,7 @@ import { useRouter } from "next/router";
 
 import { ModalsProvider } from "@mantine/modals";
 import axios from "axios";
+import { NextIntlClientProvider } from "next-intl";
 import SuperTokensReact, { SuperTokensWrapper } from "supertokens-auth-react";
 
 import { frontendConfig } from "@/config/frontendConfig";
@@ -41,6 +43,7 @@ import { AdminPanelLayout } from "../components/Layout/admin/AdminLayout";
 import Layout from "../components/Layout/Layout";
 import { allModalManagerModalsObj } from "../components/Modal/ModalManagerModals/allModalManagerModalsObj";
 import { theme } from "../config/mantineTheme";
+import messages from "../dictionaries/en.json";
 import { checkEmailVerification } from "../utils/auth/checkEmailVerification";
 import { isProduction } from "../utils/constants";
 import { fbPageview } from "../utils/fbpixel";
@@ -179,46 +182,55 @@ export default function App({
   ).split("?")[0];
 
   return (
-    <MantineProvider theme={theme}>
-      <Head>
-        <title>Rateup</title>
-        <meta
-          name="viewport"
-          content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
-        />
-        <link rel="shortcut icon" href="/favicon.png" />
-        <link rel="canonical" href={canonicalUrl} />
-      </Head>
-      {isProduction && (
-        <>
-          <FacebookPixel />
-        </>
+    <NextIntlClientProvider
+      locale="en"
+      messages={Object.entries(messages).reduce(
+        (acc, [key, value]) => set(acc, key, value),
+        {},
       )}
-      {/* notoColorEmogi is added as fallback for displaying emogies */}
-      <main className={`${geist.className},${notoColorEmogi.className}`}>
-        <QueryClientProvider client={queryClient}>
-          <ModalsProvider modals={allModalManagerModalsObj}>
-            <Notifications />
-            <HydrationBoundary state={pageProps.dehydratedState}>
-              <UserProvider>
-                <SuperTokensWrapper>
-                  <LayoutComponent {...(isLayoutNeeded ? { appProps } : {})}>
-                    <Component {...pageProps} />
-                    <GoogleTagManager gtmId="GTM-NDC3D7DP" />
-                  </LayoutComponent>
-                </SuperTokensWrapper>
-              </UserProvider>
-              {showQueryDevTools && (
-                <ReactQueryDevtools
-                  initialIsOpen={false}
-                  buttonPosition="top-right"
-                />
-              )}
-            </HydrationBoundary>
-            <Notifications />
-          </ModalsProvider>
-        </QueryClientProvider>
-      </main>
-    </MantineProvider>
+      timeZone="Europe/Vienna"
+    >
+      <MantineProvider theme={theme}>
+        <Head>
+          <title>Rateup</title>
+          <meta
+            name="viewport"
+            content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
+          />
+          <link rel="shortcut icon" href="/favicon.png" />
+          <link rel="canonical" href={canonicalUrl} />
+        </Head>
+        {isProduction && (
+          <>
+            <FacebookPixel />
+          </>
+        )}
+        {/* notoCo</HydrationBoundary>lorEmogi is added as fallback for displaying emogies */}
+        <main className={`${geist.className},${notoColorEmogi.className}`}>
+          <QueryClientProvider client={queryClient}>
+            <ModalsProvider modals={allModalManagerModalsObj}>
+              <Notifications />
+              <HydrationBoundary state={pageProps.dehydratedState}>
+                <UserProvider>
+                  <SuperTokensWrapper>
+                    <LayoutComponent {...(isLayoutNeeded ? { appProps } : {})}>
+                      <Component {...pageProps} />
+                      <GoogleTagManager gtmId="GTM-NDC3D7DP" />
+                    </LayoutComponent>
+                  </SuperTokensWrapper>
+                </UserProvider>
+                {showQueryDevTools && (
+                  <ReactQueryDevtools
+                    initialIsOpen={false}
+                    buttonPosition="top-right"
+                  />
+                )}
+              </HydrationBoundary>
+              <Notifications />
+            </ModalsProvider>
+          </QueryClientProvider>
+        </main>
+      </MantineProvider>
+    </NextIntlClientProvider>
   );
 }

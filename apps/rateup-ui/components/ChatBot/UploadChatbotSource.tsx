@@ -3,8 +3,7 @@ import React, { useState } from "react";
 import { Stack } from "@mantine/core";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { uploadFileForEmbed } from "../../backend/chatbot/chatbot.api";
 import { useUploadSourceForEmbed } from "../../backend/chatbot/chatbot.query";
@@ -29,7 +28,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
   const uploadSourceForEmbedMutate = useUploadSourceForEmbed();
   const [file, setFile] = useState<File>(null);
   const queryClient = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleUplaod = async () => {
     setIsUpload(true);
     switch (source) {
@@ -53,21 +52,21 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
         if (!file) return;
         if (file.size > 1048576 * 10)
           showLoadingToast(
-            translations[
-              "Hold on..file is getting uploaded. It may take few minutes"
-            ],
+            translations(
+              "Hold on..file is getting uploaded. It may take few minutes",
+            ),
             "file-upload",
             true,
-            translations["Uploading"],
+            translations("Uploading"),
             "teal",
             false,
           );
         else
           showLoadingToast(
-            translations["Hold on..file is getting uploaded"],
+            translations("Hold on..file is getting uploaded"),
             "file-upload",
             true,
-            translations["Uploading"],
+            translations("Uploading"),
             "teal",
             false,
           );
@@ -75,7 +74,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
           () => {
             setIsUpload(false);
             showSuccessToast(
-              translations["File uploaded successfully"],
+              translations("File uploaded successfully"),
               "file-upload",
               <IconCheck />,
               true,
@@ -87,7 +86,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
           () => {
             setIsUpload(false);
             showErrorToast(
-              translations["Errror uploading file"],
+              translations("Errror uploading file"),
               "file-upload",
               <IconX />,
               true,
@@ -102,12 +101,12 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={translations["Upload Source"]}
+      title={translations("Upload Source")}
       centered
     >
       <Stack gap={"sm"}>
         <ContainedSelection
-          label={translations["Select Source"]}
+          label={translations("Select Source")}
           data={Object.values(ChatBotDataSourceType)}
           value={source}
           onChange={(value) => setSource(value as ChatBotDataSourceType)}
@@ -116,22 +115,22 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
         {source == ChatBotDataSourceType.WEB && (
           <ContainedTextField
             value={url}
-            label={translations["Enter web url"]}
+            label={translations("Enter web url")}
             onChange={(e) => setUrl(e.currentTarget.value)}
-            placeholder={translations["Eg:https://www.example.com"]}
+            placeholder={translations("Eg:https://www.example.com")}
           />
         )}
         {source == ChatBotDataSourceType.FILE && (
           <ContainedFileInput
-            label={translations["Upload file"]}
-            placeholder={translations["Upload a pdf file (.pdf/.epub)"]}
+            label={translations("Upload file")}
+            placeholder={translations("Upload a pdf file (.pdf/.epub)")}
             accept=".pdf,.epub"
             multiple={false}
             onChange={setFile}
           />
         )}
         <RateupButtonBlue
-          title={translations["Upload"]}
+          title={translations("Upload")}
           onClick={handleUplaod}
           loading={isUpload}
           disabled={!file && !url}

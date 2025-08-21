@@ -1,8 +1,7 @@
 import { useContext } from "react";
 
 import { Stack } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionType as Q } from "../../../types/enums";
@@ -27,7 +26,7 @@ export function WaQuestionPreview({
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const title = question.title[selectedLanguage];
   const description = question.description[selectedLanguage];
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   switch (question.type) {
     case Q.Email:
     case Q.TextArea:
@@ -42,7 +41,7 @@ export function WaQuestionPreview({
           <WaResponseMessage
             header={title}
             body={description}
-            footer={translations["Please enter in the format: dd/mm/yyyy"]}
+            footer={translations("Please enter in the format: dd/mm/yyyy")}
           />
           <WaSentMessage body="12/12/2012" />
         </>
@@ -53,12 +52,10 @@ export function WaQuestionPreview({
         <WaResponseMessage
           header={title}
           body={description}
-          footer={
-            translations[
-              "Please enter phone number with country code: 91XXXXXXXXXX"
-            ]
-          }
-          quickReplyButtons={translations["Use this number"]}
+          footer={translations(
+            "Please enter phone number with country code: 91XXXXXXXXXX",
+          )}
+          quickReplyButtons={translations("Use this number") as any}
         />
       );
     }
@@ -100,7 +97,7 @@ export function WaQuestionPreview({
               </WaMessageBody>
               {
                 <WaMessageFooter>
-                  {translations["Enter index of your choice"]}
+                  {translations("Enter index of your choice")}
                 </WaMessageFooter>
               }
             </Stack>
@@ -116,31 +113,29 @@ export function WaQuestionPreview({
           <WaResponseMessage
             header={title}
             body={description}
-            footer={translations["Please share your name"]}
+            footer={translations("Please share your name")}
           />
           <WaSentMessage body="John" />
           {features?.jobTitle && (
             <>
               <WaResponseMessage
-                body={translations["Please share your job title"]}
+                body={translations("Please share your job title")}
               />
-              <WaSentMessage body={translations["Marketing specialist"]} />
+              <WaSentMessage body={translations("Marketing specialist")} />
             </>
           )}
           <WaResponseMessage
-            body={translations["Please share details of your experience"]}
+            body={translations("Please share details of your experience")}
           />
           <WaSentMessage
-            body={
-              translations[
-                "Absolutely loved this product! It exceeded my expectations - great quality, user-friendly, and worth every penny. Highly recommend!"
-              ]
-            }
+            body={translations(
+              "Absolutely loved this product! It exceeded my expectations - great quality, user-friendly, and worth every penny. Highly recommend!",
+            )}
           />
           {features?.rating && (
             <>
               <WaListMessage
-                body={translations["Rate us"]}
+                body={translations("Rate us")}
                 openList={openList}
               />
             </>
@@ -148,7 +143,7 @@ export function WaQuestionPreview({
           {features?.photo && (
             <>
               <WaResponseMessage
-                body={translations["Please share your photo"]}
+                body={translations("Please share your photo")}
               />
             </>
           )}

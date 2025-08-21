@@ -15,8 +15,7 @@ import {
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { IconCircleCheck, IconRefresh } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useSurvey } from "../../../backend/surveys/surveys.query";
 import {
@@ -103,7 +102,7 @@ export function FlowShareTemplateEditor({
     }
     setImageToUpload(event);
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [imageToUpload, setImageToUpload] = useState(null);
 
   // saving image
@@ -125,7 +124,7 @@ export function FlowShareTemplateEditor({
   return (
     <Stack gap={0}>
       <Group mb="4">
-        <Title order={4}>{translations["Edit Template Message"]}</Title>
+        <Title order={4}>{translations("Edit Template Message")}</Title>
         <SaveStatusIndicator status={status} />
       </Group>
 
@@ -146,25 +145,25 @@ export function FlowShareTemplateEditor({
               return (
                 <Button {...props}>
                   {imageToUpload
-                    ? translations["Change Image"]
-                    : translations["Upload Image"]}
+                    ? translations("Change Image")
+                    : translations("Upload Image")}
                 </Button>
               );
             }}
           </FileButton>
 
           <Button variant="outline" onClick={handleRemoveImage}>
-            {translations["Remove Image"]}
+            {translations("Remove Image")}
           </Button>
         </Group>
 
         <TextareaWithLengthTracker
-          label={translations["Body"]}
+          label={translations("Body")}
           {...form.getInputProps("body")}
           maxValue={1024}
         />
         <TextInputWithLengthTracker
-          label={translations["Footer"]}
+          label={translations("Footer")}
           {...form.getInputProps("footer")}
           maxValue={60}
         />
@@ -225,11 +224,11 @@ export function FlowStartMessageEditor({
 
     return () => clearTimeout(timer);
   }, [form.values]);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack gap={0}>
       <Group mb="4">
-        <Title order={4}>{translations["Edit Start Message"]}</Title>
+        <Title order={4}>{translations("Edit Start Message")}</Title>
         <SaveStatusIndicator status={status} />
       </Group>
 
@@ -242,12 +241,12 @@ export function FlowStartMessageEditor({
         }}
       >
         <TextareaWithLengthTracker
-          label={translations["Body"]}
+          label={translations("Body")}
           {...form.getInputProps("prefix")}
           maxValue={1024}
         />
         <TextareaWithLengthTracker
-          label={translations["Suffix"]}
+          label={translations("Suffix")}
           {...form.getInputProps("suffix")}
           maxValue={1024}
         />
@@ -275,7 +274,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
   const startMessageForm = useForm<WaFlowStartMessageConfig>({
     initialValues: startMessageInitialValues,
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <PaperLayout
       p="30px"
@@ -312,7 +311,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
           }}
         >
           <Group mb="4" justify={"center"}>
-            <Title order={4}>{translations["Preview"]}</Title>
+            <Title order={4}>{translations("Preview")}</Title>
           </Group>
           <Box
             className={whatsappStyles.chatBg}

@@ -8,8 +8,7 @@ import {
   ScrollAreaAutosize,
   Stack,
 } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useGetAllTestimonialsByCollection,
@@ -40,7 +39,7 @@ const TestimonialSelect = ({
     filters,
     type,
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { data: collection } = useGetAllTestimonialsByCollection(collectionId);
   function checkIfTestimonialIdsAreIncludedInAllTestimonials(
     idtocheck: string,
@@ -52,7 +51,7 @@ const TestimonialSelect = ({
   if (filteredTestimonials?.length <= 0)
     return (
       <Center mt={150}>
-        <NothingFound text={translations["No testimonials found"]} />
+        <NothingFound text={translations("No testimonials found")} />
       </Center>
     );
   return (

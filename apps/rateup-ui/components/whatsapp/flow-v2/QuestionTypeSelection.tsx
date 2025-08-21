@@ -31,8 +31,7 @@ import {
   IconTextSize,
   IconThumbUpFilled,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { QuestionType, QuestionType2 } from "../../../types/enums";
 import { googleReviewSupportedTypes } from "../../../utils/data";
@@ -56,7 +55,7 @@ export function QuestionTypeSelection({
     handleTypeSelection(type);
     setIsGoogleReviewSupported(false);
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const QuestionButton = ({ type }) => {
     const Icon = questionIcons[type];
     return (
@@ -106,7 +105,7 @@ export function QuestionTypeSelection({
                       },
                     }}
                   >
-                    {translations["Review Supported"]}
+                    {translations("Review Supported")}
                   </Badge>
                 ) : null}
               </Group>

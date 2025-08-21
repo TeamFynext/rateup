@@ -1,8 +1,7 @@
 import { ActionIcon, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconTrash } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useDeleteCampaignMutation } from "../../backend/campaign/campaign.query";
 import { CampaignParticipantStatus, CampaignStatus } from "../../types/enums";
@@ -12,22 +11,20 @@ export const CampaignMenu = ({ teamId, id, campaignType }) => {
     teamId,
     campaignType,
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const openDeleteModal = (e) => {
     e.stopPropagation();
     modals.openConfirmModal({
-      title: translations["Delete Campaign"],
+      title: translations("Delete Campaign"),
       centered: true,
       children: (
         <Text size="sm">
-          {
-            translations[
-              "Are you sure you want to delete this campaign? This action is destructive and you will have to contact support to restore your data."
-            ]
-          }
+          {translations(
+            "Are you sure you want to delete this campaign? This action is destructive and you will have to contact support to restore your data.",
+          )}
         </Text>
       ),
-      labels: { confirm: translations["Yes"], cancel: translations["Cancel"] },
+      labels: { confirm: translations("Yes"), cancel: translations("Cancel") },
       confirmProps: { color: "red" },
       onConfirm: () => deleteCampaignMutation.mutate(id),
       onCancel: () => modals.closeAll(),

@@ -1,17 +1,17 @@
 import { Stack } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useTranslations } from "next-intl";
 
 import { useLCAction } from "@/backend/loyalty/customer/customer.query";
 import { ContainedNumberInput } from "@/components/input/ContainedInput/ContainedInput";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { LASelector } from "../utils";
 
 const LoyaltyManualCustomerActionModal = ({ opened, close }) => {
   const lcActionMut = useLCAction();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const form = useForm({
     initialValues: {
@@ -34,7 +34,7 @@ const LoyaltyManualCustomerActionModal = ({ opened, close }) => {
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={translations["Points Issuance"]}
+      title={translations("Points Issuance")}
       centered
       includeCancelButton
       cancelOnClick={() => {
@@ -47,18 +47,18 @@ const LoyaltyManualCustomerActionModal = ({ opened, close }) => {
     >
       <Stack>
         <PhoneInputWithCountry
-          label={translations["Phone Number"]}
+          label={translations("Phone Number")}
           {...form.getInputProps("phone")}
         />
         <LASelector
-          label={translations["Action"]}
+          label={translations("Action")}
           {...form.getInputProps("actionId")}
           placeholder="Select"
         />
         <ContainedNumberInput
-          label={translations["Amount"]}
+          label={translations("Amount")}
           {...form.getInputProps("amount")}
-          placeholder={translations["Enter amount"]}
+          placeholder={translations("Enter amount")}
         />
       </Stack>
     </FormModalLayout>

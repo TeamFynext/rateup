@@ -3,8 +3,7 @@ import { useRouter } from "next/router";
 
 import { Grid, Menu, Text } from "@mantine/core";
 import { IconLanguage } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useUpdateUserLanguageMutation } from "../../backend/user/user.query";
 
@@ -12,7 +11,7 @@ const LanguageSelector = () => {
   const router = useRouter();
   const [language, setLanguage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const updateUserLanguageMutation =
     useUpdateUserLanguageMutation(setIsLoading);
 
@@ -64,19 +63,19 @@ const LanguageSelector = () => {
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item leftSection="🇺🇸" onClick={() => handleLanguageChange("en")}>
-          {translations["English"]}
+          {translations("English")}
         </Menu.Item>
         <Menu.Item leftSection="🇩🇪" onClick={() => handleLanguageChange("de")}>
-          {translations["German"]}
+          {translations("German")}
         </Menu.Item>
         <Menu.Item leftSection="🇮🇳" onClick={() => handleLanguageChange("hi")}>
-          {translations["Hindi"]}
+          {translations("Hindi")}
         </Menu.Item>
         <Menu.Item leftSection="🇫🇷" onClick={() => handleLanguageChange("fr")}>
-          {translations["French"]}
+          {translations("French")}
         </Menu.Item>
         <Menu.Item leftSection="🇸🇦" onClick={() => handleLanguageChange("ar")}>
-          {translations["Arabic"]}
+          {translations("Arabic")}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

@@ -9,8 +9,7 @@ import {
   IconShare,
   IconTrash,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useAddMultipleTestimonialsToCollection,
@@ -209,7 +208,7 @@ function UtilityComponent({
     useDisclosure(false);
   const [openedShare, { open: openShare, close: closeShare }] =
     useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleSave = () => {
     addMultipleTestimonials.mutate(selectedTestimonialIds, {
       onSuccess: () => {
@@ -254,7 +253,7 @@ function UtilityComponent({
           <>
             {isDelete && (
               <Checkbox
-                label={translations["Select All"]}
+                label={translations("Select All")}
                 size="xs"
                 checked={isAllSelectedForDelete}
                 disabled={!savedTestimonialIds?.length}
@@ -273,7 +272,7 @@ function UtilityComponent({
               disabled={!savedTestimonialIds?.length}
               leftSection={<IconPencil size={"1rem"} />}
             >
-              {translations["Customize"]}
+              {translations("Customize")}
             </Button>
 
             <Button
@@ -285,7 +284,7 @@ function UtilityComponent({
               disabled={!filteredTestimonialIds?.length}
               leftSection={<IconTrash size={"1rem"} />}
             >
-              {translations["Delete"]}
+              {translations("Delete")}
             </Button>
             {isDelete && (
               <Button
@@ -294,7 +293,7 @@ function UtilityComponent({
                 variant="filled"
                 onClick={toggleDelete}
               >
-                {translations["Cancel"]}
+                {translations("Cancel")}
               </Button>
             )}
           </>
@@ -303,7 +302,7 @@ function UtilityComponent({
         {activeTab === TestimonialTabs.Select && (
           <>
             <Checkbox
-              label={translations["Select All"]}
+              label={translations("Select All")}
               size="xs"
               checked={isAllSelected}
               disabled={!filteredTestimonialIds?.length}
@@ -317,7 +316,7 @@ function UtilityComponent({
               disabled={!filteredTestimonialIds?.length}
               leftSection={<IconDeviceFloppy size={"1rem"} />}
             >
-              {translations["Save and Next"]}
+              {translations("Save and Next")}
             </Button>
           </>
         )}
@@ -331,7 +330,7 @@ function UtilityComponent({
               disabled={!savedTestimonialIds?.length}
               leftSection={<IconShare size={"1rem"} />}
             >
-              {translations["Share"]}
+              {translations("Share")}
             </Button>
           </>
         )}
@@ -343,9 +342,9 @@ function UtilityComponent({
       />
       <ConfirmationModal
         forDeleteFunctionality
-        confirmLabel={translations["Delete"]}
-        headerLabel={translations["Are you sure to delete these testimonials?"]}
-        headerTitle={translations["Delete testimonials?"]}
+        confirmLabel={translations("Delete")}
+        headerLabel={translations("Are you sure to delete these testimonials?")}
+        headerTitle={translations("Delete testimonials?")}
         opened={dialogOpened}
         onClose={closeDialog}
         onConfirm={(e) => {

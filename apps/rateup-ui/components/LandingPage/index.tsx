@@ -13,8 +13,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useLandingPages } from "../../backend/landingPage/landingPage.query";
 import { docsPath } from "../../utils/constants";
@@ -37,7 +36,7 @@ function LandingPageDashboard() {
 
   const [landingPages, setLandingPages] = useState([]);
   const [sortOption, setSortOption] = useState("latest");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const tourSteps = LPTourSteps({ styles });
 
   useEffect(() => {
@@ -66,13 +65,13 @@ function LandingPageDashboard() {
   } else if (isError) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <p>{translations["Unable to get data, please try again later."]}</p>
+        <p>{translations("Unable to get data, please try again later.")}</p>
       </Center>
     );
   } else if (!isPending && !isError && !landingPages.length) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <NothingFound text={translations["No Landing Pages Found."]} />;
+        <NothingFound text={translations("No Landing Pages Found.")} />;
       </Center>
     );
   } else {
@@ -92,7 +91,7 @@ function LandingPageDashboard() {
             rightSection={<IconPlus />}
             onClick={createLandingPageModalHandlers.open}
           >
-            {translations["Create Landing Page"]}
+            {translations("Create Landing Page")}
           </Button>
           <InfoButton docUrl={`${docsPath}/landingpage`} />
           <WelcomeTour steps={tourSteps} />

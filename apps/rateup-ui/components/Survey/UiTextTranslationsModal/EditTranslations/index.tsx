@@ -12,7 +12,7 @@ import styles from "./EditTranslations.module.css";
 function EditTranslations({ survey, element, uiTextTranslations, languages }) {
   const { name, label, id } = element;
 
-  const translatedValues = uiTextTranslations[name] || {};
+  const translatedValues = uiTextTranslations(name) || {};
 
   const surveyUpdateMutation = useSurveyUpdateMutation(survey?.id);
 

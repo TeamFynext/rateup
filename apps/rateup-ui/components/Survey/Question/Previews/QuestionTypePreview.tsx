@@ -1,6 +1,6 @@
 import React from "react";
 
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { PageType as Page, QuestionType as Q } from "../../../../types/enums";
 import CustomHTML from "../../Page/Previews/CustomHTML";
@@ -39,7 +39,7 @@ const QuestionTypePreview = ({
   wop,
   htmlContent = null,
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   switch (type) {
     case Q.Text:
       return <TextForm />;
@@ -110,7 +110,7 @@ const QuestionTypePreview = ({
     case Page.Custom:
       return <CustomHTML content={htmlContent} />;
     default:
-      return <div>{translations["not previews"]}</div>;
+      return <div>{translations("not previews")}</div>;
   }
 };
 

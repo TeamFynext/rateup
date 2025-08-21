@@ -5,11 +5,11 @@ import { Box, Group, Text, useMantineTheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { DragDropContext } from "@hello-pangea/dnd";
+import { useTranslations } from "next-intl";
 
 import { WaFlowStatus } from "@/types/enums";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import useTranslations from "@/dictionaries/useTranslation";
 import { showErrorToast } from "@/utils/notifications";
 import { reorder } from "@/utils/questions";
 import { getScreenObjById } from "@/utils/whatsapp/flow.utils";
@@ -29,7 +29,7 @@ function FlowScreensList() {
     isCreateFlowScreenModalOpen,
     { open: openCreateFlowScreenModal, close: closeCreateFlowScreenModal },
   ] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const {
     addScreens,
     setCurrentScreenId,

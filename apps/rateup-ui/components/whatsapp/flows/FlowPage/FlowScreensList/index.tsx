@@ -5,9 +5,9 @@ import { Box, Group, Text, useMantineTheme } from "@mantine/core";
 import { useCounter, useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { DragDropContext } from "@hello-pangea/dnd";
+import { useTranslations } from "next-intl";
 
 import { WaFlowFormElement } from "@/types/global";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useWaFlowFromDb } from "../../../../../backend/whatsapp/flow/flow.query";
 import {
@@ -54,7 +54,7 @@ function FlowScreensList({
     isCreateFlowScreenModalOpen,
     { open: openCreateFlowScreenModal, close: closeCreateFlowScreenModal },
   ] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function handleCreateScreenClick() {
     if (flowJson.screens.length >= FlowMaxScreens) {
       showErrorToast(`You can only have ${FlowMaxScreens} screens`);
@@ -126,7 +126,7 @@ function FlowScreensList({
               color: theme.colors.red[9],
             }}
           >
-            {translations["Cannot Edit a Published Flow"]}
+            {translations("Cannot Edit a Published Flow")}
           </Text>
         </Group>
       )}

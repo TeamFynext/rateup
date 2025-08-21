@@ -12,8 +12,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconRefresh } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { RateupButtonSecondary } from "../../../components/Button/RateupButtons";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
@@ -32,24 +31,24 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
     { open: openOrderDetails, close: closeOrderDetails },
   ] = useDisclosure(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       {orders?.length > 0 ? (
         <>
           <Flex justify={"flex-end"} p="sm">
             <RateupButtonSecondary
-              title={translations["Refresh"]}
+              title={translations("Refresh")}
               onClick={async () => {
                 showLoadingToast(
-                  translations["Hold on...data getting updated."],
+                  translations("Hold on...data getting updated."),
                   "order-history",
                   true,
-                  translations["Refreshing order history"],
+                  translations("Refreshing order history"),
                 );
                 await refetch();
                 showSuccessToast(
-                  translations["Updated Succesfully"],
+                  translations("Updated Succesfully"),
                   "order-history",
                   <IconCheck />,
                   true,
@@ -70,12 +69,12 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
             c={"gray"}
             style={{ marginLeft: "20px" }}
           >
-            <Text w={150}>{translations["Order Id"]}</Text>
-            <Text w={120}>{translations["Billing Date"]}</Text>
-            <Text w={100}>{translations["Plan"]}</Text>
-            <Text w={100}>{translations["Amount"]}</Text>
-            <Text w={120}>{translations["Payment"]}</Text>
-            <Text w={120}>{translations["Status"]}</Text>
+            <Text w={150}>{translations("Order Id")}</Text>
+            <Text w={120}>{translations("Billing Date")}</Text>
+            <Text w={100}>{translations("Plan")}</Text>
+            <Text w={100}>{translations("Amount")}</Text>
+            <Text w={120}>{translations("Payment")}</Text>
+            <Text w={120}>{translations("Status")}</Text>
           </Group>
           <ScrollArea.Autosize h={"60vh"} scrollbarSize={6}>
             <Stack px={"sm"} gap={0}>
@@ -114,7 +113,7 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
                         <Title order={5} w={120}>
                           {order?.paymentMethod
                             ? order.paymentMethod.toUpperCase()
-                            : translations["Not available"]}
+                            : translations("Not available")}
                         </Title>
                         <Title order={5} w={120}>
                           <OrderStatusBadge order={order} />
@@ -127,12 +126,12 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
           </ScrollArea.Autosize>
         </>
       ) : (
-        <NothingFound text={translations["No Orders Found"]} />
+        <NothingFound text={translations("No Orders Found")} />
       )}
       <FormModalLayout
         opened={openedOrderDetails}
         onClose={closeOrderDetails}
-        title={translations["Order Details"]}
+        title={translations("Order Details")}
         size="xl"
         centered
       >
@@ -144,16 +143,16 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
             style={{ background: "var(--light-grey-color)" }}
           >
             <Text>
-              {translations["Order Placed"]} <br />{" "}
+              {translations("Order Placed")} <br />{" "}
               {formatIsoDateString(selectedOrder?.createdAt)}
             </Text>
             <Text>
-              {translations["Total Amount"]} <br />{" "}
+              {translations("Total Amount")} <br />{" "}
               {selectedOrder?.currency === "INR" ? "₹" : "$"}{" "}
               {selectedOrder?.amount} /-
             </Text>
             <Stack gap="5px">
-              <Text>{translations["Order Id"]}</Text>
+              <Text>{translations("Order Id")}</Text>
               <Text size="xs" c="dimmed">
                 {selectedOrder?.id}
               </Text>
@@ -174,23 +173,23 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
 
               <Group mt="xl">
                 <Text fw={500} style={{ minWidth: "150px" }}>
-                  {translations["Payment Method :"]}
+                  {translations("Payment Method :")}
                 </Text>
                 <Text c="dimmed">
                   {selectedOrder?.paymentMethod
                     ? selectedOrder.paymentMethod.toUpperCase()
-                    : translations["Not available"]}
+                    : translations("Not available")}
                 </Text>
               </Group>
               <Group>
                 <Text fw={500} style={{ minWidth: "150px" }}>
-                  {translations["Payment Status :"]}
+                  {translations("Payment Status :")}
                 </Text>
                 <Text c="dimmed">{selectedOrder?.paymentStatus} </Text>
               </Group>
             </Stack>
             <Stack mr="xl">
-              <Title order={5}>{translations["Plan Features"]} </Title>
+              <Title order={5}>{translations("Plan Features")} </Title>
               <List>
                 {selectedOrder?.planFeatures?.map((feature) => {
                   if (feature.startsWith("-")) return null;
@@ -208,29 +207,29 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
 export default OrderHistory;
 
 export const OrderStatusBadge = ({ order }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   let color, statusText;
 
   switch (order?.status) {
     case "PENDING":
       if (order?.paymentStatus === "SUCCESS") {
         color = "blue";
-        statusText = translations["PROCESSING"];
+        statusText = translations("PROCESSING");
       } else if (order?.paymentStatus === "FAILED") {
         color = "red";
-        statusText = translations["FAILED"];
+        statusText = translations("FAILED");
       } else {
         color = "yellow";
-        statusText = translations[order?.status] || order?.status;
+        statusText = translations(order?.status) || order?.status;
       }
       break;
     case "FAILED":
       color = "red";
-      statusText = translations[order?.status] || order?.status;
+      statusText = translations(order?.status) || order?.status;
       break;
     default:
       color = "green";
-      statusText = translations[order?.status] || order?.status;
+      statusText = translations(order?.status) || order?.status;
   }
 
   return (

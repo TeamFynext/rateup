@@ -1,15 +1,14 @@
 import { Button, Menu, Tooltip } from "@mantine/core";
 import { IconChevronDown } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 export function StatusFilterMenu({ filterParam, setFilterParam }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Menu shadow="md" width={120}>
       <Menu.Target>
         <Tooltip
-          label={translations["Status"] ?? "Status"}
+          label={translations("Status") ?? "Status"}
           withArrow
           position="top"
         >
@@ -21,7 +20,7 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
             tt={"capitalize"}
             style={{ minWidth: 110 }}
           >
-            {translations[filterParam] ?? filterParam}
+            {translations(filterParam) ?? filterParam}
           </Button>
         </Tooltip>
       </Menu.Target>
@@ -35,21 +34,21 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
           color={filterParam === "all" && "blue"}
           onClick={() => setFilterParam("all")}
         >
-          {translations["All"]}
+          {translations("All")}
         </Menu.Item>
 
         <Menu.Item
           color={filterParam === "active" && "green"}
           onClick={() => setFilterParam("active")}
         >
-          {translations["Active"]}
+          {translations("Active")}
         </Menu.Item>
 
         <Menu.Item
           color={filterParam === "paused" && "yellow"}
           onClick={() => setFilterParam("paused")}
         >
-          {translations["Paused"]}
+          {translations("Paused")}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

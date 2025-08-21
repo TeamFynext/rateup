@@ -13,6 +13,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useBoardQueries } from "@/backend/tickets/tickets.query";
@@ -23,7 +24,6 @@ import { TeamSelector } from "@/components/input/TeamSelector";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { BoardCard } from "@/components/Tickets/BoardCard";
 import { BoardContent } from "@/components/Tickets/BoardContent";
-import useTranslations from "@/dictionaries/useTranslation";
 import { showWarnToast } from "@/utils/notifications";
 
 export default function Page() {
@@ -50,7 +50,7 @@ export default function Page() {
     useBoardQueries();
   const { data: teamRes, isPending: teamsLoading } = useTeamsByUser();
 
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const teams = teamRes?.data;
 
@@ -224,7 +224,7 @@ export default function Page() {
           />
           <MultiSelect
             radius="md"
-            placeholder={translations["Select teams"]}
+            placeholder={translations("Select teams")}
             data={teamOptions}
             value={newBoardData.teamIds}
             onChange={(teamIds) =>
@@ -264,7 +264,7 @@ export default function Page() {
           />
           <MultiSelect
             radius="md"
-            placeholder={translations["Select teams"]}
+            placeholder={translations("Select teams")}
             data={teamOptions}
             value={editBoardData.teamIds}
             onChange={(teamIds) =>

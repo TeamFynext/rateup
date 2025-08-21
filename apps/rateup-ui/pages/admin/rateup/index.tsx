@@ -4,8 +4,7 @@ import { Box, Group, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { DataGrid } from "@mui/x-data-grid";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   usePaymentsPlans,
@@ -35,7 +34,7 @@ const RateupPlan = () => {
     openedDescriptonModal,
     { toggle: toggleDescriptonModal, close: closeDescriptonModal },
   ] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { data: plans, isPending, isError } = useRateupPaymentsPlans();
   const {
     data: razorPayPlans,
@@ -106,10 +105,10 @@ const RateupPlan = () => {
   const handleMutation = (updatedData) => {
     rateupPaymentsPlanUpdateMutation.mutate(updatedData);
     showLoadingToast(
-      translations["Hold.. your data is getting updated..."],
+      translations("Hold.. your data is getting updated..."),
       "load-data",
       true,
-      translations["Updating RateUp Plan"],
+      translations("Updating RateUp Plan"),
     );
     setUpdatedField("");
   };
@@ -121,9 +120,9 @@ const RateupPlan = () => {
   return (
     <Stack mah={"100%"}>
       <Group gap={"md"} justify="space-between" mr={"xl"}>
-        <Title order={2}>{translations["Rateup Plans"]}</Title>
+        <Title order={2}>{translations("Rateup Plans")}</Title>
         <RateupButtonPrimary
-          title={translations["Create A Plan"]}
+          title={translations("Create A Plan")}
           rightIcon={<IconPlus size={16} />}
           onClick={toggle}
         />
@@ -159,7 +158,7 @@ const RateupPlan = () => {
           setUpdatedField("");
         }}
         centered
-        title={translations["Update Description"]}
+        title={translations("Update Description")}
         buttonTitle="Update"
         includeCancelButton
         onSubmit={() => {
@@ -172,8 +171,8 @@ const RateupPlan = () => {
       >
         <Group mt="md" justify="space-between">
           <ContainedTagInput
-            label={translations["Description"]}
-            placeholder={translations["Type Description and press enter"]}
+            label={translations("Description")}
+            placeholder={translations("Type Description and press enter")}
             withAsterisk
             value={updatedField?.description ?? []}
             onChange={(e) => {

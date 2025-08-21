@@ -14,8 +14,7 @@ import {
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useTriggeringDownload,
@@ -28,7 +27,7 @@ import imageCropModalStyles from "../ImageCropModal/ImageCropModal.module.css";
 
 function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
   const { onImageSelected, aspectRatio } = innerProps;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 600);
   const largeScreen = useMediaQuery("(min-width: 60em)");
@@ -53,7 +52,7 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
   const handleImageClick = useCallback((url, name) => {
     modals.openContextModal({
       modal: "imageCropModal",
-      title: translations["Crop Image"],
+      title: translations("Crop Image"),
       centered: true,
       classNames: mmImageCropModalClassnames,
       innerProps: {
@@ -107,7 +106,7 @@ function UnsplashImageSelectorModal({ context, id: thisModalId, innerProps }) {
         mx={"lg"}
       >
         {_photoList?.length === 0 ? (
-          <Text>{translations["Images Not Found"]}</Text>
+          <Text>{translations("Images Not Found")}</Text>
         ) : (
           _photoList?.map((photo, i) => (
             <UnsplashPhoto
@@ -152,7 +151,7 @@ const UnsplashPhoto = ({
     setSearchQuery("");
     close();
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Card
       shadow="sm"
@@ -165,7 +164,7 @@ const UnsplashPhoto = ({
         <Image
           src={regular}
           h={200}
-          alt={translations["image from unsplash"]}
+          alt={translations("image from unsplash")}
         />
       </Card.Section>
     </Card>

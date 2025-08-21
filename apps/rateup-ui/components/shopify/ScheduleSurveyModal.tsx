@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { IconAlertCircle, IconRefresh } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import {
   IntegratedApps,
@@ -21,7 +22,6 @@ import {
 import { ShopifyIntegration } from "@/types/global";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import useTemplatesAvailableForTeam from "../../hooks/team";
 import { shopifyEventData } from "../../utils/constants";
@@ -74,7 +74,7 @@ const ScheduleSurveyModal = ({
           : null,
     },
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const updateIntegration = useUpdateIntegrationMutation(
     IntegratedApps.shopify,
   );
@@ -87,12 +87,15 @@ const ScheduleSurveyModal = ({
       !form.values.loyaltyApiFeature
     ) {
       form.setErrors({
-        actionId:
-          translations["Choose Loyalty API/Action or Whatsapp Template"],
-        waTemplateId:
-          translations["Choose Loyalty API/Action or Whatsapp Template"],
-        loyaltyApiFeature:
-          translations["Choose Loyalty API/Action or Whatsapp Template"],
+        actionId: translations(
+          "Choose Loyalty API/Action or Whatsapp Template",
+        ),
+        waTemplateId: translations(
+          "Choose Loyalty API/Action or Whatsapp Template",
+        ),
+        loyaltyApiFeature: translations(
+          "Choose Loyalty API/Action or Whatsapp Template",
+        ),
       });
       return;
     }
@@ -111,10 +114,10 @@ const ScheduleSurveyModal = ({
       createdAt: new Date(),
     });
     showLoadingToast(
-      translations["Creating Survey Schedule"],
+      translations("Creating Survey Schedule"),
       "integration-update",
       true,
-      translations["Loading"],
+      translations("Loading"),
       "",
       false,
     );
@@ -156,7 +159,7 @@ const ScheduleSurveyModal = ({
       title=""
       centered
       onSubmit={handleScheduleSurvey}
-      buttonTitle={translations["Create"]}
+      buttonTitle={translations("Create")}
       includeCancelButton
       size="lg"
       submitButtonDisabled={
@@ -167,7 +170,7 @@ const ScheduleSurveyModal = ({
     >
       <Stack>
         <Alert
-          title={translations["Important"]}
+          title={translations("Important")}
           display={
             form.values.event &&
             form.values.event !== ShopifyEvents.ABANDONED_CHECKOUTS &&
@@ -178,13 +181,13 @@ const ScheduleSurveyModal = ({
           icon={<IconAlertCircle color="red" />}
           color="red"
         >
-          {translations[
-            "Allow rateup to subscribe to your store events in th settings before scheduling survey"
-          ] ||
+          {translations(
+            "Allow rateup to subscribe to your store events in th settings before scheduling survey",
+          ) ||
             "Allow rateup to subscribe to your store events in th settings before scheduling survey"}
         </Alert>
         <TeamSelector
-          placeholder={translations["Select Team"]}
+          placeholder={translations("Select Team")}
           withAsterisk
           allowDeselect={false}
           disabled={false}
@@ -196,26 +199,26 @@ const ScheduleSurveyModal = ({
           searchable
         />
         <ContainedSelection
-          label={translations["Event"]}
-          placeholder={translations["Select Shopify Event"]}
+          label={translations("Event")}
+          placeholder={translations("Select Shopify Event")}
           data={shopifyEventData}
           {...form.getInputProps("event")}
         />
         <WaTemplateSelector
-          label={translations["whatsApp Template"]}
-          placeholder={translations["Select a template"]}
+          label={translations("whatsApp Template")}
+          placeholder={translations("Select a template")}
           {...form.getInputProps("waTemplateId")}
         />
         <ContainedNumberInput
-          label={translations["Time Delay (in minutes)"]}
+          label={translations("Time Delay (in minutes)")}
           {...form.getInputProps("timeDelay")}
           allowDecimal={false}
           allowNegative={false}
           display={form.values.waTemplateId ? "block" : "none"}
         />
         <LASelector
-          label={translations["Loyalty Action"]}
-          placeholder={translations["Select action"]}
+          label={translations("Loyalty Action")}
+          placeholder={translations("Select action")}
           {...form.getInputProps("actionId")}
           display={
             form.values.event === ShopifyEvents.ABANDONED_CHECKOUTS
@@ -250,19 +253,19 @@ const ScheduleSurveyModal = ({
         ) : (
           <Stack>
             <Checkbox
-              label={translations["Product Specific"]}
+              label={translations("Product Specific")}
               {...form.getInputProps("isProductSpecific")}
             />
             {form.values.isProductSpecific && (
               <Group>
                 <ContainedSelection
-                  label={translations["Product"]}
+                  label={translations("Product")}
                   data={productData}
-                  placeholder={translations["Select a product"]}
+                  placeholder={translations("Select a product")}
                   flex={1}
                   {...form.getInputProps("productId")}
                 />
-                <TooltipFloating label={translations["Load products"]}>
+                <TooltipFloating label={translations("Load products")}>
                   <ActionIcon
                     onClick={loadShopifyProducts}
                     variant="subtle"

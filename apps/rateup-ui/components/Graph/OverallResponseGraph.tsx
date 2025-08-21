@@ -75,7 +75,7 @@ const OverallResponseGraph = ({
                 className={`${classes["overall-responses-text-p"]}`}
                 c="dimmed"
               >
-                {translations["Overall Responses"]}
+                {translations("Overall Responses")}
               </Text>
             </Stack>
             <RefreshButton onClick={onRefresh} />
@@ -87,7 +87,7 @@ const OverallResponseGraph = ({
               radius="lg"
               color={timePeriod !== "hourly" ? "gray" : "black"}
               onClick={() => setTimePeriod("hourly")}
-              title={translations["Hourly"]}
+              title={translations("Hourly")}
             />
 
             <RateupButtonBlue
@@ -95,14 +95,14 @@ const OverallResponseGraph = ({
               radius="lg"
               color={timePeriod !== "daily" ? "gray" : "black"}
               onClick={() => setTimePeriod("daily")}
-              title={translations["Daily"]}
+              title={translations("Daily")}
             />
             <RateupButtonBlue
               variant={timePeriod === "weekly" ? "filled" : "subtle"}
               radius="lg"
               color={timePeriod !== "weekly" ? "gray" : "black"}
               onClick={() => setTimePeriod("weekly")}
-              title={translations["Weekly"]}
+              title={translations("Weekly")}
             />
           </Group>
         </Group>
@@ -154,7 +154,7 @@ const OverallResponseGraph = ({
               />
             </AreaChart>
           ) : (
-            <NothingFound text={translations["No data to display"]} />
+            <NothingFound text={translations("No data to display")} />
           )}
 
           {/* TODO : dots showing only on hover, show dots always in area chart */}
@@ -197,7 +197,7 @@ const CustomTooltip = ({
         }}
       >
         <p className="label">{label}</p>
-        <p className="intro">{`${translations["Responses"]}: ${payload[0].value}`}</p>
+        <p className="intro">{`${translations("Responses")}: ${payload[0].value}`}</p>
       </div>
     );
   }

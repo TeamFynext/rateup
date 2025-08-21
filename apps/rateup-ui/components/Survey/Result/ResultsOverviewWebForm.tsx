@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Flex } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 import { Margin, usePDF } from "react-to-pdf";
 
@@ -14,7 +15,6 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useResponseAnalytics } from "../../../backend/surveys/response/response.query";
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
@@ -37,7 +37,7 @@ const ResultsOverviewWebForm = ({
     SelectedLanguageContext,
   );
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [isExporting, setIsExporting] = useState(false);
   const { toPDF, targetRef } = usePDF({
     page: {
@@ -101,7 +101,7 @@ const ResultsOverviewWebForm = ({
       ) : (
         !npsOverView.length &&
         !choiceWiseOverView.length && (
-          <NothingFound text={translations["No Data available for Analysis"]} />
+          <NothingFound text={translations("No Data available for Analysis")} />
         )
       )}
       {!flowId && (

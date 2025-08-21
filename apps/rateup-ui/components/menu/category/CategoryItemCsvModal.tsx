@@ -2,8 +2,7 @@ import React, { useState } from "react";
 
 import { Blockquote, LoadingOverlay, NavLink, Stack } from "@mantine/core";
 import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useCreateMenuItemUsingCsvMutation } from "../../../backend/menu/item/mItem.query";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
@@ -19,7 +18,7 @@ const CategoryItemCsvModal = ({ opened, close, menuId }) => {
       setCsvFile(null);
     },
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleCsvFileUpload = () => {
     const formData = new FormData();
     formData.append("menuId", menuId);
@@ -30,10 +29,10 @@ const CategoryItemCsvModal = ({ opened, close, menuId }) => {
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={translations["Import Menu from CSV file"]}
+      title={translations("Import Menu from CSV file")}
       centered
       onSubmit={handleCsvFileUpload}
-      buttonTitle={translations["Upload Csv"]}
+      buttonTitle={translations("Upload Csv")}
       submitButtonDisabled={!csvFile}
     >
       <Stack>
@@ -44,17 +43,15 @@ const CategoryItemCsvModal = ({ opened, close, menuId }) => {
           loaderProps={{ type: "bars" }}
         />
         <Blockquote icon={<IconInfoCircle />} p={"sm"} iconSize={40}>
-          {
-            translations[
-              "Utilizing CSV file uploads to generate menu items requires specific fields in the file:"
-            ]
-          }{" "}
-          &quot;{translations["categoryname"]}&quot;, &quot;
-          {translations["name"]}&quot;, &quot;{translations["description"]}
-          &quot;, {translations["and"]} &quot;{translations["price"]}&quot;.
+          {translations(
+            "Utilizing CSV file uploads to generate menu items requires specific fields in the file:",
+          )}{" "}
+          &quot;{translations("categoryname")}&quot;, &quot;
+          {translations("name")}&quot;, &quot;{translations("description")}
+          &quot;, {translations("and")} &quot;{translations("price")}&quot;.
           <NavLink
             href={getFileUrlFromKey("/File/menu/Demo.csv", false)}
-            label={translations["Download Demo Csv File"]}
+            label={translations("Download Demo Csv File")}
             leftSection={<IconDownload size="1rem" stroke={1.5} />}
             download
             active

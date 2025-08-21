@@ -18,8 +18,7 @@ import {
 import { notifications } from "@mantine/notifications";
 import { IconChartBar } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useSurveys } from "../../backend/surveys/surveys.query";
 import { useUser } from "../../context/UserContext";
@@ -30,7 +29,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
 
   const { isLoading, error, data: surveys } = useSurveys();
   const queryClient = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     //-----------callback function to get selected surveys to parent -------
     getSelectedSurveys(surveyidArray);
@@ -51,7 +50,7 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
     );
   if (error || !Array.isArray(surveys)) {
     console.error(surveys, error);
-    return <> {translations["An error has occurred"]}</>;
+    return <> {translations("An error has occurred")}</>;
   }
 
   //--------handle check box click ----------
@@ -62,8 +61,8 @@ export default function SurveyCardList({ getSelectedSurveys, LandingPage }) {
       notifications.show({
         id: "survey-merge-max",
 
-        title: translations["Limit exceed"],
-        message: translations["Max 4 surveys can be merged."],
+        title: translations("Limit exceed"),
+        message: translations("Max 4 surveys can be merged."),
 
         autoClose: 2000,
       });
@@ -134,7 +133,7 @@ function SurveyCard({
   }, []);
 
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <Paper
@@ -163,7 +162,7 @@ function SurveyCard({
         <Group align={"center"} mt="sm" gap="xs">
           <Avatar radius={"xl"} />
           <Text size="sm" c="dimmed">
-            {translations["Created "]}
+            {translations("Created ")}
             {timeSince}
           </Text>
         </Group>
@@ -182,7 +181,7 @@ function SurveyCard({
           >
             <Group gap="4px">
               <IconChartBar size={20} />
-              <Text>{translations["Responses"]}</Text>
+              <Text>{translations("Responses")}</Text>
             </Group>
           </Link>
         </Flex>

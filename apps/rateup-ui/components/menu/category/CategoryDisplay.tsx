@@ -1,6 +1,5 @@
 import { Flex, Stack, Text } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { formatedTime } from "../../../utils/dateTime";
 import { ItemDisplay } from "../item/ItemDisplay";
@@ -17,7 +16,7 @@ export function CategoryDisplay({
     formattedStartTimeWithAmPm,
     formattedEndTimeWithAmPm,
   } = formatedTime(category);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack
       ref={(el) => {
@@ -37,7 +36,7 @@ export function CategoryDisplay({
         </Text>
         {categoryDisabled && !hideUnavailableCategory && (
           <Text size="xs" ml={"xs"} c={"var(--grey-color-2)"}>
-            {`${translations["This category is exclusively accessible between"]} ${formattedStartTimeWithAmPm} and ${formattedEndTimeWithAmPm}`}
+            {`${translations("This category is exclusively accessible between")} ${formattedStartTimeWithAmPm} and ${formattedEndTimeWithAmPm}`}
           </Text>
         )}
       </Stack>
@@ -45,7 +44,7 @@ export function CategoryDisplay({
         {category?.items?.length === 0 ||
         (categoryDisabled && hideUnavailableCategory) ? (
           <Text ml={"sm"} size="sm" pb={"lg"} fw={500}>
-            {translations["No Data Found"]}
+            {translations("No Data Found")}
           </Text>
         ) : (
           category?.items?.map((i: MenuItem) => (

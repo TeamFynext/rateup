@@ -11,6 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconSend } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import {
   useAllWaAutomatedReplies,
@@ -23,7 +24,6 @@ import { data } from "@/components/GenerateQr/tempdata";
 import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import classes2 from "../flowDisplayModel/flowSelectCard/styles.module.css";
 import classes from "../flowDisplayModel/styles.module.css";
@@ -43,7 +43,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
     setSelectedAutomationId("");
     props?.close();
   }
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function handleSendAutomatedReply() {
     initiate.mutate(
       { phone: props?.contact?.phone },
@@ -91,7 +91,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
             </Stack>
             <Group className={classes.send_button_wrapper}>
               <RateupButtonPrimary
-                title={translations["Send"]}
+                title={translations("Send")}
                 loading={initiate.isPending}
                 onClick={handleSendAutomatedReply}
                 rightIcon={<IconSend />}

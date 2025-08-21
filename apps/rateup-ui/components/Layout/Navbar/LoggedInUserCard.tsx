@@ -1,13 +1,13 @@
 import { Avatar, Group, Stack, Text } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
-import useTranslations from "@/dictionaries/useTranslation";
 import { getUserRoleLabel } from "@/utils";
 
 import { useUser } from "../../../context/UserContext";
 
 const LoggedInUserCard = () => {
   const { user } = useUser();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   if (!user) return null;
   return (

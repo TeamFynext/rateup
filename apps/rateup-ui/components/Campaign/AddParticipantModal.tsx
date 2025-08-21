@@ -19,8 +19,7 @@ import {
 } from "@mantine/core";
 import { useDebouncedState, useListState } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useCampaignData } from "../../backend/campaign/campaign.query";
 import { useAddCampaignParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
@@ -55,7 +54,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }) => {
     pageSize: Number(PAGE_SIZE[0]),
   });
   const { data, isPending } = useContacts(pagination, searchText);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { data: contactGroup, isLoading: groupIsLoading } =
     useContactGroupsByTeamId(campaign?.teamId);
   const { data: campaignData, isPending: isAllCampaignLoading } =
@@ -79,7 +78,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }) => {
       selectedGroups.length === 0 &&
       selectedCampaigns?.length === 0
     ) {
-      showWarnToast(translations["You have not selected any participant"]);
+      showWarnToast(translations("You have not selected any participant"));
       return;
     }
 
@@ -174,10 +173,10 @@ const AddParticipantModal = ({ close, campaign, campaignType }) => {
             <PaperLayout>
               <Group justify="space-between" mb={4}>
                 <Title order={6}>
-                  {translations["Select"]} {selectedTab?.toLowerCase()}
+                  {translations("Select")} {selectedTab?.toLowerCase()}
                 </Title>
                 <Checkbox
-                  label={translations["Select all"]}
+                  label={translations("Select All")}
                   c={"#149a8a"}
                   checked={isSelectedAll}
                   onChange={handleSelectAll}
@@ -206,7 +205,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }) => {
                         );
                       })
                     ) : (
-                      <Text>{translations["No contacts found"]}</Text>
+                      <Text>{translations("No contacts found")}</Text>
                     )}
                   </Tabs.Panel>
                   <Tabs.Panel value={CampaignParticipantSource.GROUP}>
@@ -220,13 +219,13 @@ const AddParticipantModal = ({ close, campaign, campaignType }) => {
                         />
                       ))
                     ) : (
-                      <Text>{translations["No group found"]}</Text>
+                      <Text>{translations("No group found")}</Text>
                     )}
                   </Tabs.Panel>
                   <Tabs.Panel value={CampaignParticipantSource.CAMPAIGN}>
                     <MultiSelect
-                      label={translations["message status"]}
-                      placeholder={translations["Pick status"]}
+                      label={translations("message status")}
+                      placeholder={translations("Pick status")}
                       data={Object.values(CampaignParticipantAddStatus)}
                       onChange={(e: any) => selectedStatusHandlers.setState(e)}
                       value={selectedStatus}
@@ -243,7 +242,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }) => {
                         />
                       ))
                     ) : (
-                      <Text>{translations["No group found"]}</Text>
+                      <Text>{translations("No group found")}</Text>
                     )}
                   </Tabs.Panel>
                 </Tabs>
@@ -301,7 +300,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }) => {
         </SimpleGrid>
         <Flex justify={"flex-end"} gap={"md"}>
           <Button variant="outline" radius={"xl"} onClick={close}>
-            {translations["Cancel"]}
+            {translations("Cancel")}
           </Button>
           <Button
             radius={"xl"}
@@ -309,7 +308,7 @@ const AddParticipantModal = ({ close, campaign, campaignType }) => {
             onClick={handleSubmit}
             loading={addCampaignParticipants.isPending}
           >
-            {translations["Add Participants"]}
+            {translations("Add Participants")}
           </Button>
         </Flex>
       </Stack>
@@ -324,7 +323,7 @@ export const Individual = ({
   isAlreadySelected = false,
 }) => {
   const isSelected = selectedContacts.some((c) => c?.id === customer?.id);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   return (
     <Group justify="space-between" my={"xs"}>
@@ -345,7 +344,7 @@ export const Individual = ({
           radius={"xl"}
           size="sm"
         >
-          {translations["Remove"]}
+          {translations("Remove")}
         </Button>
       ) : (
         <Button
@@ -357,7 +356,7 @@ export const Individual = ({
           w={90}
           disabled={isAlreadySelected}
         >
-          {isAlreadySelected ? translations["Added"] : translations["Add"]}
+          {isAlreadySelected ? translations("Added") : translations("Add")}
         </Button>
       )}
     </Group>
@@ -371,7 +370,7 @@ export const CustomerGroup = ({
   isAlreadySelected = false,
 }) => {
   const isSelected = selectedGroups.some((c) => c?.id === group?.id);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Group justify="space-between">
       <Stack gap={0}>
@@ -394,7 +393,7 @@ export const CustomerGroup = ({
           radius={"xl"}
           size="sm"
         >
-          {translations["Remove"]}
+          {translations("Remove")}
         </Button>
       ) : (
         <Button
@@ -411,7 +410,7 @@ export const CustomerGroup = ({
               : !group._count.LoyaltyCustomerMap)
           }
         >
-          {isAlreadySelected ? translations["Added"] : translations["Add"]}
+          {isAlreadySelected ? translations("Added") : translations("Add")}
         </Button>
       )}
     </Group>
@@ -423,7 +422,7 @@ const CustomerCampaign = ({
   selectedCampaignsHandlers,
 }) => {
   const isSelected = selectedCampaigns.some((c) => c?.id === campaign?.id);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Group justify="space-between" py={4}>
       <Title order={5} lineClamp={1} maw={190}>
@@ -438,7 +437,7 @@ const CustomerCampaign = ({
           radius={"xl"}
           size="sm"
         >
-          {translations["Remove"]}
+          {translations("Remove")}
         </Button>
       ) : (
         <Button
@@ -450,7 +449,7 @@ const CustomerCampaign = ({
           w={90}
           disabled={!campaign?.campaignParticipantsCount}
         >
-          {translations["Add"]}
+          {translations("Add")}
         </Button>
       )}
     </Group>

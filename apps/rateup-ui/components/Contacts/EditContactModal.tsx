@@ -26,7 +26,7 @@ import {
 
 import "react-phone-number-input/style.css";
 
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import styles from "./contact.module.css";
 
@@ -43,7 +43,7 @@ const EditContactModal = ({
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [contactType, setContactType] = useState<string[]>([]);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       ...contact,
@@ -52,12 +52,12 @@ const EditContactModal = ({
     validate: {
       phone: (value) =>
         !value
-          ? translations["Phone Number cannot be blank"]
+          ? translations("Phone Number cannot be blank")
           : !isValidPhoneNumber(value)
-            ? translations["Invalid phone number"]
+            ? translations("Invalid phone number")
             : null,
       tags: {},
-      name: isNotEmpty(translations["Name cannot be blank"]),
+      name: isNotEmpty(translations("Name cannot be blank")),
     },
   });
   const editContactMutation = useEditContactMutation(groupId);
@@ -109,8 +109,8 @@ const EditContactModal = ({
       <form>
         <SimpleGrid cols={2}>
           <TextInput
-            label={translations["Name"]}
-            placeholder={translations["Enter name"]}
+            label={translations("Name")}
+            placeholder={translations("Enter name")}
             {...form.getInputProps("name")}
             size="md"
             radius={"md"}
@@ -136,7 +136,7 @@ const EditContactModal = ({
           {contactType.includes("phone") && (
             <Stack gap={0}>
               <Group gap={3}>
-                <Text>{translations["Phone Number"]}</Text>
+                <Text>{translations("Phone Number")}</Text>
                 <Text c="red">*</Text>
               </Group>
               <Box
@@ -146,7 +146,7 @@ const EditContactModal = ({
                   defaultCountry="IN"
                   international
                   countryCallingCodeEditable={false}
-                  placeholder={translations["Enter phone number"]}
+                  placeholder={translations("Enter phone number")}
                   {...form.getInputProps("phone")}
                   className={styles.inputPhone}
                 />
@@ -173,11 +173,11 @@ const EditContactModal = ({
         </SimpleGrid>
         <Flex justify={"flex-end"} gap={"sm"} mt={"sm"}>
           <RateupButtonSecondary
-            title={translations["cancel"]}
+            title={translations("cancel")}
             onClick={closeEditModal}
           />
           <RateupButtonBlue
-            title={translations["Save"]}
+            title={translations("Save")}
             loading={isUpdating}
             onClick={handleSubmit}
           />

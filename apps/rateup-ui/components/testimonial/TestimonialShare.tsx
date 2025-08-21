@@ -16,8 +16,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconChevronLeft, IconCopy, IconX } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   RateupButtonBlue,
@@ -28,11 +27,11 @@ import TestimonialCard from "./TestimonialCard";
 
 const TestimonialShare = ({ selectedTestimonials, currentStyle }) => {
   const filteredTestimonials = selectedTestimonials;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   if (filteredTestimonials?.length <= 0)
     return (
       <Center mt={150}>
-        <NothingFound text={translations["No testimonials found"]} />
+        <NothingFound text={translations("No testimonials found")} />
       </Center>
     );
 
@@ -58,7 +57,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
   const iframe = `<iframe src="${shareUrl}" width="100%"></iframe>`;
 
   const [isPreview, setIsPreview] = useState(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Modal
       opened={opened}
@@ -89,14 +88,12 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
             <Group gap={"xs"} justify="center" align="center">
               <Stack gap={0}>
                 <Title fw={400}>
-                  {translations["Share Your Testimonials"]}
+                  {translations("Share Your Testimonials")}
                 </Title>
                 <Title order={5} fw={400}>
-                  {
-                    translations[
-                      "Follow the instruction to share your testimonials on your website"
-                    ]
-                  }
+                  {translations(
+                    "Follow the instruction to share your testimonials on your website",
+                  )}
                 </Title>
               </Stack>
               <Image src={`../../images/Party Svg Icon.svg`} w={60} h={60} />
@@ -117,8 +114,8 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
                   <RateupButtonSecondary
                     title={
                       copied
-                        ? translations["Copied code"]
-                        : translations["Copy code"]
+                        ? translations("Copied code")
+                        : translations("Copy code")
                     }
                     onClick={copy}
                     rightIcon={<IconCopy />}
@@ -128,14 +125,12 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
               </CopyButton>
             </Stack>
             <Text c={"#494949"} fw={400}>
-              {
-                translations[
-                  "Place this code in the desired section of your website to display the embed."
-                ]
-              }
+              {translations(
+                "Place this code in the desired section of your website to display the embed.",
+              )}
             </Text>
             <RateupButtonBlue
-              title={translations["Preview"]}
+              title={translations("Preview")}
               styles={{ root: { width: "fit-content" } }}
               onClick={() => setIsPreview(true)}
             />
@@ -150,7 +145,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
                 color: "var(--tertiary-color)",
               },
             }}
-            title={translations["Back"]}
+            title={translations("Back")}
             leftIcon={<IconChevronLeft />}
             onClick={() => setIsPreview(false)}
           />
