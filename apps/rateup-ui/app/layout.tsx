@@ -12,6 +12,7 @@ import "./globals.css";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { GoogleTagManager } from "@next/third-parties/google";
+import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 
 import { theme } from "@/config/mantineTheme";
@@ -49,15 +50,17 @@ export default async function RootLayout({
         )}
       </head>
       <body className={`${geist.className},${notoColorEmogi.className}`}>
-        <MantineProvider theme={theme}>
-          <ModalsProvider>
-            <Notifications />
-            <SuperTokensProvider>
-              <Providers>{children}</Providers>
-              <GoogleTagManager gtmId="GTM-NDC3D7DP" />
-            </SuperTokensProvider>
-          </ModalsProvider>
-        </MantineProvider>
+        <NextIntlClientProvider>
+          <MantineProvider theme={theme}>
+            <ModalsProvider>
+              <Notifications />
+              <SuperTokensProvider>
+                <Providers>{children}</Providers>
+                <GoogleTagManager gtmId="GTM-NDC3D7DP" />
+              </SuperTokensProvider>
+            </ModalsProvider>
+          </MantineProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

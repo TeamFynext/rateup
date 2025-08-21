@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Link from "next/link";
 
 import { Avatar, Image } from "@mantine/core";
@@ -23,40 +22,25 @@ function Badge({
   );
 }
 
-export async function getStaticProps() {
+export default async function BlogIndex({
+  searchParams,
+}: {
+  searchParams: Promise<{ tag?: string }>;
+}) {
   const [posts, authors, tags] = await Promise.all([
     getPosts(),
     getAuthors(),
     getTags(),
   ]);
+  const search = await searchParams;
+  const tag = search?.tag;
+  const activeTag = tag ? tag : null;
 
-  if (!posts) {
-    return {
-      notFound: true,
-    };
-  }
-
-  return {
-    props: { posts, authors, tags },
-  };
-}
-
-export default function BlogIndex({
-  posts,
-  authors,
-  tags,
-}: {
-  posts: Post[];
-  authors: Author[];
-  tags: Tag[];
-}) {
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const featuredPost = posts?.[0];
 
   const filteredPosts = activeTag
     ? posts.filter((post) => post.tags.some((tag) => tag.name === activeTag))
     : posts;
-  // Featured post is the most recent one
-  const featuredPost = posts?.[0];
   // Regular posts exclude the featured one
   const regularPosts = filteredPosts.slice(activeTag ? 0 : 1);
 
@@ -67,7 +51,7 @@ export default function BlogIndex({
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Hero section with featured post */}
-        {!activeTag && featuredPost && (
+        {featuredPost && (
           <section className="py-10 md:py-16">
             <PaperLayout p={0}>
               <div className="grid md:grid-cols-2">
@@ -152,8 +136,9 @@ export default function BlogIndex({
               <span className="text-sm font-medium text-slate-700">
                 Filter by:
               </span>
-              <button
-                onClick={() => setActiveTag(null)}
+              <Link
+                href={`/blog`}
+                scroll={false}
                 className={`rounded-full px-3 py-1 text-sm ${
                   activeTag === null
                     ? "bg-blue-600 text-white"
@@ -161,11 +146,12 @@ export default function BlogIndex({
                 }`}
               >
                 All
-              </button>
+              </Link>
               {tags.map((tag) => (
-                <button
+                <Link
                   key={tag.id}
-                  onClick={() => setActiveTag(tag.name)}
+                  href={`/blog?tag=${encodeURIComponent(tag.name)}`}
+                  scroll={false}
                   className={`rounded-full px-3 py-1 text-sm ${
                     activeTag === tag.name
                       ? "bg-blue-600 text-white"
@@ -173,7 +159,7 @@ export default function BlogIndex({
                   }`}
                 >
                   {tag.name}
-                </button>
+                </Link>
               ))}
             </div>
           </section>

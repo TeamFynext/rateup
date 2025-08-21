@@ -4,9 +4,7 @@ import {
   IconAddressBook,
   IconApi,
   IconApps,
-  IconAutomation,
   IconAward,
-  IconBell,
   IconBrandHipchat,
   IconBrandTeams,
   IconBrandWhatsapp,
@@ -18,18 +16,13 @@ import {
   IconFileDescription,
   IconGift,
   IconHome2,
-  IconInvoice,
   IconLinkPlus,
   IconLogout,
   IconLogs,
   IconMessage,
   IconMessageBolt,
-  IconMessageCancel,
   IconMessageChatbot,
-  IconMessageCheck,
   IconMessageUp,
-  IconPin,
-  IconPinned,
   IconQrcode,
   IconRobot,
   IconRobotFace,
@@ -40,10 +33,7 @@ import {
   IconTerminal2,
   IconTicket,
   IconUser,
-  IconUserCircle,
-  IconUserFilled,
   IconUsers,
-  IconUsersGroup,
   IconUserShare,
   IconUserX,
   IconWallpaper,
@@ -67,6 +57,13 @@ import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import NotificationBellIcon from "../Notification";
 
 const hiddenModules = process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
+
+// Minimal Subscription type used locally
+interface Subscription {
+  orgId?: string;
+  features?: Record<string, any>;
+}
+
 //navbar interface
 export interface NavbarLinkProps {
   Icon: React.FC<any>;
