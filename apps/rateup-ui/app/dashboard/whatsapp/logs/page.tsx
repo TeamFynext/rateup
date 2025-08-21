@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 
 import { ActionIcon, Box, List, Tooltip } from "@mantine/core";

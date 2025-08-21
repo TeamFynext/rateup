@@ -1,7 +1,7 @@
 "use no memo";
 
 import React from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   Box,
@@ -224,7 +224,8 @@ const TableLayout = ({
                     key={row.id}
                     className={detailBtn && styles["table-body-row"]}
                     onClick={() => {
-                      let routeUrl = detailBtn && row.getValue(DETAIL_BTN);
+                      let routeUrl: string | null =
+                        detailBtn && row.getValue(DETAIL_BTN);
                       if (routeUrl) router.push(routeUrl);
                     }}
                   >

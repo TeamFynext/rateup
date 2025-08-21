@@ -41,7 +41,7 @@
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
-    "@sentry/nextjs": "^8.54.0",
+    "@sentry/nextjs": "^10.5.0",
     "@storybook/addon-styling-webpack": "^1.0.1",
     "@tabler/icons-react": "^3.34.0",
     "@tailwindcss/postcss": "^4.1.10",

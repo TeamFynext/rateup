@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
