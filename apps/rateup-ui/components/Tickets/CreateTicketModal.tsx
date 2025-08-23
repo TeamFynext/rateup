@@ -5,8 +5,7 @@ import { Group, Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
 import {
@@ -44,16 +43,16 @@ const CreateTicketModal = ({
   surveyResponseId,
 }: iProps) => {
   let isCustomTicket = type === TicketType.CUSTOM;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const router = useRouter();
   const form = useForm({
     initialValues: {
       title:
         type === TicketType.REVIEW
-          ? translations["Review Ticket"]
+          ? translations("Review Ticket")
           : isCustomTicket
             ? ""
-            : translations["Survey Response Ticket"],
+            : translations("Survey Response Ticket"),
       type:
         type === TicketType.REVIEW
           ? TicketType.REVIEW
@@ -70,15 +69,15 @@ const CreateTicketModal = ({
         type === TicketType.SURVEY_RESPONSE ? surveyResponseId : "",
     },
     validate: {
-      title: (value) => (value.length ? null : translations["Cannot be empty"]),
+      title: (value) => (value.length ? null : translations("Cannot be empty")),
       firstComment: (value) =>
         value.trim().split(" ").length >= 2
           ? null
-          : translations["Minimum 2 words required"],
+          : translations("Minimum 2 words required"),
       assignedToId: (value) =>
-        value.length ? null : translations["Team staff selection is required"],
+        value.length ? null : translations("Team staff selection is required"),
       priority: (value) =>
-        value.length ? null : translations["Priority selection is required"],
+        value.length ? null : translations("Priority selection is required"),
     },
   });
 
@@ -119,8 +118,8 @@ const CreateTicketModal = ({
     notifications.show({
       id: "load-data",
       loading: true,
-      title: translations["Creating Ticket"],
-      message: translations["Hold on, your ticket is getting created..."],
+      title: translations("Creating Ticket"),
+      message: translations("Hold on, your ticket is getting created..."),
       autoClose: false,
       withCloseButton: true,
     });
@@ -143,15 +142,15 @@ const CreateTicketModal = ({
     <FormModalLayout
       opened={createTicketOpened}
       onClose={closeAll}
-      title={translations["Create Ticket"]}
+      title={translations("Create Ticket")}
       centered
       size="xl"
     >
       <Stack mt="lg">
         <Group>
           <ContainedTextField
-            placeholder={translations["Enter Ticket Name"]}
-            label={translations["Name:"]}
+            placeholder={translations("Enter Ticket Name")}
+            label={translations("Name:")}
             withAsterisk
             {...form.getInputProps("title")}
             style={{
@@ -164,7 +163,7 @@ const CreateTicketModal = ({
               value={form.values.teamId}
               onChange={(teamId) => form.setFieldValue("teamId", teamId)}
               enableAll={false}
-              label={translations["Select Team"]}
+              label={translations("Select Team")}
               style={{ minWidth: "32%" }}
               withAsterisk
             />
@@ -174,13 +173,13 @@ const CreateTicketModal = ({
         <ContainedTextArea
           placeholder={
             isCustomTicket
-              ? translations["Enter description"]
-              : translations["Enter Comment"]
+              ? translations("Enter description")
+              : translations("Enter Comment")
           }
           label={
             isCustomTicket
-              ? translations["Description"]
-              : translations["Comment"]
+              ? translations("Description")
+              : translations("Comment")
           }
           withAsterisk
           autosize
@@ -193,28 +192,28 @@ const CreateTicketModal = ({
             allowDeselect={false}
             data={memberOptions}
             withAsterisk
-            label={translations["Assign to"]}
+            label={translations("Assign to")}
             style={{ minWidth: "32%" }}
-            placeholder={
-              translations["Select a team staff to assign ticket to"]
-            }
+            placeholder={translations(
+              "Select a team staff to assign ticket to",
+            )}
             {...form.getInputProps("assignedToId")}
           />
           <ContainedSelection
             allowDeselect={false}
             data={["LOW", "MEDIUM", "HIGH", "CRITICAL"]}
             withAsterisk
-            label={translations["Priority"]}
+            label={translations("Priority")}
             style={{ minWidth: "30%" }}
-            placeholder={translations["Select priority for the ticket"]}
+            placeholder={translations("Select priority for the ticket")}
             {...form.getInputProps("priority")}
           />
           <ContainedDateInput
             minDate={new Date()}
             clearable
-            label={translations["Deadline:"]}
+            label={translations("Deadline:")}
             style={{ minWidth: "32%" }}
-            placeholder={translations["Select a deadline for the ticket"]}
+            placeholder={translations("Select a deadline for the ticket")}
             {...form.getInputProps("deadline")}
           />
         </Group>
@@ -222,7 +221,7 @@ const CreateTicketModal = ({
         <Group justify="flex-end" mt="sm">
           <RateupButtonBlue
             mt="xl"
-            title={translations["Cancel"]}
+            title={translations("Cancel")}
             onClick={() => {
               closeAll();
             }}
@@ -230,7 +229,7 @@ const CreateTicketModal = ({
 
           <RateupButtonBlue
             mt="xl"
-            title={translations["Create"]}
+            title={translations("Create")}
             leftIcon={<IconPlus />}
             onClick={onSubmit}
           />

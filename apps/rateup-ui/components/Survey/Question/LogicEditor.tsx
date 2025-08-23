@@ -20,8 +20,7 @@ import {
 import { useListState } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useQuestions,
@@ -57,7 +56,7 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
     surveyId,
   });
   const [currentLogicJumps, handlers] = useListState<LogicJump>([]);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (selectedQ && selectedQ.logic) {
       handlers.setState(selectedQ.logic);
@@ -80,8 +79,8 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
     notifications.show({
       id: "load-data",
       loading: true,
-      title: translations["updating question"],
-      message: translations["Hold on, your changes are getting updated..."],
+      title: translations("updating question"),
+      message: translations("Hold on, your changes are getting updated..."),
       autoClose: false,
       withCloseButton: false,
     });
@@ -99,9 +98,9 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
     return (
       <Center style={{ height: "100%" }}>
         <Stack>
-          <p>{translations["Logic is not supported for this question type"]}</p>
+          <p>{translations("Logic is not supported for this question type")}</p>
           <RateupButtonSecondary
-            title={translations["Go Back"]}
+            title={translations("Go Back")}
             size="sm"
             onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
           />
@@ -134,21 +133,21 @@ const LogicEditor = ({ selectedQ, setActiveTab }: LogicEditorProps) => {
             onClick={handleAddNewJump}
             mb={4}
           >
-            {translations["Add Logic Jump"]}
+            {translations("Add Logic Jump")}
           </Button>
         </Stack>
       </ScrollAreaAutosize>
 
       <Group justify="space-between">
         <RateupButtonSecondary
-          title={translations["Cancel"]}
+          title={translations("Cancel")}
           size="md"
           variant="outline"
           color="var(--tertiary-color)"
           onClick={() => setActiveTab(QuestionTabsEnum.Edit)}
         />
         <RateupButtonBlue
-          title={translations["Save"]}
+          title={translations("Save")}
           size="md"
           onClick={handleSave}
           loading={questionUpdateMutation.isPending}
@@ -197,7 +196,7 @@ function ConditionBlock({
   );
   const [selectedAction, setSelectedAction] = useState(currentLogicJump.action);
   const [matchData, setMatchData] = useState(currentLogicJump.response);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     setCurrentLogicJump({
       condition: selectedCondition,
@@ -229,7 +228,7 @@ function ConditionBlock({
           value={selectedCondition}
           onChange={setSelectedCondition as any}
           maw={150}
-          label={translations["Condition"]}
+          label={translations("Condition")}
           mb={"md"}
         />
 
@@ -245,18 +244,18 @@ function ConditionBlock({
             selectedCondition === LogicCondition.Equals) ? (
           // Array Selector
           <MultiSelect
-            label={translations["Match Data"]}
+            label={translations("Match Data")}
             data={getResponses(selectedQ, selectedLanguage)}
             value={Array.isArray(matchData) ? matchData : []}
             onChange={setMatchData}
-            placeholder={translations["Select Responses"]}
+            placeholder={translations("Select Responses")}
             searchable
             w={155}
             mb={"md"}
           />
         ) : (
           <Select
-            label={translations["Match Data"]}
+            label={translations("Match Data")}
             value={Array.isArray(matchData) ? "" : matchData}
             data={getResponses(selectedQ, selectedLanguage)}
             onChange={setMatchData}
@@ -268,7 +267,7 @@ function ConditionBlock({
 
         {/* Action Selector */}
         <Select
-          label={translations["Action"]}
+          label={translations("Action")}
           data={possibleActions}
           value={selectedAction}
           onChange={setSelectedAction as any}

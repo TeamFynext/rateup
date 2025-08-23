@@ -18,6 +18,7 @@ import { Dropzone, IMAGE_MIME_TYPE, PDF_MIME_TYPE } from "@mantine/dropzone";
 import { useForm } from "@mantine/form";
 import { useListState } from "@mantine/hooks";
 import { IconPhoto, IconRefresh, IconUpload, IconX } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
@@ -32,7 +33,6 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import classes from "./styles.module.css";
 
@@ -103,7 +103,7 @@ function WaDropZoneInputComponent(props: Props) {
       return PDF_MIME_TYPE;
     }
   }
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Dropzone
       maxFiles={1}
@@ -142,15 +142,13 @@ function WaDropZoneInputComponent(props: Props) {
         </Dropzone.Idle>
         <div>
           <Text className={classes.dropzone_text}>
-            {translations["Drag"]} {props?.type}{" "}
-            {translations["here or click to select files"]}
+            {translations("Drag")} {props?.type}{" "}
+            {translations("here or click to select files")}
           </Text>
           <Text className={classes.dropzone_text_note}>
-            {
-              translations[
-                "Attach as many files as you like, each file should not exceed 5mb"
-              ]
-            }
+            {translations(
+              "Attach as many files as you like, each file should not exceed 5mb",
+            )}
           </Text>
         </div>
       </Group>
@@ -173,11 +171,11 @@ function WaLocationInputComponent({
   const [longitude, setLongitude] = useState(defaultValue?.longitude || "");
   const [name, setName] = useState(defaultValue?.name || "");
   const [address, setAddress] = useState(defaultValue?.address || "");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <ContainedTextField
-        label={translations["Latitude"]}
+        label={translations("Latitude")}
         value={latitude}
         onChange={(e) => {
           setLatitude(e.currentTarget.value);
@@ -190,7 +188,7 @@ function WaLocationInputComponent({
         }}
       />
       <ContainedTextField
-        label={translations["Longitude"]}
+        label={translations("Longitude")}
         value={longitude}
         onChange={(e) => {
           setLongitude(e.currentTarget.value);
@@ -203,7 +201,7 @@ function WaLocationInputComponent({
         }}
       />
       <ContainedTextField
-        label={translations["Name"]}
+        label={translations("Name")}
         value={name}
         onChange={(e) => {
           setName(e.currentTarget.value);
@@ -216,7 +214,7 @@ function WaLocationInputComponent({
         }}
       />
       <ContainedTextField
-        label={translations["Address"]}
+        label={translations("Address")}
         value={address}
         onChange={(e) => {
           setAddress(e.currentTarget.value);
@@ -271,7 +269,7 @@ function WaBodyVariableInputComponent({
       });
     }
   }, [exampleParams]);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       {exampleParams?.map((_, i) =>
@@ -293,7 +291,7 @@ function WaBodyVariableInputComponent({
               <ContainedTextField
                 key={i}
                 label={`{{${i + 1}}}`}
-                placeholder={translations["select a dynamic tag value"]}
+                placeholder={translations("select a dynamic tag value")}
                 {...form.getInputProps(`dynamicTags.${i}`)}
               />
             )}
@@ -315,7 +313,7 @@ function WaBodyVariableInputComponent({
           <ContainedTextField
             key={i}
             label={`{{${i + 1}}}`}
-            placeholder={translations["select a dynamic tag value"]}
+            placeholder={translations("select a dynamic tag value")}
             {...form.getInputProps(`dynamicTags.${i}`)}
           />
         ),
@@ -345,7 +343,7 @@ function LeadFormQuestionsInputComponent(
     refetch,
   } = useWaAutomatedReplyById(automatedId);
   const isLeadAutomation =
-    automatedReply && automatedReply?.commands[0] === "lead";
+    automatedReply && automatedReply?.commands[0]?.startsWith("lead");
   const waSetting =
     waSettings &&
     (waSettings.find(

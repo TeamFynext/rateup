@@ -1,7 +1,6 @@
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
@@ -15,7 +14,7 @@ import {
 
 export const useAddContactParticipantMutation = (campaignId) => {
   const queryClient = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return useMutation({
     mutationFn: addContactParticipants,
     onSuccess: () => {
@@ -25,7 +24,7 @@ export const useAddContactParticipantMutation = (campaignId) => {
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
-      showSuccessToast(translations["Added participants successfully."]);
+      showSuccessToast(translations("Added participants successfully."));
     },
     onError: (error: any) => {
       showErrorToast(
@@ -38,7 +37,7 @@ export const useAddContactParticipantMutation = (campaignId) => {
 
 export const useAddGroupParticipantMutation = (campaignId) => {
   const queryClient = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return useMutation({
     mutationFn: addGroupParticipants,
     onSuccess: () => {
@@ -48,7 +47,7 @@ export const useAddGroupParticipantMutation = (campaignId) => {
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
-      showSuccessToast(translations["Added group participants successfully."]);
+      showSuccessToast(translations("Added group participants successfully."));
     },
     onError: (error: any) => {
       showErrorToast(
@@ -95,7 +94,7 @@ export const useAddCampaignParticipants = (
   onSuccess = () => {},
 ) => {
   const queryClient = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return useMutation({
     mutationFn: addCampaignParticipants,
     onSuccess: () => {
@@ -106,7 +105,7 @@ export const useAddCampaignParticipants = (
         queryKey: ["campaigns"],
       });
       showSuccessToast(
-        translations["Campaign particiants added successfully."],
+        translations("Campaign particiants added successfully."),
       );
       onSuccess();
     },
@@ -122,12 +121,12 @@ export const useAddCampaignParticipants = (
 
 export const useRemoveCampaignParticipant = (campaignId: string) => {
   const queryClient = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return useMutation({
     mutationFn: deleteCampaignParticipant,
     onSuccess() {
       showSuccessToast(
-        translations["Participants removed from campaign successfully."],
+        translations("Participants removed from campaign successfully."),
         "campaign-participants-remove",
         <IconCheck />,
       );
@@ -153,12 +152,12 @@ export const useRemoveMulitpleGroupParticipants = (
   onSucess: () => void,
 ) => {
   const queryClient = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return useMutation({
     mutationFn: deleteMulitpleGroupParticipants,
     onSuccess() {
       showSuccessToast(
-        translations["Participants removed from campaign successfully."],
+        translations("Participants removed from campaign successfully."),
         "campaign-mulitiple-participants-remove",
         <IconCheck />,
         true,

@@ -1,8 +1,7 @@
 import { useCallback } from "react";
 
 import { Tabs } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { ThemeTabEnum } from "../../SurveyTheme.enums";
 import {
@@ -14,7 +13,7 @@ import styles from "./PageSelector.module.css";
 function PageSelector({ survey }) {
   const selectedPageTab = useSelectedPageTab();
   const stateDispatch = useSurveyThemeStateDispatch();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleChange = useCallback((value) => {
     stateDispatch({
       type: "selected-page-tab-change",
@@ -33,17 +32,17 @@ function PageSelector({ survey }) {
     >
       <Tabs.List>
         <Tabs.Tab value={ThemeTabEnum.SURVEY}>
-          {translations["Survey Page"]}
+          {translations("Survey Page")}
         </Tabs.Tab>
         <Tabs.Tab value={ThemeTabEnum.WELCOME}>
-          {translations["Welcome Page"]}
+          {translations("Welcome Page")}
         </Tabs.Tab>
         <Tabs.Tab value={ThemeTabEnum.THANKYOU}>
-          {translations["Thankyou Page"]}
+          {translations("Thankyou Page")}
         </Tabs.Tab>
         {shouldDispalyLanguagePageTab && (
           <Tabs.Tab value={ThemeTabEnum.LANGUAGE}>
-            {translations["Language Page"]}
+            {translations("Language Page")}
           </Tabs.Tab>
         )}
       </Tabs.List>

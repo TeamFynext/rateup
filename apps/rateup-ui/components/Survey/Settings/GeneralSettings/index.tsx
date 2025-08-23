@@ -16,8 +16,7 @@ import {
 } from "@mantine/core";
 import { hasLength, isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useEditSurveyMutation } from "../../../../backend/surveys/surveys.query";
 import { useTeamsByUser } from "../../../../backend/team/team.query";
@@ -30,7 +29,7 @@ import styles from "./GeneralSettings.module.css";
 
 let Languages = new Set(["English", "Malayalam", "Hindi", "Kannada", "Tamil"]);
 const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const settingsForm = useForm({
     initialValues: {
       title: survey?.title || "",
@@ -39,14 +38,14 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
       sendWeeklyReport: survey?.sendWeeklyReport || true,
     },
     validate: {
-      title: isNotEmpty(translations["Cannot be Empty"]),
+      title: isNotEmpty(translations("Cannot be Empty")),
       languages: hasLength(
         { min: 1 },
-        translations["Must contain atleast one language"],
+        translations("Must contain atleast one language"),
       ),
       teams: hasLength(
         { min: 1 },
-        translations["Must contain atleast one team"],
+        translations("Must contain atleast one team"),
       ),
     },
   });
@@ -88,13 +87,13 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
               className={"settings-section-heading"}
               style={{ marginRight: "1rem" }}
             >
-              {translations["Survey Settings"]}
+              {translations("Survey Settings")}
             </h2>
             <InfoButton docUrl={`${docsPath}/webSurvey/shareSurvey`} />
           </div>
         </Grid>
         <p className={"settings-section-description"}>
-          {translations["Choose the teams to be added"]}
+          {translations("Choose the teams to be added")}
         </p>
       </Box>
 
@@ -110,11 +109,11 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
       >
         {enabledModules.includes("name") && (
           <Stack className={styles["form-input-container"]}>
-            <h3>{translations["Survey Name"]}</h3>
+            <h3>{translations("Survey Name")}</h3>
             <ContainedTextField
               className={styles["form-input"]}
               withAsterisk
-              placeholder={translations["Enter Survey name"]}
+              placeholder={translations("Enter Survey name")}
               required
               {...settingsForm.getInputProps("title")}
             />
@@ -122,7 +121,7 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
         )}
         {enabledModules.includes("language") && (
           <Stack className={styles["form-input-container"]}>
-            <h3>{translations["Survey Languages"]}</h3>
+            <h3>{translations("Survey Languages")}</h3>
             <MultiSelectCreatable
               value={languages}
               setValue={setLanguages}
@@ -132,10 +131,10 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
         )}
         {enabledModules.includes("teams") && (
           <Stack className={styles["form-input-container"]}>
-            <h3>{translations["Select Teams"]}</h3>
+            <h3>{translations("Select Teams")}</h3>
             <MultiSelect
               radius="md"
-              placeholder={translations["Select teams"]}
+              placeholder={translations("Select teams")}
               data={teamOptions}
               {...settingsForm.getInputProps("teams")}
               error={settingsForm.errors.teams}
@@ -148,12 +147,12 @@ const GeneralSettings = ({ survey, enabledModules, setSelectedLanguage }) => {
               type: "checkbox",
             })}
           />
-          <h3>{translations["Send weekly report to email"]}</h3>
+          <h3>{translations("Send weekly report to email")}</h3>
         </Group>
 
         <RateupButtonBlue
           className={styles["save-changes-btn"]}
-          title={translations["Save Changes"]}
+          title={translations("Save Changes")}
           type={"submit"}
           loading={isLoading}
         />
@@ -183,7 +182,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
   const [data, setData] = useState(languages);
 
   const exactOptionMatch = data.some((item) => item === search);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleValueSelect = (val: string) => {
     if (val === "$create") {
       setData((current) => [...current, search]);
@@ -211,7 +210,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
     .filter((item) => item.toLowerCase().includes(search.trim().toLowerCase()))
     .map((item) => (
       <Combobox.Option
-        title={translations["Language"]}
+        title={translations("Language")}
         value={item}
         key={item}
         active={value?.includes(item)}
@@ -244,7 +243,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
                 onFocus={() => combobox.openDropdown()}
                 onBlur={() => combobox.closeDropdown()}
                 value={search}
-                placeholder={translations["Select languages"]}
+                placeholder={translations("Select languages")}
                 onChange={(event) => {
                   combobox.updateSelectedOptionIndex();
                   setSearch(event.currentTarget.value);
@@ -267,7 +266,7 @@ export function MultiSelectCreatable({ value, setValue, errors }: iProps) {
 
           {!exactOptionMatch && search.trim().length > 0 && (
             <Combobox.Option value="$create">
-              {translations["+ Create "]}
+              {translations("+ Create ")}
               {search}
             </Combobox.Option>
           )}

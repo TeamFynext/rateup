@@ -9,8 +9,7 @@ import {
   IconPlayerPause,
   IconPlayerPlay,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useAllOrgs,
@@ -48,7 +47,7 @@ export default function OrgById() {
   const { data: stats, isLoading, isError } = useOrgStats(orgId);
   const [orgDetails, setOrgDetails] = useState<Org>(null);
   const updatePauseStatus = useUpdateOrgPause();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const updateSubscription = useUpdateSubscriptionMutation();
   useEffect(() => {
     if (orgs) {
@@ -109,8 +108,8 @@ export default function OrgById() {
             }}
           >
             {orgDetails?.isPaused
-              ? translations["Resume Organization"]
-              : translations["Pause Organization"]}
+              ? translations("Resume Organization")
+              : translations("Pause Organization")}
           </Button>
         )}
         <Group>
@@ -142,7 +141,7 @@ export default function OrgById() {
               },
             }}
           >
-            {translations["Manage Subscription"]}
+            {translations("Manage Subscription")}
           </Button>
         </Group>
       </Group>
@@ -154,7 +153,7 @@ export default function OrgById() {
             label={["Invitation", "Invitations"]}
           />
         </CountSectionContainer>
-        <CountSectionContainer label={translations["Teams"]}>
+        <CountSectionContainer label={translations("Teams")}>
           <CountCard count={stats.teams.total} label={["Team", "Teams"]} />
           <CountCard count={stats.teams.members} label={["Staff", "Staff"]} />
           <CountCard
@@ -162,7 +161,7 @@ export default function OrgById() {
             label={["Invitation", "Invitations"]}
           />
         </CountSectionContainer>
-        <CountSectionContainer label={translations["Web Surveys"]}>
+        <CountSectionContainer label={translations("Web Surveys")}>
           <CountCard count={stats.web.surveys} label={["Survey", "Surveys"]} />
           <CountCard
             count={stats.web.responses}
@@ -170,7 +169,7 @@ export default function OrgById() {
           />
           <CountCard count={stats.web.visited} label={["Visited", "Visited"]} />
         </CountSectionContainer>
-        <CountSectionContainer label={translations["WhatsApp Surveys"]}>
+        <CountSectionContainer label={translations("WhatsApp Surveys")}>
           <CountCard
             count={stats.whatsapp.surveys}
             label={["Survey", "Surveys"]}
@@ -188,14 +187,14 @@ export default function OrgById() {
             label={["Visited", "Visited"]}
           />
         </CountSectionContainer>
-        <CountSectionContainer label={translations["Reputation Mangement"]}>
+        <CountSectionContainer label={translations("Reputation Mangement")}>
           <CountCard count={stats.rm.reviews} label={["Review", "Reviews"]} />
           <CountCard
             count={stats.rm.analyzedReviews}
             label={["Analyzed Review", "Analyzed Reviews"]}
           />
         </CountSectionContainer>
-        <CountSectionContainer label={translations["Campaigns"]}>
+        <CountSectionContainer label={translations("Campaigns")}>
           <CountCard
             count={stats.campaigns.campaigns}
             label={["Campaign", "Campaigns"]}
@@ -205,7 +204,7 @@ export default function OrgById() {
             label={["Participant", "Participants"]}
           />
         </CountSectionContainer>
-        <CountSectionContainer label={translations["Digitl Menu"]}>
+        <CountSectionContainer label={translations("Digitl Menu")}>
           <CountCard count={stats.menu.total} label={["Menu", "Menu"]} />
           <CountCard count={stats.menu.banners} label={["Banner", "Banners"]} />
         </CountSectionContainer>
@@ -223,17 +222,17 @@ export default function OrgById() {
       <ConfirmationModal
         opened={openedConfirmModal}
         onClose={closeConfirmModal}
-        confirmLabel={translations["Yes"]}
+        confirmLabel={translations("Yes")}
         headerTitle={
           orgDetails?.isPaused
-            ? translations["Resume Organization"]
-            : translations["Pause Organization"]
+            ? translations("Resume Organization")
+            : translations("Pause Organization")
         }
         onConfirm={() => {
           handleOrgPauseStatus();
         }}
         headerLabel={`Are you sure to ${orgDetails?.isPaused ? "resume" : "pause"} this organization?`}
-        closeLabel={translations["cancel"]}
+        closeLabel={translations("cancel")}
       />
     </Stack>
   );

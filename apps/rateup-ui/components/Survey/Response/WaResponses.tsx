@@ -37,6 +37,7 @@ import { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
@@ -44,7 +45,6 @@ import ErrorComponent from "@/components/404/ErrorComponent";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
-import useTranslations from "@/dictionaries/useTranslation";
 import { hasFeature } from "@/utils/subscription/subscription";
 import {
   LDResponseMap,
@@ -187,7 +187,7 @@ const WaResponses = ({
     close,
     setIsDeleting,
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   useEffect(() => {
     if (ranges.length === 0) {
@@ -196,7 +196,7 @@ const WaResponses = ({
   }, [ranges]);
 
   if (Array.isArray(surveyId)) {
-    throw new Error(translations["surveyId is an array"]);
+    throw new Error(translations("surveyId is an array"));
   }
 
   const exportContactMutation = useExportContactResponses(surveyId);
@@ -204,7 +204,7 @@ const WaResponses = ({
   const downloadExcelResponse = useDownloadExcelResponse();
   const handleExportContacts = useCallback(() => {
     showLoadingToast(
-      translations["Exporting Contact responses to Contacts..."],
+      translations("Exporting Contact responses to Contacts..."),
       "export-contacts",
       true,
     );
@@ -251,8 +251,8 @@ const WaResponses = ({
         notifications.show({
           id: "load-data",
           loading: true,
-          title: translations["Deleting Response"],
-          message: translations["Hold on, response is getting deleted..."],
+          title: translations("Deleting Response"),
+          message: translations("Hold on, response is getting deleted..."),
           autoClose: false,
           withCloseButton: false,
         });
@@ -262,8 +262,8 @@ const WaResponses = ({
         notifications.show({
           id: "load-data",
           color: "red",
-          title: translations["Error"],
-          message: translations["Incorrect email"],
+          title: translations("Error"),
+          message: translations("Incorrect email"),
           icon: <IconX size="1rem" />,
           autoClose: 3000,
         });
@@ -324,7 +324,7 @@ const WaResponses = ({
             {
               header: () => (
                 <Text truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
-                  {translations["Ticket"]}
+                  {translations("Ticket")}
                 </Text>
               ),
               enableColumnFilter: false,
@@ -347,7 +347,7 @@ const WaResponses = ({
                     {ticketExist && (
                       <Tooltip
                         withArrow
-                        label={translations["View Ticket"]}
+                        label={translations("View Ticket")}
                         position="right-start"
                       >
                         <Stack>
@@ -392,7 +392,7 @@ const WaResponses = ({
     if (!googleAccessToken) {
       setIsSyncing(false);
       setAlertMsg(
-        translations["Please sync your Google account in the App & Services."],
+        translations("Please sync your Google account in the App & Services."),
       );
       redirectModalOpen();
     } else {
@@ -402,7 +402,7 @@ const WaResponses = ({
           onSuccess: () => {
             setIsSyncing(false);
             showSuccessToast(
-              translations["Response synced to Google sheet successfully"],
+              translations("Response synced to Google sheet successfully"),
               "success",
               <IconCheck />,
             );
@@ -413,14 +413,14 @@ const WaResponses = ({
             console.log(error);
             if (error.response.data?.error === "invalid_grant") {
               setAlertMsg(
-                translations[
-                  "Your access has been revoked. Please sign out and sign in again in the Apps & Services"
-                ],
+                translations(
+                  "Your access has been revoked. Please sign out and sign in again in the Apps & Services",
+                ),
               );
               redirectModalOpen();
             } else {
               toggle();
-              showErrorToast(translations["Error in syncing response"]);
+              showErrorToast(translations("Error in syncing response"));
             }
           },
         },
@@ -490,7 +490,7 @@ const WaResponses = ({
         <Group className={styles["total-responses-export-btn-container"]}>
           <Flex align={"center"}>
             <Heading
-              subtitle={`${translations["Total Responses :"]} ${responseCount}`}
+              subtitle={`${translations("Total Responses :")} ${responseCount}`}
             />
             <RefreshButton onClick={() => refetchResponse()} />
           </Flex>
@@ -499,7 +499,7 @@ const WaResponses = ({
             <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
             {CFData && CFData.length > 0 && (
               <ContainedMultiSelect
-                placeholder={translations["Filter By Campaign"]}
+                placeholder={translations("Filter By Campaign")}
                 value={campaignIds}
                 onChange={setSelectedCampaignIds}
                 data={CFData.map(({ id, name }) => ({
@@ -526,7 +526,7 @@ const WaResponses = ({
                     fw={400}
                     onClick={toggle}
                   >
-                    {translations["Export"]}
+                    {translations("Export")}
                   </Button>
                 </Popover.Target>
                 <Popover.Dropdown>
@@ -534,8 +534,8 @@ const WaResponses = ({
                     <RateupButtonSecondary
                       title={
                         survey.spreadSheetId
-                          ? translations["Resync with Google Sheet"]
-                          : translations["Sync with Google Sheet"]
+                          ? translations("Resync with Google Sheet")
+                          : translations("Sync with Google Sheet")
                       }
                       onClick={() => {
                         if (survey.spreadSheetId) alertModalOpen();
@@ -556,28 +556,26 @@ const WaResponses = ({
                         handleExcelDownload();
                         toggle();
                       }}
-                      title={translations["Download Excel"]}
+                      title={translations("Download Excel")}
                       radius={"lg"}
                       leftIcon={<IconFileDownload stroke={1.5} />}
                     />
                     <ConfirmationModal
                       opened={alertModalOpened}
                       onClose={alertModalClose}
-                      headerTitle={translations["Resync Google Sheet"]}
-                      headerLabel={
-                        translations[
-                          "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost."
-                        ]
-                      }
-                      confirmLabel={translations["Yes"]}
+                      headerTitle={translations("Resync Google Sheet")}
+                      headerLabel={translations(
+                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost.",
+                      )}
+                      confirmLabel={translations("Yes")}
                       onConfirm={handleSyncGoogleSheet}
                     />
                     <ConfirmationModal
                       opened={redirectModalOpened}
                       onClose={redirectModalClose}
-                      headerTitle={translations["Sync Google Sheet"]}
+                      headerTitle={translations("Sync Google Sheet")}
                       headerLabel={alertMsg}
-                      confirmLabel={translations["Continue"]}
+                      confirmLabel={translations("Continue")}
                       onConfirm={() => {
                         router.push("/dashboard/apps&services/googlesheet");
                       }}
@@ -625,9 +623,9 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
     <FormModalLayout
       opened={opened}
       onClose={close}
-      title={translations["Delete Response"]}
+      title={translations("Delete Response")}
       centered
-      buttonTitle={translations["Delete"]}
+      buttonTitle={translations("Delete")}
       includeCancelButton
       onSubmit={() => {
         confirmDelete(verifyEmail);
@@ -635,17 +633,17 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
       }}
     >
       <Stack py={"sm"}>
-        <Text>{translations["To proceed further, verify your email id."]}</Text>
+        <Text>{translations("To proceed further, verify your email id.")}</Text>
         <ContainedTextField
           withAsterisk
-          label={translations["Verify email"]}
-          placeholder={translations["Enter your login email"]}
+          label={translations("Verify email")}
+          placeholder={translations("Enter your login email")}
           required
           value={verifyEmail}
           onChange={(e) => setVerifyEmail(e.target.value)}
         />
         <Text c="red">
-          {translations["Once deleted, response entry data will be lost."]}
+          {translations("Once deleted, response entry data will be lost.")}
         </Text>
       </Stack>
     </FormModalLayout>

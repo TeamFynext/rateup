@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { ActionIcon, Badge, Group, Menu, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import { ActiveStatusBadge } from "pages/dashboard/apps&services/shopify";
 
 import { IntegratedApps } from "@/types/enums";
@@ -10,7 +11,6 @@ import { ShopifyIntegration, ShopifySurvey } from "@/types/global";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { shopifyEventData } from "../../utils/constants";
 import { formatIsoDateStringWithTime } from "../../utils/dateTime";
@@ -36,30 +36,30 @@ const ShopifySurveySchedules = ({
   waTemplates: WaTemplate[];
   teams: TeamData[];
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const columns = [
     { key: "event", value: "Event" },
-    { key: "whatsapp_template", value: translations["WhatsApp Template"] },
-    { key: "loyaltyAction", value: translations["Loyalty Action"] },
+    { key: "whatsapp_template", value: translations("WhatsApp Template") },
+    { key: "loyaltyAction", value: translations("Loyalty Action") },
     { key: "loyaltyApiFeature", value: "Loyalty API" },
-    { key: "isProductSpecific", value: translations["Product Specific"] },
-    { key: "product", value: translations["Product"] },
-    { key: "timeDelay", value: translations["Time Delay (in minutes)"] },
-    { key: "repeatInterval", value: translations["Repeat Interval"] },
+    { key: "isProductSpecific", value: translations("Product Specific") },
+    { key: "product", value: translations("Product") },
+    { key: "timeDelay", value: translations("Time Delay (in minutes)") },
+    { key: "repeatInterval", value: translations("Repeat Interval") },
     {
       key: "status",
-      value: translations["Status"],
+      value: translations("Status"),
       renderCell: (value) => <ActiveStatusBadge active={value} />,
     },
     {
       key: "team",
-      value: translations["Team"],
+      value: translations("Team"),
       renderCell: (value) => <Badge variant="outline">{value}</Badge>,
     },
     { key: "createdAt", value: "Created At" },
     {
       key: "action",
-      value: translations["Action"],
+      value: translations("Action"),
       renderCell: (row) => (
         <ActionMenu selectedRow={row} shopifyInfo={shopifyInfo} />
       ),
@@ -101,10 +101,10 @@ const ShopifySurveySchedules = ({
   return (
     <Stack p={"sm"}>
       <Group>
-        <Title order={3}>{translations["WhatsApp Message scheduling"]}</Title>
+        <Title order={3}>{translations("WhatsApp Message scheduling")}</Title>
         <RefreshButton queryKeys={["shopifySurveySchedules"]} />
         <RateupButtonBlue
-          title={translations["Schedule"]}
+          title={translations("Schedule")}
           onClick={open}
           rightIcon={<IconPlus />}
         />
@@ -134,7 +134,7 @@ const ActionMenu = ({
   );
   const [opened, { open, close }] = useDisclosure(false);
   const [deleteCase, setDeleteCase] = useState(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const updateSurveySchedule = () => {
     const allSchedules = shopifyInfo.credential.shopifySurveys.filter(
       (s) => s.event !== selectedRow.event,
@@ -145,7 +145,7 @@ const ActionMenu = ({
     };
     allSchedules.push(updateRow);
     showLoadingToast(
-      translations["Updating survey schedules.."],
+      translations("Updating survey schedules.."),
       "integration-update",
       true,
       "",
@@ -162,7 +162,7 @@ const ActionMenu = ({
       (s) => s.event !== selectedRow.event,
     );
     showLoadingToast(
-      translations["Deleting survey schedules.."],
+      translations("Deleting survey schedules.."),
       "integration-update",
       true,
       "",
@@ -195,22 +195,22 @@ const ActionMenu = ({
             open();
           }}
         >
-          {translations["Delete"]}
+          {translations("Delete")}
         </Menu.Item>
         <Menu.Item onClick={updateSurveySchedule}>
           {selectedRow.active
-            ? translations["Deactivate"]
-            : translations["Activate"]}
+            ? translations("Deactivate")
+            : translations("Activate")}
         </Menu.Item>
       </Menu.Dropdown>
       <ConfirmationModal
-        confirmLabel={translations["Delete"]}
+        confirmLabel={translations("Delete")}
         headerTitle={deleteCase?.headerTitle}
         headerLabel={deleteCase?.headerLabel}
         onClose={close}
         opened={opened}
         onConfirm={() => deleteCase?.confirmFunction(selectedRow)}
-        closeLabel={translations["Cancel"]}
+        closeLabel={translations("Cancel")}
         forDeleteFunctionality
         deleteQuotion={deleteCase?.deleteQuotion}
       />

@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { Box, Group, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
@@ -20,7 +21,6 @@ import WelcomeTour from "@/components/WelcomeTour/WelcomeTour";
 import CreateFlowModal from "@/components/whatsapp/flows/CreateFlowModal/CreateFlowModal.tsx";
 import FlowCardsList from "@/components/whatsapp/flows/FlowCardsList";
 import { SyncFlowsButton } from "@/components/whatsapp/flows/SyncFlows";
-import useTranslations from "@/dictionaries/useTranslation";
 import { docsPath } from "@/utils/constants";
 
 import styles from "./flows.module.css";
@@ -37,7 +37,7 @@ function Flows() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const { isPending: isPendingTeamsUser, data: teamsDataUser } =
     useTeamsByUser();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const tourSteps = WaFlowTourSteps({ styles });
   let teamsData = teamsDataUser?.data;
 
@@ -47,7 +47,7 @@ function Flows() {
     if (isError)
       return <ErrorComponent refetch={refetch} isRefetching={isPending} />;
     if (!flows?.length)
-      return <NothingFound text={translations["No Flows Available"]} />;
+      return <NothingFound text={translations("No Flows Available")} />;
     let filteredMenus =
       selectedTeamId === "all"
         ? flows
@@ -70,17 +70,15 @@ function Flows() {
       <Group justify="space-between">
         <Group>
           <Tooltip
-            label={
-              translations[
-                "Connect a WhatsApp number in settings to create a Flow"
-              ]
-            }
+            label={translations(
+              "Connect a WhatsApp number in settings to create a Flow",
+            )}
             disabled={!!data}
           >
             <Box>
               <RateupButtonBlue
                 className={styles["create-button"]}
-                title={translations["Create flow"]}
+                title={translations("Create flow")}
                 rightIcon={<IconPlus size={"1rem"} />}
                 onClick={handleCreateFlowModalOpen}
                 disabled={
@@ -102,11 +100,9 @@ function Flows() {
             allowDeselect={false}
           />
           <Tooltip
-            label={
-              translations[
-                "Connect a WhatsApp number in settings to sync a Flow"
-              ]
-            }
+            label={translations(
+              "Connect a WhatsApp number in settings to sync a Flow",
+            )}
             disabled={!!data}
           >
             <Box>

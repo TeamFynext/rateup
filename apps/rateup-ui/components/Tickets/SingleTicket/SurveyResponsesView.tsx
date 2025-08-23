@@ -3,8 +3,8 @@ import React from "react";
 import { Badge, Group, Image, Rating, Stack, Text, Title } from "@mantine/core";
 import dayjs from "dayjs";
 import parse from "html-react-parser";
+import { useTranslations } from "next-intl";
 
-import useTranslations from "@/dictionaries/useTranslation";
 import { SmileyResponseMap } from "@/utils/whatsapp/enumMap";
 
 import { QuestionType as Q, QuestionType2 } from "../../../types/enums";
@@ -25,7 +25,7 @@ const SurveyResponsesView = ({
   no: number;
   language: string;
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <Group>
@@ -67,7 +67,7 @@ const SurveyResponsesView = ({
                       <Image radius="md" maw={240} mx="0px" src={imgUrl} />
                     ) : (
                       <Text pb="sm" c="dark.0" fz="xs">
-                        {translations["... not answered..."]}
+                        {translations("... not answered...")}
                       </Text>
                     );
                   case Q.MSQ:
@@ -100,19 +100,19 @@ const SurveyResponsesView = ({
                     return (
                       <Stack>
                         <Group>
-                          <Text fw="400">{translations["Name: "]}</Text>{" "}
+                          <Text fw="400">{translations("Name: ")}</Text>{" "}
                           <Text fw="300">{data.name}</Text>{" "}
                         </Group>
                         {data.jobTitle && (
                           <Group mt="-10px">
                             <Text fw={"400"}>
-                              {translations["Job Title: "]}
+                              {translations("Job Title: ")}
                             </Text>
                             <Text fw="300">{data.jobTitle}</Text>
                           </Group>
                         )}
                         <Group mt="-10px">
-                          <Text fw="400">{translations["Testimonial: "]}</Text>{" "}
+                          <Text fw="400">{translations("Testimonial: ")}</Text>{" "}
                           <Text fw="300">{data.testimonial}</Text>{" "}
                         </Group>
                         {data.rating && <Rating value={data.rating} readOnly />}
@@ -180,19 +180,19 @@ const SurveyResponsesView = ({
                       <Stack>
                         {res?.name && (
                           <Group>
-                            <Text fw="400">{translations["Name: "]}</Text>
+                            <Text fw="400">{translations("Name: ")}</Text>
                             <Text fw="300">{res?.name}</Text>
                           </Group>
                         )}
                         {res?.phone && (
                           <Group>
-                            <Text fw="400">{translations["Phone: "]}</Text>
+                            <Text fw="400">{translations("Phone: ")}</Text>
                             <Text fw="300">{res?.phone}</Text>
                           </Group>
                         )}
                         {res?.email && (
                           <Group>
-                            <Text fw="400">{translations["Email: "]}</Text>
+                            <Text fw="400">{translations("Email: ")}</Text>
                             <Text fw="300">{res?.email}</Text>
                           </Group>
                         )}
@@ -219,7 +219,7 @@ const SurveyResponsesView = ({
             </Text>
           ) : (
             <Text c="dark.0" fz="xs">
-              {translations["... not answered..."]}
+              {translations("... not answered...")}
             </Text>
           )}
         </Stack>

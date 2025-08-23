@@ -10,12 +10,12 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useMediaQuery, useViewportSize } from "@mantine/hooks";
+import { useTranslations } from "next-intl";
 import Confetti from "react-confetti";
 
 import { PageType } from "@/types/enums";
 import { ReviewPagePlatform } from "@/components/Survey/Question/QuestionReviewPageEditor";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import {
   getPublicSurvey,
@@ -114,7 +114,7 @@ export default function ThankYou({
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile = useMediaQuery("(max-width: 480px)");
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   // const { k, sid } = router.query as { k: string; sid: string }; //kioskMode
   // const { surveyId } = router.query as { surveyId: string }; // TODO: rename to surveyTeamMapId
   let err = router.query.err && router.query.err === "oops";
@@ -260,7 +260,7 @@ export default function ThankYou({
                       textAlign: "center",
                     }}
                   >
-                    {translations["Thank You!"]}
+                    {translations("Thank You!")}
                   </Title>
                 ) : (
                   <div

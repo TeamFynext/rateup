@@ -14,8 +14,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconDeviceSdCard } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { getWaFlowFormElementTypeLabel } from "../../../../../utils/enums";
 import { fileToBase64 } from "../../../../../utils/misc/base64.utils";
@@ -48,7 +47,7 @@ export function FlowImageDetailedView() {
       src: (value) => (value?.length ? null : "Upload image to save"),
     },
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   // TODO: figure out why this can't be set in initialValues above
   // init
   useEffect(() => {
@@ -67,7 +66,7 @@ export function FlowImageDetailedView() {
   }
   function handleSaveElement() {
     const { hasErrors } = form.validate();
-    if (hasErrors) return showErrorToast(translations["Unable to Save Image"]);
+    if (hasErrors) return showErrorToast(translations("Unable to Save Image"));
     const flowForm = getFormObjFromScreenId(flowJson.screens, selectedScreenId);
     const index = flowForm.children.findIndex(
       (fe) => fe === selectedFormElement,
@@ -134,7 +133,7 @@ export function FlowImageDetailedView() {
 function FlowImageElementEditor({ onChange, src, height, width }) {
   const [file, setFile] = useState<File | null>(null);
   const [base64, setBase64] = useState("");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     onChange({
       src: base64.split(",")[1],
@@ -144,7 +143,7 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
   useEffect(() => {
     if (!file) return;
     if (file.size > 300 * 1024) {
-      showErrorToast(translations["Size must be under 300kb"]);
+      showErrorToast(translations("Size must be under 300kb"));
       return;
     }
 
@@ -159,7 +158,7 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
       <FileButton onChange={setFile} accept="image/png,image/jpeg,image/jpg">
         {(props) => (
           <Button {...props}>
-            {file ? translations["Change Image"] : translations["Upload image"]}
+            {file ? translations("Change Image") : translations("Upload image")}
           </Button>
         )}
       </FileButton>
@@ -173,14 +172,14 @@ function FlowImageElementEditor({ onChange, src, height, width }) {
             alt="flow Image"
           />
           <NumberInput
-            label={translations["Width"]}
+            label={translations("Width")}
             min={100}
             max={400}
             value={width}
             onChange={(width) => onChange({ width })}
           />
           <NumberInput
-            label={translations["Height"]}
+            label={translations("Height")}
             min={100}
             max={600}
             value={height}

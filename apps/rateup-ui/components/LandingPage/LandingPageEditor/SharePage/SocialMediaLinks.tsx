@@ -1,7 +1,6 @@
 import { ActionIcon, Box, Button, Image, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import FormModalLayout from "../../../Modal/FormModalLayout";
 import IFrameModal from "../../../Survey/ShareSurvey/IFrameModal";
@@ -17,7 +16,7 @@ function SocialMediaLinks({
     isIframeModalOpen,
     { open: openIframeModal, close: closeIframeModal },
   ] = useDisclosure();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Box
       className={styles["social-media-links-container"]}
@@ -52,7 +51,7 @@ function SocialMediaLinks({
       })}
 
       <FormModalLayout
-        title={translations["Generate IFrame"]}
+        title={translations("Generate IFrame")}
         opened={isIframeModalOpen}
         onClose={closeIframeModal}
         size="lg"

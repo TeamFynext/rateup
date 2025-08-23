@@ -2,8 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   usePushToWaMutation,
@@ -84,7 +83,7 @@ export const ShareFlow = ({
   }, [survey?.teams, surveyTeamMapId]);
 
   const pushToWaMutation = usePushToWaMutation();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const teamSelectData = survey?.teams?.map((team) => ({
     value: team?.mapId,
@@ -129,8 +128,8 @@ export const ShareFlow = ({
             <Tooltip
               label={
                 dbFlow.pendingSave
-                  ? translations["Save your flow to WhatsApp"]
-                  : translations["No changes to save"]
+                  ? translations("Save your flow to WhatsApp")
+                  : translations("No changes to save")
               }
             >
               <Button
@@ -138,16 +137,16 @@ export const ShareFlow = ({
                 onClick={handleSaveToWa}
                 loading={pushToWaMutation.isPending}
               >
-                {translations["Save to WhatsApp"]}
+                {translations("Save to WhatsApp")}
               </Button>
             </Tooltip>
           </Group>
           <Group>
-            <Text>{translations["Current Status: "]}</Text>
+            <Text>{translations("Current Status: ")}</Text>
             {isPublished ? (
               <StatusBadge active={survey?.active} />
             ) : (
-              <Text c="dark.1"> {translations["Not published! "]}</Text>
+              <Text c="dark.1"> {translations("Not published! ")}</Text>
             )}
           </Group>
         </Group>
@@ -155,12 +154,12 @@ export const ShareFlow = ({
       <PaperLayout p="md" shadow="lg" opacity={disableShare ? 0.5 : 1}>
         <Group gap="lg">
           <Stack style={{ minWidth: 300, flex: 1 }} p="md">
-            <Title order={4}>{translations["Share Survey"]}</Title>
+            <Title order={4}>{translations("Share Survey")}</Title>
             <Group>
               <ContainedSelection
                 style={{ flex: 1 }}
                 disabled={disableShare}
-                label={translations["Select Team"]}
+                label={translations("Select Team")}
                 allowDeselect={false}
                 miw={150}
                 value={surveyTeamMapId}
@@ -170,8 +169,8 @@ export const ShareFlow = ({
               <Group gap={2} align="flex-start" style={{ flex: 1 }}>
                 <ContainedSelection
                   disabled={disableShare || tagSelectData.length === 0}
-                  label={translations["Select Tag"]}
-                  placeholder={translations["select a single Tag"]}
+                  label={translations("Select Tag")}
+                  placeholder={translations("select a single Tag")}
                   miw={150}
                   data={tagSelectData}
                   value={tag}

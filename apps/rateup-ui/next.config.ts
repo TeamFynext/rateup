@@ -2,20 +2,18 @@ import type { NextConfig } from "next";
 
 import withBundleAnalyzer from "@next/bundle-analyzer";
 import { withSentryConfig } from "@sentry/nextjs";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
 const nextConfig: NextConfig = bundleAnalyzer({
-  i18n: {
-    locales: ["en", "de", "fr", "ar", "hi"],
-    defaultLocale: "en",
-  },
   reactStrictMode: false,
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // typedRoutes: false,
   images: {
     remotePatterns: [
       {
@@ -77,7 +75,13 @@ const sentryConfig = {
     deleteSourcemapsAfterUpload: true,
   },
 };
+const withNextIntl = createNextIntlPlugin({
+  experimental: {
+    // Provide the path to the messages that you're using in `AppConfig`
+    createMessagesDeclaration: "./dictionaries/en.json",
+  },
+});
 
-const config = withSentryConfig(nextConfig, sentryConfig);
+const config = withSentryConfig(withNextIntl(nextConfig), sentryConfig);
 
 export default config;

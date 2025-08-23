@@ -1,10 +1,10 @@
 import { useCallback } from "react";
 
 import { useForm } from "@mantine/form";
+import { useTranslations } from "next-intl";
 
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import useFlowStore from "../utils/store";
 
@@ -18,7 +18,7 @@ function CreateFlowScreenModal({
   close,
   screenId = null,
 }: Readonly<CreateFlowScreenModalProps>) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const flow = useFlowStore();
   const form = useForm({
     initialValues: {
@@ -27,7 +27,7 @@ function CreateFlowScreenModal({
     mode: "uncontrolled",
     validate: {
       title: (value) => {
-        if (value === "") return translations["Screen Title is required"];
+        if (value === "") return translations("Screen Title is required");
         else return null;
       },
     },
@@ -46,15 +46,15 @@ function CreateFlowScreenModal({
     <FormModalLayout
       opened={opened}
       title={
-        screenId ? translations["Edit Screen"] : translations["Create Screen"]
+        screenId ? translations("Edit Screen") : translations("Create Screen")
       }
       onClose={close}
       centered
       onSubmit={form.onSubmit(handleCreate)}
-      buttonTitle={screenId ? translations["Edit"] : translations["Create"]}
+      buttonTitle={screenId ? translations("Edit") : translations("Create")}
     >
       <ContainedTextField
-        placeholder={translations["Enter Screen Title"]}
+        placeholder={translations("Enter Screen Title")}
         {...form.getInputProps("title")}
       />
     </FormModalLayout>

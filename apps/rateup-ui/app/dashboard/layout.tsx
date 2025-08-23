@@ -2,12 +2,13 @@ import React from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import Layout from "@/components/Layout/Layout";
 import { SessionAuthForNextJS } from "@/components/SuperToken/sessionAuthForNextJS";
 import { TryRefreshComponent } from "@/components/SuperToken/tryRefreshClientComponent";
 
 import { getSessionForSSR } from "../util";
 
-export default async function Layout({
+export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const cookiesFromReq = await cookies();
@@ -52,5 +53,9 @@ export default async function Layout({
    * SessionAuthForNextJS will handle proper redirection for the user based on the different session states.
    * It will redirect to the login page if the session does not exist etc.
    */
-  return <SessionAuthForNextJS>{children}</SessionAuthForNextJS>;
+  return (
+    <SessionAuthForNextJS>
+      <Layout>{children}</Layout>
+    </SessionAuthForNextJS>
+  );
 }

@@ -9,8 +9,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBug } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import Button from "../HomePage/components/Button";
 import popoverStyles from "./PopoverStyles.module.css";
@@ -19,7 +18,7 @@ import styles from "./ReportBug.module.css";
 function ReportBug() {
   const [opened, { toggle }] = useDisclosure(false);
   const [isIframeLoading, setIsIframeLoading] = useState(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (opened) setIsIframeLoading(true);
   }, [opened]);
@@ -40,7 +39,7 @@ function ReportBug() {
       >
         <Popover.Target>
           <Flex className={styles["report-bug-container"]}>
-            <Tooltip label={translations["Report Bug"]} position="left">
+            <Tooltip label={translations("Report Bug")} position="left">
               <ActionIcon
                 className={styles["report-bug-button"]}
                 onClick={toggle}

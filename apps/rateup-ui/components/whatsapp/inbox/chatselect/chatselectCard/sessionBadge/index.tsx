@@ -1,6 +1,6 @@
 import { Avatar, Badge, Indicator, Tooltip } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
-import useTranslations from "@/dictionaries/useTranslation";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox";
 
 import classes from "./styles.module.css";
@@ -10,7 +10,7 @@ export default function WaInboxSessionBadge({
 }: {
   timeStamp: string;
 }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   let sessionExiped = isInboxSessionExpired(timeStamp);
 
   return (
@@ -18,14 +18,14 @@ export default function WaInboxSessionBadge({
       position="top-start"
       label={
         sessionExiped
-          ? translations["Session Inactive"]
-          : translations["Session Active"]
+          ? translations("Session Inactive")
+          : translations("Session Active")
       }
     >
       <Badge
         className={`${classes.session_expiry_badge} ${sessionExiped ? classes.session_expiry_badge_expired : classes.session_expiry_badge_active}`}
       >
-        {sessionExiped ? translations["Inactive"] : translations["Active"]}
+        {sessionExiped ? translations("Inactive") : translations("Active")}
       </Badge>
     </Tooltip>
   );
@@ -40,15 +40,15 @@ export function WaInboxSessionAvatar({
   title: string;
   profile?: string;
 }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   let sessionExiped = isInboxSessionExpired(timeStamp);
   return (
     <Tooltip
       position="top-start"
       label={
         sessionExiped
-          ? translations["Session Inactive"]
-          : translations["Session Active"]
+          ? translations("Session Inactive")
+          : translations("Session Active")
       }
       color={sessionExiped ? "#CC292C33" : "var(--wa-green)"}
     >

@@ -27,6 +27,7 @@ import {
 } from "@tabler/icons-react";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import classNames from "classnames/bind";
+import { useTranslations } from "next-intl";
 
 import {
   QuestionType,
@@ -49,7 +50,6 @@ import {
   FlowMaxElementsPerScreen,
   FlowMaxScreens,
 } from "@/components/whatsapp/whatsappConfig";
-import useTranslations from "@/dictionaries/useTranslation";
 import { FlowChoiceQuestions } from "@/utils/constants";
 import { showErrorToast } from "@/utils/notifications";
 import {
@@ -116,7 +116,7 @@ function ScreenListItem({
   const footerElement = getFlowFooterElementsFromScreen(
     screen,
   )?.[0] as WaFlowFormElement;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [screenTitleInputState, setScreenTitleInputState] = useState(
     screen?.title,
   );
@@ -266,13 +266,13 @@ function ScreenListItem({
             cursor: "pointer",
           }}
         >
-          <Tooltip label={translations["Add Screen"]} openDelay={500}>
+          <Tooltip label={translations("Add Screen")} openDelay={500}>
             <Stack align="center" onClick={handleCreateScreenClick}>
               <IconPlus size={30} />
               <RateupButtonPrimary
                 mt={"xl"}
                 size="lg"
-                title={translations["Add Screen"]}
+                title={translations("Add Screen")}
                 disabled={!flowEditable}
               />
             </Stack>
@@ -286,20 +286,18 @@ function ScreenListItem({
               forDeleteFunctionality
               opened={dialogOpened}
               onClose={closeDialog}
-              headerLabel={
-                translations[
-                  "Are you sure you want to delete this Screen? It will also delete all the elements in this screen."
-                ]
-              }
-              headerTitle={translations["Delete Screen?"]}
-              confirmLabel={translations["Delete"]}
+              headerLabel={translations(
+                "Are you sure you want to delete this Screen? It will also delete all the elements in this screen.",
+              )}
+              headerTitle={translations("Delete Screen?")}
+              confirmLabel={translations("Delete")}
               onConfirm={handleDeleteScreen}
             />
             <Group
               gap={5}
               className={styles["screen-title-input-and-chevrons-container"]}
             >
-              <Tooltip label={translations["Previous Screen"]}>
+              <Tooltip label={translations("Previous Screen")}>
                 <ActionIcon
                   onClick={handlers.decrement}
                   radius={"lg"}
@@ -332,11 +330,9 @@ function ScreenListItem({
                 value={screenTitleInputState}
                 onChange={handleScreenTitleInputChange}
                 readOnly={!flowEditable}
-                placeholder={
-                  translations[
-                    "Section title (Required if more than one section is added)"
-                  ]
-                }
+                placeholder={translations(
+                  "Section title (Required if more than one section is added)",
+                )}
                 onBlur={handleScreenTitleInputBlur}
                 rightSection={
                   flowEditable && (
@@ -355,7 +351,7 @@ function ScreenListItem({
                 }}
               />
 
-              <Tooltip label={translations["Next Screen"]}>
+              <Tooltip label={translations("Next Screen")}>
                 <ActionIcon
                   onClick={handlers.increment}
                   radius={"lg"}
@@ -368,7 +364,7 @@ function ScreenListItem({
             </Group>
             <Group mx={"xl"} justify="space-between" mt={"xs"}>
               <Group gap={4}>
-                <Tooltip label={translations["Add Screen"]} openDelay={500}>
+                <Tooltip label={translations("Add Screen")} openDelay={500}>
                   <ActionIcon
                     onClick={handleCreateScreenClick}
                     variant="subtle"
@@ -379,13 +375,13 @@ function ScreenListItem({
                 </Tooltip>
                 {flowEditable && (
                   <>
-                    <Tooltip label={translations["Delete Screen"]}>
+                    <Tooltip label={translations("Delete Screen")}>
                       <ActionIcon onClick={toggle} variant="subtle">
                         <IconTrash size={20} />
                       </ActionIcon>
                     </Tooltip>
                     <Tooltip
-                      label={translations["Swap order of screens"]}
+                      label={translations("Swap order of screens")}
                       openDelay={500}
                     >
                       <ActionIcon onClick={open} variant={"subtle"} size={20}>
@@ -399,10 +395,10 @@ function ScreenListItem({
                 <Tooltip
                   label={
                     dbFlow.pendingSave
-                      ? translations[
-                          "Save your flow to WhatsApp, so that you can test or share draft version before publishing."
-                        ]
-                      : translations["No changes to save"]
+                      ? translations(
+                          "Save your flow to WhatsApp, so that you can test or share draft version before publishing.",
+                        )
+                      : translations("No changes to save")
                   }
                 >
                   <ActionIcon
@@ -455,7 +451,7 @@ function ScreenListItem({
               </Droppable>
               <Group m={"md"}>
                 <RateupButtonPrimary
-                  title={translations["Add Element"]}
+                  title={translations("Add Element")}
                   rightIcon={<IconPlus />}
                   onClick={handleAddElementClick}
                   fullWidth
@@ -471,7 +467,7 @@ function ScreenListItem({
                 value={footerLabelInputState}
                 onChange={handleFooterLabelInputChange}
                 readOnly={!flowEditable}
-                placeholder={translations["Next button text"]}
+                placeholder={translations("Next button text")}
                 onBlur={handleFooterLabelInputBlur}
                 rightSection={
                   flowEditable && (
@@ -489,7 +485,7 @@ function ScreenListItem({
                   }
                 }}
               />
-              <Text fz={"xs"}>{translations["Next button text"]}</Text>
+              <Text fz={"xs"}>{translations("Next button text")}</Text>
             </Stack>
           </Flex>
           <SortDrawerFlow

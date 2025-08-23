@@ -2,8 +2,7 @@ import { useState } from "react";
 
 import { Paper, Table, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useDeleteMenuItemMutation,
@@ -48,7 +47,7 @@ export function CategoryCard({
   const [createMenuItemModalOpened, { close, open }] = useDisclosure(false);
   const [swapOrderOpened, { close: closeSwapOrder, toggle: toggleSwapOrder }] =
     useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [
     swapOrderCategoryOpened,
     { close: closeSwapOrderCategory, toggle: toggleSwapOrderCategory },
@@ -172,7 +171,7 @@ export function CategoryCard({
               <Table.Tr>
                 <Table.Td colSpan={tableColumns?.length}>
                   <Text fw={500} ta="center" c={"dimmed"}>
-                    {translations["No Items"]}
+                    {translations("No Items")}
                   </Text>
                 </Table.Td>
               </Table.Tr>

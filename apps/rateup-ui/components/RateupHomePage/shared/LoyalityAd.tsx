@@ -50,7 +50,7 @@ export default function LoyalityAd() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6 md:justify-start">
               <BookDemoModal>
                 <span className="bg-white cursor-pointer text-[#004F9E] px-4 py-2 rounded-md font-medium hover:opacity-90">
-                  Enroll for Loyalty Program
+                  Get a Free Trial
                 </span>
               </BookDemoModal>
               <Link

@@ -2,8 +2,7 @@ import { useContext, useEffect } from "react";
 
 import { LoadingOverlay, Stack, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useCreateMenuMutation,
@@ -25,7 +24,7 @@ export function CreateMenuModal({
   editingItem,
 }: CreateMenuModalProps) {
   const { selectedTeamId } = useContext(SelectedTeamContext);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: editingItem || {
       name: "",
@@ -34,11 +33,11 @@ export function CreateMenuModal({
     },
     validate: {
       name: (value) =>
-        value?.trim().length ? null : translations["Cannot be empty"],
+        value?.trim().length ? null : translations("Cannot be empty"),
       displayName: (value) =>
-        value?.trim().length ? null : translations["Cannot be empty"],
+        value?.trim().length ? null : translations("Cannot be empty"),
       teamId: (value) =>
-        value?.trim().length ? null : translations["select a team"],
+        value?.trim().length ? null : translations("select a team"),
     },
   });
 
@@ -85,12 +84,12 @@ export function CreateMenuModal({
       opened={opened}
       onClose={close}
       title={
-        editingItem ? translations["Edit Menu"] : translations["Create Menu"]
+        editingItem ? translations("Edit Menu") : translations("Create Menu")
       }
       centered
       onSubmit={form.onSubmit(onSubmit)}
       buttonTitle={
-        editingItem ? translations["Save Menu"] : translations["Create Menu"]
+        editingItem ? translations("Save Menu") : translations("Create Menu")
       }
     >
       <LoadingOverlay
@@ -99,10 +98,10 @@ export function CreateMenuModal({
         overlayProps={{ radius: "sm", blur: 2 }}
         loaderProps={{ type: "bars" }}
       />
-      <Title order={3}>{translations["General Info"]}</Title>
+      <Title order={3}>{translations("General Info")}</Title>
       <Stack>
         <TeamSelector
-          placeholder={translations["Select Team"]}
+          placeholder={translations("Select Team")}
           label=""
           allowDeselect={false}
           value={form?.getInputProps("teamId")?.value || ""}
@@ -114,14 +113,14 @@ export function CreateMenuModal({
           }}
         />
         <ContainedTextField
-          label={translations["Menu Name"]}
-          placeholder={translations["Menu 1"]}
+          label={translations("Menu Name")}
+          placeholder={translations("Menu 1")}
           withAsterisk
           {...form.getInputProps("name")}
         />
         <ContainedTextField
-          label={translations["Display Name"]}
-          placeholder={translations["Hotel Name"]}
+          label={translations("Display Name")}
+          placeholder={translations("Hotel Name")}
           withAsterisk
           {...form.getInputProps("displayName")}
         />

@@ -11,10 +11,12 @@ import "./globals.css";
 
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
+import { GoogleTagManager } from "@next/third-parties/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 
 import { theme } from "@/config/mantineTheme";
 import FacebookPixel from "@/components/Analytics/FacebookPixel";
-import GoogleAnalytics from "@/components/Analytics/GoogleAnalytics";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider";
 import { isProduction } from "@/utils/constants";
 import { geist, notoColorEmogi } from "@/utils/fonts";
@@ -26,13 +28,14 @@ export const metadata: Metadata = {
   description: "Welcome to Rateup",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="en" {...mantineHtmlProps}>
+    <html lang={locale} {...mantineHtmlProps}>
       <head>
         <ColorSchemeScript />
         <link rel="shortcut icon" href="/favicon.png" />
@@ -42,20 +45,22 @@ export default function RootLayout({
         />
         {isProduction && (
           <>
-            <GoogleAnalytics />
             <FacebookPixel />
           </>
         )}
       </head>
       <body className={`${geist.className},${notoColorEmogi.className}`}>
-        <MantineProvider theme={theme}>
-          <ModalsProvider>
-            <Notifications />
-            <SuperTokensProvider>
-              <Providers>{children}</Providers>
-            </SuperTokensProvider>
-          </ModalsProvider>
-        </MantineProvider>
+        <NextIntlClientProvider>
+          <MantineProvider theme={theme}>
+            <ModalsProvider>
+              <Notifications />
+              <SuperTokensProvider>
+                <Providers>{children}</Providers>
+                <GoogleTagManager gtmId="GTM-NDC3D7DP" />
+              </SuperTokensProvider>
+            </ModalsProvider>
+          </MantineProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

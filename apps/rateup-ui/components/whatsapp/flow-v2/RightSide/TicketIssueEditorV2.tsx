@@ -15,6 +15,7 @@ import {
 import { useListState } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconInfoCircle } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { QuestionType2, SmileyResponse2 } from "@/types/enums";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
@@ -28,7 +29,6 @@ import {
   ContainedSelection,
 } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { EditorType, FormElement } from "../utils/store";
 
@@ -43,7 +43,7 @@ const TicketIssueEditorV2 = ({
 }) => {
   const router = useRouter();
   const { dbFlowId } = router.query as { dbFlowId: string };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const ticketIssue = ticketIssued.find((s) => s.questionId === element?.id);
   const [enableTicketIssue, setEnableTicketIssue] = useState(!!ticketIssue);
   const [submissionTicket, setSubmissionTicket] = useState(
@@ -93,8 +93,8 @@ const TicketIssueEditorV2 = ({
       notifications.show({
         id: "load-data",
         color: "var(--color-tertiary)",
-        title: translations["Configure Ticket Issue"],
-        message: translations["Enter condition for ticket issue"],
+        title: translations("Configure Ticket Issue"),
+        message: translations("Enter condition for ticket issue"),
         icon: <IconInfoCircle size="3rem" />,
         autoClose: 3000,
       });
@@ -132,8 +132,8 @@ const TicketIssueEditorV2 = ({
         notifications.show({
           id: "load-data",
           color: "var(--color-tertiary)",
-          title: translations["Configure Ticket Issue"],
-          message: translations["Enter condition for ticket issue"],
+          title: translations("Configure Ticket Issue"),
+          message: translations("Enter condition for ticket issue"),
           icon: <IconInfoCircle size="3rem" />,
           autoClose: 3000,
         });
@@ -194,12 +194,10 @@ const TicketIssueEditorV2 = ({
       <Stack px="lg" h="100%">
         <>
           <Switch
-            label={translations["Enable Auto-Ticket Creation"]}
-            description={
-              translations[
-                "Setup automated ticket creation for negative responses."
-              ]
-            }
+            label={translations("Enable Auto-Ticket Creation")}
+            description={translations(
+              "Setup automated ticket creation for negative responses.",
+            )}
             labelPosition="left"
             checked={enableTicketIssue}
             onChange={(event) => handleSwitch(event)}
@@ -217,7 +215,7 @@ const TicketIssueEditorV2 = ({
             <>
               <Stack>
                 <Switch
-                  label={translations["Raise Ticket if Response submitted"]}
+                  label={translations("Raise Ticket if Response submitted")}
                   checked={submissionTicket}
                   onChange={(e) => setSubmissionTicket(e.currentTarget.checked)}
                   styles={{
@@ -237,11 +235,9 @@ const TicketIssueEditorV2 = ({
                               fw={500}
                               c={submissionTicket ? "dimmed" : "black"}
                             >
-                              {
-                                translations[
-                                  "Select the emojis for which Ticket creation to be enabled:"
-                                ]
-                              }
+                              {translations(
+                                "Select the emojis for which Ticket creation to be enabled:",
+                              )}
                             </Text>
                             <Group style={{ minWidth: "300px" }}>
                               {Object.values(SmileyResponse2).map(
@@ -286,11 +282,9 @@ const TicketIssueEditorV2 = ({
                               fw={500}
                               c={submissionTicket ? "dimmed" : "black"}
                             >
-                              {
-                                translations[
-                                  "Select rating until which Ticket should be created:"
-                                ]
-                              }
+                              {translations(
+                                "Select rating until which Ticket should be created:",
+                              )}
                             </Text>
                             <Text
                               fw={500}
@@ -326,11 +320,9 @@ const TicketIssueEditorV2 = ({
                               c={submissionTicket ? "dimmed" : "black"}
                             >
                               {" "}
-                              {
-                                translations[
-                                  "Select scale until which Ticket should be created:"
-                                ]
-                              }{" "}
+                              {translations(
+                                "Select scale until which Ticket should be created:",
+                              )}{" "}
                             </Text>
                             <Text
                               fw={500}
@@ -350,8 +342,8 @@ const TicketIssueEditorV2 = ({
                               />
                               <Text pt="sm" fz="sm" c="dimmed">
                                 {" "}
-                                {translations["For"]} {minOpinion}{" "}
-                                {translations["and below."]}
+                                {translations("For")} {minOpinion}{" "}
+                                {translations("and below.")}
                               </Text>
                             </Stack>
                           </SimpleGrid>
@@ -366,11 +358,9 @@ const TicketIssueEditorV2 = ({
                               fw={500}
                               c={submissionTicket ? "dimmed" : "black"}
                             >
-                              {
-                                translations[
-                                  "Select choices for which Ticket should be created"
-                                ]
-                              }
+                              {translations(
+                                "Select choices for which Ticket should be created",
+                              )}
                               :
                             </Text>
                             <Text
@@ -428,12 +418,12 @@ const TicketIssueEditorV2 = ({
 
       <Group justify="space-between">
         <RateupButtonSecondary
-          title={translations["Cancel"]}
+          title={translations("Cancel")}
           size="md"
           onClick={() => setDetailActiveEditor(EditorType.ElementEditor)}
         />
         <RateupButtonBlue
-          title={translations["Save"]}
+          title={translations("Save")}
           size="md"
           onClick={handleSave}
           loading={false}

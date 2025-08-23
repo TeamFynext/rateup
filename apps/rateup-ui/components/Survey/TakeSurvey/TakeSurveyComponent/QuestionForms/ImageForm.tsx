@@ -12,8 +12,7 @@ import {
   Text,
 } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import { useSurveyThemeData } from "../../../../../context/SurveyThemeContext";
@@ -73,7 +72,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
     if (!file) return;
     setFile(file);
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const isImageSelected = previewUrl || response?.length > 0;
   const imageContainerWidthAndHeight = isImageSelected ? 150 : 0;
 
@@ -94,7 +93,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
               variant="outline"
               {...props}
             >
-              {translations["Upload image"]}
+              {translations("Upload image")}
             </Button>
           )}
         </FileButton>
@@ -153,7 +152,7 @@ export function ImageForm({ isPreview }: { isPreview?: boolean }) {
               style={{ textAlign: "center" }}
               c={pickedFileTextColor}
             >
-              {translations["Picked file:"]}
+              {translations("Picked file:")}
               {file?.name || getFileName(response, isPreview || false)}
             </Text>
           )}

@@ -14,9 +14,9 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconFilter } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { useResponseFilterStore } from "@/components/Survey/Response/store";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { extractText } from "../../../utils";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
@@ -29,7 +29,7 @@ const FilterToggles = ({
   enableColumnSelection,
   tempVisibleColumnArray,
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { setServerFilters } = useResponseFilterStore();
   return (
     <Group>
@@ -83,7 +83,7 @@ const FilterToggles = ({
         </Popover>
       )}
       {enableFilter && (
-        <Tooltip label={translations["Clear the filtered values"]}>
+        <Tooltip label={translations("Clear the filtered values")}>
           <Box>
             <RateupButtonPrimary
               onClick={() => {

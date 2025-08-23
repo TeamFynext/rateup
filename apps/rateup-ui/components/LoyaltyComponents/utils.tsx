@@ -20,12 +20,12 @@ import {
   IconUserFilled,
   IconUserPlus,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { LoyaltyActionType } from "@/types/enums";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { useLoyaltyCustomers } from "@/backend/loyalty/customer/customer.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
-import useTranslations from "@/dictionaries/useTranslation";
 import { LCustomerStats } from "@/pages/dashboard/loyalty/customer/[customerId]";
 
 import {
@@ -36,7 +36,7 @@ import PaperLayout from "../styled/Layouts/PaperLayout";
 import classes from "./Loyalty.module.css";
 
 export const LRSelector = (props: SelectProps) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { data: rewards, isLoading } = useGetLoyaltyRewards();
   const rewardList = rewards
     ? rewards?.map((r) => ({
@@ -49,7 +49,7 @@ export const LRSelector = (props: SelectProps) => {
     <ContainedSelection
       data={rewardList}
       {...props}
-      nothingFoundMessage={translations["No Rewards found"]}
+      nothingFoundMessage={translations("No Rewards found")}
     />
   );
 };
@@ -65,7 +65,7 @@ export const LASelector = ({
   ...props
 }: LAProps) => {
   const { data: actions, isLoading } = useGetLoyaltyActions();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const actionList = actions
     ? actions
         .filter(
@@ -82,16 +82,16 @@ export const LASelector = ({
       <ContainedMultiSelect
         data={actionList}
         {...multiSelectProps}
-        nothingFoundMessage={translations["No action found"]}
-        placeholder={multiSelectProps.placeholder || translations["Select"]}
+        nothingFoundMessage={translations("No action found")}
+        placeholder={multiSelectProps.placeholder || translations("Select")}
       />
     );
   return (
     <ContainedSelection
       data={actionList}
       {...props}
-      nothingFoundMessage={translations["No action found"]}
-      placeholder={props.placeholder || translations["Select"]}
+      nothingFoundMessage={translations("No action found")}
+      placeholder={props.placeholder || translations("Select")}
     />
   );
 };
@@ -102,7 +102,7 @@ export const LReferralSelector = ({
   ...props
 }: LAProps) => {
   const { data: actions, isLoading } = useGetLoyaltyActions();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const actionList = actions
     ? actions
         .filter((a) => a.active && isLReferralAction(a.type))
@@ -117,16 +117,16 @@ export const LReferralSelector = ({
       <ContainedMultiSelect
         data={actionList}
         {...multiSelectProps}
-        nothingFoundMessage={translations["No action found"]}
-        placeholder={multiSelectProps.placeholder || translations["Select"]}
+        nothingFoundMessage={translations("No action found")}
+        placeholder={multiSelectProps.placeholder || translations("Select")}
       />
     );
   return (
     <ContainedSelection
       data={actionList}
       {...props}
-      nothingFoundMessage={translations["No action found"]}
-      placeholder={props.placeholder || translations["Select"]}
+      nothingFoundMessage={translations("No action found")}
+      placeholder={props.placeholder || translations("Select")}
     />
   );
 };
@@ -183,7 +183,7 @@ export const LoyaltyActionSelect = ({
   isReferralAvailable = true,
   w = "auto",
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
@@ -261,12 +261,12 @@ export const LoyaltyActionSelect = ({
           leftSection={getActionIcon(value, "var(--tertiary-color)")}
           classNames={{ input: classes["input"] }}
           disabled={disabled}
-          label={translations["Select Action"]}
+          label={translations("Select Action")}
           w={w}
         >
           {value || (
             <Input.Placeholder>
-              {translations["Select action"]}
+              {translations("Select action")}
             </Input.Placeholder>
           )}
         </InputBase>

@@ -11,9 +11,8 @@ import "cropperjs/dist/cropper.css";
 
 import { useCallback, useRef, useState } from "react";
 
+import { useTranslations } from "next-intl";
 import Cropper, { ReactCropperElement } from "react-cropper";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { mimeTypesForImage } from "../../utils/constants";
 import styles from "./ModalManagerModals/ImageCropModal/ImageCropModal.module.css";
@@ -40,7 +39,7 @@ export const ImageCropModal = ({
   const cropperRef = useRef<ReactCropperElement>(undefined);
   const [scale, setScale] = useState(0.4);
   const [isCropperReady, setIsCropperReady] = useState(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const fileExtension = imageName?.split(".")?.pop()?.toLowerCase() ?? "jpg";
   const isUnsplashImage = !image?.startsWith("blob:");
 
@@ -99,7 +98,7 @@ export const ImageCropModal = ({
         header: styles["modal-header"],
         body: styles["modal-body"],
       }}
-      title={translations["Crop Image"]}
+      title={translations("Crop Image")}
       centered
       onClose={() => {
         onclose();
@@ -110,7 +109,7 @@ export const ImageCropModal = ({
       zIndex={9999}
     >
       <NumberInput
-        label={translations["Zoom the Image"]}
+        label={translations("Zoom the Image")}
         step={0.1}
         min={0.1}
         max={1}
@@ -153,10 +152,10 @@ export const ImageCropModal = ({
 
       <Group className={styles["cancel-save-btn-container"]} justify="right">
         <Button className={styles["cancel-btn"]} onClick={handleCancelBtnClick}>
-          {translations["Cancel"]}
+          {translations("Cancel")}
         </Button>
         <Button className={styles["save-btn"]} onClick={handleSaveBtnClick}>
-          {translations["Save"]}
+          {translations("Save")}
         </Button>
       </Group>
     </Modal>

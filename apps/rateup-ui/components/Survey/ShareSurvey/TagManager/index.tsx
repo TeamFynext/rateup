@@ -19,8 +19,7 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import domtoimage from "dom-to-image-more";
 import { saveAs } from "file-saver";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useGetShareSettings } from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
 import {
@@ -49,7 +48,7 @@ function TagManager({
   const [isAllQrDownloadProcessing, setIsAllQrDownloadProcessing] =
     useState(false);
   const dataGridCompRef = useRef(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [tagManagerOpened, { open: openTagManager, close: closeTagManager }] =
     useDisclosure(false);
 
@@ -86,12 +85,12 @@ function TagManager({
         console.log("download files failed.");
         return {
           success: false,
-          message: translations["failed to download files"],
+          message: translations("failed to download files"),
         };
       }
       return {
         success: true,
-        message: translations["successfully downloaded files"],
+        message: translations("successfully downloaded files"),
       };
     },
     [surveyTitle],
@@ -121,7 +120,7 @@ function TagManager({
 
   return (
     <>
-      <Tooltip label={translations["Manage URL Tags"]} position="right-start">
+      <Tooltip label={translations("Manage URL Tags")} position="right-start">
         <ActionIcon
           disabled={!isPublished}
           onClick={openTagManager}
@@ -136,13 +135,13 @@ function TagManager({
         size="xl"
         onClose={closeTagManager}
         opened={tagManagerOpened}
-        title={translations["Manage URL Tags"]}
+        title={translations("Manage URL Tags")}
         customHeader={
           <Group justify="space-between" px={"lg"}>
             <Heading subtitle="URL Taggers" />
             <ContainedSelection
               disabled={!isPublished}
-              label={translations["Select Team"]}
+              label={translations("Select Team")}
               allowDeselect={false}
               miw={150}
               value={selectTeamDropdownValue}
@@ -159,7 +158,7 @@ function TagManager({
             rightSection={<IconDownload size={14} />}
             loading={isAllQrDownloadProcessing}
           >
-            {translations["Download all QRs"]}
+            {translations("Download all QRs")}
           </Button>
 
           <DataGrid

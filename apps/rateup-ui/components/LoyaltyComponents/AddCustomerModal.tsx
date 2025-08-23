@@ -49,8 +49,7 @@ import PaperLayout from "../styled/Layouts/PaperLayout";
 import "react-phone-number-input/style.css";
 
 import { ColumnFiltersState } from "@tanstack/react-table";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { FilterSelect } from "../../pages/dashboard/contacts";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
@@ -84,7 +83,7 @@ const AddCustomerModal = ({
     useDebouncedState<ColumnFiltersState>([], 200);
   const createNewContactMutation = useAddNewContactMutation(groupId);
   const addExistingContactsMutation = useAddExistingContactMutation(groupId);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
@@ -115,16 +114,16 @@ const AddCustomerModal = ({
           addType === contactAddType.NEW
         )
           return !value
-            ? translations["Phone Number cannot be blank"]
+            ? translations("Phone Number cannot be blank")
             : !isValidPhoneNumber(value)
-              ? translations["Invalid phone number"]
+              ? translations("Invalid phone number")
               : null;
       },
       name: (value) =>
         form.values.importMethod == importMethod.MANUAL &&
         addType == contactAddType.NEW &&
         !value.length
-          ? translations["Name cannot be blank"]
+          ? translations("Name cannot be blank")
           : null,
     },
   });
@@ -243,7 +242,7 @@ const AddCustomerModal = ({
     >
       <Table.Td>
         <Checkbox
-          aria-label={translations["Select row"]}
+          aria-label={translations("Select row")}
           checked={
             customerList?.includes(contact?.id) ||
             existingContactIds?.includes(contact?.id)
@@ -269,7 +268,7 @@ const AddCustomerModal = ({
     <FormModalLayout
       onClose={close}
       opened={opened}
-      title={translations["Add members"]}
+      title={translations("Add members")}
       size="xl"
       centered
     >
@@ -286,17 +285,17 @@ const AddCustomerModal = ({
                 value={addType}
                 onChange={setAddType}
                 name="addType"
-                label={translations["Choose"]}
+                label={translations("Choose")}
                 styles={customStyle}
               >
                 <Group>
                   <Radio
                     value={contactAddType.NEW}
-                    label={translations["Add New Contact"]}
+                    label={translations("Add New Contact")}
                   />
                   {/* <Radio
                     value={contactAddType.EXISTING}
-                    label={translations["Add Existing Contacts"]}
+                    label={translations("Add Existing Contacts")}
                   /> */}
                 </Group>
               </Radio.Group>
@@ -310,14 +309,12 @@ const AddCustomerModal = ({
                   iconSize={40}
                   mx={"lg"}
                 >
-                  {
-                    translations[
-                      "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone"
-                    ]
-                  }
+                  {translations(
+                    "Utilizing CSV/XLSX file uploads to generate contact requires specific fields in the file: name, phone",
+                  )}
                   <NavLink
                     href={getFileUrlFromKey("/File/contact/demo.csv", false)}
-                    label={translations["Download Demo Csv File"]}
+                    label={translations("Download Demo Csv File")}
                     leftSection={<IconDownload size="1rem" stroke={1.5} />}
                     download
                     active
@@ -327,20 +324,18 @@ const AddCustomerModal = ({
                 </Blockquote>
                 <Switch
                   mx={"lg"}
-                  label={
-                    translations["Update the existing data while importing"]
-                  }
+                  label={translations(
+                    "Update the existing data while importing",
+                  )}
                   key={form.key("updateExisting")}
                   {...form.getInputProps("updateExisting")}
                 />
                 <ContainedFileInput
                   mx={"lg"}
                   label=""
-                  placeholder={
-                    translations[
-                      "Upload a csv file (.csv) or excel file (.xlsx)"
-                    ]
-                  }
+                  placeholder={translations(
+                    "Upload a csv file (.csv) or excel file (.xlsx)",
+                  )}
                   accept=".csv,.xlsx"
                   multiple={false}
                   onChange={setCsvfile}
@@ -367,7 +362,7 @@ const AddCustomerModal = ({
                 <Group justify="space-between" px={"md"}>
                   <Checkbox
                     aria-label="select all"
-                    label={translations["Select All"]}
+                    label={translations("Select All")}
                     checked={remainingContactIds?.every((id) =>
                       customerList.includes(id),
                     )}
@@ -384,7 +379,7 @@ const AddCustomerModal = ({
                     leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
                     radius="xl"
                     size="sm"
-                    placeholder={translations["Search Contact"]}
+                    placeholder={translations("Search Contact")}
                     rightSectionWidth={60}
                     defaultValue={searchTerm}
                     onChange={(event) =>
@@ -399,7 +394,7 @@ const AddCustomerModal = ({
                       <Table.Thead>
                         <Table.Tr>
                           <Table.Th>
-                            <Tooltip label={translations["refresh data"]}>
+                            <Tooltip label={translations("refresh data")}>
                               <ActionIcon
                                 variant="light"
                                 onClick={() => {
@@ -410,8 +405,8 @@ const AddCustomerModal = ({
                               </ActionIcon>
                             </Tooltip>
                           </Table.Th>
-                          <Table.Th>{translations["Name"]}</Table.Th>
-                          <Table.Th>{translations["Phone Number"]}</Table.Th>
+                          <Table.Th>{translations("Name")}</Table.Th>
+                          <Table.Th>{translations("Phone Number")}</Table.Th>
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>{rows}</Table.Tbody>
@@ -427,11 +422,11 @@ const AddCustomerModal = ({
             )}
             <Group justify="flex-end">
               <RateupButtonSecondary
-                title={translations["cancel"]}
+                title={translations("cancel")}
                 onClick={close}
               />
               <RateupButtonBlue
-                title={translations["Add Member"]}
+                title={translations("Add Member")}
                 onClick={handleSubmit}
                 loading={isCreating}
                 disabled={

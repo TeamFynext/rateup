@@ -11,8 +11,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconCopy } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { RateupButtonSecondary } from "../../Button/RateupButtons";
 import {
@@ -59,19 +58,19 @@ const IFrameModal = ({ close, shareUrl }) => {
     const height = form.values.height + form.values.heightUnit;
     iframe = `<iframe src="${shareUrl}" width="${width}" height="${height}"></iframe>`;
   }
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Box>
       <Center>
-        <Text>{translations["Create an iframe to embed survey"]}</Text>
+        <Text>{translations("Create an iframe to embed survey")}</Text>
       </Center>
       <Stack gap={"md"}>
         <form>
           <Grid>
             <Grid.Col span={9}>
               <ContainedNumberInput
-                label={translations["Width"]}
-                placeholder={translations["Enter width of iframe"]}
+                label={translations("Width")}
+                placeholder={translations("Enter width of iframe")}
                 {...form.getInputProps("width")}
                 allowNegative={false}
                 allowDecimal={false}
@@ -87,8 +86,8 @@ const IFrameModal = ({ close, shareUrl }) => {
             </Grid.Col>
             <Grid.Col span={9}>
               <ContainedNumberInput
-                label={translations["Height"]}
-                placeholder={translations["Enter height of iframe"]}
+                label={translations("Height")}
+                placeholder={translations("Enter height of iframe")}
                 {...form.getInputProps("height")}
                 allowNegative={false}
                 allowDecimal={false}
@@ -110,7 +109,7 @@ const IFrameModal = ({ close, shareUrl }) => {
             <Flex justify={"flex-end"}>
               <Group gap={"sm"}>
                 <RateupButtonSecondary
-                  title={translations["cancel"]}
+                  title={translations("cancel")}
                   onClick={close}
                 />
                 <CopyButton value={iframe}>
@@ -123,8 +122,8 @@ const IFrameModal = ({ close, shareUrl }) => {
                       disabled={disabled}
                     >
                       {copied
-                        ? translations["Copied"]
-                        : translations["Copy code"]}
+                        ? translations("Copied")
+                        : translations("Copy code")}
                     </Button>
                   )}
                 </CopyButton>

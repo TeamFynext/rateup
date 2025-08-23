@@ -1,7 +1,6 @@
 import { Group } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useUser } from "../../../context/UserContext";
 import { docsPath } from "../../../utils/constants";
@@ -34,7 +33,7 @@ export function SurveyHeader({
   refetch,
 }) {
   const { user } = useUser();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const tourSteps = WebSurveyTourSteps({ styles });
 
   return (
@@ -44,7 +43,7 @@ export function SurveyHeader({
           <RateupButtonBlue
             className={styles["create-survey-button"]}
             rightIcon={<IconPlus />}
-            title={translations["Create Survey"]}
+            title={translations("Create Survey")}
             onClick={openCreateSurvey}
           />
         )}
@@ -56,7 +55,7 @@ export function SurveyHeader({
       <Group gap="md" justify="flex-start">
         {surveyCount > 0 && (
           <RateupButtonPrimary
-            title={translations["Group survey"]}
+            title={translations("Group survey")}
             onClick={() => openMergeSurvey()}
           />
         )}

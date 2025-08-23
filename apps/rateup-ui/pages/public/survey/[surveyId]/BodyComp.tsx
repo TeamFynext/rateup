@@ -2,10 +2,10 @@ import Link from "next/link";
 
 import { Group, Stack } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview";
-import useTranslations from "@/dictionaries/useTranslation";
 
 function BodyComp({
   enableGoogleReview,
@@ -16,7 +16,7 @@ function BodyComp({
   k,
   reviewPageLinks,
 }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack
       align="center"
@@ -46,7 +46,7 @@ function BodyComp({
           >
             <RateupButtonBlue
               leftIcon={<IconHome />}
-              title={translations["Go to Home"]}
+              title={translations("Go to Home")}
             />
           </Link>
         </Group>

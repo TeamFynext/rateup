@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 
 import { Group, SimpleGrid, Stack } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { LoyaltyActionType } from "@/types/enums";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
@@ -13,10 +14,9 @@ import { ContainedSelection } from "@/components/input/ContainedInput/ContainedI
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import LoyaltyActionCard from "@/components/LoyaltyComponents/Action/LoyaltyActionCard";
 import NothingFound from "@/components/NothingFound/NothingFound";
-import useTranslations from "@/dictionaries/useTranslation";
 
 const index = () => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const {
     data: subscription,
     isLoading: isSubscriptionLoading,
@@ -47,7 +47,7 @@ const index = () => {
       <Group justify="space-between">
         <Group>
           <RateupButtonBlue
-            title={translations["New Action"]}
+            title={translations("New Action")}
             rightIcon={<IconPlus />}
             onClick={() => {
               router.push("/dashboard/loyalty/actions/create");
@@ -69,7 +69,7 @@ const index = () => {
           ))}
         </SimpleGrid>
       ) : (
-        <NothingFound text={translations["No action found"]} />
+        <NothingFound text={translations("No action found")} />
       )}
     </Stack>
   );

@@ -3,6 +3,7 @@ import React from "react";
 import { Stack, Title } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { IconSend } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import { isValidPhoneNumber } from "react-phone-number-input";
 
 import { TemplateType } from "@/types/enums";
@@ -10,10 +11,9 @@ import { useSendWaTemplateToUser } from "@/backend/whatsapp/whatsapp.query";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import WaTemplateSelector from "@/components/input/WaTemplateSelector";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 
 const SendLoyaltyTemplate = ({ opened, close }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       phone: "",
@@ -22,10 +22,10 @@ const SendLoyaltyTemplate = ({ opened, close }) => {
     validate: {
       phone: (value) =>
         !value || !isValidPhoneNumber(value)
-          ? translations["Invalid phone number"]
+          ? translations("Invalid phone number")
           : null,
       waTemplateId: isNotEmpty(
-        translations["Select"] + translations["whatsApp Template"],
+        translations("Select") + translations("whatsApp Template"),
       ),
     },
   });
@@ -50,17 +50,17 @@ const SendLoyaltyTemplate = ({ opened, close }) => {
         form.reset();
         close();
       }}
-      buttonTitle={translations["Send"]}
+      buttonTitle={translations("Send")}
       onSubmit={handleSendRegisterTemplate}
       submitButtonLeftIcon={<IconSend />}
       isLoading={sendTemplate.isPending}
     >
       <Title ta={"center"} mb={"xl"} order={4}>
-        {translations["Send Customer Register Template"]}
+        {translations("Send Customer Register Template")}
       </Title>
       <Stack>
         <PhoneInputWithCountry
-          label={translations["Phone Number"]}
+          label={translations("Phone Number")}
           {...form.getInputProps("phone")}
         />
         <WaTemplateSelector

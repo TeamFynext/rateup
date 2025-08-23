@@ -1,6 +1,6 @@
 import { Modal } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
-import useTranslations from "@/dictionaries/useTranslation";
 import modalStyles from "@/styles/commonCssModules/modal.module.css";
 
 import { elementsToBeTranslated } from "./constants";
@@ -10,14 +10,14 @@ import styles from "./UiTextTranslationsModal.module.css";
 function UiTextTranslationsModal({ opened, onClose, survey }) {
   const lanugages = survey?.languages;
   const uiTextTranslations = survey?.uiTextTranslations;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   return (
     <Modal
       className={`${styles["ui-text-translations-modal"]}`}
       opened={opened}
       onClose={onClose}
-      title={translations["UI Text Translations"]}
+      title={translations("UI Text Translations")}
       classNames={{
         content: modalStyles["modal-content"],
         header: modalStyles["modal-header"],

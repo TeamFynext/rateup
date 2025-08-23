@@ -40,16 +40,15 @@ import styles from "./setting.module.css";
 
 import "react-phone-number-input/style.css";
 
+import { useTranslations } from "next-intl";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
 
-import useTranslations from "@/dictionaries/useTranslation";
-
 import { SAVE_HOTKEY } from "../../../utils/constants";
 
 const ProfileSettings = () => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const {
     isLoading: isprofileLoading,
     error: profileError,
@@ -67,11 +66,11 @@ const ProfileSettings = () => {
       confirmPassword: "",
     },
     validate: {
-      title: isNotEmpty(translations["Select a title"]),
-      firstname: isNotEmpty(translations["Name Cannot be blank"]),
+      title: isNotEmpty(translations("Select a title")),
+      firstname: isNotEmpty(translations("Name Cannot be blank")),
       phone: (value) => {
         if (value && !isValidPhoneNumber(value))
-          return translations["Invalid phone number"];
+          return translations("Invalid phone number");
         return null;
       },
       existingPassword: (value, values) =>
@@ -80,9 +79,9 @@ const ProfileSettings = () => {
         isAnyPasswordFieldDirty(values) ? passwordValidation(value) : null,
       confirmPassword: (value, values) => {
         if (value !== values.newPassword && isAnyPasswordFieldDirty(values)) {
-          return translations[
-            "New Password  and Confirm Password did not match"
-          ];
+          return translations(
+            "New Password  and Confirm Password did not match",
+          );
         }
         return null; // Validation passed
       },
@@ -181,8 +180,8 @@ const ProfileSettings = () => {
           notifications.show({
             id: "load-data",
             loading: true,
-            title: translations["Uploading photo"],
-            message: translations["Hold on, changing your profile photo"],
+            title: translations("Uploading photo"),
+            message: translations("Hold on, changing your profile photo"),
             autoClose: false,
             withCloseButton: false,
           });
@@ -218,7 +217,7 @@ const ProfileSettings = () => {
         image={selectedImage.url}
         aspect={1}
       />
-      <Title order={2}>{translations["User Settings"]}</Title>
+      <Title order={2}>{translations("User Settings")}</Title>
       <Flex direction={"row"} wrap="wrap" justify="space-around" h={"100%"}>
         <Flex
           direction={"column"}
@@ -244,7 +243,7 @@ const ProfileSettings = () => {
           </Paper>
           <Group>
             <RateupButtonSecondary
-              title={translations["Remove Image"]}
+              title={translations("Remove Image")}
               size="sm"
               variant="outline"
               color="var(--tertiary-color)"
@@ -257,7 +256,7 @@ const ProfileSettings = () => {
             >
               {(props) => (
                 <RateupButtonBlue
-                  title={translations["Change Image"]}
+                  title={translations("Change Image")}
                   size="sm"
                   color="var(--tertiary-color)"
                   onClick={removePhoto}
@@ -268,7 +267,7 @@ const ProfileSettings = () => {
           </Group>
           <Stack align={"center"}>
             <Text size={"28px"} fw={500}>
-              {profileData?.data?.data?.name || translations["User"]}
+              {profileData?.data?.data?.name || translations("User")}
             </Text>
             <Text> {retrieveRole(profileData?.data?.data?.role)}</Text>
             <Text size="sm">{profileData?.data?.data?.email}</Text>
@@ -283,7 +282,7 @@ const ProfileSettings = () => {
           miw="300px"
         >
           <Text size="lg" fw={500}>
-            {translations["Edit Info"]}
+            {translations("Edit Info")}
           </Text>
           <form
             onSubmit={profileForm.onSubmit(onSubmit)}
@@ -298,8 +297,8 @@ const ProfileSettings = () => {
             <Grid columns={10} grow>
               <Grid.Col span={{ xs: 10, lg: 2 }}>
                 <ContainedSelection
-                  label={translations["Title"]}
-                  placeholder={translations["Select"]}
+                  label={translations("Title")}
+                  placeholder={translations("Select")}
                   data={[
                     { value: "MALE", label: "Mr" },
                     { value: "FEMALE", label: "Mrs" },
@@ -312,30 +311,30 @@ const ProfileSettings = () => {
               <Grid.Col span={{ xs: 10, md: 5, lg: 4 }}>
                 <ContainedTextField
                   w={"100%"}
-                  label={translations["First Name"]}
-                  placeholder={translations["Enter your full name"]}
+                  label={translations("First Name")}
+                  placeholder={translations("Enter your full name")}
                   {...profileForm.getInputProps("firstname")}
                   withAsterisk
                 />
               </Grid.Col>
               <Grid.Col span={{ xs: 10, md: 5, lg: 4 }}>
                 <ContainedTextField
-                  label={translations["Last Name"]}
-                  placeholder={translations["Enter your full name"]}
+                  label={translations("Last Name")}
+                  placeholder={translations("Enter your full name")}
                   {...profileForm.getInputProps("lastname")}
                 />
               </Grid.Col>
               <Grid.Col span={{ xs: 10, lg: 4 }}>
                 <Text fz={12} c={"#495057"} mt={6}>
-                  {translations["Phone Number"]}
+                  {translations("Phone Number")}
                 </Text>
                 <PhoneInputWithCountrySelect
                   defaultCountry="IN"
                   international
                   countryCallingCodeEditable={false}
-                  placeholder={
-                    translations["Enter your organization phone number"]
-                  }
+                  placeholder={translations(
+                    "Enter your organization phone number",
+                  )}
                   value={profileForm?.values?.phone || null}
                   {...profileForm?.getInputProps("phone")}
                   className={styles.inputPhone}
@@ -347,8 +346,8 @@ const ProfileSettings = () => {
               <Grid.Col span={{ xs: 10, lg: 6 }}>
                 <ContainedTextField
                   disabled
-                  label={translations["Email"]}
-                  placeholder={translations["Enter your email"]}
+                  label={translations("Email")}
+                  placeholder={translations("Enter your email")}
                   value={profileData?.data?.data?.email}
                   withAsterisk
                 />
@@ -363,24 +362,24 @@ const ProfileSettings = () => {
             >
               <Stack>
                 <Title size="lg" fw={500} style={{ marginBottom: "1rem" }}>
-                  {translations["Change Password"]}
+                  {translations("Change Password")}
                 </Title>
               </Stack>
               <Flex gap={"md"} wrap="wrap" direction={"column"}>
                 <ContainedPasswordInput
                   required={isAnyPasswordFieldDirty()}
                   w={"100%"}
-                  placeholder={translations["Enter existing password"]}
+                  placeholder={translations("Enter existing password")}
                   {...profileForm.getInputProps("existingPassword")}
                 />
                 <ContainedPasswordInput
                   required={isAnyPasswordFieldDirty()}
-                  placeholder={translations["Enter new password"]}
+                  placeholder={translations("Enter new password")}
                   {...profileForm.getInputProps("newPassword")}
                 />
                 <ContainedPasswordInput
                   required={isAnyPasswordFieldDirty()}
-                  placeholder={translations["Enter new password again"]}
+                  placeholder={translations("Enter new password again")}
                   {...profileForm.getInputProps("confirmPassword")}
                 />
               </Flex>
@@ -390,7 +389,7 @@ const ProfileSettings = () => {
                 type="submit"
                 loading={isLoading}
                 size="sm"
-                title={translations["Save Changes"]}
+                title={translations("Save Changes")}
               />
             </Flex>
           </form>

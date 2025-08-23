@@ -1,9 +1,8 @@
 import { useCallback, useEffect } from "react";
 
 import { Group, Stack, Title } from "@mantine/core";
+import { useTranslations } from "next-intl";
 import { useImmerReducer } from "use-immer";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import {
   useGetShareSettings,
@@ -61,7 +60,7 @@ const ShareQR = ({
     resourceName,
     id,
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     const qrSettingsFromApi = shareSettings?.data;
     if (qrSettingsFromApi) {
@@ -89,7 +88,7 @@ const ShareQR = ({
         });
       } catch (err) {
         showErrorToast(
-          translations["Unable to save settings, Please try again later"],
+          translations("Unable to save settings, Please try again later"),
         );
       }
     }
@@ -99,7 +98,7 @@ const ShareQR = ({
     <PaperLayout style={{ ...sx }}>
       <>
         <Title order={2} mb="sm" pb="md" className={styles["heading"]}>
-          {translations["Generate & Share QR Code"]}
+          {translations("Generate & Share QR Code")}
         </Title>
 
         <Group className={styles["options-preview-container"]}>
@@ -120,7 +119,7 @@ const ShareQR = ({
               />
               <RateupButtonBlue
                 loading={shareSettingsMutation?.isPending}
-                title={translations["Save Settings"]}
+                title={translations("Save Settings")}
                 onClick={handleSaveOfSurveyShareSettings}
               />
             </Stack>

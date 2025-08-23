@@ -15,6 +15,7 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { useTranslations } from "next-intl";
 
 import { deleteTeamById, editTeam } from "../../../backend/team/team.api";
 import {
@@ -33,8 +34,6 @@ import { ContainedTextField } from "../../../components/input/ContainedInput/Con
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import Heading from "../../../components/styled/Heading/Heading";
 import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
-import useTranslations from "../../../dictionaries/useTranslation";
-import useTranslation from "../../../dictionaries/useTranslation";
 import { docsPath, SAVE_HOTKEY } from "../../../utils/constants";
 import { showErrorToast } from "../../../utils/notifications";
 
@@ -54,7 +53,7 @@ const TeamSettings = ({
   teamData: ITeamData;
 }) => {
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const teamForm = useForm({
     initialValues: {
       name: "",
@@ -63,13 +62,13 @@ const TeamSettings = ({
     validate: {
       name: (value) => {
         if (value.length < 4) {
-          return translations["Name should be min 4 characters"];
+          return translations("Name should be min 4 characters");
         }
         return null; // Validation passed
       },
       code: (value) => {
         if (value.length < 2) {
-          return translations["Code should be min 3 characters"];
+          return translations("Code should be min 3 characters");
         }
         return null; // Validation passed
       },
@@ -109,8 +108,8 @@ const TeamSettings = ({
       notifications.show({
         id: "load-data",
         loading: true,
-        title: translations["Deleting Team.."],
-        message: translations["Hold on, Your team is getting deleted."],
+        title: translations("Deleting Team.."),
+        message: translations("Hold on, Your team is getting deleted."),
         autoClose: false,
         withCloseButton: false,
       });
@@ -128,8 +127,8 @@ const TeamSettings = ({
       <Stack p={10}>
         <Group>
           <Heading
-            subtitle={translations["Team information"]}
-            label={translations["Update your team information"]}
+            subtitle={translations("Team information")}
+            label={translations("Update your team information")}
           />
           <InfoButton docUrl={`${docsPath}/teams/teamSettings`} />
         </Group>
@@ -142,11 +141,11 @@ const TeamSettings = ({
           >
             <Grid align="center">
               <Grid.Col span={{ md: 6, lg: 4 }}>
-                <Text size={"md"}>{translations["Team Name:"]} </Text>
+                <Text size={"md"}>{translations("Team Name:")} </Text>
               </Grid.Col>
               <Grid.Col span={{ md: 6, lg: 4 }}>
                 <ContainedTextField
-                  placeholder={translations["Enter team name"]}
+                  placeholder={translations("Enter team name")}
                   required
                   mt="md"
                   {...teamForm.getInputProps("name")}
@@ -159,7 +158,7 @@ const TeamSettings = ({
               </Grid.Col>
               <Grid.Col span={{ md: 6, lg: 4 }}>
                 <ContainedTextField
-                  placeholder={translations["Enter team code"]}
+                  placeholder={translations("Enter team code")}
                   required
                   mt="md"
                   {...teamForm.getInputProps("code")}
@@ -171,7 +170,7 @@ const TeamSettings = ({
                 <RateupButtonSecondary
                   type="submit"
                   loading={isLoading}
-                  title={translations["Save Changes"]}
+                  title={translations("Save Changes")}
                   color="var(--tertiary-color)"
                 />
               </Grid.Col>
@@ -181,27 +180,25 @@ const TeamSettings = ({
         </PaperLayout>
         <GoogleReviewSettings googleLink={teamData.googleLink} teamId={id} />
         <DangerZone
-          title={translations["Delete Team"]}
-          message={translations["Are you sure to delete this team?"]}
+          title={translations("Delete Team")}
+          message={translations("Are you sure to delete this team?")}
           onClick={toggle}
-          buttonText={translations["Delete Team"]}
+          buttonText={translations("Delete Team")}
         />
         <ConfirmationModal
           forDeleteFunctionality
           includeEmailConfirmation
-          deleteQuotion={
-            translations[
-              "All the associated enities including Team Staff, Survey Responses and Menus will be deleted"
-            ]
-          }
+          deleteQuotion={translations(
+            "All the associated enities including Team Staff, Survey Responses and Menus will be deleted",
+          )}
           opened={opened}
           onClose={close}
           onConfirm={(e) => {
             setDeleteTeamId(teamData?.id);
           }}
-          confirmLabel={translations["Delete"]}
-          headerLabel={translations["Are you sure to delete this team?"]}
-          headerTitle={translations["Delete Team"]}
+          confirmLabel={translations("Delete")}
+          headerLabel={translations("Are you sure to delete this team?")}
+          headerTitle={translations("Delete Team")}
         />
       </Stack>
     </>
@@ -211,7 +208,7 @@ const TeamSettings = ({
 export default TeamSettings;
 function GoogleReviewSettings({ teamId, googleLink }) {
   const theme = useMantineTheme();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       googleLink: googleLink || "",
@@ -220,7 +217,7 @@ function GoogleReviewSettings({ teamId, googleLink }) {
       googleLink: (value) =>
         value.startsWith("https://") || value === ""
           ? null
-          : translations["Please enter a valid url (https://...)"],
+          : translations("Please enter a valid url (https://...)"),
     },
   });
 
@@ -247,20 +244,20 @@ function GoogleReviewSettings({ teamId, googleLink }) {
       <Group gap={"xs"}>
         <GoogleIcon width={"1.3rem"} height={"1.3rem"} />
         <Heading
-          subtitle={translations["Google Review"]}
+          subtitle={translations("Google Review")}
           titleprops={{ c: theme.colors.dark[5] }}
         />
       </Group>
-      <Heading label={translations["Add review link & suggestions"]} />
+      <Heading label={translations("Add review link & suggestions")} />
       <PaperLayout>
         <>
           <Grid align="center">
             <Grid.Col span={{ md: 6, lg: 4 }}>
-              <Text size={"md"}>{translations["Google Reviews Link: "]}</Text>
+              <Text size={"md"}>{translations("Google Reviews Link: ")}</Text>
             </Grid.Col>
             <Grid.Col span={{ md: 6, lg: 4 }}>
               <ContainedTextField
-                placeholder={translations["Enter google url"]}
+                placeholder={translations("Enter google url")}
                 mt="md"
                 {...form.getInputProps("googleLink")}
               />
@@ -271,7 +268,7 @@ function GoogleReviewSettings({ teamId, googleLink }) {
               <RateupButtonSecondary
                 onClick={handleSave}
                 loading={editTeamMutation.isPending}
-                title={translations["Save Changes"]}
+                title={translations("Save Changes")}
                 color="var(--tertiary-color)"
               />
             </Grid.Col>
@@ -294,7 +291,7 @@ export function TagSettings({
   onlyform?: boolean;
   surveyId?: string;
 }) {
-  const { translations } = useTranslation();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: {
       tags: tags || [],
@@ -303,12 +300,12 @@ export function TagSettings({
       tags: (value) => {
         if (value.length === 0) return "Enter a tag";
         if (new Set(value).size !== value.length) {
-          return translations["Duplicate tags not allowed"];
+          return translations("Duplicate tags not allowed");
         }
         if (value.filter((tag) => tag.includes(";")).length > 0) {
-          return translations[
-            "tags can only contain _ or - or alphanumeric characters"
-          ];
+          return translations(
+            "tags can only contain _ or - or alphanumeric characters",
+          );
         }
       },
     },
@@ -336,14 +333,14 @@ export function TagSettings({
     <Stack>
       {!onlyform && (
         <Heading
-          subtitle={translations["URL Tagger"]}
-          label={translations["Add tags to your team"]}
+          subtitle={translations("URL Tagger")}
+          label={translations("Add tags to your team")}
         />
       )}
       <PaperLayout>
         <Stack align="center">
           <Title order={4} mr={"auto"}>
-            {translations["Add Tags"]}
+            {translations("Add Tags")}
           </Title>
           <Stack gap={0} w={"100%"}>
             <TagsInput
@@ -353,13 +350,13 @@ export function TagSettings({
               onChange={(values) => form.setValues({ tags: values })}
             />
             <Text size="xs">
-              {translations["press"]}{" "}
-              <Kbd size="xs">{translations["Enter"]}</Kbd>{" "}
-              {translations["to add multiple tags"]}
+              {translations("press")}{" "}
+              <Kbd size="xs">{translations("Enter")}</Kbd>{" "}
+              {translations("to add multiple tags")}
             </Text>
           </Stack>
           <RateupButtonBlue
-            title={translations["Save"]}
+            title={translations("Save")}
             onClick={handleTagAdd}
             variant="outline"
           />

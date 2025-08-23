@@ -7,8 +7,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
 import SelectedLanguageContext from "../../../../../context/SelectedLanguage";
@@ -56,7 +55,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
       : sampleChoices;
 
   const data = options?.map((op) => op?.value);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (response) {
       setSelectedOp(response?.map((r) => r?.value));
@@ -82,7 +81,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
         data={data}
         value={selectedOp}
         onChange={handleSelectedOp}
-        placeholder={translations["Select one or more / type in to search"]}
+        placeholder={translations("Select one or more / type in to search")}
         comboboxProps={{
           middlewares: {
             flip: false,
@@ -115,7 +114,7 @@ export function DDMSForm({ previewChoices }: MCQFormProps) {
       value={selectedOp}
       data={data}
       onChange={handleSelectedOp}
-      placeholder={translations["Select one or more"]}
+      placeholder={translations("Select one or more")}
       portalProps={{
         target: takeSurveyLayoutWebDomNodeRef.current,
       }}

@@ -21,11 +21,11 @@ import { LengthTracker } from "../../../input/LengthTracker";
 import "react-phone-number-input/style.css";
 
 import { UseFormReturnType } from "@mantine/form";
+import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
 import { FlowSelector } from "../../flows/FlowSelector/FlowSelector";
@@ -34,7 +34,7 @@ import { templateSchema } from "../Schema/templateSchema";
 import styles from "./ButtonInput.module.css";
 
 const ButtonInput = ({ form, index, deleteButton, data }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   let { data: flows } = useWaFlowsFromDb(
     data.type === WHATSAPP_BUTTON_TYPE.FLOW,
   );
@@ -78,7 +78,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Button text"]}
+                {translations("Button text")}
               </Text>
             }
             rightSection={
@@ -106,20 +106,20 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Type of action"]}
+                {translations("Type of action")}
               </Text>
             }
             value={
               form?.values?.buttons?.[index]?.example
-                ? translations["RateUp Web Survey"]
-                : translations["Visit a Website"]
+                ? translations("RateUp Web Survey")
+                : translations("Visit a Website")
             }
             readOnly
           />
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Button text"]}
+                {translations("Button text")}
               </Text>
             }
             rightSection={
@@ -137,7 +137,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
               searchable
               label={
                 <Text fz={14} fw={500}>
-                  {translations["Web Survey"]}
+                  {translations("Web Survey")}
                 </Text>
               }
               comboboxProps={{ position: "top" }}
@@ -148,7 +148,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             <ContainedTextField
               label={
                 <Text fz={14} fw={500}>
-                  {translations["Website Url"]}
+                  {translations("Website Url")}
                 </Text>
               }
               rightSection={
@@ -179,7 +179,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             <ContainedTextField
               label={
                 <Text fz={14} fw={500}>
-                  {translations["Type of action"]}
+                  {translations("Type of action")}
                 </Text>
               }
               value={"Call phone number"}
@@ -188,7 +188,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             <ContainedTextField
               label={
                 <Text fz={14} fw={500}>
-                  {translations["Button text"]}
+                  {translations("Button text")}
                 </Text>
               }
               rightSection={
@@ -201,12 +201,12 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
               {...form.getInputProps(`buttons.${index}.text`)}
             />
             <Box flex={1}>
-              <Text>{translations["Phone Number"]}</Text>
+              <Text>{translations("Phone Number")}</Text>
               <PhoneInputWithCountrySelect
                 defaultCountry="IN"
                 international
                 countryCallingCodeEditable={false}
-                placeholder={translations["Enter phone number"]}
+                placeholder={translations("Enter phone number")}
                 value={form?.values?.phone || null}
                 {...form.getInputProps(`buttons.${index}.phone_number`)}
                 className={
@@ -235,7 +235,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Type of action"]}
+                {translations("Type of action")}
               </Text>
             }
             value={"Copy offer code"}
@@ -244,7 +244,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Button text"]}
+                {translations("Button text")}
               </Text>
             }
             value={"Copy offer code"}
@@ -254,10 +254,10 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Offer code"]}
+                {translations("Offer code")}
               </Text>
             }
-            placeholder={translations["Enter sample code"]}
+            placeholder={translations("Enter sample code")}
             rightSection={
               <LengthTracker
                 length={form.values?.buttons?.[index]?.example?.length}
@@ -283,7 +283,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Type of action"]}
+                {translations("Type of action")}
               </Text>
             }
             value={"Open a Flow"}
@@ -292,7 +292,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Button text"]}
+                {translations("Button text")}
               </Text>
             }
             rightSection={
@@ -311,7 +311,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             searchable
             label={
               <Text fz={14} fw={500}>
-                {translations["Flow"]}
+                {translations("Flow")}
               </Text>
             }
             comboboxProps={{ position: "top" }}
@@ -332,7 +332,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             <ContainedTextField
               label={
                 <Text fz={14} fw={500}>
-                  {translations["Type of action"]}
+                  {translations("Type of action")}
                 </Text>
               }
               value={"Open order details"}
@@ -341,7 +341,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             <ContainedTextField
               label={
                 <Text fz={14} fw={500}>
-                  {translations["Button text"]}
+                  {translations("Button text")}
                 </Text>
               }
               rightSection={
@@ -377,7 +377,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Type of action"]}
+                {translations("Type of action")}
               </Text>
             }
             value={"View catalog"}
@@ -386,7 +386,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Button text"]}
+                {translations("Button text")}
               </Text>
             }
             {...form.getInputProps(`buttons.${index}.text`)}
@@ -424,7 +424,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             <ContainedTextField
               label={
                 <Text fz={14} fw={500}>
-                  {translations["Type of action"]}
+                  {translations("Type of action")}
                 </Text>
               }
               value={"View Catalog items"}
@@ -433,7 +433,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             <ContainedTextField
               label={
                 <Text fz={14} fw={500}>
-                  {translations["Button text"]}
+                  {translations("Button text")}
                 </Text>
               }
               {...form.getInputProps(`buttons.${index}.text`)}
@@ -532,7 +532,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Type of action"]}
+                {translations("Type of action")}
               </Text>
             }
             value={"View Single Product"}
@@ -541,7 +541,7 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
-                {translations["Button text"]}
+                {translations("Button text")}
               </Text>
             }
             {...form.getInputProps(`buttons.${index}.text`)}

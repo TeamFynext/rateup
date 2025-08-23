@@ -20,8 +20,7 @@ import {
 import { IconArrowLeft, IconCheck, IconDeselect } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { motion, useAnimate } from "motion/react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useSurveyThemeData } from "../../../../../../context/SurveyThemeContext";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
@@ -71,7 +70,7 @@ function CustomMultiselectForMobile({
       setSearch("");
     },
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleValueSelect = async (val) => {
     const valuesArr = value;
     const newValuesArr = value.includes(val)
@@ -236,7 +235,7 @@ function CustomMultiselectForMobile({
                 className={cxCommon("search-input")}
                 value={search}
                 onChange={(event) => setSearch(event.currentTarget.value)}
-                placeholder={translations["Type in to search"]}
+                placeholder={translations("Type in to search")}
               />
             </Group>
 
@@ -247,7 +246,7 @@ function CustomMultiselectForMobile({
                     options
                   ) : (
                     <Combobox.Empty>
-                      {translations["Nothing found"]}
+                      {translations("Nothing found")}
                     </Combobox.Empty>
                   )}
                 </Stack>
@@ -268,7 +267,7 @@ function CustomMultiselectForMobile({
                 onClick={() => setIsOptionSelectionDivVisible(false)}
                 color={themePrimaryColor}
               >
-                {translations["Done"]}
+                {translations("Done")}
               </Button>
             </Group>
           </Stack>

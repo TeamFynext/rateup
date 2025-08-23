@@ -13,8 +13,7 @@ import {
 } from "@mantine/core";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { IconArrowRight, IconSearch } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useTriggeringDownload,
@@ -58,7 +57,7 @@ export const UnsplashModal = ({
     root: lastImageRef?.current,
     threshold: 1,
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (entry?.isIntersecting) {
       unsplashPhotosList?.fetchNextPage();
@@ -73,7 +72,7 @@ export const UnsplashModal = ({
 
   return (
     <SimpleModalLayout
-      title={translations["Unsplash Images"]}
+      title={translations("Unsplash Images")}
       onClose={() => {
         onclose();
         setSearchQuery("");
@@ -89,7 +88,7 @@ export const UnsplashModal = ({
         />
         {unsplashPhotosList?.isError && (
           <Text c={"red"}>
-            {translations["Currently Unsplash Is Unavailable"]}
+            {translations("Currently Unsplash Is Unavailable")}
           </Text>
         )}
         {!unsplashPhotosList?.isError && (
@@ -124,7 +123,7 @@ export const UnsplashModal = ({
           mx={"lg"}
         >
           {_photoList?.length === 0 ? (
-            <Text>{translations["Images Not Found"]}</Text>
+            <Text>{translations("Images Not Found")}</Text>
           ) : (
             _photoList?.map((photo, i) => (
               <UnsplashPhoto
@@ -168,7 +167,7 @@ const UnsplashPhoto = ({
     setSearchQuery("");
     close();
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Card
       shadow="sm"
@@ -181,7 +180,7 @@ const UnsplashPhoto = ({
         <Image
           src={regular}
           h={200}
-          alt={translations["image from unsplash"]}
+          alt={translations("image from unsplash")}
         />
       </Card.Section>
     </Card>

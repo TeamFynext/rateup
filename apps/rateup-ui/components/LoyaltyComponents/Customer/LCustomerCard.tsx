@@ -12,11 +12,11 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCircle1, IconDotsVertical, IconTrash } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { useDeleteLoyaltyCustomerMutation } from "@/backend/loyalty/customer/customer.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 
 const LCustomerCard = ({ customer }) => {
   const router = useRouter();
@@ -56,7 +56,7 @@ export default LCustomerCard;
 
 export const CustomerMenu = ({ row }) => {
   const [opened, { open, close }] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const deleteMut = useDeleteLoyaltyCustomerMutation();
   const handleDelete = () => {
     deleteMut.mutate(row.id, {
@@ -82,17 +82,17 @@ export const CustomerMenu = ({ row }) => {
             open();
           }}
         >
-          {translations["Delete"]}
+          {translations("Delete")}
         </Menu.Item>
       </Menu.Dropdown>
       <ConfirmationModal
-        confirmLabel={translations["Delete"]}
-        headerTitle={translations["Delete"]}
-        headerLabel={translations["Are you sure to delete this"]}
+        confirmLabel={translations("Delete")}
+        headerTitle={translations("Delete")}
+        headerLabel={translations("Are you sure to delete this")}
         onClose={close}
         opened={opened}
         onConfirm={() => handleDelete()}
-        closeLabel={translations["Cancel"]}
+        closeLabel={translations("Cancel")}
         forDeleteFunctionality
         deleteQuotion={""}
         key={row?.id}

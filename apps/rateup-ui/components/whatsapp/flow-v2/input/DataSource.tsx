@@ -16,6 +16,7 @@ import { useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { QuestionType2 } from "@/types/enums";
@@ -27,7 +28,6 @@ import {
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import { LengthTracker } from "@/components/input/LengthTracker";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 import {
   DEFAULT_IMAGE_BASE64_START,
   MAX_DESCRIPTION_COUNT,
@@ -99,7 +99,7 @@ export function DataSourceInput(props) {
         },
     validate: zod4Resolver(choiceSchema),
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleAddChoice = async () => {
     const { hasErrors } = choiceForm.validate();
     if (hasErrors) return;
@@ -180,8 +180,8 @@ export function DataSourceInput(props) {
           <Stack style={{ width: "100%", flexGrow: 1 }} gap={4}>
             <Group>
               <ContainedTextField
-                placeholder={translations["Enter title here"]}
-                label={translations["Title"]}
+                placeholder={translations("Enter title here")}
+                label={translations("Title")}
                 withAsterisk
                 w={"92%"}
                 rightSection={
@@ -209,8 +209,8 @@ export function DataSourceInput(props) {
             {!props?.onlyTitle && (
               <>
                 <ContainedTextField
-                  placeholder={translations["Enter description here"]}
-                  label={translations["Description"]}
+                  placeholder={translations("Enter description here")}
+                  label={translations("Description")}
                   rightSection={
                     MAX_DESCRIPTION_COUNT && (
                       <LengthTracker
@@ -252,7 +252,7 @@ export function DataSourceInput(props) {
             )}
           </Stack>
           <RateupButtonSecondary
-            title={translations["Add choice"]}
+            title={translations("Add choice")}
             size="sm"
             variant={"outline"}
             leftIcon={<IconPlus size="1rem" />}
@@ -317,7 +317,7 @@ function Choice({
     useDisclosure(false);
   const resetRef = useRef<() => void>(null);
   const choiceResetRef = useRef<() => void>(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const choiceSchema = z.object(
     onlyTitle
       ? { title: z.string() }
@@ -389,7 +389,7 @@ function Choice({
       choiceForm.setFieldValue("image", base64String);
     } catch (error) {
       showErrorToast(
-        translations["Error converting file to Base64:"] +
+        translations("Error converting file to Base64:") +
           JSON.stringify(error),
         "file-converting",
       );
@@ -413,18 +413,18 @@ function Choice({
         <Box style={{ flexGrow: 1 }}>
           <>
             <Text>
-              {translations["Title: "]}
+              {translations("Title: ")}
               {choice?.title}
             </Text>
             {choice?.description && (
               <Text>
-                {translations["Description: "]}
+                {translations("Description: ")}
                 {choice?.description}
               </Text>
             )}
             {choice?.metadata && (
               <Text>
-                {translations["Metadata: "]}
+                {translations("Metadata: ")}
                 {choice?.metadata}
               </Text>
             )}
@@ -452,14 +452,14 @@ function Choice({
       <FormModalLayout
         opened={openedEditModal}
         onClose={closeEditModal}
-        title={translations["Edit Choice"]}
+        title={translations("Edit Choice")}
         centered
       >
         <Stack justify="center">
           <Stack style={{ flexGrow: 1 }} gap={4}>
             <ContainedTextField
-              placeholder={translations["Enter title here"]}
-              label={translations["Title"]}
+              placeholder={translations("Enter title here")}
+              label={translations("Title")}
               withAsterisk
               rightSection={
                 maxCharCount && (
@@ -475,8 +475,8 @@ function Choice({
               <>
                 {" "}
                 <ContainedTextField
-                  placeholder={translations["Enter description here"]}
-                  label={translations["Description"]}
+                  placeholder={translations("Enter description here")}
+                  label={translations("Description")}
                   rightSection={
                     MAX_DESCRIPTION_COUNT && (
                       <LengthTracker
@@ -490,8 +490,8 @@ function Choice({
                   {...choiceForm.getInputProps("description")}
                 />
                 <ContainedTextField
-                  placeholder={translations["Enter metadata here"]}
-                  label={translations["Metadata"]}
+                  placeholder={translations("Enter metadata here")}
+                  label={translations("Metadata")}
                   rightSection={
                     MAX_METADATA_COUNT && (
                       <LengthTracker
@@ -515,7 +515,7 @@ function Choice({
             )}
           </Stack>
           <RateupButtonBlue
-            title={translations["Update Choice"]}
+            title={translations("Update Choice")}
             onClick={handleEditChoice}
           />
         </Stack>

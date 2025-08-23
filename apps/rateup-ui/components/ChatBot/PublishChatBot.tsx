@@ -9,8 +9,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useCreateChatbot,
@@ -37,18 +36,18 @@ const PublishChatbot = (selectedChatbotId) => {
   const [opened, { toggle }] = useDisclosure(false);
   const [isActive, setIsActive] = useState(false);
   const queryClient = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const generateUrl = () => {
     showLoadingToast(
-      translations["Hold on...Url is getting generated"],
+      translations("Hold on...Url is getting generated"),
       "short-url",
       true,
-      translations["Generating"],
+      translations("Generating"),
     );
     createChatbotUrlMutate.mutate(null, {
       onSuccess: () => {
         showSuccessToast(
-          translations["Url generated Successfully"],
+          translations("Url generated Successfully"),
           "short-url",
           <IconCheck />,
           true,
@@ -56,7 +55,7 @@ const PublishChatbot = (selectedChatbotId) => {
       },
       onError: () => {
         showErrorToast(
-          translations["Error generating url"],
+          translations("Error generating url"),
           "short-url",
           <IconX />,
           true,
@@ -67,11 +66,11 @@ const PublishChatbot = (selectedChatbotId) => {
 
   const handleChatbotStatus = () => {
     const loadingMessage = isActive
-      ? translations["Hold On..Deactivating public page"]
-      : translations["Hold On..Activating public page"];
+      ? translations("Hold On..Deactivating public page")
+      : translations("Hold On..Activating public page");
     const loadingTitle = isActive
-      ? translations["Deactivating"]
-      : translations["Activating"];
+      ? translations("Deactivating")
+      : translations("Activating");
     showLoadingToast(loadingMessage, "chatbot-page", true, loadingTitle);
     updateChatbotMutate.mutate(
       {
@@ -89,8 +88,8 @@ const PublishChatbot = (selectedChatbotId) => {
           });
           showSuccessToast(
             isActive
-              ? translations["Page Deactivated Succesfully"]
-              : translations["Page Activated Succesfully"],
+              ? translations("Page Deactivated Succesfully")
+              : translations("Page Activated Succesfully"),
             "chatbot-page",
             <IconCheck />,
             true,
@@ -98,7 +97,7 @@ const PublishChatbot = (selectedChatbotId) => {
         },
         onError: () => {
           showErrorToast(
-            translations["something went wrong"],
+            translations("something went wrong"),
             "chatbot-page",
             <IconX />,
             true,
@@ -127,10 +126,10 @@ const PublishChatbot = (selectedChatbotId) => {
           <RateupButtonSecondary
             title={
               chatbotDetails?.shortUrlId
-                ? translations["Show public url"]
+                ? translations("Show public url")
                 : createChatbotUrlMutate.isPending
-                  ? translations["Generating.."]
-                  : translations["Generate Public Url"]
+                  ? translations("Generating..")
+                  : translations("Generate Public Url")
             }
             onClick={chatbotDetails?.shortUrlId ? toggle : generateUrl}
             rightIcon={
@@ -146,7 +145,7 @@ const PublishChatbot = (selectedChatbotId) => {
           {chatbotDetails ? (
             <>
               <Group>
-                <Text>{translations["Current Status:"]}</Text>
+                <Text>{translations("Current Status:")}</Text>
                 <Badge color={isActive ? "green" : "red"}>
                   {chatbotDetails?.publicPageStatus}
                 </Badge>
@@ -155,8 +154,8 @@ const PublishChatbot = (selectedChatbotId) => {
                 color={isActive ? "red" : "var(--tertiary-color)"}
                 title={
                   isActive
-                    ? translations["Deactivate"]
-                    : translations["Activate"]
+                    ? translations("Deactivate")
+                    : translations("Activate")
                 }
                 onClick={handleChatbotStatus}
               />

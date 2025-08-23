@@ -28,6 +28,7 @@ import {
   IconTicket,
   IconUserShare,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import {
   MessagePlatform,
@@ -55,7 +56,6 @@ import CreateTicketModal, {
   CreateTicketCard,
 } from "@/components/Tickets/CreateTicketModal";
 import { useUser } from "@/context/UserContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { useChatbotStore } from "@/store/chatbot.store";
@@ -187,12 +187,12 @@ export default function WaInboxChatDisplayHeader({
 }
 
 export const ContactEdit = ({ contact, opened, close }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack>
       <FormModalLayout
         opened={opened}
-        title={translations["Edit Contact"]}
+        title={translations("Edit Contact")}
         onClose={close}
         centered
         noCustomHeader

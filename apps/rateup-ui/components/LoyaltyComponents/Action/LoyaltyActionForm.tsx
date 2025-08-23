@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { LoyaltyActionType, TemplateType } from "@/types/enums";
@@ -35,7 +36,6 @@ import WaTemplateSelector from "@/components/input/WaTemplateSelector";
 import WaTextEditor from "@/components/RichTextEditor/waTextEditor";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { FlowSelector } from "@/components/whatsapp/flows/FlowSelector/FlowSelector";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import {
   ActionRewadTypes,
@@ -61,32 +61,31 @@ const LoyaltyActionForm = ({
 
   const router = useRouter();
 
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const schema = z
     .object({
       type: z
         .string()
         .trim()
-        .min(1, { message: translations["Select the action type"] }),
+        .min(1, { message: translations("Select the action type") }),
       name: z
         .string()
         .trim()
-        .min(1, { message: translations["Name cannot be blank"] }),
+        .min(1, { message: translations("Name cannot be blank") }),
       action_id: z
         .string()
         .trim()
-        .min(1, { message: translations["Action Id cannot be blank"] })
+        .min(1, { message: translations("Action Id cannot be blank") })
         .regex(/^[a-zA-Z0-9_]+$/, {
-          message:
-            translations[
-              "Action Id can only have alphanumerics and underscores"
-            ],
+          message: translations(
+            "Action Id can only have alphanumerics and underscores",
+          ),
         }),
       description: z
         .string()
         .trim()
-        .min(1, { message: translations["Description required"] }),
+        .min(1, { message: translations("Description required") }),
       message: z.object({
         message: z.any(),
         forwardMessage: z.any(),
@@ -103,10 +102,10 @@ const LoyaltyActionForm = ({
       waTemplateId: z.string().optional().nullable(),
       refereeWaTemplateId: z.string().optional().nullable(),
       startDate: z.date().refine((date) => date !== null, {
-        message: translations["Start date cannot be empty"],
+        message: translations("Start date cannot be empty"),
       }),
       endDate: z.date().refine((date) => date !== null, {
-        message: translations["End date cannot be empty"],
+        message: translations("End date cannot be empty"),
       }),
       isExistingUserReferralAllowed: z.boolean().optional().nullable(),
       actionRewardType: z.nativeEnum(ActionRewadTypes),
@@ -123,7 +122,7 @@ const LoyaltyActionForm = ({
         ctx.issues.push({
           path: ["action_id"],
           code: "custom",
-          message: translations["Action Id already taken"],
+          message: translations("Action Id already taken"),
           input: "",
         });
       }
@@ -134,7 +133,7 @@ const LoyaltyActionForm = ({
         ctx.issues.push({
           path: ["points"],
           code: "custom",
-          message: translations["Points should be minimum of one"],
+          message: translations("Points should be minimum of one"),
           input: "",
         });
       }
@@ -146,7 +145,7 @@ const LoyaltyActionForm = ({
         ctx.issues.push({
           path: ["refereePoints"],
           code: "custom",
-          message: translations["Points should be minimum of one"],
+          message: translations("Points should be minimum of one"),
           input: "",
         });
       }
@@ -154,7 +153,7 @@ const LoyaltyActionForm = ({
         ctx.issues.push({
           path: ["endDate"],
           code: "custom",
-          message: translations["End date must be after start date"],
+          message: translations("End date must be after start date"),
           input: "",
         });
       }
@@ -163,14 +162,14 @@ const LoyaltyActionForm = ({
           ctx.issues.push({
             path: ["message.message"],
             code: "custom",
-            message: translations["Message cannot be blank"],
+            message: translations("Message cannot be blank"),
             input: "",
           });
         if (!values.message?.forwardMessage) {
           ctx.issues.push({
             path: ["message.forwardMessage"],
             code: "custom",
-            message: translations["Forward Message cannot be blank"],
+            message: translations("Forward Message cannot be blank"),
             input: "",
           });
         }
@@ -183,7 +182,7 @@ const LoyaltyActionForm = ({
           input: "",
           path: ["rewardId"],
           code: "custom",
-          message: translations["Select the reward"],
+          message: translations("Select the reward"),
         });
       }
       if (
@@ -193,7 +192,7 @@ const LoyaltyActionForm = ({
         ctx.issues.push({
           path: ["refereeRewardId"],
           code: "custom",
-          message: translations["Select the reward"],
+          message: translations("Select the reward"),
           input: "",
         });
       }
@@ -307,7 +306,7 @@ const LoyaltyActionForm = ({
       form.values.action_id &&
       existingActionIds.includes(form.values.action_id)
     ) {
-      form.setFieldError("action_id", translations["Action Id already taken"]);
+      form.setFieldError("action_id", translations("Action Id already taken"));
     }
   }, [form.values.action_id]);
 
@@ -317,7 +316,7 @@ const LoyaltyActionForm = ({
         <Title order={3}>{title}</Title>
         <Group>
           <RateupButtonSecondary
-            title={translations["Cancel"]}
+            title={translations("Cancel")}
             onClick={() => {
               form.reset();
               router.push("/dashboard/loyalty/actions");
@@ -341,27 +340,27 @@ const LoyaltyActionForm = ({
                 isReferralAvailable={isReferralAvailable}
               />
               <ContainedTextField
-                label={translations["Action Id"]}
+                label={translations("Action Id")}
                 {...form.getInputProps("action_id")}
                 disabled={action && action.action_id?.length}
               />
               <ContainedTextField
-                label={translations["Name"]}
+                label={translations("Name")}
                 {...form.getInputProps("name")}
               />
               <Group>
                 <ContainedDateInput
-                  label={translations["Start Date"]}
+                  label={translations("Start Date")}
                   {...form.getInputProps("startDate")}
                 />{" "}
                 -
                 <ContainedDateInput
-                  label={translations["End Date"]}
+                  label={translations("End Date")}
                   {...form.getInputProps("endDate")}
                 />
               </Group>
               <ContainedTextArea
-                label={translations["Description"]}
+                label={translations("Description")}
                 {...form.getInputProps("description")}
                 autosize
                 minRows={3}
@@ -382,9 +381,9 @@ const LoyaltyActionForm = ({
                   <Checkbox
                     label={
                       isLReferralAction(form.values.type)
-                        ? translations["Amount Based"] +
-                          translations["for referrer"]
-                        : translations["Amount Based"]
+                        ? translations("Amount Based") +
+                          translations("for referrer")
+                        : translations("Amount Based")
                     }
                     {...form.getInputProps("isAmountBased")}
                     checked={form.values.isAmountBased}
@@ -394,7 +393,7 @@ const LoyaltyActionForm = ({
                   />
                   <Checkbox
                     label={
-                      translations["Amount Based"] + translations["for friends"]
+                      translations("Amount Based") + translations("for friends")
                     }
                     {...form.getInputProps("isAmountBasedForReferee")}
                     checked={form.values.isAmountBasedForReferee}
@@ -407,7 +406,7 @@ const LoyaltyActionForm = ({
                   />
                 </Stack>
                 <ContainedNumberInput
-                  label={translations["Amount"]}
+                  label={translations("Amount")}
                   {...form.getInputProps("amount")}
                   allowNegative={false}
                   display={
@@ -438,22 +437,22 @@ const LoyaltyActionForm = ({
                   {form.values.actionRewardType === ActionRewadTypes.Reward ? (
                     <LRSelector
                       {...form.getInputProps("rewardId")}
-                      label={translations["Reward"]}
+                      label={translations("Reward")}
                     />
                   ) : (
                     <>
                       <ContainedNumberInput
                         label={
                           form.values.isAmountBased
-                            ? translations["Points per amount"]
-                            : translations["Points"]
+                            ? translations("Points per amount")
+                            : translations("Points")
                         }
                         {...form.getInputProps("points")}
                         allowDecimal={false}
                         allowNegative={false}
                       />
                       <ContainedNumberInput
-                        label={translations["Max Points Per Transaction"]}
+                        label={translations("Max Points Per Transaction")}
                         {...form.getInputProps("maxPoints")}
                         allowDecimal={false}
                         allowNegative={false}
@@ -465,14 +464,14 @@ const LoyaltyActionForm = ({
                     templateType={TemplateType.LOYALTY}
                     label={
                       isLReferralAction(form.values.type)
-                        ? translations["whatsApp Template"] +
-                          translations["for referrer"] +
-                          translations["(to send after action)"]
-                        : translations["whatsApp Template"] +
-                          translations["(to send after action)"]
+                        ? translations("whatsApp Template") +
+                          translations("for referrer") +
+                          translations("(to send after action)")
+                        : translations("whatsApp Template") +
+                          translations("(to send after action)")
                     }
-                    description={`Dynamic variable {{1}} - ${translations["customer name"]}, {{2}} - 
-                      ${translations["current earned points"]} ${isLReferralAction(form.values.type) ? `,{{3}} - ${translations["Friend name"]}, {{4}} - ${translations["Friend phone number"]}` : ""} `}
+                    description={`Dynamic variable {{1}} - ${translations("customer name")}, {{2}} - 
+                      ${translations("current earned points")} ${isLReferralAction(form.values.type) ? `,{{3}} - ${translations("Friend name")}, {{4}} - ${translations("Friend phone number")}` : ""} `}
                     {...form.getInputProps("waTemplateId")}
                   />
                 </Stack>
@@ -498,18 +497,18 @@ const LoyaltyActionForm = ({
                       ActionRewadTypes.Reward ? (
                         <LRSelector
                           {...form.getInputProps("refereeRewardId")}
-                          label={translations["Reward"]}
+                          label={translations("Reward")}
                         />
                       ) : (
                         <>
                           <ContainedNumberInput
-                            label={translations["Points"]}
+                            label={translations("Points")}
                             {...form.getInputProps("refereePoints")}
                             allowDecimal={false}
                             allowNegative={false}
                           />
                           <ContainedNumberInput
-                            label={translations["Max Points Per Transaction"]}
+                            label={translations("Max Points Per Transaction")}
                             {...form.getInputProps("maxPointsForReferee")}
                             allowDecimal={false}
                             allowNegative={false}
@@ -523,20 +522,20 @@ const LoyaltyActionForm = ({
                         </>
                       )}
                       <Checkbox
-                        label={
-                          translations["Referral allowed for existing customer"]
-                        }
+                        label={translations(
+                          "Referral allowed for existing customer",
+                        )}
                         {...form.getInputProps("isExistingUserReferralAllowed")}
                         checked={form.values.isExistingUserReferralAllowed}
                       />
                       <WaTemplateSelector
                         templateType={TemplateType.LOYALTY}
                         label={
-                          translations["whatsApp Template"] +
-                          translations["for friends"] +
-                          translations["(to send after action)"]
+                          translations("whatsApp Template") +
+                          translations("for friends") +
+                          translations("(to send after action)")
                         }
-                        description={`Dynamic variable {{1}} - ${translations["customer name"]}, {{2}} - ${translations["current earned points"]}`}
+                        description={`Dynamic variable {{1}} - ${translations("customer name")}, {{2}} - ${translations("current earned points")}`}
                         {...form.getInputProps("refereeWaTemplateId")}
                       />
                     </Stack>
@@ -548,13 +547,11 @@ const LoyaltyActionForm = ({
             {isLReferralAction(form.values.type) && (
               <SimpleGrid cols={2}>
                 <Stack gap={0}>
-                  <Text size="sm">{translations["Referral Message"]}</Text>
+                  <Text size="sm">{translations("Referral Message")}</Text>
                   <Text size="xs" c={"dimmed"}>
-                    {
-                      translations[
-                        "Used in whatsapp message to send for referral"
-                      ]
-                    }
+                    {translations(
+                      "Used in whatsapp message to send for referral",
+                    )}
                   </Text>
                   <WaTextEditor
                     handleInputChange={(value) => {
@@ -566,19 +563,17 @@ const LoyaltyActionForm = ({
                 </Stack>
                 <Stack gap={0}>
                   <Text size="sm">
-                    {
-                      translations[
-                        "Referral forwarding Message with referral code"
-                      ]
-                    }
+                    {translations(
+                      "Referral forwarding Message with referral code",
+                    )}
                   </Text>
                   <Text size="xs" c={"dimmed"}>
-                    {translations[
-                      "Used in whatsapp message for forwarding to friends"
-                    ] +
-                      translations[
-                        "Use {{code}} to replace with referral code"
-                      ]}
+                    {translations(
+                      "Used in whatsapp message for forwarding to friends",
+                    ) +
+                      translations(
+                        "Use {{code}} to replace with referral code",
+                      )}
                   </Text>
                   <WaTextEditor
                     handleInputChange={(value) => {

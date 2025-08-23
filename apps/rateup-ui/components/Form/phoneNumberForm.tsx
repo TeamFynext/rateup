@@ -12,11 +12,10 @@ import styles from "./AuthForm.module.css";
 import "react-phone-number-input/style.css";
 
 import { IconChevronLeft } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 const PhoneNumberForm = ({ form, setSignUpTypeValue, isLoading, title }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <Box mb={"md"}>
@@ -31,7 +30,7 @@ const PhoneNumberForm = ({ form, setSignUpTypeValue, isLoading, title }) => {
             defaultCountry="IN"
             international
             countryCallingCodeEditable={false}
-            placeholder={translations["Enter phone number"]}
+            placeholder={translations("Enter phone number")}
             value={form?.values?.phone || null}
             {...form?.getInputProps("phoneNumber")}
             className={styles.inputPhone}
@@ -49,7 +48,7 @@ const PhoneNumberForm = ({ form, setSignUpTypeValue, isLoading, title }) => {
       />
       <RateupButtonSecondary
         type="button"
-        title={translations["Go Back"]}
+        title={translations("Go Back")}
         onClick={() => setSignUpTypeValue("")}
         className={styles["login-signup-form-submit-btn"]}
         leftIcon={<IconChevronLeft size={18} />}

@@ -19,6 +19,7 @@ import {
   createColumnHelper,
   SortingState,
 } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 
 import { ContactGroupType, LoyaltyActionType } from "@/types/enums";
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
@@ -42,7 +43,6 @@ import LCustomerPage from "@/components/LoyaltyComponents/Customer/LCustomerPage
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TabsListComp from "@/components/Survey/Tabs/TabsList";
 import ContactTable from "@/components/Table/ContactTable";
-import useTranslations from "@/dictionaries/useTranslation";
 import { formatDate } from "@/utils/dateTime";
 import { showLoadingToast } from "@/utils/notifications";
 
@@ -76,7 +76,7 @@ export default function Contacts() {
   } = useContactGroup(ContactGroupType.LOYALTY);
   const { isPending, data: cTags } = useGetContactTags();
   const updateContactTagsMutation = useUpdateContactTagsMutation();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
       ? contactGroupData
@@ -99,7 +99,7 @@ export default function Contacts() {
               leftSection={<IconSearch size="17.6px" stroke={1.5} />}
               radius="xl"
               size="md"
-              placeholder={`${translations["Search"]} ${activeTab}`}
+              placeholder={`${translations("Search")} ${activeTab}`}
               rightSectionWidth={60}
               defaultValue={searchTerm}
               onChange={(event) => setSearchTerm(event.currentTarget.value)}
@@ -152,27 +152,25 @@ export default function Contacts() {
             <PaperLayout p="xl">
               <Stack align="start">
                 <ContainedTagInput
-                  placeholder={translations["Type field name and press enter"]}
-                  label={
-                    translations[
-                      "Enter the Field name you want to add along with the existing fields in Csv Import."
-                    ]
-                  }
+                  placeholder={translations("Type field name and press enter")}
+                  label={translations(
+                    "Enter the Field name you want to add along with the existing fields in Csv Import.",
+                  )}
                   w={"25rem"}
                   onChange={setContactTags}
                   defaultValue={cTags?.contactTags}
                 />
                 <RateupButtonPrimary
-                  title={translations["Update"]}
+                  title={translations("Update")}
                   onClick={() => {
                     updateContactTagsMutation.mutate({
                       tags: contactTags,
                     });
                     showLoadingToast(
-                      translations["Contact tags updated successfully"],
+                      translations("Contact tags updated successfully"),
                       "c-tags",
                       true,
-                      translations["Loading"],
+                      translations("Loading"),
                     );
                   }}
                 />
@@ -186,7 +184,7 @@ export default function Contacts() {
 }
 
 export const FilterSelect = ({ setFilterByTag, filterByTag, contactArray }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <ContainedMultiSelect
       data={[{ group: "Groups", items: contactArray ?? [] }]}
@@ -199,7 +197,7 @@ export const FilterSelect = ({ setFilterByTag, filterByTag, contactArray }) => {
           return [...prev, { id: "filterGroupName", value: e.join(",") }];
         });
       }}
-      placeholder={translations["Filter contacts"]}
+      placeholder={translations("Filter contacts")}
     />
   );
 };
@@ -216,7 +214,7 @@ export function generateColumns(
   setCustomerRedeems,
 ) {
   const columnHelper = createColumnHelper<LoyaltyCustomerTable>();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const defaultColumns = useMemo(
     () => [
@@ -249,7 +247,7 @@ export function generateColumns(
       // },
       columnHelper.accessor((row) => row, {
         id: "customerInfo",
-        header: () => <span>{translations["Customer Info"]}</span>,
+        header: () => <span>{translations("Customer Info")}</span>,
         cell: ({ getValue }) => {
           return (
             <Stack w={200} gap={0}>
@@ -266,7 +264,7 @@ export function generateColumns(
       }),
       columnHelper.accessor((row) => row.referralCodes?.join(","), {
         id: "referralCode",
-        header: translations["Referral Code"],
+        header: translations("Referral Code"),
       }),
       ...Object.entries(LoyaltyActionType).map(([key, value]) =>
         columnHelper.accessor((row) => row[value], {
@@ -289,7 +287,7 @@ export function generateColumns(
       ),
       columnHelper.accessor((row) => row.totalPoints, {
         id: "totalPoints",
-        header: translations["Total Points"],
+        header: translations("Total Points"),
       }),
       columnHelper.accessor((row) => row.balancePoints, {
         id: "balancePoints",
@@ -297,7 +295,7 @@ export function generateColumns(
       }),
       columnHelper.accessor((row) => row.redeems, {
         id: "redeems",
-        header: translations["Redeems"],
+        header: translations("Redeems"),
         cell: ({ getValue }) => {
           return (
             <>
@@ -315,7 +313,7 @@ export function generateColumns(
       }),
 
       columnHelper.accessor((row) => row, {
-        header: () => translations["Action"],
+        header: () => translations("Action"),
         enableSorting: false,
         enableColumnFilter: false,
         id: "action",

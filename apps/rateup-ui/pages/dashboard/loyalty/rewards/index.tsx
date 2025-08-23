@@ -4,13 +4,13 @@ import { useRouter } from "next/router";
 import { Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import NothingFound from "@/components/NothingFound/NothingFound";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useGetLoyaltyRewards } from "../../../../backend/loyalty/reward/reward.query";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
@@ -26,7 +26,7 @@ export default function Reward() {
   const router = useRouter();
 
   const { data: rewards, isLoading, isError, error } = useGetLoyaltyRewards();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const {
     data: subscription,
@@ -67,7 +67,7 @@ export default function Reward() {
       <Group justify="space-between">
         <Group>
           <RateupButtonBlue
-            title={translations["New Reward"]}
+            title={translations("New Reward")}
             rightIcon={<IconPlus />}
             onClick={() => router.push("/dashboard/loyalty/rewards/create")}
           />
@@ -86,7 +86,7 @@ export default function Reward() {
         </SimpleGrid>
       ) : (
         <NothingFound
-          text={`${translations["No Rewards found"]}. ${translations["Click New Reward to create a reward"]}`}
+          text={`${translations("No Rewards found")}. ${translations("Click New Reward to create a reward")}`}
         />
       )}
     </Stack>

@@ -14,8 +14,7 @@ import {
 import { useDebouncedState } from "@mantine/hooks";
 import { IconRefresh } from "@tabler/icons-react";
 import { ColumnFiltersState } from "@tanstack/react-table";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useAddExistingContactToMultipleGroupsMutation } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "../../backend/campaign/contacts/contacts.query";
@@ -61,13 +60,13 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
     label: g?.name,
     value: g?.id,
   }));
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleSubmit = () => {
     showLoadingToast(
-      translations["Contact adding to existing group"],
+      translations("Contact adding to existing group"),
       "contact-group-add-existing",
       true,
-      translations["Adding Contact to group"],
+      translations("Adding Contact to group"),
     );
     addContactToGroupsMutation.mutate({
       contactIds: selectedIds,
@@ -115,7 +114,7 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
       centered
       size="lg"
       includeCancelButton
-      buttonTitle={translations["Done"]}
+      buttonTitle={translations("Done")}
       onSubmit={handleSubmit}
       submitButtonDisabled={isDisabledSubmit}
     >
@@ -150,7 +149,7 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
             {columnFilters?.length === 0 ? (
               <Checkbox
                 aria-label="select all"
-                label={translations["Select All"]}
+                label={translations("Select All")}
                 checked={
                   allContacts?.users?.length &&
                   allContacts?.users?.every((customer) =>
@@ -170,7 +169,7 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
             )}
 
             <SearchInput
-              placeholder={translations["Search"]}
+              placeholder={translations("Search")}
               searchText={searchText}
               setSearchText={setSearchText}
               width={300}
@@ -183,7 +182,7 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>
-                      <Tooltip label={translations["refresh data"]}>
+                      <Tooltip label={translations("refresh data")}>
                         <ActionIcon
                           variant="light"
                           onClick={() => {
@@ -194,8 +193,8 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
                         </ActionIcon>
                       </Tooltip>
                     </Table.Th>
-                    <Table.Th>{translations["Name"]}</Table.Th>
-                    <Table.Th>{translations["Phone Number"]}</Table.Th>
+                    <Table.Th>{translations("Name")}</Table.Th>
+                    <Table.Th>{translations("Phone Number")}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>{rows}</Table.Tbody>
@@ -215,7 +214,7 @@ const ContactAction = ({ opened, close, allGroups, action }) => {
             value={selectedGroups}
             onChange={setSelectedGroups}
             placeholder={
-              selectedGroups.length > 0 ? "" : translations["Select Groups"]
+              selectedGroups.length > 0 ? "" : translations("Select Groups")
             }
           />
         </Stack>
