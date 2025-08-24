@@ -29,7 +29,7 @@
   "october": "अक्टूबर",
   "november": "नवंबर",
   "december": "दिसंबर",
-  "Nothing found": "कुछ नहीं मिला",
+  "Nothing_found": "कुछ नहीं मिला",
   "No Automated Replies Found": "कोई स्वचालित उत्तर नहीं मिला",
   "filter": "फ़िल्टर",
   "sort by": "क्रमबद्ध करें",
@@ -2097,5 +2097,16 @@
   "Access Links": "पहुंच लिंक",
   "All Members": "All Members",
   "Choose Loyalty API/Action or Whatsapp Template": "लॉयल्टी एपीआई/क्रिया या व्हाट्सएप टेम्पलेट चुनें",
-  "Select Account": "खाता चुनें"
+  "Select Account": "खाता चुनें",
+  "Catalog Buttons": "कैटलॉग बटन",
+  "Remove MPM button to add other buttons": "अन्य बटन जोड़ने के लिए MPM बटन हटाएँ",
+  "Create New Campaign": "नई अभियान बनाएँ",
+  "Team Members": "टीम के सदस्य",
+  "User Role": "उपयोगकर्ता भूमिका",
+  "Assigned Chats": "सौंपे गए चैट",
+  "Assigned Tickets": "सौंपे गए टिकट",
+  "Last Login": "अंतिम लॉगिन",
+  "Subscription": "सदस्यता",
+  "Renewal Date": "नवीनीकरण तिथि",
+  "Days Remaining": "बचे हुए दिन"
 }

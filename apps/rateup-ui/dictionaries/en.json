@@ -2110,5 +2110,13 @@
   "Select Account": "Select Account",
   "Catalog Buttons": "Catalog Buttons",
   "Remove MPM button to add other buttons": "Remove MPM button to add other buttons",
-  "Create New Campaign": "Create New Campaign"
+  "Create New Campaign": "Create New Campaign",
+  "Team Members": "Team Members",
+  "User Role": "User Role",
+  "Assigned Chats": "Assigned Chats",
+  "Assigned Tickets": "Assigned Tickets",
+  "Last Login": "Last Login",
+  "Subscription": "Subscription",
+  "Renewal Date": "Renewal Date",
+  "Days Remaining": "Days Remaining"
 }
