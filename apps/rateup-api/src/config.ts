@@ -257,8 +257,6 @@ export const SuperTokensConfig: TypeInput = {
     }),
 
     Session.init({
-      olderCookieDomain: "",
-      cookieDomain: process.env.COOKIE_DOMAIN,
       override: {
         functions: (originalImplementation) => {
           return {
