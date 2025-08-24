@@ -36,6 +36,10 @@ const items = [
     title: "Unified Inbox",
     href: "https://products.rateup.app/products/ai-automation",
   },
+  {
+    title: "Smart QR",
+    href: "https://products.rateup.app/products/qr",
+  },
 ];
 
 export default function DropDownMobileNavItems() {
