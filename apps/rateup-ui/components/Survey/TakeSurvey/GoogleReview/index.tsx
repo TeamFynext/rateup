@@ -11,9 +11,9 @@ import {
   Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useTranslations } from "next-intl";
 
 import { useUpdateReviewLinkStatsOnSurveyMutation } from "@/backend/surveys/surveys.query";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useDeleteReviewSuggestionMutation } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
 import { ReviewSuggestion } from "../../../../types/global";
@@ -44,7 +44,7 @@ function GoogleReview({
   const [fakeLoading, setFakeLoading] = useState(false);
   const [lastCopiedReview, setLastCopiedReview] =
     useState<ReviewSuggestion>(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (reviewSuggestions.length > 0) {
       setShuffledArray(shuffleArray(reviewSuggestions));
@@ -135,14 +135,14 @@ function GoogleReview({
         </Box>
         {reviewSuggestions?.length >= 3 && (
           <Box className={styles["review-suggestions-container"]}>
-            <p>{translations["Need Inspirations?"]}</p>
+            <p>{translations("Need Inspirations?")}</p>
             <Box className={styles["suggestions-div"]}>
               <Button
                 className={styles["generate-suggestions-btn"]}
                 leftSection={<WandIcon />}
                 onClick={handleRegenerate}
               >
-                {translations["Regenerate Suggestions"]}
+                {translations("Regenerate Suggestions")}
               </Button>
               {fakeLoading || !shuffledArray ? (
                 <Box className={styles["review-suggestion-skeleton-container"]}>
@@ -159,7 +159,7 @@ function GoogleReview({
                   </Box>
 
                   <Button className={styles["copy-btn"]} disabled>
-                    {translations["Copy"]}
+                    {translations("Copy")}
                   </Button>
                 </Box>
               ) : (
@@ -178,7 +178,7 @@ function GoogleReview({
                     className={styles["copy-btn"]}
                     onClick={handleCopyBtnClick}
                   >
-                    {translations["Copy"]}
+                    {translations("Copy")}
                   </Button>
                 </Box>
               )}
@@ -191,7 +191,7 @@ function GoogleReview({
             target="_blank"
             onClick={handleGoToReviewPage}
           >
-            <span>{translations["Go to Review Page"]}</span>
+            <span>{translations("Go to Review Page")}</span>
             <span className={styles["google-review-link-img-span"]}>
               {reviewPageLogosObj[reviewPagePlatform] || null}
             </span>
@@ -207,7 +207,7 @@ function GoogleReview({
           title={false}
         >
           <p className={styles["suggestion-copied-text-p"]}>
-            {translations["Your Suggestion is copied!"]}
+            {translations("Your Suggestion is copied!")}
           </p>
           <Box className={styles["google-review-link-container"]}>
             <Link
@@ -215,7 +215,7 @@ function GoogleReview({
               target="_blank"
               onClick={handleGoToReviewPage}
             >
-              <span>{translations["Go to Review Page"]}</span>
+              <span>{translations("Go to Review Page")}</span>
               <span>
                 <GoogleIcon />
               </span>

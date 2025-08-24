@@ -1,16 +1,16 @@
 import { useEffect } from "react";
 
 import { useForm } from "@mantine/form";
+import { useTranslations } from "next-intl";
 
 import { useUpdateRedeem } from "@/backend/loyalty/redeems/redeems.query";
 import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 import { RedeemStatus } from "@/pages/dashboard/loyalty/redeem";
 
 const UpdateRedeemStatusModal = ({ opened, close, redeem }) => {
   const updateRedeemMut = useUpdateRedeem();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const form = useForm({
     initialValues: {
@@ -47,10 +47,10 @@ const UpdateRedeemStatusModal = ({ opened, close, redeem }) => {
       onSubmit={handleUpdateStatus}
       isLoading={updateRedeemMut.isPending}
       centered
-      buttonTitle={translations["Update"]}
+      buttonTitle={translations("Update")}
     >
       <ContainedSelection
-        label={translations["Status"]}
+        label={translations("Status")}
         data={Object.values(RedeemStatus)}
         {...form.getInputProps("status")}
       />

@@ -11,8 +11,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useCreateTemplateMutation,
@@ -36,14 +35,14 @@ import {
 export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const parsedTemplate = editingItem ? parseTemplate(editingItem) : null;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: parsedTemplate
       ? parsedTemplate
       : {
           name: "",
           header: "",
-          body: translations["Would you like to start survey?"],
+          body: translations("Would you like to start survey?"),
           footer: "",
           declineButton: "No",
           acceptButton: "Yes",
@@ -53,11 +52,11 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
         if (value.trim().length === 0 || value.trim().length > 512) {
           return null;
         } else if (value.includes(" ")) {
-          return translations[
-            "Name cannot contain spaces. Replace it with underscore(_)"
-          ];
+          return translations(
+            "Name cannot contain spaces. Replace it with underscore(_)",
+          );
         } else if (/[A-Z]/.test(value)) {
-          return translations["Name cannot contain uppercase letters"];
+          return translations("Name cannot contain uppercase letters");
         }
       },
       header: (value) => value.trim().length > 60,
@@ -103,9 +102,9 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
     if (editingItem) {
       if (editingItem.data.status === WaTemplateStatus.PENDING) {
         showWarnToast(
-          translations[
-            "Cannot edit pending template. Please wait for approval"
-          ],
+          translations(
+            "Cannot edit pending template. Please wait for approval",
+          ),
         );
         setIsSubmitting(false);
         return;
@@ -133,8 +132,8 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
       <Modal.Header>
         <Text fz="xl">
           {editingItem
-            ? translations["Edit Template"]
-            : translations["Create Template"]}
+            ? translations("Edit Template")
+            : translations("Create Template")}
         </Text>
       </Modal.Header>
       <form
@@ -146,8 +145,8 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
         <Grid align="stretch">
           <Grid.Col span={6} className={inputStyles.lengthTrackerParent}>
             <ContainedTextField
-              label={translations["Name"]}
-              placeholder={translations["Name"]}
+              label={translations("Name")}
+              placeholder={translations("Name")}
               {...form.getInputProps("name")}
               rightSection={
                 <LengthTracker
@@ -158,8 +157,8 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               disabled={!!editingItem}
             />
             <ContainedTextField
-              label={translations["Header"]}
-              placeholder={translations["Header"]}
+              label={translations("Header")}
+              placeholder={translations("Header")}
               {...form.getInputProps("header")}
               rightSection={
                 <LengthTracker
@@ -169,8 +168,8 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               }
             />
             <ContainedTextArea
-              label={translations["Body"]}
-              placeholder={translations["Body"]}
+              label={translations("Body")}
+              placeholder={translations("Body")}
               withAsterisk
               autosize
               minRows={2}
@@ -184,8 +183,8 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               }
             />
             <ContainedTextField
-              label={translations["Footer"]}
-              placeholder={translations["Footer"]}
+              label={translations("Footer")}
+              placeholder={translations("Footer")}
               {...form.getInputProps("footer")}
               rightSection={
                 <LengthTracker
@@ -195,7 +194,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               }
             />
             <ContainedTextField
-              label={translations["Decline Button (Does nothing)"]}
+              label={translations("Decline Button (Does nothing)")}
               withAsterisk
               {...form.getInputProps("declineButton")}
               rightSection={
@@ -206,7 +205,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
               }
             />
             <ContainedTextField
-              label={translations["Accept Button (Starts survey on clicking)"]}
+              label={translations("Accept Button (Starts survey on clicking)")}
               withAsterisk
               {...form.getInputProps("acceptButton")}
               rightSection={
@@ -260,7 +259,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
             Cancel
           </Button>
           <Button type="submit" loading={isSubmitting}>
-            {editingItem ? translations["Save"] : translations["Create"]}
+            {editingItem ? translations("Save") : translations("Create")}
           </Button>
         </Group>
       </form>

@@ -3,9 +3,9 @@ import { useState } from "react";
 import { Badge, Group, Loader, Radio, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconSend } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { TeamSelector } from "@/components/input/TeamSelector";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import {
   useSendFlowToUser,
@@ -32,7 +32,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
   const sendFlowToUser = useSendFlowToUser(props?.contact?.phone);
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
 
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function onClose() {
     setSelectedDbFlowId("");
     props?.close();
@@ -66,7 +66,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
       }}
     >
       {isLoading && <Loader />}
-      {error && <Badge color="red">{translations["Error"]}</Badge>}
+      {error && <Badge color="red">{translations("Error")}</Badge>}
       {data && acceptedFlows.length > 0 ? (
         <>
           <Stack className={classes.inner}>
@@ -90,7 +90,7 @@ export default function WaInboxFlowDisplayModal(props: Props) {
           </Stack>
           <Group className={classes.send_button_wrapper}>
             <RateupButtonPrimary
-              title={translations["Send"]}
+              title={translations("Send")}
               loading={sendFlowToUser.isPending}
               onClick={handleSendFlow}
               rightIcon={<IconSend />}
@@ -100,11 +100,9 @@ export default function WaInboxFlowDisplayModal(props: Props) {
         </>
       ) : (
         <NothingFound
-          text={
-            translations[
-              "No flows found, If you already have a flow, check if its PUBLISHED"
-            ]
-          }
+          text={translations(
+            "No flows found, If you already have a flow, check if its PUBLISHED",
+          )}
         />
       )}
     </SimpleModalLayout>

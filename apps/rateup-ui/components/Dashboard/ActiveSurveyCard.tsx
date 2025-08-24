@@ -2,8 +2,7 @@ import React, { JSX } from "react";
 import { useRouter } from "next/router";
 
 import { Badge, Group, Stack, Text, Title } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import PaperLayout from "../styled/Layouts/PaperLayout";
@@ -19,13 +18,13 @@ export default function ActiveSurveyCard({
     ?.map((team) => team.surveyStats?.visited ?? 0)
     ?.reduce((a, b) => a + b, 0);
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const responsesVisitedValues = [
     {
-      title: translations["Responses"],
+      title: translations("Responses"),
       value: responsesCount ? responsesCount : 0,
     },
-    { title: translations["Visited"], value: visitedCount ? visitedCount : 0 },
+    { title: translations("Visited"), value: visitedCount ? visitedCount : 0 },
   ];
 
   if (survey?.type === "waFlow") responsesVisitedValues.pop();

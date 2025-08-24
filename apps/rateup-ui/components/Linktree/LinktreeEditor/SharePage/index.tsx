@@ -3,8 +3,7 @@ import { useRouter } from "next/router";
 
 import { Box, Image, Switch } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useUpdateLinktreeMutation } from "../../../../backend/linktree/linktree.query";
 import PaperLayout from "../../../styled/Layouts/PaperLayout";
@@ -38,26 +37,26 @@ function SharePage() {
       });
     }
   }, [isPublished, links, shortUrlId, linktreeUpdateMutateAsync]);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Box className={styles["share-linktree-root-div"]}>
       <PaperLayout>
         <Switch
           onClick={handlePublishSwitchClick}
           size="lg"
-          label={translations["Published"]}
+          label={translations("Published")}
           checked={isPublished}
         />
       </PaperLayout>
 
       <PaperLayout className={styles["share-options-container"]}>
         <Box className={styles["linktree-link-container"]}>
-          <h2>{translations["Share Linktree"]}</h2>
+          <h2>{translations("Share Linktree")}</h2>
           <CopyLinkComponent value={shareUrl} disabled={!isPublished} />
         </Box>
 
         <Box className={styles["social-media-share-container"]}>
-          <h2>{translations["How Would you like to survey people?"]}</h2>
+          <h2>{translations("How Would you like to survey people?")}</h2>
           <SocialMediaLinks
             linktreeName={name}
             linktreeShareUrl={shareUrl}
@@ -67,7 +66,7 @@ function SharePage() {
       </PaperLayout>
 
       <PaperLayout className={styles["share-qr-card"]}>
-        <h2>{translations["Share QR Code"]}</h2>
+        <h2>{translations("Share QR Code")}</h2>
         <ShareLinktree url={shareUrl} isPublished={isPublished} title={name} />
       </PaperLayout>
 

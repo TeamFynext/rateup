@@ -20,10 +20,10 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconLanguage } from "@tabler/icons-react";
 import _ from "lodash";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import { v4 as uuidv4 } from "uuid";
 
 import { useAllThemes } from "@/backend/surveyTheme/surveyTheme.query";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useQuestionCreateMutation } from "../../backend/surveys/questions/questions.query";
 import { useSurvey } from "../../backend/surveys/surveys.query";
@@ -124,7 +124,7 @@ export function EditSurvey({
     isSurveyPreviewModalOpen,
     { open: openSurveyPreviewModal, close: closeSurveyPreviewModal },
   ] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   // used to rerender survey theme preview, when questions reoredered or deleted and when survey changes.
   const [surveyPreviewCompKey, setSurveyPreveiwCompKey] = useState(uuidv4());
 
@@ -444,7 +444,7 @@ export function EditSurvey({
                 <Tabs.Panel value={QuestionTabsEnum.None}>
                   <Center style={{ height: "100%" }}>
                     <Text c="dimmed">
-                      {translations["Select a question to edit"]}
+                      {translations("Select a question to edit")}
                     </Text>
                   </Center>
                 </Tabs.Panel>

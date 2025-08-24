@@ -22,12 +22,12 @@ import {
   IconSquareRoundedChevronDown,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 import { useLocation } from "react-use";
 
 import { MessagePlatform } from "@/types/enums";
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
 import { useUser } from "@/context/UserContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { WaGetMessagesBody } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
@@ -101,7 +101,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
     root: scrollableRef.current,
     threshold: 1,
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { messages } = useMessageStore();
 
   const singleMessage = (message: WaGetMessagesBody) => {
@@ -145,7 +145,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
         return (
           <Text fz={"xs"} c={"red"}>
             {messageType}{" "}
-            {translations["message type display is not supported yet"]}
+            {translations("message type display is not supported yet")}
           </Text>
         );
     }
@@ -365,13 +365,13 @@ const TempMessageBody = ({ body, timestamp }) => {
 };
 
 const EndofConversationComponent = () => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Center>
       <Group className={classes.indicator_wrapper}>
         <IconBrandWhatsapp size={20} color="gray" />
         <Text className={classes.indicator_text}>
-          {translations["This is the beginning of your conversation"]}
+          {translations("This is the beginning of your conversation")}
         </Text>
       </Group>
     </Center>

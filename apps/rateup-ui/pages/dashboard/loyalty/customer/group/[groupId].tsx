@@ -23,6 +23,7 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 
 import { ContactGroupType, LoyaltyActionType } from "@/types/enums";
 import {
@@ -48,7 +49,6 @@ import FormModalLayout from "@/components/Modal/FormModalLayout";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
 import { useRouteParams } from "@/context/RouteParamsContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import { PAGE_SIZE } from "@/utils/constants";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
@@ -69,7 +69,7 @@ export default function ContactGroup() {
     useDisclosure(false);
   const [customerActions, setCustomerActions] = useState([]);
   const [customerRedeems, setCustomerRedeems] = useState([]);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
   const router = useRouter();
@@ -100,18 +100,16 @@ export default function ContactGroup() {
 
   const openDeleteModal = () => {
     modals.openConfirmModal({
-      title: translations["Delete Group"],
+      title: translations("Delete Group"),
       centered: true,
       children: (
         <Text size="sm">
-          {
-            translations[
-              "Are you sure you want to delete this group? This action is destructive and you will have to contact support to restore your data."
-            ]
-          }
+          {translations(
+            "Are you sure you want to delete this group? This action is destructive and you will have to contact support to restore your data.",
+          )}
         </Text>
       ),
-      labels: { confirm: translations["Ok"], cancel: translations["cancel"] },
+      labels: { confirm: translations("Ok"), cancel: translations("cancel") },
       confirmProps: { color: "red" },
       onCancel: () => modals.closeAll(),
       onConfirm: () => deleteContactGroup(),
@@ -175,7 +173,7 @@ export default function ContactGroup() {
                 src={
                   groupDetails?.icon && getFileUrlFromKey(groupDetails?.icon)
                 }
-                alt={translations["profile pic"]}
+                alt={translations("profile pic")}
                 size={"xl"}
                 radius={"md"}
               >
@@ -196,11 +194,11 @@ export default function ContactGroup() {
                     variant="default"
                     disabled={loadingState}
                   >
-                    {translations["Edit Profile"]}
+                    {translations("Edit Profile")}
                   </Button>
                   <FormModalLayout
                     centered
-                    title={translations["Edit Group"]}
+                    title={translations("Edit Group")}
                     opened={openedEditModal}
                     onClose={closeEditModal}
                     size="lg"
@@ -219,7 +217,7 @@ export default function ContactGroup() {
                     onClick={openDeleteModal}
                     disabled={loadingState}
                   >
-                    {translations["Delete this Group"]}
+                    {translations("Delete this Group")}
                   </Button>
                 </Group>
               </Stack>
@@ -242,19 +240,19 @@ export default function ContactGroup() {
                     {groupDetails?._count.LoyaltyCustomerMap ?? 0}
                   </Title>
                 </Center>
-                <Text>{translations["members"]}</Text>
+                <Text>{translations("members")}</Text>
               </Stack>
             </Group>
           </Group>
         </PaperLayout>
         <Stack mt={"xs"} flex={1}>
           <Group justify="space-between">
-            <Title order={2}>{translations["Members"]}</Title>
+            <Title order={2}>{translations("Members")}</Title>
             <TextInput
               leftSection={<IconSearch size="1.1rem" stroke={1.5} />}
               radius="xl"
               size="md"
-              placeholder={translations["Search member"]}
+              placeholder={translations("Search member")}
               rightSectionWidth={60}
               defaultValue={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -280,7 +278,7 @@ export default function ContactGroup() {
               setColumnFilters={setColumnFilters}
               isPending={loadingState}
               toggle={open}
-              btnTitle={translations["Add Customer"]}
+              btnTitle={translations("Add Customer")}
             />
           </PaperLayout>
         </Stack>
@@ -288,7 +286,7 @@ export default function ContactGroup() {
       <FormModalLayout
         onClose={close}
         opened={opened}
-        title={translations["Add members"]}
+        title={translations("Add members")}
         size="xl"
         centered
       >

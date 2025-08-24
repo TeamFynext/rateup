@@ -1,12 +1,12 @@
 import { useCallback } from "react";
 
 import { Divider, Paper, Stack, Text } from "@mantine/core";
+import { useTranslations } from "next-intl";
 import { Updater } from "use-immer";
 
 import { WaTemplateFetchBody } from "@/types/global";
 import { MetaAssets } from "@/backend/whatsapp/settings/waSettings.api";
 import { LeadgenNodeData } from "@/components/whatsapp/automation/types/node-types";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import WaTemplateFormComponents from "./components";
 import classes from "./styles.module.css";
@@ -21,7 +21,7 @@ interface Props {
   };
 }
 export default function WaTemplateFormElements(props: Props) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const buildtemplatequerycomponent = useCallback(
     (
       component_type: "HEADER" | "BODY" | "FOOTER" | "BUTTONS",
@@ -90,7 +90,7 @@ export default function WaTemplateFormElements(props: Props) {
             return (
               <>
                 <Divider
-                  label={translations["Header parameters"]}
+                  label={translations("Header parameters")}
                   labelPosition="left"
                   className={classes.divider}
                 />
@@ -117,7 +117,7 @@ export default function WaTemplateFormElements(props: Props) {
             return (
               <>
                 <Divider
-                  label={translations["Body parameters"]}
+                  label={translations("Body parameters")}
                   labelPosition="left"
                   className={classes.divider}
                 />
@@ -141,7 +141,7 @@ export default function WaTemplateFormElements(props: Props) {
             return (
               <>
                 <Divider
-                  label={translations["Footer parameters"]}
+                  label={translations("Footer parameters")}
                   labelPosition="left"
                   className={classes.divider}
                 />
@@ -152,7 +152,7 @@ export default function WaTemplateFormElements(props: Props) {
             return (
               <>
                 <Divider
-                  label={translations["Button parameters"]}
+                  label={translations("Button parameters")}
                   labelPosition="left"
                   className={classes.divider}
                 />

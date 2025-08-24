@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 
 import { Card, Group, SelectProps, Skeleton, Text } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
 
@@ -25,7 +25,7 @@ export function AccountSelector({
 }: Readonly<AccountSelectorProps>) {
   const { data, isPending, isError } = useWaSettings();
 
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   let accountOptions = [];
   for (const account of data ?? []) {
     if (platform === "all" || platform === MessagePlatform.WHATSAPP)
@@ -56,7 +56,7 @@ export function AccountSelector({
   }, [accountOptions, value]);
 
   if (isError) {
-    return <Text>{translations["Something went wrong!"]}</Text>;
+    return <Text>{translations("Something went wrong!")}</Text>;
   }
   if (isPending) {
     return (
@@ -76,9 +76,9 @@ export function AccountSelector({
       defaultValue={accountOptions?.length && accountOptions[0]?.value}
       onChange={onChange}
       value={value}
-      label={translations["Account"]}
-      placeholder={translations["Select Account"]}
-      nothingFoundMessage={translations["No account found!"]}
+      label={translations("Account")}
+      placeholder={translations("Select Account")}
+      nothingFoundMessage={translations("No account found!")}
       required
       {...props}
     />

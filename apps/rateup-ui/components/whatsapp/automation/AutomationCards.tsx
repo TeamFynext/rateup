@@ -16,6 +16,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconClock, IconDots, IconTrash } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import { WaAutomatedReply } from "@/types/global";
 import { useTimeSince } from "@/hooks/timeSince";
@@ -25,7 +26,6 @@ import {
 } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 import { showLoadingToast, showSuccessToast } from "@/utils/notifications";
 
 import classes from "./styles.module.css";
@@ -52,7 +52,7 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
   const timeSince = useTimeSince(automation.createdAt);
   const router = useRouter();
   const qc = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const updateMutation = useUpdateWaAutomatedReplyMutation();
 
   const handleQuickUpdate = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -104,7 +104,7 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
         </Group>
         <Group justify="space-between">
           <Text fz="sm" c="dimmed" className="flex gap-2 items-center">
-            <IconClock size={20} /> {` ${translations["Created"]} ${timeSince}`}
+            <IconClock size={20} /> {` ${translations("Created")} ${timeSince}`}
           </Text>
           {automation?.commands?.includes("*") && (
             <Badge size="xs" color="green">
@@ -114,7 +114,7 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
         </Group>
         <Group className={classes.card_footer}>
           <Text fz={"xs"} fw={600}>
-            {translations["For"]}
+            {translations("For")}
           </Text>
 
           {automation?.commands?.map((kw) => (
@@ -133,8 +133,8 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
               checked={automation?.isEnabled}
               label={
                 automation.isEnabled
-                  ? translations["Enabled"]
-                  : translations["Disabled"]
+                  ? translations("Enabled")
+                  : translations("Disabled")
               }
               size="xs"
               styles={{
@@ -178,7 +178,7 @@ export function CardMenu({
 function LCampaignCardMenuItems({ campaignId }) {
   const [deleteDialogOpened, { open, close }] = useDisclosure(false);
   const deleteMutation = useDeleteWaAutomatedReplyMutation();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function handleDelete() {
     deleteMutation.mutate(campaignId, {
       onSuccess: close,
@@ -189,18 +189,18 @@ function LCampaignCardMenuItems({ campaignId }) {
     <>
       <Menu.Dropdown>
         <Menu.Item leftSection={<IconTrash />} onClick={open}>
-          {translations["Delete"]}
+          {translations("Delete")}
         </Menu.Item>
       </Menu.Dropdown>
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
         onClose={close}
-        headerLabel={
-          translations["Are you sure you want to delete this Automated Reply?"]
-        }
-        headerTitle={translations["Delete Automated Reply"]}
-        confirmLabel={translations["Delete"]}
+        headerLabel={translations(
+          "Are you sure you want to delete this Automated Reply?",
+        )}
+        headerTitle={translations("Delete Automated Reply")}
+        confirmLabel={translations("Delete")}
         onConfirm={handleDelete}
       />
     </>

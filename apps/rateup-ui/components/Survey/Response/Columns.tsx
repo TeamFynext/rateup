@@ -21,9 +21,9 @@ import {
 } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 
 import SurveyContext from "@/context/SurveyContext";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import { QuestionType } from "../../../types/enums";
@@ -52,14 +52,14 @@ export const useSurveyResponseColumns = ({
   surveyId,
   typeWa = false,
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const column: ColumnDef<any>[] = useMemo(
     () => [
       {
         header: () => (
           <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
-            {translations["Created At"]}
+            {translations("Created At")}
           </Text>
         ),
         filterFn: fuzzyFilter,
@@ -142,7 +142,7 @@ export const useSurveyResponseColumns = ({
       {
         header: () => (
           <Text truncate="end" miw={200} maw={200} fw={600} fz={"lg"}>
-            {translations["Tags"]}
+            {translations("Tags")}
           </Text>
         ),
         accessorKey: "tag",
@@ -176,7 +176,7 @@ export const useSurveyResponseColumns = ({
             {
               header: () => (
                 <Text truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
-                  {translations["Ticket"]}
+                  {translations("Ticket")}
                 </Text>
               ),
               enableColumnFilter: false,
@@ -199,7 +199,7 @@ export const useSurveyResponseColumns = ({
                     {ticketExist && (
                       <Tooltip
                         withArrow
-                        label={translations["View Ticket"]}
+                        label={translations("View Ticket")}
                         position="right-start"
                       >
                         <Stack>
@@ -261,20 +261,20 @@ function BadgeorTextorPreview({
   questionType: QuestionType;
   response: any;
 }>) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [previewModalopened, { open, close }] = useDisclosure(false);
   if (previewRequired.includes(questionType)) {
     return (
       <>
         <RateupButtonBlue
-          title={translations["Preview"]}
+          title={translations("Preview")}
           leftIcon={<IconEye />}
           size="compact-xs"
           onClick={open}
           disabled={response === "" || !response}
         />
         <PreviewModal
-          headerTitle={translations["Preview"]}
+          headerTitle={translations("Preview")}
           onClose={close}
           imgObject={response}
           opened={previewModalopened}
@@ -318,7 +318,7 @@ function BadgeorTextorPreview({
           <>
             <Group>
               <Text fw={300} fz="md" c="dark.3">
-                {translations["Profile Picture:"]}{" "}
+                {translations("Profile Picture:")}{" "}
               </Text>
               <Button
                 leftSection={<IconEye />}
@@ -327,11 +327,11 @@ function BadgeorTextorPreview({
                 radius={"lg"}
                 size="compact-xs"
               >
-                {translations["Preview"]}
+                {translations("Preview")}
               </Button>
             </Group>
             <PreviewModal
-              headerTitle={translations["Preview"]}
+              headerTitle={translations("Preview")}
               onClose={close}
               imgObject={response?.photo}
               opened={previewModalopened}
@@ -360,7 +360,7 @@ function BadgeorTextorPreview({
           onClick={() => {
             window.open(getFileUrlFromKey(response), "_blank");
           }}
-          title={translations["Preview"]}
+          title={translations("Preview")}
           leftIcon={<IconEye size={"1rem"} />}
           size="compact-xs"
         />
@@ -384,7 +384,7 @@ export function ActionMenu({
   enableTicket,
 }) {
   const ticketExist = ticketData?.length > 0;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack px="sm">
       <Menu
@@ -403,7 +403,7 @@ export function ActionMenu({
             style={{ maxWidth: "fit-content", marginLeft: "-14px" }}
           >
             <Text size="xs" c="dark.5">
-              {translations["Select Action"]}
+              {translations("Select Action")}
             </Text>
           </Button>
         </Menu.Target>
@@ -426,8 +426,8 @@ export function ActionMenu({
               }
             >
               {ticketExist
-                ? translations["View Ticket"]
-                : translations["Create Ticket"]}
+                ? translations("View Ticket")
+                : translations("Create Ticket")}
             </Menu.Item>
           )}
           <Menu.Item
@@ -440,7 +440,7 @@ export function ActionMenu({
               <IconTrashXFilled style={{ width: rem(14), height: rem(14) }} />
             }
           >
-            {translations["Delete Response"]}
+            {translations("Delete Response")}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

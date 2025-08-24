@@ -25,8 +25,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   deleteSurvey,
@@ -52,7 +51,7 @@ export function SurveyMenu({
 }: SurveyMenuProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [opened, { close, open }] = useDisclosure(false);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [teamChoice, setTeamChoice] = useState("all");
@@ -69,7 +68,7 @@ export function SurveyMenu({
     },
     validate: {
       teamIds: (values) =>
-        values?.length ? null : translations["Must contain atleast one team"],
+        values?.length ? null : translations("Must contain atleast one team"),
     },
   });
 
@@ -99,8 +98,8 @@ export function SurveyMenu({
     notifications.show({
       id: "load-data",
       loading: true,
-      title: translations["Clonning survey.."],
-      message: translations["Hold on, your survey is getting clonned..."],
+      title: translations("Clonning survey.."),
+      message: translations("Hold on, your survey is getting clonned..."),
       autoClose: false,
       withCloseButton: false,
     });
@@ -121,8 +120,8 @@ export function SurveyMenu({
       notifications.update({
         id: "delete-data",
         color: "teal",
-        title: translations["Success"],
-        message: translations["Deleted Survey Successfully!"],
+        title: translations("Success"),
+        message: translations("Deleted Survey Successfully!"),
         loading: false,
         icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
         autoClose: 2000,
@@ -135,7 +134,7 @@ export function SurveyMenu({
         id: "delete-data",
         loading: false,
         color: "red",
-        title: translations["Delete Failed..!"],
+        title: translations("Delete Failed..!"),
         message: error?.response?.data?.error,
         icon: <IconCheck size="1rem" />,
         autoClose: 4000,
@@ -148,7 +147,7 @@ export function SurveyMenu({
     onSuccess: () => {
       notifications.show({
         id: "survey",
-        message: translations["Survey status Updated!"],
+        message: translations("Survey status Updated!"),
         autoClose: true,
       });
       refetchSurveys();
@@ -163,31 +162,29 @@ export function SurveyMenu({
           close();
           cloneForm.reset();
         }}
-        title={translations["Clone Survey"]}
+        title={translations("Clone Survey")}
         centered
         onSubmit={cloneForm.onSubmit(onSubmit)}
-        buttonTitle={translations["Submit"]}
+        buttonTitle={translations("Submit")}
         includeCancelButton
       >
         <Stack>
           <Text c="dimmed">
-            {
-              translations[
-                "Select the team/teams in which the survey copy to be created."
-              ]
-            }
+            {translations(
+              "Select the team/teams in which the survey copy to be created.",
+            )}
           </Text>
           <Group>
             <Radio.Group
               value={teamChoice}
               onChange={setTeamChoice}
               name="selectTeams"
-              label={translations["Select teams"]}
+              label={translations("Select teams")}
               withAsterisk
             >
               <Group mt="xs">
-                <Radio checked label={translations["All teams"]} value="all" />
-                <Radio label={translations["Select Manually"]} value="manual" />
+                <Radio checked label={translations("All teams")} value="all" />
+                <Radio label={translations("Select Manually")} value="manual" />
               </Group>
             </Radio.Group>
 
@@ -196,7 +193,7 @@ export function SurveyMenu({
                 radius="md"
                 value={selectedTeams}
                 onChange={setSelectedTeams}
-                placeholder={translations["Select teams (type in to search)"]}
+                placeholder={translations("Select teams (type in to search)")}
                 data={teamOptions}
                 searchable
                 error={cloneForm.errors.teamIds}
@@ -210,15 +207,15 @@ export function SurveyMenu({
         forDeleteFunctionality
         opened={dialogOpened}
         onClose={closeDialog}
-        headerLabel={translations["Are you sure to delete this Survey?"]}
-        headerTitle={translations["Delete Survey?"]}
-        confirmLabel={translations["Delete"]}
+        headerLabel={translations("Are you sure to delete this Survey?")}
+        headerTitle={translations("Delete Survey?")}
+        confirmLabel={translations("Delete")}
         onConfirm={async (e) => {
           notifications.show({
             id: "delete-data",
             loading: true,
-            title: translations["Deleting survey.."],
-            message: translations["Hold on, survey is getting deleted..."],
+            title: translations("Deleting survey.."),
+            message: translations("Hold on, survey is getting deleted..."),
             autoClose: false,
             withCloseButton: false,
           });
@@ -256,8 +253,8 @@ export function SurveyMenu({
           }
         >
           {survey?.active
-            ? translations["Pause Survey"]
-            : translations["Resume Survey"]}
+            ? translations("Pause Survey")
+            : translations("Resume Survey")}
         </Menu.Item>
 
         <Menu.Item
@@ -266,7 +263,7 @@ export function SurveyMenu({
             router.push(`${router.pathname}/${survey?.id}?tab=Share`);
           }}
         >
-          {translations["Share"]}
+          {translations("Share")}
         </Menu.Item>
         <Menu.Item
           leftSection={<IconCopy />}
@@ -274,10 +271,10 @@ export function SurveyMenu({
             open();
           }}
         >
-          {translations["Clone"]}
+          {translations("Clone")}
         </Menu.Item>
         <Menu.Item leftSection={<IconTrash />} onClick={toggle}>
-          {translations["Delete"]}
+          {translations("Delete")}
         </Menu.Item>
 
         <Menu.Item
@@ -286,7 +283,7 @@ export function SurveyMenu({
             router.push(`${router.pathname}/${survey?.id}?tab=Settings`);
           }}
         >
-          {translations["Settings"]}
+          {translations("Settings")}
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>

@@ -13,9 +13,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconDots, IconEdit, IconShare, IconTrash } from "@tabler/icons-react";
 import { useDeleteQrMutation } from "backend/generateQr/generateQr.query";
+import { useTranslations } from "next-intl";
 import modalStyles from "styles/commonCssModules/modal.module.css";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 import CreateShortUrlModal from "../CreateQrModal";
 import styles from "./GeneratedQrCard.module.css";
@@ -25,19 +24,19 @@ function MoreOptionsMenu({ shortUrlId, name }) {
     useDisclosure();
 
   const deleteQrMutation = useDeleteQrMutation();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleDeleteClick = useCallback(async () => {
     // deleteLandingPageMutation.mutateAsync();
     modals.openConfirmModal({
-      title: translations["Delete QR?"],
+      title: translations("Delete QR?"),
       children: (
         <Text className={styles["are-you-sure-text"]}>
-          {translations["Are you sure to delete this QR?"]}
+          {translations("Are you sure to delete this QR?")}
         </Text>
       ),
       labels: {
-        confirm: translations["Delete"],
-        cancel: translations["Cancel"],
+        confirm: translations("Delete"),
+        cancel: translations("Cancel"),
       },
       className: styles["delete-confirmation-modal"],
       centered: true,
@@ -67,10 +66,10 @@ function MoreOptionsMenu({ shortUrlId, name }) {
         </MenuTarget>
         <MenuDropdown onClick={(e) => e.stopPropagation()}>
           <MenuItem leftSection={<IconEdit />} onClick={handleRenameClick}>
-            {translations["Rename"]}
+            {translations("Rename")}
           </MenuItem>
           <MenuItem leftSection={<IconTrash />} onClick={handleDeleteClick}>
-            {translations["Delete"]}
+            {translations("Delete")}
           </MenuItem>
         </MenuDropdown>
       </Menu>

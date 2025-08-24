@@ -12,6 +12,7 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import { create } from "zustand";
 
 import { MessagePlatform } from "@/types/enums";
@@ -23,7 +24,6 @@ import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
   parseToWhatsAppFormat,
 } from "@/components/RichTextEditor/waTextEditor";
-import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
@@ -51,7 +51,7 @@ export default function WaInboxChatDisplayFooter({
 }>) {
   const inputRef = useRef(null);
   const submiRef = useRef(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
   const platform =
     contact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
@@ -85,7 +85,7 @@ export default function WaInboxChatDisplayFooter({
           (value.body === "" ||
             parseToWhatsAppFormat(value.body).trim().length === 0)
         ) {
-          return translations["Message can't be empty"];
+          return translations("Message can't be empty");
         }
       },
       media: (value, values) => {
@@ -247,7 +247,7 @@ export default function WaInboxChatDisplayFooter({
         </Group>
         <Group>
           <VoiceRecorder />
-          <Tooltip label={translations["Send"]}>
+          <Tooltip label={translations("Send")}>
             <Button
               rightSection={<IconSend size={16} />}
               size="xs"

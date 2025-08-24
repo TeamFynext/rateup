@@ -17,8 +17,7 @@ import {
 import { IconArrowLeft, IconCheck } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { motion, useAnimate } from "motion/react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useSurveyThemeData } from "../../../../../../context/SurveyThemeContext";
 import { getBgImgAndBgColor } from "../../../../../Layout/TakeSurveyLayout/utils";
@@ -64,7 +63,7 @@ function CustomSelectForMobile({
   });
 
   const [scope, animate] = useAnimate();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const optionsMotionDivRefs = useRef(null);
 
   const options = data
@@ -196,7 +195,7 @@ function CustomSelectForMobile({
                 className={cx("search-input")}
                 value={search}
                 onChange={(event) => setSearch(event.currentTarget.value)}
-                placeholder={translations["Type in to search"]}
+                placeholder={translations("Type in to search")}
               />
             </Group>
             <Combobox.Options
@@ -209,7 +208,7 @@ function CustomSelectForMobile({
                     options
                   ) : (
                     <Combobox.Empty>
-                      {translations["Nothing found"]}
+                      {translations("Nothing found")}
                     </Combobox.Empty>
                   )}
                 </Stack>

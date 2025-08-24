@@ -6,8 +6,7 @@ import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useRateupPaymentsPlanUpdateMutation } from "../../../backend/payment/payment.query";
 import { useUpdateSubscriptionMutation } from "../../../backend/subscription/subscription.query";
@@ -32,7 +31,7 @@ export function SubscriptionEditorModal({
     },
   });
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const rateupPlanEnable = router.pathname === "/admin/rateup";
   const updateMutation = useUpdateSubscriptionMutation();
   const rateupPaymentsPlanUpdateMutation =
@@ -42,10 +41,10 @@ export function SubscriptionEditorModal({
   function handleSave() {
     if (rateupPlanEnable) {
       showLoadingToast(
-        translations["Plan is getting updated.."],
+        translations("Plan is getting updated.."),
         "load-data",
         true,
-        translations["Updating"],
+        translations("Updating"),
       );
       const updatedData: any = {
         id: subscription?.id,
@@ -85,15 +84,15 @@ export function SubscriptionEditorModal({
       onClick={(e) => e.stopPropagation()}
       title={
         rateupPlanEnable
-          ? translations["Modify Rateup Plan"]
-          : translations["Modify Subscription"]
+          ? translations("Modify Rateup Plan")
+          : translations("Modify Subscription")
       }
     >
       <Stack>
         {!rateupPlanEnable && (
           <>
             <DateInput
-              label={translations["Expires At"]}
+              label={translations("Expires At")}
               value={dayjs(subscriptionForm.values.expiresAt).toDate()}
               onChange={(value) =>
                 subscriptionForm.setFieldValue("expiresAt", new Date(value))
@@ -144,20 +143,18 @@ export function SubscriptionEditorModal({
           </Stack>
           {isRazorPayPlan && (
             <Text size="sm" c={"var(--tertiary-color)"} fw={"bold"} m={"xs"}>
-              {
-                translations[
-                  "*Note: The updated feature will be valid only till end of the current billing cycle"
-                ]
-              }
+              {translations(
+                "*Note: The updated feature will be valid only till end of the current billing cycle",
+              )}
             </Text>
           )}
         </Box>
         <Group justify="end">
           <Button variant="outline" onClick={onClose}>
-            {translations["Cancel"]}
+            {translations("Cancel")}
           </Button>
           <Button loading={updateMutation.isPending} onClick={handleSave}>
-            {translations["Save"]}
+            {translations("Save")}
           </Button>
         </Group>
       </Stack>

@@ -26,12 +26,12 @@ import {
 } from "@tabler/icons-react";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import classNames from "classnames/bind";
+import { useTranslations } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
 import { usePushToWaMutation } from "@/backend/whatsapp/flow/flow.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import dndClasses from "../../../Survey/Question/DraggableQuestionCard/DraggableQuestionCard.module.css";
 import SortDrawerFlow from "../../flows/sortDrawer/SortDrawerFlow";
@@ -77,7 +77,7 @@ function ScreenListItem({
     200,
   );
 
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [screenTitleInputState, setScreenTitleInputState] = useState(
     screen?.title,
   );
@@ -135,13 +135,13 @@ function ScreenListItem({
             cursor: "pointer",
           }}
         >
-          <Tooltip label={translations["Add Screen"]} openDelay={500}>
+          <Tooltip label={translations("Add Screen")} openDelay={500}>
             <Stack align="center" onClick={handleCreateScreenClick}>
               <IconPlus size={30} />
               <RateupButtonPrimary
                 mt={"xl"}
                 size="lg"
-                title={translations["Add Screen"]}
+                title={translations("Add Screen")}
               />
             </Stack>
           </Tooltip>
@@ -153,20 +153,18 @@ function ScreenListItem({
               forDeleteFunctionality
               opened={dialogOpened}
               onClose={closeDialog}
-              headerLabel={
-                translations[
-                  "Are you sure you want to delete this Screen? It will also delete all the elements in this screen."
-                ]
-              }
-              headerTitle={translations["Delete Screen?"]}
-              confirmLabel={translations["Delete"]}
+              headerLabel={translations(
+                "Are you sure you want to delete this Screen? It will also delete all the elements in this screen.",
+              )}
+              headerTitle={translations("Delete Screen?")}
+              confirmLabel={translations("Delete")}
               onConfirm={handleDeleteScreen}
             />
             <Group
               gap={5}
               className={styles["screen-title-input-and-chevrons-container"]}
             >
-              <Tooltip label={translations["Previous Screen"]}>
+              <Tooltip label={translations("Previous Screen")}>
                 <ActionIcon
                   onClick={() => {
                     setCurrentScreenId(screens?.[pageNo - 1]?.id);
@@ -185,11 +183,9 @@ function ScreenListItem({
                 label={`Screen ${pageNo + 1}`}
                 value={screenTitleInputState}
                 onChange={handleScreenTitleInputChange}
-                placeholder={
-                  translations[
-                    "Section title (Required if more than one section is added)"
-                  ]
-                }
+                placeholder={translations(
+                  "Section title (Required if more than one section is added)",
+                )}
                 onBlur={handleScreenTitleInputBlur}
                 rightSection={
                   <ActionIcon
@@ -205,7 +201,7 @@ function ScreenListItem({
                   }
                 }}
               />
-              <Tooltip label={translations["Next Screen"]}>
+              <Tooltip label={translations("Next Screen")}>
                 <ActionIcon
                   onClick={() => {
                     setCurrentScreenId(screens?.[pageNo + 1]?.id);
@@ -221,7 +217,7 @@ function ScreenListItem({
             </Group>
             <Group mx={"xl"} justify="space-between" mt={"xs"}>
               <Group gap={4}>
-                <Tooltip label={translations["Add Screen"]} openDelay={500}>
+                <Tooltip label={translations("Add Screen")} openDelay={500}>
                   <ActionIcon
                     onClick={handleCreateScreenClick}
                     variant="subtle"
@@ -229,13 +225,13 @@ function ScreenListItem({
                     <IconPlus />
                   </ActionIcon>
                 </Tooltip>
-                <Tooltip label={translations["Delete Screen"]}>
+                <Tooltip label={translations("Delete Screen")}>
                   <ActionIcon onClick={toggle} variant="subtle">
                     <IconTrash size={20} />
                   </ActionIcon>
                 </Tooltip>
                 <Tooltip
-                  label={translations["Swap order of screens"]}
+                  label={translations("Swap order of screens")}
                   openDelay={500}
                 >
                   <ActionIcon onClick={open} variant={"subtle"} size={20}>
@@ -247,8 +243,8 @@ function ScreenListItem({
                 <Tooltip
                   label={
                     pendingSave
-                      ? translations["Save your flow to WhatsApp"]
-                      : translations["No changes to save"]
+                      ? translations("Save your flow to WhatsApp")
+                      : translations("No changes to save")
                   }
                 >
                   <ActionIcon
@@ -303,7 +299,7 @@ function ScreenListItem({
               </Droppable>
               <Group m={"md"}>
                 <RateupButtonPrimary
-                  title={translations["Add Element"]}
+                  title={translations("Add Element")}
                   rightIcon={<IconPlus />}
                   onClick={onAddElementClick}
                   fullWidth
@@ -318,7 +314,7 @@ function ScreenListItem({
                 className={cx("text-input", "footer-label-input")}
                 defaultValue={footerLabel}
                 onChange={(event) => setFooterLabel(event.currentTarget.value)}
-                placeholder={translations["Next button text"]}
+                placeholder={translations("Next button text")}
                 onBlur={handleFooterLabelInputBlur}
                 rightSection={
                   <ActionIcon
@@ -334,7 +330,7 @@ function ScreenListItem({
                   }
                 }}
               />
-              <Text fz={"xs"}>{translations["Next button text"]}</Text>
+              <Text fz={"xs"}>{translations("Next button text")}</Text>
             </Stack>
           </Flex>
           <SortDrawerFlow
@@ -400,7 +396,7 @@ function FormElementCard({
   dragHandleProps,
 }: Readonly<FormElementCardProps>) {
   const [dialogOpened, { toggle, close }] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Box
       onClick={() => handleOpen(feId, feType)}
@@ -458,13 +454,11 @@ function FormElementCard({
         forDeleteFunctionality
         opened={dialogOpened}
         onClose={close}
-        headerLabel={
-          translations[
-            "Are you sure you want to delete this question? Deleting it will also remove the associated responses."
-          ]
-        }
-        headerTitle={translations["Delete Question?"]}
-        confirmLabel={translations["Delete"]}
+        headerLabel={translations(
+          "Are you sure you want to delete this question? Deleting it will also remove the associated responses.",
+        )}
+        headerTitle={translations("Delete Question?")}
+        confirmLabel={translations("Delete")}
         onConfirm={(e) => {
           handleDelete(feId);
           close();

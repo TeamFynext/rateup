@@ -3,8 +3,7 @@ import {
   IconTriangleFilled,
   IconTriangleInvertedFilled,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { SortType } from "../../types/enums";
 
@@ -21,7 +20,7 @@ export function SortableField({
 }: SortableFieldProps & GroupProps) {
   let icon;
   const { children, style, ...rest } = props;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   if (sort.sortKey === sortKey) {
     switch (sort.sortType) {
       case SortType.ASC:
@@ -33,7 +32,7 @@ export function SortableField({
     }
   }
   return (
-    <Tooltip label={translations["Click to sort by field"]} openDelay={1000}>
+    <Tooltip label={translations("Click to sort by field")} openDelay={1000}>
       <Group
         wrap="nowrap"
         gap={"xs"}

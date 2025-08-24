@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Bot,
   Box,
@@ -12,6 +13,7 @@ import {
   MessageCircleCodeIcon,
   Monitor,
   QrCode,
+  ScanLine,
   Star,
 } from "lucide-react";
 
@@ -68,6 +70,12 @@ export default function DropDownNavItems() {
       description: "Manage all customer conversations in one place",
       href: "https://products.rateup.app/products/inbox",
     },
+    {
+      icon: <ScanLine className="w-6 h-6 text-[#1c518e]" />,
+      title: "Smart QR",
+      description: "They scan, you grow",
+      href: "https://products.rateup.app/products/qr",
+    },
   ];
 
   // Close on click outside
@@ -85,7 +93,12 @@ export default function DropDownNavItems() {
   }, []);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div
+      className="relative"
+      ref={dropdownRef}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
       <span
         onClick={() => setOpen(!open)}
         className="px-4 py-2 text-[#3f5ba9] text-[17px] font-semibold cursor-pointer flex items-center gap-1 hover:text-[#1c518e] transition-colors duration-200"
@@ -98,7 +111,7 @@ export default function DropDownNavItems() {
         />
       </span>
 
-      {open && (
+      {/* {open && (
         <div className="absolute left-0 z-50 mt-3 w-[340px] max-h-[75vh] overflow-y-auto rounded-xl border border-[#3f5ba9] bg-white shadow-2xl p-4 space-y-4">
           {items.map((item, idx) => (
             <Link
@@ -114,7 +127,35 @@ export default function DropDownNavItems() {
             </Link>
           ))}
         </div>
-      )}
+      )} */}
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="absolute left-0 z-50 mt-3 w-[340px] max-h-[75vh] overflow-y-auto rounded-xl border border-[#3f5ba9] bg-white shadow-2xl p-4 space-y-4"
+          >
+            {items.map((item, idx) => (
+              <Link
+                key={idx}
+                href={item.href}
+                className="flex items-start gap-4 hover:bg-[#f1f5ff] p-3 rounded-lg transition"
+              >
+                <div>{item.icon}</div>
+                <div>
+                  <div className="font-semibold text-[#00397b]">
+                    {item.title}
+                  </div>
+                  <p className="text-sm text-gray-600">{item.description}</p>
+                </div>
+              </Link>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -13,8 +13,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useLinktrees } from "../../backend/linktree/linktree.query";
 import { docsPath } from "../../utils/constants";
@@ -37,7 +36,7 @@ function LinktreeDashboard() {
   const { data, isPending, isError } = useLinktrees();
   const [linktrees, setLinktrees] = useState([]);
   const [sortOption, setSortOption] = useState("latest");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const tourSteps = LPTourSteps({ styles });
 
   useEffect(() => {
@@ -66,13 +65,13 @@ function LinktreeDashboard() {
   } else if (isError) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <p>{translations["Unable to get data, please try again later."]}</p>
+        <p>{translations("Unable to get data, please try again later.")}</p>
       </Center>
     );
   } else if (!isPending && !isError && !linktrees.length) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <NothingFound text={translations["No Landing Pages Found."]} />;
+        <NothingFound text={translations("No Landing Pages Found.")} />;
       </Center>
     );
   } else {
@@ -88,7 +87,7 @@ function LinktreeDashboard() {
             rightSection={<IconPlus />}
             onClick={createLinktreeModalHandlers.open}
           >
-            {translations["Create Quick Access Link"]}
+            {translations("Create Quick Access Link")}
           </Button>
           <WelcomeTour steps={tourSteps} />
           <RefreshButton queryKeys={["linktrees"]} />

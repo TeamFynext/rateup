@@ -11,16 +11,16 @@ import {
 import { useForm } from "@mantine/form";
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 import { IconPhoto } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { uploadFile } from "@/components/Linktree/LinktreeEditor/ThemeEditor/components/SaveChangesBtn/uploadFile";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import styles from "./InsertImage.module.css";
 
 function InsertBase64Image() {
   const { editor } = useRichTextEditorContext();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [isPopoveOpen, setIsPopoverOpen] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [base64Image, setBase64Image] = useState<string | null>(null);
@@ -115,7 +115,7 @@ function InsertBase64Image() {
       <Popover.Target>
         <RichTextEditor.Control
           aria-label="Insert image"
-          title={translations["Insert image"]}
+          title={translations("Insert image")}
           onClick={() => {
             if (!isUploadingFile) {
               setIsPopoverOpen(!isPopoveOpen);
@@ -141,7 +141,7 @@ function InsertBase64Image() {
 
           <RateupButtonPrimary
             loading={isUploadingFile}
-            title={translations["submit"]}
+            title={translations("submit")}
             type="submit"
           />
         </form>

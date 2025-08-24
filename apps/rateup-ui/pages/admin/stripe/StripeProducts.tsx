@@ -16,8 +16,7 @@ import {
   GridRenderCellParams,
 } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useRateupPaymentsPlans } from "../../../backend/payment/payment.query";
 import {
@@ -44,7 +43,7 @@ const StripeProducts = () => {
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
   const [productId, setProductId] = useState("");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const handleDeleteProduct = () => {
     const product =
       products && products?.find((prod) => prod.productId == productId);
@@ -53,7 +52,7 @@ const StripeProducts = () => {
       rateupPlans?.find((plan) => plan?.stripeId === product?.id);
     if (productInRateupPlan) {
       showErrorToast(
-        translations["Unable to delete. Product is in use in rateup plan"],
+        translations("Unable to delete. Product is in use in rateup plan"),
         "stripe",
         <IconX />,
         true,
@@ -64,18 +63,18 @@ const StripeProducts = () => {
   };
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: translations["Product ID"], width: 200 },
-    { field: "name", headerName: translations["Name"], width: 200 },
+    { field: "id", headerName: translations("Product ID"), width: 200 },
+    { field: "name", headerName: translations("Name"), width: 200 },
     {
       field: "description",
-      headerName: translations["Description"],
+      headerName: translations("Description"),
       width: 200,
     },
-    { field: "type", headerName: translations["Type"] },
-    { field: "amount", headerName: translations["Amount"] },
-    { field: "currency", headerName: translations["Currency"] },
-    { field: "interval", headerName: translations["Interval"] },
-    { field: "intervalCount", headerName: translations["Interval Count"] },
+    { field: "type", headerName: translations("Type") },
+    { field: "amount", headerName: translations("Amount") },
+    { field: "currency", headerName: translations("Currency") },
+    { field: "interval", headerName: translations("Interval") },
+    { field: "intervalCount", headerName: translations("Interval Count") },
     {
       field: "livemod",
       headerName: "Live Mode",
@@ -83,26 +82,26 @@ const StripeProducts = () => {
         const liveMode = params.value;
         return (
           <Badge color={liveMode ? "green" : "red"}>
-            {liveMode ? translations["Live"] : translations["Inactive"]}
+            {liveMode ? translations("Live") : translations("Inactive")}
           </Badge>
         );
       },
     },
     {
       field: "active",
-      headerName: translations["Active"],
+      headerName: translations("Active"),
       renderCell: (params: GridRenderCellParams<any, any>) => {
         const active = params.value;
         return (
           <Badge color={active ? "green" : "red"}>
-            {active ? translations["Active"] : translations["Inactive"]}
+            {active ? translations("Active") : translations("Inactive")}
           </Badge>
         );
       },
     },
     {
       field: "status",
-      headerName: translations["Status"],
+      headerName: translations("Status"),
       type: "singleSelect",
       editable: true,
       preProcessEditCellProps: (params: GridPreProcessEditCellProps) => {
@@ -121,7 +120,7 @@ const StripeProducts = () => {
         PaymentPlanStatus.INACTIVE,
       ],
     },
-    { field: "createdAt", headerName: translations["Created At"], width: 200 },
+    { field: "createdAt", headerName: translations("Created At"), width: 200 },
     {
       field: "actions",
       type: "actions",
@@ -132,7 +131,7 @@ const StripeProducts = () => {
         return [
           <GridActionsCellItem
             icon={<IconTrash />}
-            label={translations["Delete"]}
+            label={translations("Delete")}
             disabled={[
               PaymentPlanStatus.ACTIVE,
               PaymentPlanStatus.LIVE,
@@ -170,7 +169,7 @@ const StripeProducts = () => {
       <Blockquote color="blue" icon={<IconInfoCircle />} p={"md"}>
         <Group justify="space-between">
           <Group gap={"xs"}>
-            <Text>{translations["List of products from Stripe DB"]}</Text>
+            <Text>{translations("List of products from Stripe DB")}</Text>
             <RefreshButton queryKeys={["stripeProducts"]} />
           </Group>
           <RateupButtonSecondary
@@ -194,21 +193,21 @@ const StripeProducts = () => {
         opened={openedDeleteModal}
         onClose={closeDeleteModal}
         forDeleteFunctionality
-        confirmLabel={translations["Delete"]}
-        headerTitle={translations["Delete Stripe Product"]}
+        confirmLabel={translations("Delete")}
+        headerTitle={translations("Delete Stripe Product")}
         onConfirm={() => {
           showLoadingToast(
-            translations["Hold on..Stripe Product is getting deleted"],
+            translations("Hold on..Stripe Product is getting deleted"),
             "stripe",
             true,
-            translations["Deleting Stripe product"],
+            translations("Deleting Stripe product"),
           );
           handleDeleteProduct();
         }}
-        headerLabel={
-          translations["Are you sure to delete this stripe product?"]
-        }
-        closeLabel={translations["cancel"]}
+        headerLabel={translations(
+          "Are you sure to delete this stripe product?",
+        )}
+        closeLabel={translations("cancel")}
       />
     </Stack>
   );

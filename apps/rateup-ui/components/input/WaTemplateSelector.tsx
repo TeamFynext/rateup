@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 
 import { SelectProps } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 import { TemplateType } from "@/types/enums";
 import useTemplatesAvailableForTeam from "@/hooks/team";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { SelectSkeleton } from "../LoyaltyComponents/utils";
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
@@ -28,7 +28,7 @@ const WaTemplateSelector = ({
   templateType,
   ...props
 }: WaTemplateSelector) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { data: allTemplates, isLoading } = useWaTemplates(templateType);
   const templates = teamId
     ? useTemplatesAvailableForTeam(teamId)
@@ -53,8 +53,8 @@ const WaTemplateSelector = ({
 
   return (
     <ContainedSelection
-      label={label || translations["whatsApp Template"]}
-      placeholder={placeholder || translations["Select a template"]}
+      label={label || translations("whatsApp Template")}
+      placeholder={placeholder || translations("Select a template")}
       data={templatesData}
       value={value}
       onChange={onChange}

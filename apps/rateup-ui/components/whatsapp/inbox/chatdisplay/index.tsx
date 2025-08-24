@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Group, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import {
   useGetAssignedUserForContact,
@@ -10,12 +11,12 @@ import {
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { useUser } from "@/context/UserContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { useIsChatDisplayOpen } from "../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import NothingFound from "../../../NothingFound/NothingFound";
 import { useChatFilterStore } from "../chatselect/chatFilter";
+import WhatsAppInboxLoader from "../loader";
 import WaInboxChatDisplayBody from "./chatdisplayBody";
 import WaInboxChatDisplayFooter, {
   WaInboxAssignUserFooter,
@@ -28,22 +29,27 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   const searchParams = useSearchParams();
   const { selectedContact: contact } = useContactStore();
   const { filter } = useChatFilterStore();
-  const { data, error } = useGetMessagesByContactId(
-    searchParams.get("contactId") ?? contact?.id,
+  const currentContactId = searchParams.get("contactId") ?? contact?.id;
+
+  const { data, error, isPending } = useGetMessagesByContactId(
+    currentContactId,
     filter?.phone,
   );
+
   const messages = useMemo(
     () =>
-      data?.pages
-        .map((page) =>
-          page?.messages?.toSorted(
-            (a, b) =>
-              new Date(a.waCreatedAt).getTime() -
-              new Date(b.waCreatedAt).getTime(),
-          ),
-        )
-        .flat() || [],
-    [data],
+      !isPending && data
+        ? data.pages
+            .map((page) =>
+              page?.messages?.toSorted(
+                (a, b) =>
+                  new Date(a.waCreatedAt).getTime() -
+                  new Date(b.waCreatedAt).getTime(),
+              ),
+            )
+            .flat()
+        : [],
+    [data, isPending],
   );
 
   const { data: assignedUsers } = useGetAssignedUserForContact(contact?.id);
@@ -56,7 +62,7 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   );
 
   const isChatDisplayOpen = useIsChatDisplayOpen();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   if (error) return <div>Error: {error.message}</div>;
 
   let footerContent = null;
@@ -84,22 +90,31 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
     );
   }
 
+  const showLoading = !!contact && isPending;
+
   return (
     <div
       className={`${classes.wrapper} ${isChatDisplayOpen ? "chat-display-open" : ""} p-1`}
     >
       <PaperLayout p={0} className="h-full">
-        {messages?.length >= 0 && contact ? (
+        {!contact && messages?.length === 0 ? (
+          <NothingFound text={translations("Select a chat to see messages")} />
+        ) : (
           <div className={classes.inner_animated}>
             <WaInboxChatDisplayHeader
               contact={contact}
               smallScreen={smallScreen}
             />
-            <WaInboxChatDisplayBody data={messages} smallScreen={smallScreen} />
-            {footerContent}
+            {showLoading ? (
+              <WhatsAppInboxLoader isLoading={showLoading} />
+            ) : (
+              <WaInboxChatDisplayBody
+                data={messages}
+                smallScreen={smallScreen}
+              />
+            )}
+            {!showLoading && footerContent}
           </div>
-        ) : (
-          <NothingFound text={translations["Select a chat to see messages"]} />
         )}
       </PaperLayout>
     </div>

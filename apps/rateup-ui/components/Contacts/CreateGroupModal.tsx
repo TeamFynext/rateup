@@ -17,9 +17,9 @@ import {
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { IconUpload } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import {
   useCreateContactGroupMutation,
@@ -58,7 +58,7 @@ const CreateGroupModal = ({
   const [isUploading, setIsUploading] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const form = useForm({
     initialValues: groupDetails
       ? { ...groupDetails, contactType: gTags ?? [] }
@@ -70,9 +70,9 @@ const CreateGroupModal = ({
           tags: {},
         },
     validate: {
-      name: (value) => (value.length ? null : translations["Cannot be empty"]),
+      name: (value) => (value.length ? null : translations("Cannot be empty")),
       teamId: (value) =>
-        !isEdit && !value && translations["Must select a team"],
+        !isEdit && !value && translations("Must select a team"),
     },
   });
 
@@ -159,7 +159,7 @@ const CreateGroupModal = ({
         setIsUploading(false);
       })
       .catch((err) => {
-        showErrorToast(translations["Error uploading icon. Please try again."]);
+        showErrorToast(translations("Error uploading icon. Please try again."));
         setIsUploading(false);
       });
   }, [file]);
@@ -174,14 +174,14 @@ const CreateGroupModal = ({
           <Stack>
             <ContainedTextField
               required
-              label={translations["Group Name"]}
-              placeholder={translations["Enter group name"]}
+              label={translations("Group Name")}
+              placeholder={translations("Enter group name")}
               {...form.getInputProps("name")}
             />
             <TeamSelector
               value={selectedTeamId}
               onChange={(value) => setSelectedTeamId(value)}
-              label={translations["Select Team"]}
+              label={translations("Select Team")}
               readOnly={isEdit}
             />
           </Stack>
@@ -203,7 +203,7 @@ const CreateGroupModal = ({
                   variant="outline"
                   leftSection={<IconUpload size={15}></IconUpload>}
                 >
-                  <Text size="sm">{translations["Upload Icon"]}</Text>
+                  <Text size="sm">{translations("Upload Icon")}</Text>
                 </Button>
               )}
             </FileButton>
@@ -212,7 +212,7 @@ const CreateGroupModal = ({
         {gTags?.length > 0 && (
           <PaperLayout p={"xs"} mt={"md"} radius={"md"}>
             <Checkbox.Group
-              label={translations["Contact Types"]}
+              label={translations("Contact Types")}
               {...form.getInputProps("contactType")}
             >
               <Group>
@@ -247,11 +247,11 @@ const CreateGroupModal = ({
 
         <Group justify="flex-end" mt={"md"}>
           <RateupButtonSecondary
-            title={translations["cancel"]}
+            title={translations("cancel")}
             onClick={groupClose}
           />
           <RateupButtonBlue
-            title={isEdit ? translations["Save"] : translations["Create Group"]}
+            title={isEdit ? translations("Save") : translations("Create Group")}
             onClick={handleSubmit}
             loading={isCreating}
             disabled={isUploading}

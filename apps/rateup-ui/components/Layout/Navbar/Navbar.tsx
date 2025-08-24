@@ -8,8 +8,7 @@ import {
   IconHeadset,
   IconHome,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
@@ -22,7 +21,7 @@ import styles from "./Navbar.module.css";
 export const Navbar = () => {
   const router = useRouter();
   const { pathname, query } = router;
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   let pathParts = pathname.split("/").filter((path) => path);
   const routeParams = useRouteParams();
   const { data: subscription, isPending } = useSubscription();
@@ -90,7 +89,7 @@ export const Navbar = () => {
         {!router.asPath.includes("/dashboard/settings?tab=account") && (
           <ExpiryComponent expiryDate={subscription?.expiresAt}>
             <RateupButtonPrimary
-              title={translations["Upgrade Now"]}
+              title={translations("Upgrade Now")}
               variant="gradient"
               leftIcon={<IconCrown />}
               gradient={{ from: "#FDBD3A", to: "#F99A21" }}

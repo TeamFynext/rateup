@@ -3,15 +3,14 @@ import { useRouter } from "next/router";
 
 import { LoadingOverlay, Paper, Text } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 //import { signOut } from "supertokens-auth-react/recipe/session";
 import Session from "supertokens-web-js/recipe/session";
-
-import useTranslations from "@/dictionaries/useTranslation";
 
 const Logout = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     handleSignOut();
     router.push("/login");
@@ -56,7 +55,7 @@ const Logout = () => {
             textAlign: "center",
           }}
         >
-          {translations["Logging out..."]}
+          {translations("Logging out...")}
         </Text>
       </Paper>
     </div>

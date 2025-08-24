@@ -3,9 +3,9 @@ import Head from "next/head";
 import Link from "next/link";
 
 import { Button, Image } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 import GoogleReview from "@/components/Survey/TakeSurvey/GoogleReview";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { getPublicSurvey } from "../../../../backend/surveys/survey.api";
 import { usePublicReviewSuggestions } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.query";
@@ -38,7 +38,7 @@ export const getServerSideProps = async (context: {
 export default function Page({ survey, error_occured, fromShortUrl = false }) {
   // empty if its not review page, contains surveyLanguage if its review page
   const [isReviewPage, setIsReviewPage] = useState<string>("");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { data: gReview } = usePublicReviewSuggestions(
     !!isReviewPage && !!survey?.surveyTeamMapId,
     survey?.surveyTeamMapId,
@@ -88,13 +88,13 @@ export default function Page({ survey, error_occured, fromShortUrl = false }) {
           <Image w={80} src={`${imagesPath}/rateup-logo-blue-text.svg`} />
         </Link>
         <p className={errorPageStyles["error-text"]}>
-          {translations["Unable to get survey, please try again later"]}
+          {translations("Unable to get survey, please try again later")}
         </p>
         <Button
           className={errorPageStyles["reload-btn"]}
           onClick={() => window.location.reload()}
         >
-          {translations["Reload the page"]}
+          {translations("Reload the page")}
         </Button>
       </div>
     );

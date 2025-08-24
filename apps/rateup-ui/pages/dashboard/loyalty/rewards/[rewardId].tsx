@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/router";
 
+import { useTranslations } from "next-intl";
+
 import {
   useGetLoyaltyRewardById,
   useGetLoyaltyRewards,
@@ -8,13 +10,12 @@ import {
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import LoyaltyRewardForm from "@/components/LoyaltyComponents/Rewards/LoyaltyRewardForm";
 import { useRouteParams } from "@/context/RouteParamsContext";
-import useTranslations from "@/dictionaries/useTranslation";
 
 const RewardID = () => {
   const router = useRouter();
   const { rewardId } = router.query as { rewardId: string };
   const { update } = useRouteParams();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
 
   const { data: reward, isLoading: isRewardLoading } = useGetLoyaltyRewardById(
     rewardId !== "create" ? rewardId : null,
@@ -37,7 +38,7 @@ const RewardID = () => {
     <LoyaltyRewardForm
       reward={reward}
       existingRewardIds={existingRewardIds}
-      title={reward ? reward.name : translations["Create Reward"]}
+      title={reward ? reward.name : translations("Create Reward")}
     />
   );
 };

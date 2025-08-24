@@ -12,6 +12,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useDebouncedState, useDisclosure, useListState } from "@mantine/hooks";
+import { useTranslations } from "next-intl";
 
 import { ContactGroupType, LoyaltyActionType } from "@/types/enums";
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
@@ -34,7 +35,6 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 import { SearchInput } from "@/pages/dashboard/campaign";
 import customer from "@/pages/dashboard/loyalty/customer";
 import { PAGE_SIZE } from "@/utils/constants";
@@ -59,7 +59,7 @@ const LoyaltyBulkActions = ({ opened, close }) => {
   const [isAllActions, setIsAllActions] = useState(false);
   const [amount, setAmount] = useState<string | number>("");
   const [dialogMessage, setDialogMessage] = useState(null);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [openedFailed, { open: openFailed, close: closeFailed }] =
     useDisclosure(false);
 
@@ -204,7 +204,7 @@ const LoyaltyBulkActions = ({ opened, close }) => {
           <SimpleGrid cols={2}>
             <PaperLayout>
               <Checkbox
-                label={translations["Select All"]}
+                label={translations("Select All")}
                 checked={
                   selectedControl === BulkActionControls.CUSTOMERS
                     ? isAllCustomer
@@ -227,7 +227,7 @@ const LoyaltyBulkActions = ({ opened, close }) => {
                       />
                     ))
                   ) : (
-                    <Text>{translations["No customer found"]}</Text>
+                    <Text>{translations("No customer found")}</Text>
                   )
                 ) : selectedControl === BulkActionControls.GROUPS ? (
                   filteredGroups.length > 0 ? (
@@ -241,7 +241,7 @@ const LoyaltyBulkActions = ({ opened, close }) => {
                       />
                     ))
                   ) : (
-                    <Text>{translations["No group found"]}</Text>
+                    <Text>{translations("No group found")}</Text>
                   )
                 ) : filteredActions.length > 0 ? (
                   filteredActions.map((a) => (
@@ -254,7 +254,7 @@ const LoyaltyBulkActions = ({ opened, close }) => {
                     />
                   ))
                 ) : (
-                  <Text>{translations["No action found"]}</Text>
+                  <Text>{translations("No action found")}</Text>
                 )}
               </ScrollAreaAutosize>
               {selectedControl === BulkActionControls.CUSTOMERS &&
@@ -320,7 +320,7 @@ const LoyaltyAction = ({
   selectedActionsHandler,
   isAlreadySelected = false,
 }) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const isSelected = selectedActions.some((c) => c?.id === action?.id);
 
   return (
@@ -342,7 +342,7 @@ const LoyaltyAction = ({
           radius={"xl"}
           size="sm"
         >
-          {translations["Remove"]}
+          {translations("Remove")}
         </Button>
       ) : (
         <Button
@@ -352,7 +352,7 @@ const LoyaltyAction = ({
           w={90}
           disabled={isAlreadySelected}
         >
-          {isAlreadySelected ? translations["Added"] : translations["Add"]}
+          {isAlreadySelected ? translations("Added") : translations("Add")}
         </Button>
       )}
     </Group>

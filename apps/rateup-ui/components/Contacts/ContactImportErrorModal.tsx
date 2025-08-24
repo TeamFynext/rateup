@@ -2,15 +2,14 @@ import React, { useEffect } from "react";
 
 import { ScrollAreaAutosize, Table } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import FormModalLayout from "../Modal/FormModalLayout";
 
 const ContactImportErrorModal = ({ isError = false, body }) => {
   let { error, data } = body ?? { error: "", data: "" };
   const [opened, { toggle, close }] = useDisclosure(false);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (isError && data?.length > 0) {
       toggle();
@@ -32,7 +31,7 @@ const ContactImportErrorModal = ({ isError = false, body }) => {
       centered
       opened={opened}
       onClose={close}
-      title={translations["Failed contact import"]}
+      title={translations("Failed contact import")}
       size={"xl"}
     >
       {isError && error === "VALIDATION_ERR" && (
@@ -40,8 +39,8 @@ const ContactImportErrorModal = ({ isError = false, body }) => {
           <Table stickyHeader>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>{translations["Name"]}</Table.Th>
-                <Table.Th>{translations["Phone"]}</Table.Th>
+                <Table.Th>{translations("Name")}</Table.Th>
+                <Table.Th>{translations("Phone")}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>{rows}</Table.Tbody>

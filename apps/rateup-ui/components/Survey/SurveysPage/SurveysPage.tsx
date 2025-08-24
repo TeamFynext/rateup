@@ -3,12 +3,12 @@ import { useRouter } from "next/router";
 
 import { Box, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useTranslations } from "next-intl";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { SurveyCard } from "@/components/Card/SurveyCard/SurveyCard";
 import { sortData } from "@/components/Dashboard/SortDropDown";
 import NothingFound from "@/components/NothingFound/NothingFound";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { CreateSurveyModal } from "../CreateSurveyModal";
 import SurveyTemplatesModal from "../SurveyTemplatesModal";
@@ -52,7 +52,7 @@ export function SurveysPage({
   const [sortOption, setSortOption] = useState("latest");
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
-  const { translations, loadingTranslations } = useTranslations();
+  const translations = useTranslations();
 
   const [template, setTemplate] = useState(null);
 
@@ -154,7 +154,7 @@ export function SurveysPage({
             ))}
         </Box>
       ) : (
-        <NothingFound text={translations["No Surveys Found"]} />
+        <NothingFound text={translations("No Surveys Found")} />
       )}
       {createSurveyOpened && (
         <CreateSurveyModal

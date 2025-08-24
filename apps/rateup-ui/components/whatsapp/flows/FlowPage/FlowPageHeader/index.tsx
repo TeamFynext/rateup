@@ -1,8 +1,7 @@
 import { useContext } from "react";
 
 import { Box, MultiSelect, Tabs } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import SurveyContext from "../../../../../context/SurveyContext";
 import StyledTabs from "../../../../styled/StyledTabs/StyledTabs";
@@ -21,7 +20,7 @@ function FlowPageHeader({ name, tab, setTabState }) {
   const multiSelectOptions = survey?.teams?.map((team) => {
     return { value: team?.mapId, label: team?.name };
   });
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Box className={styles["flow-page-header"]}>
       <Box className={styles["heading-container"]}>
@@ -61,7 +60,7 @@ function FlowPageHeader({ name, tab, setTabState }) {
             value={filterTeams}
             onChange={setFilterTeams}
             placeholder={
-              filterTeams.length > 0 ? "" : translations["All Teams"]
+              filterTeams.length > 0 ? "" : translations("All Teams")
             }
           />
         ) : null}

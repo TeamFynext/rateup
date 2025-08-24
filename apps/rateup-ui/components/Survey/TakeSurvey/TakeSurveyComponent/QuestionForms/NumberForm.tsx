@@ -1,8 +1,7 @@
 import { KeyboardEventHandler, useContext } from "react";
 
 import { NumberInput, useMantineTheme } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useHandleNextPrevFuncs } from "../../../../../context/NextPrevFuncsContext";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
@@ -14,7 +13,7 @@ export function NumberForm() {
   const { response, updateResponse } = useContext(CurrentResponsesContext);
   const theme = useMantineTheme();
   const { nextFn, isLastQuestion } = useHandleNextPrevFuncs();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <FormPaperLayout>
       <NumberInput

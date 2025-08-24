@@ -19,12 +19,12 @@ import { IconEdit, IconPlayerPlay, IconPlus } from "@tabler/icons-react";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
+import { useTranslations } from "next-intl";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
 import { PageType, QuestionType } from "@/types/enums";
 import { reorderQuestions } from "@/backend/surveys/questions/questions.api";
 import { useNavControlContext } from "@/context/NavControlContext";
-import useTranslations from "@/dictionaries/useTranslation";
 import { uniquePages } from "@/utils/constants";
 import { showErrorToast } from "@/utils/notifications";
 import { reorder, reOrderPages } from "@/utils/questions";
@@ -76,7 +76,7 @@ export function QuestionsSideBar({
   const { surveyId } = router.query as { surveyId: string };
   const [questionsState, handlers] = useListState(questions);
   const { navOpened, setNavOpened } = useNavControlContext();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     handlers.setState(questions);
 
@@ -116,12 +116,12 @@ export function QuestionsSideBar({
       title: "Discard unsaved changes?",
       children: (
         <Text className={modalStyles["are-you-sure-text"]}>
-          {translations["Are you sure, you want to discard unsaved changes?"]}
+          {translations("Are you sure, you want to discard unsaved changes?")}
         </Text>
       ),
       labels: {
-        confirm: translations["Discard"],
-        cancel: translations["Cancel"],
+        confirm: translations("Discard"),
+        cancel: translations("Cancel"),
       },
       className: modalStyles["delete-confirmation-modal"],
       centered: true,
@@ -153,7 +153,7 @@ export function QuestionsSideBar({
       Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
     ) {
       showErrorToast(
-        translations["Please Enter heading and choices for all languages."],
+        translations("Please Enter heading and choices for all languages."),
         "missing-title-toast",
       );
       return;
@@ -221,10 +221,10 @@ export function QuestionsSideBar({
             fz={14}
             fw={400}
           >
-            {translations["Add Content"]}
+            {translations("Add Content")}
           </Button>
 
-          <Tooltip label={translations["Survey Preview"]}>
+          <Tooltip label={translations("Survey Preview")}>
             <ActionIcon
               className={styles["survey-preview-btn"]}
               variant="light"
@@ -232,14 +232,14 @@ export function QuestionsSideBar({
             >
               <Group className={styles["icon-text-group"]}>
                 <Text className={styles["icon-text"]}>
-                  {translations["Preview"]}
+                  {translations("Preview")}
                 </Text>
                 <IconPlayerPlay />
               </Group>
             </ActionIcon>
           </Tooltip>
 
-          <Tooltip label={translations["Edit Theme"]}>
+          <Tooltip label={translations("Edit Theme")}>
             <ActionIcon
               className={styles["edit-theme-btn"]}
               variant="light"
@@ -263,9 +263,9 @@ export function QuestionsSideBar({
                   )
                 ) {
                   showErrorToast(
-                    translations[
-                      "Please Enter heading and choices for all languages."
-                    ],
+                    translations(
+                      "Please Enter heading and choices for all languages.",
+                    ),
                     "missing-title-toast",
                   );
                   return;
@@ -278,7 +278,7 @@ export function QuestionsSideBar({
                 style={{ display: "flex", alignItems: "center", gap: "2px" }}
               >
                 <Text className={styles["icon-text"]}>
-                  {translations["Theme"]}
+                  {translations("Theme")}
                 </Text>
                 <IconEdit />
               </Group>
@@ -296,7 +296,7 @@ export function QuestionsSideBar({
             <Stack align="center">
               <IconPlus size={36} />
               <Text size="xl" fw={500}>
-                {translations["Add Content"]}
+                {translations("Add Content")}
               </Text>
             </Stack>
           </Center>

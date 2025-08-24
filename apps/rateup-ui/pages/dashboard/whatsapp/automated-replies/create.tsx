@@ -116,7 +116,7 @@ export function AutomatedReplyForm({
     setActiveTab(
       initialValues?.commands.includes("*")
         ? "allOthers"
-        : initialValues?.commands.includes("lead")
+        : initialValues?.commands[0]?.startsWith("lead")
           ? "leadgen"
           : "keywords",
     );

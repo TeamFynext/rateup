@@ -18,10 +18,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
 import { GetContactTagsRes } from "@/backend/whatsapp/settings/waSettings.api";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 import {
@@ -101,7 +101,7 @@ function ContactTable({
   const [filterVisibility, setFilterVisibility] = React.useState(false);
   const [rowSelection, setRowSelection] = React.useState({});
   const largeScreen = useMediaQuery("(min-width: 40em)");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [
     dialogOpened,
     { toggle: toggleConfirmationModal, close: closeDialog },
@@ -189,7 +189,7 @@ function ContactTable({
             switch (tab) {
               case WhatsappTableType.CONTACTS:
                 showLoadingToast(
-                  translations["Contacts getting deleted"],
+                  translations("Contacts getting deleted"),
                   "contact-delete",
                   true,
                   "Deleting Contacts",
@@ -198,19 +198,19 @@ function ContactTable({
                 break;
               case WhatsappTableType.GROUPS:
                 showLoadingToast(
-                  translations["Contact groups getting deleted"],
+                  translations("Contact groups getting deleted"),
                   "contact-group-delete",
                   true,
-                  translations["Deleting Contact Groups"],
+                  translations("Deleting Contact Groups"),
                 );
                 deleteManyContactGroupsMutation.mutate(selectedIds);
                 break;
               case WhatsappTableType.MEMBERS:
                 showLoadingToast(
-                  translations["Members getting removed"],
+                  translations("Members getting removed"),
                   "contact-group-remove",
                   true,
-                  translations["Removing Members"],
+                  translations("Removing Members"),
                 );
                 removeContactsMutation.mutate({
                   contactIds: selectedIds,
@@ -219,10 +219,10 @@ function ContactTable({
                 break;
               case WhatsappTableType.PARTICIPANTS:
                 showLoadingToast(
-                  translations["Participants getting removed"],
+                  translations("Participants getting removed"),
                   "campaign-mulitiple-participants-remove",
                   true,
-                  translations["Removing Participants"],
+                  translations("Removing Participants"),
                 );
                 removeMulitpleGroupParticipants.mutate({
                   data: selectedIds,
@@ -242,7 +242,7 @@ function ContactTable({
               {" "}
               {Object.keys(rowSelection)?.length > 0 ? (
                 <Tooltip
-                  label={` ${translations["Click to"]} ${tooltipMsg}`}
+                  label={` ${translations("Click to")} ${tooltipMsg}`}
                   onClick={toggleConfirmationModal}
                 >
                   <ActionIcon variant="light">
@@ -250,7 +250,7 @@ function ContactTable({
                   </ActionIcon>
                 </Tooltip>
               ) : (
-                <Tooltip label={translations["Select an item to delete"]}>
+                <Tooltip label={translations("Select an item to delete")}>
                   <ActionIcon variant="light" disabled>
                     <IconTrash />
                   </ActionIcon>
@@ -280,19 +280,19 @@ function ContactTable({
                     isPending={isPending}
                     type={contactGroupType}
                   />
-                  <Tooltip label={translations["Refresh"]}>
+                  <Tooltip label={translations("Refresh")}>
                     <ActionIcon
                       variant="light"
                       onClick={async () => {
                         showLoadingToast(
-                          translations["Data getting loaded..."],
+                          translations("Data getting loaded..."),
                           "contacts",
                           true,
-                          translations["Loading"],
+                          translations("Loading"),
                         );
                         await refetch();
                         showSuccessToast(
-                          translations["Data updated"],
+                          translations("Data updated"),
                           "contacts",
                           <IconCheck />,
                           true,

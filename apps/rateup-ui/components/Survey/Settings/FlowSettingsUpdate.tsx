@@ -2,8 +2,7 @@ import React, { useState } from "react";
 
 import { Box, Group, Stack, Switch } from "@mantine/core";
 import { useForm } from "@mantine/form";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useUpdateFlowMetaDataMutation } from "../../../backend/whatsapp/flow/flow.query";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
@@ -33,15 +32,15 @@ const FlowSettingsUpdate = ({
       dbFlowId,
     });
   };
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <PaperLayout>
       <Stack align="center">
         <ContainedTextField
           className={styles["form-input"]}
           withAsterisk
-          label={translations["Flow Name"]}
-          placeholder={translations["Enter Flow name"]}
+          label={translations("Flow Name")}
+          placeholder={translations("Enter Flow name")}
           required
           w={"100%"}
           key={form.key("name")}
@@ -55,16 +54,16 @@ const FlowSettingsUpdate = ({
             {...form.getInputProps("anonymous", { type: "checkbox" })}
           />
           <Box className={"switch-heading-and-desc-container"}>
-            <h3>{translations["Anonymous"]}</h3>
+            <h3>{translations("Anonymous")}</h3>
             <p>
               {form.getValues().anonymous
-                ? translations["Anonymous Flow is enabled"]
-                : translations["Anonymous Flow is disabled"]}
+                ? translations("Anonymous Flow is enabled")
+                : translations("Anonymous Flow is disabled")}
             </p>
           </Box>
         </Group>
         <RateupButtonPrimary
-          title={translations["Save Changes"]}
+          title={translations("Save Changes")}
           onClick={handleFlowMetaData}
           loading={updateFlowMetaDataMutation?.isPending}
         />

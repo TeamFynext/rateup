@@ -15,13 +15,13 @@ import { useDisclosure, useHover } from "@mantine/hooks";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { Draggable } from "@hello-pangea/dnd";
 import cx from "clsx";
+import { useTranslations } from "next-intl";
 
 import { PageType } from "@/types/enums";
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
 import { GoogleIcon } from "@/components/Button/GoogleIcon";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
-import useTranslations from "@/dictionaries/useTranslation";
 import { extractText } from "@/utils";
 
 import { pageIcons } from "../../Page/PageIcons";
@@ -75,14 +75,14 @@ export function DraggableQuestionCard({
 
   const nonDeletablePagetypeStrs = ["Language", "GoogleReview"];
   const nonClickableQuestionTypeStrs = ["GoogleReview"];
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <>
       <ConfirmationModal
         forDeleteFunctionality
-        confirmLabel={translations["Delete"]}
-        headerLabel={` ${translations["Are you sure to delete this"]} ${question.type in PageType ? translations["page"] : translations["question"]}?`}
-        headerTitle={` ${translations["Delete"]} ${question.type in PageType ? translations["page"] : translations["question"]}?`}
+        confirmLabel={translations("Delete")}
+        headerLabel={` ${translations("Are you sure to delete this")} ${question.type in PageType ? translations("page") : translations("question")}?`}
+        headerTitle={` ${translations("Delete")} ${question.type in PageType ? translations("page") : translations("question")}?`}
         opened={dialogOpened}
         onClose={closeDialog}
         onConfirm={(e) => {

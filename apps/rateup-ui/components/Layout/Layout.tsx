@@ -1,6 +1,8 @@
-﻿import React, { useEffect, useState } from "react";
+﻿"use client";
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   AppShell,
@@ -28,13 +30,13 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import SessionReact from "supertokens-auth-react/recipe/session";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import useTranslations from "@/dictionaries/useTranslation";
 import { useChatContactCountStore } from "@/pages/dashboard/whatsapp/inbox/store";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
@@ -586,8 +588,16 @@ const MainContent = ({ children, appProps, navOpened, setNavOpened }) => {
 };
 
 // @ts-ignore
-export default function Layout({ children, appProps }) {
+export default function Layout({ children }) {
   const router = useRouter();
+  const query = useSearchParams() as {
+    msg?: string;
+    tab?: string;
+  };
+  const pathname = usePathname();
+  const fullPath = query.toString()
+    ? `${pathname}?${query.toString()}`
+    : pathname;
   const notifyWsMessages = useNotifyWsMessages();
   const isViewPortLEQ768px = useMediaQuery("(max-width: 768px)");
   const [navOpened, setNavOpened] = useState(true);
@@ -606,7 +616,7 @@ export default function Layout({ children, appProps }) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop, open }] = useDisclosure(false);
   const { data: sub, isPending } = useSubscription();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const [navLinks, setNavLinks] = useState([]);
   const [lastLinksData, setLastLinksData] = useState([]);
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
@@ -623,7 +633,7 @@ export default function Layout({ children, appProps }) {
     }
   }, [isPending, sub, translations, userInfo?.data?.role]);
 
-  if (router.query.msg === "welcome") {
+  if (query.msg === "welcome") {
     refetch();
   }
 
@@ -633,14 +643,14 @@ export default function Layout({ children, appProps }) {
         setUserInfo(userQueryData); // update localStorage
       }
       if (userQueryData?.data?.email && !userQueryData?.data?.orgId) {
-        if (router.query.msg !== "welcome") {
+        if (query?.msg !== "welcome") {
           router.push("/signup?auth=google");
         }
       }
     } else if (userQueryData && "error" in userQueryData) {
       if (userQueryData?.error?.message === "Google User missing in Rateup") {
         console.error("Google User missing in Rateup");
-        if (router.query.msg !== "welcome") {
+        if (query?.msg !== "welcome") {
           // welcome is to avoid repetition of push
           router.push("/signup?auth=google");
         }
@@ -686,25 +696,10 @@ export default function Layout({ children, appProps }) {
     }
   }, [isViewPortLEQ768px]);
 
-  useEffect(() => {
-    const handleRouteChange = (url, { shallow }) => {
-      if (isViewPortLEQ768px && navOpened) {
-        setNavOpened(false);
-      }
-    };
-
-    router.events.on("routeChangeStart", handleRouteChange);
-
-    return () => {
-      router.events.off("routeChangeStart", handleRouteChange);
-    };
-  }, [router, isViewPortLEQ768px, navOpened]);
-
   const [activeMainLink, setActiveMainLink] = useState("Home");
   const [activeSubLink, setActiveSubLink] = useState("/dashboard");
 
   const largeScreen = useMediaQuery("(min-width: 40em)");
-  const tab = router.asPath;
 
   // Create linksMapping object from navLinks
   const linksMapping = [...navLinks, ...lastLinksData]?.reduce<
@@ -715,8 +710,9 @@ export default function Layout({ children, appProps }) {
   }, {});
 
   useEffect(() => {
+    if (!pathname) return;
     Object.entries(linksMapping).find(([key, value]) => {
-      const [basePath, queryString] = tab.split("?");
+      const [basePath, queryString] = fullPath.split("?");
       const params = new URLSearchParams(queryString || "");
       const tabParam = params.get("tab");
 
@@ -736,7 +732,8 @@ export default function Layout({ children, appProps }) {
         setActiveSubLink(navItem?.link);
       }
     });
-  }, [linksMapping, navLinks, tab]);
+  }, [linksMapping, navLinks, fullPath]);
+
   const { setTotalCount } = useChatContactCountStore();
   const { filter } = useChatFilterStore();
   const { data: inboxCount, refetch: refetchInboxCount } = useGetInboxUserCount(
@@ -821,6 +818,7 @@ export default function Layout({ children, appProps }) {
       checkWhatsAppSettings={checkWhatsAppSettings}
     />
   );
+  if (!pathname) return null;
 
   return (
     <SessionReact.SessionAuth>
@@ -873,7 +871,11 @@ export default function Layout({ children, appProps }) {
 
         <AppShell.Main>
           <MainContent
-            appProps={appProps}
+            appProps={{
+              router: {
+                pathname: fullPath,
+              },
+            }}
             navOpened={navOpened}
             setNavOpened={setNavOpened}
           >

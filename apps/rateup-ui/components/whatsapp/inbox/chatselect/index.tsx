@@ -31,13 +31,13 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 import useContactStore, {
   useChatContactCountStore,
 } from "@/pages/dashboard/whatsapp/inbox/store";
@@ -59,7 +59,7 @@ const WaInboxChatSelect = () => {
 
   const queryClient = useQueryClient();
 
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const checkIfAnyFilterisActive = useCallback((filters: any) => {
     return (
       filters.contactGroups.length > 0 ||
@@ -324,13 +324,13 @@ const WaInboxChatSelect = () => {
                   variant="subtle"
                   color="gray"
                   onClick={() => setFilter({ ...filter, searchTerm: "" })}
-                  aria-label={translations["Clear search"]}
+                  aria-label={translations("Clear search")}
                 >
                   <IconSquareRoundedX size={18} />
                 </ActionIcon>
               ) : null
             }
-            placeholder={translations["Search Contacts"]}
+            placeholder={translations("Search Contacts")}
             value={filter?.searchTerm || ""}
             onChange={(e) =>
               setFilter({ ...filter, searchTerm: e.currentTarget.value })
@@ -357,7 +357,7 @@ const WaInboxChatSelect = () => {
                   queryKey: ["contactInboxCount"],
                 });
               }}
-              aria-label={translations["Refresh"]}
+              aria-label={translations("Refresh")}
             >
               <IconRefresh />
             </ActionIcon>
@@ -440,12 +440,10 @@ const WaInboxChatSelect = () => {
                   ) : (
                     <Card component={Group}>
                       <Text c="dimmed" size="sm" ta="center">
-                        {translations["No chats found"]} <br />
-                        {
-                          translations[
-                            "search for a valid phone number or contact name"
-                          ]
-                        }
+                        {translations("No chats found")} <br />
+                        {translations(
+                          "search for a valid phone number or contact name",
+                        )}
                       </Text>
                     </Card>
                   ))}

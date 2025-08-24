@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { useRouter } from "next/router";
 
 import { Avatar, Image } from "@mantine/core";
 
-import { getPosts, getSinglePost, Post } from "@/lib/posts";
+import { getSinglePost } from "@/lib/posts";
 import Layout from "@/components/blog/Layout";
+import NothingFound from "@/components/NothingFound/NothingFound";
 
 // For rendering post content
 function PostContent({ html }: { html: string }) {
@@ -16,74 +16,19 @@ function PostContent({ html }: { html: string }) {
   );
 }
 
-// Get paths for static generation
-export async function getStaticPaths() {
-  const posts = await getPosts();
-
-  const paths = posts.map((post) => ({
-    params: { slug: post.slug },
-  }));
-
-  return {
-    paths,
-    fallback: "blocking", // Show 404 for non-existent slugs
-  };
-}
-
-// Get post data
-export async function getStaticProps({ params }: { params: { slug: string } }) {
-  const post = await getSinglePost(params.slug);
-
-  if (!post) {
-    return {
-      notFound: true,
-    };
-  }
-
-  // Get posts for related content section
-  const allPosts = await getPosts();
-
-  // Filter to get posts with the same primary tag, excluding current post
-  const relatedPosts = post.primary_tag
-    ? allPosts
-        .filter(
-          (p) =>
-            p.id !== post.id &&
-            p.tags.some((tag) => tag.id === post.primary_tag.id),
-        )
-        .slice(0, 3)
-    : [];
-
-  return {
-    props: {
-      post,
-      relatedPosts,
-    },
-    // Re-generate the page at most once per day
-    revalidate: 86400,
-  };
-}
-
-export default function SinglePost({
-  post,
-  relatedPosts,
+export default async function SinglePost({
+  params,
 }: {
-  post: Post;
-  relatedPosts: Post[];
+  params: Promise<{ slug: string }>;
 }) {
-  const router = useRouter();
-
-  // If the page is still generating via fallback
-  if (router.isFallback) {
+  const { slug } = await params;
+  const post = await getSinglePost(slug);
+  if (!post)
     return (
-      <Layout>
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="text-xl">Loading...</div>
-        </div>
-      </Layout>
+      <div className="h-screen">
+        <NothingFound text="Post not found" />;
+      </div>
     );
-  }
-
   return (
     <Layout
       title={post.title}
@@ -226,7 +171,7 @@ export default function SinglePost({
       </article>
 
       {/* Related posts */}
-      {relatedPosts.length > 0 && (
+      {/* {relatedPosts.length > 0 && (
         <section className="border-t border-slate-200 bg-slate-50 py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 className="mb-8 text-2xl font-bold text-slate-900">
@@ -269,7 +214,7 @@ export default function SinglePost({
             </div>
           </div>
         </section>
-      )}
+      )} */}
 
       {/* CTA section */}
       <section className="bg-blue-700 py-16 text-white">
@@ -294,3 +239,4 @@ export default function SinglePost({
     </Layout>
   );
 }
+export const dynamic = "force-static";

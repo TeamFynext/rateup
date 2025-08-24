@@ -24,8 +24,7 @@ import {
   IconEye,
   IconX,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useQuestionCreateMutation,
@@ -77,7 +76,7 @@ export function WaQuestionDetailedView({
   const [enableTitle, setEnableTitle] = useState(
     !!question?.title?.[selectedLanguage],
   );
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (!enableTitle) {
       form.setFieldValue(
@@ -105,20 +104,20 @@ export function WaQuestionDetailedView({
       description: (desc) => {
         const value = desc[selectedLanguage];
         if (value.trim().length > 4096) {
-          return translations[
-            "Character length exceed (Max 4096 charecters allowed)"
-          ];
+          return translations(
+            "Character length exceed (Max 4096 charecters allowed)",
+          );
         } else if (value.trim().length == 0) {
-          return translations["message is required"];
+          return translations("message is required");
         }
       },
       title: (title) => {
         const value = title[selectedLanguage];
         if (enableTitle) {
           if (value.trim().length === 0) {
-            return translations["Enter a title or disable it"];
+            return translations("Enter a title or disable it");
           } else if (value.trim().length > 60) {
-            return translations["Max 60 charecters allowed"];
+            return translations("Max 60 charecters allowed");
           }
         }
       },
@@ -163,8 +162,8 @@ export function WaQuestionDetailedView({
         notifications.show({
           id: "load-data",
           loading: true,
-          title: translations["updating question"],
-          message: translations["Hold on, your changes are getting updated..."],
+          title: translations("updating question"),
+          message: translations("Hold on, your changes are getting updated..."),
           autoClose: false,
           withCloseButton: false,
         });
@@ -190,7 +189,7 @@ export function WaQuestionDetailedView({
       <ScrollArea h={"80%"}>
         <Group justify="space-between">
           <Switch
-            label={translations["Enable Header"]}
+            label={translations("Enable Header")}
             checked={enableTitle}
             onChange={(e) => setEnableTitle(e.currentTarget.checked)}
             mb="sm"
@@ -231,7 +230,7 @@ export function WaQuestionDetailedView({
                     fontSize: "26px",
                   },
                 }}
-                placeholder={translations["Enter message header here"]}
+                placeholder={translations("Enter message header here")}
                 rightSection={
                   <LengthTracker
                     length={form.values.title[selectedLanguage].length}
@@ -249,7 +248,7 @@ export function WaQuestionDetailedView({
               maxRows={4}
               minRows={2}
               variant="unstyled"
-              placeholder={translations["Enter message body here *"]}
+              placeholder={translations("Enter message body here *")}
               styles={{
                 input: {
                   fontSize: "24px",
@@ -279,7 +278,7 @@ export function WaQuestionDetailedView({
         <Divider />
         <Group justify="space-between" p="xs" px={"sm"}>
           <Checkbox
-            label={translations["Required"]}
+            label={translations("Required")}
             fw={600}
             {...form.getInputProps("required", { type: "checkbox" })}
           />
@@ -309,7 +308,7 @@ export function WaQuestionDetailedView({
               question?.type as QuestionType,
             ) && (
               <RateupButtonSecondary
-                title={translations["Google Review"]}
+                title={translations("Google Review")}
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
                 size="sm"
                 color={theme.colors["whatsapp-green"][6]}
@@ -326,8 +325,8 @@ export function WaQuestionDetailedView({
               incompleteLanguages.length > 1 ||
               (incompleteLanguages.length > 0 &&
                 incompleteLanguages[0] !== selectedLanguage)
-                ? translations["Fill Next Language"]
-                : translations["Save"]
+                ? translations("Fill Next Language")
+                : translations("Save")
             }
             size="md"
             leftIcon={<IconDeviceSdCard />}

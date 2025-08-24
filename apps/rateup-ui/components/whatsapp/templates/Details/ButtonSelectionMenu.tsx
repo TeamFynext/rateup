@@ -24,8 +24,7 @@ import {
   IconWaveSine,
   IconWorld,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { WHATSAPP_BUTTON_TYPE } from "../../../../utils/constants";
 
@@ -50,28 +49,24 @@ export const ButtonSelection = ({
   spmBtn,
   ...restProps
 }: ButtonSelectionProps) => {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack gap={4}>
       <Text fz={14} fw={500}>
-        {translations["Buttons (Optional)"]}
+        {translations("Buttons (Optional)")}
       </Text>
       <Text fz={13}>
-        {
-          translations[
-            "Insert buttons so your customers can take action and engage with your message!"
-          ]
-        }
+        {translations(
+          "Insert buttons so your customers can take action and engage with your message!",
+        )}
       </Text>
 
       <Menu shadow="md" width={200} {...restProps}>
         <Menu.Target>
           <Tooltip
-            label={
-              translations[
-                "Only one button is supported for this type of template. The button text is not editable."
-              ]
-            }
+            label={translations(
+              "Only one button is supported for this type of template. The button text is not editable.",
+            )}
             disabled={!disabled}
           >
             <Button
@@ -82,13 +77,13 @@ export const ButtonSelection = ({
               rightSection={<IconChevronDown size={16} />}
               disabled={disabled}
             >
-              {translations["Add Action Button"]}
+              {translations("Add Action Button")}
             </Button>
           </Tooltip>
         </Menu.Target>
 
         <Menu.Dropdown>
-          <Menu.Label>{translations["Rateup Interactive Buttons"]}</Menu.Label>
+          <Menu.Label>{translations("Rateup Interactive Buttons")}</Menu.Label>
           <Tooltip
             label={(btnLen > 0 || flowBtn) && "Already added"}
             display={btnLen === 0 ? "none" : "block"}
@@ -101,14 +96,14 @@ export const ButtonSelection = ({
                 }
                 onClick={() => handleMenuSelection(WHATSAPP_BUTTON_TYPE.FLOW)}
               >
-                {translations["Whatsapp Flow"]}
+                {translations("Whatsapp Flow")}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Tooltip
             label={
               (mpmBtn &&
-                translations["Remove MPM button to add other buttons"]) ||
+                translations("Remove MPM button to add other buttons")) ||
               (checkoutBtn && "Remove Checkout button to add other buttons") ||
               (catalogBtn &&
                 "Remove View Catalog button to add other buttons") ||
@@ -130,16 +125,16 @@ export const ButtonSelection = ({
                   handleMenuSelection(WHATSAPP_BUTTON_TYPE.WEBSURVEY)
                 }
               >
-                {translations["Rateup Web Survey"]}
+                {translations("Rateup Web Survey")}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Menu.Divider />
-          <Menu.Label>{translations["Quick Reply Buttons"]}</Menu.Label>
+          <Menu.Label>{translations("Quick Reply Buttons")}</Menu.Label>
           <Tooltip
             label={
               (mpmBtn &&
-                translations["Remove MPM button to add other buttons"]) ||
+                translations("Remove MPM button to add other buttons")) ||
               (catalogBtn &&
                 "Remove View Catalog button to add other buttons") ||
               (spmBtn && "Remove SPM button to add other buttons")
@@ -158,17 +153,17 @@ export const ButtonSelection = ({
                   handleMenuSelection(WHATSAPP_BUTTON_TYPE.QUICK_REPLY)
                 }
               >
-                {translations["Custom"]}
+                {translations("Custom")}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Menu.Divider />
 
-          <Menu.Label>{translations["Call-To-Action Buttons"]}</Menu.Label>
+          <Menu.Label>{translations("Call-To-Action Buttons")}</Menu.Label>
           <Tooltip
             label={
               (mpmBtn &&
-                translations["Remove MPM button to add other buttons"]) ||
+                translations("Remove MPM button to add other buttons")) ||
               (checkoutBtn && "Remove Checkout button to add other buttons") ||
               (catalogBtn &&
                 "Remove View Catalog button to add other buttons") ||
@@ -190,14 +185,14 @@ export const ButtonSelection = ({
                   handleMenuSelection(WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER)
                 }
               >
-                {translations["Call phone number"]}
+                {translations("Call phone number")}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Tooltip
             label={
               (mpmBtn &&
-                translations["Remove MPM button to add other buttons"]) ||
+                translations("Remove MPM button to add other buttons")) ||
               (checkoutBtn && "Remove Checkout button to add other buttons") ||
               (catalogBtn &&
                 "Remove View Catalog button to add other buttons") ||
@@ -219,14 +214,14 @@ export const ButtonSelection = ({
                   handleMenuSelection(WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE)
                 }
               >
-                {translations["Copy offer code"]}
+                {translations("Copy offer code")}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Tooltip
             label={
               (mpmBtn &&
-                translations["Remove MPM button to add other buttons"]) ||
+                translations("Remove MPM button to add other buttons")) ||
               (checkoutBtn && "Remove Checkout button to add other buttons") ||
               (catalogBtn &&
                 "Remove View Catalog button to add other buttons") ||
@@ -248,13 +243,13 @@ export const ButtonSelection = ({
                   handleMenuSelection(WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE)
                 }
               >
-                {translations["Visit website"]}
+                {translations("Visit website")}
               </Menu.Item>
             </Box>
           </Tooltip>
           <Menu.Divider />
 
-          <Menu.Label>{translations["Catalog Buttons"]}</Menu.Label>
+          <Menu.Label>{translations("Catalog Buttons")}</Menu.Label>
           <Tooltip
             label={
               btnLen > 0 && "Remove all buttons to add View catalog button"
@@ -323,9 +318,9 @@ export const ButtonSelection = ({
           <Tooltip
             label={
               flowBtn
-                ? translations["Remove flow button to add other buttons"]
+                ? translations("Remove flow button to add other buttons")
                 : mpmBtn
-                  ? translations["Remove MPM button to add other buttons"]
+                  ? translations("Remove MPM button to add other buttons")
                   : catalogBtn
                     ? "Remove View catalog button to add other buttons"
                     : spmBtn
@@ -359,11 +354,9 @@ export const ButtonSelection = ({
       </Menu>
       <Group fz={14} gap={"xs"} wrap="nowrap">
         <IconBulb size={16} />
-        {
-          translations[
-            "If you add more than three buttons, they will appear in a list."
-          ]
-        }
+        {translations(
+          "If you add more than three buttons, they will appear in a list.",
+        )}
       </Group>
     </Stack>
   );

@@ -24,8 +24,7 @@ import {
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useCreateReviewSuggestionsMutation,
@@ -55,7 +54,7 @@ export function ReviewSuggestionModal({
   opened,
   onClose,
 }: ReviewSuggestionModalProps) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const {
     data: reviewSuggestions,
     isLoading,
@@ -63,13 +62,13 @@ export function ReviewSuggestionModal({
   } = useReviewSuggestions(opened, teamId);
 
   if (isError && opened) {
-    showErrorToast(translations["Error fetching review suggestions"]);
+    showErrorToast(translations("Error fetching review suggestions"));
     return;
   }
 
   return (
     <Modal
-      title={translations["Suggest reviews"]}
+      title={translations("Suggest reviews")}
       opened={opened}
       onClose={onClose}
       size="lg"
@@ -177,7 +176,7 @@ function ImportJsonPanel({ handleClose, teamId }) {
       language: language,
     });
   }
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Stack>
       <TeamSurveyLanguageSelector
@@ -193,7 +192,7 @@ function ImportJsonPanel({ handleClose, teamId }) {
         }}
       />
       <Textarea
-        label={translations["Paste JSON"]}
+        label={translations("Paste JSON")}
         placeholder={expectedJsonFormat}
         rows={5}
         {...form.getInputProps("json")}
@@ -202,13 +201,13 @@ function ImportJsonPanel({ handleClose, teamId }) {
       <FileButton accept="application/json" onChange={setFile}>
         {(props) => (
           <Button leftSection={<IconUpload />} {...props}>
-            {translations["Upload JSON"]}
+            {translations("Upload JSON")}
           </Button>
         )}
       </FileButton>
       <Group justify="end" mt="sm">
         <Button variant="outline" color="gray" onClick={handleClose}>
-          {translations["Cancel"]}
+          {translations("Cancel")}
         </Button>
         <Button onClick={handleImport}>Import</Button>
       </Group>
@@ -355,7 +354,7 @@ function CreateReviewSuggestionComponent({ teamId }) {
   const createReviewMutation = useCreateReviewSuggestionsMutation(teamId);
   const [newReview, setNewReview] = useState("");
   const [language, setLanguage] = useState("");
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function handleAddReview() {
     createReviewMutation.mutate({
       reviewSuggestions: [newReview],
@@ -376,7 +375,7 @@ function CreateReviewSuggestionComponent({ teamId }) {
       }}
     >
       <ContainedTextArea
-        placeholder={translations["Suggest a review"]}
+        placeholder={translations("Suggest a review")}
         style={{
           flex: 4,
         }}
@@ -412,7 +411,7 @@ function CreateReviewSuggestionComponent({ teamId }) {
         onClick={handleAddReview}
         h={45}
       >
-        {translations["Add"]}
+        {translations("Add")}
       </Button>
     </Flex>
   );
@@ -430,7 +429,7 @@ export function TeamSurveyLanguageSelector({
   ...props
 }: TeamSurveyLanguageSelectorProps) {
   const { data: languages } = useSurveyLanguagesFromTeam(teamId);
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (!value && languages?.length > 0) {
       onChange(languages[0]);
@@ -442,7 +441,7 @@ export function TeamSurveyLanguageSelector({
       data={languages}
       value={value}
       onChange={onChange}
-      placeholder={translations["Select language"]}
+      placeholder={translations("Select language")}
       {...props}
     />
   );

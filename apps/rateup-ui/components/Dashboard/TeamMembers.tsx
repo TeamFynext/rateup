@@ -4,16 +4,16 @@ import { Select } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { useTranslations } from "next-intl";
 
 import { useTeamMemberStats } from "@/backend/dashboard/dashboard.query";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { useTeamsByUser } from "../../backend/team/team.query";
 
 dayjs.extend(relativeTime);
 
 function TeamMembers() {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const { data: teamMemberData } = useTeamsByUser();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const teams = useMemo(() => teamMemberData?.data || [], [teamMemberData]);
@@ -35,10 +35,10 @@ function TeamMembers() {
     <div className="bg-white rounded-lg shadow py-4 border border-[#E2E5ED] h-full">
       <div className="flex justify-between items-center mb-4 px-4">
         <h2 className="text-lg font-semibold text-gray-800">
-          {translations["Team Members"] || "Team Members"}
+          {translations("Team Members") || "Team Members"}
         </h2>
         <Select
-          placeholder={translations["Select Team"] || "Select Team"}
+          placeholder={translations("Select Team") || "Select Team"}
           data={teams.map((team) => ({
             value: team.id,
             label: team.name,
@@ -58,19 +58,19 @@ function TeamMembers() {
           <thead className="sticky top-0 bg-[#F5F5F5] z-10">
             <tr>
               <td className="px-4 py-2 w-64">
-                {translations["Name"] || "Name"}
+                {translations("Name") || "Name"}
               </td>
               <td className="px-4 py-2 w-32">
-                {translations["User Role"] || "User Role"}
+                {translations("User Role") || "User Role"}
               </td>
               <td className="px-4 py-2 w-40">
-                {translations["Assigned Chats"] || "Assigned Chats"}
+                {translations("Assigned Chats") || "Assigned Chats"}
               </td>
               <td className="px-4 py-2 w-40">
-                {translations["Assigned Tickets"] || "Assigned Tickets"}
+                {translations("Assigned Tickets") || "Assigned Tickets"}
               </td>
               <td className="px-4 py-2 w-40">
-                {translations["Last Login"] || "Last Login"}
+                {translations("Last Login") || "Last Login"}
               </td>
             </tr>
           </thead>

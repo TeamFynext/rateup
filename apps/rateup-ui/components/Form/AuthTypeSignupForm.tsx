@@ -10,8 +10,7 @@ import {
   IconArrowNarrowRight,
   IconCheck,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useUserInfo } from "../../backend/user/user.query";
 import { SAVE_HOTKEY } from "../../utils/constants";
@@ -30,7 +29,7 @@ function AuthTypeSignupForm({
   const [opened, { close, open }] = useDisclosure(true);
   const [isUserExist, setIsUserExist] = useState(false);
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   useEffect(() => {
     if (userInfo && "data" in userInfo) {
       if (userInfo?.data && userInfo.data?.userId) {
@@ -50,15 +49,15 @@ function AuthTypeSignupForm({
     validate: {
       name: (value) => {
         if (value.length < 4) {
-          return translations["Name should be at least 4 characters long"];
+          return translations("Name should be at least 4 characters long");
         }
         return null; // Validation passed
       },
       orgName: (value) => {
         if (value.length < 4) {
-          return translations[
-            "Organization name should be at least 4 characters long"
-          ];
+          return translations(
+            "Organization name should be at least 4 characters long",
+          );
         }
         return null; // Validation passed
       },
@@ -91,8 +90,8 @@ function AuthTypeSignupForm({
         centered={true}
         title={
           authType === "google"
-            ? translations["Google Auth Success"]
-            : translations["Phone Number Auth Success"]
+            ? translations("Google Auth Success")
+            : translations("Phone Number Auth Success")
         }
         opened={opened}
         onClose={() => {
@@ -101,13 +100,11 @@ function AuthTypeSignupForm({
         }}
       >
         <Text mt="xs" mb="xl" display={"inline-block"}>
-          {translations["You are successfully authenticated,"]}
+          {translations("You are successfully authenticated,")}
           <Text display={isUserExist ? "none" : "inline-block"}>
-            {
-              translations[
-                "please fill the information to complete the signup process"
-              ]
-            }
+            {translations(
+              "please fill the information to complete the signup process",
+            )}
           </Text>
         </Text>
 
@@ -115,7 +112,7 @@ function AuthTypeSignupForm({
           <RateupButtonPrimary
             size="lg"
             rightIcon={<IconArrowNarrowRight />}
-            title={translations["Continue"]}
+            title={translations("Continue")}
             onClick={() => {
               if (isUserExist) router.push("/dashboard");
               close();
@@ -125,7 +122,7 @@ function AuthTypeSignupForm({
       </FormModalLayout>
 
       <Title className={styles["login-signup-form-heading"]} order={2}>
-        {translations["Complete Signup Process"]}
+        {translations("Complete Signup Process")}
       </Title>
 
       <form
@@ -143,26 +140,26 @@ function AuthTypeSignupForm({
         <TextInput
           classNames={styles}
           withAsterisk
-          placeholder={translations["Name"]}
+          placeholder={translations("Name")}
           {...signUpForm.getInputProps("name")}
         />
         <TextInput
           classNames={styles}
           withAsterisk
-          placeholder={translations["Organization Name"]}
+          placeholder={translations("Organization Name")}
           {...signUpForm.getInputProps("orgName")}
         />
         {isPhoneForm && (
           <TextInput
             classNames={styles}
             withAsterisk
-            placeholder={translations["Email"]}
+            placeholder={translations("Email")}
             {...signUpForm.getInputProps("email")}
           />
         )}
         <RateupButtonBlue
           type="submit"
-          title={translations["Finish SignUp"]}
+          title={translations("Finish SignUp")}
           loading={isLoading}
           className={styles["login-signup-form-submit-btn"]}
         />
@@ -172,7 +169,7 @@ function AuthTypeSignupForm({
             <Link href="/auth/logout" style={{ textDecoration: "none" }}>
               <NavLink
                 component="div"
-                label={translations["Logout"]}
+                label={translations("Logout")}
                 leftSection={<IconArrowAutofitLeft size="1rem" stroke={1.5} />}
                 variant="subtle"
               />

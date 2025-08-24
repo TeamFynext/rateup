@@ -16,8 +16,7 @@ import {
   IconReload,
   IconTrash,
 } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import {
   useCreateLoyaltyApiKey,
@@ -44,7 +43,7 @@ export default function ApiAccessKeyPage() {
   }
 
   const { user } = useUser();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const apiEndpoint =
     process.env.NEXT_PUBLIC_API_URL +
     "/api/external/" +
@@ -65,10 +64,10 @@ export default function ApiAccessKeyPage() {
               openDelay={150}
               label={
                 apiKey
-                  ? translations["Api Access Key"]
-                  : translations[
-                      "You can only view access key at the time of creation. If you lost the key, you can regenerate it."
-                    ]
+                  ? translations("Api Access Key")
+                  : translations(
+                      "You can only view access key at the time of creation. If you lost the key, you can regenerate it.",
+                    )
               }
             >
               <ContainedTextField
@@ -105,17 +104,15 @@ export default function ApiAccessKeyPage() {
           ) : (
             <>
               <Text>
-                {
-                  translations[
-                    "You have not generated an API Access Key yet. API Access Key is required to access the all API endpoints."
-                  ]
-                }
+                {translations(
+                  "You have not generated an API Access Key yet. API Access Key is required to access the all API endpoints.",
+                )}
               </Text>
               <Button
                 onClick={handleGenerateApiKey}
                 loading={generateMutation.isPending}
               >
-                {translations["Generate Api Key"]}
+                {translations("Generate Api Key")}
               </Button>
             </>
           )}
@@ -124,7 +121,7 @@ export default function ApiAccessKeyPage() {
 
       <PaperLayout>
         <Stack>
-          <Title order={4}>{translations["API Base URL"]}</Title>
+          <Title order={4}>{translations("API Base URL")}</Title>
           <ContainedTextField
             value={apiEndpoint}
             styles={{
@@ -148,11 +145,11 @@ export default function ApiAccessKeyPage() {
 }
 
 export function ApiCopyButton({ value }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <CopyButton value={value}>
       {({ copy, copied }) => (
-        <Tooltip label={translations["Copy"]} position="top" withArrow>
+        <Tooltip label={translations("Copy")} position="top" withArrow>
           <ActionIcon
             onClick={copy}
             variant={"subtle"}
@@ -174,7 +171,7 @@ interface ApiRegenerateButtonProps {
 }
 function ApiRegenerateButton({ onRegenerate }: ApiRegenerateButtonProps) {
   const regenerateMutation = useRegenerateLoyaltyApiKey();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function handleRegenerate() {
     regenerateMutation.mutate(undefined, {
       onSuccess: (data) => {
@@ -183,7 +180,7 @@ function ApiRegenerateButton({ onRegenerate }: ApiRegenerateButtonProps) {
     });
   }
   return (
-    <Tooltip label={translations["Regenerate"]} position="top" withArrow>
+    <Tooltip label={translations("Regenerate")} position="top" withArrow>
       <ActionIcon
         onClick={handleRegenerate}
         variant={"subtle"}
@@ -203,7 +200,7 @@ interface ApiDeleteButtonProps {
 }
 function ApiDeleteButton({ onDelete }: ApiDeleteButtonProps) {
   const deleteMutation = useDeleteLoyaltyApiKey();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   function handleDelete() {
     deleteMutation.mutate(undefined, {
       onSuccess: () => {
@@ -212,7 +209,7 @@ function ApiDeleteButton({ onDelete }: ApiDeleteButtonProps) {
     });
   }
   return (
-    <Tooltip label={translations["Delete"]} position="top" withArrow>
+    <Tooltip label={translations("Delete")} position="top" withArrow>
       <ActionIcon
         onClick={handleDelete}
         variant={"subtle"}

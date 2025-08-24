@@ -2,11 +2,11 @@ import router from "next/router";
 
 import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { IconChartBar } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
 import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useTranslations from "@/dictionaries/useTranslation";
 
 import { SurveyMenu } from "./SurveyMenu";
 
@@ -31,7 +31,7 @@ export function SurveyCard({
   route,
   refetchSurveys,
 }: Readonly<SurveyCardProps>) {
-  const { translations, loadingTranslations } = useTranslations();
+  const translations = useTranslations();
   return (
     <PaperLayout
       hoveractive
@@ -77,7 +77,7 @@ export function SurveyCard({
               variant="outline"
               color={survey?.type == "web" ? "blue" : "#149a8a"}
             >
-              {translations[survey?.type]}
+              {translations(survey?.type)}
             </Badge>
           </Group>
           <Group justify={"space-between"} align={"center"}>
@@ -92,7 +92,7 @@ export function SurveyCard({
             >
               <RateupButtonSecondary
                 leftIcon={<IconChartBar size={15} />}
-                title={translations["Responses"]}
+                title={translations("Responses")}
                 variant="subtle"
                 size="xs"
                 radius={5}
@@ -107,10 +107,10 @@ export function SurveyCard({
 }
 
 function StatusBadge({ active }) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Badge color={active ? "green" : "yellow"} variant="light">
-      {active ? translations["Active"] : translations["Paused"]}
+      {active ? translations("Active") : translations("Paused")}
     </Badge>
   );
 }

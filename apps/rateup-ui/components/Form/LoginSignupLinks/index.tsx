@@ -1,8 +1,7 @@
 import Link from "next/link";
 
 import { Group } from "@mantine/core";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import styles from "./LoginsignupLinks.module.css";
 
@@ -12,7 +11,7 @@ type LoginSignupLInksProps = {
 };
 
 function LoginSignupLinks({ isLogin, isSignup }: LoginSignupLInksProps) {
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   return (
     <Group justify="center" className={styles["login-signup-links-container"]}>
       <Link
@@ -22,7 +21,7 @@ function LoginSignupLinks({ isLogin, isSignup }: LoginSignupLInksProps) {
             ${isLogin ? styles["active-link"] : ""}
           `}
       >
-        {translations["Login"]}
+        {translations("Login")}
       </Link>
       <Link
         href="/signup"
@@ -31,7 +30,7 @@ function LoginSignupLinks({ isLogin, isSignup }: LoginSignupLInksProps) {
             ${isSignup ? styles["active-link"] : ""}
           `}
       >
-        {translations["Sign Up"]}
+        {translations("Sign Up")}
       </Link>
     </Group>
   );

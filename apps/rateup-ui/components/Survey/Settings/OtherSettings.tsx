@@ -5,8 +5,7 @@ import { Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
-
-import useTranslations from "@/dictionaries/useTranslation";
+import { useTranslations } from "next-intl";
 
 import { useResetResponsesStats } from "../../../backend/surveys/response/response.query";
 import { useDeleteSurveyMutation } from "../../../backend/surveys/surveys.query";
@@ -29,7 +28,7 @@ const OtherSettings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const router = useRouter();
-  const { translations } = useTranslations();
+  const translations = useTranslations();
   const resetResponsesStats = useResetResponsesStats(
     surveyId,
     surveyTeamMapId,
@@ -46,8 +45,8 @@ const OtherSettings = () => {
       notifications.show({
         id: "load-data",
         loading: true,
-        title: translations["Resetting data."],
-        message: translations["Hold on, data is getting reset..."],
+        title: translations("Resetting data."),
+        message: translations("Hold on, data is getting reset..."),
         autoClose: false,
         withCloseButton: false,
       });
@@ -57,8 +56,8 @@ const OtherSettings = () => {
       notifications.show({
         id: "load-data",
         color: "red",
-        title: translations["Error"],
-        message: translations["Incorrect email"],
+        title: translations("Error"),
+        message: translations("Incorrect email"),
         icon: <IconX size="1rem" />,
         autoClose: 3000,
       });
@@ -71,8 +70,8 @@ const OtherSettings = () => {
     notifications.show({
       id: "delete-survey",
       loading: true,
-      title: translations["Deleting survey.."],
-      message: translations["Hold on, survey is getting deleted..."],
+      title: translations("Deleting survey.."),
+      message: translations("Hold on, survey is getting deleted..."),
       autoClose: true,
       withCloseButton: false,
     });
@@ -86,18 +85,18 @@ const OtherSettings = () => {
       <PaperLayout shadow="xl" p={"xl"}>
         <Group justify="space-between">
           <Stack gap={0}>
-            <Title order={4}>{translations["DANGER ZONE"]}</Title>
-            <Text c="dimmed">{translations["Reset data and responses"]}</Text>
+            <Title order={4}>{translations("DANGER ZONE")}</Title>
+            <Text c="dimmed">{translations("Reset data and responses")}</Text>
           </Stack>
           <Stack>
             <RateupButtonBlue
               color="red"
-              title={translations["Reset Response data"]}
+              title={translations("Reset Response data")}
               onClick={open}
             />
             <RateupButtonBlue
               color="red"
-              title={translations["Delete Survey"]}
+              title={translations("Delete Survey")}
               onClick={openDeleteModal}
             />
           </Stack>
@@ -107,8 +106,8 @@ const OtherSettings = () => {
         opened={opened}
         onClose={close}
         centered
-        title={translations["Reset Reponses & Stats"]}
-        buttonTitle={translations["Confirm"]}
+        title={translations("Reset Reponses & Stats")}
+        buttonTitle={translations("Confirm")}
         includeCancelButton
         isLoading={isLoading}
         onSubmit={confirmReset}
@@ -116,14 +115,14 @@ const OtherSettings = () => {
         <Stack>
           <ContainedTextField
             withAsterisk
-            label={translations["Verify email"]}
-            placeholder={translations["Enter your login email"]}
+            label={translations("Verify email")}
+            placeholder={translations("Enter your login email")}
             required
             value={verifyEmail}
             onChange={(e) => setVerifyEmail(e.target.value)}
           />
           <Text style={{ color: "red" }}>
-            {translations["Once reset, all response data will be lost."]}
+            {translations("Once reset, all response data will be lost.")}
           </Text>
         </Stack>
       </FormModalLayout>
@@ -131,15 +130,15 @@ const OtherSettings = () => {
         opened={deleteModalOpened}
         onClose={closeDeleteModal}
         centered
-        title={translations["Confirm Delete Survey"]}
-        buttonTitle={translations["Confirm"]}
+        title={translations("Confirm Delete Survey")}
+        buttonTitle={translations("Confirm")}
         includeCancelButton
         isLoading={isLoading}
         onSubmit={confirmDeleteSurvey}
       >
         <Text style={{ color: "red" }}>
-          {translations["Are you sure you want to delete this survey?"]} <br />
-          {translations["This action cannot be undone..!!"]}
+          {translations("Are you sure you want to delete this survey?")} <br />
+          {translations("This action cannot be undone..!!")}
         </Text>
       </FormModalLayout>
     </>
