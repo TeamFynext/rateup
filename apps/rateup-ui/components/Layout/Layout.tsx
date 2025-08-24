@@ -873,7 +873,7 @@ export default function Layout({ children }) {
           <MainContent
             appProps={{
               router: {
-                pathname: fullPath,
+                pathname: pathname,
               },
             }}
             navOpened={navOpened}
