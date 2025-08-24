@@ -29,7 +29,7 @@
   "october": "Octobre",
   "november": "Novembre",
   "december": "Décembre",
-  "Nothing found": "Rien trouvé",
+  "Nothing_found": "Rien trouvé",
   "filter": "Filtrer",
   "sort by": "Trier par",
   "Team Name": "Nom de l'équipe",
@@ -2096,5 +2096,16 @@
   "Access Links": "Liens d'accès",
   "All Members": "Tous les membres",
   "Choose Loyalty API/Action or Whatsapp Template": "Choisissez l'API/Action de fidélité ou le modèle WhatsApp",
-  "Select Account": "Sélectionner le compte"
+  "Select Account": "Sélectionner le compte",
+  "Catalog Buttons": "Boutons de catalogue",
+  "Remove MPM button to add other buttons": "Supprimer le bouton MPM pour ajouter d'autres boutons",
+  "Create New Campaign": "Créer une nouvelle campagne",
+  "Team Members": "Membres de l'équipe",
+  "User Role": "Rôle de l'utilisateur",
+  "Assigned Chats": "Chats assignés",
+  "Assigned Tickets": "Tickets assignés",
+  "Last Login": "Dernière connexion",
+  "Subscription": "Abonnement",
+  "Renewal Date": "Date de renouvellement",
+  "Days Remaining": "Jours restants"
 }

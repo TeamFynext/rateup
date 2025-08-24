@@ -31,7 +31,7 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   const { filter } = useChatFilterStore();
   const currentContactId = searchParams.get("contactId") ?? contact?.id;
 
-  const { data, error, isPending } = useGetMessagesByContactId(
+  const { data, error, isPending, isFetching } = useGetMessagesByContactId(
     currentContactId,
     filter?.phone,
   );
@@ -90,7 +90,7 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
     );
   }
 
-  const showLoading = isPending;
+  const showLoading = isPending || isFetching;
 
   return (
     <div
