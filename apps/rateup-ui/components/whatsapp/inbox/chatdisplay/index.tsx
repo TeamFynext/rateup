@@ -90,7 +90,7 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
     );
   }
 
-  const showLoading = !!contact && isPending;
+  const showLoading = isPending;
 
   return (
     <div
