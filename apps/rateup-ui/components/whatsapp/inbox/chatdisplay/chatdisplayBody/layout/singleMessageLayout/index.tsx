@@ -54,7 +54,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
       ? MessagePlatform.WHATSAPP
       : MessagePlatform.INSTAGRAM;
   const sendnewWaMessage = useSendNewWaMessage(
-    selectedContact.id,
+    selectedContact?.id,
     whatsappSettingsPhoneId,
     platform,
   );
