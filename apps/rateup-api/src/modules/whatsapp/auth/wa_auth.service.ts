@@ -4,12 +4,15 @@ import { callWhatsappApi } from "../wa_axios";
 /**
  * Get Business Integration System User Access Token from the code recieved from MetaLogin process
  * */
-export async function getAccessTokenFromCode(code: string) {
+export async function getAccessTokenFromCode(
+  code: string,
+  redirect_uri: string = "",
+) {
   let url = `/oauth/access_token`;
   url = url + `?client_id=${process.env.waclient_id}`;
   url = url + `&client_secret=${process.env.waclient_secret}`;
   url = url + `&code=${code}`;
-  url = url + `&redirect_uri=`;
+  url = url + `&redirect_uri=${redirect_uri}`;
   const res = await callWhatsappApi(url, "GET");
 
   log.trace("Access token response: %o", res.data);

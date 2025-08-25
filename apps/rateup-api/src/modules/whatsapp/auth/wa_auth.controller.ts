@@ -13,10 +13,12 @@ import { log } from "../../../utils/logger";
 import {
   createWaSettings,
   deleteWaSettings,
+  getMetaAssets,
+  syncMetaAssetstoDb,
   updateWaSettings,
 } from "../settings/wa_settings.service";
 import { WaConfigType } from "../../../types/enums";
-import { GraphApiError } from "../wa_axios";
+import { callWhatsappApi, GraphApiError } from "../wa_axios";
 import { handleWhatsappError } from "../wa_error_handler";
 import {
   generateKeyPairsForWaEncryption,
@@ -131,5 +133,45 @@ export async function deRegisterBusinessClientHandler(
   } catch (e) {
     log.error(e);
     rep.status(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function getUserAccessTokenHanlder(
+  req: FastifyRequest<{ Body: RegisterBusinessBody }>,
+  rep: FastifyReply,
+) {
+  try {
+    const { code } = req.body;
+    const { waSettingsId } = req.params as { waSettingsId: string };
+
+    const userAccessToken = await getAccessTokenFromCode(
+      code,
+      encodeURIComponent(
+        `${process.env.FRONTEND_URL}/${process.env.wa_user_redirect_uri}`,
+      ),
+    );
+    const url = `/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${userAccessToken}`;
+    const res = await callWhatsappApi(url, "GET");
+    log.info("Pages fetched from meta by user access token:%o", res?.data);
+    const metaAssets = await getMetaAssets(waSettingsId);
+    const data =
+      !metaAssets || !metaAssets?.pages.length
+        ? res.data?.data.map((page) => ({ ...page, subscribedFields: [] }))
+        : metaAssets.pages.map((page) => {
+            const pageData = res.data?.data?.find((p) => p.id === page.id);
+            if (pageData) {
+              page.pageAccessTokenByUser = pageData.access_token;
+            }
+            return page;
+          });
+    const resp = await syncMetaAssetstoDb("pages", data, waSettingsId);
+    rep.code(200).send(resp);
+  } catch (e) {
+    log.error(e);
+    if (e instanceof GraphApiError) {
+      handleWhatsappError(e, req, rep);
+    } else {
+      rep.status(500).send({ message: "Internal server error" });
+    }
   }
 }
