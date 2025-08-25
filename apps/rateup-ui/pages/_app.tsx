@@ -48,7 +48,6 @@ import { checkEmailVerification } from "../utils/auth/checkEmailVerification";
 import { isProduction } from "../utils/constants";
 import { fbPageview } from "../utils/fbpixel";
 import { geist, notoColorEmogi } from "../utils/fonts";
-import { pageView } from "../utils/gtag";
 
 if (typeof window !== "undefined") {
   SuperTokensReact.init(frontendConfig());
@@ -144,7 +143,6 @@ export default function App({
   useEffect(() => {
     const handleRouteChange = (url: URL) => {
       if (isProduction) {
-        pageView(url);
         fbPageview();
       }
     };

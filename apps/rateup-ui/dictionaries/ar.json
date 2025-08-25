@@ -29,7 +29,7 @@
   "october": "أكتوبر",
   "november": "نوفمبر",
   "december": "ديسمبر",
-  "Nothing found": "لم يتم العثور على شيء",
+  "Nothing_found": "لم يتم العثور على شيء",
   "No Automated Replies Found": "لم يتم العثور على ردود تلقائية",
   "filter": "تصفية",
   "sort by": "ترتيب حسب",
@@ -2097,5 +2097,16 @@
   "Access Links": "روابط الوصول",
   "All Members": "جميع الأعضاء",
   "Choose Loyalty API/Action or Whatsapp Template": "اختر واجهة برمجة التطبيقات/إجراء الولاء أو قالب واتساب",
-  "Select Account": "اختر الحساب"
+  "Select Account": "اختر الحساب",
+  "Catalog Buttons": "أزرار الكتالوج",
+  "Remove MPM button to add other buttons": "إزالة زر MPM لإضافة أزرار أخرى",
+  "Create New Campaign": "إنشاء حملة جديدة",
+  "Team Members": "أعضاء الفريق",
+  "User Role": "دور المستخدم",
+  "Assigned Chats": "الدردشات المعينة",
+  "Assigned Tickets": "التذاكر المعينة",
+  "Last Login": "آخر تسجيل دخول",
+  "Subscription": "الاشتراك",
+  "Renewal Date": "تاريخ التجديد",
+  "Days Remaining": "الأيام المتبقية"
 }

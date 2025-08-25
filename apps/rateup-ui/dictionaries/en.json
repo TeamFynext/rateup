@@ -29,7 +29,7 @@
   "october": "October",
   "november": "November",
   "december": "December",
-  "Nothing found": "Nothing found",
+  "Nothing_found": "Nothing found",
   "No Automated Replies Found": "No Automated Replies Found",
   "filter": "filter",
   "sort by": "sort by",
@@ -2110,5 +2110,13 @@
   "Select Account": "Select Account",
   "Catalog Buttons": "Catalog Buttons",
   "Remove MPM button to add other buttons": "Remove MPM button to add other buttons",
-  "Create New Campaign": "Create New Campaign"
+  "Create New Campaign": "Create New Campaign",
+  "Team Members": "Team Members",
+  "User Role": "User Role",
+  "Assigned Chats": "Assigned Chats",
+  "Assigned Tickets": "Assigned Tickets",
+  "Last Login": "Last Login",
+  "Subscription": "Subscription",
+  "Renewal Date": "Renewal Date",
+  "Days Remaining": "Days Remaining"
 }

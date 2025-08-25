@@ -13,6 +13,7 @@ import {
   MessageCircleCodeIcon,
   Monitor,
   QrCode,
+  ScanLine,
   Star,
 } from "lucide-react";
 
@@ -68,6 +69,12 @@ export default function DropDownNavItems() {
       title: "Unified Inbox",
       description: "Manage all customer conversations in one place",
       href: "https://products.rateup.app/products/inbox",
+    },
+    {
+      icon: <ScanLine className="w-6 h-6 text-[#1c518e]" />,
+      title: "Smart QR",
+      description: "They scan, you grow",
+      href: "https://products.rateup.app/products/qr",
     },
   ];
 
