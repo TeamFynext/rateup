@@ -909,16 +909,24 @@ export async function processNextNode(
           );
           const metaAssets = await getMetaAssets(whatsappSettings.id);
           parameters = node?.data?.parameters?.map((param) => {
-            if (
-              typeof param !== "string" &&
-              param.type === "leadgenform-question-key"
-            ) {
-              const lead = metaAssets.leads.find((lead) => lead.id === leadId);
-              if (!lead) return "NA";
-              return (
-                lead.field_data.find((field) => field.name === param.value)
-                  ?.values[0] ?? "NA"
-              );
+            if (param.type === "body") {
+              const newParams = param?.parameters?.map((p) => {
+                if (
+                  typeof p?.text !== "string" &&
+                  p?.text?.type === "leadgenform-question-key"
+                ) {
+                  const lead = metaAssets.leads.find(
+                    (lead) => lead.id === leadId,
+                  );
+                  if (!lead) p.text = null;
+
+                  p.text =
+                    lead.field_data.find((field) => field.name === p.value)
+                      ?.values[0] ?? null;
+                }
+                return p;
+              });
+              param.parameterers = [...newParams];
             }
             return param;
           });
