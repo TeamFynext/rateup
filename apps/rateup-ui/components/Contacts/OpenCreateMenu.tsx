@@ -63,7 +63,7 @@ const OpenCreateMenu = ({
         <CreateContactModal
           contactClose={contactClose}
           close={close}
-          cTags={tags.contactTags}
+          cTags={tags.contactTags?.map((tag) => tag?.name)}
           importCSVContactMutation={importCSVContactMutation}
         />
       </FormModalLayout>

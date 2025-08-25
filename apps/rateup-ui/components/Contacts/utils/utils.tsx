@@ -74,10 +74,10 @@ export const contactColumn = (contactTags = []) => {
       cell: (info) => info.getValue(),
     },
     ...(contactTags?.length > 0
-      ? contactTags?.map((data) => ({
-          header: () => data,
-          accessorFn: (row) => row?.tags?.[data],
-          id: data,
+      ? contactTags?.map(({ name, _color }) => ({
+          header: () => name,
+          accessorFn: (row) => row?.tags?.[name],
+          id: name,
           cell: (info) => info.getValue()?.toString(),
           enableSorting: false,
         }))

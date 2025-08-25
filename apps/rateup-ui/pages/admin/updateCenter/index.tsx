@@ -25,8 +25,8 @@ function UpdateAllThemes() {
         </Button>
       </Stack>
       <Stack mt="xl">
-        <Title order={2}>Update Automation Subscription</Title>
-        <Text>This will add the automation to subscription for all users</Text>
+        <Title order={2}>Update contact tags</Title>
+        <Text>this will update tags of all contacts</Text>
         <Button
           ml="md"
           style={{ alignSelf: "flex-start" }}

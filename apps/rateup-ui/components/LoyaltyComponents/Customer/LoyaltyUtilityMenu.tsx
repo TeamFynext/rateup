@@ -119,7 +119,7 @@ const LoyaltyUtilityMenu = () => {
         <CreateContactModal
           contactClose={closeAddCustomer}
           close={closeAddCustomer}
-          cTags={cTags?.contactTags}
+          cTags={cTags?.contactTags?.map((tag) => tag?.name)}
           importCSVContactMutation={importCSVCustomerMutation}
           type={ContactGroupType.LOYALTY}
         />

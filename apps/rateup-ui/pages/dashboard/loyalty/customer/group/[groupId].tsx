@@ -294,7 +294,7 @@ export default function ContactGroup() {
           groupId={groupDetails?.id}
           close={close}
           existingContactIds={[]}
-          tags={cTags?.contactTags}
+          tags={cTags?.contactTags?.map((tag) => tag.name)}
           createNewContactsFromCSV={addNewCustomersFromCSVMutation}
           type={ContactGroupType.LOYALTY}
         />
