@@ -1106,12 +1106,15 @@ export async function handleLeadGen(body: WaMessageBody) {
     const leadgenNodeData = leadgenNode.data as LeadgenNodeData;
     let phone = leadgenNodeData.phone;
     let errorMessage = "";
+    let leadData;
     try {
       const res = await callWhatsappApi(
         `/${leadgen_id}?access_token=${leadgenNodeData.pageUserAccessToken}`,
         "GET",
       );
-      if (res.data)
+      log.info("Lead generated: %o", res.data);
+      if (res.data) {
+        leadData = res.data;
         await prisma.metaAssets.updateMany({
           where: {
             whatsappSettings: {
@@ -1125,13 +1128,14 @@ export async function handleLeadGen(body: WaMessageBody) {
             },
           },
         });
-      if (leadgenNodeData.phoneField?.trim().length && res.data) {
-        const formValues = res.data.field_data;
-        const fieldValue = formValues.find(
-          (field) => field.name === leadgenNodeData.phoneField,
-        );
-        if (fieldValue) {
-          phone = fieldValue?.values[0];
+        if (leadgenNodeData.phoneField?.trim().length) {
+          const formValues = res.data.field_data;
+          const fieldValue = formValues.find(
+            (field) => field.name === leadgenNodeData.phoneField,
+          );
+          if (fieldValue) {
+            phone = fieldValue?.values[0];
+          }
         }
       }
     } catch (e) {
@@ -1154,7 +1158,7 @@ export async function handleLeadGen(body: WaMessageBody) {
       leadgenNode.id,
       automation.orgId,
       automationLog?.id,
-      leadgen_id,
+      leadData,
     );
   }
 }
