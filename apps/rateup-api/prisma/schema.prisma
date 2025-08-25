@@ -230,10 +230,10 @@ model WhatsappSettings {
 }
 
 model WaAccountSettings {
-  org              Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId            String   @unique @db.Uuid
-  contactTags      String[] @default([])
-  contactGroupTags String[] @default([])
+  org              Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId            String @unique @db.Uuid
+  contactTags      Json   @default("[]")
+  contactGroupTags Json   @default("[]")
 }
 
 model WaLogs {
@@ -516,13 +516,14 @@ model WaInboxAssign {
 }
 
 model UserAssignedCount {
-  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String @db.Uuid
-  orgId       String @db.Uuid
-  assignCount Int    @default(0)
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @db.Uuid
+  orgId       String   @db.Uuid
+  assignCount Int      @default(0)
   createdAt   DateTime @default(now())
-  org         Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org         Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, orgId], name: "user_org_unique")
 }
 
