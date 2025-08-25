@@ -277,7 +277,10 @@ function WaBodyVariableInputComponent({
           <Stack key={i}>
             <RadioGroup
               value={paramChoice[i]}
-              onChange={(value) => setParamChoice.setItem(i, value)}
+              onChange={(value) => {
+                form.setFieldValue(`dynamicTags.${i}`, "");
+                setParamChoice.setItem(i, value);
+              }}
             >
               <Group>
                 <Radio value={"default"} label={"Manual"} />
@@ -287,7 +290,7 @@ function WaBodyVariableInputComponent({
                 />
               </Group>
             </RadioGroup>
-            {paramChoice[i] === "manual" && (
+            {paramChoice[i] === "default" && (
               <ContainedTextField
                 key={i}
                 label={`{{${i + 1}}}`}
@@ -359,12 +362,14 @@ function LeadFormQuestionsInputComponent(
   const data = props.leadgenData.formQuestions.map((q) => q.key);
   if (isPending || isSettingsLoading) return <RateupLoader />;
   return (
-    <Group>
+    <Group gap={2} w={"100%"}>
       <ContainedSelection
         label={"Form question key for " + props.label}
         data={data}
         value={props.value}
         onChange={props.onChange}
+        w={"80%"}
+        placeholder="Click to select"
       />
       <Tooltip label={"Sync form questions if not found."}>
         <ActionIcon

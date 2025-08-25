@@ -1146,7 +1146,7 @@ const TemplateNodeEditor: React.FC<
   const leadgenData = useMemo(() => {
     if (isLeadAutomation && metaAssets) {
       const leadgenNode = data?.matchData?.json?.nodes.find(
-        (node) => node.type === "leadgen",
+        (node) => node.type === "leadgenNode",
       );
       if (leadgenNode && leadgenNode.data.leadgenFormId.length) {
         const leadgenForm = metaAssets?.leadgenForms.find(
