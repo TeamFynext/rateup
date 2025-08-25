@@ -246,6 +246,7 @@ export interface LeadgenNodeData extends BaseNodeData {
   fbPageId: string;
   leadgenFormId?: string;
   pageAccessToken: string;
+  pageUserAccessToken?: string;
 }
 
 // Map of node types to their data types
@@ -884,7 +885,7 @@ export function validateNodeData(node: TypedNode): {
           message: `${data.label}: Select Ad of the lead.`,
         };
       }
-      if (!data.phone.trim().length || !data.phoneField.trim().length) {
+      if (!data.phone?.trim().length && !data.phoneField?.trim().length) {
         return {
           valid: false,
           message: `${data.label}: Phone number is required.Either provide phone number or phone number question key from the form.`,

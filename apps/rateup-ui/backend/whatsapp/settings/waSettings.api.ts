@@ -29,6 +29,11 @@ export const upsertWaSettings = async (settings) => {
   return res;
 };
 
+export const updateWaSettingsById = async (settingId, data) => {
+  const res = await axiosClient.put(`${SettingsUrl}/${settingId}`, data);
+  return res;
+};
+
 export const createWaSettings = async (settings) => {
   const res = await axiosClient.post(SettingsUrl, settings);
   return res.data;
@@ -55,6 +60,13 @@ export const registerBusinessClient = async ({
 
 export const deRegisterBusinessClient = async (phoneId: string) => {
   const res = axiosClient.post(`${authUrl}/deregister/${phoneId}`);
+  return res;
+};
+
+export const updateUserAccessToken = async ({ waSettingId, code }) => {
+  const res = axiosClient.post(`${authUrl}/user-token/${waSettingId}`, {
+    code,
+  });
   return res;
 };
 
@@ -169,6 +181,7 @@ export interface MetaAssets {
     instagram_business_account: {
       id: string;
     };
+    pageAccessTokenByUser?: string;
   }[];
   adAccounts: {
     id: string;
