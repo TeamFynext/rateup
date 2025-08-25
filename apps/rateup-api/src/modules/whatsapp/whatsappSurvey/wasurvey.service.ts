@@ -1108,7 +1108,7 @@ export async function handleLeadGen(body: WaMessageBody) {
     let errorMessage = "";
     try {
       const res = await callWhatsappApi(
-        `/${leadgen_id}?access_token=${leadgenNodeData.pageAccessToken}`,
+        `/${leadgen_id}?access_token=${leadgenNodeData.pageUserAccessToken}`,
         "GET",
       );
       if (res.data)

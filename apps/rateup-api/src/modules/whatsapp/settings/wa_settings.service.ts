@@ -348,7 +348,7 @@ export async function getLeadgenFormsFromWa(fbPageId, pageAccessToken) {
 export async function subscribeFieldtoPage(fbPageId, pageAccessToken, fields) {
   const url = `/${fbPageId}/subscribed_apps?subscribed_fields=${fields.join(",")}&access_token=${pageAccessToken}`;
   const res = await callWhatsappApi(url, "POST");
-  return res.data?.data;
+  return res.data;
 }
 
 export async function getLeadgenFormQuestionsFromWa(
@@ -386,6 +386,7 @@ export interface MetaAsset {
       id: string;
     };
     subscribedFields: string[];
+    pageAccessTokenByUser?: string;
   }[];
   adAccounts: {
     id: string;

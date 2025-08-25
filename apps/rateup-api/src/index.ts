@@ -69,7 +69,6 @@ server.register(cors, {
 
 server.get("/api/ping", async (req, reply) => {
   try {
-    throw new Error("This is a test error");
     reply.send({ message: "pong" });
   } catch (e) {
     log.error(e);

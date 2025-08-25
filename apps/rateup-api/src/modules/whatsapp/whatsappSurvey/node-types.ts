@@ -248,6 +248,7 @@ export interface LeadgenNodeData extends BaseNodeData {
   fbPageId: string;
   leadgenFormId: string;
   pageAccessToken: string;
+  pageUserAccessToken?: string;
 }
 
 // Map of node types to their data types
