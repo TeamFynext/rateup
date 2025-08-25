@@ -101,6 +101,7 @@ export default function Inbox({
   });
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
+
     let ChatBoxComponent;
 
     switch (waMessageAssignStatus) {
@@ -120,7 +121,7 @@ export default function Inbox({
     }
 
     if (!ChatBoxComponent) return null;
-    const parsedMessage = parseWaMessage_(item.lastMessage.messageBody);
+    const parsedMessage = parseWaMessage_(item.lastMessage);
 
     const messagePreview = returnMessageContentBasedOnParsedMessage(
       parsedMessage,
@@ -138,7 +139,7 @@ export default function Inbox({
       <ChatBoxComponent
         id={item.id}
         phone={item.phone}
-        name={item.name}
+        name={item.name ? item.name : item.whatsappUserName}
         lastMessage={messagePreview}
         waMessageAssignStatus={item.waMessageAssignStatus}
         assignedUsers={item.assignedUsers}
@@ -147,7 +148,7 @@ export default function Inbox({
             //@ts-ignore
             pathname: `/protected/inbox/chat/${item.id}`,
             params: {
-              name: item.name,
+              name: item.name ? item.name : item.whatsappUserName,
               phone: item.phone,
               waAssignStatus: item.waMessageAssignStatus,
               lastReceivedMessageTimeStamp: item.lastReceivedMessageTimeStamp,
@@ -205,8 +206,7 @@ export default function Inbox({
         isFetchingNextPage ? (
           <ActivityIndicator size="small" className="py-4" />
         ) : (
-          <View className="items-center py-4">
-          </View>
+          <View className="items-center py-4"></View>
         )
       }
     />

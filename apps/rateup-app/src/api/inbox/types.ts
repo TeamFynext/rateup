@@ -14,6 +14,7 @@ export type ContactsWithLastMessage = {
   waMessageAssignStatus: WaMessageAssignStatus;
   assignedUsers: any;
   isSessionActive: boolean;
+  whatsappUserName?: string,
 };
 
 export enum WaMessageAssignStatus {

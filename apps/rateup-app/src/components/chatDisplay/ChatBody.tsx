@@ -101,7 +101,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
-      const parsed = parseWaMessage_(item.messageBody);
+      const parsed = parseWaMessage_(item);
       const time = dayjs(item.createdAt).format("h:mm A");
 
       const currentDate = dayjs(item.createdAt).format("YYYY-MM-DD");

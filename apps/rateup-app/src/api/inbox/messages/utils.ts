@@ -9,14 +9,62 @@ export type ParsedWaMessageReturn = {
   interactive?: WaSendMessageBody["interactive"];
 };
 
-export function parseWaMessage_(messageBody: any): ParsedWaMessageReturn {
-  let timeStamp: string = new Date().toLocaleTimeString();
+export function parseWaMessage_(message: any): ParsedWaMessageReturn {
+  const { messageBody, waCreatedAt } = message;
+  let timeStamp: string = waCreatedAt ?? new Date().toLocaleTimeString();
   let messageType: string = "text";
   let messageContent: string = "No messages yet";
   let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
   let interactive: WaSendMessageBody["interactive"] =
     {} as WaSendMessageBody["interactive"];
-  if (messageBody?.exchangeProcess === "send") {
+    if (message.sourcePlatform === "INSTAGRAM") {
+    if (messageBody?.exchangeProcess === "send") {
+      const { send } = messageBody
+      const { message, sender_action, payload } = send;
+      if (message) {
+        if (message.attachment) {
+          messageContent =
+            message.attachment.payload.id ||
+            message.attachment.payload.url ||
+            message.attachment.payload.attachment_id;
+
+          messageType = message.attachment.type;
+        } else if (message.text) {
+          messageType = "text";
+          messageContent = message.text;
+        }
+      } else if (sender_action && sender_action === "react") {
+        messageType = "reaction";
+        messageContent = payload.emoji || payload.reaction;
+      }
+    }
+    if (messageBody?.exchangeProcess === "receive") {
+      const { receive } = messageBody
+      if (receive.message) {
+        if (receive.message.attachments) {
+          messageContent = {
+            attachments: receive.message.attachments.map((r) => ({
+              content: r.payload ? r.payload.url : "",
+              type: r.type,
+            })),
+            text: receive.message.text,
+          };
+          messageType = "attachments";
+        } else if (receive.message.text) {
+          messageContent = receive.message.text;
+          messageType = "text";
+        } else if (receive.message.quick_reply) {
+          messageContent = receive.message.quick_reply.payload;
+          messageType = "quickreply";
+        }
+      } else if (receive.reaction && receive.reaction.action === "react") {
+        messageContent = receive.reaction.emoji || receive.reaction.reaction;
+        messageType = "reaction";
+      }
+    }
+  }
+  else{
+    if (messageBody?.exchangeProcess === "send") {
     const { send } = messageBody;
     messageType = send.type;
     switch (messageType) {
@@ -107,6 +155,7 @@ export function parseWaMessage_(messageBody: any): ParsedWaMessageReturn {
       default:
         messageContent = "Not Supported Yet";
     }
+  }
   }
   return { timeStamp, messageType, messageContent, interactive, template };
 }
