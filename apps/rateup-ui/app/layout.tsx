@@ -58,7 +58,7 @@ export default async function RootLayout({
         )}
       </head>
       <body className={`${geist.className},${notoColorEmogi.className}`}>
-        <NextIntlClientProvider onError={onError}>
+        <NextIntlClientProvider>
           <MantineProvider theme={theme}>
             <ModalsProvider>
               <Notifications />

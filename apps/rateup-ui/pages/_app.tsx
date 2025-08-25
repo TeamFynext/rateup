@@ -194,7 +194,6 @@ export default function App({
         {},
       )}
       timeZone="Europe/Vienna"
-      onError={onError}
     >
       <MantineProvider theme={theme}>
         <Head>
