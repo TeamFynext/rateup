@@ -926,7 +926,7 @@ export async function processNextNode(
                 }
                 return p;
               });
-              param.parameterers = [...newParams];
+              param.parameters = [...newParams];
             }
             return param;
           });
