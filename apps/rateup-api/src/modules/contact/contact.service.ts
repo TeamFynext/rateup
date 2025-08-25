@@ -516,7 +516,11 @@ export async function createContactsFromCsv(
   updateExisting = false,
   contactGroupId,
 ) {
-  const tags = (await getContactTag(orgId))?.contactTags ?? [];
+  const contactTags = ((await getContactTag(orgId))?.contactTags ??
+    []) as Array<{ name: string; color: string }>;
+
+  const tags = contactTags.map(({ name }) => name);
+
   let data = contacts?.map(({ name, phone, ...obj }) => {
     const result = {};
     if (tags?.length > 0) {

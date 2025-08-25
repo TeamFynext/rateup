@@ -51,27 +51,27 @@ export async function updateUsageStatsTemplateMessageCount() {
   }
 }
 export async function updateSubscriptionAutomation() {
-  const subscriptions: any = await prisma.subscription.findMany();
+  const waAccountSettings = await prisma.waAccountSettings.findMany({});
 
-  for await (const subscription of subscriptions) {
-    const features = {
-      ...subscription?.features,
-      whatsapp: {
-        ...subscription?.features?.whatsapp,
-        automation: { count: { max: 10 }, active: true },
-      },
-    };
-
-    const updatedSubscription = await prisma.subscription.update({
+  for (const setting of waAccountSettings) {
+    let newContactTags = (setting.contactTags as any).map((tag) => ({
+      name: tag,
+      color: "#3B82F6",
+    }));
+    let newContactGroupTags = (setting.contactGroupTags as any).map((tag) => ({
+      name: tag,
+      color: "#3bf68c",
+    }));
+    await prisma.waAccountSettings.update({
       where: {
-        orgId: subscription.orgId,
+        orgId: setting.orgId,
       },
       data: {
-        features,
+        contactTags: newContactTags,
+        contactGroupTags: newContactGroupTags,
       },
     });
-    log.info(
-      `Updated subscription automation for orgId: ${updatedSubscription.orgId}`,
-    );
   }
+
+  log.info("Completed updating all contacts' tag format");
 }

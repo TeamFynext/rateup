@@ -228,6 +228,7 @@ export async function getCampaignById(campaignId: string) {
         wt."data" as "templateData", 
         t."name" as "teamName", 
         wf."version" as "flowVersion",
+        was."contactTags",
         (
           SELECT COALESCE(json_agg(cds), '[]'::json)
           FROM "CampaignDripStage" cds
@@ -237,6 +238,7 @@ export async function getCampaignById(campaignId: string) {
       LEFT JOIN "WaTemplate" wt ON wt.id = c."waTemplateId" 
       LEFT JOIN "Team" t ON t.id = c."teamId"
       LEFT JOIN "WaFlow" wf ON wf."dbFlowId" = NULLIF(c."flowId",'')::uuid 
+      LEFT JOIN "WaAccountSettings" was ON t."orgId" = was."orgId"
       WHERE c.id = ${campaignId}::uuid`;
   return campaign[0];
 }

@@ -185,18 +185,20 @@ export async function generateChatFilterData(orgId: string) {
     };
     const multiSelectTagsData =
       contactTags?.length > 0
-        ? contactTags[0]?.contactTags?.map((tag) => {
+        ? (
+            contactTags?.[0]?.contactTags as { name: string; color: string }[]
+          )?.map(({ name, color }) => {
             const uniqueTags = new Set();
             tagsFromContacts?.forEach((t) => {
-              if (t?.tags[tag]) {
-                uniqueTags.add(t.tags[tag]);
+              if (t?.tags[name]) {
+                uniqueTags.add(t.tags[name]);
               }
             });
             return {
-              group: tag,
+              group: name,
               items: Array.from(uniqueTags).map((item) => ({
                 label: item,
-                value: `${tag}|-${item}`,
+                value: `${name}|-${item}`,
               })),
             };
           })
@@ -487,6 +489,7 @@ export async function filterChats(
         c."followerCount",
         c."isIgVerifiedUser",
         COALESCE(c.tags, '{}'::jsonb) as tags,
+       was."contactTags",
         (
           SELECT COUNT(*)::INTEGER FROM "WaMessage" w WHERE w."contactId" = c.id
           AND w."messageBody"->>'exchangeProcess' = 'receive'
@@ -523,8 +526,9 @@ export async function filterChats(
       FROM "Contact" c
          LEFT JOIN "WaInboxAssign" wb ON wb."contactId" = c.id
          LEFT JOIN "User" u ON wb."assignedUserId" = u.id
+         LEFT JOIN "WaAccountSettings" was ON was."orgId" = c."orgId"
       WHERE ${whereClause}
-      GROUP BY c.id
+      GROUP BY c.id, was."contactTags"
     `;
     const wrappedQuery = `SELECT * FROM (${query}) wc ORDER BY ${orderBy} DESC NULLS LAST LIMIT 100 OFFSET $2`;
 
