@@ -54,6 +54,7 @@ import {
 import {
   getMetaAssets,
   getWaSettingsByPhoneId,
+  MetaAsset,
 } from "../settings/wa_settings.service";
 import {
   WaMessageBody,
@@ -831,7 +832,7 @@ export async function processNextNode(
   nodeId: string,
   orgId: string,
   automationMessageId: string,
-  leadId?: string,
+  lead?: MetaAsset["leads"][0],
 ) {
   try {
     if (!nodeId || !automation?.matchData?.json?.nodes) {
@@ -879,7 +880,7 @@ export async function processNextNode(
             nextEdge.target,
             orgId,
             automationMessageId,
-            leadId,
+            lead,
           );
         }
       }
@@ -903,11 +904,7 @@ export async function processNextNode(
 
       case "templateNode":
         let parameters = node?.data?.parameters;
-        if (leadId) {
-          const whatsappSettings = await getWaSettingsByPhoneId(
-            automation.whatsappSettingsPhoneId,
-          );
-          const metaAssets = await getMetaAssets(whatsappSettings.id);
+        if (lead) {
           parameters = node?.data?.parameters?.map((param) => {
             if (param.type === "body") {
               const newParams = param?.parameters?.map((p) => {
@@ -915,13 +912,9 @@ export async function processNextNode(
                   typeof p?.text !== "string" &&
                   p?.text?.type === "leadgenform-question-key"
                 ) {
-                  const lead = metaAssets.leads.find(
-                    (lead) => lead.id === leadId,
-                  );
-                  if (!lead) p.text = null;
-
+                  const fieldName = p?.text?.value;
                   p.text =
-                    lead.field_data.find((field) => field.name === p.value)
+                    lead.field_data.find((field) => field.name === fieldName)
                       ?.values[0] ?? null;
                 }
                 return p;
@@ -1072,7 +1065,7 @@ export async function processNextNode(
             nextEdge.target,
             orgId,
             automationMessageId,
-            leadId,
+            lead,
           );
         }
       }
