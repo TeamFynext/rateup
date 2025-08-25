@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 
 import {
   ActionIcon,
+  Badge,
   Button,
   FileButton,
   Group,
@@ -21,6 +22,8 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import {
+  IconBrandFacebookFilled,
+  IconCheck,
   IconDeviceFloppy,
   IconExclamationCircle,
   IconPlus,
@@ -51,6 +54,8 @@ import {
   useSyncFbPages,
   useSyncLeadgenFormQuestions,
   useSyncMetaLeadgenForms,
+  useUpdateWaSettingsMutation,
+  useUpsertWaSettingsMutation,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
@@ -2225,6 +2230,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
     waSettingsId,
   );
   const syncLeadgenFormsMut = useSyncMetaLeadgenForms(waSettingsId);
+  const updateWaSettings = useUpdateWaSettingsMutation(waSettingsId);
   const { pages, adAccounts, leadgenForms, ads, formQuestions } =
     useMemo(() => {
       let pages = [],
@@ -2275,10 +2281,11 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
 
   useEffect(() => {
     if (typedData?.fbPageId && metaAssets) {
-      const accessToken = metaAssets.pages?.find(
+      const { access_token, pageAccessTokenByUser } = metaAssets.pages?.find(
         (page) => page?.id === typedData?.fbPageId,
-      )?.access_token;
-      handleInputChange("pageAccessToken", accessToken);
+      );
+      handleInputChange("pageAccessToken", access_token);
+      handleInputChange("pageUserAccessToken", pageAccessTokenByUser);
       const fieldSub = metaAssets.pages.find(
         (f) => f.id === typedData?.fbPageId,
       );
@@ -2289,6 +2296,22 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
       }
     }
   }, [typedData?.fbPageId, metaAssets]);
+
+  async function handleFbLogin() {
+    localStorage.setItem("waSettingsId", waSetting.id);
+    localStorage.setItem("automationId", automatedId);
+    const url = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/fb`)}&config_id=${process.env.NEXT_PUBLIC_META_USER_CONFIG_ID}`;
+    window.location.href = url;
+  }
+  const hasUserAccessToken = useMemo(() => {
+    if (metaAssets && typedData?.fbPageId) {
+      const page = metaAssets.pages?.find(
+        (page) => page.id === typedData?.fbPageId,
+      );
+      return page.pageAccessTokenByUser?.length > 0;
+    }
+    return false;
+  }, [typedData?.fbPageId, typedData.phoneField, metaAssets]);
 
   if (isLoading || isPending || isSettingsLoading) return <RateupLoader />;
   return (
@@ -2420,9 +2443,30 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           </ActionIcon>
         </Tooltip>
       </Group>
+      {typedData?.fbPageId?.length &&
+      !hasUserAccessToken &&
+      typedData?.phoneField?.length ? (
+        <RateupButtonBlue
+          leftIcon={<IconBrandFacebookFilled size={"1.5rem"} />}
+          title="Allow lead access"
+          onClick={handleFbLogin}
+          color="#1877f2"
+          radius={"sm"}
+        />
+      ) : typedData?.phoneField?.length ? (
+        <Badge
+          variant="light"
+          leftSection={<IconCheck size={"1rem"} />}
+          tt={"initial"}
+          color="green"
+        >
+          Allowed Lead Access
+        </Badge>
+      ) : null}
       <PhoneInputWithCountry
         label="Default Phone number"
         onChange={(value) => handleInputChange("phone", value)}
+        value={typedData?.phone}
       />
     </Stack>
   );
