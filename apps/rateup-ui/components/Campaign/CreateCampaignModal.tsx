@@ -603,7 +603,10 @@ const CreateCampaignModal = ({
                   <ContainedSelection
                     key={i}
                     label={`Variable {{${i + 1}}}`}
-                    data={["name", ...(campaign?.contactTags || [])]}
+                    data={[
+                      "name",
+                      ...(campaign?.contactTags?.map((tag) => tag.name) || []),
+                    ]}
                     placeholder="Select dynamic tag"
                     {...form.getInputProps(`dynamicTags.${i}`)}
                   />

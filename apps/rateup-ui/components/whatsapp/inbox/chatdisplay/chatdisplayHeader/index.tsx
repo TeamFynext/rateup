@@ -202,7 +202,7 @@ export const ContactEdit = ({ contact, opened, close }) => {
           contact={contact}
           closeEditModal={close}
           groupId={null}
-          tags={Object.values(contact.tags ?? {})}
+          tags={contact?.contactTags?.map((tag) => tag.name)}
         />
       </FormModalLayout>
     </Stack>

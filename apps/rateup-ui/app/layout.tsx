@@ -34,6 +34,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
+  function onError(error) {
+    if (
+      error.code === "MISSING_MESSAGE" &&
+      process.env.NODE_ENV === "production"
+    )
+      return;
+    console.error(error);
+  }
   return (
     <html lang={locale} {...mantineHtmlProps}>
       <head>
@@ -50,7 +58,7 @@ export default async function RootLayout({
         )}
       </head>
       <body className={`${geist.className},${notoColorEmogi.className}`}>
-        <NextIntlClientProvider>
+        <NextIntlClientProvider onError={onError}>
           <MantineProvider theme={theme}>
             <ModalsProvider>
               <Notifications />
