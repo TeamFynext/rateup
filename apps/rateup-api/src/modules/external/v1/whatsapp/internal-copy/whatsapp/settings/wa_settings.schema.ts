@@ -37,7 +37,7 @@ const getWaSettingsResponseSchema = z.object({
   type: z.nativeEnum(WaConfigType),
 });
 const contactTagSchema = z.object({
-  tags: z.array(z.object({ name: z.string(), value: z.string() })),
+  tags: z.array(z.string()),
 });
 
 export const { schemas: waSettingsSchema, $ref: $WASettingsref } =
