@@ -2247,28 +2247,42 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           label: adAccount.name,
           value: adAccount.id,
         }));
-        leadgenForms = metaAssets.leadgenForms.map((form) => ({
-          label: form.name,
-          value: form.id,
-        }));
-        ads =
-          metaAssets.adAccounts
-            .find((adacc) => adacc.id === typedData.adAccountId)
-            ?.ads?.map((ad) => ({
-              label: ad?.name,
-              value: ad?.id,
-            })) ?? [];
+        leadgenForms = typedData.fbPageId
+          ? metaAssets.leadgenForms
+              .filter((f) => f.pageId === typedData.fbPageId)
+              .map((form) => ({
+                label: form.name,
+                value: form.id,
+              }))
+          : [];
+        ads = typedData.adAccountId
+          ? metaAssets.adAccounts
+              .find((adacc) => adacc.id === typedData.adAccountId)
+              ?.ads?.map((ad) => ({
+                label: ad?.name,
+                value: ad?.id,
+              }))
+          : [];
         formQuestions =
           metaAssets.leadgenForms
             .find((form) => form.id === typedData?.leadgenFormId)
             ?.questions?.map((question) => question?.key) ?? [];
       }
       return { pages, adAccounts, leadgenForms, ads, formQuestions };
-    }, [metaAssets]);
+    }, [
+      metaAssets,
+      typedData.fbPageId,
+      typedData?.adAccountId,
+      typedData?.leadgenFormId,
+    ]);
 
   function subscribeTolead() {
     if (!typedData?.fbPageId) {
       showErrorToast("Select a page");
+      return;
+    }
+    if (!typedData?.pageAccessToken) {
+      showErrorToast("Failed! Try deselecting and selecting page");
       return;
     }
     subscribeFieldMut.mutate({
@@ -2281,16 +2295,14 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
 
   useEffect(() => {
     if (typedData?.fbPageId && metaAssets) {
-      const { access_token, pageAccessTokenByUser } = metaAssets.pages?.find(
-        (page) => page?.id === typedData?.fbPageId,
-      );
-      handleInputChange("pageAccessToken", access_token);
-      handleInputChange("pageUserAccessToken", pageAccessTokenByUser);
-      const fieldSub = metaAssets.pages.find(
-        (f) => f.id === typedData?.fbPageId,
-      );
-      if (fieldSub && fieldSub.subscribedFields.includes("leadgen")) {
-        setIsFieldSubscribed(true);
+      const page = metaAssets.pages?.find((p) => p?.id === typedData?.fbPageId);
+      if (page) {
+        handleInputChange("pageAccessToken", page.access_token);
+        if (page.subscribedFields.includes("leadgen")) {
+          setIsFieldSubscribed(true);
+        } else {
+          setIsFieldSubscribed(false);
+        }
       } else {
         setIsFieldSubscribed(false);
       }
@@ -2303,15 +2315,21 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
     const url = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/fb`)}&config_id=${process.env.NEXT_PUBLIC_META_USER_CONFIG_ID}`;
     window.location.href = url;
   }
-  const hasUserAccessToken = useMemo(() => {
+  const pageAccessTokenByUser = useMemo(() => {
     if (metaAssets && typedData?.fbPageId) {
       const page = metaAssets.pages?.find(
         (page) => page.id === typedData?.fbPageId,
       );
-      return page.pageAccessTokenByUser?.length > 0;
+      return page.pageAccessTokenByUser;
     }
-    return false;
-  }, [typedData?.fbPageId, typedData.phoneField, metaAssets]);
+    return null;
+  }, [typedData?.fbPageId, metaAssets]);
+
+  useEffect(() => {
+    if (typedData?.phoneField?.length && pageAccessTokenByUser) {
+      handleInputChange("pageUserAccessToken", pageAccessTokenByUser);
+    }
+  }, [typedData?.phoneField, pageAccessTokenByUser]);
 
   if (isLoading || isPending || isSettingsLoading) return <RateupLoader />;
   return (
@@ -2398,7 +2416,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
         <ContainedSelection
           data={ads}
           onChange={(value, option) =>
-            handleInputChange("ad", { id: option.value, name: option.label })
+            handleInputChange("ad", { id: option?.value, name: option?.label })
           }
           value={typedData?.ad?.id}
           w={200}
@@ -2444,7 +2462,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
         </Tooltip>
       </Group>
       {typedData?.fbPageId?.length &&
-      !hasUserAccessToken &&
+      !pageAccessTokenByUser &&
       typedData?.phoneField?.length ? (
         <RateupButtonBlue
           leftIcon={<IconBrandFacebookFilled size={"1.5rem"} />}
