@@ -23,10 +23,7 @@ import { useTeamsByUser } from "@/backend/team/team.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
-import {
-  ContainedMultiSelect,
-  ContainedSelection,
-} from "../../../../input/ContainedInput/ContainedInput";
+import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
 import classes from "./styles.module.css";
 
 export type MultiGV = {
@@ -53,15 +50,15 @@ interface Props {
 
 export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
   const { data, isLoading, error } = useChatFilterData();
-
-  // Extract data excluding the first two objects and map to new array
-  const firstTwoGroups = data ? data.slice(0, 2) : [];
-  const filteredData = data
-    ? data.slice(2).flatMap((group) => group.items)
-    : [];
   const { filter, setFilter } = useChatFilterStore();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const translations = useTranslations();
-  const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
+  const {
+    data: teamRes,
+    isLoading: teamsLoading,
+    isError,
+    error: teamsError,
+  } = useTeamsByUser();
 
   useEffect(() => {
     setFilterCount(getFilterActiveCount());
@@ -79,7 +76,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
   const allMultiSelectFilters = [
     ...filter?.contactGroups,
     ...filter?.campaigns,
-    // ...filter?.tags,
+    ...filter?.tags,
   ];
 
   const teamOptions = teamRes
@@ -90,9 +87,9 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
     : [];
 
   function multiSelectOnChange(cf: ChatFilter, value: Array<MultiGV>) {
-    const current_filter = { contactGroups: [], campaigns: [] };
+    const current_filter = { contactGroups: [], campaigns: [], tags: [] };
     if (value.length === 0) {
-      setFilter({ ...cf, contactGroups: [], campaigns: [] });
+      setFilter({ ...cf, contactGroups: [], campaigns: [], tags: [] });
     } else {
       const fcgs = value?.filter((v) => v.group === "contactGroups");
       const fcs = value?.filter((v) => v.group === "campaigns");
@@ -105,14 +102,14 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
       if (fcs.length > 0) {
         current_filter.campaigns = fcs;
       }
-      // if (fts.length > 0) {
-      //   current_filter.tags = fts;
-      // }
+      if (fts.length > 0) {
+        current_filter.tags = fts;
+      }
       setFilter({
         ...cf,
         contactGroups: current_filter.contactGroups,
         campaigns: current_filter.campaigns,
-        // tags: current_filter.tags,
+        tags: current_filter.tags,
       });
     }
   }
@@ -206,8 +203,8 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
         //     }
         //   />
         // }
-        placeholder="Groups, Campaigns"
-        data={firstTwoGroups}
+        placeholder="Tags, Groups, Campaigns"
+        data={data}
         value={allMultiSelectFilters?.map(
           (val) => `${val.group}|-${val.value}`,
         )}
@@ -223,24 +220,6 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
               };
             }),
           );
-        }}
-      />
-      <ContainedMultiSelect
-        data={filteredData}
-        placeholder="Filter contacts by tags"
-        value={filter?.tags?.map((val) => `${val.group}|-${val.value}`)}
-        onChange={(value) => {
-          setFilter({
-            ...filter,
-            tags: value.map((val) => {
-              const grpname = val.split("|-")[0];
-              const grpval = val.split("|-")[1];
-              return {
-                group: grpname,
-                value: grpval,
-              };
-            }),
-          });
         }}
       />
       {tab === "New" && (

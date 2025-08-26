@@ -46,7 +46,6 @@ import ContactTable from "@/components/Table/ContactTable";
 import { formatDate } from "@/utils/dateTime";
 import { showLoadingToast } from "@/utils/notifications";
 
-import { ContactSettings } from "../../contacts";
 import Redeems from "../redeem";
 import styles from "./contacts.module.css";
 
@@ -150,7 +149,33 @@ export default function Contacts() {
             <Redeems />
           </Tabs.Panel>
           <Tabs.Panel value={CustomerTabs.SETTINGS}>
-            <ContactSettings cTags={cTags} hideGroup={true} />
+            <PaperLayout p="xl">
+              <Stack align="start">
+                <ContainedTagInput
+                  placeholder={translations("Type field name and press enter")}
+                  label={translations(
+                    "Enter the Field name you want to add along with the existing fields in Csv Import.",
+                  )}
+                  w={"25rem"}
+                  onChange={setContactTags}
+                  defaultValue={cTags?.contactTags}
+                />
+                <RateupButtonPrimary
+                  title={translations("Update")}
+                  onClick={() => {
+                    updateContactTagsMutation.mutate({
+                      tags: contactTags,
+                    });
+                    showLoadingToast(
+                      translations("Contact tags updated successfully"),
+                      "c-tags",
+                      true,
+                      translations("Loading"),
+                    );
+                  }}
+                />
+              </Stack>
+            </PaperLayout>
           </Tabs.Panel>
         </Box>
       </Tabs>
