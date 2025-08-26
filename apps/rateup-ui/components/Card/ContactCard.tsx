@@ -83,7 +83,7 @@ export const ContactMenu = ({ contact, groupId, tags }) => {
           contact={contact}
           closeEditModal={closeEditModal}
           groupId={groupId}
-          tags={tags?.map((tag) => tag.name)}
+          tags={tags}
         />
       </FormModalLayout>
     </Menu>

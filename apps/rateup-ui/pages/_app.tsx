@@ -178,14 +178,7 @@ export default function App({
   const canonicalUrl = (
     `https://rateup.app` + (router.asPath === "/" ? "" : router.asPath)
   ).split("?")[0];
-  function onError(error) {
-    if (
-      error.code === "MISSING_MESSAGE" &&
-      process.env.NODE_ENV === "production"
-    )
-      return;
-    console.error(error);
-  }
+
   return (
     <NextIntlClientProvider
       locale="en"

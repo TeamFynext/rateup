@@ -186,7 +186,7 @@ export default function ContactGroup() {
                       groupClose={closeEditModal}
                       isEdit={true}
                       groupDetails={groupDetails}
-                      gTags={cTags?.contactGroupTags?.map((tag) => tag?.name)}
+                      gTags={cTags?.contactGroupTags}
                     />
                   </FormModalLayout>
 
@@ -273,7 +273,7 @@ export default function ContactGroup() {
           groupId={groupDetails?.id}
           close={close}
           existingContactIds={groupDetails?.contacts?.map((c) => c.id)}
-          tags={cTags?.contactTags?.map((tag) => tag?.name)}
+          tags={cTags?.contactTags}
           createNewContactsFromCSV={createNewContactsFromCSV}
         />
       </FormModalLayout>

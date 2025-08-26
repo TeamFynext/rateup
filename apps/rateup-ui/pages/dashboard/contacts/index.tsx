@@ -2,10 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
-  ActionIcon,
   Box,
   Button,
-  ColorInput,
   Flex,
   Group,
   Menu,
@@ -14,20 +12,12 @@ import {
   Stack,
   Tabs,
   TextInput,
-  Title,
 } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import {
-  IconChevronDown,
-  IconSearch,
-  IconUserPlus,
-  IconX,
-} from "@tabler/icons-react";
+import { IconChevronDown, IconSearch, IconUserPlus } from "@tabler/icons-react";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
-import { z } from "zod";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
@@ -62,20 +52,11 @@ export enum ContactTabs {
   CONTACTS = "All Contacts",
   SETTINGS = "settings",
 }
-
-// Zod schemas for validation
-const tagSchema = z.object({
-  name: z.string().min(1, "Tag name required"),
-  color: z.string().min(1, "Color required"),
-});
-const tagsFormSchema = z.object({
-  contactTags: z.array(tagSchema),
-  contactGroupTags: z.array(tagSchema),
-});
-
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const [selectedTeamID, setSelectedTeamID] = useState("");
+  const [contactTags, setContactTags] = useState([]);
+  const [contactGroupTags, setContactGroupTags] = useState([]);
   const [sorting, setSorting] = useState<SortingState>([CONTACT_SORT]);
   const [sortingGroup, setSortingGroup] = useState<SortingState>([
     CONTACT_SORT,
@@ -108,6 +89,7 @@ export default function Contacts() {
     isError: isErrorGroup,
   } = useContactGroup();
   const { isPending, data: cTags } = useGetContactTags();
+  const updateContactTagsMutation = useUpdateContactTagsMutation();
   const translations = useTranslations();
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
@@ -124,6 +106,11 @@ export default function Contacts() {
               group?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
           );
 
+  useEffect(() => {
+    setContactTags(cTags?.contactTags ?? []);
+    setContactGroupTags(cTags?.contactGroupTags ?? []);
+  }, [cTags]);
+
   const column = useMemo(
     () => [
       ...contactColumn(cTags?.contactTags ?? []),
@@ -136,7 +123,7 @@ export default function Contacts() {
         cell: (info) => (
           <ContactMenu
             contact={info.getValue()}
-            tags={cTags?.contactTags?.map((tag) => tag?.name)}
+            tags={cTags?.contactTags}
             groupId={""}
           />
         ),
@@ -246,151 +233,47 @@ export default function Contacts() {
             </PaperLayout>
           </Tabs.Panel>
           <Tabs.Panel value={ContactTabs.SETTINGS}>
-            <ContactSettings cTags={cTags} />
+            <PaperLayout p="xl">
+              <Stack align="start">
+                <ContainedTagInput
+                  placeholder={translations("Type field name and press enter")}
+                  label={translations(
+                    "Enter the Field name you want to add along with the existing fields in Csv Import.",
+                  )}
+                  w={"25rem"}
+                  onChange={setContactTags}
+                  value={contactTags}
+                />
+                <ContainedTagInput
+                  placeholder={translations("Type field name and press enter")}
+                  label={"Add Tags to Contact Groups"}
+                  w={"25rem"}
+                  onChange={setContactGroupTags}
+                  value={contactGroupTags}
+                />
+                <RateupButtonPrimary
+                  title={translations("Update")}
+                  onClick={() => {
+                    updateContactTagsMutation.mutate({
+                      tags: contactTags,
+                      groupTags: contactGroupTags,
+                    });
+                    showLoadingToast(
+                      translations("Contact tags updated successfully"),
+                      "c-tags",
+                      true,
+                      translations("Loading"),
+                    );
+                  }}
+                />
+              </Stack>
+            </PaperLayout>
           </Tabs.Panel>
         </Box>
       </Tabs>
     </Stack>
   );
 }
-
-export const ContactSettings = ({ cTags, hideGroup = false }) => {
-  const translations = useTranslations();
-  const updateContactTagsMutation = useUpdateContactTagsMutation();
-  // Form setup
-  const form = useForm<z.infer<typeof tagsFormSchema>>({
-    initialValues: {
-      contactTags: [],
-      contactGroupTags: [],
-    },
-    validate: zodResolver(tagsFormSchema),
-  });
-
-  useEffect(() => {
-    form.setValues({
-      contactTags: cTags?.contactTags ?? [],
-      contactGroupTags: cTags?.contactGroupTags ?? [],
-    });
-  }, [cTags]);
-
-  return (
-    <PaperLayout p="xl">
-      <form
-        onSubmit={form.onSubmit((values) => {
-          updateContactTagsMutation.mutate({
-            tags: values.contactTags,
-            groupTags: values.contactGroupTags,
-          });
-          showLoadingToast(
-            translations("Contact tags updated successfully"),
-            "c-tags",
-            true,
-            translations("Loading"),
-          );
-        })}
-        style={{ width: "100%" }}
-      >
-        <Stack align="start" gap="md">
-          <Title size="h4">{translations("Contact Settings")}</Title>
-
-          <Box mb="md">
-            <Title size="h5" mb="xs">
-              {translations("Contact Tags")}
-            </Title>
-            <Stack gap="xs">
-              {form.values.contactTags.map((tag, index) => (
-                <Flex key={index} align="center" gap="sm">
-                  <TextInput
-                    {...form.getInputProps(`contactTags.${index}.name`)}
-                    placeholder={translations("Tag name")}
-                    style={{ flex: 1 }}
-                  />
-                  <ColorInput
-                    {...form.getInputProps(`contactTags.${index}.color`)}
-                  />
-                  <ActionIcon
-                    variant="light"
-                    color="red"
-                    onClick={() => {
-                      form.removeListItem("contactTags", index);
-                    }}
-                  >
-                    <IconX size={16} />
-                  </ActionIcon>
-                </Flex>
-              ))}
-              <Button
-                variant="outline"
-                leftSection={<IconUserPlus size={16} />}
-                onClick={() =>
-                  form.insertListItem("contactTags", {
-                    name: "",
-                    color: "#3B82F6",
-                  })
-                }
-              >
-                {translations("Add New Tag")}
-              </Button>
-              {form.errors.contactTags && (
-                <Box c="red" fz="sm">
-                  {form.errors.contactTags}
-                </Box>
-              )}
-            </Stack>
-          </Box>
-
-          <Box mb="md" hidden={hideGroup}>
-            <Title size="h5" mb="xs">
-              {translations("Contact Group Tags")}
-            </Title>
-            <Stack gap="xs">
-              {form.values.contactGroupTags.map((tag, index) => (
-                <Flex key={index} align="center" gap="sm">
-                  <TextInput
-                    {...form.getInputProps(`contactGroupTags.${index}.name`)}
-                    placeholder={translations("Tag name")}
-                    style={{ flex: 1 }}
-                  />
-                  <ColorInput
-                    {...form.getInputProps(`contactGroupTags.${index}.color`)}
-                  />
-                  <ActionIcon
-                    variant="light"
-                    color="red"
-                    onClick={() => {
-                      form.removeListItem("contactGroupTags", index);
-                    }}
-                  >
-                    <IconX size={16} />
-                  </ActionIcon>
-                </Flex>
-              ))}
-              <Button
-                variant="outline"
-                leftSection={<IconUserPlus size={16} />}
-                onClick={() =>
-                  form.insertListItem("contactGroupTags", {
-                    name: "",
-                    color: "#3bf68c",
-                  })
-                }
-              >
-                {translations("Add New Group Tag")}
-              </Button>
-              {form.errors.contactGroupTags && (
-                <Box c="red" fz="sm">
-                  {form.errors.contactGroupTags}
-                </Box>
-              )}
-            </Stack>
-          </Box>
-
-          <RateupButtonPrimary title={translations("Update")} type="submit" />
-        </Stack>
-      </form>
-    </PaperLayout>
-  );
-};
 
 export const FilterSelect = ({ setFilterByTag, filterByTag, contactArray }) => {
   const translations = useTranslations();
