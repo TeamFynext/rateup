@@ -2,6 +2,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ContactGroupType } from "@/types/enums";
+import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { CONTACT_SORT } from "../../../components/Contacts/utils/utils";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
@@ -10,6 +11,7 @@ import {
   deleteContact,
   deleteManyContacts,
   editContact,
+  editContactLabels,
   getContactById,
   getContactsList,
   importContacts,
@@ -154,6 +156,30 @@ export const useEditContactMutation = (groupId) => {
       queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
       queryClient.invalidateQueries({ queryKey: ["notification"] });
       queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
+      showSuccessToast(
+        "Contact updated successfully.",
+        "contact-update",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error updating the contact: ${error?.response?.data?.error}`,
+        "contact-update",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useEditContactLabelsMutation = (contactId: string) => {
+  const queryClient = useQueryClient();
+  const { setSelectedContact, selectedContact } = useContactStore();
+  return useMutation({
+    mutationFn: editContactLabels,
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
+      setSelectedContact({ ...selectedContact, labels: data?.data?.labels });
       showSuccessToast(
         "Contact updated successfully.",
         "contact-update",
