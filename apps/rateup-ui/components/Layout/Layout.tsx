@@ -37,6 +37,8 @@ import { WaMessageAssignStatus } from "@/types/enums";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
+import { TagsContext } from "@/context/TagsContext";
 import { useChatContactCountStore } from "@/pages/dashboard/whatsapp/inbox/store";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
@@ -103,21 +105,22 @@ const MainNavLinks = ({
     >
       <UnstyledButton
         onClick={() => {
-          // Check if it's a WhatsApp related route
           const isWhatsAppRoute = link.label.toLowerCase().includes("whatsapp");
 
           if (isWhatsAppRoute && !checkWhatsAppSettings()) {
             return; // Don't proceed if no WhatsApp settings
           }
-
-          setActiveMainLink(link.label);
-          setActiveSubLink(link?.children[0]?.link);
-          showOfflineNotification(status);
-          open();
-          if (link.link && !link?.disabled) {
+          if (link.hasSubmenu && link.children?.length > 0) {
+            setActiveMainLink(link.label);
+            setActiveSubLink(link.children[0].link);
+            showOfflineNotification(status);
+            router.push(link.children[0].link);
+            open();
+          } else if (link.link && !link?.disabled) {
+            setActiveMainLink(link.label);
+            setActiveSubLink(link.link);
+            showOfflineNotification(status);
             router.push(link.link);
-          } else {
-            router.push(link?.children[0]?.link);
           }
         }}
         className={classes.mainLink}
@@ -138,7 +141,22 @@ const SubNavLinks = ({
   status,
   checkWhatsAppSettings,
 }) => {
-  const linksIcon = links
+  // Handler for label filter click
+  const chatFilterStore = useChatFilterStore();
+  const handleLabelFilter = (labelName: string) => {
+    // Update your filter state here
+    chatFilterStore.setFilter({
+      ...chatFilterStore.filter,
+      labels: labelName ? [labelName] : [],
+    });
+  };
+
+  // Find labels section if it exists
+  const labelsSection = links.find((link) => link.label === "Labels");
+  const regularLinks = links.filter((link) => link.label !== "Labels");
+
+  // Create icon links for regular items
+  const regularLinksIcons = regularLinks
     .filter((d) => !d?.disabled)
     .map((link, index) => (
       <Tooltip
@@ -150,16 +168,11 @@ const SubNavLinks = ({
       >
         <UnstyledButton
           onClick={() => {
-            // Check if it's a WhatsApp related route
-            const isWhatsAppRoute = link.link.includes("/whatsapp");
-
-            if (isWhatsAppRoute && !checkWhatsAppSettings()) {
-              return; // Don't proceed if no WhatsApp settings
+            if (link.link) {
+              setActiveSubLink(link.link);
+              showOfflineNotification(status);
+              router.push(link.link);
             }
-
-            setActiveSubLink(link.link);
-            showOfflineNotification(status);
-            router.push(link.link);
           }}
           className={classes.link}
           data-active={link.link === activeSubLink || undefined}
@@ -170,7 +183,52 @@ const SubNavLinks = ({
       </Tooltip>
     ));
 
-  const linksText = links
+  // Create label icons if labels exist
+  const labelIcons =
+    labelsSection?.children?.map((label, index) => (
+      <Tooltip
+        label={label.label}
+        position="right"
+        withArrow
+        transitionProps={{ duration: 0 }}
+        key={`label-${index}`}
+      >
+        <UnstyledButton
+          onClick={() => handleLabelFilter(index === 0 ? "" : label.label)}
+          className={classes.link}
+          w={60}
+          data-active={
+            chatFilterStore.filter.labels.includes(label.label) || undefined
+          }
+        >
+          {index === 0 ? (
+            <label.icon size={22} stroke={1.5} />
+          ) : (
+            <div
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                backgroundColor: label.color || "#5c7cfa",
+              }}
+            />
+          )}
+        </UnstyledButton>
+      </Tooltip>
+    )) || [];
+
+  // Combine all icon links, with divider if labels exist
+  const linksIcon =
+    labelsSection?.children?.length > 0
+      ? [
+          ...regularLinksIcons,
+          <Divider key="label-divider" my="xs" />,
+          ...labelIcons,
+        ]
+      : regularLinksIcons;
+
+  // Create text links (similar approach as icons)
+  const regularLinksText = regularLinks
     .filter((d) => !d?.disabled)
     .map((link, index) => (
       <Link
@@ -179,14 +237,9 @@ const SubNavLinks = ({
         href="#"
         onClick={(event) => {
           event.preventDefault();
-
-          // Check if it's a WhatsApp related route
-          const isWhatsAppRoute = link.link.includes("/whatsapp");
-
-          if (isWhatsAppRoute && !checkWhatsAppSettings()) {
-            return; // Don't proceed if no WhatsApp settings
+          if (link.link?.includes("/whatsapp") && !checkWhatsAppSettings()) {
+            return;
           }
-
           setActiveSubLink(link.link);
           router.push(link.link);
         }}
@@ -196,6 +249,38 @@ const SubNavLinks = ({
         {link.label}
       </Link>
     ));
+
+  // Create label text links
+  const labelTexts =
+    labelsSection?.children?.map((label, index) => (
+      <Link
+        className={classes.link}
+        href="#"
+        onClick={(event) => {
+          event.preventDefault();
+          handleLabelFilter(index === 0 ? "" : label.label);
+        }}
+        key={`label-text-${index}`}
+        data-active={
+          chatFilterStore.filter.labels.includes(label.label) || undefined
+        }
+        style={{ paddingLeft: 0, height: 44 }}
+      >
+        <Flex align="center" gap="xs">
+          {label.label}
+        </Flex>
+      </Link>
+    )) || [];
+
+  // Combine all text links with divider if labels exist
+  const linksText =
+    labelsSection?.children?.length > 0
+      ? [
+          ...regularLinksText,
+          <Divider key="label-text-divider" my="9.5" />,
+          ...labelTexts,
+        ]
+      : regularLinksText;
 
   return { linksIcon, linksText };
 };
@@ -561,27 +646,35 @@ const WhatsAppSettingsModal = ({ opened, onClose, onGoToSettings }) => {
 };
 
 // MainContent Component
-const MainContent = ({ children, appProps, navOpened, setNavOpened }) => {
+const MainContent = ({
+  children,
+  appProps,
+  navOpened,
+  setNavOpened,
+  cTags,
+}) => {
   return (
     <motion.div className={styles["content-container"]}>
       <Flex className={`${styles["content-wrapper"]}`}>
-        <NavControlContext.Provider value={{ navOpened, setNavOpened }}>
-          <AnimatePresence key={appProps.router.pathname}>
-            <motion.div
-              className={styles["content-div"]}
-              initial={
-                !(
-                  appProps.router.pathname.includes("login") ||
-                  appProps.router.pathname.includes("signup")
-                ) && { opacity: 0 }
-              }
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
-        </NavControlContext.Provider>
+        <TagsContext.Provider value={{ tags: cTags }}>
+          <NavControlContext.Provider value={{ navOpened, setNavOpened }}>
+            <AnimatePresence key={appProps.router.pathname}>
+              <motion.div
+                className={styles["content-div"]}
+                initial={
+                  !(
+                    appProps.router.pathname.includes("login") ||
+                    appProps.router.pathname.includes("signup")
+                  ) && { opacity: 0 }
+                }
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </NavControlContext.Provider>
+        </TagsContext.Provider>
       </Flex>
     </motion.div>
   );
@@ -605,10 +698,11 @@ export default function Layout({ children }) {
     "userInfo",
     null,
   );
+
   const { setUser } = useUser();
   const queryClient = useQueryClient();
   const {
-    isLoading: isLoadingUserInfo,
+    isPending: isLoadingUserInfo,
     data: userQueryData,
     refetch,
   } = useUserInfo();
@@ -616,22 +710,29 @@ export default function Layout({ children }) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop, open }] = useDisclosure(false);
   const { data: sub, isPending } = useSubscription();
+  const { isPending: isPendingCTags, data: cTags } = useGetContactTags();
+
   const translations = useTranslations();
   const [navLinks, setNavLinks] = useState([]);
   const [lastLinksData, setLastLinksData] = useState([]);
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
+  const isLoading = isPending || isPendingCTags || isLoadingUserInfo;
+  // Fetch inbox labels from DB
+  // const { data: inboxLabelsData } = useGetInboxLabels();
 
   useEffect(() => {
-    if (!isPending) {
+    if (!isLoading) {
+      const inboxLabels = cTags?.inboxLabels || [];
       const [nLinks, lLinks] = getNavTopData(
         sub,
         translations,
         userInfo?.data?.role,
+        inboxLabels, // pass dynamic labels
       );
       setNavLinks(nLinks);
       setLastLinksData(lLinks);
     }
-  }, [isPending, sub, translations, userInfo?.data?.role]);
+  }, [isLoading, sub, translations, userInfo?.data?.role]);
 
   if (query.msg === "welcome") {
     refetch();
@@ -709,36 +810,33 @@ export default function Layout({ children }) {
     return acc;
   }, {});
 
+  // On reload, set active main/sub link based on route
   useEffect(() => {
     if (!pathname) return;
-    Object.entries(linksMapping).find(([key, value]) => {
-      const [basePath, queryString] = fullPath.split("?");
-      const params = new URLSearchParams(queryString || "");
-      const tabParam = params.get("tab");
-
-      let navItem = value?.find((v) => {
-        const [vBasePath, vQuery] = v.link.split("?");
-        const vParams = new URLSearchParams(vQuery || "");
-        const vTabParam = vParams.get("tab");
-
-        const baseMatches = basePath.startsWith(vBasePath);
-        const tabMatches = vTabParam ? vTabParam === tabParam : true;
-
-        return baseMatches && tabMatches;
+    let found = false;
+    Object.entries(linksMapping).forEach(([mainLabel, children]) => {
+      children.forEach((child) => {
+        if (child.link && fullPath.startsWith(child.link)) {
+          setActiveMainLink(mainLabel);
+          setActiveSubLink(child.link);
+          found = true;
+        }
       });
-
-      if (navItem) {
-        setActiveMainLink(key);
-        setActiveSubLink(navItem?.link);
-      }
     });
-  }, [linksMapping, navLinks, fullPath]);
+    // If no child matches, check main links
+    if (!found) {
+      navLinks.forEach((main) => {
+        if (main.link && pathname.startsWith(main.link.split("?")[0])) {
+          setActiveMainLink(main.label);
+          setActiveSubLink(main.link);
+        }
+      });
+    }
+  }, [fullPath, linksMapping, navLinks, pathname]);
 
   const { setTotalCount } = useChatContactCountStore();
   const { filter } = useChatFilterStore();
-  const { data: inboxCount, refetch: refetchInboxCount } = useGetInboxUserCount(
-    activeMainLink === "Inbox",
-  );
+  const { data: inboxCount } = useGetInboxUserCount(activeMainLink === "Inbox");
 
   useEffect(() => {
     if (inboxCount) {
@@ -833,13 +931,19 @@ export default function Layout({ children }) {
       <AppShell
         navbar={{
           width: {
-            md: linksIcon?.length > 0 ? (desktopOpened ? 260 : 120) : 60,
+            sm: linksIcon?.length > 0 ? (desktopOpened ? 260 : 120) : 60,
             base: linksIcon?.length > 0 ? (mobileOpened ? 260 : 120) : 60,
           },
           breakpoint: "sm",
           collapsed: { mobile: !mobileOpened },
         }}
-        padding="md"
+        header={{
+          height: {
+            sm: 0,
+            base: 40,
+          },
+        }}
+        padding="xs"
         layout="alt"
       >
         <AppShell.Header>
@@ -878,6 +982,7 @@ export default function Layout({ children }) {
             }}
             navOpened={navOpened}
             setNavOpened={setNavOpened}
+            cTags={cTags}
           >
             {children}
           </MainContent>

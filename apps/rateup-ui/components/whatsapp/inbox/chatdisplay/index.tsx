@@ -61,7 +61,6 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
     [assignedUsers, user],
   );
 
-  const isChatDisplayOpen = useIsChatDisplayOpen();
   const translations = useTranslations();
   if (error) return <div>Error: {error.message}</div>;
 
@@ -93,30 +92,23 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   const showLoading = isPending || isFetching;
 
   return (
-    <div
-      className={`${classes.wrapper} ${isChatDisplayOpen ? "chat-display-open" : ""} p-1`}
-    >
-      <PaperLayout p={0} className="h-full">
-        {!contact && messages?.length === 0 ? (
-          <NothingFound text={translations("Select a chat to see messages")} />
-        ) : (
-          <div className={classes.inner_animated}>
-            <WaInboxChatDisplayHeader
-              contact={contact}
-              smallScreen={smallScreen}
-            />
-            {showLoading ? (
-              <WhatsAppInboxLoader isLoading={showLoading} />
-            ) : (
-              <WaInboxChatDisplayBody
-                data={messages}
-                smallScreen={smallScreen}
-              />
-            )}
-            {!showLoading && footerContent}
-          </div>
-        )}
-      </PaperLayout>
-    </div>
+    <PaperLayout p={0} className="h-full">
+      {!contact && messages?.length === 0 ? (
+        <NothingFound text={translations("Select a chat to see messages")} />
+      ) : (
+        <div className={classes.inner_animated}>
+          <WaInboxChatDisplayHeader
+            contact={contact}
+            smallScreen={smallScreen}
+          />
+          {showLoading ? (
+            <WhatsAppInboxLoader isLoading={showLoading} />
+          ) : (
+            <WaInboxChatDisplayBody data={messages} smallScreen={smallScreen} />
+          )}
+          {!showLoading && footerContent}
+        </div>
+      )}
+    </PaperLayout>
   );
 }

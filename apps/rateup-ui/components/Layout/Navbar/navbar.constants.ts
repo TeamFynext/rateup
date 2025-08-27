@@ -11,6 +11,7 @@ import {
   IconBrowser,
   IconBuildingStore,
   IconCirclePlus,
+  IconCircleX,
   IconDashboard,
   IconFileAnalytics,
   IconFileDescription,
@@ -38,6 +39,7 @@ import {
   IconUserX,
   IconWallpaper,
   IconWaveSine,
+  IconX,
 } from "@tabler/icons-react";
 
 import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
@@ -71,6 +73,8 @@ export interface NavbarLinkProps {
   href?: string;
   submenus?: NavbarLinkProps[];
   role?: string;
+  hasSubmenu?: boolean; // new: indicates if main link opens submenu
+  onClick?: () => void; // new: for custom click handlers
 }
 
 //data Array consisting of NavbarTopData
@@ -78,6 +82,10 @@ export function getNavTopData(
   subscription?: Subscription,
   translations?: any,
   role?: string,
+  inboxLabels?: {
+    name: string;
+    color: string;
+  }[],
 ) {
   function hasFeature(featurePath: SubscriptionFeaturePathName) {
     if (!subscription) return false;
@@ -89,20 +97,15 @@ export function getNavTopData(
       icon: IconHome2,
       label: translations("Home"),
       link: "/dashboard",
-      children: [
-        {
-          label: "Dashboard",
-          link: "/dashboard",
-          icon: IconDashboard,
-          disabled: true,
-        },
-      ],
+      hasSubmenu: false,
+      children: [],
     },
     ...(hasFeature(sfpn.Whatsapp)
       ? [
           {
             icon: IconBrandHipchat,
             label: translations("Inbox"),
+            hasSubmenu: true,
             children: [
               {
                 label: translations("New"),
@@ -149,6 +152,26 @@ export function getNavTopData(
                 link: "/dashboard/whatsapp/inbox?tab=analytics",
                 icon: IconFileAnalytics,
               },
+              ...(inboxLabels?.length
+                ? [
+                    {
+                      label: "Labels",
+                      icon: IconBrandHipchat,
+                      hasSubmenu: true,
+                      children: [
+                        {
+                          label: "Clear Label",
+                          icon: IconCircleX,
+                        },
+                        ...inboxLabels.map((lbl) => ({
+                          label: lbl.name,
+                          color: lbl.color,
+                          icon: IconBrandHipchat,
+                        })),
+                      ],
+                    },
+                  ]
+                : []),
             ],
           },
         ]
@@ -158,6 +181,7 @@ export function getNavTopData(
           {
             icon: IconSpeakerphone,
             label: translations("Campaigns"),
+            hasSubmenu: true,
             children: [
               {
                 label: translations("Campaigns"),
@@ -183,6 +207,7 @@ export function getNavTopData(
           {
             icon: IconBrandWhatsapp,
             label: translations("WhatsApp"),
+            hasSubmenu: true,
             children: [
               ...(hasFeature(sfpn.WhatsAppFlow)
                 ? [
@@ -235,6 +260,7 @@ export function getNavTopData(
           {
             icon: IconGift,
             label: translations("Loyalty"),
+            hasSubmenu: true,
             children: [
               {
                 label: translations("Dashboard"),
@@ -275,6 +301,7 @@ export function getNavTopData(
           {
             icon: IconBrowser,
             label: translations("Web Forms"),
+            hasSubmenu: true,
             children: [
               {
                 label: translations("Surveys"),
@@ -305,14 +332,7 @@ export function getNavTopData(
             icon: IconTicket,
             label: translations("Tickets"),
             link: "/dashboard/tickets",
-            children: [
-              {
-                label: translations("Tickets"),
-                link: "/dashboard/tickets",
-                icon: IconTicket,
-                disabled: true,
-              },
-            ],
+            hasSubmenu: false,
           },
         ]
       : []),
@@ -322,6 +342,7 @@ export function getNavTopData(
       label: translations("Teams"),
       link: "/dashboard/teams",
       disabled: role !== "SUPER_ADMIN",
+      hasSubmenu: true,
       children: [
         {
           label: translations("Teams"),
@@ -343,6 +364,7 @@ export function getNavTopData(
     {
       icon: IconQrcode,
       label: translations("QR Studio"),
+      hasSubmenu: true,
       children: [
         {
           label: translations("QR Creator"),
@@ -367,14 +389,7 @@ export function getNavTopData(
             icon: IconRobotFace,
             label: "ChatBot",
             link: "/dashboard/chatbot",
-            children: [
-              {
-                label: "ChatBot",
-                link: "/dashboard/chatbot",
-                icon: IconRobotFace,
-                disabled: true,
-              },
-            ],
+            hasSubmenu: false,
           },
         ]
       : []),
@@ -382,14 +397,7 @@ export function getNavTopData(
       icon: IconApps,
       label: translations("Apps & Services"),
       link: "/dashboard/apps&services",
-      children: [
-        {
-          label: translations("Apps & Services"),
-          link: "/dashboard/apps&services",
-          icon: IconApps,
-          disabled: true,
-        },
-      ],
+      hasSubmenu: false,
     },
     ...(hasFeature(sfpn.Menu)
       ? [
@@ -397,14 +405,7 @@ export function getNavTopData(
             icon: IconFileDescription,
             label: translations("Digital Menu"),
             link: "/dashboard/menu",
-            children: [
-              {
-                label: translations("Menu"),
-                link: "/dashboard/menu",
-                icon: IconFileDescription,
-                disabled: true,
-              },
-            ],
+            hasSubmenu: false,
           },
         ]
       : []),
