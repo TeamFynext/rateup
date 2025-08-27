@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
+  ActionIcon,
   Box,
   Button,
+  ColorInput,
   Flex,
   Group,
   Menu,
@@ -12,12 +14,21 @@ import {
   Stack,
   Tabs,
   TextInput,
+  Title,
 } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { IconChevronDown, IconSearch, IconUserPlus } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconSearch,
+  IconUserPlus,
+  IconX,
+} from "@tabler/icons-react";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import { zodResolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import z from "zod";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
@@ -233,47 +244,149 @@ export default function Contacts() {
             </PaperLayout>
           </Tabs.Panel>
           <Tabs.Panel value={ContactTabs.SETTINGS}>
-            <PaperLayout p="xl">
-              <Stack align="start">
-                <ContainedTagInput
-                  placeholder={translations("Type field name and press enter")}
-                  label={translations(
-                    "Enter the Field name you want to add along with the existing fields in Csv Import.",
-                  )}
-                  w={"25rem"}
-                  onChange={setContactTags}
-                  value={contactTags}
-                />
-                <ContainedTagInput
-                  placeholder={translations("Type field name and press enter")}
-                  label={"Add Tags to Contact Groups"}
-                  w={"25rem"}
-                  onChange={setContactGroupTags}
-                  value={contactGroupTags}
-                />
-                <RateupButtonPrimary
-                  title={translations("Update")}
-                  onClick={() => {
-                    updateContactTagsMutation.mutate({
-                      tags: contactTags,
-                      groupTags: contactGroupTags,
-                    });
-                    showLoadingToast(
-                      translations("Contact tags updated successfully"),
-                      "c-tags",
-                      true,
-                      translations("Loading"),
-                    );
-                  }}
-                />
-              </Stack>
-            </PaperLayout>
+            <ContactSettings cTags={cTags} />
           </Tabs.Panel>
         </Box>
       </Tabs>
     </Stack>
   );
 }
+
+const tagSchema = z.object({
+  name: z.string().min(1, "Tag name required"),
+  color: z.string().min(1, "Color required"),
+});
+const tagsFormSchema = z.object({
+  contactTags: z.array(z.string()),
+  contactGroupTags: z.array(z.string()),
+  inboxLabels: z.array(tagSchema),
+});
+
+export const ContactSettings = ({ cTags }) => {
+  const translations = useTranslations();
+  const updateContactTagsMutation = useUpdateContactTagsMutation();
+  // Form setup
+  const form = useForm<z.infer<typeof tagsFormSchema>>({
+    initialValues: {
+      contactTags: [],
+      contactGroupTags: [],
+      inboxLabels: [],
+    },
+    validate: zodResolver(tagsFormSchema),
+  });
+
+  useEffect(() => {
+    form.setValues({
+      contactTags: cTags?.contactTags ?? [],
+      contactGroupTags: cTags?.contactGroupTags ?? [],
+      inboxLabels: cTags?.inboxLabels ?? [],
+    });
+  }, [cTags]);
+
+  return (
+    <PaperLayout p="xl">
+      <form
+        onSubmit={form.onSubmit((values) => {
+          updateContactTagsMutation.mutate({
+            tags: values.contactTags,
+            groupTags: values.contactGroupTags,
+            inboxLabels: values.inboxLabels,
+          });
+          showLoadingToast(
+            translations("Contact tags updated successfully"),
+            "c-tags",
+            true,
+            translations("Loading"),
+          );
+        })}
+        style={{ width: "100%" }}
+      >
+        <Stack align="start" gap="md">
+          <Title size="h4">{translations("Contact Settings")}</Title>
+
+          <ContainedTagInput
+            placeholder={translations("Type field name and press enter")}
+            label={translations(
+              "Enter the Field name you want to add along with the existing fields in Csv Import.",
+            )}
+            w={"25rem"}
+            {...form.getInputProps(`contactTags`)}
+          />
+          <ContainedTagInput
+            placeholder={translations("Type field name and press enter")}
+            label={"Add Tags to Contact Groups"}
+            w={"25rem"}
+            {...form.getInputProps(`contactGroupTags`)}
+          />
+
+          <Box mb="md">
+            <Title size="h5" mb="xs">
+              {translations("Inbox labels")}
+            </Title>
+            <Stack gap="xs">
+              {form.values.inboxLabels.map((tag, index) => (
+                <Flex key={index} align="center" gap="sm">
+                  <TextInput
+                    {...form.getInputProps(`inboxLabels.${index}.name`)}
+                    placeholder={translations("label name")}
+                    style={{ flex: 1 }}
+                  />
+                  <ColorInput
+                    {...form.getInputProps(`inboxLabels.${index}.color`)}
+                    swatches={[
+                      "#2e2e2e",
+                      "#868e96",
+                      "#fa5252",
+                      "#e64980",
+                      "#be4bdb",
+                      "#7950f2",
+                      "#4c6ef5",
+                      "#228be6",
+                      "#15aabf",
+                      "#12b886",
+                      "#40c057",
+                      "#82c91e",
+                      "#fab005",
+                      "#fd7e14",
+                    ]}
+                  />
+                  <ActionIcon
+                    variant="light"
+                    color="red"
+                    onClick={() => {
+                      form.removeListItem("inboxLabels", index);
+                    }}
+                  >
+                    <IconX size={16} />
+                  </ActionIcon>
+                </Flex>
+              ))}
+              <Button
+                variant="outline"
+                leftSection={<IconUserPlus size={16} />}
+                onClick={() =>
+                  form.insertListItem("inboxLabels", {
+                    name: "",
+                    color: "#3B82F6",
+                  })
+                }
+              >
+                {translations("Add New Inbox Label")}
+              </Button>
+              {form.errors.inboxLabels && (
+                <Box c="red" fz="sm">
+                  {form.errors.inboxLabels}
+                </Box>
+              )}
+            </Stack>
+          </Box>
+
+          <RateupButtonPrimary title={translations("Update")} type="submit" />
+        </Stack>
+      </form>
+    </PaperLayout>
+  );
+};
 
 export const FilterSelect = ({ setFilterByTag, filterByTag, contactArray }) => {
   const translations = useTranslations();

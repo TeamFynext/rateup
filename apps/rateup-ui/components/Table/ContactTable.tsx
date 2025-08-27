@@ -52,7 +52,7 @@ function ContactTable({
   enableFilter = true,
   enablePagination = true,
   enableColumnSelection = true,
-  tags = { contactTags: [], contactGroupTags: [] },
+  tags = { contactTags: [], contactGroupTags: [], inboxLabels: [] },
   tab = WhatsappTableType.CONTACTS,
   open = () => {},
   groupId = "",
