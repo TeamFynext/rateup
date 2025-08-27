@@ -287,6 +287,11 @@ export async function filterChats(
         });
         filters.push(`(${tagFilters.join(" OR ")})`);
       }
+      if (bodyFilterProps?.labels?.length > 0) {
+        const labelFilters = `c."labels" @> $${paramIndex++}`;
+        params.push(bodyFilterProps.labels);
+        filters.push(labelFilters);
+      }
 
       // Filter by assignment status
       const org = await prisma.org.findUnique({
@@ -486,7 +491,9 @@ export async function filterChats(
         c."profilePic",
         c."followerCount",
         c."isIgVerifiedUser",
+        c.labels,
         COALESCE(c.tags, '{}'::jsonb) as tags,
+        was."contactTags",
         (
           SELECT COUNT(*)::INTEGER FROM "WaMessage" w WHERE w."contactId" = c.id
           AND w."messageBody"->>'exchangeProcess' = 'receive'
@@ -523,8 +530,9 @@ export async function filterChats(
       FROM "Contact" c
          LEFT JOIN "WaInboxAssign" wb ON wb."contactId" = c.id
          LEFT JOIN "User" u ON wb."assignedUserId" = u.id
+         LEFT JOIN "WaAccountSettings" was ON was."orgId" = c."orgId"
       WHERE ${whereClause}
-      GROUP BY c.id
+      GROUP BY c.id, was."contactTags"
     `;
     const wrappedQuery = `SELECT * FROM (${query}) wc ORDER BY ${orderBy} DESC NULLS LAST LIMIT 100 OFFSET $2`;
 
