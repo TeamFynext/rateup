@@ -9,6 +9,7 @@ import {
   getContactByIdHandler,
   importCSVContactsHandler,
   updateContactByIdHandler,
+  updateContactLabelsByIdHandler,
 } from "./contact.controller";
 import { contactGroupRoutes } from "./contactGroup/contactGroup.route";
 import { contactGroupSchemas } from "./contactGroup/contactGroup.schema";
@@ -84,6 +85,16 @@ export async function contactRoutes(server: FastifyInstance) {
       },
     },
     updateContactByIdHandler,
+  );
+  server.put(
+    "/:contactId/labels",
+    {
+      schema: {
+        params: $contactRef("byContactIdSchema"),
+        body: $contactRef("updateContactLabelsSchema"),
+      },
+    },
+    updateContactLabelsByIdHandler,
   );
 
   server.delete(
