@@ -827,7 +827,7 @@ function MetaLoginStatus({ waSettings }) {
       >
         <Stack align="center" gap="md">
           <Text>{"No WhatsApp Business Accounts Connected"}</Text>
-          <MetaLoginButton />
+          <ConnectMetaAccountButton />
         </Stack>
       </Center>
     );
