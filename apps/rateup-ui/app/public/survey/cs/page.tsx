@@ -18,7 +18,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { RateupButtonBlue } from "../../../../components/Button/RateupButtons";
 import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
 
-const index = () => {
+const Page = () => {
   const largeScreen = useMediaQuery("(min-width: 48em)");
   const [startClicked, setStartClicked] = useState(false);
 
@@ -125,4 +125,4 @@ function StartPage({ largeScreen }) {
   );
 }
 
-export default index;
+export default Page;

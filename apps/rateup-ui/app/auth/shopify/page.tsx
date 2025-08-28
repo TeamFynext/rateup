@@ -16,7 +16,7 @@ import style from "../../../components/Graph/graph.module.css";
 
 export default function Page() {
   return (
-    <Suspense fallback={"loading"}>
+    <Suspense fallback={<RateupLoader />}>
       <ShopifyAuthCallbackWithParams />
     </Suspense>
   );

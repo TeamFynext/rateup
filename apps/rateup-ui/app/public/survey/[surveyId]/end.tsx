@@ -7,7 +7,6 @@ import {
   Flex,
   ScrollAreaAutosize,
   Stack,
-  Text,
   Title,
   useMantineTheme,
 } from "@mantine/core";
@@ -15,86 +14,12 @@ import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 import { useTranslations } from "next-intl";
 import Confetti from "react-confetti";
 
-import { PageType } from "@/types/enums";
-import { ReviewPagePlatform } from "@/components/Survey/Question/QuestionReviewPageEditor";
 import { getInlineStyleFromStyleObj } from "@/components/Survey/SurveyTheme/components/previewcomponents/welcomepage";
 
-import {
-  getPublicSurvey,
-  getPublicSurveyGoogleLink,
-} from "../../../../backend/surveys/survey.api";
-import { getPublicReviewsBySurveyTeamMapId } from "../../../../backend/team/reviewSuggestion/reviewSuggestion.api";
 import { CreditsCard } from "../../../../components/Card/CreditsCard";
 import RateupRedirectCard from "../../../../components/Card/RateupRedirectCard";
 import { getBgImgAndBgColor } from "../../../../components/Layout/TakeSurveyLayout/utils";
 import BodyComp from "./BodyComp";
-
-export async function getServerSideProps(context) {
-  const { surveyId } = context.params;
-  const { msg, language } = context.query;
-
-  let propsToPass: any = {
-    enableGoogleReview: false,
-  };
-
-  const defaultTitleSubtitleTexts = {
-    titleText: `<h3 style="text-align: center">Thank you</h3><p style="text-align: center" >Thank you for taking the survey</p>`,
-  };
-
-  if (msg == "thanks") {
-    const [googleLink, reviews, survey] = await Promise.all([
-      getPublicSurveyGoogleLink(surveyId),
-      getPublicReviewsBySurveyTeamMapId(surveyId, language),
-      getPublicSurvey(surveyId),
-    ]);
-    const questions = survey.questions;
-    const thankyouPageTypeObj = questions?.find(
-      (questionObj) => questionObj.type === PageType.ThankYou,
-    );
-    propsToPass.googleLink = googleLink;
-    propsToPass.reviews = reviews;
-    const reviewPageLinks = { ...survey.reviewPageLinks };
-    if ("" in reviewPageLinks || googleLink?.length) {
-      reviewPageLinks[ReviewPagePlatform.Google] =
-        reviewPageLinks[""] ?? googleLink;
-      delete reviewPageLinks[""];
-    }
-    propsToPass.reviewPageLinks = reviewPageLinks;
-    const hasGoogleLink = Object.keys(propsToPass.reviewPageLinks).includes(
-      ReviewPagePlatform.Google,
-    );
-    if (hasGoogleLink) propsToPass.enableGoogleReview = true;
-    if (survey) {
-      propsToPass.redirect = survey.redirect;
-      propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
-      // @ts-ignore
-      propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
-      propsToPass.pagesThemeData = survey?.webSurveyPagesTheme;
-      propsToPass.titleText =
-        thankyouPageTypeObj.titleText || defaultTitleSubtitleTexts.titleText;
-      propsToPass.subtitleText = thankyouPageTypeObj?.subtitleText || null;
-    }
-  } else {
-    const survey = await getPublicSurvey(surveyId);
-    const questions = survey.questions;
-    const thankyouPageTypeObj = questions?.find(
-      (questionObj) => questionObj.type === PageType.ThankYou,
-    );
-    if (survey) {
-      propsToPass.redirect = survey.redirect;
-      propsToPass.kioskMode = survey.kioskMode ? "y" : "n";
-      // @ts-ignore
-      propsToPass.surveyThemeData = survey?.webSurveyTheme?.theme;
-      propsToPass.pagesThemeData = survey?.webSurveyPagesTheme;
-      propsToPass.titleText =
-        thankyouPageTypeObj.titleText || defaultTitleSubtitleTexts?.titleText;
-      propsToPass.subtitleText = thankyouPageTypeObj?.subtitleText ?? null;
-    }
-  }
-  return {
-    props: propsToPass,
-  };
-}
 
 export default function ThankYou({
   enableGoogleReview = false,

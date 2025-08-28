@@ -15,7 +15,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 
 export default function Page() {
   return (
-    <Suspense fallback={"loading"}>
+    <Suspense fallback={<RateupLoader />}>
       <ShopifyCallbackRetryWithParams />
     </Suspense>
   );
