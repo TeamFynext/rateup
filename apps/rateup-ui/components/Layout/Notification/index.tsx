@@ -29,7 +29,7 @@ enum NotificationTabs {
   notificationSettings = "notificationSettings",
 }
 
-const NotificationBellIcon = () => {
+const NotificationBellIcon = (props) => {
   const [opened, { open, close }] = useDisclosure(false);
 
   const [tab, setTab] = useState(NotificationTabs.notifications);
@@ -94,7 +94,7 @@ const NotificationBellIcon = () => {
         inline
         size={isLoadingCount ? 8 : 16}
       >
-        <IconBell onClick={open} />
+        <IconBell onClick={open} {...props} />
       </Indicator>
     </>
   );

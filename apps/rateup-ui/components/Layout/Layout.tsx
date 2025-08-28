@@ -324,7 +324,7 @@ const LastLinks = ({
         className={classes.mainLink}
         data-active={link.label === activeMainLink || undefined}
       >
-        <link.icon />
+        <link.icon size={22} stroke={1.5} />
       </UnstyledButton>
     </Tooltip>
   ));
