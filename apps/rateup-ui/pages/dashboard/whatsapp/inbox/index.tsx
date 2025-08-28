@@ -22,9 +22,9 @@ export default function WhatsAppInbox() {
   return (
     <MantineProvider theme={whatsappTheme}>
       <ChatDisplayContext>
-        <Stack className={styles["whatsapp-inbox-root-div"]}>
+        <div className={styles["whatsapp-inbox-root-div"]}>
           {tab === "analytics" ? <Analytics /> : <ResizeableChat />}
-        </Stack>
+        </div>
       </ChatDisplayContext>
     </MantineProvider>
   );
@@ -36,13 +36,15 @@ const ResizeableChat = () => {
     <ResizablePanelGroup
       direction="horizontal"
       autoSaveId="inbox-panel-group"
-      className="w-full h-full max-md:pt-5"
+      className="w-full h-full"
     >
       <ResizablePanel
-        defaultSize={100}
-        maxSize={350}
+        defaultSize={20}
+        maxSize={100}
         minSize={18}
-        className={`p-1 max-sm:${isChatDisplayOpen ? "hidden" : ""}`}
+        className={`p-1 min-w-[20vw] max-lg:min-w-[35vw] ${
+          isChatDisplayOpen ? "max-sm:hidden" : ""
+        }`}
         id="left"
         order={1}
       >
@@ -50,9 +52,9 @@ const ResizeableChat = () => {
       </ResizablePanel>
       <ResizableHandle withHandle className={`max-sm:hidden`} />
       <ResizablePanel
-        defaultSize={350}
-        maxSize={350}
-        minSize={39}
+        defaultSize={100}
+        maxSize={100}
+        minSize={40}
         className={`p-1 max-sm:${isChatDisplayOpen ? "" : "hidden"}`}
         id="right"
         order={2}

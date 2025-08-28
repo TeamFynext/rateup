@@ -42,6 +42,7 @@ export type ChatFilter = {
   newStatuses: string[];
   assignedTeams: string[];
   phone?: string;
+  labels: string[];
 };
 interface Props {
   tab: string;
@@ -278,6 +279,7 @@ export const useChatFilterStore = create<ChatFilterStore>()(
         ],
         assignedTeams: [],
         phone: "all",
+        labels: [],
       },
       setFilter: (value) => set({ filter: value }),
     }),

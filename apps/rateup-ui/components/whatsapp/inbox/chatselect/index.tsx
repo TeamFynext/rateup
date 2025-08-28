@@ -456,7 +456,7 @@ const WaInboxChatSelect = () => {
   );
 };
 
-export const NewInboxIcon = () => {
+export const NewInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
   const { filter } = useChatFilterStore();
   const count = useMemo(() => {
@@ -479,51 +479,61 @@ export const NewInboxIcon = () => {
       return totalCount.new;
     }
   }, [filter.newStatuses, totalCount]);
-  if (!count) return <IconMessageBolt />;
+  if (!count) return <IconMessageBolt {...props} />;
   return (
-    <Indicator label={count} inline size={16} color="black">
-      <IconMessageBolt />
-    </Indicator>
+    <div className="flex">
+      <Indicator label={count} inline size={16} color="black">
+        <IconMessageBolt {...props} />
+      </Indicator>
+    </div>
   );
 };
 
-export const AssignedInboxIcon = () => {
+export const AssignedInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.assigned) return <IconUserCheck />;
+  if (!totalCount?.assigned) return <IconUserCheck {...props} />;
   return (
-    <Indicator label={totalCount.assigned} inline size={16} color="black">
-      <IconUserCheck />
-    </Indicator>
+    <div className="flex">
+      <Indicator label={totalCount.assigned} inline size={16} color="black">
+        <IconUserCheck {...props} />
+      </Indicator>
+    </div>
   );
 };
 
-export const AssignedToMeInboxIcon = () => {
+export const AssignedToMeInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.assignedToMe) return <IconUserCircle />;
+  if (!totalCount?.assignedToMe) return <IconUserCircle {...props} />;
   return (
-    <Indicator label={totalCount.assignedToMe} inline size={16} color="black">
-      <IconUserCircle />
-    </Indicator>
+    <div className="flex">
+      <Indicator label={totalCount.assignedToMe} inline size={16} color="black">
+        <IconUserCircle {...props} />
+      </Indicator>
+    </div>
   );
 };
 
-export const ClosedInboxIcon = () => {
+export const ClosedInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.closed) return <IconMessageCheck />;
+  if (!totalCount?.closed) return <IconMessageCheck {...props} />;
   return (
-    <Indicator label={totalCount.closed} inline size={16} color="black">
-      <IconMessageCheck />
-    </Indicator>
+    <div className="flex">
+      <Indicator label={totalCount.closed} inline size={16} color="black">
+        <IconMessageCheck {...props} />
+      </Indicator>
+    </div>
   );
 };
 
-export const BlockedInboxIcon = () => {
+export const BlockedInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.blocked) return <IconForbid2 />;
+  if (!totalCount?.blocked) return <IconForbid2 {...props} />;
   return (
-    <Indicator label={totalCount.blocked} inline size={16} color="black">
-      <IconForbid2 />
-    </Indicator>
+    <div className="flex">
+      <Indicator label={totalCount.blocked} inline size={16} color="black">
+        <IconForbid2 {...props} />
+      </Indicator>
+    </div>
   );
 };
 

@@ -23,6 +23,7 @@ import {
   IconDotsVertical,
   IconForbid2,
   IconHandOff,
+  IconLabel,
   IconMessageCheck,
   IconPencil,
   IconTicket,
@@ -47,6 +48,7 @@ import {
   useGetAssignedUserForContact,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import EditContactLabelModal from "@/components/Contacts/EditContactLabelModal";
 import EditContactModal from "@/components/Contacts/EditContactModal";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
@@ -209,6 +211,28 @@ export const ContactEdit = ({ contact, opened, close }) => {
   );
 };
 
+export const LabelEdit = ({ contact, opened, close }) => {
+  const translations = useTranslations();
+  return (
+    <Stack>
+      <FormModalLayout
+        opened={opened}
+        title={translations("Edit Labels")}
+        onClose={close}
+        centered
+        noCustomHeader
+        size="lg"
+      >
+        <EditContactLabelModal
+          id={contact?.id}
+          labels={contact.labels}
+          closeEditModal={close}
+        />
+      </FormModalLayout>
+    </Stack>
+  );
+};
+
 const ChatContactMenu = ({ contact }) => {
   const { data: subscription } = useSubscription();
 
@@ -218,6 +242,8 @@ const ChatContactMenu = ({ contact }) => {
     [subscription],
   );
   const [openedEdit, { open: openEditContact, close: closeEditContact }] =
+    useDisclosure(false);
+  const [openedLabels, { open: openEditLabels, close: closeEditLabels }] =
     useDisclosure(false);
   const [
     openedCreateTicket,
@@ -295,6 +321,12 @@ const ChatContactMenu = ({ contact }) => {
         >
           Edit Contact
         </Menu.Item>
+        <Menu.Item
+          leftSection={<IconLabel size={20} />}
+          onClick={openEditLabels}
+        >
+          Edit Labels
+        </Menu.Item>
         {!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) &&
           !contact?.blockedOnWhatsApp && (
             <Menu.Item
@@ -319,6 +351,11 @@ const ChatContactMenu = ({ contact }) => {
       <ContactEdit
         opened={openedEdit}
         close={closeEditContact}
+        contact={contact}
+      />
+      <LabelEdit
+        opened={openedLabels}
+        close={closeEditLabels}
         contact={contact}
       />
       <ConfirmationModal

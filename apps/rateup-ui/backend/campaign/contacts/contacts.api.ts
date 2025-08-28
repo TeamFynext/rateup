@@ -74,3 +74,11 @@ export const editContact = async ({ data, contactId }) => {
   let res = await axiosClient.put(`${CONTACT_BASE_URL}/${contactId}`, data);
   return res;
 };
+
+export const editContactLabels = async ({ data, contactId }) => {
+  let res = await axiosClient.put(
+    `${CONTACT_BASE_URL}/${contactId}/labels`,
+    data,
+  );
+  return res;
+};
