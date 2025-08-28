@@ -361,7 +361,7 @@ function MetaLoginButton({ disabled = false, configId = null }) {
   }, [waData, code]);
 
   useEffect(() => {
-    initFacebookSdk();
+    // initFacebookSdk();
 
     const handleMessage = (event) => {
       if (!event.origin.endsWith("facebook.com")) return;
@@ -444,6 +444,10 @@ function ConnectMetaAccountButton() {
   const [selectedAssets, setSelectedAssets] = useState<string[]>([
     MetaLoginAssets.WHATSAPP,
   ]);
+
+  useEffect(() => {
+    initFacebookSdk();
+  }, []);
 
   const assets = Object.values(MetaLoginAssets);
 
