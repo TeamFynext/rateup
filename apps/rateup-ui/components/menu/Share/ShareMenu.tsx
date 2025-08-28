@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 import { Grid, LoadingOverlay, Stack, Switch } from "@mantine/core";

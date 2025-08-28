@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Box,
   Card,
@@ -23,10 +25,10 @@ import {
 import { useTranslations } from "next-intl";
 
 import { LoyaltyActionType } from "@/types/enums";
+import { LCustomerStats } from "@/app/dashboard/loyalty/customer/[customerId]/page";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { useLoyaltyCustomers } from "@/backend/loyalty/customer/customer.query";
 import { useGetLoyaltyRewards } from "@/backend/loyalty/reward/reward.query";
-import { LCustomerStats } from "@/pages/dashboard/loyalty/customer/[customerId]";
 
 import {
   ContainedMultiSelect,

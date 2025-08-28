@@ -1,4 +1,7 @@
+"use client";
+
 import { Box, Switch } from "@mantine/core";
+
 import { useEditSurveyMutation } from "../../../../backend/surveys/surveys.query";
 import { ThemeTabEnum } from "../SurveyTheme.enums";
 import styles from "../SurveyTheme.module.css";

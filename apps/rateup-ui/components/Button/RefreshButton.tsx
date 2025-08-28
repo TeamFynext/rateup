@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 
 import { ActionIcon, Tooltip } from "@mantine/core";
@@ -23,7 +25,7 @@ const RefreshButton = ({
   const handleRefresh = async () => {
     setLoading(true);
     showLoadingToast(
-      translations("Hold on..Data is refreshing"),
+      translations("Hold onData is refreshing"),
       "refresh",
       true,
       translations("Refreshing"),

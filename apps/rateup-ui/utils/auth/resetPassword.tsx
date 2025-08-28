@@ -1,6 +1,13 @@
-import { sendPasswordResetEmail } from "supertokens-web-js/recipe/emailpassword";
-import { IconX, IconCheck } from "@tabler/icons-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
+
+import { IconCheck, IconX } from "@tabler/icons-react";
+//save new password
+import {
+  sendPasswordResetEmail,
+  submitNewPassword,
+} from "supertokens-web-js/recipe/emailpassword";
+
+import { showNotification } from ".";
 
 export function useSendResetEmail() {
   const router = useRouter();
@@ -65,11 +72,6 @@ export function useSendResetEmail() {
     }
   };
 }
-
-//save new password
-
-import { submitNewPassword } from "supertokens-web-js/recipe/emailpassword";
-import { showNotification } from ".";
 
 export function useSetNewPassword(open) {
   const router = useRouter();

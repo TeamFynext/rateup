@@ -1,11 +1,13 @@
+"use client";
+
 import { useContext, useState } from "react";
 
 import { Group } from "@mantine/core";
 
-import WheelComponent from "../WheelComponent";
-import { Wop } from "../../../../../types/global";
 import { CurrentResponsesContext } from "../../../../../context/ResponseContext";
+import { Wop } from "../../../../../types/global";
 import { DEFAULT_WOP } from "../util";
+import WheelComponent from "../WheelComponent";
 
 const WOPForm = ({
   isPreview = false,

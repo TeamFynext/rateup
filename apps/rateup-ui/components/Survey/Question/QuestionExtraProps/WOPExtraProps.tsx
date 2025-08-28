@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, CloseButton, SimpleGrid } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDebouncedCallback } from "@mantine/hooks";

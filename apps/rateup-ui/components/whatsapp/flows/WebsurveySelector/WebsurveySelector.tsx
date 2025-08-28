@@ -1,3 +1,5 @@
+"use client";
+
 import { SelectProps, Skeleton } from "@mantine/core";
 
 import { useSurveys } from "../../../../backend/surveys/surveys.query";

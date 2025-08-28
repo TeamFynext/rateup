@@ -1,5 +1,9 @@
+"use client";
+
 import { Paper, useMantineTheme } from "@mantine/core";
+
 import classes from "../../TakeSurvey.module.css";
+
 export default function FormPaperLayout(props: any) {
   const theme = useMantineTheme();
   return (

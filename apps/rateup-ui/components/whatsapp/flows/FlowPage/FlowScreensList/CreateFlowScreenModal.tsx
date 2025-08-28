@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback, useContext, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { useForm } from "@mantine/form";
 import { useTranslations } from "next-intl";
@@ -37,8 +39,8 @@ function CreateFlowScreenModal({
   screenId = null,
 }: Readonly<CreateFlowScreenModalProps>) {
   const { flowJson, updateFlowJson } = useContext(EditFlowContext);
-  const router = useRouter();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const translations = useTranslations();
   const form = useForm({
@@ -48,7 +50,7 @@ function CreateFlowScreenModal({
         if (!/^[a-zA-Z,_]*$/.test(value)) {
           showErrorToast(
             translations(
-              "Error Occured. Please report this bug to the developer. code: #flowsidval",
+              "Error Occured Please report this bug to the developer code: #flowsidval",
             ),
           );
           return "Id should contain only alphabets and _";

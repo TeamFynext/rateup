@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 import { Stack, Text, Title } from "@mantine/core";
@@ -16,7 +18,7 @@ const RegisterPageShare = () => {
 
   return (
     <Stack>
-      <Title order={4}>{translations("Customer Regsitration page link")}</Title>
+      <Title order={4}>{translations("Customer Registration page link")}</Title>
       <CopyLinkComponent
         value={`${FRONTEND_URL}/public/loyalty/${orgId}/register`}
       />

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ActionIcon,
   Anchor,
@@ -120,10 +122,8 @@ const TableRow = ({
               notifications.show({
                 id: "delete-data-menu-item",
                 loading: true,
-                title: translations("Deleting menu item.."),
-                message: translations(
-                  "Hold on, menu item is getting deleted...",
-                ),
+                title: translations("Deleting menu item"),
+                message: translations("Hold on, menu item is getting deleted"),
                 autoClose: false,
                 withCloseButton: false,
               });

@@ -2,7 +2,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ContactGroupType } from "@/types/enums";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 
 import { CONTACT_SORT } from "../../../components/Contacts/utils/utils";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";

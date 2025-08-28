@@ -1,3 +1,5 @@
+"use client";
+
 import { Image, Stack, Text } from "@mantine/core";
 import { useTranslations } from "next-intl";
 

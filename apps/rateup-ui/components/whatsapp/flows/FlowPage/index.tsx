@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
 import { useTranslations } from "next-intl";
@@ -40,9 +42,11 @@ import styles from "./FlowPage.module.css";
 import FlowPageHeader, { FlowTabEnum } from "./FlowPageHeader";
 
 function FlowPage() {
-  const router = useRouter();
-  const { tab: tabView } = router.query;
-  const { dbFlowId } = router.query as { dbFlowId: string };
+  const searchParams = useSearchParams();
+  const tabView = searchParams.get("tab") as FlowTabEnum;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
+
   const { data: flow, isPending } = useWaFlowFromDb(dbFlowId);
   const { data: surveyData } = useSurvey(flow?.surveyId);
   const flowEditable = flow?.status === WaFlowStatus.DRAFT;

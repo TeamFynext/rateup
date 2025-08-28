@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useMemo } from "react";
 
 import {
@@ -25,7 +27,7 @@ import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 
 import { MessagePlatform } from "@/types/enums";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter";
 import InboxContactsControl from "./InboxContactMessage";

@@ -1,10 +1,14 @@
+"use client";
+
 import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Burger, Drawer, Flex, Image, Menu, Text } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import classNames from "classnames/bind";
+
+import { useCurrentPath } from "@/hooks/currentPath";
 
 import { rubik } from "../../../../../utils/fonts";
 import { getMobileNavLinkMenuItems, rateupLogoUrl } from "../../../constants";
@@ -26,7 +30,7 @@ function MobileNavDrawer() {
   const isViewportLEQ768px = useMediaQuery("(max-width: 768px");
 
   const router = useRouter();
-  const currentRoutePath = router.asPath;
+  const currentRoutePath = useCurrentPath();
 
   useEffect(() => {
     closeNavDrawer();

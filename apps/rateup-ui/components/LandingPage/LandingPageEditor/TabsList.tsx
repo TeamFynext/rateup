@@ -1,3 +1,5 @@
+"use client";
+
 import { Tabs, TabsList, TabsTab } from "@mantine/core";
 import { useTranslations } from "next-intl";
 

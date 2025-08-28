@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -12,16 +14,18 @@ import {
 import { useClipboard } from "@mantine/hooks";
 import { IconCheck, IconCopy, IconShare } from "@tabler/icons-react";
 
+import { useCurrentPath } from "@/hooks/currentPath";
+
 import { RateupButtonBlue } from "../Button/RateupButtons";
 
 export default function ShareLink() {
   const [opened, setOpened] = useState(false);
   const clipboard = useClipboard({ timeout: 1500 });
-  const router = useRouter();
+  const currentRoutePath = useCurrentPath();
 
   const currentURL =
     typeof window !== "undefined"
-      ? `${window.location.origin}${router.asPath}`
+      ? `${window.location.origin}${currentRoutePath}`
       : "";
 
   return (

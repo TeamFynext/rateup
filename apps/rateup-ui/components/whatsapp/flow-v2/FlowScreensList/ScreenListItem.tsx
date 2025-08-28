@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -49,8 +51,9 @@ function ScreenListItem({
   handleCreateScreenClick,
   pendingSave,
 }: Readonly<ScreenListItemProps>) {
-  const router = useRouter();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
+
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [isOpen, { open, close }] = useDisclosure(false);
   const screenTitleInputRef = useRef(null);
@@ -154,7 +157,7 @@ function ScreenListItem({
               opened={dialogOpened}
               onClose={closeDialog}
               headerLabel={translations(
-                "Are you sure you want to delete this Screen? It will also delete all the elements in this screen.",
+                "Are you sure you want to delete this Screen? It will also delete all the elements in this screen",
               )}
               headerTitle={translations("Delete Screen?")}
               confirmLabel={translations("Delete")}
@@ -181,7 +184,7 @@ function ScreenListItem({
                 ref={screenTitleInputRef}
                 className={styles["text-input"]}
                 label={`Screen ${pageNo + 1}`}
-                value={screenTitleInputState}
+                value={screenTitleInputState ?? ""}
                 onChange={handleScreenTitleInputChange}
                 placeholder={translations(
                   "Section title (Required if more than one section is added)",
@@ -455,7 +458,7 @@ function FormElementCard({
         opened={dialogOpened}
         onClose={close}
         headerLabel={translations(
-          "Are you sure you want to delete this question? Deleting it will also remove the associated responses.",
+          "Are you sure you want to delete this question? Deleting it will also remove the associated responses",
         )}
         headerTitle={translations("Delete Question?")}
         confirmLabel={translations("Delete")}

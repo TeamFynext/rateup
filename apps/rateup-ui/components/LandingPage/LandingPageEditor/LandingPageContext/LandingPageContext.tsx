@@ -1,5 +1,7 @@
+"use client";
+
 import { createContext, useContext, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { useDebouncedCallback } from "@mantine/hooks";
 import { Link } from "@mantine/tiptap";
@@ -36,9 +38,8 @@ function LandingPageContextProvider({
 }) {
   const { tiptapEditorContent } = landingPageData;
 
-  const {
-    query: { shortUrlId },
-  } = useRouter();
+  const params = useParams();
+  const shortUrlId = params?.shortUrlId as string;
   const { mutateAsync: landingPageUpdateMutateAsync } =
     useUpdateLandingPageMutation(shortUrlId);
   const handleEditorContentSave = useDebouncedCallback(async (editor) => {

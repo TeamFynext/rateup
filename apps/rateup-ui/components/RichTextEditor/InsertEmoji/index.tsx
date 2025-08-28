@@ -1,3 +1,5 @@
+"use client";
+
 import { RichTextEditor, useRichTextEditorContext } from "@mantine/tiptap";
 
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar";

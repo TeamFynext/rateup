@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { ActionIcon, Box, Button, Modal, Select } from "@mantine/core";
 import { Form, useForm } from "@mantine/form";
@@ -16,9 +18,8 @@ import SurveyTypeDropdowns from "./SurveyTypeDropdowns";
 function AddLinkModal({ title, opened, onClose, links }) {
   const queryClient = useQueryClient();
 
-  const {
-    query: { shortUrlId },
-  } = useRouter();
+  const params = useParams();
+  const shortUrlId = params?.shortUrlId as string;
   // SurveyTypeDropdowns states
   const [selectedLinkType, setSelectedLinkType] = useState("web-survey");
   const [surveyTitleAutoCompleteSearch, setSurveyTitleAutoCompleteSearch] =
@@ -50,7 +51,7 @@ function AddLinkModal({ title, opened, onClose, links }) {
           try {
             url = new URL(value);
           } catch (_) {
-            return "Please enter a valid url.";
+            return "Please enter a valid url";
           }
         } else return "Link url is required.";
       },

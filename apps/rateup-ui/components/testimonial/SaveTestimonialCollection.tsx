@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
 
 import { Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
@@ -39,21 +41,23 @@ const SaveTestimonialCollection = ({ opened, close }) => {
   });
 
   const router = useRouter();
+  const pathname = usePathname();
+
   const saveCollection = useCreateTestimonialCollection();
   const onSubmit = () => {
     if (form.validate().hasErrors) return;
     notifications.show({
       id: "create-collection",
       loading: true,
-      title: translations("Creating survey.."),
-      message: translations("Hold on, your collection is getting created..."),
+      title: translations("Creating survey"),
+      message: translations("Hold on, your collection is getting created"),
       autoClose: false,
       withCloseButton: true,
     });
     saveCollection.mutate(form.values, {
       onSuccess: (data) => {
         close();
-        router.push(`${router.pathname}/${data?.id}`);
+        router.push(`${pathname}/${data?.id}`);
       },
     });
   };

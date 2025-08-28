@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 
 import { Badge, Flex, Group, Stack, Text } from "@mantine/core";
@@ -39,7 +41,7 @@ const PublishChatbot = (selectedChatbotId) => {
   const translations = useTranslations();
   const generateUrl = () => {
     showLoadingToast(
-      translations("Hold on...Url is getting generated"),
+      translations("Hold onUrl is getting generated"),
       "short-url",
       true,
       translations("Generating"),
@@ -66,8 +68,8 @@ const PublishChatbot = (selectedChatbotId) => {
 
   const handleChatbotStatus = () => {
     const loadingMessage = isActive
-      ? translations("Hold On..Deactivating public page")
-      : translations("Hold On..Activating public page");
+      ? translations("Hold OnDeactivating public page")
+      : translations("Hold OnActivating public page");
     const loadingTitle = isActive
       ? translations("Deactivating")
       : translations("Activating");
@@ -128,7 +130,7 @@ const PublishChatbot = (selectedChatbotId) => {
               chatbotDetails?.shortUrlId
                 ? translations("Show public url")
                 : createChatbotUrlMutate.isPending
-                  ? translations("Generating..")
+                  ? translations("Generating")
                   : translations("Generate Public Url")
             }
             onClick={chatbotDetails?.shortUrlId ? toggle : generateUrl}

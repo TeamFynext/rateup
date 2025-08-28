@@ -1,5 +1,7 @@
+"use client";
+
 import { ReactNode } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   ActionIcon,

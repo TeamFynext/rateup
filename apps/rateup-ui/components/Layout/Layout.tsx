@@ -35,11 +35,11 @@ import SessionReact from "supertokens-auth-react/recipe/session";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import { useChatSocket } from "@/hooks/useChatSocket";
+import { useChatContactCountStore } from "@/app/dashboard/whatsapp/inbox/store";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
 import { TagsContext } from "@/context/TagsContext";
-import { useChatContactCountStore } from "@/pages/dashboard/whatsapp/inbox/store";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";

@@ -1,3 +1,4 @@
+"use client";
 "use no memo";
 
 import React, { useEffect, useMemo } from "react";
@@ -285,7 +286,7 @@ function ContactTable({
                       variant="light"
                       onClick={async () => {
                         showLoadingToast(
-                          translations("Data getting loaded..."),
+                          translations("Data getting loaded"),
                           "contacts",
                           true,
                           translations("Loading"),

@@ -1,4 +1,5 @@
-import { filterType } from "../pages/dashboard/testimonial/[collectionId]";
+import { filterType } from "@/app/dashboard/testimonial/[collectionId]/page";
+
 import { Testimonial, TestimonialStyleType } from "../types/global";
 
 export const getFilteredTestimonials = (
@@ -63,8 +64,8 @@ export function filterBySurveys(
     teams?.length
       ? teams?.includes(t.teamId)
       : surveys?.length
-      ? surveys.includes(t.survey.id)
-      : t,
+        ? surveys.includes(t.survey.id)
+        : t,
   );
 }
 

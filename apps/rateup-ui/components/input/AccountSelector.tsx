@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 
 import { Card, Group, SelectProps, Skeleton, Text } from "@mantine/core";

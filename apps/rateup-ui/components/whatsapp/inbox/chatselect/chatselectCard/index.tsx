@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -19,11 +21,11 @@ import dayjs from "dayjs";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { cn } from "@/lib/utils";
+import { useSetIsChatDisplayOpen } from "@/app/dashboard/whatsapp/inbox/ChatDisplayContext";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
-import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { formatToRelativeTime } from "@/utils/dateTime";
 import {
   parseWaMessage,

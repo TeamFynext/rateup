@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
@@ -36,7 +38,7 @@ function GoogleSignInButton({ buttonText, className }) {
         showErrorToast(err.message, "load-data", <IconX size="1rem" />);
       } else {
         showErrorToast(
-          translations("Oops! Something went wrong...") + err,
+          translations("Oops! Something went wrong") + err,
           "load-data",
           <IconX size="1rem" />,
         );

@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -5,15 +7,14 @@ import { Group, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import {
   useGetAssignedUserForContact,
   useGetMessagesByContactId,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { useUser } from "@/context/UserContext";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
-import { useIsChatDisplayOpen } from "../../../../pages/dashboard/whatsapp/inbox/ChatDisplayContext";
 import NothingFound from "../../../NothingFound/NothingFound";
 import { useChatFilterStore } from "../chatselect/chatFilter";
 import WhatsAppInboxLoader from "../loader";

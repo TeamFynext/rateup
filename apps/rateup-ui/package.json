@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "analyze": "ANALYZE=true next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -36,8 +36,8 @@
     "@mantine/tiptap": "^8.0.0",
     "@mui/material": "^7.2.0",
     "@mui/x-data-grid": "^8.6.0",
-    "@next/bundle-analyzer": "15.5.0",
-    "@next/third-parties": "15.5.0",
+    "@next/bundle-analyzer": "15.5.2",
+    "@next/third-parties": "15.5.2",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
@@ -75,7 +75,7 @@
     "class-variance-authority": "^0.7.1",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
-    "cookies-next": "^2.1.2",
+    "cookies-next": "^6.1.0",
     "dagre": "^0.8.5",
     "dayjs": "^1.11.13",
     "dom-to-image-more": "^3.2.0",
@@ -97,7 +97,7 @@
     "lucide-react": "^0.523.0",
     "mantine-form-zod-resolver": "^1.2.0",
     "motion": "^12.22.0",
-    "next": "15.5.0",
+    "next": "15.5.2",
     "next-intl": "^4.3.4",
     "pigeon-maps": "^0.21.3",
     "qrcode": "^1.5.3",
@@ -149,14 +149,14 @@
     "@tanstack/react-query-devtools": "^5.66.7",
     "@types/gtag.js": "^0.0.19",
     "@types/node": "^22.15.33",
-    "@types/react": "19.1.10",
+    "@types/react": "19.1.12",
     "@types/react-date-range": "^1.4.8",
     "@types/react-window": "^1.8.8",
     "@typescript-eslint/eslint-plugin": "^5.30.0",
     "@typescript-eslint/parser": "^5.30.0",
     "babel-loader": "^8.2.4",
     "eslint": "^8.57.1",
-    "eslint-config-next": "15.5.0",
+    "eslint-config-next": "15.5.2",
     "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "husky": "^8.0.3",
     "lint-staged": "^14.0.1",
@@ -173,6 +173,6 @@
     "*.{ts,tsx,js,jsx,json,css,md}": "prettier --write"
   },
   "overrides": {
-    "@types/react": "19.1.10"
+    "@types/react": "19.1.12"
   }
 }

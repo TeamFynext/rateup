@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { Box, Button, Loader, Text, TextInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
@@ -29,9 +31,8 @@ function LinkCard({ linkObj, onDelete }) {
   const linkUrlInputRef = useRef(null);
 
   const { links } = useLinktreeObj();
-  const {
-    query: { shortUrlId },
-  } = useRouter();
+  const params = useParams();
+  const shortUrlId = params?.shortUrlId as string;
   const updateLinktreeMutation = useUpdateLinktreeMutation(shortUrlId);
 
   useEffect(() => {

@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter } from "next/navigation";
 
 import { ActionIcon, Group, Menu, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -24,7 +26,7 @@ const TestimonialCollectionCard = ({ collection }) => {
       hoveractive
       shadow="xl"
       onClick={() => {
-        router.push(`${router.pathname}/${collection.id}`);
+        router.push(`testimonial/${collection.id}`);
       }}
     >
       <Stack>
@@ -75,7 +77,7 @@ const TestimonialCollectionCardMenu = ({ collectionId, openDialog }) => {
           leftSection={<IconEdit />}
           onClick={(e) => {
             e.stopPropagation();
-            router.push(`${router.pathname}/${collectionId}?tab=Edit`);
+            router.push(`testimonial/${collectionId}?tab=Edit`);
           }}
         >
           {translations("Edit")}
@@ -84,7 +86,7 @@ const TestimonialCollectionCardMenu = ({ collectionId, openDialog }) => {
           leftSection={<IconShare />}
           onClick={(e) => {
             e.stopPropagation();
-            router.push(`${router.pathname}/${collectionId}?tab=Share`);
+            router.push(`testimonial/${collectionId}?tab=Share`);
           }}
         >
           {translations("Share")}

@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext } from "react";
 
 import { Box, MultiSelect, Tabs } from "@mantine/core";

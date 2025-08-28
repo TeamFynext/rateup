@@ -1,3 +1,5 @@
+"use client";
+
 //import start
 import { useContext, useMemo, useState } from "react";
 

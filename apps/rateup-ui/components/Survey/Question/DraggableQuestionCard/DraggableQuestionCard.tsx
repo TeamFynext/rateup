@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useContext } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -49,8 +51,8 @@ export function DraggableQuestionCard({
 }: DraggableQuestionCardProps) {
   // TODO: ref lost when card is dragged to new place
   const { hovered, ref: hoverRef } = useHover();
-  const router = useRouter();
-  const { surveyId } = router.query as { surveyId: string };
+  const params = useParams();
+  const surveyId = params.surveyId as string;
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const theme = useMantineTheme();

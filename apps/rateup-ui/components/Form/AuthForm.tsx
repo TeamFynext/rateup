@@ -1,6 +1,8 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Flex, Image, useMantineColorScheme } from "@mantine/core";
 
@@ -28,13 +30,15 @@ const AuthForm = ({
   authType?: string | string[];
 }) => {
   const router = useRouter();
-  const { token, rid } = router.query;
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+  const rid = searchParams.get("rid");
   const consumeVerificationCode = useConsumeVerificationCode();
   const sendEmail = useEmailSend();
   const { colorScheme } = useMantineColorScheme();
 
   useEffect(() => {
-    if (mode === AuthMode.VERIFY && router.isReady) {
+    if (mode === AuthMode.VERIFY) {
       if (token && token?.length > 0) {
         consumeVerificationCode();
       } else {

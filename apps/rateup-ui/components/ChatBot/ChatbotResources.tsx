@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import {
@@ -41,7 +43,7 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
   const deleteManySourceMutation = useDeleteManyChatborResource();
   const handleDelete = (source) => {
     showLoadingToast(
-      translations("Hold on..Source getting deleted"),
+      translations("Hold onSource getting deleted"),
       "source",
       true,
       translations("Deleting"),
@@ -51,7 +53,7 @@ const ChatbotResources = ({ enableApi, selectedChatbotId }) => {
   const handleDeleteMany = () => {
     if (!selectedSources.length) return;
     showLoadingToast(
-      translations("Hold on..Sources getting deleted"),
+      translations("Hold onSources getting deleted"),
       "source",
       true,
       translations("Deleting"),

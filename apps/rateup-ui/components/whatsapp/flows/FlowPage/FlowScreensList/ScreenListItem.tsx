@@ -1,5 +1,7 @@
+"use client";
+
 import { useContext, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -103,13 +105,15 @@ function ScreenListItem({
     updateSurvey,
     setScreenNumber,
   } = useContext(EditFlowContext);
-  const router = useRouter();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const replaceQuestionsMutation = useReplaceQuestionsMutation(survey.id);
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
   const [isOpen, { open, close }] = useDisclosure(false);
+  const screenTitleInputRef = useRef(null);
+  const footerLabelInputRef = useRef(null);
   const elements = getFlowFormElementsFromScreen(
     flowJson?.screens?.[pageNo],
   ) as WaFlowFormElement[];
@@ -252,9 +256,6 @@ function ScreenListItem({
     }
   };
 
-  const screenTitleInputRef = useRef(null);
-  const footerLabelInputRef = useRef(null);
-
   return (
     <Stack p="xs" key={screen?.id} justify="space-between" h={"100%"}>
       {!screen ? (
@@ -287,7 +288,7 @@ function ScreenListItem({
               opened={dialogOpened}
               onClose={closeDialog}
               headerLabel={translations(
-                "Are you sure you want to delete this Screen? It will also delete all the elements in this screen.",
+                "Are you sure you want to delete this Screen? It will also delete all the elements in this screen",
               )}
               headerTitle={translations("Delete Screen?")}
               confirmLabel={translations("Delete")}
@@ -396,7 +397,7 @@ function ScreenListItem({
                   label={
                     dbFlow.pendingSave
                       ? translations(
-                          "Save your flow to WhatsApp, so that you can test or share draft version before publishing.",
+                          "Save your flow to WhatsApp, so that you can test or share draft version before publishing",
                         )
                       : translations("No changes to save")
                   }
@@ -539,8 +540,8 @@ function FormElementCard({
   screen,
   dragHandleProps,
 }: Readonly<FormElementCardProps>) {
-  const router = useRouter();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
 
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;

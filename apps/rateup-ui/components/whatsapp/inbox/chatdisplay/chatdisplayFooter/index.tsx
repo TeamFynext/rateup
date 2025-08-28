@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef } from "react";
 
 import {
@@ -16,6 +18,7 @@ import { useTranslations } from "next-intl";
 import { create } from "zustand";
 
 import { MessagePlatform } from "@/types/enums";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import VoiceRecorder, {
   useVoiceRecordStore,
@@ -24,7 +27,6 @@ import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
   parseToWhatsAppFormat,
 } from "@/components/RichTextEditor/waTextEditor";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
 

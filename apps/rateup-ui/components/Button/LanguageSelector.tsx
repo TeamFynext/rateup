@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Grid, Menu, Text } from "@mantine/core";
 import { IconLanguage } from "@tabler/icons-react";
@@ -28,19 +30,20 @@ const LanguageSelector = () => {
     localStorage.setItem("selectedLanguage", selectedLanguage); // Save to localStorage
 
     // Preserve the current pathname and query parameters
-    const { pathname, asPath, query } = router;
+    // Todo: convert this to next-intl
+    // const { pathname, asPath, query } = router;
 
-    updateUserLanguageMutation.mutate(
-      { prefLanguage: selectedLanguage },
-      {
-        onSuccess: () => {
-          // Change only the locale while keeping the user on the same page
-          router.push({ pathname, query }, asPath, {
-            locale: selectedLanguage,
-          });
-        },
-      },
-    );
+    // updateUserLanguageMutation.mutate(
+    //   { prefLanguage: selectedLanguage },
+    //   {
+    //     onSuccess: () => {
+    //       // Change only the locale while keeping the user on the same page
+    //       router.push({ pathname, query }, asPath, {
+    //         locale: selectedLanguage,
+    //       });
+    //     },
+    //   },
+    // );
   };
 
   return (

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import {
@@ -51,7 +53,8 @@ import "react-phone-number-input/style.css";
 import { ColumnFiltersState } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 
-import { FilterSelect } from "../../pages/dashboard/contacts";
+import { FilterSelect } from "@/app/dashboard/contacts/page";
+
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import ContactPagination from "../Contacts/ContactPagination";
 import RateupLoader from "../Loaders/RateupLoader";

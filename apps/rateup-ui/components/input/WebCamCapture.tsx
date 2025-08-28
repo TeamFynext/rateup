@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useCallback, useRef, useState } from "react";
 
 import { Group, Image, Stack } from "@mantine/core";

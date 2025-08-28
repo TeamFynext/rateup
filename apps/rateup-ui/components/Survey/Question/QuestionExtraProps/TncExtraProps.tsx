@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useContext, useEffect, useState } from "react";
 
 import { Group, Input, Stack, Text, Textarea } from "@mantine/core";
@@ -61,7 +63,7 @@ const TncExtraProps = ({ form }) => {
           {translations("Terms Content :")}{" "}
         </Text>
         <Textarea
-          placeholder={translations("Terms & Conditions ..........")}
+          placeholder={translations("Terms & Conditions ")}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           className={classes["inputs"]}

@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   Avatar,
@@ -159,7 +161,7 @@ const CreateGroupModal = ({
         setIsUploading(false);
       })
       .catch((err) => {
-        showErrorToast(translations("Error uploading icon. Please try again."));
+        showErrorToast(translations("Error uploading icon Please try again"));
         setIsUploading(false);
       });
   }, [file]);

@@ -15,6 +15,7 @@ import axios from "axios";
 import Session from "supertokens-web-js/recipe/session";
 
 import { UserProvider } from "@/context/UserContext";
+import RouteChangeHandler from "@/utils/routeHandler";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -78,6 +79,7 @@ export default function Providers({ children }) {
   return (
     <QueryClientProvider client={queryClient}>
       <UserProvider>
+        <RouteChangeHandler />
         <HydrationBoundary state={dehydrate(queryClient)}>
           {children}
         </HydrationBoundary>

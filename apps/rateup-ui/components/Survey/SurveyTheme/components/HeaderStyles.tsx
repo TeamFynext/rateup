@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback } from "react";
 
 import { Box, Group, NumberInput, Select, Stack } from "@mantine/core";

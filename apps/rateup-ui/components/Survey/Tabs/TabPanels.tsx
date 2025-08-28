@@ -1,3 +1,5 @@
+"use client";
+
 import { Tabs, TabsPanel } from "@mantine/core";
 
 import { SubscriptionFeaturePathName, SurveyType } from "@/types/enums";

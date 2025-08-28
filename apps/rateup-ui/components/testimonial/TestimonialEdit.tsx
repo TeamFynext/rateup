@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useParams, useRouter } from "next/navigation";
 
 import {
   Center,
@@ -27,8 +29,8 @@ const TestimonialEdit = ({
   setSelectedTestimonialIds,
   setFilters,
 }) => {
-  const { collectionId } = useRouter().query as { collectionId: string };
-
+  const params = useParams();
+  const collectionId = params.collectionId as string;
   let filteredTestimonials = getFilteredTestimonials(
     testimonials,
     filters,

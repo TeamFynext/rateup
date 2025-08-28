@@ -1,3 +1,4 @@
+"use client";
 "use no memo";
 
 import React, { useCallback, useContext, useEffect, useMemo } from "react";

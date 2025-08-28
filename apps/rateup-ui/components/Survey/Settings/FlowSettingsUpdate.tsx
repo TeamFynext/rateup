@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 
 import { Box, Group, Stack, Switch } from "@mantine/core";

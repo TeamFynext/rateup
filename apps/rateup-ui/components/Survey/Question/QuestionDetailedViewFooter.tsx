@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Button,
   Checkbox,
@@ -158,9 +160,7 @@ function QuestionDetailedViewFooter({
                     />
                   ) : (
                     <Tooltip
-                      label={translations(
-                        "Upgrade your Plan for this feature.",
-                      )}
+                      label={translations("Upgrade your Plan for this feature")}
                       disabled={isGoogleReviewFeatureActive}
                       color="yellow"
                     >
@@ -214,7 +214,7 @@ function QuestionDetailedViewFooter({
                     <Tooltip
                       label={
                         isTicketFeatureActive
-                          ? translations("Upgrade your Plan for this feature.")
+                          ? translations("Upgrade your Plan for this feature")
                           : translations(
                               "Auto-Generate Ticket is enabled on this survey",
                             )

@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -142,11 +144,7 @@ export function BoardSidebar({
                       padding: "4px 8px",
                       flex: 1,
                     }}
-                    onClick={() =>
-                      router.push({
-                        query: { b: board.id },
-                      })
-                    }
+                    onClick={() => router.push(`?b=${board.id}`)}
                   >
                     {board.title}
                   </Text>

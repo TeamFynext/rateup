@@ -1,3 +1,5 @@
+"use client";
+
 import { Title, useMantineTheme } from "@mantine/core";
 
 import { WaFlowFormElement, WaFlowScreen } from "../../../../types/global";

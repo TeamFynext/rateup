@@ -1,10 +1,13 @@
+"use client";
+
 import { useContext } from "react";
-import { EditFlowContext } from "./EditFlowContext";
-import { getFlowFormElementById } from "../../../../../utils/whatsapp/flow.utils";
+
 import { WaFlowFormElementType } from "../../../../../types/enums";
+import { getFlowFormElementById } from "../../../../../utils/whatsapp/flow.utils";
+import { EditFlowContext } from "./EditFlowContext";
+import { FlowEmbeddedLinkDetailedView } from "./FlowEmbeddedLinkView";
 import { FlowImageDetailedView } from "./FlowImageDetailedView";
 import { FlowTextDetailedView } from "./FlowTextDetailedView";
-import { FlowEmbeddedLinkDetailedView } from "./FlowEmbeddedLinkView";
 
 export function FlowNonQuestionDetailedView() {
   const { selectedFormElementId, flowJson } = useContext(EditFlowContext);

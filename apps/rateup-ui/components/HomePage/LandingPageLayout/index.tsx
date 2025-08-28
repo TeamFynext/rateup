@@ -1,3 +1,5 @@
+"use client";
+
 import { ActionIcon, Container, Flex } from "@mantine/core";
 import { useWindowScroll } from "@mantine/hooks";
 import { IconArrowUp } from "@tabler/icons-react";

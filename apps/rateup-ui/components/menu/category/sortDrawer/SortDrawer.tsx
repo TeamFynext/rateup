@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect } from "react";
 
 import { Card, Flex, Image, LoadingOverlay, Stack, Text } from "@mantine/core";

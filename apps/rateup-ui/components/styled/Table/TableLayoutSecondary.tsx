@@ -1,3 +1,5 @@
+"use client";
+
 import { JSX } from "react";
 
 import { ScrollAreaAutosize, Table } from "@mantine/core";

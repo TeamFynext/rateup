@@ -2,12 +2,8 @@ import React from "react";
 
 import RateupLoader from "@/components/Loaders/RateupLoader";
 
-const loading = () => {
-  return (
-    <div className="h-screen">
-      <RateupLoader />
-    </div>
-  );
+const Loading = () => {
+  return <RateupLoader />;
 };
 
-export default loading;
+export default Loading;

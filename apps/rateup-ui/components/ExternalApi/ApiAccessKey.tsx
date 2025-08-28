@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 
 import {
@@ -66,7 +68,7 @@ export default function ApiAccessKeyPage() {
                 apiKey
                   ? translations("Api Access Key")
                   : translations(
-                      "You can only view access key at the time of creation. If you lost the key, you can regenerate it.",
+                      "You can only view access key at the time of creation If you lost the key, you can regenerate it",
                     )
               }
             >
@@ -105,7 +107,7 @@ export default function ApiAccessKeyPage() {
             <>
               <Text>
                 {translations(
-                  "You have not generated an API Access Key yet. API Access Key is required to access the all API endpoints.",
+                  "You have not generated an API Access Key yet API Access Key is required to access the all API endpoints",
                 )}
               </Text>
               <Button

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 
 import { Chip, Group, SimpleGrid, Stack, Text } from "@mantine/core";
@@ -8,7 +10,7 @@ import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { useRateupPaymentsPlanMutation } from "../../backend/payment/payment.query";
-import { PaymentPlans } from "../../pages/admin/rateup";
+// import { PaymentPlans } from "../../app/admin/rateup/page";
 import { PaymentType } from "../../types/enums";
 import { widgetIds } from "../../utils/constants/forms";
 import { getSampleSubscriptionFeatures } from "../../utils/subscription/subscription";
@@ -20,6 +22,10 @@ import {
 } from "../input/ContainedInput/ContainedInput";
 import FormModalLayout from "./FormModalLayout";
 
+enum PaymentPlans {
+  razorpay = "Razorpay Plans",
+  stripe = "Stripe Products",
+}
 const RateupPlanModal = ({ opened, close, planList }) => {
   const [checked, setChecked] = useState(false);
   const translations = useTranslations();
@@ -100,7 +106,7 @@ const RateupPlanModal = ({ opened, close, planList }) => {
       color: "teal",
       title: translations("Creating RateUp Plan"),
       loading: true,
-      message: translations("Hold.. your data is getting created..."),
+      message: translations("Hold your data is getting created"),
       autoClose: 2000,
     });
     setChecked(false);

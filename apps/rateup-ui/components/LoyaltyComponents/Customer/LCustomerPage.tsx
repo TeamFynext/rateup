@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 
 import {
@@ -17,6 +19,7 @@ import {
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
+import { SearchInput } from "@/app/dashboard/campaign/page";
 import { useLoyaltyCustomers } from "@/backend/loyalty/customer/customer.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import ContactPagination from "@/components/Contacts/ContactPagination";
@@ -24,7 +27,6 @@ import { ContainedSelection } from "@/components/input/ContainedInput/ContainedI
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import { SearchInput } from "@/pages/dashboard/campaign";
 import { PAGE_SIZE } from "@/utils/constants";
 
 import { CustomerStatsCard } from "../utils";

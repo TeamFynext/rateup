@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import {
   Box,
@@ -26,8 +28,9 @@ import { useTranslations } from "next-intl";
 import styles from "./GeneratedQrPage.module.css";
 
 function GeneratedQrPage({}) {
-  const router = useRouter();
-  const shortUrlId = router.query.shortUrlId;
+  const params = useParams();
+  const shortUrlId = params.shortUrlId as string;
+
   const translations = useTranslations();
   const { isPending, isError, data } = useGetQrWithShortUrlId(shortUrlId);
   const updateQrMutation = useUpdateQrMutation(shortUrlId);
@@ -86,7 +89,7 @@ function GeneratedQrPage({}) {
   if (isError) {
     componentToBeRendered = (
       <Center w={"100%"} h={"100%"}>
-        <p>{translations("Unable to get data, please try again later.")}</p>
+        <p>{translations("Unable to get data, please try again later")}</p>
       </Center>
     );
   }

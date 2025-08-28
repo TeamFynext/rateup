@@ -1,8 +1,12 @@
-import { Text } from "@mantine/core";
+"use client";
+
 import { useContext } from "react";
+
+import { Text } from "@mantine/core";
+
+import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 import { SelectedQContext } from "../../../../context/SelectedQ";
 import classes from "./TakeSurvey.module.css";
-import SelectedLanguageContext from "../../../../context/SelectedLanguage";
 
 function QuestionDesc({ largeScreen, themeStyles }) {
   const { selectedQ } = useContext(SelectedQContext);

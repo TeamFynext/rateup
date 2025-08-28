@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useContext, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -81,7 +83,8 @@ const ValidationRulesEditor = ({
   setActiveTab,
   activeTab,
 }: IProps) => {
-  const { surveyId } = useRouter().query as { surveyId: string };
+  const params = useParams();
+  const surveyId = params.surveyId as string;
   const [linkUpdateStatus, setLinkUpdateStatus] = useState(false);
   const { colors } = useMantineTheme();
   const { selectedLanguage } = useContext(SelectedLanguageContext);
@@ -242,7 +245,7 @@ const ValidationRulesEditor = ({
       if (ruleType === "textType") {
         setFieldValue(ruleType, {
           type: "Letters_&_Numbers",
-          errorMessage: translations("Letters_&_Numbers only allowed."),
+          errorMessage: translations("Letters_&_Numbers only allowed"),
         });
       } else if (ruleType === "wordCount") {
         setFieldValue(ruleType, {
@@ -507,7 +510,7 @@ const ValidationRulesEditor = ({
         <Text c="gray">
           {" "}
           {translations(
-            "Add validation rules to the user input for this question.",
+            "Add validation rules to the user input for this question",
           )}
         </Text>
         <Divider />

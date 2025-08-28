@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext, useEffect, useState } from "react";
 
 import {
@@ -87,7 +89,7 @@ const EmailOTPForm = ({ isPreview }: { isPreview?: boolean }) => {
         setTimerComplete(false);
       },
       onError: () => {
-        showErrorToast(translations("Something went wrong. please retry"));
+        showErrorToast(translations("Something went wrong please retry"));
       },
     });
   };

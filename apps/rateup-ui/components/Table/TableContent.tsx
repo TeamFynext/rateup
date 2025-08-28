@@ -1,3 +1,4 @@
+"use client";
 "use no memo";
 
 import React from "react";
@@ -66,9 +67,7 @@ const renderHeader = (header) => {
 
   if (String(headerText).length <= 50) {
     return (
-      <Text miw={200} maw={200} fw={"bold"}>
-        {headerText}
-      </Text>
+      <span className="min-w-[200] max-w-[200] font-medium">{headerText}</span>
     );
   }
 

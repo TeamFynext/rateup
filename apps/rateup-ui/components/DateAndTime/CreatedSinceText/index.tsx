@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Group } from "@mantine/core";
 import { IconClock } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";

@@ -1,7 +1,7 @@
 .close {
   color: var(--orange-400);
 }
-.h1 {
+.height1 {
   font-size: clamp(16px, -270px + 20vw, 18px);
   font-weight: 700;
   line-height: 1;
