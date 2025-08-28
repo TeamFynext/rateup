@@ -66,6 +66,12 @@ const getWaSettingsResponseSchema = z.array(
 const contactTagSchema = z.object({
   tags: z.array(z.string()),
   groupTags: z.array(z.string()),
+  inboxLabels: z.array(
+    z.object({
+      name: z.string(),
+      color: z.string(),
+    }),
+  ),
 });
 const byWaSettingsIdParamsSchema = z.object({
   phoneId: z.string(),
