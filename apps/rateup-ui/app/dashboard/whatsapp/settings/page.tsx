@@ -8,6 +8,7 @@ import {
   Box,
   Button,
   Center,
+  Checkbox,
   CopyButton,
   Divider,
   Flex,
@@ -24,6 +25,7 @@ import { isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import {
   IconBrandInstagram,
+  IconBrandMeta,
   IconCheck,
   IconChecks,
   IconCopy,
@@ -35,7 +37,11 @@ import {
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
-import { SubscriptionFeaturePathName, WaConfigType } from "@/types/enums";
+import {
+  MetaLoginAssets,
+  SubscriptionFeaturePathName,
+  WaConfigType,
+} from "@/types/enums";
 import {
   useGetChatbotDetails,
   useUpdateChatbot,
@@ -62,7 +68,6 @@ import {
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
-import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import PremiumFeature from "@/components/Premium/PremiumFeature";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import StyledTabs from "@/components/styled/StyledTabs/StyledTabs";
@@ -314,14 +319,14 @@ const initFacebookSdk = () => {
   });
 };
 
-const fbLogin = (): Promise<FBLoginResponse> => {
+const fbLogin = (configId = null): Promise<FBLoginResponse> => {
   return new Promise((resolve, reject) => {
     window.FB.login(
       (response) => {
         resolve(response);
       },
       {
-        config_id: process.env.NEXT_PUBLIC_META_CONFIG_ID,
+        config_id: configId ?? process.env.NEXT_PUBLIC_META_CONFIG_ID,
         response_type: "code", // must be set to 'code' for System User access token
         override_default_response_type: true,
         extras: {
@@ -334,7 +339,7 @@ const fbLogin = (): Promise<FBLoginResponse> => {
   });
 };
 
-function MetaLoginButton() {
+function MetaLoginButton({ disabled = false, configId = null }) {
   const [waData, setWData] = useState({
     phone_number_id: "",
     waba_id: "",
@@ -357,7 +362,7 @@ function MetaLoginButton() {
   }, [waData, code]);
 
   useEffect(() => {
-    initFacebookSdk();
+    // initFacebookSdk();
 
     const handleMessage = (event) => {
       if (!event.origin.endsWith("facebook.com")) return;
@@ -398,7 +403,7 @@ function MetaLoginButton() {
   }, []);
 
   async function login() {
-    const response = await fbLogin();
+    const response = await fbLogin(configId);
     if (response.authResponse) {
       const code = response.authResponse.code;
       if (code) {
@@ -428,9 +433,104 @@ function MetaLoginButton() {
         padding: "0 24px",
       }}
       loading={registerMutation.isPending}
+      disabled={disabled}
     >
       {translations("Login with Facebook")}
     </Button>
+  );
+}
+
+function ConnectMetaAccountButton() {
+  const [opened, { open, close }] = useDisclosure(false);
+  const [selectedAssets, setSelectedAssets] = useState<string[]>([
+    MetaLoginAssets.WHATSAPP,
+  ]);
+
+  useEffect(() => {
+    initFacebookSdk();
+  }, []);
+
+  const assets = Object.values(MetaLoginAssets);
+
+  const configId = useMemo(() => {
+    if (selectedAssets.length === 1) {
+      return process.env.NEXT_PUBLIC_META_CONFIG_ID;
+    }
+    if (assets.every((a) => selectedAssets.includes(a))) {
+      return process.env.NEXT_PUBLIC_META_CONFIG_ID_ALL;
+    }
+    if (
+      selectedAssets.length === 2 &&
+      selectedAssets.includes(MetaLoginAssets.CATALOGS)
+    ) {
+      return process.env.NEXT_PUBLIC_META_CONFIG_ID_WA_CG;
+    }
+    if (selectedAssets.length === 3) {
+      if (selectedAssets.includes(MetaLoginAssets.ADACCOUNTS))
+        return process.env.NEXT_PUBLIC_META_CONFIG_ID_WA_AD;
+      if (selectedAssets.includes(MetaLoginAssets.INSTAGRAM))
+        return process.env.NEXT_PUBLIC_META_CONFIG_ID_WA_IG;
+    }
+    if (selectedAssets.length === 4) {
+      if (selectedAssets.includes(MetaLoginAssets.ADACCOUNTS)) {
+        if (selectedAssets.includes(MetaLoginAssets.INSTAGRAM))
+          return process.env.NEXT_PUBLIC_META_CONFIG_ID_WA_AD_IG;
+        if (selectedAssets.includes(MetaLoginAssets.CATALOGS))
+          return process.env.NEXT_PUBLIC_META_CONFIG_ID_WA_AD_CG;
+      }
+      return process.env.NEXT_PUBLIC_META_CONFIG_ID_WA_IG_CG;
+    }
+    return process.env.NEXT_PUBLIC_META_CONFIG_ID;
+  }, [selectedAssets]);
+
+  const error = useMemo(() => {
+    if (
+      (selectedAssets.includes(MetaLoginAssets.ADACCOUNTS) ||
+        selectedAssets.includes(MetaLoginAssets.INSTAGRAM)) &&
+      !selectedAssets.includes(MetaLoginAssets.PAGES)
+    ) {
+      return "Facebook Pages required";
+    }
+    return null;
+  }, [selectedAssets]);
+
+  return (
+    <>
+      <RateupButtonBlue
+        title="Add Account"
+        onClick={open}
+        leftIcon={<IconBrandMeta />}
+      />
+      <Modal opened={opened} onClose={close} centered>
+        <Stack>
+          <Checkbox.Group
+            defaultValue={[MetaLoginAssets.WHATSAPP]}
+            label="Select assets you want to connect"
+            withAsterisk
+            value={selectedAssets}
+            onChange={setSelectedAssets}
+            error={error}
+          >
+            <Stack mt="xs">
+              {assets.map((asset) => (
+                <Checkbox
+                  disabled={asset === MetaLoginAssets.WHATSAPP}
+                  value={asset}
+                  key={asset}
+                  label={asset}
+                  styles={{
+                    label: {
+                      textTransform: "capitalize",
+                    },
+                  }}
+                />
+              ))}
+            </Stack>
+          </Checkbox.Group>
+          <MetaLoginButton disabled={!!error} configId={configId} />
+        </Stack>
+      </Modal>
+    </>
   );
 }
 
@@ -716,7 +816,7 @@ function MetaLoginStatus({ waSettings }) {
 
           <Divider my="md" label={"Add New Account"} labelPosition="center" />
           <Center>
-            <MetaLoginButton />
+            <ConnectMetaAccountButton />
           </Center>
         </Stack>
       </PaperLayout>
@@ -732,7 +832,7 @@ function MetaLoginStatus({ waSettings }) {
       >
         <Stack align="center" gap="md">
           <Text>{"No WhatsApp Business Accounts Connected"}</Text>
-          <MetaLoginButton />
+          <ConnectMetaAccountButton />
         </Stack>
       </Center>
     );
