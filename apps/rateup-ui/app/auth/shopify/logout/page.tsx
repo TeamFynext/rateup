@@ -7,7 +7,7 @@ import { LoadingOverlay, Paper, Text } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 //import { signOut } from "supertokens-auth-react/recipe/session";
-import Session from "supertokens-web-js/recipe/session";
+import Session from "supertokens-auth-react/recipe/session";
 
 import RateupLoader from "@/components/Loaders/RateupLoader";
 

@@ -5,7 +5,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import {
   sendPasswordResetEmail,
   submitNewPassword,
-} from "supertokens-web-js/recipe/emailpassword";
+} from "supertokens-auth-react/recipe/emailpassword";
 
 import { showNotification } from ".";
 

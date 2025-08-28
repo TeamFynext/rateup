@@ -19,7 +19,7 @@ import { useTranslations } from "next-intl";
 import {
   clearLoginAttemptInfo,
   consumeCode,
-} from "supertokens-web-js/recipe/passwordless";
+} from "supertokens-auth-react/recipe/passwordless";
 
 import { fetchUserProfile } from "../../backend/user/user.api";
 import { resendOTP, showNotification } from "../../utils/auth";

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { signOut } from "supertokens-web-js/recipe/session";
+import { signOut } from "supertokens-auth-react/recipe/session";
 
 export default function Logout() {
   const router = useRouter();
@@ -13,23 +13,19 @@ export default function Logout() {
   useEffect(() => {
     async function handleLogout() {
       if (typeof window !== "undefined") {
-        return new Promise<void>((resolve, reject) => {
-          try {
-            localStorage.clear();
-            queryClient.clear();
-            resolve();
-          } catch (error) {
-            reject(error);
-          }
-        }).then(async () => {
+        try {
+          localStorage.clear();
+          queryClient.clear();
           await signOut();
           router.push("/login");
-        });
+        } catch (error) {
+          // Optionally handle error (e.g., show notification)
+        }
       }
     }
 
     handleLogout();
-  }, [router]);
+  }, [router, queryClient]);
 
   return null;
 }

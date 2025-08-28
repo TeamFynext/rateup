@@ -3,7 +3,7 @@
 import { Button } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
-import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-web-js/recipe/thirdparty";
+import { getAuthorisationURLWithQueryParamsAndSetState } from "supertokens-auth-react/recipe/thirdparty";
 
 import { showErrorToast } from "../../utils/notifications";
 import { GoogleIcon } from "../Button/GoogleIcon";

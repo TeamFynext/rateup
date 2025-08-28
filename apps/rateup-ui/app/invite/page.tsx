@@ -20,7 +20,7 @@ import { notifications } from "@mantine/notifications";
 import { IconArrowAutofitLeft, IconCheck } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { signOut } from "supertokens-web-js/recipe/session";
+import { signOut } from "supertokens-auth-react/recipe/session";
 
 import { completeInvite } from "../../backend/team/team.api";
 import { RateupButtonPrimary } from "../../components/Button/RateupButtons";

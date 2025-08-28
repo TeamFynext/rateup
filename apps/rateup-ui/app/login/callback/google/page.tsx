@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { LoadingOverlay, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import { signInAndUp } from "supertokens-web-js/recipe/thirdparty";
+import { signInAndUp } from "supertokens-auth-react/recipe/thirdparty";
 
-const index = () => {
+const GoogleCallbacck = () => {
   const router = useRouter();
 
   async function handleGoogleCallback() {
@@ -108,4 +108,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default GoogleCallbacck;

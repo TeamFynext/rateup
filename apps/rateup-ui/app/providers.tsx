@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import axios from "axios";
-import Session from "supertokens-web-js/recipe/session";
+import Session from "supertokens-auth-react/recipe/session";
 
 import { UserProvider } from "@/context/UserContext";
 import RouteChangeHandler from "@/utils/routeHandler";
