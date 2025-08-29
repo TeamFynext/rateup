@@ -35,7 +35,7 @@ const nextConfig: NextConfig = bundleAnalyzer({
       : {},
   turbopack: { resolveAlias: { html2canvas: "html2canvas-pro" } },
   experimental: {
-    optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
+    // optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
     // reactCompiler: true,
   },
   webpack: (config) => {
