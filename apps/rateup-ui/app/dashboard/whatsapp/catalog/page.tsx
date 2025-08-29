@@ -59,6 +59,7 @@ const WaCatalogList = () => {
     <SimpleGrid cols={{ base: 2, sm: 1, md: 2, lg: 4, xl: 4 }}>
       {catalogList.map((catalog) => (
         <Card
+          key={catalog?.catalogId}
           withBorder
           shadow="sm"
           radius={"md"}
