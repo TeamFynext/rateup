@@ -1,5 +1,7 @@
+"use client";
+
 import { useContext, useEffect, useRef } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { Box, Group, Text, useMantineTheme } from "@mantine/core";
 import { useCounter, useDisclosure } from "@mantine/hooks";
@@ -39,9 +41,10 @@ function FlowScreensList({
 }: FlowScreensListProps) {
   const { flowJson, updateFlowJson, setScreenNumber } =
     useContext(EditFlowContext);
-  const router = useRouter();
   const theme = useMantineTheme();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+
+  const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const firstRender = useRef(null);
   const [pageNo, handlers] = useCounter(0, {

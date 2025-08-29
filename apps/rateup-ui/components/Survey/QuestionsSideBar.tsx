@@ -1,6 +1,8 @@
+"use client";
+
 //TODO: refactor drag and drop
 import { useEffect } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -72,8 +74,9 @@ export function QuestionsSideBar({
   checkForUnsavedChanges,
   activeTab,
 }: QuestionsSideBarProps) {
-  const router = useRouter();
-  const { surveyId } = router.query as { surveyId: string };
+  const params = useParams();
+  const surveyId = params?.surveyId as string;
+
   const [questionsState, handlers] = useListState(questions);
   const { navOpened, setNavOpened } = useNavControlContext();
   const translations = useTranslations();
@@ -153,7 +156,7 @@ export function QuestionsSideBar({
       Object.values(QuestionType).includes(selectedQ?.type as QuestionType)
     ) {
       showErrorToast(
-        translations("Please Enter heading and choices for all languages."),
+        translations("Please Enter heading and choices for all languages"),
         "missing-title-toast",
       );
       return;
@@ -264,7 +267,7 @@ export function QuestionsSideBar({
                 ) {
                   showErrorToast(
                     translations(
-                      "Please Enter heading and choices for all languages.",
+                      "Please Enter heading and choices for all languages",
                     ),
                     "missing-title-toast",
                   );

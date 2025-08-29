@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Badge, Box, Group } from "@mantine/core";
 import { useTranslations } from "next-intl";
@@ -12,9 +14,7 @@ function LinktreeCard({ name, shortUrlId, id, createdAt, isPublished }) {
   const router = useRouter();
   const translations = useTranslations();
   const handleCardClick = useCallback(() => {
-    router.push({
-      pathname: `/dashboard/quickAccessLinks/${shortUrlId}`,
-    });
+    router.push(`/dashboard/quickAccessLinks/${shortUrlId}`);
   }, [shortUrlId, router]);
 
   return (

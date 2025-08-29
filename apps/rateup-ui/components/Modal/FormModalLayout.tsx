@@ -1,3 +1,5 @@
+"use client";
+
 import { FormEventHandler } from "react";
 
 import { Group, Modal, Space, Stack, Title } from "@mantine/core";

@@ -1,17 +1,18 @@
-import { useEffect } from "react";
-import { useRouter } from "next/router";
+"use client";
 
-import { Box, Button, Group, Modal, Space, Stack, Text } from "@mantine/core";
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+
+import { Box, Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
-import { IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 
 import { useRateupPaymentsPlanUpdateMutation } from "../../../backend/payment/payment.query";
 import { useUpdateSubscriptionMutation } from "../../../backend/subscription/subscription.query";
 import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { showErrorToast, showLoadingToast } from "../../../utils/notifications";
+import { showLoadingToast } from "../../../utils/notifications";
 import { FeatureCard } from "./FeatureCard";
 
 interface SubscriptionEditorModalProps {
@@ -30,9 +31,9 @@ export function SubscriptionEditorModal({
       expiresAt: subscription.expiresAt,
     },
   });
-  const router = useRouter();
   const translations = useTranslations();
-  const rateupPlanEnable = router.pathname === "/admin/rateup";
+  const pathname = usePathname();
+  const rateupPlanEnable = pathname === "/admin/rateup";
   const updateMutation = useUpdateSubscriptionMutation();
   const rateupPaymentsPlanUpdateMutation =
     useRateupPaymentsPlanUpdateMutation(onClose);
@@ -41,7 +42,7 @@ export function SubscriptionEditorModal({
   function handleSave() {
     if (rateupPlanEnable) {
       showLoadingToast(
-        translations("Plan is getting updated.."),
+        translations("Plan is getting updated"),
         "load-data",
         true,
         translations("Updating"),

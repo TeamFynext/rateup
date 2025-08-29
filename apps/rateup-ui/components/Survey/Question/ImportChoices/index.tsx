@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useRef } from "react";
 
 import {
@@ -140,12 +142,12 @@ function ImportChoices({
           <Blockquote icon={<IconInfoCircle />} iconSize={"1.25rem"}>
             <span>
               {translations(
-                "Column headings in Excel file should be the selected language key.",
+                "Column headings in Excel file should be the selected language key",
               )}
             </span>
             <NavLink
               href={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/File/multiple-choice-questions-choices-demo.xlsx`}
-              label={translations("Download Demo .xlsx File")}
+              label={translations("Download Demo xlsx File")}
               leftSection={<IconDownload size="1rem" stroke={1.5} />}
               download
               active

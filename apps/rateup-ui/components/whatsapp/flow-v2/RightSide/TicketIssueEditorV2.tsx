@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -41,8 +43,9 @@ const TicketIssueEditorV2 = ({
   ticketIssued: FlowTicket[];
   setDetailActiveEditor: (value: EditorType) => void;
 }) => {
-  const router = useRouter();
-  const { dbFlowId } = router.query as { dbFlowId: string };
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
+
   const translations = useTranslations();
   const ticketIssue = ticketIssued.find((s) => s.questionId === element?.id);
   const [enableTicketIssue, setEnableTicketIssue] = useState(!!ticketIssue);
@@ -196,7 +199,7 @@ const TicketIssueEditorV2 = ({
           <Switch
             label={translations("Enable Auto-Ticket Creation")}
             description={translations(
-              "Setup automated ticket creation for negative responses.",
+              "Setup automated ticket creation for negative responses",
             )}
             labelPosition="left"
             checked={enableTicketIssue}
@@ -343,7 +346,7 @@ const TicketIssueEditorV2 = ({
                               <Text pt="sm" fz="sm" c="dimmed">
                                 {" "}
                                 {translations("For")} {minOpinion}{" "}
-                                {translations("and below.")}
+                                {translations("and below")}
                               </Text>
                             </Stack>
                           </SimpleGrid>

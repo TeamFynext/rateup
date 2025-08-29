@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
 
 import {
   Anchor,
@@ -30,6 +32,7 @@ export function AdminPanelLayout({ children }) {
   const primaryColor = theme.colors[theme.primaryColor][6];
   const router = useRouter();
   const translations = useTranslations();
+  const pathname = usePathname();
   function handleBackToDashboard() {
     if (typeof window !== "undefined") {
       // Ensure the code is executed only on the client-side
@@ -60,7 +63,7 @@ export function AdminPanelLayout({ children }) {
             >
               <AppShell.Section grow my="md" component={ScrollArea}>
                 {adminNavItems.map(({ Icon, label, href }) => {
-                  const active = router.pathname.startsWith(href);
+                  const active = pathname.startsWith(href);
 
                   return (
                     <NavLink

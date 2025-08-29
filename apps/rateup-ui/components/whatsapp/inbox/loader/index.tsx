@@ -50,7 +50,7 @@ export default function WhatsAppInboxLoader({
         />
         <Group gap={"xs"}>
           <Loader size={10} />
-          <Text size="xs">{translations("Loading chats...")}</Text>
+          <Text size="xs">{translations("Loading chats")}</Text>
         </Group>
       </Stack>
     </Flex>

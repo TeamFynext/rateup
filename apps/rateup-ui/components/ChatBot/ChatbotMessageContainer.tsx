@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef } from "react";
 
 import {
@@ -149,7 +151,7 @@ const ChatbotMessageContainer = ({
               <Textarea
                 value={inputQuery}
                 onChange={(e) => setInputQuery(e.currentTarget.value)}
-                placeholder={translations("Type in..")}
+                placeholder={translations("Type in")}
                 variant="unstyled"
                 w={"90%"}
                 onKeyDown={getHotkeyHandler([["Enter", handleSendQuery]])}

@@ -1,6 +1,10 @@
+"use client";
+
+import { useState } from "react";
+
 import { ActionIcon, Badge, Group, Loader, Tooltip } from "@mantine/core";
 import { IconPencil, IconTrash, IconTrashX } from "@tabler/icons-react";
-import { useState } from "react";
+
 import { useDeleteThemeMutation } from "../../../../../backend/surveyTheme/surveyTheme.query";
 import styles from "./ThemeSelector.module.css";
 

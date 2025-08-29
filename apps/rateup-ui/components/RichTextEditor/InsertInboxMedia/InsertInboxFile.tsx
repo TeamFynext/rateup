@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 
 import { FileInput, Flex, Popover, Stack } from "@mantine/core";

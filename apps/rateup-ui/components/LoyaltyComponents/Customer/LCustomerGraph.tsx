@@ -13,8 +13,8 @@ import {
 } from "recharts";
 
 import { LoyaltyActionType } from "@/types/enums";
+import { LCustomerStats } from "@/app/dashboard/loyalty/customer/[customerId]/page";
 import { CustomTooltip } from "@/components/Survey/Result/Charts/QuestionBarChart";
-import { LCustomerStats } from "@/pages/dashboard/loyalty/customer/[customerId]";
 import { stringToColour } from "@/utils/essential";
 
 import { getActionColor } from "../utils";

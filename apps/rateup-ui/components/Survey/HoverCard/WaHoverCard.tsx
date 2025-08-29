@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 import { Box, HoverCard, Image, ScrollAreaAutosize, Text } from "@mantine/core";

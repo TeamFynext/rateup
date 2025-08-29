@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback } from "react";
 
 import { Divider, Paper, Stack, Text } from "@mantine/core";

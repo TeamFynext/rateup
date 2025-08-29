@@ -1,3 +1,5 @@
+"use client";
+
 import { useRef } from "react";
 
 import { ActionIcon, Divider, Indicator, Menu } from "@mantine/core";

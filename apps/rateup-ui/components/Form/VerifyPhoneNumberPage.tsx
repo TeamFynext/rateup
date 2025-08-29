@@ -1,6 +1,8 @@
+"use client";
+
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   Flex,
@@ -17,7 +19,7 @@ import { useTranslations } from "next-intl";
 import {
   clearLoginAttemptInfo,
   consumeCode,
-} from "supertokens-web-js/recipe/passwordless";
+} from "supertokens-auth-react/recipe/passwordless";
 
 import { fetchUserProfile } from "../../backend/user/user.api";
 import { resendOTP, showNotification } from "../../utils/auth";
@@ -57,7 +59,7 @@ function VerifyPhoneNumberPage() {
           "red",
           "Error",
           translations(
-            "Wrong OTP! Please try again. Number of attempts left: ",
+            "Wrong OTP! Please try again Number of attempts left: ",
           ) +
             (response.maximumCodeInputAttempts -
               response.failedCodeInputAttemptCount),
@@ -71,7 +73,7 @@ function VerifyPhoneNumberPage() {
           "red",
           "Error",
           translations(
-            "Old OTP entered. Please regenerate a new one and try again",
+            "Old OTP entered Please regenerate a new one and try again",
           ),
           <IconX size="1rem" />,
         );
@@ -115,7 +117,7 @@ function VerifyPhoneNumberPage() {
       </Title>
       <Text className={styles["verify-email-para"]}>
         {translations(
-          "Kindly enter the OTP we have sent via SMS to authenticate your phone number.",
+          "Kindly enter the OTP we have sent via SMS to authenticate your phone number",
         )}
       </Text>
       <form

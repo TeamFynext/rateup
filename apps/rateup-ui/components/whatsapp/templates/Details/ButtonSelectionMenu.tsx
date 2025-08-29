@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Box,
   Button,
@@ -65,7 +67,7 @@ export const ButtonSelection = ({
         <Menu.Target>
           <Tooltip
             label={translations(
-              "Only one button is supported for this type of template. The button text is not editable.",
+              "Only one button is supported for this type of template The button text is not editable",
             )}
             disabled={!disabled}
           >
@@ -355,7 +357,7 @@ export const ButtonSelection = ({
       <Group fz={14} gap={"xs"} wrap="nowrap">
         <IconBulb size={16} />
         {translations(
-          "If you add more than three buttons, they will appear in a list.",
+          "If you add more than three buttons, they will appear in a list",
         )}
       </Group>
     </Stack>

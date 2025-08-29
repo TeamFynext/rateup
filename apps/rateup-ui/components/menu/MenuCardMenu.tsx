@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter } from "next/navigation";
 
 import { ActionIcon, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -44,8 +46,8 @@ function MenuCardMenu({
           notifications.show({
             id: "delete-data-menu",
             loading: true,
-            title: translations("Deleting menu.."),
-            message: translations("Hold on, menu is getting deleted..."),
+            title: translations("Deleting menu"),
+            message: translations("Hold on, menu is getting deleted"),
             autoClose: false,
             withCloseButton: false,
           });

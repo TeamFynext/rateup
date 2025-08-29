@@ -1,4 +1,6 @@
-import router from "next/router";
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
 
 import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { IconChartBar } from "@tabler/icons-react";
@@ -32,6 +34,8 @@ export function SurveyCard({
   refetchSurveys,
 }: Readonly<SurveyCardProps>) {
   const translations = useTranslations();
+  const router = useRouter();
+  const pathname = usePathname();
   return (
     <PaperLayout
       hoveractive
@@ -40,7 +44,7 @@ export function SurveyCard({
         e.stopPropagation();
         router.push(
           route ||
-            `${router.pathname}/${survey?.id}${
+            `${pathname}/${survey?.id}${
               survey?.isPublished ? `?tab=Result` : ""
             }`,
         );
@@ -86,7 +90,7 @@ export function SurveyCard({
               radius={5}
               onClick={(e) => {
                 e.stopPropagation();
-                router.push(`${router.pathname}/${survey?.id}?tab=Result`);
+                router.push(`${pathname}/${survey?.id}?tab=Result`);
               }}
               style={{ overflow: "hidden" }}
             >

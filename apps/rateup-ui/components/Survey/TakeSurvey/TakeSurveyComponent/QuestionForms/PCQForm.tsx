@@ -1,5 +1,7 @@
+"use client";
+
 import { useContext, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { usePathname, useRouter } from "next/navigation";
 
 import { Radio } from "@mantine/core";
 import { useAnimate } from "motion/react";
@@ -36,8 +38,10 @@ export function PCQForm({ previewChoices }: Readonly<PCQFormProps>) {
         previewChoices?.[selectedLanguage]?.length > 0
       ? previewChoices?.[selectedLanguage]
       : samplePictureChoices;
+  const pathname = usePathname();
+
   const publicRoute =
-    router.pathname.startsWith("/public") || router.pathname.startsWith("/ws");
+    pathname.startsWith("/public") || pathname.startsWith("/ws");
 
   const isSurveyThemePreview = useIsSurveyThemePreview();
 

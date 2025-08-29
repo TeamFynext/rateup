@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 
 import { Box, Image, Stack } from "@mantine/core";

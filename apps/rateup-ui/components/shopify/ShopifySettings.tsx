@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import {
@@ -59,7 +61,7 @@ const ShopifySettings = ({
   const handleDeleteWehooks = () => {
     if (!session) return;
     showLoadingToast(
-      translations("hold on..deleting webhooks"),
+      translations("hold ondeleting webhooks"),
       "webhooks",
       true,
     );
@@ -72,7 +74,7 @@ const ShopifySettings = ({
   const handleDeleteSession = () => {
     if (!session) return;
     showLoadingToast(
-      translations("hold on..deleting connection"),
+      translations("hold ondeleting connection"),
       "integration-delete",
       true,
     );
@@ -80,7 +82,7 @@ const ShopifySettings = ({
   };
   const registerWebhooks = () => {
     showLoadingToast(
-      translations("Hold On..Registering webhooks"),
+      translations("Hold OnRegistering webhooks"),
       "webhooks",
       true,
       "Loading",
@@ -109,7 +111,7 @@ const ShopifySettings = ({
       shopifySurveys: [],
     };
     showLoadingToast(
-      translations("hold on..deleting surveys delivery settings"),
+      translations("hold ondeleting surveys delivery settings"),
       "integration-update",
       true,
     );
@@ -126,7 +128,7 @@ const ShopifySettings = ({
       shopifySurveys: shopifySurveys,
     };
     showLoadingToast(
-      translations("hold on..deleting schedules"),
+      translations("hold ondeleting schedules"),
       "integration-update",
       true,
     );
@@ -136,7 +138,7 @@ const ShopifySettings = ({
   const handleChangeWebhookByTopic = (event, isEnabled) => {
     if (isEnabled) {
       showLoadingToast(
-        translations("Hold On..Registering webhooks"),
+        translations("Hold OnRegistering webhooks"),
         "webhooks",
         true,
         "Loading",
@@ -159,7 +161,7 @@ const ShopifySettings = ({
 
   const handleDeleteWebhookByTopic = (topic) => {
     showLoadingToast(
-      translations("hold on..deleting webhooks"),
+      translations("hold ondeleting webhooks"),
       "webhooks",
       true,
     );

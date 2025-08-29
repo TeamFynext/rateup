@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useRef } from "react";
 
 import { Box, Button, Modal, TextInput } from "@mantine/core";

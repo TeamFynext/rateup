@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter } from "next/navigation";
 
 import { Avatar, Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { IconUsersGroup } from "@tabler/icons-react";

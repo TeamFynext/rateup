@@ -6,8 +6,8 @@ import {
   GridRowId,
 } from "@mui/x-data-grid";
 
+import { renderFeatures } from "../../../app/admin/subscriptions/page";
 import styles from "../../../components/adminPanel/admin.module.css";
-import { renderFeatures } from "../../../pages/admin/subscriptions";
 import { PaymentType } from "../../../types/enums";
 import { widgetIds } from "../../../utils/constants/forms";
 import { showLoadingToast } from "../../../utils/notifications";

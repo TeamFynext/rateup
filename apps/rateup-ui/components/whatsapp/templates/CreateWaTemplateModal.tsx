@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 
 import {
@@ -102,9 +104,7 @@ export function CreateWaTemplateModal({ opened, onClose, editingItem }) {
     if (editingItem) {
       if (editingItem.data.status === WaTemplateStatus.PENDING) {
         showWarnToast(
-          translations(
-            "Cannot edit pending template. Please wait for approval",
-          ),
+          translations("Cannot edit pending template Please wait for approval"),
         );
         setIsSubmitting(false);
         return;

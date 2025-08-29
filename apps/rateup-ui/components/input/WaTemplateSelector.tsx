@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 
 import { SelectProps } from "@mantine/core";

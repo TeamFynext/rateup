@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useRef } from "react";
 
 import {
@@ -54,10 +56,7 @@ export function ImageCheckbox({
   });
   const radioButtonRef = useRef(null);
   const titleTypeString = typeof title === "string";
-  const { hovered, ref } = useHover() as {
-    hovered: boolean;
-    ref: React.RefObject<HTMLButtonElement | null>;
-  };
+  const { hovered, ref } = useHover();
 
   const mantineTheme = useMantineTheme();
 

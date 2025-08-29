@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Group, Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
@@ -119,7 +121,7 @@ const CreateTicketModal = ({
       id: "load-data",
       loading: true,
       title: translations("Creating Ticket"),
-      message: translations("Hold on, your ticket is getting created..."),
+      message: translations("Hold on, your ticket is getting created"),
       autoClose: false,
       withCloseButton: true,
     });

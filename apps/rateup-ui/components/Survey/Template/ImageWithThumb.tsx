@@ -1,6 +1,10 @@
+"use client";
+
 import React, { useState } from "react";
-import { THUMBNAIL_URL, fallbackImage } from "../../../utils/constants";
+
 import { Image, ImageProps } from "@mantine/core";
+
+import { fallbackImage, THUMBNAIL_URL } from "../../../utils/constants";
 
 export const ImageWithThumb = ({
   src,

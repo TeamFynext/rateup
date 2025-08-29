@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Box,
   Card,
@@ -12,7 +14,7 @@ import {
 } from "@mantine/core";
 import { useTranslations } from "next-intl";
 
-import classes2 from "@/pages/public/menu/gradientAnimation.module.css";
+import classes2 from "@/app/m/[shortId]/gradientAnimation.module.css";
 
 import { fallbackImage } from "../../../utils/constants";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";

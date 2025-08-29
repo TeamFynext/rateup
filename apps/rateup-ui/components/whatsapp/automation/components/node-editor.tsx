@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -1131,8 +1131,9 @@ const TemplateNodeEditor: React.FC<
   let selectedTemplate = templates?.find(
     (t) => t.id === typedData?.template?.id,
   );
-  const router = useRouter();
-  let automatedId = router.query.waAutomatedReplyId as string;
+  const params = useParams();
+
+  let automatedId = params.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
   const isLeadAutomation = data && data?.commands[0]?.startsWith("lead");
@@ -2206,8 +2207,8 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   handleInputChange,
 }) => {
   const typedData = nodeData as LeadgenNodeData;
-  const router = useRouter();
-  let automatedId = router.query.waAutomatedReplyId as string;
+  const params = useParams();
+  let automatedId = params.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
   const isLeadAutomation = data && data?.commands[0]?.startsWith("lead");

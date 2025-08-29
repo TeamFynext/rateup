@@ -1,6 +1,11 @@
+"use client";
+
 import { useContext, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/dist/client/components/navigation";
-import { useRouter } from "next/router";
+import {
+  useParams,
+  useSearchParams,
+} from "next/dist/client/components/navigation";
+import { useRouter } from "next/navigation";
 
 import { Box, Center, Container, ScrollArea, Stack, Text } from "@mantine/core";
 import { useDisclosure, useListState, useMediaQuery } from "@mantine/hooks";
@@ -93,6 +98,7 @@ function TakeSurvey({
   // Used to track questions filled by user. Since there may be logical jumps, this can be used by handlePrev to get the previous question
   const [questionsHistory, questionsHistoryHandlers] = useListState<string>([]);
   const router = useRouter();
+  const params = useParams();
 
   useEffect(() => {
     setIsThankYouPageEnabled(
@@ -279,7 +285,7 @@ function TakeSurvey({
     return null;
   }
   const finishSurvey = async (pageType = "") => {
-    const { start } = router.query as { start: string }; //(TODO - Temp) change for survey merge
+    const start = searchParams.get("start"); //(TODO - Temp) change for survey merge
     const shouldShowGoogleReview =
       pageType === PageType.GoogleReview ||
       checkGoogleReviewForQuestion(survey?.questions, responsesRef.current);
@@ -322,7 +328,7 @@ function TakeSurvey({
       encryptedResponses = encryptedResponse;
       defaultResponses = [];
     }
-
+    const shortId = params?.shortId as string;
     submitSurvey({
       surveyTeamMapId: surveyTeamMapId,
       responses: defaultResponses,
@@ -344,16 +350,16 @@ function TakeSurvey({
           ? setIsReviewPage(selectedLanguage)
           : isThankYouPageEnabled
             ? fromShortUrl
-              ? router.push(`/ws/${router.query.shortId}/end`)
+              ? router.push(`/ws/${shortId}/end`)
               : router.push(
                   `${surveyTeamMapId}/end?k=${kioskMode}&sid=${survey.id}&language=${selectedLanguage}`,
                 )
-            : router.push(`/ws/${router.query.shortId}/response-submitted`);
+            : router.push(`/ws/${shortId}/response-submitted`);
       })
       .catch((e) => {
         if (e?.message === "ALREADY_RESPONDED") {
           fromShortUrl
-            ? router.push(`/ws/${router.query.shortId}/end?err=oops`)
+            ? router.push(`/ws/${shortId}/end?err=oops`)
             : router.push(
                 `${surveyTeamMapId}/end?k=${false}&sid=${survey.id}&language=${selectedLanguage}&err=oops`,
               );

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 import { Group, Loader, Stack } from "@mantine/core";

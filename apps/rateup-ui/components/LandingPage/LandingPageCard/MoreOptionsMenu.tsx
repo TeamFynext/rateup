@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -28,10 +30,7 @@ function MoreOptionsMenu({ shortUrlId, id, name }) {
   const deleteLandingPageMutation = useDeleteLandingPageMutation(id);
 
   const handleShareClick = useCallback(() => {
-    router.push({
-      pathname: `/dashboard/landingPages/${shortUrlId}`,
-      query: { tab: "share" },
-    });
+    router.push(`/dashboard/landingPages/${shortUrlId}?tab=share`);
   }, [shortUrlId]);
 
   const handleDeleteClick = useCallback(async () => {

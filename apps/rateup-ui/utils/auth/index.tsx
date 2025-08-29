@@ -1,18 +1,18 @@
 import { JSX, useCallback } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconInfoCircleFilled, IconX } from "@tabler/icons-react";
-import { signIn, signUp } from "supertokens-web-js/recipe/emailpassword";
+import { signIn, signUp } from "supertokens-auth-react/recipe/emailpassword";
 import {
   sendVerificationEmail,
   verifyEmail,
-} from "supertokens-web-js/recipe/emailverification";
+} from "supertokens-auth-react/recipe/emailverification";
 import {
   clearLoginAttemptInfo,
   createCode,
   resendCode,
-} from "supertokens-web-js/recipe/passwordless";
+} from "supertokens-auth-react/recipe/passwordless";
 
 import { useRouteAndCartStore } from "../../components/HomePage/pages/Pricing/store/RouteAndCartStore";
 

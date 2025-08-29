@@ -21,7 +21,7 @@ import {
 
 import "@xyflow/react/dist/style.css";
 
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { useDebouncedCallback, useHotkeys } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";

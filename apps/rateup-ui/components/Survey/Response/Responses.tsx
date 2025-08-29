@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   Suspense,
   useCallback,
@@ -6,7 +8,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   Box,
@@ -184,7 +186,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
   const downloadExcelResponse = useDownloadExcelResponse();
   function handleExportContacts() {
     showLoadingToast(
-      translations("Exporting Contact responses to Contacts..."),
+      translations("Exporting Contact responses to Contacts"),
       "export-contacts",
       true,
     );
@@ -229,7 +231,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
         id: "load-data",
         loading: true,
         title: translations("Deleting Response"),
-        message: translations("Hold on, response is getting deleted..."),
+        message: translations("Hold on, response is getting deleted"),
         autoClose: false,
         withCloseButton: false,
       });
@@ -274,7 +276,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
     if (!googleAccessToken) {
       setIsSyncing(false);
       setAlertMsg(
-        translations("Please sync your Google account in the App & Services."),
+        translations("Please sync your Google account in the App & Services"),
       );
       redirectModalOpen();
     } else {
@@ -296,7 +298,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
             if (error.response.data?.error === "invalid_grant") {
               setAlertMsg(
                 translations(
-                  "Your access has been revoked. Please sign out and sign in again in the Apps & Services",
+                  "Your access has been revoked Please sign out and sign in again in the Apps & Services",
                 ),
               );
               redirectModalOpen();
@@ -415,7 +417,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
                       onClose={alertModalClose}
                       headerTitle={translations("Resync Google Sheet")}
                       headerLabel={translations(
-                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost.",
+                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost",
                       )}
                       confirmLabel={translations("Yes")}
                       onConfirm={handleSyncGoogleSheet}
@@ -483,7 +485,7 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
       }}
     >
       <Stack py={"sm"}>
-        <Text>{translations("To proceed further, verify your email id.")}</Text>
+        <Text>{translations("To proceed further, verify your email id")}</Text>
         <ContainedTextField
           withAsterisk
           label={translations("Verify email")}
@@ -493,7 +495,7 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
           onChange={(e) => setVerifyEmail(e.target.value)}
         />
         <Text c="red">
-          {translations("Once deleted, response entry data will be lost.")}
+          {translations("Once deleted, response entry data will be lost")}
         </Text>
       </Stack>
     </FormModalLayout>

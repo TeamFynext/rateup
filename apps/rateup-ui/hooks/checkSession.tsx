@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-import Session from "supertokens-web-js/recipe/session";
+import Session from "supertokens-auth-react/recipe/session";
 
 export const useCheckSession = () => {
   const router = useRouter();

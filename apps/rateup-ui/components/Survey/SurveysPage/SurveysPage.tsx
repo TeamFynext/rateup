@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Box, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -35,7 +37,8 @@ export function SurveysPage({
   refetch,
 }: Readonly<SurveysPageProps>) {
   const router = useRouter();
-  const { action } = router.query;
+  const searchParams = useSearchParams();
+  const action = searchParams.get("action");
 
   const [
     createSurveyOpened,

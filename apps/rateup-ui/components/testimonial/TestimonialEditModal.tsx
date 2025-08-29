@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { Carousel } from "@mantine/carousel";
 import {
@@ -217,7 +219,8 @@ const TestimonialEditModal = ({
     }
   };
 
-  const { collectionId } = useRouter().query;
+  const params = useParams();
+  const collectionId = params.collectionId as string;
   const updateCollection = useUpdateCollection(collectionId);
   const handleUpdate = () => {
     updateCollection.mutate(

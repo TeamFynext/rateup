@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@mantine/core";
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import { Color } from "@tiptap/extension-color";

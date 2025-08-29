@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import {
   Center,
@@ -44,9 +46,10 @@ export enum TabEnum {
 }
 
 export default function SurveyID() {
-  const router = useRouter();
-  const { surveyId } = router.query;
-  const { tab } = router.query;
+  const searchParams = useSearchParams();
+  const params = useParams();
+  const surveyId = params.surveyId as string;
+  const tab = searchParams.get("tab");
   const { user } = useUser();
 
   if (Array.isArray(surveyId)) {

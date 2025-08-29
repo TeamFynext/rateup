@@ -1,9 +1,13 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+
 import { Title } from "@mantine/core";
-import { useRouter } from "next/router";
+
+import { gAnalyticsAndFbEvent } from "../../../../utils/gtag";
 import BookDemoContactForm from "../BookDemoContactForm";
 import Button from "../Button";
 import styles from "./BookADemoSection.module.css";
-import { gAnalyticsAndFbEvent } from "../../../../utils/gtag";
 
 function BookADemoSection() {
   const router = useRouter();

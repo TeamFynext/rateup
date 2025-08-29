@@ -1,3 +1,5 @@
+"use client";
+
 import { ActionIcon, Box, Checkbox, Collapse, Group } from "@mantine/core";
 import { UseFormReturnType } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";

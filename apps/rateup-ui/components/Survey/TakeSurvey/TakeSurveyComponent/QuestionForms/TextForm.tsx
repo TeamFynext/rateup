@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext } from "react";
 
 import { Input, useMantineTheme } from "@mantine/core";

@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { ActionIcon, Box, Tooltip } from "@mantine/core";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
@@ -23,8 +25,9 @@ import useFlowStore, { EditFlowRightPanel } from "./utils/store";
 
 function EditFlow() {
   const [previewOpened, setPreviewOpened] = useState(false);
-  const router = useRouter();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
+
   const { data: dbFlow, isPending } = useWaFlowFromDb(dbFlowId);
   const {
     getCurrentScreen,

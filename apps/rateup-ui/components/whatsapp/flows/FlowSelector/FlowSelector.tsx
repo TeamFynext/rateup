@@ -1,7 +1,10 @@
+"use client";
+
 import { SelectProps, Skeleton } from "@mantine/core";
+
 import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
-import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
 import { WaFlowStatus } from "../../../../types/enums";
+import { ContainedSelection } from "../../../input/ContainedInput/ContainedInput";
 
 interface FlowSelectorProps extends SelectProps {
   value?: string;

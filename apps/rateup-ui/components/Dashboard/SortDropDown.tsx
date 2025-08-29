@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import { Group, Text as MantineText, Select } from "@mantine/core";
@@ -17,7 +19,7 @@ const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
     <Group style={{ alignItems: "center", gap: "3px" }}>
       <MantineText>{translations("SORT BY")}:</MantineText>
       <Select
-        placeholder={translations("Sort by")}
+        placeholder={translations("sort by")}
         value={sortOption}
         onChange={handleSortChange}
         data={[

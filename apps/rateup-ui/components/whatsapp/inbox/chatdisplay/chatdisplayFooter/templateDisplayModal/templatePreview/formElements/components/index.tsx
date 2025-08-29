@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -337,8 +339,8 @@ interface LeadFormQuestionsInputComponentProps {
 function LeadFormQuestionsInputComponent(
   props: LeadFormQuestionsInputComponentProps,
 ) {
-  const router = useRouter();
-  let automatedId = router.query.waAutomatedReplyId as string;
+  const params = useParams();
+  let automatedId = params.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const {
     data: automatedReply,

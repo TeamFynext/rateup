@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 
 import { Blockquote, LoadingOverlay, NavLink, Stack } from "@mantine/core";

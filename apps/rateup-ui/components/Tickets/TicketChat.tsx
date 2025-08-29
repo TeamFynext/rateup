@@ -1,11 +1,12 @@
+"use client";
+
 import { useEffect } from "react";
 
 import { MantineProvider } from "@mantine/core";
 
 import { whatsappTheme } from "@/config/mantineTheme";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import WaInboxChatDisplay from "@/components/whatsapp/inbox/chatdisplay";
-
-import useContactStore from "../../pages/dashboard/whatsapp/inbox/store";
 
 export const TicketChat = ({ contact }) => {
   const { setSelectedContact } = useContactStore();

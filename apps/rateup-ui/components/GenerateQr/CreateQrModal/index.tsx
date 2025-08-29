@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useRef } from "react";
 
 import { Box, Button, Modal, TextInput } from "@mantine/core";
@@ -33,10 +35,10 @@ function CreateQrModal({ opened, onClose, mode, shortUrlId, initialName }) {
             try {
               url = new URL(value);
             } catch (_) {
-              return translations("Please enter a valid url.");
+              return translations("Please enter a valid url");
             }
           } else {
-            return translations("URL is required.");
+            return translations("URL is required");
           }
         }
       },

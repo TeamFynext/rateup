@@ -14,7 +14,7 @@ function validateNameAndEmail(name: string, email: string, translations: any) {
   if (!email) {
     errors.email = translations("Email is required.");
   } else if (!isValidEmail(email)) {
-    errors.email = translations("Invalid email format.");
+    errors.email = translations("Invalid email format");
   }
 
   return errors;

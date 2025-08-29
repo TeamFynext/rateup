@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext, useState } from "react";
 
 import {
@@ -267,7 +269,7 @@ const ImportAllowedEmailIDs = ({ qId }) => {
         ml={10}
       >
         {translations(
-          "Upload CSV/XLSX file to generate allowed email Ids. required field in the file: email",
+          "Upload CSV/XLSX file to generate allowed email Ids required field in the file: email",
         )}
       </Blockquote>
       <Stack>

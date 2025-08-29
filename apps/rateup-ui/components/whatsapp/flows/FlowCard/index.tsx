@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -79,8 +81,8 @@ function FlowCard({
     notifications.show({
       id: "copy",
       loading: true,
-      title: translations("Clonning Flow.."),
-      message: translations("Hold on, your flow is getting clonned..."),
+      title: translations("Clonning Flow"),
+      message: translations("Hold on, your flow is getting clonned"),
       autoClose: false,
       withCloseButton: false,
     });
@@ -127,7 +129,7 @@ function FlowCard({
               opened={cloneAandRenewOpened}
               onClose={closeCloneAndRenew}
               headerLabel={translations(
-                "Attention! Copying and renewing this workflow will permanently disable the original one. A new, identical copy will be created, but you won't be able to use the old one anymore. Think carefully before confirming!",
+                "Attention! Copying and renewing this workflow will permanently disable the original one A new, identical copy will be created, but you won't be able to use the old one anymore Think carefully before confirming!",
               )}
               headerTitle={translations("Copy & Renew Flow")}
               confirmLabel={translations("Copy & Renew Flow")}
@@ -137,7 +139,7 @@ function FlowCard({
                   loading: true,
                   title: translations("Copy & Renew whatapp flow"),
                   message: translations(
-                    "Hold.. your flow data is getting Coping & Renew...",
+                    "Hold your flow data is getting Coping & Renew",
                   ),
                   autoClose: false,
                   withCloseButton: false,
@@ -171,7 +173,7 @@ function FlowCard({
               <Stack>
                 <Text c="dimmed">
                   {translations(
-                    "Select the team in which the whatsapp flow copy to be created.",
+                    "Select the team in which the whatsapp flow copy to be created",
                   )}
                 </Text>
                 <ContainedSelection

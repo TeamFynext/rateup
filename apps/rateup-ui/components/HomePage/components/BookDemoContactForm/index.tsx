@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Flex } from "@mantine/core";
 import { modals } from "@mantine/modals";

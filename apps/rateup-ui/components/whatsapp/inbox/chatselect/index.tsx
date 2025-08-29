@@ -7,8 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -35,12 +34,12 @@ import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
+import useContactStore, {
+  useChatContactCountStore,
+} from "@/app/dashboard/whatsapp/inbox/store";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useContactStore, {
-  useChatContactCountStore,
-} from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
@@ -53,7 +52,8 @@ import classes from "./styles.module.css";
 
 const WaInboxChatSelect = () => {
   const router = useRouter();
-  const tab = (router.query?.tab as string) ?? "New";
+  const searchParams = useSearchParams();
+  const tab = (searchParams.get("tab") as string) ?? "New";
   const { filter, setFilter } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
 
@@ -205,8 +205,6 @@ const WaInboxChatSelect = () => {
   //   ],
   // );
 
-  const searchParams = useSearchParams();
-
   useEffect(() => {
     let contactId = searchParams.get("contactId");
     if (contactId && !selectedContact) {
@@ -275,7 +273,7 @@ const WaInboxChatSelect = () => {
     [openChatDisplayForContact, setSelectedContact],
   );
   useEffect(() => {
-    let tab = router.query?.tab as string;
+    let tab = searchParams.get("tab") as string;
     if (!tab) return;
     if (tab === "blocked") {
       prepareFilters({
@@ -301,7 +299,7 @@ const WaInboxChatSelect = () => {
         blockedUsers: false,
       });
     }
-  }, [router.query?.tab, filter, prepareFilters]);
+  }, [searchParams, filter, prepareFilters]);
 
   if (isContactLoading || isLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;

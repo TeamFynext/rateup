@@ -1,6 +1,10 @@
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
+
 import { Paper } from "@mantine/core";
-import { useRouter } from "next/router";
 import { IconMaximize, IconMaximizeOff } from "@tabler/icons-react";
+
 import styles from "./Focusmode.module.css";
 
 interface focusmodeInterface {
@@ -9,9 +13,10 @@ interface focusmodeInterface {
 }
 
 export default function FocusMode({ focus, toggleFocus }: focusmodeInterface) {
-  const router = useRouter();
+  const pathname = usePathname();
+
   if (
-    router.pathname
+    pathname
       .split("/")
       .filter((x) => x)
       .includes("surveys")

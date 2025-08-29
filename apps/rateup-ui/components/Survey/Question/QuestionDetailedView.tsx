@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   Alert,
@@ -77,12 +79,12 @@ export function QuestionDetailedView({
   setActiveTab,
   surveyLanguages,
   setSelectedLanguage,
-  surveyId,
+  surveyId: pSurveyId,
   survey,
   questionDetailedViewFormRef,
 }: QuestionDetailedViewProps) {
-  const router = useRouter();
-  surveyId = surveyId || (router.query?.surveyId as string);
+  const params = useParams();
+  const surveyId = pSurveyId || (params.surveyId as string);
   const [isSaved, setIsSaved] = useState(true);
   const [currentResponse, updateResponse] = useState(null);
   const [deleteFileLoading, setDeleteFileLoading] = useState(false);
@@ -157,7 +159,7 @@ export function QuestionDetailedView({
           setSelectedLanguage(getIncompleteLanguages()[0]);
           showErrorToast(
             translations(
-              "Please Enter heading and choices for all languages before saving.",
+              "Please Enter heading and choices for all languages before saving",
             ),
           );
           setIsSaved(false);
@@ -434,7 +436,7 @@ const SurveyIssueAlert = ({ isSaved }: { isSaved: boolean }) => {
   }
 
   const issueMessage = translations(
-    "The survey contains incomplete questions. Please fix the issue.",
+    "The survey contains incomplete questions Please fix the issue",
   );
 
   return (

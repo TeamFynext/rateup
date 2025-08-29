@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext } from "react";
 
 import { Rating, useMantineTheme } from "@mantine/core";

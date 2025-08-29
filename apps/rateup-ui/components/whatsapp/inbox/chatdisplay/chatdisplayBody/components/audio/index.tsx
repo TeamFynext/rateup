@@ -1,3 +1,5 @@
+"use client";
+
 import { JSX, useRef } from "react";
 
 import { ActionIcon, Group } from "@mantine/core";

@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { Group, Stack } from "@mantine/core";
 import { useTranslations } from "next-intl";
@@ -24,9 +26,8 @@ function ShareLandingPage({ url, isPublished, title }) {
     initialLogoTabPanelState,
   );
   const translations = useTranslations();
-  const {
-    query: { shortUrlId },
-  } = useRouter();
+  const params = useParams();
+  const shortUrlId = params?.shortUrlId as string;
   const { mutateAsync: landingPageUpdateMutateAsync } =
     useUpdateLandingPageMutation(shortUrlId);
   const [isSavingSettings, setIsSavingSettings] = useState(false);

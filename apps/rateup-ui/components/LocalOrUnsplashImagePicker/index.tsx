@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback } from "react";
 
 import { ActionIcon, Box, Button, Group } from "@mantine/core";
