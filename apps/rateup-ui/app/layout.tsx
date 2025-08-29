@@ -62,7 +62,7 @@ export default async function RootLayout({
       <body className={`${geist.className},${notoColorEmogi.className}`}>
         <NextIntlClientProvider>
           <MantineProvider theme={theme}>
-            <Suspense fallback={<RateupLoader />}>
+            <Suspense fallback={<RateupLoader h={"100dvh"} />}>
               <ModalsProvider>
                 <Notifications />
                 <SuperTokensProvider>
