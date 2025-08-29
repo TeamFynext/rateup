@@ -13,7 +13,7 @@ import CatalogProducts from "@/components/whatsapp/catalog/products/CatalogProdu
 
 const CatalogID = () => {
   const params = useParams();
-  const catalogId = params.catalogId as string;
+  const catalogId = params?.catalogId as string;
 
   const { data: catalogInfo, isPending } =
     useWaCatalog(catalogId).getCatalogInfo;
