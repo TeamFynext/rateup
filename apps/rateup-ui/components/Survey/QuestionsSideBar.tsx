@@ -2,7 +2,7 @@
 
 //TODO: refactor drag and drop
 import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -74,8 +74,8 @@ export function QuestionsSideBar({
   checkForUnsavedChanges,
   activeTab,
 }: QuestionsSideBarProps) {
-  const searchParams = useSearchParams();
-  const surveyId = searchParams.get("surveyId");
+  const params = useParams();
+  const surveyId = params?.surveyId as string;
 
   const [questionsState, handlers] = useListState(questions);
   const { navOpened, setNavOpened } = useNavControlContext();

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import {
   Box,
@@ -42,8 +42,8 @@ import TeamSettings from "../TeamSettings";
 import styles from "./teams.module.css";
 
 const TeamDetails = () => {
-  const searchParams = useSearchParams();
-  const team_code = searchParams.get("team_code");
+  const params = useParams();
+  const team_code = params?.team_code as string;
 
   const [opened, { open, close }] = useDisclosure(false);
   const [name, setName] = useState("");

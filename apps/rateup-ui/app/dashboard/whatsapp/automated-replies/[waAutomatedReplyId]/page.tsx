@@ -65,7 +65,7 @@ const WaAutomatedReplyId = () => {
   const params = useParams();
   const automatedId = params?.waAutomatedReplyId as string;
   const searchParams = useSearchParams();
-  const selectedTab = searchParams.get("tab") as string;
+  const selectedTab = (searchParams.get("tab") as string) || "flow";
 
   const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
   const { data: waAutomtedReplyMessage, isLoading } =
