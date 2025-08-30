@@ -52,7 +52,7 @@ export async function waSettingsRoutes(server: FastifyInstance) {
   );
 
   server.put(
-    "/:settingsId",
+    "/:whatsappSettingsId",
     {
       schema: {
         params: $WASettingsref("whatsappSettingsIdParamSchema"),

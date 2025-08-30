@@ -219,6 +219,8 @@ model WhatsappSettings {
   ibaId           String? @unique //Instagram Business Account ID
   pageAccessToken String? //Facebook Page access token
   igUserName      String?
+  igDisplayName         String?
+  phoneDisplayName      String?
 
   type             String // enums.ts: WaConfigType
   createdAt        DateTime           @default(now())
