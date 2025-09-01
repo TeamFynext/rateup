@@ -24,6 +24,7 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import {
+  IconArrowsLeftRight,
   IconBrandInstagram,
   IconBrandMeta,
   IconCheck,
@@ -31,8 +32,10 @@ import {
   IconCopy,
   IconHelp,
   IconLogout,
+  IconPencilMinus,
   IconRefresh,
   IconTrash,
+  IconUser,
   IconX,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
@@ -54,6 +57,7 @@ import {
   useMetaAssets,
   useRegisterBusinessClientMutation,
   useSyncFbPages,
+  useUpdateWaSettingsMutation,
   useUpsertWaSettingsMutation,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
@@ -68,14 +72,13 @@ import {
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import FormModalLayout from "@/components/Modal/FormModalLayout";
 import PremiumFeature from "@/components/Premium/PremiumFeature";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import StyledTabs from "@/components/styled/StyledTabs/StyledTabs";
 import { SAVE_HOTKEY } from "@/utils/constants";
 import { showErrorToast, showWarnToast } from "@/utils/notifications";
 import { hasFeature } from "@/utils/subscription/subscription";
-
-import styles from "./settings.style.module.css";
 
 function WhatsAppManualConfiguration({ waSettings }) {
   const { data: metaAssets, isLoading } = useMetaAssets(waSettings?.id);
@@ -602,6 +605,51 @@ export default function WhatsAppSettingsPage() {
   );
 }
 
+const WaSettingEditModal = ({ opened, close, waSetting }) => {
+  const updatemut = useUpdateWaSettingsMutation(waSetting?.id);
+  const form = useForm({
+    initialValues: {
+      phoneDisplayName: waSetting?.phoneDisplaName || "",
+      igDisplayName: waSetting?.igDisplaName || "",
+    },
+  });
+  function handleSubmit() {
+    updatemut.mutate(form.values, {
+      onSuccess: () => {
+        close();
+      },
+    });
+  }
+  if (!waSetting) return;
+  return (
+    <FormModalLayout
+      centered
+      isLoading={updatemut.isPending}
+      customHeader={<Text>Edit Configuration</Text>}
+      title=""
+      buttonTitle="save"
+      includeCancelButton
+      cancelOnClick={close}
+      opened={opened}
+      onClose={close}
+      onSubmit={handleSubmit}
+    >
+      <Stack>
+        <ContainedTextField
+          {...form.getInputProps("phoneDisplayName")}
+          label={"Display name for whatsapp phone number"}
+        />
+        {waSetting.ibaId?.length ? (
+          <ContainedTextField
+            {...form.getInputProps("igDisplayName")}
+            label={"Display name for instagram account"}
+          />
+        ) : null}
+      </Stack>
+    </FormModalLayout>
+  );
+};
+
 function MetaLoginStatus({ waSettings }) {
   const deRegisterMutation = useDeregisterBusinessClientMutation();
   const [selectedAccountId, setSelectedAccountId] = useState(null);
@@ -612,6 +660,8 @@ function MetaLoginStatus({ waSettings }) {
     openedInstaConfigModal,
     { open: openInstaConfigModal, close: closeInstaConfigModal },
   ] = useDisclosure(false);
+  const [openedEdit, { open: openEdit, close: closeEdit }] =
+    useDisclosure(false);
 
   function handleDeRegister() {
     console.log(
@@ -627,11 +677,9 @@ function MetaLoginStatus({ waSettings }) {
     open();
   };
   const InstagramConfigModal = ({ opened, close }) => {
-    if (!selectedWaSettings) return null;
     const { data: metaAssets, isLoading } = useMetaAssets(
       selectedWaSettings?.id,
     );
-    const { id, ...rest } = selectedWaSettings;
     const upsertMutation = useUpsertWaSettingsMutation();
     const syncfbpageMut = useSyncFbPages(selectedWaSettings?.id);
     const initialConfig = {
@@ -654,6 +702,8 @@ function MetaLoginStatus({ waSettings }) {
     const fbPages = metaAssets
       ? metaAssets.pages.map((page) => ({ value: page.id, label: page.name }))
       : [];
+    if (!selectedWaSettings) return null;
+    const { id, ...rest } = selectedWaSettings;
     return (
       <Modal
         opened={opened}
@@ -706,7 +756,11 @@ function MetaLoginStatus({ waSettings }) {
           <Flex justify={"flex-end"}>
             <RateupButtonBlue
               w={"fit-content"}
-              title="connect"
+              title={
+                selectedWaSettings?.fbPageId?.length && !config?.fbPageId
+                  ? "Disconnect"
+                  : "connect"
+              }
               onClick={() => {
                 const data = {
                   ...rest,
@@ -753,6 +807,17 @@ function MetaLoginStatus({ waSettings }) {
                 label={`Setting ${index + 1}`}
                 labelPosition="center"
               />
+              <Flex justify={"flex-end"}>
+                <ActionIcon
+                  onClick={() => {
+                    setSelectedWaSettings(setting);
+                    openEdit();
+                  }}
+                  variant={"subtle"}
+                >
+                  <IconPencilMinus />
+                </ActionIcon>
+              </Flex>
               <Stack w={"100%"}>
                 <Group align="flex-end" justify="apart">
                   <Group gap={"xl"}>
@@ -766,6 +831,11 @@ function MetaLoginStatus({ waSettings }) {
                       value={setting.phone}
                       readOnly
                     />
+                    <ContainedTextField
+                      label={translations("Display Name")}
+                      value={setting.phoneDisplayName}
+                      readOnly
+                    />
                   </Group>
                   <Tooltip label={"Logout from this WhatsApp Business Account"}>
                     <ActionIcon
@@ -777,23 +847,52 @@ function MetaLoginStatus({ waSettings }) {
                     </ActionIcon>
                   </Tooltip>
                 </Group>
-
-                <RateupButtonBlue
-                  w={"fit-content"}
-                  title={
-                    setting?.igUserName?.length
-                      ? `@${setting?.igUserName}`
-                      : "Connect Instagram"
-                  }
-                  variant="gradient"
-                  gradient={{ from: "#f09433", to: "#bc1888", deg: 45 }}
-                  radius={"md"}
-                  leftIcon={<IconBrandInstagram />}
-                  onClick={() => {
-                    setSelectedWaSettings(setting);
-                    openInstaConfigModal();
-                  }}
-                />
+                <Group>
+                  {setting?.ibaId?.length ? (
+                    <Group>
+                      <ContainedTextField
+                        label={"Instagram User Name"}
+                        value={`@${setting?.igUserName}`}
+                        readOnly
+                        rightSection={
+                          <Tooltip label={"Change Account"}>
+                            <ActionIcon
+                              variant="light"
+                              mr={3}
+                              onClick={() => {
+                                setSelectedWaSettings(setting);
+                                openInstaConfigModal();
+                              }}
+                            >
+                              <Group gap={0}>
+                                <IconUser size={13} />
+                                <IconArrowsLeftRight size={13} />
+                              </Group>
+                            </ActionIcon>
+                          </Tooltip>
+                        }
+                      />
+                      <ContainedTextField
+                        label={"Instagram Display Name"}
+                        value={setting?.igDisplayName}
+                        readOnly
+                      />
+                    </Group>
+                  ) : (
+                    <RateupButtonBlue
+                      w={"fit-content"}
+                      title={"Connect Instagram"}
+                      variant="gradient"
+                      gradient={{ from: "#f09433", to: "#bc1888", deg: 45 }}
+                      radius={"md"}
+                      leftIcon={<IconBrandInstagram />}
+                      onClick={() => {
+                        setSelectedWaSettings(setting);
+                        openInstaConfigModal();
+                      }}
+                    />
+                  )}
+                </Group>
               </Stack>
             </Box>
           ))}
@@ -812,6 +911,11 @@ function MetaLoginStatus({ waSettings }) {
           <InstagramConfigModal
             opened={openedInstaConfigModal}
             close={closeInstaConfigModal}
+          />
+          <WaSettingEditModal
+            opened={openedEdit}
+            close={closeEdit}
+            waSetting={selectedWaSettings}
           />
 
           <Divider my="md" label={"Add New Account"} labelPosition="center" />
