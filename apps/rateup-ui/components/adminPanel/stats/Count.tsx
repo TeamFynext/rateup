@@ -1,14 +1,17 @@
+"use client";
+
 import {
-  Stack,
-  Group,
-  Title,
   ActionIcon,
-  Collapse,
-  Text,
   Badge,
+  Collapse,
+  Group,
+  Stack,
+  Text,
+  Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconChevronUp, IconChevronDown } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 export function CountSectionContainer({ label, children }) {

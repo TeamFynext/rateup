@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useRef, useState } from "react";
 
 import {
@@ -24,13 +26,13 @@ import {
   IconTicket,
 } from "@tabler/icons-react";
 
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import {
   useCreateCommentMutation,
   useUpdateTicketMutation,
   useUpdateTicketStatusMutation,
 } from "@/backend/tickets/tickets.query";
 import { useUser } from "@/context/UserContext";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { TicketPriority, TicketStatus } from "@/utils/enums/ticket";
 import { showErrorToast } from "@/utils/notifications";
 

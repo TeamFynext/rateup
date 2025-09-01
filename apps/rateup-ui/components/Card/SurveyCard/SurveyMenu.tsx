@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { usePathname, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -51,6 +53,7 @@ export function SurveyMenu({
 }: SurveyMenuProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const pathname = usePathname();
   const translations = useTranslations();
   const [opened, { close, open }] = useDisclosure(false);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
@@ -98,8 +101,8 @@ export function SurveyMenu({
     notifications.show({
       id: "load-data",
       loading: true,
-      title: translations("Clonning survey.."),
-      message: translations("Hold on, your survey is getting clonned..."),
+      title: translations("Clonning survey"),
+      message: translations("Hold on, your survey is getting clonned"),
       autoClose: false,
       withCloseButton: false,
     });
@@ -134,7 +137,7 @@ export function SurveyMenu({
         id: "delete-data",
         loading: false,
         color: "red",
-        title: translations("Delete Failed..!"),
+        title: translations("Delete Failed!"),
         message: error?.response?.data?.error,
         icon: <IconCheck size="1rem" />,
         autoClose: 4000,
@@ -171,7 +174,7 @@ export function SurveyMenu({
         <Stack>
           <Text c="dimmed">
             {translations(
-              "Select the team/teams in which the survey copy to be created.",
+              "Select the team/teams in which the survey copy to be created",
             )}
           </Text>
           <Group>
@@ -214,8 +217,8 @@ export function SurveyMenu({
           notifications.show({
             id: "delete-data",
             loading: true,
-            title: translations("Deleting survey.."),
-            message: translations("Hold on, survey is getting deleted..."),
+            title: translations("Deleting survey"),
+            message: translations("Hold on, survey is getting deleted"),
             autoClose: false,
             withCloseButton: false,
           });
@@ -260,7 +263,7 @@ export function SurveyMenu({
         <Menu.Item
           leftSection={<IconShare />}
           onClick={() => {
-            router.push(`${router.pathname}/${survey?.id}?tab=Share`);
+            router.push(`${pathname}/${survey?.id}?tab=Share`);
           }}
         >
           {translations("Share")}
@@ -280,7 +283,7 @@ export function SurveyMenu({
         <Menu.Item
           leftSection={<IconSettings />}
           onClick={() => {
-            router.push(`${router.pathname}/${survey?.id}?tab=Settings`);
+            router.push(`${pathname}/${survey?.id}?tab=Settings`);
           }}
         >
           {translations("Settings")}

@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useSearchParams } from "next/navigation";
 
 import { Box, Center, Loader } from "@mantine/core";
 
@@ -11,9 +13,10 @@ import TabPanelsComp from "./TabPanels";
 import TabsListComp from "./TabsList";
 
 function LinktreeEdtior() {
-  const router = useRouter();
-  const shortUrlId = router.query.shortUrlId;
-  const tab = router.query?.tab;
+  const searchParams = useSearchParams();
+  const params = useParams();
+  const shortUrlId = params?.shortUrlId as string;
+  const tab = searchParams.get("tab");
 
   const defaultActiveTab = tab ? tab : "links";
   const { isPending, isError, data } = useGetLinktreeWithShortId(shortUrlId);

@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useState } from "react";
 
 import { ActionIcon, Button, Popover, Tooltip } from "@mantine/core";

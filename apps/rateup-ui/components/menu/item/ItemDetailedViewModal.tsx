@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import { Carousel } from "@mantine/carousel";
@@ -185,7 +187,7 @@ export function ItemDetailedViewModal({
                     >
                       {varient.name}
                     </Text>
-                    <Text className={styles.h1}>
+                    <Text className={styles.height1}>
                       {varient?.price && (
                         <>
                           {currencyLabel[currency]?.symbol}
@@ -197,7 +199,7 @@ export function ItemDetailedViewModal({
                 ))
               ) : (
                 <Stack align="center" gap={"0px"}>
-                  <Text className={styles.h1}>
+                  <Text className={styles.height1}>
                     {item?.price?.price && (
                       <>
                         {currencyLabel[currency]?.symbol}

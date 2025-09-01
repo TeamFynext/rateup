@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useCallback, useEffect, useRef } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -19,8 +21,9 @@ import { useCreateNewThemeMutation } from "../../../../../backend/surveyTheme/su
 import styles from "./ThemeSelector.module.css";
 
 function CreateNewThemeModal({ setThemeSelectorState, surveyThemeDispatch }) {
-  const router = useRouter();
-  const surveyId = router.query.surveyId;
+  const params = useParams();
+  const surveyId = params.surveyId as string;
+
   const translations = useTranslations();
   const [opened, { open, close }] = useDisclosure();
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext, useEffect, useState } from "react";
 
 import {
@@ -86,7 +88,7 @@ export function TestimonialForm({ features, isPreview }: TestimonialProps) {
         setIsUploading(false);
       })
       .catch((err) => {
-        showErrorToast(translations("Error uploading icon. Please try again."));
+        showErrorToast(translations("Error uploading icon Please try again"));
         setIsUploading(false);
       });
   }, [file]);

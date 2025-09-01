@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import {
@@ -126,7 +128,7 @@ export const TestimonialShareModal = ({ opened, onClose, collectionId }) => {
             </Stack>
             <Text c={"#494949"} fw={400}>
               {translations(
-                "Place this code in the desired section of your website to display the embed.",
+                "Place this code in the desired section of your website to display the embed",
               )}
             </Text>
             <RateupButtonBlue

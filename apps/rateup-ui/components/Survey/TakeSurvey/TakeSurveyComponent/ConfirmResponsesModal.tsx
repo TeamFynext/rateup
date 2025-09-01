@@ -1,3 +1,5 @@
+"use client";
+
 import NextImage from "next/image";
 
 import {
@@ -132,7 +134,7 @@ function ConfirmResponsesModal({
                               />
                             ) : (
                               <Text pb="sm" c="dark.0" fz="xs">
-                                {translations("... not answered...")}
+                                {translations(" not answered")}
                               </Text>
                             );
                           case Q.MSQ:
@@ -333,7 +335,7 @@ function ConfirmResponsesModal({
                     </Text>
                   ) : (
                     <Text pb="sm" c="dark.0" fz="xs">
-                      {translations("... not answered...")}
+                      {translations(" not answered")}
                     </Text>
                   )}
                   <Divider />

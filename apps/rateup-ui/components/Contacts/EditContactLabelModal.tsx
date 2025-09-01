@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Flex } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";

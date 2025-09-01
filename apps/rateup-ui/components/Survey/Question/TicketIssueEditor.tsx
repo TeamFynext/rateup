@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   Button,
@@ -49,7 +51,8 @@ const TicketIssueEditor = ({
   setActiveTab,
   surveyId,
 }: IProps) => {
-  surveyId = surveyId || (useRouter().query.surveyId as string);
+  const params = useParams();
+  surveyId = surveyId || (params.surveyId as string);
   const questionUpdateMutation = useQuestionUpdateMutation({
     surveyId,
   });
@@ -218,7 +221,7 @@ const TicketIssueEditor = ({
       id: "load-data",
       color: "red",
       title: translations("Failed"),
-      message: ` ${translations("Failed to update.. try again. Error:")} ${error.message}`,
+      message: ` ${translations("Failed to update try again Error:")} ${error.message}`,
       icon: <IconX size="1rem" />,
       autoClose: 2000,
     });
@@ -268,7 +271,7 @@ const TicketIssueEditor = ({
           <Switch
             label={translations("Enable Auto-Ticket Creation")}
             description={translations(
-              "Setup automated ticket creation for negative responses.",
+              "Setup automated ticket creation for negative responses",
             )}
             labelPosition="left"
             checked={enableTicketIssue}
@@ -438,7 +441,7 @@ const TicketIssueEditor = ({
                               <Text pt="sm" fz="sm" c="dimmed">
                                 {" "}
                                 {translations("For")} {minOpinion}{" "}
-                                {translations("and below.")}
+                                {translations("and below")}
                               </Text>
                             </Stack>
                           </SimpleGrid>

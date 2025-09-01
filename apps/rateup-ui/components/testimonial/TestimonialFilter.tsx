@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 
 import {
@@ -17,12 +19,13 @@ import { IconRestore } from "@tabler/icons-react";
 import { produce } from "immer";
 import { useTranslations } from "next-intl";
 
-import { useTeamsByUser } from "../../backend/team/team.query";
-import { useGetAllTestimonialsByOrg } from "../../backend/testimonials/testimonial.query";
 import {
   filterType,
   TestimonialTabs,
-} from "../../pages/dashboard/testimonial/[collectionId]";
+} from "@/app/dashboard/testimonial/[collectionId]/page";
+
+import { useTeamsByUser } from "../../backend/team/team.query";
+import { useGetAllTestimonialsByOrg } from "../../backend/testimonials/testimonial.query";
 
 const TestimonialFilter = ({
   filters,

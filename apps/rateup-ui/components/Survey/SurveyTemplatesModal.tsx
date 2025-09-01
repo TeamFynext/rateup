@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 
 import {
@@ -15,8 +17,9 @@ import {
 import { IconFileBroken, IconListDetails } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
+import SurveyTemplates from "@/app/dashboard/surveys/templates/surveyTemplates";
+
 import { useSurveyTemplates } from "../../backend/surveys/surveys.query";
-import SurveyTemplates from "../../pages/dashboard/surveys/templates/surveyTemplates";
 import {
   RateupButtonPrimary,
   RateupButtonSecondary,
@@ -178,7 +181,7 @@ const SurveyTemplatesModal = ({
                   </Tabs>
                 ) : (
                   <NothingFound
-                    text={translations("No templates available..!!")}
+                    text={translations("No templates available!!")}
                   />
                 )}
               </Group>

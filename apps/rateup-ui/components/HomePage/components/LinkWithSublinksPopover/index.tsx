@@ -1,6 +1,8 @@
+"use client";
+
 import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   Button,
@@ -13,14 +15,16 @@ import {
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconChevronDown } from "@tabler/icons-react";
 
+import { useCurrentPath } from "@/hooks/currentPath";
+
 import headerStyles from "../Header/Header.module.css";
 import styles from "./LinkWithSublinksPopover.module.css";
 
 const LinkWithSublinksPopover = ({ className, href, linkText, sublinks }) => {
   const [opened, { close, open }] = useDisclosure(false);
   const isViewportLEQ1024px = useMediaQuery("(max-width: 1024px");
-  const router = useRouter();
-  const currentRoutePath = router.asPath;
+  const currentRoutePath = useCurrentPath();
+
   useEffect(() => {
     if (isViewportLEQ1024px && opened) {
       close();

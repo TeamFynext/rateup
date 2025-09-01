@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { Box, Group, Text, useMantineTheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -21,9 +23,8 @@ import styles from "./FlowScreensList.module.css";
 import ScreenListItem from "./ScreenListItem";
 
 function FlowScreensList() {
-  const router = useRouter();
-  const theme = useMantineTheme();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow, isPending } = useWaFlowFromDb(dbFlowId);
   const [
     isCreateFlowScreenModalOpen,

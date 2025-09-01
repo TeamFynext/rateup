@@ -1,3 +1,5 @@
+"use client";
+
 // themeObj is draft obj of immer, since this function is being passes to useImmerReducer.
 function themeReducer(themeObj, action) {
   const payload = action.payload;

@@ -24,7 +24,7 @@ export const useAddContactParticipantMutation = (campaignId) => {
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
-      showSuccessToast(translations("Added participants successfully."));
+      showSuccessToast(translations("Added participants successfully"));
     },
     onError: (error: any) => {
       showErrorToast(
@@ -47,7 +47,7 @@ export const useAddGroupParticipantMutation = (campaignId) => {
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
-      showSuccessToast(translations("Added group participants successfully."));
+      showSuccessToast(translations("Added group participants successfully"));
     },
     onError: (error: any) => {
       showErrorToast(
@@ -104,9 +104,7 @@ export const useAddCampaignParticipants = (
       queryClient.invalidateQueries({
         queryKey: ["campaigns"],
       });
-      showSuccessToast(
-        translations("Campaign particiants added successfully."),
-      );
+      showSuccessToast(translations("Campaign particiants added successfully"));
       onSuccess();
     },
     onError: (error: any) => {
@@ -126,7 +124,7 @@ export const useRemoveCampaignParticipant = (campaignId: string) => {
     mutationFn: deleteCampaignParticipant,
     onSuccess() {
       showSuccessToast(
-        translations("Participants removed from campaign successfully."),
+        translations("Participants removed from campaign successfully"),
         "campaign-participants-remove",
         <IconCheck />,
       );
@@ -157,7 +155,7 @@ export const useRemoveMulitpleGroupParticipants = (
     mutationFn: deleteMulitpleGroupParticipants,
     onSuccess() {
       showSuccessToast(
-        translations("Participants removed from campaign successfully."),
+        translations("Participants removed from campaign successfully"),
         "campaign-mulitiple-participants-remove",
         <IconCheck />,
         true,

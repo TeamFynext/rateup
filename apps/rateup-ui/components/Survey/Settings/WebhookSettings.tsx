@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 
 import { ActionIcon, Input, Stack, Text, Tooltip } from "@mantine/core";
@@ -34,7 +36,7 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey }) => {
     if (!(responseWebhookEndpoint && !endpointUrl.trim().length)) {
       if (!isValidUrl(endpointUrl)) {
         setError(
-          translations("Invalid Url, eg: https://example.com/your-endpoint"),
+          translations("Invalid Url, eg: https://examplecom/your-endpoint"),
         );
         return;
       }
@@ -71,7 +73,7 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey }) => {
           <ContainedTextField
             value={endpointUrl}
             type="url"
-            placeholder={translations("https://example.com/webhook")}
+            placeholder={translations("https://examplecom/webhook")}
             onChange={(e) => {
               setError("");
               setEndpointUrl(e.currentTarget.value);

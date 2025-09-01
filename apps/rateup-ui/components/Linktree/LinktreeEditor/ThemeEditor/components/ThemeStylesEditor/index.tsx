@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Divider, Select } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 

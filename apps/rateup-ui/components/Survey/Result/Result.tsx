@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useCallback, useContext, useMemo, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Box, Flex, ScrollArea, Stack, Tabs, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";

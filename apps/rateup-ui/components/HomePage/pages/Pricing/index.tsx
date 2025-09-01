@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   Box,
@@ -37,7 +39,6 @@ const Pricing = ({
   const { updateRouteAndCart } = useRouteAndCartStore();
   const router = useRouter();
   const { data, isPending, isError } = useRateupPaymentsPlans();
-  const { gateway } = router.query;
 
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   let currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";

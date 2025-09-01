@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import Link from "next/link";
 
@@ -12,8 +14,8 @@ import {
   ShopifySchedule,
   ShopifySurvey,
 } from "@/types/global";
+import { ActiveStatusBadge } from "@/app/dashboard/apps&services/shopify/page";
 import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
-import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { shopifyEventData } from "@/utils/constants";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
 

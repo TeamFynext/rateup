@@ -1,3 +1,5 @@
+"use client";
+
 import { ActionIcon, Box, Divider, Group, Stack, Text } from "@mantine/core";
 import {
   IconChevronDown,

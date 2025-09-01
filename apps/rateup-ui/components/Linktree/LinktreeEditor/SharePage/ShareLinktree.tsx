@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { Group, Stack } from "@mantine/core";
 import { useImmerReducer } from "use-immer";
@@ -23,9 +25,8 @@ function ShareLinktree({ url, isPublished, title }) {
     initialLogoTabPanelState,
   );
 
-  const {
-    query: { shortUrlId },
-  } = useRouter();
+  const params = useParams();
+  const shortUrlId = params?.shortUrlId as string;
   const { mutateAsync: linktreeUpdateMutateAsync } =
     useUpdateLinktreeMutation(shortUrlId);
   const [isSavingSettings, setIsSavingSettings] = useState(false);

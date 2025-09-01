@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Button, ScrollArea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";

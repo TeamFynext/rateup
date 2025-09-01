@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Box, Button, Modal, MultiSelect, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";

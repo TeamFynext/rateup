@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext, useEffect, useState } from "react";
 
 import { Radio, ScrollArea } from "@mantine/core";

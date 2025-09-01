@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 
 import {
@@ -17,12 +19,12 @@ import {
 } from "@tabler/icons-react";
 
 import { LoyaltyActionType } from "@/types/enums";
-import { DateRangePickerModal } from "@/components/DateAndTime/DatePicker/DateRangePicker";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import {
   getLCustomerStatsIcon,
   LCustomerStats,
-} from "@/pages/dashboard/loyalty/customer/[customerId]";
+} from "@/app/dashboard/loyalty/customer/[customerId]/page";
+import { DateRangePickerModal } from "@/components/DateAndTime/DatePicker/DateRangePicker";
+import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 
 const LCustomerActionView = ({ setActiveStats, actions }) => {
   return (

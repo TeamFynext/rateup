@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
+
 import { uploadFile } from "../../../utils/file-upload/upload";
 import { showErrorToast } from "../../../utils/notifications";
 

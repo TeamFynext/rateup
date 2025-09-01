@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { Box, Button, Center, Flex, Loader } from "@mantine/core";
 import { useTranslations } from "next-intl";
@@ -13,10 +15,11 @@ import styles from "./LandingPageEditor.module.css";
 import TabPanelsComp from "./TabPanels";
 import TabsListComp from "./TabsList";
 
-function LandingPageEdtior() {
-  const router = useRouter();
-  const shortUrlId = router.query.shortUrlId;
-  const tab = router.query?.tab;
+function LandingPageEditor() {
+  const searchParams = useSearchParams();
+  const params = useParams();
+  const shortUrlId = params?.shortUrlId as string;
+  const tab = searchParams.get("tab");
   const translations = useTranslations();
   const defaultActiveTab = tab ? tab : "edit";
   const { isPending, isError, data } = useGetLandingPageWithShortId(shortUrlId);
@@ -41,7 +44,7 @@ function LandingPageEdtior() {
   if (isError) {
     componentToBeRendered = (
       <Center w={"100%"} h={"100%"}>
-        <p>{translations("Unable to get data, please try again later.")}</p>
+        <p>{translations("Unable to get data, please try again later")}</p>
       </Center>
     );
   }
@@ -72,4 +75,4 @@ function LandingPageEdtior() {
   );
 }
 
-export default LandingPageEdtior;
+export default LandingPageEditor;

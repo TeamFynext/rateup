@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { Box, Image, Switch } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -19,9 +21,8 @@ import SocialMediaLinks from "./SocialMediaLinks";
 
 function SharePage() {
   const { isPublished, name, tiptapEditorContent } = useLandingPageObj();
-  const {
-    query: { shortUrlId },
-  } = useRouter();
+  const params = useParams();
+  const shortUrlId = params?.shortUrlId as string;
   const shareUrl = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/lp/${shortUrlId}`;
   const { mutateAsync: landingPageUpdateMutateAsync } =
     useUpdateLandingPageMutation(shortUrlId);

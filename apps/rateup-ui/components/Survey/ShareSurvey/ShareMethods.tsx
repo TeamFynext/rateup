@@ -1,3 +1,5 @@
+"use client";
+
 import { ActionIcon, Group, Image, Stack, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useTranslations } from "next-intl";

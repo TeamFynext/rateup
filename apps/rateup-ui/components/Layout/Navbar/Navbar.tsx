@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { ActionIcon, Breadcrumbs, Flex, Group, Text } from "@mantine/core";
 import {
@@ -9,6 +11,8 @@ import {
   IconHome,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+
+import { useCurrentPath } from "@/hooks/currentPath";
 
 import { useSubscription } from "../../../backend/subscription/subscription.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
@@ -20,7 +24,8 @@ import styles from "./Navbar.module.css";
 
 export const Navbar = () => {
   const router = useRouter();
-  const { pathname, query } = router;
+  const pathname = usePathname();
+  const query = useSearchParams();
   const translations = useTranslations();
   let pathParts = pathname.split("/").filter((path) => path);
   const routeParams = useRouteParams();
@@ -60,6 +65,7 @@ export const Navbar = () => {
   ));
   const excludePath =
     paths?.length === 1 && ["tickets"].includes(paths[0].title);
+  const currentRoutePath = useCurrentPath();
   if (excludePath) return;
   return (
     <Group className={styles["navbar-root-div"]}>
@@ -86,7 +92,7 @@ export const Navbar = () => {
       <Group
         className={styles["language-selector-and-other-options-container"]}
       >
-        {!router.asPath.includes("/dashboard/settings?tab=account") && (
+        {!currentRoutePath.includes("/dashboard/settings?tab=account") && (
           <ExpiryComponent expiryDate={subscription?.expiresAt}>
             <RateupButtonPrimary
               title={translations("Upgrade Now")}

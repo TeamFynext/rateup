@@ -1,3 +1,5 @@
+"use client";
+
 import {
   memo,
   useCallback,
@@ -353,7 +355,7 @@ const FlowElementActions = ({
               />
             ) : (
               <Tooltip
-                label={translations("Upgrade your Plan for this feature.")}
+                label={translations("Upgrade your Plan for this feature")}
                 disabled={isGoogleReviewFeatureActive}
                 color="yellow"
               >
@@ -387,7 +389,7 @@ const FlowElementActions = ({
               <Tooltip
                 label={
                   !isTicketFeatureActive
-                    ? translations("Upgrade your Plan for this feature.")
+                    ? translations("Upgrade your Plan for this feature")
                     : survey?.enableAutoGenerateTicket
                       ? translations(
                           "Aut-Generate Ticket is enabled on this flow",

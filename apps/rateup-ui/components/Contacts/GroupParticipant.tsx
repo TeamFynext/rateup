@@ -1,3 +1,5 @@
+"use client";
+
 import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useTranslations } from "next-intl";

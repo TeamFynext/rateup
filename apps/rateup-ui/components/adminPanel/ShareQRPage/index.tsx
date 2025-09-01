@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
 
 import { useTranslations } from "next-intl";
@@ -7,7 +9,6 @@ import { generateWaMessageUrl } from "../../../utils/whatsapp/wa_url";
 import ShareQR from "../../Survey/ShareSurvey/ShareQR";
 import LinkWithCopyBtn from "./LinkWithCopyBtn";
 import ResourceSelector from "./ResourceSelector";
-import styles from "./ShareQRPage.module.css";
 
 const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
 
@@ -44,7 +45,7 @@ function ShareQRPage() {
   }, [resource]);
 
   return (
-    <div className={styles["share-qr-page-container"]}>
+    <div>
       <h1>{translations("Share QR")}</h1>
       <ResourceSelector
         resource={resource}

@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useState } from "react";
 
 import { Box, Button, ColorPicker, Flex, Popover, Text } from "@mantine/core";

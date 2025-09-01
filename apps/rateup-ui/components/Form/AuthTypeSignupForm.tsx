@@ -1,6 +1,8 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Center, NavLink, Text, TextInput, Title } from "@mantine/core";
 import { isEmail, useForm } from "@mantine/form";

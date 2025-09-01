@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -36,6 +38,8 @@ import {
   SubscriptionFeaturePathName,
   WaMessageAssignStatus,
 } from "@/types/enums";
+import { useSetIsChatDisplayOpen } from "@/app/dashboard/whatsapp/inbox/ChatDisplayContext";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
@@ -58,8 +62,6 @@ import CreateTicketModal, {
   CreateTicketCard,
 } from "@/components/Tickets/CreateTicketModal";
 import { useUser } from "@/context/UserContext";
-import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { useChatbotStore } from "@/store/chatbot.store";
 import { UserRole } from "@/utils/enums";
 import { TicketType } from "@/utils/enums/ticket";

@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { Button, Group, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { useTranslations } from "next-intl";
@@ -28,8 +30,9 @@ export const ShareFlow = ({
   allowUnpublishedShare?: boolean;
 }) => {
   const { survey } = useContext(EditFlowContext);
-  const router = useRouter();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
+
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const surveyId = survey?.id;
   const [shareUrl, setShareUrl] = useState("");

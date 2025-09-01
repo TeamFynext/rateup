@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import {
   CheckIcon,
@@ -69,7 +71,9 @@ export function CreateSurveyModal({
   const router = useRouter();
   const translations = useTranslations();
   const [prevOpen, setPrevOpen] = useState(false);
-  const { tmp, tn } = router?.query;
+  const searchParams = useSearchParams();
+  const tmp = searchParams.get("tmp");
+  const tn = searchParams.get("tn");
 
   const [templateId, setTemplateId] = useState(template?.id || tmp || null);
   const [templateName, setTemplateName] = useState(
@@ -200,8 +204,8 @@ export function CreateSurveyModal({
     notifications.show({
       id: "load-data",
       loading: true,
-      title: translations("Creating survey.."),
-      message: translations("Hold on, your survey is getting created..."),
+      title: translations("Creating survey"),
+      message: translations("Hold on, your survey is getting created"),
       autoClose: false,
       withCloseButton: true,
     });
@@ -213,9 +217,7 @@ export function CreateSurveyModal({
           queryClient.invalidateQueries({ queryKey: ["surveys"] });
           if (data?.id) {
             setIsLoading();
-            router.push({
-              pathname: `/dashboard/surveys/${data?.id}`,
-            });
+            router.push(`/dashboard/surveys/${data?.id}`);
           }
         },
         onError: (error) => {

@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext, useEffect } from "react";
 
 import { LoadingOverlay, Stack, Title } from "@mantine/core";

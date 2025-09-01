@@ -1,5 +1,7 @@
+"use client";
+
 import { MutableRefObject, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   ActionIcon,

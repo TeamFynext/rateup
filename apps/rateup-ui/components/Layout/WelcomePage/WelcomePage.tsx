@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 import { Button, Flex, Image, Stack, Text } from "@mantine/core";
@@ -76,7 +78,7 @@ function WelcomePage({
     : titleText;
 
   return (
-    <Flex justify={"center"} align={"center"} h={"100%"}>
+    <div className="flex justify-center items-center h-full">
       <Stack
         align="center"
         justify="center"
@@ -126,7 +128,7 @@ function WelcomePage({
           </Button>
         </div>
       </Stack>
-    </Flex>
+    </div>
   );
 }
 

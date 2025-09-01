@@ -1,3 +1,5 @@
+"use client";
+
 import { Flex, Stack, Text } from "@mantine/core";
 import { useTranslations } from "next-intl";
 

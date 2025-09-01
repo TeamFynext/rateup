@@ -1,5 +1,7 @@
+"use client";
+
 import { useContext, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   Alert,
@@ -164,7 +166,8 @@ function ElementEditor({
   const { selectedScreenId, flowJson, updateFlowJson, selectedFormElementId } =
     useContext(EditFlowContext);
   const router = useRouter();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const flowEditable = dbFlow?.status === WaFlowStatus.DRAFT;
 
@@ -746,12 +749,12 @@ function FlowQuestionExtraProps({
         <SimpleGrid mt={"xs"} cols={2}>
           <Alert variant="light" color="blue" title="Info">
             {translations(
-              "No more than 10 images or documents can be sent as part of the response message.",
+              "No more than 10 images or documents can be sent as part of the response message",
             )}
           </Alert>
           <Alert variant="light" color="blue" title="Info">
             {translations(
-              "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB.",
+              "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB",
             )}
           </Alert>
 
@@ -801,12 +804,12 @@ function FlowQuestionExtraProps({
         <SimpleGrid mt={"xs"} cols={2}>
           <Alert variant="light" color="blue" title="Info">
             {translations(
-              "No more than 10 images or documents can be sent as part of the response message.",
+              "No more than 10 images or documents can be sent as part of the response message",
             )}
           </Alert>
           <Alert variant="light" color="blue" title="Info">
             {translations(
-              "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB.",
+              "Additionally, the maximum aggregated size of attached images or documents cannot exceed 100 MB",
             )}
           </Alert>
 

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useMemo, useRef, useState } from "react";
 
 import {
@@ -33,6 +35,7 @@ import {
 import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
+import { parseStringWithVariables } from "@/app/dashboard/whatsapp/templates/[templateId]/page";
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
 import {
@@ -43,7 +46,6 @@ import {
 } from "@/components/input/ContainedInput/ContainedInput";
 import { LengthTracker } from "@/components/input/LengthTracker";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
-import { parseStringWithVariables } from "@/pages/dashboard/whatsapp/templates/[templateId]";
 import {
   WHATSAPP_BUTTON_TYPE,
   WHATSAPP_TEMPLATE_BROADCAST_TYPE,

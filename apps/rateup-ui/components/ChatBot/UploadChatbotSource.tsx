@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 
 import { Stack } from "@mantine/core";
@@ -53,7 +55,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
         if (file.size > 1048576 * 10)
           showLoadingToast(
             translations(
-              "Hold on..file is getting uploaded. It may take few minutes",
+              "Hold onfile is getting uploaded It may take few minutes",
             ),
             "file-upload",
             true,
@@ -63,7 +65,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
           );
         else
           showLoadingToast(
-            translations("Hold on..file is getting uploaded"),
+            translations("Hold onfile is getting uploaded"),
             "file-upload",
             true,
             translations("Uploading"),
@@ -117,7 +119,7 @@ const UploadChatbotSource = ({ opened, close, selectedChatbotId }) => {
             value={url}
             label={translations("Enter web url")}
             onChange={(e) => setUrl(e.currentTarget.value)}
-            placeholder={translations("Eg:https://www.example.com")}
+            placeholder={translations("Eg:https://wwwexamplecom")}
           />
         )}
         {source == ChatBotDataSourceType.FILE && (

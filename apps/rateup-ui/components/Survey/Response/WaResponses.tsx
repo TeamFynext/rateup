@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   useCallback,
   useContext,
@@ -6,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   Anchor,
@@ -141,7 +143,8 @@ const WaResponses = ({
   const [alertMsg, setAlertMsg] = useState("");
   const [ranges, setRange] = useState<Range[]>([{ key: "selection" }]);
   const router = useRouter();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
   const { data: CFData } = useCampaignFilterForFlows(surveyId);
   const [columnFilters, setColumnFilters] =
     useDebouncedState<ColumnFiltersState>([], 200);
@@ -204,7 +207,7 @@ const WaResponses = ({
   const downloadExcelResponse = useDownloadExcelResponse();
   const handleExportContacts = useCallback(() => {
     showLoadingToast(
-      translations("Exporting Contact responses to Contacts..."),
+      translations("Exporting Contact responses to Contacts"),
       "export-contacts",
       true,
     );
@@ -252,7 +255,7 @@ const WaResponses = ({
           id: "load-data",
           loading: true,
           title: translations("Deleting Response"),
-          message: translations("Hold on, response is getting deleted..."),
+          message: translations("Hold on, response is getting deleted"),
           autoClose: false,
           withCloseButton: false,
         });
@@ -392,7 +395,7 @@ const WaResponses = ({
     if (!googleAccessToken) {
       setIsSyncing(false);
       setAlertMsg(
-        translations("Please sync your Google account in the App & Services."),
+        translations("Please sync your Google account in the App & Services"),
       );
       redirectModalOpen();
     } else {
@@ -414,7 +417,7 @@ const WaResponses = ({
             if (error.response.data?.error === "invalid_grant") {
               setAlertMsg(
                 translations(
-                  "Your access has been revoked. Please sign out and sign in again in the Apps & Services",
+                  "Your access has been revoked Please sign out and sign in again in the Apps & Services",
                 ),
               );
               redirectModalOpen();
@@ -565,7 +568,7 @@ const WaResponses = ({
                       onClose={alertModalClose}
                       headerTitle={translations("Resync Google Sheet")}
                       headerLabel={translations(
-                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost.",
+                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost",
                       )}
                       confirmLabel={translations("Yes")}
                       onConfirm={handleSyncGoogleSheet}
@@ -633,7 +636,7 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
       }}
     >
       <Stack py={"sm"}>
-        <Text>{translations("To proceed further, verify your email id.")}</Text>
+        <Text>{translations("To proceed further, verify your email id")}</Text>
         <ContainedTextField
           withAsterisk
           label={translations("Verify email")}
@@ -643,7 +646,7 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
           onChange={(e) => setVerifyEmail(e.target.value)}
         />
         <Text c="red">
-          {translations("Once deleted, response entry data will be lost.")}
+          {translations("Once deleted, response entry data will be lost")}
         </Text>
       </Stack>
     </FormModalLayout>

@@ -1,13 +1,15 @@
+"use client";
+
 import React from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Badge, Box, Group, Stack, Text, Title } from "@mantine/core";
 import { IconClock, IconStarFilled } from "@tabler/icons-react";
 
 import { LoyaltyActionType } from "@/types/enums";
+import { ActiveStatusBadge } from "@/app/dashboard/apps&services/shopify/page";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { CardMenu } from "@/components/whatsapp/automation/AutomationCards";
-import { ActiveStatusBadge } from "@/pages/dashboard/apps&services/shopify";
 import { formatIsoDateString } from "@/utils/dateTime";
 
 import classes from "../Loyalty.module.css";

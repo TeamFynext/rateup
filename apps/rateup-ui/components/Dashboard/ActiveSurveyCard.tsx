@@ -1,5 +1,7 @@
+"use client";
+
 import React, { JSX } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Badge, Group, Stack, Text, Title } from "@mantine/core";
 import { useTranslations } from "next-intl";

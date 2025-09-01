@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import {
@@ -124,9 +126,7 @@ export function FoodLabelSelector({ form }) {
             {options.length > 0 ? (
               options
             ) : (
-              <Combobox.Empty>
-                {translations("Nothing found...")}
-              </Combobox.Empty>
+              <Combobox.Empty>{translations("Nothing found")}</Combobox.Empty>
             )}
           </Combobox.Options>
         </ScrollAreaAutosize>

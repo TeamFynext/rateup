@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname, useRouter } from "next/navigation";
 
 import { Flex, Group, Image } from "@mantine/core";
 import { useWindowScroll } from "@mantine/hooks";
 import classNames from "classnames/bind";
+
+import { useCurrentPath } from "@/hooks/currentPath";
 
 import {
   getNavLinksArray,
@@ -21,9 +25,11 @@ function Header({ className = "", withWhiteTextLogo = false }) {
   const scrollY = scroll.y;
 
   const router = useRouter();
-  const currentRoutePath = router.asPath;
+  const currentRoutePath = useCurrentPath();
 
-  const isProductPackagingPage = router.pathname === "/product-packaging-qr";
+  const pathname = usePathname();
+
+  const isProductPackagingPage = pathname === "/product-packaging-qr";
 
   return (
     <Flex

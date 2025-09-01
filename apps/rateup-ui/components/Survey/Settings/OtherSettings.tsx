@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useContext, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -22,7 +24,8 @@ const OtherSettings = () => {
     deleteModalOpened,
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
-  const { surveyId } = useRouter().query as { surveyId: string };
+  const params = useParams();
+  const surveyId = params?.surveyId as string;
   const { surveyTeamMapId } = useContext(SurveyContext);
   const [verifyEmail, setVerifyEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -45,8 +48,8 @@ const OtherSettings = () => {
       notifications.show({
         id: "load-data",
         loading: true,
-        title: translations("Resetting data."),
-        message: translations("Hold on, data is getting reset..."),
+        title: translations("Resetting data"),
+        message: translations("Hold on, data is getting reset"),
         autoClose: false,
         withCloseButton: false,
       });
@@ -70,8 +73,8 @@ const OtherSettings = () => {
     notifications.show({
       id: "delete-survey",
       loading: true,
-      title: translations("Deleting survey.."),
-      message: translations("Hold on, survey is getting deleted..."),
+      title: translations("Deleting survey"),
+      message: translations("Hold on, survey is getting deleted"),
       autoClose: true,
       withCloseButton: false,
     });
@@ -122,7 +125,7 @@ const OtherSettings = () => {
             onChange={(e) => setVerifyEmail(e.target.value)}
           />
           <Text style={{ color: "red" }}>
-            {translations("Once reset, all response data will be lost.")}
+            {translations("Once reset, all response data will be lost")}
           </Text>
         </Stack>
       </FormModalLayout>
@@ -138,7 +141,7 @@ const OtherSettings = () => {
       >
         <Text style={{ color: "red" }}>
           {translations("Are you sure you want to delete this survey?")} <br />
-          {translations("This action cannot be undone..!!")}
+          {translations("This action cannot be undone!!")}
         </Text>
       </FormModalLayout>
     </>

@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Stack, Tabs } from "@mantine/core";
 
 import LanguagePageThemeView from "./components/previewcomponents/languagePage";

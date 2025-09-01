@@ -1,11 +1,13 @@
+"use client";
+
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
+import { ContactTabs } from "@/app/dashboard/contacts/page";
 
 import { useImportCSVContactMutation } from "../../backend/campaign/contacts/contacts.query";
-import { ContactTabs } from "../../pages/dashboard/contacts";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import FormModalLayout from "../Modal/FormModalLayout";
 import ContactImportErrorModal from "./ContactImportErrorModal";

@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext, useEffect, useState } from "react";
 
 import { Center, Flex, Tabs, Text } from "@mantine/core";

@@ -1,5 +1,8 @@
-import { Stack, Badge } from "@mantine/core";
+"use client";
+
+import { Badge, Stack } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
+
 import PaperLayout from "../../styled/Layouts/PaperLayout";
 
 export const LanguageCompletionView = ({

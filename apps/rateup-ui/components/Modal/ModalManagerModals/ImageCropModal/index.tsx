@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useRef, useState } from "react";
 
 import { Box, Button, Group, LoadingOverlay, NumberInput } from "@mantine/core";

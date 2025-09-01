@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import { Blockquote, Group, Modal, Stack, Text } from "@mantine/core";

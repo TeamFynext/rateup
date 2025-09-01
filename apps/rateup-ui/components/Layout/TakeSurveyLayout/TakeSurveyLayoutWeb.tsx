@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
 
 import {
   BackgroundImage,
@@ -53,7 +55,8 @@ export const TakeSurveyLayoutWeb = ({ survey, children, previewId = "" }) => {
   const selectedPreview = useSelectedPreview();
 
   const surveyTeamMapId = survey?.surveyTeamMapId;
-  const { start } = useRouter().query as { start?: boolean };
+  const searchParams = useSearchParams();
+  const start = searchParams?.get("start") === "true";
 
   const largeScreen = useMediaQuery("(min-width: 60em)");
   const isMobile =

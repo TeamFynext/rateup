@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef } from "react";
 
 import { Carousel } from "@mantine/carousel";
@@ -159,7 +161,7 @@ export const BannerAddAndViewModal = ({
           </Group>
           <Text fz={"md"} c={"var(--grey-color-4)"}>
             {translations(
-              "Sliding banners to be shown in top of menu. You can add upto 4 banners.",
+              "Sliding banners to be shown in top of menu You can add upto 4 banners",
             )}
           </Text>
         </Stack>
@@ -216,7 +218,7 @@ export const BannerAddAndViewModal = ({
                   if (!data?.[data?.length - 1]?.id) {
                     showErrorToast(
                       translations(
-                        "Save the form you just made, then click Add Banner button to make a new form.",
+                        "Save the form you just made, then click Add Banner button to make a new form",
                       ),
                     );
                     return;

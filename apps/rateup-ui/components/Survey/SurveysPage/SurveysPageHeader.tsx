@@ -1,3 +1,5 @@
+"use client";
+
 import { Group } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";

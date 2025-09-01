@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
 import { Flex } from "@mantine/core";

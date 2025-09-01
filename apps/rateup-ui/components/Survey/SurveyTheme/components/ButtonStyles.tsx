@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback } from "react";
 
 import { Box, Flex, Slider, Stack } from "@mantine/core";

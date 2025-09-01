@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 
 import { Rating, Text, useMantineTheme } from "@mantine/core";

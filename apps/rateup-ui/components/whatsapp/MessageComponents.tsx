@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ActionIcon,
   Box,
@@ -21,8 +23,10 @@ import {
   IconPhone,
   IconPlus,
 } from "@tabler/icons-react";
-import classes from "./Message.module.css";
+
 import { WHATSAPP_BUTTON_TYPE } from "../../utils/constants";
+import classes from "./Message.module.css";
+
 export interface ResponseMessageContainerProps {
   children: React.ReactNode;
   style?: MantineStyleProp;

@@ -1,5 +1,8 @@
-import { TextInput, NumberInput } from "@mantine/core";
+"use client";
+
 import React from "react";
+
+import { NumberInput, TextInput } from "@mantine/core";
 
 const DebouncedInput = ({
   value: initialValue,

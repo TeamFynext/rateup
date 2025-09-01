@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   Button,
@@ -63,7 +65,7 @@ export function BoardContent({
               radius="md"
               size="sm"
               leftSection={<IconArrowLeft size={16} />}
-              onClick={() => router.push({ query: {} })}
+              onClick={() => router.push("/dashboard/tickets")}
             >
               Back
             </Button>

@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   Button,
@@ -51,7 +53,9 @@ const GoogleReviewEditor = ({
   surveyId,
   waFlowSave = false,
 }: IProps) => {
-  surveyId = surveyId || (useRouter().query.surveyId as string);
+  const params = useParams();
+  surveyId = surveyId || (params.surveyId as string);
+
   const [linkUpdateStatus, setLinkUpdateStatus] = useState(false);
   const { data: survey } = useSurvey(surveyId);
   const { updateComponentInScreen, currentElementId, setDetailActiveEditor } =
@@ -166,7 +170,7 @@ const GoogleReviewEditor = ({
         id: "load-data",
         loading: true,
         title: translations("Enabling google review"),
-        message: translations("Hold on, your changes are getting updated.."),
+        message: translations("Hold on, your changes are getting updated"),
         autoClose: false,
         withCloseButton: false,
       });
@@ -184,7 +188,7 @@ const GoogleReviewEditor = ({
       id: "load-data",
       color: "red",
       title: translations("Failed"),
-      message: `${translations("Failed to update.. try again. Error:")} ${error.message}`,
+      message: `${translations("Failed to update try again Error:")} ${error.message}`,
       icon: <IconX size="1rem" />,
       autoClose: 2000,
     });
@@ -219,7 +223,7 @@ const GoogleReviewEditor = ({
           <>
             <Switch
               label={translations("Google Reviews")}
-              description={translations("Setup Google Page review for users.")}
+              description={translations("Setup Google Page review for users")}
               labelPosition="left"
               checked={enableGoogleReview}
               onChange={(event) => handleSwitch(event)}
@@ -289,7 +293,7 @@ const GoogleReviewEditor = ({
                                 />
                                 <Text>
                                   {" "}
-                                  {minRating} {translations("stars and above.")}
+                                  {minRating} {translations("stars and above")}
                                 </Text>
                               </Stack>
                             </SimpleGrid>

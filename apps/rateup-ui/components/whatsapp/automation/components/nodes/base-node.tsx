@@ -1,3 +1,5 @@
+"use client";
+
 import { JSX, memo } from "react";
 import type React from "react";
 

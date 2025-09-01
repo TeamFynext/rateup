@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   Box,
@@ -256,8 +258,8 @@ export function FlowStartMessageEditor({
 }
 
 export function FlowShareMessageEditor({ selectedTeamCode }) {
-  const router = useRouter();
-  const dbFlowId = router.query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
 
   const { data: dbFlow } = useWaFlowFromDb(dbFlowId);
   const { data: survey } = useSurvey(dbFlow?.surveyId);
@@ -329,7 +331,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
             <Stack>
               <SentMessageContainer>
                 <Group align={"center"} pl={"xs"} h={"100%"}>
-                  <p>
+                  <div>
                     <RenderNewLine text={startMessageForm.values.prefix} />
                     <code
                       style={{
@@ -346,7 +348,7 @@ export function FlowShareMessageEditor({ selectedTeamCode }) {
                       ).replaceAll("`", "")}
                     </code>
                     <RenderNewLine text={startMessageForm.values.suffix} />
-                  </p>
+                  </div>
                 </Group>
               </SentMessageContainer>
 

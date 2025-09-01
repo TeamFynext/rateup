@@ -1,3 +1,5 @@
+"use client";
+
 import { Paper } from "@mantine/core";
 import { useTranslations } from "next-intl";
 

@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -272,55 +274,56 @@ function WaBodyVariableInputComponent({
   const translations = useTranslations();
   return (
     <>
-      {exampleParams?.map((_, i) =>
-        leadgenData ? (
-          <Stack key={i}>
-            <RadioGroup
-              value={paramChoice[i]}
-              onChange={(value) => {
-                form.setFieldValue(`dynamicTags.${i}`, "");
-                setParamChoice.setItem(i, value);
-              }}
-            >
-              <Group>
-                <Radio value={"default"} label={"Manual"} />
-                <Radio
-                  value={"leadgenform-question-key"}
-                  label={"Select from lead form"}
+      {exampleParams?.map((_, i) => {
+        if (leadgenData)
+          return (
+            <Stack key={i}>
+              <RadioGroup
+                value={paramChoice[i]}
+                onChange={(value) => {
+                  form.setFieldValue(`dynamicTags.${i}`, "");
+                  setParamChoice.setItem(i, value);
+                }}
+              >
+                <Group>
+                  <Radio value={"default"} label={"Manual"} />
+                  <Radio
+                    value={"leadgenform-question-key"}
+                    label={"Select from lead form"}
+                  />
+                </Group>
+              </RadioGroup>
+              {paramChoice[i] === "default" && (
+                <ContainedTextField
+                  label={`{{${i + 1}}}`}
+                  placeholder={translations("select a dynamic tag value")}
+                  {...form.getInputProps(`dynamicTags.${i}`)}
                 />
-              </Group>
-            </RadioGroup>
-            {paramChoice[i] === "default" && (
-              <ContainedTextField
-                key={i}
-                label={`{{${i + 1}}}`}
-                placeholder={translations("select a dynamic tag value")}
-                {...form.getInputProps(`dynamicTags.${i}`)}
-              />
-            )}
-            {paramChoice[i] === "leadgenform-question-key" && (
-              <LeadFormQuestionsInputComponent
-                leadgenData={leadgenData}
-                value={form.values.dynamicTags[i]["value"] ?? ""}
-                onChange={(value) =>
-                  form.setFieldValue(`dynamicTags.${i}`, {
-                    type: "leadgenform-question-key",
-                    value,
-                  })
-                }
-                label={`{{${i + 1}}}`}
-              />
-            )}
-          </Stack>
-        ) : (
+              )}
+              {paramChoice[i] === "leadgenform-question-key" && (
+                <LeadFormQuestionsInputComponent
+                  leadgenData={leadgenData}
+                  value={form.values.dynamicTags[i]["value"] ?? ""}
+                  onChange={(value) =>
+                    form.setFieldValue(`dynamicTags.${i}`, {
+                      type: "leadgenform-question-key",
+                      value,
+                    })
+                  }
+                  label={`{{${i + 1}}}`}
+                />
+              )}
+            </Stack>
+          );
+        return (
           <ContainedTextField
             key={i}
             label={`{{${i + 1}}}`}
             placeholder={translations("select a dynamic tag value")}
             {...form.getInputProps(`dynamicTags.${i}`)}
           />
-        ),
-      )}
+        );
+      })}
     </>
   );
 }
@@ -337,8 +340,8 @@ interface LeadFormQuestionsInputComponentProps {
 function LeadFormQuestionsInputComponent(
   props: LeadFormQuestionsInputComponentProps,
 ) {
-  const router = useRouter();
-  let automatedId = router.query.waAutomatedReplyId as string;
+  const params = useParams();
+  let automatedId = params.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const {
     data: automatedReply,

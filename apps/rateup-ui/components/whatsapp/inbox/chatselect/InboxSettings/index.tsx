@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useCallback, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -19,8 +21,8 @@ import {
 } from "@tabler/icons-react";
 
 import { WaInboxMessage } from "@/types/global";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import { useUser } from "@/context/UserContext";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { UserRole } from "@/utils/enums";
 
 import AddUnknownContactModal, {

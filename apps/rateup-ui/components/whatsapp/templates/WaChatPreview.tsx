@@ -1,3 +1,5 @@
+"use client";
+
 import {
   BackgroundImage,
   Box,
@@ -66,7 +68,7 @@ const WaChatPreview = ({ children }) => {
             >
               <IconInfoCircle size={8} />
               {translations(
-                "This business uses a secure service from Meta to manage this chat. Tap to learn more",
+                "This business uses a secure service from Meta to manage this chat Tap to learn more",
               )}
             </Text>
             {children}
