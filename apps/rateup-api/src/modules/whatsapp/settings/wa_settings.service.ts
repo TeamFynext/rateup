@@ -228,6 +228,8 @@ export async function upsertWaSettings(
       data.fbPageId = null;
       data.ibaId = null;
       data.pageAccessToken = null;
+      data.igUserName = null;
+      data.igDisplayName = null;
     }
     return await updateWaSettings(orgId, phoneId, data);
   } else {
