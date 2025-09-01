@@ -39,9 +39,9 @@ import {
   IconUserX,
   IconWallpaper,
   IconWaveSine,
-  IconX,
 } from "@tabler/icons-react";
 
+import AddLabelSettings from "@/components/Contacts/AddLabelSettings";
 import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
 import {
   AssignedInboxIcon,
@@ -152,13 +152,17 @@ export function getNavTopData(
                 link: "/dashboard/whatsapp/inbox?tab=analytics",
                 icon: IconFileAnalytics,
               },
-              ...(inboxLabels?.length
-                ? [
-                    {
-                      label: "Labels",
-                      icon: IconBrandHipchat,
-                      hasSubmenu: true,
-                      children: [
+              {
+                label: "Labels",
+                icon: IconBrandHipchat,
+                hasSubmenu: true,
+                children: [
+                  {
+                    label: "Add Label",
+                    icon: AddLabelSettings,
+                  },
+                  ...(inboxLabels?.length
+                    ? [
                         {
                           label: "Clear Label",
                           icon: IconCircleX,
@@ -168,10 +172,10 @@ export function getNavTopData(
                           color: lbl.color,
                           icon: IconBrandHipchat,
                         })),
-                      ],
-                    },
-                  ]
-                : []),
+                      ]
+                    : []),
+                ],
+              },
             ],
           },
         ]

@@ -83,15 +83,12 @@ export async function uploadTemplateMedia(file: File) {
       `${TEMPLATES_URL}/upload`,
       formData,
       {
-        timeout: 25000,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        timeout: 0,
       },
     );
     return response?.data as imageResponse;
   } catch (error) {
-    throw Error(error?.response?.data);
+    throw Error(error?.response?.data?.message);
   }
 }
 

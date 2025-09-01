@@ -4,12 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
-  ActionIcon,
   Box,
   Button,
-  ColorInput,
   Flex,
-  Group,
   Menu,
   rem,
   SegmentedControl,
@@ -20,14 +17,8 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import {
-  IconChevronDown,
-  IconSearch,
-  IconUserPlus,
-  IconX,
-} from "@tabler/icons-react";
+import { IconChevronDown, IconSearch, IconUserPlus } from "@tabler/icons-react";
 import { ColumnFiltersState, SortingState } from "@tanstack/react-table";
-import dayjs from "dayjs";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
 import z from "zod";
@@ -41,6 +32,7 @@ import {
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { ContactMenu } from "@/components/Card/ContactCard";
+import { LabelSettings } from "@/components/Contacts/AddLabelSettings";
 import ContactAction from "@/components/Contacts/ContactAction";
 import {
   CONTACT_SORT,
@@ -52,7 +44,6 @@ import {
   ContainedTagInput,
 } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
-import Heading from "@/components/styled/Heading/Heading";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
 import { PAGE_SIZE } from "@/utils/constants";
@@ -104,7 +95,6 @@ export default function Contacts() {
     isError: isErrorGroup,
   } = useContactGroup();
   const { isPending, data: cTags } = useGetContactTags();
-  const updateContactTagsMutation = useUpdateContactTagsMutation();
   const translations = useTranslations();
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
@@ -323,67 +313,7 @@ export const ContactSettings = ({ cTags }) => {
             {...form.getInputProps(`contactGroupTags`)}
           />
 
-          <Box mb="md">
-            <Title size="h5" mb="xs">
-              {translations("Inbox labels")}
-            </Title>
-            <Stack gap="xs">
-              {form.values.inboxLabels.map((tag, index) => (
-                <Flex key={index} align="center" gap="sm">
-                  <TextInput
-                    {...form.getInputProps(`inboxLabels.${index}.name`)}
-                    placeholder={translations("label name")}
-                    style={{ flex: 1 }}
-                  />
-                  <ColorInput
-                    {...form.getInputProps(`inboxLabels.${index}.color`)}
-                    swatches={[
-                      "#2e2e2e",
-                      "#868e96",
-                      "#fa5252",
-                      "#e64980",
-                      "#be4bdb",
-                      "#7950f2",
-                      "#4c6ef5",
-                      "#228be6",
-                      "#15aabf",
-                      "#12b886",
-                      "#40c057",
-                      "#82c91e",
-                      "#fab005",
-                      "#fd7e14",
-                    ]}
-                  />
-                  <ActionIcon
-                    variant="light"
-                    color="red"
-                    onClick={() => {
-                      form.removeListItem("inboxLabels", index);
-                    }}
-                  >
-                    <IconX size={16} />
-                  </ActionIcon>
-                </Flex>
-              ))}
-              <Button
-                variant="outline"
-                leftSection={<IconUserPlus size={16} />}
-                onClick={() =>
-                  form.insertListItem("inboxLabels", {
-                    name: "",
-                    color: "#3B82F6",
-                  })
-                }
-              >
-                {translations("Add New Inbox Label")}
-              </Button>
-              {form.errors.inboxLabels && (
-                <Box c="red" fz="sm">
-                  {form.errors.inboxLabels}
-                </Box>
-              )}
-            </Stack>
-          </Box>
+          <LabelSettings form={form} t={translations} />
 
           <RateupButtonPrimary title={translations("Update")} type="submit" />
         </Stack>
