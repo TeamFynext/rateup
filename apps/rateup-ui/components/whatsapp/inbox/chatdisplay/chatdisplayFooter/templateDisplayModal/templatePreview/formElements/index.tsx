@@ -90,7 +90,7 @@ export default function WaTemplateFormElements(props: Props) {
         switch (component.type) {
           case "HEADER":
             return (
-              <>
+              <Stack gap={"xs"} key={i}>
                 <Divider
                   label={translations("Header parameters")}
                   labelPosition="left"
@@ -113,11 +113,11 @@ export default function WaTemplateFormElements(props: Props) {
                 ) : (
                   <NoParams type={"Header"} />
                 )}
-              </>
+              </Stack>
             );
           case "BODY":
             return (
-              <>
+              <Stack gap={"xs"} key={i}>
                 <Divider
                   label={translations("Body parameters")}
                   labelPosition="left"
@@ -137,29 +137,29 @@ export default function WaTemplateFormElements(props: Props) {
                 ) : (
                   <NoParams type={"Body"} />
                 )}
-              </>
+              </Stack>
             );
           case "FOOTER":
             return (
-              <>
+              <Stack gap={"xs"} key={i}>
                 <Divider
                   label={translations("Footer parameters")}
                   labelPosition="left"
                   className={classes.divider}
                 />
                 <NoParams type={"Footer"} />
-              </>
+              </Stack>
             );
           case "BUTTONS":
             return (
-              <>
+              <Stack gap={"xs"} key={i}>
                 <Divider
                   label={translations("Button parameters")}
                   labelPosition="left"
                   className={classes.divider}
                 />
                 <NoParams type={"Button"} />
-              </>
+              </Stack>
             );
           default:
         }

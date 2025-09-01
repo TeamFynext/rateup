@@ -2,8 +2,10 @@
 
 import React from "react";
 
-const error = () => {
-  return <div>error</div>;
+import CommonError from "@/components/404/common-error";
+
+const Error = (props) => {
+  return <CommonError {...props} className={"h-screen"} />;
 };
 
-export default error;
+export default Error;

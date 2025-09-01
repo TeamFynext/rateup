@@ -18,6 +18,8 @@ export type WaSettings = {
   ibaId: string;
   pageAccessToken: string;
   igUserName: string;
+  phoneDisplayName: string;
+  igDisplayName: string;
 }[];
 export const getWaSettings = async () => {
   const res = await axiosClient.get(SettingsUrl);

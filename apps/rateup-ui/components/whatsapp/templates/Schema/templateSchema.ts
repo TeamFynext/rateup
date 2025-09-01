@@ -12,7 +12,7 @@ import {
 } from "../../../../utils/constants";
 
 const MB_BYTES = 1000000; // Number of bytes in a megabyte.
-const FILE_SIZE = 10;
+const FILE_SIZE = 50;
 
 const ACCEPTED_MIME_TYPES = [
   "image/png",

@@ -58,12 +58,18 @@ export default function WaInboxChatSelectCard({
       : MessagePlatform.INSTAGRAM;
   const isInsta = platform === MessagePlatform.INSTAGRAM;
 
-  function getIgUserName(sourceIdentifier) {
-    const igUsername = waSettings?.find(
-      (settings) => settings.ibaId === sourceIdentifier,
-    )?.igUserName;
-    if (igUsername) return `@${igUsername}`;
-    return "";
+  function getMessageSourceName(sourceIdentifier) {
+    const settings = waSettings?.find(
+      (setting) =>
+        sourceIdentifier === setting.ibaId ||
+        sourceIdentifier === setting.phone ||
+        `+${sourceIdentifier}` === setting.phone,
+    );
+    if (isInsta)
+      return (settings?.igDisplayName ?? settings?.igUserName)
+        ? `@${settings?.igUserName}`
+        : sourceIdentifier;
+    return settings?.phoneDisplayName ?? settings?.phone ?? sourceIdentifier;
   }
   return (
     <Card
@@ -147,9 +153,7 @@ export default function WaInboxChatSelectCard({
                   )
                 }
               >
-                {isInsta
-                  ? getIgUserName(lastMessage.sourceIdentifier)
-                  : lastMessage?.sourceIdentifier}
+                {getMessageSourceName(lastMessage?.sourceIdentifier)}
               </Badge>
               {contact.unReadMessageCount
                 ? contact?.id !== selectedContact?.id && (
