@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import {
+  completeOrgDetailsHandler,
   createOrgHandler,
   deleteOrgHandler,
   getAllMembersWithTeamsHandler,
@@ -7,7 +8,9 @@ import {
   getAllTeamsAndMembers,
   getOrgStatsHandler,
   getWebhookClientSecretHandler,
+  orgNameAndPhoneNumber,
   pauseOrgHandler,
+  tellusmoreCompleted,
   updateLogoHandler,
   updateOrgDetailsHandler,
   updateRoleController,
@@ -116,4 +119,8 @@ export async function orgRoutes(server: FastifyInstance) {
   );
 
   server.get("/webhook-client-secret", getWebhookClientSecretHandler);
+
+  server.put("/completeorgdetails", completeOrgDetailsHandler);
+  server.get("/orgnameandphone", orgNameAndPhoneNumber);
+  server.get("/istellusmorecomplete", tellusmoreCompleted);
 }
