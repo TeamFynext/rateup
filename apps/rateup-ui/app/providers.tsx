@@ -12,9 +12,11 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import axios from "axios";
+import { NextIntlClientProvider } from "next-intl";
 import Session from "supertokens-auth-react/recipe/session";
 
 import { UserProvider } from "@/context/UserContext";
+import { isProduction } from "@/utils/constants";
 import RouteChangeHandler from "@/utils/routeHandler";
 
 function makeQueryClient() {
@@ -69,7 +71,12 @@ function getQueryClient() {
   }
 }
 
-export default function Providers({ children }) {
+function onError(error) {
+  if (error.code === "MISSING_MESSAGE" && isProduction) return;
+  console.error(error);
+}
+
+export default function Providers({ children, locale, messages }) {
   // NOTE: Avoid useState when initializing the query client if you don't
   //       have a suspense boundary between this and the code that may
   //       suspend because React will throw away the client on the initial
@@ -77,14 +84,20 @@ export default function Providers({ children }) {
   const queryClient = getQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <UserProvider>
-        <RouteChangeHandler />
-        <HydrationBoundary state={dehydrate(queryClient)}>
-          {children}
-        </HydrationBoundary>
-      </UserProvider>
-      <ReactQueryDevtools initialIsOpen={false} buttonPosition="top-right" />
-    </QueryClientProvider>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={messages}
+      onError={onError}
+    >
+      <QueryClientProvider client={queryClient}>
+        <UserProvider>
+          <RouteChangeHandler />
+          <HydrationBoundary state={dehydrate(queryClient)}>
+            {children}
+          </HydrationBoundary>
+        </UserProvider>
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition="top-right" />
+      </QueryClientProvider>
+    </NextIntlClientProvider>
   );
 }
