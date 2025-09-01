@@ -486,8 +486,6 @@ export async function uploadFileToWaTemplate(
   size: number,
   orgId: string,
 ) {
-  const fileLength = size;
-  const fileType = file.mimetype;
   const waSettings = await getWaSettings(orgId);
   const { accessToken } = waSettings;
   const appId = process.env.wa_app_id;
@@ -495,30 +493,39 @@ export async function uploadFileToWaTemplate(
   if (!accessToken || !appId) {
     throw Error("AccessToken and AppId should be present in whatsapp settings");
   }
-  const imageUploadSessionRes = callWhatsappApi(
-    `/${appId}/uploads?file_length=${fileLength}&file_type=${fileType}&access_token=${accessToken}`,
+  const sessionRes = await callWhatsappApi(
+    `/${appId}/uploads`,
     "POST",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    {
+      file_name: file.filename,
+      file_length: size,
+      file_type: file.mimetype,
+      access_token: accessToken,
+    },
   );
-  const response = (await imageUploadSessionRes).data;
+  const uploadSessionId = sessionRes?.data?.id;
   const headers = {
     Authorization: `OAuth ${accessToken}`,
     "Content-Type": "application/octet-stream",
     file_offset: "0",
+    "Content-Length": size?.toString(),
   };
-  const buff = await file.toBuffer();
 
   const imageUploadRes = callWhatsappApi(
-    `/${response.id}`,
+    `/${uploadSessionId}`,
     "POST",
     undefined,
-    buff,
+    file?.file,
     undefined,
     headers,
   );
   const data = (await imageUploadRes).data;
   log.trace("Image uploaded to whatsapp %o", data);
   const fileHandle = data?.h ?? "error";
-  const uploadSessionId = response.id;
   return { fileHandle, uploadSessionId };
 }
 

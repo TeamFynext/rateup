@@ -1,13 +1,13 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { deleteFile, uploadFile } from "../../utils/upload/s3Upload";
-import { allowedMimeTypes, fileDeleteInput } from "./fileUpload.schema";
+import { fileDeleteInput } from "./fileUpload.schema";
 import sharp from "sharp";
-import { log } from "../../utils/logger";
 import fs from "fs";
 import { randomUUID } from "crypto";
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
+import { validateFile } from "../../utils/upload/validate";
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
@@ -16,18 +16,16 @@ export async function uploadController(
   reply: FastifyReply,
 ) {
   const data = await req.file();
-
   const metadata = data?.fields?.metadata
     ? JSON.parse(data?.fields?.metadata?.["value"])
-    : null;
-  if (!metadata || !metadata.allowAll) {
-    if (!allowedMimeTypes.includes(data?.mimetype) || data.type !== "file") {
-      log.debug("mime => %o", data?.mimetype);
-      log.debug("type => %o", data.type);
-      return reply
-        .code(400)
-        .send({ message: "This file type is not permitted." });
-    }
+    : { allowAll: false };
+  const validation = validateFile({
+    data,
+    allowAll: metadata?.allowAll || false,
+  });
+  if (!validation.valid) {
+    data.file.resume();
+    return reply.code(400).send({ message: validation.message });
   }
   const { filename, file } = data;
   const uniqueFilename = `${Date.now()}-${filename.replace(
@@ -134,10 +132,10 @@ export async function uploadWithThumbnailsController(
   reply: FastifyReply,
 ) {
   const data = await req.file();
-  if (!allowedMimeTypes.includes(data?.mimetype) || data.type !== "file") {
-    return reply
-      .code(400)
-      .send({ message: "This file type is not permitted." });
+  const validation = validateFile({ data });
+  if (!validation.valid) {
+    data.file.resume();
+    return reply.code(400).send({ message: validation.message });
   }
   const { filename, file } = data;
   const uniqueFilename = `${Date.now()}-${filename.replace(

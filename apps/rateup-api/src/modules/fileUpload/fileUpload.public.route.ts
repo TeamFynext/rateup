@@ -10,7 +10,7 @@ import FastifyMultipart from "@fastify/multipart";
 export async function fileUploadPublicRoutes(server: FastifyInstance) {
   server.register(FastifyMultipart, {
     limits: {
-      fileSize: 1048576 * 50,
+      fileSize: 1024 * 1024 * 100,
     },
     throwFileSizeLimit: true,
   });
