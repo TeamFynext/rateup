@@ -84,6 +84,7 @@ function AuthTypeSignupForm({
       email: values?.email,
       type: authType,
     };
+    // console.log("data:",data);
     createUserMutation.mutate(data);
   };
   return (
@@ -168,7 +169,8 @@ function AuthTypeSignupForm({
 
         <Center>
           <Text component="div" inline c="blue.6">
-            <Link href="/auth/logout" style={{ textDecoration: "none" }}>
+            {/* <Link href="/auth/logout" style={{ textDecoration: "none" }}> */}
+            <Link href="/logout" style={{ textDecoration: "none" }}>
               <NavLink
                 component="div"
                 label={translations("Logout")}
