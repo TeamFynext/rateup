@@ -152,6 +152,8 @@ export async function updateWaSettingsByIdHandler(
       request.body.fbPageId = null;
       request.body.ibaId = null;
       request.body.pageAccessToken = null;
+      request.body.igUserName = null;
+      request.body.igDisplayName = null;
     }
     await updateWaSettingsById(whatsappSettingsId, request.body);
     reply.code(200).send();
@@ -201,7 +203,7 @@ export async function updateContactTagHandler(
 ) {
   try {
     const { orgId } = request.user;
-    await updateContactTag(orgId, request.body.tags, request.body.groupTags);
+    await updateContactTag(orgId, request.body);
     reply.code(204).send();
   } catch (error) {
     log.error("Error while updating contact tags", error);

@@ -6,6 +6,7 @@ import {
   updateContactSchema,
   ContactCore,
   PaginationQuery,
+  UpdateContactLabelsSchema,
 } from "./contact.schema";
 import { log } from "../../utils/logger";
 import {
@@ -18,6 +19,7 @@ import {
   getExistingContactCountByPhno,
   importCSVContacts,
   updateContactById,
+  updateContactLabelsById,
 } from "./contact.service";
 import { ContactGroupType, Prisma } from "../../../generated/prisma/client";
 import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema";
@@ -180,6 +182,25 @@ export async function updateContactByIdHandler(
     } else {
       reply.code(500).send({ error: "Something went wrong" });
     }
+  }
+}
+
+export async function updateContactLabelsByIdHandler(
+  request: FastifyRequest<{
+    Params: ByContactIdParams;
+    Body: UpdateContactLabelsSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const contact = await updateContactLabelsById(
+      request.params.contactId,
+      request.body?.labels || [],
+    );
+    return reply.code(200).send(contact);
+  } catch (error) {
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
   }
 }
 

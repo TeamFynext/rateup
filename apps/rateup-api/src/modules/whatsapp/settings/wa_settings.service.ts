@@ -7,7 +7,11 @@ import prisma from "../../../utils/prisma";
 import { getPhoneDetails } from "../auth/wa_auth.service";
 import { WaConfigType } from "../../../types/enums";
 import { log } from "../../../utils/logger";
-import { PaginationQuery, updateWaSettingsInput } from "./wa_settings.schema";
+import {
+  ContactTagSchema,
+  PaginationQuery,
+  updateWaSettingsInput,
+} from "./wa_settings.schema";
 import { callWhatsappApi } from "../wa_axios";
 import { subscribePageToApp } from "./wa_settings.controller";
 
@@ -224,6 +228,8 @@ export async function upsertWaSettings(
       data.fbPageId = null;
       data.ibaId = null;
       data.pageAccessToken = null;
+      data.igUserName = null;
+      data.igDisplayName = null;
     }
     return await updateWaSettings(orgId, phoneId, data);
   } else {
@@ -252,28 +258,27 @@ export async function getContactTag(orgId: string) {
     select: {
       contactTags: true,
       contactGroupTags: true,
+      inboxLabels: true,
     },
   });
   return res;
 }
 
-export async function updateContactTag(
-  orgId: string,
-  tags: string[],
-  groupTags: string[],
-) {
+export async function updateContactTag(orgId: string, body: ContactTagSchema) {
   const res = await prisma.waAccountSettings.upsert({
     where: {
       orgId,
     },
     create: {
       orgId,
-      contactTags: tags,
-      contactGroupTags: groupTags,
+      contactTags: body.tags,
+      contactGroupTags: body.groupTags,
+      inboxLabels: body.inboxLabels,
     },
     update: {
-      contactTags: tags,
-      contactGroupTags: groupTags,
+      contactTags: body.tags,
+      contactGroupTags: body.groupTags,
+      inboxLabels: body.inboxLabels,
     },
   });
   return res;
@@ -348,7 +353,7 @@ export async function getLeadgenFormsFromWa(fbPageId, pageAccessToken) {
 export async function subscribeFieldtoPage(fbPageId, pageAccessToken, fields) {
   const url = `/${fbPageId}/subscribed_apps?subscribed_fields=${fields.join(",")}&access_token=${pageAccessToken}`;
   const res = await callWhatsappApi(url, "POST");
-  return res.data?.data;
+  return res.data;
 }
 
 export async function getLeadgenFormQuestionsFromWa(
@@ -386,6 +391,7 @@ export interface MetaAsset {
       id: string;
     };
     subscribedFields: string[];
+    pageAccessTokenByUser?: string;
   }[];
   adAccounts: {
     id: string;

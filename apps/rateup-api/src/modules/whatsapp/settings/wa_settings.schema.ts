@@ -41,6 +41,8 @@ const updateWaSettingsInputSchema = z.object({
   pageAccessToken: z.string().optional(),
   ibaId: z.string().optional(),
   igUserName: z.string().optional(),
+  igDisplayName: z.string().optional(),
+  phoneDisplayName: z.string().optional(),
 });
 
 const whatsappSettingsIdParamSchema = z.object({
@@ -61,11 +63,19 @@ const getWaSettingsResponseSchema = z.array(
     ibaId: z.string().optional(),
     pageAccessToken: z.string().optional(),
     igUserName: z.string().optional(),
+    igDisplayName: z.string(),
+    phoneDisplayName: z.string(),
   }),
 );
 const contactTagSchema = z.object({
   tags: z.array(z.string()),
   groupTags: z.array(z.string()),
+  inboxLabels: z.array(
+    z.object({
+      name: z.string(),
+      color: z.string(),
+    }),
+  ),
 });
 const byWaSettingsIdParamsSchema = z.object({
   phoneId: z.string(),

@@ -223,6 +223,8 @@ model WhatsappSettings {
   ibaId           String? @unique //Instagram Business Account ID
   pageAccessToken String? //Facebook Page access token
   igUserName      String?
+  igDisplayName         String?
+  phoneDisplayName      String?
 
   type             String // enums.ts: WaConfigType
   createdAt        DateTime           @default(now())
@@ -238,6 +240,7 @@ model WaAccountSettings {
   orgId            String   @unique @db.Uuid
   contactTags      String[] @default([])
   contactGroupTags String[] @default([])
+  inboxLabels      Json?
 }
 
 model WaLogs {
@@ -497,6 +500,7 @@ model Contact {
   profilePic                   String?
   followerCount                Int?
   isIgVerifiedUser             Boolean?
+  labels                       String[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -520,13 +524,14 @@ model WaInboxAssign {
 }
 
 model UserAssignedCount {
-  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String @db.Uuid
-  orgId       String @db.Uuid
-  assignCount Int    @default(0)
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @db.Uuid
+  orgId       String   @db.Uuid
+  assignCount Int      @default(0)
   createdAt   DateTime @default(now())
-  org         Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org         Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, orgId], name: "user_org_unique")
 }
 

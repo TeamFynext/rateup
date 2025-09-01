@@ -1105,32 +1105,42 @@ export async function handleLeadGen(body: WaMessageBody) {
     );
     const leadgenNodeData = leadgenNode.data as LeadgenNodeData;
     let phone = leadgenNodeData.phone;
-    const res = await callWhatsappApi(
-      `/${leadgen_id}?access_token=${leadgenNodeData.pageAccessToken}`,
-      "GET",
-    );
-    if (res.data)
-      await prisma.metaAssets.updateMany({
-        where: {
-          whatsappSettings: {
-            phoneId: automation.whatsappSettingsPhoneId,
-            orgId: automation.orgId,
-          },
-        },
-        data: {
-          leads: {
-            push: res.data,
-          },
-        },
-      });
-    if (leadgenNodeData.phoneField?.trim().length && res.data) {
-      const formValues = res.data.field_data;
-      const fieldValue = formValues.find(
-        (field) => field.name === leadgenNodeData.phoneField,
+    let errorMessage = "";
+    let leadData;
+    try {
+      const res = await callWhatsappApi(
+        `/${leadgen_id}?access_token=${leadgenNodeData.pageUserAccessToken}`,
+        "GET",
       );
-      if (fieldValue) {
-        phone = fieldValue?.values[0];
+      log.info("Lead generated: %o", res.data);
+      if (res.data) {
+        leadData = res.data;
+        await prisma.metaAssets.updateMany({
+          where: {
+            whatsappSettings: {
+              phoneId: automation.whatsappSettingsPhoneId,
+              orgId: automation.orgId,
+            },
+          },
+          data: {
+            leads: {
+              push: res.data,
+            },
+          },
+        });
+        if (leadgenNodeData.phoneField?.trim().length) {
+          const formValues = res.data.field_data;
+          const fieldValue = formValues.find(
+            (field) => field.name === leadgenNodeData.phoneField,
+          );
+          if (fieldValue) {
+            phone = fieldValue?.values[0];
+          }
+        }
       }
+    } catch (e) {
+      log.error("error in fetching lead details: %o", e);
+      errorMessage = `Error: ${e?.error?.message ?? "some error occured"}`;
     }
     const automationLog = await logAutomationAction({
       phone,
@@ -1138,18 +1148,17 @@ export async function handleLeadGen(body: WaMessageBody) {
       automationId: automation.id,
       orgId: automation.orgId,
       response: {
-        value: `lead generated ID:${leadgen_id}`,
+        value: `lead generated ID:${leadgen_id}` + errorMessage,
         action: "initial_interaction",
       },
     });
-
     await processNextNode(
       phone,
       automation,
       leadgenNode.id,
       automation.orgId,
       automationLog?.id,
-      leadgen_id,
+      leadData,
     );
   }
 }

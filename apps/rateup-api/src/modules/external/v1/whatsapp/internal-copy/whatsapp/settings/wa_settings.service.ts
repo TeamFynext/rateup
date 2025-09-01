@@ -23,6 +23,8 @@ export async function createWaSettings(
     | "ibaId"
     | "igUserName"
     | "id"
+    | "igDisplayName"
+    | "phoneDisplayName"
   > & {
     phone?: string;
     webhookPassword?: string;

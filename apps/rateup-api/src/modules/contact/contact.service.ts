@@ -293,6 +293,22 @@ export async function updateContactById(
   }
   return user;
 }
+
+export async function updateContactLabelsById(
+  contactId: string,
+  labels: string[],
+) {
+  const contact = await prisma.contact.update({
+    where: {
+      id: contactId,
+    },
+    data: {
+      labels,
+    },
+  });
+  return contact;
+}
+
 //update
 export async function getOrCreateContactByPhone(
   phone: string,

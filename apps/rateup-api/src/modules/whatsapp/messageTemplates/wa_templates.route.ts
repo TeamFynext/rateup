@@ -23,7 +23,7 @@ import { verifyTemplateSubscriptionLimit } from "./wa_templates.utils";
 export async function waTemplatesRoutes(server: FastifyInstance) {
   server.register(fastifyMultipart, {
     limits: {
-      fileSize: 1048576 * 10,
+      fileSize: 1048576 * 50,
     },
     throwFileSizeLimit: true,
   });

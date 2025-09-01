@@ -31,6 +31,9 @@ const updateContactSchema = z.object({
   profilePic: z.string().optional(),
   source: z.string().optional(),
 });
+const updateContactLabelsSchema = z.object({
+  labels: z.array(z.string()),
+});
 
 export const paginationQuery = z.object({
   page: z.number().optional(),
@@ -57,6 +60,7 @@ export const { schemas: contactSchemas, $ref: $contactRef } = buildJsonSchemas(
     deleteManyContactSchema,
     contactCoreSchema,
     paginationQuery,
+    updateContactLabelsSchema,
   },
   {
     $id: "contactSchema",
@@ -71,3 +75,6 @@ export type createMultipleContactInput = z.infer<
 >;
 export type deleteManyContactsInput = z.infer<typeof deleteManyContactSchema>;
 export type PaginationQuery = z.infer<typeof paginationQuery>;
+export type UpdateContactLabelsSchema = z.infer<
+  typeof updateContactLabelsSchema
+>;

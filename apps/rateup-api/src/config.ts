@@ -258,6 +258,10 @@ export const SuperTokensConfig: TypeInput = {
     }),
 
     Session.init({
+      // TODO: add this when app router pages is ssr
+      // cookieDomain: process.env.COOKIE_DOMAIN,
+      // olderCookieDomain: "",
+      // cookieSecure: true,
       override: {
         functions: (originalImplementation) => {
           return {
