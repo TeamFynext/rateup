@@ -106,7 +106,10 @@ const MainNavLinks = ({
         onClick={() => {
           const isWhatsAppRoute = link.label.toLowerCase().includes("whatsapp");
 
-          if (isWhatsAppRoute && !checkWhatsAppSettings()) {
+          if (
+            isWhatsAppRoute &&
+            !checkWhatsAppSettings(link?.children?.[0]?.link)
+          ) {
             return; // Don't proceed if no WhatsApp settings
           }
           if (link.hasSubmenu && link.children?.length > 0) {
@@ -167,8 +170,15 @@ const SubNavLinks = ({
         key={index}
       >
         <UnstyledButton
-          onClick={() => {
+          onClick={(event) => {
             if (link.link) {
+              event.preventDefault();
+              if (
+                link.link?.includes("/whatsapp") &&
+                !checkWhatsAppSettings(link?.link)
+              ) {
+                return;
+              }
               setActiveSubLink(link.link);
               showOfflineNotification(status);
               router.push(link.link);
@@ -245,7 +255,10 @@ const SubNavLinks = ({
         href="#"
         onClick={(event) => {
           event.preventDefault();
-          if (link.link?.includes("/whatsapp") && !checkWhatsAppSettings()) {
+          if (
+            link.link?.includes("/whatsapp") &&
+            !checkWhatsAppSettings(link?.link)
+          ) {
             return;
           }
           setActiveSubLink(link.link);
@@ -301,7 +314,6 @@ const LastLinks = ({
   setActiveSubLink,
   router,
   status,
-  checkWhatsAppSettings,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -314,15 +326,6 @@ const LastLinks = ({
       <UnstyledButton
         onClick={() => {
           if (link?.label !== "Dark Mode" && link?.label !== "Notifications") {
-            // Check if it's a WhatsApp related route
-            const isWhatsAppRoute = link?.children?.some((child) =>
-              child.link.includes("/whatsapp"),
-            );
-
-            if (isWhatsAppRoute && !checkWhatsAppSettings()) {
-              return; // Don't proceed if no WhatsApp settings
-            }
-
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
             showOfflineNotification(status);
@@ -602,8 +605,8 @@ const Navbar = ({
                 />
               </Group>
             </Title>
-            <Flex gap={0}>
-              <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
+            <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
+              <Flex gap={0}>
                 <div>{linksIcon}</div>
                 <Transition
                   mounted={largeScreen ? desktopOpened : mobileOpened}
@@ -615,8 +618,8 @@ const Navbar = ({
                     <div style={{ ...styles, flex: 1 }}>{linksText}</div>
                   )}
                 </Transition>
-              </ScrollAreaAutosize>
-            </Flex>
+              </Flex>
+            </ScrollAreaAutosize>
           </div>
         )}
       </div>
@@ -625,7 +628,13 @@ const Navbar = ({
 };
 
 // WhatsApp Settings Modal Component
-const WhatsAppSettingsModal = ({ opened, onClose, onGoToSettings }) => {
+const WhatsAppSettingsModal = ({
+  opened,
+  onClose,
+  onGoToSettings,
+  intendedRoute,
+}) => {
+  const router = useRouter();
   return (
     <Modal
       opened={opened}
@@ -643,7 +652,10 @@ const WhatsAppSettingsModal = ({ opened, onClose, onGoToSettings }) => {
           <RateupButtonPrimary
             title="Cancel"
             variant="default"
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              if (intendedRoute) router.push(intendedRoute);
+            }}
           />
           <RateupButtonPrimary
             onClick={onGoToSettings}
@@ -726,6 +738,7 @@ export default function Layout({ children }) {
   const [navLinks, setNavLinks] = useState([]);
   const [lastLinksData, setLastLinksData] = useState([]);
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
+  const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
   const isLoading = isPending || isPendingCTags || isLoadingUserInfo;
   // Fetch inbox labels from DB
   // const { data: inboxLabelsData } = useGetInboxLabels();
@@ -874,7 +887,7 @@ export default function Layout({ children }) {
   }, [inboxCount, filter.assignedTeams]);
 
   // Function to check if user has WhatsApp settings
-  const checkWhatsAppSettings = () => {
+  const checkWhatsAppSettings = (route?: string) => {
     // Add your logic here to check if user has WhatsApp settings
     // This could be checking userInfo data or making an API call
     // For now, returning false to demonstrate the modal
@@ -883,6 +896,7 @@ export default function Layout({ children }) {
 
     if (!hasWhatsAppSettings) {
       setWhatsAppModalOpened(true);
+      if (route) setIntendedRoute(route);
       return false;
     }
     return true;
@@ -924,7 +938,6 @@ export default function Layout({ children }) {
       setActiveSubLink={setActiveSubLink}
       router={router}
       status={userInfo?.data?.status || UserAvailabilityStatus.offline}
-      checkWhatsAppSettings={checkWhatsAppSettings}
     />
   );
   if (!pathname) return null;
@@ -937,6 +950,7 @@ export default function Layout({ children }) {
         opened={whatsAppModalOpened}
         onClose={() => setWhatsAppModalOpened(false)}
         onGoToSettings={handleGoToWhatsAppSettings}
+        intendedRoute={intendedRoute}
       />
 
       <AppShell
