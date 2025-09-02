@@ -31,8 +31,6 @@ import {
   getDbTemplate,
   getTemplateByIdAndOrgId,
   getTemplateByNameAndOrgId,
-  getTemplateByTemplateType,
-  getTemplatesByOrgId,
   getTemplatesByOrgIdAndTemplateType,
   getUnregisteredTemplates,
   registerTemplatesInDb,
@@ -46,7 +44,6 @@ import {
 import {
   generateTemplate,
   getFlowIdFromTemplateComponents,
-  waAllowedMimeTypes,
 } from "./wa_templates.utils";
 import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
 import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
@@ -72,7 +69,7 @@ import { WHATSAPP_BUTTON_TYPE } from "../../../types/whatsapp.types";
 import { isEmptyString } from "../../../utils/commonUtils";
 import { getConnectedWaCatalog } from "../catalog/catalog.service";
 import dayjs from "dayjs";
-import { PlatformType } from "../../../../generated/prisma/enums";
+import { validateFile } from "../../../utils/upload/validate";
 
 export async function getTemplatesHandler(
   request: FastifyRequest<{
@@ -339,15 +336,16 @@ export async function uploadHandler(
 ) {
   try {
     const data = await request.file();
-    if (!waAllowedMimeTypes.includes(data?.mimetype) || data.type !== "file")
-      return reply
-        .code(400)
-        .send({ message: "This file type is not permitted." });
+    const validation = validateFile({ data });
+    if (!validation.valid) {
+      data.file.resume();
+      return reply.code(400).send({ message: validation.message });
+    }
+    const size: number = data.fields?.size?.["value"] || 0;
     const { orgId } = await getOrgIdAndRole({ id: request.userId });
-    const size: any = data.fields.size;
     const { uploadSessionId, fileHandle } = await uploadFileToWaTemplate(
       data,
-      size?.value,
+      size,
       orgId,
     );
     if (fileHandle === "error")

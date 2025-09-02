@@ -43,6 +43,7 @@ export async function callWhatsappApi(
   data?: AxiosRequestConfig["data"],
   otherConfig: AxiosRequestConfig = {},
   headerConfig: AxiosRequestConfig["headers"] = {},
+  params: AxiosRequestConfig["params"] = {},
 ): Promise<AxiosResponse<any, any>> {
   const headAuth = accessToken
     ? { Authorization: `Bearer ${accessToken}` }
@@ -51,6 +52,7 @@ export async function callWhatsappApi(
     url: `https://graph.facebook.com/${WA_API_VERSION}${url}`,
     method,
     data,
+    params,
     headers: {
       ...headAuth,
       ...headerConfig,
