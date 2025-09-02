@@ -42,7 +42,6 @@ import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query"
 import { TagsContext } from "@/context/TagsContext";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
-import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
 import {
   IUserInfoApiResponse,
   UserAvailabilityStatus,
@@ -107,7 +106,10 @@ const MainNavLinks = ({
         onClick={() => {
           const isWhatsAppRoute = link.label.toLowerCase().includes("whatsapp");
 
-          if (isWhatsAppRoute && !checkWhatsAppSettings()) {
+          if (
+            isWhatsAppRoute &&
+            !checkWhatsAppSettings(link?.children?.[0]?.link)
+          ) {
             return; // Don't proceed if no WhatsApp settings
           }
           if (link.hasSubmenu && link.children?.length > 0) {
@@ -140,6 +142,7 @@ const SubNavLinks = ({
   router,
   status,
   checkWhatsAppSettings,
+  cTags,
 }) => {
   // Handler for label filter click
   const chatFilterStore = useChatFilterStore();
@@ -167,8 +170,15 @@ const SubNavLinks = ({
         key={index}
       >
         <UnstyledButton
-          onClick={() => {
+          onClick={(event) => {
             if (link.link) {
+              event.preventDefault();
+              if (
+                link.link?.includes("/whatsapp") &&
+                !checkWhatsAppSettings(link?.link)
+              ) {
+                return;
+              }
               setActiveSubLink(link.link);
               showOfflineNotification(status);
               router.push(link.link);
@@ -194,20 +204,28 @@ const SubNavLinks = ({
         key={`label-${index}`}
       >
         <UnstyledButton
-          onClick={() => handleLabelFilter(index === 0 ? "" : label.label)}
+          onClick={() =>
+            index === 0 ? {} : handleLabelFilter(index === 1 ? "" : label.label)
+          }
           className={classes.link}
           w={60}
           data-active={
             chatFilterStore.filter.labels.includes(label.label) || undefined
           }
         >
-          {index === 0 ? (
-            <label.icon size={22} stroke={1.5} />
+          {[0, 1].includes(index) ? (
+            <label.icon
+              size={22}
+              stroke={1.5}
+              cTags={cTags}
+              className={"mx-auto"}
+            />
           ) : (
             <div
               style={{
                 width: 20,
                 height: 20,
+                marginLeft: 4,
                 borderRadius: "50%",
                 backgroundColor: label.color || "#5c7cfa",
               }}
@@ -237,7 +255,10 @@ const SubNavLinks = ({
         href="#"
         onClick={(event) => {
           event.preventDefault();
-          if (link.link?.includes("/whatsapp") && !checkWhatsAppSettings()) {
+          if (
+            link.link?.includes("/whatsapp") &&
+            !checkWhatsAppSettings(link?.link)
+          ) {
             return;
           }
           setActiveSubLink(link.link);
@@ -293,7 +314,6 @@ const LastLinks = ({
   setActiveSubLink,
   router,
   status,
-  checkWhatsAppSettings,
 }) => {
   return links.map((link, index) => (
     <Tooltip
@@ -306,15 +326,6 @@ const LastLinks = ({
       <UnstyledButton
         onClick={() => {
           if (link?.label !== "Dark Mode" && link?.label !== "Notifications") {
-            // Check if it's a WhatsApp related route
-            const isWhatsAppRoute = link?.children?.some((child) =>
-              child.link.includes("/whatsapp"),
-            );
-
-            if (isWhatsAppRoute && !checkWhatsAppSettings()) {
-              return; // Don't proceed if no WhatsApp settings
-            }
-
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
             showOfflineNotification(status);
@@ -594,19 +605,21 @@ const Navbar = ({
                 />
               </Group>
             </Title>
-            <Flex gap={0}>
-              <div>{linksIcon}</div>
-              <Transition
-                mounted={largeScreen ? desktopOpened : mobileOpened}
-                transition="fade"
-                duration={50}
-                timingFunction="ease"
-              >
-                {(styles) => (
-                  <div style={{ ...styles, flex: 1 }}>{linksText}</div>
-                )}
-              </Transition>
-            </Flex>
+            <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
+              <Flex gap={0}>
+                <div>{linksIcon}</div>
+                <Transition
+                  mounted={largeScreen ? desktopOpened : mobileOpened}
+                  transition="fade"
+                  duration={50}
+                  timingFunction="ease"
+                >
+                  {(styles) => (
+                    <div style={{ ...styles, flex: 1 }}>{linksText}</div>
+                  )}
+                </Transition>
+              </Flex>
+            </ScrollAreaAutosize>
           </div>
         )}
       </div>
@@ -615,7 +628,13 @@ const Navbar = ({
 };
 
 // WhatsApp Settings Modal Component
-const WhatsAppSettingsModal = ({ opened, onClose, onGoToSettings }) => {
+const WhatsAppSettingsModal = ({
+  opened,
+  onClose,
+  onGoToSettings,
+  intendedRoute,
+}) => {
+  const router = useRouter();
   return (
     <Modal
       opened={opened}
@@ -633,7 +652,10 @@ const WhatsAppSettingsModal = ({ opened, onClose, onGoToSettings }) => {
           <RateupButtonPrimary
             title="Cancel"
             variant="default"
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              if (intendedRoute) router.push(intendedRoute);
+            }}
           />
           <RateupButtonPrimary
             onClick={onGoToSettings}
@@ -716,6 +738,7 @@ export default function Layout({ children }) {
   const [navLinks, setNavLinks] = useState([]);
   const [lastLinksData, setLastLinksData] = useState([]);
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
+  const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
   const isLoading = isPending || isPendingCTags || isLoadingUserInfo;
   // Fetch inbox labels from DB
   // const { data: inboxLabelsData } = useGetInboxLabels();
@@ -732,7 +755,7 @@ export default function Layout({ children }) {
       setNavLinks(nLinks);
       setLastLinksData(lLinks);
     }
-  }, [isLoading, sub, translations, userInfo?.data?.role]);
+  }, [isLoading, sub, translations, userInfo?.data?.role, cTags]);
 
   if (query.msg === "welcome") {
     refetch();
@@ -864,7 +887,7 @@ export default function Layout({ children }) {
   }, [inboxCount, filter.assignedTeams]);
 
   // Function to check if user has WhatsApp settings
-  const checkWhatsAppSettings = () => {
+  const checkWhatsAppSettings = (route?: string) => {
     // Add your logic here to check if user has WhatsApp settings
     // This could be checking userInfo data or making an API call
     // For now, returning false to demonstrate the modal
@@ -873,6 +896,7 @@ export default function Layout({ children }) {
 
     if (!hasWhatsAppSettings) {
       setWhatsAppModalOpened(true);
+      if (route) setIntendedRoute(route);
       return false;
     }
     return true;
@@ -903,6 +927,7 @@ export default function Layout({ children }) {
     router,
     status: userInfo?.data?.status || UserAvailabilityStatus.offline,
     checkWhatsAppSettings,
+    cTags,
   });
 
   const lastLinks = (
@@ -913,7 +938,6 @@ export default function Layout({ children }) {
       setActiveSubLink={setActiveSubLink}
       router={router}
       status={userInfo?.data?.status || UserAvailabilityStatus.offline}
-      checkWhatsAppSettings={checkWhatsAppSettings}
     />
   );
   if (!pathname) return null;
@@ -926,6 +950,7 @@ export default function Layout({ children }) {
         opened={whatsAppModalOpened}
         onClose={() => setWhatsAppModalOpened(false)}
         onGoToSettings={handleGoToWhatsAppSettings}
+        intendedRoute={intendedRoute}
       />
 
       <AppShell
