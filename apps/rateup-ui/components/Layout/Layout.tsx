@@ -42,7 +42,6 @@ import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query"
 import { TagsContext } from "@/context/TagsContext";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
-import { useOrgWsAuthCheck } from "../../backend/org/ws/org.ws.query";
 import {
   IUserInfoApiResponse,
   UserAvailabilityStatus,
@@ -140,6 +139,7 @@ const SubNavLinks = ({
   router,
   status,
   checkWhatsAppSettings,
+  cTags,
 }) => {
   // Handler for label filter click
   const chatFilterStore = useChatFilterStore();
@@ -194,20 +194,28 @@ const SubNavLinks = ({
         key={`label-${index}`}
       >
         <UnstyledButton
-          onClick={() => handleLabelFilter(index === 0 ? "" : label.label)}
+          onClick={() =>
+            index === 0 ? {} : handleLabelFilter(index === 1 ? "" : label.label)
+          }
           className={classes.link}
           w={60}
           data-active={
             chatFilterStore.filter.labels.includes(label.label) || undefined
           }
         >
-          {index === 0 ? (
-            <label.icon size={22} stroke={1.5} />
+          {[0, 1].includes(index) ? (
+            <label.icon
+              size={22}
+              stroke={1.5}
+              cTags={cTags}
+              className={"mx-auto"}
+            />
           ) : (
             <div
               style={{
                 width: 20,
                 height: 20,
+                marginLeft: 4,
                 borderRadius: "50%",
                 backgroundColor: label.color || "#5c7cfa",
               }}
@@ -595,17 +603,19 @@ const Navbar = ({
               </Group>
             </Title>
             <Flex gap={0}>
-              <div>{linksIcon}</div>
-              <Transition
-                mounted={largeScreen ? desktopOpened : mobileOpened}
-                transition="fade"
-                duration={50}
-                timingFunction="ease"
-              >
-                {(styles) => (
-                  <div style={{ ...styles, flex: 1 }}>{linksText}</div>
-                )}
-              </Transition>
+              <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
+                <div>{linksIcon}</div>
+                <Transition
+                  mounted={largeScreen ? desktopOpened : mobileOpened}
+                  transition="fade"
+                  duration={50}
+                  timingFunction="ease"
+                >
+                  {(styles) => (
+                    <div style={{ ...styles, flex: 1 }}>{linksText}</div>
+                  )}
+                </Transition>
+              </ScrollAreaAutosize>
             </Flex>
           </div>
         )}
@@ -732,7 +742,7 @@ export default function Layout({ children }) {
       setNavLinks(nLinks);
       setLastLinksData(lLinks);
     }
-  }, [isLoading, sub, translations, userInfo?.data?.role]);
+  }, [isLoading, sub, translations, userInfo?.data?.role, cTags]);
 
   if (query.msg === "welcome") {
     refetch();
@@ -903,6 +913,7 @@ export default function Layout({ children }) {
     router,
     status: userInfo?.data?.status || UserAvailabilityStatus.offline,
     checkWhatsAppSettings,
+    cTags,
   });
 
   const lastLinks = (

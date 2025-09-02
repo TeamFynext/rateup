@@ -13,8 +13,9 @@ export const uploadFile = async (
   data = { allowAll: false },
 ) => {
   const formData = new FormData();
-  formData.append("file", file);
   formData.append("metadata", JSON.stringify(data));
+  formData.append("size", file?.size?.toString());
+  formData.append("file", file);
   try {
     showLoadingToast(
       "Uploading file...",
@@ -30,9 +31,7 @@ export const uploadFile = async (
       }`,
       formData,
       {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        timeout: 0,
       },
     );
     showSuccessToast("File uploaded successfully", "upload-file", null, true);
