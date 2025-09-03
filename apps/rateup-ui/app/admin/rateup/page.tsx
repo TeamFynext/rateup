@@ -99,9 +99,10 @@ const RateupPlan = () => {
         : "Nil",
       features: plan,
       planType: plan.planType,
-      paymentPlanId: plan.paymentPlanId,
+      paymentPlanId: plan.paymentPlanId ?? "",
       stripeId: plan.stripeId,
       createdAt: plan?.createdAt,
+      trialDays: plan?.trialDays,
     };
   });
   const handleMutation = (updatedData) => {

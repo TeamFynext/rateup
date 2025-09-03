@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import {
@@ -93,6 +93,20 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
     validate: zod4Resolver(signUpSchema),
   });
 
+  useEffect(() => {
+    const newUserFromPricingPage = localStorage.getItem(
+      "newUserFromPricingPage",
+    );
+    if (newUserFromPricingPage) {
+      const data = JSON.parse(newUserFromPricingPage);
+      signUpForm.setValues({
+        email: data.email,
+        name: data.name,
+        orgName: data.orgName,
+      });
+    }
+  }, []);
+
   const hasPhoneInputErr = signUpForm.errors?.phoneNumber;
 
   const handleSubmit = (values) => {
@@ -109,6 +123,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
       ).finally(() => {
         setIsLoading(false);
         localStorage.removeItem("selected_plan");
+        localStorage.removeItem("newUserFromPricingPage");
       });
     }
   };

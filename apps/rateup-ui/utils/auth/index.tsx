@@ -328,8 +328,7 @@ export function useSignUp() {
 
 export const useConsumeVerificationCode = () => {
   const router = useRouter();
-  const { route } = useRouteAndCartStore();
-  const consumeVerificationCode = async () => {
+  const consumeVerificationCode = async (route) => {
     notifications.show({
       id: "verify-email",
       loading: true,

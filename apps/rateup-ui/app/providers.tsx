@@ -82,12 +82,14 @@ export default function Providers({ children, locale, messages }) {
   //       suspend because React will throw away the client on the initial
   //       render if it suspends and there is no boundary
   const queryClient = getQueryClient();
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
     <NextIntlClientProvider
       locale={locale}
       messages={messages}
       onError={onError}
+      timeZone={timeZone}
     >
       <QueryClientProvider client={queryClient}>
         <UserProvider>

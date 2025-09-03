@@ -2,7 +2,14 @@
 
 import { FormEventHandler } from "react";
 
-import { Group, Modal, Space, Stack, Title } from "@mantine/core";
+import {
+  getDefaultZIndex,
+  Group,
+  Modal,
+  Space,
+  Stack,
+  Title,
+} from "@mantine/core";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { useTranslations } from "next-intl";
 
@@ -30,6 +37,7 @@ interface FormModalLayoutProps {
   submitButtonDisabled?: boolean;
   submitBtnColor?: string;
   submitButtonLeftIcon?: React.ReactNode;
+  zIndex?: number | string;
 }
 export default function FormModalLayout({
   centered,
@@ -49,6 +57,7 @@ export default function FormModalLayout({
   cancelButtonTitle,
   submitBtnColor,
   submitButtonLeftIcon,
+  zIndex,
 }: FormModalLayoutProps) {
   const translations = useTranslations();
   return (
@@ -69,6 +78,7 @@ export default function FormModalLayout({
           fontWeight: 500,
         },
       }}
+      zIndex={zIndex ?? getDefaultZIndex("modal")}
     >
       {!noCustomHeader && (
         <>

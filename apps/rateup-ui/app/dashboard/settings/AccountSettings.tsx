@@ -20,6 +20,7 @@ import { useTranslations } from "next-intl";
 
 import {
   useCreateCheckoutSession,
+  useUpdateSubscriptionOrder,
   useUserOrgOrders,
 } from "../../../backend/payment/payment.query";
 import { useSubscription } from "../../../backend/subscription/subscription.query";
@@ -75,6 +76,7 @@ const AccountSettings = () => {
     refetch: refreshOrders,
     isRefetching: isRefetchOrders,
   } = useUserOrgOrders();
+  const updateOrderMut = useUpdateSubscriptionOrder(order?.id);
 
   const [activeOrderData, setActiveOrderData] = useState(null);
   const [latestOrderData, setLatestOrderData] = useState(null);
@@ -126,6 +128,7 @@ const AccountSettings = () => {
     period: cart?.period,
     orgId: user?.orgId,
     isAnnualMessageLimit,
+    trialDays: cart?.trialDays,
   };
 
   async function displayRazorpay() {
@@ -143,13 +146,22 @@ const AccountSettings = () => {
         key: process.env.NEXT_PUBLIC_RAZORPAY_API_KEY,
         subscription_id: order?.subscriptionId,
         name: translations("RateUp Payment"),
-        description: translations("Subscription Plans in Rateup"),
+        description: "Subscription Plans in Rateup",
         image: "https://djd7kjh9uwow0.cloudfront.net/images/logo.svg",
         handler: function (response) {
           console.log(translations("Payment Successful!"));
           setProcessingPayment(false);
+          if (order.hasTrial) {
+            updateOrderMut.mutate({
+              status: "COMPLETE",
+              paymentStatus: "SUCCESS",
+              subscriptionStatus: "authenticated",
+            });
+          } else {
+            refreshOrders();
+          }
           openSummary();
-          refreshOrders();
+
           //alert("Payment Successful!");
         },
         prefill: {
@@ -287,7 +299,7 @@ const AccountSettings = () => {
           } else {
             setProcessingPayment(true);
             createCheckout.mutate(checkoutDetails, {
-              onSettled: () => {
+              onSettled: (data) => {
                 setIsAnnualMessageLimit(false);
               },
             });
@@ -325,7 +337,7 @@ const AccountSettings = () => {
               <Text>
                 {" "}
                 {translations(
-                  "You have an active Base Plan already. So you cannot buy another Rateup base plan. But you can buy the available ADDON rateup plan to get more features.",
+                  "You have an active Base Plan already So you cannot buy another Rateup base plan But you can buy the available ADDON RateUp plan to get more features",
                 )}
               </Text>
             </Blockquote>
