@@ -33,9 +33,16 @@ const PricingSection = ({ onPlanSelect = null }) => {
   const sharedStyles =
     "bg-white border border-gray-200 rounded-2xl shadow-lg p-8 flex flex-col justify-between transition-all hover:shadow-2xl hover:scale-[1.03] duration-300";
   const { data: plans, isLoading } = useRateupPaymentsPlans();
-  const rateupPlans = plans ?? [];
   const userTimeZone = useTimeZone();
   let currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
+  const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
+  const rateupPlans = plans
+    ? plans.filter(
+        (plan) =>
+          plan.name === "FREE PLAN" ||
+          (plan.paymentPlan && plan?.paymentPlan?.curreny === currency),
+      )
+    : [];
   function handlePlanSelection(plan) {
     if (onPlanSelect) onPlanSelect();
     if (plan.name === "FREE PLAN") {
