@@ -363,7 +363,8 @@ export const useConsumeVerificationCode = () => {
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
-        router.push(route);
+        // router.push(route);
+        router.push("/login/complete-login");
       }
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {

@@ -36,6 +36,7 @@ import SessionReact from "supertokens-auth-react/recipe/session";
 import { WaMessageAssignStatus } from "@/types/enums";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useChatContactCountStore } from "@/app/dashboard/whatsapp/inbox/store";
+import { useIsTellUsMoreCompleted } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
@@ -704,6 +705,19 @@ const MainContent = ({
 
 // @ts-ignore
 export default function Layout({ children }) {
+  const {
+    data: isTellUsMoreComplete,
+    isLoading: isTellUsMoreCompleteLoading,
+    isFetched,
+  } = useIsTellUsMoreCompleted();
+
+  useEffect(() => {
+    if (!isFetched || isTellUsMoreCompleteLoading) return;
+
+    if (isTellUsMoreComplete === false) {
+      router.replace("/login/complete-login");
+    }
+  }, [isTellUsMoreComplete, isFetched, isTellUsMoreCompleteLoading]);
   const router = useRouter();
   const query = useSearchParams() as {
     msg?: string;

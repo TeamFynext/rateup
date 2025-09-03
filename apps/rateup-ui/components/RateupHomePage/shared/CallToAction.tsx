@@ -42,11 +42,7 @@ const CallToAction = () => {
           >
             Start free trial
           </Link>
-          <BookDemoModal>
-            <button className="bg-white cursor-pointer text-black border border-gray-300 font-medium px-6 py-3 rounded-full hover:bg-gray-100 transition">
-              Book A Free Demo
-            </button>
-          </BookDemoModal>
+          <BookDemoModal />
         </div>
       </div>
     </section>
