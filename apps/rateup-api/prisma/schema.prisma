@@ -978,7 +978,7 @@ enum SubscriptionStatus {
   authenticated
   active
   pending
-  haltedf
+  halted
   cancelled
   completed
   expired
