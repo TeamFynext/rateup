@@ -102,13 +102,11 @@ function AuthTypeSignupForm({
           close();
         }}
       >
-        <Text mt="xs" mb="xl" display={"inline-block"}>
-          {translations("You are successfully authenticated,")}
-          <Text display={isUserExist ? "none" : "inline-block"}>
-            {translations(
-              "please fill the information to complete the signup process",
-            )}
-          </Text>
+        <Text component="span" mt="xs" mb="xl" display="inline-block">
+          You are successfully authenticated,
+        </Text>
+        <Text component="span" display={isUserExist ? "none" : "inline-block"}>
+          please fill the information to complete the signup process,
         </Text>
 
         <Center mt="xl">

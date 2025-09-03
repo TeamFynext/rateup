@@ -153,10 +153,10 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         leftIcon={<IconMail size={16} />}
         fw={600}
       />
-      {/* <GoogleSignInButton
+      <GoogleSignInButton
         className={styles["login-signup-with-google-btn"]}
         buttonText={"SignUp with Google"}
-      /> */}
+      />
       {/* <RateupButtonSecondary
         type="button"
         title="SignUp with Phone Number"
@@ -190,14 +190,14 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
             {...signUpForm.getInputProps("name")}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 6 }}>
+        {/* <Grid.Col span={{ base: 12, md: 6 }}>
           <TextInput
             classNames={styles}
             withAsterisk
             placeholder={translations("Organization Name")}
             {...signUpForm.getInputProps("orgName")}
           />
-        </Grid.Col>
+        </Grid.Col> */}
         <Grid.Col>
           <TextInput
             classNames={styles}
