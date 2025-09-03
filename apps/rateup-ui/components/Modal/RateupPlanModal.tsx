@@ -16,6 +16,7 @@ import { widgetIds } from "../../utils/constants/forms";
 import { getSampleSubscriptionFeatures } from "../../utils/subscription/subscription";
 import {
   ContainedJsonInput,
+  ContainedNumberInput,
   ContainedSelection,
   ContainedTagInput,
   ContainedTextField,
@@ -52,6 +53,7 @@ const RateupPlanModal = ({ opened, close, planList }) => {
       .string()
       .trim()
       .min(1, { message: translations("Features should Not Be empty") }),
+    trialDays: z.number(),
   });
 
   const form = useForm({
@@ -65,6 +67,7 @@ const RateupPlanModal = ({ opened, close, planList }) => {
       stripeId: "",
       description: [],
       features: "",
+      trialDays: 0,
     },
     validate: zod4Resolver(schema),
   });
@@ -187,6 +190,12 @@ const RateupPlanModal = ({ opened, close, planList }) => {
           placeholder={translations("Type Description and press enter")}
           withAsterisk
           {...form.getInputProps("description")}
+        />
+        <ContainedNumberInput
+          label={"Trial Days"}
+          {...form.getInputProps("trialDays")}
+          allowNegative={false}
+          allowDecimal={false}
         />
       </SimpleGrid>
       <Stack gap={3} py="xs">

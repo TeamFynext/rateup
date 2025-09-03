@@ -17,9 +17,11 @@ import {
   getAllPaymentSubscription,
   getAllRateupPaymentPlans,
   ICreateCheckoutType,
+  sendMailPlanSelectDetails,
   syncRazorPayPlans,
   updatePaymentPlan,
   updateRateupPaymentPlan,
+  updateSubscriptionOrder,
 } from "./payment.api";
 
 export function usePaymentsPlans() {
@@ -282,6 +284,23 @@ export const useDeletePaymentPlanMutation = () => {
     },
     onError: () => {
       showErrorToast("Error in deleting Plan", "plan", <IconCheck />, true);
+    },
+  });
+};
+
+export function useSendMailPlanSelectDetails() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: sendMailPlanSelectDetails,
+  });
+}
+
+export const useUpdateSubscriptionOrder = (orderId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => updateSubscriptionOrder(orderId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["paymentorders"] });
     },
   });
 };

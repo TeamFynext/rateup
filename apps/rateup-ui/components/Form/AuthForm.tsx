@@ -15,6 +15,7 @@ import {
 } from "../../utils/auth";
 import { AuthMode } from "../../utils/enums";
 import { rateupLogoUrl } from "../HomePage/constants";
+import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import styles from "./AuthForm.module.css";
 import AuthTypeSignupForm from "./AuthTypeSignupForm";
 import LoginForm from "./LoginForm";
@@ -36,11 +37,21 @@ const AuthForm = ({
   const consumeVerificationCode = useConsumeVerificationCode();
   const sendEmail = useEmailSend();
   const { colorScheme } = useMantineColorScheme();
+  const { route, updateRouteAndCart } = useRouteAndCartStore();
 
   useEffect(() => {
     if (mode === AuthMode.VERIFY) {
       if (token && token?.length > 0) {
-        consumeVerificationCode();
+        let updatedRoute = route;
+        if (route === "/dashboard") {
+          const data = localStorage.getItem("subscriptionRoutAndCart");
+          if (data) {
+            const { route: newRoute, cartData } = JSON.parse(data);
+            updatedRoute = newRoute;
+            updateRouteAndCart(newRoute, cartData);
+          }
+        }
+        consumeVerificationCode(updatedRoute);
       } else {
         sendEmail(); //TODO : Add time gaps for resending verification mails
       }

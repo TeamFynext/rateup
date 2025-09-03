@@ -194,7 +194,15 @@ const Billing = ({
                   <Text c={"GrayText"} fw={500} fz={15}>
                     {translations("Plan Name")}
                   </Text>
-                  <Title order={5}>{subscription?.basePlan?.name}</Title>
+                  <Group gap={"xs"}>
+                    <Title order={5}>{subscription?.basePlan?.name}</Title>
+                    {latestOrderData?.subscriptionStatus ===
+                      "authenticated" && (
+                      <Text size="sm" c={"red"}>
+                        ( Trial Period )
+                      </Text>
+                    )}
+                  </Group>
                 </Stack>
                 {activeOrderData?.subscriptionChargeAt &&
                   activeOrderData?.subscriptionStatus !== "cancelled" &&
@@ -232,7 +240,7 @@ const Billing = ({
                   !isProcessingPlan) ? (
                   <RateupButtonPrimary
                     title={translations("Upgrade plan")}
-                    onClick={toggle}
+                    onClick={() => router.push("/pricing")}
                   />
                 ) : (
                   subscription?.basePlan?.name &&
@@ -266,7 +274,9 @@ const Billing = ({
               <Group justify="space-between">
                 <Stack gap={1}>
                   <Text c={"GrayText"} fw={500} fz={15}>
-                    {translations("Validity")}
+                    {subscription?.basePlan?.paymentPlanId
+                      ? "Next Due"
+                      : translations("Validity")}
                   </Text>
                   <Group>
                     <Text>

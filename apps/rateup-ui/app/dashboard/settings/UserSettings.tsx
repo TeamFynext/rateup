@@ -350,7 +350,7 @@ const ProfileSettings = () => {
                   disabled
                   label={translations("Email")}
                   placeholder={translations("Enter your email")}
-                  value={profileData?.data?.data?.email}
+                  value={profileData?.data?.data?.email ?? ""}
                   withAsterisk
                 />
               </Grid.Col>
