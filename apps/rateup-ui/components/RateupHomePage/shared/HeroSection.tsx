@@ -132,16 +132,7 @@ export default function HeroSection() {
             transition={{ duration: 0.2, delay: 0.1 }}
             className="mt-10 flex items-center justify-center gap-4 "
           >
-            <BookDemoModal>
-              <button
-                className="text-white px-6 cursor-pointer sm:px-7 py-2.5
-                 text-base sm:text-lg font-semibold rounded-md bg-gradient-to-r from-[#00397b]
-                  via-[#1c518e] to-[#3f5ba9] hover:opacity-90"
-                aria-label="Book a Demo"
-              >
-                Book a Demo
-              </button>
-            </BookDemoModal>
+            <BookDemoModal />
             <VideoPlayer />
           </motion.div>
         </div>

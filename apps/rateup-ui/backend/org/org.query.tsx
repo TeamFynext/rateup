@@ -1,15 +1,19 @@
 import { notifications } from "@mantine/notifications";
 import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import PhoneInputWithCountrySelect from "react-phone-number-input";
 
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
+  completeOrgDetails,
   getAllOrgs,
   getOrgStats,
   getTeamsMembersOfOrg,
   getWebhookClientSecret,
+  istellusmorecompleted,
   IUpdateLogo,
   IUpdateOrgDetails,
+  orgNameAndPhone,
   updateOrgDetails,
   updateOrgLogo,
   updateOrgPause,
@@ -157,3 +161,31 @@ export const useGetWebhookClientSecret = (webhookUrl) => {
     enabled: !!webhookUrl,
   });
 };
+
+export function useCompleteOrgDetails() {
+  return useMutation({
+    mutationFn: ({
+      orgName,
+      tellUsMore,
+      phone,
+    }: {
+      orgName?: string;
+      tellUsMore?: Record<string, unknown>;
+      phone: string;
+    }) => completeOrgDetails(orgName, tellUsMore, phone),
+  });
+}
+
+export function useOrgNameAndPhone() {
+  return useQuery({
+    queryKey: ["orgNameAndPhone"],
+    queryFn: orgNameAndPhone,
+  });
+}
+
+export function useIsTellUsMoreCompleted() {
+  return useQuery({
+    queryKey: ["istellusmorecomplete"],
+    queryFn: istellusmorecompleted,
+  });
+}

@@ -84,11 +84,7 @@ const PricingSection = ({ onPlanSelect = null }) => {
               Let&apos;s Talk!
             </div>
           </div>
-          <BookDemoModal>
-            <button className="mt-6 bg-[#1c518e] text-white font-semibold py-2 rounded-md hover:bg-[#00397b] transition">
-              Contact Sales
-            </button>
-          </BookDemoModal>
+          <BookDemoModal />
         </div>
       </motion.div>
       <MailForm

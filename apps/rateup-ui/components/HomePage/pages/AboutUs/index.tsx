@@ -78,11 +78,7 @@ function AboutUs() {
             Discover how Rateup can help your business grow through better
             customer understanding.
           </p>
-          <BookDemoModal>
-            <button className="inline-block bg-[#004F98] hover:bg-[#003b73] text-white px-8 py-3 rounded-full font-semibold text-lg transition">
-              Book a Demo
-            </button>
-          </BookDemoModal>
+          <BookDemoModal />
         </div>
       </section>
     </main>
