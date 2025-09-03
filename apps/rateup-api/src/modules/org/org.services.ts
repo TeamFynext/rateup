@@ -626,7 +626,17 @@ export async function getOrgNameAndUserPhone(userId: string) {
 export async function checkTellUsMoreCompleted(userId: string) {
   const org = await prisma.org.findFirst({
     where: { ownerId: userId },
-    select: { isTellUsMoreCompleted: true },
+    select: { id: true, isTellUsMoreCompleted: true, createdAt: true },
   });
+
+  const todayStart = new Date("2025-09-03T12:59:53.655Z");
+
+  if (org.createdAt < todayStart && !org.isTellUsMoreCompleted) {
+    await prisma.org.update({
+      where: { id: org.id },
+      data: { isTellUsMoreCompleted: true },
+    });
+    return true;
+  }
   return org?.isTellUsMoreCompleted;
 }
