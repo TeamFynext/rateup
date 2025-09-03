@@ -1,8 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { cookies } from "next/headers";
-import { redirect, useRouter } from "next/navigation";
 
-import { useIsTellUsMoreCompleted } from "@/backend/org/org.query";
 import Layout from "@/components/Layout/Layout";
 import { SessionAuthForNextJS } from "@/components/SuperToken/sessionAuthForNextJS";
 import { TryRefreshComponent } from "@/components/SuperToken/tryRefreshClientComponent";
@@ -12,20 +10,6 @@ import { getSessionForSSR } from "../util";
 export default async function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const {
-    data: isTellUsMoreComplete,
-    isLoading: isTellUsMoreCompleteLoading,
-    isFetched,
-  } = useIsTellUsMoreCompleted();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isFetched || isTellUsMoreCompleteLoading) return;
-
-    if (isTellUsMoreComplete === false) {
-      router.replace("/login/complete-login");
-    }
-  }, [isTellUsMoreComplete, isFetched, isTellUsMoreCompleteLoading]);
   // TODO: Uncomment the following lines after 6 months to let all existing sessions to change to session with the subdomain
   // const cookiesFromReq = await cookies();
   // const cookiesArray: Array<{ name: string; value: string }> = Array.from(
