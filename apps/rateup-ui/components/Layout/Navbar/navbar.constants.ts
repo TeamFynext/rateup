@@ -167,7 +167,7 @@ export function getNavTopData(
                           label: "Clear Label",
                           icon: IconCircleX,
                         },
-                        ...inboxLabels.map((lbl) => ({
+                        ...inboxLabels?.map((lbl) => ({
                           label: lbl.name,
                           color: lbl.color,
                           icon: IconBrandHipchat,

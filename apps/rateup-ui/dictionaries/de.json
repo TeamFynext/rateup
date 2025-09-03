@@ -2103,5 +2103,25 @@
   "Last Login": "Letzte Anmeldung",
   "Subscription": "Abonnement",
   "Renewal Date": "Erneuerungsdatum",
-  "Days Remaining": "Verbleibende Tage"
+  "Days Remaining": "Verbleibende Tage",
+  "Edit Labels": "Labels bearbeiten",
+  "No account found!": "Kein Konto gefunden!",
+  "Enter the text": "Text eingeben",
+  "Are you sure you want to DeRegister this WhatsApp Business Account?": "Sind Sie sicher, dass Sie dieses WhatsApp Business-Konto abmelden möchten?",
+  "WhatsApp Template for Successful Customer Registration": "WhatsApp-Vorlage für erfolgreiche Kundenregistrierung",
+  "Error: ": "Fehler: ",
+  "Back to Edit Questions": "Zurück zu den Fragen bearbeiten",
+  "Update Labels": "Labels aktualisieren",
+  "Contact Settings": "Kontoeinstellungen",
+  "Inbox labels": "Posteingangs-Labels",
+  "label name": "Label-Name",
+  "Add New Inbox Label": "Neues Posteingangs-Label hinzufügen",
+  "LocaleSwitcher": {
+    "en": "English",
+    "ar": "العربية",
+    "fr": "Français",
+    "de": "Deutsch",
+    "hi": "हिन्दी",
+    "Label": "Label"
+  }
 }
