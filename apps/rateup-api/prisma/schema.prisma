@@ -952,6 +952,7 @@ model RateupPlan {
   createdAt       DateTime        @default(now())
   stripeProduct   StripeProducts? @relation(fields: [stripeId], references: [id])
   stripeId        String?         @unique @db.Uuid
+  trialDays       Int             @default(0)
   orders          Order[]
 }
 
@@ -973,7 +974,7 @@ enum SubscriptionStatus {
   authenticated
   active
   pending
-  halted
+  haltedf
   cancelled
   completed
   expired

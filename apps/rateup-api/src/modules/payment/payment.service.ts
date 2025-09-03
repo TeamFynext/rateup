@@ -13,7 +13,10 @@ import {
   updateRateUpPlanInput,
 } from "./payment.schema";
 import dayjs from "dayjs";
-import { createEmailBodySubscriptionActivated } from "../../utils/email/payments/subscriptionActivated";
+import {
+  createEmailBodySubscriptionActivated,
+  createEmailBodyTrialSubscriptionActivated,
+} from "../../utils/email/payments/subscriptionActivated";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
 import {
   getRecurringCharge,
@@ -45,6 +48,9 @@ export async function createCheckoutSession(
       orgId: data?.orgId,
       isAnnualMessageLimit: data.isAnnualMessageLimit,
     },
+    ...(data.trialDays
+      ? { start_at: dayjs().add(data.trialDays, "day").unix() }
+      : {}),
   };
 
   try {
@@ -73,7 +79,11 @@ export async function createCheckoutSession(
 
     return {
       success: true,
-      data: { ...order, subExpiry: apiResponse?.data?.current_end },
+      data: {
+        ...order,
+        subExpiry: apiResponse?.data?.current_end,
+        hasTrial: data.trialDays > 0,
+      },
     };
   } catch (error) {
     // Handle errors
@@ -195,6 +205,7 @@ export async function createRateUpPlan(data: createRateUpPlanInput) {
         ? { connect: { id: data?.stripeId } }
         : undefined,
       features: data.features ? JSON.parse(data.features) : null,
+      trialDays: data.trialDays,
     },
   });
   return { code: 201, data: plans };
@@ -267,6 +278,11 @@ export async function updateRateUpPlan(data: updateRateUpPlanInput) {
             ? { connect: { id: data?.stripeId } }
             : undefined,
       features: data?.features,
+      ...(data.trialDays !== undefined
+        ? {
+            trialDays: data.trialDays,
+          }
+        : {}),
     },
     where: {
       id: data.id,
@@ -691,9 +707,9 @@ export async function getAllOrgOrders(orgId: string) {
         planId: order.planId,
         amount: planDetail?.amount,
         currency: planDetail?.currency,
-        planFeatures: planDetail?.rateupPlan?.description,
-        planType: planDetail?.rateupPlan?.planType,
-        displayName: planDetail?.rateupPlan?.displayName,
+        planFeatures: planDetail?.RateupPlan?.description,
+        planType: planDetail?.RateupPlan?.planType,
+        displayName: planDetail?.RateupPlan?.displayName,
         paymentMethod: order?.payment?.method || "",
         paymentStatus: order.paymentStatus,
         subscriptionId: order.subscriptionId,
@@ -730,4 +746,81 @@ export async function getRateuplanById(id: string) {
       id,
     },
   });
+}
+
+export async function updateOrder(orderId, data) {
+  return await prisma.order.update({
+    where: {
+      id: orderId,
+    },
+    data,
+  });
+}
+
+export async function updateSubscriptionForTrial(
+  orgId,
+  rateupPlanId,
+  subscriptionId,
+  userId,
+) {
+  const rateupPlan = await prisma.rateupPlan.findUnique({
+    where: { id: rateupPlanId },
+    include: {
+      paymentPlan: true,
+    },
+  });
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  const updatedSubscription = await prisma.subscription.update({
+    where: { orgId: orgId },
+    data: {
+      basePlanId: rateupPlanId,
+      features: rateupPlan.features,
+      renewedAt: new Date(),
+      subscriptionRef: subscriptionId,
+      lastLimitAlertSentAt: null,
+      expiresAt: dayjs().add(rateupPlan.trialDays, "day").toDate(),
+    },
+  });
+
+  const updatedUsageStats = await prisma.usageStats.update({
+    where: {
+      orgId: orgId,
+    },
+    data: {
+      subscriptionStartDate: new Date(),
+      subscriptionEndDate: dayjs().add(rateupPlan.trialDays, "day").toDate(),
+      monthlyMessagesCount: 0,
+      monthlySurveyResponses: 0,
+      monthlyWaSurveyResponses: 0,
+      lastMonthlyResettedDate: new Date(),
+    },
+  });
+
+  console.log("....................updating subscription.....................");
+
+  const msg = {
+    to: user?.email, // Change to your recipient
+    // from: 'hello@rateup.app', // Change to your verified sender
+    subject: "Rateup Subscription Trial Started - Rateup.app",
+    text: `Rateup Subscription Trial Started`,
+    html: createEmailBodyTrialSubscriptionActivated(
+      rateupPlan,
+      dayjs(updatedUsageStats.subscriptionEndDate).format("MMMM D, YYYY"),
+      user.name,
+    ),
+  };
+  try {
+    sendAWSEmail(msg);
+  } catch (error) {
+    console.error(error);
+    throw new Error("Email sending failed. E:" + error);
+  }
+
+  return { success: true, data: updatedSubscription };
 }
