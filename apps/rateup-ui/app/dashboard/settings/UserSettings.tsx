@@ -47,6 +47,8 @@ import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
 
+import LocaleSwitcher from "@/components/translation/LocaleSwitcher";
+
 import { SAVE_HOTKEY } from "../../../utils/constants";
 
 const ProfileSettings = () => {
@@ -274,6 +276,7 @@ const ProfileSettings = () => {
             <Text> {retrieveRole(profileData?.data?.data?.role)}</Text>
             <Text size="sm">{profileData?.data?.data?.email}</Text>
           </Stack>
+          <LocaleSwitcher />
         </Flex>
         <Divider orientation={"vertical"} />
         <Flex

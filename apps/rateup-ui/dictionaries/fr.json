@@ -2101,5 +2101,25 @@
   "Last Login": "Dernière connexion",
   "Subscription": "Abonnement",
   "Renewal Date": "Date de renouvellement",
-  "Days Remaining": "Jours restants"
+  "Days Remaining": "Jours restants",
+  "Edit Labels": "Modifier les étiquettes",
+  "No account found!": "Aucun compte trouvé !",
+  "Enter the text": "Entrez le texte",
+  "Are you sure you want to DeRegister this WhatsApp Business Account?": "Êtes-vous sûr de vouloir désinscrire ce compte WhatsApp Business ?",
+  "WhatsApp Template for Successful Customer Registration": "Modèle WhatsApp pour l'enregistrement réussi des clients",
+  "Error: ": "Erreur: ",
+  "Back to Edit Questions": "Retour à la modification des questions",
+  "Update Labels": "Mettre à jour les étiquettes",
+  "Contact Settings": "Paramètres de contact",
+  "Inbox labels": "Étiquettes de la boîte de réception",
+  "label name": "nom de l'étiquette",
+  "Add New Inbox Label": "Ajouter une nouvelle étiquette de boîte de réception",
+  "LocaleSwitcher": {
+    "en": "English",
+    "ar": "العربية",
+    "fr": "Français",
+    "de": "Deutsch",
+    "hi": "हिन्दी",
+    "Label": "Étiquette"
+  }
 }

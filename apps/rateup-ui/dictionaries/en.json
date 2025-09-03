@@ -2127,5 +2127,13 @@
   "Contact Settings": "Contact Settings",
   "Inbox labels": "Inbox labels",
   "label name": "label name",
-  "Add New Inbox Label": "Add New Inbox Label"
+  "Add New Inbox Label": "Add New Inbox Label",
+  "LocaleSwitcher": {
+    "en": "English",
+    "ar": "العربية",
+    "fr": "Français",
+    "de": "Deutsch",
+    "hi": "हिन्दी",
+    "Label": "Label"
+  }
 }

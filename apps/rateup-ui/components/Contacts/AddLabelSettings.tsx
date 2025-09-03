@@ -36,7 +36,7 @@ const AddLabelSettings = ({ cTags, ...props }) => {
 
   useEffect(() => {
     form.setValues({
-      inboxLabels: cTags?.inboxLabels,
+      inboxLabels: cTags?.inboxLabels || [],
       contactTags: [],
       contactGroupTags: [],
     });
@@ -91,7 +91,7 @@ export const LabelSettings = ({ t, form }) => {
         {t("Inbox labels")}
       </Title>
       <Stack gap="xs">
-        {form.values.inboxLabels.map((tag, index) => (
+        {form.values?.inboxLabels?.map((tag, index) => (
           <Flex key={index} align="center" gap="sm">
             <TextInput
               {...form.getInputProps(`inboxLabels.${index}.name`)}
