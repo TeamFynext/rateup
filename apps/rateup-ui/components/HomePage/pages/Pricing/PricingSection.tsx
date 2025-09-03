@@ -40,7 +40,7 @@ const PricingSection = ({ onPlanSelect = null }) => {
     ? plans.filter(
         (plan) =>
           plan.name === "FREE PLAN" ||
-          (plan.paymentPlan && plan?.paymentPlan?.curreny === currency),
+          (plan.paymentPlan && plan?.paymentPlan?.currency === currency),
       )
     : [];
   function handlePlanSelection(plan) {
