@@ -21,7 +21,6 @@ import {
   useActiveSurveyStats,
   useOverallStats,
 } from "@/backend/dashboard/dashboard.query";
-import { useIsTellUsMoreCompleted } from "@/backend/org/org.query";
 import { StatCards, StatCardSkeleton } from "@/components/Dashboard/StatCards";
 import SubscriptionCard from "@/components/Dashboard/SubscriptionCard";
 import {
@@ -33,24 +32,11 @@ import TeamMembers from "@/components/Dashboard/TeamMembers";
 dayjs.extend(relativeTime);
 
 export default function DashboardHome() {
-  const {
-    data: isTellUsMoreComplete,
-    isLoading: isTellUsMoreCompleteLoading,
-    isFetched,
-  } = useIsTellUsMoreCompleted();
   const { data: activeSurveyData, isLoading: activeSurveyLoading } =
     useActiveSurveyStats();
   const router = useRouter();
   const { data: overallData, isLoading: overallStatsLoading } =
     useOverallStats();
-
-  useEffect(() => {
-    if (!isFetched || isTellUsMoreCompleteLoading) return;
-
-    if (isTellUsMoreComplete === false) {
-      router.replace("/login/complete-login");
-    }
-  }, [isTellUsMoreComplete, isFetched, isTellUsMoreCompleteLoading]);
 
   return (
     <div className="px-2 pt-4 md:pt-0 lg:pt-0">
