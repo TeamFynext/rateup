@@ -89,7 +89,7 @@ export default function Providers({ children, locale, messages }) {
       locale={locale}
       messages={messages}
       onError={onError}
-      timeZone={timeZone}
+      timeZone={timeZone ?? "UTC"}
     >
       <QueryClientProvider client={queryClient}>
         <UserProvider>

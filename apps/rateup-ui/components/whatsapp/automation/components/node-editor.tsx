@@ -505,15 +505,15 @@ const MediaNodeEditor: React.FC<
   const getFileSizeLimit = () => {
     switch (nodeType) {
       case "imageNode":
-        return 5000000; // 5MB
+        return 5 * 1024 * 1024;
       case "videoNode":
-        return 10000000; // 10MB - WhatsApp limit is 16MB, but we use 10MB
+        return 16 * 1024 * 1024;
       case "audioNode":
-        return 10000000; // 10MB - WhatsApp limit is 16MB, but we use 10MB
+        return 16 * 1024 * 1024;
       case "documentNode":
-        return 100000000; // 100MB
+        return 100 * 1024 * 1024;
       default:
-        return 300000;
+        return 0.3 * 1024 * 1024;
     }
   };
 
@@ -567,8 +567,13 @@ const MediaNodeEditor: React.FC<
     } catch (error) {
       setLoading(false);
       showErrorToast(
-        translations("Error uploading file to server:") + JSON.stringify(error),
-        "file-uploading",
+        typeof error === "string"
+          ? error
+          : translations("Error uploading file to server:") +
+              JSON.stringify(error),
+        "upload-file",
+        null,
+        true,
       );
     }
   };
