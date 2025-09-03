@@ -1,3 +1,4 @@
+import { API_URL } from "../../constants/constants";
 import { formatDateT1 } from "../../date";
 
 export function createEmailBodySubscriptionActivated(
@@ -160,5 +161,79 @@ export function createEmailBodySubscriptionActivated(
           </div>
         </body>
       </html>
+      `;
+}
+
+export function createEmailBodyTrialSubscriptionActivated(
+  plan,
+  expiresAt: string,
+  userName,
+) {
+  return `
+      <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Your Trial Started</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { margin:0; padding:0; background:#f5f7fb; font-family: Arial, sans-serif; }
+    .container { width:100%; max-width:600px; margin:0 auto; background:#ffffff; border-radius:12px; overflow:hidden; }
+    .header { padding:24px; display:flex; justify-content:space-between; align-items:center; }
+    .logo { max-width:120px; }
+    .account { font-size:14px; color:#6b7280; }
+    .hero { background:#f3f6ff; padding:28px 24px; }
+    .hero h1 { margin:0; font-size:24px; font-weight:600; color:#111827; }
+    .hero p { margin:12px 0 0; font-size:16px; line-height:1.6; color:#374151; }
+    .content { padding:24px; font-size:16px; line-height:1.6; color:#374151; }
+    .list { margin:0 0 16px 20px; padding:0; }
+    .btn { display:inline-block; padding:14px 22px; font-size:16px; font-weight:700; text-decoration:none; border-radius:8px; }
+    .btn-primary { background:#2563EB; color:#fff; }
+    .btn-dark { background:#111827; color:#fff; padding:12px 20px; font-size:15px; }
+    .muted { font-size:14px; color:#6b7280; }
+    .card { border:1px solid #e5e7eb; border-radius:8px; padding:12px 16px; margin:16px 0; }
+    .footer { text-align:center; font-size:13px; color:#9ca3af; padding:20px; }
+    /* Responsive */
+    @media only screen and (max-width:600px) {
+      .header { flex-direction:column; align-items:flex-start; gap:8px; }
+      .content { padding:16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <img src="${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/email/rateup_logo.png" alt="{{product_name}} logo" class="logo">
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+      <h1>Your RateUp trial has begun 🎉</h1>
+      <p>Hi ${userName}, your ${plan.trialDays}-day trial started and ends on <strong>${expiresAt}</strong>.</p>
+    </div>
+
+    <!-- Body -->
+    <div class="content">
+      <p>During your trial you get full access to: All ${plan.displayName} plan features</p>
+
+      <a href="${API_URL}" class="btn btn-primary">Get Started</a>
+
+      <p class="muted">Tip: Add your team, import data, and explore templates to make the most of your trial.</p>
+
+      <div class="notice">
+        <strong>Important:</strong> At the end of your trial, 
+        your subscription will automatically renew and your payment method will be charged 
+        <strong>${plan?.paymentPlan?.amount} / ${plan.paymentPlan?.period}</strong>, unless you cancel before then.
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      © {{current_year}} {{company_name}}. All rights reserved.<br>
+    </div>
+  </div>
+</body>
+</html>
       `;
 }

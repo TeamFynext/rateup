@@ -20,6 +20,7 @@ const createCheckoutRequestSchema = z.object({
     required_error: "Rateup Plan Id is required",
   }),
   isAnnualMessageLimit: z.boolean(),
+  trialDays: z.number().optional(),
 });
 const createRateUpPlanSchema = z.object({
   name: z.string().trim().min(1),
@@ -30,6 +31,7 @@ const createRateUpPlanSchema = z.object({
   stripeId: z.string().optional(),
   description: z.array(z.string()).min(1),
   features: z.any().optional(),
+  trialDays: z.number(),
 });
 
 const updateRateUpPlanSchema = z.object({
@@ -42,6 +44,7 @@ const updateRateUpPlanSchema = z.object({
   stripeId: z.string().optional(),
   description: z.array(z.string()).min(1).optional(),
   features: z.any().optional(),
+  trialDays: z.number(),
 });
 
 const rateupPlanParamSchema = z.object({
@@ -53,6 +56,13 @@ const paymentPlanDeleteSchema = z.object({
   planId: z.string(),
 });
 
+const orgPlanEmailSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  orgName: z.string(),
+  planName: z.string(),
+});
+
 export const { schemas: paymentSchemas, $ref: $Pref } = buildJsonSchemas(
   {
     createCheckoutRequestSchema,
@@ -60,6 +70,7 @@ export const { schemas: paymentSchemas, $ref: $Pref } = buildJsonSchemas(
     updateRateUpPlanSchema,
     rateupPlanParamSchema,
     paymentPlanDeleteSchema,
+    orgPlanEmailSchema,
   },
   { $id: "paymentSchema" },
 );
@@ -78,3 +89,4 @@ export type updateRateUpPlanInput = z.infer<typeof updateRateUpPlanSchema>;
 export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
 export type rateupPlanParamInput = z.infer<typeof rateupPlanParamSchema>;
 export type paymentPlanDeleteInput = z.infer<typeof paymentPlanDeleteSchema>;
+export type orgPlanEmailInput = z.infer<typeof orgPlanEmailSchema>;

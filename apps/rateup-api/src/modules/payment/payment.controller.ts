@@ -12,14 +12,17 @@ import {
   getAllPaymentSubscriptions,
   getAllRateupPaymentPlans,
   syncPaymentPlans,
+  updateOrder,
   updatePaymentPlan,
   updateRateUpPlan,
   updateSubscription,
+  updateSubscriptionForTrial,
   verifyPayment,
 } from "./payment.service";
 import {
   CreateCheckoutInput,
   createRateUpPlanInput,
+  orgPlanEmailInput,
   paymentPlanDeleteInput,
   rateupPlanParamInput,
   UpdatePlanInput,
@@ -27,6 +30,12 @@ import {
 } from "./payment.schema";
 import Session from "supertokens-node/recipe/session";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
+import { log } from "../../utils/logger";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
+import { sendEmailService } from "../email/email.service";
+import { html } from "cheerio";
+import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected";
+import { Order } from "../../../generated/prisma/client";
 
 export async function createCheckoutSessionHandler(
   request: FastifyRequest<{
@@ -282,5 +291,49 @@ export async function deletePaymentPlanHandler(
   } catch (error) {
     console.error(error);
     reply.code(500).send("Failed");
+  }
+}
+
+export async function sendEmailPlanSelectionDetailsHandler(
+  request: FastifyRequest<{ Body: orgPlanEmailInput }>,
+  reply: FastifyReply,
+) {
+  try {
+    const emailParams = {
+      to: "hello@rateup.app",
+      text: "ALERT: User initiated subscription",
+      subject: "ALERT: User initiated subscription",
+      html: createEmailBodyPricingPlanSelected(request.body),
+    };
+    await sendAWSEmail(emailParams);
+    reply.code(200).send();
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send("email sending failed");
+  }
+}
+
+export async function updateSubscriptionOrderHandler(
+  request: FastifyRequest<{
+    Params: { orderId: string };
+    Body: Partial<Order>;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const order = await updateOrder(request.params.orderId, request.body);
+    const { status } = request.body;
+    if (status && status === "COMPLETE") {
+      await updateSubscriptionForTrial(
+        request.user.orgId,
+        order.rateupPlanId,
+        order.subscriptionId,
+        request.userId,
+      );
+    }
+    reply.code(200).send();
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send("Updating order failed");
   }
 }
