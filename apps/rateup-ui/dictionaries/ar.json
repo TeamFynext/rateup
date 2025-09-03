@@ -2102,5 +2102,25 @@
   "Last Login": "آخر تسجيل دخول",
   "Subscription": "الاشتراك",
   "Renewal Date": "تاريخ التجديد",
-  "Days Remaining": "الأيام المتبقية"
+  "Days Remaining": "الأيام المتبقية",
+  "Edit Labels": "تحرير التسميات",
+  "No account found!": "لا يوجد حساب!",
+  "Enter the text": "أدخل النص",
+  "Are you sure you want to DeRegister this WhatsApp Business Account?": "هل أنت متأكد أنك تريد إلغاء تسجيل حساب WhatsApp Business هذا؟",
+  "WhatsApp Template for Successful Customer Registration": "قالب WhatsApp لتسجيل العملاء بنجاح",
+  "Error: ": "خطأ: ",
+  "Back to Edit Questions": "العودة إلى تحرير الأسئلة",
+  "Update Labels": "تحديث التسميات",
+  "Contact Settings": "إعدادات الاتصال",
+  "Inbox labels": "تسميات البريد الوارد",
+  "label name": "اسم التسمية",
+  "Add New Inbox Label": "إضافة تسمية جديدة للبريد الوارد",
+  "LocaleSwitcher": {
+    "en": "English",
+    "ar": "العربية",
+    "fr": "Français",
+    "de": "Deutsch",
+    "hi": "हिन्दी",
+    "Label": "التسمية"
+  }
 }

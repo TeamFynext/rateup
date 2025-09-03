@@ -26,6 +26,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { theme } from "@/config/mantineTheme";
 import FacebookPixel from "@/components/Analytics/FacebookPixel";
 import RateupLoader from "@/components/Loaders/RateupLoader";
+import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider";
 import { isProduction } from "@/utils/constants";
 import { geist, notoColorEmogi } from "@/utils/fonts";
@@ -57,15 +58,15 @@ export default async function RootLayout({
       <body className={`${geist.className},${notoColorEmogi.className}`}>
         <MantineProvider theme={theme}>
           <Suspense fallback={<RateupLoader h={"100dvh"} />}>
-            <ModalsProvider>
-              <Notifications />
-              <SuperTokensProvider>
-                <Providers locale={locale} messages={messages}>
+            <Notifications />
+            <SuperTokensProvider>
+              <Providers locale={locale} messages={messages}>
+                <ModalsProvider modals={allModalManagerModalsObj}>
                   {children}
-                </Providers>
-                <GoogleTagManager gtmId="GTM-NDC3D7DP" />
-              </SuperTokensProvider>
-            </ModalsProvider>
+                </ModalsProvider>
+              </Providers>
+              <GoogleTagManager gtmId="GTM-NDC3D7DP" />
+            </SuperTokensProvider>
           </Suspense>
         </MantineProvider>
       </body>

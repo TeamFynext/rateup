@@ -2102,5 +2102,25 @@
   "Last Login": "अंतिम लॉगिन",
   "Subscription": "सदस्यता",
   "Renewal Date": "नवीनीकरण तिथि",
-  "Days Remaining": "बचे हुए दिन"
+  "Days Remaining": "बचे हुए दिन",
+  "Edit Labels": "लेबल संपादित करें",
+  "No account found!": "कोई खाता नहीं मिला!",
+  "Enter the text": "पाठ दर्ज करें",
+  "Are you sure you want to DeRegister this WhatsApp Business Account?": "क्या आप वाकई इस WhatsApp Business Account को डeregister करना चाहते हैं?",
+  "WhatsApp Template for Successful Customer Registration": "WhatsApp टेम्पलेट सफल ग्राहक पंजीकरण के लिए",
+  "Error: ": "त्रुटि: ",
+  "Back to Edit Questions": "सवालों को संपादित करने के लिए वापस जाएं",
+  "Update Labels": "लेबल अपडेट करें",
+  "Contact Settings": "संपर्क सेटिंग्स",
+  "Inbox labels": "इनबॉक्स लेबल",
+  "label name": "लेबल नाम",
+  "Add New Inbox Label": "नया इनबॉक्स लेबल जोड़ें",
+  "LocaleSwitcher": {
+    "en": "English",
+    "ar": "العربية",
+    "fr": "Français",
+    "de": "Deutsch",
+    "hi": "हिन्दी",
+    "Label": "लेबल"
+  }
 }
