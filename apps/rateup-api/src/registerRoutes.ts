@@ -98,6 +98,8 @@ import { notificationSchema } from "./modules/notification/notification.schema";
 import { instagramWebhookRoutes } from "./modules/whatsapp/instagram/instagram.webhook.route";
 import { labelRoutes } from "./modules/label/label.route";
 import { labelSchema } from "./modules/label/label.schema";
+import { bookDemoSchemas } from "./modules/BookDemo/bookDemo.schema";
+import { bookDemoRoutes } from "./modules/BookDemo/bookDemo.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -146,6 +148,7 @@ export function registerRoutes(server: FastifyInstance): void {
     expoSchemas,
     notificationSchema,
     labelSchema,
+    bookDemoSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -222,4 +225,5 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(notificationRoutes, { prefix: "api/notification" });
   server.register(instagramWebhookRoutes, { prefix: "api/instagram/webhook" });
   server.register(labelRoutes, { prefix: "api/labels" });
+  server.register(bookDemoRoutes, { prefix: "api/bookdemo" });
 }
