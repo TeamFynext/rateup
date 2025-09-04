@@ -1,13 +1,12 @@
-import { useState } from "react";
-import Link from "next/link";
+import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-import { Stack } from "@mantine/core";
+import { Badge, Group, SegmentedControl, Stack, Text } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowRight } from "@tabler/icons-react";
 import { motion } from "framer-motion";
-import { CheckCircle2, CircleX } from "lucide-react";
 import { useTimeZone } from "next-intl";
 
 import { useCheckSession } from "@/hooks/checkSession";
@@ -29,20 +28,27 @@ import { useRouteAndCartStore } from "./store/RouteAndCartStore";
 const PricingSection = ({ onPlanSelect = null }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [period, setPeriod] = useState("monthly");
   const router = useRouter();
   const sharedStyles =
-    "bg-white border border-gray-200 rounded-2xl shadow-lg p-8 flex flex-col justify-between transition-all hover:shadow-2xl hover:scale-[1.03] duration-300";
+    "bg-white border border-gray-200 rounded-2xl shadow-lg p-8 px-4 flex flex-col justify-between transition-all hover:shadow-2xl hover:scale-[1.03] duration-300";
   const { data: plans, isLoading } = useRateupPaymentsPlans();
   const userTimeZone = useTimeZone();
   let currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
   const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
-  const rateupPlans = plans
-    ? plans.filter(
-        (plan) =>
-          plan.name === "FREE PLAN" ||
-          (plan.paymentPlan && plan?.paymentPlan?.currency === currency),
-      )
-    : [];
+  const rateupPlans = useMemo(
+    () =>
+      plans
+        ? plans.filter(
+            (plan) =>
+              plan.name === "FREE PLAN" ||
+              (plan.paymentPlan &&
+                plan?.paymentPlan?.currency === currency &&
+                plan.paymentPlan.period === period),
+          )
+        : [],
+    [plans, currency, period],
+  );
   function handlePlanSelection(plan) {
     if (onPlanSelect) onPlanSelect();
     if (plan.name === "FREE PLAN") {
@@ -52,6 +58,23 @@ const PricingSection = ({ onPlanSelect = null }) => {
     setSelectedPlan(plan);
     open();
   }
+  const periods = [
+    { label: "Monthly", value: "monthly" },
+    {
+      label: (
+        <Group gap={"xs"} justify="center">
+          <Text>Yearly</Text>
+          <Badge
+            color={period === "yearly" ? "white" : "#00397b"}
+            c={period === "yearly" ? "#00397b" : "white"}
+          >
+            Save 20%
+          </Badge>
+        </Group>
+      ),
+      value: "yearly",
+    },
+  ];
   if (isLoading) return <RateupLoader />;
   return (
     <section className="relative bg-gray-100 py-12 px-6 md:px-12 text-gray-800">
@@ -63,9 +86,28 @@ const PricingSection = ({ onPlanSelect = null }) => {
           Choose What You Need
         </h2>
       </div>
+      <Stack justify={"center"} align="center" gap={0}>
+        <Image
+          src={"/images/subscriptionArrow.png"}
+          height={32}
+          width={67}
+          alt="image of arrow"
+        />
+        <SegmentedControl
+          transitionDuration={500}
+          transitionTimingFunction="linear"
+          size="md"
+          w={400}
+          color={"#00397b"}
+          bg="#cce1ee"
+          data={periods}
+          value={period}
+          onChange={setPeriod}
+        />
+      </Stack>
 
       <motion.div
-        className="grid gap-8 sm:grid-cols-1 lg:grid-cols-4 md:grid-cols-2 max-w-8xl mx-auto mt-12"
+        className="grid gap-8 sm:grid-cols-1 lg:grid-cols-4 md:grid-cols-2 max-w-7xl mx-auto mt-12"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -82,11 +124,18 @@ const PricingSection = ({ onPlanSelect = null }) => {
           <div>
             <h3 className="text-2xl font-semibold text-[#00397b] mb-2">
               Enterprise
+              <span className="text-[#1c518e] text-sm font-medium mt-6 ml-2">
+                ( Everything in Pro+ )
+              </span>
             </h3>
-            <p className="text-5xl font-bold text-[#1c518e]">Custom</p>
-            <p className="text-gray-600 mt-3 mb-6 text-sm">
-              Customized Plan & Pricing
-            </p>
+            <p className="text-4xl font-bold text-[#1c518e]">Custom</p>
+
+            <div className="mt-3">
+              <span className="text-gray-700 text-sm">
+                Customized Plan & Pricing
+              </span>
+            </div>
+
             <div className="text-xl text-center text-gray-700 mt-6 mb-4">
               Let&apos;s Talk!
             </div>
