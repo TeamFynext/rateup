@@ -35,6 +35,7 @@ export const useGetMessagesByContactId = (
   return useInfiniteQuery({
     queryKey: ["wa-messages", contactId, selectedPhone],
     initialPageParam: "",
+    placeholderData: { pages: [], pageParams: [] },
     queryFn: ({ pageParam }) =>
       getMessagesByContactId(contactId, pageParam, selectedPhone),
     getNextPageParam: (lastPage) =>

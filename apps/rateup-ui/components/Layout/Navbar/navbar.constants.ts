@@ -17,6 +17,7 @@ import {
   IconFileDescription,
   IconGift,
   IconHome2,
+  IconLabel,
   IconLinkPlus,
   IconLogout,
   IconLogs,
@@ -41,6 +42,7 @@ import {
   IconWaveSine,
 } from "@tabler/icons-react";
 
+import { GetLabelsRes } from "@/backend/label/label.types";
 import AddLabelSettings from "@/components/Contacts/AddLabelSettings";
 import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
 import {
@@ -82,10 +84,7 @@ export function getNavTopData(
   subscription?: Subscription,
   translations?: any,
   role?: string,
-  inboxLabels?: {
-    name: string;
-    color: string;
-  }[],
+  labels?: GetLabelsRes[],
 ) {
   function hasFeature(featurePath: SubscriptionFeaturePathName) {
     if (!subscription) return false;
@@ -159,22 +158,46 @@ export function getNavTopData(
                 children: [
                   {
                     label: "Add Label",
-                    icon: AddLabelSettings,
+                    icon: IconCirclePlus,
                   },
-                  ...(inboxLabels?.length
+                  {
+                    label: "Clear Label",
+                    icon: IconCircleX,
+                  },
+                  ...(labels?.length
                     ? [
-                        {
-                          label: "Clear Label",
-                          icon: IconCircleX,
-                        },
-                        ...inboxLabels?.map((lbl) => ({
-                          label: lbl.name,
-                          color: lbl.color,
-                          icon: IconBrandHipchat,
-                        })),
+                        ...(Array.isArray(labels)
+                          ? labels.map((lbl) => ({
+                              label: lbl.name,
+                              value: lbl.id,
+                              color: lbl.color,
+                              icon: IconBrandHipchat,
+                            }))
+                          : []),
                       ]
                     : []),
                 ],
+              },
+            ],
+          },
+        ]
+      : []),
+    ...(hasFeature(sfpn.WhatsAppCampaign)
+      ? [
+          {
+            icon: IconAddressBook,
+            label: translations("Contacts"),
+            hasSubmenu: true,
+            children: [
+              {
+                label: translations("Contacts"),
+                link: "/dashboard/contacts",
+                icon: IconAddressBook,
+              },
+              {
+                label: translations("labels"),
+                link: "/dashboard/contacts/labels",
+                icon: IconLabel,
               },
             ],
           },
@@ -197,15 +220,11 @@ export function getNavTopData(
                 link: "/dashboard/drip-campaigns",
                 icon: IconMessageBolt,
               },
-              {
-                label: translations("Contacts"),
-                link: "/dashboard/contacts",
-                icon: IconAddressBook,
-              },
             ],
           },
         ]
       : []),
+
     ...(hasFeature(sfpn.Whatsapp)
       ? [
           {

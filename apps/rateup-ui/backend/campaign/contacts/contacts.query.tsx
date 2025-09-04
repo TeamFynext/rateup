@@ -174,12 +174,10 @@ export const useEditContactMutation = (groupId) => {
 
 export const useEditContactLabelsMutation = (contactId: string) => {
   const queryClient = useQueryClient();
-  const { setSelectedContact, selectedContact } = useContactStore();
   return useMutation({
     mutationFn: editContactLabels,
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["contacts", "filtered"] });
-      setSelectedContact({ ...selectedContact, labels: data?.data?.labels });
       showSuccessToast(
         "Contact updated successfully.",
         "contact-update",

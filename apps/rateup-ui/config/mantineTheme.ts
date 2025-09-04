@@ -1,4 +1,10 @@
-import { createTheme, MantineColorsTuple } from "@mantine/core";
+import { machine } from "os";
+
+import {
+  createTheme,
+  MantineColorsTuple,
+  MantineThemeOverride,
+} from "@mantine/core";
 
 import { geist, notoColorEmogi } from "../utils/fonts";
 
@@ -41,11 +47,15 @@ const instaPink: MantineColorsTuple = [
   "#bc1888",
 ];
 
+const componentStyles: MantineThemeOverride = {
+  components: {},
+};
 export const theme = createTheme({
   fontFamily: `${geist.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
   primaryColor: "rateup-blue",
   primaryShade: 9,
   colors: { "rateup-blue": rateupBlue },
+  ...componentStyles,
 });
 
 export const whatsappTheme = createTheme({
@@ -53,6 +63,7 @@ export const whatsappTheme = createTheme({
   fontFamily: `${geist.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
   primaryShade: 9,
   colors: { "whatsapp-green": whatsappGreen },
+  ...componentStyles,
 });
 
 export const instaTheme = createTheme({
@@ -60,4 +71,5 @@ export const instaTheme = createTheme({
   fontFamily: `${geist.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
   primaryShade: 9,
   colors: { "insta-pink": instaPink },
+  ...componentStyles,
 });
