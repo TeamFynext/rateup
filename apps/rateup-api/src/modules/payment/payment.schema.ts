@@ -44,7 +44,7 @@ const updateRateUpPlanSchema = z.object({
   stripeId: z.string().optional(),
   description: z.array(z.string()).min(1).optional(),
   features: z.any().optional(),
-  trialDays: z.number(),
+  trialDays: z.number().optional(),
 });
 
 const rateupPlanParamSchema = z.object({
