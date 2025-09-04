@@ -32,7 +32,6 @@ import {
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import { ContactMenu } from "@/components/Card/ContactCard";
-import { LabelSettings } from "@/components/Contacts/AddLabelSettings";
 import ContactAction from "@/components/Contacts/ContactAction";
 import {
   CONTACT_SORT,
@@ -312,9 +311,6 @@ export const ContactSettings = ({ cTags }) => {
             w={"25rem"}
             {...form.getInputProps(`contactGroupTags`)}
           />
-
-          <LabelSettings form={form} t={translations} />
-
           <RateupButtonPrimary title={translations("Update")} type="submit" />
         </Stack>
       </form>

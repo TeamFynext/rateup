@@ -17,7 +17,7 @@ export function DataTableColumnHeader<TData, TValue>({
   column,
   title,
   className,
-}: DataTableColumnHeaderProps<TData, TValue>) {
+}: Readonly<DataTableColumnHeaderProps<TData, TValue>>) {
   if (!column.getCanSort()) {
     return <Text className={className}>{title}</Text>;
   }
@@ -30,6 +30,7 @@ export function DataTableColumnHeader<TData, TValue>({
             variant="subtle"
             size="compact-sm"
             color="light-dark('black', 'white')"
+            pl={0}
             fw={500}
             rightSection={
               column.getIsSorted() === "desc" ? (

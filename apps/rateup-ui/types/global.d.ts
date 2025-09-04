@@ -578,7 +578,7 @@ declare global {
     createdAt: Date;
     tags?: any;
     consent: boolean;
-    labels: string[];
+    labelIds: string[];
     waMessageAssignStatus: WaMessageAssignStatus;
     whatsappUserName?: string;
     blockedOnWhatsApp: boolean;
