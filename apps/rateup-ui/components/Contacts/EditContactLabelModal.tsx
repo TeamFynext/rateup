@@ -15,30 +15,42 @@ import "react-phone-number-input/style.css";
 
 import { useTranslations } from "next-intl";
 
-import { useTagsContext } from "@/context/TagsContext";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 import { ContainedMultiSelect } from "../input/ContainedInput/ContainedInput";
 
 const EditContactLabelModal = ({
   id,
   closeEditModal,
-  labels,
+  labelIds,
 }: {
   id: string;
   closeEditModal: () => void;
-  labels: string[];
+  labelIds: Array<string>;
 }) => {
   const translations = useTranslations();
-  const { tags } = useTagsContext();
-  const inboxLabels = tags.inboxLabels?.map((label) => label?.name) || [];
+  const tags = useLabelsContext();
+  const { setSelectedContact, selectedContact } = useContactStore();
+
+  const inboxLabels =
+    tags?.map((label) => ({
+      value: label?.id,
+      label: label?.name,
+    })) || [];
+
   const form = useForm({
     initialValues: {
-      labels: labels || [],
+      labels: labelIds || [],
     },
   });
   const editContactMutation = useEditContactLabelsMutation(id);
   const handleSubmit = () => {
     const values = form.getValues();
+    setSelectedContact({
+      ...selectedContact,
+      labelIds: values.labels,
+    });
     editContactMutation.mutate(
       { data: values, contactId: id },
       {
@@ -59,7 +71,7 @@ const EditContactLabelModal = ({
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <ContainedMultiSelect
           label="Labels"
-          placeholder="Add labels"
+          placeholder="Add label"
           data={inboxLabels}
           {...form.getInputProps("labels")}
         />

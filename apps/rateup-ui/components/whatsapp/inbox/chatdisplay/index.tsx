@@ -30,12 +30,10 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   const searchParams = useSearchParams();
   const { selectedContact: contact } = useContactStore();
   const { filter } = useChatFilterStore();
-  const currentContactId = searchParams.get("contactId") ?? contact?.id;
+  const currentContactId = contact?.id || searchParams.get("contactId");
 
-  const { data, error, isPending, isFetching } = useGetMessagesByContactId(
-    currentContactId,
-    filter?.phone,
-  );
+  const { data, error, isPending, isFetching, isFetched } =
+    useGetMessagesByContactId(currentContactId, filter?.phone);
 
   const messages = useMemo(
     () =>
@@ -90,7 +88,7 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
     );
   }
 
-  const showLoading = isPending || isFetching;
+  const showLoading = isPending || (isFetching && !isFetched);
 
   return (
     <PaperLayout p={0} className="h-full">

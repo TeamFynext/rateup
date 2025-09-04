@@ -45,7 +45,7 @@ const SubscriptionCard = () => {
           className={`text-xs font-semibold px-3 py-1 rounded-full
          ${daysRemaining > 0 ? "bg-[#69F0AE] text-[#075E54]" : "bg-[#ff525284] text-[#D32F2F]"}`}
         >
-          {daysRemaining > 0 ? "Active" : "Expired"}
+          {daysRemaining > 0 ? translations("Active") : translations("Expired")}
         </span>
       </div>
       <div className="flex flex-col gap-6">

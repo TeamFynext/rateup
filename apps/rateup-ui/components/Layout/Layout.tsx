@@ -27,6 +27,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
@@ -36,11 +37,11 @@ import SessionReact from "supertokens-auth-react/recipe/session";
 import { WaMessageAssignStatus } from "@/types/enums";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useChatContactCountStore } from "@/app/dashboard/whatsapp/inbox/store";
+import { useLabelsQuery } from "@/backend/label/label.query";
 import { useIsTellUsMoreCompleted } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
-import { TagsContext } from "@/context/TagsContext";
+import { LabelsContext } from "@/context/LabelsContext";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import {
@@ -143,7 +144,7 @@ const SubNavLinks = ({
   router,
   status,
   checkWhatsAppSettings,
-  cTags,
+  labels,
 }) => {
   // Handler for label filter click
   const chatFilterStore = useChatFilterStore();
@@ -152,6 +153,14 @@ const SubNavLinks = ({
     chatFilterStore.setFilter({
       ...chatFilterStore.filter,
       labels: labelName ? [labelName] : [],
+    });
+  };
+  const handleAddLabel = () => {
+    modals.openContextModal({
+      modal: "addLabelModal",
+      title: "Add Label",
+      centered: true,
+      innerProps: {},
     });
   };
 
@@ -206,20 +215,20 @@ const SubNavLinks = ({
       >
         <UnstyledButton
           onClick={() =>
-            index === 0 ? {} : handleLabelFilter(index === 1 ? "" : label.label)
+            index === 0 ? handleAddLabel() : handleLabelFilter(label?.value)
           }
           className={classes.link}
           w={60}
           data-active={
-            chatFilterStore.filter.labels.includes(label.label) || undefined
+            chatFilterStore.filter.labels.includes(label?.value) || undefined
           }
         >
           {[0, 1].includes(index) ? (
             <label.icon
               size={22}
               stroke={1.5}
-              cTags={cTags}
-              className={"mx-auto"}
+              labels={labels}
+              className={"m-auto"}
             />
           ) : (
             <div
@@ -280,11 +289,11 @@ const SubNavLinks = ({
         href="#"
         onClick={(event) => {
           event.preventDefault();
-          handleLabelFilter(index === 0 ? "" : label.label);
+          index === 0 ? handleAddLabel() : handleLabelFilter(label?.value);
         }}
         key={`label-text-${index}`}
         data-active={
-          chatFilterStore.filter.labels.includes(label.label) || undefined
+          chatFilterStore.filter.labels.includes(label?.value) || undefined
         }
         style={{ paddingLeft: 0, height: 44 }}
       >
@@ -674,13 +683,13 @@ const MainContent = ({
   appProps,
   navOpened,
   setNavOpened,
-  cTags,
+  labels,
 }) => {
   return (
     <motion.div className={styles["content-container"]}>
       <Flex className={`${styles["content-wrapper"]}`}>
-        <TagsContext.Provider value={{ tags: cTags }}>
-          <NavControlContext.Provider value={{ navOpened, setNavOpened }}>
+        <LabelsContext value={labels}>
+          <NavControlContext value={{ navOpened, setNavOpened }}>
             <AnimatePresence key={appProps.router.pathname}>
               <motion.div
                 className={styles["content-div"]}
@@ -696,8 +705,8 @@ const MainContent = ({
                 {children}
               </motion.div>
             </AnimatePresence>
-          </NavControlContext.Provider>
-        </TagsContext.Provider>
+          </NavControlContext>
+        </LabelsContext>
       </Flex>
     </motion.div>
   );
@@ -746,30 +755,29 @@ export default function Layout({ children }) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop, open }] = useDisclosure(false);
   const { data: sub, isPending } = useSubscription();
-  const { isPending: isPendingCTags, data: cTags } = useGetContactTags();
+  const { isPending: isPendingLabels, data: labels } = useLabelsQuery();
 
   const translations = useTranslations();
   const [navLinks, setNavLinks] = useState([]);
   const [lastLinksData, setLastLinksData] = useState([]);
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
   const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
-  const isLoading = isPending || isPendingCTags || isLoadingUserInfo;
+  const isLoading = isPending || isPendingLabels || isLoadingUserInfo;
   // Fetch inbox labels from DB
   // const { data: inboxLabelsData } = useGetInboxLabels();
 
   useEffect(() => {
     if (!isLoading) {
-      const inboxLabels = cTags?.inboxLabels || [];
       const [nLinks, lLinks] = getNavTopData(
         sub,
         translations,
         userInfo?.data?.role,
-        inboxLabels, // pass dynamic labels
+        labels, // pass dynamic labels
       );
       setNavLinks(nLinks);
       setLastLinksData(lLinks);
     }
-  }, [isLoading, sub, translations, userInfo?.data?.role, cTags]);
+  }, [isLoading, sub, translations, userInfo?.data?.role, labels]);
 
   if (query.msg === "welcome") {
     refetch();
@@ -941,7 +949,7 @@ export default function Layout({ children }) {
     router,
     status: userInfo?.data?.status || UserAvailabilityStatus.offline,
     checkWhatsAppSettings,
-    cTags,
+    labels,
   });
 
   const lastLinks = (
@@ -1021,7 +1029,7 @@ export default function Layout({ children }) {
             }}
             navOpened={navOpened}
             setNavOpened={setNavOpened}
-            cTags={cTags}
+            labels={labels}
           >
             {children}
           </MainContent>

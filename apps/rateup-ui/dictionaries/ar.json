@@ -2113,7 +2113,6 @@
   "Update Labels": "تحديث التسميات",
   "Contact Settings": "إعدادات الاتصال",
   "Inbox labels": "تسميات البريد الوارد",
-  "label name": "اسم التسمية",
   "Add New Inbox Label": "إضافة تسمية جديدة للبريد الوارد",
   "LocaleSwitcher": {
     "en": "English",
@@ -2122,5 +2121,22 @@
     "de": "Deutsch",
     "hi": "हिन्दी",
     "Label": "التسمية"
-  }
+  },
+  "New Conversations": "محادثات جديدة",
+  "Active Automations": "الأتمتة النشطة",
+  "Active Flows": "التدفقات النشطة",
+  "Loyalty Customers": "العملاء المخلصون",
+  "New Tickets": "التذاكر الجديدة",
+  "Teams Created": "الفرق التي تم إنشاؤها",
+  "Go to All Surveys": "اذهب إلى جميع الاستطلاعات",
+  "Go to All Flows": "اذهب إلى جميع التدفقات",
+  "Label name": "اسم التسمية",
+  "Create Tag": "إنشاء علامة",
+  "Add Label": "إضافة تسمية",
+  "Edit Label": "تحرير التسمية",
+  "Describe this label": "وصف هذه التسمية",
+  "labels": "التسميات",
+  "Are you sure you want to delete this label?": "هل أنت متأكد أنك تريد حذف هذه التسمية؟",
+  "Label created successfully": "تم إنشاء التسمية بنجاح",
+  "Contact labels created successfully": "تم إنشاء تسميات الاتصال بنجاح"
 }

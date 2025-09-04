@@ -2126,7 +2126,6 @@
   "Update Labels": "Update Labels",
   "Contact Settings": "Contact Settings",
   "Inbox labels": "Inbox labels",
-  "label name": "label name",
   "Add New Inbox Label": "Add New Inbox Label",
   "LocaleSwitcher": {
     "en": "English",
@@ -2135,5 +2134,22 @@
     "de": "Deutsch",
     "hi": "हिन्दी",
     "Label": "Label"
-  }
+  },
+  "New Conversations": "New Conversations",
+  "Active Flows": "Active Flows",
+  "Active Automations": "Active Automations",
+  "Loyalty Customers": "Loyalty Customers",
+  "New Tickets": "New Tickets",
+  "Teams Created": "Teams Created",
+  "Go to All Surveys": "Go to All Surveys",
+  "Go to All Flows": "Go to All Flows",
+  "Label name": "Label name",
+  "Create Tag": "Create Tag",
+  "Add Label": "Add Label",
+  "Edit Label": "Edit Label",
+  "Describe this label": "Describe this label",
+  "labels": "labels",
+  "Are you sure you want to delete this label?": "Are you sure you want to delete this label?",
+  "Label created successfully": "Label created successfully",
+  "Contact labels created successfully": "Contact labels created successfully"
 }
