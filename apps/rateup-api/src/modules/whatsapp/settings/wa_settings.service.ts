@@ -255,33 +255,52 @@ export async function getContactTag(orgId: string) {
     where: {
       orgId,
     },
-    select: {
-      contactTags: true,
-      contactGroupTags: true,
-      inboxLabels: true,
+    include: {
+      org: {
+        select: {
+          Labels: true,
+        },
+      },
     },
   });
   return res;
 }
 
 export async function updateContactTag(orgId: string, body: ContactTagSchema) {
-  const res = await prisma.waAccountSettings.upsert({
-    where: {
+  // const res = await prisma.waAccountSettings.upsert({
+  //   where: {
+  //     orgId,
+  //   },
+  //   create: {
+  //     orgId,
+  //     contactTags: body.tags,
+  //     contactGroupTags: body.groupTags,
+  //     // inboxLabels: body.inboxLabels,
+  //   },
+  //   update: {
+  //     contactTags: body.tags,
+  //     contactGroupTags: body.groupTags,
+  //     // inboxLabels: body.inboxLabels,
+  //   },
+  // });
+  // return res;
+  const bb = body.inboxLabels?.[0];
+  return await prisma.labels.create({
+    // where: {
+    //   orgId,
+    // },
+    data: {
       orgId,
+      name: bb?.name,
+      color: bb?.color,
+      description: bb?.description,
     },
-    create: {
-      orgId,
-      contactTags: body.tags,
-      contactGroupTags: body.groupTags,
-      inboxLabels: body.inboxLabels,
-    },
-    update: {
-      contactTags: body.tags,
-      contactGroupTags: body.groupTags,
-      inboxLabels: body.inboxLabels,
-    },
+    // update: {
+    //   name: bb?.name,
+    //   color: bb?.color,
+    //   description: bb?.description,
+    // },
   });
-  return res;
 }
 
 export async function getWaLogs(orgId: string, query: PaginationQuery) {

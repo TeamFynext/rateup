@@ -74,6 +74,7 @@ const contactTagSchema = z.object({
     z.object({
       name: z.string(),
       color: z.string(),
+      description: z.string().optional(),
     }),
   ),
 });
