@@ -130,9 +130,11 @@ const PricingSection = ({ onPlanSelect = null }) => {
             </h3>
             <p className="text-4xl font-bold text-[#1c518e]">Custom</p>
 
-            <Text mt={"md"} c={"dimmed"} fw={400} size="md">
-              Customized Plan & Pricing
-            </Text>
+            <div className="mt-3">
+              <span className="text-gray-700 text-sm">
+                Customized Plan & Pricing
+              </span>
+            </div>
 
             <div className="text-xl text-center text-gray-700 mt-6 mb-4">
               Let&apos;s Talk!

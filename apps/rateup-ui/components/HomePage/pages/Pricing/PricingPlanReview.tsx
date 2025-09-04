@@ -28,8 +28,11 @@ const reviews = [
 const PricingPlanReview = () => {
   return (
     <div className="grid grid-cols-3 gap-8 p-6">
-      {reviews.map((review) => (
-        <div className="flex flex-col gap-2 bg-gray-100 p-6 rounded-lg">
+      {reviews.map((review, index) => (
+        <div
+          className="flex flex-col gap-2 bg-gray-100 p-6 rounded-lg"
+          key={index}
+        >
           <h4 className="italic">"{review.title}"</h4>
           <p className="text-sm pl-3">{review.description}</p>
           <p className="flex justify-end italic"> - {review.author}</p>
