@@ -3,6 +3,8 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 
+import { useTranslations } from "next-intl";
+
 interface StatCardProps {
   label: string;
   value: number;
@@ -20,6 +22,7 @@ export const StatCards = ({
   iconBgColor,
   OnClickAction,
 }: StatCardProps) => {
+  const translations = useTranslations();
   const router = useRouter();
   return (
     <div
@@ -27,7 +30,9 @@ export const StatCards = ({
       onClick={() => router.push(`${OnClickAction}`)}
     >
       <div>
-        <div className="text-sm font-semibold text-[#343A40] mt-1">{label}</div>
+        <div className="text-sm font-semibold text-[#343A40] mt-1">
+          {translations(`${label}`)}
+        </div>
         <div className={`text-4xl font-bold`} style={{ color: valueColor }}>
           {value}
         </div>

@@ -35,7 +35,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   DataTableToolbar,
-}: DataTableProps<TData, TValue>) {
+}: Readonly<DataTableProps<TData, TValue>>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -72,54 +72,59 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" h={"100%"}>
       {DataTableToolbar && <DataTableToolbar table={table} />}
-      <Paper withBorder>
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Table.Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Table.Th key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </Table.Th>
-                ))}
-              </Table.Tr>
-            ))}
-          </Table.Thead>
-          <Table.Tbody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <Table.Tr
-                  key={row.id}
-                  bg={row.getIsSelected() ? "blue.0" : undefined}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <Table.Td key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </Table.Td>
+      <Paper withBorder h={"100%"}>
+        <Table.ScrollContainer
+          maxHeight={"calc(100dvh - 160px)"}
+          minWidth={300}
+        >
+          <Table striped highlightOnHover stickyHeader>
+            <Table.Thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <Table.Tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <Table.Th key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </Table.Th>
                   ))}
                 </Table.Tr>
-              ))
-            ) : (
-              <Table.Tr>
-                <Table.Td colSpan={columns.length}>
-                  <Center h={96}>
-                    <Text c="dimmed">No results.</Text>
-                  </Center>
-                </Table.Td>
-              </Table.Tr>
-            )}
-          </Table.Tbody>
-        </Table>
+              ))}
+            </Table.Thead>
+            <Table.Tbody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <Table.Tr
+                    key={row.id}
+                    bg={row.getIsSelected() ? "blue.0" : undefined}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <Table.Td key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </Table.Td>
+                    ))}
+                  </Table.Tr>
+                ))
+              ) : (
+                <Table.Tr>
+                  <Table.Td colSpan={columns.length}>
+                    <Center h={96}>
+                      <Text c="dimmed">No results.</Text>
+                    </Center>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       </Paper>
       <DataTablePagination table={table} />
     </Stack>

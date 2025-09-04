@@ -1,6 +1,7 @@
 import { WHATSAPP_URL } from "..";
 import { WaConfigType } from "../../../types/enums";
 import { axiosClient } from "../../apiClient";
+import { GetLabelsRes } from "../../label/label.types";
 
 const SettingsUrl = `${WHATSAPP_URL}/settings`;
 const authUrl = `${WHATSAPP_URL}/auth`;
@@ -78,10 +79,6 @@ export async function updateContactTags(tags) {
 export type GetContactTagsRes = {
   contactTags: string[];
   contactGroupTags: string[];
-  inboxLabels: Array<{
-    name: string;
-    color: string;
-  }>;
 };
 export async function getContactTags() {
   return (await axiosClient.get(`${SettingsUrl}/contact_tag`))

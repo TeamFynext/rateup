@@ -2113,7 +2113,6 @@
   "Update Labels": "लेबल अपडेट करें",
   "Contact Settings": "संपर्क सेटिंग्स",
   "Inbox labels": "इनबॉक्स लेबल",
-  "label name": "लेबल नाम",
   "Add New Inbox Label": "नया इनबॉक्स लेबल जोड़ें",
   "LocaleSwitcher": {
     "en": "English",
@@ -2122,5 +2121,22 @@
     "de": "Deutsch",
     "hi": "हिन्दी",
     "Label": "लेबल"
-  }
+  },
+  "New Conversations": "नई बातचीतें",
+  "Active Automations": "सक्रिय स्वचालन",
+  "Active Flows": "सक्रिय फ्लोज़",
+  "Loyalty Customers": "वफादार ग्राहक",
+  "New Tickets": "नए टिकट",
+  "Teams Created": "बनाई गई टीमें",
+  "Go to All Surveys": "सभी सर्वेक्षणों पर जाएँ",
+  "Go to All Flows": "सभी फ्लोज़ पर जाएँ",
+  "Label name": "लेबल नाम",
+  "Create Tag": "टैग बनाएं",
+  "Add Label": "लेबल जोड़ें",
+  "Edit Label": "लेबल संपादित करें",
+  "Describe this label": "इस लेबल का वर्णन करें",
+  "labels": "लेबल",
+  "Are you sure you want to delete this label?": "क्या आप वाकई इस लेबल को हटाना चाहते हैं?",
+  "Label created successfully": "लेबल सफलतापूर्वक बनाया गया",
+  "Contact labels created successfully": "संपर्क लेबल सफलतापूर्वक बनाए गए"
 }

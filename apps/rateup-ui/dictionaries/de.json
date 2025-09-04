@@ -2114,7 +2114,6 @@
   "Update Labels": "Labels aktualisieren",
   "Contact Settings": "Kontoeinstellungen",
   "Inbox labels": "Posteingangs-Labels",
-  "label name": "Label-Name",
   "Add New Inbox Label": "Neues Posteingangs-Label hinzufügen",
   "LocaleSwitcher": {
     "en": "English",
@@ -2123,5 +2122,22 @@
     "de": "Deutsch",
     "hi": "हिन्दी",
     "Label": "Label"
-  }
+  },
+  "New Conversations": "Neue Gespräche",
+  "Active Automations": "Aktive Automatisierungen",
+  "Active Flows": "Aktive Flows",
+  "Loyalty Customers": "Treuekunden",
+  "New Tickets": "Neue Tickets",
+  "Teams Created": "Erstellte Teams",
+  "Go to All Surveys": "Gehe zu allen Umfragen",
+  "Go to All Flows": "Gehe zu allen Flows",
+  "Label name": "Label-Name",
+  "Create Tag": "Tag erstellen",
+  "Add Label": "Label hinzufügen",
+  "Edit Label": "Label bearbeiten",
+  "Describe this label": "Beschreibe dieses Label",
+  "labels": "Labels",
+  "Are you sure you want to delete this label?": "Sind Sie sicher, dass Sie dieses Label löschen möchten?",
+  "Label created successfully": "Label erfolgreich erstellt",
+  "Contact labels created successfully": "Kontaktlabels erfolgreich erstellt"
 }

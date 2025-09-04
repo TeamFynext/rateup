@@ -227,7 +227,7 @@ export const LabelEdit = ({ contact, opened, close }) => {
       >
         <EditContactLabelModal
           id={contact?.id}
-          labels={contact.labels}
+          labelIds={contact.labelIds}
           closeEditModal={close}
         />
       </FormModalLayout>

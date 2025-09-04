@@ -44,7 +44,7 @@ function VerifyEmailPage({ sendEmail }) {
         variant="subtle"
       />
 
-      <Link href="/auth/logout" style={{ textDecoration: "none" }}>
+      <Link href="/logout" style={{ textDecoration: "none" }}>
         <NavLink
           component="div"
           style={{ fontWeight: 620 }}
