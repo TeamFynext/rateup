@@ -11,6 +11,7 @@ import Session from "supertokens-node/recipe/session";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
 import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken";
 import { IntegratedApps } from "../../types/enums";
+import { TellUsMore } from "./org.controller";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({
@@ -548,4 +549,94 @@ export async function pauseOrg(id, data: PauseOrgInput) {
     },
     data,
   });
+}
+
+export async function completeOrgDetails(
+  userId: string,
+  data: {
+    orgName?: string;
+    tellUsMore?: TellUsMore;
+    isTellUsMoreCompleted?: boolean;
+    phone?: string;
+  },
+) {
+  return prisma.$transaction(async (tx) => {
+    const org = await tx.org.findFirst({
+      where: { ownerId: userId },
+      select: { id: true },
+    });
+
+    if (!org) {
+      throw new Error("Organization not found for this user");
+    }
+
+    const updatedOrg = await tx.org.update({
+      where: { id: org.id },
+      data: {
+        ...(data.orgName && { name: data.orgName }),
+        ...(data.tellUsMore && { tellUsMore: data.tellUsMore }),
+        ...(typeof data.isTellUsMoreCompleted === "boolean" && {
+          isTellUsMoreCompleted: data.isTellUsMoreCompleted,
+        }),
+      },
+    });
+
+    if (data.phone) {
+      await tx.user.update({
+        where: { id: userId },
+        data: { phone: data.phone },
+      });
+    }
+
+    return {
+      updatedOrg: {
+        ...updatedOrg,
+        tellUsMore: updatedOrg.tellUsMore as TellUsMore,
+      },
+      phone: data.phone,
+    };
+  });
+}
+
+export async function getOrgNameAndUserPhone(userId: string) {
+  const userWithOrg = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      phone: true,
+      name: true,
+      org: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (!userWithOrg) {
+    throw new Error("User not found");
+  }
+
+  return {
+    userPhone: userWithOrg.phone,
+    orgName: userWithOrg.org.length > 0 ? userWithOrg.org[0].name : null,
+    nameOfUser: userWithOrg.name,
+  };
+}
+
+export async function checkTellUsMoreCompleted(userId: string) {
+  const org = await prisma.org.findFirst({
+    where: { ownerId: userId },
+    select: { id: true, isTellUsMoreCompleted: true, createdAt: true },
+  });
+
+  const todayStart = new Date("2025-09-03T12:59:53.655Z");
+
+  if (org.createdAt < todayStart && !org.isTellUsMoreCompleted) {
+    await prisma.org.update({
+      where: { id: org.id },
+      data: { isTellUsMoreCompleted: true },
+    });
+    return true;
+  }
+  return org?.isTellUsMoreCompleted;
 }

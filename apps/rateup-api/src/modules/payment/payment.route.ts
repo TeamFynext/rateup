@@ -12,6 +12,7 @@ import {
   syncPaymentPlansHandler,
   updatePaymentPlanHandler,
   updateRateUpPlanHandler,
+  updateSubscriptionOrderHandler,
 } from "./payment.controller";
 import { $Pref } from "./payment.schema";
 import { assertRootOrg } from "../../utils/auth";
@@ -116,4 +117,6 @@ export async function paymentRoutes(server: FastifyInstance) {
     },
     deletePaymentPlanHandler,
   );
+
+  server.put("/order/:orderId", updateSubscriptionOrderHandler);
 }

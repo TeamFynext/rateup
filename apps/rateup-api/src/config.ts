@@ -4,6 +4,7 @@ import EmailVerification from "supertokens-node/recipe/emailverification";
 import {
   createUserSignup,
   getOrgIdAndRole,
+  getUserByEmail,
   getUserRecipeName,
   updateLastLoggedInTime,
 } from "./modules/user/user.service";
@@ -293,7 +294,9 @@ export const SuperTokensConfig: TypeInput = {
             ...originalImplementation,
 
             sendEmail: async function (input) {
-              sendVerifyMail(input.emailVerifyLink, input.user.email);
+              const dbUser = await getUserByEmail(input.user.email);
+              const username = dbUser.name || "there";
+              sendVerifyMail(input.emailVerifyLink, input.user.email, username);
             },
           };
         },
@@ -315,6 +318,7 @@ export const SuperTokensConfig: TypeInput = {
               if (response.status === "OK") {
                 log.trace("Verifying email\n%o", JSON.stringify(response.user));
               }
+              console.log("email success res", response);
               return response;
             },
           };
