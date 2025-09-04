@@ -2135,5 +2135,7 @@
   "Edit Label": "Modifier l'étiquette",
   "Describe this label": "Décrire cette étiquette",
   "labels": "étiquettes",
-  "Are you sure you want to delete this label?": "Êtes-vous sûr de vouloir supprimer cette étiquette ?"
+  "Are you sure you want to delete this label?": "Êtes-vous sûr de vouloir supprimer cette étiquette ?",
+  "Label created successfully": "Étiquette créée avec succès",
+  "Contact labels created successfully": "Étiquettes de contact créées avec succès"
 }
