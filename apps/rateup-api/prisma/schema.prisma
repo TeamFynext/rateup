@@ -111,21 +111,21 @@ model User {
 }
 
 model Org {
-  id                       String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt                DateTime                   @default(now())
+  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt                DateTime @default(now())
   name                     String
-  owner                    User                       @relation(fields: [ownerId], references: [id])
-  ownerId                  String                     @db.Uuid
+  owner                    User     @relation(fields: [ownerId], references: [id])
+  ownerId                  String   @db.Uuid
   logo                     String?
   phone                    String?
   address                  String?
   encryptionKeys           Json? //{privateKey:string,publicKey:string}
-  isPaused                 Boolean?                   @default(false)
-  waAssignedChatPermission String                     @default("All")
+  isPaused                 Boolean? @default(false)
+  waAssignedChatPermission String   @default("All")
 
-  tellUsMore               Json?
-  isTellUsMoreCompleted    Boolean    @default(false)
-  
+  tellUsMore            Json?
+  isTellUsMoreCompleted Boolean @default(false)
+
   members                  OrgMember[]
   teams                    Team[]
   invitations              Invitation[]
@@ -159,6 +159,7 @@ model Org {
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
   UserAssignedCount        UserAssignedCount[]
+  Labels                   Labels[]
 }
 
 model UsageStats {
@@ -207,24 +208,36 @@ model UsageStats {
   lastMonthlyResettedDate DateTime? @db.Date()
 }
 
+model Labels {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org             Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId           String            @db.Uuid
+  name            String            @unique
+  color           String
+  description     String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  ContactLabelMap ContactLabelMap[]
+}
+
 model WhatsappSettings {
   id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   orgId String @db.Uuid
 
-  accessToken     String // encrypted
-  accessToken_iv  String?
-  wabaId          String? // WhatsApp Business Account ID
-  phoneId         String? @unique
-  phone           String? @unique
-  appId           String
-  webhookPassword String?
-  fbPageId        String? @unique //Facebook Page ID
-  ibaId           String? @unique //Instagram Business Account ID
-  pageAccessToken String? //Facebook Page access token
-  igUserName      String?
-  igDisplayName         String?
-  phoneDisplayName      String?
+  accessToken      String // encrypted
+  accessToken_iv   String?
+  wabaId           String? // WhatsApp Business Account ID
+  phoneId          String? @unique
+  phone            String? @unique
+  appId            String
+  webhookPassword  String?
+  fbPageId         String? @unique //Facebook Page ID
+  ibaId            String? @unique //Instagram Business Account ID
+  pageAccessToken  String? //Facebook Page access token
+  igUserName       String?
+  igDisplayName    String?
+  phoneDisplayName String?
 
   type             String // enums.ts: WaConfigType
   createdAt        DateTime           @default(now())
@@ -240,7 +253,6 @@ model WaAccountSettings {
   orgId            String   @unique @db.Uuid
   contactTags      String[] @default([])
   contactGroupTags String[] @default([])
-  inboxLabels      Json?
 }
 
 model WaLogs {
@@ -500,7 +512,7 @@ model Contact {
   profilePic                   String?
   followerCount                Int?
   isIgVerifiedUser             Boolean?
-  labels                       String[]
+  ContactLabelMap              ContactLabelMap[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -509,6 +521,16 @@ model Contact {
   @@index([orgId, id])
   @@index([orgId, waMessageAssignStatus])
   @@index([lastReceivedMessageTimeStamp])
+}
+
+model ContactLabelMap {
+  contactId String @db.Uuid
+  labelId   String @db.Uuid
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  label   Labels  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([contactId, labelId])
 }
 
 model WaInboxAssign {

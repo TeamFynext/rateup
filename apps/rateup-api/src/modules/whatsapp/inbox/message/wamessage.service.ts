@@ -288,9 +288,12 @@ export async function filterChats(
         filters.push(`(${tagFilters.join(" OR ")})`);
       }
       if (bodyFilterProps?.labels?.length > 0) {
-        const labelFilters = `c."labels" @> $${paramIndex++}`;
         params.push(bodyFilterProps.labels);
-        filters.push(labelFilters);
+        filters.push(`EXISTS (
+          SELECT 1 FROM "ContactLabelMap" clm
+          WHERE clm."contactId" = c.id
+          AND clm."labelId" = ANY($${paramIndex++}::uuid[])
+        )`);
       }
 
       // Filter by assignment status
@@ -491,9 +494,7 @@ export async function filterChats(
         c."profilePic",
         c."followerCount",
         c."isIgVerifiedUser",
-        c.labels,
         COALESCE(c.tags, '{}'::jsonb) as tags,
-        was."contactTags",
         (
           SELECT COUNT(*)::INTEGER FROM "WaMessage" w WHERE w."contactId" = c.id
           AND w."messageBody"->>'exchangeProcess' = 'receive'
@@ -526,13 +527,17 @@ export async function filterChats(
         AND w."messageBody"->>'exchangeProcess' = 'receive'
         ORDER BY w."waCreatedAt" DESC
         LIMIT 1
-      ) as "metadata"
+      ) as "metadata",
+      (
+        SELECT COALESCE(json_agg(clm."labelId"), '[]'::json) 
+        FROM "ContactLabelMap" clm 
+        WHERE clm."contactId" = c.id
+      ) as "labelIds"
       FROM "Contact" c
          LEFT JOIN "WaInboxAssign" wb ON wb."contactId" = c.id
          LEFT JOIN "User" u ON wb."assignedUserId" = u.id
-         LEFT JOIN "WaAccountSettings" was ON was."orgId" = c."orgId"
       WHERE ${whereClause}
-      GROUP BY c.id, was."contactTags"
+      GROUP BY c.id
     `;
     const wrappedQuery = `SELECT * FROM (${query}) wc ORDER BY ${orderBy} DESC NULLS LAST LIMIT 100 OFFSET $2`;
 
