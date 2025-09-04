@@ -36,6 +36,7 @@ export default function DashboardHome() {
   const router = useRouter();
   const { data: overallData, isLoading: overallStatsLoading } =
     useOverallStats();
+
   return (
     <div className="px-2 pt-4 md:pt-0 lg:pt-0">
       <div className="text-[#343A40] text-xl font-semibold">Overview</div>

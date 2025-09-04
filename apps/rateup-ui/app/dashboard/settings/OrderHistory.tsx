@@ -87,42 +87,40 @@ const OrderHistory = ({ orders, refetch, isRefetching }) => {
                     new Date(a.createdAt).getTime(),
                 )
                 .map((order) => (
-                  <>
-                    <PaperLayout
-                      key={order.id}
-                      my={"xs"}
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        openOrderDetails();
-                      }}
-                      hoveractive
-                      style={{ margin: "auto" }}
-                    >
-                      <Group justify="space-between">
-                        <Title order={5} w={170}>
-                          {order?.id}
-                        </Title>
-                        <Title order={5} w={140}>
-                          {formatIsoDateString(order?.createdAt)}
-                        </Title>
-                        <Title order={5} w={120}>
-                          {order?.displayName}
-                        </Title>
-                        <Title order={5} w={120}>
-                          {order?.currency === "INR" ? "₹" : "$"}
-                          {order?.amount}/-
-                        </Title>
-                        <Title order={5} w={120}>
-                          {order?.paymentMethod
-                            ? order.paymentMethod.toUpperCase()
-                            : translations("Not available")}
-                        </Title>
-                        <Title order={5} w={120}>
-                          <OrderStatusBadge order={order} />
-                        </Title>
-                      </Group>
-                    </PaperLayout>
-                  </>
+                  <PaperLayout
+                    key={order?.id}
+                    my={"xs"}
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      openOrderDetails();
+                    }}
+                    hoveractive
+                    style={{ margin: "auto" }}
+                  >
+                    <Group justify="space-between">
+                      <Title order={5} w={170}>
+                        {order?.id}
+                      </Title>
+                      <Title order={5} w={140}>
+                        {formatIsoDateString(order?.createdAt)}
+                      </Title>
+                      <Title order={5} w={120}>
+                        {order?.displayName}
+                      </Title>
+                      <Title order={5} w={120}>
+                        {order?.currency === "INR" ? "₹" : "$"}
+                        {order?.amount}/-
+                      </Title>
+                      <Title order={5} w={120}>
+                        {order?.paymentMethod
+                          ? order.paymentMethod.toUpperCase()
+                          : translations("Not available")}
+                      </Title>
+                      <Title order={5} w={120}>
+                        <OrderStatusBadge order={order} />
+                      </Title>
+                    </Group>
+                  </PaperLayout>
                 ))}
             </Stack>
           </ScrollArea.Autosize>

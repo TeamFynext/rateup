@@ -328,8 +328,7 @@ export function useSignUp() {
 
 export const useConsumeVerificationCode = () => {
   const router = useRouter();
-  const { route } = useRouteAndCartStore();
-  const consumeVerificationCode = async () => {
+  const consumeVerificationCode = async (route) => {
     notifications.show({
       id: "verify-email",
       loading: true,
@@ -363,7 +362,8 @@ export const useConsumeVerificationCode = () => {
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
-        router.push(route);
+        // router.push(route);
+        router.push("/login/complete-login");
       }
     } catch (err: any) {
       if (err?.isSuperTokensGeneralError === true) {

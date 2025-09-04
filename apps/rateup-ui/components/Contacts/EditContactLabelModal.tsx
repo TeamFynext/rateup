@@ -30,7 +30,7 @@ const EditContactLabelModal = ({
 }) => {
   const translations = useTranslations();
   const { tags } = useTagsContext();
-  const inboxLabels = tags.inboxLabels.map((label) => label?.name);
+  const inboxLabels = tags.inboxLabels?.map((label) => label?.name) || [];
   const form = useForm({
     initialValues: {
       labels: labels || [],

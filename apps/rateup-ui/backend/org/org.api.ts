@@ -68,3 +68,21 @@ export async function updateOrgPause({ orgId, data }) {
 export async function getWebhookClientSecret() {
   return (await axiosClient.get(`org/webhook-client-secret`)).data;
 }
+
+export async function completeOrgDetails(orgName, tellUsMore, phone) {
+  await axiosClient.put("/org/completeorgdetails", {
+    orgName,
+    tellUsMore,
+    phone,
+  });
+}
+
+export async function orgNameAndPhone() {
+  const res = await axiosClient.get("/org/orgnameandphone");
+  return res.data;
+}
+
+export async function istellusmorecompleted() {
+  const res = await axiosClient.get("/org/istellusmorecomplete");
+  return res.data;
+}

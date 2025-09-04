@@ -1,14 +1,58 @@
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
+import { Stack } from "@mantine/core";
+import { isNotEmpty, useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
+import { IconArrowRight } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { CheckCircle2, CircleX } from "lucide-react";
+import { useTimeZone } from "next-intl";
 
+import { useCheckSession } from "@/hooks/checkSession";
+import {
+  useRateupPaymentsPlans,
+  useSendMailPlanSelectDetails,
+} from "@/backend/payment/payment.query";
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
+import { data } from "@/components/GenerateQr/tempdata";
+import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+import { currencyLabel } from "@/components/menu/util/currencyData";
+import FormModalLayout from "@/components/Modal/FormModalLayout";
 import { BookDemoModal } from "@/components/RateupHomePage/helpers/BookDemoModal";
 
-const PricingSection = () => {
+import PlanCardNew from "./Card/PlanCardNew";
+import { useRouteAndCartStore } from "./store/RouteAndCartStore";
+
+const PricingSection = ({ onPlanSelect = null }) => {
+  const [opened, { open, close }] = useDisclosure(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const router = useRouter();
   const sharedStyles =
     "bg-white border border-gray-200 rounded-2xl shadow-lg p-8 flex flex-col justify-between transition-all hover:shadow-2xl hover:scale-[1.03] duration-300";
-
+  const { data: plans, isLoading } = useRateupPaymentsPlans();
+  const userTimeZone = useTimeZone();
+  let currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
+  const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
+  const rateupPlans = plans
+    ? plans.filter(
+        (plan) =>
+          plan.name === "FREE PLAN" ||
+          (plan.paymentPlan && plan?.paymentPlan?.currency === currency),
+      )
+    : [];
+  function handlePlanSelection(plan) {
+    if (onPlanSelect) onPlanSelect();
+    if (plan.name === "FREE PLAN") {
+      router.push("/signup");
+      return;
+    }
+    setSelectedPlan(plan);
+    open();
+  }
+  if (isLoading) return <RateupLoader />;
   return (
     <section className="relative bg-gray-100 py-12 px-6 md:px-12 text-gray-800">
       <div className="text-center mb-16">
@@ -21,47 +65,19 @@ const PricingSection = () => {
       </div>
 
       <motion.div
-        className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 max-w-2xl mx-auto mt-12"
+        className="grid gap-8 sm:grid-cols-1 lg:grid-cols-4 md:grid-cols-2 max-w-8xl mx-auto mt-12"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <div className={sharedStyles}>
-          <div>
-            <h3 className="text-2xl font-semibold text-[#00397b] mb-2">
-              Starter
-            </h3>
-            <p className="text-5xl font-bold text-[#1c518e]">
-              ₹0{" "}
-              <span className="text-base font-medium text-gray-500">
-                /month
-              </span>
-            </p>
-            <p className="text-gray-600 mt-3 mb-5 text-sm">
-              Great for small teams just getting started.
-            </p>
-            <ul className="space-y-3 text-gray-700 text-sm">
-              {[
-                "Single Team with One User",
-                "5 Web Surveys with 1000 monthly responses",
-                "WhatsApp: Single Flow, One Automation, One Campaign with 1000 monthly template messages",
-              ].map((item, index) => (
-                <li key={index} className="flex items-center gap-2">
-                  <CheckCircle2 className="text-green-500 w-5 h-5 flex-shrink-0" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <Link
-            href={"/login"}
-            className="mt-6 text-center bg-white text-[#1c518e] font-semibold py-2 rounded-md border border-[#1c518e] hover:bg-[#1c518e] hover:text-white transition"
-          >
-            Subscribe Now
-          </Link>
-        </div>
-
+        {rateupPlans.map((plan) => (
+          <PlanCardNew
+            key={plan.id}
+            plan={plan}
+            onButtonClick={() => handlePlanSelection(plan)}
+            currencySymbol={currencySymbol}
+          />
+        ))}
         <div className={sharedStyles}>
           <div>
             <h3 className="text-2xl font-semibold text-[#00397b] mb-2">
@@ -75,14 +91,115 @@ const PricingSection = () => {
               Let&apos;s Talk!
             </div>
           </div>
-          <BookDemoModal>
-            <button className="mt-6 bg-[#1c518e] text-white font-semibold py-2 rounded-md hover:bg-[#00397b] transition">
-              Contact Sales
-            </button>
-          </BookDemoModal>
+          <BookDemoModal />
         </div>
       </motion.div>
+      <MailForm
+        opened={opened}
+        close={close}
+        plan={selectedPlan}
+        currencySymbol={currencySymbol}
+      />
     </section>
+  );
+};
+
+const MailForm = ({ opened, close, plan, currencySymbol }) => {
+  const sendMail = useSendMailPlanSelectDetails();
+  const { updateRouteAndCart } = useRouteAndCartStore();
+  const session = useCheckSession();
+  const router = useRouter();
+  const form = useForm({
+    initialValues: {
+      name: "",
+      email: "",
+      orgName: "",
+    },
+    validate: {
+      name: isNotEmpty("Name is required"),
+      email: isNotEmpty("Email is required"),
+      orgName: isNotEmpty("Organization name is required"),
+    },
+  });
+
+  function handleSubmit() {
+    if (form.validate().hasErrors) return;
+    const data = {
+      ...form.values,
+      planName: plan?.displayName,
+      planId: plan?.id,
+    };
+    sendMail.mutate(data, {
+      onSettled: () => {
+        let route = "/dashboard/settings?tab=account";
+        const cartData = {
+          id: plan.id,
+          amount: plan.paymentPlan.amount,
+          currency: plan.paymentPlan.currency,
+          currencySymbol:
+            currencyLabel.find((c) => c.label === plan.paymentPlan.currency)
+              ?.symbol ?? currencySymbol,
+          description: plan.description,
+          period: plan?.paymentPlan?.period,
+          planId: plan?.paymentPlan?.planId,
+          name: plan?.displayName,
+          gateway: "RAZORPAY",
+          priceId: "",
+        };
+        if (!session) {
+          localStorage.setItem("newUserFromPricingPage", JSON.stringify(data));
+          localStorage.setItem(
+            "subscriptionRoutAndCart",
+            JSON.stringify({
+              route,
+              cartData,
+            }),
+          );
+        }
+        updateRouteAndCart(route, cartData);
+        close();
+        router.push(route);
+      },
+    });
+  }
+  function onClose() {
+    form.reset();
+    close();
+  }
+  return (
+    <FormModalLayout
+      zIndex={1001}
+      title="About You"
+      centered
+      opened={opened}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    >
+      <Stack>
+        <ContainedTextField
+          label={"Name"}
+          {...form.getInputProps("name")}
+          withAsterisk
+        />
+        <ContainedTextField
+          label={"Email"}
+          {...form.getInputProps("email")}
+          withAsterisk
+        />
+        <ContainedTextField
+          label={"Organization Name"}
+          {...form.getInputProps("orgName")}
+          withAsterisk
+        />
+        <RateupButtonBlue
+          title="Next"
+          loading={sendMail.isPending}
+          rightIcon={<IconArrowRight size={16} />}
+          type={"submit"}
+          radius={"md"}
+        />
+      </Stack>
+    </FormModalLayout>
   );
 };
 

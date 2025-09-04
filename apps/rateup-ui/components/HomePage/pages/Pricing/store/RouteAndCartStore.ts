@@ -11,6 +11,7 @@ type Cart = {
   gateway: string;
   planId: string;
   priceId: string;
+  trialDays?: number;
 };
 export type Store = {
   route: string;
