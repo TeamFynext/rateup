@@ -2135,5 +2135,13 @@
     "de": "Deutsch",
     "hi": "हिन्दी",
     "Label": "Label"
-  }
+  },
+  "New Conversations": "New Conversations",
+  "Active Flows": "Active Flows",
+  "Active Automations": "Active Automations",
+  "Loyalty Customers": "Loyalty Customers",
+  "New Tickets": "New Tickets",
+  "Teams Created": "Teams Created",
+  "Go to All Surveys": "Go to All Surveys",
+  "Go to All Flows": "Go to All Flows"
 }

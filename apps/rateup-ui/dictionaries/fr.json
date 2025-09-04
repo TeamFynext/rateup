@@ -2121,5 +2121,13 @@
     "de": "Deutsch",
     "hi": "हिन्दी",
     "Label": "Étiquette"
-  }
+  },
+  "New Conversations": "Nouvelles conversations",
+  "Active Automations": "Automatisations actives",
+  "Active Flows": "Flux actifs",
+  "Loyalty Customers": "Clients fidèles",
+  "New Tickets": "Nouveaux tickets",
+  "Teams Created": "Équipes créées",
+  "Go to All Surveys": "Aller à tous les sondages",
+  "Go to All Flows": "Aller à tous les flux"
 }

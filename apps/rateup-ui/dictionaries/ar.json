@@ -2122,5 +2122,13 @@
     "de": "Deutsch",
     "hi": "हिन्दी",
     "Label": "التسمية"
-  }
+  },
+  "New Conversations": "محادثات جديدة",
+  "Active Automations": "الأتمتة النشطة",
+  "Active Flows": "التدفقات النشطة",
+  "Loyalty Customers": "العملاء المخلصون",
+  "New Tickets": "التذاكر الجديدة",
+  "Teams Created": "الفرق التي تم إنشاؤها",
+  "Go to All Surveys": "اذهب إلى جميع الاستطلاعات",
+  "Go to All Flows": "اذهب إلى جميع التدفقات"
 }

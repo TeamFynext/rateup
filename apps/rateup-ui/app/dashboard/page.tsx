@@ -15,6 +15,7 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { MoveRight, PanelsTopLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   useActiveSurveyStats,
@@ -36,10 +37,13 @@ export default function DashboardHome() {
   const router = useRouter();
   const { data: overallData, isLoading: overallStatsLoading } =
     useOverallStats();
+  const translations = useTranslations();
 
   return (
     <div className="px-2 pt-4 md:pt-0 lg:pt-0">
-      <div className="text-[#343A40] text-xl font-semibold">Overview</div>
+      <div className="text-[#343A40] text-xl font-semibold">
+        {translations("Overview")}
+      </div>
       <div className="space-y-10">
         {/* dashboard stats */}
         {overallStatsLoading ? (
@@ -126,7 +130,9 @@ export default function DashboardHome() {
               <div className="p-1.5 rounded-md bg-[#00998733]">
                 <IconWaveSine color="#009987" />
               </div>
-              <h2 className="text-xl font-semibold text-black">Active Flows</h2>
+              <h2 className="text-xl font-semibold text-black">
+                {translations("Active Flows")}
+              </h2>
             </div>
 
             <div className="flex flex-col items-center gap-2">
@@ -164,7 +170,7 @@ export default function DashboardHome() {
                       onClick={() => router.push("/dashboard/whatsapp/flows")}
                     >
                       <div className="flex items-center gap-1">
-                        Go to All Flows
+                        {translations("Go to All Flows")}
                         <span>
                           <MoveRight color="white" />
                         </span>
@@ -187,7 +193,7 @@ export default function DashboardHome() {
                 <PanelsTopLeft color="#004F98" />
               </div>
               <h2 className="text-xl font-semibold text-black">
-                Active Surveys
+                {translations("Active Surveys")}
               </h2>
             </div>
 
@@ -225,7 +231,7 @@ export default function DashboardHome() {
                       onClick={() => router.push("/dashboard/surveys")}
                     >
                       <div className="flex items-center gap-1">
-                        Go to All Surveys
+                        {translations("Go to All Surveys")}
                         <span>
                           <MoveRight color="white" />
                         </span>
