@@ -2319,7 +2319,9 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
     localStorage.setItem("waSettingsId", waSetting.id);
     localStorage.setItem("automationId", automatedId);
     const url = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/fb`)}&config_id=${process.env.NEXT_PUBLIC_META_USER_CONFIG_ID}`;
-    window.location.href = url;
+    if (url) {
+      window.location.href = url;
+    }
   }
   const pageAccessTokenByUser = useMemo(() => {
     if (metaAssets && typedData?.fbPageId) {
