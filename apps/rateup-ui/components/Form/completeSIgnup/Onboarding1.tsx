@@ -76,7 +76,7 @@ export default function OnboardingStep1({
         {/* Org name */}
         <TextInput
           label="Organization name"
-          placeholder="E.g. respond.io"
+          placeholder="Organization name"
           required
           value={data.orgName}
           onChange={(e) =>
@@ -91,7 +91,7 @@ export default function OnboardingStep1({
         <TextInput
           mt="md"
           label="Website"
-          placeholder="E.g. www.respond.io"
+          placeholder="www.example.com"
           value={data.website}
           onChange={(e) =>
             setData((prev) => ({ ...prev, website: e.currentTarget.value }))
@@ -102,7 +102,7 @@ export default function OnboardingStep1({
         <Select
           mt="md"
           label="Industry"
-          placeholder="Choose one"
+          placeholder="Choose One"
           required
           data={["Technology", "Finance", "Retail", "Healthcare", "Other"]}
           value={data.industry}
@@ -114,7 +114,7 @@ export default function OnboardingStep1({
         {/* Employees */}
         <div className="mt-6">
           <Text size="sm" fw={500} mb={8}>
-            How many people work at your organization?{" "}
+            "How many people work at your organization?"
             <span className="text-red-500">*</span>
           </Text>
           <Radio.Group
@@ -135,17 +135,7 @@ export default function OnboardingStep1({
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
-          <Text size="sm" c="dimmed" className="text-center sm:text-left">
-            Already have an account?{" "}
-            <a
-              href="/login"
-              className="text-[#004F98] font-medium hover:underline"
-            >
-              Sign in
-            </a>
-          </Text>
-
+        <div className="flex flex-col sm:flex-row justify-end items-center gap-4 mt-8">
           <Button
             onClick={onNext}
             disabled={!isValid}
