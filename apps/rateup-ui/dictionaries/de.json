@@ -2139,5 +2139,10 @@
   "labels": "Labels",
   "Are you sure you want to delete this label?": "Sind Sie sicher, dass Sie dieses Label löschen möchten?",
   "Label created successfully": "Label erfolgreich erstellt",
-  "Contact labels created successfully": "Kontaktlabels erfolgreich erstellt"
+  "Contact labels created successfully": "Kontaktlabels erfolgreich erstellt",
+  "Assigned": "Zugewiesen",
+  "UnAssigned": "Nicht zugewiesen",
+  "Assigned to Me": "Mir zugewiesen",
+  "Closed": "Geschlossen",
+  "Blocked": "Blockiert"
 }

@@ -2138,5 +2138,10 @@
   "labels": "लेबल",
   "Are you sure you want to delete this label?": "क्या आप वाकई इस लेबल को हटाना चाहते हैं?",
   "Label created successfully": "लेबल सफलतापूर्वक बनाया गया",
-  "Contact labels created successfully": "संपर्क लेबल सफलतापूर्वक बनाए गए"
+  "Contact labels created successfully": "संपर्क लेबल सफलतापूर्वक बनाए गए",
+  "Assigned": "सौंपा गया",
+  "UnAssigned": "सौंपा नहीं",
+  "Assigned to Me": "मुझे सौंपा गया",
+  "Closed": "बंद",
+  "Blocked": "अवरोधित"
 }
