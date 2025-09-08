@@ -252,7 +252,7 @@ export async function completeOrgDetailsHandler(
       isTellUsMoreCompleted: true,
     });
     const emaildata = {
-      to: "hello@rateup.app",
+      to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
       subject: `Organization Updated: ${orgData.updatedOrg.name}`,
       text: `
 Organization "${orgData.updatedOrg.name}" was updated.

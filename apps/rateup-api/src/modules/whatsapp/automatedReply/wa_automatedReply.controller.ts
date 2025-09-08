@@ -12,6 +12,7 @@ import {
   getAutomatedRepliesMessagId,
   getAutomatedReplyById,
   updateAutomatedReply,
+  verifyAutomationTriggerLimit,
 } from "./wa_automatedReply.service";
 import { ByTeamIdParams } from "../../team/team.schema";
 import { log } from "../../../utils/logger";
@@ -124,5 +125,18 @@ export async function initiateAutomatedReplyByIdHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
+  }
+}
+
+export async function verifyAutomationTriggerLimitHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    await verifyAutomationTriggerLimit(orgId);
+  } catch (e) {
+    log.error(e);
+    reply.code(403).send(e);
   }
 }

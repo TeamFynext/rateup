@@ -300,7 +300,7 @@ export async function sendEmailPlanSelectionDetailsHandler(
 ) {
   try {
     const emailParams = {
-      to: "hello@rateup.app",
+      to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
       text: "ALERT: User initiated subscription",
       subject: "ALERT: User initiated subscription",
       html: createEmailBodyPricingPlanSelected(request.body),
