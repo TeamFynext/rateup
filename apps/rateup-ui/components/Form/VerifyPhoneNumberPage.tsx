@@ -133,6 +133,7 @@ function VerifyPhoneNumberPage() {
           placeholder={translations("OTP Code")}
           mt={"lg"}
           onChange={(e) => setOtpNumber(e.target.value)}
+          mb={"md"}
         />
         <RateupButtonBlue
           type="button"

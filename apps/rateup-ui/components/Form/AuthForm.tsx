@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { Flex, Image, useMantineColorScheme } from "@mantine/core";
+import { Flex, Image, Stack, useMantineColorScheme } from "@mantine/core";
 
 import { useCreateUserMutation } from "../../backend/user/user.query";
 import {
@@ -93,26 +93,14 @@ const AuthForm = ({
   }
 
   return (
-    <Flex
+    <Stack
       className={`
-          ${styles["auth-form-container"]}
-          ${styles[`LOGIN-auth-form-container`]}
           ${styles[`${authType ? "auth-type-signup-form" : ""}`]}
           ${styles[`color-scheme-${colorScheme}`]}
         `}
     >
-      <Flex justify={"center"}>
-        <Link href="/">
-          <Image
-            className={styles["rateup-logo-img"]}
-            src={rateupLogoUrl}
-            alt="RateUp Logo"
-            w={85}
-          />
-        </Link>
-      </Flex>
       {jsxToReturn}
-    </Flex>
+    </Stack>
   );
 };
 
