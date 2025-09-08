@@ -9,6 +9,7 @@ import {
   useCompleteOrgDetails,
   useOrgNameAndPhone,
 } from "@/backend/org/org.query";
+import { useRouteAndCartStore } from "@/components/HomePage/pages/Pricing/store/RouteAndCartStore";
 
 import OnboardingStep1 from "./Onboarding1";
 import OnboardingStep2 from "./Onboarding2";
@@ -42,6 +43,7 @@ export default function OnboardingWizard() {
   }, [info]);
 
   const completeOrgDetails = useCompleteOrgDetails();
+  const { route, updateRouteAndCart } = useRouteAndCartStore();
 
   const handleNext = () => setStep((s) => Math.min(s + 1, 3));
   const handleBack = () => setStep((s) => Math.max(s - 1, 1));
@@ -76,7 +78,17 @@ export default function OnboardingWizard() {
           await queryClient.refetchQueries({
             queryKey: ["istellusmorecomplete"],
           });
-          router.replace("/dashboard");
+
+          const data = localStorage.getItem("subscriptionRoutAndCart");
+          let updatedRoute = "/dashboard";
+          if (route === "/dashboard") {
+            if (data) {
+              const { route: newRoute, cartData } = JSON.parse(data);
+              updatedRoute = newRoute;
+              updateRouteAndCart(newRoute, cartData);
+            }
+          }
+          router.replace(updatedRoute);
         },
       },
     );

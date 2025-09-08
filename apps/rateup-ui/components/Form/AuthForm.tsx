@@ -37,21 +37,11 @@ const AuthForm = ({
   const consumeVerificationCode = useConsumeVerificationCode();
   const sendEmail = useEmailSend();
   const { colorScheme } = useMantineColorScheme();
-  const { route, updateRouteAndCart } = useRouteAndCartStore();
 
   useEffect(() => {
     if (mode === AuthMode.VERIFY) {
       if (token && token?.length > 0) {
-        let updatedRoute = route;
-        if (route === "/dashboard") {
-          const data = localStorage.getItem("subscriptionRoutAndCart");
-          if (data) {
-            const { route: newRoute, cartData } = JSON.parse(data);
-            updatedRoute = newRoute;
-            updateRouteAndCart(newRoute, cartData);
-          }
-        }
-        consumeVerificationCode(updatedRoute);
+        consumeVerificationCode();
       } else {
         sendEmail(); //TODO : Add time gaps for resending verification mails
       }

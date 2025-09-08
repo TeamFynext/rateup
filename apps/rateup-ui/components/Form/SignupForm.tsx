@@ -30,11 +30,14 @@ import PhoneInputWithCountrySelect, {
 } from "react-phone-number-input";
 import { z } from "zod/v4";
 
+import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
+
 import { SAVE_HOTKEY } from "../../utils/constants";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
+import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import styles from "./AuthForm.module.css";
 import GoogleSignInButton from "./GoogleSigninButton";
 import LoginSignupLinks from "./LoginSignupLinks";
@@ -134,11 +137,18 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
   const allPasswordRulesValid = passwordRules.every((rule) =>
     rule.test((signUpForm.values.password as string) || ""),
   );
-
+  const sendMail = useSendMailPlanSelectDetails();
   // const hasPhoneInputErr = signUpForm.errors?.phoneNumber;
-
+  const { cart } = useRouteAndCartStore();
   const handleSubmit = (values) => {
     const selectedPlan = JSON.parse(localStorage.getItem("selected_plan"));
+    if (cart?.planId.length) {
+      sendMail.mutate({
+        email: values.email,
+        name: values.name,
+        planName: cart?.name,
+      });
+    }
     if (termsPrivacyAgreed) {
       setIsLoading(true);
       signUp(

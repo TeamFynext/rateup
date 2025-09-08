@@ -4,12 +4,14 @@ import { Button, Stack, Text, Title } from "@mantine/core";
 
 import {
   useAutomationSubscription,
+  useUpdateAutomationTriggerSubscription,
   useUpdateUsageStats,
 } from "@/backend/updations/update.query";
 
 function UpdateAllThemes() {
   const updateStats = useUpdateUsageStats();
   const { mutate } = useAutomationSubscription();
+  const updateAutomTr = useUpdateAutomationTriggerSubscription();
 
   return (
     <Stack>
@@ -38,6 +40,22 @@ function UpdateAllThemes() {
           loading={updateStats.isPending}
         >
           Update Subscription
+        </Button>
+      </Stack>
+      <Stack mt="xl">
+        <Title order={2}>Update Automation Trigger Subscription</Title>
+        <Text>
+          This will add the automation Trigger to subscription & rateupplans{" "}
+        </Text>
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateAutomTr.mutate();
+          }}
+          loading={updateAutomTr.isPending}
+        >
+          Update
         </Button>
       </Stack>
     </Stack>

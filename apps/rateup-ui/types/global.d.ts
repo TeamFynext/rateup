@@ -698,6 +698,9 @@ declare global {
         monthlyMessageLimit: number;
         max: number;
       };
+      automation: subscriptionWithActiveAndCount & {
+        automationTrigger: subscriptionWithActiveAndCount;
+      };
     };
     [sfpn.ReputationManagement]: subscriptionActiveField &
       subscriptionCountRestriction;
