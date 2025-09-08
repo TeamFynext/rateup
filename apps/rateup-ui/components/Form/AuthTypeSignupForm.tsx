@@ -14,6 +14,8 @@ import {
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
+import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
+
 import { useUserInfo } from "../../backend/user/user.query";
 import { SAVE_HOTKEY } from "../../utils/constants";
 import { showSuccessToast } from "../../utils/notifications";
@@ -67,6 +69,8 @@ function AuthTypeSignupForm({
     },
   });
 
+  const sendMail = useSendMailPlanSelectDetails();
+
   const handleSubmit = (values) => {
     setIsLoading(true);
     if (isUserExist) {
@@ -84,6 +88,18 @@ function AuthTypeSignupForm({
       email: values?.email,
       type: authType,
     };
+    const planData = localStorage.getItem("subscriptionRoutAndCart");
+    if (planData) {
+      const { cartData } = JSON.parse(planData);
+      sendMail.mutate({
+        email: values.email,
+        name: values.name,
+        orgName: values?.orgName,
+        planName: cartData?.name,
+        planId: cartData?.planId,
+      });
+    }
+
     // console.log("data:",data);
     createUserMutation.mutate(data);
   };

@@ -1,5 +1,6 @@
 import React from "react";
 
+import { Spoiler } from "@mantine/core";
 import { IconFlame, IconFlameFilled } from "@tabler/icons-react";
 import { CheckCircle2 } from "lucide-react";
 
@@ -49,25 +50,35 @@ const PlanCardNew = ({ plan, currencySymbol, onButtonClick }) => {
         {plan.useCase && (
           <p className="text-gray-600 mt-3 mb-5 text-sm">{plan.useCase}</p>
         )}
-
-        <ul className="space-y-3 text-gray-700 text-sm h-50 overflow-y-auto mt-6">
-          {plan?.description?.map((item, index) => (
-            <li key={index} className="flex items-center gap-2">
-              <CheckCircle2 className="text-green-500 w-5 h-5 flex-shrink-0" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-        {plan.name === "FREE PLAN" && (
-          <p className="text-sm font-medium text-[#1c518e]">
-            *No credit card needed
-          </p>
-        )}
+        <Spoiler
+          maxHeight={310}
+          pb={"xs"}
+          styles={{ control: { fontSize: "14px" } }}
+          showLabel={"Show all available features"}
+          hideLabel={"See less"}
+        >
+          <ul className="space-y-3 text-gray-700 text-sm mt-6">
+            {plan?.description?.map((item, index) => (
+              <li key={index} className="flex items-center gap-2">
+                <CheckCircle2 className="text-green-500 w-5 h-5 flex-shrink-0" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </Spoiler>
       </div>
+      {plan.name === "FREE PLAN" && (
+        <span className="text-sm font-medium text-[#1c518e] mt-5">
+          *No credit card needed
+        </span>
+      )}
       <button
         onClick={onButtonClick}
-        style={{ fontWeight: 500 }}
-        className="mt-6 text-center bg-white text-[#1c518e] font-semibold py-2 rounded-md border border-[#1c518e] hover:bg-[#1c518e] hover:text-white transition"
+        style={{
+          fontWeight: 500,
+          marginTop: plan.name === "FREE PLAN" ? "5px" : "14px",
+        }}
+        className="text-center bg-white text-[#1c518e] font-semibold py-2 rounded-md border border-[#1c518e] hover:bg-[#1c518e] hover:text-white transition"
       >
         {plan.name === "FREE PLAN"
           ? "Get Started"

@@ -4,7 +4,11 @@ import { useMutation } from "@tanstack/react-query";
 
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
-import { automationSubscription, updateUsageStats } from "./update.api";
+import {
+  automationSubscription,
+  updateUsageStats,
+  updationAutomationTriggerSubscription,
+} from "./update.api";
 
 export const useUpdateUsageStats = () => {
   return useMutation({
@@ -21,6 +25,18 @@ export const useUpdateUsageStats = () => {
 export const useAutomationSubscription = () => {
   return useMutation({
     mutationFn: automationSubscription,
+    onSuccess: () => {
+      showSuccessToast("Automation Subscription Updated");
+    },
+    onError: () => {
+      showErrorToast("Automation Subscription Update Failed");
+    },
+  });
+};
+
+export const useUpdateAutomationTriggerSubscription = () => {
+  return useMutation({
+    mutationFn: updationAutomationTriggerSubscription,
     onSuccess: () => {
       showSuccessToast("Automation Subscription Updated");
     },

@@ -32,17 +32,17 @@ const FAQ = () => {
         <p className="font-semibold">{q.question}</p>
       </Accordion.Control>
       <Accordion.Panel>
-        <p className="text-sm">
-          {Array.isArray(q.answer) ? (
-            <ul>
-              {q.answer.map((ans) => (
-                <li>{ans}</li>
-              ))}
-            </ul>
-          ) : (
-            q.answer
-          )}
-        </p>
+        {Array.isArray(q.answer) ? (
+          <ul>
+            {q.answer.map((ans) => (
+              <li className="text-sm" key={ans}>
+                {ans}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm">{q.answer}</p>
+        )}
       </Accordion.Panel>
     </Accordion.Item>
   ));
@@ -51,15 +51,15 @@ const FAQ = () => {
     <Stack
       align="center"
       bg={"var(--shade-of-blue)"}
-      p={"lg"}
       className="rounded-xl my-5"
+      justify="center"
+      p={"sm"}
+      w={{ base: "90%", sm: "70%", md: "60%", lg: "60%" }}
     >
       <Title order={3} mb={"xl"}>
         Frequently Asked Questions
       </Title>
-      <Accordion w={700} miw={100}>
-        {faqAccordion}
-      </Accordion>
+      <Accordion w={"100%"}>{faqAccordion}</Accordion>
     </Stack>
   );
 };

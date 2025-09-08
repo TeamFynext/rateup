@@ -15,3 +15,9 @@ export async function automationSubscription() {
     timeout: 60000,
   });
 }
+
+export async function updationAutomationTriggerSubscription() {
+  return await axiosClient.put(`${baseUrl}/rateupplan`, null, {
+    timeout: 60000,
+  });
+}

@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 
 import { Badge, Group, SegmentedControl, Stack, Text } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { IconArrowRight } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { useTimeZone } from "next-intl";
@@ -15,7 +14,6 @@ import {
   useSendMailPlanSelectDetails,
 } from "@/backend/payment/payment.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
-import { data } from "@/components/GenerateQr/tempdata";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { currencyLabel } from "@/components/menu/util/currencyData";
@@ -26,12 +24,8 @@ import PlanCardNew from "./Card/PlanCardNew";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore";
 
 const PricingSection = ({ onPlanSelect = null }) => {
-  const [opened, { open, close }] = useDisclosure(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [period, setPeriod] = useState("monthly");
+  const [period, setPeriod] = useState("yearly");
   const router = useRouter();
-  const sharedStyles =
-    "bg-white border border-gray-200 rounded-2xl shadow-lg p-8 px-4 flex flex-col justify-between transition-all hover:shadow-2xl hover:scale-[1.03] duration-300";
   const { data: plans, isLoading } = useRateupPaymentsPlans();
   const userTimeZone = useTimeZone();
   let currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
@@ -49,20 +43,61 @@ const PricingSection = ({ onPlanSelect = null }) => {
         : [],
     [plans, currency, period],
   );
+  const { updateRouteAndCart } = useRouteAndCartStore();
+  const sendMail = useSendMailPlanSelectDetails();
+  const session = useCheckSession();
+
   function handlePlanSelection(plan) {
     if (onPlanSelect) onPlanSelect();
     if (plan.name === "FREE PLAN") {
       router.push("/signup");
       return;
     }
-    setSelectedPlan(plan);
-    open();
+
+    let route = "/dashboard/settings?tab=account";
+    const cartData = {
+      id: plan.id,
+      amount: plan.paymentPlan.amount,
+      currency: plan.paymentPlan.currency,
+      currencySymbol:
+        currencyLabel.find((c) => c.label === plan.paymentPlan.currency)
+          ?.symbol ?? currencySymbol,
+      description: plan.description,
+      period: plan?.paymentPlan?.period,
+      planId: plan?.paymentPlan?.planId,
+      name: plan?.displayName,
+      gateway: "RAZORPAY",
+      priceId: "",
+    };
+    updateRouteAndCart(route, cartData);
+
+    localStorage.setItem(
+      "subscriptionRoutAndCart",
+      JSON.stringify({
+        route,
+        cartData,
+      }),
+    );
+
+    const userInfo = localStorage.getItem("userInfo");
+    if (session && userInfo) {
+      const data = JSON.parse(userInfo);
+      sendMail.mutate({
+        email: data.data.email,
+        name: data.data.userName,
+        orgName: data.data.orgName,
+        planName: plan.name,
+        planId: plan.id,
+      });
+    }
+
+    router.push(route);
   }
   const periods = [
     { label: "Monthly", value: "monthly" },
     {
       label: (
-        <Group gap={"xs"} justify="center">
+        <Group gap={"xs"} p={0} w={140}>
           <Text>Yearly</Text>
           <Badge
             color={period === "yearly" ? "white" : "#00397b"}
@@ -77,8 +112,8 @@ const PricingSection = ({ onPlanSelect = null }) => {
   ];
   if (isLoading) return <RateupLoader />;
   return (
-    <section className="relative bg-gray-100 py-12 px-6 md:px-12 text-gray-800">
-      <div className="text-center mb-16">
+    <section className="relative flex flex-col justify-center gap-6 items-center bg-gray-100 py-12 px-6 md:px-12 text-gray-800">
+      <div className="text-center">
         <h4 className="text-[#1c518e] text-sm uppercase font-medium tracking-wider">
           Our Pricing Plans
         </h4>
@@ -96,8 +131,7 @@ const PricingSection = ({ onPlanSelect = null }) => {
         <SegmentedControl
           transitionDuration={500}
           transitionTimingFunction="linear"
-          size="md"
-          w={400}
+          size="lg"
           color={"#00397b"}
           bg="#cce1ee"
           data={periods}
@@ -107,7 +141,7 @@ const PricingSection = ({ onPlanSelect = null }) => {
       </Stack>
 
       <motion.div
-        className="grid gap-8 sm:grid-cols-1 lg:grid-cols-4 md:grid-cols-2 max-w-7xl mx-auto mt-12"
+        className="grid gap-8 sm:grid-cols-1 lg:grid-cols-3 md:grid-cols-2 items-start max-w-5xl mx-auto"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -120,35 +154,35 @@ const PricingSection = ({ onPlanSelect = null }) => {
             currencySymbol={currencySymbol}
           />
         ))}
-        <div className={sharedStyles}>
-          <div>
-            <h3 className="text-2xl font-semibold text-[#00397b] mb-2">
-              Enterprise
-              <span className="text-[#1c518e] text-sm font-medium mt-6 ml-2">
-                ( Everything in Pro+ )
-              </span>
-            </h3>
-            <p className="text-4xl font-bold text-[#1c518e]">Custom</p>
-
-            <div className="mt-3">
-              <span className="text-gray-700 text-sm">
-                Customized Plan & Pricing
-              </span>
-            </div>
-
-            <div className="text-xl text-center text-gray-700 mt-6 mb-4">
-              Let&apos;s Talk!
-            </div>
-          </div>
-          <BookDemoModal />
-        </div>
       </motion.div>
-      <MailForm
+      <div
+        className="flex flex-col text-center  bg-white shadow-lg transition-all 
+            rounded-2xl p-8 w-full max-w-md mx-auto hover:shadow-2xl hover:scale-[1.03] duration-300"
+      >
+        <h3 className="text-2xl font-bold text-[#00397b] mb-2">
+          Enterprise
+          <span className="block text-[#1c518e] text-sm font-medium mt-1">
+            (Everything in Pro+)
+          </span>
+        </h3>
+
+        <p className="text-5xl font-extrabold text-[#1c518e] mt-4">Custom</p>
+
+        <p className="mt-3 text-gray-600 text-sm">Customized Plan & Pricing</p>
+        <div className="w-12 h-1 bg-[#1c518e] self-center rounded-full my-6"></div>
+
+        <div className="text-lg font-medium text-gray-700 mb-4">
+          Let&apos;s Talk!
+        </div>
+
+        <BookDemoModal />
+      </div>
+      {/* <MailForm
         opened={opened}
         close={close}
         plan={selectedPlan}
         currencySymbol={currencySymbol}
-      />
+      /> */}
     </section>
   );
 };
