@@ -43,8 +43,10 @@ export const viewPort: Viewport = {
 export const metadata: Metadata = {
   title: "Rateup",
   description: "Welcome to Rateup",
-  other: {
-    "p:domain_verify": "a755ff9896b0315145ef35f5fe011cf8",
+  verification: {
+    other: {
+      "p:domain_verify": "a755ff9896b0315145ef35f5fe011cf8",
+    },
   },
 };
 
