@@ -720,8 +720,14 @@ export default function Layout({ children }) {
     isFetched,
   } = useIsTellUsMoreCompleted();
 
+  const {
+    isPending: isLoadingUserInfo,
+    data: userQueryData,
+    refetch,
+  } = useUserInfo();
+
   useEffect(() => {
-    if (!isFetched || isTellUsMoreCompleteLoading) return;
+    if (!isFetched || isTellUsMoreCompleteLoading || isLoadingUserInfo) return;
 
     if (isTellUsMoreComplete === false) {
       router.replace("/login/complete-login");
@@ -746,11 +752,6 @@ export default function Layout({ children }) {
 
   const { setUser } = useUser();
   const queryClient = useQueryClient();
-  const {
-    isPending: isLoadingUserInfo,
-    data: userQueryData,
-    refetch,
-  } = useUserInfo();
 
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop, open }] = useDisclosure(false);
