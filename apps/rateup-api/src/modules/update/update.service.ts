@@ -75,3 +75,73 @@ export async function updateSubscriptionAutomation() {
     );
   }
 }
+
+//updating automation trigger and automation for new plans
+export async function updateRateupPlanFeature() {
+  const rateupPlans = await prisma.rateupPlan.findMany();
+  for (const plan of rateupPlans) {
+    const feature = plan.features as SubscriptionFeatures;
+    if (
+      feature.whatsapp.automation &&
+      feature.whatsapp.automation.automationTrigger
+    ) {
+      continue;
+    }
+    const newFeature = {
+      ...feature,
+      whatsapp: {
+        ...feature.whatsapp,
+        automation: {
+          active: true,
+          count: {
+            max: 1,
+          },
+          automationTrigger: {
+            active: true,
+            count: {
+              max: 1000,
+            },
+          },
+        },
+      },
+    };
+
+    await prisma.rateupPlan.update({
+      where: {
+        id: plan.id,
+      },
+      data: {
+        features: newFeature,
+      },
+    });
+  }
+
+  const subscriptions = await prisma.subscription.findMany();
+  for (const subscription of subscriptions) {
+    const features = subscription.features as SubscriptionFeatures;
+    const newFeatures = {
+      ...features,
+      whatsapp: {
+        ...features.whatsapp,
+        automation: {
+          ...features.whatsapp.automation,
+          automationTrigger: {
+            active: true,
+            count: {
+              max: 1000,
+            },
+          },
+        },
+      },
+    };
+
+    await prisma.subscription.update({
+      where: {
+        orgId: subscription.orgId,
+      },
+      data: {
+        features: newFeatures,
+      },
+    });
+  }
+}

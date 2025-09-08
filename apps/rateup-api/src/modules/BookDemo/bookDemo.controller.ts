@@ -27,7 +27,7 @@ export async function bookDemoHandler(
     `;
 
     await sendAWSEmail({
-      to: "hello@rateup.app",
+      to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
       subject,
       text,
       html,

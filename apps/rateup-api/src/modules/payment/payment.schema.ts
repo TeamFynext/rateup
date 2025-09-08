@@ -59,8 +59,9 @@ const paymentPlanDeleteSchema = z.object({
 const orgPlanEmailSchema = z.object({
   name: z.string(),
   email: z.string(),
-  orgName: z.string(),
+  orgName: z.string().optional(),
   planName: z.string(),
+  planId: z.string().optional(),
 });
 
 export const { schemas: paymentSchemas, $ref: $Pref } = buildJsonSchemas(

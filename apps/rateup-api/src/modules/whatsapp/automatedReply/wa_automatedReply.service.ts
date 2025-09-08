@@ -3,6 +3,8 @@ import prisma from "../../../utils/prisma";
 import { getTeamIdsByUserId } from "../../team/team.service";
 import { getUserIdsByTeamId } from "../../user/user.service";
 import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema";
+import { getUsageStat } from "../../stats/stats.service";
+import { getSubscription } from "../../subscription/subscription.service";
 
 export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
   const automatedReplies = await prisma.waAutomatedReplyMessage.findMany({
@@ -174,4 +176,20 @@ export async function getCommandByOrgIdAndCommand(
       },
     });
   return AutomatedReplyCommand;
+}
+
+export async function verifyAutomationTriggerLimit(orgId) {
+  const [usageStats, subscription] = await Promise.all([
+    getUsageStat(orgId),
+    getSubscription(orgId),
+  ]);
+  if (!subscription.features.whatsapp.automation.automationTrigger.active) {
+    throw Error("Automation Trigger is inactive");
+  }
+  if (
+    usageStats.monthlyAutomationTriggerCount >=
+    subscription.features.whatsapp.automation.automationTrigger.count.max
+  )
+    throw Error("Automtion Trigger Limit reached");
+  return true;
 }
