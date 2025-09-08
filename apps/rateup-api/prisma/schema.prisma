@@ -205,6 +205,8 @@ model UsageStats {
   monthlyTemplateMessageCount Int @default(0)
   templateMessagesCount       Int @default(0)
 
+  monthlyAutomationTriggerCount Int @default(0)
+
   lastMonthlyResettedDate DateTime? @db.Date()
 }
 
