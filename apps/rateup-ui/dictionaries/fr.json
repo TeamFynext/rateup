@@ -2137,5 +2137,10 @@
   "labels": "étiquettes",
   "Are you sure you want to delete this label?": "Êtes-vous sûr de vouloir supprimer cette étiquette ?",
   "Label created successfully": "Étiquette créée avec succès",
-  "Contact labels created successfully": "Étiquettes de contact créées avec succès"
+  "Contact labels created successfully": "Étiquettes de contact créées avec succès",
+  "Assigned": "Assigné",
+  "UnAssigned": "Non assigné",
+  "Assigned to Me": "Assigné à moi",
+  "Closed": "Fermé",
+  "Blocked": "Bloqué"
 }

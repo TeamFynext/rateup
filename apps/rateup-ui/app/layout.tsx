@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import {
   ColorSchemeScript,
@@ -33,10 +33,23 @@ import { geist, notoColorEmogi } from "@/utils/fonts";
 
 import Providers from "./providers";
 
+export const viewPort: Viewport = {
+  minimumScale: 1,
+  initialScale: 1,
+  width: "device-width",
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: "Rateup",
   description: "Welcome to Rateup",
+  verification: {
+    other: {
+      "p:domain_verify": "a755ff9896b0315145ef35f5fe011cf8",
+    },
+  },
 };
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -49,10 +62,6 @@ export default async function RootLayout({
       <head>
         <ColorSchemeScript />
         <link rel="shortcut icon" href="/favicon.png" />
-        <meta
-          name="viewport"
-          content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
-        />
         {isProduction && <FacebookPixel />}
       </head>
       <body className={`${geist.className},${notoColorEmogi.className}`}>

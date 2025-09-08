@@ -2138,5 +2138,10 @@
   "labels": "التسميات",
   "Are you sure you want to delete this label?": "هل أنت متأكد أنك تريد حذف هذه التسمية؟",
   "Label created successfully": "تم إنشاء التسمية بنجاح",
-  "Contact labels created successfully": "تم إنشاء تسميات الاتصال بنجاح"
+  "Contact labels created successfully": "تم إنشاء تسميات الاتصال بنجاح",
+  "Assigned": "مُخصّص",
+  "UnAssigned": "غير مُعيَّن",
+  "Assigned to Me": "مُعيَّن لي",
+  "Closed": "مُغلق",
+  "Blocked": "محجوب"
 }
