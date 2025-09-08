@@ -17,4 +17,6 @@ export const subscriptionColorMap = {
   [sfpn.LoyaltyCustomer]: "indigo",
   [sfpn.LoyaltyReward]: "cyan",
   [sfpn.LoyaltyAction]: "violet",
+  [sfpn.WhatsAppAutomationTrigger]: "green",
+  [sfpn.WhatsAppAutomation]: "green",
 };
