@@ -13,7 +13,6 @@ import {
   Indicator,
   Modal,
   Popover,
-  ScrollArea,
   ScrollAreaAutosize,
   Stack,
   Text,
@@ -103,7 +102,7 @@ function WaTextEditor({
   const [opened, { open, close }] = useDisclosure(false);
   const extensions = useMemo(() => {
     const ext = [
-      StarterKit,
+      StarterKit.configure({ link: false }),
       Placeholder.configure({
         placeholder,
       }),
@@ -121,6 +120,8 @@ function WaTextEditor({
   }, [customEnter]);
   const editor = useEditor({
     extensions,
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: true,
     onUpdate: ({ editor }) => {
       handleInputChange(editor.getJSON());
     },
@@ -137,8 +138,8 @@ function WaTextEditor({
   useEffect(() => {
     if (editor) {
       const selection = editor.state.selection;
-      editor.commands.setContent(content, null, {
-        preserveWhitespace: "full",
+      editor.commands.setContent(content, {
+        parseOptions: { preserveWhitespace: "full" },
       });
       editor.commands.setTextSelection(selection);
     }
