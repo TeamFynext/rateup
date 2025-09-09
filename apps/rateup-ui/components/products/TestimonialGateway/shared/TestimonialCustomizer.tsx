@@ -4,12 +4,8 @@ import { useState } from "react";
 
 import { motion } from "framer-motion";
 
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/products/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import TestimonialCard from "../helpers/TestimonialCard";
 

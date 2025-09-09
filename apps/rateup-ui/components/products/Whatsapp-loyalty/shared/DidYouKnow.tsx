@@ -2,9 +2,9 @@
 
 import { easeOut, motion } from "framer-motion";
 
-import { Separator } from "@/components/products/components/ui/separator";
 import { BookDemoModal } from "@/components/RateupHomePage/helpers/BookDemoModal";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 import { cardData } from "../constants";
 

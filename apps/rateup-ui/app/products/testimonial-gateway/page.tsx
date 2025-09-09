@@ -1,15 +1,15 @@
-import PricingSection from "@/components/products/components/PricingComponents/helpers/PricingSection";
-import TestimonialCTASection from "@/components/products/components/TestimonialGateway/helpers/TestimonialCTASection";
-import TestimonialFAQSection from "@/components/products/components/TestimonialGateway/helpers/TestimonialFAQSection";
-import TestimonialFooter from "@/components/products/components/TestimonialGateway/helpers/TestimonialFooter";
-// import TestimonialPricingSection from "@/components/products/components/TestimonialGateway/helpers/TestimonialPricingSection";
-import TestimonialHearder from "@/components/products/components/TestimonialGateway/helpers/TsHearder";
-import SuccessStories from "@/components/products/components/TestimonialGateway/shared/SuccessStories";
-import TestimonialCustomizer from "@/components/products/components/TestimonialGateway/shared/TestimonialCustomizer";
-import TestimonialFeatureSection from "@/components/products/components/TestimonialGateway/shared/TestimonialFeatureSection";
-import TestimonialFeaturesGrid from "@/components/products/components/TestimonialGateway/shared/TestimonialFeaturesGrid";
-import TestimonialHero from "@/components/products/components/TestimonialGateway/shared/TestimonialHero";
-import TestimonialSteps from "@/components/products/components/TestimonialGateway/shared/TestimonialSteps";
+import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection";
+import TestimonialCTASection from "@/components/products/TestimonialGateway/helpers/TestimonialCTASection";
+import TestimonialFAQSection from "@/components/products/TestimonialGateway/helpers/TestimonialFAQSection";
+import TestimonialFooter from "@/components/products/TestimonialGateway/helpers/TestimonialFooter";
+// import TestimonialPricingSection from "@/components/products/TestimonialGateway/helpers/TestimonialPricingSection";
+import TestimonialHearder from "@/components/products/TestimonialGateway/helpers/TsHearder";
+import SuccessStories from "@/components/products/TestimonialGateway/shared/SuccessStories";
+import TestimonialCustomizer from "@/components/products/TestimonialGateway/shared/TestimonialCustomizer";
+import TestimonialFeatureSection from "@/components/products/TestimonialGateway/shared/TestimonialFeatureSection";
+import TestimonialFeaturesGrid from "@/components/products/TestimonialGateway/shared/TestimonialFeaturesGrid";
+import TestimonialHero from "@/components/products/TestimonialGateway/shared/TestimonialHero";
+import TestimonialSteps from "@/components/products/TestimonialGateway/shared/TestimonialSteps";
 
 function page() {
   return (

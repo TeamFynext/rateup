@@ -1,13 +1,13 @@
-import PricingSection from "@/components/products/components/PricingComponents/helpers/PricingSection";
-import { ReputationManagement } from "@/components/products/components/ReviewWithAiComponents/helpers/ReputationManagement";
-import ReviewAiHeader from "@/components/products/components/ReviewWithAiComponents/helpers/ReviewAiHeader";
-import ReviewCta from "@/components/products/components/ReviewWithAiComponents/helpers/ReviewCta";
-import ReviewAiFeatures from "@/components/products/components/ReviewWithAiComponents/shared/ReviewAiFeatures";
-import ReviewAiHero from "@/components/products/components/ReviewWithAiComponents/shared/ReviewAiHero";
-import ReviewAiHowItWorks from "@/components/products/components/ReviewWithAiComponents/shared/ReviewAiHowItWorks";
-// import ReviewPricing from "@/components/products/components/ReviewWithAiComponents/shared/ReviewPricing";
-import ReviewTestimonials from "@/components/products/components/ReviewWithAiComponents/shared/ReviewTestimonials";
-import TicketFooter from "@/components/products/components/TicketLandingComponets/helpers/TicketFooter";
+import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection";
+import { ReputationManagement } from "@/components/products/ReviewWithAiComponents/helpers/ReputationManagement";
+import ReviewAiHeader from "@/components/products/ReviewWithAiComponents/helpers/ReviewAiHeader";
+import ReviewCta from "@/components/products/ReviewWithAiComponents/helpers/ReviewCta";
+import ReviewAiFeatures from "@/components/products/ReviewWithAiComponents/shared/ReviewAiFeatures";
+import ReviewAiHero from "@/components/products/ReviewWithAiComponents/shared/ReviewAiHero";
+import ReviewAiHowItWorks from "@/components/products/ReviewWithAiComponents/shared/ReviewAiHowItWorks";
+// import ReviewPricing from "@/components/products/ReviewWithAiComponents/shared/ReviewPricing";
+import ReviewTestimonials from "@/components/products/ReviewWithAiComponents/shared/ReviewTestimonials";
+import TicketFooter from "@/components/products/TicketLandingComponets/helpers/TicketFooter";
 
 function page() {
   return (

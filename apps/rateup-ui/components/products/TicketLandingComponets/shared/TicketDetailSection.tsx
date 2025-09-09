@@ -1,17 +1,17 @@
 import { Calendar, Check, Users, X } from "lucide-react";
 
-import { Badge } from "@/components/products/components/ui/badge";
-import { Button } from "@/components/products/components/ui/button";
-import { Input } from "@/components/products/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/products/components/ui/select";
-import { Textarea } from "@/components/products/components/ui/textarea";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 const TicketDetailSection = () => {
   return (

@@ -2,11 +2,7 @@
 
 import Image from "next/image";
 
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/products/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { imagesPath } from "@/utils/constants";
 
 const WhatsAppTemplate = () => {

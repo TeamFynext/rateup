@@ -1,10 +1,9 @@
 import { Clock, Filter, Plus, Trash2 } from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/components/products/components/ui/avatar";
-import { Badge } from "@/components/products/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -12,14 +11,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/products/components/ui/table";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/products/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+} from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { ticketCategories, tickets } from "../TicketingConstants";
 
