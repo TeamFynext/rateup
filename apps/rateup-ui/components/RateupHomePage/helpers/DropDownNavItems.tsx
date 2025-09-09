@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -36,48 +35,48 @@ export default function DropDownNavItems() {
       description: "Collect and analyze customer insights easily",
       href: "/products/whatsapp-survey",
     },
-    {
-      icon: <ClipboardList className="w-6 h-6 text-[#1c518e]" />,
-      title: "Ticketing Menu",
-      description: "Quick, delicious dining with our digital menus",
-      href: "/products/ticketing",
-    },
-    {
-      icon: <Box className="w-6 h-6 text-[#1c518e]" />,
-      title: "Product Packaging QR",
-      description: "Turn packaging into a customer engagement hub",
-      href: "/products/qr-studio",
-    },
-    {
-      icon: <QrCode className="w-6 h-6 text-[#1c518e]" />,
-      title: "Testimonial Gateway",
-      description: "One smart QR code, endless possibilities",
-      href: "/products/testimonial-gateway",
-    },
-    {
-      icon: <Bot className="w-6 h-6 text-[#1c518e]" />,
-      title: "Ai Automation",
-      description: "Automation with AI, endless possibilities",
-      href: "/products/ai-automation",
-    },
-    {
-      icon: <Star className="w-6 h-6 text-[#1c518e]" />,
-      title: "Ai Review",
-      description: "Review with AI, endless possibilities",
-      href: "/products/ai-review",
-    },
-    {
-      icon: <MessageCircleCodeIcon className="w-6 h-6 text-[#1c518e]" />,
-      title: "Unified Inbox",
-      description: "Manage all customer conversations in one place",
-      href: "/products/inbox",
-    },
-    {
-      icon: <ScanLine className="w-6 h-6 text-[#1c518e]" />,
-      title: "Smart QR",
-      description: "They scan, you grow",
-      href: "/products/qr",
-    },
+    // {
+    //   icon: <ClipboardList className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Ticketing Menu",
+    //   description: "Quick, delicious dining with our digital menus",
+    //   href: "/products/ticketing",
+    // },
+    // {
+    //   icon: <Box className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Product Packaging QR",
+    //   description: "Turn packaging into a customer engagement hub",
+    //   href: "/products/qr-studio",
+    // },
+    // {
+    //   icon: <QrCode className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Testimonial Gateway",
+    //   description: "One smart QR code, endless possibilities",
+    //   href: "/products/testimonial-gateway",
+    // },
+    // {
+    //   icon: <Bot className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Ai Automation",
+    //   description: "Automation with AI, endless possibilities",
+    //   href: "/products/ai-automation",
+    // },
+    // {
+    //   icon: <Star className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Ai Review",
+    //   description: "Review with AI, endless possibilities",
+    //   href: "/products/ai-review",
+    // },
+    // {
+    //   icon: <MessageCircleCodeIcon className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Unified Inbox",
+    //   description: "Manage all customer conversations in one place",
+    //   href: "/products/inbox",
+    // },
+    // {
+    //   icon: <ScanLine className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Smart QR",
+    //   description: "They scan, you grow",
+    //   href: "/products/qr",
+    // },
   ];
 
   // Close on click outside
