@@ -51,6 +51,8 @@ export async function createLoyaltyApiSetting(
   return await prisma.loyaltyApiSettings.create({
     data: {
       ...(data as any),
+      actionId: data.actionId?.length ? data.actionId : undefined,
+      rewardId: data.rewardId?.length ? data.rewardId : undefined,
       orgId,
     },
   });
