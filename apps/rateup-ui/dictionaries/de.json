@@ -1984,7 +1984,7 @@
   "Used in whatsapp message to send for referral": "In WhatsApp-Nachricht zur Empfehlung verwendet",
   "Referral forwarding Message with referral code": "Weiterleitungsnachricht mit Empfehlungscode",
   "Used in whatsapp message for forwarding to friends": "In WhatsApp-Nachricht zur Weiterleitung an Freunde verwendet",
-  "Use {{code}} to replace with referral code": "Verwenden Sie {{code}}, um durch den Empfehlungscode zu ersetzen",
+  "Use {{code}} to replace with referral code": "Verwenden Sie '{{code}}', um durch den Empfehlungscode zu ersetzen",
   "Customer Info": "Kundeninformationen",
   "Total Points": "Gesamtpunkte",
   "Redeem Code": "Code einlösen",

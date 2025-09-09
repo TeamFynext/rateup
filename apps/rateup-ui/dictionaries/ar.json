@@ -1983,7 +1983,7 @@
   "Used in whatsapp message to send for referral": "تُستخدم في رسالة واتساب للإحالة",
   "Referral forwarding Message with referral code": "رسالة الإحالة مع رمز الإحالة",
   "Used in whatsapp message for forwarding to friends": "تُستخدم في رسالة واتساب لإعادة توجيهها للأصدقاء",
-  "Use {{code}} to replace with referral code": "استخدم {{code}} لاستبداله برمز الإحالة",
+  "Use {{code}} to replace with referral code": "استخدم '{{code}}' لاستبداله برمز الإحالة",
   "Customer Info": "معلومات العميل",
   "Total Points": "إجمالي النقاط",
   "Redeem Code": "كود الاسترداد",

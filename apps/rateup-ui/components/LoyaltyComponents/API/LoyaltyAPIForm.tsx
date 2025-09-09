@@ -62,14 +62,14 @@ const LoyaltyAPIForm = ({ apiInfo }) => {
   const form = useForm({
     initialValues: {
       feature: LoyaltyApiFeature.action,
-      actionId: null,
-      rewardId: null,
-      phoneKey: null,
-      amountKey: null,
+      actionId: "",
+      rewardId: "",
+      phoneKey: "",
+      amountKey: "",
       rules: {
         fields: [{ key: "", value: "" }],
       },
-      priority: null,
+      priority: 1,
       active: true,
     },
     validate: {
@@ -91,13 +91,13 @@ const LoyaltyAPIForm = ({ apiInfo }) => {
 
   useEffect(() => {
     const initialValues = {
-      feature: apiInfo?.feature,
-      phoneKey: apiInfo?.phoneKey,
-      amountKey: apiInfo?.amountKey,
+      feature: apiInfo?.feature ?? "",
+      phoneKey: apiInfo?.phoneKey ?? "",
+      amountKey: apiInfo?.amountKey ?? "",
       rules: apiInfo?.rules || { fields: [] },
-      actionId: apiInfo?.actionId,
-      rewardId: apiInfo?.rewardId,
-      priority: apiInfo?.priority,
+      actionId: apiInfo?.actionId ?? "",
+      rewardId: apiInfo?.rewardId ?? "",
+      priority: apiInfo?.priority ?? 1,
       active: apiInfo?.active,
     };
     form.setInitialValues(initialValues);

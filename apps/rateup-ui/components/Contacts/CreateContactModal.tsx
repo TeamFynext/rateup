@@ -230,7 +230,7 @@ const CreateContactModal = ({
                     international
                     countryCallingCodeEditable={false}
                     placeholder={translations("Enter phone number")}
-                    value={form.values.phone}
+                    value={form.values.phone ?? ""}
                     {...form.getInputProps("phone")}
                     className={styles.inputPhone}
                   />

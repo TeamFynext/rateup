@@ -1983,7 +1983,7 @@
   "Used in whatsapp message to send for referral": "संदर्भ भेजने के लिए व्हाट्सएप संदेश में उपयोग किया जाता है",
   "Referral forwarding Message with referral code": "संदर्भ कोड के साथ संदर्भ अग्रेषण संदेश",
   "Used in whatsapp message for forwarding to friends": "दोस्तों को अग्रेषित करने के लिए व्हाट्सएप संदेश में उपयोग किया जाता है",
-  "Use {{code}} to replace with referral code": "{{code}} का उपयोग करके इसे संदर्भ कोड से बदलें",
+  "Use {{code}} to replace with referral code": "'{{code}}' का उपयोग करके इसे संदर्भ कोड से बदलें",
   "Customer Info": "ग्राहक जानकारी",
   "Total Points": "कुल अंक",
   "Redeem Code": "कोड भुनाएँ",

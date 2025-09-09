@@ -103,15 +103,15 @@ const LoyaltyActionForm = ({
       maxPointsForReferee: z.number().optional().nullable(),
       waTemplateId: z.string().optional().nullable(),
       refereeWaTemplateId: z.string().optional().nullable(),
-      startDate: z.date().refine((date) => date !== null, {
-        message: translations("Start date cannot be empty"),
-      }),
-      endDate: z.date().refine((date) => date !== null, {
-        message: translations("End date cannot be empty"),
-      }),
+      startDate: z
+        .string()
+        .min(1, { message: translations("Start date cannot be empty") }),
+      endDate: z
+        .string()
+        .min(1, { message: translations("End date cannot be empty") }),
       isExistingUserReferralAllowed: z.boolean().optional().nullable(),
-      actionRewardType: z.nativeEnum(ActionRewadTypes),
-      refereeActionRewardType: z.nativeEnum(ActionRewadTypes),
+      actionRewardType: z.enum(ActionRewadTypes),
+      refereeActionRewardType: z.enum(ActionRewadTypes),
       flowId: z.string().optional().nullable(),
     })
     .check((ctx) => {
@@ -253,7 +253,13 @@ const LoyaltyActionForm = ({
 
   useEffect(() => {
     if (isLReferralAction(form.values.type) && !action) {
-      const message = `Please forward the following message to your Friends & Family. For each successful referral you will earn ${form.values.isAmountBased ? `${form.values.points} points per amount of ${form.values.amount}` : `${form.values.points} points`}`;
+      const reward =
+        form.values.actionRewardType === ActionRewadTypes.Reward
+          ? `[Reward Name]`
+          : form.values.isAmountBased
+            ? `${form.values.points} points per amount of ${form.values.amount}`
+            : `${form.values.points} points`;
+      const message = `Please forward the following message to your Friends & Family. For each successful referral you will earn ${reward}`;
       const forwardMessage = `I would like to invite you to *[Your Organization Name]*. Using the following code, You will get ${form.values.isAmountBasedForReferee ? `${form.values.refereePoints} points per amount of ${form.values.amount}` : `${form.values.refereePoints} points`}.
           \n code: *{{code}}*`;
       form.setFieldValue("message", {
@@ -264,8 +270,8 @@ const LoyaltyActionForm = ({
     if (action) {
       form.setInitialValues({
         ...action,
-        startDate: new Date(action?.startDate),
-        endDate: new Date(action?.endDate),
+        startDate: action?.startDate,
+        endDate: action?.endDate,
         description: action?.description || "",
         message: action?.message || {
           message: "",
@@ -282,8 +288,8 @@ const LoyaltyActionForm = ({
       });
       form.setValues({
         ...action,
-        startDate: new Date(action?.startDate),
-        endDate: new Date(action?.endDate),
+        startDate: action?.startDate,
+        endDate: action?.endDate,
         description: action?.description || "",
         message: action?.message || {
           message: "",
@@ -299,8 +305,7 @@ const LoyaltyActionForm = ({
         flowId: action?.flowId || "",
       });
     }
-  }, [action, form.values.type]);
-  console.log(action);
+  }, [action, form.values.type, form.values.actionRewardType]);
 
   useEffect(() => {
     if (
@@ -384,6 +389,7 @@ const LoyaltyActionForm = ({
                     label={
                       isLReferralAction(form.values.type)
                         ? translations("Amount Based") +
+                          " " +
                           translations("for referrer")
                         : translations("Amount Based")
                     }
@@ -395,7 +401,9 @@ const LoyaltyActionForm = ({
                   />
                   <Checkbox
                     label={
-                      translations("Amount Based") + translations("for friends")
+                      translations("Amount Based") +
+                      " " +
+                      translations("for friends")
                     }
                     {...form.getInputProps("isAmountBasedForReferee")}
                     checked={form.values.isAmountBasedForReferee}
@@ -569,10 +577,12 @@ const LoyaltyActionForm = ({
                       "Referral forwarding Message with referral code",
                     )}
                   </Text>
+
                   <Text size="xs" c={"dimmed"}>
                     {translations(
                       "Used in whatsapp message for forwarding to friends",
                     ) +
+                      `. ` +
                       translations(
                         "Use {{code}} to replace with referral code",
                       )}
