@@ -42,9 +42,6 @@ function RichTextEditorComp() {
                   "#fab005",
                   "#fd7e14",
                 ]}
-                popoverProps={{
-                  withinPortal: false,
-                }}
               />
               <RichTextEditor.UnsetColor />
             </RichTextEditor.ControlsGroup>
