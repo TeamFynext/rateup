@@ -7,7 +7,7 @@ import { Link, RichTextEditor } from "@mantine/tiptap";
 import { Color } from "@tiptap/extension-color";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
-import TextStyle from "@tiptap/extension-text-style";
+import { TextStyle } from "@tiptap/extension-text-style";
 import { Youtube } from "@tiptap/extension-youtube";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -32,7 +32,7 @@ function TextEditor({ form, selectedLanguage, className = "" }) {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false }),
       Link,
       TextStyle,
       Color,
@@ -46,6 +46,8 @@ function TextEditor({ form, selectedLanguage, className = "" }) {
       CustomImageExtension,
     ],
     content: content,
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: true,
     onUpdate: ({ editor }) => {
       form.setFieldValue(`title.${selectedLanguage}`, editor.getHTML());
       if (form.values?.description?.[selectedLanguage]) {
@@ -61,8 +63,8 @@ function TextEditor({ form, selectedLanguage, className = "" }) {
   useEffect(() => {
     if (editor) {
       const selection = editor.state.selection;
-      editor.commands.setContent(content, null, {
-        preserveWhitespace: "full",
+      editor.commands.setContent(content, {
+        parseOptions: { preserveWhitespace: "full" },
       });
       editor.commands.setTextSelection(selection);
       form.setFieldValue(`title.${selectedLanguage}`, editor.getHTML());
@@ -91,9 +93,6 @@ function TextEditor({ form, selectedLanguage, className = "" }) {
                 "#fab005",
                 "#fd7e14",
               ]}
-              popoverProps={{
-                withinPortal: false,
-              }}
             />
             <RichTextEditor.UnsetColor />
           </RichTextEditor.ControlsGroup>

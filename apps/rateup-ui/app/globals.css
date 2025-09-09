@@ -38,6 +38,81 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* old colors */
+  --primary-color: #ffffff;
+  --secondary-color: #000000;
+  --tertiary-color: #1c518e;
+  --homepage-blue: #013553;
+  --shade-of-blue-1: #d0d9ee;
+  --shade-of-blue: #edf2ff;
+  --shade-of-blue-2: #3f5ba9;
+  --shade-of-blue-3: #00397b;
+  --shade-of-blue-4: #225fa4;
+  --shade-of-blue-5: #2564ae;
+  --shade-of-blue-6: #d6e9ff;
+  --shade-of-blue-7: #cce4ff;
+  --shade-of-blue-8: #0f4b90;
+  --shade-of-blue-9: #0a3a71;
+  --shade-of-blue-10: #013758;
+  --shade-of-blue-11: #0277be;
+  --shade-of-blue-12: #387adf;
+  --shade-of-blue-13: #50c4ed;
+  --shade-of-blue-14: #004f98;
+  --shade-of-blue-15: #0197f6;
+  --shade-of-blue-16: #387adf;
+  --shade-of-blue-17: #50c4ed;
+  --shade-of-blue-18: #2942cc;
+  --grey-color: #494949;
+  --grey-color-2: #73737a;
+  --grey-color-3: #595959;
+  --grey-color-4: #9c9c9c;
+  --grey-color-4-5: #cacaca;
+  --grey-color-5: #f5f5f5;
+  --grey-color-6: #7a8289;
+  --grey-color-7: #343a40;
+  --light-grey-color: #f0f0f0;
+  --bg-grey-color: #f7f7f7;
+  --shade-of-brown: #af6b2e;
+  --shade-of-brown-selected: #b06b2e;
+  --shade-of-brown-unselected: #a3a3a3;
+  --shade-of-black: #161616;
+  --orange-400: #f8951d;
+  --light-blue-4: #e5f1ff;
+  --light-blue-5: #e2e5ed;
+  --hover-border-color: rgba(28, 81, 142, 0.2);
+  --light-grey-color-2: #efefef;
+  --light-grey-color-3: #f4f4f4;
+  --light-grey-color-4: #dfdfdf;
+  --light-grey-color-5: #b7b7b7;
+  --light-grey-color-6: #eef1f9;
+  --light-dark-color-2: rgba(29, 29, 29, 0.5);
+  --wa-green: #075e55;
+  --wa-alert-info: #dbf2f1;
+  --wa-blue: #58a6fb;
+  --wa-gray: #f6f6f6;
+  --wa-dark-green: #084943;
+  --gift-green-light: #9fce6d;
+  --gift-green: #06ac6e;
+  --gift-grey: #787878;
+  --gift-grey-2: #d9d9d9;
+  --gift-grey-3: #e6e6e6;
+  --gift-grey-4: #848484;
+  --gift-black: #2f2f2f;
+  --sucess-green: #39c907;
+  --active-green-2: #69f0ae;
+  --pink: #cc2960;
+  --text-color-sp: light-dark(var(--grey-color), white);
+  /* colors of ticket board */
+  --board-bg: #f5f5f5;
+  --board-text: oklch(0.985 0 0);
+  --board-scrollbar: #7a8289;
+  --board-card-over: var(--mantine-color-text);
+  --is-column-over: oklch(0.208 0.042 265.755);
+  --board-card-bg: white;
+  --board-card-text: black;
+  --ticket-bg: light-dark(var(--grey-color-5), var(--light-grey-color-5));
+  --board-card-shadow: #e5e5e5;
 }
 
 .dark {
@@ -141,82 +216,6 @@
   border-radius: 5px;
 }
 
-:root {
-  --primary-color: #ffffff;
-  --secondary-color: #000000;
-  --tertiary-color: #1c518e;
-  --homepage-blue: #013553;
-  --shade-of-blue-1: #d0d9ee;
-  --shade-of-blue: #edf2ff;
-  --shade-of-blue-2: #3f5ba9;
-  --shade-of-blue-3: #00397b;
-  --shade-of-blue-4: #225fa4;
-  --shade-of-blue-5: #2564ae;
-  --shade-of-blue-6: #d6e9ff;
-  --shade-of-blue-7: #cce4ff;
-  --shade-of-blue-8: #0f4b90;
-  --shade-of-blue-9: #0a3a71;
-  --shade-of-blue-10: #013758;
-  --shade-of-blue-11: #0277be;
-  --shade-of-blue-12: #387adf;
-  --shade-of-blue-13: #50c4ed;
-  --shade-of-blue-14: #004f98;
-  --shade-of-blue-15: #0197f6;
-  --shade-of-blue-16: #387adf;
-  --shade-of-blue-17: #50c4ed;
-  --shade-of-blue-18: #2942cc;
-  --grey-color: #494949;
-  --grey-color-2: #73737a;
-  --grey-color-3: #595959;
-  --grey-color-4: #9c9c9c;
-  --grey-color-4-5: #cacaca;
-  --grey-color-5: #f5f5f5;
-  --grey-color-6: #7a8289;
-  --grey-color-7: #343a40;
-  --light-grey-color: #f0f0f0;
-  --bg-grey-color: #f7f7f7;
-  --shade-of-brown: #af6b2e;
-  --shade-of-brown-selected: #b06b2e;
-  --shade-of-brown-unselected: #a3a3a3;
-  --shade-of-black: #161616;
-  --orange-400: #f8951d;
-  --light-blue-4: #e5f1ff;
-  --light-blue-5: #e2e5ed;
-  --hover-border-color: rgba(28, 81, 142, 0.2);
-  --light-grey-color-2: #efefef;
-  --light-grey-color-3: #f4f4f4;
-  --light-grey-color-4: #dfdfdf;
-  --light-grey-color-5: #b7b7b7;
-  --light-grey-color-6: #eef1f9;
-  --light-dark-color-2: rgba(29, 29, 29, 0.5);
-  --wa-green: #075e55;
-  --wa-alert-info: #dbf2f1;
-  --wa-blue: #58a6fb;
-  --wa-gray: #f6f6f6;
-  --wa-dark-green: #084943;
-  --gift-green-light: #9fce6d;
-  --gift-green: #06ac6e;
-  --gift-grey: #787878;
-  --gift-grey-2: #d9d9d9;
-  --gift-grey-3: #e6e6e6;
-  --gift-grey-4: #848484;
-  --gift-black: #2f2f2f;
-  --sucess-green: #39c907;
-  --active-green-2: #69f0ae;
-  --pink: #cc2960;
-  --text-color-sp: light-dark(var(--grey-color), white);
-  /* colors of ticket board */
-  --board-bg: #f5f5f5;
-  --board-text: oklch(0.985 0 0);
-  --board-scrollbar: #7a8289;
-  --board-card-over: var(--mantine-color-text);
-  --is-column-over: oklch(0.208 0.042 265.755);
-  --board-card-bg: white;
-  --board-card-text: black;
-  --ticket-bg: light-dark(var(--grey-color-5), var(--light-grey-color-5));
-  --board-card-shadow: #e5e5e5;
-}
-
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 80px;
@@ -301,4 +300,13 @@ body {
   position: absolute;
   pointer-events: all;
   transform-origin: center;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  @apply list-disc list-outside; /* or list-decimal for ol */
+}
+
+.ProseMirror ol {
+  @apply list-decimal;
 }

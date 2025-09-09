@@ -17,13 +17,15 @@ function HTMLEditor({ form, selectedLanguage, className = "" }) {
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false }),
       Placeholder.configure({
         placeholder: "Enter your question",
       }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       CustomImageExtension,
     ],
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: true,
     content: content,
     onUpdate: ({ editor }) => {
       form.setFieldValue(`title.${selectedLanguage}`, editor.getHTML());
@@ -32,12 +34,14 @@ function HTMLEditor({ form, selectedLanguage, className = "" }) {
 
   const codeEditor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false }),
       Link,
       Placeholder.configure({
         placeholder: "Enter HTML Code here",
       }),
     ],
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: true,
     content: htmlContent,
     onUpdate: ({ editor }) => {
       form.setFieldValue(`description.${selectedLanguage}`, editor.getHTML());
@@ -47,8 +51,8 @@ function HTMLEditor({ form, selectedLanguage, className = "" }) {
   useEffect(() => {
     if (editor) {
       const selection = editor.state.selection;
-      editor.commands.setContent(content, null, {
-        preserveWhitespace: "full",
+      editor.commands.setContent(content, {
+        parseOptions: { preserveWhitespace: "full" },
       });
       editor.commands.setTextSelection(selection);
       form.setFieldValue(`title.${selectedLanguage}`, editor.getHTML());
@@ -58,8 +62,8 @@ function HTMLEditor({ form, selectedLanguage, className = "" }) {
   useEffect(() => {
     if (codeEditor) {
       const selection = codeEditor.state.selection;
-      codeEditor.commands.setContent(htmlContent, null, {
-        preserveWhitespace: "full",
+      codeEditor.commands.setContent(htmlContent, {
+        parseOptions: { preserveWhitespace: "full" },
       });
       codeEditor.commands.setTextSelection(selection);
       form.setFieldValue(

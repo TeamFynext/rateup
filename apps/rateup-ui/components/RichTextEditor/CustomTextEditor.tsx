@@ -5,8 +5,7 @@ import { useEffect } from "react";
 import { Link, RichTextEditor } from "@mantine/tiptap";
 import { Color } from "@tiptap/extension-color";
 import TextAlign from "@tiptap/extension-text-align";
-import TextStyle from "@tiptap/extension-text-style";
-import Underline from "@tiptap/extension-underline";
+import { TextStyle } from "@tiptap/extension-text-style";
 import Youtube from "@tiptap/extension-youtube";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -19,8 +18,7 @@ import { Video } from "./InsertVideo/CustomVideo";
 export default function CustomTextEditor({ content, onUpdate }) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Underline,
+      StarterKit.configure({ link: false }),
       Link,
       Color,
       TextStyle,
@@ -28,6 +26,8 @@ export default function CustomTextEditor({ content, onUpdate }) {
       Video,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
+    shouldRerenderOnTransaction: true,
+    immediatelyRender: false,
     content,
     onUpdate: ({ editor }) => {
       onUpdate(editor.getHTML());
@@ -65,9 +65,6 @@ export default function CustomTextEditor({ content, onUpdate }) {
               "#fab005",
               "#fd7e14",
             ]}
-            popoverProps={{
-              withinPortal: false,
-            }}
           />
           <RichTextEditor.UnsetColor />
         </RichTextEditor.ControlsGroup>

@@ -7,10 +7,12 @@ import { Link, RichTextEditor } from "@mantine/tiptap";
 import CharacterCount from "@tiptap/extension-character-count";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
-import Table from "@tiptap/extension-table";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
-import TableRow from "@tiptap/extension-table-row";
+import {
+  Table,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@tiptap/extension-table";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
@@ -25,8 +27,10 @@ function TiptapMarkdown({ value, onChange, label, max, disabled }) {
   const editor = useEditor({
     editable: !disabled,
     content: content,
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: true,
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false }),
       Markdown,
       Link,
       Image.configure({
@@ -46,7 +50,7 @@ function TiptapMarkdown({ value, onChange, label, max, disabled }) {
       }),
     ],
     onBlur: ({ editor }) => {
-      onChange(editor.storage.markdown.getMarkdown());
+      onChange((editor.storage as any).markdown.getMarkdown());
     },
     editorProps: {
       attributes: {

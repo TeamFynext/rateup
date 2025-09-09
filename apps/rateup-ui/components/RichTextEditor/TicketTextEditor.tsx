@@ -7,8 +7,7 @@ import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
-import TextStyle from "@tiptap/extension-text-style";
-import Underline from "@tiptap/extension-underline";
+import { TextStyle } from "@tiptap/extension-text-style";
 import Youtube from "@tiptap/extension-youtube";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -26,9 +25,8 @@ export default function TicketTextEditor({
   // const [focus, setFocus] = useState(false);
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false }),
       Image,
-      Underline,
       Link,
       Color,
       TextStyle,
@@ -39,6 +37,8 @@ export default function TicketTextEditor({
       Placeholder.configure({ placeholder }),
     ],
     content,
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: true,
     onUpdate: ({ editor }) => {
       if (saveBtn) return;
       onUpdate(editor.getHTML());
@@ -66,9 +66,6 @@ export default function TicketTextEditor({
               "#fab005",
               "#fd7e14",
             ]}
-            popoverProps={{
-              withinPortal: false,
-            }}
           />
           <RichTextEditor.UnsetColor />
         </RichTextEditor.ControlsGroup>
