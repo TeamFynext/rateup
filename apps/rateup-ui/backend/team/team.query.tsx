@@ -8,6 +8,7 @@ import { getOrgIdRole, getUserID } from "../../utils/userInfo";
 import {
   createTeam,
   deleteInviteById,
+  deleteTeamById,
   editTeam,
   getSurveyLanguagesFromTeam,
   getTeamMembersFromInvitation,
@@ -112,12 +113,12 @@ export function useEditTeamMutation(
   });
 }
 
-export function useDeleteTeamMutation(handleDeleteTeam) {
+export function useDeleteTeamMutation() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
   return useMutation({
-    mutationFn: () => handleDeleteTeam(),
+    mutationFn: deleteTeamById,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] }),
         notifications.update({
