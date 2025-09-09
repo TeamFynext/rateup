@@ -102,108 +102,98 @@ const TeamSettings = ({
   };
 
   const [opened, { toggle, close }] = useDisclosure(false);
+  const deleteTeamMutation = useDeleteTeamMutation();
 
-  const [deleteTeamId, setDeleteTeamId] = useState<string>();
-  useEffect(() => {
-    deleteTeamId && deleteTeamMutation.mutate();
-    if (deleteTeamId) {
-      notifications.show({
-        id: "load-data",
-        loading: true,
-        title: translations("Deleting Team"),
-        message: translations("Hold on, Your team is getting deleted"),
-        autoClose: false,
-        withCloseButton: false,
-      });
-    }
-  }, [deleteTeamId]);
-
-  const handleDeleteTeam = async () => {
-    return deleteTeamById(deleteTeamId);
+  const handleDeleteTeam = async (deleteTeamId: string) => {
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: translations("Deleting Team"),
+      message: translations("Hold on, Your team is getting deleted"),
+      autoClose: false,
+      withCloseButton: false,
+    });
+    deleteTeamMutation.mutate(deleteTeamId);
   };
 
-  const deleteTeamMutation = useDeleteTeamMutation(handleDeleteTeam);
-
   return (
-    <>
-      <Stack p={10}>
-        <Group>
-          <Heading
-            subtitle={translations("Team information")}
-            label={translations("Update your team information")}
-          />
-          <InfoButton docUrl={`${docsPath}/teams/teamSettings`} />
-        </Group>
-        <PaperLayout>
-          <form
-            onSubmit={teamForm.onSubmit(onSubmit)}
-            onKeyDown={getHotkeyHandler([
-              [SAVE_HOTKEY, (event: any) => teamForm.onSubmit(onSubmit)(event)],
-            ])}
-          >
-            <Grid align="center">
-              <Grid.Col span={{ md: 6, lg: 4 }}>
-                <Text size={"md"}>{translations("Team Name:")} </Text>
-              </Grid.Col>
-              <Grid.Col span={{ md: 6, lg: 4 }}>
-                <ContainedTextField
-                  placeholder={translations("Enter team name")}
-                  required
-                  mt="md"
-                  {...teamForm.getInputProps("name")}
-                />
-              </Grid.Col>
-            </Grid>
-            <Grid align="center">
-              <Grid.Col span={{ md: 6, lg: 4 }}>
-                <Text size={"md"}>Team Code: </Text>
-              </Grid.Col>
-              <Grid.Col span={{ md: 6, lg: 4 }}>
-                <ContainedTextField
-                  placeholder={translations("Enter team code")}
-                  required
-                  mt="md"
-                  {...teamForm.getInputProps("code")}
-                />
-              </Grid.Col>
-            </Grid>
-            <Grid justify="flex-end" pt="xl" pb={"5px"}>
-              <Grid.Col span={2}>
-                <RateupButtonSecondary
-                  type="submit"
-                  loading={isLoading}
-                  title={translations("Save Changes")}
-                  color="var(--tertiary-color)"
-                />
-              </Grid.Col>
-              <Grid.Col span={5}></Grid.Col>
-            </Grid>
-          </form>
-        </PaperLayout>
-        <GoogleReviewSettings googleLink={teamData.googleLink} teamId={id} />
-        <DangerZone
-          title={translations("Delete Team")}
-          message={translations("Are you sure to delete this team?")}
-          onClick={toggle}
-          buttonText={translations("Delete Team")}
+    <Stack p={10}>
+      <Group>
+        <Heading
+          subtitle={translations("Team information")}
+          label={translations("Update your team information")}
         />
-        <ConfirmationModal
-          forDeleteFunctionality
-          includeEmailConfirmation
-          deleteQuotion={translations(
-            "All the associated enities including Team Staff, Survey Responses and Menus will be deleted",
-          )}
-          opened={opened}
-          onClose={close}
-          onConfirm={(e) => {
-            setDeleteTeamId(teamData?.id);
-          }}
-          confirmLabel={translations("Delete")}
-          headerLabel={translations("Are you sure to delete this team?")}
-          headerTitle={translations("Delete Team")}
-        />
-      </Stack>
-    </>
+        <InfoButton docUrl={`${docsPath}/teams/teamSettings`} />
+      </Group>
+      <PaperLayout>
+        <form
+          onSubmit={teamForm.onSubmit(onSubmit)}
+          onKeyDown={getHotkeyHandler([
+            [SAVE_HOTKEY, (event: any) => teamForm.onSubmit(onSubmit)(event)],
+          ])}
+        >
+          <Grid align="center">
+            <Grid.Col span={{ md: 6, lg: 4 }}>
+              <Text size={"md"}>{translations("Team Name:")} </Text>
+            </Grid.Col>
+            <Grid.Col span={{ md: 6, lg: 4 }}>
+              <ContainedTextField
+                placeholder={translations("Enter team name")}
+                required
+                mt="md"
+                {...teamForm.getInputProps("name")}
+              />
+            </Grid.Col>
+          </Grid>
+          <Grid align="center">
+            <Grid.Col span={{ md: 6, lg: 4 }}>
+              <Text size={"md"}>Team Code: </Text>
+            </Grid.Col>
+            <Grid.Col span={{ md: 6, lg: 4 }}>
+              <ContainedTextField
+                placeholder={translations("Enter team code")}
+                required
+                mt="md"
+                {...teamForm.getInputProps("code")}
+              />
+            </Grid.Col>
+          </Grid>
+          <Grid justify="flex-end" pt="xl" pb={"5px"}>
+            <Grid.Col span={2}>
+              <RateupButtonSecondary
+                type="submit"
+                loading={isLoading}
+                title={translations("Save Changes")}
+                color="var(--tertiary-color)"
+              />
+            </Grid.Col>
+            <Grid.Col span={5}></Grid.Col>
+          </Grid>
+        </form>
+      </PaperLayout>
+      <GoogleReviewSettings googleLink={teamData.googleLink} teamId={id} />
+      <DangerZone
+        title={translations("Delete Team")}
+        message={translations("Are you sure to delete this team?")}
+        onClick={toggle}
+        buttonText={translations("Delete Team")}
+      />
+      <ConfirmationModal
+        forDeleteFunctionality
+        includeEmailConfirmation
+        deleteQuotion={translations(
+          "All the associated enities including Team Staff, Survey Responses and Menus will be deleted",
+        )}
+        opened={opened}
+        onClose={close}
+        onConfirm={(e) => {
+          handleDeleteTeam(teamData?.id);
+        }}
+        confirmLabel={translations("Delete")}
+        headerLabel={translations("Are you sure to delete this team?")}
+        headerTitle={translations("Delete Team")}
+      />
+    </Stack>
   );
 };
 

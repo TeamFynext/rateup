@@ -12,6 +12,7 @@ import {
   Image,
   Indicator,
   Modal,
+  Popover,
   ScrollArea,
   ScrollAreaAutosize,
   Stack,
@@ -19,7 +20,13 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { RichTextEditor } from "@mantine/tiptap";
-import { IconFileFilled, IconTrash, IconX } from "@tabler/icons-react";
+import {
+  IconFileFilled,
+  IconPaperclip,
+  IconTrash,
+  IconTypography,
+  IconX,
+} from "@tabler/icons-react";
 import CharacterCount from "@tiptap/extension-character-count";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Extension, generateHTML, useEditor } from "@tiptap/react";
@@ -54,6 +61,7 @@ interface WaTextEditorProps extends BoxComponentProps {
   customEnter?: () => void;
   editable?: boolean;
   customHeaders?: React.ReactNode;
+  otherHeaders?: React.ReactNode;
 }
 
 export const CustomEnter = Extension.create({
@@ -89,6 +97,7 @@ function WaTextEditor({
   customEnter,
   editable = true,
   customHeaders = null,
+  otherHeaders = null,
   ...props
 }: WaTextEditorProps) {
   const [opened, { open, close }] = useDisclosure(false);
@@ -207,68 +216,101 @@ function WaTextEditor({
 
       <RichTextEditor editor={editor} className={className} bg={"white"}>
         <RichTextEditor.Toolbar sticky tabIndex={-1}>
-          <Group justify="space-between" w={"100%"}>
-            <Group gap={"xs"}>
-              <RichTextEditor.ControlsGroup>
-                <RichTextEditor.Bold />
-                <RichTextEditor.Italic />
-                <RichTextEditor.Strikethrough />
-                <RichTextEditor.ClearFormatting />
-                <RichTextEditor.Code />
-              </RichTextEditor.ControlsGroup>
-
-              <RichTextEditor.ControlsGroup>
-                <RichTextEditor.Blockquote />
-                <RichTextEditor.BulletList />
-                <RichTextEditor.OrderedList />
-              </RichTextEditor.ControlsGroup>
-
-              <RichTextEditor.ControlsGroup>
-                <RichTextEditor.Undo />
-                <RichTextEditor.Redo />
-              </RichTextEditor.ControlsGroup>
-              <RichTextEditor.ControlsGroup>
-                <InsertEmoji />
-              </RichTextEditor.ControlsGroup>
-            </Group>
-            <Group>
-              {inbox && (
-                <>
-                  <RichTextEditor.ControlsGroup>
-                    {platform !== MessagePlatform.INSTAGRAM && (
-                      <InsertInboxFile />
-                    )}
-                    <InsertInboxImage />
-                    <InsertInboxVideo />
-                    <InsertInboxAudio />
-                  </RichTextEditor.ControlsGroup>
-                  <RichTextEditor.ControlsGroup>
-                    <WaQuickReplyControl />
-                    {platform !== MessagePlatform.INSTAGRAM && (
-                      <>
-                        <InboxContactsControl />
-                        <InboxLocationControl />
-                      </>
-                    )}
-                  </RichTextEditor.ControlsGroup>
-                </>
-              )}
-            </Group>
-          </Group>
+          <WaTextCharacterCount editor={editor} max={max} /> {otherHeaders}
         </RichTextEditor.Toolbar>
+        <Modal opened={opened} onClose={close} title="Text Formatting" centered>
+          <Group gap="md">
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Bold />
+              <RichTextEditor.Italic />
+              <RichTextEditor.Strikethrough />
+              <RichTextEditor.ClearFormatting />
+              <RichTextEditor.Code />
+            </RichTextEditor.ControlsGroup>
+
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Blockquote />
+              <RichTextEditor.BulletList />
+              <RichTextEditor.OrderedList />
+            </RichTextEditor.ControlsGroup>
+          </Group>
+        </Modal>
         <ScrollAreaAutosize mah={mah}>
           <RichTextEditor.Content mih={mih} />
         </ScrollAreaAutosize>
-        {customHeaders ? (
-          <Flex wrap={"wrap"} flex={1} w={"100%"} pr={"xs"}>
-            <WaTextCharacterCount editor={editor} max={max} />
-            {customHeaders}
-          </Flex>
-        ) : (
-          <Flex justify={"flex-end"} pr={"lg"}>
-            <WaTextCharacterCount editor={editor} max={max} />
-          </Flex>
-        )}
+        <Flex justify="space-between" align="center" w="100%" px="sm" py={6}>
+          <Group gap="xs">
+            <Popover position="top-start" withArrow shadow="md">
+              <Popover.Target>
+                <ActionIcon variant="default">
+                  <IconTypography size={18} color="#343A40" />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Group gap="sm" wrap="nowrap">
+                  <RichTextEditor.ControlsGroup>
+                    <RichTextEditor.Bold />
+                    <RichTextEditor.Italic />
+                    <RichTextEditor.Strikethrough />
+                    <RichTextEditor.ClearFormatting />
+                    <RichTextEditor.Code />
+                  </RichTextEditor.ControlsGroup>
+
+                  <RichTextEditor.ControlsGroup>
+                    <RichTextEditor.Blockquote />
+                    <RichTextEditor.BulletList />
+                    <RichTextEditor.OrderedList />
+                  </RichTextEditor.ControlsGroup>
+                </Group>
+              </Popover.Dropdown>
+            </Popover>
+
+            <RichTextEditor.ControlsGroup>
+              <RichTextEditor.Undo />
+              <RichTextEditor.Redo />
+            </RichTextEditor.ControlsGroup>
+
+            <Popover position="top-start" withArrow shadow="md">
+              <Popover.Target>
+                <ActionIcon variant="default">
+                  <IconPaperclip size={18} color="#343A40" />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Group gap="sm" wrap="nowrap">
+                  {inbox && (
+                    <>
+                      <RichTextEditor.ControlsGroup>
+                        {platform !== MessagePlatform.INSTAGRAM && (
+                          <InsertInboxFile />
+                        )}
+                        <InsertInboxImage />
+                        <InsertInboxVideo />
+                        <InsertInboxAudio />
+                      </RichTextEditor.ControlsGroup>
+
+                      <RichTextEditor.ControlsGroup>
+                        {platform !== MessagePlatform.INSTAGRAM && (
+                          <>
+                            <InboxContactsControl />
+                            <InboxLocationControl />
+                          </>
+                        )}
+                      </RichTextEditor.ControlsGroup>
+                    </>
+                  )}
+                </Group>
+              </Popover.Dropdown>
+            </Popover>
+
+            <WaQuickReplyControl />
+
+            <RichTextEditor.ControlsGroup>
+              <InsertEmoji />
+            </RichTextEditor.ControlsGroup>
+          </Group>
+          <Group gap="xs">{customHeaders}</Group>
+        </Flex>
       </RichTextEditor>
     </Box>
   );

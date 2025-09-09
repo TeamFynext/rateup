@@ -215,38 +215,43 @@ export default function WaInboxChatDisplayFooter({
       updatePhoneId(contact.lastMessage.sourceIdentifier);
     }
   }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
+
+  const AccountSelectComponent = () => {
+    return (
+      <Group>
+        <AccountSelector
+          onChange={(phoneId) => {
+            updatePhoneId(phoneId);
+          }}
+          value={whatsappSettingsPhoneId}
+          w={150}
+          size="xs"
+          styles={{
+            input: {
+              background: "var(--mantine-primary-color-light)",
+              color: "var(--mantine-primary-color-filled)",
+              borderRadius: "5px",
+              fontWeight: "400",
+            },
+            label: {
+              display: "none",
+            },
+          }}
+          platform={platform}
+          disabled={platform === MessagePlatform.INSTAGRAM}
+        />
+        {platform !== MessagePlatform.INSTAGRAM && (
+          <WaInboxFooterMenu
+            sessionExpired={isSessionExpired}
+            contact={contact}
+          />
+        )}
+      </Group>
+    );
+  };
   const SendMessageComponent = () => {
     return (
       <Group gap={"xs"} flex={1} justify={"space-between"}>
-        <Group>
-          <AccountSelector
-            onChange={(phoneId) => {
-              updatePhoneId(phoneId);
-            }}
-            value={whatsappSettingsPhoneId}
-            w={150}
-            size="xs"
-            styles={{
-              input: {
-                background: "var(--mantine-primary-color-light)",
-                color: "var(--mantine-primary-color-filled)",
-                borderRadius: "5px",
-                fontWeight: "400",
-              },
-              label: {
-                display: "none",
-              },
-            }}
-            platform={platform}
-            disabled={platform === MessagePlatform.INSTAGRAM}
-          />
-          {platform !== MessagePlatform.INSTAGRAM && (
-            <WaInboxFooterMenu
-              sessionExpired={isSessionExpired}
-              contact={contact}
-            />
-          )}
-        </Group>
         <Group>
           <VoiceRecorder />
           <Tooltip label={translations("Send")}>
@@ -298,6 +303,7 @@ export default function WaInboxChatDisplayFooter({
               }
               placeholder="Type a message..."
               customHeaders={<SendMessageComponent />}
+              otherHeaders={<AccountSelectComponent />}
             />
           </div>
         </form>
