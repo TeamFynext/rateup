@@ -1,6 +1,6 @@
 import React from "react";
 
-import PricingSection from "@/components/products/components/LandingPage/PricingComponents/helpers/PricingSection";
+import PricingSection from "@/components/products/components/PricingComponents/helpers/PricingSection";
 import QrCTA from "@/components/products/components/Qr/helpers/QrCTA";
 import QrGrids from "@/components/products/components/Qr/helpers/QrGrids";
 import QrHeader from "@/components/products/components/Qr/helpers/QrHeader";

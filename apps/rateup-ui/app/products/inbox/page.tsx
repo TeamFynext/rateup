@@ -10,7 +10,7 @@ import InboxFeatures2 from "@/components/products/components/Inbox/shared/InboxF
 import InboxHero from "@/components/products/components/Inbox/shared/InboxHero";
 import InboxWorks from "@/components/products/components/Inbox/shared/InboxWorks";
 import ClientLogos from "@/components/products/components/LandingPage/helpers/ClientLogos";
-import PricingSection from "@/components/products/components/LandingPage/PricingComponents/helpers/PricingSection";
+import PricingSection from "@/components/products/components/PricingComponents/helpers/PricingSection";
 
 function page() {
   return (

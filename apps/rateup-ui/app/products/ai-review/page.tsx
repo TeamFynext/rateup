@@ -1,4 +1,4 @@
-import PricingSection from "@/components/products/components/LandingPage/PricingComponents/helpers/PricingSection";
+import PricingSection from "@/components/products/components/PricingComponents/helpers/PricingSection";
 import { ReputationManagement } from "@/components/products/components/ReviewWithAiComponents/helpers/ReputationManagement";
 import ReviewAiHeader from "@/components/products/components/ReviewWithAiComponents/helpers/ReviewAiHeader";
 import ReviewCta from "@/components/products/components/ReviewWithAiComponents/helpers/ReviewCta";
