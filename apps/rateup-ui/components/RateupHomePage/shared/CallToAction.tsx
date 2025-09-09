@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
 
-import { BookDemoModal } from "../helpers/BookDemoModal";
+import { BookDemoModal1 } from "../helpers/BookDemoModal";
 
 const CallToAction = () => {
   return (
@@ -42,7 +42,7 @@ const CallToAction = () => {
           >
             Start free trial
           </Link>
-          <BookDemoModal />
+          <BookDemoModal1 />
         </div>
       </div>
     </section>

@@ -6,39 +6,39 @@ import Link from "next/link";
 const items = [
   {
     title: "Whatsapp Loyalty",
-    href: "https://products.rateup.app/products/whatsapp-loyalty",
+    href: "/products/whatsapp-loyalty",
   },
   {
     title: "Web Survey",
-    href: "https://products.rateup.app/products/whatsapp-survey",
+    href: "/products/whatsapp-survey",
   },
   {
     title: "Ticketing Menu",
-    href: "https://products.rateup.app/products/ticketing",
+    href: "/products/ticketing",
   },
   {
     title: "Product Packaging QR",
-    href: "https://products.rateup.app/products/qr-studio",
+    href: "/products/qr-studio",
   },
   {
     title: "Testimonial Gateway",
-    href: "https://products.rateup.app/products/testimonial-gateway",
+    href: "/products/testimonial-gateway",
   },
   {
     title: "Ai Review",
-    href: "https://products.rateup.app/products/ai-review",
+    href: "/products/ai-review",
   },
   {
     title: "Ai Automation",
-    href: "https://products.rateup.app/products/ai-automation",
+    href: "/products/ai-automation",
   },
   {
     title: "Unified Inbox",
-    href: "https://products.rateup.app/products/ai-automation",
+    href: "/products/ai-automation",
   },
   {
     title: "Smart QR",
-    href: "https://products.rateup.app/products/qr",
+    href: "/products/qr",
   },
 ];
 

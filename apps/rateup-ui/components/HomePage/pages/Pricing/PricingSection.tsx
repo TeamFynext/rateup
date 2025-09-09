@@ -18,7 +18,7 @@ import { ContainedTextField } from "@/components/input/ContainedInput/ContainedI
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { currencyLabel } from "@/components/menu/util/currencyData";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
-import { BookDemoModal } from "@/components/RateupHomePage/helpers/BookDemoModal";
+import { BookDemoModal1 } from "@/components/RateupHomePage/helpers/BookDemoModal";
 
 import PlanCardNew from "./Card/PlanCardNew";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore";
@@ -175,7 +175,7 @@ const PricingSection = ({ onPlanSelect = null }) => {
           Let&apos;s Talk!
         </div>
 
-        <BookDemoModal />
+        <BookDemoModal1 />
       </div>
       {/* <MailForm
         opened={opened}

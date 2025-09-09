@@ -8,7 +8,7 @@ import { SiMeta } from "react-icons/si";
 
 import { imagesPath } from "@/utils/constants";
 
-import { BookDemoModal } from "../helpers/BookDemoModal";
+import { BookDemoModal1 } from "../helpers/BookDemoModal";
 import VideoPlayer from "../helpers/VideoPlayer";
 
 export default function HeroSection() {
@@ -132,7 +132,7 @@ export default function HeroSection() {
             transition={{ duration: 0.2, delay: 0.1 }}
             className="mt-10 flex items-center justify-center gap-4 "
           >
-            <BookDemoModal />
+            <BookDemoModal1 />
             <VideoPlayer />
           </motion.div>
         </div>
