@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 import { ActionIcon, Group, Modal, Text, Tooltip } from "@mantine/core";

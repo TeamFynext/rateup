@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback } from "react";
 
 import { BackgroundImage, Box, Flex, Image, Tooltip } from "@mantine/core";

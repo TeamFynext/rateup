@@ -1,7 +1,10 @@
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
+
 import { notifications } from "@mantine/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/router";
+
+import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   cancelStripeSubscription,
   createStripeCheckoutSession,
@@ -12,7 +15,6 @@ import {
   syncStripeProducts,
   updateStripeProduct,
 } from "./stripe.api";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 
 export function useCreateStripeCheckoutSession(setIsLoading) {
   const router = useRouter();

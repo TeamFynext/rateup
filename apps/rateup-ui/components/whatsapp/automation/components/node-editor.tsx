@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
+  Badge,
   Button,
   FileButton,
   Group,
@@ -21,6 +22,8 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import {
+  IconBrandFacebookFilled,
+  IconCheck,
   IconDeviceFloppy,
   IconExclamationCircle,
   IconPlus,
@@ -51,6 +54,8 @@ import {
   useSyncFbPages,
   useSyncLeadgenFormQuestions,
   useSyncMetaLeadgenForms,
+  useUpdateWaSettingsMutation,
+  useUpsertWaSettingsMutation,
   useWaSettings,
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
@@ -500,15 +505,15 @@ const MediaNodeEditor: React.FC<
   const getFileSizeLimit = () => {
     switch (nodeType) {
       case "imageNode":
-        return 5000000; // 5MB
+        return 5 * 1024 * 1024;
       case "videoNode":
-        return 10000000; // 10MB - WhatsApp limit is 16MB, but we use 10MB
+        return 16 * 1024 * 1024;
       case "audioNode":
-        return 10000000; // 10MB - WhatsApp limit is 16MB, but we use 10MB
+        return 16 * 1024 * 1024;
       case "documentNode":
-        return 100000000; // 100MB
+        return 100 * 1024 * 1024;
       default:
-        return 300000;
+        return 0.3 * 1024 * 1024;
     }
   };
 
@@ -562,8 +567,13 @@ const MediaNodeEditor: React.FC<
     } catch (error) {
       setLoading(false);
       showErrorToast(
-        translations("Error uploading file to server:") + JSON.stringify(error),
-        "file-uploading",
+        typeof error === "string"
+          ? error
+          : translations("Error uploading file to server:") +
+              JSON.stringify(error),
+        "upload-file",
+        null,
+        true,
       );
     }
   };
@@ -1126,8 +1136,9 @@ const TemplateNodeEditor: React.FC<
   let selectedTemplate = templates?.find(
     (t) => t.id === typedData?.template?.id,
   );
-  const router = useRouter();
-  let automatedId = router.query.waAutomatedReplyId as string;
+  const params = useParams();
+
+  let automatedId = params.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
   const isLeadAutomation = data && data?.commands[0]?.startsWith("lead");
@@ -1141,7 +1152,7 @@ const TemplateNodeEditor: React.FC<
   const leadgenData = useMemo(() => {
     if (isLeadAutomation && metaAssets) {
       const leadgenNode = data?.matchData?.json?.nodes.find(
-        (node) => node.type === "leadgen",
+        (node) => node.type === "leadgenNode",
       );
       if (leadgenNode && leadgenNode.data.leadgenFormId.length) {
         const leadgenForm = metaAssets?.leadgenForms.find(
@@ -2201,8 +2212,8 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   handleInputChange,
 }) => {
   const typedData = nodeData as LeadgenNodeData;
-  const router = useRouter();
-  let automatedId = router.query.waAutomatedReplyId as string;
+  const params = useParams();
+  let automatedId = params.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
   const isLeadAutomation = data && data?.commands[0]?.startsWith("lead");
@@ -2225,6 +2236,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
     waSettingsId,
   );
   const syncLeadgenFormsMut = useSyncMetaLeadgenForms(waSettingsId);
+  const updateWaSettings = useUpdateWaSettingsMutation(waSettingsId);
   const { pages, adAccounts, leadgenForms, ads, formQuestions } =
     useMemo(() => {
       let pages = [],
@@ -2241,28 +2253,42 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           label: adAccount.name,
           value: adAccount.id,
         }));
-        leadgenForms = metaAssets.leadgenForms.map((form) => ({
-          label: form.name,
-          value: form.id,
-        }));
-        ads =
-          metaAssets.adAccounts
-            .find((adacc) => adacc.id === typedData.adAccountId)
-            ?.ads?.map((ad) => ({
-              label: ad?.name,
-              value: ad?.id,
-            })) ?? [];
+        leadgenForms = typedData.fbPageId
+          ? metaAssets.leadgenForms
+              .filter((f) => f.pageId === typedData.fbPageId)
+              .map((form) => ({
+                label: form.name,
+                value: form.id,
+              }))
+          : [];
+        ads = typedData.adAccountId
+          ? metaAssets.adAccounts
+              .find((adacc) => adacc.id === typedData.adAccountId)
+              ?.ads?.map((ad) => ({
+                label: ad?.name,
+                value: ad?.id,
+              }))
+          : [];
         formQuestions =
           metaAssets.leadgenForms
             .find((form) => form.id === typedData?.leadgenFormId)
             ?.questions?.map((question) => question?.key) ?? [];
       }
       return { pages, adAccounts, leadgenForms, ads, formQuestions };
-    }, [metaAssets]);
+    }, [
+      metaAssets,
+      typedData.fbPageId,
+      typedData?.adAccountId,
+      typedData?.leadgenFormId,
+    ]);
 
   function subscribeTolead() {
     if (!typedData?.fbPageId) {
       showErrorToast("Select a page");
+      return;
+    }
+    if (!typedData?.pageAccessToken) {
+      showErrorToast("Failed! Try deselecting and selecting page");
       return;
     }
     subscribeFieldMut.mutate({
@@ -2275,20 +2301,43 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
 
   useEffect(() => {
     if (typedData?.fbPageId && metaAssets) {
-      const accessToken = metaAssets.pages?.find(
-        (page) => page?.id === typedData?.fbPageId,
-      )?.access_token;
-      handleInputChange("pageAccessToken", accessToken);
-      const fieldSub = metaAssets.pages.find(
-        (f) => f.id === typedData?.fbPageId,
-      );
-      if (fieldSub && fieldSub.subscribedFields.includes("leadgen")) {
-        setIsFieldSubscribed(true);
+      const page = metaAssets.pages?.find((p) => p?.id === typedData?.fbPageId);
+      if (page) {
+        handleInputChange("pageAccessToken", page.access_token);
+        if (page.subscribedFields.includes("leadgen")) {
+          setIsFieldSubscribed(true);
+        } else {
+          setIsFieldSubscribed(false);
+        }
       } else {
         setIsFieldSubscribed(false);
       }
     }
   }, [typedData?.fbPageId, metaAssets]);
+
+  async function handleFbLogin() {
+    localStorage.setItem("waSettingsId", waSetting.id);
+    localStorage.setItem("automationId", automatedId);
+    const url = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/fb`)}&config_id=${process.env.NEXT_PUBLIC_META_USER_CONFIG_ID}`;
+    if (url) {
+      window.location.href = url;
+    }
+  }
+  const pageAccessTokenByUser = useMemo(() => {
+    if (metaAssets && typedData?.fbPageId) {
+      const page = metaAssets.pages?.find(
+        (page) => page.id === typedData?.fbPageId,
+      );
+      return page.pageAccessTokenByUser;
+    }
+    return null;
+  }, [typedData?.fbPageId, metaAssets]);
+
+  useEffect(() => {
+    if (typedData?.phoneField?.length && pageAccessTokenByUser) {
+      handleInputChange("pageUserAccessToken", pageAccessTokenByUser);
+    }
+  }, [typedData?.phoneField, pageAccessTokenByUser]);
 
   if (isLoading || isPending || isSettingsLoading) return <RateupLoader />;
   return (
@@ -2375,7 +2424,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
         <ContainedSelection
           data={ads}
           onChange={(value, option) =>
-            handleInputChange("ad", { id: option.value, name: option.label })
+            handleInputChange("ad", { id: option?.value, name: option?.label })
           }
           value={typedData?.ad?.id}
           w={200}
@@ -2420,9 +2469,30 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
           </ActionIcon>
         </Tooltip>
       </Group>
+      {typedData?.fbPageId?.length &&
+      !pageAccessTokenByUser &&
+      typedData?.phoneField?.length ? (
+        <RateupButtonBlue
+          leftIcon={<IconBrandFacebookFilled size={"1.5rem"} />}
+          title="Allow lead access"
+          onClick={handleFbLogin}
+          color="#1877f2"
+          radius={"sm"}
+        />
+      ) : typedData?.phoneField?.length ? (
+        <Badge
+          variant="light"
+          leftSection={<IconCheck size={"1rem"} />}
+          tt={"initial"}
+          color="green"
+        >
+          Allowed Lead Access
+        </Badge>
+      ) : null}
       <PhoneInputWithCountry
         label="Default Phone number"
         onChange={(value) => handleInputChange("phone", value)}
+        value={typedData?.phone}
       />
     </Stack>
   );

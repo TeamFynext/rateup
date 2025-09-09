@@ -1,5 +1,9 @@
+"use client";
+
 import React from "react";
+
 import { Skeleton, Table } from "@mantine/core";
+
 import useTableLoadingDataCount from "../../../hooks/useTableLoadingDataCount";
 
 const columns = [

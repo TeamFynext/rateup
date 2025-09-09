@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 
 import { Group, Stack, Text } from "@mantine/core";

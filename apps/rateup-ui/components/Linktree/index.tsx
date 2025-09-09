@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import {
   Box,
@@ -28,8 +30,9 @@ import LinktreeCardsList from "./LinktreeCardsList";
 import styles from "./linktreeDashboardPage.module.css";
 
 function LinktreeDashboard() {
-  const router = useRouter();
-  const { action } = router.query;
+  const searchParams = useSearchParams();
+  const action = searchParams.get("action");
+
   const [isCreateLinktreeModalOpen, createLinktreeModalHandlers] =
     useDisclosure(action === "create");
   const queryClient = useQueryClient();
@@ -65,13 +68,13 @@ function LinktreeDashboard() {
   } else if (isError) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <p>{translations("Unable to get data, please try again later.")}</p>
+        <p>{translations("Unable to get data, please try again later")}</p>
       </Center>
     );
   } else if (!isPending && !isError && !linktrees.length) {
     componentToBeRendered = (
       <Center h={"100%"} w={"100%"}>
-        <NothingFound text={translations("No Landing Pages Found.")} />;
+        <NothingFound text={translations("No Landing Pages Found")} />;
       </Center>
     );
   } else {

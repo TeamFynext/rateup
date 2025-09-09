@@ -1,7 +1,8 @@
-// Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
+"use client";
 
+// Logic-jump is also implemented in whatsapp surveys. Any modifications to logic-jump algorithm should be reflected in backend (questions/questions.util & whatsappSurvey module).
 import { Fragment, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -111,7 +112,8 @@ export const FlowLogicEditor = ({ afterSave }: LogicEditorProps) => {
   };
 
   const updateFlowMutation = useUpdateFlowMutation();
-  const dbFlowId = useRouter().query.dbFlowId as string;
+  const params = useParams();
+  const dbFlowId = params.dbFlowId as string;
   const { data: dbFlow, isLoading, isError } = useWaFlowFromDb(dbFlowId);
   const translations = useTranslations();
   useEffect(() => {

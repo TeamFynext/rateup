@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useParams, useRouter } from "next/navigation";
 
 import {
   Center,
@@ -10,11 +12,12 @@ import {
 } from "@mantine/core";
 import { useTranslations } from "next-intl";
 
+import { filterType } from "@/app/dashboard/testimonial/[collectionId]/page";
+
 import {
   useGetAllTestimonialsByCollection,
   useGetAllTestimonialsByOrg,
 } from "../../backend/testimonials/testimonial.query";
-import { filterType } from "../../pages/dashboard/testimonial/[collectionId]";
 import { getFilteredTestimonials } from "../../utils/testimonial";
 import NothingFound from "../NothingFound/NothingFound";
 import classes from "./testimonial.module.css";
@@ -31,7 +34,8 @@ const TestimonialSelect = ({
   filters: filterType;
   type: string;
 }) => {
-  const { collectionId } = useRouter().query as { collectionId: string };
+  const params = useParams();
+  const collectionId = params.collectionId as string;
   const { data: alltestimonials, isLoading: isTestimonialLoading } =
     useGetAllTestimonialsByOrg();
   const filteredTestimonials = getFilteredTestimonials(

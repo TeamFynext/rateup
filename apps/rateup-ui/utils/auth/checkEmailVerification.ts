@@ -1,8 +1,5 @@
-import Session from "supertokens-web-js/recipe/session";
-import {
-  EmailVerificationClaim,
-  sendVerificationEmail,
-} from "supertokens-web-js/recipe/emailverification";
+import { EmailVerificationClaim } from "supertokens-auth-react/recipe/emailverification";
+import Session from "supertokens-auth-react/recipe/session";
 
 export async function checkEmailVerification(): Promise<boolean> {
   if (await Session.doesSessionExist()) {

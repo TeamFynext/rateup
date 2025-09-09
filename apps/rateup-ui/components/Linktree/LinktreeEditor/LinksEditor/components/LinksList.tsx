@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { useUpdateLinktreeMutation } from "../../../../../backend/linktree/linktree.query";
 import styles from "../LinksEditor.module.css";
@@ -8,9 +10,8 @@ import Reorder from "./Reorder";
 import ReorderItem from "./Reorder/ReorderItem";
 
 function LinksList({ links }) {
-  const {
-    query: { shortUrlId },
-  } = useRouter();
+  const params = useParams();
+  const shortUrlId = params?.shortUrlId as string;
   const updateLinktreeMutation = useUpdateLinktreeMutation(shortUrlId);
   const { mutateAsync: linktreeUpdateMutateAsync } =
     useUpdateLinktreeMutation(shortUrlId);

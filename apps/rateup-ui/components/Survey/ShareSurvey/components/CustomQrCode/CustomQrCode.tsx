@@ -1,4 +1,7 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
+
 import QRCode from "qrcode";
 
 type CustomQRCodeProps = {

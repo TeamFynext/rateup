@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useRef } from "react";
 
 import {
@@ -41,10 +43,7 @@ export function ImageCheckbox({
   });
   const checkBoxRef = useRef(null);
   const theme = useMantineTheme();
-  const { hovered, ref } = useHover() as {
-    hovered: boolean;
-    ref: React.RefObject<HTMLDivElement | null>;
-  };
+  const { hovered, ref } = useHover();
 
   const mantineTheme = useMantineTheme();
   const themePrimaryColor = mantineTheme.colors.primaryColor

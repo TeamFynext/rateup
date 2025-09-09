@@ -1,3 +1,5 @@
+"use client";
+
 import { Image, Stack, Text } from "@mantine/core";
 import { useTranslations } from "next-intl";
 
@@ -18,12 +20,12 @@ export default function NothingFound({ className, text }: NothingFoundProps) {
     >
       <Image
         src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/nodata.svg`}
-        alt={translations("Nothing found")}
+        alt={translations("Nothing_found")}
         maw={140}
         opacity={0.35}
       />
       <Text c={"dimmed"} fw={500}>
-        {text ?? translations("Nothing found")}
+        {text ?? translations("Nothing_found")}
       </Text>
     </Stack>
   );

@@ -1,3 +1,5 @@
+"use client";
+
 import { Stack } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useTranslations } from "next-intl";

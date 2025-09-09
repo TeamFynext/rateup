@@ -6,8 +6,8 @@ import {
   GridRowId,
 } from "@mui/x-data-grid";
 
+import { renderFeatures } from "../../../app/admin/subscriptions/page";
 import styles from "../../../components/adminPanel/admin.module.css";
-import { renderFeatures } from "../../../pages/admin/subscriptions";
 import { PaymentType } from "../../../types/enums";
 import { widgetIds } from "../../../utils/constants/forms";
 import { showLoadingToast } from "../../../utils/notifications";
@@ -103,6 +103,20 @@ export const generateColumns = (
       // },
     },
     {
+      field: "trialDays",
+      headerName: "Trial Days",
+      width: 100,
+      editable: true,
+      preProcessEditCellProps: (params: GridPreProcessEditCellProps) => {
+        if (params.hasChanged) {
+          setUpdatedField(params.props.value);
+        }
+        return {
+          ...params.props,
+        };
+      },
+    },
+    {
       field: "paymentPlanId",
       headerName: "payment_plan",
       width: 220,
@@ -113,14 +127,16 @@ export const generateColumns = (
         if (params.hasChanged) {
           handleMutation({
             id: params.id,
-            paymentPlanId: params.props.value,
+            paymentPlanId: !params.props.value.length
+              ? null
+              : params.props.value,
           });
         }
         return {
           ...params.props,
         };
       },
-      valueOptions: data ? [...data, null] : [],
+      valueOptions: data ? [...data, ""] : [],
     },
     {
       field: "stripeId",

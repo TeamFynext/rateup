@@ -578,6 +578,7 @@ declare global {
     createdAt: Date;
     tags?: any;
     consent: boolean;
+    labelIds: string[];
     waMessageAssignStatus: WaMessageAssignStatus;
     whatsappUserName?: string;
     blockedOnWhatsApp: boolean;
@@ -696,6 +697,9 @@ declare global {
       count: {
         monthlyMessageLimit: number;
         max: number;
+      };
+      automation: subscriptionWithActiveAndCount & {
+        automationTrigger: subscriptionWithActiveAndCount;
       };
     };
     [sfpn.ReputationManagement]: subscriptionActiveField &

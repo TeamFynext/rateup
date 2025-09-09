@@ -3,7 +3,7 @@ import GhostContentAPI from "@tryghost/content-api";
 
 // Create API instance with site credentials
 const api = new GhostContentAPI({
-  url: "https://blog.rateup.app",
+  url: "https://yellow-roadrunner.pikapod.net",
   key: "b459f625f38f60f854d72f834f",
   version: "v6.0",
 });

@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, CopyButton, TextInput } from "@mantine/core";
 import { IconCopy } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";

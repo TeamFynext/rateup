@@ -1,5 +1,7 @@
+"use client";
+
 import { useContext, useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ActionIcon,
@@ -68,9 +70,9 @@ export function WaQuestionDetailedView({
   surveyLanguages,
   setSelectedLanguage,
 }: QuestionDetailedViewProps) {
-  const router = useRouter();
   const theme = useMantineTheme();
-  const { surveyId } = router.query as { surveyId: string };
+  const params = useParams();
+  const surveyId = params.surveyId as string;
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [previewOpened, setPreviewOpened] = useState(false);
   const [enableTitle, setEnableTitle] = useState(

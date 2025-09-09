@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext } from "react";
 
 import { Stack } from "@mantine/core";
@@ -129,7 +131,7 @@ export function WaQuestionPreview({
           />
           <WaSentMessage
             body={translations(
-              "Absolutely loved this product! It exceeded my expectations - great quality, user-friendly, and worth every penny. Highly recommend!",
+              "Absolutely loved this product! It exceeded my expectations - great quality, user-friendly, and worth every penny Highly recommend!",
             )}
           />
           {features?.rating && (

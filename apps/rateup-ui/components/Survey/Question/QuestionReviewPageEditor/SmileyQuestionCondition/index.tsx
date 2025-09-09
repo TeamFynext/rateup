@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, Group, Stack, Text, useMantineTheme } from "@mantine/core";
 
 import { SmileyResponse } from "@/types/enums";

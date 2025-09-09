@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useContext, useEffect } from "react";
 
 import { Card, Flex, Stack, Text } from "@mantine/core";

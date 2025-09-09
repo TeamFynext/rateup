@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Box, Group, Stack } from "@mantine/core";
 
@@ -12,8 +14,9 @@ import styles from "./Stats.module.css";
 function Stats() {
   const linktreeObj = useLinktreeObj();
   const { links, visitorsCount = 0 } = linktreeObj;
-  const router = useRouter();
-  const { shortUrlId } = router.query;
+  const searchParams = useSearchParams();
+  const shortUrlId = searchParams.get("shortUrlId");
+
   return (
     <PaperLayout className={styles["stats-page-root-div"]}>
       <Stack className={styles["stats-container"]}>

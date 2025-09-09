@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 
 import { Link, RichTextEditor } from "@mantine/tiptap";

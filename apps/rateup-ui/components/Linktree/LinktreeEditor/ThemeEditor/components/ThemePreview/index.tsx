@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useRef } from "react";
 
 import { Box, Center, Image, Textarea } from "@mantine/core";

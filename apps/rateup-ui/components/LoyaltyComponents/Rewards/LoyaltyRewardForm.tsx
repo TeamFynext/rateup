@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect } from "react";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
@@ -38,6 +40,7 @@ const LoyaltyRewardForm = ({
   title: string;
 }) => {
   const translations = useTranslations();
+  const router = useRouter();
 
   const createReward = useCreateLoyaltyRewardMutation();
   const updateReward = useUpdateLoyaltyRewardMutation(reward?.id);

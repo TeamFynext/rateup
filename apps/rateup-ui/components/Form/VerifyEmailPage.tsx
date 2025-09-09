@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 import { Group, Image, NavLink, Space, Text, Title } from "@mantine/core";
@@ -19,7 +21,7 @@ function VerifyEmailPage({ sendEmail }) {
       </Title>
       <Text className={styles["verify-email-para"]}>
         {translations(
-          "Please click on the link in the email we just sent you to confirm your email address.",
+          "Please click on the link in the email we just sent you to confirm your email address",
         )}
       </Text>
 
@@ -42,7 +44,7 @@ function VerifyEmailPage({ sendEmail }) {
         variant="subtle"
       />
 
-      <Link href="/auth/logout" style={{ textDecoration: "none" }}>
+      <Link href="/logout" style={{ textDecoration: "none" }}>
         <NavLink
           component="div"
           style={{ fontWeight: 620 }}

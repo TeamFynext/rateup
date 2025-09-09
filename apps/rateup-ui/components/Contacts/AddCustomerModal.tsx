@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import {
@@ -54,8 +56,8 @@ import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
+import { FilterSelect } from "@/app/dashboard/contacts/page";
 
-import { FilterSelect } from "../../pages/dashboard/contacts";
 import { getFileUrlFromKey } from "../../utils/file-upload/upload";
 import RateupLoader from "../Loaders/RateupLoader";
 import styles from "./contact.module.css";

@@ -1,5 +1,9 @@
-import { LoadingOverlay } from "@mantine/core";
+"use client";
+
 import { useCallback, useState } from "react";
+
+import { LoadingOverlay } from "@mantine/core";
+
 import styles from "./BookDemoModal.module.css";
 
 function BookDemoModal() {

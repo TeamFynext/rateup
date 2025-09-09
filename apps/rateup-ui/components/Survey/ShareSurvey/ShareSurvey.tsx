@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useCallback, useEffect, useState } from "react";
 
 import {
@@ -279,7 +281,7 @@ const ShareSurvey = ({
               checked={isScheduled}
               onChange={(event) => {
                 showLoadingToast(
-                  translations("Hold.. your survey is getting unpublished..."),
+                  translations("Hold your survey is getting unpublished"),
                   "load-data",
                   true,
                   "Unpublishing...",
@@ -307,9 +309,7 @@ const ShareSurvey = ({
                   openPublishSettings();
                 } else {
                   showLoadingToast(
-                    translations(
-                      "Hold.. your survey is getting UnPublished...",
-                    ),
+                    translations("Hold your survey is getting UnPublished"),
                     "load-data",
                     true,
                     "Unpublishing...",
@@ -724,14 +724,14 @@ const PubliShSettingsModal = ({
         const minPublishDate = new Date(new Date().getTime() + 60 * 60 * 1000);
         const publishDate = form.values.surveyPublishAt;
         return value < publishDate
-          ? translations("End date must be after the publish date.")
+          ? translations("End date must be after the publish date")
           : null;
       },
       surveyEndAt: (value) => {
         const minEndDate = new Date(new Date().getTime() + 2 * 60 * 60 * 1000);
         return surveyExpiry === ExpiryEnum.CUSTOM_DATE && value < minEndDate
           ? translations(
-              "End date must be at least 2 hours ahead of current time.",
+              "End date must be at least 2 hours ahead of current time",
             )
           : null;
       },
@@ -859,10 +859,10 @@ const PubliShSettingsModal = ({
                   }
                 />
                 <Text c="red" size="xs">
-                  * {translations("Time will be rounded to nearest hours. ")}
+                  * {translations("*Time will be rounded to nearest hours ")}
                   <br />*{" "}
                   {translations(
-                    "Publish time must be at least 1 hour ahead of current time.",
+                    "Publish time must be at least 1 hour ahead of current time",
                   )}
                 </Text>
               </Stack>
@@ -912,7 +912,7 @@ const PubliShSettingsModal = ({
                   }
                 />
                 <Text c="red" size="xs">
-                  * {translations("End date must be after the publish date.")}
+                  * {translations("End date must be after the publish date")}
                 </Text>
               </Stack>
             )}

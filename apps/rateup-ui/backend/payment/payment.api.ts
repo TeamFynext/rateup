@@ -62,3 +62,11 @@ export async function getAllPaymentOrders() {
 export async function deletePaymentPlan(data: { id: string; planId: string }) {
   return await axiosClient.delete(`${PAYMENT_URL}`, { data });
 }
+
+export async function sendMailPlanSelectDetails(data) {
+  return await axiosClient.post(`${PAYMENT_PUBLIC_URL}mail`, data);
+}
+
+export async function updateSubscriptionOrder(orderId, data) {
+  return await axiosClient.put(`${PAYMENT_URL}order/${orderId}`, data);
+}

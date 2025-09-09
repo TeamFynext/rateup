@@ -1,5 +1,7 @@
+"use client";
+
 import { useCallback, useState } from "react";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 
 import { Box, Button, Group } from "@mantine/core";
 import { produce } from "immer";
@@ -20,9 +22,8 @@ function SaveChangesBtn() {
 
   const themeDispatch = useThemeDispatch();
 
-  const {
-    query: { shortUrlId },
-  } = useRouter();
+  const params = useParams();
+  const shortUrlId = params?.shortUrlId as string;
   const [isSaving, setIsSaving] = useState(false);
 
   const { mutateAsync } = useUpdateLinktreeMutation(shortUrlId);

@@ -1,8 +1,10 @@
+"use client";
+
 import { useCallback } from "react";
 
 import { Button, FileButton, Group, Image } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconUpload } from "@tabler/icons-react";
+import { IconBrandUnsplash, IconUpload } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
 import { mmImageCropModalClassnames } from "../../../../utils/constants";
@@ -75,14 +77,7 @@ function ImageSourceSelectorModal({ context, id: thisModalId, innerProps }) {
 
       <Button
         className={styles["card"]}
-        rightSection={
-          <Image
-            width={16}
-            height={16}
-            src={getFileUrlFromKey("/images/menu/unsplash.png", false)}
-            alt="unsplash logo"
-          />
-        }
+        rightSection={<IconBrandUnsplash size={16} />}
         onClick={handleUnsplashBtnClick}
       >
         {translations("Select from Unsplash")}

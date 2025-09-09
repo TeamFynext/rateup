@@ -1,15 +1,9 @@
-import {
-  Anchor,
-  Center,
-  Group,
-  Image,
-  Text,
-  useMantineTheme,
-} from "@mantine/core";
+"use client";
+
+import { Anchor, Center, Group, Image, Text } from "@mantine/core";
 import { useTranslations } from "next-intl";
 
 export default function RateupRedirectCard({ className = "" }) {
-  const theme = useMantineTheme();
   const translations = useTranslations();
   return (
     <Center

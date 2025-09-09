@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, Select } from "@mantine/core";
 import { IconAnalyze } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";

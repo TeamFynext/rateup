@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext, useEffect, useState } from "react";
 
 import { Box, Flex, Group, Transition, useMantineTheme } from "@mantine/core";

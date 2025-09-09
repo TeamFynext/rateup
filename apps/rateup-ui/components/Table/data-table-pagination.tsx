@@ -1,4 +1,4 @@
-import { ActionIcon, Button, Group, Select, Text } from "@mantine/core";
+import { ActionIcon, Group, Select, Text } from "@mantine/core";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -13,9 +13,9 @@ interface DataTablePaginationProps<TData> {
 
 export function DataTablePagination<TData>({
   table,
-}: DataTablePaginationProps<TData>) {
+}: Readonly<DataTablePaginationProps<TData>>) {
   return (
-    <Group justify="space-between" p="sm">
+    <Group justify="space-between" p="sm" mt={"auto"}>
       <Text size="sm" c="dimmed">
         {table.getFilteredSelectedRowModel().rows.length} of{" "}
         {table.getFilteredRowModel().rows.length} row(s) selected.

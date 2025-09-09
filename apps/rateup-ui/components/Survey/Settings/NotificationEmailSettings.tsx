@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 
 import { Box, Group, Stack, Switch, Text, Title } from "@mantine/core";
@@ -53,7 +55,7 @@ const NotificationEmailSettings = ({ survey, surveyId }) => {
         {!survey?.notificationEmail?.length && (
           <Text c="var(--tertiary-color)" fz={15}>
             {translations(
-              "Please Enter Email ID and Save to complete the process.",
+              "Please Enter Email ID and Save to complete the process",
             )}
           </Text>
         )}

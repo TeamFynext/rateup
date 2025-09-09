@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Avatar, Image } from "@mantine/core";
@@ -6,8 +7,42 @@ import { getSinglePost } from "@/lib/posts";
 import Layout from "@/components/blog/Layout";
 import NothingFound from "@/components/NothingFound/NothingFound";
 
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
+// Dynamic metatags
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getSinglePost(slug);
+  return {
+    title: post?.meta_title || post?.title,
+    description: post?.meta_description || post?.excerpt,
+    openGraph: {
+      title: post?.og_title || post?.meta_title || post?.title,
+      description:
+        post?.og_description || post?.meta_description || post?.excerpt,
+      images: post?.og_image,
+      url: post?.canonical_url || post?.url,
+    },
+    twitter: {
+      title: post?.twitter_title || post?.meta_title || post?.title,
+      description:
+        post?.twitter_description || post?.meta_description || post?.excerpt,
+      images: post?.twitter_image,
+      card: "summary_large_image",
+    },
+    alternates: {
+      canonical: post?.canonical_url || post?.url,
+    },
+    authors: {
+      name: post?.primary_author?.name,
+    },
+  };
+}
+
 // For rendering post content
-function PostContent({ html }: { html: string }) {
+function PostContent({ html }: Readonly<{ html: string }>) {
   return (
     <div
       className="prose prose-slate max-w-none lg:prose-lg"
@@ -16,11 +51,8 @@ function PostContent({ html }: { html: string }) {
   );
 }
 
-export default async function SinglePost({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+// Main page export
+export default async function Page({ params }: Readonly<Props>) {
   const { slug } = await params;
   const post = await getSinglePost(slug);
   if (!post)
@@ -239,4 +271,5 @@ export default async function SinglePost({
     </Layout>
   );
 }
+
 export const dynamic = "force-static";

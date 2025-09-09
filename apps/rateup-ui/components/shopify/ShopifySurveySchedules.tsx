@@ -1,13 +1,15 @@
+"use client";
+
 import React, { useState } from "react";
 
 import { ActionIcon, Badge, Group, Menu, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
-import { ActiveStatusBadge } from "pages/dashboard/apps&services/shopify";
 
 import { IntegratedApps } from "@/types/enums";
 import { ShopifyIntegration, ShopifySurvey } from "@/types/global";
+import { ActiveStatusBadge } from "@/app/dashboard/apps&services/shopify/page";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
@@ -145,7 +147,7 @@ const ActionMenu = ({
     };
     allSchedules.push(updateRow);
     showLoadingToast(
-      translations("Updating survey schedules.."),
+      translations("Updating survey schedules"),
       "integration-update",
       true,
       "",
@@ -162,7 +164,7 @@ const ActionMenu = ({
       (s) => s.event !== selectedRow.event,
     );
     showLoadingToast(
-      translations("Deleting survey schedules.."),
+      translations("Deleting survey schedules"),
       "integration-update",
       true,
       "",

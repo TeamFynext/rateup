@@ -1,4 +1,6 @@
-import { useRef, useState } from "react";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import {
@@ -13,7 +15,13 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { IconChevronLeft, IconMail } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconChevronLeft,
+  IconMail,
+  IconPhone,
+  IconX,
+} from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -22,11 +30,14 @@ import PhoneInputWithCountrySelect, {
 } from "react-phone-number-input";
 import { z } from "zod/v4";
 
+import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
+
 import { SAVE_HOTKEY } from "../../utils/constants";
 import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
+import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import styles from "./AuthForm.module.css";
 import GoogleSignInButton from "./GoogleSigninButton";
 import LoginSignupLinks from "./LoginSignupLinks";
@@ -38,10 +49,34 @@ export const signUpType = {
   SIGNUP_WITH_PHONE: "phone",
 };
 
+const passwordRules = [
+  {
+    label: "At least 8 characters",
+    test: (val: string) => val.length >= 8,
+  },
+  {
+    label: "At least 1 uppercase letter",
+    test: (val: string) => /[A-Z]/.test(val),
+  },
+  {
+    label: "At least 1 lowercase letter",
+    test: (val: string) => /[a-z]/.test(val),
+  },
+  {
+    label: "At least 1 number",
+    test: (val: string) => /\d/.test(val),
+  },
+  {
+    label: "At least 1 special character",
+    test: (val: string) => /[!@#$%^&*(),.?\":{}|<>]/.test(val),
+  },
+];
+
 function SignupForm({ setIsLoading, signUp, isLoading }) {
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const [signUpTypeValue, setSignUpTypeValue] = useState("");
   const translations = useTranslations();
-  const phoneInputContainerRef = useRef(null);
+  // const phoneInputContainerRef = useRef(null);
 
   const [termsPrivacyAgreed, setTermsPrivacyAgreed] = useState(true);
 
@@ -73,10 +108,6 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
               translations("Password should be at least 5 characters long"),
             ),
           name: z.string().min(1, translations("Name is required")),
-          orgName: z
-            .string()
-            .min(1, translations("Organization name is required")),
-          phoneNumber: z.string().optional(),
         });
 
   const signUpForm = useForm({
@@ -84,29 +115,53 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
       email: "",
       password: "",
       name: "",
-      orgName: "",
-      phoneNumber: "",
     },
 
     validate: zod4Resolver(signUpSchema),
   });
 
-  const hasPhoneInputErr = signUpForm.errors?.phoneNumber;
+  useEffect(() => {
+    const newUserFromPricingPage = localStorage.getItem(
+      "newUserFromPricingPage",
+    );
+    if (newUserFromPricingPage) {
+      const data = JSON.parse(newUserFromPricingPage);
+      signUpForm.setValues({
+        email: data.email,
+        name: data.name,
+        orgName: data.orgName,
+      });
+    }
+  }, []);
 
+  const allPasswordRulesValid = passwordRules.every((rule) =>
+    rule.test((signUpForm.values.password as string) || ""),
+  );
+  const sendMail = useSendMailPlanSelectDetails();
+  // const hasPhoneInputErr = signUpForm.errors?.phoneNumber;
+  const { cart } = useRouteAndCartStore();
   const handleSubmit = (values) => {
     const selectedPlan = JSON.parse(localStorage.getItem("selected_plan"));
+    if (cart?.planId.length) {
+      sendMail.mutate({
+        email: values.email,
+        name: values.name,
+        planName: cart?.name,
+      });
+    }
     if (termsPrivacyAgreed) {
       setIsLoading(true);
       signUp(
         values.email,
         values.password,
         values.name,
-        values.orgName,
+        "NULL",
         values.phoneNumber,
         selectedPlan?.id,
       ).finally(() => {
         setIsLoading(false);
         localStorage.removeItem("selected_plan");
+        localStorage.removeItem("newUserFromPricingPage");
       });
     }
   };
@@ -123,10 +178,10 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         leftIcon={<IconMail size={16} />}
         fw={600}
       />
-      {/* <GoogleSignInButton
+      <GoogleSignInButton
         className={styles["login-signup-with-google-btn"]}
         buttonText={"SignUp with Google"}
-      /> */}
+      />
       {/* <RateupButtonSecondary
         type="button"
         title="SignUp with Phone Number"
@@ -160,14 +215,14 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
             {...signUpForm.getInputProps("name")}
           />
         </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 6 }}>
+        {/* <Grid.Col span={{ base: 12, md: 6 }}>
           <TextInput
             classNames={styles}
             withAsterisk
             placeholder={translations("Organization Name")}
             {...signUpForm.getInputProps("orgName")}
           />
-        </Grid.Col>
+        </Grid.Col> */}
         <Grid.Col>
           <TextInput
             classNames={styles}
@@ -179,11 +234,37 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         <Grid.Col>
           <PasswordInput
             classNames={styles}
+            withAsterisk
             placeholder={translations("Enter Password")}
             {...signUpForm.getInputProps("password")}
+            onClick={() => setPasswordTouched(true)}
           />
+          {passwordTouched && (
+            <Box mt="xs">
+              {passwordRules.map((rule, idx) => {
+                const isValid = rule.test(
+                  (signUpForm.values.password as string) || "",
+                );
+                return (
+                  <Text
+                    key={idx}
+                    size="sm"
+                    c={isValid ? "green" : "red"}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    {isValid ? <IconCheck size={14} /> : <IconX size={14} />}
+                    {rule.label}
+                  </Text>
+                );
+              })}
+            </Box>
+          )}
         </Grid.Col>
-        <Grid.Col>
+        {/* <Grid.Col>
           <Box
             className={`${styles["phone-input-container"]} ${hasPhoneInputErr ? styles["phone-input-error"] : ""}`}
             ref={phoneInputContainerRef}
@@ -211,7 +292,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           <Text className={styles["phone-input-err-text"]}>
             {signUpForm.errors.phoneNumber}
           </Text>
-        </Grid.Col>
+        </Grid.Col> */}
         <Grid.Col
           className={styles["terms-of-service-and-privacy-policy-checkbox-div"]}
         >
@@ -253,7 +334,7 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           className={styles["signup-btn"]}
         >
           <RateupButtonBlue
-            disabled={!termsPrivacyAgreed}
+            disabled={!termsPrivacyAgreed || !allPasswordRulesValid}
             type="submit"
             title={translations("Sign Up")}
             loading={isLoading}

@@ -1,10 +1,12 @@
+"use client";
+
+import { ThemeTabEnum } from "../SurveyTheme.enums";
 import {
   useSelectedPageTab,
   useSelectedPreview,
   useSetSelectedPreview,
 } from "../SurveyThemeContext";
 import PreviewDeviceSelector from "./PreviewDeviceSelector";
-import { ThemeTabEnum } from "../SurveyTheme.enums";
 
 function PreviewDeviceButtons() {
   const selectedPageTab = useSelectedPageTab();

@@ -1,3 +1,5 @@
+"use client";
+
 import { useContext } from "react";
 
 import { Box, Group, isLightColor, useMantineTheme } from "@mantine/core";

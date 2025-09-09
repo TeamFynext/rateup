@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -54,8 +56,8 @@ export function CategoryCardHeader({
             notifications.show({
               id: "delete-data-menu-category",
               loading: true,
-              title: translations("Deleting category.."),
-              message: translations("Hold on, category is getting deleted..."),
+              title: translations("Deleting category"),
+              message: translations("Hold on, category is getting deleted"),
               autoClose: false,
               withCloseButton: false,
             });

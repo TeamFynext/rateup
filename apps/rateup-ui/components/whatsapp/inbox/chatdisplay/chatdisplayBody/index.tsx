@@ -1,6 +1,7 @@
+"use client";
+
 import React, { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -26,9 +27,9 @@ import { useTranslations } from "next-intl";
 import { useLocation } from "react-use";
 
 import { MessagePlatform } from "@/types/enums";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
 import { useUser } from "@/context/UserContext";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { WaGetMessagesBody } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {

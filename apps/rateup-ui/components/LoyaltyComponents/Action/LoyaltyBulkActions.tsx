@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 
 import {
@@ -15,6 +17,7 @@ import { useDebouncedState, useDisclosure, useListState } from "@mantine/hooks";
 import { useTranslations } from "next-intl";
 
 import { ContactGroupType, LoyaltyActionType } from "@/types/enums";
+import { SearchInput } from "@/app/dashboard/campaign/page";
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import {
   useBulkLoyaltyAction,
@@ -35,8 +38,6 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import { SearchInput } from "@/pages/dashboard/campaign";
-import customer from "@/pages/dashboard/loyalty/customer";
 import { PAGE_SIZE } from "@/utils/constants";
 import { showSuccessToast } from "@/utils/notifications";
 

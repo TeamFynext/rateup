@@ -75,7 +75,7 @@ const Logs = () => {
         variant="light"
         onClick={async () => {
           showLoadingToast(
-            translations("Data getting loaded..."),
+            translations("Data getting loaded"),
             "contacts",
             true,
             translations("Loading"),

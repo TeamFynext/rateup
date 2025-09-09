@@ -1,6 +1,7 @@
 import { WHATSAPP_URL } from "..";
 import { WaConfigType } from "../../../types/enums";
 import { axiosClient } from "../../apiClient";
+import { GetLabelsRes } from "../../label/label.types";
 
 const SettingsUrl = `${WHATSAPP_URL}/settings`;
 const authUrl = `${WHATSAPP_URL}/auth`;
@@ -18,6 +19,8 @@ export type WaSettings = {
   ibaId: string;
   pageAccessToken: string;
   igUserName: string;
+  phoneDisplayName: string;
+  igDisplayName: string;
 }[];
 export const getWaSettings = async () => {
   const res = await axiosClient.get(SettingsUrl);
@@ -26,6 +29,11 @@ export const getWaSettings = async () => {
 
 export const upsertWaSettings = async (settings) => {
   const res = await axiosClient.put(SettingsUrl, settings);
+  return res;
+};
+
+export const updateWaSettingsById = async (settingId, data) => {
+  const res = await axiosClient.put(`${SettingsUrl}/${settingId}`, data);
   return res;
 };
 
@@ -55,6 +63,13 @@ export const registerBusinessClient = async ({
 
 export const deRegisterBusinessClient = async (phoneId: string) => {
   const res = axiosClient.post(`${authUrl}/deregister/${phoneId}`);
+  return res;
+};
+
+export const updateUserAccessToken = async ({ waSettingId, code }) => {
+  const res = axiosClient.post(`${authUrl}/user-token/${waSettingId}`, {
+    code,
+  });
   return res;
 };
 
@@ -169,6 +184,7 @@ export interface MetaAssets {
     instagram_business_account: {
       id: string;
     };
+    pageAccessTokenByUser?: string;
   }[];
   adAccounts: {
     id: string;

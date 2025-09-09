@@ -57,6 +57,11 @@ export function getSampleSubscriptionFeatures(
           max: count,
         },
       },
+      automation: {
+        active: true,
+        count: { max: 1 },
+        automationTrigger: { count: { max: 1000 }, active: true },
+      },
     },
     reputationManagement: { count: { max: count }, active: true },
     ticket: { count: { max: count }, active: true },

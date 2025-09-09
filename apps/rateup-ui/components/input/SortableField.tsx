@@ -1,3 +1,5 @@
+"use client";
+
 import { Group, GroupProps, Tooltip } from "@mantine/core";
 import {
   IconTriangleFilled,

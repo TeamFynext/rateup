@@ -283,6 +283,7 @@ export enum SubscriptionFeaturePathName {
   LoyaltyCustomer = "loyalty.customer",
   LoyaltyAction = "loyalty.action",
   LoyaltyReward = "loyalty.reward",
+  WhatsAppAutomationTrigger = "whatsapp.automation.automationTrigger",
 }
 
 export enum PaymentType {
@@ -565,4 +566,12 @@ export enum WaAssignedChatPermission {
 export enum MessagePlatform {
   INSTAGRAM = "INSTAGRAM",
   WHATSAPP = "WHATSAPP",
+}
+
+export enum MetaLoginAssets {
+  WHATSAPP = "WHATSAPP ACCOUNTS",
+  PAGES = "FACEBOOK PAGES",
+  CATALOGS = "CATALOGS",
+  INSTAGRAM = "INSTAGRAM ACCOUNTS",
+  ADACCOUNTS = "AD ACCOUNTS",
 }

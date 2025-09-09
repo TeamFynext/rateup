@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Menu, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconChevronDown, IconSend, IconTrash } from "@tabler/icons-react";

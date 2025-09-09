@@ -1,8 +1,12 @@
-import { useEffect, useState, ReactNode } from "react";
-import { useRouter } from "next/router";
-import Session from "supertokens-web-js/recipe/session";
-import RateupLoader from "../Loaders/RateupLoader";
+"use client";
+
+import { ReactNode, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import Session from "supertokens-auth-react/recipe/session";
+
 import { checkEmailVerification } from "../../utils/auth/checkEmailVerification";
+import RateupLoader from "../Loaders/RateupLoader";
 
 interface SessionAuthProps {
   children: ReactNode;

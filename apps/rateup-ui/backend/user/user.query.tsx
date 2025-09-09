@@ -1,4 +1,4 @@
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -52,6 +52,7 @@ export const useGetAllUsers = () =>
 
 export function useCreateUserMutation(setIsLoading) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: ICreateGoogleUser) => handleCreateUser(values),
     onSuccess: () => {
@@ -64,6 +65,8 @@ export function useCreateUserMutation(setIsLoading) {
         autoClose: 3000,
       });
       setIsLoading(false);
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       router.push("/dashboard?msg=welcome");
     },
     onError: (error: any) => {

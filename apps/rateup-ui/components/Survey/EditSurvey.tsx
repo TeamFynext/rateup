@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   useCallback,
   useContext,
@@ -283,7 +285,7 @@ export function EditSurvey({
           return {
             haveUnsavedChanges,
             feedbackElement,
-            toastMessage: "Please Enter heading and choices for all languages.",
+            toastMessage: "Please Enter heading and choices for all languages",
           };
         }
       };

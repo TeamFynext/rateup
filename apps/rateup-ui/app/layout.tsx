@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import {
   ColorSchemeScript,
@@ -7,25 +7,47 @@ import {
 } from "@mantine/core";
 
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
+import "@mantine/notifications/styles.css";
+import "@mantine/carousel/styles.css";
+import "@mantine/nprogress/styles.css";
+import "@mantine/dropzone/styles.css";
+import "@mantine/tiptap/styles.css";
+import "keen-slider/keen-slider.min.css";
 import "./globals.css";
+
+import { Suspense } from "react";
 
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { GoogleTagManager } from "@next/third-parties/google";
-import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
 
 import { theme } from "@/config/mantineTheme";
 import FacebookPixel from "@/components/Analytics/FacebookPixel";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider";
 import { isProduction } from "@/utils/constants";
 import { geist, notoColorEmogi } from "@/utils/fonts";
 
 import Providers from "./providers";
 
+export const viewPort: Viewport = {
+  minimumScale: 1,
+  initialScale: 1,
+  width: "device-width",
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: "Rateup",
   description: "Welcome to Rateup",
+  verification: {
+    other: {
+      "p:domain_verify": "a755ff9896b0315145ef35f5fe011cf8",
+    },
+  },
 };
 
 export default async function RootLayout({
@@ -34,33 +56,28 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
+  const messages = await getMessages();
   return (
     <html lang={locale} {...mantineHtmlProps}>
       <head>
         <ColorSchemeScript />
         <link rel="shortcut icon" href="/favicon.png" />
-        <meta
-          name="viewport"
-          content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
-        />
-        {isProduction && (
-          <>
-            <FacebookPixel />
-          </>
-        )}
+        {isProduction && <FacebookPixel />}
       </head>
       <body className={`${geist.className},${notoColorEmogi.className}`}>
-        <NextIntlClientProvider>
-          <MantineProvider theme={theme}>
-            <ModalsProvider>
-              <Notifications />
-              <SuperTokensProvider>
-                <Providers>{children}</Providers>
-                <GoogleTagManager gtmId="GTM-NDC3D7DP" />
-              </SuperTokensProvider>
-            </ModalsProvider>
-          </MantineProvider>
-        </NextIntlClientProvider>
+        <MantineProvider theme={theme}>
+          <Suspense fallback={<RateupLoader h={"100dvh"} />}>
+            <Notifications />
+            <SuperTokensProvider>
+              <Providers locale={locale} messages={messages}>
+                <ModalsProvider modals={allModalManagerModalsObj}>
+                  {children}
+                </ModalsProvider>
+              </Providers>
+              <GoogleTagManager gtmId="GTM-NDC3D7DP" />
+            </SuperTokensProvider>
+          </Suspense>
+        </MantineProvider>
       </body>
     </html>
   );

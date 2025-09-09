@@ -12,7 +12,7 @@ import {
 } from "../../../../utils/constants";
 
 const MB_BYTES = 1000000; // Number of bytes in a megabyte.
-const FILE_SIZE = 10;
+const FILE_SIZE = 50;
 
 const ACCEPTED_MIME_TYPES = [
   "image/png",
@@ -34,6 +34,36 @@ const allowedMimesforMediaCarousel = [
   "image/jpeg",
   "video/mp4",
 ];
+
+const mimeTypeMaxSizes: Record<string, number> = {
+  // Audio
+  "audio/aac": 16 * 1024 * 1024,
+  "audio/amr": 16 * 1024 * 1024,
+  "audio/mpeg": 16 * 1024 * 1024,
+  "audio/mp4": 16 * 1024 * 1024,
+  "audio/ogg": 16 * 1024 * 1024,
+  // Document
+  "text/plain": 100 * 1024 * 1024,
+  "application/vnd.ms-excel": 100 * 1024 * 1024,
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+    100 * 1024 * 1024,
+  "application/msword": 100 * 1024 * 1024,
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+    100 * 1024 * 1024,
+  "application/vnd.ms-powerpoint": 100 * 1024 * 1024,
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+    100 * 1024 * 1024,
+  "application/pdf": 100 * 1024 * 1024,
+  // Image
+  "image/jpeg": 5 * 1024 * 1024,
+  "image/png": 5 * 1024 * 1024,
+  // Sticker
+  "image/webp": 500 * 1024,
+  // Video
+  "video/3gpp": 16 * 1024 * 1024,
+  "video/mp4": 16 * 1024 * 1024,
+};
+
 export const templateSchema = z
   .object({
     name: z
@@ -51,21 +81,23 @@ export const templateSchema = z
       z.null(),
       z.string().trim().min(1),
       z.instanceof(File).check((ctx) => {
+        const maxSize = mimeTypeMaxSizes?.[ctx.value?.type];
         if (!ACCEPTED_MIME_TYPES.includes(ctx.value.type)) {
           ctx.issues.push({
             input: "",
-            code: "custom",
+            code: "invalid_type",
+            expected: "custom",
             message: `File must be one of [${ACCEPTED_MIME_TYPES.join(
               ", ",
             )}] but was ${ctx.value.type}`,
           });
         }
-        if (ctx.value.size > FILE_SIZE * MB_BYTES) {
+        if (maxSize && ctx.value.size > maxSize) {
           ctx.issues.push({
             input: "",
             code: "too_big",
-            message: `The file must not be larger than ${FILE_SIZE} MB`,
-            maximum: FILE_SIZE * MB_BYTES,
+            message: `File size for ${ctx.value.type} must not exceed ${Math.round(maxSize / 1024 / 1024)} MB`,
+            maximum: maxSize,
             inclusive: true,
             origin: "file",
           });
@@ -105,7 +137,7 @@ export const templateSchema = z
             .max(25)
             .refine(isValidPhoneNumber)
             .optional(),
-          url: z.string().trim().url().max(2000).optional(),
+          url: z.url().trim().max(2000).optional(),
           flow_id: z.string().optional(),
           flow_action: z.string().optional(),
           navigate_screen: z.string().optional(),

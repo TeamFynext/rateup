@@ -1,4 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
+import { useRouter } from "next/navigation";
 
 import { Box, Menu, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";

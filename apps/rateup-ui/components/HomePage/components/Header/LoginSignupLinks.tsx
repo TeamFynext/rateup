@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname, useRouter } from "next/navigation";
 
 import { Flex, Group } from "@mantine/core";
 import classNames from "classnames/bind";
@@ -12,7 +14,7 @@ const cx = classNames.bind(styles);
 
 function LoginSignupLinks() {
   const router = useRouter();
-  const currentRoutePath = router.pathname;
+  const pathname = usePathname();
   const session = useCheckSession();
 
   return (
@@ -24,7 +26,7 @@ function LoginSignupLinks() {
         >
           DashBoard
         </Link>
-      ) : currentRoutePath === "/digital-menu" ? (
+      ) : pathname === "/digital-menu" ? (
         <>
           <Flex className={cx("join-now-btn-container")}>
             <JoinNowButton

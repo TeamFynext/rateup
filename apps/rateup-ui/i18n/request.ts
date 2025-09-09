@@ -1,16 +1,11 @@
-import { set } from "lodash";
 import { getRequestConfig } from "next-intl/server";
 
+import { getUserLocale } from "@/utils/service/locale";
+
 export default getRequestConfig(async () => {
-  // Provide a static locale, fetch a user setting,
-  // read from `cookies()`, `headers()`, etc.
-  const locale = "en";
-  // Todo:"Fix this"
-  const output = Object.entries(
-    (await import(`../dictionaries/${locale}.json`)).default,
-  ).reduce((acc, [key, value]) => set(acc, key, value), {});
+  const locale = await getUserLocale();
   return {
     locale,
-    messages: output,
+    messages: (await import(`../dictionaries/${locale}.json`)).default,
   };
 });

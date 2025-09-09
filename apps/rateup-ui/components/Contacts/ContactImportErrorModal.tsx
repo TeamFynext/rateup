@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect } from "react";
 
 import { ScrollAreaAutosize, Table } from "@mantine/core";

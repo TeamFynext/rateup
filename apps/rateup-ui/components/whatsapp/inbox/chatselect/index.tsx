@@ -7,8 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import {
   ActionIcon,
@@ -35,12 +34,12 @@ import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
+import useContactStore, {
+  useChatContactCountStore,
+} from "@/app/dashboard/whatsapp/inbox/store";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import useContactStore, {
-  useChatContactCountStore,
-} from "@/pages/dashboard/whatsapp/inbox/store";
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
@@ -53,7 +52,8 @@ import classes from "./styles.module.css";
 
 const WaInboxChatSelect = () => {
   const router = useRouter();
-  const tab = (router.query?.tab as string) ?? "New";
+  const searchParams = useSearchParams();
+  const tab = (searchParams.get("tab") as string) ?? "New";
   const { filter, setFilter } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
 
@@ -205,8 +205,6 @@ const WaInboxChatSelect = () => {
   //   ],
   // );
 
-  const searchParams = useSearchParams();
-
   useEffect(() => {
     let contactId = searchParams.get("contactId");
     if (contactId && !selectedContact) {
@@ -275,7 +273,7 @@ const WaInboxChatSelect = () => {
     [openChatDisplayForContact, setSelectedContact],
   );
   useEffect(() => {
-    let tab = router.query?.tab as string;
+    let tab = searchParams.get("tab") as string;
     if (!tab) return;
     if (tab === "blocked") {
       prepareFilters({
@@ -301,7 +299,7 @@ const WaInboxChatSelect = () => {
         blockedUsers: false,
       });
     }
-  }, [router.query?.tab, filter, prepareFilters]);
+  }, [searchParams, filter, prepareFilters]);
 
   if (isContactLoading || isLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
@@ -456,7 +454,7 @@ const WaInboxChatSelect = () => {
   );
 };
 
-export const NewInboxIcon = () => {
+export const NewInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
   const { filter } = useChatFilterStore();
   const count = useMemo(() => {
@@ -479,51 +477,61 @@ export const NewInboxIcon = () => {
       return totalCount.new;
     }
   }, [filter.newStatuses, totalCount]);
-  if (!count) return <IconMessageBolt />;
+  if (!count) return <IconMessageBolt {...props} />;
   return (
-    <Indicator label={count} inline size={16} color="black">
-      <IconMessageBolt />
-    </Indicator>
+    <div className="flex">
+      <Indicator label={count} inline size={16} color="black">
+        <IconMessageBolt {...props} />
+      </Indicator>
+    </div>
   );
 };
 
-export const AssignedInboxIcon = () => {
+export const AssignedInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.assigned) return <IconUserCheck />;
+  if (!totalCount?.assigned) return <IconUserCheck {...props} />;
   return (
-    <Indicator label={totalCount.assigned} inline size={16} color="black">
-      <IconUserCheck />
-    </Indicator>
+    <div className="flex">
+      <Indicator label={totalCount.assigned} inline size={16} color="black">
+        <IconUserCheck {...props} />
+      </Indicator>
+    </div>
   );
 };
 
-export const AssignedToMeInboxIcon = () => {
+export const AssignedToMeInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.assignedToMe) return <IconUserCircle />;
+  if (!totalCount?.assignedToMe) return <IconUserCircle {...props} />;
   return (
-    <Indicator label={totalCount.assignedToMe} inline size={16} color="black">
-      <IconUserCircle />
-    </Indicator>
+    <div className="flex">
+      <Indicator label={totalCount.assignedToMe} inline size={16} color="black">
+        <IconUserCircle {...props} />
+      </Indicator>
+    </div>
   );
 };
 
-export const ClosedInboxIcon = () => {
+export const ClosedInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.closed) return <IconMessageCheck />;
+  if (!totalCount?.closed) return <IconMessageCheck {...props} />;
   return (
-    <Indicator label={totalCount.closed} inline size={16} color="black">
-      <IconMessageCheck />
-    </Indicator>
+    <div className="flex">
+      <Indicator label={totalCount.closed} inline size={16} color="black">
+        <IconMessageCheck {...props} />
+      </Indicator>
+    </div>
   );
 };
 
-export const BlockedInboxIcon = () => {
+export const BlockedInboxIcon = (props) => {
   const { totalCount } = useChatContactCountStore();
-  if (!totalCount?.blocked) return <IconForbid2 />;
+  if (!totalCount?.blocked) return <IconForbid2 {...props} />;
   return (
-    <Indicator label={totalCount.blocked} inline size={16} color="black">
-      <IconForbid2 />
-    </Indicator>
+    <div className="flex">
+      <Indicator label={totalCount.blocked} inline size={16} color="black">
+        <IconForbid2 {...props} />
+      </Indicator>
+    </div>
   );
 };
 

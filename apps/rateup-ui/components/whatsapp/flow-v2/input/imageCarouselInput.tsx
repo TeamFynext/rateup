@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useRef } from "react";
 
 import { Button, Card, Flex, SimpleGrid } from "@mantine/core";

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import {
@@ -16,10 +18,11 @@ import { IconRefresh } from "@tabler/icons-react";
 import { ColumnFiltersState } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 
+import { SearchInput } from "@/app/dashboard/campaign/page";
+import { FilterSelect } from "@/app/dashboard/contacts/page";
+
 import { useAddExistingContactToMultipleGroupsMutation } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useContacts } from "../../backend/campaign/contacts/contacts.query";
-import { SearchInput } from "../../pages/dashboard/campaign";
-import { FilterSelect } from "../../pages/dashboard/contacts";
 import { PAGE_SIZE } from "../../utils/constants";
 import { showLoadingToast } from "../../utils/notifications";
 import { TeamSelector } from "../input/TeamSelector";

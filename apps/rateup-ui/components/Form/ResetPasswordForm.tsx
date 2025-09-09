@@ -1,6 +1,8 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import {
   Anchor,
@@ -41,7 +43,13 @@ import styles from "./AuthForm.module.css";
 
 const ResetPasswordForm = ({ mode }) => {
   const router = useRouter();
-  const { token, rid, requestStatus, emailTo, type } = router.query;
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+  const rid = searchParams.get("rid");
+  const requestStatus = searchParams.get("requestStatus");
+  const emailTo = searchParams.get("emailTo");
+  const type = searchParams.get("type");
+
   const [page, setPage] = useState(
     token && token.length > 0 ? ResetSteps.STEP_THREE : mode,
   );
@@ -176,7 +184,7 @@ const ResetPasswordForm = ({ mode }) => {
             {isEmailPage ? (
               <>
                 {translations(
-                  "We will send you an email to reset your password.",
+                  "We will send you an email to reset your password",
                 )}
               </>
             ) : (
@@ -307,8 +315,8 @@ const ResetPasswordForm = ({ mode }) => {
         confirmLabel={translations("Continue")}
         headerLabel={
           type === "invite"
-            ? `${translations("Password Created successfully!")} <br/> ${translations("Please login with your email and new password.")}`
-            : `${translations("Password Updated Successfully!")}  <br/>  ${translations("Login with your new password.")}`
+            ? `${translations("Password Created successfully!")} <br/> ${translations("Please login with your email and new password")}`
+            : `${translations("Password Updated Successfully!")}  <br/>  ${translations("Login with your new password")}`
         }
         headerTitle={translations("Success")}
         excludeCancelButton={true}

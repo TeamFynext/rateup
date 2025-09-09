@@ -1,5 +1,7 @@
+"use client";
+
 import { CSSProperties } from "react";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 
 import { Navbar } from "../Navbar/Navbar";
 import classes from "./Header.module.css";
@@ -10,7 +12,7 @@ interface iHeaderTabProps {
 }
 
 export function HeaderTabs({}: iHeaderTabProps) {
-  const path = useRouter().pathname;
+  const path = usePathname();
   if (["/dashboard/whatsapp/inbox"].includes(path)) return null;
   return (
     <div className={classes.header}>

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Alert,
   Box,
@@ -17,13 +19,13 @@ import { IconBell } from "@tabler/icons-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { z } from "zod/v4";
 
+import { MemberSelector } from "@/app/dashboard/tickets/[ticketId]/page";
 import {
   useBoardTeamMembersById,
   useUpdateBoardMutation,
 } from "@/backend/tickets/tickets.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import { MemberSelector } from "@/pages/dashboard/tickets/[ticketId]";
 
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { Board } from "./types";

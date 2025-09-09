@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 import { Group, RadioGroup, Stack, Tooltip } from "@mantine/core";
@@ -69,7 +71,7 @@ export default function WaInboxTemplateDisplayModal({
                 multiline
                 w={300}
                 label={translations(
-                  "Some templates might not be available for a team, since they may have Flows which are not available for the team.",
+                  "Some templates might not be available for a team, since they may have Flows which are not available for the team",
                 )}
               >
                 <div>

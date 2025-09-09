@@ -1,3 +1,5 @@
+"use client";
+
 import { Button, Menu, Tooltip } from "@mantine/core";
 import { IconChevronDown } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
@@ -20,7 +22,7 @@ export function StatusFilterMenu({ filterParam, setFilterParam }) {
             tt={"capitalize"}
             style={{ minWidth: 110 }}
           >
-            {translations(filterParam) ?? filterParam}
+            {filterParam}
           </Button>
         </Tooltip>
       </Menu.Target>

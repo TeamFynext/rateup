@@ -1,3 +1,4 @@
+import { TicketFormValues } from "@/app/dashboard/tickets/[ticketId]/page";
 import { NotificationFormValues } from "@/components/Tickets/boardSettings";
 import {
   Activity,
@@ -7,7 +8,6 @@ import {
   MemberData,
   TicketComment,
 } from "@/components/Tickets/types";
-import { TicketFormValues } from "@/pages/dashboard/tickets/[ticketId]";
 import { TicketType } from "@/utils/enums/ticket";
 
 import { axiosClient } from "../apiClient";

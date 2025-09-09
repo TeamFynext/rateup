@@ -1,3 +1,5 @@
+"use client";
+
 import { Box, Button, Center } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 import classNames from "classnames/bind";

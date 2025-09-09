@@ -48,11 +48,7 @@ export default function LoyalityAd() {
               </span>
             </h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6 md:justify-start">
-              <BookDemoModal>
-                <span className="bg-white cursor-pointer text-[#004F9E] px-4 py-2 rounded-md font-medium hover:opacity-90">
-                  Get a Free Trial
-                </span>
-              </BookDemoModal>
+              <BookDemoModal />
               <Link
                 href={"/login"}
                 className="border border-white text-white px-4 py-2 rounded-md hover:bg-white hover:text-[#004F9E]"

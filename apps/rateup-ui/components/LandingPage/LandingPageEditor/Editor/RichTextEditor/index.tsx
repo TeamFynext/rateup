@@ -1,3 +1,5 @@
+"use client";
+
 import { Group } from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
 

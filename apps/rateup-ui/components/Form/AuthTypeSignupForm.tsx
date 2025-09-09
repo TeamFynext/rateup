@@ -1,6 +1,8 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import { Center, NavLink, Text, TextInput, Title } from "@mantine/core";
 import { isEmail, useForm } from "@mantine/form";
@@ -11,6 +13,8 @@ import {
   IconCheck,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+
+import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 
 import { useUserInfo } from "../../backend/user/user.query";
 import { SAVE_HOTKEY } from "../../utils/constants";
@@ -65,6 +69,8 @@ function AuthTypeSignupForm({
     },
   });
 
+  const sendMail = useSendMailPlanSelectDetails();
+
   const handleSubmit = (values) => {
     setIsLoading(true);
     if (isUserExist) {
@@ -82,6 +88,19 @@ function AuthTypeSignupForm({
       email: values?.email,
       type: authType,
     };
+    const planData = localStorage.getItem("subscriptionRoutAndCart");
+    if (planData) {
+      const { cartData } = JSON.parse(planData);
+      sendMail.mutate({
+        email: values.email,
+        name: values.name,
+        orgName: values?.orgName,
+        planName: cartData?.name,
+        planId: cartData?.planId,
+      });
+    }
+
+    // console.log("data:",data);
     createUserMutation.mutate(data);
   };
   return (
@@ -99,13 +118,11 @@ function AuthTypeSignupForm({
           close();
         }}
       >
-        <Text mt="xs" mb="xl" display={"inline-block"}>
-          {translations("You are successfully authenticated,")}
-          <Text display={isUserExist ? "none" : "inline-block"}>
-            {translations(
-              "please fill the information to complete the signup process",
-            )}
-          </Text>
+        <Text component="span" mt="xs" mb="xl" display="inline-block">
+          You are successfully authenticated,
+        </Text>
+        <Text component="span" display={isUserExist ? "none" : "inline-block"}>
+          please fill the information to complete the signup process,
         </Text>
 
         <Center mt="xl">
@@ -166,7 +183,8 @@ function AuthTypeSignupForm({
 
         <Center>
           <Text component="div" inline c="blue.6">
-            <Link href="/auth/logout" style={{ textDecoration: "none" }}>
+            {/* <Link href="/auth/logout" style={{ textDecoration: "none" }}> */}
+            <Link href="/logout" style={{ textDecoration: "none" }}>
               <NavLink
                 component="div"
                 label={translations("Logout")}

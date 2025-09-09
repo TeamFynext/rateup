@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useRef, useState } from "react";
 
 import {
@@ -177,8 +179,8 @@ export const Slide = ({
       notifications.show({
         id: "menu-banner-delete",
         loading: true,
-        title: translations("Deleting Menu Banner.."),
-        message: translations("Hold on, Your Menu Banner Is Getting Deleted."),
+        title: translations("Deleting Menu Banner"),
+        message: translations("Hold on, Your Menu Banner Is Getting Deleted"),
         autoClose: false,
         withCloseButton: false,
       });

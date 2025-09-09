@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -23,6 +25,7 @@ import {
   IconDotsVertical,
   IconForbid2,
   IconHandOff,
+  IconLabel,
   IconMessageCheck,
   IconPencil,
   IconTicket,
@@ -35,6 +38,8 @@ import {
   SubscriptionFeaturePathName,
   WaMessageAssignStatus,
 } from "@/types/enums";
+import { useSetIsChatDisplayOpen } from "@/app/dashboard/whatsapp/inbox/ChatDisplayContext";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
@@ -47,6 +52,7 @@ import {
   useGetAssignedUserForContact,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
+import EditContactLabelModal from "@/components/Contacts/EditContactLabelModal";
 import EditContactModal from "@/components/Contacts/EditContactModal";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
@@ -56,8 +62,6 @@ import CreateTicketModal, {
   CreateTicketCard,
 } from "@/components/Tickets/CreateTicketModal";
 import { useUser } from "@/context/UserContext";
-import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { useChatbotStore } from "@/store/chatbot.store";
 import { UserRole } from "@/utils/enums";
 import { TicketType } from "@/utils/enums/ticket";
@@ -209,6 +213,28 @@ export const ContactEdit = ({ contact, opened, close }) => {
   );
 };
 
+export const LabelEdit = ({ contact, opened, close }) => {
+  const translations = useTranslations();
+  return (
+    <Stack>
+      <FormModalLayout
+        opened={opened}
+        title={translations("Edit Labels")}
+        onClose={close}
+        centered
+        noCustomHeader
+        size="lg"
+      >
+        <EditContactLabelModal
+          id={contact?.id}
+          labelIds={contact.labelIds}
+          closeEditModal={close}
+        />
+      </FormModalLayout>
+    </Stack>
+  );
+};
+
 const ChatContactMenu = ({ contact }) => {
   const { data: subscription } = useSubscription();
 
@@ -218,6 +244,8 @@ const ChatContactMenu = ({ contact }) => {
     [subscription],
   );
   const [openedEdit, { open: openEditContact, close: closeEditContact }] =
+    useDisclosure(false);
+  const [openedLabels, { open: openEditLabels, close: closeEditLabels }] =
     useDisclosure(false);
   const [
     openedCreateTicket,
@@ -295,6 +323,12 @@ const ChatContactMenu = ({ contact }) => {
         >
           Edit Contact
         </Menu.Item>
+        <Menu.Item
+          leftSection={<IconLabel size={20} />}
+          onClick={openEditLabels}
+        >
+          Edit Labels
+        </Menu.Item>
         {!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) &&
           !contact?.blockedOnWhatsApp && (
             <Menu.Item
@@ -319,6 +353,11 @@ const ChatContactMenu = ({ contact }) => {
       <ContactEdit
         opened={openedEdit}
         close={closeEditContact}
+        contact={contact}
+      />
+      <LabelEdit
+        opened={openedLabels}
+        close={closeEditLabels}
         contact={contact}
       />
       <ConfirmationModal

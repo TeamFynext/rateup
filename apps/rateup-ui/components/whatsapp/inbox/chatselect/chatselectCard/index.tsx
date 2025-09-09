@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -19,11 +21,11 @@ import dayjs from "dayjs";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { cn } from "@/lib/utils";
+import { useSetIsChatDisplayOpen } from "@/app/dashboard/whatsapp/inbox/ChatDisplayContext";
+import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
-import { useSetIsChatDisplayOpen } from "@/pages/dashboard/whatsapp/inbox/ChatDisplayContext";
-import useContactStore from "@/pages/dashboard/whatsapp/inbox/store";
 import { formatToRelativeTime } from "@/utils/dateTime";
 import {
   parseWaMessage,
@@ -56,12 +58,18 @@ export default function WaInboxChatSelectCard({
       : MessagePlatform.INSTAGRAM;
   const isInsta = platform === MessagePlatform.INSTAGRAM;
 
-  function getIgUserName(sourceIdentifier) {
-    const igUsername = waSettings?.find(
-      (settings) => settings.ibaId === sourceIdentifier,
-    )?.igUserName;
-    if (igUsername) return `@${igUsername}`;
-    return "";
+  function getMessageSourceName(sourceIdentifier) {
+    const settings = waSettings?.find(
+      (setting) =>
+        sourceIdentifier === setting.ibaId ||
+        sourceIdentifier === setting.phone ||
+        `+${sourceIdentifier}` === setting.phone,
+    );
+    if (isInsta)
+      return (settings?.igDisplayName ?? settings?.igUserName)
+        ? `@${settings?.igUserName}`
+        : sourceIdentifier;
+    return settings?.phoneDisplayName ?? settings?.phone ?? sourceIdentifier;
   }
   return (
     <Card
@@ -145,9 +153,7 @@ export default function WaInboxChatSelectCard({
                   )
                 }
               >
-                {isInsta
-                  ? getIgUserName(lastMessage.sourceIdentifier)
-                  : lastMessage?.sourceIdentifier}
+                {getMessageSourceName(lastMessage?.sourceIdentifier)}
               </Badge>
               {contact.unReadMessageCount
                 ? contact?.id !== selectedContact?.id && (

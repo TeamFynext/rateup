@@ -1,6 +1,9 @@
+"use client";
+
 import { Box, Flex, ScrollArea, useMantineColorScheme } from "@mantine/core";
-import LoginSignupDecorativeImage from "./LoginSignupDecorativeImage";
+
 import styles from "./login-signup-layout.module.css";
+import LoginSignupDecorativeImage from "./LoginSignupDecorativeImage";
 
 function LoginSignupLayout({ children }) {
   const { colorScheme } = useMantineColorScheme();

@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect } from "react";
 
 import { Group, Stack, Title } from "@mantine/core";

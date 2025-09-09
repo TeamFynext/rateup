@@ -1,3 +1,5 @@
+import AddLabelModal from "@/components/Contacts/AddLabelSettings";
+
 import BookDemoModal from "./BookDemoModal";
 import ImageCropModal from "./ImageCropModal";
 import ImageSourceSelectorModal from "./ImageSourceSelectorModal";
@@ -8,6 +10,7 @@ const allModalManagerModalsObj = {
   unsplashImageSelectorModal: UnsplashImageSelectorModal,
   imageCropModal: ImageCropModal,
   bookDemoModal: BookDemoModal,
+  addLabelModal: AddLabelModal,
 };
 
 export { allModalManagerModalsObj };
