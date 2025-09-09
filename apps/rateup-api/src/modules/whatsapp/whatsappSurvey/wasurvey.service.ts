@@ -69,6 +69,7 @@ import {
 import { processNextNode } from "./wasurvey.controller";
 import { waStatusQueue } from "../../../utils/redisConnection";
 import { assertNodeType, LeadgenNodeData, NodeData } from "./node-types";
+import { LoyaltyActionType } from "../../loyalty/actions/actions.schema";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -720,6 +721,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
   const loyalty = await prisma.loyaltyAction.findFirst({
     where: {
       flowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
+      type: LoyaltyActionType.FeedBack,
     },
   });
   if (loyalty) {

@@ -19,10 +19,10 @@ export async function createLoyaltyAction(
     data: {
       name: data.name,
       points: data.points,
-      endDate: data.endDate,
+      endDate: new Date(data.endDate),
       type: data.type,
       refereePoints: data.refereePoints,
-      startDate: data.startDate,
+      startDate: new Date(data.startDate),
       waTemplateId: data.waTemplateId?.length ? data.waTemplateId : undefined,
       orgId: orgId,
       amount: data.amount,
@@ -79,6 +79,8 @@ export async function updateLoyaltyActionById(
     },
     data: {
       ...data,
+      startDate: data.startDate?.length ? new Date(data.startDate) : undefined,
+      endDate: data.endDate?.length ? new Date(data.endDate) : undefined,
       waTemplateId: data.waTemplateId?.length ? data.waTemplateId : undefined,
       refereeWaTemplateId: data.refereeWaTemplateId?.length
         ? data.refereeWaTemplateId

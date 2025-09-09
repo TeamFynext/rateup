@@ -16,7 +16,7 @@ export async function createLoyaltyReward(
       points: reward.points,
       description: reward.description,
       tnc: reward.tnc,
-      expireAt: reward.expireAt,
+      expireAt: reward.expireAt?.length ? new Date(reward.expireAt) : undefined,
       maxPerUser: reward.maxPerUser,
       waTemplateId: reward.waTemplateId?.length
         ? reward.waTemplateId
