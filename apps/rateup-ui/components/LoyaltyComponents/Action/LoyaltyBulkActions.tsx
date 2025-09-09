@@ -71,8 +71,9 @@ const LoyaltyBulkActions = ({ opened, close }) => {
     pageSize: Number(PAGE_SIZE[0]),
   });
 
-  const { isLoading: isLoadingCustomers, data: customers } =
+  const { isLoading: isLoadingCustomers, data: customersData } =
     useLoyaltyCustomers(pagination, searchText);
+  const customers = customersData ? customersData.customers : null;
   const { isLoading: isLoadingContactgroup, data: customerGroups } =
     useContactGroup(ContactGroupType.LOYALTY);
 

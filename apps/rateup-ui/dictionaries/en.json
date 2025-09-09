@@ -1989,7 +1989,7 @@
   "Used in whatsapp message to send for referral": "Used in whatsapp message to send for referral",
   "Referral forwarding Message with referral code": "Referral forwarding Message with referral code",
   "Used in whatsapp message for forwarding to friends": "Used in whatsapp message for forwarding to friends",
-  "Use {{code}} to replace with referral code": "Use {{code}} to replace with referral code",
+  "Use {{code}} to replace with referral code": "Use '{{code}}' to replace with referral code",
   "Customer Info": "Customer Info",
   "Total Points": "Total Points",
   "Redeem Code": "Redeem Code",
