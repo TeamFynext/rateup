@@ -7,9 +7,9 @@ import { motion } from "framer-motion";
 import { SiMeta } from "react-icons/si";
 
 import { BookDemoModal } from "@/components/RateupHomePage/helpers/BookDemoModal";
+import { Button } from "@/components/ui/button";
 import { imagesPath } from "@/utils/constants";
 
-import { Button } from "../ui/button";
 import VideoPlayer from "./helpers/VideoPlayer";
 
 export default function HeroSection() {
