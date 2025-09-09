@@ -10,6 +10,7 @@ import {
   Group,
   Image,
   NavLink,
+  Stack,
   Text,
   Title,
 } from "@mantine/core";
@@ -158,17 +159,7 @@ const ResetPasswordForm = ({ mode }) => {
   return (
     <>
       {page !== ResetSteps.STEP_TWO ? (
-        <Flex className={styles["auth-form-container"]}>
-          <Flex justify="center">
-            <Link href="/" className={styles["rateup-logo-link"]}>
-              <Image
-                className={styles["rateup-logo-img"]}
-                src={rateupLogoUrl}
-                alt="RateUp Logo"
-              />
-            </Link>
-          </Flex>
-
+        <Stack>
           <Title className={`${styles["login-signup-form-heading"]}`} order={2}>
             {page !== ResetSteps.STEP_THREE
               ? translations("Reset your Password!")
@@ -257,18 +248,9 @@ const ResetPasswordForm = ({ mode }) => {
               </Anchor>
             </Group>
           </form>
-        </Flex>
+        </Stack>
       ) : (
-        <div className={styles["auth-form-container"]}>
-          <Flex justify="center">
-            <Link href="/" className={styles["rateup-logo-link"]}>
-              <Image
-                className={styles["rateup-logo-img"]}
-                src={rateupLogoUrl}
-                alt="RateUp Logo"
-              />
-            </Link>
-          </Flex>
+        <div>
           <Title order={2} className={`${styles["login-signup-form-heading"]}`}>
             {translations("Check your email")}
           </Title>

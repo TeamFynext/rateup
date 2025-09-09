@@ -21,16 +21,16 @@
   padding: 1rem;
 }
 
-.scroll-area-div {
-  border-radius: 1rem;
-}
-
 .scroll-area-div :global(.mantine-ScrollArea-viewport > div) {
   height: 100%;
 }
 
 .color-scheme-dark {
   background-color: var(--mantine-color-gray-filled);
+}
+
+.color-scheme-light {
+  background-color: var(--mantine-color-gray-0);
 }
 
 /* Media Queries */

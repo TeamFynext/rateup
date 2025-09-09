@@ -7,8 +7,10 @@ import {
   Anchor,
   Box,
   Checkbox,
+  Divider,
   Grid,
   PasswordInput,
+  Stack,
   Text,
   TextInput,
   Title,
@@ -167,55 +169,20 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
   };
 
   let signupPageView = (
-    <>
-      <RateupButtonSecondary
-        type="button"
-        title={translations("SignUp with Email")}
-        loading={isLoading}
-        onClick={() => setSignUpTypeValue(signUpType.SIGNUP_WITH_EMAIL)}
-        className={styles["login-signup-form-submit-btn"]}
-        color="var(--shade-of-blue-5)"
-        leftIcon={<IconMail size={16} />}
-        fw={600}
-      />
+    <Stack gap={"sm"}>
       <GoogleSignInButton
         className={styles["login-signup-with-google-btn"]}
         buttonText={"SignUp with Google"}
       />
-      {/* <RateupButtonSecondary
-        type="button"
-        title="SignUp with Phone Number"
-        loading={isLoading}
-        onClick={() => setSignUpTypeValue(signUpType.SIGNUP_WITH_PHONE)}
-        className={styles["login-signup-form-submit-btn"]}
-        color="var(--shade-of-blue-5)"
-        mt="md"
-        leftIcon={<IconPhone size={16} />}
-        fw={600}
-      /> */}
-    </>
-  );
-  if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) {
-    signupPageView = (
-      <PhoneNumberForm
-        form={signUpForm}
-        isLoading={isLoading}
-        setSignUpTypeValue={setSignUpTypeValue}
-        title={translations("Sign Up")}
+      <Divider size={"sm"} label={"OR"} />
+
+      <TextInput
+        classNames={styles}
+        withAsterisk
+        placeholder={translations("Name")}
+        {...signUpForm.getInputProps("name")}
       />
-    );
-  } else if (signUpTypeValue === signUpType.SIGNUP_WITH_EMAIL) {
-    signupPageView = (
-      <Grid grow gutter={"1.25rem"}>
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <TextInput
-            classNames={styles}
-            withAsterisk
-            placeholder={translations("Name")}
-            {...signUpForm.getInputProps("name")}
-          />
-        </Grid.Col>
-        {/* <Grid.Col span={{ base: 12, md: 6 }}>
+      {/* <Grid.Col span={{ base: 12, md: 6 }}>
           <TextInput
             classNames={styles}
             withAsterisk
@@ -223,48 +190,45 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
             {...signUpForm.getInputProps("orgName")}
           />
         </Grid.Col> */}
-        <Grid.Col>
-          <TextInput
-            classNames={styles}
-            withAsterisk
-            placeholder={translations("Email ID")}
-            {...signUpForm.getInputProps("email")}
-          />
-        </Grid.Col>
-        <Grid.Col>
-          <PasswordInput
-            classNames={styles}
-            withAsterisk
-            placeholder={translations("Enter Password")}
-            {...signUpForm.getInputProps("password")}
-            onClick={() => setPasswordTouched(true)}
-          />
-          {passwordTouched && (
-            <Box mt="xs">
-              {passwordRules.map((rule, idx) => {
-                const isValid = rule.test(
-                  (signUpForm.values.password as string) || "",
-                );
-                return (
-                  <Text
-                    key={idx}
-                    size="sm"
-                    c={isValid ? "green" : "red"}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    {isValid ? <IconCheck size={14} /> : <IconX size={14} />}
-                    {rule.label}
-                  </Text>
-                );
-              })}
-            </Box>
-          )}
-        </Grid.Col>
-        {/* <Grid.Col>
+      <TextInput
+        classNames={styles}
+        withAsterisk
+        placeholder={translations("Email ID")}
+        {...signUpForm.getInputProps("email")}
+      />
+
+      <PasswordInput
+        classNames={styles}
+        withAsterisk
+        placeholder={translations("Enter Password")}
+        {...signUpForm.getInputProps("password")}
+        onClick={() => setPasswordTouched(true)}
+      />
+      {passwordTouched && (
+        <Box mt="xs">
+          {passwordRules.map((rule, idx) => {
+            const isValid = rule.test(
+              (signUpForm.values.password as string) || "",
+            );
+            return (
+              <Text
+                key={idx}
+                size="sm"
+                c={isValid ? "green" : "red"}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                {isValid ? <IconCheck size={14} /> : <IconX size={14} />}
+                {rule.label}
+              </Text>
+            );
+          })}
+        </Box>
+      )}
+      {/* <Grid.Col>
           <Box
             className={`${styles["phone-input-container"]} ${hasPhoneInputErr ? styles["phone-input-error"] : ""}`}
             ref={phoneInputContainerRef}
@@ -293,55 +257,40 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
             {signUpForm.errors.phoneNumber}
           </Text>
         </Grid.Col> */}
-        <Grid.Col
-          className={styles["terms-of-service-and-privacy-policy-checkbox-div"]}
-        >
-          <Checkbox
-            defaultChecked
-            onChange={(event) =>
-              setTermsPrivacyAgreed(event.currentTarget.checked)
-            }
-            label={
-              <>
-                {translations("I accept")}{" "}
-                <Link href="/terms-of-service">
-                  {translations("terms of service")}
-                </Link>{" "}
-                {translations("and")}{" "}
-                <Link href="/privacy-policy">
-                  {translations("privacy policy")}
-                </Link>
-              </>
-            }
-          />
-        </Grid.Col>
-        <Grid.Col
-          span={{ base: 12, md: 6 }}
-          order={{ base: 2, lg: 1 }}
-          className={styles["go-back-btn"]}
-        >
-          <RateupButtonSecondary
-            type="button"
-            title={translations("Go Back")}
-            onClick={() => setSignUpTypeValue("")}
-            className={styles["login-signup-form-submit-btn"]}
-            leftIcon={<IconChevronLeft size={18} />}
-          />
-        </Grid.Col>
-        <Grid.Col
-          span={{ base: 12, md: 6 }}
-          order={{ base: 1, lg: 2 }}
-          className={styles["signup-btn"]}
-        >
-          <RateupButtonBlue
-            disabled={!termsPrivacyAgreed || !allPasswordRulesValid}
-            type="submit"
-            title={translations("Sign Up")}
-            loading={isLoading}
-            className={styles["login-signup-form-submit-btn"]}
-          />
-        </Grid.Col>
-      </Grid>
+      <Checkbox
+        defaultChecked
+        onChange={(event) => setTermsPrivacyAgreed(event.currentTarget.checked)}
+        pl={"sm"}
+        mt={"lg"}
+        label={
+          <>
+            {translations("I accept")}{" "}
+            <Link href="/terms-of-service">
+              {translations("terms of service")}
+            </Link>{" "}
+            {translations("and")}{" "}
+            <Link href="/privacy-policy">{translations("privacy policy")}</Link>
+          </>
+        }
+      />
+      <RateupButtonBlue
+        disabled={!termsPrivacyAgreed || !allPasswordRulesValid}
+        type="submit"
+        title={translations("Sign Up")}
+        loading={isLoading}
+        className={styles["login-signup-form-submit-btn"]}
+      />
+    </Stack>
+  );
+
+  if (signUpTypeValue === signUpType.SIGNUP_WITH_PHONE) {
+    signupPageView = (
+      <PhoneNumberForm
+        form={signUpForm}
+        isLoading={isLoading}
+        setSignUpTypeValue={setSignUpTypeValue}
+        title={translations("Sign Up")}
+      />
     );
   }
 
@@ -353,11 +302,13 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           `}
         order={2}
       >
-        <span>{translations("SignUp now &")}</span>
-        <span>{translations("Start engaging with your Customers")}</span>
+        <span>Sign up now &</span>
+        <span className="text-lg">
+          {translations("Start engaging with your Customers")}
+        </span>
       </Title>
 
-      <LoginSignupLinks isSignup />
+      {/* <LoginSignupLinks isSignup /> */}
 
       <form
         className={`
@@ -386,6 +337,12 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
           </motion.div>
         </AnimatePresence>
       </form>
+      <Text ta={"center"} size="sm">
+        Already have an account?{" "}
+        <Anchor fw={"bold"} component={Link} href={"/login"}>
+          Login
+        </Anchor>
+      </Text>
     </>
   );
 }

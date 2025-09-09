@@ -1,7 +1,18 @@
 "use client";
 
-import { Box, Flex, ScrollArea, useMantineColorScheme } from "@mantine/core";
+import Image from "next/image";
+import Link from "next/link";
 
+import {
+  Box,
+  Center,
+  Flex,
+  ScrollArea,
+  Stack,
+  useMantineColorScheme,
+} from "@mantine/core";
+
+import { rateupLogoUrl } from "../HomePage/constants";
 import styles from "./login-signup-layout.module.css";
 import LoginSignupDecorativeImage from "./LoginSignupDecorativeImage";
 
@@ -9,12 +20,20 @@ function LoginSignupLayout({ children }) {
   const { colorScheme } = useMantineColorScheme();
 
   return (
-    <Flex className={styles["decorative-image-form-container"]}>
-      <LoginSignupDecorativeImage />
-
-      <Box className={styles["form-container"]}>
+    <Center>
+      <Stack
+        align="center"
+        w={{ base: "100%", sm: "100%", lg: "70%" }}
+        py={"lg"}
+        gap={50}
+      >
+        <Link href="/">
+          <Image src={rateupLogoUrl} alt="RateUp Logo" width={85} height={85} />
+        </Link>
         <Box
-          className={`${styles["form-wrapper"]} ${styles[`color-scheme-${colorScheme}`]}`}
+          className={`${styles[`color-scheme-${colorScheme}`]} rounded-xl`}
+          p={"xl"}
+          w={{ base: "90%", sm: "90%", lg: "70%" }}
         >
           <ScrollArea
             className={styles["scroll-area-div"]}
@@ -26,8 +45,9 @@ function LoginSignupLayout({ children }) {
             {children}
           </ScrollArea>
         </Box>
-      </Box>
-    </Flex>
+      </Stack>
+      {/* <LoginSignupDecorativeImage /> */}
+    </Center>
   );
 }
 
