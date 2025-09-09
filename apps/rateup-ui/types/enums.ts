@@ -283,6 +283,7 @@ export enum SubscriptionFeaturePathName {
   LoyaltyCustomer = "loyalty.customer",
   LoyaltyAction = "loyalty.action",
   LoyaltyReward = "loyalty.reward",
+  WhatsAppAutomationTrigger = "whatsapp.automation.automationTrigger",
 }
 
 export enum PaymentType {

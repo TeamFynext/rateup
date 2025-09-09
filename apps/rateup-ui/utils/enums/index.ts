@@ -206,6 +206,8 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Customer";
     case sfpn.LoyaltyReward:
       return "Reward";
+    case sfpn.WhatsAppAutomationTrigger:
+      return "Automation Trigger";
     default:
       throw new Error("Invalid Subscription Feature" + feature);
   }
