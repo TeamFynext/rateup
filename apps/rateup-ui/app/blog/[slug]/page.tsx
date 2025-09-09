@@ -22,14 +22,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: post?.og_title || post?.meta_title || post?.title,
       description:
         post?.og_description || post?.meta_description || post?.excerpt,
-      images: post?.og_image,
+      images: post?.og_image || post?.feature_image,
       url: post?.canonical_url || post?.url,
     },
     twitter: {
       title: post?.twitter_title || post?.meta_title || post?.title,
       description:
         post?.twitter_description || post?.meta_description || post?.excerpt,
-      images: post?.twitter_image,
+      images: post?.twitter_image || post?.feature_image,
       card: "summary_large_image",
     },
     alternates: {
