@@ -3,7 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import { PasswordInput, TextInput, Title } from "@mantine/core";
+import {
+  Anchor,
+  Divider,
+  PasswordInput,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
 import { zod4Resolver } from "mantine-form-zod-resolver";
@@ -89,6 +96,11 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
   } else {
     signInPageView = (
       <>
+        <GoogleSignInButton
+          className={styles["login-signup-with-google-btn"]}
+          buttonText={translations("Login with Google")}
+        />
+        <Divider label={"OR"} size={"sm"} my={"lg"} />
         <TextInput
           classNames={styles}
           placeholder={translations("Email ID")}
@@ -114,10 +126,6 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
           className={styles["login-signup-form-submit-btn"]}
         />
 
-        <GoogleSignInButton
-          className={styles["login-signup-with-google-btn"]}
-          buttonText={translations("Login with Google")}
-        />
         {/* <RateupButtonSecondary
           type="button"
           title="Login with Phone Number"
@@ -134,9 +142,10 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
   return (
     <>
       <Title className={styles["login-signup-form-heading"]} order={2}>
-        {translations("Welcome Back")}
+        {/* {translations("Welcome Back")} */}
+        Hi, Welcome Back
       </Title>
-      <LoginSignupLInks isLogin />
+      {/* <LoginSignupLInks isLogin /> */}
 
       <form
         className={`
@@ -165,6 +174,12 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
           </motion.div>
         </AnimatePresence>
       </form>
+      <Text ta={"center"} size="sm">
+        Don't have an account?{" "}
+        <Anchor fw={"bold"} component={Link} href={"/signup"}>
+          Sign Up
+        </Anchor>
+      </Text>
     </>
   );
 }
