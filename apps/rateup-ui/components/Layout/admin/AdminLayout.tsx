@@ -34,7 +34,7 @@ export function AdminPanelLayout({ children }) {
   const translations = useTranslations();
   const pathname = usePathname();
   function handleBackToDashboard() {
-    if (typeof window !== "undefined") {
+    if (pathname.startsWith("/admin")) {
       // Ensure the code is executed only on the client-side
       router.push("/dashboard");
     }

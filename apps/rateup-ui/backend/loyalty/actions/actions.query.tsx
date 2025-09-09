@@ -51,8 +51,8 @@ export type LoyaltyAction = {
   type?: LoyaltyActionType;
   name?: string;
   points?: number;
-  startDate?: Date;
-  endDate?: Date;
+  startDate?: string;
+  endDate?: string;
   waTemplateId?: string;
   isAmountBased?: boolean;
   amount?: number;

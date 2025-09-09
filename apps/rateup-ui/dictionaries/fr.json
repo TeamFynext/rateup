@@ -1982,7 +1982,7 @@
   "Used in whatsapp message to send for referral": "Utilisé dans un message WhatsApp pour l'envoi d'une référence",
   "Referral forwarding Message with referral code": "Message de parrainage avec code de parrainage",
   "Used in whatsapp message for forwarding to friends": "Utilisé dans un message WhatsApp pour transfert à des amis",
-  "Use {{code}} to replace with referral code": "Utilisez {{code}} pour remplacer par le code de parrainage",
+  "Use {{code}} to replace with referral code'": "Utilisez '{{code}}' pour remplacer par le code de parrainage",
   "Customer Info": "Infos client",
   "Total Points": "Total des points",
   "Redeem Code": "Code d'échange",
