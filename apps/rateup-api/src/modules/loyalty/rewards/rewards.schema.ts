@@ -9,7 +9,7 @@ export const lRewardSchema = z.object({
   description: z.string(),
   tnc: z.string(),
   waTemplateId: z.string().optional(),
-  expireAt: z.date().optional().nullable(),
+  expireAt: z.string().optional(),
   rewardType: z.nativeEnum(RewardTypes),
   rewardValue: z.object({
     value: z.any(),
