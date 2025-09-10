@@ -1,49 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const items = [
   {
     title: "Whatsapp Loyalty",
-    href: "https://products.rateup.app/products/whatsapp-loyalty",
+    href: "/products/whatsapp-loyalty",
   },
   {
     title: "Web Survey",
-    href: "https://products.rateup.app/products/whatsapp-survey",
+    href: "/products/whatsapp-survey",
   },
-  {
-    title: "Ticketing Menu",
-    href: "https://products.rateup.app/products/ticketing",
-  },
-  {
-    title: "Product Packaging QR",
-    href: "https://products.rateup.app/products/qr-studio",
-  },
-  {
-    title: "Testimonial Gateway",
-    href: "https://products.rateup.app/products/testimonial-gateway",
-  },
-  {
-    title: "Ai Review",
-    href: "https://products.rateup.app/products/ai-review",
-  },
-  {
-    title: "Ai Automation",
-    href: "https://products.rateup.app/products/ai-automation",
-  },
-  {
-    title: "Unified Inbox",
-    href: "https://products.rateup.app/products/ai-automation",
-  },
-  {
-    title: "Smart QR",
-    href: "https://products.rateup.app/products/qr",
-  },
+  // {
+  //   title: "Ticketing Menu",
+  //   href: "/products/ticketing",
+  // },
+  // {
+  //   title: "Product Packaging QR",
+  //   href: "/products/qr-studio",
+  // },
+  // {
+  //   title: "Testimonial Gateway",
+  //   href: "/products/testimonial-gateway",
+  // },
+  // {
+  //   title: "Ai Review",
+  //   href: "/products/ai-review",
+  // },
+  // {
+  //   title: "Ai Automation",
+  //   href: "/products/ai-automation",
+  // },
+  // {
+  //   title: "Unified Inbox",
+  //   href: "/products/ai-automation",
+  // },
+  // {
+  //   title: "Smart QR",
+  //   href: "/products/qr",
+  // },
 ];
 
 export default function DropDownMobileNavItems() {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="w-full border-b border-gray-200">
@@ -73,12 +74,12 @@ export default function DropDownMobileNavItems() {
         <ul className="px-4 pb-4 flex flex-col gap-2">
           {items.map((item, index) => (
             <li key={index}>
-              <Link
-                href={item.href}
+              <button
+                onClick={() => router.push(item.href)}
                 className="block text-[#1c518e] hover:underline text-lg"
               >
                 {item.title}
-              </Link>
+              </button>
             </li>
           ))}
         </ul>

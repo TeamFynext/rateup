@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { BookDemoModal } from "../helpers/BookDemoModal";
+import { BookDemoModal1 } from "../helpers/BookDemoModal";
 
 export default function LoyalityAd() {
   return (
@@ -48,7 +48,7 @@ export default function LoyalityAd() {
               </span>
             </h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6 md:justify-start">
-              <BookDemoModal />
+              <BookDemoModal1 />
               <Link
                 href={"/login"}
                 className="border border-white text-white px-4 py-2 rounded-md hover:bg-white hover:text-[#004F9E]"

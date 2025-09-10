@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { BookDemoModal } from "@/components/RateupHomePage/helpers/BookDemoModal";
+import { BookDemoModal1 } from "@/components/RateupHomePage/helpers/BookDemoModal";
 import { imagesPath } from "@/utils/constants";
 
 function AboutUs() {
@@ -78,7 +78,7 @@ function AboutUs() {
             Discover how Rateup can help your business grow through better
             customer understanding.
           </p>
-          <BookDemoModal />
+          <BookDemoModal1 />
         </div>
       </section>
     </main>
