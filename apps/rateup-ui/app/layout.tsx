@@ -44,6 +44,11 @@ export const metadata: Metadata = {
   title: "RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
   description:
     "RateUp is the #1 AI-powered WhatsApp Business API & omnichannel customer engagement platform. The only inbox for chat automation, collect feedback & build loyalty.",
+  openGraph: {
+    title: "RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
+    description:
+      "RateUp is the #1 AI-powered WhatsApp Business API & omnichannel customer engagement platform. The only inbox for chat automation, collect feedback & build loyalty.",
+  },
   verification: {
     other: {
       "p:domain_verify": "a755ff9896b0315145ef35f5fe011cf8",
