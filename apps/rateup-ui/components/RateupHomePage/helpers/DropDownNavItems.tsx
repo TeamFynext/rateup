@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -20,62 +20,63 @@ import {
 export default function DropDownNavItems() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const items = [
     {
       icon: <MessageCircle className="w-6 h-6 text-[#1c518e]" />,
       title: "Whatsapp Loyalty",
       description: "Engage where your customers are most active",
-      href: "https://products.rateup.app/products/whatsapp-loyalty",
+      href: "/products/whatsapp-loyalty",
     },
     {
       icon: <Monitor className="w-6 h-6 text-[#1c518e]" />,
       title: "Web Survey",
       description: "Collect and analyze customer insights easily",
-      href: "https://products.rateup.app/products/whatsapp-survey",
+      href: "/products/whatsapp-survey",
     },
-    {
-      icon: <ClipboardList className="w-6 h-6 text-[#1c518e]" />,
-      title: "Ticketing Menu",
-      description: "Quick, delicious dining with our digital menus",
-      href: "https://products.rateup.app/products/ticketing",
-    },
-    {
-      icon: <Box className="w-6 h-6 text-[#1c518e]" />,
-      title: "Product Packaging QR",
-      description: "Turn packaging into a customer engagement hub",
-      href: "https://products.rateup.app/products/qr-studio",
-    },
-    {
-      icon: <QrCode className="w-6 h-6 text-[#1c518e]" />,
-      title: "Testimonial Gateway",
-      description: "One smart QR code, endless possibilities",
-      href: "https://products.rateup.app/products/testimonial-gateway",
-    },
-    {
-      icon: <Bot className="w-6 h-6 text-[#1c518e]" />,
-      title: "Ai Automation",
-      description: "Automation with AI, endless possibilities",
-      href: "https://products.rateup.app/products/ai-automation",
-    },
-    {
-      icon: <Star className="w-6 h-6 text-[#1c518e]" />,
-      title: "Ai Review",
-      description: "Review with AI, endless possibilities",
-      href: "https://products.rateup.app/products/ai-review",
-    },
-    {
-      icon: <MessageCircleCodeIcon className="w-6 h-6 text-[#1c518e]" />,
-      title: "Unified Inbox",
-      description: "Manage all customer conversations in one place",
-      href: "https://products.rateup.app/products/inbox",
-    },
-    {
-      icon: <ScanLine className="w-6 h-6 text-[#1c518e]" />,
-      title: "Smart QR",
-      description: "They scan, you grow",
-      href: "https://products.rateup.app/products/qr",
-    },
+    // {
+    //   icon: <ClipboardList className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Ticketing Menu",
+    //   description: "Quick, delicious dining with our digital menus",
+    //   href: "/products/ticketing",
+    // },
+    // {
+    //   icon: <Box className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Product Packaging QR",
+    //   description: "Turn packaging into a customer engagement hub",
+    //   href: "/products/qr-studio",
+    // },
+    // {
+    //   icon: <QrCode className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Testimonial Gateway",
+    //   description: "One smart QR code, endless possibilities",
+    //   href: "/products/testimonial-gateway",
+    // },
+    // {
+    //   icon: <Bot className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Ai Automation",
+    //   description: "Automation with AI, endless possibilities",
+    //   href: "/products/ai-automation",
+    // },
+    // {
+    //   icon: <Star className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Ai Review",
+    //   description: "Review with AI, endless possibilities",
+    //   href: "/products/ai-review",
+    // },
+    // {
+    //   icon: <MessageCircleCodeIcon className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Unified Inbox",
+    //   description: "Manage all customer conversations in one place",
+    //   href: "/products/inbox",
+    // },
+    // {
+    //   icon: <ScanLine className="w-6 h-6 text-[#1c518e]" />,
+    //   title: "Smart QR",
+    //   description: "They scan, you grow",
+    //   href: "/products/qr",
+    // },
   ];
 
   // Close on click outside
@@ -139,10 +140,12 @@ export default function DropDownNavItems() {
             className="absolute left-0 z-50 mt-3 w-[340px] max-h-[75vh] overflow-y-auto rounded-xl border border-[#3f5ba9] bg-white shadow-2xl p-4 space-y-4"
           >
             {items.map((item, idx) => (
-              <Link
+              <button
                 key={idx}
-                href={item.href}
-                className="flex items-start gap-4 hover:bg-[#f1f5ff] p-3 rounded-lg transition"
+                onClick={() => router.push(item.href)}
+                className="flex items-start gap-4 hover:bg-[#f1f5ff] p-3 rounded-lg transition w-full text-left bg-transparent border-none outline-none cursor-pointer"
+                style={{ boxShadow: "none", appearance: "none" }}
+                tabIndex={0}
               >
                 <div>{item.icon}</div>
                 <div>
@@ -151,7 +154,7 @@ export default function DropDownNavItems() {
                   </div>
                   <p className="text-sm text-gray-600">{item.description}</p>
                 </div>
-              </Link>
+              </button>
             ))}
           </motion.div>
         )}

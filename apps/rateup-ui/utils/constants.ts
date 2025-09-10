@@ -372,6 +372,8 @@ export const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL;
 
 export const DEFAULT_IMAGE_BASE64_START = "data:image/jpeg;base64,";
 
+export const rateupLogoBlue = `${imagesPath}/rateup-logo-blue-text.svg`;
+
 export const MAX_DESCRIPTION_COUNT = 300;
 export const MAX_METADATA_COUNT = 20;
 
