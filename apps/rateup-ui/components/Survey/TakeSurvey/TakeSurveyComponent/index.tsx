@@ -446,9 +446,7 @@ function TakeSurvey({
                         }}
                       >
                         <motion.div
-                          className={
-                            styles["question-and-error-text-containers-wrapper"]
-                          }
+                          className={`${styles["question-and-error-text-containers-wrapper"]}  prose max-w-none`}
                           layout="position"
                           transition={{
                             type: "tween",

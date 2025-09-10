@@ -91,8 +91,8 @@ const TeamSettings = ({
   const onSubmit = (values) => {
     setIsLoading(true);
     const data = {
-      name: values.name,
-      code: values.code,
+      name: values.name?.trim(),
+      code: values.code?.trim(),
     };
     editTeam.mutate(data, {
       onSuccess: (res) => {
