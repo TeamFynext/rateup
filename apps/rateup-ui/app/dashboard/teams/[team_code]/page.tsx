@@ -61,7 +61,7 @@ const TeamDetails = () => {
     refetch: refetchTeams,
   } = useTeamsByUser() as UseTeamsByUserResult;
   let teamsData = teamsDataUser?.data;
-  let teamCode: string = team_code?.toString();
+  let teamCode: string = decodeURIComponent(team_code);
   let teamID = getTeamIdByCode(teamsData, teamCode);
   //fetching team members data from invitation
   const {
