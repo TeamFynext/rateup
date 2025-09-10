@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -22,15 +22,8 @@ import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems";
 interface LayoutProps {
   children: React.ReactNode;
 }
-export default function Layout({ children }: LayoutProps) {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <LayoutChild>{children}</LayoutChild>;
-    </Suspense>
-  );
-}
 
-function LayoutChild({ children }: LayoutProps) {
+export default function Layout({ children }: Readonly<LayoutProps>) {
   const hasSession = useCheckSession();
   const navItems = [
     {

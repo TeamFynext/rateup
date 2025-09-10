@@ -14,7 +14,7 @@ export default function BlogLayout({
   children,
   title = "RateUp Blog",
   description = "The latest insights on business reviews and customer feedback",
-}: LayoutProps) {
+}: Readonly<LayoutProps>) {
   return (
     <>
       <Head>
