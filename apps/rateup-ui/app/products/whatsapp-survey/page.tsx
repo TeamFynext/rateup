@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/metadata";
 import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection";
 import ClientsSectionSurvey from "@/components/products/WhatsAppSurveyComponets/helpers/ClientsSectionSurvey";
 import CustomerFeedbackSection from "@/components/products/WhatsAppSurveyComponets/helpers/CustomerFeedbackSection";
@@ -12,6 +13,8 @@ import WhatsAppSurveyGrowth from "@/components/products/WhatsAppSurveyComponets/
 import WhatsAppSurveyHero from "@/components/products/WhatsAppSurveyComponets/shared/WhatsAppSurveyHero";
 import WhatsAppSurveyService from "@/components/products/WhatsAppSurveyComponets/shared/WhatsAppSurveyService";
 import WhatsAppSurveySteps from "@/components/products/WhatsAppSurveyComponets/shared/WhatsAppSurveySteps";
+
+export const metadata = pageMetadata["/products/whatsapp-survey"];
 
 const page = () => {
   return (
