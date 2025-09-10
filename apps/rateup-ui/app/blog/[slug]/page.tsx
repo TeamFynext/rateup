@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { Avatar, Image } from "@mantine/core";
 
 import { getSinglePost } from "@/lib/posts";
 import Layout from "@/components/blog/Layout";
-import NothingFound from "@/components/NothingFound/NothingFound";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -55,12 +55,7 @@ function PostContent({ html }: Readonly<{ html: string }>) {
 export default async function Page({ params }: Readonly<Props>) {
   const { slug } = await params;
   const post = await getSinglePost(slug);
-  if (!post)
-    return (
-      <div className="h-screen">
-        <NothingFound text="Post not found" />;
-      </div>
-    );
+  if (!post) notFound();
   return (
     <Layout
       title={post.title}
@@ -89,9 +84,11 @@ export default async function Page({ params }: Readonly<Props>) {
           <header className="py-8 md:py-12">
             {post.primary_tag && (
               <div className="mb-4">
-                <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
-                  {post.primary_tag?.name}
-                </span>
+                <Link href={`/blog/tag/${post.primary_tag?.slug}`}>
+                  <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+                    {post.primary_tag?.name}
+                  </span>
+                </Link>
               </div>
             )}
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
@@ -106,9 +103,11 @@ export default async function Page({ params }: Readonly<Props>) {
                 className="mr-4"
               />
               <div>
-                <div className="font-medium text-slate-900">
-                  {post.primary_author?.name}
-                </div>
+                <Link href={`/blog/author/${post.primary_author?.slug}`}>
+                  <div className="font-medium text-slate-900">
+                    {post.primary_author?.name}
+                  </div>
+                </Link>
                 <div className="text-sm text-slate-500">
                   {new Date(post.published_at).toLocaleDateString("en-US", {
                     year: "numeric",
