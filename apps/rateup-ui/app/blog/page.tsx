@@ -2,9 +2,12 @@ import Link from "next/link";
 
 import { Avatar, Image } from "@mantine/core";
 
+import { pageMetadata } from "@/lib/metadata";
 import { Author, getAuthors, getPosts, getTags, Post, Tag } from "@/lib/posts";
 import Layout from "@/components/blog/Layout";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+
+export const metadata = pageMetadata["/blog"];
 
 function Badge({
   children,
