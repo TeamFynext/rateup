@@ -2,6 +2,7 @@
 
 import { Center, Group, Loader, Stack, Title } from "@mantine/core";
 import {
+  IconAutomation,
   IconAward,
   IconBrandOpenai,
   IconCategoryFilled,
@@ -227,6 +228,20 @@ export const WhatsappStats = ({ stats, subscription }) => {
     //   count: stats?.waSurveyResponsesCount,
     //   stats: "Total Flow Responses",
     // },
+    {
+      Icon: IconAutomation as unknown as string,
+      count: stats?.waAutomationCount,
+      totalCount: subscription?.features?.whatsapp?.automation?.count?.max,
+      stats: "Automation",
+    },
+    {
+      Icon: IconClockFilled as unknown as string,
+      count: stats?.monthlyAutomationTriggerCount,
+      totalCount:
+        subscription?.features?.whatsapp?.automation?.automationTrigger?.count
+          ?.max,
+      stats: "Monthly Automation Trigger",
+    },
   ];
 
   return (

@@ -54,6 +54,7 @@ export const useUpsertWaSettingsMutation = () => {
     mutationFn: upsertWaSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });
+      queryClient.invalidateQueries({ queryKey: ["userInfoQuery"] });
       showSuccessToast("Updated Successfully");
     },
     onError: (e) => {
