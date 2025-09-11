@@ -1,4 +1,5 @@
-import { Accordion, Stack, Title } from "@mantine/core";
+import { Accordion, Badge, Stack, Title } from "@mantine/core";
+import { motion } from "motion/react";
 
 const faqs = [
   {
@@ -26,41 +27,66 @@ const faqs = [
 ];
 
 const FAQ = () => {
-  const faqAccordion = faqs.map((q) => (
-    <Accordion.Item key={q.question} value={q.question}>
-      <Accordion.Control>
-        <p className="font-semibold">{q.question}</p>
-      </Accordion.Control>
-      <Accordion.Panel>
-        {Array.isArray(q.answer) ? (
-          <ul>
-            {q.answer.map((ans) => (
-              <li className="text-sm" key={ans}>
-                {ans}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm">{q.answer}</p>
-        )}
-      </Accordion.Panel>
-    </Accordion.Item>
+  const faqAccordion = faqs.map((q, index) => (
+    <motion.div
+      key={index}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
+      viewport={{ once: true }}
+    >
+      <Accordion.Item
+        key={q.question}
+        value={q.question}
+        className="bg-white/5 border border-white/10 backdrop-blur-sm rounded-2xl my-5"
+      >
+        <Accordion.Control className="hover:bg-white/10 transition-colors rounded-2xl hover:text-black group">
+          <p className="font-semibold text-white hover:text-black group-hover:text-black">
+            {q.question}
+          </p>
+        </Accordion.Control>
+        <Accordion.Panel>
+          {Array.isArray(q.answer) ? (
+            <ul>
+              {q.answer.map((ans) => (
+                <li className="text-sm text-white" key={ans}>
+                  {ans}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-white">{q.answer}</p>
+          )}
+        </Accordion.Panel>
+      </Accordion.Item>
+    </motion.div>
   ));
 
   return (
-    <Stack
-      align="center"
-      bg={"var(--shade-of-blue)"}
-      className="rounded-xl my-5"
-      justify="center"
-      p={"sm"}
-      w={{ base: "90%", sm: "70%", md: "60%", lg: "60%" }}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="flex flex-col gap-2 text-white items-center py-12"
     >
-      <Title order={3} mb={"xl"}>
-        Frequently Asked Questions
-      </Title>
-      <Accordion w={"100%"}>{faqAccordion}</Accordion>
-    </Stack>
+      <Stack justify="center" align="center">
+        <Badge size="lg" tt={"initial"}>
+          FAQs
+        </Badge>
+        <Title order={3} c={"white"} mb={"xl"}>
+          Frequently Asked Questions
+        </Title>
+      </Stack>
+
+      <Accordion
+        w={"85%"}
+        transitionDuration={700}
+        classNames={{ chevron: "text-white group-hover:text-black" }}
+      >
+        {faqAccordion}
+      </Accordion>
+    </motion.div>
   );
 };
 
