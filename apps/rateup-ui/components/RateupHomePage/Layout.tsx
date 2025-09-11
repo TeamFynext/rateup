@@ -23,15 +23,8 @@ interface LayoutProps {
   children: React.ReactNode;
   isBlog?: boolean;
 }
-export default function Layout({ children, isBlog }: LayoutProps) {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <LayoutChild isBlog={isBlog}>{children}</LayoutChild>;
-    </Suspense>
-  );
-}
 
-function LayoutChild({ children, isBlog }: LayoutProps) {
+export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const hasSession = useCheckSession();
   const navItems = [
     {
@@ -92,6 +85,7 @@ function LayoutChild({ children, isBlog }: LayoutProps) {
               priority
             />
           </Link>
+
           {isBlog ? (
             <NavItems items={navItemsBlog} />
           ) : (
@@ -180,7 +174,6 @@ function LayoutChild({ children, isBlog }: LayoutProps) {
               </div>
 
               <DropDownMobileNavItems />
-
               {isBlog
                 ? navItemsBlog.map((item, idx) => (
                     <Link
