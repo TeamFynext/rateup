@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/metadata";
 import PricingSection from "@/components/products/PricingComponents/helpers/PricingSection";
 import BusinessTypes from "@/components/products/Whatsapp-loyalty/helpers/BusinessTypes";
 import CTASection from "@/components/products/Whatsapp-loyalty/helpers/CTASection";
@@ -14,6 +15,8 @@ import LoyaltySteps from "@/components/products/Whatsapp-loyalty/shared/LoyaltyS
 import ShopifyIntegration from "@/components/products/Whatsapp-loyalty/shared/ShopifyIntegration";
 import WhatsAppBroadcast from "@/components/products/Whatsapp-loyalty/shared/WhatsAppBroadcast";
 import WhatsAppTemplate from "@/components/products/Whatsapp-loyalty/shared/WhatsAppTemplate";
+
+export const metadata = pageMetadata["/products/whatsapp-loyality"];
 
 function page() {
   return (

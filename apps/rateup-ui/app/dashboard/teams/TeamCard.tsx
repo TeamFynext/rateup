@@ -25,9 +25,9 @@ const TeamCard = ({ team }: TeamCardProps) => {
       radius="lg"
       style={{ cursor: "pointer" }}
       onClick={() => {
-        user.role === UserRole.SUPADM
-          ? router.push(`teams/${team.code}`)
-          : null;
+        if (user.role === UserRole.SUPADM) {
+          router.push(`teams/${encodeURIComponent(team.code)}`);
+        }
       }}
     >
       <Flex justify={"space-between"} align={"center"} h={"100%"}>

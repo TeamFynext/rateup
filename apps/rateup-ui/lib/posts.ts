@@ -90,11 +90,19 @@ export type Post = {
   url: string;
   excerpt: string;
 };
-export async function getPosts() {
+export async function getPosts(filter?: { tag?: string; author?: string }) {
+  let filterStr: string | undefined;
+  if (filter?.tag) {
+    filterStr = `tag:${filter.tag}`;
+  } else if (filter?.author) {
+    filterStr = `primary_author:${filter.author}`;
+  }
+
   return (await api.posts
     .browse({
-      limit: 35, // default is 15, max is 100
+      limit: 35,
       include: "tags,authors",
+      filter: filterStr,
     })
     .catch((err) => {
       console.error(err);
@@ -102,14 +110,14 @@ export async function getPosts() {
 }
 
 export async function getSinglePost(postSlug: string) {
-  return (await api.posts
-    .read({
+  try {
+    return (await api.posts.read({
       slug: postSlug,
-      include: "authors",
-    })
-    .catch((err) => {
-      console.error(err);
+      include: "tags,authors",
     })) as Post;
+  } catch (_error) {
+    return null;
+  }
 }
 
 export async function getPages() {
