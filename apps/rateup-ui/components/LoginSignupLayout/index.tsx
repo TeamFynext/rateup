@@ -20,7 +20,7 @@ function LoginSignupLayout({ children }) {
   const { colorScheme } = useMantineColorScheme();
 
   return (
-    <Center>
+    <Center h={"100vh"}>
       <Stack
         align="center"
         w={{ base: "100%", sm: "100%", lg: "70%" }}
@@ -33,7 +33,7 @@ function LoginSignupLayout({ children }) {
         <Box
           className={`${styles[`color-scheme-${colorScheme}`]} rounded-xl`}
           p={"xl"}
-          w={{ base: "90%", sm: "90%", lg: "70%" }}
+          w={{ base: "90%", sm: "90%", xl: "70%", "2xl": "50%" }}
         >
           <ScrollArea
             className={styles["scroll-area-div"]}
