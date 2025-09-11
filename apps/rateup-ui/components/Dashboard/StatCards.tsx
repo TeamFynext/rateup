@@ -26,7 +26,7 @@ export const StatCards = ({
   const router = useRouter();
   return (
     <div
-      className="bg-white cursor-pointer shadow rounded-lg p-4 flex items-center border border-[#E2E5ED] justify-between transition-all duration-300 hover:border-[rgba(0,79,152,0.3)] hover:shadow-[0_0_2px_1px_rgba(0,79,152,0.3)]"
+      className="bg-white cursor-pointer shadow rounded-lg p-4 flex items-center border border-[#E2E5ED] justify-between transition-all duration-300 hover:border-[rgba(0,79,152,0.3)] hover:shadow-[0_0_2px_1px_rgba(0,79,152,0.3)] ease-in-out hover:scale-[1.03]"
       onClick={() => router.push(`${OnClickAction}`)}
     >
       <div>

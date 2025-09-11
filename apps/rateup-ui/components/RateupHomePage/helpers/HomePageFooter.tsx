@@ -5,6 +5,11 @@ import {
   IconBrandFacebook,
   IconBrandInstagram,
   IconBrandLinkedin,
+  IconBrandPinterest,
+  IconBrandPinterestFilled,
+  IconBrandThreads,
+  IconBrandX,
+  IconBrandYoutube,
 } from "@tabler/icons-react";
 
 import { rateupLogoBlueTextUrl } from "@/components/HomePage/constants";
@@ -28,22 +33,55 @@ const HomePageFooter = () => {
           <p className="mb-3 font-medium">Follow Us On:</p>
           <div className="flex gap-4">
             <Link
-              href="https://www.linkedin.com/company/rateup"
-              aria-label="LinkedIn"
+              href="https://x.com/rateup_app"
+              aria-label="X"
+              target="_blank"
             >
-              <IconBrandLinkedin className="w-6 h-6 text-blue-700 hover:text-blue-900 transition" />
+              <IconBrandX className="w-6 h-6 text-gray-800 hover:text-black transition" />
             </Link>
             <Link
               href="https://www.instagram.com/rateupsoftware/"
               aria-label="Instagram"
+              target="_blank"
             >
               <IconBrandInstagram className="w-6 h-6 text-pink-500 hover:text-pink-700 transition" />
             </Link>
+
             <Link
               href="https://www.facebook.com/people/RateUp/61556199852468/"
               aria-label="Facebook"
+              target="_blank"
             >
               <IconBrandFacebook className="w-6 h-6 text-blue-600 hover:text-blue-800 transition" />
+            </Link>
+            <Link
+              href="https://www.linkedin.com/company/rateup"
+              aria-label="LinkedIn"
+              target="_blank"
+            >
+              <IconBrandLinkedin className="w-6 h-6 text-blue-700 hover:text-blue-900 transition" />
+            </Link>
+
+            <Link
+              href="https://www.threads.com/@rateupsoftware"
+              aria-label="Threads"
+              target="_blank"
+            >
+              <IconBrandThreads className="w-6 h-6 text-gray-800 hover:text-black transition" />
+            </Link>
+            <Link
+              href="https://www.youtube.com/@TeamRateup"
+              aria-label="Youtube"
+              target="_blank"
+            >
+              <IconBrandYoutube className="w-6 h-6 text-red-600 hover:text-red-800 transition" />
+            </Link>
+            <Link
+              href="https://www.pinterest.com/rateupapp/"
+              aria-label="Pinterest"
+              target="_blank"
+            >
+              <IconBrandPinterestFilled className="w-6 h-6 text-red-600 hover:text-red-800 transition" />
             </Link>
           </div>
         </div>
