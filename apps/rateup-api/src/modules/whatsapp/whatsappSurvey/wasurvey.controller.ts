@@ -120,6 +120,7 @@ import { autoGenerateTicket } from "../../ticket/ticketCard/card.service";
 import {
   getAutomatedReplyById,
   getCommandByOrgIdAndCommand,
+  verifyAutomationTriggerLimit,
 } from "../automatedReply/wa_automatedReply.service";
 import { handleWaOrderfromCatalog } from "../catalog/catalog.service";
 import {
@@ -462,7 +463,6 @@ async function whatsappMessageHandler(
   }
 
   const { isAiBotActive, chatbotId } = await getAiBotActiveStatus(from, orgId);
-
   if (isAiBotActive) {
     try {
       // Check for automated reply commands
@@ -472,10 +472,15 @@ async function whatsappMessageHandler(
       );
 
       if (automatedReplyCommand?.waAutomatedReply) {
+        if (!(await verifyAutomationTriggerLimit(orgId))) return;
         await startAutomationFlow(
           from,
           automatedReplyCommand.waAutomatedReply,
           parsedMessage,
+          orgId,
+        );
+        await updateMonthlyStat(
+          SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
           orgId,
         );
         return;
@@ -684,6 +689,10 @@ export async function handleAutomatedReply(
   // chatbot: Chatbot,
   automatedReplyId?: string,
 ) {
+  if (!automatedReplyId) {
+    // already handled on case manual trigger
+    if (!(await verifyAutomationTriggerLimit(orgId))) return;
+  }
   let phone_number_id = (
     waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
   )?.metadata?.phone_number_id;
@@ -717,6 +726,10 @@ export async function handleAutomatedReply(
     else {
       await handleInitialInteraction(orgId, phone, parsedMessage.message);
     }
+    await updateMonthlyStat(
+      SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
+      orgId,
+    );
   } catch (error) {
     log.error("Error handling automated reply: %o", error);
   }
