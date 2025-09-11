@@ -55,6 +55,14 @@ export const theme = createTheme({
   primaryColor: "rateup-blue",
   primaryShade: 9,
   colors: { "rateup-blue": rateupBlue },
+  breakpoints: {
+    xs: "30em",
+    sm: "48em",
+    md: "64em",
+    lg: "74em",
+    xl: "90em",
+    "2xl": "120em",
+  },
   ...componentStyles,
 });
 

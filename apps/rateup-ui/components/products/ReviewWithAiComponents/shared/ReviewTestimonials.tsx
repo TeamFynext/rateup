@@ -98,33 +98,40 @@ const ReviewTestimonials = () => {
         </motion.div>
       </div>
 
-      <div className="py-20 px-6 lg:px-8 bg-gray-50 overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl uppercase text-[#075E54]">
-              Powering growth for
-            </h2>
-          </div>
+      <ClientLogoSectionNew />
+    </section>
+  );
+};
 
-          <div className="relative w-full overflow-hidden">
-            <motion.div
-              className="flex whitespace-nowrap"
-              animate={{ x: ["0%", "-50%"] }}
-              transition={{
-                repeat: Infinity,
-                repeatType: "loop",
-                duration: 20,
-                ease: "linear",
-              }}
-            >
-              {scrollingIcons.map((icon, index) => (
-                <Client key={index} icon={icon} />
-              ))}
-            </motion.div>
-          </div>
+// export const Client
+export const ClientLogoSectionNew = () => {
+  return (
+    <div className="py-20 px-6 lg:px-8 bg-gray-50 overflow-hidden">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-14">
+          <h2 className="text-2xl uppercase text-[#075E54]">
+            Powering growth for
+          </h2>
+        </div>
+
+        <div className="relative w-full overflow-hidden">
+          <motion.div
+            className="flex whitespace-nowrap"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{
+              repeat: Infinity,
+              repeatType: "loop",
+              duration: 20,
+              ease: "linear",
+            }}
+          >
+            {scrollingIcons.map((icon, index) => (
+              <Client key={index} icon={icon} />
+            ))}
+          </motion.div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 
