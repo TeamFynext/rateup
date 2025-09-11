@@ -31,7 +31,7 @@ export const SurveyDashCard = ({
   const router = useRouter();
   return (
     <div
-      className="bg-white cursor-pointer shadow-md rounded-lg p-4 flex flex-col transition-all duration-300 hover:border-[rgba(0,79,152,0.3)] hover:shadow-[0_0_2px_1px_rgba(0,79,152,0.3)]"
+      className="bg-white cursor-pointer shadow-md rounded-lg p-4 flex flex-col transition-all duration-300 hover:border-[rgba(0,79,152,0.3)] hover:shadow-[0_0_2px_1px_rgba(0,79,152,0.3)] ease-in-out hover:scale-[1.03]"
       onClick={() => router.push(`${OnClickAction}/${itemId}?tab=Result`)}
     >
       <div className="flex items-center justify-between">

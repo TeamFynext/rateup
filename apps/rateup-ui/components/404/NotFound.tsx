@@ -16,12 +16,12 @@ const NotFoundPage = () => {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] px-6">
+    <div className="flex items-center justify-center bg-[#FAFAFA] py-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="bg-white shadow-xl rounded-2xl max-w-lg w-full p-10 text-center border border-gray-100"
+        className="bg-[#FAFAFA] max-w-lg w-full p-10 text-center"
       >
         <Link href={"/"}>
           <Image

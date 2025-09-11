@@ -24,7 +24,7 @@ export default function BlogLayout({
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Layout>
+      <Layout isBlog={true}>
         {children}
         {/* <HomePageFooter /> */}
         <ScrollToTop />
