@@ -40,7 +40,7 @@ export default function DashboardHome() {
   const translations = useTranslations();
 
   return (
-    <div className="px-2 pt-4 md:pt-0 lg:pt-0">
+    <div className="py-6 px-6 flex flex-col gap-4">
       <div className="text-[#343A40] text-xl font-semibold">
         {translations("Overview")}
       </div>
@@ -166,7 +166,7 @@ export default function DashboardHome() {
                       color="#009987"
                       radius="md"
                       size="sm"
-                      className="bg-[#009987] hover:bg-[#00b29f]"
+                      className="bg-[#009987] hover:bg-[#00b29f] transition-all duration-200 hover:scale-[1.01]"
                       onClick={() => router.push("/dashboard/whatsapp/flows")}
                     >
                       <div className="flex items-center gap-1">
@@ -227,7 +227,7 @@ export default function DashboardHome() {
                       variant="filled"
                       radius="md"
                       size="sm"
-                      className="bg-[#004f98] hover:bg-[#0063b1]"
+                      className="bg-[#004f98] hover:bg-[#0063b1] transition-all duration-200 hover:scale-[1.01]"
                       onClick={() => router.push("/dashboard/surveys")}
                     >
                       <div className="flex items-center gap-1">
@@ -258,7 +258,7 @@ export default function DashboardHome() {
 }
 
 const GridWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full p-2">
     {children}
   </div>
 );
