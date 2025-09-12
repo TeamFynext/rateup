@@ -111,7 +111,7 @@ function FlowEditorContent({
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveFlow = useCallback(() => {
-    if (!reactFlowInstance) return;
+    if (!reactFlowInstance || !waAutomationData) return;
 
     const flow = reactFlowInstance.toObject();
     const flowJson = JSON.stringify(flow);
