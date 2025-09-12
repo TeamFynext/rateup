@@ -21,3 +21,9 @@ export async function updationAutomationTriggerSubscription() {
     timeout: 60000,
   });
 }
+
+export async function updationAutomationUsageStats() {
+  return await axiosClient.put(`${baseUrl}/usage-stats-automation`, null, {
+    timeout: 60000,
+  });
+}
