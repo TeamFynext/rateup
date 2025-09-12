@@ -134,9 +134,13 @@ export async function verifyAutomationTriggerLimitHandler(
 ) {
   try {
     const { orgId } = request.user;
-    await verifyAutomationTriggerLimit(orgId);
+    if (!(await verifyAutomationTriggerLimit(orgId))) {
+      return reply
+        .code(403)
+        .send("Automation Trigger is inactive or limit reached");
+    }
   } catch (e) {
     log.error(e);
-    reply.code(403).send(e);
+    reply.code(500).send(e);
   }
 }

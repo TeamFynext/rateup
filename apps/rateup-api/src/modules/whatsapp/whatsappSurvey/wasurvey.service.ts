@@ -1089,6 +1089,7 @@ export async function handleLeadGen(body: WaMessageBody) {
             },
           ],
         },
+        isEnabled: true,
       },
     });
     if (!automation) {

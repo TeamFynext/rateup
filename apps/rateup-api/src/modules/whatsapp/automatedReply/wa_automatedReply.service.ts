@@ -3,8 +3,9 @@ import prisma from "../../../utils/prisma";
 import { getTeamIdsByUserId } from "../../team/team.service";
 import { getUserIdsByTeamId } from "../../user/user.service";
 import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema";
-import { getUsageStat } from "../../stats/stats.service";
+import { getUsageStat, updateMonthlyStat } from "../../stats/stats.service";
 import { getSubscription } from "../../subscription/subscription.service";
+import { log } from "../../../utils/logger";
 
 export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
   const automatedReplies = await prisma.waAutomatedReplyMessage.findMany({
@@ -98,6 +99,12 @@ export async function createAutomatedReply(
     });
     return createdAutomatedReply;
   });
+  if (automatedReply)
+    await prisma.usageStats.update({
+      where: { orgId },
+      data: { waAutomationCount: { increment: 1 } },
+    });
+
   return automatedReply;
 }
 
@@ -184,12 +191,15 @@ export async function verifyAutomationTriggerLimit(orgId) {
     getSubscription(orgId),
   ]);
   if (!subscription.features.whatsapp.automation.automationTrigger.active) {
-    throw Error("Automation Trigger is inactive");
+    log.error("Automation Trigger is inactive. Aborting automation check...");
+    return false;
   }
   if (
     usageStats.monthlyAutomationTriggerCount >=
     subscription.features.whatsapp.automation.automationTrigger.count.max
-  )
-    throw Error("Automtion Trigger Limit reached");
+  ) {
+    log.error("Automtion Trigger Limit reached. Aborting automation check...");
+    return false;
+  }
   return true;
 }
