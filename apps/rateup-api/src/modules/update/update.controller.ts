@@ -3,6 +3,7 @@ import { log } from "../../utils/logger";
 import {
   updateRateupPlanFeature,
   updateSubscriptionAutomation,
+  updateUsageStatsAutomation,
   updateUsageStatsTemplateMessageCount,
 } from "./update.service";
 
@@ -41,6 +42,18 @@ export async function updateRateupPlanFeatureHandler(
   try {
     await updateRateupPlanFeature();
     reply.code(200).send("plans updated successfully");
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+export async function updateUsageStatsAutomationHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    await updateUsageStatsAutomation();
+    reply.code(200).send("usage stats updated successfully");
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

@@ -183,6 +183,7 @@ model UsageStats {
   loyaltyActionCount      Int @default(0)
   loyaltyRewardCount      Int @default(0)
   loyaltyCustomerCount    Int @default(0)
+  waAutomationCount       Int @default(0)
 
   annualMessageCount       Int @default(0)
   monthlySurveyResponses   Int @default(0)

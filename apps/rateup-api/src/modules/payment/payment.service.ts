@@ -384,6 +384,8 @@ export async function updateSubscription(payload) {
         monthlySurveyResponses: 0,
         monthlyWaSurveyResponses: 0,
         annualMessageCount: notes?.isAnnualMessageLimit ? 0 : undefined,
+        monthlyTemplateMessageCount: 0,
+        monthlyAutomationTriggerCount: 0,
         lastMonthlyResettedDate: new Date(),
       },
     });
@@ -798,6 +800,8 @@ export async function updateSubscriptionForTrial(
       monthlyMessagesCount: 0,
       monthlySurveyResponses: 0,
       monthlyWaSurveyResponses: 0,
+      monthlyTemplateMessageCount: 0,
+      monthlyAutomationTriggerCount: 0,
       lastMonthlyResettedDate: new Date(),
     },
   });

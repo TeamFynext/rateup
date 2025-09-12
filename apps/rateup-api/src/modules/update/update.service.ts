@@ -145,3 +145,22 @@ export async function updateRateupPlanFeature() {
     });
   }
 }
+
+export async function updateUsageStatsAutomation() {
+  const usageStats = await prisma.usageStats.findMany();
+  for (const stat of usageStats) {
+    const automationCount = await prisma.waAutomatedReply.count({
+      where: {
+        orgId: stat.orgId,
+      },
+    });
+    await prisma.usageStats.update({
+      where: {
+        orgId: stat.orgId,
+      },
+      data: {
+        waAutomationCount: automationCount,
+      },
+    });
+  }
+}
