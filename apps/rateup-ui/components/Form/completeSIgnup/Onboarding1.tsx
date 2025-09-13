@@ -100,8 +100,6 @@ export default function OnboardingStep1({
           }
           styles={{ input: { borderColor: "#E5E5E5" } }}
         />
-
-        {/* Country */}
         {/* Country */}
         <div className="mt-4">
           <label className="text-sm font-medium mb-1 block">
