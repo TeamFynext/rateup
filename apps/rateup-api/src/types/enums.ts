@@ -435,3 +435,7 @@ export enum InstagramEvent {
   MESSAGE_REACTION = "MESSAGE_REACTION",
   MESSAGE_SEEN = "MESSAGE_SEEN",
 }
+
+export enum SupportUserEvent {
+  MESSAGE = "MESSAGE",
+}
