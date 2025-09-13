@@ -572,6 +572,7 @@ declare global {
     id: string;
     name: string;
     phone: string;
+    other?: string;
     email: string;
     dob?: Date;
     source: string;

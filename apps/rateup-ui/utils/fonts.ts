@@ -1,13 +1,8 @@
-import { Geist, Noto_Color_Emoji, Rubik } from "next/font/google";
+import { Geist, Noto_Color_Emoji } from "next/font/google";
 
 export const geist = Geist({
   variable: "--font-geist",
   preload: false,
-});
-
-export const rubik = Rubik({
-  variable: "--font-rubik",
-  subsets: ["latin"],
 });
 
 export const notoColorEmogi = Noto_Color_Emoji({
@@ -15,4 +10,5 @@ export const notoColorEmogi = Noto_Color_Emoji({
   style: ["normal"],
   variable: "--font-noto-color-emoji",
   subsets: ["emoji"],
+  preload: false,
 });
