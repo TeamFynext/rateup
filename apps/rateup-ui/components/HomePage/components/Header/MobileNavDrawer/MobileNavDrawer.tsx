@@ -10,7 +10,6 @@ import classNames from "classnames/bind";
 
 import { useCurrentPath } from "@/hooks/currentPath";
 
-import { rubik } from "../../../../../utils/fonts";
 import { getMobileNavLinkMenuItems, rateupLogoUrl } from "../../../constants";
 import headerStyles from "../Header.module.css";
 import drawerStyles from "./Drawer.module.css";
@@ -64,7 +63,6 @@ function MobileNavDrawer() {
         zIndex={500}
         classNames={drawerStyles}
         size={"400px"}
-        className={rubik.variable}
       >
         <Menu classNames={menuStyles}>
           {getMobileNavLinkMenuItems(

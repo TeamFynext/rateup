@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
-import { IconApi, IconCloudLock } from "@tabler/icons-react";
+import { IconApi, IconCloudLock, IconFidgetSpinner } from "@tabler/icons-react";
 import PaperLayout from "components/styled/Layouts/PaperLayout";
 import { IntegratedApps } from "types/enums";
 
@@ -59,6 +59,15 @@ const WaPayment = () => {
             <Group>
               <IconApi color="gray" />
               <Text>API Service</Text>
+            </Group>
+          </PaperLayout>
+          <PaperLayout
+            onClick={() => router.push("/dashboard/apps&services/widget")}
+            hoveractive
+          >
+            <Group>
+              <IconFidgetSpinner color="gray" />
+              <Text>Widget</Text>
             </Group>
           </PaperLayout>
         </SimpleGrid>

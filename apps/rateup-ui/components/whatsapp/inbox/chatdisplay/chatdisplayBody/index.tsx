@@ -154,7 +154,9 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
 
   function getReactionMessage(message: WaGetMessagesBody) {
     const exchangeProcess = message?.messageBody?.exchangeProcess;
-    const isInsta = message?.sourcePlatform == MessagePlatform.INSTAGRAM;
+    const isInsta =
+      message?.sourcePlatform == MessagePlatform.INSTAGRAM ||
+      message?.sourcePlatform == MessagePlatform.WEBCHAT;
     if (!exchangeProcess) return null;
     const wa_id =
       exchangeProcess === "send" || isInsta

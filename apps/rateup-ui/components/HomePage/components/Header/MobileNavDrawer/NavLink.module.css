@@ -1,6 +1,5 @@
 /* NavLink styles */
 .root {
-  font-family: var(--font-rubik);
   padding: 1rem 0;
   background-color: transparent;
   color: var(--shade-of-blue-8);

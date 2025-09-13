@@ -6,7 +6,6 @@ import { IconArrowUp } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 
 import { isProduction } from "../../../utils/constants";
-import { rubik } from "../../../utils/fonts";
 import CookieConsentBanner from "../../Analytics/CookieConsentBanner";
 import BookADemoSection from "../components/BookADemoSection";
 import Footer from "../components/Footer";
@@ -16,11 +15,7 @@ import styles from "./LandingPageLayout.module.css";
 const cx = classNames.bind(styles);
 
 function LandingPageLayout({ children, className = "" }) {
-  const requiredClassName = cx(
-    className,
-    "home-page-container",
-    rubik.variable,
-  );
+  const requiredClassName = cx(className, "home-page-container");
 
   const [scroll, scrollTo] = useWindowScroll();
   const maxScrollY =
