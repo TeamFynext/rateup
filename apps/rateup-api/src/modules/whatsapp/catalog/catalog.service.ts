@@ -5,9 +5,18 @@ import {
 } from "../../../../generated/prisma/client";
 import prisma from "../../../utils/prisma";
 import { callWhatsappApi } from "../wa_axios";
-import { UpdateCatalogSchema } from "./catalog.schema";
+import {
+  CatalogWhatsappSettingSchema,
+  UpdateCatalogSchema,
+} from "./catalog.schema";
 import { WaReceiveMessageBody } from "../../../types/whatsapp.types";
 import { log } from "../../../utils/logger";
+import {
+  getAllWaSettings,
+  getWaSettingsById,
+  getWaSettingsWithAccessTokenDecrypted,
+} from "../settings/wa_settings.service";
+import { MetaLoginAssets, WaConfigType } from "../../../types/enums";
 
 export async function updateWaCatalog(
   catalogId: string,
@@ -26,71 +35,130 @@ export async function getWaCatalog(catalogId) {
     where: {
       catalogId,
     },
+    include: {
+      connectedWaPhoneIds: true,
+    },
   });
 }
 
-export async function syncWaCatalogs(
-  orgId: string,
-  waSettings: Omit<WhatsappSettings, "accessToken_iv">,
-  businessId: string,
-) {
-  const { accessToken } = waSettings;
+async function getMetaBusinessInfoByWABAId(wabaId, accessToken) {
   const res = await callWhatsappApi(
-    `/${businessId}/owned_product_catalogs?fields=name,vertical&access_token=${accessToken}`,
+    `/${wabaId}?fields=on_behalf_of_business_info&access_token=${accessToken}`,
     "GET",
   );
-  const catalogs = res.data.data.map(({ id, ...rest }) => ({
-    orgId,
-    catalogId: id,
-    ...rest,
-  }));
+  return res.data.on_behalf_of_business_info;
+}
 
-  await prisma.whatsappCatalog.createMany({
-    data: catalogs,
-    skipDuplicates: true,
-  });
-  const existingCatalogs = await prisma.whatsappCatalog.findMany({
-    where: {
-      orgId,
-    },
-  });
-  const updateCatalogs = [];
-  const deletedCatalogs = [];
-  existingCatalogs.map((ct) => {
-    const catalog = res.data.data.find((c) => c.id === ct.catalogId);
-    if (!catalog) {
-      deletedCatalogs.push(ct.catalogId);
-      return;
-    }
-    if (catalog.name !== ct.name || catalog.vertical !== ct.vertical) {
-      updateCatalogs.push({
-        catalogId: ct.catalogId,
-        data: {
-          name: catalog.name,
-          vertical: catalog.vertical,
-        },
+export async function syncWaCatalogs(orgId: string) {
+  const waSettings = await getAllWaSettings(orgId);
+  const map = new Map();
+  for (const setting of waSettings) {
+    try {
+      if (
+        setting.type === WaConfigType.Automated &&
+        !setting.assets.includes(MetaLoginAssets.CATALOGS)
+      )
+        continue;
+      const { accessToken, wabaId } = setting;
+      let businessId = map.get(wabaId);
+      if (businessId) continue; //already synced
+      map.set(wabaId, businessId);
+      const businessInfo = await getMetaBusinessInfoByWABAId(
+        wabaId,
+        accessToken,
+      );
+      if (!businessInfo) {
+        continue;
+      }
+      businessId = businessInfo.id;
+
+      const res = await callWhatsappApi(
+        `/${businessId}/owned_product_catalogs?fields=name,vertical&access_token=${accessToken}`,
+        "GET",
+      );
+
+      const catalogs = res.data.data.map(({ id, ...rest }) => ({
+        orgId,
+        catalogId: id,
+        ...rest,
+      }));
+
+      await prisma.$transaction(async (tx) => {
+        await tx.whatsappCatalog.createMany({
+          data: catalogs,
+          skipDuplicates: true,
+        });
+        const existingCatalogs = await tx.whatsappCatalog.findMany({
+          where: {
+            orgId,
+          },
+        });
+        const updateCatalogs = [];
+        const deletedCatalogs = [];
+        existingCatalogs.map((ct) => {
+          const catalog = res.data.data.find((c) => c.id === ct.catalogId);
+          if (!catalog) {
+            deletedCatalogs.push(ct.catalogId);
+            return;
+          }
+          if (catalog.name !== ct.name || catalog.vertical !== ct.vertical) {
+            updateCatalogs.push({
+              catalogId: ct.catalogId,
+              data: {
+                name: catalog.name,
+                vertical: catalog.vertical,
+              },
+            });
+          }
+        });
+
+        if (deletedCatalogs.length) {
+          await tx.whatsappCatalog.deleteMany({
+            where: {
+              catalogId: {
+                in: deletedCatalogs,
+              },
+            },
+          });
+        }
+
+        if (updateCatalogs.length) {
+          for (const catalog of updateCatalogs) {
+            await tx.whatsappCatalog.update({
+              where: {
+                catalogId: catalog.catalogId,
+              },
+              data: catalog.data,
+            });
+          }
+        }
       });
-    }
-  });
-
-  if (deletedCatalogs.length) {
-    await prisma.whatsappCatalog.deleteMany({
-      where: {
-        catalogId: {
-          in: deletedCatalogs,
-        },
-      },
-    });
-  }
-
-  if (updateCatalogs.length) {
-    for (const catalog of updateCatalogs) {
-      await prisma.whatsappCatalog.update({
-        where: {
-          catalogId: catalog.catalogId,
-        },
-        data: catalog.data,
+      const connectedCatalog = await callWhatsappApi(
+        `/${wabaId}/product_catalogs?access_token=${accessToken}`,
+        "GET",
+      );
+      console.log("connectedCatalog", connectedCatalog.data);
+      if (!connectedCatalog.data.data.length) {
+        await prisma.catalogPhoneIdMap.deleteMany({
+          where: {
+            WhatsappSettings: {
+              wabaId,
+            },
+          },
+        });
+        continue;
+      }
+      await prisma.catalogPhoneIdMap.createMany({
+        data: waSettings
+          .filter((s) => s.wabaId === wabaId)
+          .map((s) => ({
+            catalogId: connectedCatalog.data.data[0].id,
+            whatsappSettingsPhoneId: s.phoneId,
+          })),
+        skipDuplicates: true,
       });
+    } catch (e) {
+      log.error(e);
     }
   }
 }
@@ -103,11 +171,14 @@ export async function getWaCatalogsByOrg(orgId) {
   });
 }
 
-export async function getConnectedWaCatalog(orgId) {
+export async function getConnectedWaCatalog(whatsappSettingsPhoneId) {
   return await prisma.whatsappCatalog.findFirst({
     where: {
-      orgId,
-      isWhatsappConnected: true,
+      connectedWaPhoneIds: {
+        some: {
+          whatsappSettingsPhoneId: whatsappSettingsPhoneId,
+        },
+      },
     },
     include: {
       products: true,
@@ -143,4 +214,67 @@ export async function handleWaOrderfromCatalog(
     },
   });
   log.info("Order placed => %o", newOrder);
+}
+
+export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {
+  const waSettings = await prisma.whatsappSettings.findMany({
+    where: {
+      wabaId: wabaId,
+      orgId: orgId,
+      OR: [
+        {
+          type: WaConfigType.Automated,
+          assets: {
+            has: MetaLoginAssets.CATALOGS,
+          },
+        },
+        {
+          type: WaConfigType.Manual,
+        },
+      ],
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  if (!waSettings.length) {
+    throw Error("No whatsapp settings found");
+  }
+  const { accessToken } = getWaSettingsWithAccessTokenDecrypted(waSettings[0]);
+  let url = `/${wabaId}/product_catalogs`;
+  const res = await callWhatsappApi(url, "POST", accessToken, {
+    catalog_id: catalogId,
+  });
+  if (res?.data?.success) {
+    await prisma.catalogPhoneIdMap.createMany({
+      data: waSettings.map((s) => ({
+        catalogId,
+        whatsappSettingsPhoneId: s.phoneId,
+      })),
+      skipDuplicates: true,
+    });
+  }
+}
+
+export async function disconnectCatalogFromWaba({
+  whatsappSettingsId,
+  catalogId,
+}: CatalogWhatsappSettingSchema) {
+  const waSettings = await getWaSettingsById(whatsappSettingsId);
+  const { wabaId, accessToken } = waSettings;
+  const res = await callWhatsappApi(
+    `/${wabaId}/product_catalogs`,
+    "DELETE",
+    accessToken,
+    { catalog_id: catalogId },
+  );
+  if (!res.data.success) throw Error("Something went wrong");
+  await prisma.catalogPhoneIdMap.deleteMany({
+    where: {
+      WhatsappSettings: {
+        wabaId,
+      },
+      catalogId,
+    },
+  });
 }

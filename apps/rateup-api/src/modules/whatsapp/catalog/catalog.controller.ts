@@ -1,18 +1,21 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../../utils/logger";
 import {
-  BusinessIdParams,
   CatalogIdParam,
+  CatalogWhatsappSettingSchema,
   UpdateCatalogSchema,
 } from "./catalog.schema";
 import {
+  disconnectCatalogFromWaba,
   getConnectedWaCatalog,
   getWaCatalog,
   getWaCatalogsByOrg,
   syncWaCatalogs,
+  updateConnectWaCatalog,
   updateWaCatalog,
 } from "./catalog.service";
 import { getWaSettings } from "../settings/wa_settings.service";
+import { whatsappSettingsIdParamSchema } from "../settings/wa_settings.schema";
 
 export async function updateCatalogHandler(
   request: FastifyRequest<{
@@ -24,23 +27,14 @@ export async function updateCatalogHandler(
   try {
     const { orgId } = request.user;
     const { catalogId } = request.params;
-    const waSettings = await getWaSettings(orgId);
-    if (!waSettings) {
-      return reply.code(400).send("Connect whatsapp in settings");
+    const { wabaId, ...rest } = request.body;
+    if (wabaId) {
+      await updateConnectWaCatalog(wabaId, orgId, catalogId);
     }
-    const { isWhatsappConnected } = request.body;
-    if (isWhatsappConnected) {
-      const connectedCatalog = await getConnectedWaCatalog(orgId);
-      if (connectedCatalog && connectedCatalog.catalogId !== catalogId) {
-        return reply
-          .code(400)
-          .send(
-            "Another catalog connected to whatsapp. Disabled other and reenable it",
-          );
-      }
+    if (rest) {
+      const catalog = await updateWaCatalog(catalogId, rest);
     }
-    const catalog = await updateWaCatalog(catalogId, request.body);
-    reply.code(200).send(catalog);
+    reply.code(200).send();
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);
@@ -62,17 +56,12 @@ export async function getWaCatalogInfoHandler(
 }
 
 export async function syncCatalogsHandler(
-  request: FastifyRequest<{ Params: BusinessIdParams }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
     const { orgId } = request.user;
-    const { businessId } = request.params;
-    const waSettings = await getWaSettings(orgId);
-    if (!waSettings) {
-      return reply.code(400).send("Connect whatsapp in settings");
-    }
-    const catalogs = await syncWaCatalogs(orgId, waSettings, businessId);
+    const catalogs = await syncWaCatalogs(orgId);
     reply.code(200).send(catalogs);
   } catch (e) {
     log.error(e);
@@ -95,11 +84,26 @@ export async function getWaCatalogByOrgHandler(
 }
 
 export async function getConnectedWaCatalogHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Params: { whatsappSettingsPhoneId: string } }>,
   reply: FastifyReply,
 ) {
   try {
-    const catalog = await getConnectedWaCatalog(request.user.orgId);
+    const catalog = await getConnectedWaCatalog(
+      request.params.whatsappSettingsPhoneId,
+    );
+    reply.code(200).send(catalog);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function disconnectCatalogFromWabaHandler(
+  request: FastifyRequest<{ Body: CatalogWhatsappSettingSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const catalog = await disconnectCatalogFromWaba(request.body);
     reply.code(200).send(catalog);
   } catch (e) {
     log.error(e);

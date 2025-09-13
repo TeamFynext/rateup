@@ -495,7 +495,9 @@ export async function sendTemplateToUserCore(
         }
         break;
       case WaTemplateSupportedFormats.PRODUCT:
-        const catalog = await getConnectedWaCatalog(orgId);
+        const catalog = await getConnectedWaCatalog(
+          defaultValues?.whatsappSettingsPhoneId,
+        );
         components.push({
           type: WaTemplateComponentType.HEADER,
           parameters: [
@@ -780,7 +782,9 @@ export async function sendTemplateToUserCore(
           (c) => c?.type.toLowerCase() === WaTemplateComponentType.HEADER,
         )?.format;
         if (headerFormat === WaTemplateSupportedFormats.PRODUCT) {
-          const catalog = await getConnectedWaCatalog(orgId);
+          const catalog = await getConnectedWaCatalog(
+            defaultValues?.whatsappSettingsPhoneId,
+          );
           let cards = await Promise.all([
             item?.cards?.map(async (card, index) => {
               const cardInComponents = components.find(

@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { waCatalogProductRoutes } from "./products/product.route";
 import { checkSession } from "../../../utils/checkSession";
 import {
+  disconnectCatalogFromWabaHandler,
   getConnectedWaCatalogHandler,
   getWaCatalogByOrgHandler,
   getWaCatalogInfoHandler,
@@ -26,17 +27,21 @@ export async function waCatalogRoutes(server: FastifyInstance) {
     updateCatalogHandler,
   );
 
-  server.post(
-    "/:businessId",
-    {
-      schema: {
-        params: $WC("businessIdParams"),
-      },
-    },
-    syncCatalogsHandler,
-  );
+  server.post("/sync", syncCatalogsHandler);
 
   server.get("/:catalogId", getWaCatalogInfoHandler);
   server.get("/", getWaCatalogByOrgHandler);
-  server.get("/connected", getConnectedWaCatalogHandler);
+  server.get(
+    "/connected/:whatsappSettingsPhoneId",
+    getConnectedWaCatalogHandler,
+  );
+  server.delete(
+    "/disconnect",
+    {
+      schema: {
+        body: $WC("catalogWhatsappSettingSchema"),
+      },
+    },
+    disconnectCatalogFromWabaHandler,
+  );
 }

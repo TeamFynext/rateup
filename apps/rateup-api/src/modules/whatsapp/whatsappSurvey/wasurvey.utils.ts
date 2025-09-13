@@ -342,6 +342,33 @@ export function convertNodeToWhatsAppMessage(
       };
     }
 
+    case "catalogNode": {
+      const typedData = node?.data as NodeTypeMap["catalogNode"];
+      return {
+        ...baseMessage,
+        type: "interactive",
+        interactive: {
+          type: "catalog_message",
+          body: {
+            text: parseToWhatsAppFormat(typedData?.body) || "Default message",
+          },
+          action: {
+            name: "catalog_message",
+            parameters: typedData?.thumbnailProductId?.length
+              ? {
+                  thumbnail_product_retailer_id: typedData?.thumbnailProductId,
+                }
+              : undefined,
+          },
+          footer: typedData.footer
+            ? {
+                text: parseToWhatsAppFormat(typedData.footer),
+              }
+            : undefined,
+        },
+      };
+    }
+
     default:
       return null;
   }

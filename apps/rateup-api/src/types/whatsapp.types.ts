@@ -254,6 +254,7 @@ type WaInteractiveMessageAction = {
       data?: any; // data to be sent to the screen
     };
     mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
+    thumbnail_product_retailer_id?: string;
   };
 };
 

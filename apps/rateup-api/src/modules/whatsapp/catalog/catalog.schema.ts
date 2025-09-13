@@ -5,22 +5,27 @@ const catalogIdParams = z.object({
   catalogId: z.string(),
 });
 
-const businessIdParams = z.object({
-  businessId: z.string(),
+const catalogWhatsappSettingSchema = z.object({
+  catalogId: z.string(),
+  whatsappSettingsId: z.string(),
 });
 
 const updateCatalogSchema = z.object({
-  isWhatsappConnected: z.boolean().optional(),
+  wabaId: z.string().optional(),
+  name: z.string().optional(),
 });
+
 export const { schemas: waCatalogSchemas, $ref: $WC } = buildJsonSchemas(
   {
     catalogIdParams,
-    businessIdParams,
+    catalogWhatsappSettingSchema,
     updateCatalogSchema,
   },
   { $id: "waCatalogSchemas" },
 );
 
 export type CatalogIdParam = z.infer<typeof catalogIdParams>;
-export type BusinessIdParams = z.infer<typeof businessIdParams>;
+export type CatalogWhatsappSettingSchema = z.infer<
+  typeof catalogWhatsappSettingSchema
+>;
 export type UpdateCatalogSchema = z.infer<typeof updateCatalogSchema>;

@@ -251,6 +251,12 @@ export interface LeadgenNodeData extends BaseNodeData {
   pageUserAccessToken?: string;
 }
 
+export interface CatalogNodeData extends BaseNodeData {
+  body: string;
+  thumbnailProductId?: string;
+  footer: string;
+}
+
 // Map of node types to their data types
 export type NodeTypeMap = {
   textNode: TextNodeData;
@@ -283,6 +289,7 @@ export type NodeTypeMap = {
   ticketNode: TicketNodeData;
   assignNode: AssignNodeData;
   leadgenNode: LeadgenNodeData;
+  catalogNode: CatalogNodeData;
 };
 
 // Node type strings as a union type
@@ -313,7 +320,8 @@ export type NodeData =
   | FlowNodeData
   | AiBotNodeData
   | TicketNodeData
-  | AssignNodeData;
+  | AssignNodeData
+  | CatalogNodeData;
 
 // Extended Node type with typed data
 export type TypedNode<T extends NodeType = NodeType> = Omit<
