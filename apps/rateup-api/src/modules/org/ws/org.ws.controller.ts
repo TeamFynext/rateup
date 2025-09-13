@@ -16,11 +16,14 @@ const activeConnections = new Map<string, Map<string, WebSocket>>();
 subscriber.on("message", (channel, message) => {
   if (channel === WS_CHANNEL) {
     const parsedMessage = JSON.parse(message);
-    const { orgId, data } = parsedMessage;
+    const { orgId, data, roleFilter } = parsedMessage;
     const connections = activeConnections.get(orgId);
     if (!connections) return;
     for (const client of connections?.values()) {
-      if (client.readyState === 1) {
+      if (
+        client.readyState === 1 &&
+        (!roleFilter || (client as any).role === roleFilter)
+      ) {
         client.send(JSON.stringify(data));
       }
     }
@@ -31,26 +34,33 @@ subscriber.subscribe(WS_CHANNEL);
 
 export async function handleWebSocketConnection(
   connection: WebSocket,
-  request: FastifyRequest<{ Params: { afterAuthId: string; orgId?: string } }>,
+  request: FastifyRequest<{
+    Params: { afterAuthId: string; orgId?: string };
+    Querystring: {
+      role?: string;
+    };
+  }>,
 ) {
   const browserId = request.params.afterAuthId;
   const orgId = request.user?.orgId || request.params.orgId;
+  const role = request.query.role || "main";
+
   if (!orgId || !browserId) {
     connection.send(JSON.stringify({ error: "Missing orgId or browserId" }));
     connection.close();
     return;
   }
 
-  // Get or create the map for this orgId
   if (!activeConnections.has(orgId)) {
     activeConnections.set(orgId, new Map<string, WebSocket>());
   }
 
-  // Add the connection to the org's map
+  // Store role alongside connection
+  (connection as any).role = role;
   activeConnections.get(orgId)!.set(browserId, connection);
 
   connection.on("message", (msg) => {
-    console.log("Received message: ", msg);
+    console.log(`[${orgId} - ${role}] Received message:`, msg.toString());
   });
 
   connection.on("close", async () => {
@@ -65,9 +75,13 @@ export async function handleWebSocketConnection(
 export async function sendViaWstoOrgHandler(
   orgId: string,
   message: orgWsMessage,
+  roleFilter?: string,
 ) {
   try {
-    publisher.publish(WS_CHANNEL, JSON.stringify({ orgId, data: message }));
+    publisher.publish(
+      WS_CHANNEL,
+      JSON.stringify({ orgId, data: message, roleFilter }),
+    );
   } catch (err) {
     log.error("Error publishing message to org %s: %s", orgId, err);
   }
