@@ -1,5 +1,7 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import ClientLogos from "@/components/RateupHomePage/helpers/ClientLogos";
 import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter";
 import ScrollToTop from "@/components/RateupHomePage/helpers/ScrollToTop";
@@ -18,6 +20,11 @@ import MobileAppSection from "@/components/RateupHomePage/shared/MobileAppSectio
 import NewsStoriesCenter from "@/components/RateupHomePage/shared/NewsStoriesCenter";
 import ObstaclesOverview from "@/components/RateupHomePage/shared/ObstaclesOverview";
 import TabComponent from "@/components/RateupHomePage/shared/TabComponent";
+
+const SupportWidget = dynamic(
+  () => import("@/components/app&services/support-widget"),
+  { ssr: false },
+);
 
 const page = () => {
   return (
@@ -39,6 +46,10 @@ const page = () => {
       <CallToAction />
       <HomePageFooter />
       <ScrollToTop />
+      <SupportWidget
+        orgId={process.env.NEXT_PUBLIC_ROOT_ORG}
+        token={process.env.NEXT_PUBLIC_ROOT_TOKEN}
+      />
     </Layout>
   );
 };

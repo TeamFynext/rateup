@@ -14,12 +14,14 @@ interface Props extends DefaultInputComponentProps {
   label?: string;
   withAsterisk?: boolean;
   error?: any;
+  borderRadius?: string | number;
 }
 const PhoneInputWithCountry = ({
   label,
   onChange,
   withAsterisk,
   error,
+  borderRadius,
   ...props
 }: Props) => {
   return (
@@ -34,7 +36,10 @@ const PhoneInputWithCountry = ({
           </Text>
         )}
       </Group>
-      <Box className={styles.inputBox} style={{ borderColor: error && "red" }}>
+      <Box
+        className={styles.inputBox}
+        style={{ borderColor: error && "red", borderRadius }}
+      >
         <PhoneInputWithCountrySelect
           defaultCountry="IN"
           international
