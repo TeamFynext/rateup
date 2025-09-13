@@ -1,14 +1,32 @@
 "use client";
 
-import {
-  Button,
-  Card,
-  Radio,
-  Select,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { Button, Card, Select, Text, TextInput, Title } from "@mantine/core";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+
+import "react-phone-number-input/style.css";
+
+// Build country options once
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+const countryCodes = [
+  "US",
+  "IN",
+  "GB",
+  "CA",
+  "AU",
+  "DE",
+  "FR",
+  "IT",
+  "ES",
+  "BR",
+  "CN",
+  "JP",
+  "ZA",
+  // add more or pull dynamically if you want the full ISO list
+];
+const countryOptions = countryCodes.map((code) => ({
+  value: regionNames.of(code) || code,
+  label: regionNames.of(code) || code,
+}));
 
 export default function OnboardingStep1({
   onNext,
@@ -23,8 +41,10 @@ export default function OnboardingStep1({
 }) {
   const isValid =
     data.orgName.trim() !== "" &&
-    data.industry.trim() !== "" &&
-    data.employees.trim() !== "";
+    data.business_type.trim() !== "" &&
+    data.role.trim() !== "" &&
+    data.country.trim() !== "" &&
+    isValidPhoneNumber(data.phone);
 
   return (
     <div className="max-w-xl mx-auto px-4 sm:px-6 md:px-8 lg:px-0">
@@ -62,77 +82,108 @@ export default function OnboardingStep1({
           >
             Welcome, <span className="text-black">{userName}</span> 👋
           </Title>
-          <Text
-            size="md"
-            style={{
-              color: "#4B5563",
-              fontSize: "1rem",
-            }}
-          >
+          <Text size="md" style={{ color: "#4B5563", fontSize: "1rem" }}>
             Let’s set up your workspace to get started.
           </Text>
         </div>
 
-        {/* Org name */}
+        {/* Business name */}
         <TextInput
-          label="Organization name"
-          placeholder="Organization name"
+          label="Business name"
+          placeholder="Enter your business name"
           required
           value={data.orgName}
           onChange={(e) =>
             setData((prev) => ({ ...prev, orgName: e.currentTarget.value }))
           }
-          styles={{
-            input: { borderColor: "#E5E5E5" },
-          }}
+          styles={{ input: { borderColor: "#E5E5E5" } }}
+        />
+
+        {/* Industry */}
+        <Select
+          mt="md"
+          label="Business Type"
+          placeholder="Choose one"
+          required
+          data={[
+            "E-Commerce/Retail",
+            "SaaS/Technology",
+            "Financial Services",
+            "Healthcare",
+            "Education",
+            "Hospitality/Travel",
+            "Professional Services",
+            "Manufacturing",
+            "Other",
+          ]}
+          value={data.business_type}
+          onChange={(value) =>
+            setData((prev) => ({ ...prev, business_type: value || "" }))
+          }
+          styles={{ input: { borderColor: "#E5E5E5" } }}
+        />
+
+        {/* Country */}
+        <Select
+          mt="md"
+          label="Country"
+          placeholder="Select your country"
+          required
+          searchable
+          data={countryOptions}
+          value={data.country}
+          onChange={(val) =>
+            setData((prev) => ({ ...prev, country: val || "" }))
+          }
+          styles={{ input: { borderColor: "#E5E5E5" } }}
+        />
+
+        {/* Phone */}
+        <div className="mt-4">
+          <label className="text-sm font-medium mb-1 block">
+            What is your phone number? <span className="text-red-500">*</span>
+          </label>
+          <PhoneInput
+            defaultCountry="IN"
+            international
+            countryCallingCodeEditable={false}
+            value={data.phone}
+            onChange={(val) => setData({ ...data, phone: val || "" })}
+            placeholder="Enter phone number"
+            className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004F98]"
+          />
+        </div>
+
+        {/* Role */}
+        <Select
+          mt="md"
+          label="What is your role at your organization?"
+          placeholder="Choose one"
+          required
+          data={[
+            "Founder",
+            "Manager",
+            "Marketer",
+            "Support",
+            "Developer",
+            "Other",
+          ]}
+          value={data.role}
+          onChange={(value) => setData({ ...data, role: value || "" })}
+          styles={{ input: { borderColor: "#E5E5E5" } }}
         />
 
         {/* Website */}
         <TextInput
           mt="md"
           label="Website"
-          placeholder="www.example.com"
+          placeholder="Enter your website (optional)"
           value={data.website}
           onChange={(e) =>
             setData((prev) => ({ ...prev, website: e.currentTarget.value }))
           }
+          styles={{ input: { borderColor: "#E5E5E5" } }}
         />
-
-        {/* Industry */}
-        <Select
-          mt="md"
-          label="Industry"
-          placeholder="Choose One"
-          required
-          data={["Technology", "Finance", "Retail", "Healthcare", "Other"]}
-          value={data.industry}
-          onChange={(value) =>
-            setData((prev) => ({ ...prev, industry: value || "" }))
-          }
-        />
-
-        {/* Employees */}
-        <div className="mt-6">
-          <Text size="sm" fw={500} mb={8}>
-            "How many people work at your organization?"
-            <span className="text-red-500">*</span>
-          </Text>
-          <Radio.Group
-            value={data.employees}
-            onChange={(val) => setData((prev) => ({ ...prev, employees: val }))}
-          >
-            {[
-              "1-10",
-              "11-20",
-              "21-50",
-              "51-200",
-              "201-1000",
-              "More than 1000",
-            ].map((size) => (
-              <Radio key={size} value={size} label={size} />
-            ))}
-          </Radio.Group>
-        </div>
 
         {/* Footer */}
         <div className="flex flex-col sm:flex-row justify-end items-center gap-4 mt-8">
@@ -144,7 +195,9 @@ export default function OnboardingStep1({
               root: {
                 backgroundColor: isValid ? "#004F98" : "#E5E5E5",
                 color: "white",
-                "&:hover": { backgroundColor: isValid ? "#003B73" : "#E5E5E5" },
+                "&:hover": {
+                  backgroundColor: isValid ? "#003B73" : "#E5E5E5",
+                },
               },
             }}
           >

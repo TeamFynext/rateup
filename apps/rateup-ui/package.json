@@ -107,6 +107,7 @@
     "qrcode": "^1.5.3",
     "react": "19.1.1",
     "react-confetti": "^6.4.0",
+    "react-country-region-selector": "^4.0.2",
     "react-cropper": "^2.3.3",
     "react-date-range": "^1.4.0",
     "react-dom": "19.1.1",

@@ -13,14 +13,11 @@ export default function OnboardingStep2({
   data: any;
   setData: (data: any) => void;
 }) {
-  const toggleReason = (value: string) => {
-    const updatedReasons = data.reasons.includes(value)
-      ? data.reasons.filter((r) => r !== value)
-      : [...data.reasons, value];
-    setData({ ...data, reasons: updatedReasons });
-  };
-
-  const isValid = data.reasons.length > 0 && data.storage !== "";
+  const isValid =
+    data.team_size &&
+    data.which_platforms_do_you_actively_use &&
+    data.do_you_currently_use_any_tools_for_engagement &&
+    data.interest_in_whatsapp_loyality_or_web_surveys;
 
   return (
     <div className="max-w-xl mx-auto px-4 sm:px-6">
@@ -53,66 +50,125 @@ export default function OnboardingStep2({
           Choose the options that best describe your business needs.
         </Text>
 
-        {/* Reasons */}
-        <div className="mb-6">
+        {/* Team Size */}
+        <div className="mt-6">
           <Text size="sm" fw={500} mb={8}>
-            Why do you chat with customers?{" "}
-            <span className="text-red-500">*</span>
+            Team Size <span className="text-red-500">*</span>
           </Text>
-          <div className="space-y-2">
+          <Radio.Group
+            value={data.team_size}
+            onChange={(val) => setData({ ...data, team_size: val })}
+          >
             {[
-              "Assist with online checkout",
-              "Booking appointments",
-              "Sending quotations",
-              "Booking a free or trial class",
-              "Customer support",
-              "Receive payment",
-              "Sending bulk broadcasts",
-              "Others",
-            ].map((item) => (
-              <Checkbox
-                key={item}
-                label={item}
-                checked={data.reasons.includes(item)}
-                onChange={() => toggleReason(item)}
+              "Just me (1 Person)",
+              "Small Team (2-10 people)",
+              "Larger Team (10+ people)",
+            ].map((size) => (
+              <Radio
+                key={size}
+                value={size}
+                label={size}
                 styles={{
-                  input: { borderColor: "#E5E5E5" },
+                  radio: { borderColor: "#E5E5E5" },
                   label: { color: "#000" },
                 }}
               />
             ))}
-          </div>
+          </Radio.Group>
         </div>
 
-        {/* Storage */}
-        <div>
+        {/* Platforms */}
+        <div className="mt-6">
           <Text size="sm" fw={500} mb={8}>
-            How do you store customer data?{" "}
+            Which platforms do you actively use?{" "}
             <span className="text-red-500">*</span>
           </Text>
           <Radio.Group
-            value={data.storage}
-            onChange={(val) => setData({ ...data, storage: val })}
+            value={data.which_platforms_do_you_actively_use}
+            onChange={(val) =>
+              setData({ ...data, which_platforms_do_you_actively_use: val })
+            }
           >
-            <div className="space-y-2">
-              {[
-                "HubSpot",
-                "Salesforce",
-                "Shopify",
-                "Others",
-                "We don't use any tools to store customer data",
-              ].map((item) => (
-                <Radio
-                  key={item}
-                  value={item}
-                  label={item}
-                  styles={{
-                    radio: { borderColor: "#E5E5E5" },
-                    label: { color: "#000" },
-                  }}
-                />
-              ))}
-            </div>
+            {[
+              "WhatsApp Business",
+              "Instagram Business/Creator Account",
+              "Facebook Page",
+              "None yet, but planning to start",
+            ].map((item) => (
+              <Radio
+                key={item}
+                value={item}
+                label={item}
+                styles={{
+                  radio: { borderColor: "#E5E5E5" },
+                  label: { color: "#000" },
+                }}
+              />
+            ))}
+          </Radio.Group>
+        </div>
+
+        {/* Engagement Tools */}
+        <div className="mt-6">
+          <Text size="sm" fw={500} mb={8}>
+            Do you currently use any tools for engagement?{" "}
+            <span className="text-red-500">*</span>
+          </Text>
+          <Radio.Group
+            value={data.do_you_currently_use_any_tools_for_engagement}
+            onChange={(val) =>
+              setData({
+                ...data,
+                do_you_currently_use_any_tools_for_engagement: val,
+              })
+            }
+          >
+            {[
+              "WhatsApp Business App",
+              "CRM (Zoho, HubSpot, Salesforce, etc.)",
+              "Loyality App",
+              "Others",
+              "None",
+            ].map((item) => (
+              <Radio
+                key={item}
+                value={item}
+                label={item}
+                styles={{
+                  radio: { borderColor: "#E5E5E5" },
+                  label: { color: "#000" },
+                }}
+              />
+            ))}
+          </Radio.Group>
+        </div>
+
+        {/* Loyalty/Survey Interest */}
+        <div>
+          <Text size="sm" fw={500} mb={8}>
+            Are you interested in WhatsApp Loyalty, Web Survey Programs for your
+            Business <span className="text-red-500">*</span>
+          </Text>
+          <Radio.Group
+            value={data.interest_in_whatsapp_loyality_or_web_surveys}
+            onChange={(val) =>
+              setData({
+                ...data,
+                interest_in_whatsapp_loyality_or_web_surveys: val,
+              })
+            }
+          >
+            {["Yes", "No"].map((item) => (
+              <Radio
+                key={item}
+                value={item}
+                label={item}
+                styles={{
+                  radio: { borderColor: "#E5E5E5" },
+                  label: { color: "#000" },
+                }}
+              />
+            ))}
           </Radio.Group>
         </div>
 
