@@ -5,6 +5,7 @@ import { useCallback } from "react";
 
 import {
   IconAd,
+  IconBuildingStore,
   IconExternalLink,
   IconFile,
   IconGitMerge,
@@ -54,6 +55,11 @@ const categories = [
         icon: <IconExternalLink size={16} />,
       },
       { id: "templateNode", label: "Template", icon: <IconLayout size={16} /> },
+      {
+        id: "catalogNode",
+        label: "Catalog",
+        icon: <IconBuildingStore size={16} />,
+      },
     ],
   },
   {

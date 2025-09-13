@@ -1,58 +1,48 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  ActionIcon,
   Badge,
   Card,
   Flex,
   Group,
-  Image,
-  Modal,
   SimpleGrid,
-  Skeleton,
-  Spoiler,
   Stack,
-  Switch,
   Text,
   Title,
 } from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { IconRefresh } from "@tabler/icons-react";
 
-import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "@/components/Button/RateupButtons";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
+  useAllWaCatalogs,
+  useSyncCatalogs,
+} from "@/backend/whatsapp/catalog/catalog.query";
+import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 
 const Catalog = () => {
-  const [opened, { open, close }] = useDisclosure(false);
+  const sync = useSyncCatalogs();
   return (
     <Stack p={"xs"}>
       <Flex justify={"space-between"}>
         <Title order={4}>Catalogs</Title>
         <RateupButtonPrimary
           title="Sync Catalogs"
-          onClick={open}
+          onClick={() => sync.mutate()}
           leftIcon={<IconRefresh size={16} />}
+          loading={sync.isPending}
         />
       </Flex>
       <WaCatalogList />
-      <SycnWaCatalogsModal opened={opened} close={close} />
     </Stack>
   );
 };
 
 const WaCatalogList = () => {
-  const { allCatalogs } = useWaCatalog();
   const router = useRouter();
-  const { data: catalogs, isPending } = allCatalogs;
+  const { data: catalogs, isPending } = useAllWaCatalogs();
   const catalogList = useMemo(() => catalogs ?? [], [catalogs]);
   if (isPending) return <RateupLoader />;
   return (
@@ -80,51 +70,6 @@ const WaCatalogList = () => {
         </Card>
       ))}
     </SimpleGrid>
-  );
-};
-const SycnWaCatalogsModal = ({ opened, close }) => {
-  const { sync } = useWaCatalog();
-  const form = useForm({
-    initialValues: {
-      businessId: "",
-    },
-    validate: {
-      businessId: isNotEmpty("Required"),
-    },
-  });
-  function handleSync() {
-    if (form.validate().hasErrors) return;
-    sync.mutate(form.values.businessId, {
-      onSettled: () => {
-        form.reset(), close();
-      },
-    });
-  }
-  return (
-    <Modal opened={opened} onClose={close} centered title="Sync catalogs">
-      <Stack>
-        <ContainedTextField
-          label={"Meta Business ID"}
-          {...form.getInputProps("businessId")}
-          placeholder="Enter"
-        />
-        <Group justify="flex-end">
-          <RateupButtonSecondary
-            title="Cancel"
-            onClick={() => {
-              form.reset();
-              close();
-            }}
-            variant="light"
-          />
-          <RateupButtonPrimary
-            title="Sync"
-            loading={sync.isPending}
-            onClick={handleSync}
-          />
-        </Group>
-      </Stack>
-    </Modal>
   );
 };
 

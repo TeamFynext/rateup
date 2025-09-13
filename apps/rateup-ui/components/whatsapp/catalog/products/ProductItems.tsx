@@ -16,7 +16,10 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconEdit, IconTrash, IconX } from "@tabler/icons-react";
 
 import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
-import { useWaCatalogProducts } from "@/backend/whatsapp/catalog/products/products.query";
+import {
+  useDeletCatalogProducts,
+  useWaCatalogProducts,
+} from "@/backend/whatsapp/catalog/products/products.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import NothingFound from "@/components/NothingFound/NothingFound";
 import { fallbackImage } from "@/utils/constants";
@@ -29,9 +32,9 @@ import {
 import { AddCatalogProductModal } from "./AddCatalogProduct";
 
 const ProductItems = ({ catalogId }) => {
-  const { productQuery, deleteProducts } = useWaCatalogProducts(catalogId);
-  const { data: catalog, isPending } = useWaCatalog(catalogId).getCatalogInfo;
-  const { data: products, isLoading } = productQuery;
+  const deleteProducts = useDeletCatalogProducts(catalogId);
+  const { data: catalog, isPending } = useWaCatalog(catalogId);
+  const { data: products, isLoading } = useWaCatalogProducts(catalogId);
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   if (isLoading || isPending) return <RateupLoader />;
@@ -139,7 +142,7 @@ const ProductItems = ({ catalogId }) => {
         const { productProps } = product;
         return (
           <Card
-            key={product.id ?? product.rerailer_id}
+            key={product.id ?? product.retailer_id}
             shadow="sm"
             withBorder
             radius={"sm"}

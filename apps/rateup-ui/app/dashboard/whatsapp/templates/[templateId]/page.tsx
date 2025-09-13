@@ -129,6 +129,7 @@ export default function WhatsappTemplateById() {
             product_retailer_id: "",
           },
         },
+        whatsappSettingsPhoneId: "",
       },
     },
     validate: zod4Resolver(templateSchema),
@@ -180,6 +181,12 @@ export default function WhatsappTemplateById() {
   }, [form.values.buttons]);
 
   useEffect(() => {
+    const currentTemplateType = form.getValues().templateType;
+    const previousTemplateType = editingItem?.templateType;
+    if (currentTemplateType != TemplateType.CAROUSEL) {
+      form.setFieldValue("productCarousel", []);
+      form.setFieldValue("mediaCarousel", []);
+    }
     switch (form.getValues().templateType) {
       case TemplateType.ORDER_DETAILS:
         form.setFieldValue("category", "UTILITY");
@@ -203,9 +210,6 @@ export default function WhatsappTemplateById() {
         form.setFieldValue("footer", "");
         break;
       default:
-        const currentTemplateType = form.getValues().templateType;
-        const previousTemplateType = editingItem?.templateType;
-
         if (
           (currentTemplateType === TemplateType.LOYALTY &&
             previousTemplateType === TemplateType.GENERAL_NOTIFICATION) ||
@@ -536,6 +540,7 @@ export default function WhatsappTemplateById() {
       form.setFieldValue("category", "MARKETING");
     }
     if (e === WHATSAPP_BUTTON_TYPE.MPM) {
+      form.setFieldValue("header", "");
       form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
       form.setFieldValue("category", "MARKETING");
     }

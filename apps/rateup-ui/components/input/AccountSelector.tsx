@@ -78,7 +78,7 @@ export function AccountSelector({
       defaultValue={accountOptions?.length && accountOptions[0]?.value}
       onChange={onChange}
       value={value}
-      label={translations("Account")}
+      label={label ?? translations("Account")}
       placeholder={translations("Select Account")}
       nothingFoundMessage={translations("No account found!")}
       required

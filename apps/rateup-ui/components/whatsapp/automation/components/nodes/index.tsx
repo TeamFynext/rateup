@@ -2,6 +2,7 @@ import AiBotNode from "./aibot-node";
 import assignNode from "./assign-node";
 import AudioNode from "./audio-node";
 import ButtonNode from "./button-node";
+import CatalogNode from "./catalog-node";
 import ContactsNode from "./contacts-node";
 import CtaUrlNode from "./cta-url-node";
 import DelayNode from "./delay-node";
@@ -45,4 +46,5 @@ export const nodeTypes = {
   ticketNode: ticketNode,
   assignNode: assignNode,
   leadgenNode: LeadgenNode,
+  catalogNode: CatalogNode,
 };

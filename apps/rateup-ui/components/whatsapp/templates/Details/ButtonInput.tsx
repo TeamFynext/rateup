@@ -26,8 +26,12 @@ import { UseFormReturnType } from "@mantine/form";
 import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
-import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import {
+  useConnectedWaCatalog,
+  useWaCatalog,
+} from "@/backend/whatsapp/catalog/catalog.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
+import { AccountSelector } from "@/components/input/AccountSelector";
 
 import { useWaFlowsFromDb } from "../../../../backend/whatsapp/flow/flow.query";
 import { FlowSelector } from "../../flows/FlowSelector/FlowSelector";
@@ -48,8 +52,10 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
       data["navigate_screen"] = screeenId;
     }
   }
-  const { connectedCatalog } = useWaCatalog();
-  const { data: catalog } = connectedCatalog;
+
+  const { data: catalog } = useConnectedWaCatalog(
+    form.values.defaultValues.whatsappSettingsPhoneId,
+  );
   const productRetailerIds = catalog
     ? catalog?.products?.map((p) => p.retailer_id)
     : [];
@@ -394,7 +400,20 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             {...form.getInputProps(`buttons.${index}.text`)}
             readOnly
           />
-          <ContainedTextField
+          <Stack p={0}>
+            <AccountSelector
+              label={"Select catalog linked account"}
+              {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
+            />
+            {!catalog && (
+              <Text size="sm" c={"red"}>
+                No catalogs are linked to selected account
+              </Text>
+            )}
+          </Stack>
+
+          <ContainedSelection
+            data={productRetailerIds}
             label={
               <Text fz={14} fw={500}>
                 {"Thumbnail product retailer id"}
@@ -441,7 +460,20 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
               {...form.getInputProps(`buttons.${index}.text`)}
               readOnly
             />
-            <ContainedTextField
+            <Stack>
+              <AccountSelector
+                label={"Select catalog linked account"}
+                {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
+              />
+              {!catalog && (
+                <Text size="sm" c={"red"}>
+                  No catalogs are linked to selected account
+                </Text>
+              )}
+            </Stack>
+
+            <ContainedSelection
+              data={productRetailerIds}
               label={
                 <Text fz={14} fw={500}>
                   {"Thumbnail product retailer id"}
@@ -549,6 +581,17 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
             {...form.getInputProps(`buttons.${index}.text`)}
             readOnly
           />
+          <Stack>
+            <AccountSelector
+              label={"Select catalog linked account"}
+              {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
+            />
+            {!catalog && (
+              <Text size="sm" c={"red"}>
+                No catalogs are linked to selected account
+              </Text>
+            )}
+          </Stack>
           <ContainedSelection
             data={productRetailerIds}
             label={

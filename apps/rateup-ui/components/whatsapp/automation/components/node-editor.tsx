@@ -44,6 +44,10 @@ import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import {
+  useConnectedWaCatalog,
+  useWaCatalog,
+} from "@/backend/whatsapp/catalog/catalog.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useMarkWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import {
@@ -85,6 +89,7 @@ import { hasFeature } from "@/utils/subscription/subscription";
 
 import { AssignInboxContent } from "../../inbox/chatdisplay/chatdisplayHeader";
 import {
+  CatalogNodeData,
   LeadgenNodeData,
   NodeData,
   NodeType,
@@ -308,6 +313,13 @@ export default function NodeEditor({
         return (
           <LeadgenNodeEditor
             nodeData={nodeData as NodeTypeMap["leadgenNode"]}
+            handleInputChange={handleInputChange}
+          />
+        );
+      case "catalogNode":
+        return (
+          <CatalogNodeEditor
+            nodeData={nodeData as NodeTypeMap["catalogNode"]}
             handleInputChange={handleInputChange}
           />
         );
@@ -2493,6 +2505,59 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
         label="Default Phone number"
         onChange={(value) => handleInputChange("phone", value)}
         value={typedData?.phone}
+      />
+    </Stack>
+  );
+};
+
+const CatalogNodeEditor = ({
+  nodeData,
+  handleInputChange,
+}: NodeComponentProps<"catalogNode">) => {
+  const typedData = nodeData as CatalogNodeData;
+  const params = useParams();
+  let automatedId = params.waAutomatedReplyId as string;
+  const {
+    data: automation,
+    isPending,
+    refetch,
+  } = useWaAutomatedReplyById(automatedId);
+  const { data, isLoading } = useConnectedWaCatalog(
+    automation?.whatsappSettingsPhoneId,
+  );
+  const products = useMemo(
+    () =>
+      data
+        ? data.products.map((p) => ({
+            value: p.retailer_id,
+            label: p?.productProps?.title,
+          }))
+        : [],
+    [data],
+  );
+  if (isLoading || isPending) return <RateupLoader />;
+  return (
+    <Stack>
+      <WaTextEditor
+        content={typedData?.body || ""}
+        handleInputChange={(e) => handleInputChange("body", e)}
+        label="Body Text"
+        placeholder="Enter your message text here..."
+        required
+      />
+      <ContainedSelection
+        label={"Thumbnail Product (optional)"}
+        data={products}
+        value={typedData?.thumbnailProductId || ""}
+        onChange={(value) => handleInputChange("thumbnailProductId", value)}
+        placeholder="Select"
+      />
+      <WaTextEditor
+        handleInputChange={(e) => handleInputChange("footer", e)}
+        content={typedData.footer || ""}
+        placeholder="Enter footer text..."
+        label="Footer (optional)"
+        max={60}
       />
     </Stack>
   );

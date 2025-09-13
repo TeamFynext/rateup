@@ -9,29 +9,37 @@ import {
 } from "./products.api";
 
 export const useWaCatalogProducts = (catalogId) => {
+  return useQuery({
+    queryFn: () => getCatalogProducts(catalogId),
+    queryKey: ["catalog_products", catalogId],
+    enabled: !!catalogId,
+  });
+};
+
+export const useCreateBatchCatalogProducts = (catalogId) => {
   const qc = useQueryClient();
-  const createBatch = useMutation({
+  return useMutation({
     mutationFn: (data: any) => createCatalogProductBatch(catalogId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
     onError: () => {},
   });
+};
 
-  const productQuery = useQuery({
-    queryFn: () => getCatalogProducts(catalogId),
-    queryKey: ["catalog_products", catalogId],
-    enabled: !!catalogId,
-  });
-
-  const syncProducts = useMutation({
+export const useSyncCatalogProducts = (catalogId) => {
+  const qc = useQueryClient();
+  return useMutation({
     mutationFn: (data: any) => syncCatalogProducts(catalogId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
   });
+};
 
-  const deleteProducts = useMutation({
+export const useDeletCatalogProducts = (catalogId) => {
+  const qc = useQueryClient();
+  return useMutation({
     mutationFn: (data: {
       productIds: { id: string; hotel_reatiler_id?: string }[];
     }) => deleteCatalogProducts(catalogId, data),
@@ -39,18 +47,14 @@ export const useWaCatalogProducts = (catalogId) => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
   });
+};
 
-  const updateProducts = useMutation({
+export const useUpdateCatalogProducts = (catalogId) => {
+  const qc = useQueryClient();
+  return useMutation({
     mutationFn: (data: any) => updateCatalogProducts(catalogId, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["catalog_products", catalogId] });
     },
   });
-  return {
-    createBatch,
-    syncProducts,
-    productQuery,
-    deleteProducts,
-    updateProducts,
-  };
 };
