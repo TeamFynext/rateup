@@ -71,6 +71,7 @@ export default function WaInboxChatSelectCard({
   }
 
   function getMessageSourceName(sourceIdentifier) {
+    if (!waSettings) return sourceIdentifier;
     const settings = waSettings?.find(
       (setting) =>
         sourceIdentifier === setting.ibaId ||
