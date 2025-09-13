@@ -1,32 +1,10 @@
 "use client";
 
 import { Button, Card, Select, Text, TextInput, Title } from "@mantine/core";
+import { CountryDropdown } from "react-country-region-selector";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 
 import "react-phone-number-input/style.css";
-
-// Build country options once
-const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
-const countryCodes = [
-  "US",
-  "IN",
-  "GB",
-  "CA",
-  "AU",
-  "DE",
-  "FR",
-  "IT",
-  "ES",
-  "BR",
-  "CN",
-  "JP",
-  "ZA",
-  // add more or pull dynamically if you want the full ISO list
-];
-const countryOptions = countryCodes.map((code) => ({
-  value: regionNames.of(code) || code,
-  label: regionNames.of(code) || code,
-}));
 
 export default function OnboardingStep1({
   onNext,
@@ -124,19 +102,19 @@ export default function OnboardingStep1({
         />
 
         {/* Country */}
-        <Select
-          mt="md"
-          label="Country"
-          placeholder="Select your country"
-          required
-          searchable
-          data={countryOptions}
-          value={data.country}
-          onChange={(val) =>
-            setData((prev) => ({ ...prev, country: val || "" }))
-          }
-          styles={{ input: { borderColor: "#E5E5E5" } }}
-        />
+        {/* Country */}
+        <div className="mt-4">
+          <label className="text-sm font-medium mb-1 block">
+            Country <span className="text-red-500">*</span>
+          </label>
+          <CountryDropdown
+            value={data.country}
+            onChange={(val) =>
+              setData((prev) => ({ ...prev, country: val || "" }))
+            }
+            className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004F98]"
+          />
+        </div>
 
         {/* Phone */}
         <div className="mt-4">
