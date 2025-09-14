@@ -229,12 +229,19 @@ export async function getWebhookClientSecretHandler(
 }
 
 export interface TellUsMore {
-  role?: string;
-  reasons?: string[];
-  storage?: string;
-  website?: string;
-  industry?: string;
-  employees?: string;
+  "Business Name": string;
+  "Business Type": string;
+  "Team Size": string;
+  Country: string;
+  "Phone Number": string;
+  "What is your role at your organization?": string;
+  "Company Website": string;
+  "Which platform do you actively use?": string;
+  "Do you currently use any tools for engagement?": string;
+  "What do you want to automate?": string[];
+  "Are you interested in WhatsApp Loyalty, Web Survey Programs for your business?": string;
+  "How did you hear about RateUp?": string;
+  "Need help with onboarding, have a specific use case, or require custom features? Let us know below": string;
 }
 
 export async function completeOrgDetailsHandler(
@@ -251,34 +258,53 @@ export async function completeOrgDetailsHandler(
       tellUsMore: request.body.tellUsMore,
       isTellUsMoreCompleted: true,
     });
+    const tellUsMore = orgData.updatedOrg.tellUsMore;
     const emaildata = {
       to: process.env.ROOT_ORG_MAIL_ID ?? "hello@rateup.app",
-      subject: `Organization Updated: ${orgData.updatedOrg.name}`,
+      subject: `New RateUp SignUp: ${orgData.updatedOrg.name}`,
       text: `
-Organization "${orgData.updatedOrg.name}" was updated.
+New Organization "${orgData.updatedOrg.name}".
 
 Details:
 - Created At: ${orgData.updatedOrg.createdAt.toISOString()}
 - Phone: ${orgData.phone}
-- Role: ${orgData.updatedOrg?.tellUsMore?.role}
-- Website: ${orgData.updatedOrg.tellUsMore.website}
-- Industry: ${orgData.updatedOrg.tellUsMore.industry}
-- Employees: ${orgData.updatedOrg.tellUsMore.employees}
-- Reasons: ${orgData.updatedOrg.tellUsMore.reasons.join(", ")}
-    `,
+
+Tell Us More:
+- Business Name: ${tellUsMore?.["Business Name"]}
+- Business Type: ${tellUsMore?.["Business Type"]}
+- Team Size: ${tellUsMore?.["Team Size"]}
+- Country: ${tellUsMore?.["Country"]}
+- Phone Number: ${tellUsMore?.["Phone Number"]}
+- What is your role at your organization?: ${tellUsMore?.["What is your role at your organization?"]}
+- Company Website: ${tellUsMore?.["Company Website"]}
+- Which platform do you actively use?: ${tellUsMore?.["Which platform do you actively use?"]}
+- Do you currently use any tools for engagement?: ${tellUsMore?.["Do you currently use any tools for engagement?"]}
+- What do you want to automate?: ${(tellUsMore?.["What do you want to automate?"] || []).join(", ")}
+- Are you interested in WhatsApp Loyalty, Web Survey Programs for your business?: ${tellUsMore?.["Are you interested in WhatsApp Loyalty, Web Survey Programs for your business?"]}
+- How did you hear about RateUp?: ${tellUsMore?.["How did you hear about RateUp?"]}
+- Need help with onboarding, have a specific use case, or require custom features? Let us know below: ${tellUsMore?.["Need help with onboarding, have a specific use case, or require custom features? Let us know below"]}
+      `,
       html: `
       <h2>Organization Updated: ${orgData.updatedOrg.name}</h2>
       <p><strong>Created At:</strong> ${orgData.updatedOrg.createdAt.toISOString()}</p>
       <p><strong>Phone:</strong> ${orgData.phone}</p>
       <h3>Tell Us More</h3>
       <ul>
-        <li><strong>Role:</strong> ${orgData.updatedOrg.tellUsMore.role}</li>
-        <li><strong>Website:</strong> ${orgData.updatedOrg.tellUsMore.website}</li>
-        <li><strong>Industry:</strong> ${orgData.updatedOrg.tellUsMore.industry}</li>
-        <li><strong>Employees:</strong> ${orgData.updatedOrg.tellUsMore.employees}</li>
-        <li><strong>Reasons:</strong> ${orgData.updatedOrg.tellUsMore.reasons.join(", ")}</li>
+        <li><strong>Business Name:</strong> ${tellUsMore?.["Business Name"]}</li>
+        <li><strong>Business Type:</strong> ${tellUsMore?.["Business Type"]}</li>
+        <li><strong>Team Size:</strong> ${tellUsMore?.["Team Size"]}</li>
+        <li><strong>Country:</strong> ${tellUsMore?.["Country"]}</li>
+        <li><strong>Phone Number:</strong> ${tellUsMore?.["Phone Number"]}</li>
+        <li><strong>What is your role at your organization?:</strong> ${tellUsMore?.["What is your role at your organization?"]}</li>
+        <li><strong>Company Website:</strong> ${tellUsMore?.["Company Website"]}</li>
+        <li><strong>Which platform do you actively use?:</strong> ${tellUsMore?.["Which platform do you actively use?"]}</li>
+        <li><strong>Do you currently use any tools for engagement?:</strong> ${tellUsMore?.["Do you currently use any tools for engagement?"]}</li>
+        <li><strong>What do you want to automate?:</strong> ${(tellUsMore?.["What do you want to automate?"] || []).join(", ")}</li>
+        <li><strong>Are you interested in WhatsApp Loyalty, Web Survey Programs for your business?:</strong> ${tellUsMore?.["Are you interested in WhatsApp Loyalty, Web Survey Programs for your business?"]}</li>
+        <li><strong>How did you hear about RateUp?:</strong> ${tellUsMore?.["How did you hear about RateUp?"]}</li>
+        <li><strong>Need help with onboarding, have a specific use case, or require custom features? Let us know below:</strong> ${tellUsMore?.["Need help with onboarding, have a specific use case, or require custom features? Let us know below"]}</li>
       </ul>
-    `,
+      `,
     };
     await sendAWSEmail(emaildata);
     reply.code(200).send(orgData);
