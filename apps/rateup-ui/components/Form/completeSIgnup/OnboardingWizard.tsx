@@ -23,13 +23,18 @@ export default function OnboardingWizard() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     orgName: "",
+    business_type: "",
     website: "",
-    industry: "",
-    employees: "",
-    reasons: [] as string[],
-    storage: "",
+    team_size: "",
     role: "",
     phone: "",
+    country: "",
+    which_platforms_do_you_actively_use: "",
+    do_you_currently_use_any_tools_for_engagement: "",
+    what_do_you_want_to_automate_first: "",
+    interest_in_whatsapp_loyality_or_web_surveys: "",
+    how_did_you_hear_about_rateup: "",
+    specific_feature_or_custom_feature: "",
   });
 
   useEffect(() => {
@@ -61,12 +66,25 @@ export default function OnboardingWizard() {
       {
         orgName: formData.orgName,
         tellUsMore: {
-          website: formData.website,
-          industry: formData.industry,
-          employees: formData.employees,
-          reasons: formData.reasons,
-          storage: formData.storage,
-          role: formData.role,
+          "Business Name": formData.orgName,
+          "Business Type": formData.business_type,
+          "Team Size": formData.team_size,
+          Country: formData.country,
+          "Phone Number": formData.phone,
+          "What is your role at your organization?": formData.role,
+          "Company Website": formData.website,
+          "Which platform do you actively use?":
+            formData.which_platforms_do_you_actively_use,
+          "Do you currently use any tools for engagement?":
+            formData.do_you_currently_use_any_tools_for_engagement,
+          "What do you want to automate?":
+            formData.what_do_you_want_to_automate_first,
+          "Are you interested in WhatsApp Loyalty, Web Survey Programs for your business?":
+            formData.interest_in_whatsapp_loyality_or_web_surveys,
+          "How did you hear about RateUp?":
+            formData.how_did_you_hear_about_rateup,
+          "Need help with onboarding, have a specific use case, or require custom features? Let us know below":
+            formData.specific_feature_or_custom_feature,
         },
         phone: formData.phone,
       },

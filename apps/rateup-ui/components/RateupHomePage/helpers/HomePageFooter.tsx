@@ -5,7 +5,6 @@ import {
   IconBrandFacebook,
   IconBrandInstagram,
   IconBrandLinkedin,
-  IconBrandPinterest,
   IconBrandPinterestFilled,
   IconBrandThreads,
   IconBrandX,
@@ -48,7 +47,7 @@ const HomePageFooter = () => {
             </Link>
 
             <Link
-              href="https://www.facebook.com/people/RateUp/61556199852468/"
+              href="https://www.facebook.com/rateupsapp/"
               aria-label="Facebook"
               target="_blank"
             >
