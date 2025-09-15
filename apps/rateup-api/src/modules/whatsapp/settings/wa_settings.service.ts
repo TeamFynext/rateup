@@ -142,7 +142,7 @@ export async function getWaSettingsByIbaId(ibaId: string) {
   return !res.wabaId ? res : getWaSettingsWithAccessTokenDecrypted(res);
 }
 
-function getWaSettingsWithAccessTokenDecrypted(
+export function getWaSettingsWithAccessTokenDecrypted(
   waSettings: WhatsappSettings,
 ): Omit<WhatsappSettings, "accessToken_iv"> {
   const { accessToken_iv, accessToken, ...data } = waSettings;

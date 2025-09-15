@@ -495,7 +495,17 @@ export async function sendTemplateToUserCore(
         }
         break;
       case WaTemplateSupportedFormats.PRODUCT:
-        const catalog = await getConnectedWaCatalog(orgId);
+        const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId);
+        if (!catalog || catalog.catalogId !== defaultValues.catalog.catalogId) {
+          log.error(
+            "The selected catalog not linked to the selected account: catalogId => %s, phoneId => %s",
+            defaultValues.catalog.catalogId,
+            whatsappSettingsPhoneId,
+          );
+          throw Error(
+            "The selected catalog not linked to the selected whatsapp account",
+          );
+        }
         components.push({
           type: WaTemplateComponentType.HEADER,
           parameters: [
@@ -780,7 +790,20 @@ export async function sendTemplateToUserCore(
           (c) => c?.type.toLowerCase() === WaTemplateComponentType.HEADER,
         )?.format;
         if (headerFormat === WaTemplateSupportedFormats.PRODUCT) {
-          const catalog = await getConnectedWaCatalog(orgId);
+          const catalog = await getConnectedWaCatalog(whatsappSettingsPhoneId);
+          if (
+            !catalog ||
+            catalog.catalogId !== defaultValues.catalog.catalogId
+          ) {
+            log.error(
+              "The selected catalog not linked to the selected account: catalogId => %s, phoneId => %s",
+              defaultValues.catalog.catalogId,
+              whatsappSettingsPhoneId,
+            );
+            throw Error(
+              "The selected catalog not linked to the selected whatsapp account",
+            );
+          }
           let cards = await Promise.all([
             item?.cards?.map(async (card, index) => {
               const cardInComponents = components.find(

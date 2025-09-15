@@ -65,6 +65,7 @@ const getWaSettingsResponseSchema = z.array(
     igUserName: z.string().optional(),
     igDisplayName: z.string(),
     phoneDisplayName: z.string(),
+    assets: z.array(z.string()),
   }),
 );
 const contactTagSchema = z.object({

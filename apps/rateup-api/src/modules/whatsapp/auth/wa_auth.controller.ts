@@ -34,7 +34,7 @@ export async function registerBusinessClientHandler(
   rep: FastifyReply,
 ) {
   try {
-    const { code, phone_number_id, waba_id } = req.body;
+    const { code, phone_number_id, waba_id, assets } = req.body;
     const { orgId } = req.user;
 
     if (phone_number_id) {
@@ -96,6 +96,7 @@ export async function registerBusinessClientHandler(
     if (waSetting) {
       await updateWaSettings(orgId, phone?.id, {
         accessToken,
+        assets,
       });
     } else {
       await createWaSettings(orgId, {
@@ -106,6 +107,7 @@ export async function registerBusinessClientHandler(
         type: WaConfigType.Automated,
         appId: process.env.wa_app_id,
         encryption: keys,
+        assets,
       });
     }
 

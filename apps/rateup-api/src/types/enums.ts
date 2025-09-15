@@ -439,3 +439,11 @@ export enum InstagramEvent {
 export enum SupportUserEvent {
   MESSAGE = "MESSAGE",
 }
+
+export enum MetaLoginAssets {
+  WHATSAPP = "WHATSAPP ACCOUNTS",
+  PAGES = "FACEBOOK PAGES",
+  CATALOGS = "CATALOGS",
+  INSTAGRAM = "INSTAGRAM ACCOUNTS",
+  ADACCOUNTS = "AD ACCOUNTS",
+}

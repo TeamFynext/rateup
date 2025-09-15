@@ -56,6 +56,7 @@ const waTemplateInput = {
           link: z.string(),
         })
         .optional(),
+      whatsappSettingsPhoneId: z.string().optional(),
       catalog: z
         .object({
           thumbnail_product_retailer_id: z.string().optional(),
@@ -71,6 +72,7 @@ const waTemplateInput = {
               product_retailer_id: z.string(),
             })
             .optional(),
+          catalogId: z.string(),
         })
         .optional(),
       mediaCarousel: z
