@@ -72,6 +72,7 @@ const waTemplateInput = {
               product_retailer_id: z.string(),
             })
             .optional(),
+          catalogId: z.string(),
         })
         .optional(),
       mediaCarousel: z

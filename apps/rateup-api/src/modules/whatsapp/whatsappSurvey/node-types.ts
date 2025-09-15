@@ -252,9 +252,17 @@ export interface LeadgenNodeData extends BaseNodeData {
 }
 
 export interface CatalogNodeData extends BaseNodeData {
+  type: string;
+  header?: string;
   body: string;
   thumbnailProductId?: string;
   footer: string;
+  productRetailerId?: string;
+  sections?: {
+    title: string;
+    productItems: string[];
+  }[];
+  catalogId: string;
 }
 
 // Map of node types to their data types
