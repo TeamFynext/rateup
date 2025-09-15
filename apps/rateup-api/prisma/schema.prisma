@@ -183,6 +183,7 @@ model UsageStats {
   loyaltyActionCount      Int @default(0)
   loyaltyRewardCount      Int @default(0)
   loyaltyCustomerCount    Int @default(0)
+  waAutomationCount       Int @default(0)
 
   annualMessageCount       Int @default(0)
   monthlySurveyResponses   Int @default(0)
@@ -517,6 +518,7 @@ model Contact {
   followerCount                Int?
   isIgVerifiedUser             Boolean?
   ContactLabelMap              ContactLabelMap[]
+  other String?
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -1282,6 +1284,7 @@ model Linktree {
 enum PlatformType {
   WHATSAPP
   INSTAGRAM
+  WEBCHAT
 }
 
 model WaMessage {

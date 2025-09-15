@@ -436,6 +436,10 @@ export enum InstagramEvent {
   MESSAGE_SEEN = "MESSAGE_SEEN",
 }
 
+export enum SupportUserEvent {
+  MESSAGE = "MESSAGE",
+}
+
 export enum MetaLoginAssets {
   WHATSAPP = "WHATSAPP ACCOUNTS",
   PAGES = "FACEBOOK PAGES",

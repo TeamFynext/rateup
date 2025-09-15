@@ -323,14 +323,21 @@ export async function getOrCreateContactByPhone(
   phone: string,
   orgId: string,
   additionalData?: updateContactSchema,
+  source?: string,
 ) {
   try {
     const contact = await prisma.contact.findFirst({
       // TODO: findout why findUnique is giving error
-      where: {
-        phone: phone,
-        orgId: orgId,
-      },
+      where: source
+        ? {
+            other: phone,
+            orgId: orgId,
+            source,
+          }
+        : {
+            phone: phone,
+            orgId: orgId,
+          },
     });
 
     if (contact) {
@@ -352,7 +359,7 @@ export async function getOrCreateContactByPhone(
         data: {
           ...additionalData,
           aiWaChat,
-          phone,
+          phone: source ? undefined : phone,
           orgId,
         },
       });

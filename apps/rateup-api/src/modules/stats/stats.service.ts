@@ -53,6 +53,10 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
               annualTemplateMessageCount: { increment: 1 },
             }
           : {}),
+        monthlyAutomationTriggerCount:
+          stat === SubscriptionFeaturePathName.WhatsAppAutomationTrigger
+            ? { increment: 1 }
+            : undefined,
       },
       create: {
         orgId: orgId,
@@ -87,6 +91,10 @@ export async function updateMonthlyStat(stat: string, orgId: string) {
               monthlyTemplateMessageCount: 0,
               annualTemplateMessageCount: 0,
             }),
+        monthlyAutomationTriggerCount:
+          stat === SubscriptionFeaturePathName.WhatsAppAutomationTrigger
+            ? 1
+            : 0,
         //TODO: improve
         // Add other fields with default values as needed
       },
@@ -126,6 +134,8 @@ export async function resetMonthlyCounts() {
         monthlyMenuViews: 0,
         monthlySurveyResponses: 0,
         monthlyMessagesCount: 0,
+        monthlyAutomationTriggerCount: 0,
+        monthlyTemplateMessageCount: 0,
         lastMonthlyResettedDate: new Date(),
       },
     });
@@ -259,6 +269,11 @@ export async function createStats(orgId: string) {
       },
     });
 
+    const waAutomationCount = await prisma.waAutomatedReply.count({
+      where: {
+        orgId,
+      },
+    });
     let statsData = {
       teamCount,
       teamMemberCount,
@@ -268,6 +283,7 @@ export async function createStats(orgId: string) {
       menuCount,
       menuViewsCount: menuViewsCount._sum.visited,
       monthlyMessagesCount,
+      waAutomationCount,
     };
 
     await updateUsageStats(orgId, statsData);
@@ -290,6 +306,7 @@ export async function updateUsageStats(
     menuCount: number;
     menuViewsCount: number;
     monthlyMessagesCount: number;
+    waAutomationCount: number;
   },
 ) {
   const usageStats = await prisma.usageStats.upsert({
@@ -303,6 +320,7 @@ export async function updateUsageStats(
       menusCount: stats?.menuCount || 0,
       menuViewsCount: stats?.menuViewsCount || 0,
       monthlyMessagesCount: stats?.monthlyMessagesCount || 0,
+      waAutomationCount: stats?.waAutomationCount || 0,
     },
     create: {
       teamsCount: stats?.teamCount || 0,

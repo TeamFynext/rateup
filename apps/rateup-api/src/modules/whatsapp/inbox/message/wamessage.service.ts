@@ -59,10 +59,19 @@ export async function addNewWaMessage(
     failed: "",
     delivered: "",
   };
+  if (sourcePlatform === PlatformType.WEBCHAT) {
+    initialStats.sent = waCreatedAt;
+    initialStats.delivered = waCreatedAt;
+  }
 
   if (failed) {
     initialStats.failed = waCreatedAt;
   }
+  let statsData = {};
+  if (failed || sourcePlatform === PlatformType.WEBCHAT) {
+    statsData = { stats: initialStats };
+  }
+
   const newMessage = prisma.waMessage.create({
     data: {
       messageBody: messageBody as any,
@@ -73,7 +82,7 @@ export async function addNewWaMessage(
       sendBy,
       sourcePlatform,
       sourceIdentifier,
-      ...(failed ? { stats: initialStats } : {}),
+      ...statsData,
     },
   });
   return newMessage;
@@ -483,6 +492,7 @@ export async function filterChats(
         c.id,
         c."name",
         c."phone",
+        c."other",
         c."aiWaChat",
         c."waMessageAssignStatus",
         c."lastReceivedMessageTimeStamp",
@@ -1130,4 +1140,23 @@ export async function generateChatAnalytics(orgId: string) {
   `;
 
   return { ...analytics?.[0], assignedUserCounts };
+}
+
+export async function getChatByContactId(req, res) {
+  const { contactId } = req.params;
+  try {
+    const chat = await prisma.waMessage.findMany({
+      where: {
+        contactId,
+        sourcePlatform: "WEBCHAT",
+      },
+      orderBy: {
+        waCreatedAt: "asc",
+      },
+    });
+    return res.status(200).send(chat);
+  } catch (error) {
+    log.error("Error in getChatByContactId: %o", error);
+    res.status(500).send({ error: "Failed to retrieve chat" });
+  }
 }
