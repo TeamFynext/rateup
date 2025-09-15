@@ -1,5 +1,9 @@
 import { Node } from "@xyflow/react";
 
+import { safeStrOrNull } from "@/utils";
+
+import { CatalogMessages } from "../components/node-editor";
+
 // Base node data interface with common properties
 export interface BaseNodeData {
   label: string;
@@ -249,6 +253,20 @@ export interface LeadgenNodeData extends BaseNodeData {
   pageUserAccessToken?: string;
 }
 
+export interface CatalogNodeData extends BaseNodeData {
+  type: string;
+  body: string;
+  header?: string;
+  thumbnailProductId?: string;
+  footer: string;
+  productRetailerId?: string;
+  sections?: {
+    title: string;
+    productItems: string[];
+  }[];
+  catalogId: string;
+}
+
 // Map of node types to their data types
 export type NodeTypeMap = {
   textNode: TextNodeData;
@@ -281,6 +299,7 @@ export type NodeTypeMap = {
   ticketNode: TicketNodeData;
   assignNode: AssignNodeData;
   leadgenNode: LeadgenNodeData;
+  catalogNode: CatalogNodeData;
 };
 
 // Node type strings as a union type
@@ -312,7 +331,8 @@ export type NodeData =
   | AiBotNodeData
   | TicketNodeData
   | AssignNodeData
-  | LeadgenNodeData;
+  | LeadgenNodeData
+  | CatalogNodeData;
 
 // Extended Node type with typed data
 export type TypedNode<T extends NodeType = NodeType> = Omit<
@@ -871,7 +891,7 @@ export function validateNodeData(node: TypedNode): {
       break;
     }
 
-    case "leadgenNode":
+    case "leadgenNode": {
       const data = node.data as NodeTypeMap["leadgenNode"];
       if (!data.fbPageId.trim().length) {
         return {
@@ -898,6 +918,65 @@ export function validateNodeData(node: TypedNode): {
         };
       }
       break;
+    }
+
+    case "catalogNode": {
+      const data = node.data as NodeTypeMap["catalogNode"];
+      if (data.type !== CatalogMessages.SingleProduct && !data.body) {
+        return {
+          valid: false,
+          message: `${data.label}: Body Text required.`,
+        };
+      }
+      if (data.type === CatalogMessages.MultiProduct) {
+        if (!data.header)
+          return {
+            valid: false,
+            message: `${data.label}: Header Text required.`,
+          };
+        if (!data.sections.length)
+          return {
+            valid: false,
+            message: `${data.label}: At least one section required`,
+          };
+        let sum = 0;
+        if (
+          data.sections.length > 1 &&
+          data.sections.some((s) => !safeStrOrNull(s.title))
+        ) {
+          return {
+            valid: false,
+            message: `${data.label}: Section title is required`,
+          };
+        }
+        for (const section of data.sections) {
+          if (!section.productItems.length) {
+            return {
+              valid: false,
+              message: `${data.label}: At least one product per section is required`,
+            };
+          }
+          sum += section.productItems.length;
+        }
+        if (sum > 30) {
+          return {
+            valid: false,
+            message: `${data.label}: maximum of 30 products can be selected across all sections`,
+          };
+        }
+      }
+      if (
+        data.type === CatalogMessages.SingleProduct &&
+        !safeStrOrNull(data.productRetailerId)
+      ) {
+        return {
+          valid: false,
+          message: `${data.label}: product is required.`,
+        };
+      }
+
+      break;
+    }
   }
 
   // If we get here, all validations passed

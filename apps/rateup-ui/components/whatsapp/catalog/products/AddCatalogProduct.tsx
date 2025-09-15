@@ -17,8 +17,10 @@ import { isInRange, isNotEmpty, useForm } from "@mantine/form";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
 import { CatalogProductType } from "@/types/enums";
-import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
-import { useWaCatalogProducts } from "@/backend/whatsapp/catalog/products/products.query";
+import {
+  useCreateBatchCatalogProducts,
+  useUpdateCatalogProducts,
+} from "@/backend/whatsapp/catalog/products/products.query";
 import {
   RateupButtonOutline,
   RateupButtonPrimary,
@@ -188,9 +190,8 @@ const AddCatalogProduct = ({ catalogData, onCancel, productData = null }) => {
     }
   }, [catalogData, productData]);
 
-  const { createBatch, updateProducts } = useWaCatalogProducts(
-    catalogData.catalogId,
-  );
+  const createBatch = useCreateBatchCatalogProducts(catalogData?.catalogId);
+  const updateProducts = useUpdateCatalogProducts(catalogData?.catalogId);
 
   const [imageUpload, setImageUpload] = useState("upload");
   const [image, setImage] = useState(null);

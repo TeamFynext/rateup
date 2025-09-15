@@ -27,6 +27,7 @@ import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
+import { safeStrOrNull } from "@/utils";
 import { formatToRelativeTime } from "@/utils/dateTime";
 import {
   parseWaMessage,

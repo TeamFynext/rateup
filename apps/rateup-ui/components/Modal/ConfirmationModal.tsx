@@ -26,6 +26,8 @@ interface ConfirmationModalProps {
   includeEmailConfirmation?: boolean;
   deleteQuotion?: string;
   excludeCancelButton?: boolean;
+  loading?: boolean;
+  closeAfterOnConfirm?: boolean;
 }
 export default function ConfirmationModal({
   opened,
@@ -39,6 +41,8 @@ export default function ConfirmationModal({
   includeEmailConfirmation = false,
   deleteQuotion,
   excludeCancelButton = false,
+  loading = false,
+  closeAfterOnConfirm = true,
 }: ConfirmationModalProps) {
   const [email, setEmail] = useState("");
   const { user } = useUser();
@@ -48,13 +52,13 @@ export default function ConfirmationModal({
     if (includeEmailConfirmation) {
       if (email === user?.email) {
         onConfirm();
-        onClose();
+        if (closeAfterOnConfirm) onClose();
       } else {
         showErrorToast(translations("Email entered is invalid"));
       }
     } else {
       onConfirm();
-      onClose();
+      if (closeAfterOnConfirm) onClose();
     }
   }
   return (
@@ -76,7 +80,7 @@ export default function ConfirmationModal({
     >
       <Modal.Body>
         <Stack gap={0}>
-          <Text dangerouslySetInnerHTML={{ __html: headerLabel }} />
+          <Text size="sm" dangerouslySetInnerHTML={{ __html: headerLabel }} />
           {forDeleteFunctionality && deleteQuotion && (
             <Blockquote
               color="red"
@@ -111,6 +115,7 @@ export default function ConfirmationModal({
               title={confirmLabel ?? translations("Submit")}
               onClick={confirmation}
               color={forDeleteFunctionality ? "red" : ""}
+              loading={loading}
             />
           </Group>
         </Stack>

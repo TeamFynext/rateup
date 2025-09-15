@@ -34,7 +34,7 @@ const CatalogOrders = ({ catalogId }) => {
     error,
     refetch,
     isRefetching,
-  } = useWaCatalogOrders(catalogId, pagination).get;
+  } = useWaCatalogOrders(catalogId, pagination);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [opened, { open, close }] = useDisclosure(false);
   const data = useMemo(() => {

@@ -33,6 +33,7 @@ import { z } from "zod/v4";
 
 import { OrderType, TemplateType, WaTemplateStatus } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
+import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { uploadTemplateMedia } from "@/backend/whatsapp/whatsapp.api";
 import {
   useCreateTemplateMutation,
@@ -128,7 +129,9 @@ export default function WhatsappTemplateById() {
           spm: {
             product_retailer_id: "",
           },
+          catalogId: "",
         },
+        whatsappSettingsPhoneId: "",
       },
     },
     validate: zod4Resolver(templateSchema),
@@ -180,6 +183,12 @@ export default function WhatsappTemplateById() {
   }, [form.values.buttons]);
 
   useEffect(() => {
+    const currentTemplateType = form.getValues().templateType;
+    const previousTemplateType = editingItem?.templateType;
+    if (currentTemplateType != TemplateType.CAROUSEL) {
+      form.setFieldValue("productCarousel", []);
+      form.setFieldValue("mediaCarousel", []);
+    }
     switch (form.getValues().templateType) {
       case TemplateType.ORDER_DETAILS:
         form.setFieldValue("category", "UTILITY");
@@ -203,9 +212,6 @@ export default function WhatsappTemplateById() {
         form.setFieldValue("footer", "");
         break;
       default:
-        const currentTemplateType = form.getValues().templateType;
-        const previousTemplateType = editingItem?.templateType;
-
         if (
           (currentTemplateType === TemplateType.LOYALTY &&
             previousTemplateType === TemplateType.GENERAL_NOTIFICATION) ||
@@ -234,6 +240,22 @@ export default function WhatsappTemplateById() {
       setIsSubmitting(false);
     },
   );
+
+  const { data: catalog } = useConnectedWaCatalog(
+    form.values.defaultValues.whatsappSettingsPhoneId,
+  );
+  const productRetailerIds = useMemo(
+    () => (catalog ? catalog.products?.map((p) => p.retailer_id) : []),
+    [catalog],
+  );
+  useEffect(() => {
+    const selectedCatalogId = form.values.defaultValues.catalog.catalogId;
+    if (
+      catalog &&
+      (!selectedCatalogId.length || selectedCatalogId !== catalog.catalogId)
+    )
+      form.setFieldValue("defaultValues.catalog.catalogId", catalog.catalogId);
+  }, [catalog]);
 
   const updateTemplateMutation = useUpdateTemplateMutation(
     templateId,
@@ -536,6 +558,7 @@ export default function WhatsappTemplateById() {
       form.setFieldValue("category", "MARKETING");
     }
     if (e === WHATSAPP_BUTTON_TYPE.MPM) {
+      form.setFieldValue("header", "");
       form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
       form.setFieldValue("category", "MARKETING");
     }
@@ -890,6 +913,8 @@ export default function WhatsappTemplateById() {
                                     deleteButton={deleteButton}
                                     index={index}
                                     data={data}
+                                    catalog={catalog}
+                                    productRetailerIds={productRetailerIds}
                                   />
                                 </Group>
                               ))}
@@ -947,7 +972,13 @@ export default function WhatsappTemplateById() {
                         </>
                       )}
                     {form.getValues().templateType ===
-                      TemplateType.CAROUSEL && <CardCarousel form={form} />}
+                      TemplateType.CAROUSEL && (
+                      <CardCarousel
+                        form={form}
+                        catalog={catalog}
+                        productRetailerIds={productRetailerIds}
+                      />
+                    )}
                   </Stack>
                 </Stack>
               </PaperLayout>
@@ -1073,7 +1104,10 @@ export default function WhatsappTemplateById() {
                               ))}
                             </Stack>
                           ))}
-                          <ProductCardCarouselPreview form={form} />
+                          <ProductCardCarouselPreview
+                            form={form}
+                            catalog={catalog}
+                          />
                         </Box>
                       </ScrollAreaAutosize>
                     </Stack>

@@ -36,8 +36,12 @@ import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { parseStringWithVariables } from "@/app/dashboard/whatsapp/templates/[templateId]/page";
-import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import {
+  useConnectedWaCatalog,
+  useWaCatalog,
+} from "@/backend/whatsapp/catalog/catalog.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
+import { AccountSelector } from "@/components/input/AccountSelector";
 import {
   ContainedFileInput,
   ContainedMultiSelect,
@@ -60,8 +64,12 @@ import { TextFormateToolBar } from "./TextFormateToolBar";
 
 const CardCarousel = ({
   form,
+  catalog,
+  productRetailerIds,
 }: {
   form: UseFormReturnType<z.infer<typeof templateSchema>>;
+  catalog: any;
+  productRetailerIds: string[];
 }) => {
   function handleMediaCarousel() {
     if (form.values.mediaCarousel.length === 10) {
@@ -162,11 +170,7 @@ const CardCarousel = ({
     }
     form.insertListItem(`mediaCarousel.${index}.buttons`, newObject);
   }
-  const { connectedCatalog } = useWaCatalog();
-  const { data: catalog } = connectedCatalog;
-  const productRetailerIds = catalog
-    ? catalog?.products?.map((p) => p.retailer_id)
-    : [];
+
   const productCarouselButtons = [
     {
       value: WHATSAPP_BUTTON_TYPE.SPM,
@@ -414,7 +418,17 @@ const CardCarousel = ({
       ) : null}
       {form.values.productCarousel.length ? (
         <Card bg={"var(--light-grey-color-2)"} p={"sm"} radius={"md"}>
-          <Group fz={14} gap={"xs"} wrap="nowrap" mb={"xs"}>
+          <AccountSelector
+            label={"Select catalog linked account"}
+            {...form.getInputProps(`defaultValues.whatsappSettingsPhoneId`)}
+          />
+          {form.values.defaultValues.whatsappSettingsPhoneId.length &&
+            !catalog && (
+              <Text size="xs" c="red">
+                No catalogs are linked to selected account
+              </Text>
+            )}
+          <Group fz={14} gap={"xs"} wrap="nowrap" mb={"xs"} mt={"lg"}>
             <IconBulb size={16} />
             Use the same structure for all cards
           </Group>
@@ -602,12 +616,11 @@ const CarouselButtonMenu = ({ btnLength, handleButtonSelect }) => {
 
 export const ProductCardCarouselPreview = ({
   form,
+  catalog,
 }: {
   form: UseFormReturnType<z.infer<typeof templateSchema>>;
+  catalog: any;
 }) => {
-  const { connectedCatalog } = useWaCatalog();
-  const { data: catalog } = connectedCatalog;
-
   const productCardData = useMemo(
     () =>
       catalog
@@ -638,7 +651,7 @@ export const ProductCardCarouselPreview = ({
           w={"180px"}
         >
           <Image
-            src={card.image}
+            src={card.image || null}
             h={100}
             w={"100%"}
             alt="image of the product"

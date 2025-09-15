@@ -4,6 +4,7 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 import { showErrorToastFromError } from "@/utils/query";
 
 import {
+  disconnectCatalogFromWaba,
   getWaCatalogById,
   getWaCatalogs,
   getWaConnectedCatalog,
@@ -11,9 +12,9 @@ import {
   updateWaCatalog,
 } from "./catalog.api";
 
-export const useWaCatalog = (catalogId = null) => {
+export const useSyncCatalogs = () => {
   const qc = useQueryClient();
-  const sync = useMutation({
+  return useMutation({
     mutationFn: syncWaCatalog,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
@@ -23,40 +24,58 @@ export const useWaCatalog = (catalogId = null) => {
       showErrorToastFromError(e, "Connection failed");
     },
   });
+};
 
-  const update = useMutation({
+export const useUpateCatalog = (catalogId) => {
+  const qc = useQueryClient();
+  return useMutation({
     mutationFn: (data: any) => updateWaCatalog(catalogId, data),
     onSuccess: () => {
       showSuccessToast("updated");
       qc.invalidateQueries({ queryKey: ["WaCatalog", catalogId] });
       qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
+      qc.invalidateQueries({ queryKey: ["waSettings"] });
     },
     onError: (e) => {
       showErrorToastFromError(e, "Connection failed");
     },
   });
+};
 
-  const getCatalogInfo = useQuery({
+export const useDisconnectCatalogFromWa = (catalogId) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: disconnectCatalogFromWaba,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["WaCatalog", catalogId] });
+      qc.invalidateQueries({ queryKey: ["allWaCatalog"] });
+      qc.invalidateQueries({ queryKey: ["waSettings"] });
+      showSuccessToast("disconnected");
+    },
+    onError: (e) => {
+      showErrorToastFromError(e, "Unable to disconnect");
+    },
+  });
+};
+
+export const useWaCatalog = (catalogId) => {
+  return useQuery({
     queryFn: () => getWaCatalogById(catalogId),
     queryKey: ["WaCatalog", catalogId],
     enabled: !!catalogId,
   });
+};
 
-  const allCatalogs = useQuery({
+export const useAllWaCatalogs = () => {
+  return useQuery({
     queryFn: getWaCatalogs,
     queryKey: ["allWaCatalog"],
   });
-
-  const connectedCatalog = useQuery({
-    queryFn: getWaConnectedCatalog,
+};
+export const useConnectedWaCatalog = (whatsappSettingsPhoneId) => {
+  return useQuery({
+    queryFn: () => getWaConnectedCatalog(whatsappSettingsPhoneId),
     queryKey: ["connected_catalog"],
+    enabled: !!whatsappSettingsPhoneId,
   });
-
-  return {
-    sync,
-    getCatalogInfo,
-    update,
-    allCatalogs,
-    connectedCatalog,
-  };
 };

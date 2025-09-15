@@ -16,14 +16,23 @@ export async function getWaCatalogs() {
   }[];
 }
 
-export async function syncWaCatalog(businessId) {
-  await axiosClient.post(`${waCatalogUrl}/${businessId}`);
+export async function syncWaCatalog() {
+  await axiosClient.post(`${waCatalogUrl}/sync`);
 }
 
 export async function getWaCatalogById(catalogId) {
   return (await axiosClient.get(`${waCatalogUrl}/${catalogId}`)).data;
 }
 
-export async function getWaConnectedCatalog() {
-  return (await axiosClient.get(`${waCatalogUrl}/connected`)).data;
+export async function getWaConnectedCatalog(whatsappSettingsPhoneId: string) {
+  return (
+    await axiosClient.get(
+      `${waCatalogUrl}/connected/${whatsappSettingsPhoneId}`,
+    )
+  ).data;
+}
+
+export async function disconnectCatalogFromWaba(data) {
+  return (await axiosClient.delete(`${waCatalogUrl}/disconnect`, { data }))
+    .data;
 }

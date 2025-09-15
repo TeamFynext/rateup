@@ -15,8 +15,7 @@ const CatalogID = () => {
   const params = useParams();
   const catalogId = params?.catalogId as string;
 
-  const { data: catalogInfo, isPending } =
-    useWaCatalog(catalogId).getCatalogInfo;
+  const { data: catalogInfo, isPending } = useWaCatalog(catalogId);
   if (isPending) return <RateupLoader />;
   return (
     <>
