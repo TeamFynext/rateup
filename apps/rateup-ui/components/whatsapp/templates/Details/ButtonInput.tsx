@@ -22,6 +22,8 @@ import { LengthTracker } from "../../../input/LengthTracker";
 
 import "react-phone-number-input/style.css";
 
+import { useMemo } from "react";
+
 import { UseFormReturnType } from "@mantine/form";
 import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
@@ -39,7 +41,14 @@ import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelect
 import { templateSchema } from "../Schema/templateSchema";
 import styles from "./ButtonInput.module.css";
 
-const ButtonInput = ({ form, index, deleteButton, data }) => {
+const ButtonInput = ({
+  form,
+  index,
+  deleteButton,
+  data,
+  catalog,
+  productRetailerIds,
+}) => {
   const translations = useTranslations();
   let { data: flows } = useWaFlowsFromDb(
     data.type === WHATSAPP_BUTTON_TYPE.FLOW,
@@ -52,13 +61,6 @@ const ButtonInput = ({ form, index, deleteButton, data }) => {
       data["navigate_screen"] = screeenId;
     }
   }
-
-  const { data: catalog } = useConnectedWaCatalog(
-    form.values.defaultValues.whatsappSettingsPhoneId,
-  );
-  const productRetailerIds = catalog
-    ? catalog?.products?.map((p) => p.retailer_id)
-    : [];
 
   function handleAddMPMSections() {
     const defaultValues = form.values.defaultValues ?? {};

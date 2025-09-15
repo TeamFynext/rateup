@@ -1,5 +1,9 @@
 import { Node } from "@xyflow/react";
 
+import { safeStrOrNull } from "@/utils";
+
+import { CatalogMessages } from "../components/node-editor";
+
 // Base node data interface with common properties
 export interface BaseNodeData {
   label: string;
@@ -250,9 +254,17 @@ export interface LeadgenNodeData extends BaseNodeData {
 }
 
 export interface CatalogNodeData extends BaseNodeData {
+  type: string;
   body: string;
+  header?: string;
   thumbnailProductId?: string;
   footer: string;
+  productRetailerId?: string;
+  sections?: {
+    title: string;
+    productItems: string[];
+  }[];
+  catalogId: string;
 }
 
 // Map of node types to their data types
@@ -909,6 +921,60 @@ export function validateNodeData(node: TypedNode): {
     }
 
     case "catalogNode": {
+      const data = node.data as NodeTypeMap["catalogNode"];
+      if (data.type !== CatalogMessages.SingleProduct && !data.body) {
+        return {
+          valid: false,
+          message: `${data.label}: Body Text required.`,
+        };
+      }
+      if (data.type === CatalogMessages.MultiProduct) {
+        if (!data.header)
+          return {
+            valid: false,
+            message: `${data.label}: Header Text required.`,
+          };
+        if (!data.sections.length)
+          return {
+            valid: false,
+            message: `${data.label}: At least one section required`,
+          };
+        let sum = 0;
+        if (
+          data.sections.length > 1 &&
+          data.sections.some((s) => !safeStrOrNull(s.title))
+        ) {
+          return {
+            valid: false,
+            message: `${data.label}: Section title is required`,
+          };
+        }
+        for (const section of data.sections) {
+          if (!section.productItems.length) {
+            return {
+              valid: false,
+              message: `${data.label}: At least one product per section is required`,
+            };
+          }
+          sum += section.productItems.length;
+        }
+        if (sum > 30) {
+          return {
+            valid: false,
+            message: `${data.label}: maximum of 30 products can be selected across all sections`,
+          };
+        }
+      }
+      if (
+        data.type === CatalogMessages.SingleProduct &&
+        !safeStrOrNull(data.productRetailerId)
+      ) {
+        return {
+          valid: false,
+          message: `${data.label}: product is required.`,
+        };
+      }
+
       break;
     }
   }

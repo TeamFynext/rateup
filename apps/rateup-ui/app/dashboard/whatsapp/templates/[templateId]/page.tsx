@@ -33,6 +33,7 @@ import { z } from "zod/v4";
 
 import { OrderType, TemplateType, WaTemplateStatus } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
+import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { uploadTemplateMedia } from "@/backend/whatsapp/whatsapp.api";
 import {
   useCreateTemplateMutation,
@@ -128,6 +129,7 @@ export default function WhatsappTemplateById() {
           spm: {
             product_retailer_id: "",
           },
+          catalogId: "",
         },
         whatsappSettingsPhoneId: "",
       },
@@ -238,6 +240,22 @@ export default function WhatsappTemplateById() {
       setIsSubmitting(false);
     },
   );
+
+  const { data: catalog } = useConnectedWaCatalog(
+    form.values.defaultValues.whatsappSettingsPhoneId,
+  );
+  const productRetailerIds = useMemo(
+    () => (catalog ? catalog.products?.map((p) => p.retailer_id) : []),
+    [catalog],
+  );
+  useEffect(() => {
+    const selectedCatalogId = form.values.defaultValues.catalog.catalogId;
+    if (
+      catalog &&
+      (!selectedCatalogId.length || selectedCatalogId !== catalog.catalogId)
+    )
+      form.setFieldValue("defaultValues.catalog.catalogId", catalog.catalogId);
+  }, [catalog]);
 
   const updateTemplateMutation = useUpdateTemplateMutation(
     templateId,
@@ -895,6 +913,8 @@ export default function WhatsappTemplateById() {
                                     deleteButton={deleteButton}
                                     index={index}
                                     data={data}
+                                    catalog={catalog}
+                                    productRetailerIds={productRetailerIds}
                                   />
                                 </Group>
                               ))}
@@ -952,7 +972,13 @@ export default function WhatsappTemplateById() {
                         </>
                       )}
                     {form.getValues().templateType ===
-                      TemplateType.CAROUSEL && <CardCarousel form={form} />}
+                      TemplateType.CAROUSEL && (
+                      <CardCarousel
+                        form={form}
+                        catalog={catalog}
+                        productRetailerIds={productRetailerIds}
+                      />
+                    )}
                   </Stack>
                 </Stack>
               </PaperLayout>
@@ -1078,7 +1104,10 @@ export default function WhatsappTemplateById() {
                               ))}
                             </Stack>
                           ))}
-                          <ProductCardCarouselPreview form={form} />
+                          <ProductCardCarouselPreview
+                            form={form}
+                            catalog={catalog}
+                          />
                         </Box>
                       </ScrollAreaAutosize>
                     </Stack>

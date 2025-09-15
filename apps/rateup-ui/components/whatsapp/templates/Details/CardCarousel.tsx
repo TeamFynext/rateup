@@ -64,8 +64,12 @@ import { TextFormateToolBar } from "./TextFormateToolBar";
 
 const CardCarousel = ({
   form,
+  catalog,
+  productRetailerIds,
 }: {
   form: UseFormReturnType<z.infer<typeof templateSchema>>;
+  catalog: any;
+  productRetailerIds: string[];
 }) => {
   function handleMediaCarousel() {
     if (form.values.mediaCarousel.length === 10) {
@@ -167,12 +171,6 @@ const CardCarousel = ({
     form.insertListItem(`mediaCarousel.${index}.buttons`, newObject);
   }
 
-  const { data: catalog } = useConnectedWaCatalog(
-    form.values.defaultValues.whatsappSettingsPhoneId,
-  );
-  const productRetailerIds = catalog
-    ? catalog?.products?.map((p) => p.retailer_id)
-    : [];
   const productCarouselButtons = [
     {
       value: WHATSAPP_BUTTON_TYPE.SPM,
@@ -618,13 +616,11 @@ const CarouselButtonMenu = ({ btnLength, handleButtonSelect }) => {
 
 export const ProductCardCarouselPreview = ({
   form,
+  catalog,
 }: {
   form: UseFormReturnType<z.infer<typeof templateSchema>>;
+  catalog: any;
 }) => {
-  const { data: catalog } = useConnectedWaCatalog(
-    form.values.defaultValues.whatsappSettingsPhoneId,
-  );
-
   const productCardData = useMemo(
     () =>
       catalog

@@ -26,6 +26,7 @@ import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
+import { safeStrOrNull } from "@/utils";
 import { formatToRelativeTime } from "@/utils/dateTime";
 import {
   parseWaMessage,
@@ -69,7 +70,11 @@ export default function WaInboxChatSelectCard({
       return (settings?.igDisplayName ?? settings?.igUserName)
         ? `@${settings?.igUserName}`
         : sourceIdentifier;
-    return settings?.phoneDisplayName ?? settings?.phone ?? sourceIdentifier;
+    return (
+      safeStrOrNull(settings.phoneDisplayName) ??
+      safeStrOrNull(settings?.phone) ??
+      sourceIdentifier
+    );
   }
   return (
     <Card

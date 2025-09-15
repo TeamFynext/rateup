@@ -243,6 +243,7 @@ export const templateSchema = z
                 product_retailer_id: z.string(),
               })
               .optional(),
+            catalogId: z.string(),
           })
           .optional(),
         whatsappSettingsPhoneId: z.string().optional(),
