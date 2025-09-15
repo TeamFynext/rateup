@@ -103,8 +103,9 @@ export default function NewsStoriesCenter() {
                 href={post.link}
                 rel="noopener noreferrer"
                 className="self-start bg-[#3f5ba9] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#1c518e] transition-colors"
+                aria-label={`Read the full blog about ${post.title}`}
               >
-                Read more
+                View full article
               </Link>
             </div>
           </motion.div>

@@ -1,3 +1,5 @@
+"use client";
+
 import { Accordion, Badge, Stack, Title } from "@mantine/core";
 import { motion } from "motion/react";
 
@@ -26,7 +28,7 @@ const faqs = [
   },
 ];
 
-const FAQ = () => {
+export const FAQ = () => {
   const faqAccordion = faqs.map((q, index) => (
     <motion.div
       key={index}
@@ -89,5 +91,3 @@ const FAQ = () => {
     </motion.div>
   );
 };
-
-export default FAQ;

@@ -566,6 +566,7 @@ export enum WaAssignedChatPermission {
 export enum MessagePlatform {
   INSTAGRAM = "INSTAGRAM",
   WHATSAPP = "WHATSAPP",
+  WEBCHAT = "WEBCHAT",
 }
 
 export enum MetaLoginAssets {

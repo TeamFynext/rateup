@@ -33,7 +33,6 @@
 }
 
 .header-link {
-  font-family: var(--font-rubik);
   composes: header-footer-link from "../../index.module.css";
   color: var(--shade-of-blue-8);
   margin-right: 0;
@@ -68,7 +67,6 @@
   composes: gradient-image-1 from "../../index.module.css";
   border-radius: 0.625rem;
   display: block;
-  font-family: var(--font-rubik);
   font-weight: 430;
   border: 1px solid var(--tertiary-color);
 }

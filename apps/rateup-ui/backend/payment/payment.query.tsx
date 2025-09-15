@@ -1,5 +1,3 @@
-import { useRouter } from "next/navigation";
-
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -175,7 +173,6 @@ export function usePlanSyncMutation() {
 }
 
 export function useCreateCheckoutSession(setIsLoading, setOrder) {
-  const router = useRouter();
   return useMutation({
     mutationFn: (values: ICreateCheckoutType) => createCheckoutSession(values),
     onSuccess: (data) => {

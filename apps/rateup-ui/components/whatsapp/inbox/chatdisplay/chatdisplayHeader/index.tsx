@@ -106,11 +106,7 @@ export default function WaInboxChatDisplayHeader({
   }
 
   if (!contact) return null;
-  const display_phone_numbera = contact?.metadata?.display_phone_number || "";
-  const platform =
-    contact.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
-      ? MessagePlatform.WHATSAPP
-      : MessagePlatform.INSTAGRAM;
+  const platform = contact.source?.toUpperCase() || MessagePlatform.WHATSAPP;
   return (
     <div
       className={classes.wrapper}
@@ -155,11 +151,13 @@ export default function WaInboxChatDisplayHeader({
               )}
             </Tooltip>
           )}
-          <Text className={classes.phone}>{contact.phone}</Text>
+          <Text className={classes.phone}>
+            {contact.phone || contact?.other}
+          </Text>
         </Stack>
       </Group>
       <Stack gap={"xs"} align="center">
-        {!smallScreen && (
+        {!smallScreen && platform !== MessagePlatform.WEBCHAT && (
           <WaInboxCountdownTimer
             timeStamp={contact?.lastReceivedMessageTimeStamp}
           />

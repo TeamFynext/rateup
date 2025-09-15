@@ -8,6 +8,7 @@ import {
   automationSubscription,
   updateUsageStats,
   updationAutomationTriggerSubscription,
+  updationAutomationUsageStats,
 } from "./update.api";
 
 export const useUpdateUsageStats = () => {
@@ -42,6 +43,18 @@ export const useUpdateAutomationTriggerSubscription = () => {
     },
     onError: () => {
       showErrorToast("Automation Subscription Update Failed");
+    },
+  });
+};
+
+export const useUpdateAutomationUsageStats = () => {
+  return useMutation({
+    mutationFn: updationAutomationUsageStats,
+    onSuccess: () => {
+      showSuccessToast("Automation usage stats Updated");
+    },
+    onError: () => {
+      showErrorToast("Automation usage stats Update Failed");
     },
   });
 };

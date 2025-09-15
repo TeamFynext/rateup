@@ -21,9 +21,10 @@ import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems";
 
 interface LayoutProps {
   children: React.ReactNode;
+  isBlog?: boolean;
 }
 
-export default function Layout({ children }: Readonly<LayoutProps>) {
+export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const hasSession = useCheckSession();
   const navItems = [
     {
@@ -41,6 +42,25 @@ export default function Layout({ children }: Readonly<LayoutProps>) {
     {
       name: "Blog",
       link: "/blog",
+    },
+  ];
+
+  const navItemsBlog = [
+    {
+      name: "Home",
+      link: "/",
+    },
+    {
+      name: "Pricing",
+      link: "/pricing",
+    },
+    {
+      name: "Contact",
+      link: "/contact-us",
+    },
+    {
+      name: "About Us",
+      link: "/about-us",
     },
   ];
 
@@ -65,7 +85,12 @@ export default function Layout({ children }: Readonly<LayoutProps>) {
               priority
             />
           </Link>
-          <NavItems items={navItems} />
+
+          {isBlog ? (
+            <NavItems items={navItemsBlog} />
+          ) : (
+            <NavItems items={navItems} />
+          )}
 
           {hasSession ? (
             <div className="flex  items-center gap-4">
@@ -149,16 +174,27 @@ export default function Layout({ children }: Readonly<LayoutProps>) {
               </div>
 
               <DropDownMobileNavItems />
-              {navItems.map((item, idx) => (
-                <Link
-                  key={`mobile-link-${idx}`}
-                  href={item.link}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="py-3 text-lg text-neutral-700 hover:text-[#1c518e]"
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {isBlog
+                ? navItemsBlog.map((item, idx) => (
+                    <Link
+                      key={`mobile-link-${idx}`}
+                      href={item.link}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="py-3 text-lg text-neutral-700 hover:text-[#1c518e]"
+                    >
+                      {item.name}
+                    </Link>
+                  ))
+                : navItems.map((item, idx) => (
+                    <Link
+                      key={`mobile-link-${idx}`}
+                      href={item.link}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="py-3 text-lg text-neutral-700 hover:text-[#1c518e]"
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
 
               <div className="mt-6 flex flex-col gap-3">
                 <Link
