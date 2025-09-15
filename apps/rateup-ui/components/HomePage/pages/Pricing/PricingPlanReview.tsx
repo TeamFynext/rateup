@@ -1,3 +1,5 @@
+"use client";
+
 import { Carousel } from "@mantine/carousel";
 import { Flex, Rating, Stack, Text, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
@@ -30,7 +32,7 @@ const reviews = [
   },
 ];
 
-const PricingPlanReview = () => {
+export const PricingPlanReview = () => {
   const quote = <span className="font-bold">"</span>;
   return (
     <motion.div
@@ -83,5 +85,3 @@ const PricingPlanReview = () => {
     </motion.div>
   );
 };
-
-export default PricingPlanReview;

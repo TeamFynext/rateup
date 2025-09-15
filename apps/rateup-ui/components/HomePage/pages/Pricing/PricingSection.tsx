@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -9,13 +11,9 @@ import { motion } from "framer-motion";
 import { useTimeZone } from "next-intl";
 
 import { useCheckSession } from "@/hooks/checkSession";
-import {
-  useRateupPaymentsPlans,
-  useSendMailPlanSelectDetails,
-} from "@/backend/payment/payment.query";
+import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
-import RateupLoader from "@/components/Loaders/RateupLoader";
 import { currencyLabel } from "@/components/menu/util/currencyData";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import { BookDemoModal1 } from "@/components/RateupHomePage/helpers/BookDemoModal";
@@ -23,10 +21,9 @@ import { BookDemoModal1 } from "@/components/RateupHomePage/helpers/BookDemoModa
 import PlanCardNew from "./Card/PlanCardNew";
 import { useRouteAndCartStore } from "./store/RouteAndCartStore";
 
-const PricingSection = ({ onPlanSelect = null }) => {
+const PricingSection = ({ onPlanSelect = null, plans }) => {
   const [period, setPeriod] = useState("yearly");
   const router = useRouter();
-  const { data: plans, isLoading } = useRateupPaymentsPlans();
   const userTimeZone = useTimeZone();
   let currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
   const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
@@ -110,7 +107,7 @@ const PricingSection = ({ onPlanSelect = null }) => {
       value: "yearly",
     },
   ];
-  if (isLoading) return <RateupLoader />;
+
   return (
     <section className="relative flex flex-col justify-center gap-6 items-center bg-gray-100 py-12 px-6 md:px-12 text-gray-800">
       <div className="text-center">
