@@ -104,6 +104,7 @@
     "motion": "^12.22.0",
     "next": "15.5.2",
     "next-intl": "^4.3.4",
+    "next-share": "^0.27.0",
     "pigeon-maps": "^0.21.3",
     "qrcode": "^1.5.3",
     "react": "19.1.1",

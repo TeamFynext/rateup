@@ -6,6 +6,7 @@ import { Avatar, Image } from "@mantine/core";
 
 import { getSinglePost } from "@/lib/posts";
 import Layout from "@/components/blog/Layout";
+import SharePopover from "@/components/blog/ShareBlog";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -102,29 +103,34 @@ export default async function Page({ params }: Readonly<Props>) {
                 size="md"
                 className="mr-4"
               />
-              <div>
-                <Link href={`/blog/author/${post.primary_author?.slug}`}>
-                  <div className="font-medium text-slate-900">
-                    {post.primary_author?.name}
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <Link href={`/blog/author/${post.primary_author?.slug}`}>
+                    <div className="font-medium text-slate-900">
+                      {post.primary_author?.name}
+                    </div>
+                  </Link>
+                  <div className="text-sm text-slate-500">
+                    {new Date(post.published_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                    {post.updated_at !== post.published_at && (
+                      <span>
+                        {" "}
+                        · Updated:{" "}
+                        {new Date(post.updated_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </span>
+                    )}
                   </div>
-                </Link>
-                <div className="text-sm text-slate-500">
-                  {new Date(post.published_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                  {post.updated_at !== post.published_at && (
-                    <span>
-                      {" "}
-                      · Updated:{" "}
-                      {new Date(post.updated_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
-                  )}
+                </div>
+                <div>
+                  <SharePopover />
                 </div>
               </div>
             </div>
