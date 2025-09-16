@@ -391,7 +391,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     respondent: !anonymous && Contact?.phone,
     tag,
   });
-  await sendResponseToWebhook(res);
+  await sendResponseToWebhook(res, session.orgId);
   // TODO move out of this function
   updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));
   if (session.campaignParticipantId) {

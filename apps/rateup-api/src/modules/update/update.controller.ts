@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger";
 import {
+  updatePlanFeatures,
   updateRateupPlanFeature,
   updateSubscriptionAutomation,
   updateUsageStatsAutomation,
@@ -54,6 +55,19 @@ export async function updateUsageStatsAutomationHandler(
   try {
     await updateUsageStatsAutomation();
     reply.code(200).send("usage stats updated successfully");
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function updatePlanFeaturesHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    await updatePlanFeatures();
+    reply.code(200).send("plans updated successfully");
   } catch (e) {
     log.error(e);
     reply.code(500).send(e);

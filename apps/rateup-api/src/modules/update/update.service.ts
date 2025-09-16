@@ -164,3 +164,63 @@ export async function updateUsageStatsAutomation() {
     });
   }
 }
+
+export async function updatePlanFeatures() {
+  const subscriptions = await prisma.subscription.findMany();
+  const rateupplans = await prisma.rateupPlan.findMany();
+
+  function getNewFeatures(features) {
+    return {
+      ...features,
+      webSurvey: {
+        ...features.webSurvey,
+        webhook: {
+          active: false,
+        },
+      },
+      whatsapp: {
+        ...features.whatsapp,
+        template: {
+          ...features.whatsapp.template,
+          carouselTemplate: {
+            active: false,
+            count: { max: 1 },
+          },
+        },
+        automation: {
+          ...features.whatsapp.automation,
+          leadAdAutomation: {
+            active: false,
+            count: {
+              max: 1,
+            },
+          },
+        },
+      },
+    } as SubscriptionFeatures;
+  }
+  for (const sub of subscriptions) {
+    const features = { ...(sub.features as SubscriptionFeatures) };
+    const newFeatures = getNewFeatures(features);
+    await prisma.subscription.update({
+      where: {
+        orgId: sub.orgId,
+      },
+      data: {
+        features: newFeatures,
+      },
+    });
+  }
+  for (const plan of rateupplans) {
+    const features = { ...(plan.features as SubscriptionFeatures) };
+    const newFeatures = getNewFeatures(features);
+    await prisma.rateupPlan.update({
+      where: {
+        id: plan.id,
+      },
+      data: {
+        features: newFeatures,
+      },
+    });
+  }
+}
