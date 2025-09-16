@@ -141,6 +141,10 @@ const Flow = () => {
                         subscription,
                         SubscriptionFeaturePathName.Ticket,
                       ) && "tickets",
+                      hasFeature(
+                        subscription,
+                        SubscriptionFeaturePathName.Webhook,
+                      ) && "webhook",
                     ]}
                     flowName={flow.name}
                     flowDbId={flow.dbFlowId}

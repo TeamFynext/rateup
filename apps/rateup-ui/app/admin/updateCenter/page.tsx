@@ -6,6 +6,7 @@ import {
   useAutomationSubscription,
   useUpdateAutomationTriggerSubscription,
   useUpdateAutomationUsageStats,
+  useUpdateSubscriptionNewFeat,
   useUpdateUsageStats,
 } from "@/backend/updations/update.query";
 import { isProduction } from "@/utils/constants";
@@ -15,6 +16,7 @@ function UpdateAllThemes() {
   const { mutate } = useAutomationSubscription();
   const updateAutomTr = useUpdateAutomationTriggerSubscription();
   const updateAutStat = useUpdateAutomationUsageStats();
+  const updateFeat = useUpdateSubscriptionNewFeat();
 
   return (
     <Stack>
@@ -66,18 +68,36 @@ function UpdateAllThemes() {
               Update
             </Button>
           </Stack>
+
+          <Stack mt="xl">
+            <Title order={2}>Update Automation Usage stats</Title>
+            <Text>This will update automation count in usage stats</Text>
+            <Button
+              ml="md"
+              style={{ alignSelf: "flex-start" }}
+              onClick={() => {
+                updateAutStat.mutate();
+              }}
+              loading={updateAutStat.isPending}
+            >
+              Update
+            </Button>
+          </Stack>
         </>
       )}
       <Stack mt="xl">
-        <Title order={2}>Update Automation Usage stats</Title>
-        <Text>This will update automation count in usage stats</Text>
+        <Title order={2}>Update Subscription new features</Title>
+        <Text>
+          This will add webhooks, leadad automation, carousel template in
+          subscription feature
+        </Text>
         <Button
           ml="md"
           style={{ alignSelf: "flex-start" }}
           onClick={() => {
-            updateAutStat.mutate();
+            updateFeat.mutate();
           }}
-          loading={updateAutStat.isPending}
+          loading={updateFeat.isPending}
         >
           Update
         </Button>

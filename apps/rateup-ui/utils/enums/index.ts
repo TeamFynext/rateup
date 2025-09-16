@@ -208,6 +208,12 @@ export function getSubscriptionFeatureLabel(feature: sfpn) {
       return "Reward";
     case sfpn.WhatsAppAutomationTrigger:
       return "Automation Trigger";
+    case sfpn.CarouselTemplate:
+      return "Carousel Template";
+    case sfpn.Webhook:
+      return "Webhook";
+    case sfpn.LeadAdAutomation:
+      return "Lead Ad Automation";
     default:
       throw new Error("Invalid Subscription Feature" + feature);
   }

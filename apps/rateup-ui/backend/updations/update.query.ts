@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   automationSubscription,
+  updateSubscriptionNewFeat,
   updateUsageStats,
   updationAutomationTriggerSubscription,
   updationAutomationUsageStats,
@@ -55,6 +56,18 @@ export const useUpdateAutomationUsageStats = () => {
     },
     onError: () => {
       showErrorToast("Automation usage stats Update Failed");
+    },
+  });
+};
+
+export const useUpdateSubscriptionNewFeat = () => {
+  return useMutation({
+    mutationFn: updateSubscriptionNewFeat,
+    onSuccess: () => {
+      showSuccessToast("success");
+    },
+    onError: () => {
+      showErrorToast("Failed");
     },
   });
 };

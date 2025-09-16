@@ -25,9 +25,11 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { AssignInboxContent } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayHeader";
 import { showSuccessToast } from "@/utils/notifications";
+import { hasFeature } from "@/utils/subscription/subscription";
 
 import {
   useCreateWaAutomatedReplyMutation,
@@ -38,7 +40,10 @@ import {
   ContainedTagInput,
   ContainedTextField,
 } from "../../../../components/input/ContainedInput/ContainedInput";
-import { WaAutomatedReplyMatchType } from "../../../../types/enums";
+import {
+  SubscriptionFeaturePathName,
+  WaAutomatedReplyMatchType,
+} from "../../../../types/enums";
 import {
   WaAutomatedReply,
   WaAutomatedReplyMatchData,
@@ -130,6 +135,7 @@ export function AutomatedReplyForm({
 
   const createMutation = useCreateWaAutomatedReplyMutation();
   const updateMutation = useUpdateWaAutomatedReplyMutation();
+  const { data: subscription, isLoading } = useSubscription();
 
   function handleCancelClick() {
     rootForm.reset();
@@ -251,7 +257,17 @@ export function AutomatedReplyForm({
             >
               Keywords
             </Tabs.Tab>
-            <Tabs.Tab value="leadgen" leftSection={<IconBrandMeta size={12} />}>
+            <Tabs.Tab
+              value="leadgen"
+              disabled={
+                !subscription ||
+                !hasFeature(
+                  subscription,
+                  SubscriptionFeaturePathName.LeadAdAutomation,
+                )
+              }
+              leftSection={<IconBrandMeta size={12} />}
+            >
               Lead generation
             </Tabs.Tab>
             <Tabs.Tab value="allOthers" leftSection={<IconPhoto size={12} />}>

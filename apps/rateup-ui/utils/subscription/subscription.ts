@@ -26,6 +26,9 @@ export function getSampleSubscriptionFeatures(
       googleReview: { active: true },
       emailNotification: { active: true },
       htmlCodePage: { active: true },
+      webhook: {
+        active: false,
+      },
     },
     whatsapp: {
       active: true,
@@ -56,11 +59,18 @@ export function getSampleSubscriptionFeatures(
         count: {
           max: count,
         },
+        carouselTemplate: {
+          active: false,
+          count: {
+            max: 1,
+          },
+        },
       },
       automation: {
         active: true,
         count: { max: 1 },
         automationTrigger: { count: { max: 1000 }, active: true },
+        leadAdAutomation: { count: { max: 0 }, active: false },
       },
     },
     reputationManagement: { count: { max: count }, active: true },

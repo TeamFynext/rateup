@@ -686,6 +686,7 @@ declare global {
         googleReview: subscriptionActiveField;
         emailNotification: subscriptionActiveField;
         htmlCodePage: subscriptionActiveField;
+        webhook: subscriptionActiveField;
         count: {
           monthlyResponseLimit: number;
         };
@@ -694,13 +695,16 @@ declare global {
       survey: subscriptionWithActiveAndCount;
       campaign: subscriptionWithActiveAndCount;
       flow: subscriptionWithActiveAndCount;
-      template: subscriptionWithActiveAndCount;
+      template: subscriptionWithActiveAndCount & {
+        carouselTemplate: subscriptionWithActiveAndCount;
+      };
       count: {
         monthlyMessageLimit: number;
         max: number;
       };
       automation: subscriptionWithActiveAndCount & {
         automationTrigger: subscriptionWithActiveAndCount;
+        leadAdAutomation: subscriptionWithActiveAndCount;
       };
     };
     [sfpn.ReputationManagement]: subscriptionActiveField &
