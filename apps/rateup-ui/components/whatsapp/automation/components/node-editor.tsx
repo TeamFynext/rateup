@@ -2225,6 +2225,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
 }) => {
   const typedData = nodeData as LeadgenNodeData;
   const params = useParams();
+  const router = useRouter();
   let automatedId = params.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
@@ -2330,9 +2331,10 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   async function handleFbLogin() {
     localStorage.setItem("waSettingsId", waSetting.id);
     localStorage.setItem("automationId", automatedId);
+
     const url = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/fb`)}&config_id=${process.env.NEXT_PUBLIC_META_USER_CONFIG_ID}`;
     if (url) {
-      window.location.href = url;
+      router.push(url);
     }
   }
   const pageAccessTokenByUser = useMemo(() => {
