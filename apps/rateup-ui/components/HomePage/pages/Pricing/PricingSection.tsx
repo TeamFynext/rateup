@@ -138,7 +138,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
       </Stack>
 
       <motion.div
-        className="grid gap-8 sm:grid-cols-1 lg:grid-cols-3 md:grid-cols-2 items-start max-w-5xl mx-auto"
+        className="grid gap-8 sm:grid-cols-1 lg:grid-cols-3 md:grid-cols-2 max-w-5xl mx-auto"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
