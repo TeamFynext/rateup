@@ -85,6 +85,7 @@ export const FAQ = () => {
         w={"85%"}
         transitionDuration={700}
         classNames={{ chevron: "text-white group-hover:text-black" }}
+        defaultValue={faqs[0].question}
       >
         {faqAccordion}
       </Accordion>
