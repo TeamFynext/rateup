@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { ActionIcon, Input, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Group, Input, Stack, Text, Tooltip } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
@@ -13,10 +13,15 @@ import {
   ContainedPasswordInput,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import PremiumFeature from "@/components/Premium/PremiumFeature";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { isValidUrl } from "@/utils";
 
-const WebhookSettings = ({ responseWebhookEndpoint, editSurvey }) => {
+const WebhookSettings = ({
+  responseWebhookEndpoint,
+  editSurvey,
+  enabledModules,
+}) => {
   const [endpointUrl, setEndpointUrl] = useState("");
   const [error, setError] = useState("");
   const { data: webhookSecret } = useGetWebhookClientSecret(
@@ -47,48 +52,56 @@ const WebhookSettings = ({ responseWebhookEndpoint, editSurvey }) => {
 
   return (
     <PaperLayout className="section-div">
-      <Stack>
+      <Stack gap={1} p={0}>
         <h2 className={"settings-section-heading"}>
           {translations("Webhooks")}
         </h2>
-        {responseWebhookEndpoint && (
-          <ContainedPasswordInput
-            value={webhookSecret}
-            readOnly
-            rightSection={<ApiCopyButton value={webhookSecret} />}
-            label={translations("Client Secret")}
-          />
-        )}
-        <Input.Wrapper>
-          <Input.Label>
-            <Text size="xs">
-              {translations("Enter webhook url endpoint for response")}
-              <Tooltip
-                label={translations("Triggers when a response is submitted")}
-              >
-                <IconInfoCircle size={"1rem"} />
-              </Tooltip>
-            </Text>
-          </Input.Label>
-          <ContainedTextField
-            value={endpointUrl}
-            type="url"
-            placeholder={translations("https://examplecom/webhook")}
-            onChange={(e) => {
-              setError("");
-              setEndpointUrl(e.currentTarget.value);
-            }}
-            error={error}
-          />
-        </Input.Wrapper>
+        <PremiumFeature isSubscribed={enabledModules.includes("webhook")}>
+          <Stack p={0}>
+            {responseWebhookEndpoint && (
+              <ContainedPasswordInput
+                value={webhookSecret}
+                readOnly
+                rightSection={<ApiCopyButton value={webhookSecret} />}
+                label={translations("Client Secret")}
+              />
+            )}
+            <Input.Wrapper>
+              <Input.Label>
+                <Group gap={1}>
+                  <Text size="xs">
+                    {translations("Enter webhook url endpoint for response")}
+                  </Text>
+                  <Tooltip
+                    label={translations(
+                      "Triggers when a response is submitted",
+                    )}
+                  >
+                    <IconInfoCircle size={"1rem"} />
+                  </Tooltip>
+                </Group>
+              </Input.Label>
+              <ContainedTextField
+                value={endpointUrl}
+                type="url"
+                placeholder={translations("https://examplecom/webhook")}
+                onChange={(e) => {
+                  setError("");
+                  setEndpointUrl(e.currentTarget.value);
+                }}
+                error={error}
+              />
+            </Input.Wrapper>
 
-        <RateupButtonBlue
-          title={translations("Save Changes")}
-          onClick={handleSave}
-          w={"fit-content"}
-          sx={{ alignSelf: "center" }}
-          loading={editSurvey.isPending}
-        />
+            <RateupButtonBlue
+              title={translations("Save Changes")}
+              onClick={handleSave}
+              w={"fit-content"}
+              sx={{ alignSelf: "center" }}
+              loading={editSurvey.isPending}
+            />
+          </Stack>
+        </PremiumFeature>
       </Stack>
     </PaperLayout>
   );

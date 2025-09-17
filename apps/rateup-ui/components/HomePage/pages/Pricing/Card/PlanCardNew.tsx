@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Spoiler } from "@mantine/core";
+import { Spoiler, Stack } from "@mantine/core";
 import { IconFlame, IconFlameFilled } from "@tabler/icons-react";
 import { CheckCircle2 } from "lucide-react";
 
@@ -67,25 +67,27 @@ const PlanCardNew = ({ plan, currencySymbol, onButtonClick }) => {
           </ul>
         </Spoiler>
       </div>
-      {plan.name === "FREE PLAN" && (
-        <span className="text-sm font-medium text-[#1c518e] mt-5">
-          *No credit card needed
-        </span>
-      )}
-      <button
-        onClick={onButtonClick}
-        style={{
-          fontWeight: 500,
-          marginTop: plan.name === "FREE PLAN" ? "5px" : "14px",
-        }}
-        className="text-center bg-white text-[#1c518e] font-semibold py-2 rounded-md border border-[#1c518e] hover:bg-[#1c518e] hover:text-white transition"
-      >
-        {plan.name === "FREE PLAN"
-          ? "Get Started"
-          : plan?.trialDays
-            ? `Start  ${plan?.trialDays} Days Free trial`
-            : "Subscribe Now"}
-      </button>
+      <Stack gap={1}>
+        {plan.name === "FREE PLAN" && (
+          <span className="text-sm font-medium text-[#1c518e] mt-5">
+            *No credit card needed
+          </span>
+        )}
+        <button
+          onClick={onButtonClick}
+          style={{
+            fontWeight: 500,
+            marginTop: plan.name === "FREE PLAN" ? "5px" : "14px",
+          }}
+          className="text-center bg-white text-[#1c518e] font-semibold py-2 rounded-md border border-[#1c518e] hover:bg-[#1c518e] hover:text-white transition"
+        >
+          {plan.name === "FREE PLAN"
+            ? "Get Started"
+            : plan?.trialDays
+              ? `Start  ${plan?.trialDays} Days Free trial`
+              : "Subscribe Now"}
+        </button>
+      </Stack>
     </div>
   );
 };

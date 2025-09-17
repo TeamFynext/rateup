@@ -5,8 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 
 import {
   Alert,
+  Badge,
   Box,
   Card,
+  ComboboxData,
   Divider,
   Flex,
   Grid,
@@ -31,8 +33,14 @@ import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
-import { OrderType, TemplateType, WaTemplateStatus } from "@/types/enums";
+import {
+  OrderType,
+  SubscriptionFeaturePathName,
+  TemplateType,
+  WaTemplateStatus,
+} from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { uploadTemplateMedia } from "@/backend/whatsapp/whatsapp.api";
 import {
@@ -53,6 +61,7 @@ import {
 import { LengthTracker } from "@/components/input/LengthTracker";
 import { LinkCopyElement } from "@/components/input/LinkCopyElement";
 import RateupLoader from "@/components/Loaders/RateupLoader";
+import PremiumFeature from "@/components/Premium/PremiumFeature";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import {
   QuickReplyButton,
@@ -86,6 +95,7 @@ import {
 } from "@/utils/constants";
 import { uploadFile } from "@/utils/file-upload/upload";
 import { showErrorToast, showWarnToast } from "@/utils/notifications";
+import { hasFeature } from "@/utils/subscription/subscription";
 import { parseTemplate } from "@/utils/whatsapp/templates";
 
 import styles from "../templateId.module.css";
@@ -567,6 +577,23 @@ export default function WhatsappTemplateById() {
     form.removeListItem("buttons", index);
   };
   const dynamicVariables = parseStringWithVariables(form.values.body);
+  const { data: subscription, isLoading } = useSubscription();
+  const templateTypes = useMemo(
+    () =>
+      Object.values(TemplateType).map((type) => ({
+        value: type,
+        label: type,
+        disabled:
+          type === TemplateType.CAROUSEL
+            ? !subscription ||
+              !hasFeature(
+                subscription,
+                SubscriptionFeaturePathName.CarouselTemplate,
+              )
+            : false,
+      })),
+    [subscription],
+  );
   const requiredIcon = (
     <sup>
       <IconAsterisk color="red" size={5} />
@@ -707,7 +734,7 @@ export default function WhatsappTemplateById() {
                       }
                       placeholder={translations("TemplateType")}
                       {...form.getInputProps("templateType")}
-                      data={Object.values(TemplateType)}
+                      data={templateTypes}
                       allowDeselect={false}
                     />
                     {form.getValues().templateType !==
