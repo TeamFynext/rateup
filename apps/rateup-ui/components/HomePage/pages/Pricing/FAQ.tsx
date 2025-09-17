@@ -1,3 +1,5 @@
+"use client";
+
 import { Accordion, Badge, Stack, Title } from "@mantine/core";
 import { motion } from "motion/react";
 
@@ -26,7 +28,46 @@ const faqs = [
   },
 ];
 
-const FAQ = () => {
+export const pricingFaqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "Do you offer a free trial?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Absolutely! We provide a 14-day free trial for all the plans so you can explore all features before committing. We will be billed after the trial period unless cancelled. Additionally we have a starter plan absolutely for free.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Which plan do you recommend for my business?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Starter → testing & very small usage; Basic → small businesses just starting with WhatsApp engagement; Pro → growing teams needing automation and advanced insights; Enterprise → large businesses requiring high volumes and customization.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Can I switch plans later?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Yes, you can upgrade, downgrade, or move to a custom enterprise setup anytime. Changes apply instantly.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What payment methods do you accept?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Major credit/debit cards/UPI/eMandate are supported. Enterprise customers can request invoicing and bank transfers. UPI and eMandate are available for customers from India only.",
+      },
+    },
+  ],
+};
+
+export const FAQ = () => {
   const faqAccordion = faqs.map((q, index) => (
     <motion.div
       key={index}
@@ -63,31 +104,38 @@ const FAQ = () => {
   ));
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className="flex flex-col gap-2 text-white items-center py-12"
-    >
-      <Stack justify="center" align="center">
-        <Badge size="lg" tt={"initial"}>
-          FAQs
-        </Badge>
-        <Title order={3} c={"white"} mb={"xl"}>
-          Frequently Asked Questions
-        </Title>
-      </Stack>
-
-      <Accordion
-        w={"85%"}
-        transitionDuration={700}
-        classNames={{ chevron: "text-white group-hover:text-black" }}
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(pricingFaqJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="flex flex-col gap-2 text-white items-center py-12"
       >
-        {faqAccordion}
-      </Accordion>
-    </motion.div>
+        <Stack justify="center" align="center">
+          <Badge size="lg" tt={"initial"}>
+            FAQs
+          </Badge>
+          <Title order={3} c={"white"} mb={"xl"}>
+            Frequently Asked Questions
+          </Title>
+        </Stack>
+
+        <Accordion
+          w={"85%"}
+          transitionDuration={700}
+          classNames={{ chevron: "text-white group-hover:text-black" }}
+          defaultValue={faqs[0].question}
+        >
+          {faqAccordion}
+        </Accordion>
+      </motion.div>
+    </>
   );
 };
-
-export default FAQ;

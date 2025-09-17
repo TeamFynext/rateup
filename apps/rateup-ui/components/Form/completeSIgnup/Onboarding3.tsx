@@ -1,9 +1,14 @@
 "use client";
 
-import { Button, Card, Select, Text, Title } from "@mantine/core";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
-
-import "react-phone-number-input/style.css";
+import {
+  Button,
+  Card,
+  Checkbox,
+  Select,
+  Text,
+  Textarea,
+  Title,
+} from "@mantine/core";
 
 export default function OnboardingStep3({
   onBack,
@@ -18,7 +23,19 @@ export default function OnboardingStep3({
   setData: (data: any) => void;
   loading: boolean;
 }) {
-  const isValid = data.role !== "" && isValidPhoneNumber(data.phone);
+  const toggleAutomation = (value: string) => {
+    const updated = data.what_do_you_want_to_automate_first.includes(value)
+      ? data.what_do_you_want_to_automate_first.filter(
+          (r: string) => r !== value,
+        )
+      : [...data.what_do_you_want_to_automate_first, value];
+
+    setData({ ...data, what_do_you_want_to_automate_first: updated });
+  };
+
+  const isValid =
+    data.what_do_you_want_to_automate_first.length > 0 &&
+    data.how_did_you_hear_about_rateup.trim() !== "";
 
   return (
     <div className="max-w-xl mx-auto">
@@ -51,44 +68,73 @@ export default function OnboardingStep3({
           Complete your details so we can personalize your experience.
         </Text>
 
-        {/* Role */}
+        {/* Automation Needs */}
+        <div className="mt-6 mb-6">
+          <Text size="sm" fw={500} mb={8}>
+            What do you want to automate first{" "}
+            <span className="text-red-500">*</span>
+          </Text>
+          <div className="space-y-2">
+            {[
+              "Lead qualification and follow-up",
+              "Customer support responses",
+              "Order updates and tracking",
+              "Collecting customer feedback/reviews",
+              "Product recommendations",
+            ].map((item) => (
+              <Checkbox
+                key={item}
+                label={item}
+                checked={data.what_do_you_want_to_automate_first.includes(item)}
+                onChange={() => toggleAutomation(item)}
+                styles={{
+                  input: { borderColor: "#E5E5E5" },
+                  label: { color: "#000" },
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Source */}
         <Select
-          label={<>What is your role at your organization?</>}
+          label="How did you hear about RateUp?"
           placeholder="Choose one"
           required
           data={[
-            "Founder",
-            "Manager",
-            "Marketer",
-            "Support",
-            "Developer",
+            "Google Search",
+            "Social media",
+            "Referral",
+            "Advertisement",
             "Other",
           ]}
-          value={data.role}
-          onChange={(value) => setData({ ...data, role: value || "" })}
+          value={data.how_did_you_hear_about_rateup}
+          onChange={(value) =>
+            setData({ ...data, how_did_you_hear_about_rateup: value || "" })
+          }
           styles={{
             input: { borderColor: "#E5E5E5" },
           }}
         />
 
-        {/* Phone */}
-        <div className="mt-4">
-          <label className="text-sm font-medium mb-1 block">
-            What is your phone number? <span className="text-red-500">*</span>
-          </label>
-          <PhoneInput
-            defaultCountry="IN"
-            international
-            countryCallingCodeEditable={false}
-            value={data.phone}
-            onChange={(val) => setData({ ...data, phone: val || "" })}
-            placeholder="Enter phone number"
-            className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004F98]"
-          />
-          <Text size="xs" c="dimmed" mt={4} className="text-gray-500">
-            🔒 We won’t share your phone number with anyone.
-          </Text>
-        </div>
+        {/* Extra Features */}
+        <Textarea
+          mt="md"
+          label="Need help with onboarding, have a specific use case, or require custom features? Let us know below"
+          placeholder="Write here (optional)"
+          value={data.specific_feature_or_custom_feature}
+          onChange={(e) =>
+            setData({
+              ...data,
+              specific_feature_or_custom_feature: e.currentTarget.value,
+            })
+          }
+          autosize
+          minRows={3}
+          styles={{
+            input: { borderColor: "#E5E5E5" },
+          }}
+        />
 
         {/* Footer */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">

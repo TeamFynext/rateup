@@ -55,14 +55,11 @@ export default function WaInboxChatDisplayFooter({
   const submiRef = useRef(null);
   const translations = useTranslations();
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
-  const platform =
-    contact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
-      ? MessagePlatform.WHATSAPP
-      : MessagePlatform.INSTAGRAM;
+  const platform = contact?.source?.toUpperCase() || MessagePlatform.WHATSAPP;
   const sendnewWaMessage = useSendNewWaMessage(
     contact.id,
     whatsappSettingsPhoneId,
-    platform,
+    platform as MessagePlatform,
   );
   const { addMessage, removeMessage } = useMessageStore();
   const { media, resetMedia } = useMediaStore();
@@ -145,7 +142,7 @@ export default function WaInboxChatDisplayFooter({
   }, [audioUrl]);
   function handleSendMessage() {
     if (form.validate().hasErrors) return;
-    if (!whatsappSettingsPhoneId) {
+    if (!whatsappSettingsPhoneId && platform !== MessagePlatform.WEBCHAT) {
       showErrorToast("Select a account to send the message");
       return;
     }
@@ -192,9 +189,9 @@ export default function WaInboxChatDisplayFooter({
     }, 0);
   }
 
-  const isSessionExpired = isInboxSessionExpired(
-    contact?.lastReceivedMessageTimeStamp,
-  );
+  const isSessionExpired =
+    platform !== MessagePlatform.WEBCHAT &&
+    isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp);
   submiRef.current = () => {
     if (isSessionExpired) return;
     handleSendMessage();
@@ -217,6 +214,7 @@ export default function WaInboxChatDisplayFooter({
   }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
 
   const AccountSelectComponent = () => {
+    if (platform === MessagePlatform.WEBCHAT) return null;
     return (
       <Group>
         <AccountSelector
@@ -237,15 +235,16 @@ export default function WaInboxChatDisplayFooter({
               display: "none",
             },
           }}
-          platform={platform}
+          platform={platform as MessagePlatform}
           disabled={platform === MessagePlatform.INSTAGRAM}
         />
-        {platform !== MessagePlatform.INSTAGRAM && (
-          <WaInboxFooterMenu
-            sessionExpired={isSessionExpired}
-            contact={contact}
-          />
-        )}
+        {platform !== MessagePlatform.INSTAGRAM &&
+          platform !== MessagePlatform.WEBCHAT && (
+            <WaInboxFooterMenu
+              sessionExpired={isSessionExpired}
+              contact={contact}
+            />
+          )}
       </Group>
     );
   };
@@ -253,7 +252,7 @@ export default function WaInboxChatDisplayFooter({
     return (
       <Group gap={"xs"} flex={1} justify={"space-between"}>
         <Group>
-          <VoiceRecorder />
+          {platform !== MessagePlatform.WEBCHAT && <VoiceRecorder />}
           <Tooltip label={translations("Send")}>
             <Button
               rightSection={<IconSend size={16} />}

@@ -98,6 +98,7 @@ const SurveySettings = ({
           <WebhookSettings
             responseWebhookEndpoint={survey?.responseWebhookEndpoint}
             editSurvey={editSurvey}
+            enabledModules={enabledModules}
           />
         </Box>
         <Box className={`${styles["right-panel"]} ${styles["panel"]}`}>

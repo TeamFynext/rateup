@@ -64,13 +64,18 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
   return (
-    <html lang={locale} {...mantineHtmlProps}>
+    <html
+      lang={locale}
+      className={`${geist.className},${notoColorEmogi.className}`}
+      {...mantineHtmlProps}
+    >
       <head>
         <ColorSchemeScript />
         <link rel="shortcut icon" href="/favicon.png" />
         {isProduction && <FacebookPixel />}
+        <GoogleTagManager gtmId="GTM-NDC3D7DP" />
       </head>
-      <body className={`${geist.className},${notoColorEmogi.className}`}>
+      <body>
         <MantineProvider theme={theme}>
           <Suspense fallback={<RateupLoader h={"100dvh"} />}>
             <Notifications />
@@ -80,7 +85,6 @@ export default async function RootLayout({
                   {children}
                 </ModalsProvider>
               </Providers>
-              <GoogleTagManager gtmId="GTM-NDC3D7DP" />
             </SuperTokensProvider>
           </Suspense>
         </MantineProvider>

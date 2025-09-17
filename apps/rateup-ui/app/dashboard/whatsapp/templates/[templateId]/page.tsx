@@ -5,8 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 
 import {
   Alert,
+  Badge,
   Box,
   Card,
+  ComboboxData,
   Divider,
   Flex,
   Grid,
@@ -31,8 +33,15 @@ import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
-import { OrderType, TemplateType, WaTemplateStatus } from "@/types/enums";
+import {
+  OrderType,
+  SubscriptionFeaturePathName,
+  TemplateType,
+  WaTemplateStatus,
+} from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
+import { useSubscription } from "@/backend/subscription/subscription.query";
+import { useConnectedWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
 import { uploadTemplateMedia } from "@/backend/whatsapp/whatsapp.api";
 import {
   useCreateTemplateMutation,
@@ -52,6 +61,7 @@ import {
 import { LengthTracker } from "@/components/input/LengthTracker";
 import { LinkCopyElement } from "@/components/input/LinkCopyElement";
 import RateupLoader from "@/components/Loaders/RateupLoader";
+import PremiumFeature from "@/components/Premium/PremiumFeature";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import {
   QuickReplyButton,
@@ -85,6 +95,7 @@ import {
 } from "@/utils/constants";
 import { uploadFile } from "@/utils/file-upload/upload";
 import { showErrorToast, showWarnToast } from "@/utils/notifications";
+import { hasFeature } from "@/utils/subscription/subscription";
 import { parseTemplate } from "@/utils/whatsapp/templates";
 
 import styles from "../templateId.module.css";
@@ -128,7 +139,9 @@ export default function WhatsappTemplateById() {
           spm: {
             product_retailer_id: "",
           },
+          catalogId: "",
         },
+        whatsappSettingsPhoneId: "",
       },
     },
     validate: zod4Resolver(templateSchema),
@@ -180,6 +193,12 @@ export default function WhatsappTemplateById() {
   }, [form.values.buttons]);
 
   useEffect(() => {
+    const currentTemplateType = form.getValues().templateType;
+    const previousTemplateType = editingItem?.templateType;
+    if (currentTemplateType != TemplateType.CAROUSEL) {
+      form.setFieldValue("productCarousel", []);
+      form.setFieldValue("mediaCarousel", []);
+    }
     switch (form.getValues().templateType) {
       case TemplateType.ORDER_DETAILS:
         form.setFieldValue("category", "UTILITY");
@@ -203,9 +222,6 @@ export default function WhatsappTemplateById() {
         form.setFieldValue("footer", "");
         break;
       default:
-        const currentTemplateType = form.getValues().templateType;
-        const previousTemplateType = editingItem?.templateType;
-
         if (
           (currentTemplateType === TemplateType.LOYALTY &&
             previousTemplateType === TemplateType.GENERAL_NOTIFICATION) ||
@@ -234,6 +250,22 @@ export default function WhatsappTemplateById() {
       setIsSubmitting(false);
     },
   );
+
+  const { data: catalog } = useConnectedWaCatalog(
+    form.values.defaultValues.whatsappSettingsPhoneId,
+  );
+  const productRetailerIds = useMemo(
+    () => (catalog ? catalog.products?.map((p) => p.retailer_id) : []),
+    [catalog],
+  );
+  useEffect(() => {
+    const selectedCatalogId = form.values.defaultValues.catalog.catalogId;
+    if (
+      catalog &&
+      (!selectedCatalogId.length || selectedCatalogId !== catalog.catalogId)
+    )
+      form.setFieldValue("defaultValues.catalog.catalogId", catalog.catalogId);
+  }, [catalog]);
 
   const updateTemplateMutation = useUpdateTemplateMutation(
     templateId,
@@ -536,6 +568,7 @@ export default function WhatsappTemplateById() {
       form.setFieldValue("category", "MARKETING");
     }
     if (e === WHATSAPP_BUTTON_TYPE.MPM) {
+      form.setFieldValue("header", "");
       form.setFieldValue("format", WHATSAPP_TEMPLATE_BROADCAST_TYPE.TEXT);
       form.setFieldValue("category", "MARKETING");
     }
@@ -544,6 +577,23 @@ export default function WhatsappTemplateById() {
     form.removeListItem("buttons", index);
   };
   const dynamicVariables = parseStringWithVariables(form.values.body);
+  const { data: subscription, isLoading } = useSubscription();
+  const templateTypes = useMemo(
+    () =>
+      Object.values(TemplateType).map((type) => ({
+        value: type,
+        label: type,
+        disabled:
+          type === TemplateType.CAROUSEL
+            ? !subscription ||
+              !hasFeature(
+                subscription,
+                SubscriptionFeaturePathName.CarouselTemplate,
+              )
+            : false,
+      })),
+    [subscription],
+  );
   const requiredIcon = (
     <sup>
       <IconAsterisk color="red" size={5} />
@@ -684,7 +734,7 @@ export default function WhatsappTemplateById() {
                       }
                       placeholder={translations("TemplateType")}
                       {...form.getInputProps("templateType")}
-                      data={Object.values(TemplateType)}
+                      data={templateTypes}
                       allowDeselect={false}
                     />
                     {form.getValues().templateType !==
@@ -890,6 +940,8 @@ export default function WhatsappTemplateById() {
                                     deleteButton={deleteButton}
                                     index={index}
                                     data={data}
+                                    catalog={catalog}
+                                    productRetailerIds={productRetailerIds}
                                   />
                                 </Group>
                               ))}
@@ -947,7 +999,13 @@ export default function WhatsappTemplateById() {
                         </>
                       )}
                     {form.getValues().templateType ===
-                      TemplateType.CAROUSEL && <CardCarousel form={form} />}
+                      TemplateType.CAROUSEL && (
+                      <CardCarousel
+                        form={form}
+                        catalog={catalog}
+                        productRetailerIds={productRetailerIds}
+                      />
+                    )}
                   </Stack>
                 </Stack>
               </PaperLayout>
@@ -1073,7 +1131,10 @@ export default function WhatsappTemplateById() {
                               ))}
                             </Stack>
                           ))}
-                          <ProductCardCarouselPreview form={form} />
+                          <ProductCardCarouselPreview
+                            form={form}
+                            catalog={catalog}
+                          />
                         </Box>
                       </ScrollAreaAutosize>
                     </Stack>

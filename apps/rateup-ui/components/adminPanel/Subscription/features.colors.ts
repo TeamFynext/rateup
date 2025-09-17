@@ -19,4 +19,7 @@ export const subscriptionColorMap = {
   [sfpn.LoyaltyAction]: "violet",
   [sfpn.WhatsAppAutomationTrigger]: "green",
   [sfpn.WhatsAppAutomation]: "green",
+  [sfpn.CarouselTemplate]: "green",
+  [sfpn.LeadAdAutomation]: "blue",
+  [sfpn.Webhook]: "orange",
 };

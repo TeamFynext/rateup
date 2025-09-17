@@ -342,7 +342,11 @@ const fbLogin = (configId = null): Promise<FBLoginResponse> => {
   });
 };
 
-function MetaLoginButton({ disabled = false, configId = null }) {
+function MetaLoginButton({
+  disabled = false,
+  configId = null,
+  selectedAssets,
+}) {
   const [waData, setWData] = useState({
     phone_number_id: "",
     waba_id: "",
@@ -360,6 +364,7 @@ function MetaLoginButton({ disabled = false, configId = null }) {
         code,
         phone_number_id: waData.phone_number_id,
         waba_id: waData.waba_id,
+        assets: selectedAssets,
       });
     }
   }, [waData, code]);
@@ -503,6 +508,7 @@ function ConnectMetaAccountButton() {
         title="Add Account"
         onClick={open}
         leftIcon={<IconBrandMeta />}
+        radius={"sm"}
       />
       <Modal opened={opened} onClose={close} centered>
         <Stack>
@@ -530,7 +536,11 @@ function ConnectMetaAccountButton() {
               ))}
             </Stack>
           </Checkbox.Group>
-          <MetaLoginButton disabled={!!error} configId={configId} />
+          <MetaLoginButton
+            disabled={!!error}
+            configId={configId}
+            selectedAssets={selectedAssets}
+          />
         </Stack>
       </Modal>
     </>

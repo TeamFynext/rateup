@@ -44,6 +44,10 @@ import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBoardsQueries } from "@/backend/tickets/tickets.query";
 import { useWaAutomatedReplyById } from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import {
+  useConnectedWaCatalog,
+  useWaCatalog,
+} from "@/backend/whatsapp/catalog/catalog.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useMarkWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import {
@@ -85,6 +89,7 @@ import { hasFeature } from "@/utils/subscription/subscription";
 
 import { AssignInboxContent } from "../../inbox/chatdisplay/chatdisplayHeader";
 import {
+  CatalogNodeData,
   LeadgenNodeData,
   NodeData,
   NodeType,
@@ -308,6 +313,13 @@ export default function NodeEditor({
         return (
           <LeadgenNodeEditor
             nodeData={nodeData as NodeTypeMap["leadgenNode"]}
+            handleInputChange={handleInputChange}
+          />
+        );
+      case "catalogNode":
+        return (
+          <CatalogNodeEditor
+            nodeData={nodeData as NodeTypeMap["catalogNode"]}
             handleInputChange={handleInputChange}
           />
         );
@@ -2213,6 +2225,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
 }) => {
   const typedData = nodeData as LeadgenNodeData;
   const params = useParams();
+  const router = useRouter();
   let automatedId = params.waAutomatedReplyId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
   const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
@@ -2318,9 +2331,10 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   async function handleFbLogin() {
     localStorage.setItem("waSettingsId", waSetting.id);
     localStorage.setItem("automationId", automatedId);
+
     const url = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/fb`)}&config_id=${process.env.NEXT_PUBLIC_META_USER_CONFIG_ID}`;
     if (url) {
-      window.location.href = url;
+      router.push(url);
     }
   }
   const pageAccessTokenByUser = useMemo(() => {
@@ -2494,6 +2508,180 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
         onChange={(value) => handleInputChange("phone", value)}
         value={typedData?.phone}
       />
+    </Stack>
+  );
+};
+
+export enum CatalogMessages {
+  Catalog = "Catalog",
+  SingleProduct = "Single-Product",
+  MultiProduct = "Multi-Product",
+}
+
+const CatalogNodeEditor = ({
+  nodeData,
+  handleInputChange,
+}: NodeComponentProps<"catalogNode">) => {
+  const typedData = nodeData as CatalogNodeData;
+  const params = useParams();
+  let automatedId = params.waAutomatedReplyId as string;
+  const {
+    data: automation,
+    isPending,
+    refetch,
+  } = useWaAutomatedReplyById(automatedId);
+  const { data, isLoading } = useConnectedWaCatalog(
+    automation?.whatsappSettingsPhoneId,
+  );
+
+  useEffect(() => {
+    if (
+      data &&
+      (!typedData.catalogId || typedData.catalogId !== data.catalogId)
+    )
+      handleInputChange("catalogId", data.catalogId);
+  }, [data]);
+
+  const products = useMemo(
+    () =>
+      data
+        ? data.products.map((p) => ({
+            value: p.retailer_id,
+            label: p?.productProps?.title,
+          }))
+        : [],
+    [data],
+  );
+
+  if (isLoading || isPending) return <RateupLoader />;
+  return (
+    <Stack>
+      <ContainedSelection
+        label={"Catalog Message type"}
+        placeholder="Select"
+        value={typedData?.type || ""}
+        onChange={(value) => handleInputChange("type", value)}
+        data={Object.values(CatalogMessages)}
+        allowDeselect={false}
+      />
+      {typedData?.type === CatalogMessages.MultiProduct && (
+        <WaTextEditor
+          handleInputChange={(e) => handleInputChange("header", e)}
+          content={typedData.header || ""}
+          placeholder="Enter header text..."
+          label="Header Text ( Required )"
+          max={60}
+          required
+        />
+      )}
+      <WaTextEditor
+        content={typedData?.body || ""}
+        handleInputChange={(e) => handleInputChange("body", e)}
+        label={`Body Text ${typedData?.type === CatalogMessages.SingleProduct ? " ( optional ) " : ""}`}
+        placeholder="Enter your message text here..."
+        required
+      />
+      <WaTextEditor
+        handleInputChange={(e) => handleInputChange("footer", e)}
+        content={typedData.footer || ""}
+        placeholder="Enter footer text..."
+        label="Footer (optional)"
+        max={60}
+      />
+      {typedData.type === CatalogMessages.Catalog && (
+        <ContainedSelection
+          label={"Thumbnail Product (optional)"}
+          data={products}
+          value={typedData?.thumbnailProductId || ""}
+          onChange={(value) => handleInputChange("thumbnailProductId", value)}
+          placeholder="Select"
+        />
+      )}
+      {typedData.type === CatalogMessages.SingleProduct && (
+        <ContainedSelection
+          label={"Product Retailer ID"}
+          withAsterisk
+          data={products}
+          value={typedData?.productRetailerId || ""}
+          onChange={(value) => handleInputChange("productRetailerId", value)}
+          placeholder="Select"
+        />
+      )}
+      {(typedData.sections || []).map(
+        (section: CatalogNodeData["sections"][0], sectionIndex: number) => (
+          <Stack
+            key={sectionIndex}
+            className={styles.sectionContainer}
+            p="xs"
+            my="xs"
+            style={{ border: "1px solid #eee", borderRadius: "8px" }}
+          >
+            <ContainedTextField
+              label={`Section ${sectionIndex + 1} Title`}
+              placeholder="Enter section title"
+              value={section.title || ""}
+              onChange={(e) => {
+                const newSections = [...(typedData.sections || [])];
+                newSections[sectionIndex] = {
+                  ...newSections[sectionIndex],
+                  title: e.target.value,
+                };
+                handleInputChange("sections", newSections);
+              }}
+              maxLength={24}
+              description="Max 24 characters"
+              rightSection={
+                <ActionIcon
+                  color="red"
+                  variant="subtle"
+                  onClick={() => {
+                    const newSections = [...(typedData.sections || [])];
+                    newSections.splice(sectionIndex, 1);
+                    handleInputChange("sections", newSections);
+                  }}
+                >
+                  <IconX size={16} />
+                </ActionIcon>
+              }
+            />
+            <Text size="xs" c="dimmed">
+              Catalog Multi product message support up to 10 sections, with a
+              minimum of 1 product per section and a maximum of 30 products
+              across all sections.
+            </Text>
+            <ContainedMultiSelect
+              label={"Products"}
+              value={section.productItems || []}
+              data={products}
+              onChange={(values) => {
+                const newSections = [...(typedData.sections || [])];
+                newSections[sectionIndex] = {
+                  ...newSections[sectionIndex],
+                  productItems: values,
+                };
+                handleInputChange("sections", newSections);
+              }}
+              placeholder="Select multiple items"
+            />
+          </Stack>
+        ),
+      )}
+      {typedData.type === CatalogMessages.MultiProduct && (
+        <Button
+          variant="outline"
+          disabled={typedData.sections?.length >= 10}
+          onClick={() => {
+            const newSections = [
+              ...(typedData.sections || []),
+              { title: "", rows: [] },
+            ];
+            handleInputChange("sections", newSections);
+          }}
+          mt="md"
+        >
+          + Add Section
+        </Button>
+      )}
     </Stack>
   );
 };

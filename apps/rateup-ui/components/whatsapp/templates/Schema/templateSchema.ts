@@ -243,8 +243,10 @@ export const templateSchema = z
                 product_retailer_id: z.string(),
               })
               .optional(),
+            catalogId: z.string(),
           })
           .optional(),
+        whatsappSettingsPhoneId: z.string().optional(),
         mediaCarousel: z
           .array(
             z.object({
@@ -339,8 +341,9 @@ export const templateSchema = z
           break;
         case WHATSAPP_BUTTON_TYPE.MPM:
           let errormsg;
-
-          if (values.defaultValues.catalog.mpm.sections.length > 10) {
+          if (!values.defaultValues.whatsappSettingsPhoneId?.length) {
+            errormsg = "Catalog linked Whatsapp account is required";
+          } else if (values.defaultValues.catalog.mpm.sections.length > 10) {
             errormsg = "Sections cannot be more than 10";
           } else if (
             values.defaultValues.catalog.mpm.sections.some(
@@ -372,7 +375,9 @@ export const templateSchema = z
           }
           break;
         case WHATSAPP_BUTTON_TYPE.SPM:
-          if (!values.defaultValues.catalog.spm.product_retailer_id) {
+          if (!values.defaultValues.whatsappSettingsPhoneId?.length) {
+            errormsg = "Catalog linked Whatsapp account is required";
+          } else if (!values.defaultValues.catalog.spm.product_retailer_id) {
             issues.push({
               input: "",
               path: ["buttons", index],

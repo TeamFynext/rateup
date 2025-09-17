@@ -6,7 +6,7 @@ import { Group, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconPlus, IconRefresh, IconX } from "@tabler/icons-react";
 
-import { useWaCatalogProducts } from "@/backend/whatsapp/catalog/products/products.query";
+import { useSyncCatalogProducts } from "@/backend/whatsapp/catalog/products/products.query";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import {
   showErrorToast,
@@ -19,9 +19,7 @@ import ProductItems from "./ProductItems";
 
 const CatalogProducts = ({ catalogData }) => {
   const [opened, { open, close }] = useDisclosure(false);
-  const { syncProducts: syncProductsMut } = useWaCatalogProducts(
-    catalogData?.catalogId,
-  );
+  const syncProductsMut = useSyncCatalogProducts(catalogData?.catalogId);
 
   function syncProducts(data = null) {
     showLoadingToast(

@@ -27,6 +27,7 @@ const nextConfig: NextConfig = bundleAnalyzer({
       },
     ],
   },
+  htmlLimitedBots: /.*/,
   compiler:
     process.env.NODE_ENV === "production"
       ? {

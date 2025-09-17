@@ -84,6 +84,10 @@ function TabPanelsComp({
                     subscription,
                     SubscriptionFeaturePathName.EmailNotification,
                   ) && "enableNotificationEmail",
+                  hasFeature(
+                    subscription,
+                    SubscriptionFeaturePathName.Webhook,
+                  ) && "webhook",
                 ]
           }
         />

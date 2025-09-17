@@ -1,5 +1,5 @@
 import { WHATSAPP_URL } from "..";
-import { WaConfigType } from "../../../types/enums";
+import { MetaLoginAssets, WaConfigType } from "../../../types/enums";
 import { axiosClient } from "../../apiClient";
 import { GetLabelsRes } from "../../label/label.types";
 
@@ -21,6 +21,7 @@ export type WaSettings = {
   igUserName: string;
   phoneDisplayName: string;
   igDisplayName: string;
+  assets: MetaLoginAssets[];
 }[];
 export const getWaSettings = async () => {
   const res = await axiosClient.get(SettingsUrl);
@@ -50,10 +51,11 @@ export const registerBusinessClient = async ({
   code,
   phone_number_id,
   waba_id,
+  assets,
 }) => {
   const res = axiosClient.post(
     `${authUrl}/register`,
-    { code, phone_number_id, waba_id },
+    { code, phone_number_id, waba_id, assets },
     {
       timeout: 1000 * 25,
     },

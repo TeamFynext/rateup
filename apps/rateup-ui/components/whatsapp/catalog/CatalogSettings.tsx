@@ -1,20 +1,94 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { Group, Loader, Stack } from "@mantine/core";
+import { ActionIcon, Group, Loader, Stack } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconCheck, IconLinkPlus, IconLogin2 } from "@tabler/icons-react";
 
-import { useWaCatalog } from "@/backend/whatsapp/catalog/catalog.query";
+import { MetaLoginAssets, WaConfigType } from "@/types/enums";
 import {
+  useDisconnectCatalogFromWa,
+  useUpateCatalog,
+  useWaCatalog,
+} from "@/backend/whatsapp/catalog/catalog.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
+import {
+  ContainedSelection,
   ContainedSwitchInput,
   ContainedTextField,
 } from "@/components/input/ContainedInput/ContainedInput";
+import RateupLoader from "@/components/Loaders/RateupLoader";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import { showErrorToast } from "@/utils/notifications";
 
 const CatalogSettings = ({ catalogData }) => {
-  const { update } = useWaCatalog(catalogData?.catalogId);
-  function handleSwitch(checked) {
-    update.mutate({ isWhatsappConnected: checked });
+  const update = useUpateCatalog(catalogData?.catalogId);
+  const disconnect = useDisconnectCatalogFromWa(catalogData?.catalogId);
+  const [opened, { open, close }] = useDisclosure(false);
+  const [openedConnect, { open: openConnect, close: closeConnect }] =
+    useDisclosure(false);
+  const [wabaId, setWabaId] = useState("");
+  const { data: waSettings, isLoading } = useWaSettings();
+  const wabaIds = waSettings
+    ? Array.from(
+        new Set(
+          waSettings
+            .filter((s) =>
+              s.type === WaConfigType.Automated
+                ? s.assets.includes(MetaLoginAssets.CATALOGS)
+                : true,
+            )
+            .map((s) => s.wabaId),
+        ),
+      )
+    : [];
+  useEffect(() => {
+    if (waSettings && catalogData) {
+      const setting = waSettings.find((s) =>
+        catalogData.connectedWaPhoneIds.some(
+          (c) => c.whatsappSettingsPhoneId === s.phoneId,
+        ),
+      );
+      if (setting) {
+        setWabaId(setting.wabaId);
+      } else {
+        setWabaId("");
+      }
+    }
+  }, [catalogData, waSettings]);
+  function handleDisconnect() {
+    if (!wabaId) {
+      showErrorToast("Try again!");
+      return;
+    }
+    const settings = waSettings.find((s) =>
+      s.wabaId === wabaId && s.type === WaConfigType.Automated
+        ? s.assets.includes(MetaLoginAssets.CATALOGS)
+        : true,
+    );
+    disconnect.mutate(
+      { catalogId: catalogData?.catalogId, whatsappSettingsId: settings.id },
+      {
+        onSuccess: () => {
+          setWabaId("");
+          close();
+        },
+      },
+    );
   }
+  function handleConnect() {
+    update.mutate(
+      { wabaId },
+      {
+        onSuccess: () => {
+          closeConnect();
+        },
+      },
+    );
+  }
+  if (isLoading) return <RateupLoader />;
   return (
     <Stack>
       <ContainedTextField
@@ -32,14 +106,60 @@ const CatalogSettings = ({ catalogData }) => {
         disabled
         label={"Catalog vertical"}
       />
-      <Group>
-        <ContainedSwitchInput
-          checked={catalogData.isWhatsappConnected}
-          label={"Connect to WhatsApp"}
-          onChange={(e) => handleSwitch(e.currentTarget.checked)}
+      <Group justify="space-between">
+        <Group>
+          <ContainedSelection
+            allowDeselect={false}
+            label={"Connected Whatsapp Business Account ID"}
+            placeholder="select"
+            data={wabaIds}
+            value={wabaId}
+            onChange={(value) => {
+              setWabaId(value);
+              openConnect();
+            }}
+          />
+          {/* <ActionIcon variant="filled" radius={"xl"}>
+          <IconCheck size={16} stroke={4}/>
+        </ActionIcon> */}
+          {/* <RateupButtonBlue onClick={handleConnect} title="Connect" loading={update.isPending} /> */}
+        </Group>
+        <RateupButtonBlue
+          leftIcon={<IconLogin2 />}
+          color="red"
+          w={"fit-content"}
+          onClick={open}
+          title="Disconnect Whatsapp Business Account"
+          loading={disconnect.isPending}
         />
-        {update.isPending && <Loader size={"sm"} />}
       </Group>
+
+      <ConfirmationModal
+        forDeleteFunctionality
+        deleteQuotion={
+          "The catalog in automation on the connected accont won't work."
+        }
+        opened={opened}
+        onClose={close}
+        onConfirm={handleDisconnect}
+        confirmLabel={"Disconnect"}
+        headerLabel={
+          "Are you sure you want to disconnect catalog from whatsapp"
+        }
+        headerTitle={"Disconnect Whatsapp Business Account"}
+        loading={disconnect.isPending}
+        closeAfterOnConfirm={false}
+      />
+      <ConfirmationModal
+        opened={openedConnect}
+        onClose={closeConnect}
+        onConfirm={handleConnect}
+        confirmLabel={"Connect"}
+        headerLabel={`Are you sure you want to connect this catalog to Whatsapp Business Account ( WABA ID: ${wabaId})`}
+        headerTitle={"Connect Whatsapp Business Account"}
+        loading={update.isPending}
+        closeAfterOnConfirm={false}
+      />
     </Stack>
   );
 };

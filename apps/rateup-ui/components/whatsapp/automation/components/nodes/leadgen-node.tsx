@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 import { IconAd, IconBrandMeta, IconGitBranch } from "@tabler/icons-react";
 import { NodeProps } from "@xyflow/react";
@@ -14,4 +14,4 @@ const LeadgenNode = (props: NodeProps & { data: LeadgenNodeData }) => {
   );
 };
 
-export default LeadgenNode;
+export default memo(LeadgenNode);

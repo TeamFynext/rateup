@@ -147,3 +147,6 @@ export function isValidUrl(url: string, checkHttps: boolean = true) {
     return false;
   }
 }
+
+export const safeStrOrNull = (str: string): string | null =>
+  !str || !str.trim().length ? null : str;

@@ -16,6 +16,7 @@ import {
 import {
   IconBrandWhatsappFilled,
   IconRosetteDiscountCheckFilled,
+  IconWebhook,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
@@ -26,6 +27,7 @@ import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
+import { safeStrOrNull } from "@/utils";
 import { formatToRelativeTime } from "@/utils/dateTime";
 import {
   parseWaMessage,
@@ -43,7 +45,7 @@ interface WaInboxChatSelectCardProps {
 export default function WaInboxChatSelectCard({
   contact,
   waSettings,
-}: WaInboxChatSelectCardProps) {
+}: Readonly<WaInboxChatSelectCardProps>) {
   const params = useSearchParams();
   const lastMessage = contact?.lastMessage;
 
@@ -52,13 +54,25 @@ export default function WaInboxChatSelectCard({
     useContactStore();
   let tab = params.get("tab") ?? "New";
 
-  const platform =
-    contact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
-      ? MessagePlatform.WHATSAPP
-      : MessagePlatform.INSTAGRAM;
+  const platform = contact?.source?.toUpperCase() || MessagePlatform.WHATSAPP;
   const isInsta = platform === MessagePlatform.INSTAGRAM;
+  let leftSectionIcon: React.ReactNode;
+
+  switch (platform) {
+    case MessagePlatform.INSTAGRAM:
+      leftSectionIcon = <InstagramIcon size={13} />;
+      break;
+    case MessagePlatform.WEBCHAT:
+      leftSectionIcon = <IconWebhook size={13} color="#25D366" />;
+      break;
+    case MessagePlatform.WHATSAPP:
+    default:
+      leftSectionIcon = <IconBrandWhatsappFilled size={13} color="#25D366" />;
+      break;
+  }
 
   function getMessageSourceName(sourceIdentifier) {
+    if (!waSettings) return sourceIdentifier;
     const settings = waSettings?.find(
       (setting) =>
         sourceIdentifier === setting.ibaId ||
@@ -69,7 +83,7 @@ export default function WaInboxChatSelectCard({
       return (settings?.igDisplayName ?? settings?.igUserName)
         ? `@${settings?.igUserName}`
         : sourceIdentifier;
-    return settings?.phoneDisplayName ?? settings?.phone ?? sourceIdentifier;
+    return settings?.phoneDisplayName || settings?.phone || sourceIdentifier;
   }
   return (
     <Card
@@ -145,13 +159,7 @@ export default function WaInboxChatSelectCard({
                 p={1}
                 variant="light"
                 color={isInsta ? "#cc2960" : "#25D366"}
-                leftSection={
-                  isInsta ? (
-                    <InstagramIcon size={13} />
-                  ) : (
-                    <IconBrandWhatsappFilled size={13} color="#25D366" />
-                  )
-                }
+                leftSection={leftSectionIcon}
               >
                 {getMessageSourceName(lastMessage?.sourceIdentifier)}
               </Badge>
