@@ -255,7 +255,7 @@ export async function createResponseHandler(
         }),
         sendEmailOnResponseCreation(data.surveyTeamMapId, response),
         updateResponse(response.id, { ip, location }),
-        sendResponseToWebhook(response),
+        sendResponseToWebhook(response, response.surveyTeamMap.team.orgId),
         createTestimonial(data, response.id),
       ]);
     }

@@ -1723,7 +1723,10 @@ export async function exportContactResponseToContacts(surveyId, orgId) {
   );
 }
 
-export async function sendResponseToWebhook(responseObj) {
+export async function sendResponseToWebhook(responseObj, orgId) {
+  if (!hasFeature(orgId, SubscriptionFeaturePathName.Webhook)) {
+    return;
+  }
   const endpoint = responseObj.surveyTeamMap.survey.responseWebhookEndpoint;
   if (!endpoint) return;
   const questionMap = responseObj.surveyTeamMap.survey.questions.reduce(
@@ -1752,7 +1755,6 @@ export async function sendResponseToWebhook(responseObj) {
     teamId: responseObj.surveyTeamMap.team.id,
     surveyId: responseObj.surveyTeamMap.surveyId,
   };
-  const orgId = responseObj.surveyTeamMap.team.orgId;
   await sendWebhook(endpoint, payload, orgId);
 }
 

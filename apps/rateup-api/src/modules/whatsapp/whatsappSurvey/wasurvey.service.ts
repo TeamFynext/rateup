@@ -9,6 +9,7 @@ import {
   QuestionType as Q,
   QuestionType,
   QuestionType2,
+  SubscriptionFeaturePathName,
   WaEvent,
   WaQuestions,
 } from "../../../types/enums";
@@ -70,6 +71,7 @@ import { processNextNode } from "./wasurvey.controller";
 import { waStatusQueue } from "../../../utils/redisConnection";
 import { assertNodeType, LeadgenNodeData, NodeData } from "./node-types";
 import { LoyaltyActionType } from "../../loyalty/actions/actions.schema";
+import { hasFeature } from "../../subscription/subscription.service";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -748,7 +750,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     respondent: !anonymous && Contact?.phone,
     tag,
   });
-  await sendResponseToWebhook(res);
+  await sendResponseToWebhook(res, session.orgId);
   // TODO move out of this function
   updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));
   if (session.campaignParticipantId) {
@@ -1108,6 +1110,18 @@ export async function handleLeadGen(body: WaMessageBody) {
         "No lead automation found for pageid:%s and ad id: %s",
         page_id,
         ad_id,
+      );
+      return;
+    }
+    if (
+      !hasFeature(
+        automation.orgId,
+        SubscriptionFeaturePathName.LeadAdAutomation,
+      )
+    ) {
+      log.trace(
+        "Aborting..Not subscribed to lead automation, orgId => %s",
+        automation.orgId,
       );
       return;
     }
