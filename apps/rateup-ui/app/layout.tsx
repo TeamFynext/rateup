@@ -73,6 +73,7 @@ export default async function RootLayout({
         <ColorSchemeScript />
         <link rel="shortcut icon" href="/favicon.png" />
         {isProduction && <FacebookPixel />}
+        <GoogleTagManager gtmId="GTM-NDC3D7DP" />
       </head>
       <body>
         <MantineProvider theme={theme}>
@@ -84,7 +85,6 @@ export default async function RootLayout({
                   {children}
                 </ModalsProvider>
               </Providers>
-              <GoogleTagManager gtmId="GTM-NDC3D7DP" />
             </SuperTokensProvider>
           </Suspense>
         </MantineProvider>
