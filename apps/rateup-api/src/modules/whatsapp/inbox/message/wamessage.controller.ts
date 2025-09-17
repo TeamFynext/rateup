@@ -120,10 +120,22 @@ export async function handleWaMessages(
       ...additionalData,
     };
     // create contact if it does not exist
-    const contact =
-      sourcePlatform === PlatformType.INSTAGRAM
-        ? await getOrCreateContactByIgsId(from, orgId, contactData)
-        : await getOrCreateContactByPhone(from, orgId, contactData);
+    let contact;
+    switch (sourcePlatform) {
+      case PlatformType.INSTAGRAM:
+        contact = await getOrCreateContactByIgsId(from, orgId, contactData);
+        break;
+      case PlatformType.WEBCHAT:
+        contact = await getOrCreateContactByPhone(
+          from,
+          orgId,
+          undefined,
+          PlatformType.WEBCHAT,
+        );
+        break;
+      default:
+        contact = await getOrCreateContactByPhone(from, orgId, contactData);
+    }
 
     let parameterData = {};
     switch (type) {
@@ -165,13 +177,17 @@ export async function handleWaMessages(
     );
 
     // Send the message to the connected clients
-    await sendViaWstoOrgHandler(orgId, {
-      type: "inbox",
-      inbox: {
-        contact: contact,
-        message: waMessage,
+    await sendViaWstoOrgHandler(
+      orgId,
+      {
+        type: "inbox",
+        inbox: {
+          contact: contact,
+          message: waMessage,
+        },
       },
-    });
+      sourcePlatform === PlatformType.WEBCHAT ? "fab" : "main",
+    );
     return waMessage;
   } catch (error) {
     log.error("Error in handleWaMessages: %o", error);
@@ -192,8 +208,17 @@ export async function sendNewWaMessageHandler(
       request.body;
     const { orgId, userId } = request.user;
     const contact = await getContactById(contactId);
-    const to =
-      platform === PlatformType.INSTAGRAM ? contact.igsId : contact.phone;
+    let to;
+    switch (platform) {
+      case PlatformType.INSTAGRAM:
+        to = contact?.igsId;
+        break;
+      case PlatformType.WEBCHAT:
+        to = contact?.other;
+        break;
+      default:
+        to = contact?.phone;
+    }
     if (!contact) {
       log.error("Contact not found with id %s", contactId);
       reply.status(404).send("Contact not found");

@@ -264,6 +264,9 @@ export enum SubscriptionFeaturePathName {
   LoyaltyAction = "loyalty.action",
   LoyaltyReward = "loyalty.reward",
   WhatsAppAutomationTrigger = "whatsapp.automation.automationTrigger",
+  LeadAdAutomation = "whatsapp.automation.leadAd",
+  Webhook = "webSurvey.webhook",
+  CarouselTemplate = "whatsapp.template.carouselTemplate",
 }
 export enum WaFlowLayoutType {
   scl = "SingleColumnLayout",
@@ -434,4 +437,16 @@ export enum InstagramEvent {
   MESSAGE = "MESSAGE",
   MESSAGE_REACTION = "MESSAGE_REACTION",
   MESSAGE_SEEN = "MESSAGE_SEEN",
+}
+
+export enum SupportUserEvent {
+  MESSAGE = "MESSAGE",
+}
+
+export enum MetaLoginAssets {
+  WHATSAPP = "WHATSAPP ACCOUNTS",
+  PAGES = "FACEBOOK PAGES",
+  CATALOGS = "CATALOGS",
+  INSTAGRAM = "INSTAGRAM ACCOUNTS",
+  ADACCOUNTS = "AD ACCOUNTS",
 }

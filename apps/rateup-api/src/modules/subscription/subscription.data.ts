@@ -13,6 +13,9 @@ function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {
       googleReview: { active: true },
       emailNotification: { active: true },
       htmlCodePage: { active: true },
+      webhook: {
+        active: false,
+      },
     },
     whatsapp: {
       active: true,
@@ -43,11 +46,18 @@ function getSampleSubscriptionFeatures(count: number): SubscriptionFeatures {
         count: {
           max: 0,
         },
+        carouselTemplate: {
+          active: false,
+          count: {
+            max: 1,
+          },
+        },
       },
       automation: {
         active: true,
         count: { max: count },
         automationTrigger: { count: { max: count }, active: true },
+        leadAdAutomation: { count: { max: 0 }, active: false },
       },
     },
     reputationManagement: { count: { max: count }, active: true },
@@ -84,6 +94,9 @@ function getFreeSubscriptionFeatures(): SubscriptionFeatures {
       googleReview: { active: false },
       emailNotification: { active: false },
       htmlCodePage: { active: false },
+      webhook: {
+        active: false,
+      },
     },
     whatsapp: {
       active: true,
@@ -114,11 +127,18 @@ function getFreeSubscriptionFeatures(): SubscriptionFeatures {
         count: {
           max: 1,
         },
+        carouselTemplate: {
+          active: false,
+          count: {
+            max: 1,
+          },
+        },
       },
       automation: {
         active: true,
         count: { max: 1 },
         automationTrigger: { count: { max: 1000 }, active: true },
+        leadAdAutomation: { count: { max: 0 }, active: false },
       },
     },
     reputationManagement: { count: { max: 0 }, active: false },

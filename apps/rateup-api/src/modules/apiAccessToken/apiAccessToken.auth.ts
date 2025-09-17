@@ -11,11 +11,14 @@ import { Role } from "../../../generated/prisma/client";
 export const verifyApiAccessTokenHook = async (
   request: FastifyRequest<{
     Params: ByOrgIdParams;
+    Querystring: ByOrgIdParams;
   }>,
   reply: FastifyReply,
 ) => {
   try {
-    const orgId = request.params.orgId;
+    const orgId = request.params.orgId
+      ? request.params.orgId
+      : request.query?.orgId;
     if (!orgId) {
       log.warn(
         "No orgId found in request\n%s\n%o",

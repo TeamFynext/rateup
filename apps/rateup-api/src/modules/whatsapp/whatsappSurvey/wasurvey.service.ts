@@ -9,6 +9,7 @@ import {
   QuestionType as Q,
   QuestionType,
   QuestionType2,
+  SubscriptionFeaturePathName,
   WaEvent,
   WaQuestions,
 } from "../../../types/enums";
@@ -70,6 +71,7 @@ import { processNextNode } from "./wasurvey.controller";
 import { waStatusQueue } from "../../../utils/redisConnection";
 import { assertNodeType, LeadgenNodeData, NodeData } from "./node-types";
 import { LoyaltyActionType } from "../../loyalty/actions/actions.schema";
+import { hasFeature } from "../../subscription/subscription.service";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -103,25 +105,38 @@ export async function sendMessage(
     configId = "me";
     accessToken = waSettings.pageAccessToken;
     sourceIdentifier = waSettings.ibaId;
-  } else {
+  } else if (platform !== PlatformType.WEBCHAT) {
     waSettings = await getWaSettings(orgId, whatsappSettingsPhoneId);
     to = (messageData as WaSendMessageBody).to;
     configId = waSettings.phoneId;
     accessToken = waSettings.accessToken;
     sourceIdentifier = waSettings.phone;
   }
+
   log.trace(`sending message to %s \n%o`, to, messageData);
   try {
-    const res = await callWhatsappApi(
-      `/${configId}/messages`,
-      "POST",
-      platform === PlatformType.INSTAGRAM ? null : accessToken,
-      messageData,
-      platform === PlatformType.INSTAGRAM
-        ? { params: { access_token: accessToken } }
-        : {},
-    );
-    log.trace(`sent successfully %o %o `, res.data, res.statusText);
+    let res;
+    if (platform !== PlatformType.WEBCHAT) {
+      res = await callWhatsappApi(
+        `/${configId}/messages`,
+        "POST",
+        platform === PlatformType.INSTAGRAM ? null : accessToken,
+        messageData,
+        platform === PlatformType.INSTAGRAM
+          ? { params: { access_token: accessToken } }
+          : {},
+      );
+      log.trace(`sent successfully %o %o `, res.data, res.statusText);
+    }
+    let messageId;
+    if (platform === PlatformType.INSTAGRAM) {
+      messageId = res?.data?.message_id;
+    } else if (platform === PlatformType.WEBCHAT) {
+      const phone = (messageData as WaSendMessageBody).to.replace(/\D/g, "");
+      messageId = `webid.chat${phone}FQIAERgS${Buffer.from(phone).toString("base64").slice(0, 22)}AA==`;
+    } else {
+      messageId = res?.data?.messages?.[0]?.id;
+    }
     await handleWaMessages(
       "send",
       messageData,
@@ -130,12 +145,10 @@ export async function sendMessage(
       platform,
       sourceIdentifier,
       userName,
-      platform === PlatformType.INSTAGRAM
-        ? res?.data?.message_id
-        : res?.data?.messages?.[0]?.id,
+      messageId,
       userId,
     );
-    return { status: true, message: res?.data?.messages?.[0]?.id };
+    return { status: true, message: messageId };
   } catch (e: any) {
     console.log("🚀 ~ e:", e);
     await handleWaMessages(
@@ -737,7 +750,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     respondent: !anonymous && Contact?.phone,
     tag,
   });
-  await sendResponseToWebhook(res);
+  await sendResponseToWebhook(res, session.orgId);
   // TODO move out of this function
   updateCompletedSurvey(session.surveyTeamMapId).catch((e) => log.error(e));
   if (session.campaignParticipantId) {
@@ -1097,6 +1110,18 @@ export async function handleLeadGen(body: WaMessageBody) {
         "No lead automation found for pageid:%s and ad id: %s",
         page_id,
         ad_id,
+      );
+      return;
+    }
+    if (
+      !hasFeature(
+        automation.orgId,
+        SubscriptionFeaturePathName.LeadAdAutomation,
+      )
+    ) {
+      log.trace(
+        "Aborting..Not subscribed to lead automation, orgId => %s",
+        automation.orgId,
       );
       return;
     }

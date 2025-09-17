@@ -231,10 +231,13 @@ type WaButton = {
 };
 type WaSection = {
   title?: string; // max 24 chars
-  rows: Array<{
+  rows?: Array<{
     title: string; // max 24 chars
     description?: string; // max 72 chars
     id: string;
+  }>;
+  product_items?: Array<{
+    product_retailer_id: string;
   }>;
 };
 type WaInteractiveMessageAction = {
@@ -254,6 +257,7 @@ type WaInteractiveMessageAction = {
       data?: any; // data to be sent to the screen
     };
     mode?: WaFlowStatus.DRAFT | WaFlowStatus.PUBLISHED;
+    thumbnail_product_retailer_id?: string;
   };
 };
 

@@ -88,6 +88,13 @@ export function getEventType(data: WaMessageBody) {
   }
   return null;
 }
+
+enum CatalogMessages {
+  Catalog = "Catalog",
+  SingleProduct = "Single-Product",
+  MultiProduct = "Multi-Product",
+}
+
 export function convertNodeToWhatsAppMessage(
   node: TypedNode,
   recipient: string,
@@ -340,6 +347,87 @@ export function convertNodeToWhatsAppMessage(
             urls: contact?.urls,
           })) || [],
       };
+    }
+
+    case "catalogNode": {
+      const typedData = node?.data as NodeTypeMap["catalogNode"];
+      if (typedData.type === CatalogMessages.Catalog)
+        return {
+          ...baseMessage,
+          type: "interactive",
+          interactive: {
+            type: "catalog_message",
+            body: {
+              text: parseToWhatsAppFormat(typedData?.body) || "Default message",
+            },
+            action: {
+              name: "catalog_message",
+              parameters: typedData?.thumbnailProductId?.length
+                ? {
+                    thumbnail_product_retailer_id:
+                      typedData?.thumbnailProductId,
+                  }
+                : undefined,
+            },
+            footer: typedData.footer
+              ? {
+                  text: parseToWhatsAppFormat(typedData.footer),
+                }
+              : undefined,
+          },
+        };
+      else if (typedData.type === CatalogMessages.SingleProduct) {
+        return {
+          ...baseMessage,
+          type: "interactive",
+          interactive: {
+            type: "product",
+            body: typedData.body
+              ? {
+                  text: parseToWhatsAppFormat(typedData.body),
+                }
+              : undefined,
+            footer: typedData.footer
+              ? {
+                  text: parseToWhatsAppFormat(typedData.footer),
+                }
+              : undefined,
+            action: {
+              catalog_id: typedData.catalogId,
+              product_retailer_id: typedData.productRetailerId,
+            },
+          },
+        };
+      } else if (typedData.type === CatalogMessages.MultiProduct) {
+        return {
+          ...baseMessage,
+          type: "interactive",
+          interactive: {
+            type: "product_list",
+            header: {
+              type: "text",
+              text: parseToWhatsAppFormat(typedData.header),
+            },
+            body: {
+              text: parseToWhatsAppFormat(typedData.body),
+            },
+            footer: typedData.footer
+              ? {
+                  text: parseToWhatsAppFormat(typedData.footer),
+                }
+              : undefined,
+            action: {
+              catalog_id: typedData.catalogId,
+              sections: typedData.sections.map((section) => ({
+                title: section.title,
+                product_items: section.productItems.map((productId) => ({
+                  product_retailer_id: productId,
+                })),
+              })),
+            },
+          },
+        };
+      }
     }
 
     default:
