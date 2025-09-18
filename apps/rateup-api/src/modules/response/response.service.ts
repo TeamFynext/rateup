@@ -2852,3 +2852,12 @@ export async function happyIndexResponsesBySurveyId(
     happinessIndex,
   };
 }
+
+export async function getSurveyResponseByIp(surveyTeamMapId, ip) {
+  return await prisma.surveyResponse.findFirst({
+    where: {
+      surveyTeamMapId,
+      ip,
+    },
+  });
+}
