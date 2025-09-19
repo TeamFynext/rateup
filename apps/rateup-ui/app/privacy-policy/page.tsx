@@ -4,7 +4,7 @@ import Layout from "@/components/RateupHomePage/Layout";
 
 import PrivacyPolicyPage from "../../components/HomePage/pages/PrivacyPolicy";
 
-export const metadata = pageMetadata["/pricing"];
+export const metadata = pageMetadata["/privacy-policy"];
 
 function PrivacyPolicy() {
   return (

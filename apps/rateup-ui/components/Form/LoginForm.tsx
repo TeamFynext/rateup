@@ -141,7 +141,7 @@ function LoginForm({ setIsLoading, signIn, isLoading }) {
   }
   return (
     <>
-      <Title className={styles["login-signup-form-heading"]} order={2}>
+      <Title className={styles["login-signup-form-heading"]} order={1}>
         {/* {translations("Welcome Back")} */}
         Hi, Welcome Back
       </Title>
