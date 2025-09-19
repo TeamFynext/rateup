@@ -393,3 +393,5 @@ export const CURRENCY_CODES = [
   "EUR", // Euro
   "USD", // United States Dollar
 ];
+
+export const rateupUrl = "https://rateup.app";
