@@ -64,6 +64,8 @@ import {
 import { log } from "../../utils/logger";
 import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema";
 import { ResponseFilterQuery } from "../response/response.schema";
+import { getIp } from "../../utils/http";
+import { getSurveyResponseByIp } from "../response/response.service";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{
@@ -123,6 +125,18 @@ export async function getPublicSurveyByIdHandler(
     if (!survey) {
       reply.code(404);
     } else {
+      if (survey.uniqueDeviceResponse) {
+        const ip = getIp(request);
+        const surveyResponse = await getSurveyResponseByIp(
+          survey.surveyTeamMapId,
+          ip,
+        );
+        if (surveyResponse) {
+          return reply
+            .code(200)
+            .send({ ...survey, message: "ALREADY_SUBMITTED" });
+        }
+      }
       reply.send(survey);
     }
   } catch (e) {
