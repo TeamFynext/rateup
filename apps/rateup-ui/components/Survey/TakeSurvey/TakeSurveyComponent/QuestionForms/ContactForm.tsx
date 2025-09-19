@@ -62,7 +62,7 @@ const ContactForm = ({ features }) => {
               onChange={(value) =>
                 updateResponse({ ...response, phone: value })
               }
-              className={classes.inputPhone}
+              className={`${classes.inputPhone} not-prose`}
               onClick={handleInputScrollIntoView}
             />
           </FormPaperLayout>
