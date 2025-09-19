@@ -28,7 +28,7 @@ import FacebookPixel from "@/components/Analytics/FacebookPixel";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider";
-import { isProduction } from "@/utils/constants";
+import { isProduction, rateupUrl } from "@/utils/constants";
 import { geist, notoColorEmogi } from "@/utils/fonts";
 
 import Providers from "./providers";
@@ -48,6 +48,10 @@ export const metadata: Metadata = {
     title: "RateUp #1 AI Powered Omnichannel Customer Engagement Platform",
     description:
       "RateUp is the #1 AI-powered WhatsApp Business API & omnichannel customer engagement platform. The only inbox for chat automation, collect feedback & build loyalty.",
+  },
+  metadataBase: new URL(rateupUrl),
+  alternates: {
+    canonical: "/",
   },
   verification: {
     other: {
