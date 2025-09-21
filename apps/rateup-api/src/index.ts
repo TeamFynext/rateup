@@ -39,6 +39,7 @@ const server = Fastify({
   disableRequestLogging: true,
   //TODO this is a temporary fix for the large payload error issue
   bodyLimit: 30971520,
+  trustProxy: true,
 });
 
 // req.body is not serialized at the time of logging. So adding a hook to log the body
