@@ -112,7 +112,7 @@ export function FlowQuestionDetailedView({
       id: "load-data",
       loading: true,
       title: "updating question",
-      message: `Hold on, your changes are getting updated...`,
+      message: `Hold on, your changes are getting updated`,
       autoClose: false,
       withCloseButton: false,
     });
@@ -415,7 +415,7 @@ function ElementEditor({
       id: "load-data",
       loading: true,
       title: translations("Updating question"),
-      message: translations("Hold on, your changes are getting updated..."),
+      message: translations("Hold on, your changes are getting updated"),
       autoClose: false,
       withCloseButton: false,
     });

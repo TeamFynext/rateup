@@ -164,7 +164,7 @@ export const MemberEditFormModal = ({
       id: "load-data",
       loading: true,
       title: translations("Updating role"),
-      message: translations("Hold on, your changes are getting updated..."),
+      message: translations("Hold on, your changes are getting updated"),
       autoClose: false,
       withCloseButton: false,
     });
@@ -232,7 +232,7 @@ const LongMemberCard = ({
       id: "load-data",
       loading: true,
       title: translations("Deleting User"),
-      message: translations("Hold on, your changes are getting updated..."),
+      message: translations("Hold on, your changes are getting updated"),
       autoClose: false,
       withCloseButton: false,
     });

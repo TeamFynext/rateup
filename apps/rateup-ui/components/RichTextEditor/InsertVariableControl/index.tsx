@@ -33,16 +33,10 @@ const InsertVariableControl = ({ question }) => {
         position="bottom-start"
         transitionProps={{ transition: "rotate-right", duration: 150 }}
         shadow="md"
+        disabled={!variablesData.length}
       >
         <Menu.Target>
-          <ActionIcon
-            variant="subtle"
-            color="black"
-            size={"sm"}
-            disabled={!variablesData.length}
-          >
-            <IconVariable stroke={1.2} size={"1.2rem"} />
-          </ActionIcon>
+          <IconVariable stroke={1.2} size={"1.2rem"} />
         </Menu.Target>
         <Menu.Dropdown>
           {variablesData?.map((value) => (

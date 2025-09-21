@@ -149,8 +149,12 @@ type ExtendedSurvey = Survey & {
   message?: string;
 };
 
-export async function getPublicSurvey(surveyId: string) {
-  const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/${surveyId}`);
+export async function getPublicSurvey(surveyId: string, ip?: string) {
+  const res = await axiosClientIP.get(`${SURVEY_PUBLIC_URL}/${surveyId}`, {
+    headers: {
+      "x-forwarded-for": ip ?? "",
+    },
+  });
   return res.data as ExtendedSurvey;
 }
 

@@ -62,7 +62,7 @@ export default function ETESettings(props: ETESettingsInterface) {
         onClose={close}
         headerTitle={translations("End-to-End Encryption")}
         headerLabel={translations(
-          "Are you sure you want to enable end-to-end encryption? Once enabled it cannot be disabled.",
+          "Are you sure you want to enable end-to-end encryption? Once enabled it cannot be disabled",
         )}
         confirmLabel={translations("Confirm")}
         onConfirm={() =>
