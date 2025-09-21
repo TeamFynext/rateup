@@ -188,9 +188,7 @@ export function QuestionDetailedView({
             id: "load-data",
             loading: true,
             title: translations("updating question"),
-            message: translations(
-              "Hold on, your changes are getting updated...",
-            ),
+            message: translations("Hold on, your changes are getting updated"),
             autoClose: false,
             withCloseButton: false,
           });
