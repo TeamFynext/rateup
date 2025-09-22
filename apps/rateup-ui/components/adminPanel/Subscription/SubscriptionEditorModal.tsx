@@ -90,6 +90,12 @@ export function SubscriptionEditorModal({
       }
     >
       <Stack>
+        {subscription?.basePlan?.name.includes("FREE") && (
+          <Text size="sm" c={"red"}>
+            *Recommended: Change Subscription from FREE Plan to Custom Plan and
+            make the changes
+          </Text>
+        )}
         {!rateupPlanEnable && (
           <>
             <DateInput

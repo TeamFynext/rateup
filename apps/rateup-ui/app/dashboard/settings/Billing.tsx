@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -60,6 +60,10 @@ const Billing = ({
     latestOrderData?.subscriptionStatus === "pending" || false,
   );
   const [isShopifyPlan, setIsShopifyPlan] = useState(false);
+  const isFreePlan = useMemo(
+    () => subscription && subscription?.basePlan?.name?.includes("FREE"),
+    [subscription],
+  );
 
   useEffect(() => {
     if (
@@ -195,7 +199,9 @@ const Billing = ({
                     {translations("Plan Name")}
                   </Text>
                   <Group gap={"xs"}>
-                    <Title order={5}>{subscription?.basePlan?.name}</Title>
+                    <Title order={5}>
+                      {subscription?.basePlan?.displayName}
+                    </Title>
                     {latestOrderData?.subscriptionStatus ===
                       "authenticated" && (
                       <Text size="sm" c={"red"}>
@@ -235,9 +241,7 @@ const Billing = ({
                   )}
 
                 {subscription?.basePlan?.name === "RATEUP TRIAL" ||
-                (subscription?.basePlan?.name.includes("FREE") &&
-                  !isCustomPlan &&
-                  !isProcessingPlan) ? (
+                (isFreePlan && !isCustomPlan && !isProcessingPlan) ? (
                   <RateupButtonPrimary
                     title={translations("Upgrade plan")}
                     onClick={() => router.push("/pricing")}
@@ -279,9 +283,10 @@ const Billing = ({
                       : translations("Validity")}
                   </Text>
                   <Group>
-                    <Text>
-                      {" "}
-                      {formatIsoDateString(subscription?.expiresAt)}{" "}
+                    <Text size="sm">
+                      {isFreePlan
+                        ? "NA"
+                        : formatIsoDateString(subscription?.expiresAt)}
                     </Text>
                     <Badge
                       color={
