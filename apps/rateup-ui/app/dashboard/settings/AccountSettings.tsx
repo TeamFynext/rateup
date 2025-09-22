@@ -346,7 +346,7 @@ const AccountSettings = () => {
               <Title order={4} style={{ minWidth: "140px" }}>
                 {translations("Current Plan :")}
               </Title>
-              <Text> {subscription?.basePlan?.name} </Text>
+              <Text> {subscription?.basePlan?.displayName} </Text>
             </Group>
 
             <RateupButtonPrimary title="Buy Addons" />

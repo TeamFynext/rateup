@@ -6,6 +6,7 @@ import {
   useAutomationSubscription,
   useUpdateAutomationTriggerSubscription,
   useUpdateAutomationUsageStats,
+  useUpdateFreePlanSubscriptionExpiry,
   useUpdateSubscriptionNewFeat,
   useUpdateUsageStats,
 } from "@/backend/updations/update.query";
@@ -17,6 +18,7 @@ function UpdateAllThemes() {
   const updateAutomTr = useUpdateAutomationTriggerSubscription();
   const updateAutStat = useUpdateAutomationUsageStats();
   const updateFeat = useUpdateSubscriptionNewFeat();
+  const updateFreePlan = useUpdateFreePlanSubscriptionExpiry();
 
   return (
     <Stack>
@@ -83,21 +85,38 @@ function UpdateAllThemes() {
               Update
             </Button>
           </Stack>
+          <Stack mt="xl">
+            <Title order={2}>Update Subscription new features</Title>
+            <Text>
+              This will add webhooks, leadad automation, carousel template in
+              subscription feature
+            </Text>
+            <Button
+              ml="md"
+              style={{ alignSelf: "flex-start" }}
+              onClick={() => {
+                updateFeat.mutate();
+              }}
+              loading={updateFeat.isPending}
+            >
+              Update
+            </Button>
+          </Stack>
         </>
       )}
       <Stack mt="xl">
-        <Title order={2}>Update Subscription new features</Title>
+        <Title order={2}>Update Free plan subscription expiry</Title>
         <Text>
-          This will add webhooks, leadad automation, carousel template in
-          subscription feature
+          This will update all free plan subscription expiry date to 100 years
+          ahead
         </Text>
         <Button
           ml="md"
           style={{ alignSelf: "flex-start" }}
           onClick={() => {
-            updateFeat.mutate();
+            updateFreePlan.mutate();
           }}
-          loading={updateFeat.isPending}
+          loading={updateFreePlan.isPending}
         >
           Update
         </Button>

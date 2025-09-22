@@ -33,3 +33,8 @@ export async function updateSubscriptionNewFeat() {
     timeout: 60000,
   });
 }
+export async function updateFreePlanSubscriptionExpiry() {
+  return await axiosClient.put(`${baseUrl}/free-plan`, null, {
+    timeout: 60000,
+  });
+}

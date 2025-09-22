@@ -725,6 +725,7 @@ declare global {
   interface SPlan {
     id: string;
     name: string;
+    displayName: string;
     paymentPlan?: {
       period: string;
       amount: number;
