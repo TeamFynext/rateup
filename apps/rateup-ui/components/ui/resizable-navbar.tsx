@@ -3,6 +3,7 @@
 import React, { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import {
@@ -120,6 +121,7 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
 
 export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
+  const pathname = usePathname();
 
   return (
     <motion.div
@@ -135,8 +137,13 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
         <Link
           onMouseEnter={() => setHovered(idx)}
           onClick={onItemClick}
-          className="relative px-4 py-1.5 text-[#3f5ba9] text-[17px] font-semibold
-           dark:text-neutral-300"
+          className={`relative px-4 py-1.5 text-[#3f5ba9] text-[17px] font-semibold
+           dark:text-neutral-300 ${
+             item.link === pathname
+               ? `rounded-xl
+               bg-[#3f5ba91c] dark:bg-neutral-800`
+               : ""
+           }`}
           key={`link-${idx}`}
           href={item.link}
         >
