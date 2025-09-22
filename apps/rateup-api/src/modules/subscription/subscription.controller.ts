@@ -48,6 +48,7 @@ export async function updateSubscriptionHandler(
 ) {
   const { orgId } = req.params;
   const updatedData = req.body;
+  //case: on changing to new plan
   if (updatedData?.basePlanId) {
     const rateupPlan = await getRateuplanById(updatedData?.basePlanId);
     if (rateupPlan.paymentPlanId)
