@@ -224,3 +224,16 @@ export async function updatePlanFeatures() {
     });
   }
 }
+
+export async function updateFreePlanExpiry() {
+  await prisma.subscription.updateMany({
+    where: {
+      basePlan: {
+        name: "FREE PLAN",
+      },
+    },
+    data: {
+      expiresAt: dayjs().add(100, "years").toDate(),
+    },
+  });
+}
