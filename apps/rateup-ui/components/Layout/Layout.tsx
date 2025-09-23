@@ -537,7 +537,7 @@ const Navbar = ({
                 </HoverCard>
               </div>
             </Stack>
-            <ScrollAreaAutosize mah={"calc(100dvh - 300px)"} scrollbarSize={6}>
+            <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
               {mainLinks}
             </ScrollAreaAutosize>
           </div>
