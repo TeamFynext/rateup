@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
+  ActionIcon,
   Avatar,
   Box,
   Divider,
@@ -52,7 +53,7 @@ export default function TopNavbar({ user }) {
       component="header"
       justify="end"
       align="center"
-      h={56}
+      h={60}
       px="md"
       w={"100%"}
       className={classes["topbar"]}
@@ -79,17 +80,24 @@ export default function TopNavbar({ user }) {
       {/* RIGHT: Notifications + Settings + Profile */}
       <Group gap="md">
         <Flex align={"center"} justify={"center"} gap={8}>
-          <Box style={{ cursor: "pointer" }}>
+          <ActionIcon
+            variant="transparent"
+            className={classes["theme-toggle-icon"]}
+          >
             <ColorSchemaButton />
-          </Box>
-          <NotificationBellIcon strokeWidth={1.5} className="cursor-pointer" />
+          </ActionIcon>
 
-          <Box
+          <Box mt={5} className={classes["bell-icon"]}>
+            <NotificationBellIcon strokeWidth={1.5} />
+          </Box>
+
+          <ActionIcon
+            variant="transparent"
             onClick={() => router.push("/dashboard/settings?tab=account")}
-            className={classes["spin-icon"]}
+            className={classes["settings-icon"]}
           >
             <Settings size={20} />
-          </Box>
+          </ActionIcon>
         </Flex>
 
         <Popover

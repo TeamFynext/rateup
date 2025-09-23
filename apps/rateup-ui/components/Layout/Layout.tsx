@@ -501,7 +501,7 @@ const Navbar = ({
       <div className={classes.wrapper}>
         <div className={classes.aside}>
           <div>
-            <Stack gap={0} pb={"sm"}>
+            <Stack gap={0}>
               <div className={classes.logo}>
                 <HoverCard shadow="md" position="right-end">
                   <HoverCard.Target>
@@ -537,7 +537,7 @@ const Navbar = ({
                 </HoverCard>
               </div>
             </Stack>
-            <ScrollAreaAutosize scrollbarSize={6}>
+            <ScrollAreaAutosize mah={"calc(100dvh - 300px)"} scrollbarSize={6}>
               {mainLinks}
             </ScrollAreaAutosize>
           </div>
