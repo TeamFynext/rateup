@@ -77,41 +77,50 @@ export async function handleWaMessages(
   failed: boolean = false,
 ) {
   try {
-    // Create the message body
-    let waMessageBody: WaInboxMessageBody = {
+    // Prepare message body
+    const waMessageBody: WaInboxMessageBody = {
       exchangeProcess: type,
       send: type === "send" ? messageBody : null,
       receive: type === "receive" ? messageBody : null,
     };
-    // Create the contact core
+
+    // Prepare contact core data
     const waTimeStamp = await returnAppropriateTimeStamp(
       waMessageBody,
       sourcePlatform,
     );
     const contactCore: ContactCore = {
       name: userName,
-      phone: from,
+      ...(sourcePlatform === PlatformType.WEBCHAT
+        ? { other: from }
+        : { phone: from }),
       igsId: sourcePlatform === PlatformType.INSTAGRAM ? from : undefined,
-      source: sourcePlatform?.toLowerCase(),
+      source:
+        sourcePlatform === PlatformType.WEBCHAT
+          ? PlatformType.WEBCHAT
+          : sourcePlatform?.toLowerCase(),
     };
+
+    // Fetch additional Instagram data if needed
     let additionalData = {};
-    if (sourcePlatform === "INSTAGRAM" && type === "receive") {
+    if (sourcePlatform === PlatformType.INSTAGRAM && type === "receive") {
       try {
         const userDetails = await getIgUserDetailsFromMeta(
           from,
           sourceIdentifier,
         );
         additionalData = {
-          ...additionalData,
           name: userDetails?.name ?? undefined,
           whatsappUserName: userDetails?.username ?? undefined,
           followerCount: userDetails?.follower_count,
           isIgVerifiedUser: userDetails?.is_verified_user,
         };
       } catch (e) {
-        log.error(`error in getting insta user detail => %o`, e);
+        log.error("Error getting Instagram user details: %o", e);
       }
     }
+
+    // Compose contact data
     const contactData = {
       ...(type === "receive"
         ? { lastReceivedMessageTimeStamp: waTimeStamp }
@@ -119,51 +128,45 @@ export async function handleWaMessages(
       ...contactCore,
       ...additionalData,
     };
-    // create contact if it does not exist
+
+    // Get or create contact
     let contact;
-    switch (sourcePlatform) {
-      case PlatformType.INSTAGRAM:
-        contact = await getOrCreateContactByIgsId(from, orgId, contactData);
-        break;
-      case PlatformType.WEBCHAT:
-        contact = await getOrCreateContactByPhone(
-          from,
-          orgId,
-          undefined,
-          PlatformType.WEBCHAT,
-        );
-        break;
-      default:
-        contact = await getOrCreateContactByPhone(from, orgId, contactData);
+    if (sourcePlatform === PlatformType.INSTAGRAM) {
+      contact = await getOrCreateContactByIgsId(from, orgId, contactData);
+    } else if (sourcePlatform === PlatformType.WEBCHAT) {
+      contact = await getOrCreateContactByPhone(
+        from,
+        orgId,
+        contactData,
+        PlatformType.WEBCHAT,
+      );
+    } else {
+      contact = await getOrCreateContactByPhone(from, orgId, contactData);
     }
 
+    // Prepare parameter data and handle specific cases
     let parameterData = {};
-    switch (type) {
-      case "send": {
-        //condition to add template body to messageData if type is template
-        if (messageBody?.type === "template") {
-          const template = await getTemplateByNameAndOrgId(
-            messageBody.template.name,
-            orgId,
-          );
-          parameterData = messageBody.template.components;
-          (waMessageBody.send as WaSendMessageBody).template =
-            template.data as unknown as any;
-        }
-        break;
+    if (type === "send" && messageBody?.type === "template") {
+      const template = await getTemplateByNameAndOrgId(
+        messageBody.template.name,
+        orgId,
+      );
+      parameterData = messageBody.template.components;
+      (waMessageBody.send as WaSendMessageBody).template = template.data as any;
+    }
+
+    if (type === "receive") {
+      if (sourcePlatform === PlatformType.WHATSAPP) {
+        await handleWaReceivedImages(waMessageBody, orgId);
       }
-      case "receive": {
-        if (sourcePlatform === "WHATSAPP") {
-          waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
-        }
-        if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED)
-          await updateContactById(contact.id, {
-            waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
-          });
-        break;
+      if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
+        await updateContactById(contact.id, {
+          waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+        });
       }
     }
 
+    // Add new message to DB
     const waMessage = await addNewWaMessage(
       waMessageBody,
       contact.id,
@@ -176,22 +179,22 @@ export async function handleWaMessages(
       failed,
     );
 
-    // Send the message to the connected clients
+    // Notify connected clients
     await sendViaWstoOrgHandler(
       orgId,
       {
         type: "inbox",
         inbox: {
-          contact: contact,
+          contact,
           message: waMessage,
         },
       },
       sourcePlatform === PlatformType.WEBCHAT ? "fab" : "main",
     );
+
     return waMessage;
   } catch (error) {
     log.error("Error in handleWaMessages: %o", error);
-    log.error(error);
   }
 }
 

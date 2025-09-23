@@ -29,11 +29,21 @@ export async function createFreePlanSubscription(
     });
 
     let freePlanDescription = [
-      "2 Surveys",
-      "100 Response/Month",
-      "100 Messages/Month",
-      "1 Team",
-      "1 User",
+      "1 Team & 1 User",
+      "1 WhatsApp Automation",
+      "1K Template Messages",
+      "1K Automation Triggers",
+      "Omnichannel inbox - WhatsApp + Instagram",
+      "100 web surveys & 100000 responses",
+      "WhatsApp Catalog",
+      "AI Summary",
+      "Reports & Analytics",
+      "Basic CX analytics",
+      "Website widget",
+      "QR Code Generator",
+      "Integration - Google Sheet+ MS Excel+ Shopify",
+      "API Integration",
+      "Customer issue escalation & Ticketing",
     ];
 
     if (!rateupFreePlan) {
@@ -56,7 +66,7 @@ export async function createFreePlanSubscription(
       orgId,
       basePlanId: rateupPlan.id,
       features: rateupPlan.features,
-      expiresAt: dayjs().add(100, "day").toDate(),
+      expiresAt: dayjs().add(100, "year").toDate(),
     },
   });
 }

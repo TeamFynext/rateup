@@ -3,6 +3,7 @@
 
 import { FastifyInstance } from "fastify";
 import {
+  updateFreePlanExpiryHandler,
   updatePlanFeaturesHandler,
   updateRateupPlanFeatureHandler,
   updateSubscriptionHandler,
@@ -16,4 +17,5 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/rateupplan", updateRateupPlanFeatureHandler);
   server.put("/usage-stats-automation", updateUsageStatsAutomationHandler);
   server.put("/plan-subscription", updatePlanFeaturesHandler);
+  server.put("/free-plan", updateFreePlanExpiryHandler);
 }
