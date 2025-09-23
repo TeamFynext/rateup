@@ -84,7 +84,7 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  height: 60px;
+  height: 70px;
   padding-top: var(--mantine-spacing-md);
   background-color: var(--mantine-color-body);
 }
@@ -115,5 +115,42 @@
       background-color: var(--mantine-color-rateup-blue-light);
       color: var(--mantine-color-rateup-blue-filled);
     }
+  }
+}
+
+.topbar {
+  border-bottom: 1px solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.topbarcapsule {
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: var(--mantine-color-gray-1);
+  transition: background-color 0.2s ease;
+}
+
+.topbarcapsule:hover {
+  background-color: var(--mantine-color-gray-2);
+}
+
+.spin-icon {
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spin-icon:hover {
+  animation: spin 0.6s forwards;
+}
+
+@keyframes spin {
+  from {
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

@@ -23,7 +23,7 @@ const Settings = () => {
   const searchParams = useSearchParams();
   if (!session || !user) return;
 
-  const tab = searchParams.get("tab") || "user";
+  const tab = searchParams.get("tab") || "account";
   if (retrieveRole(user?.role) === "Super Admin") {
     return (
       <StyledTabs
@@ -32,15 +32,15 @@ const Settings = () => {
         w="100%"
       >
         <Tabs.List mb="md">
-          <Tabs.Tab value="user">{translations("User")}</Tabs.Tab>
+          {/* <Tabs.Tab value="user">{translations("User")}</Tabs.Tab> */}
           <Tabs.Tab value="organization">
             {translations("Organization")}
           </Tabs.Tab>
           <Tabs.Tab value="account">{translations("Account")}</Tabs.Tab>
         </Tabs.List>
-        <Tabs.Panel value="user">
+        {/* <Tabs.Panel value="user">
           <ProfileSettings />
-        </Tabs.Panel>
+        </Tabs.Panel> */}
         <Tabs.Panel value="organization">
           <OrgSettings />
         </Tabs.Panel>

@@ -2143,5 +2143,8 @@
   "UnAssigned": "غير مُعيَّن",
   "Assigned to Me": "مُعيَّن لي",
   "Closed": "مُغلق",
-  "Blocked": "محجوب"
+  "Blocked": "محجوب",
+  "Online": "متصل",
+  "Offline": "غير متصل",
+  "Profile": "الملف الشخصي"
 }

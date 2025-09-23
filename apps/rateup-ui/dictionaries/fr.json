@@ -2142,5 +2142,8 @@
   "UnAssigned": "Non assigné",
   "Assigned to Me": "Assigné à moi",
   "Closed": "Fermé",
-  "Blocked": "Bloqué"
+  "Blocked": "Bloqué",
+  "Online": "En ligne",
+  "Offline": "Hors ligne",
+  "Profile": "Profil"
 }
