@@ -12,6 +12,8 @@ export function getIntegrationDisplayName(name) {
       return "Whatsapp Payment";
     case IntegratedApps.petpooja:
       return "Petpooja";
+    case IntegratedApps.zapier:
+      return "Zapier";
     default:
       return "Not defined";
   }

@@ -463,6 +463,7 @@ export enum IntegratedApps {
   amelia = "amelia",
   waPayment = "waPayment",
   petpooja = "petpooja",
+  zapier = "zapier",
 }
 export enum PhotoSource {
   cameraGallery = "camera_gallery",
@@ -578,4 +579,9 @@ export enum MetaLoginAssets {
   CATALOGS = "CATALOGS",
   INSTAGRAM = "INSTAGRAM ACCOUNTS",
   ADACCOUNTS = "AD ACCOUNTS",
+}
+
+export enum ZapierTriggers {
+  CONTACT_CREATE = "new_contact_create",
+  CONTACT_ASSIGN = "new_contact_assignee",
 }

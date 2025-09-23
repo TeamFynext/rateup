@@ -230,7 +230,7 @@ const CreateContactModal = ({
                     international
                     countryCallingCodeEditable={false}
                     placeholder={translations("Enter phone number")}
-                    value={form.values.phone ?? ""}
+                    value={form.values.phone || ""}
                     {...form.getInputProps("phone")}
                     className={styles.inputPhone}
                   />
@@ -315,7 +315,7 @@ const CreateContactModal = ({
                 mx={"lg"}
                 label=""
                 placeholder={translations(
-                  "Upload a csv file (.csv) or excel file (.xlsx)",
+                  "Upload a csv file (csv) or excel file (xlsx)",
                 )}
                 accept=".csv,.xlsx"
                 multiple={false}
