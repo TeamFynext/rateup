@@ -114,9 +114,9 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
         <h4 className="text-[#1c518e] text-sm uppercase font-medium tracking-wider">
           Our Pricing Plans
         </h4>
-        <h2 className="text-4xl md:text-5xl font-bold text-[#00397b] mt-3">
+        <h1 className="text-4xl md:text-5xl font-bold text-[#00397b] mt-3">
           Choose What You Need
-        </h2>
+        </h1>
       </div>
       <Stack justify={"center"} align="center" gap={0}>
         <Image

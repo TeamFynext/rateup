@@ -24,6 +24,43 @@ interface LayoutProps {
   isBlog?: boolean;
 }
 
+const homePageJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "RateUp",
+  url: "https://rateup.app",
+  logo: "https://djd7kjh9uwow0.cloudfront.net/images/rateup-logo-blue-text.svg",
+  description:
+    "RateUp is an AI-powered omnichannel customer engagement platform that integrates WhatsApp Business API, feedback, loyalty, chat automation, and a unified inbox to help businesses boost retention and repeat sales.",
+  foundingDate: "2023",
+  contactPoint: [
+    {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: "hello@rateup.app",
+    },
+  ],
+  sameAs: [
+    "https://www.linkedin.com/company/rateupapp",
+    "https://twitter.com/rateupapp",
+    "https://www.instagram.com/rateupapp",
+    "https://www.facebook.com/rateupapp",
+    "https://www.threads.com/@rateupsoftware",
+    "https://www.youtube.com/@TeamRateup",
+  ],
+  brand: {
+    "@type": "Brand",
+    name: "RateUp",
+    logo: "https://djd7kjh9uwow0.cloudfront.net/images/rateup-logo-blue-text.svg",
+  },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "5",
+    reviewCount: "3987",
+    bestRating: "5",
+  },
+};
+
 export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const hasSession = useCheckSession();
   const navItems = [
@@ -42,25 +79,6 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
     {
       name: "Blog",
       link: "/blog",
-    },
-  ];
-
-  const navItemsBlog = [
-    {
-      name: "Home",
-      link: "/",
-    },
-    {
-      name: "Pricing",
-      link: "/pricing",
-    },
-    {
-      name: "Contact",
-      link: "/contact-us",
-    },
-    {
-      name: "About Us",
-      link: "/about-us",
     },
   ];
 
@@ -85,13 +103,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
               priority
             />
           </Link>
-
-          {isBlog ? (
-            <NavItems items={navItemsBlog} />
-          ) : (
-            <NavItems items={navItems} />
-          )}
-
+          <NavItems items={navItems} />
           {hasSession ? (
             <div className="flex  items-center gap-4">
               <Link
@@ -174,27 +186,16 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
               </div>
 
               <DropDownMobileNavItems />
-              {isBlog
-                ? navItemsBlog.map((item, idx) => (
-                    <Link
-                      key={`mobile-link-${idx}`}
-                      href={item.link}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="py-3 text-lg text-neutral-700 hover:text-[#1c518e]"
-                    >
-                      {item.name}
-                    </Link>
-                  ))
-                : navItems.map((item, idx) => (
-                    <Link
-                      key={`mobile-link-${idx}`}
-                      href={item.link}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="py-3 text-lg text-neutral-700 hover:text-[#1c518e]"
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
+              {navItems.map((item, idx) => (
+                <Link
+                  key={`mobile-link-${idx}`}
+                  href={item.link}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-3 text-lg text-neutral-700 hover:text-[#1c518e]"
+                >
+                  {item.name}
+                </Link>
+              ))}
 
               <div className="mt-6 flex flex-col gap-3">
                 <Link
@@ -220,6 +221,12 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
 
       {children}
       <CookieConsentBanner />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(homePageJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
     </div>
   );
 }

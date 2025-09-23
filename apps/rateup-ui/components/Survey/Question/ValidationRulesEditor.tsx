@@ -284,7 +284,7 @@ const ValidationRulesEditor = ({
       id: "load-data",
       loading: true,
       title: translations("Saving validations"),
-      message: translations("Hold on, your changes are getting updated..."),
+      message: translations("Hold on, your changes are getting updated"),
       autoClose: false,
       withCloseButton: false,
     });

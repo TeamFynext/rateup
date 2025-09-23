@@ -54,7 +54,9 @@ const ContactForm = ({ features }) => {
           </Text>
           <FormPaperLayout>
             <PhoneInputWithCountrySelect
-              defaultCountry="IN"
+              defaultCountry={
+                selectedFeature?.phone?.defaultCountryCode || "IN"
+              }
               international
               countryCallingCodeEditable={false}
               placeholder={translations("Enter phone number")}
@@ -62,7 +64,7 @@ const ContactForm = ({ features }) => {
               onChange={(value) =>
                 updateResponse({ ...response, phone: value })
               }
-              className={classes.inputPhone}
+              className={`${classes.inputPhone} not-prose`}
               onClick={handleInputScrollIntoView}
             />
           </FormPaperLayout>

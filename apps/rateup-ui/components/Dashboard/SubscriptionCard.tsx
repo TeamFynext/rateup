@@ -54,7 +54,9 @@ const SubscriptionCard = () => {
             <p className="text-xs uppercase text-gray-400">
               {translations("Plan Name") || "Plan Name"}
             </p>
-            <p className="text-4xl font-bold text-gray-800">{basePlan?.name}</p>
+            <p className="text-4xl font-bold text-gray-800">
+              {basePlan?.displayName}
+            </p>
           </div>
 
           <div className="space-y-1">
@@ -65,22 +67,27 @@ const SubscriptionCard = () => {
               {dayjs(createdAt).format("DD MMM YYYY")}
             </p>
           </div>
+          {!subscription.basePlan.name.includes("FREE") && (
+            <>
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500">
+                  {translations("Renewal Date") || "Renewal Date"}
+                </p>
+                <p className="text-md text-gray-800 font-normal">
+                  {dayjs(expiresAt).format("DD MMM YYYY")}
+                </p>
+              </div>
 
-          <div className="space-y-1">
-            <p className="text-xs text-gray-500">
-              {translations("Renewal Date") || "Renewal Date"}
-            </p>
-            <p className="text-md text-gray-800 font-normal">
-              {dayjs(expiresAt).format("DD MMM YYYY")}
-            </p>
-          </div>
-
-          <div className="space-y-1">
-            <p className="text-xs text-gray-500">
-              {translations("Days Remaining") || "Days Remaining"}
-            </p>
-            <p className="text-4xl font-bold text-gray-800">{daysRemaining}</p>
-          </div>
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500">
+                  {translations("Days Remaining") || "Days Remaining"}
+                </p>
+                <p className="text-4xl font-bold text-gray-800">
+                  {daysRemaining}
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         <div>

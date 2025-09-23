@@ -300,9 +300,9 @@ function SignupForm({ setIsLoading, signUp, isLoading }) {
         className={`${styles["login-signup-form-heading"]}
            ${styles["signup-form-heading"]}
           `}
-        order={2}
+        order={1}
       >
-        <span>Sign up now &</span>
+        Sign up now &
         <span className="text-lg">
           {translations("Start engaging with your Customers")}
         </span>

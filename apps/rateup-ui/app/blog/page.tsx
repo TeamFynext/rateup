@@ -74,9 +74,9 @@ export default async function BlogIndex({
                       {featuredPost.primary_tag.name}
                     </Badge>
                   )}
-                  <h2 className="mb-4 text-2xl font-bold text-slate-900 sm:text-3xl">
+                  <h1 className="mb-4 text-2xl font-bold text-slate-900 sm:text-3xl">
                     {featuredPost.title}
-                  </h2>
+                  </h1>
                   <p className="mb-6 text-slate-600">{featuredPost.excerpt}</p>
                   <div className="mb-6 flex items-center">
                     <Avatar
