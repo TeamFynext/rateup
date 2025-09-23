@@ -28,6 +28,10 @@ import {
   createNotification,
   getNotificationSettings,
 } from "../notification/notification.service";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../integrations/external/zapier/zapier.service";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
@@ -38,6 +42,11 @@ export async function createContact(contact: ContactCore & { orgId: string }) {
   const user = await prisma.contact.create({
     data: contact,
   });
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_CREATE,
+    { contact: user },
+    user.orgId,
+  );
   return user;
 }
 
@@ -59,6 +68,12 @@ export async function getOrcreateContact(
   user = await prisma.contact.create({
     data: contact,
   });
+
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_CREATE,
+    { contact: user },
+    user.orgId,
+  );
   return user;
 }
 
@@ -73,10 +88,18 @@ export async function createMultipleContacts(
     orgId,
     aiWaChat,
   }));
-  return await prisma.contact.createMany({
+  const newContacts = await prisma.contact.createManyAndReturn({
     skipDuplicates: true,
     data: contactsData,
   });
+  if (newContacts.length) {
+    for (const contact of newContacts)
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { contact },
+        orgId,
+      );
+  }
 }
 
 export async function getContactById(contactId: string) {
@@ -355,7 +378,7 @@ export async function getOrCreateContactByPhone(
     } else {
       const chatbot = await getChatbotDetails(orgId);
       const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
-      return await prisma.contact.create({
+      const contact = await prisma.contact.create({
         data: {
           ...additionalData,
           aiWaChat,
@@ -363,6 +386,12 @@ export async function getOrCreateContactByPhone(
           orgId,
         },
       });
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { contact },
+        orgId,
+      );
+      return contact;
     }
   } catch (e) {
     log.error(e);
@@ -397,7 +426,7 @@ export async function getOrCreateContactByIgsId(
     } else {
       const chatbot = await getChatbotDetails(orgId);
       const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
-      return await prisma.contact.create({
+      const contact = await prisma.contact.create({
         data: {
           ...additionalData,
           aiWaChat,
@@ -405,6 +434,12 @@ export async function getOrCreateContactByIgsId(
           orgId,
         },
       });
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { contact },
+        orgId,
+      );
+      return contact;
     }
   } catch (e) {
     log.error(e);
@@ -652,3 +687,18 @@ export const handleContactConsent = async (
   });
   return true;
 };
+
+export async function updateContactLabelsByName(labels, contactId, orgId) {
+  const orgLabels = await prisma.labels.findMany({
+    where: {
+      name: {
+        in: labels,
+      },
+      orgId,
+    },
+  });
+  return await prisma.contactLabelMap.createMany({
+    data: orgLabels.map((l) => ({ contactId, labelId: l.id })),
+    skipDuplicates: true,
+  });
+}

@@ -30,6 +30,7 @@ import {
 import { RouteShorthandOptionsWithHandler } from "fastify";
 import { Session } from "@shopify/shopify-api";
 import z from "zod";
+import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.service";
 
 type GoogleReview = {
   minRating?: number;
@@ -223,6 +224,19 @@ declare global {
     apiStatus?: string;
   };
 
+  type ZapierIntegration = Integration & {
+    credential: {
+      accessToken: string;
+      triggerSubscriptions: {
+        hookUrl: string;
+        subscribed_field: ZapierTriggers;
+        active: boolean;
+        zapId: string;
+        createdAt: string;
+        updatedAt: string;
+      }[];
+    };
+  };
   type WaSectionsType = Array<{
     title?: string;
     rows: Array<{ id?: string; title: string; description?: string }>;

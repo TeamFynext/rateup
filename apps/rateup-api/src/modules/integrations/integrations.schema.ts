@@ -44,6 +44,7 @@ export const updateIntgrationSchema = z.object({
   credential: z.record(z.string(), z.any()).optional(),
   orgId: z.string().optional(),
   active: z.boolean().optional(),
+  updateKey: z.boolean().optional(),
 });
 
 export const { schemas: integrationSchemas, $ref: $integrationRef } =

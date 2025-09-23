@@ -101,6 +101,7 @@ import { labelSchema } from "./modules/label/label.schema";
 import { bookDemoSchemas } from "./modules/BookDemo/bookDemo.schema";
 import { bookDemoRoutes } from "./modules/BookDemo/bookDemo.route";
 import { supportUserWebhookRoutes } from "./modules/whatsapp/support-user/suport-user.webhook.route";
+import { externalIntegrationRoutes } from "./modules/integrations/external/external.route";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -228,4 +229,7 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(supportUserWebhookRoutes, { prefix: "api/support" });
   server.register(labelRoutes, { prefix: "api/labels" });
   server.register(bookDemoRoutes, { prefix: "api/bookdemo" });
+  server.register(externalIntegrationRoutes, {
+    prefix: "api/integration/external",
+  });
 }

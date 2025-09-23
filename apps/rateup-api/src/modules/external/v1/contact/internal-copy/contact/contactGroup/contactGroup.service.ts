@@ -1,6 +1,10 @@
 import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
 import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../../../../../../integrations/external/zapier/zapier.service";
+import {
   AddNewContactsToGroupInput,
   CreateContactGroupInput,
   RemoveGroupContactsSchema,
@@ -109,9 +113,10 @@ export async function addNewContactsToGroup(
   }
   // TODO: we could create uuid manually and skip the findMany query.
   // TODO: check if below query can be optimized
+  let newContacts;
   await prisma.$transaction(async (tx) => {
     // create contacts
-    await tx.contact.createMany({
+    newContacts = await tx.contact.createManyAndReturn({
       skipDuplicates: true,
       data: contacts.map((contact) => ({
         ...contact,
@@ -142,6 +147,14 @@ export async function addNewContactsToGroup(
       })),
     });
   });
+  if (newContacts.length) {
+    for (const contact of newContacts)
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { contact },
+        orgId,
+      );
+  }
 }
 
 export async function addExistingContactsToGroup(
