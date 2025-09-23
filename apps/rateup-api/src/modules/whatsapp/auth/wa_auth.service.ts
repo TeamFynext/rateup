@@ -62,7 +62,7 @@ export async function getPhoneNumbersFromWABA(
   wabaId: string,
   accessToken: string,
 ): Promise<WABAPhoneNumbersResponse> {
-  let url = `/${wabaId}/phone_numbers`;
+  let url = `/${wabaId}/phone_numbers?fields=status,display_phone_number,verified_name`;
   const res = await callWhatsappApi(url, "GET", accessToken);
 
   log.trace("Phone Numbers response: %o", res.data);
@@ -74,6 +74,7 @@ type WABAPhoneNumbersResponse = {
     display_phone_number: string;
     verified_name: string;
     id: string;
+    status: string;
   }[];
 };
 
