@@ -5,10 +5,9 @@ import { ColumnDef } from "@tanstack/react-table";
 
 import { DataTableColumnHeader } from "@/components/Table/data-table-column-header";
 
-import { LabelForm } from "../data/schema";
 import { DataTableRowActions } from "./data-table-row-actions";
 
-export const columns: ColumnDef<LabelForm>[] = [
+export const columns: ColumnDef<any>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -44,12 +43,12 @@ export const columns: ColumnDef<LabelForm>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "color",
+    accessorKey: "field_id",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Color" />
+      <DataTableColumnHeader column={column} title="Field ID" />
     ),
     cell: ({ row }) => {
-      return <ColorSwatch color={row.getValue("color") ?? "#009790"} />;
+      return <Text size="sm">{String(row.getValue("field_id"))}</Text>;
     },
   },
   {
@@ -67,7 +66,34 @@ export const columns: ColumnDef<LabelForm>[] = [
     },
   },
   {
-    id: "actions",
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    accessorKey: "visibility",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Visibility" />
+    ),
+    cell: ({ row }) => {
+      return <Text size="sm">{String(row.getValue("visibility"))}</Text>;
+    },
   },
+  {
+    accessorKey: "type",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Type" />
+    ),
+    cell: ({ row }) => {
+      return <Text size="sm">{String(row.getValue("type"))}</Text>;
+    },
+  },
+  {
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Created At" />
+    ),
+    cell: ({ row }) => {
+      return <Text size="sm">{String(row.getValue("created_at"))}</Text>;
+    },
+  },
+  // {
+  //   id: "actions",
+  //   cell: ({ row }) => <DataTableRowActions row={row} />,
+  // },
 ];

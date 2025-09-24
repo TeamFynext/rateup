@@ -22,14 +22,15 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconArrowLeft,
   IconBrandInstagram,
+  IconBrandWhatsappFilled,
   IconDotsVertical,
   IconForbid2,
   IconHandOff,
-  IconLabel,
   IconMessageCheck,
   IconPencil,
   IconTicket,
   IconUserShare,
+  IconWebhook,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
@@ -44,26 +45,20 @@ import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.que
 import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import { useTickets } from "@/backend/tickets/tickets.query";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
   useBlockWhatsAppUser,
   useGetAssignedUserForContact,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
-import EditContactLabelModal from "@/components/Contacts/EditContactLabelModal";
 import EditContactModal from "@/components/Contacts/EditContactModal";
+import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
-import CreateTicketModal, {
-  CreateTicketCard,
-} from "@/components/Tickets/CreateTicketModal";
-import { useUser } from "@/context/UserContext";
+import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal";
 import { useChatbotStore } from "@/store/chatbot.store";
-import { UserRole } from "@/utils/enums";
 import { TicketType } from "@/utils/enums/ticket";
 import { hasFeature } from "@/utils/subscription/subscription";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox";
@@ -74,10 +69,12 @@ import classes from "./styles.module.css";
 interface WaInboxChatDisplayHeaderProps {
   contact: ContactsWithLastMessage;
   smallScreen: boolean;
+  waSettings: any;
 }
 export default function WaInboxChatDisplayHeader({
   contact,
   smallScreen,
+  waSettings,
 }: WaInboxChatDisplayHeaderProps) {
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   const editContactMutation = useEditContactMutation(null);
@@ -105,15 +102,41 @@ export default function WaInboxChatDisplayHeader({
     );
   }
 
+  const platform = contact?.source?.toUpperCase() || MessagePlatform.WHATSAPP;
+  const isInsta = platform === MessagePlatform.INSTAGRAM;
+  let leftSectionIcon: React.ReactNode;
+
+  switch (platform) {
+    case MessagePlatform.INSTAGRAM:
+      leftSectionIcon = <InstagramIcon size={13} />;
+      break;
+    case MessagePlatform.WEBCHAT:
+      leftSectionIcon = <IconWebhook size={13} color="#25D366" />;
+      break;
+    case MessagePlatform.WHATSAPP:
+    default:
+      leftSectionIcon = <IconBrandWhatsappFilled size={13} color="#25D366" />;
+      break;
+  }
+
+  function getMessageSourceName(sourceIdentifier) {
+    if (!waSettings) return sourceIdentifier;
+    const settings = waSettings?.find(
+      (setting) =>
+        sourceIdentifier === setting.ibaId ||
+        sourceIdentifier === setting.phone ||
+        `+${sourceIdentifier}` === setting.phone,
+    );
+    if (isInsta)
+      return (settings?.igDisplayName ?? settings?.igUserName)
+        ? `@${settings?.igUserName}`
+        : sourceIdentifier;
+    return settings?.phoneDisplayName || settings?.phone || sourceIdentifier;
+  }
+
   if (!contact) return null;
-  const platform = contact.source?.toUpperCase() || MessagePlatform.WHATSAPP;
   return (
-    <div
-      className={classes.wrapper}
-      style={{
-        ...(smallScreen ? { padding: 10 } : {}),
-      }}
-    >
+    <div className={classes.wrapper}>
       <Group>
         {isMobile && (
           <ActionIcon
@@ -128,52 +151,52 @@ export default function WaInboxChatDisplayHeader({
 
         <Avatar
           color="var(--mantine-primary-color-6)"
-          size={!isMobile && !smallScreen ? 65 : 35}
+          // size={!isMobile && !smallScreen ? 65 : 35}
+          size={"md"}
           name={contact.name}
         />
         <Stack className={classes.name_phone_wrapper}>
           <Text className={classes.name} fw={600}>
             {contact.name ?? contact.whatsappUserName}
           </Text>
-          {contact.whatsappUserName && (
-            <Tooltip label={"WhatsApp User Name"}>
-              {platform === MessagePlatform.INSTAGRAM ? (
-                <Badge
-                  leftSection={<InstagramIcon />}
-                  tt={"initial"}
-                  variant="light"
-                  color="#bc1888"
-                  radius={"xs"}
-                  p={1}
-                >{`@${contact.whatsappUserName}`}</Badge>
-              ) : (
-                <Text size="xs">{contact.whatsappUserName}</Text>
-              )}
-            </Tooltip>
+          {contact.consent ? (
+            <Text className={classes.phone}>
+              {contact.phone || contact?.other}
+            </Text>
+          ) : (
+            <Badge
+              leftSection={<IconHandOff size={"0.75rem"} />}
+              size="xs"
+              variant="outline"
+            >
+              Do Not Disturb
+            </Badge>
           )}
-          <Text className={classes.phone}>
-            {contact.phone || contact?.other}
-          </Text>
         </Stack>
+        <LifecycleSelector value={contact.lifecycleId} id={contact.id} />
       </Group>
-      <Stack gap={"xs"} align="center">
-        {!smallScreen && platform !== MessagePlatform.WEBCHAT && (
-          <WaInboxCountdownTimer
-            timeStamp={contact?.lastReceivedMessageTimeStamp}
-          />
-        )}
-        {!contact.consent && (
-          <Badge
-            leftSection={<IconHandOff size={"0.75rem"} />}
-            size="xs"
-            variant="outline"
-          >
-            Do Not Disturb
-          </Badge>
-        )}
-      </Stack>
 
       <Group gap={"sm"}>
+        {contact?.lastMessage && (
+          <Badge
+            tt={"initial"}
+            size="xs"
+            radius={"sm"}
+            p={1}
+            variant="light"
+            color={isInsta ? "#cc2960" : "#25D366"}
+            leftSection={leftSectionIcon}
+          >
+            {getMessageSourceName(contact?.lastMessage?.sourceIdentifier)}
+          </Badge>
+        )}
+        <Stack gap={"xs"} align="center">
+          {!smallScreen && platform !== MessagePlatform.WEBCHAT && (
+            <WaInboxCountdownTimer
+              timeStamp={contact?.lastReceivedMessageTimeStamp}
+            />
+          )}
+        </Stack>
         {hasAIFeature && chatbot?.enableWaChat && chatbot?.enableAllWaChat && (
           <Switch
             size="xs"
@@ -211,28 +234,6 @@ export const ContactEdit = ({ contact, opened, close }) => {
   );
 };
 
-export const LabelEdit = ({ contact, opened, close }) => {
-  const translations = useTranslations();
-  return (
-    <Stack>
-      <FormModalLayout
-        opened={opened}
-        title={translations("Edit Labels")}
-        onClose={close}
-        centered
-        noCustomHeader
-        size="lg"
-      >
-        <EditContactLabelModal
-          id={contact?.id}
-          labelIds={contact.labelIds}
-          closeEditModal={close}
-        />
-      </FormModalLayout>
-    </Stack>
-  );
-};
-
 const ChatContactMenu = ({ contact }) => {
   const { data: subscription } = useSubscription();
 
@@ -241,10 +242,6 @@ const ChatContactMenu = ({ contact }) => {
     () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     [subscription],
   );
-  const [openedEdit, { open: openEditContact, close: closeEditContact }] =
-    useDisclosure(false);
-  const [openedLabels, { open: openEditLabels, close: closeEditLabels }] =
-    useDisclosure(false);
   const [
     openedCreateTicket,
     { open: openCreateTicket, close: closeCreateTicket },
@@ -315,18 +312,6 @@ const ChatContactMenu = ({ contact }) => {
             Create Ticket
           </Menu.Item>
         )}
-        <Menu.Item
-          leftSection={<IconPencil size={20} />}
-          onClick={openEditContact}
-        >
-          Edit Contact
-        </Menu.Item>
-        <Menu.Item
-          leftSection={<IconLabel size={20} />}
-          onClick={openEditLabels}
-        >
-          Edit Labels
-        </Menu.Item>
         {!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) &&
           !contact?.blockedOnWhatsApp && (
             <Menu.Item
@@ -347,16 +332,6 @@ const ChatContactMenu = ({ contact }) => {
         opened={openedCreateTicket}
         type={TicketType.CUSTOM}
         hasTicketFeature={hasTicketFeature}
-      />
-      <ContactEdit
-        opened={openedEdit}
-        close={closeEditContact}
-        contact={contact}
-      />
-      <LabelEdit
-        opened={openedLabels}
-        close={closeEditLabels}
-        contact={contact}
       />
       <ConfirmationModal
         onClose={closeConfirm}

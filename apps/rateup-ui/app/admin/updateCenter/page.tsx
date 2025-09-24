@@ -7,6 +7,7 @@ import {
   useUpdateAutomationTriggerSubscription,
   useUpdateAutomationUsageStats,
   useUpdateFreePlanSubscriptionExpiry,
+  useUpdateLifecycle,
   useUpdateSubscriptionNewFeat,
   useUpdateUsageStats,
 } from "@/backend/updations/update.query";
@@ -19,6 +20,7 @@ function UpdateAllThemes() {
   const updateAutStat = useUpdateAutomationUsageStats();
   const updateFeat = useUpdateSubscriptionNewFeat();
   const updateFreePlan = useUpdateFreePlanSubscriptionExpiry();
+  const updateLife = useUpdateLifecycle();
 
   return (
     <Stack>
@@ -117,6 +119,20 @@ function UpdateAllThemes() {
             updateFreePlan.mutate();
           }}
           loading={updateFreePlan.isPending}
+        >
+          Update
+        </Button>
+      </Stack>
+      <Stack mt="xl">
+        <Title order={2}>Update lifecycle</Title>
+        <Text>This will add default lifecycle</Text>
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateLife.mutate();
+          }}
+          loading={updateLife.isPending}
         >
           Update
         </Button>
