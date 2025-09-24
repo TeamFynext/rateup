@@ -2146,5 +2146,7 @@
   "Blocked": "محجوب",
   "Online": "متصل",
   "Offline": "غير متصل",
-  "Profile": "الملف الشخصي"
+  "Profile": "الملف الشخصي",
+  "You’ll need to log in again to access your account": "ستحتاج إلى تسجيل الدخول مرة أخرى للوصول إلى حسابك.",
+  "Are you sure you want to logout?": "هل أنت متأكد أنك تريد تسجيل الخروج؟"
 }

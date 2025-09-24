@@ -9,6 +9,7 @@ import {
   IconBrandTeams,
   IconBrandWhatsapp,
   IconBrowser,
+  IconBuildings,
   IconBuildingStore,
   IconCirclePlus,
   IconCircleX,
@@ -423,10 +424,21 @@ export function getNavTopData(
       label: translations("Account"),
       children: [
         {
+          label: translations("User"),
+          link: "/dashboard/settings?tab=user",
+          icon: IconUser,
+        },
+        {
+          label: translations("Organization"),
+          link: "/dashboard/settings?tab=organization",
+          icon: IconBuildings,
+        },
+        {
           label: translations("Account"),
-          link: "/dashboard/settings",
+          link: "/dashboard/settings?tab=account",
           icon: IconUserShare,
         },
+
         ...(subscription?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
           ? [
               {
@@ -436,11 +448,6 @@ export function getNavTopData(
               },
             ]
           : []),
-        {
-          label: translations("Logout"),
-          link: "/logout",
-          icon: IconLogout,
-        },
       ],
     },
   ];

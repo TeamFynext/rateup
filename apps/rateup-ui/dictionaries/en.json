@@ -2154,5 +2154,7 @@
   "Contact labels created successfully": "Contact labels created successfully",
   "Online": "Online",
   "Offline": "Offline",
-  "Profile": "Profile"
+  "Profile": "Profile",
+  "You’ll need to log in again to access your account": "You’ll need to log in again to access your account.",
+  "Are you sure you want to logout?": "Are you sure you want to logout?"
 }

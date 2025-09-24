@@ -74,8 +74,7 @@
   margin-bottom: var(--mantine-spacing-xs);
   background-color: var(--mantine-color-body);
   padding: var(--mantine-spacing-md);
-  padding-top: 18px;
-  height: 60px;
+  height: 50px;
   border-bottom: 1px solid
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-7));
 }
@@ -84,8 +83,8 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  height: 70px;
-  padding-top: var(--mantine-spacing-md);
+  height: 60px;
+  padding-top: var(--mantine-spacing-xs);
   background-color: var(--mantine-color-body);
 }
 

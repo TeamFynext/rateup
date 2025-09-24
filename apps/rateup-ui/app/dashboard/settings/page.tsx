@@ -31,16 +31,9 @@ const Settings = () => {
         onChange={(value) => router.push(`?tab=${value}`)}
         w="100%"
       >
-        <Tabs.List mb="md">
-          {/* <Tabs.Tab value="user">{translations("User")}</Tabs.Tab> */}
-          <Tabs.Tab value="organization">
-            {translations("Organization")}
-          </Tabs.Tab>
-          <Tabs.Tab value="account">{translations("Account")}</Tabs.Tab>
-        </Tabs.List>
-        {/* <Tabs.Panel value="user">
+        <Tabs.Panel value="user">
           <ProfileSettings />
-        </Tabs.Panel> */}
+        </Tabs.Panel>
         <Tabs.Panel value="organization">
           <OrgSettings />
         </Tabs.Panel>

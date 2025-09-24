@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Avatar,
   Box,
+  Button,
   Divider,
   FileButton,
   Flex,
@@ -18,6 +19,8 @@ import {
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 
 import {
   useChangePasswordMutation,
@@ -35,7 +38,8 @@ import {
   ContainedTextField,
 } from "../../../components/input/ContainedInput/ContainedInput";
 import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
-import { mergeNames } from "../../../utils/essential";
+import { mergeNames, retrieveRole } from "../../../utils/essential";
+import { uploadFile } from "../../../utils/file-upload/upload";
 import { passwordValidation } from "../../../utils/validation";
 import styles from "./setting.module.css";
 
@@ -52,15 +56,21 @@ import { SAVE_HOTKEY } from "../../../utils/constants";
 
 const ProfileSettings = () => {
   const translations = useTranslations();
-  const { data: profileData } = useGetUserProfile();
+  const {
+    isLoading: isprofileLoading,
+    error: profileError,
+    data: profileData,
+  } = useGetUserProfile();
 
-  // form setup
   const profileForm = useForm({
     initialValues: {
       title: "",
       firstname: "",
       lastname: "",
       phone: "",
+      existingPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     },
     validate: {
       title: isNotEmpty(translations("Select a title")),
@@ -70,104 +80,151 @@ const ProfileSettings = () => {
           return translations("Invalid phone number");
         return null;
       },
+      existingPassword: (value, values) =>
+        isAnyPasswordFieldDirty(values) ? passwordValidation(value) : null,
+      newPassword: (value, values) =>
+        isAnyPasswordFieldDirty(values) ? passwordValidation(value) : null,
+      confirmPassword: (value, values) => {
+        if (value !== values.newPassword && isAnyPasswordFieldDirty(values)) {
+          return translations(
+            "New Password  and Confirm Password did not match",
+          );
+        }
+        return null; // Validation passed
+      },
     },
   });
+  function isAnyPasswordFieldDirty(
+    values: {
+      existingPassword: string;
+      newPassword: string;
+      confirmPassword: string;
+    } = { confirmPassword: "", existingPassword: "", newPassword: "" },
+  ) {
+    return (
+      values.existingPassword !== "" ||
+      values.newPassword !== "" ||
+      values.confirmPassword != "" ||
+      profileForm.isDirty("existingPassword") ||
+      profileForm.isDirty("newPassword") ||
+      profileForm.isDirty("confirmPassword")
+    );
+  }
 
   const [isLoading, setIsLoading] = useState(false);
+  const [openedPasswordModal, passwordModal] = useDisclosure(false);
   const updateProfile = useUpdateProfileMutation(setIsLoading);
   const changePassword = useChangePasswordMutation(setIsLoading);
 
-  const onSubmit = (values: typeof profileForm.values) => {
+  const onSubmit = (values) => {
     setIsLoading(true);
     const data = {
       title: values.title,
       name: mergeNames(values.firstname, values.lastname),
       phone: values.phone ?? "",
     };
+    if (isAnyPasswordFieldDirty(values)) {
+      const passwordData = {
+        existingPassword: values.existingPassword,
+        newPassword: values.newPassword,
+      };
+      changePassword.mutate(passwordData);
+      profileForm.reset();
+    }
+
     updateProfile.mutate(data);
   };
 
-  // avatar logic
   const [avatarSrc, setAvatarSrc] = useState(
     `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/profile-photo.png`,
   );
+
   useEffect(() => {
     if (profileData?.data?.data) {
+      const phone = profileData?.data?.data?.phone
+        ? profileData?.data?.data?.phone
+        : null;
       profileForm.setValues({
         title: profileData?.data?.data?.gender || "",
         firstname: profileData?.data?.data?.name?.split(" ")[0] || "",
         lastname: profileData?.data?.data?.name?.split(" ")[1] || "",
-        phone: profileData?.data?.data?.phone || "",
+        phone: phone || "",
       });
     }
+
     const profilePhoto = profileData?.data?.data?.profilePhoto;
+
     if (profilePhoto && profilePhoto !== "REMOVED_PHOTO") {
+      const imgUrl = `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`;
+      setAvatarSrc(imgUrl);
+    } else {
       setAvatarSrc(
-        `${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${profilePhoto}`,
+        `${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/profile-photo.png`,
       );
     }
   }, [profileData]);
 
-  // crop modal + upload
   const [file, setFile] = useState<File | null>(null);
-  const [selectedImage, setSelectedImage] = useState({ url: "", name: "" });
+  const [isLoadingUpload, setIsLoadingUpload] = useState(false);
+  const [selectedImage, setSelectedImage] = useState({
+    url: "",
+    name: "",
+  });
   const resetRef = useRef(null);
-  const [openedCropDialog, cropDialog] = useDisclosure(false);
-  const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoading);
+  const [
+    openedCropDialog,
+    { toggle: toggleCropDialog, close: closeCropDialog },
+  ] = useDisclosure(false);
 
-  const handleImagePicker = (event: any) => {
-    if (!event) return;
-    cropDialog.toggle();
-    setSelectedImage({ name: event.name, url: URL.createObjectURL(event) });
-    resetRef?.current?.();
-  };
-  const handleCropImageSave = (cropedImage: File) => {
-    setFile(cropedImage);
-  };
+  const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoadingUpload);
+  useEffect(() => {
+    const uploadAndUpdate = async () => {
+      if (file) {
+        const fileKey = await uploadFile(file);
+        const data = { profilePhoto: fileKey };
+        if (typeof fileKey === "string") {
+          updateProfilePhoto.mutate(data);
+
+          notifications.show({
+            id: "load-data",
+            loading: true,
+            title: translations("Uploading photo"),
+            message: translations("Hold on, changing your profile photo"),
+            autoClose: false,
+            withCloseButton: false,
+          });
+        }
+      }
+    };
+    uploadAndUpdate();
+  }, [file]);
 
   function removePhoto() {
-    updateProfilePhoto.mutate({ profilePhoto: "REMOVED_PHOTO" });
+    const data = { profilePhoto: "REMOVED_PHOTO" };
+    updateProfilePhoto.mutate(data);
   }
-
-  // password modal
-  const [openedPasswordModal, passwordModal] = useDisclosure(false);
-  const passwordForm = useForm({
-    initialValues: {
-      existingPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    },
-    validate: {
-      existingPassword: passwordValidation,
-      newPassword: passwordValidation,
-      confirmPassword: (value, values) =>
-        value !== values.newPassword
-          ? translations("New Password and Confirm Password did not match")
-          : null,
-    },
-  });
-
-  const handlePasswordSubmit = (values: typeof passwordForm.values) => {
-    changePassword.mutate({
-      existingPassword: values.existingPassword,
-      newPassword: values.newPassword,
+  const handleImagePicker = (event) => {
+    if (!event) return;
+    toggleCropDialog();
+    setSelectedImage({
+      name: event.name,
+      url: URL.createObjectURL(event),
     });
-    passwordForm.reset();
-    passwordModal.close();
+    resetRef?.current?.();
   };
-
+  const handleCropImageSave = (cropedImage) => {
+    setFile(cropedImage);
+  };
   return (
-    <Flex direction="column" h="90vh" gap="lg" p="xl" align="start" maw="100%">
-      {/* Image Crop Modal */}
+    <Flex direction="column" h="80vh" gap="lg" p="xl" align="start" maw="100%">
       <ImageCropModal
         opened={openedCropDialog}
-        onclose={cropDialog.close}
+        onclose={closeCropDialog}
         imageName={selectedImage.name}
         handleCropImageSave={handleCropImageSave}
         image={selectedImage.url}
         aspect={1}
       />
-
       {/* Password Modal */}
       <Modal
         opened={openedPasswordModal}
@@ -181,24 +238,27 @@ const ProfileSettings = () => {
         radius="lg"
       >
         <form
-          onSubmit={passwordForm.onSubmit(handlePasswordSubmit)}
+          onSubmit={profileForm.onSubmit(onSubmit)}
           className="flex flex-col gap-5"
         >
-          <ContainedPasswordInput
-            required
-            placeholder={translations("Enter existing password")}
-            {...passwordForm.getInputProps("existingPassword")}
-          />
-          <ContainedPasswordInput
-            required
-            placeholder={translations("Enter new password")}
-            {...passwordForm.getInputProps("newPassword")}
-          />
-          <ContainedPasswordInput
-            required
-            placeholder={translations("Enter new password again")}
-            {...passwordForm.getInputProps("confirmPassword")}
-          />
+          <Flex gap={"md"} wrap="wrap" direction={"column"}>
+            <ContainedPasswordInput
+              required={isAnyPasswordFieldDirty()}
+              w={"100%"}
+              placeholder={translations("Enter existing password")}
+              {...profileForm.getInputProps("existingPassword")}
+            />
+            <ContainedPasswordInput
+              required={isAnyPasswordFieldDirty()}
+              placeholder={translations("Enter new password")}
+              {...profileForm.getInputProps("newPassword")}
+            />
+            <ContainedPasswordInput
+              required={isAnyPasswordFieldDirty()}
+              placeholder={translations("Enter new password again")}
+              {...profileForm.getInputProps("confirmPassword")}
+            />
+          </Flex>
           <Flex justify="flex-end" mt="md">
             <RateupButtonBlue
               type="submit"
@@ -208,33 +268,31 @@ const ProfileSettings = () => {
           </Flex>
         </form>
       </Modal>
-
-      {/* Page Header */}
-      <Box mb="sm">
-        <Title order={2} fw={700}>
-          {translations("User Settings")}
-        </Title>
-      </Box>
-
-      {/* Responsive Layout */}
+      <Title order={2}>{translations("User Settings")}</Title>
       <Flex
         direction={{ base: "column", md: "row" }}
         wrap="wrap"
         justify="center"
-        align="stretch" // ensures equal height
+        align="stretch"
         gap="xl"
-        w="100%"
         maw="100%"
       >
         {/* Left Column */}
-        <Paper withBorder shadow="sm" radius="xl" p="xl">
+        <Paper
+          withBorder
+          shadow="sm"
+          radius="xl"
+          p="xl"
+          flex={1}
+          maw={{ base: "100%", md: "40%" }}
+        >
           <Flex
-            gap="md"
+            gap="xs"
             direction="column"
             justify="center"
             align="center"
             h="100%" // match parent height
-            p="md"
+            p="sm"
           >
             {/* Avatar */}
             <Avatar
@@ -242,28 +300,59 @@ const ProfileSettings = () => {
               alt="Profile Picture"
               radius="50%"
               size={180}
-              className="w-[140px] h-[140px] sm:w-[180px] sm:h-[180px]"
             />
 
             {/* Buttons */}
-            <Flex gap="md" mt="sm">
-              <RateupButtonSecondary
-                title={translations("Remove Image")}
+            <Flex gap="md" mt="sm" w="100%">
+              {/* <RateupButtonSecondary
+                title={translations("Remove")}
                 size="sm"
                 variant="outline"
                 onClick={removePhoto}
-              />
+              /> */}
+              <Button
+                onClick={removePhoto}
+                variant="filled"
+                size="sm"
+                radius="lg"
+                w="100%"
+                maw="100%"
+                flex={1}
+              >
+                <Flex align={"center"} justify={"center"} gap={2}>
+                  <IconTrash strokeWidth={1.5} size={20} />
+                  <Text size="sm">{translations("Remove")}</Text>
+                </Flex>
+              </Button>
               <FileButton
                 onChange={handleImagePicker}
                 accept="image/png,image/jpeg,image/svg+xml,image/webp"
                 resetRef={resetRef}
               >
-                {(props) => (
+                {/* {(props) => (
                   <RateupButtonBlue
                     title={translations("Change Image")}
                     size="sm"
                     {...props}
                   />
+                )} */}
+
+                {(props) => (
+                  <Button
+                    {...props}
+                    variant="filled"
+                    size="sm"
+                    radius="lg"
+                    w="100%"
+                    maw="100%"
+                    flex={1}
+                  >
+                    <Flex align={"center"} justify={"center"} gap={2}>
+                      <IconEdit strokeWidth={1.5} size={20} />
+
+                      <Text size="sm"> {translations("Edit")}</Text>
+                    </Flex>
+                  </Button>
                 )}
               </FileButton>
             </Flex>
@@ -280,8 +369,8 @@ const ProfileSettings = () => {
           radius="xl"
           p="xl"
           withBorder
-          flex={1}
-          className="bg-white w-full md:flex-[0.65] min-w-[320px] max-w-full"
+          flex={2}
+          maw={{ base: "100%", md: "60%" }}
         >
           <Text size="lg" fw={600} className="text-gray-700 mb-4">
             {translations("Edit Info")}
