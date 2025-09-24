@@ -7,15 +7,19 @@ import {
   ActionIcon,
   Avatar,
   Box,
+  Button,
   Divider,
   Flex,
   Group,
   Indicator,
+  Modal,
   Popover,
   rgba,
   Switch,
   Text,
+  Title,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { ChevronDown, ChevronUp, LogOut, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -31,6 +35,7 @@ export default function TopNavbar({ user }) {
   const updateUserStatus = useUpdateUserAvailabilityStatus();
   const [status, setStatus] = useState(user?.status);
   const [opened, setOpened] = useState(false);
+  const [openedLogoutModal, logoutModal] = useDisclosure(false);
 
   const translations = useTranslations();
   const router = useRouter();
@@ -53,30 +58,60 @@ export default function TopNavbar({ user }) {
       component="header"
       justify="end"
       align="center"
-      h={60}
+      h={50}
       px="md"
       w={"100%"}
       className={classes["topbar"]}
     >
-      {/* LEFT: Org avatar + name */}
-      {/* <Group
-        gap="sm"
-        onClick={() => router.push("/dashboard/settings?tab=organization")}
-        style={{ cursor: "pointer" }}
+      <Modal
+        opened={openedLogoutModal}
+        onClose={logoutModal.close}
+        centered
+        radius="lg"
+        withCloseButton={false}
+        overlayProps={{
+          blur: 4,
+          backgroundOpacity: 0.55,
+        }}
       >
-        <Avatar
-          name={user?.orgName}
-          src={getFileUrlFromKey(user?.orgLogo)}
-          radius="xl"
-          size="md"
-        />
-        <Box>
-          <Text size="sm" fw={600}>
-            {user?.orgName || "Org"}
-          </Text>
-        </Box>
-      </Group> */}
+        <Flex direction="column" align="center" gap="md" p="lg">
+          <div
+            style={{
+              background: "rgba(0, 79, 152, 0.1)",
+              borderRadius: "50%",
+              padding: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <LogOut size={28} color="#004F98" strokeWidth={2} />
+          </div>
 
+          <Title order={4} style={{ fontWeight: 600 }}>
+            {translations("Are you sure you want to logout?")}
+          </Title>
+
+          <Text size="sm" c="dimmed" ta="center" maw={280}>
+            {translations("You’ll need to log in again to access your account")}
+          </Text>
+
+          <Flex gap="sm" mt="md" w="100%" justify="center">
+            <Button variant="outline" radius="md" onClick={logoutModal.close}>
+              {translations("Cancel")}
+            </Button>
+            <Button
+              radius="md"
+              onClick={() => {
+                router.push("/logout");
+                logoutModal.close();
+              }}
+            >
+              {translations("Logout")}
+            </Button>
+          </Flex>
+        </Flex>
+      </Modal>
       {/* RIGHT: Notifications + Settings + Profile */}
       <Group gap="md">
         <Flex align={"center"} justify={"center"} gap={8}>
@@ -245,7 +280,7 @@ export default function TopNavbar({ user }) {
                 py={6}
                 style={{ borderRadius: 6, cursor: "pointer" }}
                 onClick={() => {
-                  router.push("/dashboard/user");
+                  router.push("/dashboard/settings?tab=user");
                   setOpened(false);
                 }}
               >
@@ -265,7 +300,7 @@ export default function TopNavbar({ user }) {
                   fontWeight: 500,
                 }}
                 onClick={() => {
-                  router.push("/logout");
+                  logoutModal.open();
                   setOpened(false);
                 }}
               >

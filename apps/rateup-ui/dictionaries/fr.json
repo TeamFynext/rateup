@@ -2145,5 +2145,7 @@
   "Blocked": "Bloqué",
   "Online": "En ligne",
   "Offline": "Hors ligne",
-  "Profile": "Profil"
+  "Profile": "Profil",
+  "You’ll need to log in again to access your account": "Vous devez vous reconnecter pour accéder à votre compte.",
+  "Are you sure you want to logout?": "Êtes-vous sûr de vouloir vous déconnecter ?"
 }
