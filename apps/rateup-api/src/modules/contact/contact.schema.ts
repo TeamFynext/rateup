@@ -32,7 +32,7 @@ const updateContactSchema = z.object({
   source: z.string().optional(),
 });
 const updateContactLabelsSchema = z.object({
-  labels: z.array(z.string()),
+  lifecycleId: z.string(),
 });
 
 export const paginationQuery = z.object({

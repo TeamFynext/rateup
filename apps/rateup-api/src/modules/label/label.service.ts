@@ -2,18 +2,18 @@ import prisma from "../../utils/prisma";
 import { LabelBodySchema } from "./label.schema";
 
 export async function getLabels(orgId: string) {
-  return await prisma.labels.findMany({
+  return await prisma.lifecycle.findMany({
     where: {
       orgId,
     },
     orderBy: {
-      createdAt: "desc",
+      ordering: "asc",
     },
   });
 }
 
 export async function updateLabel(labelId: string, data: LabelBodySchema) {
-  await prisma.labels.update({
+  await prisma.lifecycle.update({
     where: {
       id: labelId,
     },
@@ -22,7 +22,7 @@ export async function updateLabel(labelId: string, data: LabelBodySchema) {
 }
 
 export async function createLabel(orgId: string, data: LabelBodySchema) {
-  await prisma.labels.create({
+  await prisma.lifecycle.create({
     data: {
       orgId,
       ...data,
@@ -31,7 +31,7 @@ export async function createLabel(orgId: string, data: LabelBodySchema) {
 }
 
 export async function deleteLabelById(id: string) {
-  await prisma.labels.delete({
+  await prisma.lifecycle.delete({
     where: {
       id,
     },

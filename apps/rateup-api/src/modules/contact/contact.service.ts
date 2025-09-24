@@ -296,23 +296,14 @@ export async function updateContactById(
 
 export async function updateContactLabelsById(
   contactId: string,
-  labels: string[],
+  lifecycleId: string,
 ) {
-  await prisma.contactLabelMap.deleteMany({
-    where: {
-      contactId: contactId,
-    },
-  });
   const contact = await prisma.contact.update({
     where: {
       id: contactId,
     },
     data: {
-      ContactLabelMap: {
-        create: labels.map((labelId) => ({
-          labelId,
-        })),
-      },
+      lifecycleId,
     },
   });
   return contact;
