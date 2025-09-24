@@ -7,6 +7,7 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 import {
   automationSubscription,
   updateFreePlanSubscriptionExpiry,
+  updateLifecycle,
   updateSubscriptionNewFeat,
   updateUsageStats,
   updationAutomationTriggerSubscription,
@@ -81,6 +82,19 @@ export const useUpdateFreePlanSubscriptionExpiry = () => {
     },
     onError: () => {
       showErrorToast("Failed");
+    },
+  });
+};
+export const useUpdateLifecycle = () => {
+  return useMutation({
+    mutationFn: () => {
+      return updateLifecycle();
+    },
+    onSuccess: () => {
+      showSuccessToast("Lifecycle added successfully");
+    },
+    onError: () => {
+      showErrorToast("Failed to add lifecycle");
     },
   });
 };

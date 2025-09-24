@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation";
 
 import { MantineProvider, Stack } from "@mantine/core";
 
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import RateupLoader from "@/components/Loaders/RateupLoader";
 import Analytics from "@/components/whatsapp/inbox/analytics/analaytics";
 import {
   ResizableHandle,
@@ -34,6 +36,8 @@ export default function WhatsAppInbox() {
 
 const ResizeableChat = () => {
   const isChatDisplayOpen = useIsChatDisplayOpen();
+  const { data, isPending } = useWaSettings();
+  if (isPending) return <RateupLoader />;
   return (
     <ResizablePanelGroup
       direction="horizontal"
@@ -61,7 +65,7 @@ const ResizeableChat = () => {
         id="right"
         order={2}
       >
-        <WaInboxChatDisplay />
+        <WaInboxChatDisplay waSettings={data} />
       </ResizablePanel>
     </ResizablePanelGroup>
   );

@@ -190,6 +190,7 @@ const SubNavLinks = ({
               ) {
                 return;
               }
+              handleLabelFilter(""); // Clear label filter on regular link click
               setActiveSubLink(link.link);
               showOfflineNotification(status);
               router.push(link.link);
@@ -215,33 +216,14 @@ const SubNavLinks = ({
         key={`label-${index}`}
       >
         <UnstyledButton
-          onClick={() =>
-            index === 0 ? handleAddLabel() : handleLabelFilter(label?.value)
-          }
+          onClick={() => handleLabelFilter(label?.value)}
           className={classes.link}
           w={60}
           data-active={
             chatFilterStore.filter.labels.includes(label?.value) || undefined
           }
         >
-          {[0, 1].includes(index) ? (
-            <label.icon
-              size={22}
-              stroke={1.5}
-              labels={labels}
-              className={"m-auto"}
-            />
-          ) : (
-            <div
-              style={{
-                width: 20,
-                height: 20,
-                marginLeft: 4,
-                borderRadius: "50%",
-                backgroundColor: label.color || "#5c7cfa",
-              }}
-            />
-          )}
+          <div className="ml-1">{label.emoji}</div>
         </UnstyledButton>
       </Tooltip>
     )) || [];
@@ -272,6 +254,7 @@ const SubNavLinks = ({
           ) {
             return;
           }
+          handleLabelFilter(""); // Clear label filter on regular link click
           setActiveSubLink(link.link);
           router.push(link.link);
         }}
@@ -290,7 +273,7 @@ const SubNavLinks = ({
         href="#"
         onClick={(event) => {
           event.preventDefault();
-          index === 0 ? handleAddLabel() : handleLabelFilter(label?.value);
+          handleLabelFilter(label?.value);
         }}
         key={`label-text-${index}`}
         data-active={

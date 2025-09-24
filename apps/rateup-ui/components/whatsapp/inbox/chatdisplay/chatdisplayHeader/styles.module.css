@@ -1,6 +1,5 @@
 .wrapper {
-  padding: var(--mantine-spacing-sm) var(--mantine-spacing-xs);
-  padding-left: var(--mantine-spacing-xl);
+  padding: 4;
   border-bottom: 1px solid var(--mantine-color-gray-3);
   display: flex;
   gap: var(--mantine-spacing-sm);
@@ -13,7 +12,7 @@
   gap: 0;
 }
 .name {
-  font-size: var(--mantine-font-size-lg);
+  font-size: var(--mantine-font-size-sm);
   font-weight: 600;
   text-transform: capitalize;
 }

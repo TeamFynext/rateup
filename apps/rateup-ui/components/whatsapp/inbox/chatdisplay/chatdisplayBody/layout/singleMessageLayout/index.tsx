@@ -77,7 +77,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
         bg:
           platform === MessagePlatform.INSTAGRAM
             ? "#D6297614"
-            : "light-dark(#dcf0e4,rgb(82, 190, 127)",
+            : "light-dark(#dcf0e4,#0f2a1e)",
       };
     }
     return { bg: "light-dark(#ffffff, var(--mantine-color-dark-6))" };
