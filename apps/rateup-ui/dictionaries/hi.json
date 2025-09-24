@@ -2143,5 +2143,8 @@
   "UnAssigned": "सौंपा नहीं",
   "Assigned to Me": "मुझे सौंपा गया",
   "Closed": "बंद",
-  "Blocked": "अवरोधित"
+  "Blocked": "अवरोधित",
+  "Online": "ऑनलाइन",
+  "Offline": "ऑफ़लाइन",
+  "Profile": "प्रोफ़ाइल"
 }

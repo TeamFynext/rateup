@@ -94,7 +94,12 @@ const NotificationBellIcon = (props) => {
         inline
         size={isLoadingCount ? 8 : 16}
       >
-        <IconBell onClick={open} {...props} />
+        <ActionIcon
+          variant="transparent"
+          style={{ color: "light-dark(black, white)" }}
+        >
+          <IconBell onClick={open} {...props} />
+        </ActionIcon>
       </Indicator>
     </>
   );
