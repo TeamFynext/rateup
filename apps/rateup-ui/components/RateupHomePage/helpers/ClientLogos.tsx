@@ -42,28 +42,39 @@ const ClientLogos = () => {
   const allLogos = [...logos, ...logos]; // duplicate for seamless loop
 
   return (
-    <section className="pt-2.5 sm:pt-0  lg:pb-7 overflow-hidden  ">
-      <div className="relative overflow-hidden">
-        <motion.div
-          className="flex gap-12 min-w-max"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        >
-          {allLogos.map((logo, index) => (
-            <Image
-              key={index}
-              src={logo}
-              width={100}
-              height={100}
-              alt={`Client Logo ${index + 1}`}
-              className="sm:h-[110px] h-[60px] w-auto object-contain"
-            />
-          ))}
-        </motion.div>
+    <section className="lg:pb-7 flex items-center justify-center py-8">
+      <div className="border border-[#E2E5ED] w-[80vw] flex items-center justify-center rounded-lg">
+        {/* Left Section */}
+        <div className="flex flex-col items-center justify-center px-6 py-4 w-[12vw]">
+          <span className="text-[#7A8289] font-semibold">Trusted By</span>
+          <span className="bg-gradient-to-r from-[#004F98] to-[#001747] bg-clip-text text-transparent font-bold">
+            70+ Clients
+          </span>
+        </div>
+
+        {/* Scrolling Logos */}
+        <div className="relative overflow-hidden w-full border-l border-l-[#E2E5ED] py-4">
+          <motion.div
+            className="flex gap-12 min-w-max"
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          >
+            {[...allLogos, ...allLogos].map((logo, index) => (
+              <Image
+                key={index}
+                src={logo}
+                width={100}
+                height={100}
+                alt={`Client Logo ${index + 1}`}
+                className="sm:h-[110px] h-[60px] w-auto object-contain"
+              />
+            ))}
+          </motion.div>
+        </div>
       </div>
     </section>
   );
