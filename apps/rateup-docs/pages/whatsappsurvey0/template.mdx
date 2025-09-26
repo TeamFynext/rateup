@@ -1,0 +1,35 @@
+# WhatsApp Templates
+
+Templates provide a structured and predefined format for your WhatsApp flows, making it convenient for users to understand the survey content and for you to maintain consistency in survey design. These templates can be particularly useful when conducting similar types of WhatsApp flows or when you want to standardize the WhatsApp flow format for your audience.
+
+import ScreenShot from "../../components/Screenshot";
+import YoutubeVideo from "../../components/YoutubeVideo";
+
+<ScreenShot src={"/screenshots/template-whatsapp.png"} alt="WhatsApp Templates"/>
+
+### Key Components
+
+- **Template Name**: This required field can only contain lowercase letters and underscores.
+- **Header**: An optional section that can include text, media, or a document.
+- **Body**: The main content of the message, typically including placeholders for dynamic content.
+    * You can send dynamic templates with custom values to personalize each message.
+    * For example, the template body:Hi `{{1}}`
+    * will be replaced with "Hi [name]" from the contact list, making each message feel personalized. You can include as many variables as needed using the `+` button above the body text space. Dont add two variable together
+- **Footer**: An optional section for additional information or disclaimers.
+- **Buttons**: Optional interactive elements that can be added to the message. There are two types:
+  - **Quick Replies**: Allow users to respond with a single tap.
+  - **Call to Action**: Direct users to a URL or initiate a phone call.
+  - **Rateup Interactive Buttons**: Add a RateUp WhatsApp flow button or a RateUp web survey button..
+
+#### Create Template
+
+- To create template go to `Templates` under WhatsApp. Click on `Create Template`.
+- Provide the necessary information and click on save as draft to save your content as a draft instead of publishing it. To publish the content to WhatsApp, click save & submit.
+
+
+#### Edit Template
+
+- You can also edit template you created by clicking on template card.
+- After publishing, the content can be edited once within 24 hours.
+
+<YoutubeVideo  src={"https://youtube.com/embed/R7PFMNRBlFQ"} />
