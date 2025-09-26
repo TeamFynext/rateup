@@ -6,10 +6,10 @@
     "teams":{
         "title" : "Teams and User Roles"
     } ,
-    "webSurvey":{
+    "websurvey":{
         "title" : "Web Survey"
     },
-    "whatsappSurvey" : {
+    "whatsappsurvey" : {
         "title": "WhatsApp Features"
     },
     "menu" : {
@@ -22,10 +22,10 @@
         "type":"separator",
         "title":""
     },
-    "advancedFt": {
+    "advancedft": {
         "title": "Advanced Feature"
     },
-    "apiDoc": {
+    "apidoc": {
         "title" : "API Documentation"
     },
     "-- More": {
