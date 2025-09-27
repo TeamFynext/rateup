@@ -38,3 +38,9 @@ export async function updateFreePlanSubscriptionExpiry() {
     timeout: 60000,
   });
 }
+
+export async function updateLifecycle() {
+  return await axiosClient.put(`${baseUrl}/add-default-lifecycle`, null, {
+    timeout: 60000,
+  });
+}

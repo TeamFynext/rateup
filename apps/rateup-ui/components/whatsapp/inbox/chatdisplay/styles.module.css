@@ -15,6 +15,7 @@
   opacity: 0;
   opacity: 0;
   animation: fadeIn 0.2s ease-in-out 0.2s forwards;
+  position: relative;
 }
 
 @keyframes fadeIn {

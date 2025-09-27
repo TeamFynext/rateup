@@ -63,6 +63,7 @@ import { useChatFilterStore } from "../whatsapp/inbox/chatselect/chatFilter";
 import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
 import { getNavTopData } from "./Navbar/navbar.constants";
+import TopNavbar from "./TopLayout";
 
 const showOfflineNotification = (status) => {
   if (status === UserAvailabilityStatus.offline) {
@@ -189,6 +190,7 @@ const SubNavLinks = ({
               ) {
                 return;
               }
+              handleLabelFilter(""); // Clear label filter on regular link click
               setActiveSubLink(link.link);
               showOfflineNotification(status);
               router.push(link.link);
@@ -214,33 +216,14 @@ const SubNavLinks = ({
         key={`label-${index}`}
       >
         <UnstyledButton
-          onClick={() =>
-            index === 0 ? handleAddLabel() : handleLabelFilter(label?.value)
-          }
+          onClick={() => handleLabelFilter(label?.value)}
           className={classes.link}
           w={60}
           data-active={
             chatFilterStore.filter.labels.includes(label?.value) || undefined
           }
         >
-          {[0, 1].includes(index) ? (
-            <label.icon
-              size={22}
-              stroke={1.5}
-              labels={labels}
-              className={"m-auto"}
-            />
-          ) : (
-            <div
-              style={{
-                width: 20,
-                height: 20,
-                marginLeft: 4,
-                borderRadius: "50%",
-                backgroundColor: label.color || "#5c7cfa",
-              }}
-            />
-          )}
+          <div className="ml-1">{label.emoji}</div>
         </UnstyledButton>
       </Tooltip>
     )) || [];
@@ -271,6 +254,7 @@ const SubNavLinks = ({
           ) {
             return;
           }
+          handleLabelFilter(""); // Clear label filter on regular link click
           setActiveSubLink(link.link);
           router.push(link.link);
         }}
@@ -289,7 +273,7 @@ const SubNavLinks = ({
         href="#"
         onClick={(event) => {
           event.preventDefault();
-          index === 0 ? handleAddLabel() : handleLabelFilter(label?.value);
+          handleLabelFilter(label?.value);
         }}
         key={`label-text-${index}`}
         data-active={
@@ -480,6 +464,7 @@ const Navbar = ({
 }) => {
   const updateUserStatus = useUpdateUserAvailabilityStatus();
   const [status, setStatus] = useState(user?.status);
+  const router = useRouter();
   useEffect(() => {
     if (status !== user?.status) {
       updateUserStatus.mutate({
@@ -499,99 +484,46 @@ const Navbar = ({
       <div className={classes.wrapper}>
         <div className={classes.aside}>
           <div>
-            <Stack gap={0} pb={"sm"}>
+            <Stack gap={0}>
               <div className={classes.logo}>
-                <HoverCard width={280} shadow="md" position="right-end">
+                <HoverCard shadow="md" position="right-end">
                   <HoverCard.Target>
-                    <Indicator
-                      color={
-                        user?.status === UserAvailabilityStatus.online
-                          ? "#69f0ae"
-                          : "#cacaca"
+                    <Avatar
+                      name={user?.orgName}
+                      color="initials"
+                      src={getFileUrlFromKey(user?.orgLogo)}
+                    />
+                  </HoverCard.Target>
+                  <HoverCard.Dropdown>
+                    <Flex
+                      justify={"center"}
+                      align={"center"}
+                      gap={"xs"}
+                      onClick={() =>
+                        router.push("/dashboard/settings?tab=organization")
                       }
-                      processing={
-                        user?.status === UserAvailabilityStatus.online
-                      }
-                      size={8}
+                      style={{
+                        cursor: "pointer",
+                      }}
                     >
                       <Avatar
                         name={user?.orgName}
                         color="initials"
                         src={getFileUrlFromKey(user?.orgLogo)}
+                        size={30}
                       />
-                    </Indicator>
-                  </HoverCard.Target>
-                  <HoverCard.Dropdown>
-                    <Box>
-                      <Text fw={500} size="sm" mb={"xs"}>
-                        {user?.userName || "User"}
+                      <Text fw={500} size="sm">
+                        {user?.orgName || "No Organization"}
                       </Text>
-                      <Box>
-                        <Text size="xs" c="dimmed">
-                          Email: {user?.email}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          Org: {user?.orgName || "No organization"}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          Role: {user?.role || "User"}
-                        </Text>
-                      </Box>
-                    </Box>
+                    </Flex>
                   </HoverCard.Dropdown>
                 </HoverCard>
               </div>
-              <Stack justify="center" align="center" gap={3} p={0}>
-                <Switch
-                  color={
-                    status === UserAvailabilityStatus.online
-                      ? "#099268"
-                      : "grey"
-                  }
-                  size="xs"
-                  styles={{
-                    track: {
-                      backgroundColor:
-                        status === UserAvailabilityStatus.online &&
-                        rgba("#099268", 0.15),
-                      width: 40,
-                    },
-                    thumb: {
-                      backgroundColor:
-                        status === UserAvailabilityStatus.online && "#099268",
-                    },
-                  }}
-                  checked={status === UserAvailabilityStatus.online}
-                  onChange={(e) => {
-                    setStatus(
-                      e.currentTarget.checked
-                        ? UserAvailabilityStatus.online
-                        : UserAvailabilityStatus.offline,
-                    );
-                  }}
-                />
-                <Badge
-                  w={50}
-                  tt={"capitalize"}
-                  color={
-                    status === UserAvailabilityStatus.online
-                      ? "#099268"
-                      : "grey"
-                  }
-                  radius={"xs"}
-                  size={"xs"}
-                  variant="light"
-                >
-                  {status}
-                </Badge>
-              </Stack>
-              <Divider />
             </Stack>
-            <ScrollAreaAutosize mah={"calc(100dvh - 300px)"} scrollbarSize={6}>
+            <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
               {mainLinks}
             </ScrollAreaAutosize>
           </div>
-          <div>{lastLinks}</div>
         </div>
 
         {linksIcon?.length > 0 && (
@@ -1002,6 +934,7 @@ export default function Layout({ children }) {
             size="sm"
             p={"md"}
           />
+          <TopNavbar user={userInfo.data} />
         </AppShell.Header>
 
         <AppShell.Navbar>

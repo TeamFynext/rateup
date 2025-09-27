@@ -4,11 +4,14 @@ import React, { useEffect, useRef, useState } from "react";
 
 import {
   Avatar,
+  Box,
+  Button,
   Divider,
   FileButton,
   Flex,
   Grid,
   Group,
+  Modal,
   Paper,
   Stack,
   Text,
@@ -17,7 +20,7 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconPlus } from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 
 import {
   useChangePasswordMutation,
@@ -109,6 +112,7 @@ const ProfileSettings = () => {
   }
 
   const [isLoading, setIsLoading] = useState(false);
+  const [openedPasswordModal, passwordModal] = useDisclosure(false);
   const updateProfile = useUpdateProfileMutation(setIsLoading);
   const changePassword = useChangePasswordMutation(setIsLoading);
 
@@ -212,7 +216,7 @@ const ProfileSettings = () => {
     setFile(cropedImage);
   };
   return (
-    <Flex direction={"column"} h={"100%"}>
+    <Flex direction="column" h="80vh" gap="lg" p="xl" align="start" maw="100%">
       <ImageCropModal
         opened={openedCropDialog}
         onclose={closeCropDialog}
@@ -221,77 +225,160 @@ const ProfileSettings = () => {
         image={selectedImage.url}
         aspect={1}
       />
-      <Title order={2}>{translations("User Settings")}</Title>
-      <Flex direction={"row"} wrap="wrap" justify="space-around" h={"100%"}>
-        <Flex
-          direction={"column"}
-          align="center"
-          justify={"center"}
-          gap="xl"
-          style={{ flex: 0.3 }}
-          p="lg"
-          miw={"300px"}
+      {/* Password Modal */}
+      <Modal
+        opened={openedPasswordModal}
+        onClose={passwordModal.close}
+        title={
+          <Text fw={600} size="lg">
+            {translations("Change Password")}
+          </Text>
+        }
+        centered
+        radius="lg"
+      >
+        <form
+          onSubmit={profileForm.onSubmit(onSubmit)}
+          className="flex flex-col gap-5"
         >
-          <Paper
-            withBorder
-            p={5}
-            radius="50%"
-            style={{ borderWidth: 3, objectFit: "cover" }}
+          <Flex gap={"md"} wrap="wrap" direction={"column"}>
+            <ContainedPasswordInput
+              required={isAnyPasswordFieldDirty()}
+              w={"100%"}
+              placeholder={translations("Enter existing password")}
+              {...profileForm.getInputProps("existingPassword")}
+            />
+            <ContainedPasswordInput
+              required={isAnyPasswordFieldDirty()}
+              placeholder={translations("Enter new password")}
+              {...profileForm.getInputProps("newPassword")}
+            />
+            <ContainedPasswordInput
+              required={isAnyPasswordFieldDirty()}
+              placeholder={translations("Enter new password again")}
+              {...profileForm.getInputProps("confirmPassword")}
+            />
+          </Flex>
+          <Flex justify="flex-end" mt="md">
+            <RateupButtonBlue
+              type="submit"
+              loading={isLoading}
+              title={translations("Change Password")}
+            />
+          </Flex>
+        </form>
+      </Modal>
+      <Title order={2}>{translations("User Settings")}</Title>
+      <Flex
+        direction={{ base: "column", md: "row" }}
+        wrap="wrap"
+        justify="center"
+        align="stretch"
+        gap="xl"
+        maw="100%"
+      >
+        {/* Left Column */}
+        <Paper
+          withBorder
+          shadow="sm"
+          radius="xl"
+          p="xl"
+          flex={1}
+          maw={{ base: "100%", md: "40%" }}
+        >
+          <Flex
+            gap="xs"
+            direction="column"
+            justify="center"
+            align="center"
+            h="100%" // match parent height
+            p="sm"
           >
+            {/* Avatar */}
             <Avatar
               src={avatarSrc}
-              alt={"Profile Picture"}
+              alt="Profile Picture"
               radius="50%"
-              size={200}
+              size={180}
             />
-          </Paper>
-          <Group>
-            <RateupButtonSecondary
-              title={translations("Remove Image")}
-              size="sm"
-              variant="outline"
-              color="var(--tertiary-color)"
-              onClick={removePhoto}
-            />
-            <FileButton
-              onChange={handleImagePicker}
-              accept="image/png,image/jpeg,image/svg+xml,image/webp"
-              resetRef={resetRef}
-            >
-              {(props) => (
-                <RateupButtonBlue
-                  title={translations("Change Image")}
-                  size="sm"
-                  color="var(--tertiary-color)"
-                  onClick={removePhoto}
-                  {...props}
-                />
-              )}
-            </FileButton>
-          </Group>
-          <Stack align={"center"}>
-            <Text size={"28px"} fw={500}>
-              {profileData?.data?.data?.name || translations("User")}
-            </Text>
-            <Text> {retrieveRole(profileData?.data?.data?.role)}</Text>
-            <Text size="sm">{profileData?.data?.data?.email}</Text>
-          </Stack>
-          <LocaleSwitcher />
-        </Flex>
-        <Divider orientation={"vertical"} />
-        <Flex
-          direction={"column"}
-          style={{ flex: 0.7 }}
-          px="xl"
-          gap={20}
-          miw="300px"
+
+            {/* Buttons */}
+            <Flex gap="md" mt="sm" w="100%">
+              {/* <RateupButtonSecondary
+                title={translations("Remove")}
+                size="sm"
+                variant="outline"
+                onClick={removePhoto}
+              /> */}
+              <Button
+                onClick={removePhoto}
+                variant="filled"
+                size="sm"
+                radius="lg"
+                w="100%"
+                maw="100%"
+                flex={1}
+              >
+                <Flex align={"center"} justify={"center"} gap={2}>
+                  <IconTrash strokeWidth={1.5} size={20} />
+                  <Text size="sm">{translations("Remove")}</Text>
+                </Flex>
+              </Button>
+              <FileButton
+                onChange={handleImagePicker}
+                accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                resetRef={resetRef}
+              >
+                {/* {(props) => (
+                  <RateupButtonBlue
+                    title={translations("Change Image")}
+                    size="sm"
+                    {...props}
+                  />
+                )} */}
+
+                {(props) => (
+                  <Button
+                    {...props}
+                    variant="filled"
+                    size="sm"
+                    radius="lg"
+                    w="100%"
+                    maw="100%"
+                    flex={1}
+                  >
+                    <Flex align={"center"} justify={"center"} gap={2}>
+                      <IconEdit strokeWidth={1.5} size={20} />
+
+                      <Text size="sm"> {translations("Edit")}</Text>
+                    </Flex>
+                  </Button>
+                )}
+              </FileButton>
+            </Flex>
+
+            <Box mt="md">
+              <LocaleSwitcher />
+            </Box>
+          </Flex>
+        </Paper>
+
+        {/* Right Column */}
+        <Paper
+          shadow="sm"
+          radius="xl"
+          p="xl"
+          withBorder
+          flex={2}
+          maw={{ base: "100%", md: "60%" }}
         >
-          <Text size="lg" fw={500}>
+          <Text size="lg" fw={600} className="text-gray-700 mb-4">
             {translations("Edit Info")}
           </Text>
+
           <form
             onSubmit={profileForm.onSubmit(onSubmit)}
-            style={{ display: "flex", flexDirection: "column", gap: 30 }}
+            className="flex flex-col gap-6 h-full pb-10"
             onKeyDown={getHotkeyHandler([
               [
                 SAVE_HOTKEY,
@@ -299,8 +386,8 @@ const ProfileSettings = () => {
               ],
             ])}
           >
-            <Grid columns={10} grow>
-              <Grid.Col span={{ xs: 10, lg: 2 }}>
+            <Grid columns={12} gutter="md">
+              <Grid.Col span={{ xs: 12, sm: 2 }}>
                 <ContainedSelection
                   label={translations("Title")}
                   placeholder={translations("Select")}
@@ -313,42 +400,45 @@ const ProfileSettings = () => {
                   withAsterisk
                 />
               </Grid.Col>
-              <Grid.Col span={{ xs: 10, md: 5, lg: 4 }}>
+
+              <Grid.Col span={{ xs: 12, sm: 5 }}>
                 <ContainedTextField
-                  w={"100%"}
                   label={translations("First Name")}
-                  placeholder={translations("Enter your full name")}
+                  placeholder={translations("First Name")}
                   {...profileForm.getInputProps("firstname")}
                   withAsterisk
                 />
               </Grid.Col>
-              <Grid.Col span={{ xs: 10, md: 5, lg: 4 }}>
+
+              <Grid.Col span={{ xs: 12, sm: 5 }}>
                 <ContainedTextField
                   label={translations("Last Name")}
-                  placeholder={translations("Enter your full name")}
+                  placeholder={translations("Last Name")}
                   {...profileForm.getInputProps("lastname")}
                 />
               </Grid.Col>
-              <Grid.Col span={{ xs: 10, lg: 4 }}>
-                <Text fz={12} c={"#495057"} mt={6}>
+
+              <Grid.Col span={{ xs: 12, sm: 6 }}>
+                <Text size="sm" c="dimmed" mb={4}>
                   {translations("Phone Number")}
                 </Text>
                 <PhoneInputWithCountrySelect
                   defaultCountry="IN"
                   international
                   countryCallingCodeEditable={false}
-                  placeholder={translations(
-                    "Enter your organization phone number",
-                  )}
-                  value={profileForm?.values?.phone || null}
+                  placeholder={translations("Phone Number")}
+                  value={profileForm?.values?.phone || ""}
                   {...profileForm?.getInputProps("phone")}
-                  className={styles.inputPhone}
+                  className="rounded-md border border-gray-300 px-2 py-1 w-full"
                 />
-                <Text size="sm" c={"red"}>
-                  {profileForm?.errors?.phone}
-                </Text>
+                {profileForm?.errors?.phone && (
+                  <Text size="xs" c="red" mt={4}>
+                    {profileForm.errors.phone}
+                  </Text>
+                )}
               </Grid.Col>
-              <Grid.Col span={{ xs: 10, lg: 6 }}>
+
+              <Grid.Col span={{ xs: 12, sm: 6 }}>
                 <ContainedTextField
                   disabled
                   label={translations("Email")}
@@ -358,38 +448,15 @@ const ProfileSettings = () => {
                 />
               </Grid.Col>
             </Grid>
-            <Flex
-              direction={"column"}
-              gap="md"
-              display={
-                profileData?.data?.data?.passwordlessLogin ? "none" : "block"
-              }
-            >
-              <Stack>
-                <Title size="lg" fw={500} style={{ marginBottom: "1rem" }}>
-                  {translations("Change Password")}
-                </Title>
-              </Stack>
-              <Flex gap={"md"} wrap="wrap" direction={"column"}>
-                <ContainedPasswordInput
-                  required={isAnyPasswordFieldDirty()}
-                  w={"100%"}
-                  placeholder={translations("Enter existing password")}
-                  {...profileForm.getInputProps("existingPassword")}
+
+            <Flex gap="md" justify="flex-end" wrap="wrap" mt="auto">
+              {!profileData?.data?.data?.passwordlessLogin && (
+                <RateupButtonBlue
+                  title={translations("Change Password")}
+                  size="sm"
+                  onClick={passwordModal.open}
                 />
-                <ContainedPasswordInput
-                  required={isAnyPasswordFieldDirty()}
-                  placeholder={translations("Enter new password")}
-                  {...profileForm.getInputProps("newPassword")}
-                />
-                <ContainedPasswordInput
-                  required={isAnyPasswordFieldDirty()}
-                  placeholder={translations("Enter new password again")}
-                  {...profileForm.getInputProps("confirmPassword")}
-                />
-              </Flex>
-            </Flex>
-            <Flex justify="center" mb="xl">
+              )}
               <RateupButtonBlue
                 type="submit"
                 loading={isLoading}
@@ -398,7 +465,7 @@ const ProfileSettings = () => {
               />
             </Flex>
           </form>
-        </Flex>
+        </Paper>
       </Flex>
     </Flex>
   );

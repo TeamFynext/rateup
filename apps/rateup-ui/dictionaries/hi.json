@@ -2143,5 +2143,10 @@
   "UnAssigned": "सौंपा नहीं",
   "Assigned to Me": "मुझे सौंपा गया",
   "Closed": "बंद",
-  "Blocked": "अवरोधित"
+  "Blocked": "अवरोधित",
+  "Online": "ऑनलाइन",
+  "Offline": "ऑफ़लाइन",
+  "Profile": "प्रोफ़ाइल",
+  "You’ll need to log in again to access your account": "आपको अपने खाते तक पहुँचने के लिए दोबारा लॉगिन करना होगा।",
+  "Are you sure you want to logout?": "क्या आप वाकई लॉगआउट करना चाहते हैं?"
 }

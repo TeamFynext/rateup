@@ -2144,5 +2144,10 @@
   "UnAssigned": "Nicht zugewiesen",
   "Assigned to Me": "Mir zugewiesen",
   "Closed": "Geschlossen",
-  "Blocked": "Blockiert"
+  "Blocked": "Blockiert",
+  "Online": "Online",
+  "Offline": "Offline",
+  "Profile": "Profil",
+  "You’ll need to log in again to access your account": "Sie müssen sich erneut anmelden, um auf Ihr Konto zuzugreifen.",
+  "Are you sure you want to logout?": "Sind Sie sicher, dass Sie sich abmelden möchten?"
 }

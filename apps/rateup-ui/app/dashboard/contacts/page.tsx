@@ -45,9 +45,12 @@ import {
 import { TeamSelector } from "@/components/input/TeamSelector";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
+import { DataTable } from "@/components/Table/data-table";
 import { PAGE_SIZE } from "@/utils/constants";
 import { showLoadingToast } from "@/utils/notifications";
 
+import { columns } from "./components/columns";
+import { DataTableToolbar } from "./components/data-table-toolbar";
 import styles from "./contacts.module.css";
 
 export enum ContactTabs {

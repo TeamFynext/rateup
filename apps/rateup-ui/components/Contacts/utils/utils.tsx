@@ -14,7 +14,14 @@ import {
   Select,
   Text,
 } from "@mantine/core";
-import { IconCheck, IconEye, IconUsersGroup, IconX } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconCircleCheck,
+  IconCircleX,
+  IconEye,
+  IconUsersGroup,
+  IconX,
+} from "@tabler/icons-react";
 import { rankItem } from "@tanstack/match-sorter-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
@@ -75,6 +82,16 @@ export const contactColumn = (contactTags = []) => {
       accessorKey: "phone",
       cell: (info) => info.getValue(),
     },
+    {
+      header: () => "Not Blocked",
+      accessorKey: "blockedOnWhatsApp",
+      cell: (info) =>
+        !info.getValue() ? (
+          <IconCircleCheck color="green" />
+        ) : (
+          <IconCircleX color="red" />
+        ),
+    },
     ...(contactTags?.length > 0
       ? contactTags?.map((data) => ({
           header: () => data,
@@ -98,7 +115,11 @@ export const contactColumn = (contactTags = []) => {
       header: () => "Consent",
       accessorKey: "consent",
       cell: (info) =>
-        info.getValue() ? <IconCheck color="green" /> : <IconX color="red" />,
+        info.getValue() ? (
+          <IconCircleCheck color="green" />
+        ) : (
+          <IconCircleX color="red" />
+        ),
       meta: {
         filterComponent: (setFilterValue) => {
           return (

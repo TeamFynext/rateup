@@ -12,7 +12,7 @@ export function useCreateLabelMutation() {
     mutationFn: createLabel,
     onSuccess: () => {
       showSuccessToast(t("Label created successfully"), "c-label", null, true);
-      queryClient.invalidateQueries({ queryKey: ["labels"] });
+      queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
     },
     onError: (error: any) => {
       showErrorToast(error?.response?.data?.message, "c-label", null, true);
@@ -27,7 +27,7 @@ export function useUpdateLabelMutation() {
     mutationFn: updateLabel,
     onSuccess: () => {
       showSuccessToast(t("Label updated successfully"), "c-label", null, true);
-      queryClient.invalidateQueries({ queryKey: ["labels"] });
+      queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
     },
     onError: (error: any) => {
       showErrorToast(error?.response?.data?.message, "c-label", null, true);
@@ -41,7 +41,7 @@ export function useDeleteLabelMutation() {
     mutationFn: deleteLabel,
     onSuccess: () => {
       showSuccessToast(t("Label deleted successfully"), "c-label", null, true);
-      queryClient.invalidateQueries({ queryKey: ["labels"] });
+      queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
     },
     onError: (error: any) => {
       console.log("🚀 ~ useDeleteLabelMutation ~ error:", error);
@@ -52,6 +52,6 @@ export function useDeleteLabelMutation() {
 
 export const useLabelsQuery = () =>
   useQuery({
-    queryKey: ["labels"],
+    queryKey: ["lifecycles"],
     queryFn: getLabels,
   });

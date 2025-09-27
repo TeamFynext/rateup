@@ -216,7 +216,7 @@ function WaTextEditor({
       </Group>
 
       <RichTextEditor editor={editor} className={className} bg={"white"}>
-        <RichTextEditor.Toolbar sticky tabIndex={-1}>
+        <RichTextEditor.Toolbar sticky tabIndex={-1} p={2}>
           <WaTextCharacterCount editor={editor} max={max} /> {otherHeaders}
         </RichTextEditor.Toolbar>
         <Modal opened={opened} onClose={close} title="Text Formatting" centered>
