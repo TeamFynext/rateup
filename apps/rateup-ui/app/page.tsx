@@ -42,7 +42,7 @@ const page = () => {
       <HomePageQrSection />
       <AudienceOverview />
       <MobileAppSection />
-      <NewsStoriesCenter />
+      {/* <NewsStoriesCenter /> */}
       <CallToAction />
       <HomePageFooter />
       <ScrollToTop />
