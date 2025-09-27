@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 
 import {
+  Accordion,
+  AccordionControl,
   ActionIcon,
   Avatar,
   Divider,
@@ -39,6 +41,7 @@ import { ContainedTextField } from "@/components/input/ContainedInput/ContainedI
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { useUser } from "@/context/UserContext";
 import {
   formatDateWithTime,
   formatIsoDateStringWithTime,
@@ -56,18 +59,20 @@ const Zapier = () => {
 
   if (isLoading) return <RateupLoader />;
   return (
-    <Stack p={"xl"}>
+    <Stack p={"sm"}>
       <Group>
         <Avatar src={"/images/zapier.png"} />
         <Title>Zapier</Title>
       </Group>
-      <Flex gap={"sm"} className="items-start">
+      <Flex gap={"sm"} className="flex-col items-start">
         <APIKeyGenerate integration={integration} />
-        <ZapierTriggerList
-          integration={integration}
-          refetch={refetch}
-          isLoading={isRefetching}
-        />
+        <div className="flex flex-col justify-center items-center w-full">
+          <ZapierTriggerList
+            integration={integration}
+            refetch={refetch}
+            isLoading={isRefetching}
+          />
+        </div>
       </Flex>
     </Stack>
   );
@@ -76,6 +81,7 @@ const Zapier = () => {
 const APIKeyGenerate = ({ integration }) => {
   const [apiKey, setApiKey] = useState(undefined);
   const translations = useTranslations();
+  const user = useUser();
   const updateKey = useUpdateIntegrationMutation(IntegratedApps.zapier);
   const deleteMut = useDeleteIntegrationMutation(IntegratedApps.zapier);
   const createMut = useCreateIntegrationMutation(IntegratedApps.zapier);
@@ -103,10 +109,14 @@ const APIKeyGenerate = ({ integration }) => {
     );
   }
   return (
-    <PaperLayout w={"40%"} p="xl">
+    <PaperLayout w="50%" p="xl">
       <Stack>
-        <Title order={3}>Api Key</Title>
-        <Text size="sm">Use this key to set up your Zapier connection</Text>
+        <ContainedTextField
+          label={"Organization ID"}
+          value={user.user.orgId}
+          readOnly
+          rightSection={<ApiCopyButton value={user.user.orgId} />}
+        />
         {integration && integration?.credential?.accessToken ? (
           <Tooltip
             openDelay={150}
@@ -129,6 +139,10 @@ const APIKeyGenerate = ({ integration }) => {
                   paddingRight: "92px", // 46px * 2 (copy/regen and delete button)
                 },
               }}
+              label={translations("Api Key")}
+              description={translations(
+                "Use this key to set up your Zapier connection",
+              )}
               rightSection={
                 <Group
                   gap={0}
@@ -181,13 +195,19 @@ const APIKeyGenerate = ({ integration }) => {
             />
           </Tooltip>
         ) : (
-          <RateupButtonBlue
-            leftIcon={<IconKey />}
-            radius={"md"}
-            title={translations("Generate Api Key")}
-            onClick={handleCreate}
-            loading={createMut.isPending}
-          />
+          <Stack gap={2}>
+            <Text size="sm">Api Key</Text>
+            <Text size="sm" c={"dimmed"} mb="xs">
+              Use this key to set up your Zapier connection
+            </Text>
+            <RateupButtonBlue
+              leftIcon={<IconKey />}
+              radius={"md"}
+              title={translations("Generate Api Key")}
+              onClick={handleCreate}
+              loading={createMut.isPending}
+            />
+          </Stack>
         )}
       </Stack>
     </PaperLayout>
@@ -224,13 +244,13 @@ const ZapierTriggerList = ({
       },
     });
   }
+  if (!integration) return null;
   return (
-    <PaperLayout p={"lg"}>
+    <PaperLayout w="70%" p={"lg"}>
       <Group>
         <Title order={4}>Trigger Subscriptions</Title>
         <RefreshButton onClick={refetch} isLoading={isLoading} />
       </Group>
-
       <Stack py={"lg"}>
         {groupedTrigger.map((t) => (
           <Stack key={t.key} className="rounded-xl bg-gray-100" p={"xl"}>
@@ -245,6 +265,22 @@ const ZapierTriggerList = ({
                   className="rounded-sm bg-gray-200"
                   p={"sm"}
                 >
+                  <Group px={"sm"} gap={"xs"} justify="end">
+                    <ActiveStatusBadge active={tr.active} />
+                    <Tooltip label={"Delete"}>
+                      <ActionIcon
+                        loading={deleteMut.isPending}
+                        variant="subtle"
+                        color="red"
+                        onClick={() => {
+                          setTrigger(tr);
+                          open();
+                        }}
+                      >
+                        {<IconTrash size={"1.2rem"} />}
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
                   <ContainedTextField
                     label={"Zap ID"}
                     value={tr.zapId || ""}
@@ -254,25 +290,6 @@ const ZapierTriggerList = ({
                     value={tr.hookUrl}
                     label={`Target Url ${index + 1}`}
                     readOnly
-                    rightSection={
-                      <Group px={"sm"}>
-                        <ActiveStatusBadge active={tr.active} />
-                        <Divider orientation="vertical" />
-                        <Tooltip label={"Delete"}>
-                          <ActionIcon
-                            loading={deleteMut.isPending}
-                            variant="subtle"
-                            color="red"
-                            onClick={() => {
-                              setTrigger(tr);
-                              open();
-                            }}
-                          >
-                            {<IconTrash size={"1.2rem"} />}
-                          </ActionIcon>
-                        </Tooltip>
-                      </Group>
-                    }
                   />
                   <Group justify="end">
                     <Text size="sm" fw={500}>
@@ -318,6 +335,28 @@ function getTriggerLabel(triggerKey: ZapierTriggers) {
       return "New user assigned to contact";
     case ZapierTriggers.CONTACT_CREATE:
       return "New Contact created";
+    case ZapierTriggers.CONTACT_DELETED:
+      return "Contact Deleted";
+    case ZapierTriggers.CONVERSATION_CLOSED:
+      return "Conversation closed";
+    case ZapierTriggers.CONTACT_LIFECYCLE_UPDATED:
+      return "Contact life cycle updated";
+    case ZapierTriggers.CONTACT_UPDATED:
+      return "Contact updated";
+    case ZapierTriggers.NEW_MESSAGE:
+      return "New Message received";
+    case ZapierTriggers.NEW_TEAM_MEMBER_CREATED:
+      return "Staff joined to a team";
+    case ZapierTriggers.RESPONSE_SUBMITTED:
+      return "Response submitted";
+    case ZapierTriggers.TICKET_ASSIGNEE_UPDATED:
+      return "Ticket Assignee updated";
+    case ZapierTriggers.TICKET_CREATED:
+      return "Ticket created";
+    case ZapierTriggers.TICKET_CARD_MOVED:
+      return "Ticket card moved to another column";
+    default:
+      return "not supported";
   }
 }
 export default Zapier;

@@ -89,12 +89,11 @@ const PetpoojaConfig = ({ integration, updateIntegration }) => {
     } else
       createIntegration.mutate({
         credential: { restaurantId },
-        name: IntegratedApps.petpooja,
       });
   };
 
   const handleDeleteConfig = () => {
-    deleteIntegration.mutate(IntegratedApps.petpooja);
+    deleteIntegration.mutate();
   };
   useEffect(() => {
     setRestaurantId(integration?.credential.restaurantId ?? "");
