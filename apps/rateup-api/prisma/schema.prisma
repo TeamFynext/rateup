@@ -159,7 +159,7 @@ model Org {
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
   UserAssignedCount        UserAssignedCount[]
-  Labels                   Labels[]
+  Lifecycle                Lifecycle[]
 }
 
 model UsageStats {
@@ -211,16 +211,29 @@ model UsageStats {
   lastMonthlyResettedDate DateTime? @db.Date()
 }
 
-model Labels {
-  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  org             Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId           String            @db.Uuid
-  name            String            @unique
-  color           String
-  description     String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  ContactLabelMap ContactLabelMap[]
+enum StageCategory {
+  active
+  won
+  lost
+}
+
+model Lifecycle {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  ordering    Int           @default(0)
+  isDefault   Boolean       @default(false)
+  category    StageCategory
+  emoji       String
+  description String
+  isWon       Boolean       @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contacts Contact[]
+
+  org   Org?    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId String? @db.Uuid
 }
 
 model WhatsappSettings {
@@ -250,7 +263,7 @@ model WhatsappSettings {
   LoyaltyWaCommand LoyaltyWaCommand[]
   metaAssets       MetaAssets[]
   catalog          CatalogPhoneIdMap?
-  assets           String[]       @default([])  //enum.ts MetaLoginAssets (assets selected on login)
+  assets           String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
 }
 
 model WaAccountSettings {
@@ -517,8 +530,9 @@ model Contact {
   profilePic                   String?
   followerCount                Int?
   isIgVerifiedUser             Boolean?
-  ContactLabelMap              ContactLabelMap[]
-  other String?
+  other                        String?
+  Lifecycle                    Lifecycle?            @relation(fields: [lifecycleId], references: [id])
+  lifecycleId                  String?               @db.Uuid
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -527,16 +541,6 @@ model Contact {
   @@index([orgId, id])
   @@index([orgId, waMessageAssignStatus])
   @@index([lastReceivedMessageTimeStamp])
-}
-
-model ContactLabelMap {
-  contactId String @db.Uuid
-  labelId   String @db.Uuid
-
-  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  label   Labels  @relation(fields: [labelId], references: [id], onDelete: Cascade)
-
-  @@id([contactId, labelId])
 }
 
 model WaInboxAssign {
@@ -1662,23 +1666,24 @@ model ExpoPushToken {
 }
 
 model WhatsappCatalog {
-  catalogId           String             @unique
-  orgId               String             @db.Uuid
-  org                 Org                @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  catalogId           String              @unique
+  orgId               String              @db.Uuid
+  org                 Org                 @relation(fields: [orgId], references: [id], onDelete: Cascade)
   vertical            String
   name                String?
   products            WaCatalogProduct[]
   orders              WaCatalogOrder[]
-  connectedWaPhoneIds  CatalogPhoneIdMap[]
+  connectedWaPhoneIds CatalogPhoneIdMap[]
 
   @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
 }
 
 model CatalogPhoneIdMap {
-  whatsappSettingsPhoneId String @unique
-  WhatsappSettings  WhatsappSettings @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
-  catalogId String  
-  catalog  WhatsappCatalog @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
+  whatsappSettingsPhoneId String           @unique
+  WhatsappSettings        WhatsappSettings @relation(fields: [whatsappSettingsPhoneId], references: [phoneId])
+  catalogId               String
+  catalog                 WhatsappCatalog  @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
+
   @@index([catalogId])
 }
 

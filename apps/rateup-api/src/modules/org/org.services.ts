@@ -12,6 +12,7 @@ import { defaultTheme } from "../surveyTheme/defaultTheme";
 import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken";
 import { IntegratedApps } from "../../types/enums";
 import { TellUsMore } from "./org.controller";
+import { seedDefaultStages } from "../update/update.controller";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({
@@ -26,6 +27,7 @@ export async function createOrg(input: CreateOrgInput) {
       },
     },
   });
+  await seedDefaultStages(org.id);
   return org;
 }
 

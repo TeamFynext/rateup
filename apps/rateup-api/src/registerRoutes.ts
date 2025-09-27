@@ -227,7 +227,7 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(notificationRoutes, { prefix: "api/notification" });
   server.register(instagramWebhookRoutes, { prefix: "api/instagram/webhook" });
   server.register(supportUserWebhookRoutes, { prefix: "api/support" });
-  server.register(labelRoutes, { prefix: "api/labels" });
+  server.register(labelRoutes, { prefix: "api/lifecycles" });
   server.register(bookDemoRoutes, { prefix: "api/bookdemo" });
   server.register(externalIntegrationRoutes, {
     prefix: "api/integration/external",

@@ -190,6 +190,7 @@ export async function getContactTagHandler(
     const data = await getContactTag(orgId);
     reply.code(200).send(data ?? { contactTags: [] });
   } catch (error) {
+    console.log("🚀 ~ getContactTagHandler ~ error:", error);
     log.error("Error while getting contact tags", error);
     reply.code(500).send({ message: "Something went wrong" });
   }

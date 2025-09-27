@@ -255,52 +255,43 @@ export async function getContactTag(orgId: string) {
     where: {
       orgId,
     },
-    include: {
-      org: {
-        select: {
-          Labels: true,
-        },
-      },
-    },
   });
   return res;
 }
 
 export async function updateContactTag(orgId: string, body: ContactTagSchema) {
-  // const res = await prisma.waAccountSettings.upsert({
-  //   where: {
-  //     orgId,
-  //   },
-  //   create: {
-  //     orgId,
-  //     contactTags: body.tags,
-  //     contactGroupTags: body.groupTags,
-  //     // inboxLabels: body.inboxLabels,
-  //   },
-  //   update: {
-  //     contactTags: body.tags,
-  //     contactGroupTags: body.groupTags,
-  //     // inboxLabels: body.inboxLabels,
-  //   },
-  // });
-  // return res;
-  const bb = body.inboxLabels?.[0];
-  return await prisma.labels.create({
-    // where: {
-    //   orgId,
-    // },
-    data: {
+  const res = await prisma.waAccountSettings.upsert({
+    where: {
       orgId,
-      name: bb?.name,
-      color: bb?.color,
-      description: bb?.description,
     },
-    // update: {
-    //   name: bb?.name,
-    //   color: bb?.color,
-    //   description: bb?.description,
-    // },
+    create: {
+      orgId,
+      contactTags: body.tags,
+      contactGroupTags: body.groupTags,
+    },
+    update: {
+      contactTags: body.tags,
+      contactGroupTags: body.groupTags,
+    },
   });
+  return res;
+  const bb = body.inboxLabels?.[0];
+  // return await prisma.labels.create({
+  //   // where: {
+  //   //   orgId,
+  //   // },
+  //   data: {
+  //     orgId,
+  //     name: bb?.name,
+  //     color: bb?.color,
+  //     description: bb?.description,
+  //   },
+  //   // update: {
+  //   //   name: bb?.name,
+  //   //   color: bb?.color,
+  //   //   description: bb?.description,
+  //   // },
+  // });
 }
 
 export async function getWaLogs(orgId: string, query: PaginationQuery) {

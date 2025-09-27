@@ -199,7 +199,7 @@ export async function updateContactLabelsByIdHandler(
   try {
     const contact = await updateContactLabelsById(
       request.params.contactId,
-      request.body?.labels || [],
+      request.body?.lifecycleId,
     );
     return reply.code(200).send(contact);
   } catch (error) {

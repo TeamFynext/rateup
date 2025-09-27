@@ -73,7 +73,8 @@ export async function registerBusinessClientHandler(
     log.trace("App subscription response: %o", subRes);
 
     // Registering phone number
-    if (phone_number_id) {
+    log.trace("Phone status: %o", phone?.status);
+    if (phone_number_id && phone?.status !== "CONNECTED") {
       const registerRes = await registerPhoneNumber(
         phone_number_id,
         accessToken,

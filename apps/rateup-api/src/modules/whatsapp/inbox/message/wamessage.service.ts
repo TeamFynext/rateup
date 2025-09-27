@@ -301,12 +301,13 @@ export async function filterChats(
         filters.push(`(${tagFilters.join(" OR ")})`);
       }
       if (bodyFilterProps?.labels?.length > 0) {
-        params.push(bodyFilterProps.labels);
-        filters.push(`EXISTS (
-          SELECT 1 FROM "ContactLabelMap" clm
-          WHERE clm."contactId" = c.id
-          AND clm."labelId" = ANY($${paramIndex++}::uuid[])
-        )`);
+        params.push(bodyFilterProps.labels?.[0]);
+        // filters.push(`EXISTS (
+        //   SELECT 1 FROM "ContactLabelMap" clm
+        //   WHERE clm."contactId" = c.id
+        //   AND clm."labelId" = ANY($${paramIndex++}::uuid[])
+        // )`);
+        filters.push(`(c."lifecycleId" = $${paramIndex++}::uuid)`);
       }
 
       // Filter by assignment status
@@ -316,8 +317,7 @@ export async function filterChats(
       });
       const waAssignedChatPermission = org?.waAssignedChatPermission;
 
-      const isAssignedToMe =
-        bodyFilterProps?.waMessageAssignStatus === "AssignedToMe";
+      const isAssignedToMe = bodyFilterProps?.waMessageAssignStatus === "mine";
       const isNew = bodyFilterProps?.waMessageAssignStatus === "New";
       const isNotSent = bodyFilterProps?.waMessageAssignStatus !== "Sent";
       const newStatuses = bodyFilterProps?.newStatuses?.length
@@ -335,13 +335,13 @@ export async function filterChats(
           if (newStatuses.length) {
             params.push(
               newStatuses.map((status) =>
-                status === "ASSIGNEDTOME" ? "ASSIGNED" : status,
+                status === "MINE" ? "ASSIGNED" : status,
               ),
             );
 
             let newQuery = `(c."waMessageAssignStatus" = ANY($${paramIndex++}::TEXT[])`;
 
-            if (newStatuses.includes("ASSIGNEDTOME")) {
+            if (newStatuses.includes("MINE")) {
               params.push(userId);
               const assignmentCondition = `EXISTS (
               SELECT 1 FROM "WaInboxAssign" winb 
@@ -358,7 +358,7 @@ export async function filterChats(
 
             if (
               newStatuses.includes("ASSIGNED") ||
-              newStatuses.includes("ASSIGNEDTOME")
+              newStatuses.includes("MINE")
             ) {
               if (
                 waAssignedChatPermission ===
@@ -493,66 +493,67 @@ export async function filterChats(
 
     // Simplified and optimized query with last received message
     const query = `SELECT 
-        c.id,
-        c."name",
-        c."phone",
-        c."other",
-        c."aiWaChat",
-        c."waMessageAssignStatus",
-        c."lastReceivedMessageTimeStamp",
-        c."consent",
-        c."whatsappUserName",
-        c."blockedOnWhatsApp",
-        c."source",
-        c."igsId",
-        c."profilePic",
-        c."followerCount",
-        c."isIgVerifiedUser",
-        COALESCE(c.tags, '{}'::jsonb) as tags,
-        (
-          SELECT COUNT(*)::INTEGER FROM "WaMessage" w WHERE w."contactId" = c.id
-          AND w."messageBody"->>'exchangeProcess' = 'receive'
-          AND NOT($3::TEXT = ANY(w."readUsers"))
-        ) as "unReadMessageCount",
-        COALESCE(
-        json_agg(
-            json_build_object(
-                'id', u.id,
-                'name', u.name
-            )
-        ) FILTER (WHERE u.id IS NOT NULL),
-        '[]') AS "assignedUsers",
-        (
-          SELECT jsonb_build_object(
-            'messageBody', w."messageBody",
-            'waCreatedAt', w."waCreatedAt",
-            'sourcePlatform', w."sourcePlatform",
-            'sourceIdentifier',w."sourceIdentifier"
+    c.id,
+    c."name",
+    c."phone",
+    c."other",
+    c."aiWaChat",
+    c."waMessageAssignStatus",
+    c."lastReceivedMessageTimeStamp",
+    c."consent",
+    c."whatsappUserName",
+    c."blockedOnWhatsApp",
+    c."source",
+    c."igsId",
+    c."profilePic",
+    c."followerCount",
+    c."isIgVerifiedUser",
+    COALESCE(c.tags, '{}'::jsonb) as tags,
+    (
+      SELECT COUNT(*)::INTEGER 
+      FROM "WaMessage" w 
+      WHERE w."contactId" = c.id
+      AND w."messageBody"->>'exchangeProcess' = 'receive'
+      AND NOT($3::TEXT = ANY(w."readUsers"))
+    ) as "unReadMessageCount",
+    COALESCE(
+      json_agg(
+          json_build_object(
+              'id', u.id,
+              'name', u.name
           )
-          FROM "WaMessage" w
-          WHERE w."contactId" = c.id
-          ORDER BY w."waCreatedAt" DESC
-          LIMIT 1
-        ) as "lastMessage",
-      (
-        SELECT w."messageBody"->'receive'->'metadata'
-        FROM "WaMessage" w
-        WHERE w."contactId" = c.id
-        AND w."messageBody"->>'exchangeProcess' = 'receive'
-        ORDER BY w."waCreatedAt" DESC
-        LIMIT 1
-      ) as "metadata",
-      (
-        SELECT COALESCE(json_agg(clm."labelId"), '[]'::json) 
-        FROM "ContactLabelMap" clm 
-        WHERE clm."contactId" = c.id
-      ) as "labelIds"
-      FROM "Contact" c
-         LEFT JOIN "WaInboxAssign" wb ON wb."contactId" = c.id
-         LEFT JOIN "User" u ON wb."assignedUserId" = u.id
-      WHERE ${whereClause}
-      GROUP BY c.id
-    `;
+      ) FILTER (WHERE u.id IS NOT NULL),
+      '[]'
+    ) AS "assignedUsers",
+    (
+      SELECT jsonb_build_object(
+        'messageBody', w."messageBody",
+        'waCreatedAt', w."waCreatedAt",
+        'sourcePlatform', w."sourcePlatform",
+        'sourceIdentifier', w."sourceIdentifier"
+      )
+      FROM "WaMessage" w
+      WHERE w."contactId" = c.id
+      ORDER BY w."waCreatedAt" DESC
+      LIMIT 1
+    ) as "lastMessage",
+    (
+      SELECT w."messageBody"->'receive'->'metadata'
+      FROM "WaMessage" w
+      WHERE w."contactId" = c.id
+      AND w."messageBody"->>'exchangeProcess' = 'receive'
+      ORDER BY w."waCreatedAt" DESC
+      LIMIT 1
+    ) as "metadata",
+    c."lifecycleId",
+    l."name" as "lifecycleName"
+FROM "Contact" c
+   LEFT JOIN "WaInboxAssign" wb ON wb."contactId" = c.id
+   LEFT JOIN "User" u ON wb."assignedUserId" = u.id
+   LEFT JOIN "Lifecycle" l ON l.id = c."lifecycleId"
+WHERE ${whereClause}
+GROUP BY c.id, l.id
+`;
     const wrappedQuery = `SELECT * FROM (${query}) wc ORDER BY ${orderBy} DESC NULLS LAST LIMIT 100 OFFSET $2`;
 
     const contacts = await prisma.$queryRawUnsafe(wrappedQuery, ...params);
