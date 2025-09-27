@@ -1,0 +1,9 @@
+const meta ={
+    "overview":"Overview",
+    "googlereview":"Google Review",
+    "logicjump": "Logic Jump",
+    "variables":"Variables",
+    "customvalidation" : "Custom Validation",
+    "resultexport" : "Result Export"
+}
+export default meta
