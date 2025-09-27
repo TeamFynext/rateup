@@ -789,7 +789,13 @@ export async function assignWaMessageToUser(
 
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_ASSIGN,
-    { contact: updatedContact, teamId: data.teamId, assignedUserIds: newUsers },
+    {
+      [ZapierTriggers.CONTACT_ASSIGN]: {
+        contact: updatedContact,
+        teamId: data.teamId,
+        assignedUserIds: newUsers,
+      },
+    },
     orgId,
   );
 }

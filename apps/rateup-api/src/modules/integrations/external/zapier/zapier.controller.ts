@@ -4,41 +4,53 @@ import {
   getIntegrationByName,
   updateIntegrationByName,
 } from "../../integrations.service";
-import {
-  IntegratedApps,
-  LoyaltyTemplateTypes,
-  WaAutomatedReplyResponseType,
-} from "../../../../types/enums";
+import { IntegratedApps, WaMessageAssignStatus } from "../../../../types/enums";
 import { ByOrgIdParams } from "../../../org/org.schema";
 import bcrypt from "bcrypt";
 import { Role } from "../../../org/org.services";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import { Prisma } from "../../../../../generated/prisma/client";
 import { ContactCore } from "../../../contact/contact.schema";
 import {
-  createContact,
+  deleteContactById,
+  getContactById,
+  getContactByPhoneNumberAndOrgId,
+  updateContactById,
   updateContactLabelsByName,
 } from "../../../contact/contact.service";
-import { ContactGroupType } from "../../../contact/contactGroup/contactGroup.schema";
-import {
-  createLCustomer,
-  handleSendTemplate,
-  handlePostRegisterAction,
-} from "../../../loyalty/customer/customer.service";
-import {
-  getLoyaltyWaCommandByType,
-  replacedContentByDynamicVariable,
-} from "../../../loyalty/settings/settings.service";
 import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service";
-import { getLabels } from "../../../label/label.service";
-import { getSampleContacts, ZapierTriggers } from "./zapier.service";
+import {
+  addZapierTriggerToQueue,
+  deleteContactByPhoneNumberAndOrgId,
+  getSampleDataForTrigger,
+  getTicketBoardsByTeamId,
+  getTicketColumnsByBoardId,
+  ZapierTriggers,
+} from "./zapier.service";
+import { TicketPriority } from "../../../../../generated/prisma/enums";
+import { CardInput, createCard } from "../../../ticket/ticketCard/card.service";
+import {
+  addNewContactsToGroup,
+  getContactGroupsByOrgId,
+  getContactGroupsByTeamId,
+} from "../../../contact/contactGroup/contactGroup.service";
+import { getTeamsByOrgId, inviteTeamMember } from "../../../team/team.service";
+import { InviteType } from "../../../team/team.schema";
+import {
+  ContactLabelSchema,
+  InviteMemberRequestSchema,
+  NewMemberToGroupShema,
+  PageSchema,
+  SendMessageSchema,
+  TicketCardSchema,
+  TriggerSubscriptionBodySchema,
+} from "./zapier.schema";
+import { AddNewContactsToGroupInput } from "../../../contact/contactGroup/contactGroup.schema";
 
 export async function zapierAuthenticationHandler(
   request: FastifyRequest<{ Querystring: ByOrgIdParams }>,
   reply: FastifyReply,
 ) {
   try {
-    console.log("secret", request.headers["X-Hook-Secret"]);
+    //TODO: add subscription check
     const { orgId } = request.query;
     if (!orgId) {
       log.warn("No orgId found in request\n%s", request.url);
@@ -108,82 +120,16 @@ export async function zapierAuthenticationHandler(
   }
 }
 
-export async function createContactHandler(
-  request: FastifyRequest<{ Body: ContactCore; Querystring: ByOrgIdParams }>,
-  reply: FastifyReply,
-) {
-  try {
-    const { orgId } = request.query;
-
-    if (!isValidPhoneNumber(`+${request.body.phone}`))
-      return reply.code(400).send({ error: "Phone number is not valid" });
-    if (request.body.source === ContactGroupType.LOYALTY) {
-      const contact = await createLCustomer({
-        ...request.body,
-        orgId,
-      });
-      reply.code(201).send(contact);
-      const loyaltyWaCommand = await getLoyaltyWaCommandByType(
-        LoyaltyTemplateTypes.CustomerRegistration,
-        orgId,
-      );
-      if (loyaltyWaCommand) {
-        const { responseType, waTemplateId, content } = loyaltyWaCommand;
-        const dynamicVariables = [contact.name];
-        if (responseType === WaAutomatedReplyResponseType.Template)
-          await handleSendTemplate(
-            waTemplateId,
-            orgId,
-            contact.phone,
-            dynamicVariables,
-          );
-        else if (responseType === WaAutomatedReplyResponseType.Text) {
-          const message = replacedContentByDynamicVariable(
-            content,
-            dynamicVariables,
-          );
-          await sendTextMessage(
-            {
-              phone: contact.phone,
-              orgId,
-            },
-            null,
-            message,
-          );
-        }
-      }
-      await handlePostRegisterAction(orgId, contact.id);
-    } else {
-      const contact = await createContact({ ...request.body, orgId });
-      reply.code(201).send({
-        id: contact.id,
-        name: contact.name,
-        phone: contact.phone,
-        email: contact.email,
-      });
-    }
-  } catch (error) {
-    log.error(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        reply.code(500).send({ error: "Contact already exist" });
-      }
-    } else {
-      reply.code(500).send({ error: "Something went wrong" });
-    }
-  }
-}
-
 export async function sendTextMessageHandler(
-  request: FastifyRequest<{ Querystring: ByOrgIdParams }>,
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams;
+    Body: SendMessageSchema;
+  }>,
   reply: FastifyReply,
 ) {
   try {
     const { orgId } = request.query;
-    const { phone, message } = request.body as {
-      phone: string;
-      message: string;
-    };
+    const { phone, message } = request.body;
     await sendTextMessage({ phone, orgId }, null, message);
     reply.code(200).send({ success: true });
   } catch (e) {
@@ -193,7 +139,10 @@ export async function sendTextMessageHandler(
 }
 
 export async function subscribeTriggerHandler(
-  request: FastifyRequest<{ Querystring: ByOrgIdParams }>,
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams;
+    Body: TriggerSubscriptionBodySchema;
+  }>,
   reply: FastifyReply,
 ) {
   try {
@@ -202,11 +151,7 @@ export async function subscribeTriggerHandler(
       request.body,
     );
     const { orgId } = request.query;
-    const { hookUrl, subscribed_field, zapId } = request.body as {
-      hookUrl: string;
-      subscribed_field: string;
-      zapId;
-    };
+    const { hookUrl, subscribed_field, zapId } = request.body;
     const integration = (await getIntegrationByName(
       orgId,
       IntegratedApps.zapier,
@@ -248,7 +193,7 @@ export async function subscribeTriggerHandler(
       triggerSubscriptions,
     };
     await updateIntegrationByName(orgId, IntegratedApps.zapier, { credential });
-    reply.code(201).send(newTrigger);
+    reply.code(201).send({ success: true });
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: "Something went wrong" });
@@ -269,12 +214,11 @@ export async function unsubscribeTriggerHandler(
       orgId,
       IntegratedApps.zapier,
     )) as unknown as ZapierIntegration;
-    const { hookUrl, subscribed_field } = request.body as {
+    const { hookUrl } = request.body as {
       hookUrl: string;
-      subscribed_field: string;
     };
     const triggers = integration.credential.triggerSubscriptions.filter(
-      (t) => t.hookUrl !== hookUrl && t.subscribed_field !== subscribed_field,
+      (t) => t.hookUrl !== hookUrl,
     );
     const credential = {
       ...integration.credential,
@@ -289,30 +233,232 @@ export async function unsubscribeTriggerHandler(
 }
 
 export async function assignContactLabelsHandler(
-  request: FastifyRequest<{ Querystring: ByOrgIdParams }>,
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams;
+    Body: ContactLabelSchema;
+  }>,
   reply: FastifyReply,
 ) {
   try {
     const { orgId } = request.query;
-    const { labels, contactId } = request.body as {
-      contactId: string;
-      labels: string[];
-    };
+    const { labels, contactId } = request.body;
     await updateContactLabelsByName(labels, contactId, orgId);
     reply.code(200).send({ labels, contactId });
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONTACT_LABEL_UPDATED,
+      {
+        [ZapierTriggers.CONTACT_LABEL_UPDATED]: {
+          contactId,
+          labels,
+        },
+      },
+      orgId,
+    );
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: "Something went wrong" });
   }
 }
 
-export async function getSampleContactsHandler(
-  request: FastifyRequest<{ Querystring: ByOrgIdParams }>,
+export async function getSampleDataForTriggerHandler(
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams & { triggerKey: ZapierTriggers };
+  }>,
   reply: FastifyReply,
 ) {
   try {
-    const contacts = await getSampleContacts(request.query.orgId);
-    reply.send(contacts);
+    const { triggerKey, orgId } = request.query;
+    const data = await getSampleDataForTrigger(triggerKey);
+    reply.send(data);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function updateContactHandler(
+  request: FastifyRequest<{
+    Body: { contactId: string; waMessageAssignStatus: WaMessageAssignStatus };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { contactId, ...rest } = request.body;
+    const data = await updateContactById(contactId, rest);
+    reply.send(data);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function getContactHandler(
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams & {
+      contactId: string;
+      phone: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { contactId, phone, orgId } = request.query;
+    let contact;
+    if (contactId) {
+      contact = await getContactById(contactId);
+    } else {
+      contact = await getContactByPhoneNumberAndOrgId(orgId, phone);
+    }
+    reply.send(contact);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function deleteContactHandler(
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams & {
+      contactId: string;
+      phone: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { contactId, phone, orgId } = request.query;
+    if (contactId) {
+      await deleteContactById(contactId);
+    } else {
+      await deleteContactByPhoneNumberAndOrgId(orgId, phone);
+    }
+    reply.send({ contactId });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function createTicketHandler(
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams;
+    Body: TicketCardSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.query;
+    const res = await createCard({
+      ...request.body,
+      orgId,
+      type: "CUSTOM",
+    } as CardInput);
+    reply.send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function getTeamsHandler(
+  request: FastifyRequest<{ Querystring: ByOrgIdParams & PageSchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId, page } = request.query;
+    const data = await getTeamsByOrgId({ orgId }, page);
+    reply.send(data);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function getTicketBoardsByTeamIdHandler(
+  request: FastifyRequest<{ Querystring: ByOrgIdParams & { teamId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const data = await getTicketBoardsByTeamId(request.query.teamId);
+    reply.send(data);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function getTicketColumnsByBoardIdHandler(
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams & { boardId: string } & PageSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { boardId, page } = request.query;
+    const data = await getTicketColumnsByBoardId(boardId, page);
+    reply.send(data);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function getContactGroupsHandler(
+  request: FastifyRequest<{ Querystring: ByOrgIdParams & { teamId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    let groups;
+    if (!request.query.teamId) {
+      const data = await getContactGroupsByOrgId(request.query.orgId);
+      groups = data.map((g) => ({ id: g.id, name: g.name }));
+    } else {
+      const data = await getContactGroupsByTeamId(request.query.teamId);
+      groups = data.map((g) => ({ id: g.id, name: g.name }));
+    }
+    reply.send(groups);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function addContactToGroupHandler(
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams;
+    Body: NewMemberToGroupShema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.query;
+    const res = await addNewContactsToGroup(
+      request.body.groupId,
+      request.body.contacts,
+      orgId,
+    );
+    reply.send({ success: true });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function inviteMemberHandler(
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams;
+    Body: InviteMemberRequestSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.query;
+    const res = await inviteTeamMember({
+      orgId,
+      type: InviteType.TEAM,
+      ...request.body,
+    });
+    reply.send({ success: true });
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: "Something went wrong" });

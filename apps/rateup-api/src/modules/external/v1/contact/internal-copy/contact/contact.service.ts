@@ -21,7 +21,7 @@ export async function createContact(contact: ContactCore & { orgId: string }) {
 
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_CREATE,
-    { contact: user },
+    { [ZapierTriggers.CONTACT_CREATE]: user },
     user.orgId,
   );
   return user;
@@ -40,13 +40,14 @@ export async function createMultipleContacts(
     for (const contact of result)
       await addZapierTriggerToQueue(
         ZapierTriggers.CONTACT_CREATE,
-        { contact },
+        { [ZapierTriggers.CONTACT_CREATE]: contact },
         orgId,
       );
   }
   return result;
 }
 
+//used in zapier controller too
 export async function getContactById(contactId: string) {
   const user = await prisma.contact.findUnique({
     where: {
@@ -95,6 +96,11 @@ export async function deleteContactById(contactId: string) {
       id: contactId,
     },
   });
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_DELETED,
+    { [ZapierTriggers.CONTACT_DELETED]: user },
+    user.orgId,
+  );
   return user;
 }
 
@@ -141,7 +147,7 @@ export async function getOrCreateContactByPhone(
       });
       await addZapierTriggerToQueue(
         ZapierTriggers.CONTACT_CREATE,
-        { contact },
+        { [ZapierTriggers.CONTACT_CREATE]: contact },
         orgId,
       );
       return contact;
@@ -152,6 +158,13 @@ export async function getOrCreateContactByPhone(
 }
 
 export async function deleteManyContacts(contactIds: Array<string>) {
+  const contacts = await prisma.contact.findMany({
+    where: {
+      id: {
+        in: contactIds,
+      },
+    },
+  });
   const res = await prisma.contact.deleteMany({
     where: {
       id: {
@@ -159,5 +172,12 @@ export async function deleteManyContacts(contactIds: Array<string>) {
       },
     },
   });
+  for (const contact of contacts) {
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONTACT_DELETED,
+      { [ZapierTriggers.CONTACT_DELETED]: contact },
+      contact.orgId,
+    );
+  }
   return res;
 }

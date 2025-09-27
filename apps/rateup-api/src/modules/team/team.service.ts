@@ -111,7 +111,7 @@ export async function createTeam(input: CreateTeamInput) {
   }
 }
 
-export function getTeamsByOrgId(input: GetTeamsByOrgInput) {
+export function getTeamsByOrgId(input: GetTeamsByOrgInput, page?) {
   return prisma.team.findMany({
     where: {
       orgId: input.orgId,
@@ -120,6 +120,12 @@ export function getTeamsByOrgId(input: GetTeamsByOrgInput) {
       id: true,
       name: true,
     },
+    ...(page !== undefined
+      ? {
+          take: 20,
+          skip: page * 20,
+        }
+      : {}),
   });
 }
 
@@ -138,6 +144,7 @@ export async function deleteTeamById(id: string) {
   return team;
 }
 
+//used in zapier controller also
 export async function inviteTeamMember(input: InviteMemberInput) {
   if (input.name.length < 2) {
     throw new Error("Invalid name.");
@@ -317,6 +324,12 @@ export async function completeInvite(token: string) {
               email: true,
             },
           },
+        },
+      },
+      team: {
+        select: {
+          code: true,
+          name: true,
         },
       },
     },
