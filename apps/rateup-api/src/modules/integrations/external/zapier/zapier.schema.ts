@@ -75,7 +75,7 @@ const sendMessageSchema = z.object({
 
 const contactLabelSchema = z.object({
   contactId: z.string(),
-  labels: z.array(z.string()),
+  lifecycleId: z.string(),
 });
 
 export const { schemas: zapierSchemas, $ref: $zapier } = buildJsonSchemas(

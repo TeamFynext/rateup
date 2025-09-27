@@ -347,19 +347,20 @@ export async function updateContactLabelsById(
       lifecycleId,
     },
     include: {
-      ContactLabelMap: {
+      Lifecycle: {
         select: {
-          label: true,
+          name: true,
         },
       },
     },
   });
   await addZapierTriggerToQueue(
-    ZapierTriggers.CONTACT_LABEL_UPDATED,
+    ZapierTriggers.CONTACT_LIFECYCLE_UPDATED,
     {
-      [ZapierTriggers.CONTACT_LABEL_UPDATED]: {
+      [ZapierTriggers.CONTACT_LIFECYCLE_UPDATED]: {
         contactId: contact.id,
-        labels: contact.ContactLabelMap.map((l) => l.label),
+        lifecycleId,
+        lifecycleName: contact.Lifecycle.name,
       },
     },
     contact.orgId,
@@ -736,18 +737,3 @@ export const handleContactConsent = async (
   });
   return true;
 };
-
-export async function updateContactLabelsByName(labels, contactId, orgId) {
-  const orgLabels = await prisma.labels.findMany({
-    where: {
-      name: {
-        in: labels,
-      },
-      orgId,
-    },
-  });
-  return await prisma.contactLabelMap.createMany({
-    data: orgLabels.map((l) => ({ contactId, labelId: l.id })),
-    skipDuplicates: true,
-  });
-}

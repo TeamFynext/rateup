@@ -102,6 +102,7 @@ import { bookDemoSchemas } from "./modules/BookDemo/bookDemo.schema";
 import { bookDemoRoutes } from "./modules/BookDemo/bookDemo.route";
 import { supportUserWebhookRoutes } from "./modules/whatsapp/support-user/suport-user.webhook.route";
 import { externalIntegrationRoutes } from "./modules/integrations/external/external.route";
+import { zapierSchemas } from "./modules/integrations/external/zapier/zapier.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -151,6 +152,7 @@ export function registerRoutes(server: FastifyInstance): void {
     notificationSchema,
     labelSchema,
     bookDemoSchemas,
+    zapierSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {

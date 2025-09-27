@@ -14,12 +14,13 @@ import {
   getContactById,
   getContactByPhoneNumberAndOrgId,
   updateContactById,
-  updateContactLabelsByName,
+  updateContactLabelsById,
 } from "../../../contact/contact.service";
 import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service";
 import {
   addZapierTriggerToQueue,
   deleteContactByPhoneNumberAndOrgId,
+  getLifecyclesByOrgId,
   getSampleDataForTrigger,
   getTicketBoardsByTeamId,
   getTicketColumnsByBoardId,
@@ -113,7 +114,7 @@ export async function zapierAuthenticationHandler(
 
     const user = { orgId, role: Role.SUPER_ADMIN };
     (request as any).user! = user;
-    if (request.url.includes("/auth")) reply.code(200).send({ user: user });
+    if (request.url.includes("/auth")) reply.send({ user: user });
   } catch (e) {
     log.error("Error checking session\n%o", e);
     reply.code(401).send({ message: "Not authorized" });
@@ -131,7 +132,7 @@ export async function sendTextMessageHandler(
     const { orgId } = request.query;
     const { phone, message } = request.body;
     await sendTextMessage({ phone, orgId }, null, message);
-    reply.code(200).send({ success: true });
+    reply.send({ success: true });
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: "Something went wrong" });
@@ -172,7 +173,7 @@ export async function subscribeTriggerHandler(
     const hookReceivedAt = new Date().toISOString();
     if (index !== -1) {
       if (triggerSubscriptions[index].active) {
-        return reply.code(201).send(newTrigger);
+        return reply.send(newTrigger);
       } else {
         triggerSubscriptions[index] = {
           ...triggerSubscriptions[index],
@@ -193,7 +194,7 @@ export async function subscribeTriggerHandler(
       triggerSubscriptions,
     };
     await updateIntegrationByName(orgId, IntegratedApps.zapier, { credential });
-    reply.code(201).send({ success: true });
+    reply.send({ success: true });
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: "Something went wrong" });
@@ -225,37 +226,33 @@ export async function unsubscribeTriggerHandler(
       triggerSubscriptions: triggers,
     };
     await updateIntegrationByName(orgId, IntegratedApps.zapier, { credential });
-    reply.code(200).send({ success: true });
+    reply.send({ success: true });
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: "Something went wrong" });
   }
 }
 
-export async function assignContactLabelsHandler(
+export async function updateContactLabelsByIdHandler(
   request: FastifyRequest<{
-    Querystring: ByOrgIdParams;
     Body: ContactLabelSchema;
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.query;
-    const { labels, contactId } = request.body;
-    await updateContactLabelsByName(labels, contactId, orgId);
-    reply.code(200).send({ labels, contactId });
-    await addZapierTriggerToQueue(
-      ZapierTriggers.CONTACT_LABEL_UPDATED,
-      {
-        [ZapierTriggers.CONTACT_LABEL_UPDATED]: {
-          contactId,
-          labels,
-        },
-      },
-      orgId,
+    const contact = await updateContactLabelsById(
+      request.body.contactId,
+      request.body?.lifecycleId,
     );
-  } catch (e) {
-    log.error(e);
+    return reply
+      .code(201)
+      .send({
+        contactId: contact.id,
+        lifecycleId: request.body?.lifecycleId,
+        lifecycleName: contact.Lifecycle.name,
+      });
+  } catch (error) {
+    log.error(error);
     reply.code(500).send({ error: "Something went wrong" });
   }
 }
@@ -459,6 +456,22 @@ export async function inviteMemberHandler(
       ...request.body,
     });
     reply.send({ success: true });
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function getLifecycleHandler(
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.query;
+    const data = await getLifecyclesByOrgId(orgId);
+    reply.send(data);
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: "Something went wrong" });

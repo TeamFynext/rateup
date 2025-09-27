@@ -11,7 +11,7 @@ export enum ZapierTriggers {
   NEW_MESSAGE = "new_message_received",
   CONVERSATION_CLOSED = "conversation_closed",
   CONTACT_UPDATED = "contact_updated",
-  CONTACT_LABEL_UPDATED = "contact_label_updated",
+  CONTACT_LIFECYCLE_UPDATED = "contact_lifecycle_updated",
   TICKET_CREATED = "new_ticket",
   CONTACT_ADDED_TO_GROUP = "contact_added_to_group",
   RESPONSE_SUBMITTED = "response_submitted",
@@ -98,8 +98,14 @@ export async function getSampleDataForTrigger(triggerKey: ZapierTriggers) {
         },
       ];
       break;
-    case ZapierTriggers.CONTACT_LABEL_UPDATED:
-      data = [];
+    case ZapierTriggers.CONTACT_LIFECYCLE_UPDATED:
+      data = [
+        {
+          contactId: "SAMPLE-ID-1234",
+          lifecycleId: "abcd-id-1234",
+          lifecycleName: "New Lead",
+        },
+      ];
       break;
     case ZapierTriggers.CONTACT_UPDATED:
       data = [
@@ -307,5 +313,17 @@ export async function getTicketColumnsByBoardId(boardId: string, page?) {
           take: 20,
         }
       : {}),
+  });
+}
+
+export async function getLifecyclesByOrgId(orgId) {
+  return await prisma.lifecycle.findMany({
+    where: {
+      orgId,
+    },
+    select: {
+      id: true,
+      name: true,
+    },
   });
 }

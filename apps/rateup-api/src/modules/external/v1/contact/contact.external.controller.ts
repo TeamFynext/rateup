@@ -6,7 +6,7 @@ import {
 } from "../../../contact/contact.controller";
 
 export async function extCreateContactHandler(
-  request: FastifyRequest<{ Body: ExtCreateContactSchema }>,
+  request: FastifyRequest<{ Body: ExtCreateContactSchema; Querystring: {} }>,
   reply: FastifyReply,
 ) {
   // Set the source to external
