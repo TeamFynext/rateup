@@ -70,7 +70,10 @@ export async function uploadFileForAIEmbedHandler(
           return;
         }
 
-        const blob = new Blob([await part.toBuffer()], { type: part.mimetype });
+        const buffer = await part.toBuffer();
+        const blob = new Blob([new Uint8Array(buffer)], {
+          type: part.mimetype,
+        });
         formData.append("file", blob, part.filename);
       }
 

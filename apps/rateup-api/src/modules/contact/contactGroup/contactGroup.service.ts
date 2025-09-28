@@ -252,7 +252,11 @@ export async function getContactsByContactGroupIdWithPagination(
       },
       contacts: {
         include: {
-          contact: true,
+          contact: {
+            include: {
+              customFields: true,
+            },
+          },
         },
         where: {
           contact: searchCondition,
