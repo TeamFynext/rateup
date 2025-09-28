@@ -39,8 +39,8 @@ import {
   SubscriptionFeaturePathName,
   WaMessageAssignStatus,
 } from "@/types/enums";
-import { useSetIsChatDisplayOpen } from "@/app/dashboard/whatsapp/inbox/ChatDisplayContext";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContext";
+import useContactStore from "@/app/dashboard/inbox/store";
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
@@ -51,7 +51,6 @@ import {
   useBlockWhatsAppUser,
   useGetAssignedUserForContact,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import EditContactModal from "@/components/Contacts/EditContactModal";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
@@ -210,29 +209,6 @@ export default function WaInboxChatDisplayHeader({
     </div>
   );
 }
-
-export const ContactEdit = ({ contact, opened, close }) => {
-  const translations = useTranslations();
-  return (
-    <Stack>
-      <FormModalLayout
-        opened={opened}
-        title={translations("Edit Contact")}
-        onClose={close}
-        centered
-        noCustomHeader
-        size="lg"
-      >
-        <EditContactModal
-          contact={contact}
-          closeEditModal={close}
-          groupId={null}
-          tags={Object.values(contact.tags ?? {})}
-        />
-      </FormModalLayout>
-    </Stack>
-  );
-};
 
 const ChatContactMenu = ({ contact }) => {
   const { data: subscription } = useSubscription();

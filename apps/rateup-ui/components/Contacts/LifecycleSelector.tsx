@@ -5,7 +5,7 @@ import React from "react";
 import { Button, Select, SelectProps } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 import { useLabelsContext } from "@/context/LabelsContext";
 
 import { useEditContactLabelsMutation } from "../../backend/campaign/contacts/contacts.query";

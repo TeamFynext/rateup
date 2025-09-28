@@ -8,8 +8,10 @@ import {
   Checkbox,
   Group,
   NavLink,
+  NumberInput,
   Paper,
   Radio,
+  Select,
   SimpleGrid,
   Stack,
   Switch,
@@ -24,7 +26,10 @@ import PhoneInputWithCountrySelect, {
 } from "react-phone-number-input";
 
 import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
-import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
+import {
+  useCreateContactMutation,
+  useEditContactMutation,
+} from "@/backend/campaign/contacts/contacts.query";
 import { SAVE_HOTKEY } from "@/utils/constants";
 import { importMethod } from "@/utils/enums";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
@@ -42,6 +47,7 @@ import { DatePickerInput } from "@mantine/dates";
 import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
+import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 
 import styles from "./contact.module.css";
 
@@ -55,26 +61,36 @@ export interface ImportContact {
 const CreateContactModal = ({
   contactClose,
   close,
-  cTags = [],
   importCSVContactMutation,
   type = ContactGroupType.NORMAL,
   initialValues = null,
+  createNewContactMutation,
+}: {
+  contactClose: () => void;
+  close: () => void;
+  importCSVContactMutation?: any;
+  type?: ContactGroupType;
+  initialValues?: any;
+  createNewContactMutation?: any;
 }) => {
   const [csvfile, setCsvfile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const createContactMutation = useCreateContactMutation();
+  const editContactMutation = useEditContactMutation(null);
+
   const translations = useTranslations();
+  const { customFields } = useCustomFieldsContext();
+
   const form = useForm({
-    mode: "uncontrolled",
     initialValues: initialValues ?? {
       name: "",
       phone: "",
       email: "",
       dob: null,
       source: importMethod.MANUAL,
-      contactType: cTags ?? [],
+      contactType: [],
       countryCode: "91",
-      tags: {},
+      customFields: [],
       updateExisting: false,
       external_id: "",
     },
@@ -90,6 +106,31 @@ const CreateContactModal = ({
       name: (value, values) =>
         values.source == importMethod.MANUAL &&
         (value.length ? null : translations("Name cannot be blank")),
+      customFields: {
+        "*": (value, values, path) => {
+          const fieldId = path.split(".")[1];
+          const customField = customFields.find(
+            (field) => field.slug === fieldId,
+          );
+
+          if (!customField) return null;
+
+          if (value && customField.type === "email") {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+              return translations("Invalid email format");
+            }
+          }
+
+          if (value && customField.type === "number") {
+            if (isNaN(Number(value))) {
+              return translations("Must be a valid number");
+            }
+          }
+
+          return null;
+        },
+      },
     },
   });
   const handleSubmit = async () => {
@@ -120,43 +161,72 @@ const CreateContactModal = ({
         },
       });
     } else {
-      const result = {};
-      for await (const key of form.getValues().contactType) {
-        if (form.getValues()?.tags?.hasOwnProperty(key)) {
-          result[key] = form.getValues()?.tags?.[key];
-        }
-      }
-      form.getValues().tags = result;
-      let contactData: ICreateContact = {
+      let contactData = {
         ...form.getValues(),
-        external_id: form.values.external_id.length
-          ? form.values.external_id
-          : undefined,
-        phone: form.getValues().phone.slice(1),
+        dob: form.getValues()?.dob
+          ? new Date(form.getValues().dob).toISOString()
+          : null,
+        external_id: form.getValues()?.external_id || undefined,
+        phone: form.getValues()?.phone?.replace(/^\+/, "") || "",
         source:
           type === ContactGroupType.LOYALTY
             ? ContactGroupType.LOYALTY
             : form.getValues().source,
       };
-      createContactMutation.mutate(contactData, {
-        onSuccess: () => {
-          setIsCreating(false);
-          contactClose();
-          close();
-          form.reset();
-        },
-        onError: () => {
-          setIsCreating(false);
-          form.reset();
-        },
-      });
+      if (initialValues) {
+        editContactMutation.mutate(
+          { data: contactData, contactId: initialValues.id },
+          {
+            onSuccess: () => {
+              setIsCreating(false);
+              contactClose();
+              close();
+              form.reset();
+            },
+            onError: () => {
+              setIsCreating(false);
+            },
+          },
+        );
+      } else {
+        if (createNewContactMutation) {
+          createNewContactMutation.mutate([contactData], {
+            onSuccess: () => {
+              setIsCreating(false);
+              contactClose();
+              close();
+              form.reset();
+            },
+            onError: () => {
+              setIsCreating(false);
+            },
+          });
+        } else {
+          createContactMutation.mutate(contactData, {
+            onSuccess: () => {
+              setIsCreating(false);
+              contactClose();
+              close();
+              form.reset();
+            },
+            onError: () => {
+              setIsCreating(false);
+            },
+          });
+        }
+      }
     }
   };
 
   useEffect(() => {
     if (initialValues) {
       form.setValues(initialValues);
+      form.setFieldValue("phone", "+" + initialValues.phone);
     }
+    form.setFieldValue(
+      "contactType",
+      customFields?.map((field) => field.slug) || [],
+    );
   }, [initialValues]);
 
   return (
@@ -168,36 +238,38 @@ const CreateContactModal = ({
       >
         <Stack>
           <Group justify="space-between">
-            <Radio.Group
-              name="importMethod"
-              label={translations("Import Contacts")}
-              key={form.key("source")}
-              {...form.getInputProps("source")}
-            >
-              <Group>
-                <Radio
-                  value={importMethod.MANUAL}
-                  label={translations("Manual")}
-                />
-                <Radio
-                  value={importMethod.CSV}
-                  label={translations("Import CSV/XLSX")}
-                />
-              </Group>
-            </Radio.Group>
+            {initialValues ? null : (
+              <Radio.Group
+                name="importMethod"
+                label={translations("Import Contacts")}
+                key={form.key("source")}
+                {...form.getInputProps("source")}
+              >
+                <Group>
+                  <Radio
+                    value={importMethod.MANUAL}
+                    label={translations("Manual")}
+                  />
+                  <Radio
+                    value={importMethod.CSV}
+                    label={translations("Import CSV/XLSX")}
+                  />
+                </Group>
+              </Radio.Group>
+            )}
 
-            {cTags?.length > 0 && (
-              <Paper shadow="xl" p="md" px="xl">
+            {customFields?.length > 0 && (
+              <Paper p="xs" withBorder>
                 <Checkbox.Group
                   key={form.key("contactType")}
                   {...form.getInputProps("contactType")}
                 >
                   <Group>
-                    {cTags?.map((data) => (
+                    {customFields?.map((data) => (
                       <Checkbox
-                        value={data}
-                        label={data}
-                        key={data}
+                        value={data?.slug}
+                        label={data?.name}
+                        key={data?.id}
                         tt={"capitalize"}
                       />
                     ))}
@@ -206,82 +278,9 @@ const CreateContactModal = ({
               </Paper>
             )}
           </Group>
-          {form.getValues().source == importMethod.MANUAL && (
-            <SimpleGrid cols={2}>
-              <TextInput
-                label={translations("Name")}
-                placeholder={translations("Enter name")}
-                radius={"md"}
-                size="md"
-                required
-                key={form.key("name")}
-                {...form.getInputProps("name")}
-              />
-              <Stack gap={0}>
-                <Group gap={3}>
-                  <Text>{translations("Phone Number")}</Text>
-                  <Text c="red">*</Text>
-                </Group>
-                <Box
-                  className={`${styles["phone-input-container"]} ${form?.errors?.phone ? styles["phone-input-error"] : ""}`}
-                >
-                  <PhoneInputWithCountrySelect
-                    defaultCountry="IN"
-                    international
-                    countryCallingCodeEditable={false}
-                    placeholder={translations("Enter phone number")}
-                    value={form.values.phone || ""}
-                    {...form.getInputProps("phone")}
-                    className={styles.inputPhone}
-                  />
-                  <Text size="sm" c={"red"}>
-                    {form?.errors?.phone}
-                  </Text>
-                </Box>
-              </Stack>
-              {type === ContactGroupType.LOYALTY && (
-                <>
-                  <TextInput
-                    label={translations("email")}
-                    placeholder={translations("Enter the email")}
-                    radius={"md"}
-                    size="md"
-                    type="email"
-                    {...form.getInputProps("email")}
-                  />
-                  <DatePickerInput
-                    label={translations("dob")}
-                    placeholder={translations("Enter the dob")}
-                    radius={"md"}
-                    size="md"
-                    maxDate={new Date()}
-                    {...form.getInputProps("dob")}
-                  />
-                  <TextInput
-                    label={translations("External ID")}
-                    placeholder={translations("Enter External ID")}
-                    radius={"md"}
-                    size="md"
-                    {...form.getInputProps("external_id")}
-                  />
-                </>
-              )}
-              {form
-                .getValues()
-                .contactType?.map(
-                  (data) =>
-                    data !== "phone" && (
-                      <TextInput
-                        label={data}
-                        placeholder={`Enter ${data}`}
-                        radius={"md"}
-                        size="md"
-                        key={form.key(`tags.${data}`)}
-                        {...form.getInputProps(`tags.${data}`)}
-                      />
-                    ),
-                )}
-            </SimpleGrid>
+          {(form.getValues().source == importMethod.MANUAL ||
+            form.getValues().source != importMethod.CSV) && (
+            <ContactForm form={form} customFields={customFields} type={type} />
           )}
           {form.getValues().source == importMethod.CSV && (
             <Stack>
@@ -335,9 +334,11 @@ const CreateContactModal = ({
             <RateupButtonSecondary title="cancel" onClick={contactClose} />
             <RateupButtonBlue
               title={
-                form.getValues().source == importMethod.MANUAL
-                  ? translations("Add Contact")
-                  : translations("Import Contacts")
+                initialValues
+                  ? translations("Update Contact")
+                  : form.getValues().source == importMethod.MANUAL
+                    ? translations("Add Contact")
+                    : translations("Import Contacts")
               }
               type="button"
               loading={isCreating}
@@ -351,3 +352,185 @@ const CreateContactModal = ({
   );
 };
 export default CreateContactModal;
+
+export const ContactForm = ({ form, customFields, type }) => {
+  const translations = useTranslations();
+
+  const getCustomFieldValue = (fieldId) => {
+    const customField = form
+      .getValues()
+      .customFields.find((cf) => cf.slug === fieldId);
+    return customField?.value || "";
+  };
+
+  const updateCustomField = (fieldId, value, customFieldData) => {
+    const currentCustomFields = form.getValues().customFields;
+    const existingIndex = currentCustomFields.findIndex(
+      (cf) => cf.fieldId === fieldId,
+    );
+
+    if (existingIndex >= 0) {
+      currentCustomFields[existingIndex].value = value;
+    } else {
+      currentCustomFields.push({
+        id: customFieldData?.id,
+        fieldId: fieldId,
+        value: value,
+      });
+    }
+
+    form.setFieldValue("customFields", [...currentCustomFields]);
+  };
+
+  const renderCustomField = (fieldId) => {
+    if (fieldId === "phone") return null;
+
+    const customField = customFields.find((field) => field.slug === fieldId);
+
+    if (!customField) return null;
+
+    const fieldValue = getCustomFieldValue(fieldId);
+    const fieldError = form.errors[`customFields.${fieldId}`];
+
+    const commonProps = {
+      label: customField.name,
+      placeholder: `Enter ${customField.name}`,
+      radius: "md",
+      size: "md",
+      key: `customField-${fieldId}`,
+      required: customField.required,
+      error: fieldError,
+    };
+
+    switch (customField.type) {
+      case "email":
+        return (
+          <TextInput
+            {...commonProps}
+            type="email"
+            defaultValue={fieldValue}
+            onChange={(event) => {
+              updateCustomField(
+                fieldId,
+                event.currentTarget.value,
+                customField,
+              );
+            }}
+          />
+        );
+
+      case "number":
+        return (
+          <NumberInput
+            {...commonProps}
+            defaultValue={fieldValue ? Number(fieldValue) : ""}
+            onChange={(value) => {
+              updateCustomField(fieldId, value?.toString() || "", customField);
+            }}
+          />
+        );
+
+      case "multivalue":
+        const options =
+          customField?.listValues?.map((option) => ({
+            value: option,
+            label: option,
+          })) || [];
+
+        return (
+          <Select
+            {...commonProps}
+            data={options}
+            defaultValue={fieldValue}
+            onChange={(value) => {
+              updateCustomField(fieldId, value || "", customField);
+            }}
+            searchable
+            clearable
+          />
+        );
+
+      case "text":
+      default:
+        return (
+          <TextInput
+            {...commonProps}
+            defaultValue={fieldValue}
+            onChange={(event) => {
+              updateCustomField(
+                fieldId,
+                event.currentTarget.value,
+                customField,
+              );
+            }}
+          />
+        );
+    }
+  };
+
+  return (
+    <SimpleGrid cols={2}>
+      <TextInput
+        label={translations("Name")}
+        placeholder={translations("Enter name")}
+        radius={"md"}
+        size="md"
+        required
+        key={form.key("name")}
+        {...form.getInputProps("name")}
+      />
+      <Stack gap={0}>
+        <Group gap={3}>
+          <Text>{translations("Phone Number")}</Text>
+          <Text c="red">*</Text>
+        </Group>
+        <Box
+          className={`${styles["phone-input-container"]} ${form?.errors?.phone ? styles["phone-input-error"] : ""}`}
+        >
+          <PhoneInputWithCountrySelect
+            defaultCountry="IN"
+            international
+            countryCallingCodeEditable={false}
+            placeholder={translations("Enter phone number")}
+            value={form.values.phone ?? ""}
+            {...form.getInputProps("phone")}
+            className={styles.inputPhone}
+          />
+          <Text size="sm" c={"red"}>
+            {form?.errors?.phone}
+          </Text>
+        </Box>
+      </Stack>
+      {type === ContactGroupType.LOYALTY && (
+        <>
+          <TextInput
+            label={translations("email")}
+            placeholder={translations("Enter the email")}
+            radius={"md"}
+            size="md"
+            type="email"
+            {...form.getInputProps("email")}
+          />
+          <DatePickerInput
+            label={translations("dob")}
+            placeholder={translations("Enter the dob")}
+            radius={"md"}
+            size="md"
+            maxDate={new Date()}
+            {...form.getInputProps("dob")}
+          />
+          <TextInput
+            label={translations("External ID")}
+            placeholder={translations("Enter External ID")}
+            radius={"md"}
+            size="md"
+            {...form.getInputProps("external_id")}
+          />
+        </>
+      )}
+      {form
+        .getValues()
+        .contactType?.map((fieldId) => renderCustomField(fieldId))}
+    </SimpleGrid>
+  );
+};

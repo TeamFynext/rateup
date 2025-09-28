@@ -16,11 +16,11 @@ import {
 } from "../../backend/campaign/contactGroup/contactGroup.query";
 import { useContactDeleteMutation } from "../../backend/campaign/contacts/contacts.query";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
+import CreateContactModal from "../Contacts/CreateContactModal";
 import CreateGroupModal from "../Contacts/CreateGroupModal";
-import EditContactModal from "../Contacts/EditContactModal";
 import FormModalLayout from "../Modal/FormModalLayout";
 
-export const ContactMenu = ({ contact, groupId, tags }) => {
+export const ContactMenu = ({ contact, groupId }) => {
   const translations = useTranslations();
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
@@ -81,11 +81,10 @@ export const ContactMenu = ({ contact, groupId, tags }) => {
         centered
         size="lg"
       >
-        <EditContactModal
-          contact={contact}
-          closeEditModal={closeEditModal}
-          groupId={groupId}
-          tags={tags}
+        <CreateContactModal
+          initialValues={contact}
+          close={closeEditModal}
+          contactClose={closeEditModal}
         />
       </FormModalLayout>
     </Menu>

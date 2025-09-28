@@ -12,15 +12,14 @@
 
 .content-container {
   display: flex;
-  margin-top: 56px;
   align-items: center;
   flex: 1 1 auto;
   overflow: auto;
   flex-direction: column;
-  height: calc(100vh - 80px);
-  height: calc(100dvh - 80px);
+  height: calc(100vh - 65px);
+  height: calc(100dvh - 65px);
+  max-height: 1100px;
   overflow-x: hidden;
-  /* background: light-dark(var(--light-grey-color-6), var(--mantine-color-body)); */
 }
 
 .content-container > div {

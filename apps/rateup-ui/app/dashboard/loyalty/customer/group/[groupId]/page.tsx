@@ -36,7 +36,6 @@ import {
   useAddNewCustomersFromCSVMutation,
   useCustomerGroupById,
 } from "@/backend/loyalty/customerGroup/customerGroup.query";
-import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import AddCustomerModal from "@/components/Contacts/AddCustomerModal";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal";
@@ -50,6 +49,7 @@ import LoyaltyCustomerRedeems from "@/components/LoyaltyComponents/Customer/Loya
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
+import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { useRouteParams } from "@/context/RouteParamsContext";
 import { PAGE_SIZE } from "@/utils/constants";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
@@ -81,7 +81,6 @@ export default function ContactGroup() {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
   const { update } = useRouteParams();
-  const { isPending, data: cTags } = useGetContactTags();
   const createNewContactsFromCSV = useAddNewContactFromCSVMutation(
     groupId?.toString(),
   );
@@ -160,7 +159,7 @@ export default function ContactGroup() {
     groupId?.toString(),
   );
 
-  const loadingState = isLoading || isPending || isRefetching;
+  const loadingState = isLoading || isRefetching;
   if (groupByIderror) return <ErrorComponent refetch={refetchgroupById} />;
 
   return (
@@ -298,7 +297,6 @@ export default function ContactGroup() {
           groupId={groupDetails?.id}
           close={close}
           existingContactIds={[]}
-          tags={cTags?.contactTags}
           createNewContactsFromCSV={addNewCustomersFromCSVMutation}
           type={ContactGroupType.LOYALTY}
         />

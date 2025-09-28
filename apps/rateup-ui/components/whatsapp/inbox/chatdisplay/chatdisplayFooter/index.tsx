@@ -18,7 +18,7 @@ import { useTranslations } from "next-intl";
 import { create } from "zustand";
 
 import { MessagePlatform } from "@/types/enums";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import VoiceRecorder, {
   useVoiceRecordStore,

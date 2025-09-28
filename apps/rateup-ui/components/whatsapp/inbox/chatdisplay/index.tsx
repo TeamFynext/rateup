@@ -3,16 +3,15 @@
 import { useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { Flex, Group, Text } from "@mantine/core";
+import { Flex, Group, Paper, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 import {
   useGetAssignedUserForContact,
   useGetMessagesByContactId,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { useUser } from "@/context/UserContext";
 
@@ -42,7 +41,6 @@ export default function WaInboxChatDisplay({
 
   const { data, error, isPending, isFetching, isFetched } =
     useGetMessagesByContactId(currentContactId, filter?.phone);
-  const { data: cTags } = useGetContactTags();
 
   const messages = useMemo(
     () =>
@@ -100,7 +98,7 @@ export default function WaInboxChatDisplay({
   const showLoading = isPending || (isFetching && !isFetched);
 
   return (
-    <PaperLayout p={0} className="h-full">
+    <Paper withBorder p={0} className="h-full">
       {!contact && messages?.length === 0 ? (
         <NothingFound text={translations("Select a chat to see messages")} />
       ) : (
@@ -110,7 +108,7 @@ export default function WaInboxChatDisplay({
             smallScreen={smallScreen}
             waSettings={waSettings}
           />
-          <div className={"flex h-[93.2%]"}>
+          <div className={"flex h-[calc(100%-49px)]"}>
             <div className="flex flex-1 flex-col">
               {showLoading ? (
                 <WhatsAppInboxLoader isLoading={showLoading} />
@@ -122,13 +120,10 @@ export default function WaInboxChatDisplay({
               )}
               {!showLoading && footerContent}
             </div>
-            <WaInboxContactDetails
-              contact={contact}
-              cTags={cTags?.contactTags}
-            />
+            <WaInboxContactDetails contact={contact} />
           </div>
         </div>
       )}
-    </PaperLayout>
+    </Paper>
   );
 }

@@ -64,7 +64,7 @@ const NotificationList = ({ close, data, isLoading }) => {
               <Anchor
                 component={Link}
                 onClick={() => close()}
-                href={`/dashboard/whatsapp/inbox?tab=AssignedToMe&contactId=${data?.contactId}`}
+                href={`/dashboard/inbox?tab=mine&contactId=${data?.contactId}`}
               >
                 {" "}
                 Show chat

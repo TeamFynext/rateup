@@ -16,7 +16,6 @@ import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
 import { useImportCSVCustomerMutation } from "@/backend/loyalty/customer/customer.query";
-import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
 import CreateContactModal from "@/components/Contacts/CreateContactModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
@@ -43,8 +42,6 @@ const LoyaltyUtilityMenu = () => {
     openedAddCustomer,
     { open: openAddCustomer, close: closeAddCustomer },
   ] = useDisclosure(false);
-
-  const { isPending, data: cTags } = useGetContactTags();
 
   const importCSVCustomerMutation = useImportCSVCustomerMutation();
   const translations = useTranslations();
@@ -122,7 +119,6 @@ const LoyaltyUtilityMenu = () => {
         <CreateContactModal
           contactClose={closeAddCustomer}
           close={closeAddCustomer}
-          cTags={cTags?.contactTags}
           importCSVContactMutation={importCSVCustomerMutation}
           type={ContactGroupType.LOYALTY}
         />

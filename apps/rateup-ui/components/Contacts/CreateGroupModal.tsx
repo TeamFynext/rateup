@@ -7,14 +7,11 @@ import {
   Avatar,
   Box,
   Button,
-  Checkbox,
   FileButton,
   Group,
-  Paper,
   SimpleGrid,
   Stack,
   Text,
-  TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
@@ -36,7 +33,6 @@ import {
 } from "../Button/RateupButtons";
 import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
-import PaperLayout from "../styled/Layouts/PaperLayout";
 
 interface GroupModalProps {
   groupClose: () => void;
@@ -44,7 +40,6 @@ interface GroupModalProps {
   isEdit?: boolean;
   groupDetails?: ContactGroup;
   type?: ContactGroupType;
-  gTags?: string[];
 }
 
 const CreateGroupModal = ({
@@ -53,7 +48,6 @@ const CreateGroupModal = ({
   isEdit,
   groupDetails,
   type,
-  gTags = [],
 }: GroupModalProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -63,12 +57,12 @@ const CreateGroupModal = ({
   const translations = useTranslations();
   const form = useForm({
     initialValues: groupDetails
-      ? { ...groupDetails, contactType: gTags ?? [] }
+      ? { ...groupDetails, contactType: [] }
       : {
           name: "",
           icon: "",
           teamId: "",
-          contactType: gTags ?? [],
+          contactType: [],
           tags: {},
         },
     validate: {
@@ -211,41 +205,6 @@ const CreateGroupModal = ({
             </FileButton>
           </Stack>
         </SimpleGrid>
-        {gTags?.length > 0 && (
-          <PaperLayout p={"xs"} mt={"md"} radius={"md"}>
-            <Checkbox.Group
-              label={translations("Contact Types")}
-              {...form.getInputProps("contactType")}
-            >
-              <Group>
-                {gTags?.map((data) => (
-                  <Checkbox
-                    value={data}
-                    label={data}
-                    key={data}
-                    tt={"capitalize"}
-                  />
-                ))}
-              </Group>
-            </Checkbox.Group>
-          </PaperLayout>
-        )}
-
-        {form.values.contactType?.length > 0 && (
-          <SimpleGrid cols={2}>
-            {form.values.contactType?.map(
-              (data) =>
-                data !== "phone" && (
-                  <ContainedTextField
-                    key={data}
-                    label={data}
-                    placeholder={`Enter ${data}`}
-                    {...form.getInputProps(`tags.${data}`)}
-                  />
-                ),
-            )}
-          </SimpleGrid>
-        )}
 
         <Group justify="flex-end" mt={"md"}>
           <RateupButtonSecondary
