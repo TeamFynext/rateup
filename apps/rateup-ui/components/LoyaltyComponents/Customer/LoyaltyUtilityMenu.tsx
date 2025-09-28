@@ -19,6 +19,7 @@ import { useImportCSVCustomerMutation } from "@/backend/loyalty/customer/custome
 import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
 import CreateContactModal from "@/components/Contacts/CreateContactModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
+import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import { useUser } from "@/context/UserContext";
 import { FRONTEND_URL } from "@/utils/constants";
 
@@ -111,7 +112,7 @@ const LoyaltyUtilityMenu = () => {
       <ManualRedeemModal opened={redeemOpened} close={closeRedeem} />
       <SendLoyaltyTemplate opened={openedSendModal} close={closeSendModal} />
       <LoyaltyBulkActions opened={openedBulk} close={closeBulk} />
-      <FormModalLayout
+      <SimpleModalLayout
         onClose={closeAddCustomer}
         opened={openedAddCustomer}
         title={translations("Add members")}
@@ -125,7 +126,7 @@ const LoyaltyUtilityMenu = () => {
           importCSVContactMutation={importCSVCustomerMutation}
           type={ContactGroupType.LOYALTY}
         />
-      </FormModalLayout>
+      </SimpleModalLayout>
     </Menu>
   );
 };

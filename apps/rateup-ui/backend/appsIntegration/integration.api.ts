@@ -22,6 +22,7 @@ type integrationSchemaProps = {
 
 export type updateIntegrationSchema = {
   credential: any;
+  updateKey?: boolean;
 };
 
 export const createIntegration = async (data: integrationSchemaProps) => {
@@ -93,4 +94,8 @@ export const regenerateWaPaymentConfigurationOauth = async (name: string) => {
 
 export async function getAllIntegrations() {
   return (await axiosClient.get(`${ROUTE_URL}all`)).data;
+}
+
+export async function deleteZapierTriggerHook(data) {
+  return (await axiosClient.delete(`${ROUTE_URL}zapier-hook`, { data })).data;
 }

@@ -78,7 +78,7 @@ const ShopifySettings = ({
       "integration-delete",
       true,
     );
-    deleteIntgration.mutate(IntegratedApps.shopify);
+    deleteIntgration.mutate();
   };
   const registerWebhooks = () => {
     showLoadingToast(
