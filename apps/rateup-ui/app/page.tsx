@@ -17,7 +17,6 @@ import HomePageQrSection from "@/components/RateupHomePage/shared/HomePageQrSect
 import IntegrationHero from "@/components/RateupHomePage/shared/IntegrationAndClients";
 import LoyalityAd from "@/components/RateupHomePage/shared/LoyalityAd";
 import MobileAppSection from "@/components/RateupHomePage/shared/MobileAppSection";
-import NewsStoriesCenter from "@/components/RateupHomePage/shared/NewsStoriesCenter";
 import ObstaclesOverview from "@/components/RateupHomePage/shared/ObstaclesOverview";
 import TabComponent from "@/components/RateupHomePage/shared/TabComponent";
 
@@ -42,7 +41,6 @@ const page = () => {
       <HomePageQrSection />
       <AudienceOverview />
       <MobileAppSection />
-      <NewsStoriesCenter />
       <CallToAction />
       <HomePageFooter />
       <ScrollToTop />

@@ -92,10 +92,7 @@ const WhatsAppSurveyFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="https://blog.rateup.app/"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link href="/blog" className="hover:text-gray-300 transition">
                   Blog
                 </Link>
               </li>
