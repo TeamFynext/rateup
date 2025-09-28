@@ -116,8 +116,9 @@ export async function seedDefaultStages(orgId: string) {
       ordering: 1,
       isDefault: true,
       category: StageCategory.active,
-      emoji: "🆕",
-      description: "The Contact has shown interest for the first time.",
+      emoji: "✨",
+      description:
+        "A potential customer who has just entered the pipeline and shown initial interest.",
       isWon: false,
     },
     {
@@ -125,29 +126,29 @@ export async function seedDefaultStages(orgId: string) {
       ordering: 1,
       isDefault: false,
       category: StageCategory.lost,
-      emoji: "🧊",
+      emoji: "❄️",
       description:
-        "The Contact has stopped showing interest and is no longer responsive.",
+        "A lead that has gone cold, showing little or no engagement despite outreach attempts.",
       isWon: false,
     },
     {
-      name: "Hot Lead",
+      name: "Engaged Lead",
       ordering: 2,
       isDefault: false,
       category: StageCategory.active,
-      emoji: "🔥",
+      emoji: "⚡",
       description:
         "The Contact is actively interested and ready to move forward.",
       isWon: false,
     },
     {
-      name: "Payment",
+      name: "In Negotiation",
       ordering: 3,
       isDefault: false,
       category: StageCategory.active,
       emoji: "💵",
       description:
-        "The Contact is considering your offer and payment is in progress.",
+        "The lead is reviewing the proposal, and pricing or payment discussions are underway.",
       isWon: false,
     },
     {
@@ -157,7 +158,7 @@ export async function seedDefaultStages(orgId: string) {
       category: StageCategory.won,
       emoji: "🤩",
       description:
-        "The Contact has made a purchase and is now a paying customer.",
+        "The lead has successfully completed a purchase and become a paying customer.",
       isWon: true,
     },
   ];
