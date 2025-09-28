@@ -1,15 +1,19 @@
 import { FastifyInstance } from "fastify";
 import { $contactRef } from "./contact.schema";
 import {
+  addCustomFieldHandler,
   createContactHandler,
   createMultipleContactsHandler,
   deleteContactByIdHandler,
+  deleteCustomFieldHandler,
   deleteManyContactsHandler,
   getAllContactsHandler,
   getContactByIdHandler,
+  getCustomFieldHandler,
   importCSVContactsHandler,
   updateContactByIdHandler,
   updateContactLabelsByIdHandler,
+  updateCustomFieldHandler,
 } from "./contact.controller";
 import { contactGroupRoutes } from "./contactGroup/contactGroup.route";
 import { contactGroupSchemas } from "./contactGroup/contactGroup.schema";
@@ -125,5 +129,35 @@ export async function contactRoutes(server: FastifyInstance) {
       },
     },
     importCSVContactsHandler,
+  );
+  server.get("/custom-fields", getCustomFieldHandler);
+  server.post(
+    "/custom-fields",
+    {
+      schema: {
+        body: $contactRef("customFieldSchema"),
+      },
+    },
+    addCustomFieldHandler,
+  );
+  server.put(
+    "/custom-fields/:fieldId",
+    {
+      schema: {
+        params: $contactRef("byFieldIdSchema"),
+        body: $contactRef("customFieldSchema"),
+      },
+    },
+    updateCustomFieldHandler,
+  );
+
+  server.delete(
+    "/custom-fields/:fieldId",
+    {
+      schema: {
+        params: $contactRef("byFieldIdSchema"),
+      },
+    },
+    deleteCustomFieldHandler,
   );
 }

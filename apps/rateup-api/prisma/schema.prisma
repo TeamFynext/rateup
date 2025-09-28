@@ -4,8 +4,8 @@
 generator client {
   provider        = "prisma-client"
   output          = "../generated/prisma"
-  moduleFormat    = "commonjs"
-  previewFeatures = ["queryCompiler", "driverAdapters"]
+  moduleFormat    = "cjs"
+  engineType = "client"
 }
 
 // for having typed Json fields
@@ -160,6 +160,7 @@ model Org {
   WaCatalog                WhatsappCatalog[]
   UserAssignedCount        UserAssignedCount[]
   Lifecycle                Lifecycle[]
+  ContactCustomField       ContactCustomField[]
 }
 
 model UsageStats {
@@ -505,34 +506,35 @@ model Contact {
   phone  String?
   source String?
 
-  org                          Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                        String                @db.Uuid
+  org                          Org                       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                        String                    @db.Uuid
   responses                    SurveyResponse[]
   contactGroups                ContactGroupMap[]
   campaignParticipants         CampaignParticipant[]
   tags                         Json?
   WaMessage                    WaMessage[]
-  consent                      Boolean               @default(true)
+  consent                      Boolean                   @default(true)
   email                        String?
   dob                          DateTime?
   loyaltyCustomer              LoyaltyCustomer?
   external_id                  String?
-  aiWaChat                     Boolean               @default(false)
-  isAiBotActive                Boolean               @default(false)
-  chatbotId                    String                @default("")
-  waMessageAssignStatus        String                @default("UNASSIGNED")
+  aiWaChat                     Boolean                   @default(false)
+  isAiBotActive                Boolean                   @default(false)
+  chatbotId                    String                    @default("")
+  waMessageAssignStatus        String                    @default("UNASSIGNED")
   waInboxAssign                WaInboxAssign[]
   lastReceivedMessageTimeStamp DateTime?
   whatsappUserName             String? //whatsapp or instagram username
-  blockedOnWhatsApp            Boolean               @default(false)
+  blockedOnWhatsApp            Boolean                   @default(false)
   waCatalogOrders              WaCatalogOrder[]
   igsId                        String? //Instagram Scoped User ID
   profilePic                   String?
   followerCount                Int?
   isIgVerifiedUser             Boolean?
   other                        String?
-  Lifecycle                    Lifecycle?            @relation(fields: [lifecycleId], references: [id])
-  lifecycleId                  String?               @db.Uuid
+  Lifecycle                    Lifecycle?                @relation(fields: [lifecycleId], references: [id])
+  lifecycleId                  String?                   @db.Uuid
+  customFields                 ContactCustomFieldValue[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -541,6 +543,32 @@ model Contact {
   @@index([orgId, id])
   @@index([orgId, waMessageAssignStatus])
   @@index([lastReceivedMessageTimeStamp])
+}
+
+model ContactCustomField {
+  id          String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org         Org                       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId       String                    @db.Uuid
+  slug        String // e.g. tag.toLowerCase().replace(/\s+/g, "_")
+  name        String // Display name
+  description String?
+  visibility  Boolean                   @default(true)
+  type        String // e.g. number, string, date
+  createdAt   DateTime                  @default(now())
+  listValues  String[]                  @default([])
+  values      ContactCustomFieldValue[]
+}
+
+model ContactCustomFieldValue {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId String  @db.Uuid
+
+  field   ContactCustomField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  fieldId String             @db.Uuid
+
+  value     String // store as string; parse based on field.type
+  createdAt DateTime @default(now())
 }
 
 model WaInboxAssign {
