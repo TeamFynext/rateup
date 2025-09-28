@@ -45,7 +45,7 @@ const GoogleSheet = () => {
       autoClose: false,
       withCloseButton: false,
     });
-    deleteAccount.mutate(IntegratedApps.googlesheet);
+    deleteAccount.mutate();
   };
   if (!googleAccessToken)
     return (

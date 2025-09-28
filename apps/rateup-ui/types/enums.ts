@@ -463,6 +463,7 @@ export enum IntegratedApps {
   amelia = "amelia",
   waPayment = "waPayment",
   petpooja = "petpooja",
+  zapier = "zapier",
 }
 export enum PhotoSource {
   cameraGallery = "camera_gallery",
@@ -578,4 +579,19 @@ export enum MetaLoginAssets {
   CATALOGS = "CATALOGS",
   INSTAGRAM = "INSTAGRAM ACCOUNTS",
   ADACCOUNTS = "AD ACCOUNTS",
+}
+
+export enum ZapierTriggers {
+  CONTACT_CREATE = "new_contact_create",
+  CONTACT_ASSIGN = "new_contact_assignee",
+  NEW_MESSAGE = "new_message_received",
+  CONVERSATION_CLOSED = "conversation_closed",
+  CONTACT_UPDATED = "contact_updated",
+  CONTACT_LIFECYCLE_UPDATED = "contact_lifecycle_updated",
+  TICKET_CREATED = "new_ticket",
+  RESPONSE_SUBMITTED = "response_submitted",
+  CONTACT_DELETED = "contact_deleted",
+  TICKET_CARD_MOVED = "ticket_card_moved",
+  TICKET_ASSIGNEE_UPDATED = "ticket_assignee_updated",
+  NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
 }

@@ -1764,3 +1764,17 @@ export type ShopifySchedule = ScheduleObj & {
   history: ScheduleObj[];
   apiStatus?: string;
 };
+
+export type ZapierIntegration = Integration & {
+  credential: {
+    accessToken: string;
+    triggerSubscriptions: {
+      hookUrl: string;
+      subscribed_field: ZapierTriggers;
+      active: boolean;
+      zapId: string;
+      createdAt: string;
+      updatedAt: string;
+    }[];
+  };
+};

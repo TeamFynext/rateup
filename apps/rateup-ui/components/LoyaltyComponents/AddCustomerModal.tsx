@@ -331,7 +331,7 @@ const AddCustomerModal = ({
                   mx={"lg"}
                   label=""
                   placeholder={translations(
-                    "Upload a csv file (.csv) or excel file (.xlsx)",
+                    "Upload a csv file (csv) or excel file (xlsx)",
                   )}
                   accept=".csv,.xlsx"
                   multiple={false}
