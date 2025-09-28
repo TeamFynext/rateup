@@ -3,11 +3,8 @@
 import { useMemo, useState } from "react";
 
 import {
-  Accordion,
-  AccordionControl,
   ActionIcon,
   Avatar,
-  Divider,
   Flex,
   Group,
   Stack,
@@ -90,7 +87,7 @@ const APIKeyGenerate = ({ integration }) => {
       { credential: integration.credential, updateKey: true },
       {
         onSuccess: (data) => {
-          setApiKey(data?.apiKey);
+          setApiKey(data?.apikey);
         },
       },
     );
@@ -103,7 +100,7 @@ const APIKeyGenerate = ({ integration }) => {
       { credential: {} },
       {
         onSuccess: (data) => {
-          setApiKey(data?.apiKey);
+          setApiKey(data?.apikey);
         },
       },
     );
@@ -143,6 +140,7 @@ const APIKeyGenerate = ({ integration }) => {
               description={translations(
                 "Use this key to set up your Zapier connection",
               )}
+              readOnly
               rightSection={
                 <Group
                   gap={0}
