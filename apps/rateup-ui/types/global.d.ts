@@ -615,6 +615,13 @@ declare global {
     ];
     campaignParticipants: any[];
     aiWaChat: boolean;
+    customFields?: Array<{
+      id: string;
+      contactId: string;
+      fieldId: string;
+      value: string;
+      createdAt: string;
+    }>;
   };
 
   type ContactsResponse = {

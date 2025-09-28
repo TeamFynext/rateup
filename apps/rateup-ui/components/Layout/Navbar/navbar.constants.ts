@@ -109,27 +109,27 @@ export function getNavTopData(
               // new,assigned,closed,sent,blocked
               {
                 label: translations("Mine"),
-                link: "/dashboard/whatsapp/inbox?tab=mine",
+                link: "/dashboard/inbox?tab=mine",
                 icon: AssignedToMeInboxIcon,
               },
               {
                 label: translations("UnAssigned"),
-                link: "/dashboard/whatsapp/inbox?tab=UnAssigned",
+                link: "/dashboard/inbox?tab=UnAssigned",
                 icon: IconUserX,
               },
               {
                 label: translations("All"),
-                link: "/dashboard/whatsapp/inbox?tab=All",
+                link: "/dashboard/inbox?tab=All",
                 icon: IconMessage,
               },
               {
                 label: translations("Analytics"),
-                link: "/dashboard/whatsapp/inbox?tab=analytics",
+                link: "/dashboard/inbox?tab=analytics",
                 icon: IconFileAnalytics,
               },
               {
                 label: "Labels",
-                icon: IconBrandHipchat,
+                icon: IconLabel,
                 hasSubmenu: true,
                 children: [
                   ...(labels?.length
@@ -141,7 +141,7 @@ export function getNavTopData(
                                 label: lbl.name,
                                 value: lbl.id,
                                 emoji: lbl.emoji,
-                                icon: IconBrandHipchat,
+                                icon: IconLabel,
                               }))
                           : []),
                       ]
@@ -160,14 +160,24 @@ export function getNavTopData(
             hasSubmenu: true,
             children: [
               {
-                label: translations("Contacts"),
+                label: translations("All Contacts"),
                 link: "/dashboard/contacts",
                 icon: IconAddressBook,
               },
               {
-                label: translations("labels"),
-                link: "/dashboard/contacts/labels",
-                icon: IconLabel,
+                label: translations("Groups"),
+                link: "/dashboard/groups",
+                icon: IconUsers,
+              },
+              {
+                label: translations("Custom Fields"),
+                link: "/dashboard/contacts/custom-fields",
+                icon: IconFileDescription,
+              },
+              {
+                label: translations("Lifecycle"),
+                link: "/dashboard/lifecycle",
+                icon: IconActivity,
               },
             ],
           },

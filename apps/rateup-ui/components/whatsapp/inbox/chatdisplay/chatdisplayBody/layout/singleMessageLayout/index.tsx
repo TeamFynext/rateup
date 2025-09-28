@@ -23,7 +23,7 @@ import { EmojiClickData } from "emoji-picker-react";
 
 import { MessagePlatform } from "@/types/enums";
 import { WaReceiveMessageBody, WaSendMessageBody } from "@/types/global";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar";

@@ -1,16 +1,15 @@
 import { useEffect } from "react";
 
-import { Button, Group, Select, Stack } from "@mantine/core";
+import { Button, Group, Select, Stack, TagsInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
 import z from "zod";
 
-// import {
-//   useCreateCustomFieldMutation,
-//   useUpdateCustomFieldMutation,
-// } from "@/backend/label/label.query";
-import { showLoadingToast } from "@/utils/notifications";
+import {
+  useCreateCustomFieldMutation,
+  useUpdateCustomFieldMutation,
+} from "@/backend/campaign/contacts/contacts.query";
 
 import {
   ContainedTextArea,
@@ -25,30 +24,30 @@ export const CustomFieldForm = ({
   close: () => void;
 }) => {
   const t = useTranslations();
-  let updateCustomFieldMutation: any;
-  // = useUpdateCustomFieldMutation();
-  let createCustomFieldMutation: any;
-  //  = useCreateCustomFieldMutation();
+  const updateCustomFieldMutation = useUpdateCustomFieldMutation();
+  const createCustomFieldMutation = useCreateCustomFieldMutation();
 
   const customFieldFormSchema = z.object({
     name: z.string().min(1, t("Name is required")),
-    fieldId: z.string().min(1, t("Field ID is required")),
+    slug: z.string().min(1, t("Slug is required")),
     description: z.string().optional(),
     type: z.enum(["multivalue", "number", "text", "email"], {
       required_error: t("Type is required"),
     }),
-    visibility: z.enum(["show", "hide"], {
+    visibility: z.boolean({
       required_error: t("Visibility is required"),
     }),
+    listValues: z.array(z.string()).optional(),
   });
 
   const form = useForm<z.infer<typeof customFieldFormSchema>>({
     initialValues: {
       name: data?.name || "",
-      fieldId: data?.fieldId || "",
+      slug: data?.slug || "",
       description: data?.description || "",
       type: data?.type || "text",
-      visibility: data?.visibility || "show",
+      visibility: data?.visibility ?? true,
+      listValues: data?.listValues || [],
     },
     validate: zodResolver(customFieldFormSchema),
   });
@@ -57,12 +56,12 @@ export const CustomFieldForm = ({
   useEffect(() => {
     const name = form.values.name;
     if (name && !data) {
-      const fieldId = name
+      const slug = name
         .toLowerCase()
         .replace(/[^a-z0-9]/g, "_")
         .replace(/_+/g, "_")
         .replace(/^_|_$/g, "");
-      form.setFieldValue("fieldId", fieldId);
+      form.setFieldValue("slug", slug);
     }
   }, [form.values.name, data]);
 
@@ -70,7 +69,7 @@ export const CustomFieldForm = ({
     if (data) {
       updateCustomFieldMutation.mutate(
         {
-          customFieldId: data?.id,
+          fieldId: data?.id,
           data: form.getValues(),
         },
         {
@@ -80,12 +79,6 @@ export const CustomFieldForm = ({
           },
         },
       );
-      showLoadingToast(
-        t("Custom field updated successfully"),
-        "c-customfield",
-        true,
-        t("Loading"),
-      );
     } else {
       createCustomFieldMutation.mutate(form.getValues(), {
         onSettled() {
@@ -93,12 +86,6 @@ export const CustomFieldForm = ({
           close();
         },
       });
-      showLoadingToast(
-        t("Custom field created successfully"),
-        "c-customfield",
-        true,
-        t("Loading"),
-      );
     }
   };
 
@@ -110,8 +97,8 @@ export const CustomFieldForm = ({
   ];
 
   const visibilityOptions = [
-    { value: "show", label: t("Show") },
-    { value: "hide", label: t("Hide") },
+    { value: "true", label: t("Show") },
+    { value: "false", label: t("Hide") },
   ];
 
   return (
@@ -128,7 +115,7 @@ export const CustomFieldForm = ({
           placeholder={t("Auto-generated from name")}
           required
           disabled={!!data}
-          {...form.getInputProps("fieldId")}
+          {...form.getInputProps("slug")}
         />
         <Select
           label={t("Type")}
@@ -137,12 +124,23 @@ export const CustomFieldForm = ({
           required
           {...form.getInputProps("type")}
         />
+        {form.values.type === "multivalue" && (
+          <TagsInput
+            label={t("Input Values")}
+            placeholder={t("Enter values and press Enter")}
+            {...form.getInputProps("listValues")}
+          />
+        )}
         <Select
           label={t("Visibility")}
           placeholder={t("Select visibility")}
           data={visibilityOptions}
           required
-          {...form.getInputProps("visibility")}
+          value={form.values.visibility ? "true" : "false"}
+          onChange={(value) =>
+            form.setFieldValue("visibility", value === "true")
+          }
+          error={form.errors.visibility}
         />
         <ContainedTextArea
           label={t("Description")}

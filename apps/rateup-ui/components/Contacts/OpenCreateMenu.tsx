@@ -16,10 +16,6 @@ import CreateGroupModal from "./CreateGroupModal";
 import { WhatsappTableType } from "./utils/utils";
 
 const OpenCreateMenu = ({
-  tags = {
-    contactTags: [],
-    contactGroupTags: [],
-  },
   tab,
   toggle = () => {},
   isPending = false,
@@ -65,7 +61,6 @@ const OpenCreateMenu = ({
         <CreateContactModal
           contactClose={contactClose}
           close={close}
-          cTags={tags.contactTags}
           importCSVContactMutation={importCSVContactMutation}
         />
       </FormModalLayout>
@@ -80,12 +75,7 @@ const OpenCreateMenu = ({
         }
         size="lg"
       >
-        <CreateGroupModal
-          groupClose={groupClose}
-          close={close}
-          type={type}
-          gTags={tags.contactGroupTags}
-        />
+        <CreateGroupModal groupClose={groupClose} close={close} type={type} />
       </FormModalLayout>
     </>
   );

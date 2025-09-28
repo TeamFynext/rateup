@@ -2,12 +2,14 @@
 
 import { Checkbox, ColorSwatch, Text } from "@mantine/core";
 import { ColumnDef } from "@tanstack/react-table";
+import dayjs from "dayjs";
 
+import { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { DataTableColumnHeader } from "@/components/Table/data-table-column-header";
 
 import { DataTableRowActions } from "./data-table-row-actions";
 
-export const columns: ColumnDef<any>[] = [
+export const columns: ColumnDef<CustomFieldData>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -43,12 +45,12 @@ export const columns: ColumnDef<any>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "field_id",
+    accessorKey: "slug",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Field ID" />
     ),
     cell: ({ row }) => {
-      return <Text size="sm">{String(row.getValue("field_id"))}</Text>;
+      return <Text size="sm">{String(row.getValue("slug"))}</Text>;
     },
   },
   {
@@ -84,16 +86,20 @@ export const columns: ColumnDef<any>[] = [
     },
   },
   {
-    accessorKey: "created_at",
+    accessorKey: "createdAt",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Created At" />
     ),
     cell: ({ row }) => {
-      return <Text size="sm">{String(row.getValue("created_at"))}</Text>;
+      return (
+        <Text size="sm">
+          {dayjs(row.getValue("createdAt")).format("DD/MM/YYYY")}
+        </Text>
+      );
     },
   },
-  // {
-  //   id: "actions",
-  //   cell: ({ row }) => <DataTableRowActions row={row} />,
-  // },
+  {
+    id: "actions",
+    cell: ({ row }) => <DataTableRowActions row={row} />,
+  },
 ];

@@ -7,7 +7,6 @@ import {
   deleteWaSettings,
   deRegisterBusinessClient,
   fbPageQuery,
-  getContactTags,
   getMetaAssets,
   getWaLogs,
   getWaSettings,
@@ -18,7 +17,6 @@ import {
   syncFbPages,
   syncLeadgenFormQuestions,
   syncMetaLeadgenForms,
-  updateContactTags,
   updateUserAccessToken,
   updateWaSettingsById,
   upsertWaSettings,
@@ -140,31 +138,6 @@ export const useDeregisterBusinessClientMutation = () => {
     },
   });
 };
-
-export function useUpdateContactTagsMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: updateContactTags,
-    onSuccess: () => {
-      showSuccessToast(
-        "Contact tags updated successfully",
-        "c-tags",
-        null,
-        true,
-      );
-      queryClient.invalidateQueries({ queryKey: ["contactTags"] });
-    },
-    onError: (error: any) => {
-      showErrorToast(error?.response?.data?.message, "c-tags", null, true);
-    },
-  });
-}
-
-export const useGetContactTags = () =>
-  useQuery({
-    queryKey: ["contactTags"],
-    queryFn: getContactTags,
-  });
 
 export const useWaLogs = (pagination, search, sort, columnFilters) =>
   useQuery({

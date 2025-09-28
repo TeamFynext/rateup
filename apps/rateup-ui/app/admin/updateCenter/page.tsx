@@ -6,6 +6,7 @@ import {
   useAutomationSubscription,
   useUpdateAutomationTriggerSubscription,
   useUpdateAutomationUsageStats,
+  useUpdateCustomField,
   useUpdateFreePlanSubscriptionExpiry,
   useUpdateLifecycle,
   useUpdateSubscriptionNewFeat,
@@ -21,6 +22,7 @@ function UpdateAllThemes() {
   const updateFeat = useUpdateSubscriptionNewFeat();
   const updateFreePlan = useUpdateFreePlanSubscriptionExpiry();
   const updateLife = useUpdateLifecycle();
+  const updateCustom = useUpdateCustomField();
 
   return (
     <Stack>
@@ -133,6 +135,20 @@ function UpdateAllThemes() {
             updateLife.mutate();
           }}
           loading={updateLife.isPending}
+        >
+          Update
+        </Button>
+      </Stack>
+      <Stack mt="xl">
+        <Title order={2}>Migrate tags to custom field</Title>
+        <Text>This will migrate tags to a custom field</Text>
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateCustom.mutate();
+          }}
+          loading={updateCustom.isPending}
         >
           Update
         </Button>

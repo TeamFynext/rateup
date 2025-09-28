@@ -5,7 +5,7 @@ import React from "react";
 import { Card, Group, Text } from "@mantine/core";
 
 // import { PriorityBadge, StatusBadge } from "@/components/Tickets/TicketCard";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 import { ITicket } from "@/backend/tickets/tickets";
 
 import styles from "./styles.module.css";

@@ -27,7 +27,7 @@ import { useTranslations } from "next-intl";
 import { useLocation } from "react-use";
 
 import { MessagePlatform } from "@/types/enums";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
 import { useUser } from "@/context/UserContext";
 

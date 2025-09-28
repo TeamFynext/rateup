@@ -13,9 +13,9 @@ import {
   ResizablePanelGroup,
 } from "@/components/whatsapp/inbox/resizeable";
 
-import WaInboxChatDisplay from "../../../../components/whatsapp/inbox/chatdisplay";
-import WaInboxChatSelect from "../../../../components/whatsapp/inbox/chatselect";
-import { whatsappTheme } from "../../../../config/mantineTheme";
+import WaInboxChatDisplay from "../../../components/whatsapp/inbox/chatdisplay";
+import WaInboxChatSelect from "../../../components/whatsapp/inbox/chatselect";
+import { whatsappTheme } from "../../../config/mantineTheme";
 import ChatDisplayContext, { useIsChatDisplayOpen } from "./ChatDisplayContext";
 import styles from "./WhatsappInbox.module.css";
 
@@ -42,7 +42,7 @@ const ResizeableChat = () => {
     <ResizablePanelGroup
       direction="horizontal"
       autoSaveId="inbox-panel-group"
-      className="w-full h-full"
+      className="w-full h-full gap-0"
     >
       <ResizablePanel
         defaultSize={20}
@@ -56,7 +56,10 @@ const ResizeableChat = () => {
       >
         <WaInboxChatSelect />
       </ResizablePanel>
-      <ResizableHandle withHandle className={`max-sm:hidden`} />
+      <ResizableHandle
+        withHandle
+        className={`max-sm:hidden focus:hidden bg-transparent`}
+      />
       <ResizablePanel
         defaultSize={100}
         maxSize={100}

@@ -9,8 +9,8 @@ import dayjs from "dayjs";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { cn } from "@/lib/utils";
-import { useSetIsChatDisplayOpen } from "@/app/dashboard/whatsapp/inbox/ChatDisplayContext";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContext";
+import useContactStore from "@/app/dashboard/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
 import {

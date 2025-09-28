@@ -36,11 +36,13 @@ import SessionReact from "supertokens-auth-react/recipe/session";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import { useChatSocket } from "@/hooks/useChatSocket";
-import { useChatContactCountStore } from "@/app/dashboard/whatsapp/inbox/store";
+import { useChatContactCountStore } from "@/app/dashboard/inbox/store";
+import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useLabelsQuery } from "@/backend/label/label.query";
 import { useIsTellUsMoreCompleted } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { CustomFieldsProvider } from "@/context/CustomFieldsContext";
 import { LabelsContext } from "@/context/LabelsContext";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
@@ -616,28 +618,31 @@ const MainContent = ({
   navOpened,
   setNavOpened,
   labels,
+  customFieldData,
 }) => {
   return (
     <motion.div className={styles["content-container"]}>
       <Flex className={`${styles["content-wrapper"]}`}>
         <LabelsContext value={labels}>
-          <NavControlContext value={{ navOpened, setNavOpened }}>
-            <AnimatePresence key={appProps.router.pathname}>
-              <motion.div
-                className={styles["content-div"]}
-                initial={
-                  !(
-                    appProps.router.pathname.includes("login") ||
-                    appProps.router.pathname.includes("signup")
-                  ) && { opacity: 0 }
-                }
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                {children}
-              </motion.div>
-            </AnimatePresence>
-          </NavControlContext>
+          <CustomFieldsProvider initialFields={customFieldData || []}>
+            <NavControlContext value={{ navOpened, setNavOpened }}>
+              <AnimatePresence key={appProps.router.pathname}>
+                <motion.div
+                  className={styles["content-div"]}
+                  initial={
+                    !(
+                      appProps.router.pathname.includes("login") ||
+                      appProps.router.pathname.includes("signup")
+                    ) && { opacity: 0 }
+                  }
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            </NavControlContext>
+          </CustomFieldsProvider>
         </LabelsContext>
       </Flex>
     </motion.div>
@@ -689,13 +694,16 @@ export default function Layout({ children }) {
   const [desktopOpened, { toggle: toggleDesktop, open }] = useDisclosure(false);
   const { data: sub, isPending } = useSubscription();
   const { isPending: isPendingLabels, data: labels } = useLabelsQuery();
+  const { isPending: isCustomFieldPending, data: customFieldData } =
+    useCustomFields();
 
   const translations = useTranslations();
   const [navLinks, setNavLinks] = useState([]);
   const [lastLinksData, setLastLinksData] = useState([]);
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
   const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
-  const isLoading = isPending || isPendingLabels || isLoadingUserInfo;
+  const isLoading =
+    isPending || isPendingLabels || isLoadingUserInfo || isCustomFieldPending;
   // Fetch inbox labels from DB
   // const { data: inboxLabelsData } = useGetInboxLabels();
 
@@ -917,13 +925,9 @@ export default function Layout({ children }) {
           breakpoint: "sm",
           collapsed: { mobile: !mobileOpened },
         }}
-        header={{
-          height: {
-            sm: 0,
-            base: 40,
-          },
-        }}
-        padding="xs"
+        header={{ height: 50 }}
+        footer={{ height: 0 }}
+        padding={7}
         layout="alt"
       >
         <AppShell.Header>
@@ -936,7 +940,6 @@ export default function Layout({ children }) {
           />
           <TopNavbar user={userInfo.data} />
         </AppShell.Header>
-
         <AppShell.Navbar>
           <Navbar
             mainLinks={mainLinks}
@@ -964,6 +967,7 @@ export default function Layout({ children }) {
             navOpened={navOpened}
             setNavOpened={setNavOpened}
             labels={labels}
+            customFieldData={customFieldData}
           >
             {children}
           </MainContent>

@@ -67,7 +67,7 @@ const SubscriptionCard = () => {
               {dayjs(createdAt).format("DD MMM YYYY")}
             </p>
           </div>
-          {!subscription.basePlan.name.includes("FREE") && (
+          {!subscription.basePlan?.name.includes("FREE") && (
             <>
               <div className="space-y-1">
                 <p className="text-xs text-gray-500">

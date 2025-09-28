@@ -44,3 +44,9 @@ export async function updateLifecycle() {
     timeout: 60000,
   });
 }
+
+export async function updateCustomField() {
+  return await axiosClient.put(`${baseUrl}/migrate-tags`, null, {
+    timeout: 60000,
+  });
+}
