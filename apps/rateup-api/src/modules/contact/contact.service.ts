@@ -28,6 +28,10 @@ import {
   createNotification,
   getNotificationSettings,
 } from "../notification/notification.service";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../integrations/external/zapier/zapier.service";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
@@ -38,6 +42,11 @@ export async function createContact(contact: ContactCore & { orgId: string }) {
   const user = await prisma.contact.create({
     data: contact,
   });
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_CREATE,
+    { [ZapierTriggers.CONTACT_CREATE]: user },
+    user.orgId,
+  );
   return user;
 }
 
@@ -59,6 +68,12 @@ export async function getOrcreateContact(
   user = await prisma.contact.create({
     data: contact,
   });
+
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_CREATE,
+    { [ZapierTriggers.CONTACT_CREATE]: user },
+    user.orgId,
+  );
   return user;
 }
 
@@ -73,10 +88,18 @@ export async function createMultipleContacts(
     orgId,
     aiWaChat,
   }));
-  return await prisma.contact.createMany({
+  const newContacts = await prisma.contact.createManyAndReturn({
     skipDuplicates: true,
     data: contactsData,
   });
+  if (newContacts.length) {
+    for (const contact of newContacts)
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { [ZapierTriggers.CONTACT_CREATE]: contact },
+        orgId,
+      );
+  }
 }
 
 export async function getContactById(contactId: string) {
@@ -227,6 +250,7 @@ export async function getContactsByOrgId(
   return { users, totalCount };
 }
 
+//also used in zapier
 export async function getContactByPhoneNumberAndOrgId(
   phone: string,
   orgId: string,
@@ -240,15 +264,22 @@ export async function getContactByPhoneNumberAndOrgId(
   return contact;
 }
 
+//used in zapier controller also
 export async function deleteContactById(contactId: string) {
   const user = await prisma.contact.delete({
     where: {
       id: contactId,
     },
   });
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_DELETED,
+    { [ZapierTriggers.CONTACT_DELETED]: user },
+    user.orgId,
+  );
   return user;
 }
 
+//used in zapier controller also
 export async function updateContactById(
   contactId: string,
   contact: updateContactSchema,
@@ -266,7 +297,17 @@ export async function updateContactById(
       lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp,
     },
   });
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_UPDATED,
+    { [ZapierTriggers.CONTACT_UPDATED]: user },
+    user.orgId,
+  );
   if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONVERSATION_CLOSED,
+      { [ZapierTriggers.CONVERSATION_CLOSED]: contact },
+      user.orgId,
+    );
     const assignedUsers = await getAssignedUserForContact(user.id);
     await deleteAssignedUsersforContact(user.id);
     for (const assignee of assignedUsers) {
@@ -305,7 +346,25 @@ export async function updateContactLabelsById(
     data: {
       lifecycleId,
     },
+    include: {
+      Lifecycle: {
+        select: {
+          name: true,
+        },
+      },
+    },
   });
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_LIFECYCLE_UPDATED,
+    {
+      [ZapierTriggers.CONTACT_LIFECYCLE_UPDATED]: {
+        contactId: contact.id,
+        lifecycleId,
+        lifecycleName: contact.Lifecycle.name,
+      },
+    },
+    contact.orgId,
+  );
   return contact;
 }
 
@@ -346,7 +405,7 @@ export async function getOrCreateContactByPhone(
     } else {
       const chatbot = await getChatbotDetails(orgId);
       const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
-      return await prisma.contact.create({
+      const contact = await prisma.contact.create({
         data: {
           ...additionalData,
           aiWaChat,
@@ -354,6 +413,12 @@ export async function getOrCreateContactByPhone(
           orgId,
         },
       });
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { [ZapierTriggers.CONTACT_CREATE]: contact },
+        orgId,
+      );
+      return contact;
     }
   } catch (e) {
     log.error(e);
@@ -388,7 +453,7 @@ export async function getOrCreateContactByIgsId(
     } else {
       const chatbot = await getChatbotDetails(orgId);
       const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
-      return await prisma.contact.create({
+      const contact = await prisma.contact.create({
         data: {
           ...additionalData,
           aiWaChat,
@@ -396,6 +461,12 @@ export async function getOrCreateContactByIgsId(
           orgId,
         },
       });
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { [ZapierTriggers.CONTACT_CREATE]: contact },
+        orgId,
+      );
+      return contact;
     }
   } catch (e) {
     log.error(e);
@@ -403,6 +474,13 @@ export async function getOrCreateContactByIgsId(
 }
 
 export async function deleteManyContacts(contactIds: Array<string>) {
+  const contacts = await prisma.contact.findMany({
+    where: {
+      id: {
+        in: contactIds,
+      },
+    },
+  });
   const res = await prisma.contact.deleteMany({
     where: {
       id: {
@@ -410,6 +488,13 @@ export async function deleteManyContacts(contactIds: Array<string>) {
       },
     },
   });
+  for (const contact of contacts) {
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONTACT_DELETED,
+      { [ZapierTriggers.CONTACT_DELETED]: contact },
+      contact.orgId,
+    );
+  }
   return res;
 }
 
@@ -596,9 +681,10 @@ export async function updateMulitplceContacts(
   contacts: createMultipleContactInput,
   orgId: string,
 ) {
+  let updatedContacts = [];
   for (let i = 0; i < contacts.length; i += BATCH_SIZE) {
     const batch = contacts.slice(i, i + BATCH_SIZE);
-    await Promise.all(
+    const res = await Promise.all(
       batch.map((contact) =>
         prisma.contact.upsert({
           where: {
@@ -617,6 +703,14 @@ export async function updateMulitplceContacts(
           },
         }),
       ),
+    );
+    updatedContacts.push(...res);
+  }
+  for (const contact of updatedContacts) {
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONTACT_UPDATED,
+      { [ZapierTriggers.CONTACT_UPDATED]: contact },
+      orgId,
     );
   }
 }

@@ -3,6 +3,7 @@ import {
   createWaPaymentConfigurations,
   deleteIntegrationByName,
   deleteWaPaymentConfiguration,
+  deleteZapierTriggerHooks,
   getAllIntegrations,
   getAllIntegrationsByOrgId,
   getGoogleAuthUrl,
@@ -178,7 +179,8 @@ export const updateIntegrationByNameHandler = async (
     );
     reply.send(data);
   } catch (error) {
-    log.error("Error fetching integration by name");
+    console.error(error);
+    log.error("Error updating integration by name => %o", error);
     return reply.code(500).send({ error: "Something went wrong" });
   }
 };
@@ -279,5 +281,21 @@ export async function petPoojaWebhookHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send();
+  }
+}
+
+export async function deleteZapierTriggerHookHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await deleteZapierTriggerHooks(
+      request.body as any,
+      request.user.orgId,
+    );
+    reply.send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
   }
 }

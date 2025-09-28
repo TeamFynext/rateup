@@ -39,12 +39,16 @@ import {
 } from "../loyalty/settings/settings.service";
 import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service";
 
+//used in zapier
 export async function createContactHandler(
-  request: FastifyRequest<{ Body: ContactCore }>,
+  request: FastifyRequest<{
+    Body: ContactCore;
+    Querystring: { orgId?: string };
+  }>,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
+    const { orgId } = request.user ?? request.query; // orgId appended in query in case of zapier
     if (!isValidPhoneNumber(`+${request.body.phone}`))
       return reply.code(400).send({ error: "Phone number is not valid" });
     if (request.body.source === ContactGroupType.LOYALTY) {

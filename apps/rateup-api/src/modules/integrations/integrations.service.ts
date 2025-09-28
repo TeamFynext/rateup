@@ -13,6 +13,8 @@ import { getWaSettings } from "../whatsapp/settings/wa_settings.service";
 import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service";
 import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils";
 import { getScheduleTime } from "../../utils/date";
+import { generateApiKey } from "../apiAccessToken/apiAccessToken.service";
+import axios from "axios";
 
 export const getAllIntegrationsByOrgId = (orgId: string) => {
   return prisma.integration.findMany({
@@ -259,30 +261,54 @@ export const deleteWaPaymentConfiguration = async (
   return;
 };
 
-export const createIntegration = (data: IntegrationSchema, orgId?: string) => {
-  return prisma.integration.create({
+export const createIntegration = async (
+  data: IntegrationSchema,
+  orgId?: string,
+) => {
+  let apikey;
+  if (data.name === IntegratedApps.zapier) {
+    const { key, hash } = await generateApiKey();
+    data.credential = {
+      ...(data?.credential ?? {}),
+      accessToken: hash,
+    };
+    apikey = key;
+  }
+  const integration = await prisma.integration.create({
     data: {
       name: data.name,
       credential: data.credential,
       orgId: orgId ?? undefined,
     },
   });
+
+  return { ...integration, apikey };
 };
 
-export const updateIntegrationByName = (
+export const updateIntegrationByName = async (
   orgId: string,
   name: string,
   data: UpdateIntgrationInput,
 ) => {
-  return prisma.integration.update({
+  let apikey;
+  if (name === IntegratedApps.zapier && data.updateKey) {
+    const { key, hash } = await generateApiKey();
+    data.credential.accessToken = hash;
+    apikey = key;
+  }
+  const { updateKey, ...rest } = data;
+  const integration = await prisma.integration.update({
     where: {
       orgid_integration_name_unique: {
         orgId,
         name,
       },
     },
-    data,
+    data: {
+      ...rest,
+    },
   });
+  return { ...integration, apikey };
 };
 
 export const deleteIntegrationByName = (name: string, orgId: string) => {
@@ -472,4 +498,24 @@ export async function sendWaTemplateOnPetpoojaOrder(integration, customer) {
   await updateIntegrationByName(integration.orgId, IntegratedApps.petpooja, {
     credential: { ...integration.credential, history },
   });
+}
+
+export async function deleteZapierTriggerHooks(
+  data: ZapierIntegration["credential"]["triggerSubscriptions"][0],
+  orgId,
+) {
+  if (data.active) {
+    const res = await axios.delete(data.hookUrl);
+  }
+  const integration = (await getIntegrationByName(
+    orgId,
+    IntegratedApps.zapier,
+  )) as unknown as ZapierIntegration;
+  const credential = {
+    ...integration.credential,
+    triggerSubscriptions: integration.credential.triggerSubscriptions.filter(
+      (t) => t.hookUrl !== data.hookUrl,
+    ),
+  } as ZapierIntegration["credential"];
+  await updateIntegrationByName(orgId, IntegratedApps.zapier, { credential });
 }

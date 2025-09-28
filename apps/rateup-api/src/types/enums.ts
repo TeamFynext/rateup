@@ -383,6 +383,7 @@ export enum IntegratedApps {
   amelia = "amelia",
   waPayment = "waPayment",
   petpooja = "petpooja",
+  zapier = "zapier",
 }
 
 export enum PhotoSource {

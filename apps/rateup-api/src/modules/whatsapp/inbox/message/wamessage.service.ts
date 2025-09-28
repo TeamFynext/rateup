@@ -41,6 +41,10 @@ import {
   createNotification,
   getNotificationSettings,
 } from "../../../notification/notification.service";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../../../integrations/external/zapier/zapier.service";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -783,6 +787,18 @@ export async function assignWaMessageToUser(
       );
     }
   }
+
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_ASSIGN,
+    {
+      [ZapierTriggers.CONTACT_ASSIGN]: {
+        contact: updatedContact,
+        teamId: data.teamId,
+        assignedUserIds: newUsers,
+      },
+    },
+    orgId,
+  );
 }
 
 export async function getAssignedUserForContact(contactId) {

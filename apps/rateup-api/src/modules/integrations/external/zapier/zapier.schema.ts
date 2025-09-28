@@ -1,0 +1,109 @@
+import { buildJsonSchemas } from "fastify-zod";
+import z from "zod";
+import { ZapierTriggers } from "./zapier.service";
+import { WaMessageAssignStatus } from "../../../../types/enums";
+import { TicketPriority } from "../../../../../generated/prisma/enums";
+import { contactCoreSchema } from "../../../contact/contact.schema";
+
+//any changes to schema should affect in integration created in zapier
+
+const successSchema = z.object({
+  success: z.boolean(),
+});
+
+const triggerSubscriptionBodySchema = z.object({
+  hookUrl: z.string(),
+  subscribed_field: z.nativeEnum(ZapierTriggers),
+  zapId: z.string(),
+});
+
+const teamResponseSchema = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string(),
+  }),
+);
+
+const ticketBoardResponseSchema = z.array(
+  z.object({
+    id: z.string(),
+    title: z.string(),
+  }),
+);
+
+const contactResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  phone: z.string(),
+  igsId: z.string(),
+  email: z.string(),
+  source: z.string(),
+  waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus),
+});
+
+const pageSchema = z.object({
+  page: z.number(),
+});
+
+const ticketCardResponseSchema = z.object({
+  ticketId: z.string(),
+});
+
+const ticketCardSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  deadline: z.string(),
+  priority: z.nativeEnum(TicketPriority),
+  ticketColumnId: z.string(),
+});
+
+const newMemberToGroupShema = z.object({
+  groupId: z.string(),
+  contacts: z.array(contactCoreSchema.partial()),
+});
+
+const inviteMemberRequestSchema = z.object({
+  teamId: z.string(),
+  email: z.string(),
+  name: z.string(),
+});
+
+const sendMessageSchema = z.object({
+  phone: z.string(),
+  message: z.string(),
+});
+
+const contactLabelSchema = z.object({
+  contactId: z.string(),
+  lifecycleId: z.string(),
+});
+
+export const { schemas: zapierSchemas, $ref: $zapier } = buildJsonSchemas(
+  {
+    successSchema,
+    triggerSubscriptionBodySchema,
+    teamResponseSchema,
+    ticketBoardResponseSchema,
+    contactResponseSchema,
+    ticketCardResponseSchema,
+    ticketCardSchema,
+    newMemberToGroupShema,
+    inviteMemberRequestSchema,
+    sendMessageSchema,
+    contactLabelSchema,
+    pageSchema,
+  },
+  { $id: "zapierSchemas" },
+);
+
+export type TriggerSubscriptionBodySchema = z.infer<
+  typeof triggerSubscriptionBodySchema
+>;
+export type TicketCardSchema = z.infer<typeof ticketCardSchema>;
+export type NewMemberToGroupShema = z.infer<typeof newMemberToGroupShema>;
+export type InviteMemberRequestSchema = z.infer<
+  typeof inviteMemberRequestSchema
+>;
+export type SendMessageSchema = z.infer<typeof sendMessageSchema>;
+export type ContactLabelSchema = z.infer<typeof contactLabelSchema>;
+export type PageSchema = z.infer<typeof pageSchema>;

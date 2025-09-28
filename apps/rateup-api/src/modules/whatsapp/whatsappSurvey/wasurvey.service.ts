@@ -72,6 +72,10 @@ import { waStatusQueue } from "../../../utils/redisConnection";
 import { assertNodeType, LeadgenNodeData, NodeData } from "./node-types";
 import { LoyaltyActionType } from "../../loyalty/actions/actions.schema";
 import { hasFeature } from "../../subscription/subscription.service";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../../integrations/external/zapier/zapier.service";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -772,6 +776,11 @@ export async function saveResponses(session: WaSessionWithRelations) {
 
     await updateCampaignStats(session.campaignParticipantId);
   }
+  addZapierTriggerToQueue(
+    ZapierTriggers.RESPONSE_SUBMITTED,
+    { [ZapierTriggers.RESPONSE_SUBMITTED]: res },
+    res.surveyTeamMap.team.orgId,
+  );
   return res;
 }
 async function updateCampaignStats(id: string) {
