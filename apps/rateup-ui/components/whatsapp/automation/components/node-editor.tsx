@@ -323,6 +323,7 @@ export default function NodeEditor({
             handleInputChange={handleInputChange}
           />
         );
+
       default:
         return (
           <div className={styles.editorSection}>
@@ -382,10 +383,8 @@ const TextNodeEditor: React.FC<NodeComponentProps<"textNode">> = ({
         label="Message Text"
         placeholder="Enter your message text here..."
         required
+        max={4096}
       />
-      <Text fz={"xs"} ta={"right"}>
-        {typedData.body?.length || 0}/4096 characters
-      </Text>
       <Switch
         label="Enable link preview"
         checked={typedData.previewUrl || true}
@@ -437,12 +436,13 @@ const InputNodeEditor: React.FC<
   return (
     <div className={styles.editorSection}>
       <label htmlFor="question">Question</label>
-      <input
-        id="question"
-        type="text"
-        value={typedData.question || ""}
-        onChange={(e) => handleInputChange("question", e.target.value)}
-        placeholder="Enter your question..."
+      <WaTextEditor
+        content={typedData.question || ""}
+        handleInputChange={(e) => handleInputChange("question", e)}
+        label="Question Text"
+        placeholder="Enter your question text here..."
+        required
+        max={4096}
       />
 
       <label htmlFor="variableName">Save Answer to Variable</label>
@@ -454,14 +454,14 @@ const InputNodeEditor: React.FC<
         placeholder="Variable name (e.g., user_email)"
       />
 
-      <label htmlFor="validation">Validation (optional)</label>
+      {/* <label htmlFor="validation">Validation (optional)</label>
       <input
         id="validation"
         type="text"
         value={typedData.validation || ""}
         onChange={(e) => handleInputChange("validation", e.target.value)}
         placeholder="Regex pattern or validation rule"
-      />
+      /> */}
     </div>
   );
 };
