@@ -57,7 +57,7 @@ const config = {
       useLink: () => "https://rateup.app"
     },
     editLink: {
-      text:null,
+     component:null
 
     },
  
