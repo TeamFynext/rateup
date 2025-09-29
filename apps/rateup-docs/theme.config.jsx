@@ -56,7 +56,7 @@ export default {
       useLink: () => "https://rateup.app"
     },
     editLink: {
-      text:null,
+     component:null
 
     },
  
