@@ -1,6 +1,5 @@
 import Image from "next/image";
 
-
 const Footer = () => {
   return (
     <footer style={{
@@ -17,7 +16,7 @@ const Footer = () => {
     </footer>
   )
 }
-const config = {
+export default {
     // darkMode: false,
     head: (
       <>
@@ -32,7 +31,7 @@ const config = {
       </>
     ),
     footer: {
-      text:Footer
+      text:<Footer/>
     },
     logo: (
         <>
@@ -64,4 +63,3 @@ const config = {
   
     // ... other theme options
   }
-  export default config

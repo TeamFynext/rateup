@@ -27,9 +27,9 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "theme.config.tsx",
+    "theme.config.jsx",
     ".next/types/**/*.ts"
-  ],
+, "next.config.mjs", "app/layout.jsx"  ],
   "exclude": [
     "node_modules"
   ]

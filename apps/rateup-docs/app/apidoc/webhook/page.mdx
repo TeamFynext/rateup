@@ -29,7 +29,7 @@ To enable webhook notifications, you must configure created webhook endpoint on 
 4. Under webhook, Enter your webhook endpoint URL.
 7. Click **Save changes** to activate the webhook.
 
-import ScreenShot from  "../../components/Screenshot";
+import ScreenShot from "./../../../components/Screenshot"
 
 <ScreenShot src={"/screenshots/webhook.png"} alt="webhook"/>
 
@@ -75,7 +75,7 @@ Each webhook request will include a **signature** in the request headers, which 
 
 ##### Example (Node.js):
 ```javascript
-const crypto = require('crypto');
+import crypto from "crypto";
 
 function verifySignature(payload, signature, secret) {
     const hmac = crypto.createHmac('sha256', secret);
