@@ -1,5 +1,5 @@
 // const meta = {
-  
+
 //   profile: {
 //     title: "Getting Started",
 //   },
@@ -44,12 +44,27 @@
 
 // export default meta;
 
-export default{
-  index:"Introduction",
-  profile:"Getting Started",
-  teams:"Teams and User Roles",
-  websurvey:"Web Survey",
-  whatsappsurvey:"WhatsApp Features",
-  menu:"Digital Menu",
-  landingpage:"Landing Page"
-}
+export default {
+  index: "Introduction",
+  profile: "Getting Started",
+  teams: "Teams and User Roles",
+  websurvey: "Web Survey",
+  whatsappsurvey: "WhatsApp Features",
+  menu: "Digital Menu",
+  landingpage: "Landing Page",
+  ticket: "Tickets",
+  testimonial: "Testimonials",
+  "###": {
+    type: "separator",
+  },
+  advancedft: "Advanced Feature",
+  apidoc: "API Documentation",
+  "## More": {
+    type: "separator",
+    title: "More",
+  },
+  app_link: {
+    title: "Go to RateUp App",
+    href: "https://rateup.app",
+  },
+};
