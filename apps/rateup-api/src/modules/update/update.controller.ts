@@ -116,8 +116,9 @@ export async function seedDefaultStages(orgId: string) {
       ordering: 1,
       isDefault: true,
       category: StageCategory.active,
-      emoji: "🆕",
-      description: "The Contact has shown interest for the first time.",
+      emoji: "✨",
+      description:
+        "A potential customer who has just entered the pipeline and shown initial interest.",
       isWon: false,
     },
     {
@@ -125,29 +126,29 @@ export async function seedDefaultStages(orgId: string) {
       ordering: 1,
       isDefault: false,
       category: StageCategory.lost,
-      emoji: "🧊",
+      emoji: "❄️",
       description:
-        "The Contact has stopped showing interest and is no longer responsive.",
+        "A lead that has gone cold, showing little or no engagement despite outreach attempts.",
       isWon: false,
     },
     {
-      name: "Hot Lead",
+      name: "Engaged Lead",
       ordering: 2,
       isDefault: false,
       category: StageCategory.active,
-      emoji: "🔥",
+      emoji: "⚡",
       description:
         "The Contact is actively interested and ready to move forward.",
       isWon: false,
     },
     {
-      name: "Payment",
+      name: "In Negotiation",
       ordering: 3,
       isDefault: false,
       category: StageCategory.active,
       emoji: "💵",
       description:
-        "The Contact is considering your offer and payment is in progress.",
+        "The lead is reviewing the proposal, and pricing or payment discussions are underway.",
       isWon: false,
     },
     {
@@ -157,7 +158,7 @@ export async function seedDefaultStages(orgId: string) {
       category: StageCategory.won,
       emoji: "🤩",
       description:
-        "The Contact has made a purchase and is now a paying customer.",
+        "The lead has successfully completed a purchase and become a paying customer.",
       isWon: true,
     },
   ];
@@ -168,4 +169,89 @@ export async function seedDefaultStages(orgId: string) {
       orgId,
     })),
   });
+}
+
+export async function migrateTagsHandle(
+  req: FastifyRequest,
+  res: FastifyReply,
+) {
+  try {
+    const contactCustomFieldValueCount =
+      await prisma.contactCustomFieldValue.count();
+
+    if (contactCustomFieldValueCount > 0) {
+      return res.code(400).send("Tags have already been migrated");
+    }
+    await migrateTags();
+    res.code(200).send("Tags migrated successfully");
+  } catch (error) {
+    log.error(error);
+    res.code(500).send("Error migrating tags");
+  }
+}
+
+async function migrateTags() {
+  // 1. Load all org account settings
+  const settings = await prisma.waAccountSettings.findMany({
+    include: { org: true },
+  });
+
+  for (const setting of settings) {
+    // Create OrgCustomField rows from contactTags
+    for (const tag of setting.contactTags) {
+      // machine fieldId
+      const fieldKey = tag.toLowerCase().replace(/\s+/g, "_");
+
+      let field = await prisma.contactCustomField.findFirst({
+        where: { orgId: setting.orgId, slug: fieldKey },
+      });
+
+      if (!field) {
+        field = await prisma.contactCustomField.create({
+          data: {
+            orgId: setting.orgId,
+            slug: fieldKey,
+            name: tag,
+            type: "text", // default; adjust later if you know real type
+          },
+        });
+      }
+    }
+
+    // 2. Load contacts for this org
+    const contacts = await prisma.contact.findMany({
+      where: { orgId: setting.orgId },
+    });
+
+    for (const contact of contacts) {
+      if (!contact.tags) continue;
+
+      const tags = contact.tags as Record<string, any>;
+
+      for (const [key, val] of Object.entries(tags)) {
+        const fieldKey = key.toLowerCase().replace(/\s+/g, "_");
+
+        // Find the ContactCustomField for this org + fieldId
+        const field = await prisma.contactCustomField.findFirst({
+          where: { orgId: setting.orgId, slug: fieldKey },
+        });
+
+        if (!field) {
+          console.warn(
+            `No ContactCustomField for ${key} in org ${setting.orgId}`,
+          );
+          continue;
+        }
+
+        // Save ContactCustomFieldValue
+        await prisma.contactCustomFieldValue.create({
+          data: {
+            contactId: contact.id,
+            fieldId: field.id, // reference UUID
+            value: val,
+          },
+        });
+      }
+    }
+  }
 }

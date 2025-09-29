@@ -8,9 +8,16 @@ export const LCustomerSchema = z.object({
   dob: z.date().optional().nullable(),
   orgId: z.string(),
   totalEarnedPoints: z.number().optional(),
-  tags: z.any(),
   source: z.string().optional(),
   external_id: z.string().optional(),
+  customFields: z
+    .array(
+      z.object({
+        id: z.string(),
+        value: z.string(),
+      }),
+    )
+    .optional(),
 });
 
 const actionCustomerIdParamSchema = z.object({

@@ -6,7 +6,14 @@ import { WaMessageAssignStatus } from "../../types/enums";
 export const contactCoreSchema = z.object({
   name: z.string(),
   phone: z.string().optional(),
-  tags: z.any(),
+  customFields: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        value: z.string(),
+      }),
+    )
+    .optional(),
   source: z.string(),
   email: z.string().optional(),
   dob: z.date().optional().nullable(),
@@ -20,7 +27,14 @@ export const createMultipleContactSchema = z.array(contactCoreSchema);
 const updateContactSchema = z.object({
   name: z.string().optional(),
   phone: z.string().optional(),
-  tags: z.any(),
+  customFields: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        value: z.string(),
+      }),
+    )
+    .optional(),
   aiWaChat: z.boolean().optional(),
   waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus).optional(),
   lastReceivedMessageTimeStamp: z.string().optional(),
@@ -52,6 +66,19 @@ const deleteManyContactSchema = z.object({
   contactIds: z.array(z.string()),
 });
 
+const customFieldSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  visibility: z.boolean().default(true),
+  type: z.enum(["text", "number", "email", "multivalue"]).default("text"),
+  listValues: z.array(z.string()).optional(),
+});
+
+const byFieldIdSchema = z.object({
+  fieldId: z.string(),
+});
+
 export const { schemas: contactSchemas, $ref: $contactRef } = buildJsonSchemas(
   {
     byContactIdSchema,
@@ -61,6 +88,8 @@ export const { schemas: contactSchemas, $ref: $contactRef } = buildJsonSchemas(
     contactCoreSchema,
     paginationQuery,
     updateContactLabelsSchema,
+    customFieldSchema,
+    byFieldIdSchema,
   },
   {
     $id: "contactSchema",
@@ -78,3 +107,6 @@ export type PaginationQuery = z.infer<typeof paginationQuery>;
 export type UpdateContactLabelsSchema = z.infer<
   typeof updateContactLabelsSchema
 >;
+export type CustomFieldSchema = z.infer<typeof customFieldSchema>;
+
+export type ByFieldIdSchema = z.infer<typeof byFieldIdSchema>;

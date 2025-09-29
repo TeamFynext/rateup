@@ -420,7 +420,20 @@ export async function sendCampaignToParticipants(
       include: {
         campaignParticipants: {
           include: {
-            contact: true,
+            contact: {
+              include: {
+                customFields: {
+                  select: {
+                    value: true,
+                    field: {
+                      select: {
+                        slug: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         },
         team: {
@@ -502,7 +515,14 @@ type _campaign = {
     orgId: string;
   };
   campaignParticipants: (CampaignParticipant & {
-    contact: Contact;
+    contact: Contact & {
+      customFields: {
+        value: string;
+        field: {
+          slug: string;
+        };
+      }[];
+    };
   })[];
 };
 // TODO: use batch sending

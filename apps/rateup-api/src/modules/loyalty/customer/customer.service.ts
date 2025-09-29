@@ -76,7 +76,6 @@ export async function createLCustomer(input: LCustomerInput) {
       name: input.name,
       dob: input.dob ?? null,
       email: input.email,
-      tags: input.tags,
       external_id: input.external_id,
       loyaltyCustomer: {
         create: {
@@ -91,7 +90,6 @@ export async function createLCustomer(input: LCustomerInput) {
       orgId: input.orgId,
       dob: input.dob ?? null,
       email: input.email,
-      tags: input.tags,
       external_id: input.external_id,
       loyaltyCustomer: {
         create: {
@@ -103,6 +101,21 @@ export async function createLCustomer(input: LCustomerInput) {
       loyaltyCustomer: true,
     },
   });
+  if (input.customFields?.length) {
+    await prisma.contactCustomFieldValue.deleteMany({
+      where: {
+        contactId: contact?.id,
+      },
+    });
+    await prisma.contactCustomFieldValue.createMany({
+      data: input.customFields.map((field) => ({
+        contactId: contact?.id,
+        fieldId: field.id,
+        value: field.value,
+      })),
+      skipDuplicates: true,
+    });
+  }
   await updateMonthlyStat(
     SubscriptionFeaturePathName.LoyaltyCustomer,
     input.orgId,
@@ -1063,39 +1076,56 @@ export async function updateMulitplceContacts(
 ) {
   for (let i = 0; i < contacts.length; i += BATCH_SIZE) {
     const batch = contacts.slice(i, i + BATCH_SIZE);
-    await Promise.all(
-      batch.map(({ phone, ...restContact }) =>
-        prisma.contact.upsert({
-          where: {
-            contact_phone_org_id_unique: {
-              phone,
-              orgId,
-            },
-          },
-          update: {
-            ...restContact,
-            loyaltyCustomer: {
-              upsert: {
-                create: {
-                  orgId,
-                },
-                update: {},
-              },
-            },
-          },
-          create: {
-            phone,
-            ...restContact,
+
+    for (const contact of batch) {
+      const { customFields, ...contactData } = contact;
+
+      const updatedContact = await prisma.contact.upsert({
+        where: {
+          contact_phone_org_id_unique: {
+            phone: contact.phone,
             orgId,
-            loyaltyCustomer: {
+          },
+        },
+        update: {
+          name: contact.name,
+          ...contactData,
+          loyaltyCustomer: {
+            upsert: {
               create: {
                 orgId,
               },
+              update: {},
             },
           },
-        }),
-      ),
-    );
+        },
+        create: {
+          ...contactData,
+          orgId,
+          loyaltyCustomer: {
+            create: {
+              orgId,
+            },
+          },
+        },
+      });
+
+      if (customFields?.length) {
+        await prisma.contactCustomFieldValue.deleteMany({
+          where: {
+            contactId: updatedContact.id,
+          },
+        });
+        await prisma.contactCustomFieldValue.createMany({
+          data: customFields.map((field) => ({
+            contactId: updatedContact.id,
+            fieldId: field.id,
+            value: field.value,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
   }
 }
 
@@ -1109,12 +1139,26 @@ export async function createMultipleCustomers(
     dob: contact.dob || null,
   }));
 
-  for (const contactData of contactsData) {
-    await prisma.contact.upsert({
+  for (const contact of contactsData) {
+    const { customFields, ...contactData } = contact;
+
+    const updatedContact = await prisma.contact.upsert({
       where: {
         contact_phone_org_id_unique: {
-          phone: contactData.phone,
+          phone: contact.phone,
           orgId,
+        },
+      },
+      update: {
+        name: contact.name,
+        ...contactData,
+        loyaltyCustomer: {
+          upsert: {
+            create: {
+              orgId,
+            },
+            update: {},
+          },
         },
       },
       create: {
@@ -1126,17 +1170,23 @@ export async function createMultipleCustomers(
           },
         },
       },
-      update: {
-        dob: contactData.dob,
-        email: contactData.email,
-        orgId,
-        loyaltyCustomer: {
-          create: {
-            orgId,
-          },
-        },
-      },
     });
+
+    if (customFields?.length) {
+      await prisma.contactCustomFieldValue.deleteMany({
+        where: {
+          contactId: updatedContact.id,
+        },
+      });
+      await prisma.contactCustomFieldValue.createMany({
+        data: customFields.map((field) => ({
+          contactId: updatedContact.id,
+          fieldId: field.id,
+          value: field.value,
+        })),
+        skipDuplicates: true,
+      });
+    }
   }
 
   return;

@@ -1003,24 +1003,22 @@ export async function handleTestimonialReply(
   await handleTestimonialQuestion(question, session);
 }
 
-export async function addToStatusUpdateQueue(data: {
-  status: string;
-  messageId: string;
-  errors?: any;
-}) {
-  await waStatusQueue.add("status-update", data, {
-    removeOnComplete: true,
-    removeOnFail: true,
-  });
-}
-
 export const handleMessageStatusUpdate = async (
   status: string,
   messageId: string,
   errors?: any,
 ) => {
   if (!messageId) return;
-  await addToStatusUpdateQueue({ status, messageId, errors });
+  const now = new Date().toISOString();
+
+  await waStatusQueue.add(
+    "status-update",
+    { status, messageId, errors, timestamp: now },
+    {
+      removeOnComplete: true,
+      removeOnFail: true,
+    },
+  );
 };
 
 export async function setAiBotActiveStatus(
