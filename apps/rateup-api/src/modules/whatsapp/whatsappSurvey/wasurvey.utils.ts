@@ -122,6 +122,19 @@ export function convertNodeToWhatsAppMessage(
         },
       };
     }
+    case "textInputNode": {
+      const data = node.data as NodeTypeMap["textInputNode"];
+      return {
+        ...baseMessage,
+        type: "text",
+        text: {
+          preview_url: true,
+          body: data.question
+            ? parseToWhatsAppFormat(data.question)
+            : "Default message",
+        },
+      };
+    }
 
     case "imageNode": {
       const data = node.data as NodeTypeMap["imageNode"];
