@@ -244,13 +244,11 @@ export async function updateContactLabelsByIdHandler(
       request.body.contactId,
       request.body?.lifecycleId,
     );
-    return reply
-      .code(201)
-      .send({
-        contactId: contact.id,
-        lifecycleId: request.body?.lifecycleId,
-        lifecycleName: contact.Lifecycle.name,
-      });
+    return reply.code(201).send({
+      contactId: contact.id,
+      lifecycleId: request.body?.lifecycleId,
+      lifecycleName: contact.Lifecycle.name,
+    });
   } catch (error) {
     log.error(error);
     reply.code(500).send({ error: "Something went wrong" });
@@ -259,13 +257,13 @@ export async function updateContactLabelsByIdHandler(
 
 export async function getSampleDataForTriggerHandler(
   request: FastifyRequest<{
-    Querystring: ByOrgIdParams & { triggerKey: ZapierTriggers };
+    Querystring: ByOrgIdParams & { triggerKey: ZapierTriggers } & PageSchema;
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { triggerKey, orgId } = request.query;
-    const data = await getSampleDataForTrigger(triggerKey);
+    const { triggerKey, orgId, page } = request.query;
+    const data = await getSampleDataForTrigger(triggerKey, orgId, page);
     reply.send(data);
   } catch (e) {
     log.error(e);

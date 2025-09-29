@@ -21,6 +21,8 @@ import {
 import { createContactHandler } from "../../../contact/contact.controller";
 import { $zapier } from "./zapier.schema";
 import { $contactRef } from "../../../contact/contact.schema";
+import { $Tref } from "../../../team/team.schema";
+import { $BoardRef } from "../../../ticket/ticketBoard/board.schema";
 
 export async function zapierRoutes(server: FastifyInstance) {
   //auth
@@ -51,7 +53,7 @@ export async function zapierRoutes(server: FastifyInstance) {
   );
   //trigger sample data
   server.get("/sample-data", getSampleDataForTriggerHandler);
-  // add as a  trigger hidden & can be used as search action
+  // hidden triggers polling api for dropdown data
   server.get(
     "/teams",
     {
@@ -67,6 +69,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/ticket-boards",
     {
       schema: {
+        querystring: $Tref("byTeamIdParamsSchema"),
         response: {
           201: $zapier("ticketBoardResponseSchema"),
         },
@@ -78,6 +81,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/ticket-column",
     {
       schema: {
+        querystring: $zapier("boardIdParamSchema"),
         response: {
           201: $zapier("ticketBoardResponseSchema"),
         },

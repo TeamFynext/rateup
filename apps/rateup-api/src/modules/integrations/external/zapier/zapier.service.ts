@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 import { zapierTriggerQueue } from "../../../../utils/redisConnection";
 import prisma from "../../../../utils/prisma";
 import { PlatformType } from "../../../../../generated/prisma/client";
-import { QuestionType } from "../../../../types/enums";
+import { QuestionType, WaMessageAssignStatus } from "../../../../types/enums";
 import { TicketPriority } from "../../../../../generated/prisma/enums";
 
 export enum ZapierTriggers {
@@ -21,237 +21,382 @@ export enum ZapierTriggers {
   NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
 }
 
-export async function getSampleDataForTrigger(triggerKey: ZapierTriggers) {
+export async function getSampleDataForTrigger(
+  triggerKey: ZapierTriggers,
+  orgId,
+  page?,
+) {
   let data = [];
   switch (triggerKey) {
     case ZapierTriggers.CONTACT_CREATE:
-      data = [
-        {
-          id: "SAMPLE-ID-1234",
-          name: faker.person.fullName(),
-          phone: faker.phone.number(),
-          email: faker.internet.email(),
-          source: "whatsapp",
-          igsId: null,
+    case ZapierTriggers.CONTACT_DELETED:
+    case ZapierTriggers.CONTACT_UPDATED:
+    case ZapierTriggers.CONVERSATION_CLOSED: {
+      const contacts = await prisma.contact.findMany({
+        where: {
+          orgId,
         },
-        {
-          id: "SAMPLE-ID-1234",
-          name: faker.person.fullName(),
-          phone: null,
-          email: null,
-          source: "instagram",
-          igsId: "1254477777772919",
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          igsId: true,
+          source: true,
+          waMessageAssignStatus: true,
         },
-      ];
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = [...contacts];
       break;
+    }
     case ZapierTriggers.CONTACT_ASSIGN:
-      return [
-        {
-          contactId: "SAMPLE-ID-1234",
-          name: faker.person.fullName(),
-          phone: faker.phone.number(),
-          email: faker.internet.email(),
-          igsId: null,
-          assignees: [
-            {
-              name: faker.person.fullName(),
-              email: faker.person.fullName(),
-              teamName: "marketing",
-              teamCode: "marketing123",
-            },
-          ],
+      const contactAssigns = await prisma.contact.findMany({
+        where: {
+          orgId,
+          waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
         },
-        {
-          contactId: "SAMPLE-ID-1234",
-          name: faker.person.fullName(),
-          phone: null,
-          email: null,
-          igsId: "1254477777772919",
-          assignees: [
-            {
-              name: faker.person.fullName(),
-              email: faker.person.fullName(),
-              teamName: "marketing",
-              teamCode: "marketing123",
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          igsId: true,
+          waInboxAssign: {
+            select: {
+              assignedUser: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+              Team: {
+                select: {
+                  name: true,
+                  code: true,
+                },
+              },
             },
-          ],
+          },
         },
-      ];
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = contactAssigns.map((c) => ({
+        contactId: c.id,
+        name: c.name,
+        phone: c.phone,
+        email: c.email,
+        igsId: c.igsId,
+        assignees: c.waInboxAssign.map((a) => ({
+          name: a.assignedUser.name,
+          email: a.assignedUser.email,
+          teamName: a.Team.name,
+          teamCode: a.Team.code,
+        })),
+      }));
       break;
     case ZapierTriggers.CONTACT_ADDED_TO_GROUP:
-      data = [
-        {
-          contactId: "1234-sample-000-contact-id",
-          contactGroupId: "1234-sample-000-group-id",
+      const groupContacts = await prisma.contactGroupMap.findMany({
+        where: {
+          contact: {
+            orgId,
+          },
         },
-      ];
-      break;
-    case ZapierTriggers.CONTACT_DELETED:
-      data = [
-        {
-          id: "SAMPLE-ID-1234",
-          name: faker.person.fullName(),
-          phone: faker.phone.number(),
-          email: faker.internet.email(),
-          source: "whatsapp",
-          igsId: null,
+        select: {
+          contactId: true,
+          contactGroupId: true,
         },
-      ];
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+      });
+      data = [...groupContacts];
       break;
     case ZapierTriggers.CONTACT_LIFECYCLE_UPDATED:
-      data = [
-        {
-          contactId: "SAMPLE-ID-1234",
-          lifecycleId: "abcd-id-1234",
-          lifecycleName: "New Lead",
+      const contactLifecyles = await prisma.contact.findMany({
+        where: {
+          orgId,
+          lifecycleId: {
+            not: null,
+          },
         },
-      ];
-      break;
-    case ZapierTriggers.CONTACT_UPDATED:
-      data = [
-        {
-          id: "SAMPLE-ID-1234",
-          name: faker.person.fullName(),
-          phone: faker.phone.number(),
-          email: faker.internet.email(),
-          source: "whatsapp",
-          igsId: null,
+        select: {
+          id: true,
+          lifecycleId: true,
+          Lifecycle: {
+            select: {
+              name: true,
+            },
+          },
         },
-      ];
-      break;
-    case ZapierTriggers.CONVERSATION_CLOSED:
-      data = [
-        {
-          id: "SAMPLE-ID-1234",
-          name: faker.person.fullName(),
-          phone: faker.phone.number(),
-          email: faker.internet.email(),
-          source: "whatsapp",
-          igsId: null,
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
         },
-      ];
+      });
+      data = contactLifecyles.map((l) => ({
+        contactId: l.id,
+        lifecycleId: l.lifecycleId,
+        lifecycleName: l.Lifecycle.name,
+      }));
       break;
     case ZapierTriggers.NEW_MESSAGE:
-      const from = faker.phone.number();
-      const source = faker.phone.number();
-      data = [
-        {
-          from,
-          messageBody: {
-            messaging_product: "whatsapp",
-            metadata: {
-              display_phone_number: source,
-              phone_number_id: "1234567890000",
-            },
-            contacts: [
-              {
-                profile: {
-                  name: faker.person.fullName(),
-                },
-                wa_id: from,
-              },
-            ],
-            messages: [
-              {
-                from: from,
-                id: "wamid.ID",
-                timestamp: "1273846753",
-                text: {
-                  body: "MESSAGE_BODY",
-                },
-                type: "text",
-              },
-            ],
+      const messages = await prisma.waMessage.findMany({
+        where: {
+          contact: {
+            orgId,
           },
-          platform: PlatformType.WHATSAPP,
-          source: "1234567890000",
-          messageId: "wamid.ID",
+          messageBody: {
+            path: ["exchangeProcess"],
+            equals: "receive",
+          },
         },
-      ];
+        select: {
+          contact: {
+            select: {
+              phone: true,
+            },
+          },
+          sourcePlatform: true,
+          sourceIdentifier: true,
+          messageId: true,
+          messageBody: true,
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = messages.map((m) => ({
+        from: m.contact.phone,
+        messageBody: m.messageBody.receive,
+        platform: m.sourcePlatform,
+        source: m.sourceIdentifier,
+        messageId: m.messageId,
+      }));
       break;
     case ZapierTriggers.NEW_TEAM_MEMBER_CREATED:
-      data = [
-        {
-          isExistingUser: true,
-          name: faker.person.fullName(),
-          email: faker.internet.email(),
-          teamCode: "marketing_1234",
-          teamName: "marketing",
+      const users = await prisma.teamMember.findMany({
+        where: {
+          team: {
+            orgId,
+          },
         },
-      ];
+        select: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+          team: {
+            select: {
+              name: true,
+              code: true,
+            },
+          },
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = users.map((u) => ({
+        isExistingUser: true,
+        name: u.user.name,
+        email: u.user.email,
+        teamName: u.team.name,
+        teamCode: u.team.code,
+      }));
       break;
     case ZapierTriggers.RESPONSE_SUBMITTED:
-      data = [
-        {
-          responses: [
-            {
-              questionId: "suin-1111-kljdkh1323",
-              type: QuestionType.Text,
-              response: {
-                [QuestionType.Text]: "sample text response",
+      const responses = await prisma.surveyResponse.findMany({
+        where: {
+          surveyTeamMap: {
+            team: {
+              orgId,
+            },
+          },
+        },
+        select: {
+          responses: true,
+          language: true,
+          platform: true,
+          createdAt: true,
+          tag: true,
+          deviceData: true,
+          location: true,
+          surveyTeamMap: {
+            select: {
+              survey: {
+                select: {
+                  title: true,
+                },
+              },
+              team: {
+                select: {
+                  name: true,
+                },
               },
             },
-          ],
-          createdAt: "2022-09-19T11:03:06.955Z",
-          language: "English",
-          tag: "abc",
-          platform: "web",
-          deviceData: "",
-          contactId: "1929-jdkh-jhdjhd",
-          location: null,
-          shortUrlId: "ahvkXgt1",
+          },
         },
-      ];
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = responses.map((r) => {
+        const { surveyTeamMap, ...rest } = r;
+        return {
+          ...rest,
+          survey: surveyTeamMap.survey.title,
+          team: surveyTeamMap.team.name,
+        };
+      });
       break;
     case ZapierTriggers.TICKET_ASSIGNEE_UPDATED:
-      data = [
-        {
-          card: {
-            ticketId: "ahvkXgt1",
-            title: "Booking Confirmation Not Received",
-            description:
-              "I completed a reservation yesterday, but I haven't received the confirmation email yet.",
-            type: "CUSTOM",
-            ticketColumnName: "TODO",
-            deadline: "2022-09-19T11:03:06.955Z",
-            priority: TicketPriority.HIGH,
-          },
-          assignees: [
-            {
-              name: faker.person.fullName(),
-              email: faker.internet.email(),
+      const ticketAssigne = await prisma.ticketCard.findMany({
+        where: {
+          ticketColumn: {
+            ticketBoard: {
+              teams: {
+                some: {
+                  team: {
+                    orgId,
+                  },
+                },
+              },
             },
-          ],
+          },
         },
-      ];
+        select: {
+          ticketId: true,
+          title: true,
+          description: true,
+          type: true,
+          ticketColumn: {
+            select: {
+              title: true,
+            },
+          },
+          deadline: true,
+          priority: true,
+          assignees: {
+            select: {
+              assignee: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = ticketAssigne.map((t) => {
+        const { ticketColumn, assignees, ...rest } = t;
+        return {
+          ...rest,
+          ticketColumnName: ticketColumn.title,
+          assignees: assignees.map((a) => a.assignee),
+        };
+      });
       break;
     case ZapierTriggers.TICKET_CARD_MOVED:
-      data = [
-        {
-          ticketId: "ahvkXgt1",
-          title: "Booking Confirmation Not Received",
-          description:
-            "I completed a reservation yesterday, but I haven't received the confirmation email yet.",
-          type: "CUSTOM",
-          ticketColumnName: "RESOLVED",
-          deadline: "2022-09-19T11:03:06.955Z",
-          priority: TicketPriority.HIGH,
-        },
-      ];
-      break;
     case ZapierTriggers.TICKET_CREATED:
-      data = [
-        {
-          ticketId: "ahvkXgt1",
-          title: "Booking Confirmation Not Received",
-          description:
-            "I completed a reservation yesterday, but I haven't received the confirmation email yet.",
-          type: "CUSTOM",
-          ticketColumnName: "TODO",
-          deadline: "2022-09-19T11:03:06.955Z",
-          priority: TicketPriority.HIGH,
+      const tickerCards = await prisma.ticketCard.findMany({
+        where: {
+          ticketColumn: {
+            ticketBoard: {
+              teams: {
+                some: {
+                  team: {
+                    orgId,
+                  },
+                },
+              },
+            },
+          },
         },
-      ];
+        select: {
+          ticketId: true,
+          title: true,
+          description: true,
+          type: true,
+          ticketColumn: {
+            select: {
+              title: true,
+            },
+          },
+          deadline: true,
+          priority: true,
+        },
+        ...(page !== undefined
+          ? {
+              skip: page * 20,
+              take: 20,
+            }
+          : {}),
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      data = tickerCards.map((t) => {
+        const { ticketColumn, ...rest } = t;
+        return {
+          ...rest,
+          ticketColumnName: ticketColumn.title,
+        };
+      });
       break;
   }
   return data;
