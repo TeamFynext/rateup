@@ -673,6 +673,52 @@ async function handleSubscriptionStatus(
   }
 }
 
+async function handleInputReply({ phone, orgId, parsedMessage }) {
+  const progress = await findRecentAutomation(phone, orgId);
+  const automation = progress?.waAutomatedReply;
+  if (automation) {
+    const matchData = automation.matchData as {
+      json: { edges: any[]; nodes: any };
+    };
+    const nextEdge = matchData?.json?.edges?.find(
+      (edge: any) => edge.target === progress.currentNode,
+    );
+
+    if (!nextEdge) return false;
+
+    const nextNode = matchData?.json?.nodes?.find(
+      (node: any) => node.id === nextEdge.source,
+    );
+
+    if (!nextNode) return false;
+
+    if (nextNode.type === "textInputNode") {
+      // Log flow submission using the utility function
+
+      logAutomationAction({
+        phone,
+        nodeId: nextNode.id,
+        automationId: automation.id,
+        orgId,
+        response: {
+          value: parsedMessage?.message,
+          variable: nextNode?.data?.variableName,
+          action: "user_input",
+        },
+      });
+
+      await processNextNode(
+        phone,
+        automation,
+        progress.currentNode,
+        orgId,
+        automation.id,
+      );
+      return true;
+    }
+  }
+  return false;
+}
 /**
  * Handles automated replies for WhatsApp messages
  * @param orgId Organization ID
@@ -693,9 +739,14 @@ export async function handleAutomatedReply(
     // already handled on case manual trigger
     if (!(await verifyAutomationTriggerLimit(orgId))) return;
   }
+
   let phone_number_id = (
     waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
   )?.metadata?.phone_number_id;
+
+  const inputHandled = await handleInputReply({ phone, orgId, parsedMessage });
+  if (inputHandled) return;
+
   try {
     // Case 1: New message from user
     let automation;
@@ -1049,9 +1100,12 @@ export async function processNextNode(
     }
 
     // Find and process next node unless current node requires user input
-    let requiresUserInput = ["buttonNode", "flowNode", "listNode"].includes(
-      node?.type,
-    );
+    let requiresUserInput = [
+      "buttonNode",
+      "flowNode",
+      "listNode",
+      "textInputNode",
+    ].includes(node?.type);
     // Special check for AI Bot Node
     if (node?.type === "aibotNode") {
       const isActive = await getAiBotActiveStatus(userPhone, orgId);
