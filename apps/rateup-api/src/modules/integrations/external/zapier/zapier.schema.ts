@@ -52,14 +52,18 @@ const ticketCardResponseSchema = z.object({
 const ticketCardSchema = z.object({
   title: z.string(),
   description: z.string(),
-  deadline: z.string(),
-  priority: z.nativeEnum(TicketPriority),
+  deadline: z.string().optional(),
+  priority: z.nativeEnum(TicketPriority).optional(),
   ticketColumnId: z.string(),
 });
 
 const newMemberToGroupShema = z.object({
   groupId: z.string(),
   contacts: z.array(contactCoreSchema.partial()),
+});
+
+const boardIdParamSchema = z.object({
+  boardId: z.string(),
 });
 
 const inviteMemberRequestSchema = z.object({
@@ -92,6 +96,7 @@ export const { schemas: zapierSchemas, $ref: $zapier } = buildJsonSchemas(
     sendMessageSchema,
     contactLabelSchema,
     pageSchema,
+    boardIdParamSchema,
   },
   { $id: "zapierSchemas" },
 );
