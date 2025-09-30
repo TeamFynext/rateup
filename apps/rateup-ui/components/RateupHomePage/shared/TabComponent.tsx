@@ -146,9 +146,12 @@ import {
   IconMessages,
   IconWaveSine,
 } from "@tabler/icons-react";
+import { ArrowRightIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { imagesPath } from "@/utils/constants";
+
+import { BookDemoModal } from "../helpers/BookDemoModal";
 
 type TabKey = "AI-Workflows" | "Unified-Inbox" | "Automation" | "WhatsApp-Flow";
 
