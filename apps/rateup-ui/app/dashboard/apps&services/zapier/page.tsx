@@ -353,6 +353,8 @@ function getTriggerLabel(triggerKey: ZapierTriggers) {
       return "Ticket created";
     case ZapierTriggers.TICKET_CARD_MOVED:
       return "Ticket card moved to another column";
+    case ZapierTriggers.CONTACT_ADDED_TO_GROUP:
+      return "Contact added to group";
     default:
       return "not supported";
   }

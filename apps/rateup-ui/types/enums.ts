@@ -594,4 +594,5 @@ export enum ZapierTriggers {
   TICKET_CARD_MOVED = "ticket_card_moved",
   TICKET_ASSIGNEE_UPDATED = "ticket_assignee_updated",
   NEW_TEAM_MEMBER_CREATED = "new_staff_joined_to_team",
+  CONTACT_ADDED_TO_GROUP = "contact_added_to_group",
 }
