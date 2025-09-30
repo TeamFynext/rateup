@@ -297,7 +297,6 @@ export async function getContactsByOrgId(
   return { users, totalCount };
 }
 
-//also used in zapier
 export async function getContactByPhoneNumberAndOrgId(
   phone: string,
   orgId: string,
@@ -367,7 +366,7 @@ export async function updateContactById(
   if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
     await addZapierTriggerToQueue(
       ZapierTriggers.CONVERSATION_CLOSED,
-      { [ZapierTriggers.CONVERSATION_CLOSED]: contact },
+      { [ZapierTriggers.CONVERSATION_CLOSED]: user },
       user.orgId,
     );
     const assignedUsers = await getAssignedUserForContact(user.id);
