@@ -17,7 +17,7 @@ const triggerSubscriptionBodySchema = z.object({
   zapId: z.string(),
 });
 
-const teamResponseSchema = z.array(
+const dropdownResponseSchema = z.array(
   z.object({
     id: z.string(),
     name: z.string(),
@@ -40,6 +40,8 @@ const contactResponseSchema = z.object({
   source: z.string(),
   waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus),
 });
+
+const contactSearchResponseSchema = z.array(contactResponseSchema);
 
 const pageSchema = z.object({
   page: z.number(),
@@ -70,6 +72,7 @@ const inviteMemberRequestSchema = z.object({
   teamId: z.string(),
   email: z.string(),
   name: z.string(),
+  invitedByEmail: z.string(),
 });
 
 const sendMessageSchema = z.object({
@@ -95,7 +98,7 @@ export const { schemas: zapierSchemas, $ref: $zapier } = buildJsonSchemas(
   {
     successSchema,
     triggerSubscriptionBodySchema,
-    teamResponseSchema,
+    dropdownResponseSchema,
     ticketBoardResponseSchema,
     contactResponseSchema,
     ticketCardResponseSchema,
@@ -106,6 +109,8 @@ export const { schemas: zapierSchemas, $ref: $zapier } = buildJsonSchemas(
     contactLabelSchema,
     pageSchema,
     boardIdParamSchema,
+    contactSearchSchema,
+    contactSearchResponseSchema,
   },
   { $id: "zapierSchemas" },
 );

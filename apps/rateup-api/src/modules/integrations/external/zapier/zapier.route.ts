@@ -59,7 +59,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          201: $zapier("teamResponseSchema"),
+          201: $zapier("dropdownResponseSchema"),
         },
       },
     },
@@ -71,7 +71,7 @@ export async function zapierRoutes(server: FastifyInstance) {
       schema: {
         querystring: $Tref("byTeamIdParamsSchema"),
         response: {
-          201: $zapier("ticketBoardResponseSchema"),
+          201: $zapier("dropdownResponseSchema"),
         },
       },
     },
@@ -83,7 +83,7 @@ export async function zapierRoutes(server: FastifyInstance) {
       schema: {
         querystring: $zapier("boardIdParamSchema"),
         response: {
-          201: $zapier("ticketBoardResponseSchema"),
+          201: $zapier("dropdownResponseSchema"),
         },
       },
     },
@@ -94,7 +94,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     {
       schema: {
         response: {
-          201: $zapier("teamResponseSchema"),
+          201: $zapier("dropdownResponseSchema"),
         },
       },
     },
@@ -153,8 +153,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/contact",
     {
       schema: {
+        querystring: $zapier("contactSearchSchema"),
         response: {
-          201: $zapier("contactResponseSchema"),
+          201: $zapier("contactSearchResponseSchema"),
         },
       },
     },
@@ -164,8 +165,9 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/contact",
     {
       schema: {
+        querystring: $zapier("contactSearchSchema"),
         response: {
-          201: $contactRef("byContactIdSchema"),
+          201: $zapier("contactResponseSchema"),
         },
       },
     },

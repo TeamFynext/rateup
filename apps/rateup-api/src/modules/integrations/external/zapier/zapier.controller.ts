@@ -12,7 +12,6 @@ import { ContactCore } from "../../../contact/contact.schema";
 import {
   deleteContactById,
   getContactById,
-  getContactByPhoneNumberAndOrgId,
   updateContactById,
   updateContactLabelsById,
 } from "../../../contact/contact.service";
@@ -20,10 +19,12 @@ import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.servi
 import {
   addZapierTriggerToQueue,
   deleteContactByPhoneNumberAndOrgId,
+  getContactsByPhoneNumberAndOrgId,
   getLifecyclesByOrgId,
   getSampleDataForTrigger,
   getTicketBoardsByTeamId,
   getTicketColumnsByBoardId,
+  getUserIdByEmailAndOrgId,
   ZapierTriggers,
 } from "./zapier.service";
 import { TicketPriority } from "../../../../../generated/prisma/enums";
@@ -44,7 +45,6 @@ import {
   TicketCardSchema,
   TriggerSubscriptionBodySchema,
 } from "./zapier.schema";
-import { AddNewContactsToGroupInput } from "../../../contact/contactGroup/contactGroup.schema";
 
 export async function zapierAuthenticationHandler(
   request: FastifyRequest<{ Querystring: ByOrgIdParams }>,
@@ -300,9 +300,10 @@ export async function getContactHandler(
     const { contactId, phone, orgId } = request.query;
     let contact;
     if (contactId) {
-      contact = await getContactById(contactId);
+      const res = await getContactById(contactId);
+      contact = res ? [res] : [];
     } else {
-      contact = await getContactByPhoneNumberAndOrgId(orgId, phone);
+      contact = await getContactsByPhoneNumberAndOrgId(phone, orgId);
     }
     reply.send(contact);
   } catch (e) {
@@ -370,11 +371,16 @@ export async function getTeamsHandler(
 }
 
 export async function getTicketBoardsByTeamIdHandler(
-  request: FastifyRequest<{ Querystring: ByOrgIdParams & { teamId: string } }>,
+  request: FastifyRequest<{
+    Querystring: ByOrgIdParams & { teamId: string } & PageSchema;
+  }>,
   reply: FastifyReply,
 ) {
   try {
-    const data = await getTicketBoardsByTeamId(request.query.teamId);
+    const data = await getTicketBoardsByTeamId(
+      request.query.teamId,
+      request.query.page,
+    );
     reply.send(data);
   } catch (e) {
     log.error(e);
@@ -448,10 +454,13 @@ export async function inviteMemberHandler(
 ) {
   try {
     const { orgId } = request.query;
+    const { invitedByEmail, ...rest } = request.body;
+    const invitedBy = await getUserIdByEmailAndOrgId(invitedByEmail, orgId);
     const res = await inviteTeamMember({
       orgId,
       type: InviteType.TEAM,
-      ...request.body,
+      invitedBy: invitedBy.userId,
+      ...rest,
     });
     reply.send({ success: true });
   } catch (e) {

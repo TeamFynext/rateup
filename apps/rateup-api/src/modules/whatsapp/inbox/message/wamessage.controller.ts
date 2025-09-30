@@ -82,7 +82,7 @@ export async function handleWaMessages(
 ) {
   try {
     // Prepare message body
-    const waMessageBody: WaInboxMessageBody = {
+    let waMessageBody: WaInboxMessageBody = {
       exchangeProcess: type,
       send: type === "send" ? messageBody : null,
       receive: type === "receive" ? messageBody : null,
@@ -161,7 +161,7 @@ export async function handleWaMessages(
 
     if (type === "receive") {
       if (sourcePlatform === PlatformType.WHATSAPP) {
-        await handleWaReceivedImages(waMessageBody, orgId);
+        waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
       }
       if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
         await updateContactById(contact.id, {
