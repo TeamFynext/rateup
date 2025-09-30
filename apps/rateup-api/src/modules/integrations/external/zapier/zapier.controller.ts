@@ -316,15 +316,17 @@ export async function getContactHandler(
 
 export async function deleteContactHandler(
   request: FastifyRequest<{
-    Querystring: ByOrgIdParams & {
-      contactId: string;
-      phone: string;
+    Querystring: ByOrgIdParams;
+    Body: {
+      contactId?: string;
+      phone?: string;
     };
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { contactId, phone, orgId } = request.query;
+    const { orgId } = request.query;
+    const { contactId, phone } = request.body;
     if (contactId) {
       await deleteContactById(contactId);
     } else {
@@ -379,12 +381,10 @@ export async function getTicketBoardsByTeamIdHandler(
   reply: FastifyReply,
 ) {
   try {
-    console.log("query string in fetching ticket boards", request.query);
     const data = await getTicketBoardsByTeamId(
       request.query.teamId,
       request.query.page,
     );
-    console.log("boards", data);
     reply.send(data);
   } catch (e) {
     log.error(e);

@@ -165,7 +165,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/contact",
     {
       schema: {
-        querystring: $zapier("contactSearchSchema"),
+        body: $zapier("contactSearchSchema"),
         response: {
           201: $zapier("contactResponseSchema"),
         },

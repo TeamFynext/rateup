@@ -96,7 +96,7 @@ const contactSearchSchema = z
   })
   .merge(
     z.object({
-      orgId: z.string(),
+      orgId: z.string().optional(),
     }),
   )
   .refine((data) => !data?.contactId.length && !data?.phone.length, {
