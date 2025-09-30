@@ -20,6 +20,7 @@ import styles from "./AuthForm.module.css";
 import AuthTypeSignupForm from "./AuthTypeSignupForm";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
+import { SignUpFlow } from "./SignupFormNew";
 import VerifyEmailPage from "./VerifyEmailPage";
 import VerifyPhoneNumberPage from "./VerifyPhoneNumberPage";
 
@@ -83,11 +84,12 @@ const AuthForm = ({
         );
       else
         jsxToReturn = (
-          <SignupForm
-            setIsLoading={setIsLoading}
-            signUp={signUp}
-            isLoading={isLoading}
-          />
+          // <SignupForm
+          //   setIsLoading={setIsLoading}
+          //   signUp={signUp}
+          //   isLoading={isLoading}
+          // />
+          <SignUpFlow />
         );
     }
   }
