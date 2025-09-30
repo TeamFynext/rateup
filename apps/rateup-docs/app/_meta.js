@@ -45,7 +45,9 @@
 // export default meta;
 
 export default {
-  index: "Introduction",
+  index: {
+    title:"Introduction"
+  },
   profile: "Getting Started",
   teams: "Teams and User Roles",
   websurvey: "Web Survey",
