@@ -77,6 +77,15 @@ const sendMessageSchema = z.object({
   message: z.string(),
 });
 
+const contactSearchSchema = z
+  .object({
+    contactId: z.string().optional(),
+    phone: z.string().optional(),
+  })
+  .refine((data) => !data?.contactId.length && !data?.phone.length, {
+    message: "Either contactId or phone number should be provided",
+  });
+
 const contactLabelSchema = z.object({
   contactId: z.string(),
   lifecycleId: z.string(),
