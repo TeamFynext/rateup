@@ -117,6 +117,9 @@ export async function getSurveyByIdHandler(
 export async function getPublicSurveyByIdHandler(
   request: FastifyRequest<{
     Params: GetSurveyByIdParams;
+    Querystring: {
+      checkUniqueDevice?: boolean;
+    };
   }>,
   reply: FastifyReply,
 ) {
@@ -125,7 +128,7 @@ export async function getPublicSurveyByIdHandler(
     if (!survey) {
       reply.code(404);
     } else {
-      if (survey.uniqueDeviceResponse) {
+      if (request.query.checkUniqueDevice && survey.uniqueDeviceResponse) {
         const ip = getIp(request);
         const surveyResponse = await getSurveyResponseByIp(
           survey.surveyTeamMapId,

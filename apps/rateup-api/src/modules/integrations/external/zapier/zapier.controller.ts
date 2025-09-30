@@ -37,12 +37,14 @@ import {
 import { getTeamsByOrgId, inviteTeamMember } from "../../../team/team.service";
 import { InviteType } from "../../../team/team.schema";
 import {
+  BoardQueryInput,
   ContactLabelSchema,
   InviteMemberRequestSchema,
   NewMemberToGroupShema,
   PageSchema,
   SendMessageSchema,
   TicketCardSchema,
+  TicketColumnQueryInput,
   TriggerSubscriptionBodySchema,
 } from "./zapier.schema";
 
@@ -372,15 +374,17 @@ export async function getTeamsHandler(
 
 export async function getTicketBoardsByTeamIdHandler(
   request: FastifyRequest<{
-    Querystring: ByOrgIdParams & { teamId: string } & PageSchema;
+    Querystring: BoardQueryInput;
   }>,
   reply: FastifyReply,
 ) {
   try {
+    console.log("query string in fetching ticket boards", request.query);
     const data = await getTicketBoardsByTeamId(
       request.query.teamId,
       request.query.page,
     );
+    console.log("boards", data);
     reply.send(data);
   } catch (e) {
     log.error(e);
@@ -390,7 +394,7 @@ export async function getTicketBoardsByTeamIdHandler(
 
 export async function getTicketColumnsByBoardIdHandler(
   request: FastifyRequest<{
-    Querystring: ByOrgIdParams & { boardId: string } & PageSchema;
+    Querystring: TicketColumnQueryInput;
   }>,
   reply: FastifyReply,
 ) {

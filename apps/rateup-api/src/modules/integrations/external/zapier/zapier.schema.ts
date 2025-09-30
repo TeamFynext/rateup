@@ -67,6 +67,15 @@ const newMemberToGroupShema = z.object({
 const boardIdParamSchema = z.object({
   boardId: z.string(),
 });
+const teamIdParamsSchema = z.object({
+  teamId: z.string(),
+});
+const boardQuerySchema = teamIdParamsSchema.merge(pageSchema);
+const ticketColumnSchema = z
+  .object({
+    boardId: z.string(),
+  })
+  .merge(pageSchema);
 
 const inviteMemberRequestSchema = z.object({
   teamId: z.string(),
@@ -85,6 +94,11 @@ const contactSearchSchema = z
     contactId: z.string().optional(),
     phone: z.string().optional(),
   })
+  .merge(
+    z.object({
+      orgId: z.string(),
+    }),
+  )
   .refine((data) => !data?.contactId.length && !data?.phone.length, {
     message: "Either contactId or phone number should be provided",
   });
@@ -111,6 +125,8 @@ export const { schemas: zapierSchemas, $ref: $zapier } = buildJsonSchemas(
     boardIdParamSchema,
     contactSearchSchema,
     contactSearchResponseSchema,
+    boardQuerySchema,
+    ticketColumnSchema,
   },
   { $id: "zapierSchemas" },
 );
@@ -126,3 +142,5 @@ export type InviteMemberRequestSchema = z.infer<
 export type SendMessageSchema = z.infer<typeof sendMessageSchema>;
 export type ContactLabelSchema = z.infer<typeof contactLabelSchema>;
 export type PageSchema = z.infer<typeof pageSchema>;
+export type BoardQueryInput = z.infer<typeof boardQuerySchema>;
+export type TicketColumnQueryInput = z.infer<typeof ticketColumnSchema>;

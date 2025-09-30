@@ -69,7 +69,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/ticket-boards",
     {
       schema: {
-        querystring: $Tref("byTeamIdParamsSchema"),
+        querystring: $zapier("boardQuerySchema"),
         response: {
           201: $zapier("dropdownResponseSchema"),
         },
@@ -81,7 +81,7 @@ export async function zapierRoutes(server: FastifyInstance) {
     "/ticket-column",
     {
       schema: {
-        querystring: $zapier("boardIdParamSchema"),
+        querystring: $zapier("ticketColumnSchema"),
         response: {
           201: $zapier("dropdownResponseSchema"),
         },
