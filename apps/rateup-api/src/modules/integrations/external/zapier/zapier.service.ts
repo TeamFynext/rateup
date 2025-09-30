@@ -274,6 +274,7 @@ export async function getSampleDataForTrigger(
               },
             },
           },
+          contactId: true,
         },
         ...(page !== undefined
           ? {
@@ -427,7 +428,7 @@ export async function deleteContactByPhoneNumberAndOrgId(orgId, phone) {
   return contact;
 }
 
-export async function getTicketBoardsByTeamId(teamId) {
+export async function getTicketBoardsByTeamId(teamId, page?) {
   return await prisma.ticketBoard.findMany({
     where: {
       teams: {
@@ -440,6 +441,12 @@ export async function getTicketBoardsByTeamId(teamId) {
       id: true,
       title: true,
     },
+    ...(page !== undefined
+      ? {
+          skip: page * 25,
+          take: 25,
+        }
+      : {}),
   });
 }
 
@@ -469,6 +476,31 @@ export async function getLifecyclesByOrgId(orgId) {
     select: {
       id: true,
       name: true,
+    },
+  });
+}
+
+export async function getContactsByPhoneNumberAndOrgId(phone, orgId) {
+  return await prisma.contact.findMany({
+    where: {
+      phone: {
+        contains: phone,
+      },
+      orgId,
+    },
+  });
+}
+
+export async function getUserIdByEmailAndOrgId(email, orgId) {
+  return await prisma.orgMember.findFirst({
+    where: {
+      user: {
+        email,
+      },
+      orgId,
+    },
+    select: {
+      userId: true,
     },
   });
 }

@@ -41,6 +41,8 @@ const contactResponseSchema = z.object({
   waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus),
 });
 
+const contactSearchResponseSchema = z.array(contactResponseSchema);
+
 const pageSchema = z.object({
   page: z.number(),
 });
@@ -70,12 +72,22 @@ const inviteMemberRequestSchema = z.object({
   teamId: z.string(),
   email: z.string(),
   name: z.string(),
+  invitedByEmail: z.string(),
 });
 
 const sendMessageSchema = z.object({
   phone: z.string(),
   message: z.string(),
 });
+
+const contactSearchSchema = z
+  .object({
+    contactId: z.string().optional(),
+    phone: z.string(),
+  })
+  .refine((data) => !data?.contactId.length && !data?.phone.length, {
+    message: "Either contactId or phone number should be provided",
+  });
 
 const contactLabelSchema = z.object({
   contactId: z.string(),
@@ -97,6 +109,8 @@ export const { schemas: zapierSchemas, $ref: $zapier } = buildJsonSchemas(
     contactLabelSchema,
     pageSchema,
     boardIdParamSchema,
+    contactSearchSchema,
+    contactSearchResponseSchema,
   },
   { $id: "zapierSchemas" },
 );
