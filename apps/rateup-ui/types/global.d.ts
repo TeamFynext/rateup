@@ -1143,6 +1143,7 @@ export type WaAutomatedReply = {
     choice: string;
   };
   whatsappSettingsPhoneId: string;
+  sendOnceIn24Hours: boolean;
 };
 
 //types related to wa inbox
