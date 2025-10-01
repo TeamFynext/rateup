@@ -14,6 +14,7 @@ import prisma from "../../../utils/prisma";
 import { templateData } from "../messageTemplates/wa_templates.service";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
+import { findRecentAutomation } from "../whatsappSurvey/automation-logger.utils";
 
 export function validateAutomationMatchCondition(
   automation: {
@@ -28,6 +29,20 @@ export function validateAutomationMatchCondition(
   message: string,
 ): boolean {
   const { matchType, matchData, commands } = automation;
+
+  // Helper to check whole word match
+  function includesWholeWord(
+    text: string,
+    word: string,
+    caseSensitive: boolean,
+  ) {
+    const flags = caseSensitive ? "g" : "gi";
+    // Escape special regex characters in word
+    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`\\b${escapedWord}\\b`, flags);
+    return regex.test(text);
+  }
+
   if (matchType === WaAutomatedReplyMatchType.Exact) {
     if (matchData.caseSensitive) {
       return commands?.[0] === message;
@@ -47,14 +62,10 @@ export function validateAutomationMatchCondition(
     if (WaAutomatedReplyMatchType.ContainsAnyOf === matchType)
       comparator = "some";
 
-    if (matchData.caseSensitive) {
-      return commands[comparator]((keyword) => message.includes(keyword));
-    } else {
-      message = message.toLowerCase();
-      return commands[comparator]((keyword) =>
-        message.includes(keyword.toLowerCase()),
-      );
-    }
+    const caseSensitive = !!matchData.caseSensitive;
+    return commands[comparator]((keyword) =>
+      includesWholeWord(message, keyword, caseSensitive),
+    );
   } else {
     throw new Error(`WaAutomation not implemented for: ${matchType}`);
   }
@@ -67,6 +78,7 @@ export function validateAutomationMatchCondition(
 export async function checkIfMessageMatchesAnyAutomation(
   orgId: string,
   waMessage: WaMessageBody,
+  phone: string,
 ) {
   const { message } = parseMessage(waMessage);
   let phone_number_id = (
@@ -79,6 +91,12 @@ export async function checkIfMessageMatchesAnyAutomation(
 
   for (const automation of automatedReplies) {
     if (validateAutomationMatchCondition(automation, message)) {
+      if (automation.sendOnceIn24Hours) {
+        const recentActivity = await findRecentAutomation(phone, orgId, {
+          timeWindow: 24 * 60 * 60 * 1000, // 24 hours
+        });
+        if (recentActivity) return;
+      }
       log.trace("Automation Matched! %o", automation);
       return automation;
     }

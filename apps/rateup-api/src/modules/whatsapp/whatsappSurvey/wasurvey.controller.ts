@@ -757,6 +757,7 @@ export async function handleAutomatedReply(
       automation = (await checkIfMessageMatchesAnyAutomation(
         orgId,
         waMessage,
+        phone,
       )) as {
         id: string;
         matchData: { json: { nodes: any[]; edges: any[] } };
@@ -1262,12 +1263,12 @@ async function handleInitialInteraction(
 
     if (!aiBotNode) {
       // If there's no AI bot node, check for recent activity
-      const recentActivity = await findRecentAutomation(phone, orgId, {
-        timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-      });
-
-      // If there's recent activity, stop the flow
-      if (recentActivity) return;
+      if (wildcardAutomation?.waAutomatedReply?.sendOnceIn24Hours) {
+        const recentActivity = await findRecentAutomation(phone, orgId, {
+          timeWindow: 24 * 60 * 60 * 1000, // 24 hours
+        });
+        if (recentActivity) return;
+      }
     }
 
     const automation = wildcardAutomation.waAutomatedReply as {
