@@ -13,6 +13,7 @@ const createAutomatedReplySchema = z.object({
   commands: z.array(z.string()),
   whatsappSettingsPhoneId: z.string(),
   isEnabled: z.boolean().optional().default(true),
+  sendOnceIn24Hours: z.boolean().optional().default(true),
 });
 
 const byWaAutomatedReplyIdParams = z.object({

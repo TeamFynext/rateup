@@ -1367,6 +1367,7 @@ model WaAutomatedReply {
   org                     Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
   whatsappSettingsPhoneId String?
   isEnabled               Boolean  @default(true)
+  sendOnceIn24Hours       Boolean  @default(true)
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
