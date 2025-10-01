@@ -4,32 +4,23 @@ import { getPageMap } from "nextra/page-map";
 import "nextra-theme-docs/style.css";
 import Image from "next/image";
 
-// export const metadata = {
-//   title: "RateUp Documentation",
-//   description: "Welcome to the RateUp documentation",
-//   openGraph: {
-//     title: "RateUp Documentation",
-//     description: "Welcome to the RateUp documentation",
-//     url: "https://rateup.app",
-//     siteName: "RateUp Docs",
-//     images: [
-//       {
-//         url: "/images/rateup-logo.svg",
-//         width: 1200,
-//         height: 630,
-//         alt: "RateUp logo",
-//       },
-//     ],
-//     locale: "en_US",
-//     type: "website",
-//   },
-// };
 export const metadata = {
   title: {
     default: "RateUp Documentation",
-    template: "RateUp Documentation", // if you want page-specific titles
+    template: "RateUp Documentation", // will allow page-specific titles
   },
   description: "Welcome to the RateUp documentation",
+  viewport: {
+    width: "device-width",
+    initialScale: 1.0,
+  },
+  openGraph: {
+    title: "RateUp Documentation",
+    description: "Welcome to the RateUp documentation",
+  },
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 const navbar = (
   <Navbar
@@ -85,23 +76,6 @@ const footer = (
 export default async function RootLayout({ children }) {
   return (
     <html>
-      <Head>
-        {
-          <>
-            <title>RateUp Documentation</title>
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1.0"
-            />
-            <meta property="og:title" content="RateUp Documentation" />
-            <meta
-              property="og:description"
-              content="Welcome to the RateUp documentation"
-            />
-            <link rel="icon" href="/favicon.png" />
-          </>
-        }
-      </Head>
       <body>
         <Layout
           navbar={navbar}
