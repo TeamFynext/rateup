@@ -342,13 +342,15 @@ export async function getOrCreateContactByPhone(
 
     if (contact) {
       if (additionalData) {
+        const updateData = { ...additionalData };
+        if (!additionalData?.name) {
+          delete updateData?.name;
+        }
         return await prisma.contact.update({
           where: {
             id: contact.id,
           },
-          data: {
-            ...additionalData,
-          },
+          data: updateData,
         });
       }
       return contact;
