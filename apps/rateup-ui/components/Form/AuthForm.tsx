@@ -19,6 +19,7 @@ import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCa
 import styles from "./AuthForm.module.css";
 import AuthTypeSignupForm from "./AuthTypeSignupForm";
 import LoginForm from "./LoginForm";
+import SignInFlow from "./LoginFormNew";
 import SignupForm from "./SignupForm";
 import { SignUpFlow } from "./SignupFormNew";
 import VerifyEmailPage from "./VerifyEmailPage";
@@ -66,7 +67,12 @@ const AuthForm = ({
   } else {
     if (isLogin) {
       jsxToReturn = (
-        <LoginForm
+        // <LoginForm
+        //   setIsLoading={setIsLoading}
+        //   signIn={signIn}
+        //   isLoading={isLoading}
+        // />
+        <SignInFlow
           setIsLoading={setIsLoading}
           signIn={signIn}
           isLoading={isLoading}
@@ -89,7 +95,11 @@ const AuthForm = ({
           //   signUp={signUp}
           //   isLoading={isLoading}
           // />
-          <SignUpFlow />
+          <SignUpFlow
+            setIsLoading={setIsLoading}
+            signUp={signUp}
+            isLoading={isLoading}
+          />
         );
     }
   }
