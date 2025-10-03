@@ -149,7 +149,7 @@ interface ResponseAnalytic {
     };
   };
 }
-export async function getSurveyResponseAnalyics(surveyId, filter = "") {
+export async function getSurveyResponseAnalytics(surveyId, filter = "") {
   return (
     await axiosClient.get(`${RESPONSE_URL}/analytics/${surveyId}?${filter}`)
   ).data as ResponseAnalytic;
@@ -170,8 +170,10 @@ export async function getSurveyHappyResponseAnalytics(
   ).data;
 }
 
-export async function getHappyIndex(surveyId) {
+export async function getHappyIndex(surveyId, surveyTeamMapIds) {
   return (
-    await axiosClient.get(`${RESPONSE_URL}/analytics/happyindex/${surveyId}`)
+    await axiosClient.get(
+      `${RESPONSE_URL}/analytics/happyindex/${surveyId}?teamMapIds=${surveyTeamMapIds?.join(",")}`,
+    )
   ).data;
 }

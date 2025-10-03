@@ -23,7 +23,7 @@ import {
   getResponses,
   getResponsesBySurveyId,
   getSurveyHappyResponseAnalytics,
-  getSurveyResponseAnalyics,
+  getSurveyResponseAnalytics,
   getSurveyResponseCount,
   resetResponsesStats,
   syncResponseToGoogleSheet,
@@ -295,7 +295,7 @@ export const useResponseAnalytics = (surveyId, filter: FilterAnalytics) => {
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
   return useQuery({
-    queryFn: () => getSurveyResponseAnalyics(surveyId, filterQuery),
+    queryFn: () => getSurveyResponseAnalytics(surveyId, filterQuery),
     queryKey: ["responnseAnalytics", surveyId, filter],
     enabled: !!surveyId,
   });
@@ -322,10 +322,10 @@ export function useSurveyHappyResponseAnalytics(
   });
 }
 
-export function useHappyIndex(surveyId: string) {
+export function useHappyIndex(surveyId: string, filterTeams) {
   return useQuery({
-    queryKey: ["happy-index", surveyId],
-    queryFn: () => getHappyIndex(surveyId),
+    queryKey: ["happy-index", surveyId, filterTeams],
+    queryFn: () => getHappyIndex(surveyId, filterTeams),
     enabled: !!surveyId,
   });
 }
