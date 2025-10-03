@@ -51,7 +51,17 @@ const inviteMemberRequestSchema = z.object({
 });
 
 const inviteMemberRequestResponse = z.object({
-  id: z.string(),
+  id: z.string().optional(),
+  existing: z.boolean().optional(),
+});
+
+const deleteTeamMemberSchema = z.object({
+  teamId: z.string(),
+  userId: z.string(),
+});
+
+const addTeamMemberSchema = z.object({
+  teamIds: z.array(z.string()),
 });
 
 const inviteCompleteRequestSchema = z.object({
@@ -96,6 +106,8 @@ export const { schemas: teamSchemas, $ref: $Tref } = buildJsonSchemas(
     idParamRequestSchema,
     byTeamIdParamsSchema,
     bySurveyTeamMapIdParamsSchema,
+    deleteTeamMemberSchema,
+    addTeamMemberSchema,
   },
   { $id: "teamSchema" },
 );

@@ -629,6 +629,7 @@ export async function checkTellUsMoreCompleted(userId: string) {
     select: { id: true, isTellUsMoreCompleted: true, createdAt: true },
   });
 
+  if (!org) return true;
   const todayStart = new Date("2025-09-03T12:59:53.655Z");
 
   if (org.createdAt < todayStart && !org.isTellUsMoreCompleted) {

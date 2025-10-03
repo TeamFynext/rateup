@@ -23,6 +23,8 @@ import {
   getHubSpotCompanyByOwnerEmail,
 } from "../../utils/hubspot";
 
+import { getEmailBodyTemplate } from "../email/email.util";
+
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {
     throw new Error("Invalid team name.");
@@ -169,20 +171,72 @@ export async function inviteTeamMember(input: InviteMemberInput) {
     }
 
     // Check if the user with the input email is already a member in any organization with role SUPER_ADMIN
-    const existingOrgMember = await prisma.orgMember.findFirst({
+    const existingMemberships = await prisma.orgMember.findMany({
       where: {
         user: {
           email,
         },
-        role: "SUPER_ADMIN",
       },
     });
 
-    //TODO VERIFY below MYG
-    if (existingOrgMember && existingOrgMember.orgId !== orgId) {
-      throw new Error(
-        "User with the provided email is already a SUPER_ADMIN member in an organization.",
+    if (existingMemberships.length) {
+      const memberOfGroup = existingMemberships.find((o) => o.orgId === orgId);
+      if (memberOfGroup) {
+        const teamMember = await prisma.teamMember.create({
+          data: {
+            teamId: input.teamId,
+            userId: memberOfGroup.userId,
+          },
+          include: {
+            team: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        });
+        const invitedPerson = await prisma.orgMember.findFirst({
+          where: {
+            userId: invitedBy,
+            orgId,
+          },
+          select: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+            org: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        });
+        const msg = {
+          to: email,
+          subject: `${invitedPerson.user.name} add you to the Team ${teamMember.team.name} - RateUp.app`,
+          text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
+          html: getEmailBodyTemplate("GeneralTemplate", {
+            body: `Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details`,
+            buttonLink: `${process.env.FRONTEND_URL}/dashboard/teams`,
+          }),
+        };
+        try {
+          sendAWSEmail(msg);
+        } catch (error) {
+          console.error(error);
+          throw new Error("Email sending failed. E:" + error);
+        }
+        return { ...input, existing: true };
+      }
+      const anotherOrgOwner = existingMemberships.find(
+        (o) => o.orgId !== orgId && o.role === "SUPER_ADMIN",
       );
+      if (anotherOrgOwner)
+        throw new Error(
+          "User with the provided email is already a SUPER_ADMIN member in an organization.",
+        );
     }
 
     // Check if the email already exists in the invitation table
@@ -705,4 +759,23 @@ export async function getTeamById(teamId: string) {
   });
 
   return team;
+}
+
+export async function deleteTeamMember(teamId, userId) {
+  await prisma.teamMember.deleteMany({
+    where: {
+      teamId,
+      userId,
+    },
+  });
+}
+
+export async function addMemberToTeams(teamIds, userId) {
+  await prisma.teamMember.createMany({
+    data: teamIds.map((teamId) => ({
+      teamId,
+      userId,
+    })),
+    skipDuplicates: true,
+  });
 }

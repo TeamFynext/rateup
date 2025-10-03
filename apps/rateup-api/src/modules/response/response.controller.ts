@@ -362,7 +362,8 @@ export async function getSurveyResponseCountHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await getSurveyResponseCount(request.params.surveyId);
+    const teamIds = await getTeamIdsByUserId(request.userId);
+    const res = await getSurveyResponseCount(request.params.surveyId, teamIds);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -434,16 +435,21 @@ export async function getResponseCountForCamparisonHandler(
 
 export async function getHappyIndexResponsesHandler(
   request: FastifyRequest<{
-    Params: { surveyId: string; surveyTeamMapId?: string };
+    Params: { surveyId: string };
+    Querystring: {
+      teamMapIds: string;
+    };
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const { surveyId, surveyTeamMapId } = request.params;
+    const { surveyId } = request.params;
+    const { teamMapIds } = request.query;
+    const surveyTeamMapIds = teamMapIds ? teamMapIds.split(",") : [];
     const teamIds = await getTeamIdsByUserId(request.userId);
     const result = await happyIndexResponsesBySurveyId(
       surveyId,
-      surveyTeamMapId,
+      surveyTeamMapIds,
       teamIds,
     );
     reply.send(result);
