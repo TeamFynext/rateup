@@ -26,6 +26,11 @@ const createUserSignupSchema = z.object({
   phoneNumber: z.string().optional(),
   recipeName: z.nativeEnum(UserRecipes),
   planId: z.string().optional(),
+  location: z.string().optional(),
+  website: z.string().url().optional(),
+  industry: z.string().optional(),
+  goals: z.array(z.string()).optional(),
+  integrationsSelected: z.array(z.string()).optional(),
 });
 
 const pauseUserSchema = z.object({
