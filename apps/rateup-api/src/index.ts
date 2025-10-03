@@ -33,6 +33,7 @@ import {
   sendSchedulesWaMessages,
 } from "./modules/whatsapp/wa_message_scheduler";
 import { deactivateExpiredActions } from "./modules/loyalty/actions/actions.service";
+import { Kafka, Partitioners } from "kafkajs";
 
 const server = Fastify({
   loggerInstance: log,
@@ -49,6 +50,10 @@ server.addHook("preHandler", async (req, _rep) => {
   if (req.body) {
     //log.trace("Request body for id %s: %o", req.id, req.body);
   }
+});
+const kafka = new Kafka({ brokers: [process.env.KAFKA_URL] });
+export const producer = kafka.producer({
+  createPartitioner: Partitioners.DefaultPartitioner,
 });
 
 server.register(require("@fastify/websocket"));
@@ -182,7 +187,6 @@ async function main() {
       console.error(e);
       process.exit(1);
     });
-
   if (process.env.SWAGGER == "1") {
     server.after(() => {
       server.register(swagger, swaggerConfig);
@@ -197,7 +201,8 @@ async function main() {
     });
   }
 
-  server.after(() => {
+  server.after(async () => {
+    await producer.connect();
     registerRoutes(server);
   });
 

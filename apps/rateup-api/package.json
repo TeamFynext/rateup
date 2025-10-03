@@ -39,6 +39,7 @@
     "googleapis": "^131.0.0",
     "immer": "^10.1.1",
     "ioredis": "^5.5.0",
+    "kafkajs": "^2.2.4",
     "libphonenumber-js": "^1.11.2",
     "lodash": "^4.17.21",
     "nanoid": "^3.3.7",
