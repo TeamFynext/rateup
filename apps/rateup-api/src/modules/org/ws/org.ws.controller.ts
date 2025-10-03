@@ -8,7 +8,7 @@ import { WebSocket } from "@fastify/websocket";
 const subscriber = baseRedis.duplicate();
 const publisher = baseRedis.duplicate();
 
-const WS_CHANNEL = "ws:messages";
+export const WS_CHANNEL = "ws:messages";
 
 // Store active connections in memory for direct socket access
 const activeConnections = new Map<string, Map<string, WebSocket>>();
