@@ -3,7 +3,9 @@ import { useRouter } from "next/navigation";
 
 import { isEmail, useForm } from "@mantine/form";
 import { IconCheck } from "@tabler/icons-react";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
 import { useUserInfo } from "@/backend/user/user.query";
@@ -31,8 +33,28 @@ function AuthTypeSignupForm({
     }
   }, [userInfo]);
 
-  const isPhoneForm = authType === "phone";
   const translations = useTranslations();
+  const signupSchema = z.object({
+    name: z.string().min(4, "Name should be at least 4 characters long"),
+
+    orgName: z
+      .string()
+      .min(4, "Organization name should be at least 4 characters long"),
+
+    email: z.string().email("Invalid email").optional(),
+
+    website: z.string().url("Invalid website URL").optional(),
+
+    phoneNumber: z.string().optional(),
+
+    industry: z.string().optional(),
+
+    location: z.string().optional(),
+
+    goals: z.array(z.string()),
+
+    integrationsSelected: z.array(z.string()),
+  });
   const signupForm = useForm({
     initialValues: {
       email: "",
@@ -45,23 +67,7 @@ function AuthTypeSignupForm({
       goals: [] as string[],
       integrationsSelected: [] as string[],
     },
-    validate: {
-      name: (value) => {
-        if (value.length < 4) {
-          return translations("Name should be at least 4 characters long");
-        }
-        return null; // Validation passed
-      },
-      orgName: (value) => {
-        if (value.length < 4) {
-          return translations(
-            "Organization name should be at least 4 characters long",
-          );
-        }
-        return null; // Validation passed
-      },
-      email: isPhoneForm && isEmail("Invalid email"),
-    },
+    validate: zod4Resolver(signupSchema),
   });
 
   const totalSteps = 3;

@@ -67,11 +67,6 @@ const AuthForm = ({
   } else {
     if (isLogin) {
       jsxToReturn = (
-        // <LoginForm
-        //   setIsLoading={setIsLoading}
-        //   signIn={signIn}
-        //   isLoading={isLoading}
-        // />
         <SignInFlow
           setIsLoading={setIsLoading}
           signIn={signIn}
@@ -90,11 +85,6 @@ const AuthForm = ({
         );
       else
         jsxToReturn = (
-          // <SignupForm
-          //   setIsLoading={setIsLoading}
-          //   signUp={signUp}
-          //   isLoading={isLoading}
-          // />
           <SignUpFlow
             setIsLoading={setIsLoading}
             signUp={signUp}

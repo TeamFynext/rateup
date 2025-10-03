@@ -4,6 +4,9 @@ import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 
 import "react-phone-number-input/style.css";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 import { useForm } from "@mantine/form";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -255,6 +258,7 @@ export function Step1({ formData, handleNext, translations, google }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreesToTerms, setAgreesToTerms] = useState(true);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const router = useRouter();
 
   const password = formData.values.password;
 
@@ -493,13 +497,19 @@ export function Step1({ formData, handleNext, translations, google }) {
           className="text-xs text-gray-600 leading-relaxed cursor-pointer"
         >
           {translations("I accept")}{" "}
-          <span className="text-blue-600 hover:text-blue-700 cursor-pointer underline">
+          <Link
+            href={"/terms-of-service"}
+            className="text-blue-600 hover:text-blue-700 cursor-pointer underline"
+          >
             {translations("terms of service")}
-          </span>{" "}
+          </Link>{" "}
           {translations("and")}{" "}
-          <span className="text-blue-600 hover:text-blue-700 cursor-pointer underline">
+          <Link
+            href={"/privacy-policy"}
+            className="text-blue-600 hover:text-blue-700 cursor-pointer underline"
+          >
             {translations("privacy policy")}
-          </span>
+          </Link>
         </Label>
       </div>
 
@@ -517,7 +527,7 @@ export function Step1({ formData, handleNext, translations, google }) {
         <Button
           onClick={handleNext}
           disabled={!isFormComplete}
-          className="flex items-center px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {translations("Continue")}
           <ArrowRight className="w-4 h-4 ml-2" />
@@ -529,7 +539,8 @@ export function Step1({ formData, handleNext, translations, google }) {
           {translations("Already have an account")}?{" "}
           <button
             type="button"
-            className="text-rateup-blue hover:text-rateup-blue/80 underline transition-colors"
+            onClick={() => router.push("/login")}
+            className="text-rateup-blue hover:text-rateup-blue/80 underline transition-colors cursor-pointer"
           >
             Sign in
           </button>
@@ -709,7 +720,7 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         <Button
           onClick={handleNext}
           disabled={!isFormComplete}
-          className="flex items-center px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {translations("Continue")}
           <ArrowRight className="w-4 h-4 ml-2" />
@@ -854,7 +865,7 @@ export function Step3({
         <Button
           onClick={handleSubmit}
           disabled={isLoading}
-          className="flex items-center px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? <Loader /> : translations("Continue")}
           <ArrowRight className="w-4 h-4 ml-2" />

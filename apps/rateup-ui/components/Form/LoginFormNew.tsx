@@ -179,7 +179,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full h-10 bg-gradient-to-r from-rateup-blue to-rateup-orange hover:from-rateup-blue/90 hover:to-rateup-orange/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full cursor-pointer h-10 bg-rateup-blue hover:bg-rateup-blue/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? <Loader /> : "Sign In"}
           </Button>
