@@ -83,19 +83,21 @@ const TeamDetails = () => {
     let teamId: string = teamID?.toString();
     let type = "TEAM";
     const data = { name, email, orgId, type, teamId, invitedBy: userId };
-    return inviteTeamMember(data);
+    return (await inviteTeamMember(data)).data;
   };
 
   const addResourceMutation = useMutation({
     mutationFn: () => handleMemberInvite(),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["teamsDetailsQuery"] }), //update team list on add
         notifications.update({
           id: "load-data",
           color: "teal",
           title: translations("success"),
           loading: false,
-          message: translations("Invite sent successfully"),
+          message: data?.existing
+            ? translations("staff added successfully")
+            : translations("Invite sent successfully"),
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });

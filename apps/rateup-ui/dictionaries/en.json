@@ -2151,5 +2151,17 @@
   "labels": "labels",
   "Are you sure you want to delete this label?": "Are you sure you want to delete this label?",
   "Label created successfully": "Label created successfully",
-  "Contact labels created successfully": "Contact labels created successfully"
+  "Contact labels created successfully": "Contact labels created successfully",
+  "Online": "Online",
+  "Offline": "Offline",
+  "Profile": "Profile",
+  "You’ll need to log in again to access your account": "You’ll need to log in again to access your account.",
+  "Are you sure you want to logout?": "Are you sure you want to logout?",
+  "Use this key to set up your Zapier connection": "Use this key to set up your Zapier connection",
+  "Api Key": "Api Key",
+  "Mine": "Mine",
+  "Add to teams": "Add to teams",
+  "Are you sure to delete this team staff?": "Are you sure to delete this team staff?",
+  "Remove Staff": "Remove Staff",
+  "Are you sure to remove this staff from": "Are you sure to remove this staff from"
 }

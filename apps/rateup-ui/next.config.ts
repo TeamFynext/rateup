@@ -57,6 +57,11 @@ const nextConfig: NextConfig = bundleAnalyzer({
         destination: "/terms-of-service#cancellation-and-refund",
         permanent: false,
       },
+      {
+        source: "/blog/about",
+        destination: "blog",
+        permanent: true,
+      },
     ];
   },
 });
