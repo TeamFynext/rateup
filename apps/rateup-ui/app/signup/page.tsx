@@ -12,9 +12,9 @@ const Signup = () => {
   const auth = searchParams.get("auth");
   useCheckSession();
   return (
-    <LoginSignupLayout>
-      <AuthForm mode={AuthMode.SIGNUP} authType={auth} />
-    </LoginSignupLayout>
+    // <LoginSignupLayout>
+    <AuthForm mode={AuthMode.SIGNUP} authType={auth} />
+    // </LoginSignupLayout>
   );
 };
 
