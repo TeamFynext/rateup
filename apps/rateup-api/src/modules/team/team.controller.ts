@@ -13,6 +13,8 @@ import {
   resendInviteTeamMember,
   manageTags,
   getTeamById,
+  deleteTeamMember,
+  addMemberToTeams,
 } from "./team.service";
 import {
   CreateTeamInput,
@@ -254,4 +256,39 @@ export async function editTeamHandler(
   }
 
   reply.code(201).send({ success: true, data: team });
+}
+
+export async function deleteTeamMemberHandler(
+  request: FastifyRequest<{
+    Querystring: {
+      teamId: string;
+      userId: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { teamId, userId } = request.query;
+    const res = await deleteTeamMember(teamId, userId);
+    reply.send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function addMembertoTeamsHandler(
+  request: FastifyRequest<{
+    Params: { id: string };
+    Body: { teamIds: string[] };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await addMemberToTeams(request.body.teamIds, request.params.id);
+    reply.send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send(e);
+  }
 }

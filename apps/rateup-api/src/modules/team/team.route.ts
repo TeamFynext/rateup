@@ -11,6 +11,8 @@ import {
   deleteInviteHandler,
   editTeamHandler,
   resendInviteMemberHandler,
+  deleteTeamMemberHandler,
+  addMembertoTeamsHandler,
 } from "./team.controller";
 import { $Tref } from "./team.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
@@ -204,5 +206,28 @@ export async function teamRoutes(server: FastifyInstance) {
       },
     },
     getSurveyLanguagesByTeamIdHandler,
+  );
+
+  server.delete(
+    "/member",
+    {
+      preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
+      schema: {
+        querystring: $Tref("deleteTeamMemberSchema"),
+      },
+    },
+    deleteTeamMemberHandler,
+  );
+
+  server.post(
+    "/members/:id",
+    {
+      preHandler: [checkSession, checkRoleHandler(["SUPER_ADMIN"])],
+      schema: {
+        params: $Tref("idParamRequestSchema"),
+        body: $Tref("addTeamMemberSchema"),
+      },
+    },
+    addMembertoTeamsHandler,
   );
 }

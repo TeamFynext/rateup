@@ -1810,7 +1810,7 @@ const getCellData = (response, question) => {
   }
 };
 
-export async function getSurveyResponseCount(surveyId) {
+export async function getSurveyResponseCount(surveyId, teamIds) {
   const teamWiseCount =
     (await prisma.$queryRaw`SELECT st.id,t.code as "teamCode", 
   COUNT(sr.id)::INTEGER
@@ -1818,6 +1818,7 @@ export async function getSurveyResponseCount(surveyId) {
   LEFT JOIN "SurveyResponse" sr ON st.id = sr."surveyTeamMapId" 
   LEFT JOIN "Team" t ON t.id = st."teamId"
   WHERE st."surveyId"=${surveyId}::uuid 
+  AND st."teamId" = ANY(${teamIds}::uuid[])
   GROUP BY st.id, t.code
   ;`) as { id: string; teamCode: string; count: number }[];
 
@@ -2671,7 +2672,6 @@ export async function happyIndexResponsesBySurveyId(
       ...(teamMapIds?.length && { id: { in: teamMapIds } }),
     },
   };
-
   const surveyInfo = await prisma.surveyTeamMap.findFirst({
     where: { surveyId },
     select: {
