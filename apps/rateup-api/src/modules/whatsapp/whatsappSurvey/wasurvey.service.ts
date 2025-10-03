@@ -10,7 +10,6 @@ import {
   QuestionType,
   QuestionType2,
   SubscriptionFeaturePathName,
-  WaEvent,
   WaQuestions,
 } from "../../../types/enums";
 import {
@@ -65,17 +64,16 @@ import { handleLoyaltyFeedback } from "../../loyalty/settings/settings.service";
 import {
   findRecentAutomation,
   logAutomationAction,
-  logFlowCompletion,
 } from "./automation-logger.utils";
 import { processNextNode } from "./wasurvey.controller";
-import { waStatusQueue } from "../../../utils/redisConnection";
-import { assertNodeType, LeadgenNodeData, NodeData } from "./node-types";
+import { LeadgenNodeData } from "./node-types";
 import { LoyaltyActionType } from "../../loyalty/actions/actions.schema";
 import { hasFeature } from "../../subscription/subscription.service";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../../integrations/external/zapier/zapier.service";
+import { producer } from "../../..";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -1011,14 +1009,19 @@ export const handleMessageStatusUpdate = async (
   if (!messageId) return;
   const now = new Date().toISOString();
 
-  await waStatusQueue.add(
-    "status-update",
-    { status, messageId, errors, timestamp: now },
-    {
-      removeOnComplete: true,
-      removeOnFail: true,
-    },
-  );
+  await producer.send({
+    topic: "status-events",
+    messages: [
+      {
+        value: JSON.stringify({
+          status,
+          messageId,
+          errors,
+          timestamp: now,
+        }),
+      },
+    ],
+  });
 };
 
 export async function setAiBotActiveStatus(
