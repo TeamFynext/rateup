@@ -223,6 +223,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
               formData={signupForm}
               handleNext={handleNext}
               translations={translations}
+              google={false}
             />
           )}
           {currentStep === 2 && (
@@ -249,7 +250,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
   );
 }
 
-function Step1({ formData, handleNext, translations }) {
+export function Step1({ formData, handleNext, translations, google }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreesToTerms, setAgreesToTerms] = useState(true);
@@ -277,58 +278,73 @@ function Step1({ formData, handleNext, translations }) {
     },
   ];
 
-  const isPasswordValid = (password: string) => {
-    const minLength = /.{8,}/;
-    const upper = /[A-Z]/;
-    const lower = /[a-z]/;
-    const number = /[0-9]/;
-    const special = /[!@#$%^&*(),.?":{}|<>]/;
-
-    return (
-      minLength.test(password) &&
-      upper.test(password) &&
-      lower.test(password) &&
-      number.test(password) &&
-      special.test(password)
-    );
-  };
+  const isPasswordValid = (password: string) =>
+    /.{8,}/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
   const isFormComplete =
-    formData.values.email.trim() !== "" &&
     formData.values.name.trim() !== "" &&
-    formData.values.password.trim() !== "" &&
-    formData.values.confirmPassword.trim() !== "" &&
-    formData.values.password === formData.values.confirmPassword &&
-    isPasswordValid(formData.values.password) &&
+    (!google
+      ? formData.values.email.trim() !== "" &&
+        formData.values.password.trim() !== "" &&
+        formData.values.confirmPassword.trim() !== "" &&
+        formData.values.password === formData.values.confirmPassword &&
+        isPasswordValid(formData.values.password)
+      : true) &&
     agreesToTerms;
 
   return (
     <div className="flex flex-col gap-3 w-full">
       <div className="text-center mb-3">
         <h2 className="text-lg text-gray-900 mb-1">
-          {" "}
-          {translations("Create Your Account")}{" "}
+          {translations("Create Your Account")}
         </h2>
         <p className="text-sm text-gray-600">
-          {" "}
-          {translations("Start your journey with RateUp")}{" "}
+          {translations("Start your journey with RateUp")}
         </p>
       </div>
-      <GoogleSignInButton
-        className={styles["login-signup-with-google-btn"]}
-        buttonText={"Continue with Google"}
-      />
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300" />
+      {google ? (
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-2.5">
+          <div className="flex items-center space-x-2.5">
+            <CheckCircle className="w-4 h-4 text-green-600" />
+            <div>
+              <p className="text-sm text-green-800">
+                Account connected successfully!
+              </p>
+              <p className="text-xs text-gray-600">
+                {formData.values.email || ""}
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-gray-500">
-            {translations("Or continue with email")}
-          </span>
-        </div>
-      </div>
+      ) : (
+        <GoogleSignInButton
+          className={styles["login-signup-with-google-btn"]}
+          buttonText={"Continue with Google"}
+        />
+      )}
+
+      {!google && (
+        <>
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500">
+                {translations("Or continue with email")}
+              </span>
+            </div>
+          </div>
+        </>
+      )}
+
       <div className="space-y-3">
+        {/* Name field (always visible) */}
         <div className="space-y-1">
           <Label htmlFor="name" className="text-gray-700 text-sm">
             {translations("Name")}
@@ -344,110 +360,127 @@ function Step1({ formData, handleNext, translations }) {
             />
           </div>
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="email" className="text-gray-700 text-sm">
-            {translations("Email")}
-          </Label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@company.com"
-              className="pl-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
-              {...formData.getInputProps("email")}
-            />
-          </div>
-        </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="password" className="text-gray-700 text-sm">
-            {translations("Password")}
-          </Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              placeholder={translations("Create a strong password")}
-              className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
-              {...formData.getInputProps("password")}
-              onFocus={() => setIsPasswordFocused(true)}
-              onBlur={() => setIsPasswordFocused(false)}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              {showPassword ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
+        {/* Email + Passwords (only if not Google signup) */}
+        {!google && (
+          <>
+            <div className="space-y-1">
+              <Label htmlFor="email" className="text-gray-700 text-sm">
+                {translations("Email")}
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@company.com"
+                  className="pl-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+                  {...formData.getInputProps("email")}
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1">
+              <Label htmlFor="password" className="text-gray-700 text-sm">
+                {translations("Password")}
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder={translations("Create a strong password")}
+                  className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+                  {...formData.getInputProps("password")}
+                  onFocus={() => setIsPasswordFocused(true)}
+                  onBlur={() => setIsPasswordFocused(false)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-1">
+              <Label
+                htmlFor="confirmPassword"
+                className="text-gray-700 text-sm"
+              >
+                {translations("Confirm Password")}
+              </Label>
+              <div className="relative">
+                <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+                  {...formData.getInputProps("confirmPassword")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Password Rules */}
+            <AnimatePresence>
+              {isPasswordFocused && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="text-xs text-gray-500 mt-1 overflow-hidden"
+                >
+                  {translations("Password must have")}:
+                  <ul className="list-none mt-1 space-y-1">
+                    {rules.map((rule) => (
+                      <li
+                        key={rule.label}
+                        className="flex items-center space-x-1"
+                      >
+                        {rule.valid ? (
+                          <span className="text-green-600">✔</span>
+                        ) : (
+                          <span className="text-gray-400">●</span>
+                        )}
+                        <span
+                          className={
+                            rule.valid ? "text-gray-800" : "text-gray-500"
+                          }
+                        >
+                          {rule.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
               )}
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <Label htmlFor="confirmPassword" className="text-gray-700 text-sm">
-            {translations("Confirm Password")}
-          </Label>
-          <div className="relative">
-            <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              id="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm your password"
-              className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
-              {...formData.getInputProps("confirmPassword")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              {showConfirmPassword ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {isPasswordFocused && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.25 }}
-              className="text-xs text-gray-500 mt-1 overflow-hidden"
-            >
-              {translations("Password must have")}:
-              <ul className="list-none mt-1 space-y-1">
-                {rules.map((rule) => (
-                  <li key={rule.label} className="flex items-center space-x-1">
-                    {rule.valid ? (
-                      <span className="text-green-600">✔</span>
-                    ) : (
-                      <span className="text-gray-400">●</span>
-                    )}
-                    <span
-                      className={rule.valid ? "text-gray-800" : "text-gray-500"}
-                    >
-                      {rule.label}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </AnimatePresence>
+          </>
+        )}
       </div>
 
-      {/* Terms checkbox - always show */}
+      {/* Terms checkbox */}
       <div className="flex items-center space-x-3">
         <Checkbox
           id="terms"
@@ -470,6 +503,7 @@ function Step1({ formData, handleNext, translations }) {
         </Label>
       </div>
 
+      {/* Footer actions */}
       <div className="flex justify-between pt-3 border-t border-gray-200 w-full">
         <Button
           variant="outline"
@@ -489,6 +523,7 @@ function Step1({ formData, handleNext, translations }) {
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
+
       <div className="w-full text-center pt-2 border-t border-gray-200">
         <p className="text-sm text-gray-600 text-center">
           {translations("Already have an account")}?{" "}
@@ -504,7 +539,7 @@ function Step1({ formData, handleNext, translations }) {
   );
 }
 
-function Step2({ formData, handleBack, handleNext, translations }) {
+export function Step2({ formData, handleBack, handleNext, translations }) {
   const industries = [
     "E-commerce",
     "Retail",
@@ -684,7 +719,7 @@ function Step2({ formData, handleBack, handleNext, translations }) {
   );
 }
 
-function Step3({
+export function Step3({
   formData,
   handleBack,
   handleSubmit,
@@ -829,7 +864,7 @@ function Step3({
   );
 }
 
-function Step4({ formData }) {
+export function Step4({ formData }) {
   const integrations = [
     {
       id: "whatsapp",
