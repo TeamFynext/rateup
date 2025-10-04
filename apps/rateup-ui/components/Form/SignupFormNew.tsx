@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useForm } from "@mantine/form";
+import { IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -32,6 +33,10 @@ import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
+import { checkEmailExist } from "@/backend/user/user.api";
+import { useCheckEmailExistMutation } from "@/backend/user/user.query";
+import { showNotification } from "@/utils/auth";
+import { showErrorToast } from "@/utils/notifications";
 
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { Button } from "../ui/button";
@@ -254,12 +259,13 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
 }
 
 export function Step1({ formData, handleNext, translations, google }) {
+  const checkEmailMutaion = useCheckEmailExistMutation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreesToTerms, setAgreesToTerms] = useState(true);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const router = useRouter();
-
+  const [loading, setLoading] = useState(false);
   const password = formData.values.password;
 
   const rules = [
@@ -300,9 +306,32 @@ export function Step1({ formData, handleNext, translations, google }) {
       : true) &&
     agreesToTerms;
 
+  const handleClick = async () => {
+    if (formData.values?.email) {
+      setLoading(true);
+      const response = await checkEmailMutaion.mutateAsync({
+        email: formData.values.email.trim(),
+      });
+
+      if (response.success) {
+        showNotification(
+          "error",
+          "red",
+          "Error",
+          translations("User with this email already exists!"),
+          <IconX size="1rem" />,
+        );
+        setLoading(false);
+        return;
+      }
+      setLoading(false);
+      handleNext();
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3 w-full">
-      <div className="text-center mb-3">
+      <div className="text-center mb-1">
         <h2 className="text-lg text-gray-900 mb-1">
           {translations("Create Your Account")}
         </h2>
@@ -525,11 +554,11 @@ export function Step1({ formData, handleNext, translations, google }) {
         </Button>
 
         <Button
-          onClick={handleNext}
+          onClick={handleClick}
           disabled={!isFormComplete}
-          className="flex items-center px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-w-30 flex items-center px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {translations("Continue")}
+          {loading ? <Loader /> : translations("Continue")}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
@@ -865,7 +894,7 @@ export function Step3({
         <Button
           onClick={handleSubmit}
           disabled={isLoading}
-          className="flex items-center px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-w-30 flex items-center px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? <Loader /> : translations("Continue")}
           <ArrowRight className="w-4 h-4 ml-2" />
