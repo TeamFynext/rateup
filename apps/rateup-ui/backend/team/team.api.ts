@@ -54,7 +54,7 @@ export const deleteTeamById = (id: String) =>
     method: "DELETE",
   });
 
-export const inviteTeamMember = (data: IInviteMember) =>
+export const inviteTeamMember = async (data: IInviteMember) =>
   axiosClient({
     url: `/team/invite`,
     method: "POST",
@@ -101,4 +101,12 @@ export const getTeamSurveys = (teamId: String) =>
 export async function getSurveyLanguagesFromTeam(teamId: string) {
   const res = await axiosClient.get(`/team/${teamId}/survey-languages`);
   return res.data as string[];
+}
+
+export async function addUsertoTeams({ userId, teamIds }) {
+  await axiosClient.post(`/team/members/${userId}`, { teamIds });
+}
+
+export async function removeUserFromTeam({ teamId, userId }) {
+  await axiosClient.delete(`/team/member?teamId=${teamId}&userId=${userId}`);
 }

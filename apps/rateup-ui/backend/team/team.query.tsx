@@ -4,8 +4,11 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+
 import { getOrgIdRole, getUserID } from "../../utils/userInfo";
 import {
+  addUsertoTeams,
   createTeam,
   deleteInviteById,
   deleteTeamById,
@@ -14,6 +17,7 @@ import {
   getTeamMembersFromInvitation,
   getTeamsByUser,
   IEditTeam,
+  removeUserFromTeam,
   resendInviteTeamMember,
 } from "./team.api";
 
@@ -205,5 +209,37 @@ export function useSurveyLanguagesFromTeam(teamId: string) {
     queryKey: ["surveyLanguages", teamId],
     queryFn: () => getSurveyLanguagesFromTeam(teamId),
     enabled: !!teamId,
+  });
+}
+
+export function useAddUsertoTeams() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addUsertoTeams,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      showSuccessToast("success");
+    },
+    onError: () => {
+      showErrorToast("Failed");
+    },
+  });
+}
+
+export function useRemoveUserFromTeam(teamId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: removeUserFromTeam,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      queryClient.invalidateQueries({
+        queryKey: ["invitedTeamMembers", teamId],
+      });
+
+      showSuccessToast("success");
+    },
+    onError: () => {
+      showErrorToast("Failed");
+    },
   });
 }
