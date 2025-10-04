@@ -1663,10 +1663,16 @@ export type Campaign = {
 
 //type for org websocket messages
 export type orgWsMessage = {
-  type: "inbox";
+  type: "inbox" | "message_status_update";
   inbox?: {
     contact: ContactsData;
     message: WaGetMessagesBody;
+  };
+  message_status_update?: {
+    messageId: string;
+    contactId: string;
+    stats: any;
+    timestamp: string;
   };
 };
 

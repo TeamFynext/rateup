@@ -59,7 +59,7 @@ export const useChatSocket = () => {
 
 const handleNotificationWithSound = ({ message, router }) => {
   const pathnamesMap = {
-    inbox: "/dashboard/whatsapp/inbox",
+    inbox: "/dashboard/inbox",
   };
   if (
     !message ||

@@ -10,11 +10,13 @@ interface Props {
 export default function WaInboxText(props: Props) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
 
-  const parts = props?.messageContent?.split(urlRegex).filter(Boolean);
+  const message =
+    typeof props?.messageContent === "string" ? props.messageContent : "";
+  const parts = message.split(urlRegex).filter(Boolean);
 
   return (
     <Text className={classes.text} maw={"300px"} component="span">
-      {parts?.map((text, index) =>
+      {parts.map((text, index) =>
         urlRegex.test(text) ? (
           <Anchor
             className={classes.text}
