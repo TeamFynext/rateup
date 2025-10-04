@@ -7,6 +7,7 @@ import { notifications } from "@mantine/notifications";
 import { useTranslations } from "next-intl";
 
 import { useGenerateInboxResponse } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { isProduction } from "@/utils/constants";
 
 import { useGenerateResponse } from "../../../backend/surveys/response/response.query";
 import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
@@ -97,6 +98,7 @@ const GenerateData = () => {
           title={translations("Generate WhatsApp Chat")}
           size="md"
           onClick={handleWaChat}
+          disabled={isProduction}
         />
       </Stack>
     </SimpleGrid>
