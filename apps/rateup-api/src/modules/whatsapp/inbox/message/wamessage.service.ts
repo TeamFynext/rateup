@@ -3,13 +3,13 @@ import {
   Contact,
   ContactGroup,
   PlatformType,
-  Prisma,
   WaAccountSettings,
   WaMessage,
 } from "../../../../../generated/prisma/client";
 import prisma from "../../../../utils/prisma";
 import {
   DateType,
+  GenerateInboxResponseBody,
   WaChatExportConstraints,
   WaChatFilterSchema,
   WaMessageAssignBody,
@@ -1175,5 +1175,143 @@ export async function getChatByContactId(req, res) {
   } catch (error) {
     log.error("Error in getChatByContactId: %o", error);
     res.status(500).send({ error: "Failed to retrieve chat" });
+  }
+}
+import { faker } from "@faker-js/faker";
+import { v4 as uuidv4 } from "uuid";
+
+/**
+ * Generate a "send" text message
+ */
+function generateSendMessage(contact) {
+  return {
+    send: {
+      to: contact.phone,
+      text: { body: faker.lorem.sentence(), preview_url: false },
+      type: "text",
+      recipient_type: "individual",
+      messaging_product: "whatsapp",
+    },
+    receive: null,
+    exchangeProcess: "send",
+  };
+}
+
+/**
+ * Generate a "receive" text message
+ */
+function generateReceiveMessage(contact, settings) {
+  return {
+    send: null,
+    receive: {
+      contacts: [{ wa_id: contact.phone, profile: { name: contact.name } }],
+      messages: [
+        {
+          id: `wamid.${uuidv4()}`,
+          from: contact.phone,
+          text: { body: faker.lorem.sentence() },
+          type: "text",
+          timestamp: Math.floor(Date.now() / 1000).toString(),
+        },
+      ],
+      metadata: {
+        phone_number_id: settings.phoneId,
+        display_phone_number: settings.phone,
+      },
+      messaging_product: "whatsapp",
+    },
+    exchangeProcess: "receive",
+  };
+}
+
+/**
+ * Seed chats for all contacts
+ */
+export async function generateInboxResponse(
+  body: GenerateInboxResponseBody,
+  orgId: string,
+  userId: string,
+) {
+  const contacts = await prisma.contact.findMany({
+    where: { orgId: orgId },
+    take: body.numberOfContacts || 5,
+  });
+  const settings = await getWaSettings(orgId);
+
+  for await (const contact of contacts) {
+    console.log(
+      `Seeding chats for contact: ${contact.name} (${contact.phone})`,
+    );
+    const messagesToCreate = [];
+    let lastReceivedTime: Date | null = null;
+
+    for (let i = 0; i < (body.messagesPerContact || 1); i++) {
+      const isSend = faker.datatype.boolean();
+      const messageBody = isSend
+        ? generateSendMessage(contact)
+        : generateReceiveMessage(contact, settings);
+
+      // Prepare message creation data
+      const now = new Date();
+      const base = faker.date.recent({ days: 10, refDate: now });
+      let sent = base;
+      let delivered: Date | null = faker.date.between({ from: sent, to: now });
+      let read: Date | null = null;
+      let failed: Date | null = null;
+
+      const isFailed = faker.datatype.boolean();
+      if (isFailed) {
+        failed = faker.date.between({ from: sent, to: now });
+        delivered = null;
+        read = null;
+      } else {
+        if (faker.datatype.boolean()) {
+          read = faker.date.between({ from: delivered!, to: now });
+        }
+      }
+
+      messagesToCreate.push({
+        id: uuidv4(),
+        createdAt: new Date(),
+        waCreatedAt: base,
+        contactId: contact.id,
+        messageBody,
+        sendBy: isSend ? userId : null,
+        sourcePlatform: "WHATSAPP",
+        sourceIdentifier:
+          messageBody.send?.to ||
+          messageBody.receive?.contacts?.[0]?.wa_id ||
+          null,
+        stats: {
+          failed: failed ? failed.toISOString() : "",
+          sent: sent.toISOString(),
+          delivered: delivered ? delivered.toISOString() : "",
+          read: read ? read.toISOString() : "",
+        },
+      });
+
+      if (!isSend) {
+        lastReceivedTime = base;
+      }
+    }
+
+    if (messagesToCreate.length > 0) {
+      await prisma.waMessage.createMany({
+        data: messagesToCreate,
+        skipDuplicates: true,
+      });
+    }
+
+    // Update lastReceivedMessageTimeStamp only once per contact
+    if (lastReceivedTime) {
+      await prisma.contact.update({
+        where: {
+          id: contact?.id,
+        },
+        data: {
+          lastReceivedMessageTimeStamp: lastReceivedTime.toISOString(),
+        },
+      });
+    }
   }
 }

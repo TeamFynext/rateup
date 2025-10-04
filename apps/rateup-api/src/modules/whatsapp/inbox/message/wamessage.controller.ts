@@ -8,6 +8,7 @@ import {
   WaMediaFileByMediaIdBody,
   WaMessageAssignBody,
   BlockUserBody,
+  GenerateInboxResponseBody,
 } from "./wamessage.schema";
 import {
   addNewWaMessage,
@@ -24,6 +25,7 @@ import {
   sendContactMessage,
   sendLocationMessage,
   generateChatAnalytics,
+  generateInboxResponse,
 } from "./wamessage.service";
 import {
   ByContactIdParams,
@@ -563,6 +565,22 @@ export async function generateChatAnalyticsHandler(
     reply.status(200).send(analyticsData);
   } catch (error) {
     log.error("Error in generateChatAnalyticsHandler: %o", error);
+    reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function generateInboxResponseHandler(
+  request: FastifyRequest<{ Body: GenerateInboxResponseBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId, userId } = request.user;
+
+    await generateInboxResponse(request.body, orgId, userId);
+
+    // Generate response logic here
+  } catch (error) {
+    log.error("Error in generateInboxResponseHandler: %o", error);
     reply.status(500).send("Internal Server Error");
   }
 }
