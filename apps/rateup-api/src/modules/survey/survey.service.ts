@@ -513,11 +513,14 @@ export async function getSurveyStatsBySurveyTeamMapId(surveyTeamMapId: string) {
   return surveyStats;
 }
 
-export async function getSurveyStats(surveyId) {
+export async function getSurveyStats(surveyId, teamIds) {
   const surveyStats = await prisma.surveyStats.findMany({
     where: {
       surveyTeamMap: {
         surveyId,
+        teamId: {
+          in: teamIds,
+        },
       },
     },
   });
@@ -1558,6 +1561,7 @@ export async function getNPSResponsesForGraph(
   timePeriod: "hourly" | "daily" | "weekly" | string,
   surveyId = "",
   teamMapIds: string[] = [],
+  teamIds: string[],
 ) {
   const surveyInfo = await prisma.surveyTeamMap.findFirst({
     where: { surveyId },
@@ -1601,7 +1605,7 @@ export async function getNPSResponsesForGraph(
     LEFT JOIN "Survey" s ON st."surveyId" = s.id
     WHERE s."orgId" = ${orgId}::uuid
       ${surveyId.length ? Prisma.sql`AND st."surveyId" = ${surveyId}::uuid` : Prisma.empty}
-      ${teamMapIds.length ? Prisma.sql`AND st.id = ANY(${teamMapIds}::uuid[])` : Prisma.empty}
+      ${teamMapIds.length ? Prisma.sql`AND st.id = ANY(${teamMapIds}::uuid[])` : Prisma.sql`AND st."teamId"= ANY(${teamIds}::uuid[])`}
       AND sr."createdAt" >= CURRENT_DATE - INTERVAL '1 year'
   `;
   const resultMap = new Map<

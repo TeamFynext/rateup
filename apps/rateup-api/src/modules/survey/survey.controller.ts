@@ -245,7 +245,8 @@ export async function getSurveyStatsHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await getSurveyStats(request.params.surveyId);
+    const teamIds = await getTeamIdsByUserId(request.userId);
+    const res = await getSurveyStats(request.params.surveyId, teamIds);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
@@ -703,12 +704,14 @@ export async function getNPSGraphHandler(
 ) {
   try {
     const { userTimeZone, timePeriod, surveyId, teamMapIds } = request.query;
+    const teamIds = await getTeamIdsByUserId(request.userId);
     const res = await getNPSResponsesForGraph(
       request.user.orgId,
       userTimeZone,
       timePeriod,
       surveyId,
       teamMapIds?.length ? teamMapIds?.split(",") : [],
+      teamIds,
     );
     reply.code(200).send(res);
   } catch (e) {
