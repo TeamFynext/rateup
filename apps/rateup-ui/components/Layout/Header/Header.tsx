@@ -13,7 +13,7 @@ interface iHeaderTabProps {
 
 export function HeaderTabs({}: iHeaderTabProps) {
   const path = usePathname();
-  if (["/dashboard/whatsapp/inbox"].includes(path)) return null;
+  if (["/dashboard/inbox"].includes(path)) return null;
   return (
     <div className={classes.header}>
       <Navbar />

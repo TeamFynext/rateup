@@ -109,7 +109,7 @@ export default function WaInboxChatSelectCard({
               <Group gap={4}>
                 {contact?.lastReceivedMessageTimeStamp &&
                   dayjs().diff(contact.lastReceivedMessageTimeStamp, "hour") <
-                    12 && (
+                    24 && (
                     <Badge color="red" variant="filled" size="xs" radius="sm">
                       New
                     </Badge>

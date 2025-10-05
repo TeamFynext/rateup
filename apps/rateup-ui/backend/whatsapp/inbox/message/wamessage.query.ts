@@ -1,3 +1,4 @@
+import { notifications } from "@mantine/notifications";
 import {
   useInfiniteQuery,
   useMutation,
@@ -16,6 +17,7 @@ import {
   assignInboxToUser,
   blockWhatsAppUser,
   exportWaChats,
+  generateInboxResponse,
   getAssignedUserForContact,
   getChatFilterData,
   getFilteredContacts,
@@ -216,3 +218,40 @@ export const useGetInboxAnalytics = () => {
     queryFn: getInboxAnalytics,
   });
 };
+
+export function useGenerateInboxResponse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: generateInboxResponse,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({
+        queryKey: ["wa-messages"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["contacts", "filtered"],
+        exact: false,
+      });
+
+      notifications.update({
+        id: "generateWaChat",
+        loading: false,
+        color: "green",
+        title: "Response Generate Success",
+        message: "Generate Response successfully",
+        autoClose: 3000,
+      });
+    },
+    onError: (error: any) => {
+      notifications.update({
+        id: "generateWaChat",
+        color: "red",
+        loading: false,
+        title: "Failed Response Generate",
+        message: error?.response?.data?.message ?? error?.response?.data,
+        autoClose: 3000,
+      });
+    },
+  });
+}

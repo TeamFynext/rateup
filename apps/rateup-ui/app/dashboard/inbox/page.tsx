@@ -48,7 +48,7 @@ const ResizeableChat = () => {
         defaultSize={20}
         maxSize={100}
         minSize={18}
-        className={`p-1 min-w-[20vw] max-lg:min-w-[35vw] ${
+        className={`min-w-[20vw] max-lg:min-w-[35vw] ${
           isChatDisplayOpen ? "max-sm:hidden" : ""
         }`}
         id="left"
@@ -64,7 +64,7 @@ const ResizeableChat = () => {
         defaultSize={100}
         maxSize={100}
         minSize={40}
-        className={`p-1 max-sm:${isChatDisplayOpen ? "" : "hidden"}`}
+        className={`max-sm:${isChatDisplayOpen ? "" : "hidden"}`}
         id="right"
         order={2}
       >

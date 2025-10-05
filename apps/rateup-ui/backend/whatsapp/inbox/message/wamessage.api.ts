@@ -205,3 +205,9 @@ export async function unblockWhatsAppUser(data: {
 export async function getInboxAnalytics() {
   return (await axiosClient.get(`${WA_CONTACT_BASE_PATH}/analytics`)).data;
 }
+
+export async function generateInboxResponse(data) {
+  return (
+    await axiosClient.post(`${WA_CONTACT_BASE_PATH}/generate-response`, data)
+  ).data;
+}

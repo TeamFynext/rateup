@@ -307,7 +307,7 @@ const WaInboxChatSelect = () => {
 
   return (
     <Paper withBorder p={0} className="h-full">
-      <Group gap="xs" align="center" wrap="nowrap" p={"xs"}>
+      <Group gap="xs" align="center" wrap="nowrap" p={6.3}>
         <ContainedTextField
           leftSection={<IconSearch size={18} color="gray" stroke={1.5} />}
           rightSection={
