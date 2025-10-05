@@ -51,6 +51,7 @@ import {
   useBlockWhatsAppUser,
   useGetAssignedUserForContact,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import CopyIcon from "@/components/Button/CopyIcon";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
@@ -159,9 +160,11 @@ export default function WaInboxChatDisplayHeader({
             {contact.name ?? contact.whatsappUserName}
           </Text>
           {contact.consent ? (
-            <Text className={classes.phone}>
-              {contact.phone || contact?.other}
-            </Text>
+            <CopyIcon value={contact.phone || contact?.other}>
+              <Text className={classes.phone}>
+                {contact.phone || contact?.other}
+              </Text>
+            </CopyIcon>
           ) : (
             <Badge
               leftSection={<IconHandOff size={"0.75rem"} />}

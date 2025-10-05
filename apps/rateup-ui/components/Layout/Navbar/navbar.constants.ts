@@ -108,6 +108,11 @@ export function getNavTopData(
             children: [
               // new,assigned,closed,sent,blocked
               {
+                label: translations("All"),
+                link: "/dashboard/inbox?tab=All",
+                icon: IconMessage,
+              },
+              {
                 label: translations("Mine"),
                 link: "/dashboard/inbox?tab=mine",
                 icon: AssignedToMeInboxIcon,
@@ -116,11 +121,6 @@ export function getNavTopData(
                 label: translations("UnAssigned"),
                 link: "/dashboard/inbox?tab=UnAssigned",
                 icon: IconUserX,
-              },
-              {
-                label: translations("All"),
-                link: "/dashboard/inbox?tab=All",
-                icon: IconMessage,
               },
               {
                 label: translations("Analytics"),
