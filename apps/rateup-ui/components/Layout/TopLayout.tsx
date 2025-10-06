@@ -92,10 +92,6 @@ export default function TopNavbar({ user }) {
             {translations("Are you sure you want to logout?")}
           </Title>
 
-          <Text size="sm" c="dimmed" ta="center" maw={280}>
-            {translations("You'll need to log in again to access your account")}
-          </Text>
-
           <Flex gap="sm" mt="md" w="100%" justify="center">
             <Button variant="outline" radius="md" onClick={logoutModal.close}>
               {translations("Cancel")}

@@ -8,7 +8,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useForm } from "@mantine/form";
-import { IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -267,23 +266,24 @@ export function Step1({ formData, handleNext, translations, google }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const password = formData.values.password;
+  const [emailError, setEmailError] = useState(false);
 
   const rules = [
     {
-      label: translations("At least 8 characters"),
+      label: "At least 8 characters",
       valid: /.{8,}/.test(password),
     },
     {
-      label: translations("1 uppercase letter"),
+      label: "1 uppercase letter",
       valid: /[A-Z]/.test(password),
     },
     {
-      label: translations("1 lowercase letter"),
+      label: "1 lowercase letter",
       valid: /[a-z]/.test(password),
     },
-    { label: translations("1 number"), valid: /[0-9]/.test(password) },
+    { label: "1 number", valid: /[0-9]/.test(password) },
     {
-      label: translations("1 special character"),
+      label: "1 special character",
       valid: /[!@#$%^&*(),.?\":{}|<>]/.test(password),
     },
   ];
@@ -314,13 +314,7 @@ export function Step1({ formData, handleNext, translations, google }) {
       });
 
       if (response.success) {
-        showNotification(
-          "error",
-          "red",
-          "Error",
-          translations("User with this email already exists!"),
-          <IconX size="1rem" />,
-        );
+        setEmailError(true);
         setLoading(false);
         return;
       }
@@ -407,10 +401,44 @@ export function Step1({ formData, handleNext, translations, google }) {
                   id="email"
                   type="email"
                   placeholder="you@company.com"
-                  className="pl-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+                  className={`pl-10 h-8 border-2 bg-white text-sm transition-colors duration-200 focus:ring-2 ${
+                    emailError
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-100"
+                      : "border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20"
+                  }`}
                   {...formData.getInputProps("email")}
                 />
               </div>
+
+              {/* Animated Error Message */}
+              <AnimatePresence>
+                {emailError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-1 mt-1 text-xs text-red-600 font-medium"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {translations("This account already exists")}.{" "}
+                    {translations("Please sign in to continue")}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Password */}
@@ -456,7 +484,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
+                  placeholder={translations("Confirm your password")}
                   className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
                   {...formData.getInputProps("confirmPassword")}
                 />
