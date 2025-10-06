@@ -69,6 +69,7 @@ export async function uploadFileForAIEmbedHandler(
           reply.code(400).send({ message: "This file type is not permitted." });
           return;
         }
+
         const buffer = await part.toBuffer();
         const blob = new Blob([new Uint8Array(buffer)], {
           type: part.mimetype,

@@ -42,6 +42,10 @@ import {
 } from "../../../../../../survey/survey.service";
 import { getOrCreateContactByPhone } from "../../../../contact/internal-copy/contact/contact.service";
 import { updateCampaignParticipant } from "../../../../campaign/internal-copy/campaign/campaignParticipants/campaignParticipants.service";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../../../../../../integrations/external/zapier/zapier.service";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -400,6 +404,11 @@ export async function saveResponses(session: WaSessionWithRelations) {
       responseId: res.id,
     });
   }
+  await addZapierTriggerToQueue(
+    ZapierTriggers.RESPONSE_SUBMITTED,
+    { [ZapierTriggers.RESPONSE_SUBMITTED]: res },
+    res.surveyTeamMap.team.orgId,
+  );
   return res;
 }
 

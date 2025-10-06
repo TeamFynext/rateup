@@ -71,16 +71,7 @@ export async function waSettingsRoutes(server: FastifyInstance) {
     },
     deleteWaSettingsHandler,
   );
-  server.get("/contact_tag", getContactTagHandler);
-  server.post(
-    "/contact_tag",
-    {
-      schema: {
-        body: $WASettingsref("contactTagSchema"),
-      },
-    },
-    updateContactTagHandler,
-  );
+
   server.get(
     "/logs",
     {

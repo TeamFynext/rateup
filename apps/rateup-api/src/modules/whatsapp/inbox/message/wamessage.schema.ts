@@ -21,6 +21,10 @@ const WaReaction = z.object({
   emoji: z.string().optional(), //used in whatsapp
   reaction: z.string().optional(), //used in instagram
 });
+const generateInboxResponseBody = z.object({
+  numberOfContacts: z.number().min(1).default(1),
+  messagesPerContact: z.number().min(1).default(1),
+});
 
 const WaMedia = z.array(
   z.object({
@@ -124,6 +128,7 @@ export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
     waMediaFileByMediaIdBody,
     waMessageAssignBody,
     blockUserSchema,
+    generateInboxResponseBody,
   },
   { $id: "waMessage" },
 );
@@ -137,3 +142,6 @@ export type WaChatExportQuerySchema = z.infer<typeof waChatExportQuerySchema>;
 export type WaMediaFileByMediaIdBody = z.infer<typeof waMediaFileByMediaIdBody>;
 export type WaMessageAssignBody = z.infer<typeof waMessageAssignBody>;
 export type BlockUserBody = z.infer<typeof blockUserSchema>;
+export type GenerateInboxResponseBody = z.infer<
+  typeof generateInboxResponseBody
+>;

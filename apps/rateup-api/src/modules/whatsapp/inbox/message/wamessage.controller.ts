@@ -8,6 +8,7 @@ import {
   WaMediaFileByMediaIdBody,
   WaMessageAssignBody,
   BlockUserBody,
+  GenerateInboxResponseBody,
 } from "./wamessage.schema";
 import {
   addNewWaMessage,
@@ -24,6 +25,7 @@ import {
   sendContactMessage,
   sendLocationMessage,
   generateChatAnalytics,
+  generateInboxResponse,
 } from "./wamessage.service";
 import {
   ByContactIdParams,
@@ -63,6 +65,10 @@ import { Contact, PlatformType } from "../../../../../generated/prisma/client";
 import { Role } from "../../../../utils/enums";
 import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service";
 import { WaSendMessageBody } from "../../../../types/whatsapp.types";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../../../integrations/external/zapier/zapier.service";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
@@ -179,6 +185,20 @@ export async function handleWaMessages(
       failed,
     );
 
+    if (type === "receive")
+      await addZapierTriggerToQueue(
+        ZapierTriggers.NEW_MESSAGE,
+        {
+          [ZapierTriggers.NEW_MESSAGE]: {
+            messageBody,
+            messageId,
+            sourcePlatform,
+            sourceIdentifier,
+            from,
+          },
+        },
+        orgId,
+      );
     // Notify connected clients
     await sendViaWstoOrgHandler(
       orgId,
@@ -545,6 +565,22 @@ export async function generateChatAnalyticsHandler(
     reply.status(200).send(analyticsData);
   } catch (error) {
     log.error("Error in generateChatAnalyticsHandler: %o", error);
+    reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function generateInboxResponseHandler(
+  request: FastifyRequest<{ Body: GenerateInboxResponseBody }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId, userId } = request.user;
+
+    await generateInboxResponse(request.body, orgId, userId);
+
+    // Generate response logic here
+  } catch (error) {
+    log.error("Error in generateInboxResponseHandler: %o", error);
     reply.status(500).send("Internal Server Error");
   }
 }

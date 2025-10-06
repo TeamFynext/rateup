@@ -120,6 +120,7 @@ export async function addExistingContactsToGroupHandler(
       request.params.contactGroupId,
       request.body.contactIds,
       request.body.isCustomer,
+      request.user.orgId,
     );
     reply.code(200).send(contactGroup);
   } catch (error) {
@@ -228,6 +229,7 @@ export async function addExistingContactsToMultipleGroupsHandler(
     const contactGroup = await addExistingContactsToMultipleGroups(
       contactIds,
       contactGroupIds,
+      request.user.orgId,
     );
     reply.code(200).send(contactGroup);
   } catch (error) {

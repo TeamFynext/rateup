@@ -12,6 +12,7 @@ import { defaultTheme } from "../surveyTheme/defaultTheme";
 import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken";
 import { IntegratedApps } from "../../types/enums";
 import { TellUsMore } from "./org.controller";
+import { seedDefaultStages } from "../update/update.controller";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({
@@ -26,6 +27,7 @@ export async function createOrg(input: CreateOrgInput) {
       },
     },
   });
+  await seedDefaultStages(org.id);
   return org;
 }
 
@@ -554,10 +556,8 @@ export async function pauseOrg(id, data: PauseOrgInput) {
 export async function completeOrgDetails(
   userId: string,
   data: {
-    orgName?: string;
     tellUsMore?: TellUsMore;
     isTellUsMoreCompleted?: boolean;
-    phone?: string;
   },
 ) {
   return prisma.$transaction(async (tx) => {
@@ -573,7 +573,6 @@ export async function completeOrgDetails(
     const updatedOrg = await tx.org.update({
       where: { id: org.id },
       data: {
-        ...(data.orgName && { name: data.orgName }),
         ...(data.tellUsMore && { tellUsMore: data.tellUsMore }),
         ...(typeof data.isTellUsMoreCompleted === "boolean" && {
           isTellUsMoreCompleted: data.isTellUsMoreCompleted,
@@ -581,19 +580,11 @@ export async function completeOrgDetails(
       },
     });
 
-    if (data.phone) {
-      await tx.user.update({
-        where: { id: userId },
-        data: { phone: data.phone },
-      });
-    }
-
     return {
       updatedOrg: {
         ...updatedOrg,
         tellUsMore: updatedOrg.tellUsMore as TellUsMore,
       },
-      phone: data.phone,
     };
   });
 }

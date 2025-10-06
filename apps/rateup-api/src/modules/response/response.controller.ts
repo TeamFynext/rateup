@@ -47,6 +47,10 @@ import { getSubscription } from "../subscription/subscription.service";
 import { getFlowFromDb } from "../whatsapp/flows/flow.service";
 import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema";
 import { PrismaClientKnownRequestError } from "../../../generated/prisma/internal/prismaNamespace";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../integrations/external/zapier/zapier.service";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{
@@ -257,6 +261,11 @@ export async function createResponseHandler(
         updateResponse(response.id, { ip, location }),
         sendResponseToWebhook(response, response.surveyTeamMap.team.orgId),
         createTestimonial(data, response.id),
+        addZapierTriggerToQueue(
+          ZapierTriggers.RESPONSE_SUBMITTED,
+          { [ZapierTriggers.RESPONSE_SUBMITTED]: response },
+          response.surveyTeamMap.team.orgId,
+        ),
       ]);
     }
   } catch (e) {

@@ -12,6 +12,10 @@ import {
   createNotification,
   getNotificationSettings,
 } from "../../notification/notification.service";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../../integrations/external/zapier/zapier.service";
 
 export interface CardInput {
   title?: string;
@@ -26,6 +30,7 @@ export interface CardInput {
   surveyResponseId?: string;
 }
 
+//used in zapier also
 export async function createCard(data: CardInput) {
   const { title, userId, orgId, ...otherData } = data;
   // Get the highest order in the column to place new card at the end
@@ -44,6 +49,13 @@ export async function createCard(data: CardInput) {
       title,
       order,
       ticketId: getShortUrlId(),
+    },
+    include: {
+      ticketColumn: {
+        select: {
+          title: true,
+        },
+      },
     },
   });
 
@@ -104,8 +116,21 @@ export async function createCard(data: CardInput) {
         phone: user.phone,
         orgId,
       });
+    const notificationSetting = await getNotificationSettings(user.id, orgId);
+    if (notificationSetting && notificationSetting.ticketAssignNotification) {
+      await createNotification(user.id, orgId, "ticket", "ticket-assigned", {
+        board_name: board.title,
+        column_name: column.title,
+        cardId: card.id,
+        ticketId: card.ticketId,
+      });
+    }
   }
-
+  await addZapierTriggerToQueue(
+    ZapierTriggers.TICKET_CREATED,
+    { [ZapierTriggers.TICKET_CREATED]: card },
+    orgId,
+  );
   return card;
 }
 
@@ -248,6 +273,14 @@ export async function updateCard(
         },
       },
     },
+    include: {
+      //for zapier
+      ticketColumn: {
+        select: {
+          title: true,
+        },
+      },
+    },
   });
 
   // Log activity for card update
@@ -272,9 +305,19 @@ export async function updateCard(
       id: true,
       email: true,
       phone: true,
+      name: true,
     },
   });
-
+  await addZapierTriggerToQueue(
+    ZapierTriggers.TICKET_ASSIGNEE_UPDATED,
+    {
+      [ZapierTriggers.TICKET_ASSIGNEE_UPDATED]: {
+        assignees: users,
+        card: card,
+      },
+    },
+    orgId,
+  );
   const column = await prisma.ticketColumn.findUnique({
     where: { id: card.ticketColumnId },
     select: { ticketBoardId: true, title: true },
@@ -324,6 +367,7 @@ export async function moveCard(
   id: string,
   ticketColumnId: string,
   userId: string,
+  orgId: string,
   newOrder?: number,
 ) {
   // Get the current card to record the source column
@@ -353,6 +397,14 @@ export async function moveCard(
       ticketColumnId,
       order,
     },
+    include: {
+      //for zapier
+      ticketColumn: {
+        select: {
+          title: true,
+        },
+      },
+    },
   });
 
   // If the card moved to a new column, adjust orders in both source and target columns
@@ -375,6 +427,12 @@ export async function moveCard(
           AND "id" <> ${id}
       `;
     }
+
+    await addZapierTriggerToQueue(
+      ZapierTriggers.TICKET_CARD_MOVED,
+      { [ZapierTriggers.TICKET_CARD_MOVED]: card },
+      orgId,
+    );
   }
   // If staying in the same column but changing order
   else if (currentCard.order !== order) {

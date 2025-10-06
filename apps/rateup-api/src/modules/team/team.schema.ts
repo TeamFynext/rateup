@@ -36,7 +36,7 @@ const deleteTeamByIdRequestSchema = z.object({
   id: z.string(),
 });
 
-enum InviteType {
+export enum InviteType {
   ORG = "ORG",
   TEAM = "TEAM",
 }

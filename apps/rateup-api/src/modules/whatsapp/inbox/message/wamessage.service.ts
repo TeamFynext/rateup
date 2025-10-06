@@ -3,13 +3,13 @@ import {
   Contact,
   ContactGroup,
   PlatformType,
-  Prisma,
   WaAccountSettings,
   WaMessage,
 } from "../../../../../generated/prisma/client";
 import prisma from "../../../../utils/prisma";
 import {
   DateType,
+  GenerateInboxResponseBody,
   WaChatExportConstraints,
   WaChatFilterSchema,
   WaMessageAssignBody,
@@ -41,6 +41,10 @@ import {
   createNotification,
   getNotificationSettings,
 } from "../../../notification/notification.service";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../../../integrations/external/zapier/zapier.service";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -297,12 +301,13 @@ export async function filterChats(
         filters.push(`(${tagFilters.join(" OR ")})`);
       }
       if (bodyFilterProps?.labels?.length > 0) {
-        params.push(bodyFilterProps.labels);
-        filters.push(`EXISTS (
-          SELECT 1 FROM "ContactLabelMap" clm
-          WHERE clm."contactId" = c.id
-          AND clm."labelId" = ANY($${paramIndex++}::uuid[])
-        )`);
+        params.push(bodyFilterProps.labels?.[0]);
+        // filters.push(`EXISTS (
+        //   SELECT 1 FROM "ContactLabelMap" clm
+        //   WHERE clm."contactId" = c.id
+        //   AND clm."labelId" = ANY($${paramIndex++}::uuid[])
+        // )`);
+        filters.push(`(c."lifecycleId" = $${paramIndex++}::uuid)`);
       }
 
       // Filter by assignment status
@@ -312,8 +317,7 @@ export async function filterChats(
       });
       const waAssignedChatPermission = org?.waAssignedChatPermission;
 
-      const isAssignedToMe =
-        bodyFilterProps?.waMessageAssignStatus === "AssignedToMe";
+      const isAssignedToMe = bodyFilterProps?.waMessageAssignStatus === "mine";
       const isNew = bodyFilterProps?.waMessageAssignStatus === "New";
       const isNotSent = bodyFilterProps?.waMessageAssignStatus !== "Sent";
       const newStatuses = bodyFilterProps?.newStatuses?.length
@@ -331,13 +335,13 @@ export async function filterChats(
           if (newStatuses.length) {
             params.push(
               newStatuses.map((status) =>
-                status === "ASSIGNEDTOME" ? "ASSIGNED" : status,
+                status === "MINE" ? "ASSIGNED" : status,
               ),
             );
 
             let newQuery = `(c."waMessageAssignStatus" = ANY($${paramIndex++}::TEXT[])`;
 
-            if (newStatuses.includes("ASSIGNEDTOME")) {
+            if (newStatuses.includes("MINE")) {
               params.push(userId);
               const assignmentCondition = `EXISTS (
               SELECT 1 FROM "WaInboxAssign" winb 
@@ -354,7 +358,7 @@ export async function filterChats(
 
             if (
               newStatuses.includes("ASSIGNED") ||
-              newStatuses.includes("ASSIGNEDTOME")
+              newStatuses.includes("MINE")
             ) {
               if (
                 waAssignedChatPermission ===
@@ -489,66 +493,67 @@ export async function filterChats(
 
     // Simplified and optimized query with last received message
     const query = `SELECT 
-        c.id,
-        c."name",
-        c."phone",
-        c."other",
-        c."aiWaChat",
-        c."waMessageAssignStatus",
-        c."lastReceivedMessageTimeStamp",
-        c."consent",
-        c."whatsappUserName",
-        c."blockedOnWhatsApp",
-        c."source",
-        c."igsId",
-        c."profilePic",
-        c."followerCount",
-        c."isIgVerifiedUser",
-        COALESCE(c.tags, '{}'::jsonb) as tags,
-        (
-          SELECT COUNT(*)::INTEGER FROM "WaMessage" w WHERE w."contactId" = c.id
-          AND w."messageBody"->>'exchangeProcess' = 'receive'
-          AND NOT($3::TEXT = ANY(w."readUsers"))
-        ) as "unReadMessageCount",
-        COALESCE(
-        json_agg(
-            json_build_object(
-                'id', u.id,
-                'name', u.name
-            )
-        ) FILTER (WHERE u.id IS NOT NULL),
-        '[]') AS "assignedUsers",
-        (
-          SELECT jsonb_build_object(
-            'messageBody', w."messageBody",
-            'waCreatedAt', w."waCreatedAt",
-            'sourcePlatform', w."sourcePlatform",
-            'sourceIdentifier',w."sourceIdentifier"
+    c.id,
+    c."name",
+    c."phone",
+    c."other",
+    c."aiWaChat",
+    c."waMessageAssignStatus",
+    c."lastReceivedMessageTimeStamp",
+    c."consent",
+    c."whatsappUserName",
+    c."blockedOnWhatsApp",
+    c."source",
+    c."igsId",
+    c."profilePic",
+    c."followerCount",
+    c."isIgVerifiedUser",
+    COALESCE(c.tags, '{}'::jsonb) as tags,
+    (
+      SELECT COUNT(*)::INTEGER 
+      FROM "WaMessage" w 
+      WHERE w."contactId" = c.id
+      AND w."messageBody"->>'exchangeProcess' = 'receive'
+      AND NOT($3::TEXT = ANY(w."readUsers"))
+    ) as "unReadMessageCount",
+    COALESCE(
+      json_agg(
+          json_build_object(
+              'id', u.id,
+              'name', u.name
           )
-          FROM "WaMessage" w
-          WHERE w."contactId" = c.id
-          ORDER BY w."waCreatedAt" DESC
-          LIMIT 1
-        ) as "lastMessage",
-      (
-        SELECT w."messageBody"->'receive'->'metadata'
-        FROM "WaMessage" w
-        WHERE w."contactId" = c.id
-        AND w."messageBody"->>'exchangeProcess' = 'receive'
-        ORDER BY w."waCreatedAt" DESC
-        LIMIT 1
-      ) as "metadata",
-      (
-        SELECT COALESCE(json_agg(clm."labelId"), '[]'::json) 
-        FROM "ContactLabelMap" clm 
-        WHERE clm."contactId" = c.id
-      ) as "labelIds"
-      FROM "Contact" c
-         LEFT JOIN "WaInboxAssign" wb ON wb."contactId" = c.id
-         LEFT JOIN "User" u ON wb."assignedUserId" = u.id
-      WHERE ${whereClause}
-      GROUP BY c.id
-    `;
+      ) FILTER (WHERE u.id IS NOT NULL),
+      '[]'
+    ) AS "assignedUsers",
+    (
+      SELECT jsonb_build_object(
+        'messageBody', w."messageBody",
+        'waCreatedAt', w."waCreatedAt",
+        'sourcePlatform', w."sourcePlatform",
+        'sourceIdentifier', w."sourceIdentifier"
+      )
+      FROM "WaMessage" w
+      WHERE w."contactId" = c.id
+      ORDER BY w."waCreatedAt" DESC
+      LIMIT 1
+    ) as "lastMessage",
+    (
+      SELECT w."messageBody"->'receive'->'metadata'
+      FROM "WaMessage" w
+      WHERE w."contactId" = c.id
+      AND w."messageBody"->>'exchangeProcess' = 'receive'
+      ORDER BY w."waCreatedAt" DESC
+      LIMIT 1
+    ) as "metadata",
+    c."lifecycleId",
+    l."name" as "lifecycleName"
+FROM "Contact" c
+   LEFT JOIN "WaInboxAssign" wb ON wb."contactId" = c.id
+   LEFT JOIN "User" u ON wb."assignedUserId" = u.id
+   LEFT JOIN "Lifecycle" l ON l.id = c."lifecycleId"
+WHERE ${whereClause}
+GROUP BY c.id, l.id
+`;
     const wrappedQuery = `SELECT * FROM (${query}) wc ORDER BY ${orderBy} DESC NULLS LAST LIMIT 100 OFFSET $2`;
 
     const contacts = await prisma.$queryRawUnsafe(wrappedQuery, ...params);
@@ -782,6 +787,18 @@ export async function assignWaMessageToUser(
       );
     }
   }
+
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_ASSIGN,
+    {
+      [ZapierTriggers.CONTACT_ASSIGN]: {
+        contact: updatedContact,
+        teamId: data.teamId,
+        assignedUserIds: newUsers,
+      },
+    },
+    orgId,
+  );
 }
 
 export async function getAssignedUserForContact(contactId) {
@@ -1158,5 +1175,143 @@ export async function getChatByContactId(req, res) {
   } catch (error) {
     log.error("Error in getChatByContactId: %o", error);
     res.status(500).send({ error: "Failed to retrieve chat" });
+  }
+}
+import { faker } from "@faker-js/faker";
+import { v4 as uuidv4 } from "uuid";
+
+/**
+ * Generate a "send" text message
+ */
+function generateSendMessage(contact) {
+  return {
+    send: {
+      to: contact.phone,
+      text: { body: faker.lorem.sentence(), preview_url: false },
+      type: "text",
+      recipient_type: "individual",
+      messaging_product: "whatsapp",
+    },
+    receive: null,
+    exchangeProcess: "send",
+  };
+}
+
+/**
+ * Generate a "receive" text message
+ */
+function generateReceiveMessage(contact, settings) {
+  return {
+    send: null,
+    receive: {
+      contacts: [{ wa_id: contact.phone, profile: { name: contact.name } }],
+      messages: [
+        {
+          id: `wamid.${uuidv4()}`,
+          from: contact.phone,
+          text: { body: faker.lorem.sentence() },
+          type: "text",
+          timestamp: Math.floor(Date.now() / 1000).toString(),
+        },
+      ],
+      metadata: {
+        phone_number_id: settings.phoneId,
+        display_phone_number: settings.phone,
+      },
+      messaging_product: "whatsapp",
+    },
+    exchangeProcess: "receive",
+  };
+}
+
+/**
+ * Seed chats for all contacts
+ */
+export async function generateInboxResponse(
+  body: GenerateInboxResponseBody,
+  orgId: string,
+  userId: string,
+) {
+  const contacts = await prisma.contact.findMany({
+    where: { orgId: orgId },
+    take: body.numberOfContacts || 5,
+  });
+  const settings = await getWaSettings(orgId);
+
+  for await (const contact of contacts) {
+    console.log(
+      `Seeding chats for contact: ${contact.name} (${contact.phone})`,
+    );
+    const messagesToCreate = [];
+    let lastReceivedTime: Date | null = null;
+
+    for (let i = 0; i < (body.messagesPerContact || 1); i++) {
+      const isSend = faker.datatype.boolean();
+      const messageBody = isSend
+        ? generateSendMessage(contact)
+        : generateReceiveMessage(contact, settings);
+
+      // Prepare message creation data
+      const now = new Date();
+      const base = faker.date.recent({ days: 10, refDate: now });
+      let sent = base;
+      let delivered: Date | null = faker.date.between({ from: sent, to: now });
+      let read: Date | null = null;
+      let failed: Date | null = null;
+
+      const isFailed = faker.datatype.boolean();
+      if (isFailed) {
+        failed = faker.date.between({ from: sent, to: now });
+        delivered = null;
+        read = null;
+      } else {
+        if (faker.datatype.boolean()) {
+          read = faker.date.between({ from: delivered!, to: now });
+        }
+      }
+
+      messagesToCreate.push({
+        id: uuidv4(),
+        createdAt: new Date(),
+        waCreatedAt: base,
+        contactId: contact.id,
+        messageBody,
+        sendBy: isSend ? userId : null,
+        sourcePlatform: "WHATSAPP",
+        sourceIdentifier:
+          messageBody.send?.to ||
+          messageBody.receive?.contacts?.[0]?.wa_id ||
+          null,
+        stats: {
+          failed: failed ? failed.toISOString() : "",
+          sent: sent.toISOString(),
+          delivered: delivered ? delivered.toISOString() : "",
+          read: read ? read.toISOString() : "",
+        },
+      });
+
+      if (!isSend) {
+        lastReceivedTime = base;
+      }
+    }
+
+    if (messagesToCreate.length > 0) {
+      await prisma.waMessage.createMany({
+        data: messagesToCreate,
+        skipDuplicates: true,
+      });
+    }
+
+    // Update lastReceivedMessageTimeStamp only once per contact
+    if (lastReceivedTime) {
+      await prisma.contact.update({
+        where: {
+          id: contact?.id,
+        },
+        data: {
+          lastReceivedMessageTimeStamp: lastReceivedTime.toISOString(),
+        },
+      });
+    }
   }
 }

@@ -6,6 +6,7 @@ import {
   createWaPaymentConfigurationsHandler,
   deleteIntegrationByNameHandler,
   deleteWaPaymentConfigurationHandler,
+  deleteZapierTriggerHookHandler,
   getAllIntegrationsByOrgHandler,
   getAllIntegrationsHandler,
   getGoogleAuthUrlForSheetHandler,
@@ -113,4 +114,5 @@ export async function integrationsRoutes(server: FastifyInstance) {
     },
     deleteWaPaymentConfigurationHandler,
   );
+  server.delete("/zapier-hook", deleteZapierTriggerHookHandler);
 }

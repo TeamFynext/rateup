@@ -1,9 +1,10 @@
-import { Contact, ContactGroupType } from "../../../generated/prisma/client";
+import { ContactGroupType } from "../../../generated/prisma/client";
 import { log } from "../../utils/logger";
 import prisma from "../../utils/prisma";
 import {
   ContactCore,
   createMultipleContactInput,
+  CustomFieldSchema,
   PaginationQuery,
   updateContactSchema,
 } from "./contact.schema";
@@ -11,13 +12,9 @@ import Papa from "papaparse";
 import { getContactTag } from "../whatsapp/settings/wa_settings.service";
 import xlsx from "node-xlsx";
 import { MultipartFile } from "@fastify/multipart";
-import {
-  addNewContactsToGroup,
-  getContactGroupById,
-} from "./contactGroup/contactGroup.service";
+import { addNewContactsToGroup } from "./contactGroup/contactGroup.service";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants";
-import { AddNewContactsToGroupInput } from "./contactGroup/contactGroup.schema";
 import { WaMessageAssignStatus } from "../../types/enums";
 import {
   deleteAssignedUsersforContact,
@@ -28,6 +25,10 @@ import {
   createNotification,
   getNotificationSettings,
 } from "../notification/notification.service";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../integrations/external/zapier/zapier.service";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
@@ -35,9 +36,25 @@ export async function createContact(contact: ContactCore & { orgId: string }) {
   }
   const chatbot = await getChatbotDetails(contact.orgId);
   if (chatbot && chatbot.enableAllWaChat) contact.aiWaChat = true;
+  const { customFields, ...rest } = contact;
   const user = await prisma.contact.create({
-    data: contact,
+    data: rest,
   });
+  if (customFields?.length) {
+    await prisma.contactCustomFieldValue.createMany({
+      data: customFields.map((field) => ({
+        contactId: user.id,
+        fieldId: field.id,
+        value: field.value,
+      })),
+      skipDuplicates: true,
+    });
+  }
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_CREATE,
+    { [ZapierTriggers.CONTACT_CREATE]: user },
+    user.orgId,
+  );
   return user;
 }
 
@@ -56,9 +73,26 @@ export async function getOrcreateContact(
   if (user) return user;
   const chatbot = await getChatbotDetails(contact.orgId);
   if (chatbot && chatbot.enableAllWaChat) contact.aiWaChat = true;
+  const { customFields, ...rest } = contact;
   user = await prisma.contact.create({
-    data: contact,
+    data: rest,
   });
+
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_CREATE,
+    { [ZapierTriggers.CONTACT_CREATE]: user },
+    user.orgId,
+  );
+  if (customFields?.length) {
+    await prisma.contactCustomFieldValue.createMany({
+      data: customFields.map((field) => ({
+        contactId: user.id,
+        fieldId: field.id,
+        value: field.value,
+      })),
+      skipDuplicates: true,
+    });
+  }
   return user;
 }
 
@@ -72,11 +106,46 @@ export async function createMultipleContacts(
     ...contact,
     orgId,
     aiWaChat,
+    customFields: undefined,
   }));
-  return await prisma.contact.createMany({
+  const createdContacts = await prisma.contact.createManyAndReturn({
     skipDuplicates: true,
     data: contactsData,
   });
+  if (createdContacts.length) {
+    await prisma.contactCustomFieldValue.deleteMany({
+      where: {
+        contactId: {
+          in: createdContacts.map((c) => c.id),
+        },
+      },
+    });
+    console.log(
+      "🚀 ~ createMultipleContacts ~ contact.customFields:",
+      contacts,
+    );
+    await prisma.contactCustomFieldValue.createMany({
+      data: contacts
+        .filter((contact) => contact.customFields?.length)
+        .flatMap((contact) =>
+          contact.customFields.map((field) => ({
+            contactId:
+              createdContacts.find((c) => c.phone === contact.phone)?.id || "",
+            fieldId: field.id,
+            value: field.value,
+          })),
+        ),
+      skipDuplicates: true,
+    });
+    for (const contact of createdContacts)
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { [ZapierTriggers.CONTACT_CREATE]: contact },
+        orgId,
+      );
+  }
+
+  return createdContacts;
 }
 
 export async function getContactById(contactId: string) {
@@ -193,6 +262,7 @@ export async function getContactsByOrgId(
   });
   const includeCondition = {
     loyaltyCustomer: true,
+    customFields: true,
     contactGroups: {
       select: {
         contactGroup: {
@@ -240,19 +310,41 @@ export async function getContactByPhoneNumberAndOrgId(
   return contact;
 }
 
+//used in zapier controller also
 export async function deleteContactById(contactId: string) {
   const user = await prisma.contact.delete({
     where: {
       id: contactId,
     },
   });
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_DELETED,
+    { [ZapierTriggers.CONTACT_DELETED]: user },
+    user.orgId,
+  );
   return user;
 }
 
+//used in zapier controller also
 export async function updateContactById(
   contactId: string,
   contact: updateContactSchema,
 ) {
+  if (contact.customFields?.length) {
+    await prisma.contactCustomFieldValue.deleteMany({
+      where: {
+        contactId,
+      },
+    });
+    await prisma.contactCustomFieldValue.createMany({
+      data: contact.customFields.map((field) => ({
+        contactId,
+        fieldId: field.id,
+        value: field.value,
+      })),
+      skipDuplicates: true,
+    });
+  }
   const user = await prisma.contact.update({
     where: {
       id: contactId,
@@ -260,13 +352,23 @@ export async function updateContactById(
     data: {
       name: contact.name,
       phone: contact.phone,
-      tags: contact.tags,
       aiWaChat: contact.aiWaChat,
       waMessageAssignStatus: contact.waMessageAssignStatus,
-      lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp,
+      lastReceivedMessageTimeStamp:
+        contact.lastReceivedMessageTimeStamp || undefined,
     },
   });
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_UPDATED,
+    { [ZapierTriggers.CONTACT_UPDATED]: user },
+    user.orgId,
+  );
   if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONVERSATION_CLOSED,
+      { [ZapierTriggers.CONVERSATION_CLOSED]: user },
+      user.orgId,
+    );
     const assignedUsers = await getAssignedUserForContact(user.id);
     await deleteAssignedUsersforContact(user.id);
     for (const assignee of assignedUsers) {
@@ -296,25 +398,34 @@ export async function updateContactById(
 
 export async function updateContactLabelsById(
   contactId: string,
-  labels: string[],
+  lifecycleId: string,
 ) {
-  await prisma.contactLabelMap.deleteMany({
-    where: {
-      contactId: contactId,
-    },
-  });
   const contact = await prisma.contact.update({
     where: {
       id: contactId,
     },
     data: {
-      ContactLabelMap: {
-        create: labels.map((labelId) => ({
-          labelId,
-        })),
+      lifecycleId,
+    },
+    include: {
+      Lifecycle: {
+        select: {
+          name: true,
+        },
       },
     },
   });
+  await addZapierTriggerToQueue(
+    ZapierTriggers.CONTACT_LIFECYCLE_UPDATED,
+    {
+      [ZapierTriggers.CONTACT_LIFECYCLE_UPDATED]: {
+        contactId: contact.id,
+        lifecycleId,
+        lifecycleName: contact.Lifecycle.name,
+      },
+    },
+    contact.orgId,
+  );
   return contact;
 }
 
@@ -322,7 +433,7 @@ export async function updateContactLabelsById(
 export async function getOrCreateContactByPhone(
   phone: string,
   orgId: string,
-  additionalData?: updateContactSchema,
+  additionalData?: Omit<updateContactSchema, "customFields">,
   source?: string,
 ) {
   try {
@@ -357,7 +468,7 @@ export async function getOrCreateContactByPhone(
     } else {
       const chatbot = await getChatbotDetails(orgId);
       const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
-      return await prisma.contact.create({
+      const contact = await prisma.contact.create({
         data: {
           ...additionalData,
           aiWaChat,
@@ -365,6 +476,12 @@ export async function getOrCreateContactByPhone(
           orgId,
         },
       });
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { [ZapierTriggers.CONTACT_CREATE]: contact },
+        orgId,
+      );
+      return contact;
     }
   } catch (e) {
     log.error(e);
@@ -374,7 +491,7 @@ export async function getOrCreateContactByPhone(
 export async function getOrCreateContactByIgsId(
   igsId: string,
   orgId: string,
-  additionalData?: updateContactSchema,
+  additionalData?: Omit<updateContactSchema, "customFields">,
 ) {
   try {
     const contact = await prisma.contact.findUnique({
@@ -399,7 +516,7 @@ export async function getOrCreateContactByIgsId(
     } else {
       const chatbot = await getChatbotDetails(orgId);
       const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
-      return await prisma.contact.create({
+      const contact = await prisma.contact.create({
         data: {
           ...additionalData,
           aiWaChat,
@@ -407,6 +524,12 @@ export async function getOrCreateContactByIgsId(
           orgId,
         },
       });
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { [ZapierTriggers.CONTACT_CREATE]: contact },
+        orgId,
+      );
+      return contact;
     }
   } catch (e) {
     log.error(e);
@@ -414,6 +537,13 @@ export async function getOrCreateContactByIgsId(
 }
 
 export async function deleteManyContacts(contactIds: Array<string>) {
+  const contacts = await prisma.contact.findMany({
+    where: {
+      id: {
+        in: contactIds,
+      },
+    },
+  });
   const res = await prisma.contact.deleteMany({
     where: {
       id: {
@@ -421,7 +551,32 @@ export async function deleteManyContacts(contactIds: Array<string>) {
       },
     },
   });
+  for (const contact of contacts) {
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONTACT_DELETED,
+      { [ZapierTriggers.CONTACT_DELETED]: contact },
+      contact.orgId,
+    );
+  }
   return res;
+}
+function normalizePhone(phone) {
+  if (!phone) return "";
+
+  // Already a string like "9198771234"
+  if (/^\d+$/.test(phone)) {
+    return phone;
+  }
+
+  // If it's in scientific notation (like "9.19877E+11")
+  if (/e/i.test(phone)) {
+    const num = Number(phone);
+    if (!isNaN(num)) {
+      return num.toFixed(0); // no decimals
+    }
+  }
+
+  return phone.toString().trim();
 }
 
 export async function importCSVContacts(
@@ -442,9 +597,11 @@ export async function importCSVContacts(
     let errorContact = [];
 
     const processContact = (contact) => {
-      const formattedPhone = contact.phone?.startsWith("+")
-        ? contact?.phone?.replace(/\s+/g, "")
-        : `+${contact?.phone?.replace(/\s+/g, "")}`;
+      let rawPhone = normalizePhone(contact.phone);
+
+      const formattedPhone = rawPhone?.startsWith("+")
+        ? rawPhone?.replace(/\s+/g, "")
+        : `+${rawPhone?.replace(/\s+/g, "")}`;
 
       if (
         !contact?.phone ||
@@ -550,13 +707,16 @@ export async function createContactsFromCsv(
   updateExisting = false,
   contactGroupId,
 ) {
-  const tags = (await getContactTag(orgId))?.contactTags ?? [];
-  let data = contacts?.map(({ name, phone, ...obj }) => {
-    const result = {};
-    if (tags?.length > 0) {
-      for (const key of tags) {
-        if (obj?.hasOwnProperty(key) && cTags.includes(key)) {
-          result[key] = obj[key];
+  const customFields = await getCustomFields(orgId);
+  const data = contacts?.map(({ name, phone, ...obj }) => {
+    const customFieldsRes = [];
+    if (customFields?.length > 0) {
+      for (const field of customFields) {
+        if (cTags.includes(field.slug) && obj?.[field?.slug]) {
+          customFieldsRes.push({
+            id: field.id,
+            value: obj?.[field.slug],
+          });
         }
       }
     }
@@ -564,7 +724,7 @@ export async function createContactsFromCsv(
       name,
       phone,
       source: "CSV IMPORT",
-      tags: result ?? undefined,
+      customFields: customFieldsRes,
     };
   });
   if (updateExisting) {
@@ -607,28 +767,54 @@ export async function updateMulitplceContacts(
   contacts: createMultipleContactInput,
   orgId: string,
 ) {
+  const chatbot = await getChatbotDetails(orgId);
+  const aiWaChat = chatbot && chatbot.enableAllWaChat ? true : false;
+
   for (let i = 0; i < contacts.length; i += BATCH_SIZE) {
     const batch = contacts.slice(i, i + BATCH_SIZE);
-    await Promise.all(
-      batch.map((contact) =>
-        prisma.contact.upsert({
-          where: {
-            contact_phone_org_id_unique: {
-              phone: contact.phone,
-              orgId,
-            },
-          },
-          update: {
-            tags: contact.tags,
-            name: contact.name,
-          },
-          create: {
-            ...contact,
+
+    for (const contact of batch) {
+      const { customFields, ...contactData } = contact;
+
+      const updatedContact = await prisma.contact.upsert({
+        where: {
+          contact_phone_org_id_unique: {
+            phone: contact.phone,
             orgId,
           },
-        }),
-      ),
-    );
+        },
+        update: {
+          name: contact.name,
+          aiWaChat,
+        },
+        create: {
+          ...contactData,
+          aiWaChat,
+          orgId,
+        },
+      });
+
+      if (customFields?.length) {
+        await prisma.contactCustomFieldValue.deleteMany({
+          where: {
+            contactId: updatedContact.id,
+          },
+        });
+        await prisma.contactCustomFieldValue.createMany({
+          data: customFields.map((field) => ({
+            contactId: updatedContact.id,
+            fieldId: field.id,
+            value: field.value,
+          })),
+          skipDuplicates: true,
+        });
+      }
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_UPDATED,
+        { [ZapierTriggers.CONTACT_UPDATED]: contact },
+        orgId,
+      );
+    }
   }
 }
 
@@ -654,3 +840,50 @@ export const handleContactConsent = async (
   });
   return true;
 };
+
+export async function getCustomFields(orgId: string) {
+  const fields = await prisma.contactCustomField.findMany({
+    where: {
+      orgId,
+    },
+  });
+  return fields;
+}
+
+export async function addCustomField(
+  orgId: string,
+  data: Required<CustomFieldSchema>,
+) {
+  const field = await prisma.contactCustomField.create({
+    data: {
+      ...data,
+      orgId,
+    },
+  });
+  return field;
+}
+
+export async function updateCustomField(
+  orgId: string,
+  fieldId: string,
+  data: Omit<CustomFieldSchema, "slug" | "type">,
+) {
+  const field = await prisma.contactCustomField.update({
+    where: {
+      id: fieldId,
+      orgId,
+    },
+    data,
+  });
+  return field;
+}
+
+export async function deleteCustomField(orgId: string, fieldId: string) {
+  const field = await prisma.contactCustomField.delete({
+    where: {
+      id: fieldId,
+      orgId,
+    },
+  });
+  return field;
+}

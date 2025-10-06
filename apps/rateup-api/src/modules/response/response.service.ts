@@ -767,12 +767,14 @@ export async function createResponse(
             select: {
               questions: true,
               responseWebhookEndpoint: true,
+              title: true,
             },
           },
           team: {
             select: {
               orgId: true,
               id: true,
+              name: true,
             },
           },
         },

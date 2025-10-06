@@ -10,7 +10,6 @@ import {
   QuestionType,
   QuestionType2,
   SubscriptionFeaturePathName,
-  WaEvent,
   WaQuestions,
 } from "../../../types/enums";
 import {
@@ -65,13 +64,16 @@ import { handleLoyaltyFeedback } from "../../loyalty/settings/settings.service";
 import {
   findRecentAutomation,
   logAutomationAction,
-  logFlowCompletion,
 } from "./automation-logger.utils";
 import { processNextNode } from "./wasurvey.controller";
-import { waStatusQueue } from "../../../utils/redisConnection";
-import { assertNodeType, LeadgenNodeData, NodeData } from "./node-types";
+import { LeadgenNodeData } from "./node-types";
 import { LoyaltyActionType } from "../../loyalty/actions/actions.schema";
 import { hasFeature } from "../../subscription/subscription.service";
+import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../../integrations/external/zapier/zapier.service";
+import { producer } from "../../..";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -772,6 +774,11 @@ export async function saveResponses(session: WaSessionWithRelations) {
 
     await updateCampaignStats(session.campaignParticipantId);
   }
+  addZapierTriggerToQueue(
+    ZapierTriggers.RESPONSE_SUBMITTED,
+    { [ZapierTriggers.RESPONSE_SUBMITTED]: res },
+    res.surveyTeamMap.team.orgId,
+  );
   return res;
 }
 async function updateCampaignStats(id: string) {
@@ -994,24 +1001,27 @@ export async function handleTestimonialReply(
   await handleTestimonialQuestion(question, session);
 }
 
-export async function addToStatusUpdateQueue(data: {
-  status: string;
-  messageId: string;
-  errors?: any;
-}) {
-  await waStatusQueue.add("status-update", data, {
-    removeOnComplete: true,
-    removeOnFail: true,
-  });
-}
-
 export const handleMessageStatusUpdate = async (
   status: string,
   messageId: string,
   errors?: any,
 ) => {
   if (!messageId) return;
-  await addToStatusUpdateQueue({ status, messageId, errors });
+  const now = new Date().toISOString();
+
+  await producer.send({
+    topic: "status-events",
+    messages: [
+      {
+        value: JSON.stringify({
+          status,
+          messageId,
+          errors,
+          timestamp: now,
+        }),
+      },
+    ],
+  });
 };
 
 export async function setAiBotActiveStatus(

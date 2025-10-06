@@ -7,5 +7,5 @@ export const WaMessageAssignStatusTab = {
   UnAssigned: "UNASSIGNED",
   Assigned: "ASSIGNED",
   Closed: "CLOSED",
-  AssignedToMe: "ASSIGNED",
+  mine: "ASSIGNED",
 };

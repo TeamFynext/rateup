@@ -7,19 +7,24 @@ import {
   ContactCore,
   PaginationQuery,
   UpdateContactLabelsSchema,
+  CustomFieldSchema,
 } from "./contact.schema";
 import { log } from "../../utils/logger";
 import {
+  addCustomField,
   createContact,
   createMultipleContacts,
   deleteContactById,
+  deleteCustomField,
   deleteManyContacts,
   getContactById,
   getContactsByOrgId,
+  getCustomFields,
   getExistingContactCountByPhno,
   importCSVContacts,
   updateContactById,
   updateContactLabelsById,
+  updateCustomField,
 } from "./contact.service";
 import { ContactGroupType, Prisma } from "../../../generated/prisma/client";
 import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema";
@@ -39,12 +44,16 @@ import {
 } from "../loyalty/settings/settings.service";
 import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service";
 
+//used in zapier
 export async function createContactHandler(
-  request: FastifyRequest<{ Body: ContactCore }>,
+  request: FastifyRequest<{
+    Body: ContactCore;
+    Querystring: { orgId?: string };
+  }>,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = request.user;
+    const { orgId } = request.user ?? request.query; // orgId appended in query in case of zapier
     if (!isValidPhoneNumber(`+${request.body.phone}`))
       return reply.code(400).send({ error: "Phone number is not valid" });
     if (request.body.source === ContactGroupType.LOYALTY) {
@@ -163,7 +172,7 @@ export async function deleteContactByIdHandler(
 export async function updateContactByIdHandler(
   request: FastifyRequest<{
     Params: ByContactIdParams;
-    Body: updateContactSchema;
+    Body: Required<updateContactSchema>;
   }>,
   reply: FastifyReply,
 ) {
@@ -195,7 +204,7 @@ export async function updateContactLabelsByIdHandler(
   try {
     const contact = await updateContactLabelsById(
       request.params.contactId,
-      request.body?.labels || [],
+      request.body?.lifecycleId,
     );
     return reply.code(200).send(contact);
   } catch (error) {
@@ -246,5 +255,72 @@ export async function importCSVContactsHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send({ error: e?.message || "Something went wrong" });
+  }
+}
+
+export async function getCustomFieldHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const data = await getCustomFields(orgId);
+    reply.code(200).send(data ?? { contactTags: [] });
+  } catch (error) {
+    log.error("Error while getting custom fields", error);
+    reply.code(500).send({ message: "Something went wrong" });
+  }
+}
+
+export async function addCustomFieldHandler(
+  request: FastifyRequest<{ Body: Required<CustomFieldSchema> }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const res = await addCustomField(orgId, request.body);
+    reply.code(200).send(res);
+  } catch (e) {
+    if (e.code === "P2002") {
+      return reply.code(409).send({ message: "Field already exists" });
+    }
+    log.error(e);
+    reply.code(500).send({ message: "Error creating field" });
+  }
+}
+
+export async function updateCustomFieldHandler(
+  request: FastifyRequest<{
+    Body: CustomFieldSchema;
+    Params: { fieldId: string };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { fieldId } = request.params;
+    const res = await updateCustomField(orgId, fieldId, request.body);
+    reply.code(200).send(res);
+  } catch (e) {
+    if (e.code === "P2002") {
+      return reply.code(409).send({ message: "Field already exists" });
+    }
+    log.error(e);
+    reply.code(500).send({ message: "Error updating field" });
+  }
+}
+
+export async function deleteCustomFieldHandler(
+  request: FastifyRequest<{ Params: { fieldId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { fieldId } = request.params;
+    const res = await deleteCustomField(orgId, fieldId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ message: "Error deleting field" });
   }
 }

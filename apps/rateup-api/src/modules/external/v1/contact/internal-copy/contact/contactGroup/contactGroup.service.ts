@@ -1,6 +1,10 @@
 import { log } from "../../../../../../../utils/logger";
 import prisma from "../../../../../../../utils/prisma";
 import {
+  addZapierTriggerToQueue,
+  ZapierTriggers,
+} from "../../../../../../integrations/external/zapier/zapier.service";
+import {
   AddNewContactsToGroupInput,
   CreateContactGroupInput,
   RemoveGroupContactsSchema,
@@ -109,9 +113,10 @@ export async function addNewContactsToGroup(
   }
   // TODO: we could create uuid manually and skip the findMany query.
   // TODO: check if below query can be optimized
+  let newContacts;
   await prisma.$transaction(async (tx) => {
     // create contacts
-    await tx.contact.createMany({
+    newContacts = await tx.contact.createManyAndReturn({
       skipDuplicates: true,
       data: contacts.map((contact) => ({
         ...contact,
@@ -134,28 +139,52 @@ export async function addNewContactsToGroup(
       },
     });
     // create contact group map
-    await tx.contactGroupMap.createMany({
+    const newMembers = await tx.contactGroupMap.createManyAndReturn({
       skipDuplicates: true,
       data: createdContacts.map((contact) => ({
         contactId: contact.id,
         contactGroupId,
       })),
     });
+    for (const contact of newMembers) {
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_ADDED_TO_GROUP,
+        { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: contact },
+        orgId,
+      );
+    }
   });
+  if (newContacts.length) {
+    for (const contact of newContacts)
+      await addZapierTriggerToQueue(
+        ZapierTriggers.CONTACT_CREATE,
+        { [ZapierTriggers.CONTACT_CREATE]: contact },
+        orgId,
+      );
+  }
 }
 
 export async function addExistingContactsToGroup(
   contactGroupId: string,
   contactIds: Array<string>,
+  orgId: string,
 ) {
   const contactGroup = await getContactGroupById(contactGroupId);
   if (!contactGroup) {
     throw new Error("Contact group not found");
   }
   // TODO: check if contactIds belong to the same team?
-  return await prisma.contactGroupMap.createMany({
+  const newMembers = await prisma.contactGroupMap.createManyAndReturn({
     data: contactIds.map((contactId) => ({ contactId, contactGroupId })),
   });
+  for (const contact of newMembers) {
+    await addZapierTriggerToQueue(
+      ZapierTriggers.CONTACT_ADDED_TO_GROUP,
+      { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: contact },
+      orgId,
+    );
+  }
+  return;
 }
 
 export async function updateContactGroup(
@@ -196,6 +225,7 @@ export async function removeContactsFromGroup(
 export async function addExistingContactsToMultipleGroups(
   contactIds: Array<string>,
   contactGroupIds: Array<string>,
+  orgId,
 ) {
   return await Promise.all(
     contactGroupIds.map(async (contactGroupId) => {
@@ -208,12 +238,19 @@ export async function addExistingContactsToMultipleGroups(
         (id) => !existingContacts?.some((c) => c.contactId === id),
       );
       if (remainingContacts?.length) {
-        await prisma.contactGroupMap.createMany({
+        const newMembers = await prisma.contactGroupMap.createManyAndReturn({
           data: remainingContacts.map((contactId) => ({
             contactId,
             contactGroupId,
           })),
         });
+        for (const contact of newMembers) {
+          await addZapierTriggerToQueue(
+            ZapierTriggers.CONTACT_ADDED_TO_GROUP,
+            { [ZapierTriggers.CONTACT_ADDED_TO_GROUP]: contact },
+            orgId,
+          );
+        }
       }
     }),
   );

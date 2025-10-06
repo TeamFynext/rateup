@@ -1626,7 +1626,20 @@ export async function sendCampaignToParticipants(
       include: {
         campaignParticipants: {
           include: {
-            contact: true,
+            contact: {
+              include: {
+                customFields: {
+                  select: {
+                    value: true,
+                    field: {
+                      select: {
+                        slug: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
             campaign: {
               select: {
                 flowId: true,
@@ -1807,7 +1820,14 @@ type _campaign = {
     orgId: string;
   };
   campaignParticipants: (CampaignParticipant & {
-    contact: Contact;
+    contact: Contact & {
+      customFields: {
+        value: string;
+        field: {
+          slug: string;
+        };
+      }[];
+    };
   })[];
   useUserConsent: boolean;
 };
@@ -1949,7 +1969,8 @@ async function _sendCampaignToParticipants(
         const textValue =
           tag === "name"
             ? contact?.name || defaultValue[i]
-            : contact.tags?.[tag] || defaultValue[i];
+            : contact.customFields?.find((field) => field?.field?.slug === tag)
+                ?.value || defaultValue[i];
         return { type: "text", textValue };
       });
       copyComponents.push({

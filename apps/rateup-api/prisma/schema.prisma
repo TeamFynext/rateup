@@ -4,8 +4,8 @@
 generator client {
   provider        = "prisma-client"
   output          = "../generated/prisma"
-  moduleFormat    = "commonjs"
-  previewFeatures = ["queryCompiler", "driverAdapters"]
+  moduleFormat    = "cjs"
+  engineType = "client"
 }
 
 // for having typed Json fields
@@ -159,7 +159,8 @@ model Org {
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
   UserAssignedCount        UserAssignedCount[]
-  Labels                   Labels[]
+  Lifecycle                Lifecycle[]
+  ContactCustomField       ContactCustomField[]
 }
 
 model UsageStats {
@@ -211,16 +212,29 @@ model UsageStats {
   lastMonthlyResettedDate DateTime? @db.Date()
 }
 
-model Labels {
-  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  org             Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId           String            @db.Uuid
-  name            String            @unique
-  color           String
-  description     String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  ContactLabelMap ContactLabelMap[]
+enum StageCategory {
+  active
+  won
+  lost
+}
+
+model Lifecycle {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  ordering    Int           @default(0)
+  isDefault   Boolean       @default(false)
+  category    StageCategory
+  emoji       String
+  description String
+  isWon       Boolean       @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contacts Contact[]
+
+  org   Org?    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId String? @db.Uuid
 }
 
 model WhatsappSettings {
@@ -492,33 +506,35 @@ model Contact {
   phone  String?
   source String?
 
-  org                          Org                   @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                        String                @db.Uuid
+  org                          Org                       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                        String                    @db.Uuid
   responses                    SurveyResponse[]
   contactGroups                ContactGroupMap[]
   campaignParticipants         CampaignParticipant[]
   tags                         Json?
   WaMessage                    WaMessage[]
-  consent                      Boolean               @default(true)
+  consent                      Boolean                   @default(true)
   email                        String?
   dob                          DateTime?
   loyaltyCustomer              LoyaltyCustomer?
   external_id                  String?
-  aiWaChat                     Boolean               @default(false)
-  isAiBotActive                Boolean               @default(false)
-  chatbotId                    String                @default("")
-  waMessageAssignStatus        String                @default("UNASSIGNED")
+  aiWaChat                     Boolean                   @default(false)
+  isAiBotActive                Boolean                   @default(false)
+  chatbotId                    String                    @default("")
+  waMessageAssignStatus        String                    @default("UNASSIGNED")
   waInboxAssign                WaInboxAssign[]
   lastReceivedMessageTimeStamp DateTime?
   whatsappUserName             String? //whatsapp or instagram username
-  blockedOnWhatsApp            Boolean               @default(false)
+  blockedOnWhatsApp            Boolean                   @default(false)
   waCatalogOrders              WaCatalogOrder[]
   igsId                        String? //Instagram Scoped User ID
   profilePic                   String?
   followerCount                Int?
   isIgVerifiedUser             Boolean?
-  ContactLabelMap              ContactLabelMap[]
   other                        String?
+  Lifecycle                    Lifecycle?                @relation(fields: [lifecycleId], references: [id])
+  lifecycleId                  String?                   @db.Uuid
+  customFields                 ContactCustomFieldValue[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -529,14 +545,30 @@ model Contact {
   @@index([lastReceivedMessageTimeStamp])
 }
 
-model ContactLabelMap {
-  contactId String @db.Uuid
-  labelId   String @db.Uuid
+model ContactCustomField {
+  id          String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org         Org                       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId       String                    @db.Uuid
+  slug        String // e.g. tag.toLowerCase().replace(/\s+/g, "_")
+  name        String // Display name
+  description String?
+  visibility  Boolean                   @default(true)
+  type        String // e.g. number, string, date
+  createdAt   DateTime                  @default(now())
+  listValues  String[]                  @default([])
+  values      ContactCustomFieldValue[]
+}
 
-  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  label   Labels  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+model ContactCustomFieldValue {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId String  @db.Uuid
 
-  @@id([contactId, labelId])
+  field   ContactCustomField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  fieldId String             @db.Uuid
+
+  value     String // store as string; parse based on field.type
+  createdAt DateTime @default(now())
 }
 
 model WaInboxAssign {

@@ -137,7 +137,13 @@ export async function moveCardHandler(
     const { ticketColumnId, order } = request.body;
     const userId = request.userId;
 
-    const movedCard = await moveCard(id, ticketColumnId, userId, order);
+    const movedCard = await moveCard(
+      id,
+      ticketColumnId,
+      userId,
+      request.user.orgId,
+      order,
+    );
 
     if (!movedCard) {
       return reply.code(404).send({ message: "Card not found" });

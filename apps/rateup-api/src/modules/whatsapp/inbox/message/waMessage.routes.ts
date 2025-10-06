@@ -5,6 +5,7 @@ import {
   exportWhatsappChatsHandler,
   generateChatAnalyticsHandler,
   generateChatFilterDataHandler,
+  generateInboxResponseHandler,
   getAssignedUserForContactHandler,
   getContactsCountByInboxTabHandler,
   getFilteredContactsHandler,
@@ -115,4 +116,13 @@ export async function waMessageRoutes(server: FastifyInstance) {
   );
 
   server.get("/analytics", generateChatAnalyticsHandler);
+  server.post(
+    "/generate-response",
+    {
+      schema: {
+        body: $waMessage("generateInboxResponseBody"),
+      },
+    },
+    generateInboxResponseHandler,
+  );
 }
