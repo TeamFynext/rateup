@@ -9,7 +9,9 @@ import { getHotkeyHandler } from "@mantine/hooks";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, Shield } from "lucide-react";
+import { zodResolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import { z } from "zod";
 
 import { useCheckEmailExistMutation } from "../../backend/user/user.query";
 import { showNotification } from "../../utils/auth";
@@ -52,6 +54,39 @@ const ResetPasswordForm = ({ mode }) => {
       }
     }
   }, [mode, token, rid, requestStatus, router]);
+  const emailSchema = z.object({
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Enter a valid email address"),
+    password: z.string().optional(), // optional if not used in this form
+  });
+
+  const pwdSchema = z
+    .object({
+      password: z
+        .string()
+        .min(1, { message: translations("Password is required") })
+        .min(5, {
+          message: translations(
+            "Password should be at least 5 characters long",
+          ),
+        })
+        .refine((val) => /\d/.test(val) && /[a-zA-Z]/.test(val), {
+          message: translations(
+            "Password should contain at least one letter and one number!",
+          ),
+        }),
+      confirmPassword: z
+        .string()
+        .min(1, { message: translations("Confirm password is required") }),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      path: ["confirmPassword"],
+      message: translations("Passwords do not match"),
+    });
+
+  type PwdSchemaType = z.infer<typeof pwdSchema>;
 
   const emailForm = useForm({
     initialValues: {
@@ -59,45 +94,15 @@ const ResetPasswordForm = ({ mode }) => {
       password: "",
     },
 
-    validate: {
-      email: isEmail("Email is required"),
-    },
+    validate: zodResolver(emailSchema),
   });
 
-  const pwdForm = useForm({
+  const pwdForm = useForm<PwdSchemaType>({
     initialValues: {
       password: "",
       confirmPassword: "",
     },
-
-    validate: {
-      password: (value, values) => {
-        if (!value) {
-          return translations("Password is required");
-        }
-        if (value.length < 5) {
-          return translations("Password should be at least 5 characters long");
-        }
-        if (!/\d/.test(value) || !/[a-zA-Z]/.test(value)) {
-          return translations(
-            "Password should contain at least one letter and one number!",
-          );
-        }
-        if (values.confirmPassword && value !== values.confirmPassword) {
-          return translations("Passwords do not match");
-        }
-        return null;
-      },
-      confirmPassword: (value, values) => {
-        if (!value) {
-          return translations("Confirm password is required");
-        }
-        if (value !== values.password) {
-          return translations("Passwords do not match");
-        }
-        return null;
-      },
-    },
+    validate: zodResolver(pwdSchema),
   });
 
   const sendResetEmail = useSendResetEmail();
@@ -188,7 +193,7 @@ const ResetPasswordForm = ({ mode }) => {
         </div>
       )}
       {page !== ResetSteps.STEP_TWO ? (
-        <Card className="border-none shadow-lg p-4 max-w-2xl min-w-md flex flex-col gap-8">
+        <Card className="border-none shadow-lg p-4 max-w-2xl sm:min-w-md flex flex-col gap-8">
           <div className="text-center space-y-2 flex flex-col  items-center justify-center gap-1">
             <div className="w-12 h-12 bg-rateup-blue/10 rounded-full flex items-center justify-center mx-auto">
               {isEmailPage ? (
