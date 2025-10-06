@@ -100,15 +100,17 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
       cell: (info) => info.getValue() ?? "-",
     },
     ...(contactTags?.length > 0
-      ? contactTags?.map((data) => ({
-          header: () => data?.name,
-          accessorFn: (row) =>
-            row?.customFields?.find((f) => f?.fieldId === data?.id)?.value,
-          id: data?.id,
-          cell: (info) => info.getValue()?.toString() ?? "-",
+      ? contactTags
+          ?.filter((tag) => tag?.visibility)
+          ?.map((data) => ({
+            header: () => data?.name,
+            accessorFn: (row) =>
+              row?.customFields?.find((f) => f?.fieldId === data?.id)?.value,
+            id: data?.id,
+            cell: (info) => info.getValue()?.toString() ?? "-",
 
-          enableSorting: false,
-        }))
+            enableSorting: false,
+          }))
       : []),
 
     {
