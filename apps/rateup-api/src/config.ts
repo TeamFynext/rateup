@@ -65,6 +65,26 @@ export const SuperTokensConfig: TypeInput = {
             id: "planId",
             optional: true,
           },
+          {
+            id: "location",
+            optional: true,
+          },
+          {
+            id: "website",
+            optional: true,
+          },
+          {
+            id: "industry",
+            optional: true,
+          },
+          {
+            id: "goals",
+            optional: true,
+          },
+          {
+            id: "integrationsSelected",
+            optional: true,
+          },
         ],
       },
       override: {
@@ -137,6 +157,14 @@ export const SuperTokensConfig: TypeInput = {
                 const orgName = getValueByKey(formFields, "orgName");
                 const phoneNumber = getValueByKey(formFields, "phoneNumber");
                 const planId = getValueByKey(formFields, "planId");
+                const location = getValueByKey(formFields, "location");
+                const website = getValueByKey(formFields, "website");
+                const industry = getValueByKey(formFields, "industry");
+                const goals = getValueByKey(formFields, "goals");
+                const integrationsSelected = getValueByKey(
+                  formFields,
+                  "integrationsSelected",
+                );
 
                 let { id, emails, loginMethods } = response.user;
 
@@ -151,6 +179,15 @@ export const SuperTokensConfig: TypeInput = {
                     phoneNumber,
                     recipeName: getUserRecipeName(loginMethods[0].recipeId),
                     planId,
+                    location,
+                    website,
+                    industry,
+                    goals: Array.isArray(goals) ? goals : goals ? [goals] : [],
+                    integrationsSelected: Array.isArray(integrationsSelected)
+                      ? integrationsSelected
+                      : integrationsSelected
+                        ? [integrationsSelected]
+                        : [],
                   });
                 }
 

@@ -252,9 +252,8 @@ export async function completeOrgDetailsHandler(
 ) {
   try {
     const userId = request.user.userId;
+    const phone = request.body.phone;
     const orgData = await completeOrgDetails(userId, {
-      orgName: request.body.orgName,
-      phone: request.body.phone,
       tellUsMore: request.body.tellUsMore,
       isTellUsMoreCompleted: true,
     });
@@ -267,7 +266,7 @@ New Organization "${orgData.updatedOrg.name}".
 
 Details:
 - Created At: ${orgData.updatedOrg.createdAt.toISOString()}
-- Phone: ${orgData.phone}
+- Phone: ${phone}
 
 Tell Us More:
 - Business Name: ${tellUsMore?.["Business Name"]}
@@ -287,7 +286,7 @@ Tell Us More:
       html: `
       <h2>Organization Updated: ${orgData.updatedOrg.name}</h2>
       <p><strong>Created At:</strong> ${orgData.updatedOrg.createdAt.toISOString()}</p>
-      <p><strong>Phone:</strong> ${orgData.phone}</p>
+      <p><strong>Phone:</strong> ${phone}</p>
       <h3>Tell Us More</h3>
       <ul>
         <li><strong>Business Name:</strong> ${tellUsMore?.["Business Name"]}</li>
