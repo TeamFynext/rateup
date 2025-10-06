@@ -761,7 +761,18 @@ export async function getTeamById(teamId: string) {
   return team;
 }
 
-export async function deleteTeamMember(teamId, userId) {
+export async function deleteTeamMember(teamId, userId, orgId) {
+  const org = await prisma.org.findUnique({
+    where: {
+      id: orgId,
+    },
+    select: {
+      ownerId: true,
+    },
+  });
+  if (org.ownerId === userId) {
+    throw Error("You can't remove Owner from team");
+  }
   await prisma.teamMember.deleteMany({
     where: {
       teamId,

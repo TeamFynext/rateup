@@ -259,8 +259,9 @@ export async function deleteTeamMemberHandler(
   reply: FastifyReply,
 ) {
   try {
+    const { orgId } = request.user;
     const { teamId, userId } = request.query;
-    const res = await deleteTeamMember(teamId, userId);
+    const res = await deleteTeamMember(teamId, userId, orgId);
     reply.send(res);
   } catch (e) {
     log.error(e);
