@@ -8,11 +8,7 @@ import { AuthMode } from "../../utils/enums";
 const Login = () => {
   useCheckSession();
 
-  return (
-    <LoginSignupLayout>
-      <AuthForm mode={AuthMode.LOGIN} />
-    </LoginSignupLayout>
-  );
+  return <AuthForm mode={AuthMode.LOGIN} />;
 };
 
 export default Login;

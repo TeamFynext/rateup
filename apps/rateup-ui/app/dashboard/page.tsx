@@ -60,7 +60,7 @@ export default function DashboardHome() {
               valueColor="#009987"
               icon={<IconMessage width={30} height={30} color="#009987" />}
               iconBgColor="#00998733"
-              OnClickAction={"/dashboard/whatsapp/inbox?tab=New"}
+              OnClickAction={"/dashboard/inbox?tab=Mine"}
             />
             <StatCards
               label="Active Campaigns"

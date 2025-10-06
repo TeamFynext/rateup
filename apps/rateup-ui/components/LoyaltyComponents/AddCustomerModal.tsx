@@ -66,14 +66,14 @@ export interface IAddCustomer {
   email?: string;
   phone?: string;
   source?: string;
-  tags: any;
+  customFields: any;
 }
 
 const AddCustomerModal = ({
   groupId,
   close,
   existingContactIds,
-  tags = [],
+  customFields = [],
   createNewContactsFromCSV,
   opened,
 }) => {
@@ -105,9 +105,9 @@ const AddCustomerModal = ({
       name: "",
       phone: "",
       importMethod: importMethod.CSV,
-      contactType: tags ?? [],
+      contactType: customFields ?? [],
       countryCode: "91",
-      tags: {},
+      customFields: {},
       updateExisting: false,
     },
     validate: {
@@ -151,7 +151,7 @@ const AddCustomerModal = ({
       formData.append("update", form.getValues().updateExisting?.toString());
       const contactTypes = form.getValues().contactType;
       contactTypes.forEach((item, index) => {
-        formData.append(`tags[${index}]`, item);
+        formData.append(`customFields[${index}]`, item);
       });
       formData.append("file", csvfile);
       createNewContactsFromCSV.mutate(
@@ -186,12 +186,12 @@ const AddCustomerModal = ({
           },
         );
       } else {
-        let contactData: IAddCustomer[] = [form.values];
+        let contactData: any = [form.values];
         const phone = form.values.phone.slice(1);
         const result = {};
         for await (const key of form.getValues().contactType) {
-          if (form.getValues()?.tags?.hasOwnProperty(key)) {
-            result[key] = form.getValues()?.tags?.[key];
+          if (form.getValues()?.customFields?.hasOwnProperty(key)) {
+            result[key] = form.getValues()?.customFields?.[key];
           }
         }
         contactData = [
@@ -199,26 +199,20 @@ const AddCustomerModal = ({
             name: form.values.name,
             phone: phone,
             source: importMethod.MANUAL,
-            tags: result,
+            customFields: result,
           },
         ];
-        createNewContactMutation.mutate(
-          {
-            data: contactData,
-            groupId: groupId,
+        createNewContactMutation.mutate(contactData, {
+          onSuccess: () => {
+            setIsCreating(false);
+            form.reset();
+            close();
           },
-          {
-            onSuccess: () => {
-              setIsCreating(false);
-              form.reset();
-              close();
-            },
-            onError: () => {
-              setIsCreating(false);
-              form.reset();
-            },
+          onError: () => {
+            setIsCreating(false);
+            form.reset();
           },
-        );
+        });
       }
     }
   };
@@ -337,7 +331,7 @@ const AddCustomerModal = ({
                   mx={"lg"}
                   label=""
                   placeholder={translations(
-                    "Upload a csv file (.csv) or excel file (.xlsx)",
+                    "Upload a csv file (csv) or excel file (xlsx)",
                   )}
                   accept=".csv,.xlsx"
                   multiple={false}

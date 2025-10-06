@@ -7,20 +7,24 @@ import {
 } from "@mantine/core";
 import { IconMoon, IconSun } from "@tabler/icons-react";
 import cx from "clsx";
+import { useTheme } from "next-themes";
 
 import classes from "./ColorSchemaButton.module.css";
 
 export default function ColorSchemaButton() {
   const { setColorScheme } = useMantineColorScheme();
+  const { setTheme } = useTheme();
+
   const computedColorScheme = useComputedColorScheme("light", {
     getInitialValueInEffect: true,
   });
 
   return (
     <Box
-      onClick={() =>
-        setColorScheme(computedColorScheme === "light" ? "dark" : "light")
-      }
+      onClick={() => {
+        setColorScheme(computedColorScheme === "light" ? "dark" : "light");
+        setTheme(computedColorScheme === "light" ? "dark" : "light");
+      }}
       variant="default"
       size="xl"
       aria-label="Toggle color scheme"

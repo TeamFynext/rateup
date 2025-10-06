@@ -33,7 +33,7 @@ import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 
 import { MessagePlatform } from "@/types/enums";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter";
 import InboxContactsControl from "./InboxContactMessage";
@@ -216,7 +216,7 @@ function WaTextEditor({
       </Group>
 
       <RichTextEditor editor={editor} className={className} bg={"white"}>
-        <RichTextEditor.Toolbar sticky tabIndex={-1}>
+        <RichTextEditor.Toolbar sticky tabIndex={-1} p={2}>
           <WaTextCharacterCount editor={editor} max={max} /> {otherHeaders}
         </RichTextEditor.Toolbar>
         <Modal opened={opened} onClose={close} title="Text Formatting" centered>

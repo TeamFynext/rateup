@@ -3,38 +3,21 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-import {
-  Badge,
-  Card,
-  Flex,
-  Group,
-  Skeleton,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import {
-  IconBrandWhatsappFilled,
-  IconRosetteDiscountCheckFilled,
-  IconWebhook,
-} from "@tabler/icons-react";
+import { Badge, Card, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { cn } from "@/lib/utils";
-import { useSetIsChatDisplayOpen } from "@/app/dashboard/whatsapp/inbox/ChatDisplayContext";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContext";
+import useContactStore from "@/app/dashboard/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
-import { safeStrOrNull } from "@/utils";
-import { formatToRelativeTime } from "@/utils/dateTime";
 import {
   parseWaMessage,
   returnMessageContentBasedOnParsedMessage,
 } from "@/utils/whatsapp/inbox";
 
-import { InstagramIcon } from "../../chatdisplay/chatdisplayHeader";
 import { WaInboxSessionAvatar } from "./sessionBadge";
 import classes from "./styles.module.css";
 
@@ -44,7 +27,6 @@ interface WaInboxChatSelectCardProps {
 }
 export default function WaInboxChatSelectCard({
   contact,
-  waSettings,
 }: Readonly<WaInboxChatSelectCardProps>) {
   const params = useSearchParams();
   const lastMessage = contact?.lastMessage;
@@ -56,35 +38,7 @@ export default function WaInboxChatSelectCard({
 
   const platform = contact?.source?.toUpperCase() || MessagePlatform.WHATSAPP;
   const isInsta = platform === MessagePlatform.INSTAGRAM;
-  let leftSectionIcon: React.ReactNode;
 
-  switch (platform) {
-    case MessagePlatform.INSTAGRAM:
-      leftSectionIcon = <InstagramIcon size={13} />;
-      break;
-    case MessagePlatform.WEBCHAT:
-      leftSectionIcon = <IconWebhook size={13} color="#25D366" />;
-      break;
-    case MessagePlatform.WHATSAPP:
-    default:
-      leftSectionIcon = <IconBrandWhatsappFilled size={13} color="#25D366" />;
-      break;
-  }
-
-  function getMessageSourceName(sourceIdentifier) {
-    if (!waSettings) return sourceIdentifier;
-    const settings = waSettings?.find(
-      (setting) =>
-        sourceIdentifier === setting.ibaId ||
-        sourceIdentifier === setting.phone ||
-        `+${sourceIdentifier}` === setting.phone,
-    );
-    if (isInsta)
-      return (settings?.igDisplayName ?? settings?.igUserName)
-        ? `@${settings?.igUserName}`
-        : sourceIdentifier;
-    return settings?.phoneDisplayName || settings?.phone || sourceIdentifier;
-  }
   return (
     <Card
       component={Link}
@@ -152,17 +106,22 @@ export default function WaInboxChatSelectCard({
           </Flex>
           {lastMessage && (
             <Flex justify={"space-between"}>
-              <Badge
-                tt={"initial"}
-                size="xs"
-                radius={"sm"}
-                p={1}
-                variant="light"
-                color={isInsta ? "#cc2960" : "#25D366"}
-                leftSection={leftSectionIcon}
-              >
-                {getMessageSourceName(lastMessage?.sourceIdentifier)}
-              </Badge>
+              <Group gap={4}>
+                {contact?.lastReceivedMessageTimeStamp &&
+                  dayjs().diff(contact.lastReceivedMessageTimeStamp, "hour") <
+                    24 && (
+                    <Badge color="red" variant="filled" size="xs" radius="sm">
+                      New
+                    </Badge>
+                  )}
+                {contact?.lifecycleName ? (
+                  <Badge color="blue" variant="light" size="xs" radius={"sm"}>
+                    {contact?.lifecycleName}
+                  </Badge>
+                ) : (
+                  <Badge variant="transparent" size="xs" />
+                )}
+              </Group>
               {contact.unReadMessageCount
                 ? contact?.id !== selectedContact?.id && (
                     <Badge

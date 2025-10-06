@@ -239,7 +239,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
           }
         />
       )}
-      {["Assigned", "AssignedToMe"].includes(tab) && (
+      {["Assigned", "mine"].includes(tab) && (
         <ContainedMultiSelect
           radius="md"
           value={filter.assignedTeams || []}

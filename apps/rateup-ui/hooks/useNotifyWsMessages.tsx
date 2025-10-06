@@ -10,7 +10,7 @@ export function useNotifyWsMessages() {
   return (message: orgWsMessage) => {
     const audio = new Audio("/sounds/noti.wav");
     const pathnamesMap = {
-      inbox: "/dashboard/whatsapp/inbox",
+      inbox: "/dashboard/inbox",
     };
 
     switch (message.type) {

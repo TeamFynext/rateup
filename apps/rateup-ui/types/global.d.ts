@@ -579,7 +579,8 @@ declare global {
     createdAt: Date;
     tags?: any;
     consent: boolean;
-    labelIds: string[];
+    lifecycleName: string;
+    lifecycleId: string;
     waMessageAssignStatus: WaMessageAssignStatus;
     whatsappUserName?: string;
     blockedOnWhatsApp: boolean;
@@ -614,6 +615,13 @@ declare global {
     ];
     campaignParticipants: any[];
     aiWaChat: boolean;
+    customFields?: Array<{
+      id: string;
+      contactId: string;
+      fieldId: string;
+      value: string;
+      createdAt: string;
+    }>;
   };
 
   type ContactsResponse = {
@@ -1655,10 +1663,16 @@ export type Campaign = {
 
 //type for org websocket messages
 export type orgWsMessage = {
-  type: "inbox";
+  type: "inbox" | "message_status_update";
   inbox?: {
     contact: ContactsData;
     message: WaGetMessagesBody;
+  };
+  message_status_update?: {
+    messageId: string;
+    contactId: string;
+    stats: any;
+    timestamp: string;
   };
 };
 
@@ -1756,4 +1770,18 @@ export type ShopifySchedule = ScheduleObj & {
   actionStatus?: "success" | "failed";
   history: ScheduleObj[];
   apiStatus?: string;
+};
+
+export type ZapierIntegration = Integration & {
+  credential: {
+    accessToken: string;
+    triggerSubscriptions: {
+      hookUrl: string;
+      subscribed_field: ZapierTriggers;
+      active: boolean;
+      zapId: string;
+      createdAt: string;
+      updatedAt: string;
+    }[];
+  };
 };

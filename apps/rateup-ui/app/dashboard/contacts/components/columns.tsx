@@ -2,13 +2,14 @@
 
 import { Checkbox, ColorSwatch, Text } from "@mantine/core";
 import { ColumnDef } from "@tanstack/react-table";
+import dayjs from "dayjs";
 
+import { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { DataTableColumnHeader } from "@/components/Table/data-table-column-header";
 
-import { LabelForm } from "../data/schema";
 import { DataTableRowActions } from "./data-table-row-actions";
 
-export const columns: ColumnDef<LabelForm>[] = [
+export const columns: ColumnDef<CustomFieldData>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -44,12 +45,12 @@ export const columns: ColumnDef<LabelForm>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "color",
+    accessorKey: "slug",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Color" />
+      <DataTableColumnHeader column={column} title="Field ID" />
     ),
     cell: ({ row }) => {
-      return <ColorSwatch color={row.getValue("color") ?? "#009790"} />;
+      return <Text size="sm">{String(row.getValue("slug"))}</Text>;
     },
   },
   {
@@ -62,6 +63,37 @@ export const columns: ColumnDef<LabelForm>[] = [
       return (
         <Text size="sm" style={{ maxWidth: 500 }} truncate>
           {description}
+        </Text>
+      );
+    },
+  },
+  {
+    accessorKey: "visibility",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Visibility" />
+    ),
+    cell: ({ row }) => {
+      return <Text size="sm">{String(row.getValue("visibility"))}</Text>;
+    },
+  },
+  {
+    accessorKey: "type",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Type" />
+    ),
+    cell: ({ row }) => {
+      return <Text size="sm">{String(row.getValue("type"))}</Text>;
+    },
+  },
+  {
+    accessorKey: "createdAt",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Created At" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <Text size="sm">
+          {dayjs(row.getValue("createdAt")).format("DD/MM/YYYY")}
         </Text>
       );
     },

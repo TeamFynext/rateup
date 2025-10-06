@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
+  ActionIcon,
   Avatar,
+  CopyButton,
   Group,
   Indicator,
   IndicatorProps,
@@ -11,19 +13,21 @@ import {
   Popover,
   Stack,
   Text,
+  Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconCheck,
   IconChecks,
   IconClock,
+  IconCopy,
   IconExclamationCircleFilled,
 } from "@tabler/icons-react";
 import { EmojiClickData } from "emoji-picker-react";
 
 import { MessagePlatform } from "@/types/enums";
 import { WaReceiveMessageBody, WaSendMessageBody } from "@/types/global";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
@@ -51,6 +55,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
   const [isHovered, setIsHovered] = useState(false);
   const { selectedContact } = useContactStore();
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
+  const messageContentRef = React.useRef(null);
   const platform =
     selectedContact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
       ? MessagePlatform.WHATSAPP
@@ -77,7 +82,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
         bg:
           platform === MessagePlatform.INSTAGRAM
             ? "#D6297614"
-            : "light-dark(#dcf0e4,rgb(82, 190, 127)",
+            : "light-dark(#dcf0e4,#0f2a1e)",
       };
     }
     return { bg: "light-dark(#ffffff, var(--mantine-color-dark-6))" };
@@ -148,7 +153,6 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     };
     sendnewWaMessage.mutate({ reaction, type: "reaction" });
   }
-
   return (
     <Stack
       className={classes.wrapper}
@@ -157,6 +161,25 @@ export default function WaInboxSingleMessageLayout(props: Props) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <Group gap={4}>
+        {exchangeProcess === "send" && isHovered && (
+          <CopyButton value={messageContentRef?.current?.innerText ?? ""}>
+            {({ copied, copy }) => (
+              <Tooltip
+                label={copied ? "Copied" : "Copy"}
+                withArrow
+                position="right"
+              >
+                <ActionIcon
+                  color={copied ? "teal" : "gray"}
+                  variant="subtle"
+                  onClick={copy}
+                >
+                  {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+                </ActionIcon>
+              </Tooltip>
+            )}
+          </CopyButton>
+        )}
         <Indicator
           disabled={!props.reaction}
           label={
@@ -179,7 +202,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
               >
                 {props?.messageObject?.sender?.name}
               </Text>
-              {props?.children}
+              <div ref={messageContentRef}>{props?.children}</div>
             </div>
             <Group justify="flex-end" gap={4}>
               <Text fz={10} c={"dimmed"}>
@@ -192,7 +215,26 @@ export default function WaInboxSingleMessageLayout(props: Props) {
           </Paper>
         </Indicator>
         {exchangeProcess === "receive" && isHovered && (
-          <PopoverEmojiPicker onEmojiClick={sendReaction} />
+          <div className="flex gap-1 items-center">
+            <PopoverEmojiPicker onEmojiClick={sendReaction} />
+            <CopyButton value={messageContentRef?.current?.innerText}>
+              {({ copied, copy }) => (
+                <Tooltip
+                  label={copied ? "Copied" : "Copy"}
+                  withArrow
+                  position="right"
+                >
+                  <ActionIcon
+                    color={copied ? "teal" : "gray"}
+                    variant="subtle"
+                    onClick={copy}
+                  >
+                    {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </CopyButton>
+          </div>
         )}
         {exchangeProcess === "send" && (
           <Avatar

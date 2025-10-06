@@ -3,11 +3,11 @@
 import { useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { Group, Text } from "@mantine/core";
+import { Flex, Group, Paper, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 import {
   useGetAssignedUserForContact,
   useGetMessagesByContactId,
@@ -24,9 +24,16 @@ import WaInboxChatDisplayFooter, {
   WaInboxBlockedContactFooter,
 } from "./chatdisplayFooter";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader";
+import WaInboxContactDetails from "./contactDetails";
 import classes from "./styles.module.css";
 
-export default function WaInboxChatDisplay({ smallScreen = false }) {
+export default function WaInboxChatDisplay({
+  smallScreen = false,
+  waSettings,
+}: {
+  smallScreen?: boolean;
+  waSettings?: any;
+}) {
   const searchParams = useSearchParams();
   const { selectedContact: contact } = useContactStore();
   const { filter } = useChatFilterStore();
@@ -91,7 +98,7 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
   const showLoading = isPending || (isFetching && !isFetched);
 
   return (
-    <PaperLayout p={0} className="h-full">
+    <Paper withBorder p={0} className="h-full">
       {!contact && messages?.length === 0 ? (
         <NothingFound text={translations("Select a chat to see messages")} />
       ) : (
@@ -99,15 +106,24 @@ export default function WaInboxChatDisplay({ smallScreen = false }) {
           <WaInboxChatDisplayHeader
             contact={contact}
             smallScreen={smallScreen}
+            waSettings={waSettings}
           />
-          {showLoading ? (
-            <WhatsAppInboxLoader isLoading={showLoading} />
-          ) : (
-            <WaInboxChatDisplayBody data={messages} smallScreen={smallScreen} />
-          )}
-          {!showLoading && footerContent}
+          <div className={"flex h-[calc(100%-49px)]"}>
+            <div className="flex flex-1 flex-col">
+              {showLoading ? (
+                <WhatsAppInboxLoader isLoading={showLoading} />
+              ) : (
+                <WaInboxChatDisplayBody
+                  data={messages}
+                  smallScreen={smallScreen}
+                />
+              )}
+              {!showLoading && footerContent}
+            </div>
+            <WaInboxContactDetails contact={contact} />
+          </div>
         </div>
       )}
-    </PaperLayout>
+    </Paper>
   );
 }

@@ -2,20 +2,24 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ContactGroupType } from "@/types/enums";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 
 import { CONTACT_SORT } from "../../../components/Contacts/utils/utils";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   createContact,
+  createCustomField,
   deleteContact,
+  deleteCustomField,
   deleteManyContacts,
   editContact,
   editContactLabels,
   getContactById,
   getContactsList,
+  getCustomField,
   importContacts,
   importCSVContacts,
+  updateCustomField,
 } from "./contacts.api";
 
 export const useContacts = (
@@ -217,6 +221,79 @@ export const useDeleteManyContactsMutation = (onSucess: () => void) => {
         "contact-delete",
         <IconX />,
         true,
+      );
+    },
+  });
+};
+
+export const useCustomFields = () =>
+  useQuery({
+    queryKey: ["customFields"],
+    queryFn: getCustomField,
+  });
+
+export const useCreateCustomFieldMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createCustomField,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customFields"] });
+      showSuccessToast(
+        "Custom field created successfully.",
+        "custom-field-create",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error creating custom field: ${error?.response?.data?.error}`,
+        "custom-field-create",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useUpdateCustomFieldMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ fieldId, data }: { fieldId: string; data: any }) =>
+      updateCustomField(fieldId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customFields"] });
+      showSuccessToast(
+        "Custom field updated successfully.",
+        "custom-field-update",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error updating custom field: ${error?.response?.data?.error}`,
+        "custom-field-update",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useDeleteCustomFieldMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteCustomField,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customFields"] });
+      showSuccessToast(
+        "Custom field deleted successfully.",
+        "custom-field-delete",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error deleting custom field: ${error?.response?.data?.error}`,
+        "custom-field-delete",
+        <IconX />,
       );
     },
   });

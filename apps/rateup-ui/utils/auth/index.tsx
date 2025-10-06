@@ -238,6 +238,11 @@ export function useSignUp() {
     orgName: string,
     phoneNumber: string,
     planId?: string,
+    website?: string,
+    industry?: string,
+    location?: string,
+    goals?: string,
+    integrationsSelected?: string,
   ) {
     try {
       // if (phoneNumber) {
@@ -268,6 +273,26 @@ export function useSignUp() {
           {
             id: "planId",
             value: planId || null,
+          },
+          {
+            id: "website",
+            value: website || null,
+          },
+          {
+            id: "industry",
+            value: industry || null,
+          },
+          {
+            id: "location",
+            value: location || null,
+          },
+          {
+            id: "goals",
+            value: goals || null,
+          },
+          {
+            id: "integrationsSelected",
+            value: integrationsSelected || null,
           },
         ],
       });
@@ -314,6 +339,7 @@ export function useSignUp() {
           <IconX size="1rem" />,
         );
       } else {
+        console.log(err);
         showNotification(
           "sign-up-error",
           "red",

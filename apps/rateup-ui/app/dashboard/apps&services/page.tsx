@@ -34,6 +34,10 @@ const WaPayment = () => {
         return {
           src: "/images/petpooja.png",
         };
+      case IntegratedApps.zapier:
+        return {
+          src: "/images/zapier.png",
+        };
     }
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 
 import {
   ActionIcon,
@@ -22,7 +23,7 @@ import {
 import { EmojiClickData } from "emoji-picker-react";
 import { useTranslations } from "next-intl";
 
-const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
 export const TextFormateToolBar = ({
   insertValue,

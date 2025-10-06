@@ -76,6 +76,7 @@ import {
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
+import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { useRouteParams } from "@/context/RouteParamsContext";
 import { getErrorMessage } from "@/utils";
 import { PAGE_SIZE } from "@/utils/constants";
@@ -149,6 +150,7 @@ const CampaignById = () => {
     template: campaignData?.templateData?.name,
     team: campaignData?.teamName,
   };
+  const { customFields } = useCustomFieldsContext();
 
   const column: ColumnDef<any>[] = contactParticipentDetailColumn;
   const sendMutation = useSendCampaign(campaignData?.id, campaignData?.teamId);

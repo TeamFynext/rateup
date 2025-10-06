@@ -6,7 +6,9 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   automationSubscription,
+  updateCustomField,
   updateFreePlanSubscriptionExpiry,
+  updateLifecycle,
   updateSubscriptionNewFeat,
   updateUsageStats,
   updationAutomationTriggerSubscription,
@@ -81,6 +83,33 @@ export const useUpdateFreePlanSubscriptionExpiry = () => {
     },
     onError: () => {
       showErrorToast("Failed");
+    },
+  });
+};
+export const useUpdateLifecycle = () => {
+  return useMutation({
+    mutationFn: () => {
+      return updateLifecycle();
+    },
+    onSuccess: () => {
+      showSuccessToast("Lifecycle added successfully");
+    },
+    onError: () => {
+      showErrorToast("Failed to add lifecycle");
+    },
+  });
+};
+
+export const useUpdateCustomField = () => {
+  return useMutation({
+    mutationFn: () => {
+      return updateCustomField();
+    },
+    onSuccess: () => {
+      showSuccessToast("Custom fields migrated successfully");
+    },
+    onError: () => {
+      showErrorToast("Failed to migrate custom fields");
     },
   });
 };

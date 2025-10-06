@@ -154,6 +154,9 @@ export async function getPublicSurvey(surveyId: string, ip?: string) {
     headers: {
       "x-forwarded-for": ip ?? "",
     },
+    params: {
+      checkUniqueDevice: !!ip,
+    },
   });
   return res.data as ExtendedSurvey;
 }

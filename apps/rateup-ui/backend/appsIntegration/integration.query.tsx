@@ -10,6 +10,7 @@ import {
   createWaPaymentConfiguration,
   deleteIntegration,
   deleteWaPaymentConfiguration,
+  deleteZapierTriggerHook,
   getAllIntegrations,
   getGoogleSheetAuthorizationUrl,
   getIntegrationByType,
@@ -139,7 +140,8 @@ export const useDeleteWaPaymentConfigurationMutation = (
 export const useCreateIntegrationMutation = (type: IntegratedApps) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createIntegration,
+    mutationFn: (data: { credential: any }) =>
+      createIntegration({ name: type, ...data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
       showSuccessToast(
@@ -186,7 +188,7 @@ export const useUpdateIntegrationMutation = (type: IntegratedApps) => {
 export const useDeleteIntegrationMutation = (type: IntegratedApps) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteIntegration,
+    mutationFn: () => deleteIntegration(type),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["integrations", type] });
       showSuccessToast(
@@ -225,5 +227,21 @@ export const useGetAllIntegrations = () => {
   return useQuery({
     queryKey: ["integrations"],
     queryFn: getAllIntegrations,
+  });
+};
+
+export const useDeleteZapierTriggerHook = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteZapierTriggerHook,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["integrations", IntegratedApps.zapier],
+      });
+      showSuccessToast("success");
+    },
+    onError: () => {
+      showErrorToast("Failed");
+    },
   });
 };

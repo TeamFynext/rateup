@@ -16,10 +16,10 @@
   flex: 1 1 auto;
   overflow: auto;
   flex-direction: column;
-  height: calc(100vh - 20px);
-  height: calc(100dvh - 20px);
+  height: calc(100vh - 65px);
+  height: calc(100dvh - 65px);
+  max-height: 1100px;
   overflow-x: hidden;
-  /* background: light-dark(var(--light-grey-color-6), var(--mantine-color-body)); */
 }
 
 .content-container > div {

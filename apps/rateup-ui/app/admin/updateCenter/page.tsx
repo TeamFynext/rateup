@@ -6,7 +6,9 @@ import {
   useAutomationSubscription,
   useUpdateAutomationTriggerSubscription,
   useUpdateAutomationUsageStats,
+  useUpdateCustomField,
   useUpdateFreePlanSubscriptionExpiry,
+  useUpdateLifecycle,
   useUpdateSubscriptionNewFeat,
   useUpdateUsageStats,
 } from "@/backend/updations/update.query";
@@ -19,6 +21,8 @@ function UpdateAllThemes() {
   const updateAutStat = useUpdateAutomationUsageStats();
   const updateFeat = useUpdateSubscriptionNewFeat();
   const updateFreePlan = useUpdateFreePlanSubscriptionExpiry();
+  const updateLife = useUpdateLifecycle();
+  const updateCustom = useUpdateCustomField();
 
   return (
     <Stack>
@@ -117,6 +121,34 @@ function UpdateAllThemes() {
             updateFreePlan.mutate();
           }}
           loading={updateFreePlan.isPending}
+        >
+          Update
+        </Button>
+      </Stack>
+      <Stack mt="xl">
+        <Title order={2}>Update lifecycle</Title>
+        <Text>This will add default lifecycle</Text>
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateLife.mutate();
+          }}
+          loading={updateLife.isPending}
+        >
+          Update
+        </Button>
+      </Stack>
+      <Stack mt="xl">
+        <Title order={2}>Migrate tags to custom field</Title>
+        <Text>This will migrate tags to a custom field</Text>
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateCustom.mutate();
+          }}
+          loading={updateCustom.isPending}
         >
           Update
         </Button>

@@ -14,10 +14,19 @@ import {
   Select,
   Text,
 } from "@mantine/core";
-import { IconCheck, IconEye, IconUsersGroup, IconX } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconCircleCheck,
+  IconCircleX,
+  IconEye,
+  IconUsersGroup,
+  IconX,
+} from "@tabler/icons-react";
 import { rankItem } from "@tanstack/match-sorter-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+
+import { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 
 import { CampaignParticipantStatus, CampaignType } from "../../../types/enums";
 import { fallbackImage } from "../../../utils/constants";
@@ -66,7 +75,7 @@ const contactDetailsColumn: ColumnDef<any>[] = [
   },
 ];
 
-export const contactColumn = (contactTags = []) => {
+export const contactColumn = (contactTags: CustomFieldData[] = []) => {
   return [
     ...selectCheckBox,
     ...contactDetailsColumn,
@@ -75,14 +84,33 @@ export const contactColumn = (contactTags = []) => {
       accessorKey: "phone",
       cell: (info) => info.getValue(),
     },
+    {
+      header: () => "Not Blocked",
+      accessorKey: "blockedOnWhatsApp",
+      cell: (info) =>
+        !info.getValue() ? (
+          <IconCircleCheck color="green" />
+        ) : (
+          <IconCircleX color="red" />
+        ),
+    },
+    {
+      header: () => "Other",
+      accessorKey: "other",
+      cell: (info) => info.getValue() ?? "-",
+    },
     ...(contactTags?.length > 0
-      ? contactTags?.map((data) => ({
-          header: () => data,
-          accessorFn: (row) => row?.tags?.[data],
-          id: data,
-          cell: (info) => info.getValue()?.toString(),
-          enableSorting: false,
-        }))
+      ? contactTags
+          ?.filter((tag) => tag?.visibility)
+          ?.map((data) => ({
+            header: () => data?.name,
+            accessorFn: (row) =>
+              row?.customFields?.find((f) => f?.fieldId === data?.id)?.value,
+            id: data?.id,
+            cell: (info) => info.getValue()?.toString() ?? "-",
+
+            enableSorting: false,
+          }))
       : []),
 
     {
@@ -98,7 +126,11 @@ export const contactColumn = (contactTags = []) => {
       header: () => "Consent",
       accessorKey: "consent",
       cell: (info) =>
-        info.getValue() ? <IconCheck color="green" /> : <IconX color="red" />,
+        info.getValue() ? (
+          <IconCircleCheck color="green" />
+        ) : (
+          <IconCircleX color="red" />
+        ),
       meta: {
         filterComponent: (setFilterValue) => {
           return (
@@ -154,7 +186,7 @@ export const contactGroupColumn = [
   {
     header: () => "Detail View",
     id: DETAIL_BTN,
-    accessorFn: (row) => `contacts/${row.id}`,
+    accessorFn: (row) => `groups/${row.id}`,
     enableSorting: false,
     enableColumnFilter: false,
   },

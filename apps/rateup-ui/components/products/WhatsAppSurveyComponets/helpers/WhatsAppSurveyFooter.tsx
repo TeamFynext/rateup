@@ -4,6 +4,10 @@ import {
   IconBrandFacebook,
   IconBrandInstagram,
   IconBrandLinkedin,
+  IconBrandPinterest,
+  IconBrandThreads,
+  IconBrandX,
+  IconBrandYoutube,
 } from "@tabler/icons-react";
 
 const WhatsAppSurveyFooter = () => {
@@ -19,6 +23,12 @@ const WhatsAppSurveyFooter = () => {
             </p>
             <div className="flex space-x-4 mt-3">
               <Link
+                href="https://x.com/rateup_app"
+                className="text-gray-400 hover:text-white"
+              >
+                <IconBrandX size={20} />
+              </Link>
+              <Link
                 href="https://www.instagram.com/rateupsoftware/"
                 className="text-gray-400 hover:text-white"
               >
@@ -31,10 +41,28 @@ const WhatsAppSurveyFooter = () => {
                 <IconBrandLinkedin size={20} />
               </Link>
               <Link
-                href="https://www.facebook.com/people/RateUp/61556199852468/"
+                href="https://www.facebook.com/rateupsapp/"
                 className="text-gray-400 hover:text-white"
               >
                 <IconBrandFacebook size={20} />
+              </Link>
+              <Link
+                href="https://www.threads.com/@rateupsoftware"
+                className="text-gray-400 hover:text-white"
+              >
+                <IconBrandThreads size={20} />
+              </Link>
+              <Link
+                href="https://www.youtube.com/@TeamRateup"
+                className="text-gray-400 hover:text-white"
+              >
+                <IconBrandYoutube size={20} />
+              </Link>
+              <Link
+                href="https://www.pinterest.com/rateupapp/"
+                className="text-gray-400 hover:text-white"
+              >
+                <IconBrandPinterest size={20} />
               </Link>
             </div>
           </div>
@@ -64,10 +92,7 @@ const WhatsAppSurveyFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="https://blog.rateup.app/"
-                  className="hover:text-gray-300 transition"
-                >
+                <Link href="/blog" className="hover:text-gray-300 transition">
                   Blog
                 </Link>
               </li>

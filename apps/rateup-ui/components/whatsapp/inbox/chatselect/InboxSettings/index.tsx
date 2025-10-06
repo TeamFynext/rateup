@@ -21,7 +21,7 @@ import {
 } from "@tabler/icons-react";
 
 import { WaInboxMessage } from "@/types/global";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
 

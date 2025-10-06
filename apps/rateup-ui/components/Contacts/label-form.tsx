@@ -1,23 +1,22 @@
-import { Button, Group, Stack } from "@mantine/core";
+import { useEffect } from "react";
+
+import { Button, Group, Select, Stack, TagsInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
 import z from "zod";
 
-import { labelFormSchema } from "@/app/dashboard/contacts/labels/data/schema";
 import {
-  useCreateLabelMutation,
-  useUpdateLabelMutation,
-} from "@/backend/label/label.query";
-import { showLoadingToast } from "@/utils/notifications";
+  useCreateCustomFieldMutation,
+  useUpdateCustomFieldMutation,
+} from "@/backend/campaign/contacts/contacts.query";
 
 import {
-  ContainedColorInput,
   ContainedTextArea,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
 
-export const LabelForm = ({
+export const CustomFieldForm = ({
   data,
   close,
 }: {
@@ -25,23 +24,52 @@ export const LabelForm = ({
   close: () => void;
 }) => {
   const t = useTranslations();
-  const updateLabelMutation = useUpdateLabelMutation();
-  const createLabelMutation = useCreateLabelMutation();
+  const updateCustomFieldMutation = useUpdateCustomFieldMutation();
+  const createCustomFieldMutation = useCreateCustomFieldMutation();
 
-  const form = useForm<z.infer<typeof labelFormSchema>>({
+  const customFieldFormSchema = z.object({
+    name: z.string().min(1, t("Name is required")),
+    slug: z.string().min(1, t("Slug is required")),
+    description: z.string().optional(),
+    type: z.enum(["multivalue", "number", "text", "email"], {
+      required_error: t("Type is required"),
+    }),
+    visibility: z.boolean({
+      required_error: t("Visibility is required"),
+    }),
+    listValues: z.array(z.string()).optional(),
+  });
+
+  const form = useForm<z.infer<typeof customFieldFormSchema>>({
     initialValues: {
       name: data?.name || "",
-      color: data?.color || "",
+      slug: data?.slug || "",
       description: data?.description || "",
+      type: data?.type || "text",
+      visibility: data?.visibility ?? true,
+      listValues: data?.listValues || [],
     },
-    validate: zodResolver(labelFormSchema),
+    validate: zodResolver(customFieldFormSchema),
   });
+
+  // Auto-generate fieldId from name
+  useEffect(() => {
+    const name = form.values.name;
+    if (name && !data) {
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_|_$/g, "");
+      form.setFieldValue("slug", slug);
+    }
+  }, [form.values.name, data]);
 
   const handleSubmit = () => {
     if (data) {
-      updateLabelMutation.mutate(
+      updateCustomFieldMutation.mutate(
         {
-          labelId: data?.id,
+          fieldId: data?.id,
           data: form.getValues(),
         },
         {
@@ -51,60 +79,72 @@ export const LabelForm = ({
           },
         },
       );
-      showLoadingToast(
-        t("Contact labels updated successfully"),
-        "c-label",
-        true,
-        t("Loading"),
-      );
     } else {
-      createLabelMutation.mutate(form.getValues(), {
+      createCustomFieldMutation.mutate(form.getValues(), {
         onSettled() {
           form.reset();
           close();
         },
       });
-      showLoadingToast(
-        t("Contact labels created successfully"),
-        "c-label",
-        true,
-        t("Loading"),
-      );
     }
   };
+
+  const typeOptions = [
+    { value: "text", label: t("Text") },
+    { value: "number", label: t("Number") },
+    { value: "email", label: t("Email") },
+    { value: "multivalue", label: t("Multi-value") },
+  ];
+
+  const visibilityOptions = [
+    { value: "true", label: t("Show") },
+    { value: "false", label: t("Hide") },
+  ];
+
   return (
     <form onSubmit={form.onSubmit(handleSubmit)} style={{ width: "100%" }}>
       <Stack>
         <ContainedTextField
           label={t("Name")}
-          placeholder={t("Label name")}
+          placeholder={t("Custom field name")}
           required
           {...form.getInputProps("name")}
         />
-        <ContainedColorInput
-          placeholder={t("Select Color")}
-          label={t("Select Color")}
-          swatches={[
-            "#2e2e2e",
-            "#868e96",
-            "#fa5252",
-            "#e64980",
-            "#be4bdb",
-            "#7950f2",
-            "#4c6ef5",
-            "#228be6",
-            "#15aabf",
-            "#12b886",
-            "#40c057",
-            "#82c91e",
-            "#fab005",
-            "#fd7e14",
-          ]}
-          {...form.getInputProps("color")}
+        <ContainedTextField
+          label={t("Field ID")}
+          placeholder={t("Auto-generated from name")}
+          required
+          disabled={!!data}
+          {...form.getInputProps("slug")}
+        />
+        <Select
+          label={t("Type")}
+          placeholder={t("Select field type")}
+          data={typeOptions}
+          required
+          {...form.getInputProps("type")}
+        />
+        {form.values.type === "multivalue" && (
+          <TagsInput
+            label={t("Input Values")}
+            placeholder={t("Enter values and press Enter")}
+            {...form.getInputProps("listValues")}
+          />
+        )}
+        <Select
+          label={t("Visibility")}
+          placeholder={t("Select visibility")}
+          data={visibilityOptions}
+          required
+          value={form.values.visibility ? "true" : "false"}
+          onChange={(value) =>
+            form.setFieldValue("visibility", value === "true")
+          }
+          error={form.errors.visibility}
         />
         <ContainedTextArea
           label={t("Description")}
-          placeholder={t("Describe this label")}
+          placeholder={t("Describe this custom field")}
           minRows={3}
           {...form.getInputProps("description")}
         />
@@ -112,7 +152,9 @@ export const LabelForm = ({
           <Button variant="default" onClick={close}>
             {t("Cancel")}
           </Button>
-          <Button type="submit">{t("Create Tag")}</Button>
+          <Button type="submit">
+            {data ? t("Update Custom Field") : t("Create Custom Field")}
+          </Button>
         </Group>
       </Stack>
     </form>

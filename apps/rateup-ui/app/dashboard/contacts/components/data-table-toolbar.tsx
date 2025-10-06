@@ -5,9 +5,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
 import { Table } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
-import { z } from "zod";
 
-import { LabelForm } from "@/components/Contacts/label-form";
+import { CustomFieldForm } from "@/components/Contacts/label-form";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
 
 interface DataTableToolbarProps<TData> {
@@ -57,10 +56,15 @@ const AddLabels = () => {
   return (
     <>
       <Button size="sm" onClick={toggle}>
-        {t("Add Label")}
+        {t("Add Custom Field")}
       </Button>
-      <Modal opened={opened} onClose={close} title={t("Add Label")} centered>
-        <LabelForm close={close} />
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={t("Add Custom Field")}
+        centered
+      >
+        <CustomFieldForm close={close} />
       </Modal>
     </>
   );

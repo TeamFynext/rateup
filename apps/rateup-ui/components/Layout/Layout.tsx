@@ -36,11 +36,13 @@ import SessionReact from "supertokens-auth-react/recipe/session";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import { useChatSocket } from "@/hooks/useChatSocket";
-import { useChatContactCountStore } from "@/app/dashboard/whatsapp/inbox/store";
+import { useChatContactCountStore } from "@/app/dashboard/inbox/store";
+import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useLabelsQuery } from "@/backend/label/label.query";
 import { useIsTellUsMoreCompleted } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { CustomFieldsProvider } from "@/context/CustomFieldsContext";
 import { LabelsContext } from "@/context/LabelsContext";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
@@ -63,6 +65,7 @@ import { useChatFilterStore } from "../whatsapp/inbox/chatselect/chatFilter";
 import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
 import { getNavTopData } from "./Navbar/navbar.constants";
+import TopNavbar from "./TopLayout";
 
 const showOfflineNotification = (status) => {
   if (status === UserAvailabilityStatus.offline) {
@@ -189,6 +192,7 @@ const SubNavLinks = ({
               ) {
                 return;
               }
+              handleLabelFilter(""); // Clear label filter on regular link click
               setActiveSubLink(link.link);
               showOfflineNotification(status);
               router.push(link.link);
@@ -214,33 +218,14 @@ const SubNavLinks = ({
         key={`label-${index}`}
       >
         <UnstyledButton
-          onClick={() =>
-            index === 0 ? handleAddLabel() : handleLabelFilter(label?.value)
-          }
+          onClick={() => handleLabelFilter(label?.value)}
           className={classes.link}
           w={60}
           data-active={
             chatFilterStore.filter.labels.includes(label?.value) || undefined
           }
         >
-          {[0, 1].includes(index) ? (
-            <label.icon
-              size={22}
-              stroke={1.5}
-              labels={labels}
-              className={"m-auto"}
-            />
-          ) : (
-            <div
-              style={{
-                width: 20,
-                height: 20,
-                marginLeft: 4,
-                borderRadius: "50%",
-                backgroundColor: label.color || "#5c7cfa",
-              }}
-            />
-          )}
+          <div className="ml-1">{label.emoji}</div>
         </UnstyledButton>
       </Tooltip>
     )) || [];
@@ -271,6 +256,7 @@ const SubNavLinks = ({
           ) {
             return;
           }
+          handleLabelFilter(""); // Clear label filter on regular link click
           setActiveSubLink(link.link);
           router.push(link.link);
         }}
@@ -289,7 +275,7 @@ const SubNavLinks = ({
         href="#"
         onClick={(event) => {
           event.preventDefault();
-          index === 0 ? handleAddLabel() : handleLabelFilter(label?.value);
+          handleLabelFilter(label?.value);
         }}
         key={`label-text-${index}`}
         data-active={
@@ -480,6 +466,7 @@ const Navbar = ({
 }) => {
   const updateUserStatus = useUpdateUserAvailabilityStatus();
   const [status, setStatus] = useState(user?.status);
+  const router = useRouter();
   useEffect(() => {
     if (status !== user?.status) {
       updateUserStatus.mutate({
@@ -499,99 +486,46 @@ const Navbar = ({
       <div className={classes.wrapper}>
         <div className={classes.aside}>
           <div>
-            <Stack gap={0} pb={"sm"}>
+            <Stack gap={0}>
               <div className={classes.logo}>
-                <HoverCard width={280} shadow="md" position="right-end">
+                <HoverCard shadow="md" position="right-end">
                   <HoverCard.Target>
-                    <Indicator
-                      color={
-                        user?.status === UserAvailabilityStatus.online
-                          ? "#69f0ae"
-                          : "#cacaca"
+                    <Avatar
+                      name={user?.orgName}
+                      color="initials"
+                      src={getFileUrlFromKey(user?.orgLogo)}
+                    />
+                  </HoverCard.Target>
+                  <HoverCard.Dropdown>
+                    <Flex
+                      justify={"center"}
+                      align={"center"}
+                      gap={"xs"}
+                      onClick={() =>
+                        router.push("/dashboard/settings?tab=organization")
                       }
-                      processing={
-                        user?.status === UserAvailabilityStatus.online
-                      }
-                      size={8}
+                      style={{
+                        cursor: "pointer",
+                      }}
                     >
                       <Avatar
                         name={user?.orgName}
                         color="initials"
                         src={getFileUrlFromKey(user?.orgLogo)}
+                        size={30}
                       />
-                    </Indicator>
-                  </HoverCard.Target>
-                  <HoverCard.Dropdown>
-                    <Box>
-                      <Text fw={500} size="sm" mb={"xs"}>
-                        {user?.userName || "User"}
+                      <Text fw={500} size="sm">
+                        {user?.orgName || "No Organization"}
                       </Text>
-                      <Box>
-                        <Text size="xs" c="dimmed">
-                          Email: {user?.email}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          Org: {user?.orgName || "No organization"}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          Role: {user?.role || "User"}
-                        </Text>
-                      </Box>
-                    </Box>
+                    </Flex>
                   </HoverCard.Dropdown>
                 </HoverCard>
               </div>
-              <Stack justify="center" align="center" gap={3} p={0}>
-                <Switch
-                  color={
-                    status === UserAvailabilityStatus.online
-                      ? "#099268"
-                      : "grey"
-                  }
-                  size="xs"
-                  styles={{
-                    track: {
-                      backgroundColor:
-                        status === UserAvailabilityStatus.online &&
-                        rgba("#099268", 0.15),
-                      width: 40,
-                    },
-                    thumb: {
-                      backgroundColor:
-                        status === UserAvailabilityStatus.online && "#099268",
-                    },
-                  }}
-                  checked={status === UserAvailabilityStatus.online}
-                  onChange={(e) => {
-                    setStatus(
-                      e.currentTarget.checked
-                        ? UserAvailabilityStatus.online
-                        : UserAvailabilityStatus.offline,
-                    );
-                  }}
-                />
-                <Badge
-                  w={50}
-                  tt={"capitalize"}
-                  color={
-                    status === UserAvailabilityStatus.online
-                      ? "#099268"
-                      : "grey"
-                  }
-                  radius={"xs"}
-                  size={"xs"}
-                  variant="light"
-                >
-                  {status}
-                </Badge>
-              </Stack>
-              <Divider />
             </Stack>
-            <ScrollAreaAutosize mah={"calc(100dvh - 300px)"} scrollbarSize={6}>
+            <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
               {mainLinks}
             </ScrollAreaAutosize>
           </div>
-          <div>{lastLinks}</div>
         </div>
 
         {linksIcon?.length > 0 && (
@@ -684,28 +618,31 @@ const MainContent = ({
   navOpened,
   setNavOpened,
   labels,
+  customFieldData,
 }) => {
   return (
     <motion.div className={styles["content-container"]}>
       <Flex className={`${styles["content-wrapper"]}`}>
         <LabelsContext value={labels}>
-          <NavControlContext value={{ navOpened, setNavOpened }}>
-            <AnimatePresence key={appProps.router.pathname}>
-              <motion.div
-                className={styles["content-div"]}
-                initial={
-                  !(
-                    appProps.router.pathname.includes("login") ||
-                    appProps.router.pathname.includes("signup")
-                  ) && { opacity: 0 }
-                }
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                {children}
-              </motion.div>
-            </AnimatePresence>
-          </NavControlContext>
+          <CustomFieldsProvider initialFields={customFieldData || []}>
+            <NavControlContext value={{ navOpened, setNavOpened }}>
+              <AnimatePresence key={appProps.router.pathname}>
+                <motion.div
+                  className={styles["content-div"]}
+                  initial={
+                    !(
+                      appProps.router.pathname.includes("login") ||
+                      appProps.router.pathname.includes("signup")
+                    ) && { opacity: 0 }
+                  }
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            </NavControlContext>
+          </CustomFieldsProvider>
         </LabelsContext>
       </Flex>
     </motion.div>
@@ -757,13 +694,16 @@ export default function Layout({ children }) {
   const [desktopOpened, { toggle: toggleDesktop, open }] = useDisclosure(false);
   const { data: sub, isPending } = useSubscription();
   const { isPending: isPendingLabels, data: labels } = useLabelsQuery();
+  const { isPending: isCustomFieldPending, data: customFieldData } =
+    useCustomFields();
 
   const translations = useTranslations();
   const [navLinks, setNavLinks] = useState([]);
   const [lastLinksData, setLastLinksData] = useState([]);
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
   const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
-  const isLoading = isPending || isPendingLabels || isLoadingUserInfo;
+  const isLoading =
+    isPending || isPendingLabels || isLoadingUserInfo || isCustomFieldPending;
   // Fetch inbox labels from DB
   // const { data: inboxLabelsData } = useGetInboxLabels();
 
@@ -985,13 +925,9 @@ export default function Layout({ children }) {
           breakpoint: "sm",
           collapsed: { mobile: !mobileOpened },
         }}
-        header={{
-          height: {
-            sm: 0,
-            base: 40,
-          },
-        }}
-        padding="xs"
+        header={{ height: 50 }}
+        footer={{ height: 0 }}
+        padding={7}
         layout="alt"
       >
         <AppShell.Header>
@@ -1002,8 +938,8 @@ export default function Layout({ children }) {
             size="sm"
             p={"md"}
           />
+          <TopNavbar user={userInfo.data} />
         </AppShell.Header>
-
         <AppShell.Navbar>
           <Navbar
             mainLinks={mainLinks}
@@ -1031,6 +967,7 @@ export default function Layout({ children }) {
             navOpened={navOpened}
             setNavOpened={setNavOpened}
             labels={labels}
+            customFieldData={customFieldData}
           >
             {children}
           </MainContent>

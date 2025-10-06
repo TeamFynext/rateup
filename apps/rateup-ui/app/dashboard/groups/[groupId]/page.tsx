@@ -36,7 +36,6 @@ import {
   useContactGroupById,
   useDeleteGroupMutation,
 } from "@/backend/campaign/contactGroup/contactGroup.query";
-import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import AddCustomerModal from "@/components/Contacts/AddCustomerModal";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal";
@@ -50,6 +49,7 @@ import {
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
+import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { useRouteParams } from "@/context/RouteParamsContext";
 import { PAGE_SIZE } from "@/utils/constants";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
@@ -71,7 +71,7 @@ export default function ContactGroup() {
   const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
     useDisclosure(false);
   const { update } = useRouteParams();
-  const { isPending, data: cTags } = useGetContactTags();
+  const { customFields } = useCustomFieldsContext();
   const createNewContactsFromCSV = useAddNewContactFromCSVMutation(
     groupId?.toString(),
   );
@@ -123,7 +123,7 @@ export default function ContactGroup() {
   }, [groupDetails?.name]);
 
   const column: ColumnDef<any>[] = [
-    ...contactColumn(cTags?.contactTags ?? []),
+    ...contactColumn(customFields ?? []),
     {
       header: () => "Action",
       accessorFn: (row) => row,
@@ -138,7 +138,7 @@ export default function ContactGroup() {
       ),
     },
   ];
-  const loadingState = isLoading || isPending || isRefetching;
+  const loadingState = isLoading || isRefetching;
   if (groupByIderror) return <ErrorComponent refetch={refetchgroupById} />;
 
   return (
@@ -189,7 +189,6 @@ export default function ContactGroup() {
                       groupClose={closeEditModal}
                       isEdit={true}
                       groupDetails={groupDetails}
-                      gTags={cTags?.contactGroupTags}
                     />
                   </FormModalLayout>
 
@@ -248,7 +247,6 @@ export default function ContactGroup() {
             <ContactTable
               columns={column}
               data={groupDetails?.contacts}
-              tags={cTags}
               tab={WhatsappTableType.MEMBERS}
               open={open}
               groupId={groupDetails?.id}
@@ -276,7 +274,6 @@ export default function ContactGroup() {
           groupId={groupDetails?.id}
           close={close}
           existingContactIds={groupDetails?.contacts?.map((c) => c.id)}
-          tags={cTags?.contactTags}
           createNewContactsFromCSV={createNewContactsFromCSV}
         />
       </FormModalLayout>

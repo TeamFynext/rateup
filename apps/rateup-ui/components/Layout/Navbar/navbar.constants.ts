@@ -9,6 +9,7 @@ import {
   IconBrandTeams,
   IconBrandWhatsapp,
   IconBrowser,
+  IconBuildings,
   IconBuildingStore,
   IconCirclePlus,
   IconCircleX,
@@ -43,7 +44,6 @@ import {
 } from "@tabler/icons-react";
 
 import { GetLabelsRes } from "@/backend/label/label.types";
-import AddLabelSettings from "@/components/Contacts/AddLabelSettings";
 import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
 import {
   AssignedInboxIcon,
@@ -106,73 +106,43 @@ export function getNavTopData(
             label: translations("Inbox"),
             hasSubmenu: true,
             children: [
-              {
-                label: translations("New"),
-                link: "/dashboard/whatsapp/inbox?tab=New",
-                icon: NewInboxIcon,
-              },
-              {
-                label: translations("UnAssigned"),
-                link: "/dashboard/whatsapp/inbox?tab=UnAssigned",
-                icon: IconUserX,
-              },
-              {
-                label: translations("Assigned"),
-                link: "/dashboard/whatsapp/inbox?tab=Assigned",
-                icon: AssignedInboxIcon,
-              },
-              {
-                label: translations("Assigned to Me"),
-                link: "/dashboard/whatsapp/inbox?tab=AssignedToMe",
-                icon: AssignedToMeInboxIcon,
-              },
-              {
-                label: translations("Closed"),
-                link: "/dashboard/whatsapp/inbox?tab=Closed",
-                icon: ClosedInboxIcon,
-              },
-              {
-                label: translations("Sent"),
-                link: "/dashboard/whatsapp/inbox?tab=Sent",
-                icon: IconMessageUp,
-              },
+              // new,assigned,closed,sent,blocked
               {
                 label: translations("All"),
-                link: "/dashboard/whatsapp/inbox?tab=All",
+                link: "/dashboard/inbox?tab=All",
                 icon: IconMessage,
               },
               {
-                label: translations("Blocked"),
-                link: "/dashboard/whatsapp/inbox?tab=blocked",
-                icon: BlockedInboxIcon,
+                label: translations("Mine"),
+                link: "/dashboard/inbox?tab=mine",
+                icon: AssignedToMeInboxIcon,
+              },
+              {
+                label: translations("UnAssigned"),
+                link: "/dashboard/inbox?tab=UnAssigned",
+                icon: IconUserX,
               },
               {
                 label: translations("Analytics"),
-                link: "/dashboard/whatsapp/inbox?tab=analytics",
+                link: "/dashboard/inbox?tab=analytics",
                 icon: IconFileAnalytics,
               },
               {
                 label: "Labels",
-                icon: IconBrandHipchat,
+                icon: IconLabel,
                 hasSubmenu: true,
                 children: [
-                  {
-                    label: "Add Label",
-                    icon: IconCirclePlus,
-                  },
-                  {
-                    label: "Clear Label",
-                    icon: IconCircleX,
-                  },
                   ...(labels?.length
                     ? [
                         ...(Array.isArray(labels)
-                          ? labels.map((lbl) => ({
-                              label: lbl.name,
-                              value: lbl.id,
-                              color: lbl.color,
-                              icon: IconBrandHipchat,
-                            }))
+                          ? labels
+                              ?.filter((lbl) => lbl?.category !== "lost")
+                              .map((lbl) => ({
+                                label: lbl.name,
+                                value: lbl.id,
+                                emoji: lbl.emoji,
+                                icon: IconLabel,
+                              }))
                           : []),
                       ]
                     : []),
@@ -190,14 +160,24 @@ export function getNavTopData(
             hasSubmenu: true,
             children: [
               {
-                label: translations("Contacts"),
+                label: translations("All Contacts"),
                 link: "/dashboard/contacts",
                 icon: IconAddressBook,
               },
               {
-                label: translations("labels"),
-                link: "/dashboard/contacts/labels",
-                icon: IconLabel,
+                label: translations("Groups"),
+                link: "/dashboard/groups",
+                icon: IconUsers,
+              },
+              {
+                label: translations("Custom Fields"),
+                link: "/dashboard/contacts/custom-fields",
+                icon: IconFileDescription,
+              },
+              {
+                label: translations("Lifecycle"),
+                link: "/dashboard/lifecycle",
+                icon: IconActivity,
               },
             ],
           },
@@ -454,10 +434,21 @@ export function getNavTopData(
       label: translations("Account"),
       children: [
         {
+          label: translations("User"),
+          link: "/dashboard/settings?tab=user",
+          icon: IconUser,
+        },
+        {
+          label: translations("Organization"),
+          link: "/dashboard/settings?tab=organization",
+          icon: IconBuildings,
+        },
+        {
           label: translations("Account"),
-          link: "/dashboard/settings",
+          link: "/dashboard/settings?tab=account",
           icon: IconUserShare,
         },
+
         ...(subscription?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
           ? [
               {
@@ -467,11 +458,6 @@ export function getNavTopData(
               },
             ]
           : []),
-        {
-          label: translations("Logout"),
-          link: "/logout",
-          icon: IconLogout,
-        },
       ],
     },
   ];
