@@ -106,7 +106,7 @@ export async function createTemplateHandler(
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = await getOrgIdAndRole({ id: request.userId });
+    const orgId = request.user.orgId;
     // TODO: restrict access to super admin and admin?
 
     const { defaultValues, templateType, config, ...templateData } =
