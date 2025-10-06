@@ -80,7 +80,10 @@ const EditContactModal = ({
     }
     form?.setFieldValue("tags", result);
     editContactMutation.mutate(
-      { data: form.getValues(), contactId: contact?.id },
+      {
+        data: { ...form?.getValues(), lastReceivedMessageTimeStamp: undefined },
+        contactId: contact?.id,
+      },
       {
         onSuccess: () => {
           setIsUpdating(false);
