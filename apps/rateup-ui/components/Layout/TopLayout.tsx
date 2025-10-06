@@ -111,12 +111,14 @@ export default function TopNavbar({ user }) {
       {/* RIGHT: Notifications + Settings + Profile */}
       <Group gap="md">
         <Flex align={"center"} justify={"center"} gap={8}>
-          <ActionIcon
-            variant="transparent"
-            className={classes["theme-toggle-icon"]}
-          >
-            <ColorSchemaButton />
-          </ActionIcon>
+          {process.env.NEXT_PUBLIC_EXPERIMENT && (
+            <ActionIcon
+              variant="transparent"
+              className={classes["theme-toggle-icon"]}
+            >
+              <ColorSchemaButton />
+            </ActionIcon>
+          )}
 
           <Box mt={5} className={classes["bell-icon"]}>
             <NotificationBellIcon strokeWidth={1.5} />
