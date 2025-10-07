@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Flex, Group, Paper, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
-import useContactStore from "@/app/dashboard/inbox/store";
+import useContactStore, {
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
 import {
   useGetAssignedUserForContact,
   useGetMessagesByContactId,
@@ -35,7 +38,8 @@ export default function WaInboxChatDisplay({
   waSettings?: any;
 }) {
   const searchParams = useSearchParams();
-  const { selectedContact: contact } = useContactStore();
+
+  const contact = useContactsStore((s) => s.selectedContact);
   const { filter } = useChatFilterStore();
   const currentContactId = contact?.id || searchParams.get("contactId");
 
@@ -68,7 +72,7 @@ export default function WaInboxChatDisplay({
   );
 
   const translations = useTranslations();
-  if (error) return <div>Error: {error.message}</div>;
+  // if (error) return <div>Error: {error.message}</div>;
 
   let footerContent = null;
   if (contact?.blockedOnWhatsApp) {
@@ -99,7 +103,7 @@ export default function WaInboxChatDisplay({
 
   return (
     <Paper withBorder p={0} className="h-full">
-      {!contact && messages?.length === 0 ? (
+      {!contact ? (
         <NothingFound text={translations("Select a chat to see messages")} />
       ) : (
         <div className={classes.inner_animated}>

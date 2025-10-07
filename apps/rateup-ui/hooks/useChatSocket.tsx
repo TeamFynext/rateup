@@ -7,6 +7,10 @@ import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { getBrowserId } from "@/lib/utils";
+import {
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { handleWebSocketMessage } from "@/components/Layout/Layout";
 import { showInfoToast } from "@/utils/notifications";
@@ -17,6 +21,8 @@ export const useChatSocket = () => {
   const browserId = getBrowserId();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { updateContactById, selectedContact } = useContactsStore();
+  const { mergeMessages } = useMessagesStore();
 
   useEffect(() => {
     if (!browserId) return;
@@ -30,8 +36,34 @@ export const useChatSocket = () => {
       );
       socketRef.current = ws;
 
-      ws.onmessage = (event) => {
+      ws.onmessage = async (event) => {
         const message = JSON.parse(event.data);
+        const data = JSON.parse(event.data); //add event type
+        switch (data.type) {
+          case "inbox":
+            updateContactById(data.id, (contact) => ({
+              ...contact,
+              ...data.inbox.contact,
+              ...(selectedContact &&
+              selectedContact?.id !== data.inbox.contact.id
+                ? {
+                    unReadMessageCount: contact.unReadMessageCount + 1,
+                  }
+                : {}),
+            }));
+            if (selectedContact && selectedContact?.id === data.inbox.contact) {
+              mergeMessages(
+                `${selectedContact?.id}_${data.inbox.message.sourceIdentifier}`,
+                [data.inbox.message],
+              );
+            }
+
+            break;
+
+          default:
+            break;
+        }
+
         handleWebSocketMessage({
           newMessagePayload: message,
           queryClient,

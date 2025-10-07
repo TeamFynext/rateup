@@ -71,6 +71,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       className={`${geist.className},${notoColorEmogi.className}`}
+      data-scroll-behavior="smooth"
       {...mantineHtmlProps}
     >
       <head>

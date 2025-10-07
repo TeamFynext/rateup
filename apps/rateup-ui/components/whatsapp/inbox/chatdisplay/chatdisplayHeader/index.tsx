@@ -40,7 +40,7 @@ import {
   WaMessageAssignStatus,
 } from "@/types/enums";
 import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContext";
-import useContactStore from "@/app/dashboard/inbox/store";
+import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
@@ -78,7 +78,7 @@ export default function WaInboxChatDisplayHeader({
 }: WaInboxChatDisplayHeaderProps) {
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   const editContactMutation = useEditContactMutation(null);
-  const { setSelectedContact } = useContactStore();
+  const { setSelectedContact } = useContactsStore();
   const isMobile = useMediaQuery("(max-width: 1200px)");
   const { selectedChatbotId } = useChatbotStore();
 
@@ -138,16 +138,17 @@ export default function WaInboxChatDisplayHeader({
   return (
     <div className={classes.wrapper}>
       <Group>
-        {isMobile && (
+        {
           <ActionIcon
             variant="subtle"
             onClick={() => {
+              setSelectedContact(null);
               setIsChatDisplayOpen(false);
             }}
           >
-            <IconArrowLeft size={!isMobile ? 28 : 20} />
+            <IconArrowLeft size={20} />
           </ActionIcon>
-        )}
+        }
 
         <Avatar
           color="var(--mantine-primary-color-6)"

@@ -35,12 +35,18 @@ import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
+import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
 import useContactStore, {
+  makeFilterKey,
   useChatContactCountStore,
+  useContactsStore,
+  useMessagesStore,
 } from "@/app/dashboard/inbox/store";
+import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { useUser } from "@/context/UserContext";
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
@@ -56,8 +62,22 @@ const WaInboxChatSelect = () => {
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as string) ?? "New";
   const { filter, setFilter } = useChatFilterStore();
-  const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
+  const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
+  const {
+    setSelectedContact,
+    setFilter: setFilterForContactsStore,
+    addContactsForFilter,
+    loadContactsFromDB,
+  } = useContactsStore();
+  const currentFilterKey = useContactsStore((s) => s.currentFilterKey);
+  const contactsById = useContactsStore((s) => s.contactsById);
+  const selectedContact = useContactsStore((s) => s.selectedContact);
+  const contactsByFilter = useContactsStore((s) => s.contactsByFilter);
 
+  useEffect(() => {
+    setFilterForContactsStore(processedFilter);
+    loadContactsFromDB(processedFilter);
+  }, [processedFilter, setFilterForContactsStore, loadContactsFromDB]);
   const queryClient = useQueryClient();
 
   const translations = useTranslations();
@@ -91,66 +111,66 @@ const WaInboxChatSelect = () => {
   const { data: waSettings, isLoading } = useWaSettings();
 
   const {
-    setSelectedContact,
-    selectedContact,
+    // setSelectedContact,
+    // selectedContact,
     setFilterData,
     openedContactIds,
     setOpenedContactIds,
   } = useContactStore();
 
-  const allFilteredContactsRow = useMemo(
-    () =>
-      filteredContacts
-        ? filteredContacts.pages.flatMap((d) =>
-            d.rows.map((r) => ({
-              ...r,
-              unReadMessageCount: openedContactIds.includes(r.id)
-                ? 0
-                : r.unReadMessageCount,
-            })),
-          )
-        : [],
-    [filteredContacts, openedContactIds],
-  );
+  // const allFilteredContactsRow = useMemo(
+  //   () =>
+  //     filteredContacts
+  //       ? filteredContacts.pages.flatMap((d) =>
+  //           d.rows.map((r) => ({
+  //             ...r,
+  //             unReadMessageCount: openedContactIds.includes(r.id)
+  //               ? 0
+  //               : r.unReadMessageCount,
+  //           })),
+  //         )
+  //       : [],
+  //   [filteredContacts, openedContactIds],
+  // );
 
   useEffect(() => {
     if (isRefetchingFilteredContacts) setOpenedContactIds([]);
   }, [isRefetchingFilteredContacts]);
 
   const parentRef = useRef(null);
-
+  /////////////////////////////////////////////////////////////
   // The virtualizer
-  const contactRowVirtualizer = useVirtualizer({
-    count: hasNextPageFilteredContacts
-      ? allFilteredContactsRow.length + 1
-      : allFilteredContactsRow.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 87,
-    overscan: 5,
-  });
-  useEffect(() => {
-    const [lastItem] = [...contactRowVirtualizer.getVirtualItems()].reverse();
+  // const contactRowVirtualizer = useVirtualizer({
+  //   count: hasNextPageFilteredContacts
+  //     ? allFilteredContactsRow.length + 1
+  //     : allFilteredContactsRow.length,
+  //   getScrollElement: () => parentRef.current,
+  //   estimateSize: () => 87,
+  //   overscan: 5,
+  // });
+  // useEffect(() => {
+  //   const [lastItem] = [...contactRowVirtualizer.getVirtualItems()].reverse();
 
-    if (!lastItem) {
-      return;
-    }
+  //   if (!lastItem) {
+  //     return;
+  //   }
 
-    if (
-      checkIfAnyFilterisActive(filter) &&
-      lastItem.index >= allFilteredContactsRow.length - 1 &&
-      hasNextPageFilteredContacts &&
-      !isFilteredContactsFetchingNextPage
-    ) {
-      fetchNextPageFilteredContacts();
-    }
-  }, [
-    allFilteredContactsRow.length,
-    fetchNextPageFilteredContacts,
-    hasNextPageFilteredContacts,
-    isFilteredContactsFetchingNextPage,
-    contactRowVirtualizer.getVirtualItems(), // This is the key change - use getVirtualItems()
-  ]);
-
+  //   if (
+  //     checkIfAnyFilterisActive(filter) &&
+  //     lastItem.index >= allFilteredContactsRow.length - 1 &&
+  //     hasNextPageFilteredContacts &&
+  //     !isFilteredContactsFetchingNextPage
+  //   ) {
+  //     fetchNextPageFilteredContacts();
+  //   }
+  // }, [
+  //   allFilteredContactsRow.length,
+  //   fetchNextPageFilteredContacts,
+  //   hasNextPageFilteredContacts,
+  //   isFilteredContactsFetchingNextPage,
+  //   contactRowVirtualizer.getVirtualItems(), // This is the key change - use getVirtualItems()
+  // ]);
+  //////////////////////////////////////////////////////////
   // const { wsData } = useWsData();
 
   // const findAndReturnTheIndexOfTheContact = useCallback(
@@ -206,22 +226,24 @@ const WaInboxChatSelect = () => {
   //   ],
   // );
 
-  useEffect(() => {
-    let contactId = searchParams.get("contactId");
-    if (contactId && !selectedContact) {
-      let contact = allFilteredContactsRow.find(
-        (contact) => contact.id === searchParams.get("contactId"),
-      );
-      if (contact && selectedContact !== contact) {
-        setSelectedContact(contact);
-      }
-    }
-  }, [
-    allFilteredContactsRow,
-    searchParams,
-    selectedContact,
-    setSelectedContact,
-  ]);
+  // useEffect(() => {
+  //   let contactId = searchParams.get("contactId");
+  //   if (contactId && !selectedContact) {
+  //     // let contact = allFilteredContactsRow.find(
+  //     //   (contact) => contact.id === searchParams.get("contactId"),
+  //     // );
+  //     let contact = contactsById.get(contactId)
+  //     if (contact && selectedContact !== contact) {
+  //       setSelectedContact(contact);
+  //     }
+  //   }
+  // }, [
+  //   // allFilteredContactsRow,
+  //   contactsById,
+  //   searchParams,
+  //   selectedContact,
+  //   setSelectedContact,
+  // ]);
 
   const prepareFilters = useCallback(
     (filters: any) => {
@@ -235,7 +257,7 @@ const WaInboxChatSelect = () => {
           })),
         };
         setProcessedFilter(processedFilters);
-        setFilterData(encodeURIComponent(JSON.stringify(processedFilter)));
+        setFilterData(encodeURIComponent(JSON.stringify(processedFilters)));
       }
     },
     [checkIfAnyFilterisActive],
@@ -248,12 +270,66 @@ const WaInboxChatSelect = () => {
     [],
   );
 
+  console.log("seletctedcontact", selectedContact?.name);
+
+  useEffect(() => {
+    const filterKey = makeFilterKey(processedFilter);
+    if (
+      !filteredContacts ||
+      !currentFilterKey ||
+      filterKey !== currentFilterKey
+    )
+      return;
+    filteredContacts.pages.forEach((page) => {
+      if (page.rows?.length) {
+        const existingIds = new Set(contactsByFilter[currentFilterKey] || []);
+        const newContacts = page.rows
+          .filter((c) => !existingIds.has(c.id))
+          .map((c) => ({ ...c, updatedAt: new Date().toISOString() }));
+        if (newContacts.length)
+          addContactsForFilter(currentFilterKey, newContacts);
+      }
+    });
+  }, [
+    filteredContacts,
+    currentFilterKey,
+    addContactsForFilter,
+    processedFilter,
+  ]);
+
+  const contactIds = useMemo(
+    () => contactsByFilter[currentFilterKey] || [],
+    [contactsById, currentFilterKey],
+  );
   const openChatDisplayForContact = useCallback(
     (data: Partial<ContactsData>) => {
-      router.push(`/dashboard/inbox?tab=${tab}&contactId=${data.id}`);
+      // router.push(`/dashboard/inbox?tab=${tab}&contactId=${data.id}`);
     },
     [router],
   );
+
+  const rowVirtualizer = useVirtualizer({
+    count: contactIds.length,
+    estimateSize: () => 87,
+    overscan: 5,
+    getScrollElement: () => parentRef.current,
+  });
+  useEffect(() => {
+    const last = rowVirtualizer.getVirtualItems().at(-1);
+    if (
+      !isFilteredContactsFetchingNextPage &&
+      hasNextPageFilteredContacts &&
+      last?.index >= contactIds.length - 1
+    ) {
+      fetchNextPageFilteredContacts();
+    }
+  }, [
+    rowVirtualizer.getVirtualItems(),
+    contactIds.length,
+    hasNextPageFilteredContacts,
+    isFilteredContactsFetchingNextPage,
+    fetchNextPageFilteredContacts,
+  ]);
 
   const onUnknownContactAddSuccess = useCallback(
     (contact: ContactsData) => {
@@ -269,9 +345,9 @@ const WaInboxChatSelect = () => {
         },
         assignedUsers: [],
       });
-      openChatDisplayForContact(contact);
+      // openChatDisplayForContact(contact);
     },
-    [openChatDisplayForContact, setSelectedContact],
+    [setSelectedContact],
   );
   useEffect(() => {
     let tab = searchParams.get("tab") as string;
@@ -288,8 +364,8 @@ const WaInboxChatSelect = () => {
     if (tab === "All") {
       prepareFilters({
         ...filter,
-        messageType: "all",
-        waMessageAssignStatus: undefined,
+        messageType: "usermessages",
+        waMessageAssignStatus: null,
         blockedUsers: false,
       });
     } else {
@@ -361,9 +437,9 @@ const WaInboxChatSelect = () => {
         />
       </Group>
       <div>
-        {filteredContactsStatus === "pending" ? (
+        {!contactIds.length && filteredContactsStatus === "pending" ? (
           <Text px={"md"}>Loading...</Text>
-        ) : filteredContactsStatus === "error" ? (
+        ) : !contactIds.length && filteredContactsStatus === "error" ? (
           <Text px={"md"}>Error: {filteredContactsError?.message}</Text>
         ) : (
           <div
@@ -378,15 +454,14 @@ const WaInboxChatSelect = () => {
             <Divider />
             <div
               style={{
-                height: `${contactRowVirtualizer.getTotalSize()}px`,
+                height: `${rowVirtualizer.getTotalSize()}px`,
                 width: "100%",
                 position: "relative",
               }}
             >
-              {contactRowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const isLoaderRow =
-                  virtualRow.index > allFilteredContactsRow.length - 1;
-                const post = allFilteredContactsRow[virtualRow.index];
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const isLoaderRow = virtualRow.index > contactIds.length - 1;
+                const post = contactsById.get(contactIds[virtualRow.index]);
 
                 return (
                   <div
@@ -416,7 +491,7 @@ const WaInboxChatSelect = () => {
                   </div>
                 );
               })}
-              {contactRowVirtualizer.getVirtualItems()?.length === 0 &&
+              {rowVirtualizer.getVirtualItems()?.length === 0 &&
                 (validateSearchStringAsMobileNumber(filter.searchTerm) ? (
                   <AddUnknownContactModal
                     phone={filter.searchTerm}

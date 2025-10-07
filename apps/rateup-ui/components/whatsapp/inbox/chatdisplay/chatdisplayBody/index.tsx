@@ -1,5 +1,6 @@
 "use client";
 
+import { constants } from "node:buffer";
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -27,7 +28,14 @@ import { useTranslations } from "next-intl";
 import { useLocation } from "react-use";
 
 import { MessagePlatform } from "@/types/enums";
-import useContactStore from "@/app/dashboard/inbox/store";
+import {
+  getMessagesFromIDB,
+  saveMessagesToIDB,
+} from "@/app/dashboard/inbox/idb";
+import useContactStore, {
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
 import { useUser } from "@/context/UserContext";
 
@@ -69,21 +77,47 @@ interface Props {
 }
 export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
   const searchParams = useSearchParams();
-  let contactId = searchParams.get("contactId");
-  const { filterData, selectedContact } = useContactStore();
-
+  // let contactId = searchParams.get("contactId");
+  // const { filterData, selectedContact } = useContactStore();
+  const { selectedContact } = useContactsStore();
   const { filter } = useChatFilterStore();
+  const { setSelected, setIsLoading, mergeMessages } = useMessagesStore();
+  const selectedKey = useMessagesStore((s) => s.selectedKey);
+  const isStoreDataLoading = useMessagesStore((s) => s.isLoading);
+  const messagesByKey = useMessagesStore((s) => s.messagesByKey);
+
+  const allMessages = useMemo(
+    () => messagesByKey.get(selectedKey)?.messages || [],
+    [selectedKey, messagesByKey],
+  );
+
+  // Select contact/source
+  useEffect(() => {
+    if (!selectedContact || !filter?.phone) return;
+    setSelected(selectedContact.id, filter?.phone);
+  }, [selectedContact, filter?.phone]);
+
+  useEffect(() => {
+    if (!selectedKey) return;
+    (async () => {
+      setIsLoading(true);
+      const cached = await getMessagesFromIDB(selectedKey);
+      if (cached.length) {
+        mergeMessages(selectedKey, cached);
+      }
+      setIsLoading(false);
+    })();
+  }, [selectedKey]);
+
   const {
     error, // Error
     fetchNextPage,
     hasNextPage, // boolean
     isError,
+    data,
     isFetchingNextPage,
     isLoading,
-  } = useGetMessagesByContactId(
-    contactId ?? selectedContact?.id,
-    filter?.phone,
-  );
+  } = useGetMessagesByContactId(selectedContact?.id, filter?.phone);
 
   const [currentScrollPosition, setCurrentScrollPosition] = useState(0);
   const [currentScrollHeight, setCurrentScrollHeight] = useState(0);
@@ -102,6 +136,21 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
     root: scrollableRef.current,
     threshold: 1,
   });
+
+  // Merge fetched messages into store & IndexedDB
+  useEffect(() => {
+    if (!data || !selectedKey || !selectedContact) return;
+    const contactId = selectedKey.split("_")[0];
+    if (contactId !== selectedContact.id) return;
+    setIsLoading(true);
+    const all = data.pages.flatMap((p) => p.messages);
+    if (all.length) {
+      mergeMessages(selectedKey, all);
+      saveMessagesToIDB(selectedKey, all);
+    }
+    setIsLoading(false);
+  }, [data, selectedKey, selectedContact]);
+
   const translations = useTranslations();
   const { messages } = useMessageStore();
 
@@ -216,38 +265,25 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
 
   useEffect(() => {
     scrollIntoView();
-  }, [targetRef.current]);
+  }, [allMessages.length]);
 
   useEffect(() => {
     // Check if the paginateTargetRef is in view and if we're not already loading more messages
-    if (paginateEntry?.isIntersecting && !isFetchingNextPage) {
+    if (paginateEntry?.isIntersecting && !isFetchingNextPage && hasNextPage) {
       setCurrentScrollPosition(scrollableRef.current.scrollTop);
       setCurrentScrollHeight(scrollableRef.current.scrollHeight);
       fetchNextPage();
     }
-  }, [paginateEntry]);
+  }, [paginateEntry, hasNextPage, isFetchingNextPage]);
 
   useEffect(() => {
     const newScrollHeight = scrollableRef.current?.scrollHeight;
     if (!newScrollHeight) return;
     const heightDifference = newScrollHeight - currentScrollHeight;
     scrollableRef.current.scrollTop = currentScrollPosition + heightDifference;
-  }, [props?.data]);
-  const markAsRead = useMarkWaMessagesAsRead(contactId, filterData);
-  const { user } = useUser();
+  }, [allMessages]);
 
-  useEffect(() => {
-    if (
-      contactId &&
-      user.userId &&
-      props?.data?.find(
-        (message) =>
-          message?.messageBody?.exchangeProcess === "receive" &&
-          !message?.readUsers?.includes(user.userId),
-      )
-    )
-      markAsRead.mutate();
-  }, [contactId]);
+  const { user } = useUser();
 
   return (
     <div className={classes.wrapper}>
@@ -258,16 +294,16 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
           ...(props.smallScreen ? { padding: 0, paddingLeft: 10 } : {}),
         }}
       >
-        {isLoading ? (
+        {isLoading || isStoreDataLoading ? (
           <Center>
             <Loader size={"xs"} my="auto" />
           </Center>
-        ) : props?.data && hasNextPage ? (
+        ) : data && hasNextPage ? (
           <div ref={paginateTargetRef}></div>
         ) : (
           <EndofConversationComponent />
         )}
-        {isError && (
+        {!allMessages.length && isError && (
           <Text size="xs" c="red">
             {error?.message}
           </Text>
@@ -277,7 +313,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
             <Loader size={"xs"} my="auto" />
           </Center>
         )}
-        {props?.data?.map((message, index) => {
+        {allMessages?.map((message, index) => {
           const { exchangeProcess, receive } = message.messageBody;
           const { messageType } = parseWaMessage(message);
           if (messageType === "reaction") return null;
@@ -287,7 +323,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
             (receive as IgReceiveMessageBody)?.message?.is_deleted
           )
             return null;
-          const previousMessage = index > 0 ? props.data[index - 1] : null;
+          const previousMessage = index > 0 ? allMessages[index - 1] : null;
           const showDate =
             !previousMessage ||
             !dayjs(message.waCreatedAt).isSame(
@@ -309,7 +345,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
             </React.Fragment>
           );
         })}
-        {messages?.[contactId]?.map((msg, i) => (
+        {messages?.[selectedContact.id]?.map((msg, i) => (
           <TempMessageBody body={msg?.body} timestamp={msg.timestamp} key={i} />
         ))}
         <div ref={targetInViewportRef}></div>

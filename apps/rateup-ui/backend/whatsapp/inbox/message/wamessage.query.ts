@@ -7,6 +7,11 @@ import {
 } from "@tanstack/react-query";
 
 import { MessagePlatform } from "@/types/enums";
+import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
+import {
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
 import {
   showErrorToast,
   showSuccessToast,

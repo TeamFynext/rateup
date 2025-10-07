@@ -151,7 +151,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
       searchTerm: "",
       newStatuses: [
         WaMessageAssignStatus.ASSIGNED,
-        WaMessageAssignStatus.UNASSIGNED,
+        WaMessageAssignStatus.CLOSED,
       ],
       assignedTeams: [],
     });
@@ -273,11 +273,11 @@ export const useChatFilterStore = create<ChatFilterStore>()(
         contactGroups: [],
         campaigns: [],
         tags: [],
-        waMessageAssignStatus: "New",
+        waMessageAssignStatus: null,
         blockedUsers: false,
         newStatuses: [
           WaMessageAssignStatus.ASSIGNED,
-          WaMessageAssignStatus.UNASSIGNED,
+          WaMessageAssignStatus.CLOSED,
         ],
         assignedTeams: [],
         phone: "all",
