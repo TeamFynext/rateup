@@ -10,7 +10,6 @@ import {
   getWebhookClientSecretHandler,
   orgNameAndPhoneNumber,
   pauseOrgHandler,
-  tellusmoreCompleted,
   updateLogoHandler,
   updateOrgDetailsHandler,
   updateRoleController,
@@ -122,5 +121,4 @@ export async function orgRoutes(server: FastifyInstance) {
 
   server.put("/completeorgdetails", completeOrgDetailsHandler);
   server.get("/orgnameandphone", orgNameAndPhoneNumber);
-  server.get("/istellusmorecomplete", tellusmoreCompleted);
 }

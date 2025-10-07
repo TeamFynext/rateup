@@ -265,6 +265,7 @@ export async function getLoggedUserInfo(
       phone: true,
       encryptionKeys: true,
       isPaused: true,
+      isTellUsMoreCompleted: true,
       waAssignedChatPermission: true,
       WhatsappSettings: {
         select: {
@@ -293,6 +294,7 @@ export async function getLoggedUserInfo(
     waAssignedChatPermission: orgData?.waAssignedChatPermission,
     status: profile?.orgMember?.[0]?.status,
     hasWhatsAppSettings: !!orgData?.WhatsappSettings?.[0]?.appId,
+    isTellUsMoreCompleted: orgData?.isTellUsMoreCompleted,
   };
 }
 

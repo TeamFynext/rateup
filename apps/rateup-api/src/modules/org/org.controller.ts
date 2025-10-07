@@ -1,6 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
-  checkTellUsMoreCompleted,
   completeOrgDetails,
   createOrg,
   deleteOrg,
@@ -319,19 +318,6 @@ export async function orgNameAndPhoneNumber(
   try {
     const userId = request.user.userId;
     const updates = await getOrgNameAndUserPhone(userId);
-    reply.code(200).send(updates);
-  } catch (e) {
-    reply.code(500).send(e);
-  }
-}
-
-export async function tellusmoreCompleted(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  try {
-    const userId = request.user.userId;
-    const updates = await checkTellUsMoreCompleted(userId);
     reply.code(200).send(updates);
   } catch (e) {
     reply.code(500).send(e);
