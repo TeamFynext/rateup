@@ -10,7 +10,6 @@ import {
   getOrgStats,
   getTeamsMembersOfOrg,
   getWebhookClientSecret,
-  istellusmorecompleted,
   IUpdateLogo,
   IUpdateOrgDetails,
   orgNameAndPhone,
@@ -180,12 +179,5 @@ export function useOrgNameAndPhone() {
   return useQuery({
     queryKey: ["orgNameAndPhone"],
     queryFn: orgNameAndPhone,
-  });
-}
-
-export function useIsTellUsMoreCompleted() {
-  return useQuery({
-    queryKey: ["istellusmorecomplete"],
-    queryFn: istellusmorecompleted,
   });
 }

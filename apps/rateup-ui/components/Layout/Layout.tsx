@@ -39,7 +39,6 @@ import { useChatSocket } from "@/hooks/useChatSocket";
 import { useChatContactCountStore } from "@/app/dashboard/inbox/store";
 import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useLabelsQuery } from "@/backend/label/label.query";
-import { useIsTellUsMoreCompleted } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { CustomFieldsProvider } from "@/context/CustomFieldsContext";
@@ -652,24 +651,23 @@ const MainContent = ({
 // @ts-ignore
 export default function Layout({ children }) {
   const {
-    data: isTellUsMoreComplete,
-    isLoading: isTellUsMoreCompleteLoading,
-    isFetched,
-  } = useIsTellUsMoreCompleted();
-
-  const {
     isPending: isLoadingUserInfo,
     data: userQueryData,
+    isFetched,
     refetch,
   } = useUserInfo();
 
   useEffect(() => {
-    if (!isFetched || isTellUsMoreCompleteLoading || isLoadingUserInfo) return;
+    if (!isFetched || isLoadingUserInfo) return;
 
-    if (isTellUsMoreComplete === false) {
+    if (userQueryData?.data?.isTellUsMoreCompleted === false) {
       router.replace("/login/complete-login");
     }
-  }, [isTellUsMoreComplete, isFetched, isTellUsMoreCompleteLoading]);
+  }, [
+    userQueryData?.data?.isTellUsMoreCompleted,
+    isFetched,
+    isLoadingUserInfo,
+  ]);
   const router = useRouter();
   const query = useSearchParams() as {
     msg?: string;

@@ -331,9 +331,9 @@ export function Step1({ formData, handleNext, translations, google }) {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
-          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30 mb-4"
+          className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30 mb-4"
         >
-          <Users className="w-8 h-8 text-white" />
+          <Users className="w-7 h-7 text-white" />
         </motion.div>
         <h2 className="text-md text-gray-600">
           {translations("Create Your Account")}
@@ -665,9 +665,9 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
-          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30 mb-4 mx-auto"
+          className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30 mb-4 mx-auto"
         >
-          <Building className="w-8 h-8 text-white" />
+          <Building className="w-7 h-7 text-white" />
         </motion.div>
         <h2 className="text-lg text-gray-900 mb-1">
           {translations("Tell Us About Your Business")}
@@ -867,9 +867,9 @@ export function Step3({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", duration: 0.6 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-500 shadow-lg shadow-purple-500/30 mb-4 mx-auto"
+            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-500 shadow-lg shadow-purple-500/30 mb-4 mx-auto"
           >
-            <Target className="w-8 h-8 text-white" />
+            <Target className="w-7 h-7 text-white" />
           </motion.div>
           <h2 className="text-gray-900 mb-2">What Are Your Goals?</h2>
           <p className="text-gray-600">

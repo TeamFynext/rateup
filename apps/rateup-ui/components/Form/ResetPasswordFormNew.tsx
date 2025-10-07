@@ -181,17 +181,14 @@ const ResetPasswordForm = ({ mode }) => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
-      {(isEmailPage || page !== ResetSteps.STEP_TWO) && (
-        <div className="text-center">
-          <div className="w-16 h-16 bg-rateup-blue rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <img
-              src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/icons/rateup_new_logo.svg`}
-              alt="RateUp"
-              className="w-10 h-10"
-            />
-          </div>
-        </div>
-      )}
+      <div className="text-center">
+        <img
+          src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/rateup-logo-blue-text.svg`}
+          alt="RateUp"
+          className="w-18"
+        />
+      </div>
+
       {page !== ResetSteps.STEP_TWO ? (
         <Card className="border-none shadow-lg p-4 max-w-2xl sm:min-w-md flex flex-col gap-8">
           <div className="text-center space-y-2 flex flex-col  items-center justify-center gap-1">

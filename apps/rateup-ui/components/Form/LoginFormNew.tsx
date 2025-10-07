@@ -95,9 +95,9 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", duration: 0.6 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4"
+            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4"
           >
-            <Lock className="w-8 h-8 text-white" />
+            <Lock className="w-7 h-7 text-white" />
           </motion.div>
           <h2 className="text-lg text-gray-900">Sign In</h2>
           <p className="text-sm text-gray-600">
