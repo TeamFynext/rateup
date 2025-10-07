@@ -1,6 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { MantineProvider, Stack } from "@mantine/core";
 
@@ -22,6 +23,13 @@ import styles from "./WhatsappInbox.module.css";
 export default function WhatsAppInbox() {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!tab) {
+      router.replace("/dashboard/inbox?tab=All");
+    }
+  }, [router, tab]);
 
   return (
     <MantineProvider theme={whatsappTheme}>
