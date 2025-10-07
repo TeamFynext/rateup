@@ -14,11 +14,36 @@ import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 
 import "react-phone-number-input/style.css";
 
-import { AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Building,
+  Calendar,
+  CheckCircle2,
+  Mail,
+  Phone,
+  Target,
+  User,
+  X,
+  Zap,
+} from "lucide-react";
 
 import { useBookDemoMutation } from "@/backend/bookdemo/bookdemo.query";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function BookDemoModal1() {
+  const router = useRouter();
   const [opened, setOpened] = useState(false);
   const { mutate, isPending, isSuccess, error, reset } = useBookDemoMutation();
   const [formData, setFormData] = useState({
@@ -62,10 +87,7 @@ export function BookDemoModal1() {
   return (
     <>
       <button
-        onClick={() => {
-          setOpened(true);
-          reset();
-        }}
+        onClick={() => router.push("/bookdemo")}
         className="text-white px-6 cursor-pointer sm:px-7 py-2.5
                  text-base sm:text-lg font-semibold rounded-md bg-gradient-to-r from-[#00397b]
                   via-[#1c518e] to-[#3f5ba9] hover:opacity-90"
@@ -168,6 +190,7 @@ interface BookDemoModalProps {
 }
 
 export function BookDemoModal({ children }: BookDemoModalProps) {
+  const router = useRouter();
   const [opened, setOpened] = useState(false);
   const { mutate, isPending, isSuccess, error, reset } = useBookDemoMutation();
   const [formData, setFormData] = useState({
@@ -211,13 +234,7 @@ export function BookDemoModal({ children }: BookDemoModalProps) {
   return (
     <>
       {/* Trigger - any custom button passed as children */}
-      <span
-        onClick={() => {
-          setOpened(true);
-          reset();
-        }}
-        className="inline-block"
-      >
+      <span onClick={() => router.push("/bookdemo")} className="inline-block">
         {children}
       </span>
 
