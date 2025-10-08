@@ -1,18 +1,18 @@
 import { axiosClient } from "../apiClient";
 
-interface BookDemo {
-  name: string;
-  email: string;
-  phone: string;
-  reason: string;
+export interface BookDemo {
+  firstName: string;
+  lastName: string;
+  workEmail: string;
+  phoneNumber: string;
+  companyName: string;
+  teamSize: string;
+  preferredTime: string;
+  primaryUseCase: string;
+  additionalInfo?: string;
 }
 
-export async function bookDemo({ name, email, phone, reason }: BookDemo) {
-  const res = await axiosClient.post("/bookdemo", {
-    name,
-    email,
-    phone,
-    reason,
-  });
-  return res;
+export async function bookDemo(data: BookDemo) {
+  const res = await axiosClient.post("/bookdemo", data);
+  return res.data;
 }
