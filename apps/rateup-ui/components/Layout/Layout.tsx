@@ -338,36 +338,58 @@ const LastLinks = ({
 export const handleWebSocketMessage = ({
   newMessagePayload,
   queryClient,
+  userId,
 }: {
   newMessagePayload: orgWsMessage;
   queryClient: QueryClient;
+  userId: string | undefined;
 }) => {
+  // Handle WhatsApp message status update
+  if (newMessagePayload.type === "message_status_update") {
+    const { message_status_update } = newMessagePayload;
+    queryClient.setQueriesData(
+      {
+        queryKey: ["wa-messages", message_status_update?.contactId],
+        exact: false,
+      },
+      (old: any) => {
+        if (!old) return old;
+        // Update the stats for the matching messageId
+        return {
+          ...old,
+          pages: (old.pages ?? []).map((page) => ({
+            ...page,
+            messages: (page.messages ?? []).map((msg) =>
+              msg.messageId === message_status_update.messageId
+                ? { ...msg, stats: message_status_update.stats }
+                : msg,
+            ),
+          })),
+        };
+      },
+    );
+    return;
+  }
+
+  // Only handle inbox type
   if (newMessagePayload.type !== "inbox") return;
 
-  const newMessage = newMessagePayload.inbox.message;
-  const contact = newMessagePayload.inbox.contact;
+  const { inbox } = newMessagePayload;
+  const { message: newMessage, contact } = inbox;
   const contactId = contact.id;
 
-  const urlContactId = new URLSearchParams(window.location?.search)?.get(
-    "contactId",
-  );
-  const urlTab = new URLSearchParams(window.location?.search)?.get("tab");
-  const waMessageAssignStatus = contact.waMessageAssignStatus;
-  const blockedOnWhatsApp = contact.blockedOnWhatsApp;
+  const urlParams = new URLSearchParams(window.location?.search);
+  const urlContactId = urlParams.get("contactId");
+  const urlTab = urlParams.get("tab");
+  // If tab is "mine" and user is not assigned, ignore
+  if (
+    urlTab === "mine" &&
+    !contact?.waInboxAssign?.some((assign) => assign.assignedUser.id === userId)
+  )
+    return;
 
-  // Only update contact list if tab matches relevant status
-  const tabMatches =
-    urlTab &&
-    (["New", "All", "Sent"].includes(urlTab) ||
-      (urlTab === "UnAssigned" &&
-        waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED) ||
-      (urlTab === "Assigned" &&
-        waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED) ||
-      (urlTab === "Closed" &&
-        waMessageAssignStatus === WaMessageAssignStatus.CLOSED) ||
-      (urlTab === "blocked" && blockedOnWhatsApp));
-
-  if (tabMatches) {
+  // Update filtered contacts list if tab is present
+  if (urlTab) {
     queryClient.setQueriesData(
       { queryKey: ["contacts", "filtered"], exact: false },
       (old: any) => {
@@ -381,7 +403,13 @@ export const handleWebSocketMessage = ({
               return {
                 ...row,
                 lastMessage: newMessage,
-                lastReceivedMessageTimeStamp: newMessage.waCreatedAt,
+                lastReceivedMessageTimeStamp:
+                  contact.lastReceivedMessageTimeStamp,
+                waMessageAssignStatus: contact.waMessageAssignStatus,
+                assignedUsers: contact.waInboxAssign?.map((assign) => ({
+                  id: assign.assignedUser.id,
+                  name: assign.assignedUser.name,
+                })),
               };
             }
             return row;
@@ -394,9 +422,15 @@ export const handleWebSocketMessage = ({
           const newContactRow = {
             id: contactId,
             lastMessage: newMessage,
-            lastReceivedMessageTimeStamp: newMessage.waCreatedAt,
+            lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp,
             name: contact.name,
             phone: contact.phone,
+            waMessageAssignStatus: contact.waMessageAssignStatus,
+
+            assignedUsers: contact.waInboxAssign?.map((assign) => ({
+              id: assign.assignedUser.id,
+              name: assign.assignedUser.name,
+            })),
           };
           if (updatedPages.length > 0) {
             updatedPages[0] = {
@@ -411,22 +445,17 @@ export const handleWebSocketMessage = ({
         return { ...old, pages: updatedPages };
       },
     );
-  } else if (urlTab === "AssignedToMe") {
-    queryClient.invalidateQueries({
-      queryKey: ["contacts", "filtered"],
-      exact: false,
-    });
   }
 
+  // Only update wa-messages if viewing the correct contact
   if (!urlContactId || urlContactId !== contactId) return;
 
-  // Update wa-messages only if first message differs
   queryClient.setQueriesData(
     { queryKey: ["wa-messages", contactId], exact: false },
     (old: any) => {
       if (!old) return old;
-
       const firstMessage = old.pages?.[0]?.messages?.[0];
+      // Avoid duplicate if already present
       if (firstMessage?.messageId === newMessage.messageId) return old;
 
       const updatedFirstPage = {

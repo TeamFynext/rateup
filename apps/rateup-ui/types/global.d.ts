@@ -589,6 +589,7 @@ declare global {
     isIgVerifiedUser: boolean;
     followerCount: number;
     profilePic: string;
+    lastReceivedMessageTimeStamp: string;
     loyaltyCustomer?: {
       id: string;
       email?: string;
@@ -622,6 +623,12 @@ declare global {
       fieldId: string;
       value: string;
       createdAt: string;
+    }>;
+    waInboxAssign: Array<{
+      assignedUser: {
+        name: string;
+        id: string;
+      };
     }>;
   };
 
