@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useForm } from "@mantine/form";
+import { motion } from "framer-motion";
 import { Eye, EyeOff, Key, Lock, Mail } from "lucide-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
@@ -76,7 +77,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
     });
   };
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center w-full p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center w-full p-4 bg-gradient-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative">
       <div className="text-center mb-2">
         <div className="flex items-center justify-center mb-1">
           <img
@@ -90,6 +91,14 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
       </div>
       <Card className="flex flex-col px-6 py-4 sm:min-w-md max-w-lg">
         <div className="text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", duration: 0.6 }}
+            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4"
+          >
+            <Lock className="w-7 h-7 text-white" />
+          </motion.div>
           <h2 className="text-lg text-gray-900">Sign In</h2>
           <p className="text-sm text-gray-600">
             Continue your growth journey with RateUp
@@ -179,7 +188,7 @@ export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full cursor-pointer h-10 bg-rateup-blue hover:bg-rateup-blue/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full cursor-pointer h-10 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? <Loader /> : "Sign In"}
           </Button>
