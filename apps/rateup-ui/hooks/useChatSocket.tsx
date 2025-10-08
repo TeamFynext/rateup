@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getBrowserId } from "@/lib/utils";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { handleWebSocketMessage } from "@/components/Layout/Layout";
+import { useUser } from "@/context/UserContext";
 import { showInfoToast } from "@/utils/notifications";
 
 export const useChatSocket = () => {
@@ -17,6 +18,7 @@ export const useChatSocket = () => {
   const browserId = getBrowserId();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { user } = useUser();
 
   useEffect(() => {
     if (!browserId) return;
@@ -35,6 +37,7 @@ export const useChatSocket = () => {
         handleWebSocketMessage({
           newMessagePayload: message,
           queryClient,
+          userId: user?.userId,
         });
         handleNotificationWithSound({ message, router });
       };
