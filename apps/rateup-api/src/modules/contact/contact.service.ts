@@ -120,10 +120,6 @@ export async function createMultipleContacts(
         },
       },
     });
-    console.log(
-      "🚀 ~ createMultipleContacts ~ contact.customFields:",
-      contacts,
-    );
     await prisma.contactCustomFieldValue.createMany({
       data: contacts
         .filter((contact) => contact.customFields?.length)
@@ -449,6 +445,18 @@ export async function getOrCreateContactByPhone(
             phone: phone,
             orgId: orgId,
           },
+      include: {
+        waInboxAssign: {
+          select: {
+            assignedUser: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (contact) {
@@ -462,6 +470,18 @@ export async function getOrCreateContactByPhone(
             id: contact.id,
           },
           data: updateData,
+          include: {
+            waInboxAssign: {
+              select: {
+                assignedUser: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
         });
       }
       return contact;
@@ -474,6 +494,18 @@ export async function getOrCreateContactByPhone(
           aiWaChat,
           phone: source ? undefined : phone,
           orgId,
+        },
+        include: {
+          waInboxAssign: {
+            select: {
+              assignedUser: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
         },
       });
       await addZapierTriggerToQueue(
