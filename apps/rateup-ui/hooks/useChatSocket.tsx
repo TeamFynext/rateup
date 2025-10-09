@@ -13,6 +13,7 @@ import {
 } from "@/app/dashboard/inbox/store";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { handleWebSocketMessage } from "@/components/Layout/Layout";
+import { useUser } from "@/context/UserContext";
 import { showInfoToast } from "@/utils/notifications";
 
 export const useChatSocket = () => {
@@ -23,6 +24,7 @@ export const useChatSocket = () => {
   const router = useRouter();
   const { updateContactById, selectedContact } = useContactsStore();
   const { mergeMessages } = useMessagesStore();
+  const { user } = useUser();
 
   useEffect(() => {
     if (!browserId) return;
@@ -67,6 +69,7 @@ export const useChatSocket = () => {
         handleWebSocketMessage({
           newMessagePayload: message,
           queryClient,
+          userId: user?.userId,
         });
         handleNotificationWithSound({ message, router });
       };

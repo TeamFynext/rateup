@@ -312,88 +312,90 @@ const LongMemberCard = ({
           <Text size="xs" fw={400} c={"dimmed"}>
             {translations("Teams joined")} :
           </Text>
-          <ScrollArea
-            style={{ flex: 1 }}
-            scrollbarSize={1}
-            offsetScrollbars={"x"}
-            miw={250}
-          >
-            <Group
+          <Group>
+            <ScrollArea
               style={{ flex: 1 }}
-              px={"sm"}
-              justify="flex-start"
-              wrap="nowrap"
+              scrollbarSize={3}
+              offsetScrollbars={"x"}
+              miw={250}
+              maw={750}
             >
-              {teams.map(({ team_code, team_id, team_name }) => (
-                <Pill
-                  size="xs"
-                  variant="contrast"
-                  radius={"md"}
-                  styles={{
-                    root: { outline: "1px solid var(--tertiary-color)" },
-                    label: {
-                      fontWeight: "bold",
-                      color: "var(--tertiary-color)",
-                      textTransform: "uppercase",
-                    },
-                    remove: {
-                      color: "var(--tertiary-color)",
-                    },
-                  }}
-                  key={team_code}
-                  withRemoveButton
-                  onRemove={() => {
-                    setSelectedTeam({ id: team_id, name: team_name });
-                    openConfirm();
-                  }}
-                >
-                  {team_code}
-                </Pill>
-              ))}
-
-              <Popover width={200} position="bottom" withArrow shadow="md">
-                <Popover.Target>
-                  <Tooltip label={translations("Add to teams")}>
-                    <ActionIcon variant="light" radius={"xl"}>
-                      <IconPlus size={"1rem"} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Popover.Target>
-                <Popover.Dropdown p={"sm"} h={200} w={300}>
-                  <Flex justify={"flex-end"}>
-                    <RateupButtonBlue
-                      disabled={!newTeams.length}
-                      radius={"md"}
-                      size="xs"
-                      mb={"sm"}
-                      title={"Done"}
-                      onClick={() => {
-                        addTeams.mutate(
-                          { userId: member.id, teamIds: newTeams },
-                          {
-                            onSettled: () => {
-                              setNewTeams([]);
-                            },
+              <Group
+                style={{ flex: 1 }}
+                p={"sm"}
+                justify="flex-start"
+                wrap="nowrap"
+              >
+                {teams.map(({ team_code, team_id, team_name }) => (
+                  <Pill
+                    size="xs"
+                    variant="contrast"
+                    radius={"md"}
+                    styles={{
+                      root: { outline: "1px solid var(--tertiary-color)" },
+                      label: {
+                        fontWeight: "bold",
+                        color: "var(--tertiary-color)",
+                        textTransform: "uppercase",
+                      },
+                      remove: {
+                        color: "var(--tertiary-color)",
+                      },
+                    }}
+                    key={team_code}
+                    withRemoveButton
+                    onRemove={() => {
+                      setSelectedTeam({ id: team_id, name: team_name });
+                      openConfirm();
+                    }}
+                  >
+                    {team_code}
+                  </Pill>
+                ))}
+              </Group>
+            </ScrollArea>
+            <Popover width={200} position="bottom" withArrow shadow="md">
+              <Popover.Target>
+                <Tooltip label={translations("Add to teams")}>
+                  <ActionIcon variant="light" radius={"xl"}>
+                    <IconPlus size={"1rem"} />
+                  </ActionIcon>
+                </Tooltip>
+              </Popover.Target>
+              <Popover.Dropdown p={"sm"} h={200} w={300}>
+                <Flex justify={"flex-end"}>
+                  <RateupButtonBlue
+                    disabled={!newTeams.length}
+                    radius={"md"}
+                    size="xs"
+                    mb={"sm"}
+                    title={"Done"}
+                    onClick={() => {
+                      addTeams.mutate(
+                        { userId: member.id, teamIds: newTeams },
+                        {
+                          onSettled: () => {
+                            setNewTeams([]);
                           },
-                        );
-                      }}
-                      loading={addTeams.isPending}
-                    />
-                  </Flex>
-                  <MultiSelect
-                    comboboxProps={{ withinPortal: false }}
-                    value={newTeams}
-                    onChange={setNewTeams}
-                    data={teamsnotPartOf.map((t) => ({
-                      value: t.id,
-                      label: t.name,
-                    }))}
-                    placeholder="click to select"
+                        },
+                      );
+                    }}
+                    loading={addTeams.isPending}
                   />
-                </Popover.Dropdown>
-              </Popover>
-            </Group>
-          </ScrollArea>
+                </Flex>
+                <MultiSelect
+                  comboboxProps={{ withinPortal: false }}
+                  value={newTeams}
+                  onChange={setNewTeams}
+                  data={teamsnotPartOf.map((t) => ({
+                    value: t.id,
+                    label: t.name,
+                  }))}
+                  placeholder="click to select"
+                />
+              </Popover.Dropdown>
+            </Popover>
+          </Group>
         </Stack>
         <Group>
           <Tooltip

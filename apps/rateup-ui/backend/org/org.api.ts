@@ -81,8 +81,3 @@ export async function orgNameAndPhone() {
   const res = await axiosClient.get("/org/orgnameandphone");
   return res.data;
 }
-
-export async function istellusmorecompleted() {
-  const res = await axiosClient.get("/org/istellusmorecomplete");
-  return res.data;
-}

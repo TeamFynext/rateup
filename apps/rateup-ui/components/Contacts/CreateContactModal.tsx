@@ -142,7 +142,7 @@ const CreateContactModal = ({
       return;
     }
     setIsCreating(true);
-    if (form.getValues().source == importMethod.CSV) {
+    if (form.getValues().source == importMethod.CSV && !initialValues) {
       if (!csvfile) return;
       const formData = new FormData();
       formData.append("update", form.getValues().updateExisting?.toString());
@@ -172,6 +172,7 @@ const CreateContactModal = ({
           type === ContactGroupType.LOYALTY
             ? ContactGroupType.LOYALTY
             : form.getValues().source,
+        lastReceivedMessageTimeStamp: undefined,
       };
       if (initialValues) {
         editContactMutation.mutate(
@@ -279,10 +280,11 @@ const CreateContactModal = ({
             )}
           </Group>
           {(form.getValues().source == importMethod.MANUAL ||
-            form.getValues().source != importMethod.CSV) && (
+            form.getValues().source != importMethod.CSV ||
+            initialValues) && (
             <ContactForm form={form} customFields={customFields} type={type} />
           )}
-          {form.getValues().source == importMethod.CSV && (
+          {form.getValues().source == importMethod.CSV && !initialValues && (
             <Stack>
               <Blockquote
                 color="blue"
@@ -343,7 +345,11 @@ const CreateContactModal = ({
               type="button"
               loading={isCreating}
               onClick={handleSubmit}
-              disabled={form.getValues().source == importMethod.CSV && !csvfile}
+              disabled={
+                form.getValues().source == importMethod.CSV &&
+                !initialValues &&
+                !csvfile
+              }
             />
           </Group>
         </Stack>
