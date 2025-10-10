@@ -107,7 +107,7 @@ export async function getWaMessagesByContactId(
   if (cursor) {
     messages = await prisma.waMessage.findMany({
       skip: 1,
-      take: 300,
+      take: 50,
       cursor: {
         id: cursor,
       },
@@ -129,7 +129,7 @@ export async function getWaMessagesByContactId(
     });
   } else {
     messages = await prisma.waMessage.findMany({
-      take: 300,
+      take: 50,
       where: {
         contactId,
         ...sourceIdentifierCondition,
@@ -147,9 +147,9 @@ export async function getWaMessagesByContactId(
       },
     });
   }
-  const hasNextpage = messages.length === 300;
-  const nextCursor = hasNextpage ? messages[messages.length - 1].id : null;
-  return { messages, nextCursor, hasNextpage };
+  const hasNextPage = messages.length === 50;
+  const nextCursor = hasNextPage ? messages[messages.length - 1].id : null;
+  return { messages, nextCursor, hasNextPage };
 }
 
 export async function generateChatFilterData(orgId: string) {
