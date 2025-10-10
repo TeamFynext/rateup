@@ -264,7 +264,7 @@ Onboarding:
       html: `
       <h2>Organization Updated: ${orgData.updatedOrg.name}</h2>
       <p><strong>Created At:</strong> ${orgData.updatedOrg.createdAt.toISOString()}</p>
-      <h3>Tell Us More</h3>
+      <h3>Onboarding Details</h3>
       <ul>
         <li><strong>Services:</strong> ${(tellUsMore?.["services"] || []).join(", ")}</li>
         <li><strong>Industry:</strong> ${tellUsMore?.["industry"]}</li>
