@@ -1,186 +1,187 @@
 "use client";
 
-import { Button, Card, Select, Text, TextInput, Title } from "@mantine/core";
-import { CountryDropdown } from "react-country-region-selector";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BarChart3,
+  CheckCircle,
+  ClipboardList,
+  Crown,
+  MessageSquare,
+} from "lucide-react";
+
+import { Card } from "@/components/ui/card";
 
 import "react-phone-number-input/style.css";
 
+import { Button } from "@/components/ui/button";
+
 export default function OnboardingStep1({
-  onNext,
   data,
   setData,
-  userName,
+  currentStep,
+  handleBack,
+  handleNext,
 }: {
   data: any;
   setData: (fn: (prev: any) => any) => void;
-  onNext: () => void;
-  userName: string;
+  currentStep: number;
+  handleNext: any;
+  handleBack: any;
 }) {
-  const isValid =
-    data.orgName.trim() !== "" &&
-    data.business_type.trim() !== "" &&
-    data.role.trim() !== "" &&
-    data.country.trim() !== "" &&
-    isValidPhoneNumber(data.phone);
+  const services = [
+    {
+      id: "whatsapp-api",
+      name: "WhatsApp Business API",
+      icon: MessageSquare,
+      color: "bg-gradient-to-br from-green-400 to-emerald-500",
+      description: "Advanced WhatsApp automation and messaging",
+      benefit: "Reach 2.5B+ users",
+      recommended: true,
+    },
+    {
+      id: "whatsapp-loyalty",
+      name: "WhatsApp Loyalty Program",
+      icon: Crown,
+      color: "bg-gradient-to-br from-orange-400 to-pink-500",
+      description: "Reward customers via WhatsApp",
+      benefit: "Increase repeat purchases",
+    },
+    {
+      id: "web-survey",
+      name: "Web Survey Platform",
+      icon: BarChart3,
+      color: "bg-gradient-to-br from-blue-400 to-indigo-500",
+      description: "Collect customer feedback and insights",
+      benefit: "Data-driven decisions",
+    },
+  ];
+
+  const canProceed = () => {
+    return data.services.length > 0;
+  };
+
+  const handleServiceToggle = (serviceId: string) => {
+    setData((prev) => ({
+      ...prev,
+      services: prev.services.includes(serviceId)
+        ? prev.services.filter((s) => s !== serviceId)
+        : [...prev.services, serviceId],
+    }));
+  };
 
   return (
-    <div className="max-w-xl mx-auto px-4 sm:px-6 md:px-8 lg:px-0">
-      <Card
-        radius="lg"
-        shadow="sm"
-        styles={{
-          root: {
-            backgroundColor: "#FFFFFF",
-            padding: "32px",
-            border: "1px solid #E5E5E5",
-          },
-        }}
-      >
-        {/* Step indicator */}
-        <div className="mb-6">
-          <div className="h-1 bg-[#F5F5F5] rounded-full w-full">
-            <div className="h-1 bg-[#004F98] rounded-full w-1/3" />
+    <div className="space-y-4">
+      <div className="text-center">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", duration: 0.6 }}
+          className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30 mb-2 mx-auto"
+        >
+          <ClipboardList className="w-5 h-5 text-white" />
+        </motion.div>
+        <h2 className="text-gray-900 text-base">Select Your Services</h2>
+        <p className="text-gray-600 text-sm">
+          Choose the tools and features you need for your business
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-2.5">
+        {services.map((service) => (
+          <motion.div
+            key={service.id}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Card
+              className={`p-3 cursor-pointer transition-all duration-300 hover:shadow-md border-2 ${
+                data.services.includes(service.id)
+                  ? "border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
+                  : "border-gray-200 hover:border-blue-300 bg-white"
+              }`}
+              onClick={() => handleServiceToggle(service.id)}
+            >
+              <div className="flex items-center space-x-3">
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${service.color} shadow-md`}
+                >
+                  <service.icon className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-900 text-sm">
+                      {service.name}
+                    </span>
+                    {service.recommended && (
+                      <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white px-2 py-0.5 rounded-full shadow-sm text-sm">
+                        Recommended
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-gray-600 text-sm">{service.description}</p>
+                  <p className="text-blue-600 mt-1 text-sm">
+                    ✓ {service.benefit}
+                  </p>
+                </div>
+                {data.services.includes(service.id) && (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                    <CheckCircle className="w-5 h-5 text-blue-600" />
+                  </motion.div>
+                )}
+              </div>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Selection feedback */}
+      {data.services.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-2.5 mt-3 shadow-sm backdrop-blur-sm"
+        >
+          <div className="flex items-center space-x-2.5">
+            <CheckCircle className="w-4 h-4 text-blue-600" />
+            <div>
+              <p className="text-blue-700 text-sm">
+                Great! You've selected {data.services.length} service
+                {data.services.length !== 1 ? "s" : ""}
+              </p>
+              <p className="text-gray-700 mt-0.5 text-sm">
+                We'll configure these for you
+              </p>
+            </div>
           </div>
-          <Text size="sm" mt="xs" c="dimmed">
-            Step 1 of 3
-          </Text>
-        </div>
+        </motion.div>
+      )}
 
-        {/* Greeting */}
-        <div className="mb-6 text-center md:text-left">
-          <Title
-            order={2}
-            style={{
-              color: "#004F98",
-              fontWeight: 700,
-              fontSize: "1.5rem",
-              marginBottom: "0.5rem",
-            }}
-          >
-            Welcome, <span className="text-black">{userName}</span> 👋
-          </Title>
-          <Text size="md" style={{ color: "#4B5563", fontSize: "1rem" }}>
-            Let’s set up your workspace to get started.
-          </Text>
-        </div>
+      <div className="flex justify-between mt-5 pt-4 border-t border-gray-200">
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          disabled={currentStep === 1}
+          className="flex items-center px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
 
-        {/* Business name */}
-        <TextInput
-          label="Business name"
-          placeholder="Enter your business name"
-          required
-          value={data.orgName}
-          onChange={(e) =>
-            setData((prev) => ({ ...prev, orgName: e.currentTarget.value }))
-          }
-          styles={{ input: { borderColor: "#E5E5E5" } }}
-        />
-
-        {/* Industry */}
-        <Select
-          mt="md"
-          label="Business Type"
-          placeholder="Choose one"
-          required
-          data={[
-            "E-Commerce/Retail",
-            "SaaS/Technology",
-            "Financial Services",
-            "Healthcare",
-            "Education",
-            "Hospitality/Travel",
-            "Professional Services",
-            "Manufacturing",
-            "Other",
-          ]}
-          value={data.business_type}
-          onChange={(value) =>
-            setData((prev) => ({ ...prev, business_type: value || "" }))
-          }
-          styles={{ input: { borderColor: "#E5E5E5" } }}
-        />
-        {/* Country */}
-        <div className="mt-4">
-          <label className="text-sm font-medium mb-1 block">
-            Country <span className="text-red-500">*</span>
-          </label>
-          <CountryDropdown
-            value={data.country}
-            onChange={(val) =>
-              setData((prev) => ({ ...prev, country: val || "" }))
-            }
-            className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004F98]"
-          />
-        </div>
-
-        {/* Phone */}
-        <div className="mt-4">
-          <label className="text-sm font-medium mb-1 block">
-            What is your phone number? <span className="text-red-500">*</span>
-          </label>
-          <PhoneInput
-            defaultCountry="IN"
-            international
-            countryCallingCodeEditable={false}
-            value={data.phone}
-            onChange={(val) => setData({ ...data, phone: val || "" })}
-            placeholder="Enter phone number"
-            className="w-full border border-[#E5E5E5] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004F98]"
-          />
-        </div>
-
-        {/* Role */}
-        <Select
-          mt="md"
-          label="What is your role at your organization?"
-          placeholder="Choose one"
-          required
-          data={[
-            "Founder",
-            "Manager",
-            "Marketer",
-            "Support",
-            "Developer",
-            "Other",
-          ]}
-          value={data.role}
-          onChange={(value) => setData({ ...data, role: value || "" })}
-          styles={{ input: { borderColor: "#E5E5E5" } }}
-        />
-
-        {/* Website */}
-        <TextInput
-          mt="md"
-          label="Website"
-          placeholder="Enter your website (optional)"
-          value={data.website}
-          onChange={(e) =>
-            setData((prev) => ({ ...prev, website: e.currentTarget.value }))
-          }
-          styles={{ input: { borderColor: "#E5E5E5" } }}
-        />
-
-        {/* Footer */}
-        <div className="flex flex-col sm:flex-row justify-end items-center gap-4 mt-8">
+        <div className="flex space-x-2">
           <Button
-            onClick={onNext}
-            disabled={!isValid}
-            className="w-full sm:w-auto"
-            styles={{
-              root: {
-                backgroundColor: isValid ? "#004F98" : "#E5E5E5",
-                color: "white",
-                "&:hover": {
-                  backgroundColor: isValid ? "#003B73" : "#E5E5E5",
-                },
-              },
-            }}
+            onClick={handleNext}
+            disabled={!canProceed()}
+            className={`flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+              canProceed() ? "hover:scale-105" : ""
+            }`}
           >
-            Next →
+            Continue
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

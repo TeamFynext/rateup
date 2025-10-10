@@ -69,11 +69,9 @@ export async function getWebhookClientSecret() {
   return (await axiosClient.get(`org/webhook-client-secret`)).data;
 }
 
-export async function completeOrgDetails(orgName, tellUsMore, phone) {
+export async function completeOrgDetails(onboarding) {
   await axiosClient.put("/org/completeorgdetails", {
-    orgName,
-    tellUsMore,
-    phone,
+    onboarding,
   });
 }
 
