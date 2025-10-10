@@ -127,17 +127,22 @@ export const useGetMediaFile = () => {
   });
 };
 
-export const useAssignInboxToUer = (filterData) => {
+export const useAssignInboxToUer = (contactId, filterData) => {
   const qc = useQueryClient();
+  const { updateContactById } = useContactsStore();
   return useMutation({
     mutationFn: assignInboxToUser,
-    onSuccess: () => {
+    onSuccess: (data: { id: string; name: string }[]) => {
       qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
       qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
       qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
       qc.invalidateQueries({ queryKey: ["notification"] });
       qc.invalidateQueries({ queryKey: ["notificationCount"] });
       showSuccessToast("Assigned successfully");
+      updateContactById(contactId, (contact) => ({
+        ...contact,
+        assignedUsers: data,
+      }));
     },
     onError: (e) => {
       showWarnToast("Something went wrong" + JSON.stringify(e));

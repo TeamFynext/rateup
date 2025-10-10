@@ -76,12 +76,11 @@ interface Props {
   smallScreen?: boolean;
 }
 export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
-  const searchParams = useSearchParams();
-  // let contactId = searchParams.get("contactId");
-  // const { filterData, selectedContact } = useContactStore();
   const { selectedContact } = useContactsStore();
   const { filter } = useChatFilterStore();
-  const { setSelected, setIsLoading, mergeMessages } = useMessagesStore();
+  const mergeMessages = useMessagesStore((s) => s.mergeMessages);
+  const setSelected = useMessagesStore((s) => s.setSelected);
+  const setIsLoading = useMessagesStore((s) => s.setIsLoading);
   const selectedKey = useMessagesStore((s) => s.selectedKey);
   const isStoreDataLoading = useMessagesStore((s) => s.isLoading);
   const messagesByKey = useMessagesStore((s) => s.messagesByKey);
@@ -102,10 +101,11 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
     (async () => {
       setIsLoading(true);
       const cached = await getMessagesFromIDB(selectedKey);
-      if (cached.length) {
-        mergeMessages(selectedKey, cached);
+      if (!cached.length) {
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+      mergeMessages(selectedKey, cached);
     })();
   }, [selectedKey]);
 
@@ -144,11 +144,11 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
     if (contactId !== selectedContact.id) return;
     setIsLoading(true);
     const all = data.pages.flatMap((p) => p.messages);
-    if (all.length) {
-      mergeMessages(selectedKey, all);
-      saveMessagesToIDB(selectedKey, all);
+    if (!all.length) {
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
+    mergeMessages(selectedKey, all);
   }, [data, selectedKey, selectedContact]);
 
   const translations = useTranslations();
@@ -283,8 +283,6 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
     scrollableRef.current.scrollTop = currentScrollPosition + heightDifference;
   }, [allMessages]);
 
-  const { user } = useUser();
-
   return (
     <div className={classes.wrapper}>
       <div
@@ -294,7 +292,7 @@ export default function WaInboxChatDisplayBody(props: Readonly<Props>) {
           ...(props.smallScreen ? { padding: 0, paddingLeft: 10 } : {}),
         }}
       >
-        {isLoading || isStoreDataLoading ? (
+        {!allMessages.length && isLoading ? (
           <Center>
             <Loader size={"xs"} my="auto" />
           </Center>

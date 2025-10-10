@@ -7,11 +7,13 @@ import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { getBrowserId } from "@/lib/utils";
+import { saveMessagesToIDB } from "@/app/dashboard/inbox/idb";
 import {
   useContactsStore,
   useMessagesStore,
 } from "@/app/dashboard/inbox/store";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
+import { useMarkWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { handleWebSocketMessage } from "@/components/Layout/Layout";
 import { useUser } from "@/context/UserContext";
 import { showInfoToast } from "@/utils/notifications";
@@ -22,9 +24,13 @@ export const useChatSocket = () => {
   const browserId = getBrowserId();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { updateContactById, selectedContact } = useContactsStore();
-  const { mergeMessages } = useMessagesStore();
   const { user } = useUser();
+  const messageStore = useMessagesStore.getState();
+  const contactStore = useContactsStore.getState();
+  const markMessageAsRead = useMarkWaMessagesAsRead(
+    contactStore?.selectedContact?.id,
+    null,
+  );
 
   useEffect(() => {
     if (!browserId) return;
@@ -39,39 +45,57 @@ export const useChatSocket = () => {
       socketRef.current = ws;
 
       ws.onmessage = async (event) => {
-        const message = JSON.parse(event.data);
-        const data = JSON.parse(event.data); //add event type
+        const data = JSON.parse(event.data);
+        const { selectedContact, updateContactById, resetUnreadForContact } =
+          contactStore;
         switch (data.type) {
           case "inbox":
-            updateContactById(data.id, (contact) => ({
+            const { message, contact: incomingContact } = data.inbox;
+            updateContactById(incomingContact.id, (contact) => ({
               ...contact,
-              ...data.inbox.contact,
-              ...(selectedContact &&
-              selectedContact?.id !== data.inbox.contact.id
-                ? {
-                    unReadMessageCount: contact.unReadMessageCount + 1,
-                  }
-                : {}),
+              unReadMessageCount:
+                selectedContact?.id === incomingContact.id
+                  ? 0
+                  : contact.unReadMessageCount + 1,
+              lastMessage: {
+                messageBody: message.messageBody,
+                sourceIdentifier: message.sourceIdentifier,
+                sourcePlatform: message.sourcePlatform,
+                waCreatedAt: message.waCreatedAt,
+              },
             }));
-            if (selectedContact && selectedContact?.id === data.inbox.contact) {
-              mergeMessages(
-                `${selectedContact?.id}_${data.inbox.message.sourceIdentifier}`,
-                [data.inbox.message],
+            if (selectedContact && selectedContact?.id === incomingContact.id) {
+              for (const key of [
+                `${selectedContact?.id}_all`,
+                `${selectedContact?.id}_${message.sourceIdentifier}`,
+              ]) {
+                messageStore.mergeMessages(key, [message]);
+              }
+              markMessageAsRead.mutate();
+            }
+            break;
+          case "message_status_update":
+            if (
+              selectedContact &&
+              selectedContact?.id === data?.message_status_update?.contactId
+            ) {
+              messageStore.updateMessageByMessageId(
+                `${selectedContact?.id}_${data.message_status_update.sourceIdentifier}`,
+                data?.message_status_update.messageId,
+                { stats: data?.message_status_update?.stats },
               );
             }
-
             break;
-
           default:
             break;
         }
 
-        handleWebSocketMessage({
-          newMessagePayload: message,
-          queryClient,
-          userId: user?.userId,
-        });
-        handleNotificationWithSound({ message, router });
+        // handleWebSocketMessage({
+        //   newMessagePayload: data,
+        //   queryClient,
+        //   userId: user?.userId,
+        // });
+        handleNotificationWithSound({ message: data, router });
       };
 
       ws.onclose = () => {
@@ -89,7 +113,7 @@ export const useChatSocket = () => {
       closedByUser = true;
       ws?.close();
     };
-  }, [browserId, queryClient, router]);
+  }, [browserId, queryClient, router, messageStore, contactStore]);
 };
 
 const handleNotificationWithSound = ({ message, router }) => {

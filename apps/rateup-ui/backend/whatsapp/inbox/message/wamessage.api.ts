@@ -170,8 +170,8 @@ export async function assignInboxToUser(data: {
   contactId: string;
   assignedUserIds: string[];
   teamId: string;
-}) {
-  await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data);
+}): Promise<{ id: string; name: string }[]> {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data)).data;
 }
 
 export async function getAssignedUserForContact(contactId) {

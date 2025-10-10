@@ -333,7 +333,7 @@ export const AssignInbox = ({ contactId, opened, close }) => {
   const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
   const { data: assignedUsers } = useGetAssignedUserForContact(contactId);
   const { filterData } = useContactStore();
-  const assignMut = useAssignInboxToUer(filterData);
+  const assignMut = useAssignInboxToUer(contactId, filterData);
   const form = useForm({
     initialValues: {
       teamId: "",

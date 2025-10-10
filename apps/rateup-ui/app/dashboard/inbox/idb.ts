@@ -115,3 +115,28 @@ export async function clearAllMessagesFromIDB() {
   const db = await getDB();
   await db.clear(STORE_MESSAGES);
 }
+
+export async function removeMessagesFromIDB(key: string) {
+  const db = await getDB();
+  const tx = db.transaction(STORE_MESSAGES, "readwrite");
+  const store = tx.objectStore(STORE_MESSAGES);
+
+  const messagesToDelete: IDBValidKey[] = [];
+  let cursor = await store.openCursor();
+  while (cursor) {
+    if (cursor.value.key === key) {
+      messagesToDelete.push(cursor.primaryKey);
+    }
+    cursor.continue();
+  }
+  for (const pk of messagesToDelete) {
+    store.delete(pk);
+  }
+
+  await tx.done;
+}
+
+export async function removeContactFromDB(id: string) {
+  const db = await getDB();
+  await db.delete(STORE_GLOBAL, id);
+}

@@ -270,8 +270,6 @@ const WaInboxChatSelect = () => {
     [],
   );
 
-  console.log("seletctedcontact", selectedContact?.name);
-
   useEffect(() => {
     const filterKey = makeFilterKey(processedFilter);
     if (
@@ -286,8 +284,9 @@ const WaInboxChatSelect = () => {
         const newContacts = page.rows
           .filter((c) => !existingIds.has(c.id))
           .map((c) => ({ ...c, updatedAt: new Date().toISOString() }));
+        console.log("newContacts", newContacts);
         if (newContacts.length)
-          addContactsForFilter(currentFilterKey, newContacts);
+          addContactsForFilter(currentFilterKey, newContacts, tab);
       }
     });
   }, [
@@ -295,8 +294,12 @@ const WaInboxChatSelect = () => {
     currentFilterKey,
     addContactsForFilter,
     processedFilter,
+    tab,
   ]);
-
+  console.log(
+    "contactsById.get(selectedContact?.id)",
+    contactsById.get(selectedContact?.id),
+  );
   const contactIds = useMemo(
     () => contactsByFilter[currentFilterKey] || [],
     [contactsById, currentFilterKey],
@@ -364,7 +367,7 @@ const WaInboxChatSelect = () => {
     if (tab === "All") {
       prepareFilters({
         ...filter,
-        messageType: "usermessages",
+        messageType: "all",
         waMessageAssignStatus: null,
         blockedUsers: false,
       });
