@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Building, Check, ClipboardList, Sparkles, Zap } from "lucide-react";
+import { Building, Check, ClipboardList, Sparkles, X, Zap } from "lucide-react";
 
+import WhatsAppSettingsPage from "@/app/dashboard/whatsapp/settings/page";
 import {
   useCompleteOrgDetails,
   useOrgNameAndPhone,
@@ -109,25 +111,37 @@ export default function OnboardingWizard() {
     },
     {
       id: 2,
-      title: "Your Industry",
+      title: "Select Your Industry",
       icon: Building,
       description: "Tell us about your business",
     },
+    // {
+    //   id: 3,
+    //   title: "Choose Template",
+    //   icon: Sparkles,
+    //   description: "Pick a design",
+    // },
     {
       id: 3,
-      title: "Choose Template",
-      icon: Sparkles,
-      description: "Pick a design",
-    },
-    {
-      id: 4,
-      title: "Integrations",
+      title: "Select Integrations",
       icon: Zap,
       description: "Connect channels",
     },
   ];
-
-  const totalSteps = 4;
+  const [activeIntegration, setActiveIntegration] = useState<string | null>(
+    null,
+  );
+  const integrations = [
+    {
+      id: "whatsapp",
+      name: "WhatsApp",
+      icon: IconBrandWhatsapp,
+      color: "bg-green-500",
+      description: "Connect WhatsApp Business",
+      required: true,
+    },
+  ];
+  const totalSteps = 3;
   const progress = (currentStep / totalSteps) * 100;
 
   const handleBack = () => {
@@ -149,6 +163,32 @@ export default function OnboardingWizard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 flex flex-col items-center justify-center p-4 w-full">
+      <AnimatePresence>
+        {activeIntegration && (
+          <motion.div
+            className="fixed inset-0 bg-black/5 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-xl p-6 shadow-xl w-[90vw] max-w-lg relative h-[90vh] overflow-scroll"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.4 }}
+            >
+              <button
+                onClick={() => setActiveIntegration(null)}
+                className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              {activeIntegration === "whatsapp" && <WhatsAppSettingsPage />}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="max-w-xl">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl animate-pulse"></div>
@@ -338,20 +378,23 @@ export default function OnboardingWizard() {
                   handleBack={handleBack}
                 />
               )}
-              {currentStep === 3 && (
+              {/* {currentStep === 3 && (
                 <OnboardingStep3
                   data={formData}
                   handleNext={handleNext}
                   handleBack={handleBack}
                   handleTemplateSelect={handleTemplateSelect}
                 />
-              )}
-              {currentStep === 4 && (
+              )} */}
+              {currentStep === 3 && (
                 <OnboardingStep4
                   data={formData}
                   handleSubmit={handleFinish}
                   handleBack={handleBack}
                   handleIntegrationToggle={handleIntegrationToggle}
+                  setActiveIntegration={setActiveIntegration}
+                  integrations={integrations}
+                  loading={completeOrgDetails.isPending}
                 />
               )}
             </Card>

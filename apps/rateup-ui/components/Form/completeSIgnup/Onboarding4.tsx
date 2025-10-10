@@ -8,54 +8,19 @@ import WhatsAppSettingsPage from "@/app/dashboard/whatsapp/settings/page";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkboxnew";
+import { Loader } from "@/components/ui/loader";
 
 function OnboardingStep4({
   data,
   handleBack,
   handleSubmit,
   handleIntegrationToggle,
+  setActiveIntegration,
+  integrations,
+  loading,
 }) {
-  const [activeIntegration, setActiveIntegration] = useState<string | null>(
-    null,
-  );
-  const integrations = [
-    {
-      id: "whatsapp",
-      name: "WhatsApp",
-      icon: IconBrandWhatsapp,
-      color: "bg-green-500",
-      description: "Connect WhatsApp Business",
-      required: true,
-    },
-  ];
   return (
     <div className="space-y-4">
-      <AnimatePresence>
-        {activeIntegration && (
-          <motion.div
-            className="fixed inset-0 bg-black/5 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white rounded-xl p-6 shadow-xl w-full max-w-lg relative h-[50vh] overflow-scroll"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: "spring", duration: 0.4 }}
-            >
-              <button
-                onClick={() => setActiveIntegration(null)}
-                className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              {activeIntegration === "whatsapp" && <WhatsAppSettingsPage />}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
       <div className="text-center mb-4">
         <motion.div
           initial={{ scale: 0 }}
@@ -150,7 +115,7 @@ function OnboardingStep4({
             onClick={handleSubmit}
             className={`flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            Continue
+            {loading ? <Loader /> : "Continue"}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
