@@ -294,7 +294,7 @@ export async function getLoggedUserInfo(
     waAssignedChatPermission: orgData?.waAssignedChatPermission,
     status: profile?.orgMember?.[0]?.status,
     hasWhatsAppSettings: !!orgData?.WhatsappSettings?.[0]?.appId,
-    isTellUsMoreCompleted: orgData?.onboardingCompleted,
+    onboardingCompleted: orgData?.onboardingCompleted,
   };
 }
 
