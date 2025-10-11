@@ -408,6 +408,7 @@ export async function getFilteredContactsHandler(
         Array.isArray(contacts) && contacts.length > 0
           ? parseInt(page) + 1
           : null,
+      prevOffset: parseInt(page) > 1 ? parseInt(page) - 1 : null,
     });
   } catch (error) {
     console.log(error);
