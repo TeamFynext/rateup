@@ -5,7 +5,7 @@ import React from "react";
 import { Button, Select, SelectProps } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 
-import useContactStore from "@/app/dashboard/inbox/store";
+import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useLabelsContext } from "@/context/LabelsContext";
 
 import { useEditContactLabelsMutation } from "../../backend/campaign/contacts/contacts.query";
@@ -19,6 +19,7 @@ export const LifecycleSelector = ({
 }) => {
   const tags = useLabelsContext();
   const { setSelectedContact, selectedContact } = useContactStore();
+  const { updateContactById } = useContactsStore();
   const editContactMutation = useEditContactLabelsMutation(id);
 
   // Memoize the labels to prevent unnecessary recalculations
@@ -63,11 +64,17 @@ export const LifecycleSelector = ({
   const handleSubmit = (newValue: string) => {
     if (newValue === value) return; // Prevent unnecessary updates
 
-    setSelectedContact({
-      ...selectedContact,
+    // setSelectedContact({
+    //   ...selectedContact,
+    //   lifecycleId: newValue,
+    // });
+    updateContactById(id, (contact) => ({
+      ...contact,
       lifecycleId: newValue,
-    });
-
+      lifecycleName: inboxLabels
+        .flatMap((c) => c.items)
+        .find((c) => c.value === newValue).label,
+    }));
     editContactMutation.mutate({
       data: { lifecycleId: newValue },
       contactId: id,

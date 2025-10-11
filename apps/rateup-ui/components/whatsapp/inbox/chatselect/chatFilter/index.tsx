@@ -133,7 +133,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
     if (filter.strictFilter !== false) {
       count += 1;
     }
-    if (tab === WaMessageAssignStatusTab.NEW && filter.newStatuses.length) {
+    if (tab === "All" && filter.newStatuses.length) {
       count += filter.newStatuses.length;
     }
     if (["Assigned", "AssignedToMe"].includes(tab) && filter.assignedTeams) {
@@ -149,22 +149,24 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
       tags: [],
       strictFilter: false,
       searchTerm: "",
-      newStatuses: [
-        WaMessageAssignStatus.ASSIGNED,
-        WaMessageAssignStatus.CLOSED,
-      ],
+      newStatuses: [],
       assignedTeams: [],
     });
   }
 
   const statusData = [
     WaMessageAssignStatus.ASSIGNED,
-    WaMessageAssignStatus.UNASSIGNED,
-    "ASSIGNEDTOME",
-  ].map((status) => ({
-    value: status,
-    label: WaMessageAssignStatusTab[status],
-  }));
+    WaMessageAssignStatus.CLOSED,
+  ];
+
+  // const statusData = [
+  //   WaMessageAssignStatus.ASSIGNED,
+  //   WaMessageAssignStatus.UNASSIGNED,
+  //   "ASSIGNEDTOME",
+  // ].map((status) => ({
+  //   value: status,
+  //   label: WaMessageAssignStatusTab[status],
+  // }));
 
   return (
     <Stack>
@@ -275,10 +277,7 @@ export const useChatFilterStore = create<ChatFilterStore>()(
         tags: [],
         waMessageAssignStatus: null,
         blockedUsers: false,
-        newStatuses: [
-          WaMessageAssignStatus.ASSIGNED,
-          WaMessageAssignStatus.CLOSED,
-        ],
+        newStatuses: [],
         assignedTeams: [],
         phone: "all",
         labels: [],

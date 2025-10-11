@@ -19,6 +19,7 @@ import {
   loadContactIdsForFilter,
   loadContactsFromDB,
   removeContactFromDB,
+  removeContactsFromDB,
   removeMessagesFromIDB,
   saveContactIdsForFilter,
   saveContactsToDB,
@@ -125,6 +126,7 @@ interface ContactsStoreState {
   setSelectedContact: (contact) => void;
   getContactsByIds: (ids: string[]) => Promise<ContactWithUpdatedAt[]>;
   clearAllContacts: () => Promise<void>;
+  deleteContactsByIds: (contactIds: string[]) => Promise<void>;
 }
 
 enableMapSet();
@@ -168,7 +170,6 @@ export const useContactsStore = create<ContactsStoreState>()(
           produce((state: ContactsStoreState) => {
             const existingIds = state.contactsByFilter[filterKey] || [];
             const contactIdsSet = new Set(existingIds);
-            console.log("contacts", contacts);
             contacts.forEach((c) => {
               const existing = state.contactsById.get(c.id);
               // Only update if incoming contact is newer
@@ -220,7 +221,8 @@ export const useContactsStore = create<ContactsStoreState>()(
                 id,
                 createdAt:
                   tab === "All"
-                    ? (state.contactsById.get(id)?.lastMessage.waCreatedAt ?? 0)
+                    ? (state.contactsById.get(id)?.lastMessage?.waCreatedAt ??
+                      0)
                     : (state.contactsById.get(id)
                         ?.lastReceivedMessageTimeStamp ?? 0),
               }))
@@ -266,6 +268,30 @@ export const useContactsStore = create<ContactsStoreState>()(
             const newMap = new Map(state.contactsById);
             newMap.set(contactId, updated);
             state.contactsById = newMap;
+            if (contactId === get().selectedContact.id) {
+              state.selectedContact = updated;
+            }
+            if (
+              updated.lastMessage.waCreatedAt > contact.lastMessage.waCreatedAt
+            ) {
+              const newList = state.contactsByFilter[state.currentFilterKey]
+                .map((id) => ({
+                  id,
+                  createdAt: state.currentFilterKey.contains("messageType:all")
+                    ? (state.contactsById.get(id)?.lastMessage?.waCreatedAt ??
+                      0)
+                    : (state.contactsById.get(id)
+                        ?.lastReceivedMessageTimeStamp ?? 0),
+                }))
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime(),
+                )
+                .map((c) => c.id);
+
+              state.contactsByFilter[state.currentFilterKey] = newList;
+            }
           }),
         );
         saveContactToDB(updated);
@@ -316,6 +342,29 @@ export const useContactsStore = create<ContactsStoreState>()(
         }
 
         return result;
+      },
+
+      deleteContactsByIds: async (contactIds: string[]) => {
+        set(
+          produce((state) => {
+            contactIds.forEach((id) => {
+              state.contactsById.delete(id);
+              Object.keys(state.contactsByFilter).forEach((filterKey) => {
+                const contacts = state.contactsByFilter[filterKey];
+                if (contacts) {
+                  state.contactsByFilter[filterKey] = contacts.filter(
+                    (contactId) => !contactIds.includes(contactId),
+                  );
+                }
+              });
+              if (state.selectedContact?.id === id) {
+                state.selectedContact = null;
+              }
+            });
+          }),
+        );
+
+        await removeContactsFromDB(contactIds);
       },
 
       async clearAllContacts() {

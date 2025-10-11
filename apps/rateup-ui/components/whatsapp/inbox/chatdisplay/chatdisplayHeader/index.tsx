@@ -216,6 +216,7 @@ export default function WaInboxChatDisplayHeader({
 
 const ChatContactMenu = ({ contact }) => {
   const { data: subscription } = useSubscription();
+  const { updateContactById } = useContactsStore();
 
   const { setSelectedContact, filterData } = useContactStore();
   const hasTicketFeature = useMemo(
@@ -240,10 +241,14 @@ const ChatContactMenu = ({ contact }) => {
       },
       {
         onSuccess: () => {
-          setSelectedContact({
+          // setSelectedContact({
+          //   ...contact,
+          //   waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+          // });
+          updateContactById(contact.id, (existing) => ({
             ...contact,
             waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
-          });
+          }));
         },
       },
     );

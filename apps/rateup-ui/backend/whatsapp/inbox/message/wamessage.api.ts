@@ -86,6 +86,7 @@ export type ContactsWithLastMessage = ContactsData & {
 type ContactsWithLastMessageResponse = {
   rows: ContactsWithLastMessage[];
   nextOffset: number | null;
+  prevOffset: number | null;
 };
 
 export async function getChatFilterData() {

@@ -106,6 +106,9 @@ const WaInboxChatSelect = () => {
     hasNextPage: hasNextPageFilteredContacts,
     isLoading: isContactLoading,
     isFetching,
+    hasPreviousPage,
+    isFetchingPreviousPage,
+    fetchPreviousPage,
   } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
 
   const { data: waSettings, isLoading } = useWaSettings();
@@ -284,7 +287,6 @@ const WaInboxChatSelect = () => {
         const newContacts = page.rows
           .filter((c) => !existingIds.has(c.id))
           .map((c) => ({ ...c, updatedAt: new Date().toISOString() }));
-        console.log("newContacts", newContacts);
         if (newContacts.length)
           addContactsForFilter(currentFilterKey, newContacts, tab);
       }
@@ -296,10 +298,6 @@ const WaInboxChatSelect = () => {
     processedFilter,
     tab,
   ]);
-  console.log(
-    "contactsById.get(selectedContact?.id)",
-    contactsById.get(selectedContact?.id),
-  );
   const contactIds = useMemo(
     () => contactsByFilter[currentFilterKey] || [],
     [contactsById, currentFilterKey],
@@ -310,27 +308,58 @@ const WaInboxChatSelect = () => {
     },
     [router],
   );
+  const shouldShowTopLoader = hasPreviousPage;
+  const shouldShowBottomLoader = hasNextPageFilteredContacts;
+  console.log("hasPreviousPage", hasPreviousPage);
+  console.log("hasNextPageFilteredContacts", hasNextPageFilteredContacts);
+
+  const rowCount =
+    contactIds.length +
+    (shouldShowTopLoader ? 1 : 0) +
+    (shouldShowBottomLoader ? 1 : 0);
 
   const rowVirtualizer = useVirtualizer({
-    count: contactIds.length,
+    count: rowCount,
+    getScrollElement: () => parentRef.current,
     estimateSize: () => 87,
     overscan: 5,
-    getScrollElement: () => parentRef.current,
   });
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+  const firstItem = virtualItems.at(0);
+  const lastItem = virtualItems.at(-1);
+
+  // --- Top loader fetch (older messages) ---
   useEffect(() => {
-    const last = rowVirtualizer.getVirtualItems().at(-1);
+    if (!firstItem || !shouldShowTopLoader) return;
+    console.log("firstItem", firstItem);
+    if (firstItem.index === 1 && !isFetchingPreviousPage && hasPreviousPage) {
+      fetchPreviousPage();
+    }
+  }, [
+    firstItem?.index,
+    shouldShowTopLoader,
+    isFetchingPreviousPage,
+    hasPreviousPage,
+    fetchPreviousPage,
+  ]);
+
+  // --- Bottom loader fetch (newer messages) ---
+  useEffect(() => {
+    if (!lastItem || !shouldShowBottomLoader) return;
     if (
+      lastItem.index === rowCount - 1 &&
       !isFilteredContactsFetchingNextPage &&
-      hasNextPageFilteredContacts &&
-      last?.index >= contactIds.length - 1
+      hasNextPageFilteredContacts
     ) {
       fetchNextPageFilteredContacts();
     }
   }, [
-    rowVirtualizer.getVirtualItems(),
-    contactIds.length,
-    hasNextPageFilteredContacts,
+    lastItem?.index,
+    shouldShowBottomLoader,
+    rowCount,
     isFilteredContactsFetchingNextPage,
+    hasNextPageFilteredContacts,
     fetchNextPageFilteredContacts,
   ]);
 
@@ -421,7 +450,9 @@ const WaInboxChatSelect = () => {
             variant="light"
             radius="md"
             loading={
-              isFilteredContactsFetchingNextPage || isRefetchingFilteredContacts
+              isFilteredContactsFetchingNextPage ||
+              isRefetchingFilteredContacts ||
+              isFetchingPreviousPage
             }
             onClick={() => {
               refetchFilteredContacts();
@@ -463,9 +494,16 @@ const WaInboxChatSelect = () => {
               }}
             >
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const isLoaderRow = virtualRow.index > contactIds.length - 1;
-                const post = contactsById.get(contactIds[virtualRow.index]);
-
+                const topLoaderOffset = shouldShowTopLoader ? 1 : 0;
+                const isTopLoader =
+                  shouldShowTopLoader && virtualRow.index === 0;
+                const isBottomLoader =
+                  shouldShowBottomLoader && virtualRow.index === rowCount - 1;
+                let contact: any = null;
+                if (!isTopLoader && !isBottomLoader) {
+                  const idx = virtualRow.index - topLoaderOffset;
+                  contact = contactsById.get(contactIds[idx]);
+                }
                 return (
                   <div
                     key={virtualRow.index}
@@ -478,15 +516,21 @@ const WaInboxChatSelect = () => {
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >
-                    {isLoaderRow ? (
-                      hasNextPageFilteredContacts ? (
-                        "Loading more..."
-                      ) : (
-                        "Nothing more to load"
-                      )
+                    {isTopLoader ? (
+                      <div className="py-3 text-center text-gray-500">
+                        {isFetchingPreviousPage
+                          ? "Loading more..."
+                          : "No more contacts"}
+                      </div>
+                    ) : isBottomLoader ? (
+                      <div className="py-3 text-center text-gray-500">
+                        {isFilteredContactsFetchingNextPage
+                          ? "Loading more..."
+                          : "No more contacts"}
+                      </div>
                     ) : (
                       <WaInboxChatSelectCard
-                        contact={post}
+                        contact={contact}
                         waSettings={waSettings}
                       />
                     )}

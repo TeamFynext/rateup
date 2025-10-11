@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { MessagePlatform } from "@/types/enums";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
 import {
   useContactsStore,
@@ -91,6 +91,9 @@ export const useFilteredContacts = (filterData: string) => {
     queryFn: ({ pageParam }) => getFilteredContacts(filterData, pageParam),
     getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
     placeholderData: { pages: [], pageParams: [] },
+    getPreviousPageParam: (firstPage) => {
+      return firstPage?.prevOffset ?? null;
+    },
   });
 };
 
@@ -142,6 +145,7 @@ export const useAssignInboxToUer = (contactId, filterData) => {
       updateContactById(contactId, (contact) => ({
         ...contact,
         assignedUsers: data,
+        waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
       }));
     },
     onError: (e) => {

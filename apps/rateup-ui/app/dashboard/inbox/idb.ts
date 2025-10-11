@@ -140,3 +140,12 @@ export async function removeContactFromDB(id: string) {
   const db = await getDB();
   await db.delete(STORE_GLOBAL, id);
 }
+
+export async function removeContactsFromDB(ids: string[]) {
+  const db = await getDB();
+  const tx = db.transaction(STORE_GLOBAL, "readwrite");
+  for (const id of ids) {
+    await tx.store.delete(id);
+  }
+  await tx.done;
+}
