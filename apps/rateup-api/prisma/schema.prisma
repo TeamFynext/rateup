@@ -123,8 +123,8 @@ model Org {
   isPaused                 Boolean? @default(false)
   waAssignedChatPermission String   @default("All")
 
-  tellUsMore            Json?
-  isTellUsMoreCompleted Boolean @default(false)
+  onboarding              Json?
+  onboardingCompleted     Boolean @default(false)
 
   members                  OrgMember[]
   teams                    Team[]
