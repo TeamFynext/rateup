@@ -512,6 +512,67 @@ export function Step1({ formData, handleNext, translations, google }) {
                 </button>
               </div>
             </div>
+            {/* Password Validation Errors */}
+            <AnimatePresence>
+              {formData.values.password &&
+                !isPasswordValid(formData.values.password) && (
+                  <motion.div
+                    key="password-invalid"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-1 mt-1 text-xs text-red-600 font-medium"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {translations(
+                      "Your password must meet all security requirements",
+                    )}
+                  </motion.div>
+                )}
+
+              {formData.values.confirmPassword &&
+                formData.values.password !==
+                  formData.values.confirmPassword && (
+                  <motion.div
+                    key="password-mismatch"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-1 mt-1 text-xs text-red-600 font-medium"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {translations("Passwords do not match")}
+                  </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Password Rules */}
             <AnimatePresence>
@@ -871,9 +932,13 @@ export function Step3({
           >
             <Target className="w-7 h-7 text-white" />
           </motion.div>
-          <h2 className="text-gray-900 mb-2">What Are Your Goals?</h2>
+          <h2 className="text-gray-900 mb-2">
+            {translations("What Are Your Goals")}?
+          </h2>
           <p className="text-gray-600">
-            Select all that apply to personalize your RateUp experience
+            {translations(
+              "Select all that apply to personalize your RateUp experience",
+            )}
           </p>
         </div>
 
@@ -941,11 +1006,14 @@ export function Step3({
               <CheckCircle className="w-4 h-4 text-blue-600" />
               <div>
                 <p className="text-blue-700">
-                  Great! You've selected {formData.values.goals.length} goal
+                  {translations("Great")}! {translations("You've selected")}{" "}
+                  {formData.values.goals.length} goal
                   {formData.values.goals.length !== 1 ? "s" : ""}
                 </p>
                 <p className="text-gray-700 mt-1">
-                  We'll prioritize these features in your dashboard
+                  {translations(
+                    "We'll prioritize these features in your dashboard",
+                  )}
                 </p>
               </div>
             </div>
