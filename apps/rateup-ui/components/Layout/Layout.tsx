@@ -690,7 +690,7 @@ export default function Layout({ children }) {
 
     if (
       "data" in userQueryData &&
-      userQueryData.data?.isTellUsMoreCompleted === false
+      userQueryData.data?.onboardingCompleted === false
     ) {
       router.replace("/login/complete-login");
     }
