@@ -47,10 +47,10 @@ export const useGetMessagesByContactId = (
       getMessagesByContactId(contactId, pageParam, selectedPhone),
     getNextPageParam: (lastPage) =>
       lastPage.hasNextPage ? lastPage.nextCursor : undefined,
-    select: (data) => ({
-      pages: [...data.pages].reverse(),
-      pageParams: [...data.pageParams].reverse(),
-    }),
+    // select: (data) => ({
+    //   pages: [...data.pages].reverse(),
+    //   pageParams: [...data.pageParams].reverse(),
+    // }),
     enabled: !!contactId && !!selectedPhone,
   });
 };

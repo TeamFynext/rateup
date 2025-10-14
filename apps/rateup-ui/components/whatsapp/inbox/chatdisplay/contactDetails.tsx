@@ -24,6 +24,7 @@ import { useTranslations } from "next-intl";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
+import { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import { LifecycleInput } from "@/components/Contacts/LifecycleSelector";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
@@ -61,6 +62,7 @@ export default function WaInboxContactDetails({
   const [isOpen, setIsOpen] = useState(false);
   const editContactMutation = useEditContactMutation(null);
   const { customFields } = useCustomFieldsContext();
+  const { updateContactById, setSelectedContact } = useContactsStore();
 
   const form = useForm<ContactFormValues>({
     validate: zod4Resolver(contactSchema),
@@ -95,10 +97,21 @@ export default function WaInboxContactDetails({
         : values.phone,
     };
     try {
-      await editContactMutation.mutateAsync({
-        contactId: contact.id,
-        data,
-      });
+      await editContactMutation.mutateAsync(
+        {
+          contactId: contact.id,
+          data,
+        },
+        {
+          onSettled: () => {
+            updateContactById(contact.id, (c) => ({
+              ...c,
+              name: values.name,
+            }));
+            setSelectedContact({ ...contact, ...data });
+          },
+        },
+      );
     } catch (error) {
       console.error("Error updating contact:", error);
     }
@@ -210,8 +223,9 @@ export default function WaInboxContactDetails({
         style={{
           borderLeft: "1px solid #e9ecef",
         }}
+        className="hidden"
       >
-        <Stack gap="md" align="center" style={{ flex: 1 }}>
+        <Stack gap="md" align="center" style={{ flex: 1 }} mt={6}>
           <ActionIcon
             variant="outline"
             size="md"

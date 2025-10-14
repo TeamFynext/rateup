@@ -431,8 +431,8 @@ export const useMessagesStore = create<MessagesStore>()(
         for (const msg of messages) existing.set(msg.messageId ?? msg.id, msg);
         const sortedMessages = Array.from(existing.values()).sort(
           (a, b) =>
-            new Date(a.waCreatedAt).getTime() -
-            new Date(b.waCreatedAt).getTime(),
+            new Date(b.waCreatedAt).getTime() -
+            new Date(a.waCreatedAt).getTime(),
         );
         const trimmed = sortedMessages.slice(-MAX_MESSAGES_PER_CONTACT);
         entry.messages = trimmed;
@@ -460,8 +460,8 @@ export const useMessagesStore = create<MessagesStore>()(
           const sorted = data.waCreatedAt
             ? updatedMessages.sort(
                 (a, b) =>
-                  new Date(a.waCreatedAt).getTime() -
-                  new Date(b.waCreatedAt).getTime(),
+                  new Date(b.waCreatedAt).getTime() -
+                  new Date(a.waCreatedAt).getTime(),
               )
             : updatedMessages;
 

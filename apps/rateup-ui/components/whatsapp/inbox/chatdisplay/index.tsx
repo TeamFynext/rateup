@@ -106,26 +106,24 @@ export default function WaInboxChatDisplay({
       {!contact ? (
         <NothingFound text={translations("Select a chat to see messages")} />
       ) : (
-        <div className={classes.inner_animated}>
-          <WaInboxChatDisplayHeader
-            contact={contact}
-            smallScreen={smallScreen}
-            waSettings={waSettings}
-          />
-          <div className={"flex h-[calc(100%-49px)]"}>
-            <div className="flex flex-1 flex-col">
-              {showLoading ? (
-                <WhatsAppInboxLoader isLoading={showLoading} />
-              ) : (
-                <WaInboxChatDisplayBody
-                  data={messages}
-                  smallScreen={smallScreen}
-                />
-              )}
-              {!showLoading && footerContent}
-            </div>
-            <WaInboxContactDetails contact={contact} />
+        <div className="sm:flex h-full w-full">
+          <div className={classes.inner_animated}>
+            <WaInboxChatDisplayHeader
+              contact={contact}
+              smallScreen={smallScreen}
+              waSettings={waSettings}
+            />
+            {showLoading ? (
+              <WhatsAppInboxLoader isLoading={showLoading} />
+            ) : (
+              <WaInboxChatDisplayBody
+                data={messages}
+                smallScreen={smallScreen}
+              />
+            )}
+            {!showLoading && footerContent}
           </div>
+          <WaInboxContactDetails contact={contact} />
         </div>
       )}
     </Paper>
