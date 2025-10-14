@@ -143,7 +143,7 @@ function AuthTypeSignupForm({
           {translations("Welcome to RateUp")}
         </h2>
         <p className="text-sm text-gray-600">
-          {translations("Set up your account in just a few steps")}
+          {translations("Set up your account in few steps")}
         </p>
       </div>
       <div className="max-w-2xl">
@@ -159,7 +159,7 @@ function AuthTypeSignupForm({
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-orange-500 rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>

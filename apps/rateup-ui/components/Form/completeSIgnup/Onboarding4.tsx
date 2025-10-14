@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 
-import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, X, Zap } from "lucide-react";
 
-import WhatsAppSettingsPage from "@/app/dashboard/whatsapp/settings/page";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkboxnew";
