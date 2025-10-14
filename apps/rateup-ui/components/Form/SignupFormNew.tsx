@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import countryList from "react-select-country-list";
 
 import "react-phone-number-input/style.css";
 
@@ -30,13 +31,11 @@ import {
 } from "lucide-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import SelectR from "react-select";
 import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
-import { checkEmailExist } from "@/backend/user/user.api";
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
-import { showNotification } from "@/utils/auth";
-import { showErrorToast } from "@/utils/notifications";
 
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { Button } from "../ui/button";
@@ -204,7 +203,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
           {translations("Welcome to RateUp")}
         </h2>
         <p className="text-sm text-gray-600">
-          {translations("Set up your account in just a few steps")}
+          {translations("Set up your account in few steps")}
         </p>
       </div>
       <div className="max-w-2xl">
@@ -308,18 +307,22 @@ export function Step1({ formData, handleNext, translations, google }) {
     agreesToTerms;
 
   const handleClick = async () => {
-    if (formData.values?.email) {
-      setLoading(true);
-      const response = await checkEmailMutaion.mutateAsync({
-        email: formData.values.email.trim(),
-      });
+    if (!google) {
+      if (formData.values?.email) {
+        setLoading(true);
+        const response = await checkEmailMutaion.mutateAsync({
+          email: formData.values.email.trim(),
+        });
 
-      if (response.success) {
-        setEmailError(true);
+        if (response.success) {
+          setEmailError(true);
+          setLoading(false);
+          return;
+        }
         setLoading(false);
-        return;
+        handleNext();
       }
-      setLoading(false);
+    } else {
       handleNext();
     }
   };
@@ -340,7 +343,7 @@ export function Step1({ formData, handleNext, translations, google }) {
         </h2>
         <p className="text-md text-gray-600 max-w-md">
           {translations(
-            "Start your journey with RateUp's customer engagement platform",
+            "Start your Journey with RateUp's Customer Engagement Platform",
           )}
         </p>
       </div>
@@ -386,6 +389,7 @@ export function Step1({ formData, handleNext, translations, google }) {
         <div className="space-y-1">
           <Label htmlFor="name" className="text-gray-700 text-sm">
             {translations("Name")}
+            <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -393,7 +397,7 @@ export function Step1({ formData, handleNext, translations, google }) {
               id="name"
               type="text"
               placeholder={translations("Name")}
-              className="pl-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+              className="pl-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
               {...formData.getInputProps("name")}
             />
           </div>
@@ -405,6 +409,7 @@ export function Step1({ formData, handleNext, translations, google }) {
             <div className="space-y-1">
               <Label htmlFor="email" className="text-gray-700 text-sm">
                 {translations("Email")}
+                <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -412,7 +417,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                   id="email"
                   type="email"
                   placeholder="you@company.com"
-                  className={`pl-10 h-8 border-2 bg-white text-sm transition-colors duration-200 focus:ring-2 ${
+                  className={`pl-10 h-9 border-2 bg-white text-sm transition-colors duration-200 focus:ring-2 ${
                     emailError
                       ? "border-red-400 focus:border-red-500 focus:ring-red-100"
                       : "border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20"
@@ -456,6 +461,7 @@ export function Step1({ formData, handleNext, translations, google }) {
             <div className="space-y-1">
               <Label htmlFor="password" className="text-gray-700 text-sm">
                 {translations("Password")}
+                <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -463,7 +469,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder={translations("Create a strong password")}
-                  className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+                  className="pl-10 pr-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
                   {...formData.getInputProps("password")}
                   onFocus={() => setIsPasswordFocused(true)}
                   onBlur={() => setIsPasswordFocused(false)}
@@ -489,6 +495,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                 className="text-gray-700 text-sm"
               >
                 {translations("Confirm Password")}
+                <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
                 <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -496,7 +503,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder={translations("Confirm your password")}
-                  className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+                  className="pl-10 pr-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
                   {...formData.getInputProps("confirmPassword")}
                 />
                 <button
@@ -693,25 +700,7 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
     "Other",
   ];
 
-  const locations = [
-    "United States",
-    "Canada",
-    "United Kingdom",
-    "Australia",
-    "Germany",
-    "France",
-    "Spain",
-    "Italy",
-    "Netherlands",
-    "Sweden",
-    "Norway",
-    "Denmark",
-    "Singapore",
-    "India",
-    "Brazil",
-    "Mexico",
-    "Other",
-  ];
+  const countries = countryList().getData();
 
   const isFormComplete =
     formData.values.orgName.trim() !== "" &&
@@ -744,13 +733,14 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         <div className="space-y-1">
           <Label htmlFor="orgName" className="text-gray-700 text-sm">
             {translations("Business Name")}
+            <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               id="orgName"
               placeholder={translations("Business Name")}
-              className="pl-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+              className="pl-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
               {...formData.getInputProps("orgName")}
             />
           </div>
@@ -765,7 +755,7 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
             <Input
               id="website"
               placeholder="https://yourcompany.com"
-              className="pl-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+              className="pl-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
               {...formData.getInputProps("website")}
             />
           </div>
@@ -774,19 +764,21 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         <div className="space-y-1">
           <Label className="text-gray-700 text-sm">
             {translations("Phone Number")}
+            <span className="text-red-500">*</span>
           </Label>
           <PhoneInput
             international
             defaultCountry="IN"
             value={formData.values.phoneNumber}
             onChange={(val) => formData.setFieldValue("phoneNumber", val || "")}
-            className="border-2 border-gray-200 focus:border-rateup-blue focus-within:ring-2 focus-within:ring-rateup-blue/20 rounded-md px-3 py-1 text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full"
+            className="border-2 border-gray-200 focus:border-rateup-blue focus-within:ring-2 focus-within:ring-rateup-blue/20 rounded-md px-3 py-2 text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full "
           />
         </div>
 
         <div className="space-y-1">
           <Label className="text-gray-700 text-sm">
             {translations("Industry")}
+            <span className="text-red-500">*</span>
           </Label>
           <Select
             value={formData.values.industry}
@@ -808,38 +800,34 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         <div className="space-y-1">
           <Label className="text-gray-700 text-sm">
             {translations("Location")}
+            <span className="text-red-500">*</span>
           </Label>
-          <Select
-            value={formData.values.location}
-            onValueChange={(val) => formData.setFieldValue("location", val)}
-          >
-            <SelectTrigger className="w-full h-7 border-2 border-gray-200 focus:border-orange-500 bg-white text-sm">
-              <SelectValue placeholder={translations("Select Your Location")} />
-            </SelectTrigger>
-            <SelectContent side="bottom" align="start">
-              {locations.map((location) => (
-                <SelectItem key={location} value={location}>
-                  {location}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SelectR
+            options={countries}
+            value={countries.find((c) => c.value === formData.values.location)}
+            onChange={(option) =>
+              formData.setFieldValue("location", option?.value || "")
+            }
+            placeholder={translations("Select Your Location")}
+            isSearchable
+            className="rounded-md text-sm bg-white [&>input]:w-full border-gray-200"
+          />
         </div>
       </div>
 
       <div className="bg-gradient-to-r from-orange-100 to-pink-100 border border-orange-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm">
-        <div className="flex items-start">
-          <Sparkles className="w-4 h-4 text-orange-600 mt-0.5" />
-          <div>
+        <div className="flex flex-col items-start gap-1">
+          <div className="flex gap-1 items-start justify-center">
+            <Sparkles className="w-5 h-5 text-orange-600 mt-0.5" />
             <p className="text-orange-700 text-sm">
               {translations("Personalized setup ahead")}
             </p>
-            <p className="text-gray-700 mt-1 text-sm">
-              {translations(
-                "We'll tailor your dashboard and features based on your business details",
-              )}
-            </p>
           </div>
+          <p className="text-gray-700 mt-1 text-sm">
+            {translations(
+              "We'll tailor your dashboard and features based on your business details",
+            )}
+          </p>
         </div>
       </div>
 

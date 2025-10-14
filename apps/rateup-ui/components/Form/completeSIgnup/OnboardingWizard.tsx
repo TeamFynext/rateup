@@ -23,7 +23,6 @@ import {
 
 import OnboardingStep1 from "./Onboarding1";
 import OnboardingStep2 from "./Onboarding2";
-import OnboardingStep3 from "./Onboarding3";
 import OnboardingStep4 from "./Onboarding4";
 
 export default function OnboardingWizard() {
@@ -38,6 +37,9 @@ export default function OnboardingWizard() {
   });
 
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [activeIntegration, setActiveIntegration] = useState<string | null>(
+    null,
+  );
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const completeOrgDetails = useCompleteOrgDetails();
   const { route, updateRouteAndCart } = useRouteAndCartStore();
@@ -87,12 +89,6 @@ export default function OnboardingWizard() {
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-  const handleTemplateSelect = (templateId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      selectedTemplate: templateId,
-    }));
-  };
   const handleIntegrationToggle = (integrationId: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -115,12 +111,6 @@ export default function OnboardingWizard() {
       icon: Building,
       description: "Tell us about your business",
     },
-    // {
-    //   id: 3,
-    //   title: "Choose Template",
-    //   icon: Sparkles,
-    //   description: "Pick a design",
-    // },
     {
       id: 3,
       title: "Select Integrations",
@@ -128,9 +118,6 @@ export default function OnboardingWizard() {
       description: "Connect channels",
     },
   ];
-  const [activeIntegration, setActiveIntegration] = useState<string | null>(
-    null,
-  );
   const integrations = [
     {
       id: "whatsapp",
@@ -213,7 +200,7 @@ export default function OnboardingWizard() {
               Welcome to RateUp, {info?.nameOfUser || ""}! 👋
             </h1>
             <p className="text-gray-600 text-sm">
-              Let's get your customer engagement platform ready in 4 quick steps
+              Let's get your customer engagement platform ready in 3 quick steps
             </p>
           </motion.div>
 
@@ -378,14 +365,6 @@ export default function OnboardingWizard() {
                   handleBack={handleBack}
                 />
               )}
-              {/* {currentStep === 3 && (
-                <OnboardingStep3
-                  data={formData}
-                  handleNext={handleNext}
-                  handleBack={handleBack}
-                  handleTemplateSelect={handleTemplateSelect}
-                />
-              )} */}
               {currentStep === 3 && (
                 <OnboardingStep4
                   data={formData}
