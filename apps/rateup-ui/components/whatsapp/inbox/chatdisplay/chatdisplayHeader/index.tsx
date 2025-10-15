@@ -40,7 +40,10 @@ import {
   WaMessageAssignStatus,
 } from "@/types/enums";
 import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContext";
-import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
+import useContactStore, {
+  ContactWithUpdatedAt,
+  useContactsStore,
+} from "@/app/dashboard/inbox/store";
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
@@ -67,7 +70,7 @@ import WaInboxCountdownTimer from "./countDown";
 import classes from "./styles.module.css";
 
 interface WaInboxChatDisplayHeaderProps {
-  contact: ContactsWithLastMessage;
+  contact: ContactWithUpdatedAt;
   smallScreen: boolean;
   waSettings: any;
 }
@@ -241,10 +244,6 @@ const ChatContactMenu = ({ contact }) => {
       },
       {
         onSuccess: () => {
-          // setSelectedContact({
-          //   ...contact,
-          //   waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
-          // });
           updateContactById(contact.id, (existing) => ({
             ...contact,
             waMessageAssignStatus: WaMessageAssignStatus.CLOSED,

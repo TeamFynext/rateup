@@ -39,6 +39,7 @@ export type WaGetMessagesBody = {
     };
   };
   sourcePlatform: MessagePlatform;
+  sourceIdentifier: string;
 };
 
 export type WaMessagePage = {
@@ -82,11 +83,11 @@ export type ContactsWithLastMessage = ContactsData & {
   total_contact_count?: string;
   unReadMessageCount?: number;
   assignedUsers: { id: string; name: string }[];
+  messages: Partial<WaGetMessagesBody>[];
 };
 type ContactsWithLastMessageResponse = {
   rows: ContactsWithLastMessage[];
   nextOffset: number | null;
-  prevOffset: number | null;
 };
 
 export async function getChatFilterData() {

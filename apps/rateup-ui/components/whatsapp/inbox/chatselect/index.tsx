@@ -31,7 +31,7 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Loader } from "lucide-react";
+import { Key, Loader } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
@@ -74,6 +74,7 @@ const WaInboxChatSelect = () => {
   const currentFilterKey = useContactsStore((s) => s.currentFilterKey);
   const contactsById = useContactsStore((s) => s.contactsById);
   const contactsByFilter = useContactsStore((s) => s.contactsByFilter);
+  const { mergeMessages } = useMessagesStore();
 
   useEffect(() => {
     loadContactsFromDB(processedFilter);
@@ -138,7 +139,20 @@ const WaInboxChatSelect = () => {
     },
     [],
   );
-
+  function updateInitialMessagesToStore(contacts) {
+    contacts.map((c) => {
+      const messageMap = new Map();
+      c.messages.map((m) => {
+        const key = `${c.id}_${m.sourceIdentifier}`;
+        const all = `${c.id}_all`;
+        messageMap.set(key, [...(messageMap.get(key) ?? []), m]);
+        messageMap.set(all, [...(messageMap.get(all) ?? []), m]);
+      });
+      Array.from(messageMap.entries()).map(([key, messages]) => {
+        mergeMessages(key, messages, false);
+      });
+    });
+  }
   useEffect(() => {
     const filterKey = makeFilterKey(processedFilter);
     if (
@@ -153,8 +167,9 @@ const WaInboxChatSelect = () => {
         const newContacts = page.rows
           .filter((c) => !existingIds.has(c.id))
           .map((c) => ({ ...c, updatedAt: new Date().toISOString() }));
-        if (newContacts.length)
-          addContactsForFilter(currentFilterKey, newContacts, tab);
+        if (!newContacts.length) return;
+        addContactsForFilter(currentFilterKey, newContacts, tab);
+        updateInitialMessagesToStore(newContacts);
       }
     });
   }, [

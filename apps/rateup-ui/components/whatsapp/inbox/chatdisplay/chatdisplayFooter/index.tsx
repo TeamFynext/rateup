@@ -19,7 +19,10 @@ import { useTranslations } from "next-intl";
 import { create } from "zustand";
 
 import { MessagePlatform } from "@/types/enums";
-import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
+import useContactStore, {
+  ContactWithUpdatedAt,
+  useContactsStore,
+} from "@/app/dashboard/inbox/store";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import VoiceRecorder, {
   useVoiceRecordStore,
@@ -53,7 +56,7 @@ import classes from "./styles.module.css";
 export default function WaInboxChatDisplayFooter({
   contact,
 }: Readonly<{
-  contact: ContactsWithLastMessage;
+  contact: ContactWithUpdatedAt;
 }>) {
   const inputRef = useRef(null);
   const submiRef = useRef(null);

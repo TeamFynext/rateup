@@ -121,18 +121,13 @@ export async function removeMessagesFromIDB(key: string) {
   const tx = db.transaction(STORE_MESSAGES, "readwrite");
   const store = tx.objectStore(STORE_MESSAGES);
 
-  const messagesToDelete: IDBValidKey[] = [];
   let cursor = await store.openCursor();
   while (cursor) {
     if (cursor.value.key === key) {
-      messagesToDelete.push(cursor.primaryKey);
+      await cursor.delete();
     }
-    cursor.continue();
+    cursor = await cursor.continue();
   }
-  for (const pk of messagesToDelete) {
-    store.delete(pk);
-  }
-
   await tx.done;
 }
 

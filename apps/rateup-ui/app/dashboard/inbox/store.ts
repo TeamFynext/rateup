@@ -83,7 +83,7 @@ export function makeFilterKey(filter) {
 }
 type ContactsByFilter = Record<string, string[]>;
 
-export type ContactWithUpdatedAt = ContactsWithLastMessage & {
+export type ContactWithUpdatedAt = Omit<ContactsWithLastMessage, "messages"> & {
   updatedAt: string;
 };
 interface ContactsStoreState {
@@ -98,7 +98,7 @@ interface ContactsStoreState {
   loadContactsFromDB: (filter: ChatFilter) => Promise<void>;
   addContactsForFilter: (
     filterKey: string,
-    contacts: ContactWithUpdatedAt[],
+    contacts: Array<ContactsWithLastMessage & { updatedAt: string }>,
     tab: string,
   ) => Promise<void>;
   updateContactById: (
@@ -163,6 +163,7 @@ export const useContactsStore = create<ContactsStoreState>()(
             const existingIds = state.contactsByFilter[filterKey] || [];
             const contactIdsSet = new Set(existingIds);
             contacts.forEach((c) => {
+              const { messages, ...rest } = c;
               const existing = state.contactsById.get(c.id);
               // Only update if incoming contact is newer
               if (
@@ -170,7 +171,7 @@ export const useContactsStore = create<ContactsStoreState>()(
                 new Date(c.updatedAt) > new Date(existing.updatedAt)
               ) {
                 state.contactsById.set(c.id, {
-                  ...c,
+                  ...rest,
                   unReadMessageCount:
                     state.selectedContact?.id === c.id
                       ? 0
@@ -362,7 +363,11 @@ interface MessagesStore {
   selectedKey: string | null;
   accessTimestamps: Map<string, number>;
   setSelected: (contactId: string, account: string) => void;
-  mergeMessages: (key: string, messages: WaGetMessagesBody[]) => void;
+  mergeMessages: (
+    key: string,
+    messages: WaGetMessagesBody[],
+    evictInactive?: boolean,
+  ) => void;
   getMessages: (key: string) => WaGetMessagesBody[];
   isLoading: boolean;
   setIsLoading: (valu: boolean) => void;
@@ -392,7 +397,7 @@ export const useMessagesStore = create<MessagesStore>()(
         set({ selectedKey: key, isLoading: true });
       },
 
-      mergeMessages: (key, messages) => {
+      mergeMessages: (key, messages, evictInactive = true) => {
         const state = get();
         const m = new Map(state.messagesByKey);
         const entry = m.get(key) ?? { messages: [] };
@@ -428,7 +433,7 @@ export const useMessagesStore = create<MessagesStore>()(
         entry.messages = trimmed;
         m.set(key, entry);
         set({ messagesByKey: m, isLoading: false });
-        requestIdleCallback(() => saveMessagesToIDB(key, trimmed));
+        if (!evictInactive) return;
         const acc = new Map(state.accessTimestamps);
         acc.set(key, Date.now());
         set({ accessTimestamps: acc });
