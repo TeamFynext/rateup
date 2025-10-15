@@ -129,8 +129,10 @@ const WaInboxChatDisplayBody = (props) => {
         <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const message = allMessages[virtualRow.index];
-            const previousMessage =
-              virtualRow.index > 0 ? allMessages[virtualRow.index - 1] : null;
+            const nextMessage =
+              virtualRow.index < allMessages.length - 1
+                ? allMessages[virtualRow.index + 1]
+                : null;
             const isLoaderRow = virtualRow.index > allMessages.length - 1;
             return (
               <div
@@ -151,7 +153,7 @@ const WaInboxChatDisplayBody = (props) => {
                     message={message}
                     props={props}
                     selectedContact={selectedContact}
-                    previousMessage={previousMessage}
+                    nextMessage={nextMessage}
                   />
                 )}
               </div>
@@ -179,7 +181,7 @@ const WaInboxChatDisplayBody = (props) => {
 };
 export default WaInboxChatDisplayBody;
 
-const MessageItem = ({ message, props, selectedContact, previousMessage }) => {
+const MessageItem = ({ message, props, selectedContact, nextMessage }) => {
   const translations = useTranslations();
   if (!message) return null;
   const { exchangeProcess, receive } = message.messageBody;
@@ -192,11 +194,8 @@ const MessageItem = ({ message, props, selectedContact, previousMessage }) => {
   )
     return <div />;
   const showDate =
-    !previousMessage ||
-    !dayjs(message.waCreatedAt).isSame(
-      dayjs(previousMessage.waCreatedAt),
-      "day",
-    );
+    !nextMessage ||
+    !dayjs(message.waCreatedAt).isSame(dayjs(nextMessage.waCreatedAt), "day");
   const reaction = getReactionMessage({
     message,
     props,
