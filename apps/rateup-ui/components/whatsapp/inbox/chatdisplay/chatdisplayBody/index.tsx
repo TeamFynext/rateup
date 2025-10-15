@@ -30,7 +30,7 @@ const reverseScroll = (e) => {
   e.currentTarget.scrollTop -= e.deltaY;
 };
 
-const PaymentMessagesChat = (props) => {
+const WaInboxChatDisplayBody = (props) => {
   const parentRef = useRef(null);
   const { selectedContact } = useContactsStore();
   const { filter } = useChatFilterStore();
@@ -168,7 +168,7 @@ const PaymentMessagesChat = (props) => {
     </>
   );
 };
-export default PaymentMessagesChat;
+export default WaInboxChatDisplayBody;
 
 const MessageItem = ({ message, props, selectedContact, previousMessage }) => {
   const translations = useTranslations();
