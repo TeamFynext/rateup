@@ -84,7 +84,7 @@ export async function createUserSignup({
           name: orgName,
           ownerId: newUser.id,
           phone: phoneNumber,
-          tellUsMore: {
+          onboarding: {
             location: location || null,
             website: website || null,
             industry: industry || null,
@@ -265,7 +265,7 @@ export async function getLoggedUserInfo(
       phone: true,
       encryptionKeys: true,
       isPaused: true,
-      isTellUsMoreCompleted: true,
+      onboardingCompleted: true,
       waAssignedChatPermission: true,
       WhatsappSettings: {
         select: {
@@ -294,7 +294,7 @@ export async function getLoggedUserInfo(
     waAssignedChatPermission: orgData?.waAssignedChatPermission,
     status: profile?.orgMember?.[0]?.status,
     hasWhatsAppSettings: !!orgData?.WhatsappSettings?.[0]?.appId,
-    isTellUsMoreCompleted: orgData?.isTellUsMoreCompleted,
+    onboardingCompleted: orgData?.onboardingCompleted,
   };
 }
 

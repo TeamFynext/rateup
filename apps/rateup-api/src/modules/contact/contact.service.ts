@@ -108,37 +108,68 @@ export async function createMultipleContacts(
     aiWaChat,
     customFields: undefined,
   }));
-  const createdContacts = await prisma.contact.createManyAndReturn({
-    skipDuplicates: true,
-    data: contactsData,
-  });
-  if (createdContacts.length) {
-    await prisma.contactCustomFieldValue.deleteMany({
-      where: {
-        contactId: {
-          in: createdContacts.map((c) => c.id),
-        },
-      },
-    });
-    await prisma.contactCustomFieldValue.createMany({
-      data: contacts
-        .filter((contact) => contact.customFields?.length)
-        .flatMap((contact) =>
-          contact.customFields.map((field) => ({
-            contactId:
-              createdContacts.find((c) => c.phone === contact.phone)?.id || "",
-            fieldId: field.id,
-            value: field.value,
-          })),
-        ),
+
+  // Batch size for DB operations
+  const BATCH_SIZE = 1000;
+  let createdContacts: any[] = [];
+  for (let i = 0; i < contactsData.length; i += BATCH_SIZE) {
+    const batch = contactsData.slice(i, i + BATCH_SIZE);
+    const batchCreated = await prisma.contact.createManyAndReturn({
       skipDuplicates: true,
+      data: batch,
     });
-    for (const contact of createdContacts)
-      await addZapierTriggerToQueue(
-        ZapierTriggers.CONTACT_CREATE,
-        { [ZapierTriggers.CONTACT_CREATE]: contact },
-        orgId,
+    createdContacts = createdContacts.concat(batchCreated);
+  }
+
+  if (createdContacts.length) {
+    // Batch delete custom field values
+    for (let i = 0; i < createdContacts.length; i += BATCH_SIZE) {
+      const batchIds = createdContacts
+        .slice(i, i + BATCH_SIZE)
+        .map((c) => c.id);
+      await prisma.contactCustomFieldValue.deleteMany({
+        where: {
+          contactId: {
+            in: batchIds,
+          },
+        },
+      });
+    }
+
+    // Prepare custom field values
+    const customFieldValues = contacts
+      .filter((contact) => contact.customFields?.length)
+      .flatMap((contact) =>
+        contact.customFields.map((field) => ({
+          contactId:
+            createdContacts.find((c) => c.phone === contact.phone)?.id || "",
+          fieldId: field.id,
+          value: field.value,
+        })),
       );
+
+    // Batch create custom field values
+    for (let i = 0; i < customFieldValues.length; i += BATCH_SIZE) {
+      const batch = customFieldValues.slice(i, i + BATCH_SIZE);
+      await prisma.contactCustomFieldValue.createMany({
+        data: batch,
+        skipDuplicates: true,
+      });
+    }
+
+    // Batch Zapier triggers
+    for (let i = 0; i < createdContacts.length; i += BATCH_SIZE) {
+      const batch = createdContacts.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map((contact) =>
+          addZapierTriggerToQueue(
+            ZapierTriggers.CONTACT_CREATE,
+            { [ZapierTriggers.CONTACT_CREATE]: contact },
+            orgId,
+          ),
+        ),
+      );
+    }
   }
 
   return createdContacts;

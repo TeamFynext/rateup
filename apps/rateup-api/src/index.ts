@@ -188,13 +188,19 @@ async function main() {
       process.exit(1);
     });
   if (process.env.SWAGGER == "1") {
-    server.after(() => {
+    server.after(async () => {
       server.register(swagger, swaggerConfig);
       server.register(swaggerUi, {
         routePrefix: "/docs",
         uiConfig: {
           defaultModelsExpandDepth: -1,
           persistAuthorization: true,
+        },
+      });
+      await server.register(import("@scalar/fastify-api-reference"), {
+        routePrefix: "/reference",
+        configuration: {
+          persistAuth: true,
         },
       });
       log.trace("Swagger registered. Exposing docs at /docs");

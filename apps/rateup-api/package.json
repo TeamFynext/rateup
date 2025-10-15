@@ -21,6 +21,7 @@
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@google-cloud/language": "^6.1.1",
     "@prisma/adapter-pg": "^6.16.2",
+    "@scalar/fastify-api-reference": "^1.38.0",
     "@sendgrid/mail": "^7.7.0",
     "@shopify/shopify-api": "^11.1.0",
     "axios": "^1.4.0",
