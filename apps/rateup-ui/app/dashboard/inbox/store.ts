@@ -118,7 +118,6 @@ interface ContactsStoreState {
 enableMapSet();
 //for messages
 const MAX_CONTACTS_IN_MEMORY = 30;
-const MAX_MESSAGES_PER_CONTACT = 500;
 export const useContactsStore = create<ContactsStoreState>()(
   persist(
     (set, get) => ({
@@ -429,8 +428,7 @@ export const useMessagesStore = create<MessagesStore>()(
             new Date(b.waCreatedAt).getTime() -
             new Date(a.waCreatedAt).getTime(),
         );
-        const trimmed = sortedMessages.slice(-MAX_MESSAGES_PER_CONTACT);
-        entry.messages = trimmed;
+        entry.messages = sortedMessages;
         m.set(key, entry);
         set({ messagesByKey: m, isLoading: false });
         if (!evictInactive) return;
