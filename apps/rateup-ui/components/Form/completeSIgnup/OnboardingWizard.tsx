@@ -65,10 +65,10 @@ export default function OnboardingWizard() {
       {
         onSuccess: async () => {
           await queryClient.invalidateQueries({
-            queryKey: ["istellusmorecomplete"],
+            queryKey: ["userInfoQuery"],
           });
           await queryClient.refetchQueries({
-            queryKey: ["istellusmorecomplete"],
+            queryKey: ["userInfoQuery"],
           });
 
           const data = localStorage.getItem("subscriptionRoutAndCart");
