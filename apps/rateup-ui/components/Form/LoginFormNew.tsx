@@ -17,7 +17,7 @@ import { Label } from "../ui/label";
 import { Loader } from "../ui/loader";
 import styles from "./AuthForm.module.css";
 import GoogleSignInButton from "./GoogleSigninButton";
-import { signUpType } from "./SignupForm";
+import { signUpType } from "./SignupFormNew";
 
 export default function SignInFlow({ setIsLoading, signIn, isLoading }) {
   const translations = useTranslations();

@@ -8,9 +8,9 @@ import { AuthMode } from "../../../utils/enums";
 const VerifyEmail = () => {
   useCheckSession();
   return (
-    <LoginSignupLayout>
-      <AuthForm mode={AuthMode.VERIFY} />
-    </LoginSignupLayout>
+    // <LoginSignupLayout>
+    <AuthForm mode={AuthMode.VERIFY} />
+    // </LoginSignupLayout>
   );
 };
 
