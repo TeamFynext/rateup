@@ -20,8 +20,8 @@ const userInfoSchema = z.object({
 const createUserSignupSchema = z.object({
   ...userCore,
   email: z.string().email(),
-  name: z.string().min(4),
-  orgName: z.string().min(4),
+  name: z.string().min(1),
+  orgName: z.string().min(1),
   phone: z.string(),
   phoneNumber: z.string().optional(),
   recipeName: z.nativeEnum(UserRecipes),
