@@ -10,7 +10,6 @@ import {
   getOrgStats,
   getTeamsMembersOfOrg,
   getWebhookClientSecret,
-  istellusmorecompleted,
   IUpdateLogo,
   IUpdateOrgDetails,
   orgNameAndPhone,
@@ -164,15 +163,8 @@ export const useGetWebhookClientSecret = (webhookUrl) => {
 
 export function useCompleteOrgDetails() {
   return useMutation({
-    mutationFn: ({
-      orgName,
-      tellUsMore,
-      phone,
-    }: {
-      orgName?: string;
-      tellUsMore?: Record<string, unknown>;
-      phone: string;
-    }) => completeOrgDetails(orgName, tellUsMore, phone),
+    mutationFn: ({ onboarding }: { onboarding?: Record<string, unknown> }) =>
+      completeOrgDetails(onboarding),
   });
 }
 
@@ -180,12 +172,5 @@ export function useOrgNameAndPhone() {
   return useQuery({
     queryKey: ["orgNameAndPhone"],
     queryFn: orgNameAndPhone,
-  });
-}
-
-export function useIsTellUsMoreCompleted() {
-  return useQuery({
-    queryKey: ["istellusmorecomplete"],
-    queryFn: istellusmorecompleted,
   });
 }

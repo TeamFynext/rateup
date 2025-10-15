@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import countryList from "react-select-country-list";
 
 import "react-phone-number-input/style.css";
 
@@ -13,7 +14,9 @@ import {
   ArrowLeft,
   ArrowRight,
   Building,
+  Check,
   CheckCircle,
+  Dot,
   Eye,
   EyeOff,
   Globe,
@@ -22,6 +25,7 @@ import {
   Mail,
   MessageSquare,
   Shield,
+  Sparkles,
   Target,
   User,
   Users,
@@ -29,13 +33,11 @@ import {
 } from "lucide-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
+import SelectR from "react-select";
 import { z } from "zod/v4";
 
 import { useSendMailPlanSelectDetails } from "@/backend/payment/payment.query";
-import { checkEmailExist } from "@/backend/user/user.api";
 import { useCheckEmailExistMutation } from "@/backend/user/user.query";
-import { showNotification } from "@/utils/auth";
-import { showErrorToast } from "@/utils/notifications";
 
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { Button } from "../ui/button";
@@ -190,7 +192,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
     });
   };
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center w-full p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center w-full p-4 bg-gradient-to-br from-blue-50/40 via-purple-50/30 to-pink-50/40 relative">
       <div className="text-center mb-1">
         <div className="flex items-center justify-center mb-1">
           <img
@@ -203,7 +205,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
           {translations("Welcome to RateUp")}
         </h2>
         <p className="text-sm text-gray-600">
-          {translations("Set up your account in just a few steps")}
+          {translations("Set up your account in few steps")}
         </p>
       </div>
       <div className="max-w-2xl">
@@ -219,7 +221,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-orange-500 rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -307,30 +309,44 @@ export function Step1({ formData, handleNext, translations, google }) {
     agreesToTerms;
 
   const handleClick = async () => {
-    if (formData.values?.email) {
-      setLoading(true);
-      const response = await checkEmailMutaion.mutateAsync({
-        email: formData.values.email.trim(),
-      });
+    if (!google) {
+      if (formData.values?.email) {
+        setLoading(true);
+        const response = await checkEmailMutaion.mutateAsync({
+          email: formData.values.email.trim(),
+        });
 
-      if (response.success) {
-        setEmailError(true);
+        if (response.success) {
+          setEmailError(true);
+          setLoading(false);
+          return;
+        }
         setLoading(false);
-        return;
+        handleNext();
       }
-      setLoading(false);
+    } else {
       handleNext();
     }
   };
 
   return (
     <div className="flex flex-col gap-3 w-full">
-      <div className="text-center mb-1">
-        <h2 className="text-lg text-gray-900 mb-1">
+      <div className="text-center mb-1 flex flex-col items-center justify-center">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", duration: 0.6 }}
+          className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/30 mb-4"
+        >
+          <Users className="w-7 h-7 text-white" />
+        </motion.div>
+        <h2 className="text-md text-gray-600">
           {translations("Create Your Account")}
         </h2>
-        <p className="text-sm text-gray-600">
-          {translations("Start your journey with RateUp")}
+        <p className="text-md text-gray-600 max-w-md">
+          {translations(
+            "Start your Journey with RateUp's Customer Engagement Platform",
+          )}
         </p>
       </div>
       {google ? (
@@ -375,6 +391,7 @@ export function Step1({ formData, handleNext, translations, google }) {
         <div className="space-y-1">
           <Label htmlFor="name" className="text-gray-700 text-sm">
             {translations("Name")}
+            <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -382,7 +399,7 @@ export function Step1({ formData, handleNext, translations, google }) {
               id="name"
               type="text"
               placeholder={translations("Name")}
-              className="pl-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+              className="pl-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
               {...formData.getInputProps("name")}
             />
           </div>
@@ -394,6 +411,7 @@ export function Step1({ formData, handleNext, translations, google }) {
             <div className="space-y-1">
               <Label htmlFor="email" className="text-gray-700 text-sm">
                 {translations("Email")}
+                <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -401,7 +419,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                   id="email"
                   type="email"
                   placeholder="you@company.com"
-                  className={`pl-10 h-8 border-2 bg-white text-sm transition-colors duration-200 focus:ring-2 ${
+                  className={`pl-10 h-9 border-2 bg-white text-sm transition-colors duration-200 focus:ring-2 ${
                     emailError
                       ? "border-red-400 focus:border-red-500 focus:ring-red-100"
                       : "border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20"
@@ -445,6 +463,7 @@ export function Step1({ formData, handleNext, translations, google }) {
             <div className="space-y-1">
               <Label htmlFor="password" className="text-gray-700 text-sm">
                 {translations("Password")}
+                <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -452,7 +471,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder={translations("Create a strong password")}
-                  className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+                  className="pl-10 pr-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
                   {...formData.getInputProps("password")}
                   onFocus={() => setIsPasswordFocused(true)}
                   onBlur={() => setIsPasswordFocused(false)}
@@ -478,6 +497,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                 className="text-gray-700 text-sm"
               >
                 {translations("Confirm Password")}
+                <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
                 <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -485,7 +505,7 @@ export function Step1({ formData, handleNext, translations, google }) {
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder={translations("Confirm your password")}
-                  className="pl-10 pr-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+                  className="pl-10 pr-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
                   {...formData.getInputProps("confirmPassword")}
                 />
                 <button
@@ -501,6 +521,67 @@ export function Step1({ formData, handleNext, translations, google }) {
                 </button>
               </div>
             </div>
+            {/* Password Validation Errors */}
+            <AnimatePresence>
+              {formData.values.password &&
+                !isPasswordValid(formData.values.password) && (
+                  <motion.div
+                    key="password-invalid"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-1 mt-1 text-xs text-red-600 font-medium"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {translations(
+                      "Your password must meet all security requirements",
+                    )}
+                  </motion.div>
+                )}
+
+              {formData.values.confirmPassword &&
+                formData.values.password !==
+                  formData.values.confirmPassword && (
+                  <motion.div
+                    key="password-mismatch"
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-1 mt-1 text-xs text-red-600 font-medium"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {translations("Passwords do not match")}
+                  </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Password Rules */}
             <AnimatePresence>
@@ -520,9 +601,13 @@ export function Step1({ formData, handleNext, translations, google }) {
                         className="flex items-center space-x-1"
                       >
                         {rule.valid ? (
-                          <span className="text-green-600">✔</span>
+                          <span className="text-green-600">
+                            <Check size={18} />
+                          </span>
                         ) : (
-                          <span className="text-gray-400">●</span>
+                          <span className="text-gray-400">
+                            <Dot size={18} />
+                          </span>
                         )}
                         <span
                           className={
@@ -570,6 +655,19 @@ export function Step1({ formData, handleNext, translations, google }) {
         </Label>
       </div>
 
+      <div className="w-full text-center pt-2 border-t border-gray-200">
+        <p className="text-sm text-gray-600 text-center">
+          {translations("Already have an account")}?{" "}
+          <button
+            type="button"
+            onClick={() => router.push("/login")}
+            className="text-rateup-blue hover:text-rateup-blue/80 underline transition-colors cursor-pointer"
+          >
+            Sign in
+          </button>
+        </p>
+      </div>
+
       {/* Footer actions */}
       <div className="flex justify-between pt-3 border-t border-gray-200 w-full">
         <Button
@@ -584,24 +682,11 @@ export function Step1({ formData, handleNext, translations, google }) {
         <Button
           onClick={handleClick}
           disabled={!isFormComplete}
-          className="min-w-30 flex items-center px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-w-30 flex items-center px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? <Loader /> : translations("Continue")}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
-      </div>
-
-      <div className="w-full text-center pt-2 border-t border-gray-200">
-        <p className="text-sm text-gray-600 text-center">
-          {translations("Already have an account")}?{" "}
-          <button
-            type="button"
-            onClick={() => router.push("/login")}
-            className="text-rateup-blue hover:text-rateup-blue/80 underline transition-colors cursor-pointer"
-          >
-            Sign in
-          </button>
-        </p>
       </div>
     </div>
   );
@@ -621,25 +706,7 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
     "Other",
   ];
 
-  const locations = [
-    "United States",
-    "Canada",
-    "United Kingdom",
-    "Australia",
-    "Germany",
-    "France",
-    "Spain",
-    "Italy",
-    "Netherlands",
-    "Sweden",
-    "Norway",
-    "Denmark",
-    "Singapore",
-    "India",
-    "Brazil",
-    "Mexico",
-    "Other",
-  ];
+  const countries = countryList().getData();
 
   const isFormComplete =
     formData.values.orgName.trim() !== "" &&
@@ -650,14 +717,21 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
   return (
     <div className="w-full">
       <div className="text-center mb-3">
-        <div className="w-10 h-8 bg-gradient-to-r from-orange-100 to-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2">
-          <Building className="w-5 h-5 text-orange-600" />
-        </div>
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", duration: 0.6 }}
+          className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30 mb-4 mx-auto"
+        >
+          <Building className="w-7 h-7 text-white" />
+        </motion.div>
         <h2 className="text-lg text-gray-900 mb-1">
           {translations("Tell Us About Your Business")}
         </h2>
         <p className="text-sm text-gray-600">
-          {translations("Help us customize your RateUp experience")}
+          {translations(
+            "Help us customize your RateUp experience for your specific needs",
+          )}
         </p>
       </div>
 
@@ -665,13 +739,14 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         <div className="space-y-1">
           <Label htmlFor="orgName" className="text-gray-700 text-sm">
             {translations("Business Name")}
+            <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               id="orgName"
               placeholder={translations("Business Name")}
-              className="pl-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+              className="pl-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
               {...formData.getInputProps("orgName")}
             />
           </div>
@@ -686,7 +761,7 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
             <Input
               id="website"
               placeholder="https://yourcompany.com"
-              className="pl-10 h-8 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
+              className="pl-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
               {...formData.getInputProps("website")}
             />
           </div>
@@ -695,19 +770,21 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         <div className="space-y-1">
           <Label className="text-gray-700 text-sm">
             {translations("Phone Number")}
+            <span className="text-red-500">*</span>
           </Label>
           <PhoneInput
             international
             defaultCountry="IN"
             value={formData.values.phoneNumber}
             onChange={(val) => formData.setFieldValue("phoneNumber", val || "")}
-            className="border-2 border-gray-200 focus:border-rateup-blue focus-within:ring-2 focus-within:ring-rateup-blue/20 rounded-md px-3 py-1 text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full"
+            className="border-2 border-gray-200 focus:border-rateup-blue focus-within:ring-2 focus-within:ring-rateup-blue/20 rounded-md px-3 py-2 text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full "
           />
         </div>
 
         <div className="space-y-1">
           <Label className="text-gray-700 text-sm">
             {translations("Industry")}
+            <span className="text-red-500">*</span>
           </Label>
           <Select
             value={formData.values.industry}
@@ -729,38 +806,34 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         <div className="space-y-1">
           <Label className="text-gray-700 text-sm">
             {translations("Location")}
+            <span className="text-red-500">*</span>
           </Label>
-          <Select
-            value={formData.values.location}
-            onValueChange={(val) => formData.setFieldValue("location", val)}
-          >
-            <SelectTrigger className="w-full h-7 border-2 border-gray-200 focus:border-orange-500 bg-white text-sm">
-              <SelectValue placeholder={translations("Select Your Location")} />
-            </SelectTrigger>
-            <SelectContent side="bottom" align="start">
-              {locations.map((location) => (
-                <SelectItem key={location} value={location}>
-                  {location}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SelectR
+            options={countries}
+            value={countries.find((c) => c.value === formData.values.location)}
+            onChange={(option) =>
+              formData.setFieldValue("location", option?.value || "")
+            }
+            placeholder={translations("Select Your Location")}
+            isSearchable
+            className="rounded-md text-sm bg-white [&>input]:w-full border-gray-200"
+          />
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-orange-50 to-blue-50 border border-orange-200 rounded-lg p-3 mt-4">
-        <div className="flex items-start space-x-3">
-          <Target className="w-4 h-4 text-orange-600 mt-0.5" />
-          <div>
-            <p className="text-sm text-orange-800">
+      <div className="bg-gradient-to-r from-orange-100 to-pink-100 border border-orange-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm">
+        <div className="flex flex-col items-start gap-1">
+          <div className="flex gap-1 items-start justify-center">
+            <Sparkles className="w-5 h-5 text-orange-600 mt-0.5" />
+            <p className="text-orange-700 text-sm">
               {translations("Personalized setup ahead")}
             </p>
-            <p className="text-xs text-orange-600 mt-1">
-              {translations(
-                "We'll tailor your dashboard and features based on your business details",
-              )}
-            </p>
           </div>
+          <p className="text-gray-700 mt-1 text-sm">
+            {translations(
+              "We'll tailor your dashboard and features based on your business details",
+            )}
+          </p>
         </div>
       </div>
 
@@ -777,7 +850,7 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         <Button
           onClick={handleNext}
           disabled={!isFormComplete}
-          className="flex items-center px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {translations("Continue")}
           <ArrowRight className="w-4 h-4 ml-2" />
@@ -799,23 +872,37 @@ export function Step3({
       id: "customer-support",
       label: "Improve Customer Support",
       icon: MessageSquare,
+      color: "from-cyan-400 to-blue-500",
     },
-    { id: "lead-generation", label: "Generate More Leads", icon: Target },
-    { id: "sales-automation", label: "Automate Sales Process", icon: Zap },
+    {
+      id: "lead-generation",
+      label: "Generate More Leads",
+      icon: Target,
+      color: "from-purple-400 to-pink-500",
+    },
+    {
+      id: "sales-automation",
+      label: "Automate Sales Process",
+      icon: Zap,
+      color: "from-orange-400 to-red-500",
+    },
     {
       id: "customer-retention",
       label: "Increase Customer Retention",
       icon: Users,
+      color: "from-green-400 to-emerald-500",
     },
     {
       id: "social-engagement",
       label: "Boost Social Media Engagement",
       icon: Instagram,
+      color: "from-pink-400 to-purple-500",
     },
     {
       id: "loyalty-program",
       label: "Build Loyalty Programs",
       icon: CheckCircle,
+      color: "from-yellow-400 to-orange-500",
     },
   ];
 
@@ -829,86 +916,104 @@ export function Step3({
   };
   return (
     <div className="w-full">
-      <div className="text-center mb-5">
-        <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-          <Target className="w-6 h-6 text-blue-600" />
+      <div className="space-y-4">
+        <div className="text-center mb-5">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", duration: 0.6 }}
+            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-500 shadow-lg shadow-purple-500/30 mb-4 mx-auto"
+          >
+            <Target className="w-7 h-7 text-white" />
+          </motion.div>
+          <h2 className="text-gray-900 mb-2">
+            {translations("What Are Your Goals")}?
+          </h2>
+          <p className="text-gray-600">
+            {translations(
+              "Select all that apply to personalize your RateUp experience",
+            )}
+          </p>
         </div>
-        <h2 className="text-lg text-gray-900 mb-1">
-          {translations("What Are Your Goals")}?
-        </h2>
-        <p className="text-sm text-gray-600">
-          {translations(
-            "Select all that apply to personalize your RateUp experience",
-          )}
-        </p>
-      </div>
-      <div className="grid grid-cols-1 gap-3 w-full">
-        {businessGoals.map((goal) => (
-          <Card
-            key={goal.id}
-            className={`p-1 cursor-pointer transition-all duration-300 hover:shadow-md border-2 ${
-              formData.values.goals.includes(goal.id)
-                ? "border-blue-500 bg-gradient-to-r from-blue-50 to-orange-50 shadow-md"
-                : "border-gray-200 hover:border-gray-300 bg-white"
-            }`}
-            onClick={() => handleGoalToggle(goal.id)}
+
+        <div className="grid grid-cols-1 gap-3">
+          {businessGoals.map((goal) => (
+            <motion.div
+              key={goal.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Card
+                className={`p-4 cursor-pointer transition-all duration-300 hover:shadow-md border-2 ${
+                  formData.values.goals.includes(goal.id)
+                    ? "border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
+                    : "border-gray-200 hover:border-blue-300 bg-white"
+                }`}
+                onClick={() => handleGoalToggle(goal.id)}
+              >
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors shadow-md ${
+                      formData.values.goals.includes(goal.id)
+                        ? `bg-gradient-to-r ${goal.color}`
+                        : "bg-gradient-to-br from-gray-200 to-gray-300"
+                    }`}
+                  >
+                    <goal.icon
+                      className={`w-5 h-5 ${
+                        formData.values.goals.includes(goal.id)
+                          ? "text-white"
+                          : "text-gray-600"
+                      }`}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <span
+                      className={`${
+                        formData.values.goals.includes(goal.id)
+                          ? "text-gray-900"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {goal.label}
+                    </span>
+                  </div>
+                  {formData.values.goals.includes(goal.id) && (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                      <CheckCircle className="w-5 h-5 text-blue-600" />
+                    </motion.div>
+                  )}
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Selection feedback */}
+        {formData.values.goals.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm"
           >
             <div className="flex items-center space-x-3">
-              <div
-                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                  formData.values.goals.includes(goal.id)
-                    ? "bg-gradient-to-r from-blue-500 to-orange-500"
-                    : "bg-gray-100"
-                }`}
-              >
-                <goal.icon
-                  className={`w-4 h-4 ${
-                    formData.values.goals.includes(goal.id)
-                      ? "text-white"
-                      : "text-gray-600"
-                  }`}
-                />
+              <CheckCircle className="w-4 h-4 text-blue-600" />
+              <div>
+                <p className="text-blue-700">
+                  {translations("Great")}! {translations("You've selected")}{" "}
+                  {formData.values.goals.length} goal
+                  {formData.values.goals.length !== 1 ? "s" : ""}
+                </p>
+                <p className="text-gray-700 mt-1">
+                  {translations(
+                    "We'll prioritize these features in your dashboard",
+                  )}
+                </p>
               </div>
-              <div className="flex-1">
-                <span
-                  className={`text-sm ${
-                    formData.values.goals.includes(goal.id)
-                      ? "text-gray-900"
-                      : "text-gray-700"
-                  }`}
-                >
-                  {goal.label}
-                </span>
-              </div>
-              {formData.values.goals.includes(goal.id) && (
-                <CheckCircle className="w-5 h-5 text-blue-600" />
-              )}
             </div>
-          </Card>
-        ))}
+          </motion.div>
+        )}
       </div>
-
-      {formData.values.goals.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-orange-50 border border-blue-200 rounded-lg p-3 mt-4">
-          <div className="flex items-center space-x-3">
-            <CheckCircle className="w-4 h-4 text-blue-600" />
-            <div>
-              <p className="text-sm text-blue-800">
-                {translations("Great")}! {translations("You've selected")}{" "}
-                {formData.values.goals.length}{" "}
-                {formData.values.goals.length !== 1
-                  ? translations("goals")
-                  : translations("goal")}
-              </p>
-              <p className="text-xs text-blue-600 mt-1">
-                {translations(
-                  "We'll prioritize these features in your dashboard",
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="flex justify-between pt-3 border-t border-gray-200 w-full">
         <Button
           variant="outline"
@@ -922,7 +1027,7 @@ export function Step3({
         <Button
           onClick={handleSubmit}
           disabled={isLoading}
-          className="min-w-30 flex items-center px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-w-30 flex items-center px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? <Loader /> : translations("Continue")}
           <ArrowRight className="w-4 h-4 ml-2" />
