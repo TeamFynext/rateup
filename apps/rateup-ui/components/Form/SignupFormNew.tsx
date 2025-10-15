@@ -14,7 +14,9 @@ import {
   ArrowLeft,
   ArrowRight,
   Building,
+  Check,
   CheckCircle,
+  Dot,
   Eye,
   EyeOff,
   Globe,
@@ -599,9 +601,13 @@ export function Step1({ formData, handleNext, translations, google }) {
                         className="flex items-center space-x-1"
                       >
                         {rule.valid ? (
-                          <span className="text-green-600">✔</span>
+                          <span className="text-green-600">
+                            <Check size={18} />
+                          </span>
                         ) : (
-                          <span className="text-gray-400">●</span>
+                          <span className="text-gray-400">
+                            <Dot size={18} />
+                          </span>
                         )}
                         <span
                           className={
