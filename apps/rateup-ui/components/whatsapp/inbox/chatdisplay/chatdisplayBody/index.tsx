@@ -17,10 +17,12 @@ import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wame
 import { parseWaMessage } from "@/utils/whatsapp/inbox";
 
 import { useChatFilterStore } from "../../chatselect/chatFilter";
+import { useMessageStore } from "../chatdisplayFooter";
 import {
   DateComponent,
   getReactionMessage,
   singleMessage,
+  TempMessageBody,
 } from "./components/utils";
 import WaInboxSingleMessageLayout from "./layout/singleMessageLayout";
 import classes from "./styles.module.css";
@@ -54,28 +56,14 @@ const WaInboxChatDisplayBody = (props) => {
     setSelected(selectedContact.id, filter?.phone);
   }, [selectedContact, filter?.phone]);
 
-  useEffect(() => {
-    if (!selectedKey) return;
-    (async () => {
-      setIsLoading(true);
-      const cached = await getMessagesFromIDB(selectedKey);
-      if (!cached.length) {
-        setIsLoading(false);
-        return;
-      }
-      mergeMessages(selectedKey, cached);
-    })();
-  }, [selectedKey]);
-
   const {
     fetchNextPage,
     hasNextPage, // boolean
     data,
     isFetchingNextPage,
   } = useGetMessagesByContactId(selectedContact?.id, filter?.phone);
+  const { messages } = useMessageStore();
 
-  // const messages = data?.pages.flatMap((page) => page.messages) || [];
-  const messages = allMessages;
   useEffect(() => {
     if (!data || !selectedKey || !selectedContact) return;
     const contactId = selectedKey.split("_")[0];
@@ -90,15 +78,29 @@ const WaInboxChatDisplayBody = (props) => {
   }, [data, selectedKey, selectedContact]);
 
   const rowVirtualizer = useVirtualizer({
-    count: hasNextPage ? messages.length + 1 : messages.length,
+    count: hasNextPage ? allMessages.length + 1 : allMessages.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 100,
   });
 
   useEffect(() => {
+    if (!selectedKey) return;
+    (async () => {
+      setIsLoading(true);
+      const cached = await getMessagesFromIDB(selectedKey);
+      if (!cached.length) {
+        setIsLoading(false);
+        return;
+      }
+      mergeMessages(selectedKey, cached);
+    })();
+    rowVirtualizer.scrollToIndex(0);
+  }, [selectedKey]);
+
+  useEffect(() => {
     const lastItem = rowVirtualizer.getVirtualItems().at(-1);
     if (
-      lastItem?.index >= messages.length - 1 &&
+      lastItem?.index >= allMessages.length - 1 &&
       hasNextPage &&
       !isFetchingNextPage
     ) {
@@ -106,7 +108,7 @@ const WaInboxChatDisplayBody = (props) => {
     }
   }, [
     rowVirtualizer.getVirtualItems(),
-    messages,
+    allMessages,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
@@ -126,10 +128,10 @@ const WaInboxChatDisplayBody = (props) => {
       >
         <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const message = messages[virtualRow.index];
+            const message = allMessages[virtualRow.index];
             const previousMessage =
-              virtualRow.index > 0 ? messages[virtualRow.index - 1] : null;
-            const isLoaderRow = virtualRow.index > messages.length - 1;
+              virtualRow.index > 0 ? allMessages[virtualRow.index - 1] : null;
+            const isLoaderRow = virtualRow.index > allMessages.length - 1;
             return (
               <div
                 key={virtualRow.key}
@@ -155,6 +157,13 @@ const WaInboxChatDisplayBody = (props) => {
               </div>
             );
           })}
+          {messages?.[selectedContact.id]?.map((msg, i) => (
+            <TempMessageBody
+              body={msg?.body}
+              timestamp={msg.timestamp}
+              key={i}
+            />
+          ))}
         </div>
       </div>
       <div className={classes.affix}>

@@ -163,7 +163,7 @@ export function getReactionMessage({
 
 export const TempMessageBody = ({ body, timestamp }) => {
   return (
-    <Stack align="flex-end">
+    <Stack align="flex-end" style={{ transform: "scaleY(-1)" }}>
       <Group gap={4}>
         <Paper
           w={"fit-content"}

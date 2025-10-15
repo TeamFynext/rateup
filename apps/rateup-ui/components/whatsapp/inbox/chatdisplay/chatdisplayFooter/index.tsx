@@ -167,6 +167,16 @@ export default function WaInboxChatDisplayFooter({
       },
       type: "text",
     });
+    resetMedia();
+    setAudioUrl(null);
+    sendnewWaMessage.mutate(
+      { ...values },
+      {
+        onSuccess: () => {
+          removeMessage(contact.id);
+        },
+      },
+    );
     updateContactById(contact.id, (contact) => ({
       ...contact,
       lastMessage: {
@@ -219,16 +229,6 @@ export default function WaInboxChatDisplayFooter({
         sourcePlatform: platform as MessagePlatform,
       },
     }));
-    resetMedia();
-    setAudioUrl(null);
-    sendnewWaMessage.mutate(
-      { ...values },
-      {
-        onSuccess: () => {
-          removeMessage(contact.id);
-        },
-      },
-    );
   }
   function insertEmoji(value: string) {
     const { selectionStart, selectionEnd } = inputRef.current;
