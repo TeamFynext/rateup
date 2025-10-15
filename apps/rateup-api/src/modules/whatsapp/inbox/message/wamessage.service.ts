@@ -230,18 +230,25 @@ export async function filterChats(
   role: Role,
 ) {
   try {
-    // Create params array to use parameterized queries instead of string concatenation
+    // Lazily fetch teamIds only if needed
+    let teamIdsCache: string[] | null = null;
+    const getTeamIdsLazy = async () => {
+      if (!teamIdsCache) {
+        teamIdsCache = await getTeamIdsByUserId(userId);
+      }
+      return teamIdsCache;
+    };
+
+    // Parameterized query params
     const params: any[] = [orgId, (page - 1) * 100, userId];
     let paramIndex = 4;
 
     // Build where conditions using parameters to prevent SQL injection
-    let filters = [];
-
-    // Base condition
+    const filters: string[] = [];
     filters.push(`c."orgId" = $1::uuid`);
     let orderBy = `wc."lastReceivedMessageTimeStamp"`;
 
-    //skip filters for search term
+    // Skip filters for search term
     if (
       !bodyFilterProps?.searchTerm ||
       bodyFilterProps?.searchTerm?.length === 0
@@ -270,6 +277,7 @@ export async function filterChats(
           orderBy = `wc."lastMessage"->>'waCreatedAt'`;
         }
       }
+
       // Filter by contact groups
       if (bodyFilterProps?.contactGroups?.length > 0) {
         params.push(bodyFilterProps.contactGroups);
@@ -300,13 +308,10 @@ export async function filterChats(
         });
         filters.push(`(${tagFilters.join(" OR ")})`);
       }
+
+      // Filter by labels
       if (bodyFilterProps?.labels?.length > 0) {
         params.push(bodyFilterProps.labels?.[0]);
-        // filters.push(`EXISTS (
-        //   SELECT 1 FROM "ContactLabelMap" clm
-        //   WHERE clm."contactId" = c.id
-        //   AND clm."labelId" = ANY($${paramIndex++}::uuid[])
-        // )`);
         filters.push(`(c."lifecycleId" = $${paramIndex++}::uuid)`);
       }
 
@@ -326,7 +331,7 @@ export async function filterChats(
 
       if (bodyFilterProps?.waMessageAssignStatus && isNotSent) {
         if (isNew) {
-          // Handle 'New' logic
+          // 'New' logic
           params.push(WaMessageAssignStatus.CLOSED);
           filters.push(
             `(c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours') AND NOT c."waMessageAssignStatus" = $${paramIndex++}::TEXT`,
@@ -344,10 +349,10 @@ export async function filterChats(
             if (newStatuses.includes("MINE")) {
               params.push(userId);
               const assignmentCondition = `EXISTS (
-              SELECT 1 FROM "WaInboxAssign" winb 
-              WHERE winb."contactId" = c.id 
-              AND winb."assignedUserId" = $${paramIndex++}::uuid
-            )`;
+                SELECT 1 FROM "WaInboxAssign" winb 
+                WHERE winb."contactId" = c.id 
+                AND winb."assignedUserId" = $${paramIndex++}::uuid
+              )`;
               newQuery +=
                 newStatuses.length === 1
                   ? ` AND ${assignmentCondition})`
@@ -364,13 +369,13 @@ export async function filterChats(
                 waAssignedChatPermission ===
                 WaAssignedChatPermission.TeamMembers
               ) {
-                const teamIds = await getTeamIdsByUserId(userId);
+                const teamIds = await getTeamIdsLazy();
                 params.push(teamIds);
                 const teamCondition = `EXISTS (
-                SELECT 1 FROM "WaInboxAssign" winb 
-                WHERE winb."contactId" = c.id 
-                AND winb."teamId" = ANY($${paramIndex++}::uuid[])
-              )`;
+                  SELECT 1 FROM "WaInboxAssign" winb 
+                  WHERE winb."contactId" = c.id 
+                  AND winb."teamId" = ANY($${paramIndex++}::uuid[])
+                )`;
 
                 if (newStatuses.includes("UNASSIGNED")) {
                   params.push(WaMessageAssignStatus.UNASSIGNED);
@@ -405,7 +410,7 @@ export async function filterChats(
             filters.push(newQuery);
           }
         } else {
-          // Handle other statuses: Assigned, AssignedToMe, etc.
+          // Other statuses: Assigned, mine, etc.
           const assignedStatus =
             WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
           params.push(assignedStatus);
@@ -426,29 +431,29 @@ export async function filterChats(
             }
 
             filters.push(`EXISTS (
-            SELECT 1 FROM "WaInboxAssign" winb 
-            WHERE ${assignedQuery.join(" AND ")}
-          )`);
+              SELECT 1 FROM "WaInboxAssign" winb 
+              WHERE ${assignedQuery.join(" AND ")}
+            )`);
           } else if (assignedStatus === "ASSIGNED") {
             if (bodyFilterProps?.assignedTeams?.length) {
               params.push(bodyFilterProps.assignedTeams);
               filters.push(`EXISTS (
-              SELECT 1 FROM "WaInboxAssign" winb 
-              WHERE winb."contactId" = c.id 
-              AND winb."teamId" = ANY($${paramIndex++}::uuid[])
-            )`);
+                SELECT 1 FROM "WaInboxAssign" winb 
+                WHERE winb."contactId" = c.id 
+                AND winb."teamId" = ANY($${paramIndex++}::uuid[])
+              )`);
             } else {
               if (
                 waAssignedChatPermission ===
                 WaAssignedChatPermission.TeamMembers
               ) {
-                const teamIds = await getTeamIdsByUserId(userId);
+                const teamIds = await getTeamIdsLazy();
                 params.push(teamIds);
                 filters.push(`EXISTS (
-                SELECT 1 FROM "WaInboxAssign" winb 
-                WHERE winb."contactId" = c.id 
-                AND winb."teamId" = ANY($${paramIndex++}::uuid[])
-              )`);
+                  SELECT 1 FROM "WaInboxAssign" winb 
+                  WHERE winb."contactId" = c.id 
+                  AND winb."teamId" = ANY($${paramIndex++}::uuid[])
+                )`);
               } else if (
                 waAssignedChatPermission === WaAssignedChatPermission.Admins &&
                 role === Role.MEMBER
@@ -459,6 +464,7 @@ export async function filterChats(
           }
         }
       }
+
       // Filter by phone (sourceIdentifier)
       if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
         params.push(bodyFilterProps.phone);
@@ -470,12 +476,14 @@ export async function filterChats(
             wm."sourceIdentifier" = $${paramIndex++}
             OR wm."sourceIdentifier" = $${paramIndex++}
           )
-          )`);
+        )`);
       }
+
+      // Blocked filter
       if (bodyFilterProps?.blockedUsers) {
-        filters?.push(`c."blockedOnWhatsApp" = TRUE`);
+        filters.push(`c."blockedOnWhatsApp" = TRUE`);
       } else {
-        filters?.push(`c."blockedOnWhatsApp" = FALSE`);
+        filters.push(`c."blockedOnWhatsApp" = FALSE`);
       }
     }
 
@@ -491,7 +499,7 @@ export async function filterChats(
 
     const whereClause = filters.join(" AND ");
 
-    // Simplified and optimized query with last received message
+    // Main contacts query (limited to 100 per page)
     const query = `SELECT 
     c.id,
     c."name",
@@ -556,8 +564,86 @@ GROUP BY c.id, l.id
 `;
     const wrappedQuery = `SELECT * FROM (${query}) wc ORDER BY ${orderBy} DESC NULLS LAST LIMIT 100 OFFSET $2`;
 
-    const contacts = await prisma.$queryRawUnsafe(wrappedQuery, ...params);
-    return contacts;
+    const contacts: any[] = await prisma.$queryRawUnsafe(
+      wrappedQuery,
+      ...params,
+    );
+
+    // Performance optimization: fetch last 10 messages for all contacts in a single query
+    const contactIds = contacts.map((c) => c.id);
+    if (contactIds.length === 0) {
+      return [];
+    }
+
+    type MessageRow = {
+      id: string;
+      contactId: string;
+      waCreatedAt: Date;
+      messageBody: any;
+      sourcePlatform: PlatformType;
+      sourceIdentifier: string | null;
+      sendBy: string | null;
+      senderName: string | null;
+      senderProfilePhoto: string | null;
+    };
+
+    const messagesRows: MessageRow[] = await prisma.$queryRaw`
+      WITH ranked AS (
+        SELECT 
+          w.id,
+          w."contactId",
+          w."waCreatedAt",
+          w."messageBody",
+          w."sourcePlatform",
+          w."sourceIdentifier",
+          w."sendBy",
+          ROW_NUMBER() OVER (PARTITION BY w."contactId" ORDER BY w."waCreatedAt" DESC) AS rn
+        FROM "WaMessage" w
+        WHERE w."contactId" = ANY(${contactIds}::uuid[])
+      )
+      SELECT 
+        r.id,
+        r."contactId",
+        r."waCreatedAt",
+        r."messageBody",
+        r."sourcePlatform",
+        r."sourceIdentifier",
+        r."sendBy",
+        u."name" AS "senderName",
+        u."profilePhoto" AS "senderProfilePhoto"
+      FROM ranked r
+      LEFT JOIN "User" u ON r."sendBy" = u.id
+      WHERE r.rn <= 10
+      ORDER BY r."contactId", r."waCreatedAt" DESC
+    `;
+
+    // Group messages by contactId
+    const messagesByContact = new Map<string, any[]>();
+    for (const row of messagesRows) {
+      const list = messagesByContact.get(row.contactId) || [];
+      list.push({
+        id: row.id,
+        contactId: row.contactId,
+        waCreatedAt: row.waCreatedAt,
+        messageBody: row.messageBody,
+        sourcePlatform: row.sourcePlatform,
+        sourceIdentifier: row.sourceIdentifier,
+        sendBy: row.sendBy,
+        sender:
+          row.senderName || row.senderProfilePhoto
+            ? { name: row.senderName, profilePhoto: row.senderProfilePhoto }
+            : null,
+      });
+      messagesByContact.set(row.contactId, list);
+    }
+
+    // Merge contacts with their messages
+    const contactsWithMessages = contacts.map((contact: any) => ({
+      ...contact,
+      messages: messagesByContact.get(contact.id) || [],
+    }));
+
+    return contactsWithMessages;
   } catch (error) {
     log.error("Error in inbox chat filter API: %o", error);
     return [];

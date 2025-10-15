@@ -10,8 +10,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import Session from "supertokens-node/recipe/session";
 import { defaultTheme } from "../surveyTheme/defaultTheme";
 import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken";
-import { IntegratedApps } from "../../types/enums";
-import { TellUsMore } from "./org.controller";
 import { seedDefaultStages } from "../update/update.controller";
 
 export async function createOrg(input: CreateOrgInput) {
@@ -556,8 +554,8 @@ export async function pauseOrg(id, data: PauseOrgInput) {
 export async function completeOrgDetails(
   userId: string,
   data: {
-    tellUsMore?: TellUsMore;
-    isTellUsMoreCompleted?: boolean;
+    onboarding?: any;
+    onboardingCompleted?: boolean;
   },
 ) {
   return prisma.$transaction(async (tx) => {
@@ -573,9 +571,9 @@ export async function completeOrgDetails(
     const updatedOrg = await tx.org.update({
       where: { id: org.id },
       data: {
-        ...(data.tellUsMore && { tellUsMore: data.tellUsMore }),
-        ...(typeof data.isTellUsMoreCompleted === "boolean" && {
-          isTellUsMoreCompleted: data.isTellUsMoreCompleted,
+        ...(data.onboarding && { onboarding: data.onboarding }),
+        ...(typeof data.onboardingCompleted === "boolean" && {
+          onboardingCompleted: data.onboardingCompleted,
         }),
       },
     });
@@ -583,7 +581,7 @@ export async function completeOrgDetails(
     return {
       updatedOrg: {
         ...updatedOrg,
-        tellUsMore: updatedOrg.tellUsMore as TellUsMore,
+        onboarding: updatedOrg.onboarding,
       },
     };
   });
@@ -612,23 +610,4 @@ export async function getOrgNameAndUserPhone(userId: string) {
     orgName: userWithOrg.org.length > 0 ? userWithOrg.org[0].name : null,
     nameOfUser: userWithOrg.name,
   };
-}
-
-export async function checkTellUsMoreCompleted(userId: string) {
-  const org = await prisma.org.findFirst({
-    where: { ownerId: userId },
-    select: { id: true, isTellUsMoreCompleted: true, createdAt: true },
-  });
-
-  if (!org) return true;
-  const todayStart = new Date("2025-09-03T12:59:53.655Z");
-
-  if (org.createdAt < todayStart && !org.isTellUsMoreCompleted) {
-    await prisma.org.update({
-      where: { id: org.id },
-      data: { isTellUsMoreCompleted: true },
-    });
-    return true;
-  }
-  return org?.isTellUsMoreCompleted;
 }

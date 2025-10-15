@@ -123,8 +123,8 @@ model Org {
   isPaused                 Boolean? @default(false)
   waAssignedChatPermission String   @default("All")
 
-  tellUsMore            Json?
-  isTellUsMoreCompleted Boolean @default(false)
+  onboarding              Json?
+  onboardingCompleted     Boolean @default(false)
 
   members                  OrgMember[]
   teams                    Team[]
@@ -1774,4 +1774,19 @@ model NotificationSetting {
   ticketAssignNotification    Boolean   @default(false)
   waMessageAssignNotification Boolean   @default(false)
   waMessageClosedNotification Boolean   @default(false)
+}
+
+model BookDemo {
+  id              String  @id @default(cuid())
+  firstName       String
+  lastName        String
+  workEmail       String
+  phoneNumber     String
+  companyName     String
+  teamSize        String
+  preferredTime   String
+  primaryUseCase  String
+  additionalInfo  String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
