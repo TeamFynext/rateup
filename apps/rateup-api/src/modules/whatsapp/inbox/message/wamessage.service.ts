@@ -585,6 +585,8 @@ GROUP BY c.id, l.id
       sendBy: string | null;
       senderName: string | null;
       senderProfilePhoto: string | null;
+      stats: WaMessage["stats"];
+      messageId: string;
     };
 
     const messagesRows: MessageRow[] = await prisma.$queryRaw`
@@ -597,6 +599,8 @@ GROUP BY c.id, l.id
           w."sourcePlatform",
           w."sourceIdentifier",
           w."sendBy",
+          w."stats",
+          w."messageId",
           ROW_NUMBER() OVER (PARTITION BY w."contactId" ORDER BY w."waCreatedAt" DESC) AS rn
         FROM "WaMessage" w
         WHERE w."contactId" = ANY(${contactIds}::uuid[])
@@ -610,7 +614,9 @@ GROUP BY c.id, l.id
         r."sourceIdentifier",
         r."sendBy",
         u."name" AS "senderName",
-        u."profilePhoto" AS "senderProfilePhoto"
+        u."profilePhoto" AS "senderProfilePhoto",
+        r."stats",
+        r."messageId"
       FROM ranked r
       LEFT JOIN "User" u ON r."sendBy" = u.id
       WHERE r.rn <= 10
@@ -633,6 +639,8 @@ GROUP BY c.id, l.id
           row.senderName || row.senderProfilePhoto
             ? { name: row.senderName, profilePhoto: row.senderProfilePhoto }
             : null,
+        stats: row.stats,
+        messageId: row.messageId,
       });
       messagesByContact.set(row.contactId, list);
     }
@@ -1279,6 +1287,7 @@ export async function getChatByContactId(req, res) {
 }
 import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
+import { WaMessageBody } from "../../../../types/whatsapp.types";
 
 /**
  * Generate a "send" text message
