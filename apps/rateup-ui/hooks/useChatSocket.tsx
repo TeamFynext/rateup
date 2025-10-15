@@ -7,7 +7,6 @@ import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { getBrowserId } from "@/lib/utils";
-import { saveMessagesToIDB } from "@/app/dashboard/inbox/idb";
 import {
   useContactsStore,
   useMessagesStore,
@@ -15,7 +14,6 @@ import {
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { useMarkWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { handleWebSocketMessage } from "@/components/Layout/Layout";
-import { useUser } from "@/context/UserContext";
 import { showInfoToast } from "@/utils/notifications";
 
 export const useChatSocket = () => {
@@ -24,13 +22,9 @@ export const useChatSocket = () => {
   const browserId = getBrowserId();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { user } = useUser();
   const messageStore = useMessagesStore.getState();
-  const contactStore = useContactsStore.getState();
-  const markMessageAsRead = useMarkWaMessagesAsRead(
-    contactStore?.selectedContact?.id,
-    null,
-  );
+  const { selectedContact, updateContactById } = useContactsStore();
+  const markMessageAsRead = useMarkWaMessagesAsRead(selectedContact?.id, null);
 
   useEffect(() => {
     if (!browserId) return;
@@ -46,15 +40,15 @@ export const useChatSocket = () => {
 
       ws.onmessage = async (event) => {
         const data = JSON.parse(event.data);
-        const { selectedContact, updateContactById, resetUnreadForContact } =
-          contactStore;
         switch (data.type) {
           case "inbox":
             const { message, contact: incomingContact } = data.inbox;
+            console.log("incomingContact", incomingContact);
+            console.log("selectedContact", selectedContact);
             updateContactById(incomingContact.id, (contact) => ({
               ...contact,
               unReadMessageCount:
-                selectedContact?.id === incomingContact.id
+                selectedContact?.id === incomingContact?.id
                   ? 0
                   : contact.unReadMessageCount + 1,
               lastMessage: {
@@ -63,6 +57,7 @@ export const useChatSocket = () => {
                 sourcePlatform: message.sourcePlatform,
                 waCreatedAt: message.waCreatedAt,
               },
+              lastReceivedMessageTimeStamp: message.waCreatedAt,
             }));
             if (selectedContact && selectedContact?.id === incomingContact.id) {
               for (const key of [
@@ -84,7 +79,13 @@ export const useChatSocket = () => {
                 data?.message_status_update.messageId,
                 { stats: data?.message_status_update?.stats },
               );
+              messageStore.updateMessageByMessageId(
+                `${selectedContact?.id}_all`,
+                data?.message_status_update.messageId,
+                { stats: data?.message_status_update?.stats },
+              );
             }
+
             break;
           default:
             break;
@@ -113,7 +114,7 @@ export const useChatSocket = () => {
       closedByUser = true;
       ws?.close();
     };
-  }, [browserId, queryClient, router, messageStore, contactStore]);
+  }, [browserId, queryClient, router, messageStore]);
 };
 
 const handleNotificationWithSound = ({ message, router }) => {

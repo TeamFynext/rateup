@@ -22,7 +22,7 @@ export type WaGetMessagesBody = {
   waCreatedAt: string;
   messageBody: WaInboxMessage;
   templateComponentParams: WaTemplateComponent[];
-  stats?: { read: string; delivered: string; sent: string; error: string };
+  stats?: { read: string; delivered: string; sent: string; failed: string };
   sender?: {
     name?: string;
     profile_photo?: string;

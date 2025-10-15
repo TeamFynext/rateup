@@ -18,7 +18,6 @@ export const LifecycleSelector = ({
   id: string;
 }) => {
   const tags = useLabelsContext();
-  const { setSelectedContact, selectedContact } = useContactStore();
   const { updateContactById } = useContactsStore();
   const editContactMutation = useEditContactLabelsMutation(id);
 
@@ -63,11 +62,6 @@ export const LifecycleSelector = ({
 
   const handleSubmit = (newValue: string) => {
     if (newValue === value) return; // Prevent unnecessary updates
-
-    // setSelectedContact({
-    //   ...selectedContact,
-    //   lifecycleId: newValue,
-    // });
     updateContactById(id, (contact) => ({
       ...contact,
       lifecycleId: newValue,

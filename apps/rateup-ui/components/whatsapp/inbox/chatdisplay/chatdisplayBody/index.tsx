@@ -17,7 +17,7 @@ import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wame
 import { parseWaMessage } from "@/utils/whatsapp/inbox";
 
 import { useChatFilterStore } from "../../chatselect/chatFilter";
-import { useMessageStore } from "../chatdisplayFooter";
+import { useTemperoryMessageStore } from "../chatdisplayFooter";
 import {
   DateComponent,
   getReactionMessage,
@@ -61,8 +61,9 @@ const WaInboxChatDisplayBody = (props) => {
     hasNextPage, // boolean
     data,
     isFetchingNextPage,
+    isLoading,
   } = useGetMessagesByContactId(selectedContact?.id, filter?.phone);
-  const { messages } = useMessageStore();
+  const { messages: tempMessages } = useTemperoryMessageStore();
 
   useEffect(() => {
     if (!data || !selectedKey || !selectedContact) return;
@@ -126,7 +127,10 @@ const WaInboxChatDisplayBody = (props) => {
         ref={parentRef}
         className="relative h-full p-2 scale-y-[-1] overflow-y-auto"
       >
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+        <div
+          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+          className=""
+        >
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const message = allMessages[virtualRow.index];
             const nextMessage =
@@ -146,7 +150,7 @@ const WaInboxChatDisplayBody = (props) => {
                   left: 0,
                   width: "100%",
                 }}
-                className="gap-4 p-2"
+                className="gap-4 p-4 pl-6"
               >
                 {!isLoaderRow && (
                   <MessageItem
@@ -159,7 +163,7 @@ const WaInboxChatDisplayBody = (props) => {
               </div>
             );
           })}
-          {messages?.[selectedContact.id]?.map((msg, i) => (
+          {tempMessages?.[selectedContact.id]?.map((msg, i) => (
             <TempMessageBody
               body={msg?.body}
               timestamp={msg.timestamp}

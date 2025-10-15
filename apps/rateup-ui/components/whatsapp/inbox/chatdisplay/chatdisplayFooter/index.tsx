@@ -65,7 +65,7 @@ export default function WaInboxChatDisplayFooter({
     whatsappSettingsPhoneId,
     platform as MessagePlatform,
   );
-  const { addMessage, removeMessage } = useMessageStore();
+  const { addMessage, removeMessage } = useTemperoryMessageStore();
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
@@ -422,7 +422,8 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
 };
 
 export const WaInboxBlockedContactFooter = ({ contact }) => {
-  const { setSelectedContact, filterData } = useContactStore();
+  const { filterData } = useContactStore();
+  const { setSelectedContact } = useContactsStore();
   const [opened, { open, close }] = useDisclosure(false);
   const unblockMut = useUnBlockWhatsAppUser(filterData);
   function handleUnblock() {
@@ -493,7 +494,7 @@ interface MessageState {
   removeMessage: (contactId: string) => void;
 }
 
-export const useMessageStore = create<MessageState>((set, get) => ({
+export const useTemperoryMessageStore = create<MessageState>((set, get) => ({
   messages: {},
   addMessage: (contactId, message) =>
     set((state) => {

@@ -33,25 +33,19 @@ export default function WaInboxChatSelectCard({
   const lastMessage = contact?.lastMessage;
 
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
-  const { addOpenedContactIds } = useContactStore();
   let tab = params.get("tab") ?? "New";
 
   const { setSelectedContact, selectedContact } = useContactsStore();
-  const {
-    user: { userId },
-  } = useUser();
 
   const platform = contact?.source?.toUpperCase() || MessagePlatform.WHATSAPP;
   const isInsta = platform === MessagePlatform.INSTAGRAM;
 
   return (
     <Card
-      // href={`?tab=${tab}&contactId=${contact?.id}`}
       className={`${classes.wrapper} ${selectedContact?.id === contact?.id && classes.highlighted_wrapper}`}
       onClick={() => {
         setIsChatDisplayOpen(true);
         setSelectedContact(contact);
-        addOpenedContactIds(contact.id);
       }}
       py={"xs"}
     >
@@ -144,7 +138,7 @@ const AssignedStatusBadge = ({
 }: {
   contact: ContactsWithLastMessage;
 }) => {
-  if (contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED)
+  if (contact?.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED)
     return (
       <Flex gap={"xs"}>
         {contact?.assignedUsers?.map((u) => (

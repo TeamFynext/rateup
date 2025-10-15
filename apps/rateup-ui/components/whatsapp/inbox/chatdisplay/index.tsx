@@ -37,30 +37,12 @@ export default function WaInboxChatDisplay({
   smallScreen?: boolean;
   waSettings?: any;
 }) {
-  const searchParams = useSearchParams();
-
   const contact = useContactsStore((s) => s.selectedContact);
   const { filter } = useChatFilterStore();
-  const currentContactId = contact?.id || searchParams.get("contactId");
 
   const { data, error, isPending, isFetching, isFetched } =
-    useGetMessagesByContactId(currentContactId, filter?.phone);
-
-  const messages = useMemo(
-    () =>
-      !isPending && data
-        ? data.pages
-            .map((page) =>
-              page?.messages?.toSorted(
-                (a, b) =>
-                  new Date(a.waCreatedAt).getTime() -
-                  new Date(b.waCreatedAt).getTime(),
-              ),
-            )
-            .flat()
-        : [],
-    [data, isPending],
-  );
+    useGetMessagesByContactId(contact?.id, filter?.phone);
+  const { messagesByKey, selectedKey } = useMessagesStore();
 
   const { data: assignedUsers } = useGetAssignedUserForContact(contact?.id);
   const { user } = useUser();
@@ -72,7 +54,7 @@ export default function WaInboxChatDisplay({
   );
 
   const translations = useTranslations();
-  // if (error) return <div>Error: {error.message}</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   let footerContent = null;
   if (contact?.blockedOnWhatsApp) {
@@ -99,7 +81,9 @@ export default function WaInboxChatDisplay({
     );
   }
 
-  const showLoading = isPending || (isFetching && !isFetched);
+  const showLoading =
+    !messagesByKey?.get(selectedKey)?.messages?.length &&
+    (isPending || (isFetching && !isFetched));
 
   return (
     <Paper withBorder p={0} className="h-full">
@@ -116,10 +100,7 @@ export default function WaInboxChatDisplay({
             {showLoading ? (
               <WhatsAppInboxLoader isLoading={showLoading} />
             ) : (
-              <WaInboxChatDisplayBody
-                data={messages}
-                smallScreen={smallScreen}
-              />
+              <WaInboxChatDisplayBody smallScreen={smallScreen} />
             )}
             {!showLoading && footerContent}
           </div>

@@ -33,7 +33,7 @@ import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
 
 import { MessagePlatform } from "@/types/enums";
-import useContactStore from "@/app/dashboard/inbox/store";
+import { useContactsStore } from "@/app/dashboard/inbox/store";
 
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter";
 import InboxContactsControl from "./InboxContactMessage";
@@ -129,7 +129,7 @@ function WaTextEditor({
   });
   const { media, setSelectedMedia, selectedMedia, removeMedia } =
     useMediaStore();
-  const { selectedContact } = useContactStore();
+  const { selectedContact } = useContactsStore();
   const platform =
     selectedContact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
       ? MessagePlatform.WHATSAPP

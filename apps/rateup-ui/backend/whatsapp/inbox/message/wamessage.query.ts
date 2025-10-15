@@ -91,9 +91,6 @@ export const useFilteredContacts = (filterData: string) => {
     queryFn: ({ pageParam }) => getFilteredContacts(filterData, pageParam),
     getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
     placeholderData: { pages: [], pageParams: [] },
-    getPreviousPageParam: (firstPage) => {
-      return firstPage?.prevOffset ?? null;
-    },
   });
 };
 

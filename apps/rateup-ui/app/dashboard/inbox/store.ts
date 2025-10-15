@@ -1,9 +1,6 @@
-import { JsonInput } from "@mantine/core";
 import { enableMapSet, produce } from "immer";
-import stringify from "json-stable-stringify";
-import { Key } from "lucide-react";
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 
 import {
   ContactsWithLastMessage,
@@ -11,14 +8,12 @@ import {
   WaGetMessagesBody,
 } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { ChatFilter } from "@/components/whatsapp/inbox/chatselect/chatFilter";
-import { useUser } from "@/context/UserContext";
 
 import {
   clearAllContactsFromDB,
   clearAllMessagesFromIDB,
   loadContactIdsForFilter,
   loadContactsFromDB,
-  removeContactFromDB,
   removeContactsFromDB,
   removeMessagesFromIDB,
   saveContactIdsForFilter,
@@ -28,8 +23,6 @@ import {
 } from "./idb";
 
 interface ContactStore {
-  selectedContact: ContactsWithLastMessage | null;
-  setSelectedContact: (contact: ContactsWithLastMessage) => void;
   opened: boolean;
   open: () => void;
   close: () => void;
@@ -38,9 +31,6 @@ interface ContactStore {
   setTicketAndOpen: (ticket: any) => void;
   filterData: string;
   setFilterData: (value: string) => void;
-  openedContactIds: string[];
-  addOpenedContactIds: (id: string) => void;
-  setOpenedContactIds: (value: string[]) => void;
 }
 
 interface ChatContactCountStore {
@@ -61,19 +51,11 @@ const useContactStore = create<ContactStore>((set) => ({
   opened: false,
   open: () => set((state) => ({ opened: true })),
   close: () => set((state) => ({ opened: false })),
-  selectedContact: null,
-  setSelectedContact: (contact) => set({ selectedContact: contact }),
   selectedTicket: null,
   setSelectedTicket: (ticket) => set({ selectedTicket: ticket }),
   setTicketAndOpen: (ticket) => set({ selectedTicket: ticket, opened: true }),
   filterData: null,
   setFilterData: (value) => set({ filterData: value }),
-  openedContactIds: [],
-  addOpenedContactIds: (id) =>
-    set((state) => ({
-      openedContactIds: Array.from(new Set([...state.openedContactIds, id])),
-    })),
-  setOpenedContactIds: (value) => set({ openedContactIds: value }),
 }));
 
 export const useChatContactCountStore = create<ChatContactCountStore>(
@@ -109,6 +91,7 @@ interface ContactsStoreState {
   contactsByFilter: ContactsByFilter;
   selectedContact: ContactWithUpdatedAt | null;
   currentFilterKey: string;
+  isLoading: boolean;
 
   // Actions
   setFilter: (filter: ChatFilter) => void;
@@ -122,7 +105,10 @@ interface ContactsStoreState {
     contactId: string,
     updater: (c: ContactWithUpdatedAt) => ContactWithUpdatedAt,
   ) => void;
-  resetUnreadForContact: (contactId: string) => void;
+  resetUnreadForContact: (
+    contactId: string,
+    contact?: ContactWithUpdatedAt,
+  ) => void;
   setSelectedContact: (contact) => void;
   getContactsByIds: (ids: string[]) => Promise<ContactWithUpdatedAt[]>;
   clearAllContacts: () => Promise<void>;
@@ -130,7 +116,6 @@ interface ContactsStoreState {
 }
 
 enableMapSet();
-const MAX_CONTACTS_PER_FILTER = 200;
 //for messages
 const MAX_CONTACTS_IN_MEMORY = 30;
 const MAX_MESSAGES_PER_CONTACT = 500;
@@ -141,6 +126,7 @@ export const useContactsStore = create<ContactsStoreState>()(
       contactsByFilter: {},
       selectedContact: null,
       currentFilterKey: null,
+      isLoading: false,
 
       setFilter: (filter) => {
         set({ currentFilterKey: makeFilterKey(filter) });
@@ -149,6 +135,12 @@ export const useContactsStore = create<ContactsStoreState>()(
       /* ---------- Load contacts by filter from DB ---------- */
       loadContactsFromDB: async (filter) => {
         const filterKey = makeFilterKey(filter);
+        set(
+          produce((state) => {
+            state.currentFilterKey = filterKey;
+          }),
+        );
+        if (get().currentFilterKey[filterKey]?.length) return;
         const ids = await loadContactIdsForFilter(filterKey);
         if (!ids.length) return;
 
@@ -165,9 +157,9 @@ export const useContactsStore = create<ContactsStoreState>()(
 
       /* ---------- Append contacts for pagination ---------- */
       addContactsForFilter: async (filterKey, contacts, tab) => {
-        let removedIds = [];
         set(
           produce((state: ContactsStoreState) => {
+            state.isLoading = true;
             const existingIds = state.contactsByFilter[filterKey] || [];
             const contactIdsSet = new Set(existingIds);
             contacts.forEach((c) => {
@@ -189,33 +181,6 @@ export const useContactsStore = create<ContactsStoreState>()(
             });
 
             let allIds = Array.from(contactIdsSet);
-
-            if (allIds.length > MAX_CONTACTS_PER_FILTER) {
-              const contactsWithUpdatedAt = allIds.map((id) => ({
-                id,
-                updatedAt: state.contactsById.get(id)?.updatedAt ?? 0,
-              }));
-              contactsWithUpdatedAt.sort(
-                (a, b) =>
-                  new Date(a.updatedAt).getTime() -
-                  new Date(b.updatedAt).getTime(),
-              );
-
-              const overflow =
-                contactsWithUpdatedAt.length - MAX_CONTACTS_PER_FILTER;
-              const removedIds = contactsWithUpdatedAt
-                .slice(0, overflow)
-                .map((c) => c.id);
-
-              removedIds.forEach((id) => {
-                const shared = Object.entries(state.contactsByFilter).some(
-                  ([key, ids]) => ids.includes(id) && filterKey !== key,
-                );
-                if (!shared) state.contactsById.delete(id);
-              });
-
-              allIds = contactsWithUpdatedAt.slice(overflow).map((c) => c.id);
-            }
             const newList = allIds
               .map((id) => ({
                 id,
@@ -232,8 +197,8 @@ export const useContactsStore = create<ContactsStoreState>()(
                   new Date(a.createdAt).getTime(),
               )
               .map((c) => c.id);
-
             state.contactsByFilter[filterKey] = newList;
+            state.isLoading = false;
           }),
         );
 
@@ -244,15 +209,6 @@ export const useContactsStore = create<ContactsStoreState>()(
             contacts.map((c) => c.id),
           ),
         ]);
-        for (const id of removedIds) {
-          const usedInOtherFilters = Object.values(
-            useContactsStore.getState().contactsByFilter,
-          ).some((ids) => ids.includes(id));
-
-          if (!usedInOtherFilters) {
-            await removeContactFromDB(id);
-          }
-        }
       },
 
       /* ---------- Update one contact globally ---------- */
@@ -268,16 +224,31 @@ export const useContactsStore = create<ContactsStoreState>()(
             const newMap = new Map(state.contactsById);
             newMap.set(contactId, updated);
             state.contactsById = newMap;
-            if (contactId === get().selectedContact.id) {
+            if (contactId === get().selectedContact?.id) {
               state.selectedContact = updated;
             }
+            let filter = false;
             if (
-              updated.lastMessage.waCreatedAt > contact.lastMessage.waCreatedAt
+              updated.waMessageAssignStatus !== contact.waMessageAssignStatus &&
+              !state.currentFilterKey?.includes("messageType:all")
             ) {
-              const newList = state.contactsByFilter[state.currentFilterKey]
+              filter = true;
+            }
+            if (
+              updated.lastMessage.waCreatedAt >
+                contact.lastMessage.waCreatedAt ||
+              filter
+            ) {
+              state.isLoading = true;
+              const list = filter
+                ? state.contactsByFilter[state.currentFilterKey].filter(
+                    (id) => id !== contactId,
+                  )
+                : state.contactsByFilter[state.currentFilterKey];
+              const newList = list
                 .map((id) => ({
                   id,
-                  createdAt: state.currentFilterKey.contains("messageType:all")
+                  createdAt: state.currentFilterKey?.includes("messageType:all")
                     ? (state.contactsById.get(id)?.lastMessage?.waCreatedAt ??
                       0)
                     : (state.contactsById.get(id)
@@ -291,17 +262,18 @@ export const useContactsStore = create<ContactsStoreState>()(
                 .map((c) => c.id);
 
               state.contactsByFilter[state.currentFilterKey] = newList;
+              state.isLoading = false;
             }
           }),
         );
         saveContactToDB(updated);
       },
 
-      resetUnreadForContact(contactId) {
-        const contact = get().contactsById.get(contactId);
+      resetUnreadForContact(contactId, contact) {
+        if (!contact) contact = get().contactsById.get(contactId);
         if (contact && contact.unReadMessageCount !== 0) {
           get().updateContactById(contactId, (c) => ({
-            ...c,
+            ...contact,
             unReadMessageCount: 0,
           }));
         }
@@ -314,12 +286,11 @@ export const useContactsStore = create<ContactsStoreState>()(
 
       setSelectedContact(contact) {
         if (contact && contact.unReadMessageCount !== 0) {
-          get().resetUnreadForContact(contact.id);
+          get().resetUnreadForContact(contact.id, contact);
         }
         set({ selectedContact: contact });
       },
 
-      /* ---------- Get multiple contacts by IDs (IN query) ---------- */
       async getContactsByIds(ids: string[]): Promise<ContactWithUpdatedAt[]> {
         const { contactsById } = get();
         const result: ContactWithUpdatedAt[] = [];
@@ -428,7 +399,26 @@ export const useMessagesStore = create<MessagesStore>()(
         const existing = new Map(
           entry.messages.map((x) => [x.messageId ?? x.id, x]),
         );
-        for (const msg of messages) existing.set(msg.messageId ?? msg.id, msg);
+        for (const msg of messages) {
+          const existingMsg = existing.get(msg.messageId ?? msg.id);
+          if (existingMsg) {
+            existingMsg.stats = {
+              read: msg.stats.read.length
+                ? msg.stats.read
+                : existingMsg.stats.read,
+              sent: msg.stats.sent.length
+                ? msg.stats.sent
+                : existingMsg.stats.sent,
+              delivered: msg.stats.delivered.length
+                ? msg.stats.delivered
+                : existingMsg.stats.delivered,
+              failed: msg.stats.failed.length
+                ? msg.stats.failed
+                : existingMsg.stats.failed,
+            };
+          }
+          existing.set(msg.messageId ?? msg.id, existingMsg ?? msg);
+        }
         const sortedMessages = Array.from(existing.values()).sort(
           (a, b) =>
             new Date(b.waCreatedAt).getTime() -

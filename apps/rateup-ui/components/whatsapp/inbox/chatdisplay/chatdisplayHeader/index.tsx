@@ -216,9 +216,9 @@ export default function WaInboxChatDisplayHeader({
 
 const ChatContactMenu = ({ contact }) => {
   const { data: subscription } = useSubscription();
-  const { updateContactById } = useContactsStore();
+  const { updateContactById, setSelectedContact } = useContactsStore();
 
-  const { setSelectedContact, filterData } = useContactStore();
+  const { filterData } = useContactStore();
   const hasTicketFeature = useMemo(
     () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
     [subscription],
