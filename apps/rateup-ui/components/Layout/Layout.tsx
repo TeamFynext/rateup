@@ -677,7 +677,6 @@ const MainContent = ({
   );
 };
 
-// @ts-ignore
 export default function Layout({ children }) {
   const {
     isPending: isLoadingUserInfo,
@@ -689,14 +688,13 @@ export default function Layout({ children }) {
   useEffect(() => {
     if (!isFetched || isLoadingUserInfo) return;
 
-    if (userQueryData?.data?.isTellUsMoreCompleted === false) {
+    if (
+      "data" in userQueryData &&
+      userQueryData.data?.onboardingCompleted === false
+    ) {
       router.replace("/login/complete-login");
     }
-  }, [
-    userQueryData?.data?.isTellUsMoreCompleted,
-    isFetched,
-    isLoadingUserInfo,
-  ]);
+  }, [userQueryData, isFetched, isLoadingUserInfo]);
   const router = useRouter();
   const query = useSearchParams() as {
     msg?: string;

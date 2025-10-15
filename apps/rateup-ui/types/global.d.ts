@@ -367,7 +367,7 @@ declare global {
     waAssignedChatPermission: WaAssignedChatPermission;
     status: UserAvailabilityStatus;
     hasWhatsAppSettings: boolean;
-    isTellUsMoreCompleted: boolean;
+    onboardingCompleted?: boolean;
   };
 
   interface UserInfoQueryData {

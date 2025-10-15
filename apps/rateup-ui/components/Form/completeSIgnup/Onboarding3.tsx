@@ -1,174 +1,207 @@
 "use client";
 
+import { Button } from "@mantine/core";
+import { motion } from "framer-motion";
 import {
-  Button,
-  Card,
-  Checkbox,
-  Select,
-  Text,
-  Textarea,
-  Title,
-} from "@mantine/core";
+  ArrowLeft,
+  ArrowRight,
+  BarChart3,
+  CheckCircle,
+  Crown,
+  Gift,
+  HelpCircle,
+  Sparkles,
+  Target,
+  Users,
+} from "lucide-react";
+
+import { Card } from "@/components/ui/card";
 
 export default function OnboardingStep3({
-  onBack,
-  onFinish,
+  handleNext,
+  handleBack,
   data,
-  setData,
-  loading,
+  handleTemplateSelect,
 }: {
-  onBack: () => void;
-  onFinish: () => void;
+  handleNext: any;
+  handleBack: any;
   data: any;
-  setData: (data: any) => void;
-  loading: boolean;
+  handleTemplateSelect: any;
 }) {
-  const toggleAutomation = (value: string) => {
-    const updated = data.what_do_you_want_to_automate_first.includes(value)
-      ? data.what_do_you_want_to_automate_first.filter(
-          (r: string) => r !== value,
-        )
-      : [...data.what_do_you_want_to_automate_first, value];
+  const templates = [
+    {
+      id: "ecommerce",
+      label: "E-commerce Store",
+      icon: Gift,
+      color: "from-cyan-400 to-blue-500",
+      description: "Product catalog, cart recovery, order tracking",
+      features: "• Abandoned cart • Order updates • Product recommendations",
+    },
+    {
+      id: "restaurant",
+      label: "Restaurant & Food",
+      icon: Users,
+      color: "from-orange-400 to-red-500",
+      description: "Menu sharing, table booking, delivery tracking",
+      features: "• Digital menu • Reservations • Delivery updates",
+    },
+    {
+      id: "healthcare",
+      label: "Healthcare & Wellness",
+      icon: HelpCircle,
+      color: "from-green-400 to-emerald-500",
+      description: "Appointment booking, reminders, health tips",
+      features: "• Appointment scheduling • Reminders • Health resources",
+    },
+    {
+      id: "retail",
+      label: "Retail Store",
+      icon: Crown,
+      color: "from-purple-400 to-pink-500",
+      description: "Loyalty programs, promotions, in-store pickup",
+      features: "• Loyalty rewards • Flash sales • Store locator",
+    },
+    {
+      id: "service",
+      label: "Service Business",
+      icon: Target,
+      color: "from-indigo-400 to-purple-500",
+      description: "Bookings, quotes, service reminders",
+      features: "• Service booking • Quote requests • Follow-ups",
+    },
+    {
+      id: "education",
+      label: "Education & Training",
+      icon: BarChart3,
+      color: "from-pink-400 to-rose-500",
+      description: "Course enrollment, class schedules, announcements",
+      features: "• Course catalog • Class reminders • Progress tracking",
+    },
+  ];
 
-    setData({ ...data, what_do_you_want_to_automate_first: updated });
+  const canProceed = () => {
+    return data.selectedTemplate !== "";
   };
 
-  const isValid =
-    data.what_do_you_want_to_automate_first.length > 0 &&
-    data.how_did_you_hear_about_rateup.trim() !== "";
-
   return (
-    <div className="max-w-xl mx-auto">
-      <Card
-        radius="lg"
-        shadow="sm"
-        styles={{
-          root: {
-            backgroundColor: "#FFFFFF",
-            padding: "32px",
-            border: "1px solid #E5E5E5",
-          },
-        }}
-      >
-        {/* Step indicator */}
-        <div className="mb-6">
-          <div className="h-1 bg-[#F5F5F5] rounded-full w-full">
-            <div className="h-1 bg-[#004F98] rounded-full w-full" />
-          </div>
-          <Text size="sm" mt="xs" c="dimmed">
-            Step 3 of 3
-          </Text>
-        </div>
+    <div className="space-y-4">
+      <div className="text-center mb-4">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", duration: 0.6 }}
+          className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 shadow-lg shadow-purple-500/30 mx-auto mb-1"
+        >
+          <Sparkles className="w-5 h-5 text-white" />
+        </motion.div>
+        <h2 className="text-gray-900">Choose Your Template</h2>
+        <p className="text-gray-600 text-sm">
+          Select a pre-built template tailored to your industry
+        </p>
+      </div>
 
-        {/* Title */}
-        <Title order={3} mb="sm" c="#004F98">
-          Last step, let’s set up your profile
-        </Title>
-        <Text size="sm" c="dimmed" mb="lg">
-          Complete your details so we can personalize your experience.
-        </Text>
-
-        {/* Automation Needs */}
-        <div className="mt-6 mb-6">
-          <Text size="sm" fw={500} mb={8}>
-            What do you want to automate first{" "}
-            <span className="text-red-500">*</span>
-          </Text>
-          <div className="space-y-2">
-            {[
-              "Lead qualification and follow-up",
-              "Customer support responses",
-              "Order updates and tracking",
-              "Collecting customer feedback/reviews",
-              "Product recommendations",
-            ].map((item) => (
-              <Checkbox
-                key={item}
-                label={item}
-                checked={data.what_do_you_want_to_automate_first.includes(item)}
-                onChange={() => toggleAutomation(item)}
-                styles={{
-                  input: { borderColor: "#E5E5E5" },
-                  label: { color: "#000" },
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Source */}
-        <Select
-          label="How did you hear about RateUp?"
-          placeholder="Choose one"
-          required
-          data={[
-            "Google Search",
-            "Social media",
-            "Referral",
-            "Advertisement",
-            "Other",
-          ]}
-          value={data.how_did_you_hear_about_rateup}
-          onChange={(value) =>
-            setData({ ...data, how_did_you_hear_about_rateup: value || "" })
-          }
-          styles={{
-            input: { borderColor: "#E5E5E5" },
-          }}
-        />
-
-        {/* Extra Features */}
-        <Textarea
-          mt="md"
-          label="Need help with onboarding, have a specific use case, or require custom features? Let us know below"
-          placeholder="Write here (optional)"
-          value={data.specific_feature_or_custom_feature}
-          onChange={(e) =>
-            setData({
-              ...data,
-              specific_feature_or_custom_feature: e.currentTarget.value,
-            })
-          }
-          autosize
-          minRows={3}
-          styles={{
-            input: { borderColor: "#E5E5E5" },
-          }}
-        />
-
-        {/* Footer */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
-          <Button
-            variant="outline"
-            onClick={onBack}
-            className="w-full sm:w-auto"
-            styles={{
-              root: {
-                borderColor: "#E5E5E5",
-                color: "#004F98",
-                "&:hover": { backgroundColor: "#F5F5F5" },
-              },
-            }}
+      <div className="grid grid-cols-1 gap-2.5">
+        {templates.map((template) => (
+          <motion.div
+            key={template.id}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            ← Back
-          </Button>
+            <Card
+              className={`p-3 cursor-pointer transition-all duration-300 hover:shadow-md border-2 ${
+                data.selectedTemplate === template.id
+                  ? "border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
+                  : "border-gray-200 hover:border-blue-300 bg-white"
+              }`}
+              onClick={() => handleTemplateSelect(template.id)}
+            >
+              <div className="flex items-start space-x-2.5">
+                <div
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors shadow-md ${
+                    data.selectedTemplate === template.id
+                      ? `bg-gradient-to-r ${template.color}`
+                      : "bg-gradient-to-br from-gray-200 to-gray-300"
+                  }`}
+                >
+                  <template.icon
+                    className={`w-5 h-5 ${
+                      data.selectedTemplate === template.id
+                        ? "text-white"
+                        : "text-gray-600"
+                    }`}
+                  />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`text-sm font-semibold ${
+                        data.selectedTemplate === template.id
+                          ? "text-gray-900"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {template.label}
+                    </span>
+                    {data.selectedTemplate === template.id && (
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                        <CheckCircle className="w-5 h-5 text-blue-600" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <p className="text-gray-600 text-sm">
+                    {template.description}
+                  </p>
+                  <p className="text-gray-700 text-sm">{template.features}</p>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Selection feedback */}
+      {data.selectedTemplate && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-purple-100 to-pink-100 border border-purple-300/60 rounded-lg p-3 shadow-sm backdrop-blur-sm"
+        >
+          <div className="flex items-start space-x-3">
+            <Sparkles className="w-3 h-3 text-purple-600 mt-0.5" />
+            <div>
+              <p className="text-purple-700 text-sm">Perfect choice!</p>
+              <p className="text-gray-700 mt-1 text-sm">
+                We'll set up your{" "}
+                {templates.find((t) => t.id === data.selectedTemplate)?.label}{" "}
+                template with pre-configured workflows
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+      <div className="flex justify-between mt-5 pt-4 border-t border-gray-200">
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          className="flex items-center px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+
+        <div className="flex space-x-2">
           <Button
-            onClick={onFinish}
-            disabled={!isValid || loading}
-            className="w-full sm:w-auto"
-            styles={{
-              root: {
-                backgroundColor: isValid ? "#004F98" : "#E5E5E5",
-                color: "white",
-                "&:hover": { backgroundColor: isValid ? "#003B73" : "#E5E5E5" },
-              },
-            }}
-            loading={loading}
+            onClick={handleNext}
+            disabled={!canProceed()}
+            className={`flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+              canProceed() ? "hover:scale-105" : ""
+            }`}
           >
-            Get started →
+            Continue
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

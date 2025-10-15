@@ -163,15 +163,8 @@ export const useGetWebhookClientSecret = (webhookUrl) => {
 
 export function useCompleteOrgDetails() {
   return useMutation({
-    mutationFn: ({
-      orgName,
-      tellUsMore,
-      phone,
-    }: {
-      orgName?: string;
-      tellUsMore?: Record<string, unknown>;
-      phone: string;
-    }) => completeOrgDetails(orgName, tellUsMore, phone),
+    mutationFn: ({ onboarding }: { onboarding?: Record<string, unknown> }) =>
+      completeOrgDetails(onboarding),
   });
 }
 

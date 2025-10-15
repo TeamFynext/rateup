@@ -166,6 +166,24 @@ export default function WhatsappTemplateById() {
     }
   }, [editingItem]);
 
+  const { data: subscription, isLoading } = useSubscription();
+  const templateTypes = useMemo(
+    () =>
+      Object.values(TemplateType).map((type) => ({
+        value: type,
+        label: type,
+        disabled:
+          type === TemplateType.CAROUSEL
+            ? !subscription ||
+              !hasFeature(
+                subscription,
+                SubscriptionFeaturePathName.CarouselTemplate,
+              )
+            : false,
+      })),
+    [subscription],
+  );
+
   const { spmBtn, mpmBtn, checkoutBtn, flowBtn, catalogBtn } = useMemo(() => {
     let spmBtn = false,
       mpmBtn = false,
@@ -577,23 +595,7 @@ export default function WhatsappTemplateById() {
     form.removeListItem("buttons", index);
   };
   const dynamicVariables = parseStringWithVariables(form.values.body);
-  const { data: subscription, isLoading } = useSubscription();
-  const templateTypes = useMemo(
-    () =>
-      Object.values(TemplateType).map((type) => ({
-        value: type,
-        label: type,
-        disabled:
-          type === TemplateType.CAROUSEL
-            ? !subscription ||
-              !hasFeature(
-                subscription,
-                SubscriptionFeaturePathName.CarouselTemplate,
-              )
-            : false,
-      })),
-    [subscription],
-  );
+
   const requiredIcon = (
     <sup>
       <IconAsterisk color="red" size={5} />
