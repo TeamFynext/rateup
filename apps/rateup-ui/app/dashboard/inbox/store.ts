@@ -164,7 +164,6 @@ export const useContactsStore = create<ContactsStoreState>()(
             contacts.forEach((c) => {
               const { messages, ...rest } = c;
               const existing = state.contactsById.get(c.id);
-              // Only update if incoming contact is newer
               if (
                 !existing ||
                 new Date(c.updatedAt) > new Date(existing.updatedAt)

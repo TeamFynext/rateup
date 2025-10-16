@@ -43,8 +43,6 @@ export const useChatSocket = () => {
         switch (data.type) {
           case "inbox":
             const { message, contact: incomingContact } = data.inbox;
-            console.log("incomingContact", incomingContact);
-            console.log("selectedContact", selectedContact);
             updateContactById(incomingContact.id, (contact) => ({
               ...contact,
               unReadMessageCount:
@@ -57,7 +55,11 @@ export const useChatSocket = () => {
                 sourcePlatform: message.sourcePlatform,
                 waCreatedAt: message.waCreatedAt,
               },
-              lastReceivedMessageTimeStamp: message.waCreatedAt,
+              ...(message.messageBody.exchangeProcess === "receive"
+                ? {
+                    lastReceivedMessageTimeStamp: message.waCreatedAt,
+                  }
+                : {}),
             }));
             if (selectedContact && selectedContact?.id === incomingContact.id) {
               for (const key of [
