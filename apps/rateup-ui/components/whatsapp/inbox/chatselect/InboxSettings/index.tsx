@@ -21,7 +21,7 @@ import {
 } from "@tabler/icons-react";
 
 import { WaInboxMessage } from "@/types/global";
-import useContactStore from "@/app/dashboard/inbox/store";
+import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
 
@@ -34,7 +34,8 @@ import AutoAssignChat from "../permissions";
 import WaInboxPermissions from "../permissions";
 
 const InboxSettings = ({ tab, onUnknownContactAddSuccess }) => {
-  const { setSelectedContact, filterData } = useContactStore();
+  const { filterData } = useContactStore();
+  const { setSelectedContact } = useContactsStore();
   const [filterCount, setFilterCount] = useState(0);
   const { user } = useUser();
   return (

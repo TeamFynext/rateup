@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Flex, Group, Paper, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
-import useContactStore from "@/app/dashboard/inbox/store";
+import useContactStore, {
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
 import {
   useGetAssignedUserForContact,
   useGetMessagesByContactId,
@@ -34,29 +37,12 @@ export default function WaInboxChatDisplay({
   smallScreen?: boolean;
   waSettings?: any;
 }) {
-  const searchParams = useSearchParams();
-  const { selectedContact: contact } = useContactStore();
+  const contact = useContactsStore((s) => s.selectedContact);
   const { filter } = useChatFilterStore();
-  const currentContactId = contact?.id || searchParams.get("contactId");
 
   const { data, error, isPending, isFetching, isFetched } =
-    useGetMessagesByContactId(currentContactId, filter?.phone);
-
-  const messages = useMemo(
-    () =>
-      !isPending && data
-        ? data.pages
-            .map((page) =>
-              page?.messages?.toSorted(
-                (a, b) =>
-                  new Date(a.waCreatedAt).getTime() -
-                  new Date(b.waCreatedAt).getTime(),
-              ),
-            )
-            .flat()
-        : [],
-    [data, isPending],
-  );
+    useGetMessagesByContactId(contact?.id, filter?.phone);
+  const { messagesByKey, selectedKey } = useMessagesStore();
 
   const { data: assignedUsers } = useGetAssignedUserForContact(contact?.id);
   const { user } = useUser();
@@ -95,33 +81,30 @@ export default function WaInboxChatDisplay({
     );
   }
 
-  const showLoading = isPending || (isFetching && !isFetched);
+  const showLoading =
+    !messagesByKey?.get(selectedKey)?.messages?.length &&
+    (isPending || (isFetching && !isFetched));
 
   return (
     <Paper withBorder p={0} className="h-full">
-      {!contact && messages?.length === 0 ? (
+      {!contact ? (
         <NothingFound text={translations("Select a chat to see messages")} />
       ) : (
-        <div className={classes.inner_animated}>
-          <WaInboxChatDisplayHeader
-            contact={contact}
-            smallScreen={smallScreen}
-            waSettings={waSettings}
-          />
-          <div className={"flex h-[calc(100%-49px)]"}>
-            <div className="flex flex-1 flex-col">
-              {showLoading ? (
-                <WhatsAppInboxLoader isLoading={showLoading} />
-              ) : (
-                <WaInboxChatDisplayBody
-                  data={messages}
-                  smallScreen={smallScreen}
-                />
-              )}
-              {!showLoading && footerContent}
-            </div>
-            <WaInboxContactDetails contact={contact} />
+        <div className="sm:flex h-full w-full">
+          <div className={classes.inner_animated}>
+            <WaInboxChatDisplayHeader
+              contact={contact}
+              smallScreen={smallScreen}
+              waSettings={waSettings}
+            />
+            {showLoading ? (
+              <WhatsAppInboxLoader isLoading={showLoading} />
+            ) : (
+              <WaInboxChatDisplayBody smallScreen={smallScreen} />
+            )}
+            {!showLoading && footerContent}
           </div>
+          <WaInboxContactDetails contact={contact} />
         </div>
       )}
     </Paper>

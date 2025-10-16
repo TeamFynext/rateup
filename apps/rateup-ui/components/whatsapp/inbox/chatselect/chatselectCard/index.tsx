@@ -10,9 +10,10 @@ import dayjs from "dayjs";
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { cn } from "@/lib/utils";
 import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContext";
-import useContactStore from "@/app/dashboard/inbox/store";
+import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
+import { useUser } from "@/context/UserContext";
 import {
   parseWaMessage,
   returnMessageContentBasedOnParsedMessage,
@@ -32,22 +33,19 @@ export default function WaInboxChatSelectCard({
   const lastMessage = contact?.lastMessage;
 
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
-  const { setSelectedContact, selectedContact, addOpenedContactIds } =
-    useContactStore();
   let tab = params.get("tab") ?? "New";
+
+  const { setSelectedContact, selectedContact } = useContactsStore();
 
   const platform = contact?.source?.toUpperCase() || MessagePlatform.WHATSAPP;
   const isInsta = platform === MessagePlatform.INSTAGRAM;
 
   return (
     <Card
-      component={Link}
-      href={`?tab=${tab}&contactId=${contact?.id}`}
-      className={`${classes.wrapper} ${params.get("contactId") === contact?.id && classes.highlighted_wrapper}`}
+      className={`${classes.wrapper} ${selectedContact?.id === contact?.id && classes.highlighted_wrapper}`}
       onClick={() => {
         setIsChatDisplayOpen(true);
         setSelectedContact(contact);
-        addOpenedContactIds(contact.id);
       }}
       py={"xs"}
     >
@@ -122,16 +120,11 @@ export default function WaInboxChatSelectCard({
                   <Badge variant="transparent" size="xs" />
                 )}
               </Group>
-              {contact.unReadMessageCount
-                ? contact?.id !== selectedContact?.id && (
-                    <Badge
-                      color={isInsta ? "#cc2960" : "#128c7e"}
-                      radius={"xl"}
-                    >
-                      {contact?.unReadMessageCount}
-                    </Badge>
-                  )
-                : null}
+              {contact?.unReadMessageCount ? (
+                <Badge color={isInsta ? "#cc2960" : "#128c7e"} radius={"xl"}>
+                  {contact?.unReadMessageCount}
+                </Badge>
+              ) : null}
             </Flex>
           )}
         </Stack>
@@ -145,7 +138,7 @@ const AssignedStatusBadge = ({
 }: {
   contact: ContactsWithLastMessage;
 }) => {
-  if (contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED)
+  if (contact?.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED)
     return (
       <Flex gap={"xs"}>
         {contact?.assignedUsers?.map((u) => (

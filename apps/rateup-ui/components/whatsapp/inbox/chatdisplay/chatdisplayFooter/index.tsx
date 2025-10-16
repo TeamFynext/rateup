@@ -14,11 +14,15 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 import { create } from "zustand";
 
 import { MessagePlatform } from "@/types/enums";
-import useContactStore from "@/app/dashboard/inbox/store";
+import useContactStore, {
+  ContactWithUpdatedAt,
+  useContactsStore,
+} from "@/app/dashboard/inbox/store";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import VoiceRecorder, {
   useVoiceRecordStore,
@@ -36,7 +40,10 @@ import {
   useSendNewWaMessage,
   useUnBlockWhatsAppUser,
 } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
-import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
+import {
+  isInboxSessionExpired,
+  returnMessageContentBasedOnParsedMessage,
+} from "../../../../../utils/whatsapp/inbox";
 import {
   RateupButtonPrimary,
   RateupButtonSecondary,
@@ -49,7 +56,7 @@ import classes from "./styles.module.css";
 export default function WaInboxChatDisplayFooter({
   contact,
 }: Readonly<{
-  contact: ContactsWithLastMessage;
+  contact: ContactWithUpdatedAt;
 }>) {
   const inputRef = useRef(null);
   const submiRef = useRef(null);
@@ -61,11 +68,12 @@ export default function WaInboxChatDisplayFooter({
     whatsappSettingsPhoneId,
     platform as MessagePlatform,
   );
-  const { addMessage, removeMessage } = useMessageStore();
+  const { addMessage, removeMessage } = useTemperoryMessageStore();
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
   const phone_number_id = contact?.metadata?.phone_number_id || "";
+  const { updateContactById } = useContactsStore();
   const form = useForm({
     initialValues: {
       type: "text",
@@ -172,6 +180,58 @@ export default function WaInboxChatDisplayFooter({
         },
       },
     );
+    updateContactById(contact.id, (contact) => ({
+      ...contact,
+      lastMessage: {
+        messageBody: {
+          send:
+            platform === MessagePlatform.INSTAGRAM
+              ? {
+                  recipient: {
+                    id: contact.igsId,
+                  },
+                  message: {
+                    ...(values.type === "text"
+                      ? { text: parseToWhatsAppFormat(values.text.body) }
+                      : values.type === "media"
+                        ? {
+                            attachment: {
+                              type: values.media[values.media.length - 1].type,
+                            },
+                          }
+                        : {}),
+                  },
+                }
+              : {
+                  messaging_product: "whatsapp",
+                  recipient_type: "individual",
+                  to: contact.phone,
+                  type: "text",
+                  text: {
+                    body:
+                      values.type === "text"
+                        ? parseToWhatsAppFormat(values.text.body)
+                        : values.type === "media"
+                          ? returnMessageContentBasedOnParsedMessage(
+                              {
+                                messageType:
+                                  values.media[media.length - 1].type,
+                                messageContent: "",
+                                timeStamp: dayjs().unix().toString(),
+                              },
+                              "send",
+                            )
+                          : "",
+                  },
+                },
+          exchangeProcess: "send",
+          receive: null,
+        },
+        waCreatedAt: new Date().toISOString(),
+        sourceIdentifier: whatsappSettingsPhoneId,
+        sourcePlatform: platform as MessagePlatform,
+      },
+    }));
   }
   function insertEmoji(value: string) {
     const { selectionStart, selectionEnd } = inputRef.current;
@@ -313,7 +373,7 @@ export default function WaInboxChatDisplayFooter({
 
 export const WaInboxAssignUserFooter = ({ contactId, user }) => {
   const { filterData } = useContactStore();
-  const assignMut = useAssignInboxToUer(filterData);
+  const assignMut = useAssignInboxToUer(contactId, filterData);
   const [openedAssign, { open: openAssign, close: closeAssign }] =
     useDisclosure(false);
 
@@ -365,7 +425,8 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
 };
 
 export const WaInboxBlockedContactFooter = ({ contact }) => {
-  const { setSelectedContact, filterData } = useContactStore();
+  const { filterData } = useContactStore();
+  const { setSelectedContact } = useContactsStore();
   const [opened, { open, close }] = useDisclosure(false);
   const unblockMut = useUnBlockWhatsAppUser(filterData);
   function handleUnblock() {
@@ -436,7 +497,7 @@ interface MessageState {
   removeMessage: (contactId: string) => void;
 }
 
-export const useMessageStore = create<MessageState>((set, get) => ({
+export const useTemperoryMessageStore = create<MessageState>((set, get) => ({
   messages: {},
   addMessage: (contactId, message) =>
     set((state) => {

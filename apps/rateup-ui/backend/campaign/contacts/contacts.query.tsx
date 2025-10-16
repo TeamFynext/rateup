@@ -2,7 +2,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ContactGroupType } from "@/types/enums";
-import useContactStore from "@/app/dashboard/inbox/store";
+import { useContactsStore } from "@/app/dashboard/inbox/store";
 
 import { CONTACT_SORT } from "../../../components/Contacts/utils/utils";
 import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
@@ -121,9 +121,10 @@ export const useImportCSVContactMutation = () => {
 };
 export const useContactDeleteMutation = (groupId: string) => {
   const queryClient = useQueryClient();
+  const { deleteContactsByIds } = useContactsStore();
   return useMutation({
     mutationFn: deleteContact,
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
@@ -133,6 +134,7 @@ export const useContactDeleteMutation = (groupId: string) => {
           "contact-delete",
           <IconCheck />,
         );
+      deleteContactsByIds([variables]);
     },
     onError: (error: any) => {
       showErrorToast(
@@ -200,9 +202,10 @@ export const useEditContactLabelsMutation = (contactId: string) => {
 
 export const useDeleteManyContactsMutation = (onSucess: () => void) => {
   const queryClient = useQueryClient();
+  const { deleteContactsByIds } = useContactsStore();
   return useMutation({
     mutationFn: deleteManyContacts,
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
@@ -213,6 +216,7 @@ export const useDeleteManyContactsMutation = (onSucess: () => void) => {
         <IconCheck />,
         true,
       );
+      deleteContactsByIds([...variables]);
       onSucess();
     },
     onError: (error: any) => {
