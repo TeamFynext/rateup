@@ -118,6 +118,7 @@ interface ContactsStoreState {
 enableMapSet();
 //for messages
 const MAX_CONTACTS_IN_MEMORY = 30;
+let currentLoadToken = 0;
 export const useContactsStore = create<ContactsStoreState>()(
   persist(
     (set, get) => ({
@@ -131,8 +132,8 @@ export const useContactsStore = create<ContactsStoreState>()(
         set({ currentFilterKey: makeFilterKey(filter) });
       },
 
-      /* ---------- Load contacts by filter from DB ---------- */
       loadContactsFromDB: async (filter) => {
+        const loadToken = ++currentLoadToken;
         const filterKey = makeFilterKey(filter);
         set(
           produce((state) => {
@@ -141,21 +142,36 @@ export const useContactsStore = create<ContactsStoreState>()(
         );
         if (get().currentFilterKey[filterKey]?.length) return;
         const ids = await loadContactIdsForFilter(filterKey);
-        if (!ids.length) return;
+        if (!ids.length || loadToken !== currentLoadToken) return;
 
         const contacts = await loadContactsFromDB(ids);
-        if (!contacts.length) return;
+        if (!contacts.length || loadToken !== currentLoadToken) return;
 
         set(
           produce((state: ContactsStoreState) => {
-            contacts.forEach((c) => state.contactsById.set(c.id, c));
-            state.contactsByFilter[filterKey] = ids;
+            if (loadToken !== currentLoadToken) return;
+            contacts.forEach((c) => {
+              const existing = state.contactsById.get(c.id);
+              if (
+                !existing ||
+                new Date(c.updatedAt) > new Date(existing.updatedAt)
+              ) {
+                state.contactsById.set(c.id, c);
+              }
+            });
+
+            const existingIds = new Set(
+              state.contactsByFilter[filterKey] || [],
+            );
+            ids.forEach((id) => existingIds.add(id));
+            state.contactsByFilter[filterKey] = Array.from(existingIds);
           }),
         );
       },
 
-      /* ---------- Append contacts for pagination ---------- */
       addContactsForFilter: async (filterKey, contacts, tab) => {
+        const { currentFilterKey } = get();
+        if (currentFilterKey !== filterKey) return;
         set(
           produce((state: ContactsStoreState) => {
             state.isLoading = true;
@@ -201,7 +217,7 @@ export const useContactsStore = create<ContactsStoreState>()(
           }),
         );
 
-        await Promise.all([
+        Promise.all([
           saveContactsToDB(contacts),
           saveContactIdsForFilter(
             filterKey,
@@ -210,7 +226,6 @@ export const useContactsStore = create<ContactsStoreState>()(
         ]);
       },
 
-      /* ---------- Update one contact globally ---------- */
       updateContactById(contactId, updater) {
         const contact = get().contactsById.get(contactId);
         if (!contact) return;
@@ -302,7 +317,6 @@ export const useContactsStore = create<ContactsStoreState>()(
         });
 
         if (missingIds.length) {
-          // Load missing contacts from IndexedDB
           const fromDB = await loadContactsFromDB(missingIds);
           fromDB.forEach((c) => {
             contactsById.set(c.id, c);
@@ -467,7 +481,6 @@ export const useMessagesStore = create<MessagesStore>()(
         const keys = Array.from(state.messagesByKey.keys());
         if (keys.length <= MAX_CONTACTS_IN_MEMORY) return;
 
-        // sort by last access time
         const sortedByAccess = keys.sort(
           (a, b) =>
             (state.accessTimestamps.get(a) ?? 0) -
