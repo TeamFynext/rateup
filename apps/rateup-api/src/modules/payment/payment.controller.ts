@@ -156,12 +156,6 @@ export async function getAllRateupPaymentPlansHandler(
   reply: FastifyReply,
 ) {
   try {
-    const country = request?.headers?.["cf-ipcountry"]; // Cloudflare adds this automatically
-    log.info(`Request from country: ${country}`);
-
-    if (country === "BH") {
-      return reply.code(200).send([]);
-    }
     const paymentPlans = await getAllRateupPaymentPlans();
     reply.code(200).send(paymentPlans);
   } catch (error) {

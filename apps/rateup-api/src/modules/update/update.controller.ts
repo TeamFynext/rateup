@@ -255,3 +255,44 @@ async function migrateTags() {
     }
   }
 }
+
+export async function migratePhoneIdsHandle(
+  req: FastifyRequest,
+  res: FastifyReply,
+) {
+  try {
+    const automations = await prisma.waAutomatedReply.findMany({
+      where: { whatsappSettingsPhoneId: { not: null } },
+      select: { id: true, whatsappSettingsPhoneId: true },
+    });
+
+    log.info(`Found ${automations.length} automations to migrate phone IDs`);
+
+    if (automations.length === 0) {
+      log.info("No phone IDs to migrate");
+      return;
+    }
+
+    const results = await Promise.allSettled(
+      automations.map((auto) =>
+        prisma.waAutomatedReply.update({
+          where: { id: auto.id },
+          data: {
+            whatsappSettingsPhoneIds: [auto.whatsappSettingsPhoneId as string],
+          },
+        }),
+      ),
+    );
+
+    const successful = results.filter((r) => r.status === "fulfilled").length;
+    const failed = results.filter((r) => r.status === "rejected").length;
+
+    log.info(
+      `Phone ID migration completed: ${successful} successful, ${failed} failed`,
+    );
+    res.code(200).send("Phone IDs migrated successfully");
+  } catch (error) {
+    log.error(error);
+    res.code(500).send("Error migrating Phone IDs");
+  }
+}

@@ -11,7 +11,7 @@ const createAutomatedReplySchema = z.object({
   matchType: z.nativeEnum(WaAutomatedReplyMatchType),
   matchData: matchDataSchema,
   commands: z.array(z.string()),
-  whatsappSettingsPhoneId: z.string(),
+  whatsappSettingsPhoneIds: z.array(z.string()),
   isEnabled: z.boolean().optional().default(true),
   sendOnceIn24Hours: z.boolean().optional().default(true),
 });
