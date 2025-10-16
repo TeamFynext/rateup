@@ -162,7 +162,11 @@ const WaQuickReply = ({ handleSelectQuickReply }) => {
                   onClick={(value, onClose) =>
                     handleUpdate(quickReply.id, { text: value }, onClose)
                   }
-                  initialValues={{ text: quickReply.text }}
+                  initialValues={{
+                    text: !isJSONString(quickReply.text)
+                      ? quickReply.text
+                      : parseToWhatsAppFormat(JSON.parse(quickReply.text)),
+                  }}
                   close={updateToggle}
                   loading={updateQuickReply.isPending}
                 />
@@ -247,6 +251,7 @@ const WaQuickReplyEditor = ({
       <WaTextEditor
         handleInputChange={(value) => form.setFieldValue("text", value)}
         content={form.values.text}
+        isQuickReplyEditor={true}
       />
       <Group justify={"flex-end"} gap={"xs"}>
         <RateupButtonSecondary

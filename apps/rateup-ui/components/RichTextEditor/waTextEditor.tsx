@@ -61,6 +61,7 @@ interface WaTextEditorProps extends BoxComponentProps {
   editable?: boolean;
   customHeaders?: React.ReactNode;
   otherHeaders?: React.ReactNode;
+  isQuickReplyEditor?: boolean;
 }
 
 export const CustomEnter = Extension.create({
@@ -97,6 +98,7 @@ function WaTextEditor({
   editable = true,
   customHeaders = null,
   otherHeaders = null,
+  isQuickReplyEditor = false,
   ...props
 }: WaTextEditorProps) {
   const [opened, { open, close }] = useDisclosure(false);
@@ -271,40 +273,37 @@ function WaTextEditor({
               <RichTextEditor.Redo />
             </RichTextEditor.ControlsGroup>
 
-            <Popover position="top-start" withArrow shadow="md">
-              <Popover.Target>
-                <ActionIcon variant="default">
-                  <IconPaperclip size={18} color="#343A40" />
-                </ActionIcon>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <Group gap="sm" wrap="nowrap">
-                  {inbox && (
-                    <>
-                      <RichTextEditor.ControlsGroup>
-                        {platform !== MessagePlatform.INSTAGRAM && (
-                          <InsertInboxFile />
-                        )}
-                        <InsertInboxImage />
-                        <InsertInboxVideo />
-                        <InsertInboxAudio />
-                      </RichTextEditor.ControlsGroup>
+            {inbox && !isQuickReplyEditor && (
+              <Popover position="top-start" withArrow shadow="md">
+                <Popover.Target>
+                  <ActionIcon variant="default">
+                    <IconPaperclip size={18} color="#343A40" />
+                  </ActionIcon>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <Group gap="sm" wrap="nowrap">
+                    <RichTextEditor.ControlsGroup>
+                      {platform !== MessagePlatform.INSTAGRAM && (
+                        <InsertInboxFile />
+                      )}
+                      <InsertInboxImage />
+                      <InsertInboxVideo />
+                      <InsertInboxAudio />
+                    </RichTextEditor.ControlsGroup>
 
-                      <RichTextEditor.ControlsGroup>
-                        {platform !== MessagePlatform.INSTAGRAM && (
-                          <>
-                            <InboxContactsControl />
-                            <InboxLocationControl />
-                          </>
-                        )}
-                      </RichTextEditor.ControlsGroup>
-                    </>
-                  )}
-                </Group>
-              </Popover.Dropdown>
-            </Popover>
-
-            <WaQuickReplyControl />
+                    <RichTextEditor.ControlsGroup>
+                      {platform !== MessagePlatform.INSTAGRAM && (
+                        <>
+                          <InboxContactsControl />
+                          <InboxLocationControl />
+                        </>
+                      )}
+                    </RichTextEditor.ControlsGroup>
+                  </Group>
+                </Popover.Dropdown>
+              </Popover>
+            )}
+            {!isQuickReplyEditor && <WaQuickReplyControl />}
 
             <RichTextEditor.ControlsGroup>
               <InsertEmoji />
