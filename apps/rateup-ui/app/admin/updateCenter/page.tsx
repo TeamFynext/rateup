@@ -4,6 +4,7 @@ import { Button, Stack, Text, Title } from "@mantine/core";
 
 import {
   useAutomationSubscription,
+  useUpdateAutomationPhoneId,
   useUpdateAutomationTriggerSubscription,
   useUpdateAutomationUsageStats,
   useUpdateCustomField,
@@ -23,7 +24,7 @@ function UpdateAllThemes() {
   const updateFreePlan = useUpdateFreePlanSubscriptionExpiry();
   const updateLife = useUpdateLifecycle();
   const updateCustom = useUpdateCustomField();
-
+  const updatePhoneId = useUpdateAutomationPhoneId();
   return (
     <Stack>
       <Stack mt="xl">
@@ -149,6 +150,20 @@ function UpdateAllThemes() {
             updateCustom.mutate();
           }}
           loading={updateCustom.isPending}
+        >
+          Update
+        </Button>
+      </Stack>
+      <Stack mt="xl">
+        <Title order={2}>Migrate automation phoneid to phoneIds</Title>
+        <Text>This will migrate automation phoneId</Text>
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updatePhoneId.mutate();
+          }}
+          loading={updatePhoneId.isPending}
         >
           Update
         </Button>
