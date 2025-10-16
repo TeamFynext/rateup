@@ -27,10 +27,9 @@ export async function getAutomatedRepliesByOrgId(
       ...(phone_number_id
         ? {
             isEnabled: true,
-            OR: [
-              { whatsappSettingsPhoneId: phone_number_id },
-              { whatsappSettingsPhoneId: null },
-            ],
+            whatsappSettingsPhoneIds: {
+              has: phone_number_id,
+            },
           }
         : {}),
     },

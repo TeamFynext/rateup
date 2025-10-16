@@ -765,7 +765,7 @@ export async function handleAutomatedReply(
     }
 
     if (automation) {
-      if (!automation?.whatsappSettingsPhoneId) {
+      if (phone_number_id) {
         automation.whatsappSettingsPhoneId = phone_number_id;
       }
       await startAutomationFlow(phone, automation, parsedMessage, orgId);
@@ -776,7 +776,12 @@ export async function handleAutomatedReply(
     // }
     // Case 3: No matching automation rules found
     else {
-      await handleInitialInteraction(orgId, phone, parsedMessage.message);
+      await handleInitialInteraction(
+        orgId,
+        phone,
+        parsedMessage.message,
+        phone_number_id,
+      );
     }
     await updateMonthlyStat(
       SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
@@ -1226,11 +1231,13 @@ async function handleAiBotNode(node: any, userPhone: string, orgId: string) {
  * @param orgId Organization ID
  * @param phone User's phone number
  * @param message User's message content
+ * @param phone_number_id WhatsApp phone number ID
  */
 async function handleInitialInteraction(
   orgId: string,
   phone: string,
   message: string,
+  phone_number_id: string,
 ) {
   try {
     // Look for a wildcard automation command
@@ -1243,6 +1250,9 @@ async function handleInitialInteraction(
           },
           waAutomatedReply: {
             isEnabled: true,
+            whatsappSettingsPhoneIds: {
+              has: phone_number_id,
+            },
           },
         },
         include: {

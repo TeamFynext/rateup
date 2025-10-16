@@ -2,10 +2,10 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client"
-  output          = "../generated/prisma"
-  moduleFormat    = "cjs"
-  engineType = "client"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+  engineType   = "client"
 }
 
 // for having typed Json fields
@@ -1358,16 +1358,18 @@ enum AssignType {
 }
 
 model WaAutomatedReply {
-  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                    String
-  createdAt               DateTime @default(now())
-  matchData               Json
-  matchType               String // enums.ts: WaAutomatedReplyMatchType
-  orgId                   String?  @db.Uuid
-  org                     Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  whatsappSettingsPhoneId String?
-  isEnabled               Boolean  @default(true)
-  sendOnceIn24Hours       Boolean  @default(true)
+  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                     String
+  createdAt                DateTime @default(now())
+  matchData                Json
+  matchType                String // enums.ts: WaAutomatedReplyMatchType
+  orgId                    String?  @db.Uuid
+  org                      Org?     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  whatsappSettingsPhoneId  String?
+  whatsappSettingsPhoneIds String[] @default([]) //for multiple whatsapp integration
+
+  isEnabled                Boolean  @default(true)
+  sendOnceIn24Hours        Boolean  @default(true)
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
