@@ -50,3 +50,13 @@ export async function updateCustomField() {
     timeout: 60000,
   });
 }
+
+export async function updateAutomationPhoneId() {
+  return await axiosClient.put(
+    `${baseUrl}/migrate-to-whatsapp-phone-ids`,
+    null,
+    {
+      timeout: 60000,
+    },
+  );
+}

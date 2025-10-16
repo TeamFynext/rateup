@@ -2,29 +2,49 @@
 
 import { useEffect } from "react";
 
-import { Card, Group, SelectProps, Skeleton, Text } from "@mantine/core";
+import {
+  Card,
+  Group,
+  MultiSelectProps,
+  SelectProps,
+  Skeleton,
+  Text,
+} from "@mantine/core";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 
-import { ContainedSelection } from "./ContainedInput/ContainedInput";
+import {
+  ContainedMultiSelect,
+  ContainedSelection,
+} from "./ContainedInput/ContainedInput";
 
-interface AccountSelectorProps extends SelectProps {
-  onChange?: (teamId: string) => void;
+interface CommonAccountSelectorProps {
+  onChange?: any;
   usePhoneNumber?: boolean;
   withAllOption?: boolean;
   platform?: MessagePlatform | "all";
+  multiple?: boolean;
+  label?: string;
+  value?: any;
 }
-export function AccountSelector({
-  value,
-  onChange,
-  label = "",
-  usePhoneNumber = false,
-  withAllOption = false,
-  platform = MessagePlatform.WHATSAPP,
-  ...props
-}: Readonly<AccountSelectorProps>) {
+
+type AccountSelectorProps =
+  | (CommonAccountSelectorProps & SelectProps)
+  | (CommonAccountSelectorProps & MultiSelectProps);
+
+export function AccountSelector(props: Readonly<AccountSelectorProps>) {
+  const {
+    value,
+    onChange,
+    label = "",
+    usePhoneNumber = false,
+    withAllOption = false,
+    platform = MessagePlatform.WHATSAPP,
+    multiple = false,
+    ...restProps
+  } = props;
   const { data, isPending, isError } = useWaSettings();
 
   const translations = useTranslations();
@@ -64,13 +84,28 @@ export function AccountSelector({
     return (
       <Card h={40} w={props?.w ?? 240} radius={"md"} withBorder p={0}>
         <Group justify="space-between" w={"100%"} my={"auto"}>
-          <Skeleton w={props?.w ? 40 : 100} h={17} ml={"xs"} />
+          <Skeleton w={restProps?.w ? 40 : 100} h={17} ml={"xs"} />
           <Skeleton w={20} h={17} mr={"xs"} />
         </Group>
       </Card>
     );
   }
-
+  if (multiple) {
+    return (
+      <ContainedMultiSelect
+        data={accountOptions}
+        defaultValue={
+          accountOptions?.length && [accountOptions[0]?.value as string]
+        }
+        onChange={onChange}
+        value={value}
+        label={label ?? translations("Account")}
+        placeholder={translations("Select Account")}
+        nothingFoundMessage={translations("No account found!")}
+        required
+      />
+    );
+  }
   return (
     <ContainedSelection
       allowDeselect={false}
@@ -82,7 +117,7 @@ export function AccountSelector({
       placeholder={translations("Select Account")}
       nothingFoundMessage={translations("No account found!")}
       required
-      {...props}
+      // {...props}
     />
   );
 }

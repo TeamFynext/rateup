@@ -6,6 +6,7 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   automationSubscription,
+  updateAutomationPhoneId,
   updateCustomField,
   updateFreePlanSubscriptionExpiry,
   updateLifecycle,
@@ -110,6 +111,20 @@ export const useUpdateCustomField = () => {
     },
     onError: () => {
       showErrorToast("Failed to migrate custom fields");
+    },
+  });
+};
+
+export const useUpdateAutomationPhoneId = () => {
+  return useMutation({
+    mutationFn: () => {
+      return updateAutomationPhoneId();
+    },
+    onSuccess: () => {
+      showSuccessToast("Automation phoneId migrated successfully");
+    },
+    onError: () => {
+      showErrorToast("Failed to migrate automation phoneId");
     },
   });
 };

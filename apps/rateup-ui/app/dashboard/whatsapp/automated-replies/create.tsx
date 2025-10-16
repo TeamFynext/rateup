@@ -91,7 +91,7 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
       caseSensitive: false,
     },
     commands: [],
-    whatsappSettingsPhoneId: "",
+    whatsappSettingsPhoneIds: [],
     isEnabled: true,
     sendOnceIn24Hours: true,
   };
@@ -233,7 +233,8 @@ export function AutomatedReplyForm({
           {...rootForm.getInputProps("name")}
         />
         <AccountSelector
-          {...rootForm.getInputProps("whatsappSettingsPhoneId")}
+          multiple
+          {...rootForm.getInputProps("whatsappSettingsPhoneIds")}
         />
 
         <Tabs
