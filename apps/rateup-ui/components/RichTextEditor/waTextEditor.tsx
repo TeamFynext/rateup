@@ -443,7 +443,7 @@ interface TiptapNode {
   text?: string;
 }
 
-function parseFromWhatsAppFormat(text: string): {
+export function parseFromWhatsAppFormat(text: string): {
   type: "doc";
   content: TiptapNode[];
 } {

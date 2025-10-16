@@ -9,6 +9,7 @@ import {
   Group,
   Loader,
   Popover,
+  ScrollAreaAutosize,
   Stack,
   Text,
 } from "@mantine/core";
@@ -30,7 +31,10 @@ import {
 import Reorder from "@/components/Linktree/LinktreeEditor/LinksEditor/components/Reorder";
 import ReorderItem from "@/components/Linktree/LinktreeEditor/LinksEditor/components/Reorder/ReorderItem";
 
-import WaTextEditor, { parseToWhatsAppFormat } from "../waTextEditor";
+import WaTextEditor, {
+  parseFromWhatsAppFormat,
+  parseToWhatsAppFormat,
+} from "../waTextEditor";
 import styles from "./quickeReply.module.css";
 
 const WaQuickReplyControl = () => {
@@ -47,18 +51,34 @@ const WaQuickReplyControl = () => {
         </RichTextEditor.Control>
       </Popover.Target>
       <Popover.Dropdown>
-        <WaQuickReply
-          handleSelectQuickReply={(value) => {
-            if (editor) {
-              editor.commands.insertContent(value);
-              setOpened((o) => !o);
-            }
-          }}
-        />
+        <ScrollAreaAutosize
+          miw={400}
+          mah={500}
+          maw={700}
+          type="scroll"
+          offsetScrollbars
+          scrollbarSize={6}
+        >
+          <WaQuickReply
+            handleSelectQuickReply={(value) => {
+              if (editor) {
+                const parsedValue = !isJSONString(value)
+                  ? parseFromWhatsAppFormat(value)
+                  : JSON.parse(value);
+                editor.commands.insertContent(parsedValue);
+                setOpened((o) => !o);
+              }
+            }}
+          />
+        </ScrollAreaAutosize>
       </Popover.Dropdown>
     </Popover>
   );
 };
+
+function isJSONString(string) {
+  return /^\s*\{.*\}\s*$/.test(string);
+}
 
 const WaQuickReply = ({ handleSelectQuickReply }) => {
   const {
@@ -155,7 +175,9 @@ const WaQuickReply = ({ handleSelectQuickReply }) => {
                   justify="space-between"
                 >
                   <Text size="sm" w={500}>
-                    {quickReply.text}
+                    {!isJSONString(quickReply.text)
+                      ? quickReply.text
+                      : parseToWhatsAppFormat(JSON.parse(quickReply.text))}
                   </Text>
                   <Group gap={2} px={"sm"}>
                     <ActionIcon
@@ -212,7 +234,7 @@ const WaQuickReplyEditor = ({
 
   function handleSave() {
     if (form.validate().hasErrors) return;
-    onClick(parseToWhatsAppFormat(form.values.text), onClose);
+    onClick(JSON.stringify(form.values.text), onClose);
   }
 
   function onClose() {
@@ -225,7 +247,6 @@ const WaQuickReplyEditor = ({
       <WaTextEditor
         handleInputChange={(value) => form.setFieldValue("text", value)}
         content={form.values.text}
-        mah={50}
       />
       <Group justify={"flex-end"} gap={"xs"}>
         <RateupButtonSecondary
