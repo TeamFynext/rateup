@@ -59,15 +59,12 @@ import InboxSettings from "./InboxSettings";
 import classes from "./styles.module.css";
 
 const WaInboxChatSelect = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as string) ?? "New";
   const { filter, setFilter } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
   const {
     setSelectedContact,
-    setFilter: setFilterForContactsStore,
-    addContactsForFilter,
     loadContactsFromDB,
     isLoading: isStoreLoading,
   } = useContactsStore();
@@ -77,8 +74,18 @@ const WaInboxChatSelect = () => {
   const { mergeMessages } = useMessagesStore();
 
   useEffect(() => {
-    loadContactsFromDB(processedFilter);
-  }, [processedFilter, setFilterForContactsStore, loadContactsFromDB]);
+    let cancelled = false;
+
+    (async () => {
+      await loadContactsFromDB(processedFilter);
+      if (cancelled) return;
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [processedFilter]);
+
   const queryClient = useQueryClient();
 
   const translations = useTranslations();
@@ -154,30 +161,29 @@ const WaInboxChatSelect = () => {
     });
   }
   useEffect(() => {
+    if (!filteredContacts || !currentFilterKey) return;
     const filterKey = makeFilterKey(processedFilter);
-    if (
-      !filteredContacts ||
-      !currentFilterKey ||
-      filterKey !== currentFilterKey
-    )
-      return;
-    filteredContacts.pages.forEach((page) => {
-      if (page.rows?.length) {
-        const existingIds = new Set(contactsByFilter[currentFilterKey] || []);
+    if (filterKey !== currentFilterKey) return;
+    let isActive = true;
+    (async () => {
+      for (const page of filteredContacts.pages) {
+        if (!isActive || !page.rows?.length) continue;
+        const state = useContactsStore.getState();
+        const existingIds = new Set(state.contactsByFilter[filterKey] || []);
         const newContacts = page.rows
           .filter((c) => !existingIds.has(c.id))
           .map((c) => ({ ...c, updatedAt: new Date().toISOString() }));
-        if (!newContacts.length) return;
-        addContactsForFilter(currentFilterKey, newContacts, tab);
-        updateInitialMessagesToStore(newContacts);
+        if (newContacts.length) {
+          await state.addContactsForFilter(filterKey, newContacts, tab);
+          updateInitialMessagesToStore?.(newContacts);
+        }
       }
-    });
-  }, [
-    filteredContacts,
-    currentFilterKey,
-    addContactsForFilter,
-    processedFilter,
-  ]);
+    })();
+    return () => {
+      isActive = false;
+    };
+  }, [filteredContacts, currentFilterKey, processedFilter, tab]);
+
   const contactIds = useMemo(
     () => contactsByFilter[currentFilterKey] || [],
     [contactsById, currentFilterKey, contactsByFilter],
@@ -230,7 +236,6 @@ const WaInboxChatSelect = () => {
     [setSelectedContact],
   );
   useEffect(() => {
-    let tab = searchParams.get("tab") as string;
     if (!tab) return;
     if (tab === "blocked") {
       prepareFilters({
@@ -256,7 +261,13 @@ const WaInboxChatSelect = () => {
         blockedUsers: false,
       });
     }
-  }, [searchParams, filter, prepareFilters]);
+  }, [tab, filter, prepareFilters]);
+
+  useEffect(() => {
+    if (parentRef.current) {
+      parentRef.current.scrollTop = 0;
+    }
+  }, [tab]);
 
   if (isContactLoading || isLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
