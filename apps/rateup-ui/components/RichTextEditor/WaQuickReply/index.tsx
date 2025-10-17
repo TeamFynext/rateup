@@ -41,7 +41,13 @@ const WaQuickReplyControl = () => {
   const { editor } = useRichTextEditorContext();
   const [opened, setOpened] = useState(false);
   return (
-    <Popover position="top" opened={opened} onChange={setOpened}>
+    <Popover
+      position="top"
+      opened={opened}
+      onChange={setOpened}
+      closeOnClickOutside={false}
+      withinPortal
+    >
       <Popover.Target>
         <RichTextEditor.Control
           title="Insert quick replies"
