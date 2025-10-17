@@ -48,7 +48,7 @@ export const useChatSocket = () => {
               unReadMessageCount:
                 selectedContact?.id === incomingContact?.id
                   ? 0
-                  : contact.unReadMessageCount + 1,
+                  : (contact.unReadMessageCount ?? 0) + 1,
               lastMessage: {
                 messageBody: message.messageBody,
                 sourceIdentifier: message.sourceIdentifier,
@@ -61,15 +61,13 @@ export const useChatSocket = () => {
                   }
                 : {}),
             }));
-            if (selectedContact && selectedContact?.id === incomingContact.id) {
-              for (const key of [
-                `${selectedContact?.id}_all`,
-                `${selectedContact?.id}_${message.sourceIdentifier}`,
-              ]) {
-                messageStore.mergeMessages(key, [message]);
-              }
-              markMessageAsRead.mutate();
+            for (const key of [
+              `${incomingContact?.id}_all`,
+              `${incomingContact?.id}_${message.sourceIdentifier}`,
+            ]) {
+              messageStore.mergeMessages(key, [message]);
             }
+            markMessageAsRead.mutate();
             break;
           case "message_status_update":
             if (

@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import { ActionIcon } from "@mantine/core";
+import { ActionIcon, Center, Loader } from "@mantine/core";
 import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import dayjs from "dayjs";
@@ -17,6 +17,7 @@ import { useGetMessagesByContactId } from "@/backend/whatsapp/inbox/message/wame
 import { parseWaMessage } from "@/utils/whatsapp/inbox";
 
 import { useChatFilterStore } from "../../chatselect/chatFilter";
+import WhatsAppInboxLoader from "../../loader";
 import { useTemperoryMessageStore } from "../chatdisplayFooter";
 import {
   DateComponent,
@@ -36,23 +37,24 @@ const WaInboxChatDisplayBody = (props) => {
   const parentRef = useRef(null);
   const { selectedContact } = useContactsStore();
   const { filter } = useChatFilterStore();
+  //api call
+  const [enable, setEnabled] = useState(false);
   const {
     mergeMessages,
     setSelected,
     setIsLoading,
     selectedKey,
     messagesByKey,
-    isLoading: isStoreDataLoading,
+    isLoading,
   } = useMessagesStore();
-
   const allMessages = useMemo(
     () => messagesByKey.get(selectedKey)?.messages || [],
     [selectedKey, messagesByKey],
   );
 
-  // Select contact/source
   useEffect(() => {
     if (!selectedContact || !filter?.phone) return;
+    setEnabled(false);
     setSelected(selectedContact.id, filter?.phone);
   }, [selectedContact, filter?.phone]);
 
@@ -61,18 +63,16 @@ const WaInboxChatDisplayBody = (props) => {
     hasNextPage, // boolean
     data,
     isFetchingNextPage,
-    isLoading,
-  } = useGetMessagesByContactId(selectedContact?.id, filter?.phone);
+    isPending,
+  } = useGetMessagesByContactId(selectedContact?.id, filter?.phone, enable);
   const { messages: tempMessages } = useTemperoryMessageStore();
 
   useEffect(() => {
     if (!data || !selectedKey || !selectedContact) return;
     const contactId = selectedKey.split("_")[0];
     if (contactId !== selectedContact.id) return;
-    setIsLoading(true);
     const all = data.pages.flatMap((p) => p.messages);
     if (!all.length) {
-      setIsLoading(false);
       return;
     }
     mergeMessages(selectedKey, all);
@@ -87,19 +87,20 @@ const WaInboxChatDisplayBody = (props) => {
   useEffect(() => {
     if (!selectedKey) return;
     (async () => {
-      setIsLoading(true);
       const cached = await getMessagesFromIDB(selectedKey);
       if (!cached.length) {
-        setIsLoading(false);
         return;
       }
       mergeMessages(selectedKey, cached);
     })();
-    rowVirtualizer.scrollToIndex(0);
+    if (rowVirtualizer.getVirtualItems().length > 0)
+      rowVirtualizer.scrollToIndex(0);
   }, [selectedKey]);
 
   useEffect(() => {
     const lastItem = rowVirtualizer.getVirtualItems().at(-1);
+    if (lastItem && lastItem?.index >= allMessages.length - 1) setEnabled(true);
+    else if (enable) setEnabled(false);
     if (
       lastItem?.index >= allMessages.length - 1 &&
       hasNextPage &&
@@ -120,6 +121,14 @@ const WaInboxChatDisplayBody = (props) => {
     current?.addEventListener("wheel", reverseScroll, { passive: false });
     return () => void current?.removeEventListener("wheel", reverseScroll);
   }, []);
+
+  useEffect(() => {
+    setIsLoading(
+      !messagesByKey?.get(selectedKey)?.messages?.length && isPending,
+    );
+  }, [selectedKey, isPending, messagesByKey, enable]);
+
+  if (isLoading) return <WhatsAppInboxLoader isLoading={isLoading} />;
 
   return (
     <>
@@ -152,6 +161,11 @@ const WaInboxChatDisplayBody = (props) => {
                 }}
                 className="gap-4 p-4 pl-6"
               >
+                {isLoaderRow && (
+                  <Center>
+                    <Loader size={16} />
+                  </Center>
+                )}
                 {!isLoaderRow && (
                   <MessageItem
                     message={message}

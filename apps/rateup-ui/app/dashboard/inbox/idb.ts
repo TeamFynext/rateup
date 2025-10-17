@@ -1,9 +1,5 @@
 import { openDB } from "idb";
-
-import {
-  ContactsWithLastMessage,
-  WaGetMessagesBody,
-} from "@/backend/whatsapp/inbox/message/wamessage.api";
+import lodash from "lodash";
 
 import { ContactWithUpdatedAt } from "./store";
 
@@ -13,7 +9,7 @@ const STORE_FILTERS = "contacts_by_filter";
 const STORE_MESSAGES = "messages";
 
 export async function getDB() {
-  return openDB(DB_NAME, 3, {
+  return openDB(DB_NAME, 4, {
     upgrade(db) {
       if (!db.objectStoreNames.contains(STORE_GLOBAL)) {
         db.createObjectStore(STORE_GLOBAL); // key = contact.id
@@ -22,7 +18,9 @@ export async function getDB() {
         db.createObjectStore(STORE_FILTERS); // key = filterKey, value = contactIds[]
       }
       if (!db.objectStoreNames.contains(STORE_MESSAGES)) {
-        db.createObjectStore(STORE_MESSAGES, { keyPath: "id" });
+        const store = db.createObjectStore(STORE_MESSAGES, { keyPath: "id" });
+        if (!store.indexNames.contains("key"))
+          store.createIndex("key", "key", { unique: false });
       }
     },
   });
@@ -71,7 +69,6 @@ export async function clearAllContactsFromDB() {
   await db.clear(STORE_FILTERS);
 }
 
-/* ---------- Filter Contact IDs ---------- */
 export async function saveContactIdsForFilter(
   filterKey: string,
   contactIds: string[],
@@ -87,13 +84,34 @@ export async function loadContactIdsForFilter(
   return (await db.get(STORE_FILTERS, filterKey)) || [];
 }
 
-/*-------------Messages by contact and account------------------*/
 export async function saveMessagesToIDB(key: string, messages: any[]) {
   const db = await getDB();
   const tx = db.transaction(STORE_MESSAGES, "readwrite");
   const store = tx.objectStore(STORE_MESSAGES);
-  for (const m of messages)
-    store.put({ id: `${key}_${m.id}`, key, message: m });
+  const index = store.index("key");
+  const range = IDBKeyRange.only(key);
+  const existingEntries = await index.getAll(range);
+
+  const existingMap = new Map(
+    existingEntries.map((e) => [e.message.id, e.message]),
+  );
+
+  const toUpdate: any[] = [];
+  for (const m of messages) {
+    const existing = existingMap.get(m.id);
+    if (!existing || !lodash.isEqual(existing, m)) {
+      toUpdate.push({ id: `${key}_${m.id}`, key, message: m });
+    }
+  }
+
+  if (toUpdate.length) {
+    const writeTx = db.transaction(STORE_MESSAGES, "readwrite");
+    const writeStore = writeTx.objectStore(STORE_MESSAGES);
+    for (const item of toUpdate) {
+      writeStore.put(item);
+    }
+    await writeTx.done;
+  }
   await tx.done;
 }
 
@@ -101,14 +119,11 @@ export async function getMessagesFromIDB(key: string) {
   const db = await getDB();
   const tx = db.transaction(STORE_MESSAGES, "readonly");
   const store = tx.objectStore(STORE_MESSAGES);
-  const res: any[] = [];
-  let cursor = await store.openCursor();
-  while (cursor) {
-    if (cursor.value.key === key) res.push(cursor.value.message);
-    cursor = await cursor.continue(); // move to next
-  }
-
-  return res;
+  const index = store.index("key");
+  const range = IDBKeyRange.only(key);
+  const res = await index.getAll(range);
+  const messages = res.map((m) => m.message);
+  return messages;
 }
 
 export async function clearAllMessagesFromIDB() {

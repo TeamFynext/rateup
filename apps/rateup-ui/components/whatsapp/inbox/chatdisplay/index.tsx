@@ -38,28 +38,21 @@ export default function WaInboxChatDisplay({
   waSettings?: any;
 }) {
   const contact = useContactsStore((s) => s.selectedContact);
-  const { filter } = useChatFilterStore();
 
-  const { data, error, isPending, isFetching, isFetched } =
-    useGetMessagesByContactId(contact?.id, filter?.phone);
-  const { messagesByKey, selectedKey } = useMessagesStore();
-
-  const { data: assignedUsers } = useGetAssignedUserForContact(contact?.id);
   const { user } = useUser();
   const isAssignedToMe = useMemo(
     () =>
-      assignedUsers &&
-      !!assignedUsers?.find((c) => c.assignedUserId === user?.userId),
-    [assignedUsers, user],
+      contact && !!contact.assignedUsers?.find((c) => c.id === user?.userId),
+    [contact, user],
   );
 
   const translations = useTranslations();
-  if (error) return <div>Error: {error.message}</div>;
+  const { isLoading } = useMessagesStore();
 
   let footerContent = null;
   if (contact?.blockedOnWhatsApp) {
     footerContent = <WaInboxBlockedContactFooter contact={contact} />;
-  } else if (!assignedUsers?.length) {
+  } else if (!contact?.assignedUsers?.length) {
     footerContent = (
       <WaInboxAssignUserFooter contactId={contact?.id} user={user} />
     );
@@ -81,10 +74,6 @@ export default function WaInboxChatDisplay({
     );
   }
 
-  const showLoading =
-    !messagesByKey?.get(selectedKey)?.messages?.length &&
-    (isPending || (isFetching && !isFetched));
-
   return (
     <Paper withBorder p={0} className="h-full">
       {!contact ? (
@@ -97,12 +86,8 @@ export default function WaInboxChatDisplay({
               smallScreen={smallScreen}
               waSettings={waSettings}
             />
-            {showLoading ? (
-              <WhatsAppInboxLoader isLoading={showLoading} />
-            ) : (
-              <WaInboxChatDisplayBody smallScreen={smallScreen} />
-            )}
-            {!showLoading && footerContent}
+            <WaInboxChatDisplayBody smallScreen={smallScreen} />
+            {!isLoading && footerContent}
           </div>
           <WaInboxContactDetails contact={contact} />
         </div>
