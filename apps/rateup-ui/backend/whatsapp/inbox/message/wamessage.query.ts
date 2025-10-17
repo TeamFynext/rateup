@@ -38,6 +38,7 @@ import {
 export const useGetMessagesByContactId = (
   contactId: string,
   selectedPhone: string,
+  enabled: boolean,
 ) => {
   return useInfiniteQuery({
     queryKey: ["wa-messages", contactId, selectedPhone],
@@ -51,7 +52,7 @@ export const useGetMessagesByContactId = (
     //   pages: [...data.pages].reverse(),
     //   pageParams: [...data.pageParams].reverse(),
     // }),
-    enabled: !!contactId && !!selectedPhone,
+    enabled: !!contactId && !!selectedPhone && enabled,
   });
 };
 

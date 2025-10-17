@@ -1,4 +1,5 @@
 import { enableMapSet, produce } from "immer";
+import lodash from "lodash";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -15,7 +16,6 @@ import {
   loadContactIdsForFilter,
   loadContactsFromDB,
   removeContactsFromDB,
-  removeMessagesFromIDB,
   saveContactIdsForFilter,
   saveContactsToDB,
   saveContactToDB,
@@ -389,7 +389,6 @@ interface MessagesStore {
     messageId: string,
     updatedData: Partial<WaGetMessagesBody>,
   ) => void;
-  evictInactiveContacts: () => void;
 }
 
 export const useMessagesStore = create<MessagesStore>()(
@@ -406,49 +405,67 @@ export const useMessagesStore = create<MessagesStore>()(
           set((s) => ({
             messagesByKey: new Map(s.messagesByKey.set(key, { messages: [] })),
           }));
-        set({ selectedKey: key, isLoading: true });
+        set({ selectedKey: key });
       },
 
       mergeMessages: (key, messages, evictInactive = true) => {
         const state = get();
         const m = new Map(state.messagesByKey);
         const entry = m.get(key) ?? { messages: [] };
+
         const existing = new Map(
           entry.messages.map((x) => [x.messageId ?? x.id, x]),
         );
+
+        const changedOrNew: any[] = [];
+
         for (const msg of messages) {
-          const existingMsg = existing.get(msg.messageId ?? msg.id);
+          const id = msg.messageId ?? msg.id;
+          const existingMsg = existing.get(id);
+
           if (existingMsg) {
-            existingMsg.stats = {
-              read: msg.stats.read.length
-                ? msg.stats.read
-                : existingMsg.stats.read,
-              sent: msg.stats.sent.length
-                ? msg.stats.sent
-                : existingMsg.stats.sent,
-              delivered: msg.stats.delivered.length
-                ? msg.stats.delivered
-                : existingMsg.stats.delivered,
-              failed: msg.stats.failed.length
-                ? msg.stats.failed
-                : existingMsg.stats.failed,
+            const merged = {
+              ...existingMsg,
+              ...msg,
+              stats: {
+                read: msg.stats.read.length
+                  ? msg.stats.read
+                  : existingMsg.stats.read,
+                sent: msg.stats.sent.length
+                  ? msg.stats.sent
+                  : existingMsg.stats.sent,
+                delivered: msg.stats.delivered.length
+                  ? msg.stats.delivered
+                  : existingMsg.stats.delivered,
+                failed: msg.stats.failed.length
+                  ? msg.stats.failed
+                  : existingMsg.stats.failed,
+              },
             };
+
+            if (!lodash.isEqual(existingMsg, merged)) {
+              existing.set(id, merged);
+              changedOrNew.push(merged);
+            }
+          } else {
+            existing.set(id, msg);
+            changedOrNew.push(msg);
           }
-          existing.set(msg.messageId ?? msg.id, existingMsg ?? msg);
         }
+
         const sortedMessages = Array.from(existing.values()).sort(
           (a, b) =>
             new Date(b.waCreatedAt).getTime() -
             new Date(a.waCreatedAt).getTime(),
         );
+
         entry.messages = sortedMessages;
         m.set(key, entry);
-        set({ messagesByKey: m, isLoading: false });
-        if (!evictInactive) return;
-        const acc = new Map(state.accessTimestamps);
-        acc.set(key, Date.now());
-        set({ accessTimestamps: acc });
-        state.evictInactiveContacts();
+        set({ messagesByKey: m });
+
+        if (changedOrNew.length) {
+          saveMessagesToIDB(key, changedOrNew);
+        }
       },
 
       updateMessageByMessageId: (key, messageId, data) =>
@@ -462,7 +479,8 @@ export const useMessagesStore = create<MessagesStore>()(
           if (idx === -1) return state;
 
           const updatedMessages = [...entry.messages];
-          updatedMessages[idx] = { ...updatedMessages[idx], ...data };
+          const updatedMessage = { ...updatedMessages[idx], ...data };
+          updatedMessages[idx] = updatedMessage;
           const sorted = data.waCreatedAt
             ? updatedMessages.sort(
                 (a, b) =>
@@ -470,38 +488,11 @@ export const useMessagesStore = create<MessagesStore>()(
                   new Date(a.waCreatedAt).getTime(),
               )
             : updatedMessages;
-
           const newMap = new Map(state.messagesByKey);
           newMap.set(key, { messages: sorted });
-
+          saveMessagesToIDB(key, [updatedMessage]);
           return { messagesByKey: newMap };
         }),
-      evictInactiveContacts: () => {
-        const state = get();
-        const keys = Array.from(state.messagesByKey.keys());
-        if (keys.length <= MAX_CONTACTS_IN_MEMORY) return;
-
-        const sortedByAccess = keys.sort(
-          (a, b) =>
-            (state.accessTimestamps.get(a) ?? 0) -
-            (state.accessTimestamps.get(b) ?? 0),
-        );
-
-        const toEvict = sortedByAccess.slice(
-          0,
-          keys.length - MAX_CONTACTS_IN_MEMORY,
-        );
-        const newMap = new Map(state.messagesByKey);
-        for (const key of toEvict) newMap.delete(key);
-
-        set({ messagesByKey: newMap });
-        const newAccess = new Map(state.accessTimestamps);
-        for (const key of toEvict) {
-          newAccess.delete(key);
-          requestIdleCallback(() => removeMessagesFromIDB(key));
-        }
-        set({ accessTimestamps: newAccess });
-      },
       getMessages: (key) => get().messagesByKey.get(key)?.messages ?? [],
       clearMessages: async () => {
         await clearAllMessagesFromIDB();
