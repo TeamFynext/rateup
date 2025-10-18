@@ -89,7 +89,9 @@ export default function WaInboxChatSelectCard({
                   : "No messages yet"
               }
             >
-              <Text className={cn(classes.latest_chat, "line-clamp-1 break")}>
+              <Text
+                className={cn(classes.latest_chat, "line-clamp-1 break-all")}
+              >
                 {lastMessage &&
                   returnMessageContentBasedOnParsedMessage(
                     parseWaMessage(lastMessage),
