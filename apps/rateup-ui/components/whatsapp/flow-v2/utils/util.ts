@@ -133,7 +133,7 @@ export const getValidationSchema = (type: QuestionType2) => {
             }),
           )
           .min(1, { message: "At least one option is required" })
-          .max(300, { message: "Maximum 300 options allowed" }),
+          .max(200, { message: "Maximum 200 options allowed" }),
         required: z.boolean(),
         "init-value": z.string().optional(),
         visible: z.boolean(),
