@@ -15,7 +15,7 @@ export default function WaInboxText(props: Props) {
   const parts = message.split(urlRegex).filter(Boolean);
 
   return (
-    <Text size="sm" className="line-clamp-2" component="span">
+    <Text size="sm" className="w-80 break-words" component="span">
       {parts.map((text, index) =>
         urlRegex.test(text) ? (
           <Anchor
