@@ -630,3 +630,61 @@ export function parseJsonToReact(value) {
   if (!value?.content?.[0]?.content) return "";
   return parse(generateHTML(value, [StarterKit]));
 }
+
+export function whatsappToHTML(text) {
+  if (!text) return "";
+
+  let html = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  html = html
+    // Bold (*text*)
+    .replace(/\*(.*?)\*/g, "<strong>$1</strong>")
+    // Italic (_text_)
+    .replace(/_(.*?)_/g, "<em>$1</em>")
+    // Strikethrough (~text~)
+    .replace(/~(.*?)~/g, "<s>$1</s>")
+    // Inline code (`code`)
+    .replace(/`(.*?)`/g, "<code>$1</code>");
+
+  //Alignment markers
+  html = html
+    .replace(
+      /\[center\]([\s\S]*?)(?=\[|$)/g,
+      '<div style="text-align:center;">$1</div>',
+    )
+    .replace(
+      /\[right\]([\s\S]*?)(?=\[|$)/g,
+      '<div style="text-align:right;">$1</div>',
+    )
+    .replace(
+      /\[left\]([\s\S]*?)(?=\[|$)/g,
+      '<div style="text-align:left;">$1</div>',
+    );
+
+  // --- Handle checkboxes / bullets / numbered lists ---
+  html = html.replace(
+    /(^|\\n)[\s]*[☑☐]\s?(.*?)(?=\\n|$)/g,
+    "$1<div>☐ $2</div>",
+  );
+
+  // Replace lines that start with "-" or "*" or "•"
+  html = html.replace(
+    /(^|\\n)[\s]*[-*•]\s+(.*?)(?=\\n|$)/g,
+    "$1<div>• $2</div>",
+  );
+
+  // Replace numbered list lines "1. text"
+  html = html.replace(/(^|\\n)[\s]*\d+\.\s+(.*?)(?=\\n|$)/g, "$1<div>$2</div>");
+
+  // --- Paragraphs & line breaks ---
+  // Replace escaped newlines (\n or \\n) with <br>
+  html = html.replace(/\\n|\\\\n|\n/g, "<br>");
+
+  // Optional: convert multiple <br> sequences into paragraph breaks
+  html = html.replace(/(<br>\s*){2,}/g, "</p><p>");
+
+  return `<p>${html}</p>`;
+}

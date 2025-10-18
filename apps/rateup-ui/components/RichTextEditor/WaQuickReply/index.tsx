@@ -23,7 +23,13 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 
-import { useWaQuickReplies } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
+import {
+  useCreateWaQuickReply,
+  useDeleteReply,
+  useGetWaQuickReplies,
+  useUpdateReply,
+  useUpdateReplyOrder,
+} from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
 import {
   RateupButtonPrimary,
   RateupButtonSecondary,
@@ -33,6 +39,7 @@ import ReorderItem from "@/components/Linktree/LinktreeEditor/LinksEditor/compon
 
 import WaTextEditor, {
   parseFromWhatsAppFormat,
+  parseJsonToReact,
   parseToWhatsAppFormat,
 } from "../waTextEditor";
 import styles from "./quickeReply.module.css";
@@ -87,16 +94,16 @@ function isJSONString(string) {
 }
 
 const WaQuickReply = ({ handleSelectQuickReply }) => {
-  const {
-    waQuickReplies,
-    updateQuickReplyOrder,
-    deleteQuickReplyById,
-    updateQuickReply,
-    createQuickReply,
-  } = useWaQuickReplies();
   const [opened, { toggle }] = useDisclosure(false);
   const [updateOpend, { toggle: updateToggle }] = useDisclosure(false);
   const [selectedReplyId, setSelectedReplyId] = useState("");
+
+  const updateQuickReplyOrder = useUpdateReplyOrder();
+  const deleteQuickReplyById = useDeleteReply();
+  const updateQuickReply = useUpdateReply();
+  const createQuickReply = useCreateWaQuickReply();
+
+  const waQuickReplies = useGetWaQuickReplies();
 
   function handleDragEnd(orderedReplies) {
     const data = orderedReplies.map((r, index) => ({
@@ -162,8 +169,11 @@ const WaQuickReply = ({ handleSelectQuickReply }) => {
           className={styles["cards-container-div"]}
         >
           {quickReplies.map((quickReply, index) => {
+            const json = !isJSONString(quickReply.text)
+              ? parseFromWhatsAppFormat(quickReply.text)
+              : JSON.parse(quickReply.text);
             return updateOpend && quickReply.id === selectedReplyId ? (
-              <Collapse in={updateOpend}>
+              <Collapse in={updateOpend} key={index}>
                 <WaQuickReplyEditor
                   onClick={(value, onClose) =>
                     handleUpdate(quickReply.id, { text: value }, onClose)
@@ -184,11 +194,8 @@ const WaQuickReply = ({ handleSelectQuickReply }) => {
                   style={{ cursor: "pointer" }}
                   justify="space-between"
                 >
-                  <Text size="sm" w={500}>
-                    {!isJSONString(quickReply.text)
-                      ? quickReply.text
-                      : parseToWhatsAppFormat(JSON.parse(quickReply.text))}
-                  </Text>
+                  <div>{parseJsonToReact(json)}</div>
+
                   <Group gap={2} px={"sm"}>
                     <ActionIcon
                       variant="subtle"
