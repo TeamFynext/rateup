@@ -155,7 +155,6 @@ export default function WaInboxChatDisplayHeader({
 
         <Avatar
           color="var(--mantine-primary-color-6)"
-          // size={!isMobile && !smallScreen ? 65 : 35}
           size={"md"}
           name={contact.name}
         />
