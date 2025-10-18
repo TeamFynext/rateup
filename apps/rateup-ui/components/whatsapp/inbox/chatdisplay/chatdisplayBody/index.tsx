@@ -21,6 +21,7 @@ import WhatsAppInboxLoader from "../../loader";
 import { useTemperoryMessageStore } from "../chatdisplayFooter";
 import {
   DateComponent,
+  EndofConversationComponent,
   getReactionMessage,
   singleMessage,
   TempMessageBody,
@@ -136,10 +137,7 @@ const WaInboxChatDisplayBody = (props) => {
         ref={parentRef}
         className="relative h-full p-2 scale-y-[-1] overflow-y-auto"
       >
-        <div
-          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-          className=""
-        >
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const message = allMessages[virtualRow.index];
             const nextMessage =
@@ -147,6 +145,8 @@ const WaInboxChatDisplayBody = (props) => {
                 ? allMessages[virtualRow.index + 1]
                 : null;
             const isLoaderRow = virtualRow.index > allMessages.length - 1;
+            const isEndofConversation =
+              !hasNextPage && virtualRow.index === allMessages.length - 1;
             return (
               <div
                 key={virtualRow.key}
@@ -159,12 +159,17 @@ const WaInboxChatDisplayBody = (props) => {
                   left: 0,
                   width: "100%",
                 }}
-                className="gap-4 p-4 pl-6"
+                className="gap-4 pb-4 pr-4 pl-6"
               >
                 {isLoaderRow && (
                   <Center>
-                    <Loader size={16} />
+                    <Loader size={16}></Loader>
                   </Center>
+                )}
+                {isEndofConversation && (
+                  <div className="mb-6">
+                    <EndofConversationComponent />
+                  </div>
                 )}
                 {!isLoaderRow && (
                   <MessageItem
