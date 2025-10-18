@@ -27,7 +27,7 @@ import { EmojiClickData } from "emoji-picker-react";
 
 import { MessagePlatform } from "@/types/enums";
 import { WaReceiveMessageBody, WaSendMessageBody } from "@/types/global";
-import useContactStore from "@/app/dashboard/inbox/store";
+import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
@@ -53,7 +53,7 @@ interface Props {
 export default function WaInboxSingleMessageLayout(props: Props) {
   const { exchangeProcess } = props;
   const [isHovered, setIsHovered] = useState(false);
-  const { selectedContact } = useContactStore();
+  const { selectedContact } = useContactsStore();
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const messageContentRef = React.useRef(null);
   const platform =

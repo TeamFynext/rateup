@@ -6,7 +6,12 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { MessagePlatform } from "@/types/enums";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
+import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
+import {
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
 import {
   showErrorToast,
   showSuccessToast,
@@ -33,6 +38,7 @@ import {
 export const useGetMessagesByContactId = (
   contactId: string,
   selectedPhone: string,
+  enabled: boolean,
 ) => {
   return useInfiniteQuery({
     queryKey: ["wa-messages", contactId, selectedPhone],
@@ -42,11 +48,11 @@ export const useGetMessagesByContactId = (
       getMessagesByContactId(contactId, pageParam, selectedPhone),
     getNextPageParam: (lastPage) =>
       lastPage.hasNextPage ? lastPage.nextCursor : undefined,
-    select: (data) => ({
-      pages: [...data.pages].reverse(),
-      pageParams: [...data.pageParams].reverse(),
-    }),
-    enabled: !!contactId && !!selectedPhone,
+    // select: (data) => ({
+    //   pages: [...data.pages].reverse(),
+    //   pageParams: [...data.pageParams].reverse(),
+    // }),
+    enabled: !!contactId && !!selectedPhone && enabled,
   });
 };
 
@@ -122,17 +128,23 @@ export const useGetMediaFile = () => {
   });
 };
 
-export const useAssignInboxToUer = (filterData) => {
+export const useAssignInboxToUer = (contactId, filterData) => {
   const qc = useQueryClient();
+  const { updateContactById } = useContactsStore();
   return useMutation({
     mutationFn: assignInboxToUser,
-    onSuccess: () => {
+    onSuccess: (data: { id: string; name: string }[]) => {
       qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
       qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
       qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
       qc.invalidateQueries({ queryKey: ["notification"] });
       qc.invalidateQueries({ queryKey: ["notificationCount"] });
       showSuccessToast("Assigned successfully");
+      updateContactById(contactId, (contact) => ({
+        ...contact,
+        assignedUsers: data,
+        waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+      }));
     },
     onError: (e) => {
       showWarnToast("Something went wrong" + JSON.stringify(e));

@@ -22,7 +22,7 @@ export type WaGetMessagesBody = {
   waCreatedAt: string;
   messageBody: WaInboxMessage;
   templateComponentParams: WaTemplateComponent[];
-  stats?: { read: string; delivered: string; sent: string; error: string };
+  stats?: { read: string; delivered: string; sent: string; failed: string };
   sender?: {
     name?: string;
     profile_photo?: string;
@@ -39,6 +39,7 @@ export type WaGetMessagesBody = {
     };
   };
   sourcePlatform: MessagePlatform;
+  sourceIdentifier: string;
 };
 
 export type WaMessagePage = {
@@ -82,6 +83,7 @@ export type ContactsWithLastMessage = ContactsData & {
   total_contact_count?: string;
   unReadMessageCount?: number;
   assignedUsers: { id: string; name: string }[];
+  messages: Partial<WaGetMessagesBody>[];
 };
 type ContactsWithLastMessageResponse = {
   rows: ContactsWithLastMessage[];
@@ -170,8 +172,8 @@ export async function assignInboxToUser(data: {
   contactId: string;
   assignedUserIds: string[];
   teamId: string;
-}) {
-  await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data);
+}): Promise<{ id: string; name: string }[]> {
+  return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data)).data;
 }
 
 export async function getAssignedUserForContact(contactId) {

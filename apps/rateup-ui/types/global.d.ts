@@ -1681,6 +1681,7 @@ export type orgWsMessage = {
     contactId: string;
     stats: any;
     timestamp: string;
+    sourceIdentifier: string;
   };
 };
 

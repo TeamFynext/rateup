@@ -6,9 +6,13 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { signOut } from "supertokens-auth-react/recipe/session";
 
+import { useContactsStore, useMessagesStore } from "../dashboard/inbox/store";
+
 export default function Logout() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { clearAllContacts } = useContactsStore();
+  const { clearMessages } = useMessagesStore();
 
   useEffect(() => {
     async function handleLogout() {
@@ -16,6 +20,8 @@ export default function Logout() {
         try {
           localStorage.clear();
           queryClient.clear();
+          await clearMessages();
+          await clearAllContacts();
           await signOut();
           router.push("/login");
         } catch (error) {
