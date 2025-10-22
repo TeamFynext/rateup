@@ -187,6 +187,8 @@ const RateupPlan = () => {
               });
             }}
             error={error}
+            description={"Use || for split"}
+            splitChars={["||"]}
           />
         </Group>
       </FormModalLayout>
