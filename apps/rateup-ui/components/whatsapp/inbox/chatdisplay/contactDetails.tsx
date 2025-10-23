@@ -425,14 +425,14 @@ export default function WaInboxContactDetails({
                     <Input
                       type="email"
                       placeholder={t("Enter email")}
-                      className="h-7 text-xs"
+                      className="h-7 text-xs border border-gray-300 py-4 placeholder:text-gray-400"
                       {...form.getInputProps("email")}
                     />
                   </motion.div>
                 </div>
               </motion.div>
 
-              <Separator />
+              {/* <Separator /> */}
 
               {/* Additional Fields */}
               <motion.div
@@ -467,7 +467,7 @@ export default function WaInboxContactDetails({
                     </label>
                     <Input
                       placeholder={t("Enter other")}
-                      className="h-7 text-xs"
+                      className="h-7 text-xs border border-gray-300 py-4 placeholder:text-gray-400"
                       {...form.getInputProps("other")}
                     />
                   </div>
@@ -494,7 +494,7 @@ export default function WaInboxContactDetails({
                 </>
               )}
 
-              <Separator />
+              {/* <Separator /> */}
 
               {/* Action Buttons */}
               <motion.div
