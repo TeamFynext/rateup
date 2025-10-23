@@ -129,7 +129,7 @@ const CreateGroupModal = ({
           setIsCreating(false);
           form.reset();
           router.push(
-            `/dashboard/${type === ContactGroupType.LOYALTY ? "loyalty/customer/group" : "contacts"}/${data?.data?.id}`,
+            `/dashboard/${type === ContactGroupType.LOYALTY ? "loyalty/customer/group" : "groups"}/${data?.data?.id}`,
           );
         },
         onError: () => {
