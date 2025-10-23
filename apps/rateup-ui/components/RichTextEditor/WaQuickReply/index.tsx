@@ -44,7 +44,7 @@ import WaTextEditor, {
 } from "../waTextEditor";
 import styles from "./quickeReply.module.css";
 
-const WaQuickReplyControl = () => {
+export const WaQuickReplyControl = () => {
   const { editor } = useRichTextEditorContext();
   const [opened, setOpened] = useState(false);
   return (
@@ -89,11 +89,11 @@ const WaQuickReplyControl = () => {
   );
 };
 
-function isJSONString(string) {
+export function isJSONString(string) {
   return /^\s*\{.*\}\s*$/.test(string);
 }
 
-const WaQuickReply = ({ handleSelectQuickReply }) => {
+export const WaQuickReply = ({ handleSelectQuickReply }) => {
   const [opened, { toggle }] = useDisclosure(false);
   const [updateOpend, { toggle: updateToggle }] = useDisclosure(false);
   const [selectedReplyId, setSelectedReplyId] = useState("");
@@ -188,7 +188,12 @@ const WaQuickReply = ({ handleSelectQuickReply }) => {
                 />
               </Collapse>
             ) : (
-              <ReorderItem key={quickReply.id} id={quickReply.id} index={index}>
+              <ReorderItem
+                key={quickReply.id}
+                id={quickReply.id}
+                index={index}
+                className="bg-gray-100"
+              >
                 <Group
                   onClick={() => handleSelectQuickReply(quickReply.text)}
                   style={{ cursor: "pointer" }}
@@ -285,4 +290,4 @@ const WaQuickReplyEditor = ({
   );
 };
 
-export default WaQuickReplyControl;
+export default WaQuickReply;

@@ -1,20 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
-import {
-  ActionIcon,
-  Button,
-  Flex,
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { create } from "zustand";
 
@@ -23,6 +16,7 @@ import useContactStore, {
   ContactWithUpdatedAt,
   useContactsStore,
 } from "@/app/dashboard/inbox/store";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import VoiceRecorder, {
   useVoiceRecordStore,
@@ -31,6 +25,8 @@ import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
   parseToWhatsAppFormat,
 } from "@/components/RichTextEditor/waTextEditor";
+import { Button } from "@/components/ui/button";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
 
@@ -49,7 +45,6 @@ import {
   RateupButtonSecondary,
 } from "../../../../Button/RateupButtons";
 import { usePhoneIdStore } from "../../chatselect/accountSelectorStore";
-import { AssignInbox } from "../chatdisplayHeader";
 import WaInboxFooterMenu from "./footerMenu";
 import classes from "./styles.module.css";
 
@@ -72,7 +67,16 @@ export default function WaInboxChatDisplayFooter({
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
-  const phone_number_id = contact?.metadata?.phone_number_id || "";
+  const { data: waSettings } = useWaSettings();
+  const phone_number_id = useMemo(
+    () =>
+      waSettings
+        ? waSettings?.find(
+            (s) => s?.phone === contact?.lastMessage?.sourceIdentifier,
+          )?.phoneId
+        : "",
+    [waSettings],
+  );
   const { updateContactById } = useContactsStore();
   const form = useForm({
     initialValues: {
@@ -261,70 +265,25 @@ export default function WaInboxChatDisplayFooter({
     resetMedia();
   }, [contact]);
 
-  useEffect(() => {
-    if (!whatsappSettingsPhoneId && phone_number_id) {
-      updatePhoneId(phone_number_id);
-    }
-    if (
-      platform === MessagePlatform.INSTAGRAM &&
-      whatsappSettingsPhoneId !== contact?.lastMessage?.sourceIdentifier
-    ) {
-      updatePhoneId(contact.lastMessage.sourceIdentifier);
-    }
-  }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
-
-  const AccountSelectComponent = () => {
-    if (platform === MessagePlatform.WEBCHAT) return null;
-    return (
-      <Group>
-        <AccountSelector
-          onChange={(phoneId) => {
-            updatePhoneId(phoneId);
-          }}
-          value={whatsappSettingsPhoneId}
-          w={150}
-          size="xs"
-          styles={{
-            input: {
-              background: "var(--mantine-primary-color-light)",
-              color: "var(--mantine-primary-color-filled)",
-              borderRadius: "5px",
-              fontWeight: "400",
-            },
-            label: {
-              display: "none",
-            },
-          }}
-          platform={platform as MessagePlatform}
-          disabled={platform === MessagePlatform.INSTAGRAM}
-        />
-        {platform !== MessagePlatform.INSTAGRAM &&
-          platform !== MessagePlatform.WEBCHAT && (
-            <WaInboxFooterMenu
-              sessionExpired={isSessionExpired}
-              contact={contact}
-            />
-          )}
-      </Group>
-    );
-  };
   const SendMessageComponent = () => {
     return (
-      <Group gap={"xs"} flex={1} justify={"space-between"}>
-        <Group>
-          {platform !== MessagePlatform.WEBCHAT && <VoiceRecorder />}
-          <Tooltip label={translations("Send")}>
-            <Button
-              rightSection={<IconSend size={16} />}
-              size="xs"
-              onClick={handleSendMessage}
-              disabled={isSessionExpired || isRecording}
-            >
-              Send
-            </Button>
-          </Tooltip>
-        </Group>
-      </Group>
+      <CustomTooltip
+        trigger={
+          <Button
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 h-[60px] px-6"
+            onClick={handleSendMessage}
+            disabled={
+              isSessionExpired ||
+              isRecording ||
+              (!media.length && !form.isValid("text"))
+            }
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        }
+        content={<span>{translations("Send")}</span>}
+      />
     );
   };
 
@@ -339,54 +298,27 @@ export default function WaInboxChatDisplayFooter({
       </Flex>
     );
   }
-
   return (
-    <Stack gap={0}>
-      <div className={classes.wrapper}>
-        <form className={classes.form}>
-          <div ref={inputRef} style={{ display: "flex", flex: 1 }}>
-            <WaTextEditor
-              handleInputChange={(value) => {
-                setBody({ ...body, text: { ...body.text, body: value } });
-              }}
-              content={body.text.body}
-              mih={50}
-              flex={1}
-              inbox={true}
-              customEnter={() => submiRef.current()}
-              editable={
-                !isSessionExpired &&
-                !isRecording &&
-                !audioUrl &&
-                body.type === "text"
-              }
-              placeholder="Type a message..."
-              customHeaders={<SendMessageComponent />}
-              otherHeaders={<AccountSelectComponent />}
-            />
-          </div>
-        </form>
-      </div>
-    </Stack>
+    <WaTextEditor
+      handleInputChange={(value) => {
+        setBody({ ...body, text: { ...body.text, body: value } });
+      }}
+      content={body.text.body}
+      mih={50}
+      flex={1}
+      inbox={true}
+      customEnter={() => submiRef.current()}
+      editable={
+        !isSessionExpired && !isRecording && !audioUrl && body.type === "text"
+      }
+      placeholder="Type a message..."
+      sendMessageButton={<SendMessageComponent />}
+    />
   );
 }
 
 export const WaInboxAssignUserFooter = ({ contactId, user }) => {
   const { filterData } = useContactStore();
-  const assignMut = useAssignInboxToUer(contactId, filterData);
-  const [openedAssign, { open: openAssign, close: closeAssign }] =
-    useDisclosure(false);
-
-  function handleAssignToMe() {
-    if (!user) {
-      return showErrorToast("failed!try again");
-    }
-    assignMut.mutate({
-      contactId,
-      assignedUserIds: [user.userId],
-      teamId: user.teams[0],
-    });
-  }
 
   return (
     <Stack gap={"xs"} pb={"xs"}>
@@ -401,25 +333,6 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
         <IconExclamationCircle size={"1rem"} />
         <Text size="xs">Please Assign to start the chat</Text>
       </Group>
-      <Group justify={"center"} gap={"xs"}>
-        <RateupButtonSecondary
-          title="Assign To Me"
-          onClick={handleAssignToMe}
-          size="xs"
-          radius={"md"}
-        />
-        <RateupButtonPrimary
-          title="Assign To Staff"
-          onClick={openAssign}
-          size="xs"
-          radius={"md"}
-        />
-      </Group>
-      <AssignInbox
-        contactId={contactId}
-        opened={openedAssign}
-        close={closeAssign}
-      />
     </Stack>
   );
 };

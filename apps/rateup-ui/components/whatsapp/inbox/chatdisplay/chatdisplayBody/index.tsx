@@ -1,4 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { ActionIcon, Center, Loader } from "@mantine/core";
 import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
@@ -52,6 +59,13 @@ const WaInboxChatDisplayBody = (props) => {
     () => messagesByKey.get(selectedKey)?.messages || [],
     [selectedKey, messagesByKey],
   );
+  const { messages: tempMessages } = useTemperoryMessageStore();
+
+  useEffect(() => {
+    if (tempMessages[selectedContact?.id]?.length) {
+      rowVirtualizer.scrollToIndex(0);
+    }
+  }, [tempMessages]);
 
   useEffect(() => {
     if (!selectedContact || !filter?.phone) return;
@@ -66,7 +80,6 @@ const WaInboxChatDisplayBody = (props) => {
     isFetchingNextPage,
     isPending,
   } = useGetMessagesByContactId(selectedContact?.id, filter?.phone, enable);
-  const { messages: tempMessages } = useTemperoryMessageStore();
 
   useEffect(() => {
     if (!data || !selectedKey || !selectedContact) return;
@@ -128,16 +141,41 @@ const WaInboxChatDisplayBody = (props) => {
       !messagesByKey?.get(selectedKey)?.messages?.length && isPending,
     );
   }, [selectedKey, isPending, messagesByKey, enable]);
-
   if (isLoading) return <WhatsAppInboxLoader isLoading={isLoading} />;
 
   return (
     <>
       <div
         ref={parentRef}
-        className="relative h-full p-2 scale-y-[-1] overflow-y-auto"
+        className="relative h-full p-2 scale-y-[-1] overflow-y-auto bg-gradient-to-b from-muted/10 to-background "
       >
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+        {tempMessages?.[selectedContact.id]?.length > 0 && (
+          <div className="relative p-6 max-w-4xl mx-auto mb-8">
+            {tempMessages?.[selectedContact.id]?.map((msg, i) => (
+              <div
+                key={`temp-${i}`}
+                style={{
+                  transform: `scaleY(-1)`,
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                }}
+                className="flex flex-col items-end gap-6"
+              >
+                <TempMessageBody
+                  body={msg?.body}
+                  timestamp={msg.timestamp}
+                  key={i}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        <div
+          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+          className="relative p-6 max-w-4xl mx-auto"
+        >
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const message = allMessages[virtualRow.index];
             const nextMessage =
@@ -174,7 +212,6 @@ const WaInboxChatDisplayBody = (props) => {
                 {!isLoaderRow && (
                   <MessageItem
                     message={message}
-                    props={props}
                     selectedContact={selectedContact}
                     nextMessage={nextMessage}
                   />
@@ -182,13 +219,6 @@ const WaInboxChatDisplayBody = (props) => {
               </div>
             );
           })}
-          {tempMessages?.[selectedContact.id]?.map((msg, i) => (
-            <TempMessageBody
-              body={msg?.body}
-              timestamp={msg.timestamp}
-              key={i}
-            />
-          ))}
         </div>
       </div>
       <div className={classes.affix}>
@@ -204,10 +234,11 @@ const WaInboxChatDisplayBody = (props) => {
 };
 export default WaInboxChatDisplayBody;
 
-const MessageItem = ({ message, props, selectedContact, nextMessage }) => {
+const MessageItem = ({ message, selectedContact, nextMessage }) => {
   const translations = useTranslations();
   if (!message) return null;
   const { exchangeProcess, receive } = message.messageBody;
+  const { messagesByKey, selectedKey } = useMessagesStore();
   const { messageType } = parseWaMessage(message);
   if (messageType === "reaction") return null;
   if (
@@ -221,7 +252,7 @@ const MessageItem = ({ message, props, selectedContact, nextMessage }) => {
     !dayjs(message.waCreatedAt).isSame(dayjs(nextMessage.waCreatedAt), "day");
   const reaction = getReactionMessage({
     message,
-    props,
+    allMessages: messagesByKey.get(selectedKey)?.messages || [],
     selectedContact,
   });
   return (

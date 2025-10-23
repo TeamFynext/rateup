@@ -4,34 +4,37 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   ActionIcon,
-  Avatar,
-  Badge,
   Group,
   Menu,
   Radio,
   RadioGroup,
   Skeleton,
   Stack,
-  Switch,
   Text,
   ThemeIcon,
-  Tooltip,
 } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
-  IconArrowLeft,
   IconBrandInstagram,
   IconBrandWhatsappFilled,
-  IconDotsVertical,
-  IconForbid2,
-  IconHandOff,
-  IconMessageCheck,
-  IconPencil,
-  IconTicket,
-  IconUserShare,
   IconWebhook,
 } from "@tabler/icons-react";
+import {
+  Ban,
+  BellOff,
+  Bot,
+  CheckCheck,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  InstagramIcon,
+  MessageCircle,
+  MoreVertical,
+  Ticket,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -61,11 +64,32 @@ import { TeamSelector } from "@/components/input/TeamSelector";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import FormModalLayout from "@/components/Modal/FormModalLayout";
 import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CreativeAvatar } from "@/components/ui/creative-avatar";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { useChatbotStore } from "@/store/chatbot.store";
 import { TicketType } from "@/utils/enums/ticket";
 import { hasFeature } from "@/utils/subscription/subscription";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox";
 
+import { getSoucePlatformIconAndColor } from "../../util";
+import AssignUser from "./AssignUser";
 import WaInboxCountdownTimer from "./countDown";
 import classes from "./styles.module.css";
 
@@ -93,10 +117,9 @@ export default function WaInboxChatDisplayHeader({
     [subscription],
   );
 
-  function handleAiWaChat(e) {
-    const checked = e.currentTarget.checked;
+  function handleAiWaChat(checked) {
     editContactMutation.mutate(
-      { contactId: contact.id, data: { aiWaChat: e.currentTarget.checked } },
+      { contactId: contact.id, data: { aiWaChat: checked } },
       {
         onSuccess: () => {
           setSelectedContact({ ...contact, aiWaChat: checked });
@@ -105,7 +128,8 @@ export default function WaInboxChatDisplayHeader({
     );
   }
 
-  const platform = contact?.source?.toUpperCase() || MessagePlatform.WHATSAPP;
+  const platform =
+    contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const isInsta = platform === MessagePlatform.INSTAGRAM;
   let leftSectionIcon: React.ReactNode;
 
@@ -122,136 +146,120 @@ export default function WaInboxChatDisplayHeader({
       break;
   }
 
-  function getMessageSourceName(sourceIdentifier) {
-    if (!waSettings) return sourceIdentifier;
-    const settings = waSettings?.find(
-      (setting) =>
-        sourceIdentifier === setting.ibaId ||
-        sourceIdentifier === setting.phone ||
-        `+${sourceIdentifier}` === setting.phone,
-    );
-    if (isInsta)
-      return (settings?.igDisplayName ?? settings?.igUserName)
-        ? `@${settings?.igUserName}`
-        : sourceIdentifier;
-    return settings?.phoneDisplayName || settings?.phone || sourceIdentifier;
-  }
+  const isSessionExpired = isInboxSessionExpired(
+    contact?.lastReceivedMessageTimeStamp,
+  );
 
+  const sourcePlatform = getSoucePlatformIconAndColor(platform);
   if (!contact) return null;
   return (
-    <div className={classes.wrapper}>
-      <Group>
-        {
-          <ActionIcon
-            variant="subtle"
-            onClick={() => {
-              setSelectedContact(null);
-              setIsChatDisplayOpen(false);
-            }}
-          >
-            <IconArrowLeft size={20} />
-          </ActionIcon>
-        }
-
-        <Avatar
-          color="var(--mantine-primary-color-6)"
-          size={"md"}
-          name={contact.name}
-        />
-        <Stack className={classes.name_phone_wrapper}>
-          <Text className={classes.name} fw={600}>
-            {contact.name ?? contact.whatsappUserName}
-          </Text>
-          {contact.consent ? (
-            <CopyIcon value={contact.phone || contact?.other}>
-              <Text className={classes.phone}>
-                {contact.phone || contact?.other}
-              </Text>
-            </CopyIcon>
-          ) : (
-            <Badge
-              leftSection={<IconHandOff size={"0.75rem"} />}
-              size="xs"
-              variant="outline"
-            >
-              Do Not Disturb
-            </Badge>
-          )}
-        </Stack>
-        <LifecycleSelector value={contact.lifecycleId} id={contact.id} />
-      </Group>
-
-      <Group gap={"sm"}>
-        {contact?.lastMessage && (
-          <Badge
-            tt={"initial"}
-            size="xs"
-            radius={"sm"}
-            p={1}
-            variant="light"
-            color={isInsta ? "#cc2960" : "#25D366"}
-            leftSection={leftSectionIcon}
-          >
-            {getMessageSourceName(contact?.lastMessage?.sourceIdentifier)}
-          </Badge>
-        )}
-        <Stack gap={"xs"} align="center">
-          {!smallScreen && platform !== MessagePlatform.WEBCHAT && (
-            <WaInboxCountdownTimer
-              timeStamp={contact?.lastReceivedMessageTimeStamp}
+    <div className="p-3 border-b bg-card flex-shrink-0">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-shrink">
+          <div className="relative flex-shrink-0">
+            <CreativeAvatar
+              name={contact?.name || contact?.whatsappUserName || ""}
+              size="md"
+              isOnline={!isSessionExpired}
+              showOnlineStatus={!isSessionExpired}
+              onlineStatusPosition="topLeft"
+              showRing={true}
             />
-          )}
-        </Stack>
-        {hasAIFeature && chatbot?.enableWaChat && chatbot?.enableAllWaChat && (
-          <Switch
-            size="xs"
-            label={"AI Chat"}
-            checked={contact.aiWaChat}
-            onChange={handleAiWaChat}
+            <div
+              className={`absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 shadow-sm ${
+                sourcePlatform?.bgColor
+              }`}
+            >
+              {sourcePlatform?.icon}
+            </div>
+          </div>
+          <div className="min-w-0 flex-shrink">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-0.5">
+                <h3 className="truncate">
+                  {contact.name ?? contact.whatsappUserName}
+                </h3>
+                {!contact.consent && (
+                  <CustomTooltip
+                    side="bottom"
+                    trigger={
+                      <Badge
+                        className="w-full h-4.5 text-[10px] text-red-600 bg-red-100"
+                        variant={"secondary"}
+                      >
+                        <BellOff /> DND
+                      </Badge>
+                    }
+                    content={
+                      <span>
+                        This contact has not consented to receive template
+                        messages.
+                      </span>
+                    }
+                  />
+                )}
+              </div>
+              <LifecycleSelector value={contact.lifecycleId} id={contact.id} />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {hasAIFeature &&
+            chatbot?.enableWaChat &&
+            chatbot?.enableAllWaChat && (
+              <Popover>
+                <PopoverTrigger
+                  asChild
+                  className="hover:bg-accent p-1 rounded-md"
+                >
+                  <Bot
+                    className={`h-7 w-7 ${contact.aiWaChat ? "text-blue-600" : "text-gray-200"} cursor-pointer`}
+                  />
+                </PopoverTrigger>
+                <PopoverContent className="w-40 break-words">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Enable/Disable AI response for this contact
+                  </p>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={contact.aiWaChat}
+                      onCheckedChange={handleAiWaChat}
+                      id="ai-chat-switch"
+                    />
+                    <Label htmlFor="ai-chat-switchh" className="text-sm">
+                      AI Chat
+                    </Label>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+          <AssignUser contactId={contact?.id} />
+          <WaInboxCountdownTimer
+            timeStamp={contact?.lastReceivedMessageTimeStamp}
           />
-        )}
-        <ChatContactMenu contact={contact} />
-      </Group>
+          <ChatHeaderMenu contact={contact} />
+        </div>
+      </div>
     </div>
   );
 }
 
-const ChatContactMenu = ({ contact }) => {
-  const { data: subscription } = useSubscription();
+const ChatHeaderMenu = ({ contact }) => {
+  const editContactMutation = useEditContactMutation(null);
   const { updateContactById, setSelectedContact } = useContactsStore();
-
-  const { filterData } = useContactStore();
-  const hasTicketFeature = useMemo(
-    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
-    [subscription],
-  );
   const [
     openedCreateTicket,
     { open: openCreateTicket, close: closeCreateTicket },
   ] = useDisclosure(false);
-  const editContactMutation = useEditContactMutation(null);
-  const blockmut = useBlockWhatsAppUser(filterData);
-  const [openedAssign, { open: openAssign, close: closeAssign }] =
-    useDisclosure(false);
+  const { data: subscription } = useSubscription();
   const [openedConfirmation, { open: openConfirm, close: closeConfirm }] =
     useDisclosure(false);
-  function handleCloseChat() {
-    editContactMutation.mutate(
-      {
-        contactId: contact.id,
-        data: { waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
-      },
-      {
-        onSuccess: () => {
-          updateContactById(contact.id, (existing) => ({
-            ...contact,
-            waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
-          }));
-        },
-      },
-    );
-  }
-
+  const blockmut = useBlockWhatsAppUser();
+  const hasTicketFeature = useMemo(
+    () => hasFeature(subscription, SubscriptionFeaturePathName.Ticket),
+    [subscription],
+  );
   function handleBlock() {
     blockmut.mutate(
       { phoneNumbersList: [contact.phone] },
@@ -265,57 +273,60 @@ const ChatContactMenu = ({ contact }) => {
       },
     );
   }
-
+  function handleCloseChat() {
+    editContactMutation.mutate(
+      {
+        contactId: contact.id,
+        data: { waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
+      },
+      {
+        onSuccess: () => {
+          updateContactById(contact.id, (existing) => ({
+            ...existing,
+            waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+            assignedUsers: [],
+          }));
+        },
+      },
+    );
+  }
   return (
-    <Menu shadow="xl" position="bottom-end">
-      <Menu.Target>
-        <IconDotsVertical />
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Menu.Item
-          leftSection={<IconUserShare size={20} />}
-          onClick={openAssign}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <MoreVertical className="w-3.5 h-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          onClick={handleCloseChat}
+          disabled={
+            editContactMutation.isPending ||
+            contact?.waMessageAssignStatus === WaMessageAssignStatus.CLOSED
+          }
         >
-          Assign Chat
-        </Menu.Item>
-        {contact?.waMessageAssignStatus !== WaMessageAssignStatus.CLOSED && (
-          <Menu.Item
-            leftSection={<IconMessageCheck size={20} />}
-            onClick={handleCloseChat}
-          >
-            Close Chat
-          </Menu.Item>
-        )}
-        <Menu.Divider />
+          <CheckCheck className="w-4 h-4 mr-2" />
+          Mark as Closed
+        </DropdownMenuItem>
+
         {hasTicketFeature && (
-          <Menu.Item
-            leftSection={<IconTicket size={20} />}
-            onClick={openCreateTicket}
-          >
+          <DropdownMenuItem onClick={openCreateTicket}>
+            <Ticket className="w-4 h-4 mr-2" />
             Create Ticket
-          </Menu.Item>
+          </DropdownMenuItem>
         )}
+        <DropdownMenuSeparator />
         {!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) &&
           !contact?.blockedOnWhatsApp && (
-            <Menu.Item
-              leftSection={<IconForbid2 size={20} />}
+            <DropdownMenuItem
               onClick={openConfirm}
+              className="text-destructive"
             >
+              <Ban className="w-4 h-4 mr-2 text-destructive" />
               Block contact
-            </Menu.Item>
+            </DropdownMenuItem>
           )}
-      </Menu.Dropdown>
-      <AssignInbox
-        contactId={contact.id}
-        opened={openedAssign}
-        close={closeAssign}
-      />
-      <CreateTicketCard
-        close={closeCreateTicket}
-        opened={openedCreateTicket}
-        type={TicketType.CUSTOM}
-        hasTicketFeature={hasTicketFeature}
-      />
+      </DropdownMenuContent>
       <ConfirmationModal
         onClose={closeConfirm}
         headerTitle={`Block ${contact?.name ?? contact?.phone}`}
@@ -327,87 +338,13 @@ const ChatContactMenu = ({ contact }) => {
         forDeleteFunctionality
         headerLabel="Are you sure to block this user?"
       />
-    </Menu>
-  );
-};
-
-export const AssignInbox = ({ contactId, opened, close }) => {
-  const [memberChoice, setMemberChoice] = useState("manual");
-  const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
-  const { data: assignedUsers } = useGetAssignedUserForContact(contactId);
-  const { filterData } = useContactStore();
-  const assignMut = useAssignInboxToUer(contactId, filterData);
-  const form = useForm({
-    initialValues: {
-      teamId: "",
-      contactId,
-      assignedUserIds: [],
-    },
-    validate: {
-      teamId: isNotEmpty("required"),
-      assignedUserIds: memberChoice === "manual" && isNotEmpty("required"),
-    },
-  });
-  const members = useMemo(
-    () =>
-      teamMembers &&
-      teamMembers.data
-        ?.filter((user) =>
-          user.teams.some((t) => t.team_id === form.values.teamId),
-        )
-        .map((user) => ({ value: user.id, label: user.name })),
-    [teamMembers, form.values.teamId],
-  );
-
-  function handleSubmit() {
-    if (form.validate().hasErrors) return;
-    const values = { ...form.values };
-    if (memberChoice === "all")
-      values.assignedUserIds = members?.map((m) => m.value);
-    assignMut.mutate(values, {
-      onSettled: () => {
-        onClose();
-      },
-    });
-  }
-
-  function onClose() {
-    form.reset();
-    close();
-  }
-
-  useEffect(() => {
-    if (assignedUsers) {
-      const data = {
-        teamId: assignedUsers[0]?.teamId,
-        contactId,
-        assignedUserIds: assignedUsers?.map((user) => user.assignedUserId),
-      };
-      form.setInitialValues(data);
-      form.setValues(data);
-    }
-  }, [assignedUsers]);
-
-  return (
-    <FormModalLayout
-      title="Assign to Member"
-      opened={opened}
-      onClose={onClose}
-      onSubmit={handleSubmit}
-      isLoading={assignMut.isPending}
-      buttonTitle="Assign"
-      cancelOnClick={onClose}
-      centered
-      includeCancelButton
-    >
-      <AssignInboxContent
-        form={form}
-        memberChoice={memberChoice}
-        setMemberChoice={setMemberChoice}
-        isLoading={isLoading}
-        members={members}
+      <CreateTicketCard
+        close={closeCreateTicket}
+        opened={openedCreateTicket}
+        type={TicketType.CUSTOM}
+        hasTicketFeature={hasTicketFeature}
       />
-    </FormModalLayout>
+    </DropdownMenu>
   );
 };
 
@@ -446,17 +383,5 @@ export const AssignInboxContent = ({
         </Skeleton>
       )}
     </Stack>
-  );
-};
-
-export const InstagramIcon = ({ size = "xs" }: { size?: string | number }) => {
-  return (
-    <ThemeIcon
-      variant="gradient"
-      size={size}
-      gradient={{ from: "#f09433", to: "#bc1888", deg: 45 }}
-    >
-      <IconBrandInstagram />
-    </ThemeIcon>
   );
 };

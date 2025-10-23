@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import {
   ActionIcon,
@@ -12,7 +12,6 @@ import {
   Image,
   Indicator,
   Modal,
-  Popover,
   ScrollAreaAutosize,
   Stack,
   Text,
@@ -22,8 +21,10 @@ import { RichTextEditor } from "@mantine/tiptap";
 import {
   IconFileFilled,
   IconPaperclip,
+  IconRobot,
   IconTrash,
   IconTypography,
+  IconWaveSine,
   IconX,
 } from "@tabler/icons-react";
 import CharacterCount from "@tiptap/extension-character-count";
@@ -31,11 +32,34 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { Extension, generateHTML, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import parse from "html-react-parser";
+import {
+  LayoutTemplate,
+  Paperclip,
+  Send,
+  TypeOutline,
+  X,
+  Zap,
+} from "lucide-react";
 
 import { MessagePlatform } from "@/types/enums";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import {
+  getMessageSourceName,
+  getSourceDiplayLabel,
+  isInboxSessionExpired,
+} from "@/utils/whatsapp/inbox";
 
+import { AccountSelector } from "../input/AccountSelector";
+import VoiceRecorder from "../input/VoiceRecorder";
+import { Button } from "../ui/button";
+import CustomTooltip from "../ui/custom/CustomTooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { useMediaStore } from "../whatsapp/inbox/chatdisplay/chatdisplayFooter";
+import WaInboxAutomationDisplayModal from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/automationDisplayModal";
+import WaInboxFlowDisplayModal from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/flowDisplayModel";
+import WaInboxTemplateDisplayModal from "../whatsapp/inbox/chatdisplay/chatdisplayFooter/templateDisplayModal";
+import { usePhoneIdStore } from "../whatsapp/inbox/chatselect/accountSelectorStore";
 import InboxContactsControl from "./InboxContactMessage";
 import InboxLocationControl from "./InboxLocation";
 import InsertEmoji from "./InsertEmoji";
@@ -43,7 +67,10 @@ import InsertInboxAudio from "./InsertInboxMedia/InserInboxAudio";
 import InsertInboxFile from "./InsertInboxMedia/InsertInboxFile";
 import InsertInboxImage from "./InsertInboxMedia/InsertInboxImage";
 import InsertInboxVideo from "./InsertInboxMedia/InsertInboxVideo";
-import WaQuickReplyControl from "./WaQuickReply";
+import WaQuickReplyControl, {
+  isJSONString,
+  WaQuickReply,
+} from "./WaQuickReply";
 import styles from "./waTextEditor.module.css";
 
 interface WaTextEditorProps extends BoxComponentProps {
@@ -59,7 +86,7 @@ interface WaTextEditorProps extends BoxComponentProps {
   inbox?: boolean;
   customEnter?: () => void;
   editable?: boolean;
-  customHeaders?: React.ReactNode;
+  sendMessageButton?: React.ReactNode;
   otherHeaders?: React.ReactNode;
   isQuickReplyEditor?: boolean;
 }
@@ -96,12 +123,13 @@ function WaTextEditor({
   inbox = false,
   customEnter,
   editable = true,
-  customHeaders = null,
+  sendMessageButton = null,
   otherHeaders = null,
   isQuickReplyEditor = false,
   ...props
 }: WaTextEditorProps) {
   const [opened, { open, close }] = useDisclosure(false);
+  const [showQuickReplies, setShowQuickReplies] = useState(false);
   const extensions = useMemo(() => {
     const ext = [
       StarterKit.configure({ link: false }),
@@ -132,10 +160,13 @@ function WaTextEditor({
   const { media, setSelectedMedia, selectedMedia, removeMedia } =
     useMediaStore();
   const { selectedContact } = useContactsStore();
-  const platform =
-    selectedContact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
-      ? MessagePlatform.WHATSAPP
-      : MessagePlatform.INSTAGRAM;
+  const { data: waSettings } = useWaSettings();
+  const [flowModalOpened, { close: flowModalClose, open: openFlowModal }] =
+    useDisclosure(false);
+  const [
+    automationModalOpened,
+    { close: automationModalClose, open: openAutomationModal },
+  ] = useDisclosure(false);
 
   useEffect(() => {
     if (editor) {
@@ -150,27 +181,69 @@ function WaTextEditor({
   useEffect(() => {
     if (editor) editor.setEditable(editable);
   }, [editable]);
+  const [isModalOpened, { close: onModalClose, open: openModal }] =
+    useDisclosure(false);
+  const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
+  const platform = selectedContact
+    ? selectedContact.lastMessage?.sourcePlatform
+    : null;
+  const phone_number_id = useMemo(
+    () =>
+      waSettings
+        ? waSettings?.find(
+            (s) => s?.phone === selectedContact?.lastMessage?.sourceIdentifier,
+          )?.phoneId
+        : "",
+    [waSettings],
+  );
+
+  useEffect(() => {
+    if (!whatsappSettingsPhoneId && phone_number_id) {
+      updatePhoneId(phone_number_id);
+    }
+    if (
+      platform === MessagePlatform.INSTAGRAM &&
+      whatsappSettingsPhoneId !== selectedContact?.lastMessage?.sourceIdentifier
+    ) {
+      updatePhoneId(selectedContact.lastMessage.sourceIdentifier);
+    }
+  }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
+
+  const isSessionExpired = isInboxSessionExpired(
+    selectedContact?.lastReceivedMessageTimeStamp,
+  );
+
+  const AccountSelectComponent = () => {
+    if (platform === MessagePlatform.WEBCHAT) return null;
+    return (
+      <AccountSelector
+        onChange={(phoneId) => {
+          updatePhoneId(phoneId);
+        }}
+        value={whatsappSettingsPhoneId}
+        w={150}
+        size="xs"
+        styles={{
+          input: {
+            background: "var(--mantine-primary-color-light)",
+            color: "var(--mantine-primary-color-filled)",
+            borderRadius: "5px",
+            fontWeight: "400",
+          },
+          label: {
+            display: "none",
+          },
+        }}
+        platform={platform as MessagePlatform}
+        disabled={platform === MessagePlatform.INSTAGRAM}
+      />
+    );
+  };
 
   return (
-    <Box {...props}>
-      <Text
-        fz={12}
-        c={
-          "light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-4))"
-        }
-      >
-        {label}{" "}
-        <span
-          style={{
-            color: "var(--mantine-color-red-6)",
-            fontWeight: 700,
-          }}
-        >
-          {required ? "*" : ""}
-        </span>
-      </Text>
-      <Group gap={1}>
-        {media.length &&
+    <div className="border-t bg-card  flex-shrink-0">
+      <div className="flex gap-1">
+        {media.length > 0 &&
           media.map((me) => {
             return (
               <Indicator
@@ -215,104 +288,256 @@ function WaTextEditor({
             );
           })}
         <ShowMedia opened={opened} close={close} />
-      </Group>
+      </div>
+      {showQuickReplies && (
+        <div className="p-2 flex-shrink-0">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Quick Replies</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs"
+              onClick={() => setShowQuickReplies(false)}
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+          <div className="overflow-auto min-w-40 min-h-20 max-h-50">
+            <WaQuickReply
+              handleSelectQuickReply={(value) => {
+                if (editor) {
+                  const parsedValue = !isJSONString(value)
+                    ? parseFromWhatsAppFormat(value)
+                    : JSON.parse(value);
+                  editor.commands.insertContent(parsedValue);
+                  setShowQuickReplies(false);
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
+      <div className="flex items-start p-4 space-x-2">
+        <div className="flex-1">
+          <RichTextEditor
+            classNames={{
+              content: "rounded-xl overflow-y-auto min-h-[60px] max-h-[200px]",
+            }}
+            editor={editor}
+            styles={{
+              root: {
+                border: "none",
+              },
+              control: {
+                border: "none",
+              },
+            }}
+          >
+            <div
+              className="relative"
+              style={{
+                border: editor?.isFocused
+                  ? "3.5px solid var(--grey-color-4-5)"
+                  : "none",
+                borderRadius: "10px",
+              }}
+            >
+              <RichTextEditor.Content
+                bg={"#f9f9f9ff"}
+                style={{
+                  border: editor?.isFocused
+                    ? "1px solid var(--grey-color-4)"
+                    : "none",
+                  borderRadius: "5px",
+                }}
+              />
+              <div className="absolute bottom-2 right-2 flex items-center space-x-1">
+                <WaTextCharacterCount editor={editor} max={max} />
+                {inbox && (
+                  <CustomTooltip
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={() => setShowQuickReplies((prev) => !prev)}
+                      >
+                        <Zap className="w-4 h-4 text-cyan-600" />
+                      </Button>
+                    }
+                    content={<p>Quick Replies</p>}
+                  />
+                )}
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex p-2">
+                <RichTextEditor.ControlsGroup className="mt-1">
+                  <InsertEmoji />
+                </RichTextEditor.ControlsGroup>
+                <Popover>
+                  <PopoverTrigger>
+                    <CustomTooltip
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <TypeOutline className="w-5 h-5" />
+                        </Button>
+                      }
+                      content={<span>Format Message</span>}
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full">
+                    <div className="flex gap-1 flex-nowrap">
+                      <RichTextEditor.ControlsGroup>
+                        <RichTextEditor.Bold />
+                        <RichTextEditor.Italic />
+                        <RichTextEditor.Strikethrough />
+                        <RichTextEditor.ClearFormatting />
+                        <RichTextEditor.Code />
+                      </RichTextEditor.ControlsGroup>
 
-      <RichTextEditor editor={editor} className={className} bg={"white"}>
-        <RichTextEditor.Toolbar sticky tabIndex={-1} p={2}>
-          <WaTextCharacterCount editor={editor} max={max} /> {otherHeaders}
-        </RichTextEditor.Toolbar>
-        <Modal opened={opened} onClose={close} title="Text Formatting" centered>
-          <Group gap="md">
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.Bold />
-              <RichTextEditor.Italic />
-              <RichTextEditor.Strikethrough />
-              <RichTextEditor.ClearFormatting />
-              <RichTextEditor.Code />
-            </RichTextEditor.ControlsGroup>
+                      <RichTextEditor.ControlsGroup>
+                        <RichTextEditor.Blockquote />
+                        <RichTextEditor.BulletList />
+                        <RichTextEditor.OrderedList />
+                      </RichTextEditor.ControlsGroup>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <CustomTooltip
+                  trigger={
+                    <Button variant="ghost">
+                      <RichTextEditor.ControlsGroup>
+                        <RichTextEditor.Undo />
+                        <RichTextEditor.Redo />
+                      </RichTextEditor.ControlsGroup>
+                    </Button>
+                  }
+                  content={<span>Undo/Redo</span>}
+                />
+                {inbox && !isQuickReplyEditor && (
+                  <Popover>
+                    <PopoverTrigger>
+                      <CustomTooltip
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
+                            <Paperclip className="w-5 h-5" />
+                          </Button>
+                        }
+                        content={<span>Insert Media</span>}
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full">
+                      <div className="flex items-center justify-center flex-nowrap">
+                        <RichTextEditor.ControlsGroup>
+                          {platform !== MessagePlatform.INSTAGRAM && (
+                            <InsertInboxFile />
+                          )}
+                          <InsertInboxImage />
+                          <InsertInboxVideo />
+                          <InsertInboxAudio />
+                        </RichTextEditor.ControlsGroup>
 
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.Blockquote />
-              <RichTextEditor.BulletList />
-              <RichTextEditor.OrderedList />
-            </RichTextEditor.ControlsGroup>
-          </Group>
-        </Modal>
-        <ScrollAreaAutosize mah={mah}>
-          <RichTextEditor.Content mih={mih} />
-        </ScrollAreaAutosize>
-        <Flex justify="space-between" align="center" w="100%" px="sm" py={6}>
-          <Group gap="xs">
-            <Popover position="top-start" withArrow shadow="md">
-              <Popover.Target>
-                <ActionIcon variant="default">
-                  <IconTypography size={18} color="#343A40" />
-                </ActionIcon>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <Group gap="sm" wrap="nowrap">
-                  <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.Bold />
-                    <RichTextEditor.Italic />
-                    <RichTextEditor.Strikethrough />
-                    <RichTextEditor.ClearFormatting />
-                    <RichTextEditor.Code />
-                  </RichTextEditor.ControlsGroup>
+                        <RichTextEditor.ControlsGroup>
+                          {platform !== MessagePlatform.INSTAGRAM && (
+                            <>
+                              <InboxContactsControl />
+                              <InboxLocationControl />
+                            </>
+                          )}
+                        </RichTextEditor.ControlsGroup>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+                {inbox && platform === MessagePlatform.WHATSAPP && (
+                  <div className="flex">
+                    <CustomTooltip
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          onClick={() => openModal()}
+                          size="sm"
+                        >
+                          <LayoutTemplate className="w-4 h-4" />
+                        </Button>
+                      }
+                      content={<span>Template</span>}
+                    />
+                    <CustomTooltip
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          onClick={() => openFlowModal()}
+                          size="sm"
+                        >
+                          <IconWaveSine className="w-4 h-4" />
+                        </Button>
+                      }
+                      content={<span>Flow</span>}
+                    />
+                    <CustomTooltip
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          onClick={() => openAutomationModal()}
+                          size="sm"
+                        >
+                          <IconRobot className="w-4 h-4" />
+                        </Button>
+                      }
+                      content={<span>Automation</span>}
+                    />
+                  </div>
+                )}
+                {inbox && platform !== MessagePlatform.WEBCHAT && (
+                  <VoiceRecorder />
+                )}
+              </div>
 
-                  <RichTextEditor.ControlsGroup>
-                    <RichTextEditor.Blockquote />
-                    <RichTextEditor.BulletList />
-                    <RichTextEditor.OrderedList />
-                  </RichTextEditor.ControlsGroup>
-                </Group>
-              </Popover.Dropdown>
-            </Popover>
-
-            <RichTextEditor.ControlsGroup>
-              <RichTextEditor.Undo />
-              <RichTextEditor.Redo />
-            </RichTextEditor.ControlsGroup>
-
-            {inbox && !isQuickReplyEditor && (
-              <Popover position="top-start" withArrow shadow="md">
-                <Popover.Target>
-                  <ActionIcon variant="default">
-                    <IconPaperclip size={18} color="#343A40" />
-                  </ActionIcon>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <Group gap="sm" wrap="nowrap">
-                    <RichTextEditor.ControlsGroup>
-                      {platform !== MessagePlatform.INSTAGRAM && (
-                        <InsertInboxFile />
-                      )}
-                      <InsertInboxImage />
-                      <InsertInboxVideo />
-                      <InsertInboxAudio />
-                    </RichTextEditor.ControlsGroup>
-
-                    <RichTextEditor.ControlsGroup>
-                      {platform !== MessagePlatform.INSTAGRAM && (
-                        <>
-                          <InboxContactsControl />
-                          <InboxLocationControl />
-                        </>
-                      )}
-                    </RichTextEditor.ControlsGroup>
-                  </Group>
-                </Popover.Dropdown>
-              </Popover>
-            )}
-            {!isQuickReplyEditor && <WaQuickReplyControl />}
-
-            <RichTextEditor.ControlsGroup>
-              <InsertEmoji />
-            </RichTextEditor.ControlsGroup>
-          </Group>
-          <Group gap="xs">{customHeaders}</Group>
-        </Flex>
-      </RichTextEditor>
-    </Box>
+              {inbox && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-muted-foreground">
+                    {getSourceDiplayLabel(
+                      selectedContact.lastMessage?.sourcePlatform,
+                    )}{" "}
+                    - to:
+                  </span>
+                  <AccountSelectComponent />
+                </div>
+              )}
+            </div>
+          </RichTextEditor>
+        </div>
+        {inbox && sendMessageButton}
+      </div>
+      <WaInboxTemplateDisplayModal
+        sessionExpired={isSessionExpired}
+        contact={selectedContact}
+        opened={isModalOpened}
+        onClose={onModalClose}
+      />
+      <WaInboxFlowDisplayModal
+        sessionExpired={isSessionExpired}
+        contact={selectedContact}
+        opened={flowModalOpened}
+        close={flowModalClose}
+      />
+      <WaInboxAutomationDisplayModal
+        sessionExpired={isSessionExpired}
+        contact={selectedContact}
+        opened={automationModalOpened}
+        close={automationModalClose}
+      />
+    </div>
   );
 }
 

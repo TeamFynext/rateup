@@ -16,6 +16,15 @@ import { MessagePlatform } from "@/types/enums";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import {
   ContainedMultiSelect,
   ContainedSelection,
 } from "./ContainedInput/ContainedInput";
@@ -106,6 +115,28 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
       />
     );
   }
+  return (
+    <div className="flex flex-col">
+      {label && <p className="text-xs text-muted-foreground">{label}</p>}
+      <Select
+        value={value}
+        defaultValue={accountOptions?.length && accountOptions[0]?.value}
+        onValueChange={onChange}
+        required
+      >
+        <SelectTrigger className="w-[180px] !text-xs text-muted-foreground cursor-pointer hover:bg-accent">
+          <SelectValue placeholder={translations("Select Account")} />
+        </SelectTrigger>
+        <SelectContent>
+          {accountOptions.map((account) => (
+            <SelectItem value={account?.value} key={account?.value}>
+              {account?.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
   return (
     <ContainedSelection
       allowDeselect={false}

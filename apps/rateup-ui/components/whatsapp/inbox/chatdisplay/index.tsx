@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Flex, Group, Paper, Text } from "@mantine/core";
@@ -48,6 +48,7 @@ export default function WaInboxChatDisplay({
 
   const translations = useTranslations();
   const { isLoading } = useMessagesStore();
+  const [showCustomerInfo, setShowCustomerInfo] = useState(false);
 
   let footerContent = null;
   if (contact?.blockedOnWhatsApp) {
@@ -79,8 +80,10 @@ export default function WaInboxChatDisplay({
       {!contact ? (
         <NothingFound text={translations("Select a chat to see messages")} />
       ) : (
-        <div className="sm:flex h-full w-full">
-          <div className={classes.inner_animated}>
+        <div
+          className={`flex min-w-0 h-full ${showCustomerInfo ? "flex-1" : "flex-[2.2]"}`}
+        >
+          <div className="flex-1 flex flex-col min-w-0">
             <WaInboxChatDisplayHeader
               contact={contact}
               smallScreen={smallScreen}

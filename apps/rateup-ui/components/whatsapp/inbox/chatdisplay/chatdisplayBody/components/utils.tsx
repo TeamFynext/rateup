@@ -1,6 +1,5 @@
 import {
   Avatar,
-  Badge,
   Center,
   Divider,
   Group,
@@ -20,8 +19,13 @@ import {
   WaReceiveMessageBody,
   WaSendMessageBody,
 } from "@/types/global";
+import { useMessagesStore } from "@/app/dashboard/inbox/store";
 import { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
+import { Badge } from "@/components/ui/badge";
+import { CreativeAvatar } from "@/components/ui/creative-avatar";
+import { Separator } from "@/components/ui/separator";
+import { useUser } from "@/context/UserContext";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime";
 import { parseWaMessage } from "@/utils/whatsapp/inbox";
 
@@ -93,11 +97,11 @@ export const singleMessage = ({
 
 export function getReactionMessage({
   message,
-  props,
+  allMessages,
   selectedContact,
 }: {
   message: WaGetMessagesBody;
-  props: any;
+  allMessages: WaGetMessagesBody[];
   selectedContact: any;
 }) {
   const exchangeProcess = message?.messageBody?.exchangeProcess;
@@ -109,7 +113,7 @@ export function getReactionMessage({
     exchangeProcess === "send" || isInsta
       ? message?.messageId
       : (message.messageBody.receive as WaReceiveMessageBody)?.messages[0].id;
-  const reactionMsg = props.data?.find((msg) => {
+  const reactionMsg = allMessages?.find((msg) => {
     const { messageType } = parseWaMessage(msg);
     if (messageType === "reaction") {
       const reactedMessageId =
@@ -162,15 +166,13 @@ export function getReactionMessage({
 }
 
 export const TempMessageBody = ({ body, timestamp }) => {
+  const { user } = useUser();
   return (
-    <Stack align="flex-end" style={{ transform: "scaleY(-1)" }}>
-      <Group gap={4}>
-        <Paper
-          w={"fit-content"}
-          px={"xs"}
-          radius={"md"}
-          shadow="xs"
-          bg={"light-dark(#dcf0e4,rgb(82, 190, 127)"}
+    <div className="flex gap-2 pb-4 pr-4 pl-6">
+      <div className="flex flex-col gap-2">
+        <div
+          // bg={"light-dark(#dcf0e4,rgb(82, 190, 127)"}
+          className="bg-green-500/10 px-4 py-2.5 rounded-2xl shadow-sm rounded-br-sm"
         >
           {body.url && body.urlType === "image" && (
             <Image
@@ -194,16 +196,16 @@ export const TempMessageBody = ({ body, timestamp }) => {
           )}
           {body.url && body.urlType === "audio" && <audio src={body.url} />}
           <div>{body.text ? parseJsonToReact(body?.text) : null}</div>
-          <Group gap={4}>
-            <Text fz={10} c={"dimmed"}>
-              {formatToCustomTime(timestamp)}
-            </Text>
-            <IconClock size={13} color="gray" />
-          </Group>
-        </Paper>
-        <Avatar color="initials" size={"sm"} mb={"auto"} />
-      </Group>
-    </Stack>
+        </div>
+        <Group gap={4}>
+          <span className="text-xs text-muted-foreground">
+            {formatToCustomTime(timestamp)}
+          </span>
+          <IconClock size={13} color="gray" />
+        </Group>
+      </div>
+      <CreativeAvatar name={user?.userName} size="xs" />
+    </div>
   );
 };
 
@@ -221,14 +223,25 @@ export const EndofConversationComponent = () => {
   );
 };
 
+export const SeparatorWithText = ({ text }: { text: string }) => {
+  return (
+    <div className="flex items-center my-4 w-full">
+      <Separator className="flex-1" />
+      <Badge
+        variant="secondary"
+        className="mx-2 px-3 py-1 font-medium text-gray-500 bg-gray-200"
+      >
+        {text}
+      </Badge>
+      <Separator className="flex-1" />
+    </div>
+  );
+};
+
 export const DateComponent = ({ date }: { date: string }) => {
   return (
-    <Group className={classes.date_wrapper}>
-      <Divider flex={1} />
-      <Badge variant="white" radius={"sm"}>
-        <Text fz={"xs"}>{formatDate(date)}</Text>
-      </Badge>
-      <Divider flex={1} />
-    </Group>
+    <div>
+      <SeparatorWithText text={formatDate(date)} />
+    </div>
   );
 };

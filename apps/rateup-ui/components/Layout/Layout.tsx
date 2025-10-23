@@ -7,7 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   AppShell,
   Avatar,
-  Badge,
+  // Badge,
   Box,
   Burger,
   Divider,
@@ -30,6 +30,7 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
+import { PanelLeft, PanelLeftClose } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import SessionReact from "supertokens-auth-react/recipe/session";
@@ -60,6 +61,9 @@ import { useNotifyWsMessages } from "../../hooks/useNotifyWsMessages";
 import { orgWsMessage } from "../../types/global";
 import NavbarSkeleton from "../animation/skeleton/Navbar.Skeleton";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import CustomTooltip from "../ui/custom/CustomTooltip";
 import { useChatFilterStore } from "../whatsapp/inbox/chatselect/chatFilter";
 import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
@@ -98,44 +102,48 @@ const MainNavLinks = ({
   status,
   checkWhatsAppSettings,
 }) => {
-  return links.map((link, index) => (
-    <Tooltip
-      label={link.label}
-      position="right"
-      withArrow
-      transitionProps={{ duration: 0 }}
-      key={index}
-    >
-      <UnstyledButton
-        onClick={() => {
-          const isWhatsAppRoute = link.label.toLowerCase().includes("whatsapp");
-
-          if (
-            isWhatsAppRoute &&
-            !checkWhatsAppSettings(link?.children?.[0]?.link)
-          ) {
-            return; // Don't proceed if no WhatsApp settings
-          }
-          if (link.hasSubmenu && link.children?.length > 0) {
-            setActiveMainLink(link.label);
-            setActiveSubLink(link.children[0].link);
-            showOfflineNotification(status);
-            router.push(link.children[0].link);
-            open();
-          } else if (link.link && !link?.disabled) {
-            setActiveMainLink(link.label);
-            setActiveSubLink(link.link);
-            showOfflineNotification(status);
-            router.push(link.link);
-          }
-        }}
-        className={classes.mainLink}
-        data-active={link.label === activeMainLink || undefined}
-      >
-        <link.icon size={22} stroke={1.5} />
-      </UnstyledButton>
-    </Tooltip>
-  ));
+  return links.map((link, index) => {
+    const LinkIcon = link.icon;
+    console.log("LinkIcon", LinkIcon);
+    return (
+      <CustomTooltip
+        key={index}
+        trigger={
+          <Button
+            variant={link.label === activeMainLink ? "default" : "ghost"}
+            className="w-full mb-2 p-2"
+            onClick={() => {
+              const isWhatsAppRoute = link.label
+                .toLowerCase()
+                .includes("whatsapp");
+              if (
+                isWhatsAppRoute &&
+                !checkWhatsAppSettings(link?.children?.[0]?.link)
+              ) {
+                return; // Don't proceed if no WhatsApp settings
+              }
+              if (link.hasSubmenu && link.children?.length > 0) {
+                setActiveMainLink(link.label);
+                setActiveSubLink(link.children[0].link);
+                showOfflineNotification(status);
+                router.push(link.children[0].link);
+                open();
+              } else if (link.link && !link?.disabled) {
+                setActiveMainLink(link.label);
+                setActiveSubLink(link.link);
+                showOfflineNotification(status);
+                router.push(link.link);
+              }
+            }}
+          >
+            <LinkIcon className={`!w-6 !h-5`} />
+          </Button>
+        }
+        content={<p>{link.label}</p>}
+        side="right"
+      />
+    );
+  });
 };
 
 // SubNavLinks Component
@@ -150,6 +158,7 @@ const SubNavLinks = ({
 }) => {
   // Handler for label filter click
   const chatFilterStore = useChatFilterStore();
+  console.log("links", links);
   const handleLabelFilter = (labelName: string) => {
     // Update your filter state here
     chatFilterStore.setFilter({
@@ -173,60 +182,65 @@ const SubNavLinks = ({
   // Create icon links for regular items
   const regularLinksIcons = regularLinks
     .filter((d) => !d?.disabled)
-    .map((link, index) => (
-      <Tooltip
-        label={link.label}
-        position="right"
-        withArrow
-        transitionProps={{ duration: 0 }}
-        key={index}
-      >
-        <UnstyledButton
-          onClick={(event) => {
-            if (link.link) {
-              event.preventDefault();
-              if (
-                link.link?.includes("/whatsapp") &&
-                !checkWhatsAppSettings(link?.link)
-              ) {
-                return;
-              }
-              handleLabelFilter(""); // Clear label filter on regular link click
-              setActiveSubLink(link.link);
-              showOfflineNotification(status);
-              router.push(link.link);
-            }
-          }}
-          className={classes.link}
-          data-active={link.link === activeSubLink || undefined}
-          w={60}
-        >
-          <link.icon size={22} stroke={1.5} />
-        </UnstyledButton>
-      </Tooltip>
-    ));
+    .map((link, index) => {
+      const LinkIcon = link.icon;
+      return (
+        <CustomTooltip
+          trigger={
+            <div className="relative">
+              <Button
+                variant={link.link === activeSubLink ? "secondary" : "ghost"}
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (
+                    link.link?.includes("/whatsapp") &&
+                    !checkWhatsAppSettings(link?.link)
+                  ) {
+                    return;
+                  }
+                  handleLabelFilter(""); // Clear label filter on regular link click
+                  setActiveSubLink(link.link);
+                  router.push(link.link);
+                }}
+                className="h-9 w-full mb-2"
+              >
+                <LinkIcon className="w-5 h-5" />
+              </Button>
+              {link?.count > 0 && (
+                <span className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full px-1 text-[10px] font-medium">
+                  {link?.count > 9 ? "9+" : link?.count}
+                </span>
+              )}
+            </div>
+          }
+          content={<p>{link.label}</p>}
+          side="right"
+          key={link.label}
+        />
+      );
+    });
 
   // Create label icons if labels exist
   const labelIcons =
     labelsSection?.children?.map((label, index) => (
-      <Tooltip
-        label={label.label}
-        position="right"
-        withArrow
-        transitionProps={{ duration: 0 }}
-        key={`label-${index}`}
-      >
-        <UnstyledButton
-          onClick={() => handleLabelFilter(label?.value)}
-          className={classes.link}
-          w={60}
-          data-active={
-            chatFilterStore.filter.labels.includes(label?.value) || undefined
-          }
-        >
-          <div className="ml-1">{label.emoji}</div>
-        </UnstyledButton>
-      </Tooltip>
+      <CustomTooltip
+        key={`${label}-${index}`}
+        trigger={
+          <Button
+            className="h-9 w-9 mb-2"
+            onClick={() => handleLabelFilter(label?.value)}
+            variant={
+              chatFilterStore.filter.labels.includes(label?.value)
+                ? "secondary"
+                : "ghost"
+            }
+          >
+            <p className="text-center text-xs">{label.emoji}</p>
+          </Button>
+        }
+        content={<p>{label.label}</p>}
+        side="right"
+      />
     )) || [];
 
   // Combine all icon links, with divider if labels exist
@@ -234,7 +248,7 @@ const SubNavLinks = ({
     labelsSection?.children?.length > 0
       ? [
           ...regularLinksIcons,
-          <Divider key="label-divider" my="xs" />,
+          <Divider key="label-divider" my="xs" mr={"xs"} />,
           ...labelIcons,
         ]
       : regularLinksIcons;
@@ -242,50 +256,64 @@ const SubNavLinks = ({
   // Create text links (similar approach as icons)
   const regularLinksText = regularLinks
     .filter((d) => !d?.disabled)
-    .map((link, index) => (
-      <Link
-        className={classes.link}
-        data-active={link.link === activeSubLink || undefined}
-        href="#"
-        onClick={(event) => {
-          event.preventDefault();
-          if (
-            link.link?.includes("/whatsapp") &&
-            !checkWhatsAppSettings(link?.link)
-          ) {
-            return;
-          }
-          handleLabelFilter(""); // Clear label filter on regular link click
-          setActiveSubLink(link.link);
-          router.push(link.link);
-        }}
-        key={index}
-        style={{ paddingLeft: 0 }}
-      >
-        {link.label}
-      </Link>
-    ));
+    .map((link, index) => {
+      const LinkIcon = link.icon;
+      return (
+        <Button
+          className="w-full my-1"
+          variant={link.link === activeSubLink ? "secondary" : "ghost"}
+          key={link.link}
+          onClick={(event) => {
+            event.preventDefault();
+            if (
+              link.link?.includes("/whatsapp") &&
+              !checkWhatsAppSettings(link?.link)
+            ) {
+              return;
+            }
+            handleLabelFilter(""); // Clear label filter on regular link click
+            setActiveSubLink(link.link);
+            router.push(link.link);
+          }}
+        >
+          <div className="flex justify-between w-full">
+            <div className="flex gap-2 items-center">
+              <LinkIcon className="w-5 h-5" />
+              <span className="text-sm font-medium">{link.label}</span>
+            </div>
+            {link?.count > 0 && (
+              <Badge variant="secondary">{link?.count}</Badge>
+            )}
+          </div>
+        </Button>
+      );
+    });
 
   // Create label text links
   const labelTexts =
     labelsSection?.children?.map((label, index) => (
-      <Link
-        className={classes.link}
-        href="#"
+      <Button
         onClick={(event) => {
           event.preventDefault();
           handleLabelFilter(label?.value);
         }}
-        key={`label-text-${index}`}
-        data-active={
-          chatFilterStore.filter.labels.includes(label?.value) || undefined
+        className="w-full my-1"
+        variant={
+          chatFilterStore.filter.labels.includes(label?.value)
+            ? "secondary"
+            : "ghost"
         }
-        style={{ paddingLeft: 0, height: 44 }}
       >
-        <Flex align="center" gap="xs">
-          {label.label}
-        </Flex>
-      </Link>
+        <div className="flex justify-between w-full">
+          <div className="flex gap-2 items-center">
+            <span className="text-sm">{label.emoji}</span>
+            <span className="text-sm">{label.label}</span>
+          </div>
+          {label?.count > 0 && (
+            <Badge variant="secondary">{label?.count}</Badge>
+          )}
+        </div>
+      </Button>
     )) || [];
 
   // Combine all text links with divider if labels exist
@@ -294,6 +322,9 @@ const SubNavLinks = ({
       ? [
           ...regularLinksText,
           <Divider key="label-text-divider" my="9.5" />,
+          <p className="text-muted-foreground text-xs mb-7" key="life-cycle">
+            LIFE CYCLE
+          </p>,
           ...labelTexts,
         ]
       : regularLinksText;
@@ -480,6 +511,7 @@ const WebSocketHandler = () => {
 // Navbar Component
 const Navbar = ({
   mainLinks,
+  mainNavLinks,
   activeMainLink,
   linksIcon,
   linksText,
@@ -508,6 +540,9 @@ const Navbar = ({
       setStatus(user?.status);
     }
   }, [user]);
+  const MainNavlink = mainNavLinks?.find(
+    (link) => link.label === activeMainLink,
+  );
   if (isPending) return <NavbarSkeleton />;
   return (
     <nav className={classes.navbar}>
@@ -550,20 +585,69 @@ const Navbar = ({
                 </HoverCard>
               </div>
             </Stack>
-            <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
+            <ScrollAreaAutosize
+              mah={"calc(100dvh - 80px)"}
+              scrollbarSize={6}
+              p={"xs"}
+            >
               {mainLinks}
             </ScrollAreaAutosize>
           </div>
         </div>
 
         {linksIcon?.length > 0 && (
-          <div className={classes.main}>
-            <Title order={5} className={classes.title}>
-              <Group justify="space-between">
+          <div>
+            <div className="px-3 py-2 border-b border-b-2">
+              <div className="flex justify-between items-center">
                 {largeScreen
-                  ? desktopOpened && activeMainLink
-                  : mobileOpened && activeMainLink}
-                <Burger
+                  ? desktopOpened && (
+                      <div className="flex items-center gap-2">
+                        <MainNavlink.icon className="w-5 h-5 text-muted-foreground" />
+                        <h3 className="text-lg font-bold">{activeMainLink}</h3>
+                      </div>
+                    )
+                  : mobileOpened && (
+                      <div className="flex items-center gap-2">
+                        <MainNavlink.icon className="w-5 h-5 text-muted-foreground" />
+                        <h3 className="text-lg font-bold">{activeMainLink}</h3>
+                      </div>
+                    )}
+
+                <CustomTooltip
+                  trigger={
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      onClick={largeScreen ? toggleDesktop : toggleMobile}
+                    >
+                      {largeScreen ? (
+                        desktopOpened ? (
+                          <PanelLeftClose className="w-4 h-4" />
+                        ) : (
+                          <PanelLeft className="w-4 h-4" />
+                        )
+                      ) : mobileOpened ? (
+                        <PanelLeftClose className="w-4 h-4" />
+                      ) : (
+                        <PanelLeft className="w-4 h-4" />
+                      )}
+                    </Button>
+                  }
+                  content={
+                    <p>
+                      {largeScreen
+                        ? desktopOpened
+                          ? "Hide"
+                          : "Collapse"
+                        : mobileOpened
+                          ? "Hide"
+                          : "Collapse"}
+                    </p>
+                  }
+                  side="right"
+                />
+                {/* <Burger
                   opened={mobileOpened}
                   onClick={toggleMobile}
                   hiddenFrom="sm"
@@ -574,23 +658,41 @@ const Navbar = ({
                   onClick={toggleDesktop}
                   visibleFrom="sm"
                   size="sm"
-                />
-              </Group>
-            </Title>
+                /> */}
+              </div>
+            </div>
             <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
-              <Flex gap={0}>
-                <div>{linksIcon}</div>
-                <Transition
-                  mounted={largeScreen ? desktopOpened : mobileOpened}
-                  transition="fade"
-                  duration={50}
-                  timingFunction="ease"
-                >
-                  {(styles) => (
-                    <div style={{ ...styles, flex: 1 }}>{linksText}</div>
-                  )}
-                </Transition>
-              </Flex>
+              <div className="p-1">
+                {largeScreen ? (
+                  desktopOpened ? (
+                    <Transition
+                      mounted={largeScreen ? desktopOpened : mobileOpened}
+                      transition="fade"
+                      duration={50}
+                      timingFunction="ease"
+                    >
+                      {(styles) => (
+                        <div style={{ ...styles, flex: 1 }}>{linksText}</div>
+                      )}
+                    </Transition>
+                  ) : (
+                    <div>{linksIcon}</div>
+                  )
+                ) : mobileOpened ? (
+                  <Transition
+                    mounted={largeScreen ? desktopOpened : mobileOpened}
+                    transition="fade"
+                    duration={50}
+                    timingFunction="ease"
+                  >
+                    {(styles) => (
+                      <div style={{ ...styles, flex: 1 }}>{linksText}</div>
+                    )}
+                  </Transition>
+                ) : (
+                  <div>{linksIcon}</div>
+                )}
+              </div>
             </ScrollAreaAutosize>
           </div>
         )}
@@ -928,6 +1030,7 @@ export default function Layout({ children }) {
       status={userInfo?.data?.status || UserAvailabilityStatus.offline}
     />
   );
+  console.log("activeMainlinl", activeMainLink);
   if (!pathname) return null;
 
   return (
@@ -952,10 +1055,10 @@ export default function Layout({ children }) {
         }}
         header={{ height: 50 }}
         footer={{ height: 0 }}
-        padding={7}
+        padding={activeMainLink === "Inbox" ? undefined : 7}
         layout="alt"
       >
-        <AppShell.Header>
+        <AppShell.Header zIndex={0}>
           <Burger
             opened={mobileOpened}
             onClick={toggleMobile}
@@ -965,9 +1068,10 @@ export default function Layout({ children }) {
           />
           <TopNavbar user={userInfo.data} />
         </AppShell.Header>
-        <AppShell.Navbar>
+        <AppShell.Navbar zIndex={0}>
           <Navbar
             mainLinks={mainLinks}
+            mainNavLinks={navLinks}
             activeMainLink={activeMainLink}
             linksIcon={linksIcon}
             linksText={linksText}

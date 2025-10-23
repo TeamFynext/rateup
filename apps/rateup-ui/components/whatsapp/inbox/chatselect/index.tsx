@@ -31,7 +31,19 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Key, Loader } from "lucide-react";
+import {
+  ChevronDown,
+  Clock,
+  Download,
+  Filter,
+  Key,
+  Loader,
+  MessageSquare,
+  RefreshCcw,
+  Search,
+  UserPlus,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
@@ -47,15 +59,23 @@ import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamess
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { Button } from "@/components/ui/button";
+import { useLabelsContext } from "@/context/LabelsContext";
 import { useUser } from "@/context/UserContext";
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
-import AddUnknownContactModal from "./addUnknownContactModal";
-import { ChatFilter, useChatFilterStore } from "./chatFilter";
+import AddUnknownContactModal, {
+  AddUnknownContactForm,
+} from "./addUnknownContactModal";
+import WaInboxChatFilter, {
+  ChatFilter,
+  useChatFilterStore,
+} from "./chatFilter";
 import WaInboxChatSelectCard from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
-import InboxSettings from "./InboxSettings";
+import ChatselectPanelHeader from "./ChatselectPanelHeader";
+import InboxSettings, { InboxChatFilterAndSettings } from "./InboxSettings";
 import classes from "./styles.module.css";
 
 const WaInboxChatSelect = () => {
@@ -118,7 +138,7 @@ const WaInboxChatSelect = () => {
 
   const { data: waSettings, isLoading } = useWaSettings();
 
-  const { setFilterData } = useContactStore();
+  const { setFilterData, filterData } = useContactStore();
 
   const parentRef = useRef(null);
 
@@ -194,7 +214,7 @@ const WaInboxChatSelect = () => {
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 87,
+    estimateSize: () => 90,
     overscan: 5,
   });
 
@@ -268,67 +288,18 @@ const WaInboxChatSelect = () => {
       parentRef.current.scrollTop = 0;
     }
   }, [tab]);
+  const lifeCycleLabels = useLabelsContext();
 
   if (isContactLoading || isLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
 
   return (
     <Paper withBorder p={0} className="h-full">
-      <Group gap="xs" align="center" wrap="nowrap" p={6.3}>
-        <ContainedTextField
-          leftSection={<IconSearch size={18} color="gray" stroke={1.5} />}
-          rightSection={
-            filter.searchTerm ? (
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="gray"
-                onClick={() => setFilter({ ...filter, searchTerm: "" })}
-                aria-label={translations("Clear search")}
-              >
-                <IconSquareRoundedX size={18} />
-              </ActionIcon>
-            ) : null
-          }
-          placeholder={translations("Search Contacts")}
-          value={filter?.searchTerm || ""}
-          onChange={(e) =>
-            setFilter({ ...filter, searchTerm: e.currentTarget.value })
-          }
-          autoFocus
-          flex={1}
-        />
-        <Group
-          className={classes.chat_select_filter_indicator_wrapper}
-          gap={4}
-          p={0}
-        >
-          <ActionIcon
-            h={30}
-            w={30}
-            variant="light"
-            radius="md"
-            loading={
-              // isFilteredContactsFetchingNextPage ||
-              isRefetchingFilteredContacts
-              // isFetchingPreviousPage
-            }
-            onClick={() => {
-              refetchFilteredContacts();
-              queryClient.invalidateQueries({
-                queryKey: ["contactInboxCount"],
-              });
-            }}
-            aria-label={translations("Refresh")}
-          >
-            <IconRefresh />
-          </ActionIcon>
-        </Group>
-        <InboxSettings
-          tab={tab}
-          onUnknownContactAddSuccess={onUnknownContactAddSuccess}
-        />
-      </Group>
+      <ChatselectPanelHeader
+        isRefetchingFilteredContacts={isRefetchingFilteredContacts}
+        onUnknownContactAddSuccess={onUnknownContactAddSuccess}
+        refetchFilteredContacts={refetchFilteredContacts}
+      />
       <div>
         {isStoreLoading ||
         (!contactIds.length && filteredContactsStatus === "pending") ? (
@@ -383,6 +354,7 @@ const WaInboxChatSelect = () => {
                         <WaInboxChatSelectCard
                           contact={contact}
                           waSettings={waSettings}
+                          lifeCycleLabels={lifeCycleLabels}
                         />
                         <Divider />
                       </>
