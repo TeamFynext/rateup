@@ -595,6 +595,8 @@ const Navbar = ({
           </div>
         )}
       </div>
+
+      <div>{lastLinks}</div>
     </nav>
   );
 };
@@ -950,7 +952,6 @@ export default function Layout({ children }) {
           breakpoint: "sm",
           collapsed: { mobile: !mobileOpened },
         }}
-        header={{ height: 50 }}
         footer={{ height: 0 }}
         padding={7}
         layout="alt"
@@ -963,7 +964,7 @@ export default function Layout({ children }) {
             size="sm"
             p={"md"}
           />
-          <TopNavbar user={userInfo.data} />
+          {/* <TopNavbar user={userInfo.data} /> */}
         </AppShell.Header>
         <AppShell.Navbar>
           <Navbar

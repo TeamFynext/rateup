@@ -13,7 +13,7 @@ import { useCheckSession } from "../../../hooks/checkSession";
 import { retrieveRole } from "../../../utils/essential";
 import AccountSettings from "./AccountSettings";
 import OrgSettings from "./OrgSettings";
-import ProfileSettings from "./UserSettings";
+import ProfileSettings from "./UserSettingsNew";
 
 const Settings = () => {
   const router = useRouter();
