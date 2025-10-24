@@ -812,7 +812,7 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
             options={countries}
             value={countries.find((c) => c.value === formData.values.location)}
             onChange={(option) =>
-              formData.setFieldValue("location", option?.value || "")
+              formData.setFieldValue("location", option?.label || "")
             }
             placeholder={translations("Select Your Location")}
             isSearchable
