@@ -114,7 +114,10 @@ const WaInboxChatSelect = () => {
     hasNextPage: hasNextPageFilteredContacts,
     isLoading: isContactLoading,
     isFetching,
-  } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
+  } = useFilteredContacts(
+    encodeURIComponent(JSON.stringify(processedFilter)),
+    !!processedFilter,
+  );
 
   const { data: waSettings, isLoading } = useWaSettings();
 
@@ -348,7 +351,7 @@ const WaInboxChatSelect = () => {
             <Divider />
             <div
               style={{
-                height: `${rowVirtualizer.getTotalSize()}px`,
+                // height: `${rowVirtualizer.getTotalSize()}px`,
                 width: "100%",
                 position: "relative",
               }}
@@ -365,12 +368,13 @@ const WaInboxChatSelect = () => {
                 return (
                   <div
                     key={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
                     style={{
                       position: "absolute",
                       top: 0,
                       left: 0,
                       width: "100%",
-                      height: `${virtualRow.size}px`,
+                      // height: `${virtualRow.size}px`,
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >

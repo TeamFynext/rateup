@@ -60,3 +60,9 @@ export async function updateAutomationPhoneId() {
     },
   );
 }
+
+export async function updateBackfillMessageData() {
+  return await axiosClient.put(`${baseUrl}/backfill`, null, {
+    timeout: 60000,
+  });
+}
