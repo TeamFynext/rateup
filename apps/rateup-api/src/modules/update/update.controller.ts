@@ -310,7 +310,7 @@ export async function backfillWithSQLHandler(
         },
       },
     });
-    if (fi) return res.code(400).send("Backfill already done");
+    // if (fi) return res.code(400).send("Backfill already done");
 
     await backfillWithSQL();
     res.code(200).send("Backfill completed successfully");
