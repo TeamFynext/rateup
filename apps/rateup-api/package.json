@@ -63,8 +63,7 @@
     "start": "sleep 3 && node dist/src/index.js",
     "dev": "tsx watch src/index.ts",
     "test": "jest --silent",
-    "prepare": "husky install",
-    "backfill": "node  src/backfill-contact-data.js"
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
