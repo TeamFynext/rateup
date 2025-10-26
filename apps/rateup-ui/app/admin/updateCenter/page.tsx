@@ -7,6 +7,7 @@ import {
   useUpdateAutomationPhoneId,
   useUpdateAutomationTriggerSubscription,
   useUpdateAutomationUsageStats,
+  useUpdateBackfillMessageData,
   useUpdateCustomField,
   useUpdateFreePlanSubscriptionExpiry,
   useUpdateLifecycle,
@@ -25,6 +26,7 @@ function UpdateAllThemes() {
   const updateLife = useUpdateLifecycle();
   const updateCustom = useUpdateCustomField();
   const updatePhoneId = useUpdateAutomationPhoneId();
+  const updateBackfill = useUpdateBackfillMessageData();
   return (
     <Stack>
       <Stack mt="xl">
@@ -164,6 +166,20 @@ function UpdateAllThemes() {
             updatePhoneId.mutate();
           }}
           loading={updatePhoneId.isPending}
+        >
+          Update
+        </Button>
+      </Stack>
+      <Stack mt="xl">
+        <Title order={2}>backfill message data to contact</Title>
+        <Text>This will backfill message data to contact</Text>
+        <Button
+          ml="md"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => {
+            updateBackfill.mutate();
+          }}
+          loading={updateBackfill.isPending}
         >
           Update
         </Button>
