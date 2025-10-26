@@ -417,6 +417,8 @@ declare global {
     id: string;
     name: string;
     code: string;
+    color: string;
+    createdAt: string;
     _count: {
       members: number;
     };

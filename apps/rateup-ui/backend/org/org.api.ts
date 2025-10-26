@@ -39,6 +39,10 @@ export interface IUpdateOrgDetails {
   name: string;
   phone: string;
   address: string;
+  businessmail: string;
+  location: string;
+  industry: string;
+  website: string;
   encryptionKeys: EncryptionKeys;
   waAssignedChatPermission: WaAssignedChatPermission;
 }

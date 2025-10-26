@@ -36,7 +36,7 @@ export function useTeamMembersFromInvitation(teamId: string) {
 }
 
 export function useCreateTeamMutation(
-  close: () => void,
+  setIsCreateTeamDialogOpen: (arg: boolean) => void,
   createTeamForm: any,
   setIsCreating: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
@@ -55,7 +55,7 @@ export function useCreateTeamMutation(
           autoClose: 3000,
         });
       setIsCreating(false);
-      close();
+      setIsCreateTeamDialogOpen(false);
       createTeamForm.reset();
     },
     onError: (error: any) => {
@@ -156,6 +156,7 @@ async function handleCreateTeam(values) {
   const data = {
     name: values.name,
     code: values.code,
+    color: values.color,
     orgId,
     userId,
     whatsappAccessToken: values.whatsappAccessToken,
