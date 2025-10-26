@@ -7,6 +7,7 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 import {
   automationSubscription,
   updateAutomationPhoneId,
+  updateBackfillMessageData,
   updateCustomField,
   updateFreePlanSubscriptionExpiry,
   updateLifecycle,
@@ -125,6 +126,20 @@ export const useUpdateAutomationPhoneId = () => {
     },
     onError: () => {
       showErrorToast("Failed to migrate automation phoneId");
+    },
+  });
+};
+
+export const useUpdateBackfillMessageData = () => {
+  return useMutation({
+    mutationFn: updateBackfillMessageData,
+    onSuccess: () => {
+      showSuccessToast("Message data backfilled to contact successfully");
+    },
+    onError: (e: any) => {
+      showErrorToast(
+        e?.response?.data || "Failed to backfill message data to contact",
+      );
     },
   });
 };
