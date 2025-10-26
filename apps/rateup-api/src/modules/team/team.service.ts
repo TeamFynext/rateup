@@ -67,6 +67,7 @@ export async function createTeam(input: CreateTeamInput) {
             name: input.name,
             code: input.code.trim(),
             orgId: input.orgId,
+            color: input.color,
           },
           select: {
             id: true,
@@ -673,6 +674,8 @@ export async function getTeamsByUserId(userId: string) {
           id: true,
           name: true, // Team name
           code: true,
+          color: true,
+          createdAt: true,
           googleLink: true,
           reviewPageLinks: true,
           _count: {

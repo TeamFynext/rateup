@@ -6,6 +6,7 @@ const teamCore = {
   code: z.string(),
   orgId: z.string(),
   userId: z.string(),
+  color: z.string().optional(),
 };
 
 const createTeamRequestSchema = z.object({

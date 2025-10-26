@@ -177,6 +177,10 @@ export async function updateOrgDetails(
     address,
     phone,
     name,
+    industry,
+    location,
+    website,
+    businessmail,
     encryptionKeys,
     waAssignedChatPermission,
   }: UpdateOrgDetailsInput,
@@ -186,7 +190,12 @@ export async function updateOrgDetails(
   let session = await Session.getSession(request, reply);
   const accessTokenPayload = session.getAccessTokenPayload();
   let orgId = accessTokenPayload.orgId;
-  console.log(address, phone, name);
+  const existingOrg = await prisma.org.findUnique({
+    where: { id: orgId },
+    select: { onboarding: true },
+  });
+  const existingOnboarding =
+    (existingOrg?.onboarding as Record<string, any>) ?? {};
   const org = await prisma.org.update({
     where: { id: orgId },
     data: {
@@ -195,6 +204,13 @@ export async function updateOrgDetails(
       name,
       encryptionKeys,
       waAssignedChatPermission,
+      onboarding: {
+        ...existingOnboarding,
+        industry: industry,
+        website: website,
+        location: location,
+        businessmail: businessmail,
+      },
     },
   });
   return org;
