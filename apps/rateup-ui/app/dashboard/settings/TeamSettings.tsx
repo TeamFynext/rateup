@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
-import { Plus, Users } from "lucide-react";
+import { Plus, Trash2, User, Users, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -23,6 +23,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 
 let colorArray = [
@@ -41,6 +49,9 @@ const Team = () => {
   const { user } = useUser();
   const [isCreating, setIsCreating] = useState(false);
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
+  const [isManageTeamDialogOpen, setIsManageTeamDialogOpen] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<TeamData | null>(null);
+  const [editedColor, setEditedColor] = useState("blue");
 
   const createTeamForm = useForm({
     initialValues: {
@@ -186,7 +197,7 @@ const Team = () => {
                         key={index}
                         className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center text-white text-xs font-medium"
                       >
-                        U{index + 1}
+                        <User className="h-4 w-4" />
                       </div>
                     ))}
 
@@ -208,11 +219,11 @@ const Team = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  //   onClick={() => {
-                  //     setSelectedTeam(team);
-                  //     setEditedTeamColor(team.color || "blue");
-                  //     setIsManageTeamDialogOpen(true);
-                  //   }}
+                  onClick={() => {
+                    setSelectedTeam(team);
+                    setEditedColor(team.color || "blue");
+                    setIsManageTeamDialogOpen(true);
+                  }}
                 >
                   Manage
                 </Button>
@@ -295,8 +306,353 @@ const Team = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* manage teams */}
+      <Dialog
+        open={isManageTeamDialogOpen}
+        onOpenChange={setIsManageTeamDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all`}
+                style={{
+                  backgroundColor: editedColor,
+                }}
+              >
+                <Users className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle>{selectedTeam?.name}</DialogTitle>
+                <DialogDescription className="text-xs">
+                  Created {selectedTeam?.createdAt}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="members">
+                Members ({selectedTeam?._count?.members || 0})
+              </TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="details" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-team-name">Team Name</Label>
+                <Input
+                  id="edit-team-name"
+                  defaultValue={selectedTeam?.name}
+                  className="border-2 border-gray-200 focus:border-rateup-blue"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-team-code">Team Code</Label>
+                <Input
+                  id="edit-team-code"
+                  defaultValue={selectedTeam?.code}
+                  className="border-2 border-gray-200 focus:border-rateup-blue"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Team Color</Label>
+                <div className="flex gap-3">
+                  {colorArray.map((color, index) => {
+                    const isSelected = editedColor === color.from;
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        className={`w-12 h-12 rounded-lg border-2 ${isSelected ? "border-black" : "border-transparent"} transition-all`}
+                        style={{
+                          background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
+                        }}
+                        onClick={() => setEditedColor(color.from)}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* <TabsContent value="members" className="space-y-3">
+            
+              <div className="flex items-center justify-between pb-2 border-b">
+                <p className="text-sm text-muted-foreground">
+                  {selectedTeam?.members?.length || 0} member
+                  {(selectedTeam?.members?.length || 0) !== 1 ? "s" : ""} in
+                  this team
+                </p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-rateup-blue to-rateup-orange"
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1.5" />
+                      Add Member
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-3" align="end">
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-sm mb-1">Add Members to Team</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Select users to add to {selectedTeam?.name}
+                        </p>
+                      </div>
+                      <Separator />
+                      <ScrollArea className="h-[240px]">
+                        <div className="space-y-1">
+                          {users
+                            .filter(
+                              (u) =>
+                                u.status === "active" &&
+                                !selectedTeam?.members?.includes(u.id),
+                            )
+                            .map((user) => (
+                              <button
+                                key={user.id}
+                                className="w-full flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                                onClick={() => {
+                                  if (selectedTeam) {
+                                    setTeams(
+                                      teams.map((t) =>
+                                        t.id === selectedTeam.id
+                                          ? {
+                                              ...t,
+                                              members: [...t.members, user.id],
+                                            }
+                                          : t,
+                                      ),
+                                    );
+                                    setSelectedTeam({
+                                      ...selectedTeam,
+                                      members: [
+                                        ...selectedTeam.members,
+                                        user.id,
+                                      ],
+                                    });
+                                    toast.success(`${user.name} added to team`);
+                                  }
+                                }}
+                              >
+                                <Avatar className="w-8 h-8">
+                                  <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs">
+                                    {user.name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm truncate">
+                                    {user.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {user.email}
+                                  </p>
+                                </div>
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs capitalize flex-shrink-0"
+                                >
+                                  {user.role}
+                                </Badge>
+                              </button>
+                            ))}
+                          {users.filter(
+                            (u) =>
+                              u.status === "active" &&
+                              !selectedTeam?.members?.includes(u.id),
+                          ).length === 0 && (
+                            <div className="text-center py-6 text-muted-foreground">
+                              <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm">
+                                All active users are already in this team
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+             
+              <ScrollArea className="h-[260px] pr-3">
+                <div className="space-y-2">
+                  {selectedTeam?.members?.map((memberId: string) => {
+                    const member = users.find((u) => u.id === memberId);
+                    if (!member) return null;
+
+                    return (
+                      <div
+                        key={memberId}
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <Avatar className="w-9 h-9 flex-shrink-0">
+                            <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs">
+                              {member.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm truncate">{member.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {member.email}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Badge
+                            variant="outline"
+                            className="text-xs capitalize"
+                          >
+                            {member.role}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => {
+                              if (selectedTeam) {
+                                setTeams(
+                                  teams.map((t) =>
+                                    t.id === selectedTeam.id
+                                      ? {
+                                          ...t,
+                                          members: t.members.filter(
+                                            (id) => id !== memberId,
+                                          ),
+                                        }
+                                      : t,
+                                  ),
+                                );
+                                setSelectedTeam({
+                                  ...selectedTeam,
+                                  members: selectedTeam.members.filter(
+                                    (id) => id !== memberId,
+                                  ),
+                                });
+                                toast.success(
+                                  `${member.name} removed from team`,
+                                );
+                              }
+                            }}
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {(!selectedTeam?.members ||
+                    selectedTeam.members.length === 0) && (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm mb-1">
+                        No members in this team yet
+                      </p>
+                      <p className="text-xs">
+                        Click "Add Member" to get started
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-4">
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Trash2 className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="text-sm text-red-700 mb-1">Delete Team</h4>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Permanently delete this team. Team members will remain in
+                      your organization.
+                    </p>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            `Are you sure you want to delete "${selectedTeam?.name}"? This action cannot be undone.`,
+                          )
+                        ) {
+                          setTeams(
+                            teams.filter((t) => t.id !== selectedTeam?.id),
+                          );
+                          setIsManageTeamDialogOpen(false);
+                        }
+                      }}
+                    >
+                      Delete Team
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </TabsContent> */}
+          </Tabs>
+
+          {/* <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsManageTeamDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-gradient-to-r from-rateup-blue to-rateup-orange"
+              onClick={() => {
+               
+                setTeams(
+                  teams.map((t) =>
+                    t.id === selectedTeam?.id
+                      ? {
+                          ...t,
+                          color: editedTeamColor,
+                          name:
+                            (
+                              document.getElementById(
+                                "edit-team-name",
+                              ) as HTMLInputElement
+                            )?.value || t.name,
+                          description:
+                            (
+                              document.getElementById(
+                                "edit-team-description",
+                              ) as HTMLTextAreaElement
+                            )?.value || t.description,
+                        }
+                      : t,
+                  ),
+                );
+                setIsManageTeamDialogOpen(false);
+              }}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter> */}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default Team;
+
+function newnew() {
+  return <div></div>;
+}

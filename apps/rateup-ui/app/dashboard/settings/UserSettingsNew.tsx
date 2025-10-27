@@ -485,7 +485,7 @@ const ProfileSettings = () => {
                         onClick={() => setIsEditProfileDialogOpen(true)}
                       >
                         <Edit className="w-4 h-4" />
-                        Edit Profile
+                        Edit
                       </Button>
                     </div>
                   </div>
@@ -494,14 +494,14 @@ const ProfileSettings = () => {
             </Card>
 
             {/* Business Information Modal Trigger */}
-            <Card className="p-6 shadow-sm border-gray-200">
-              <div className="flex items-center justify-between mb-6">
+            <Card className="p-6 shadow-sm border-gray-200 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center">
                     <Building className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="mb-0.5">Business Information</h3>
+                    <h3 className="">Business Information</h3>
                     <p className="text-xs text-muted-foreground">
                       Your company details and contact information
                     </p>
@@ -514,18 +514,26 @@ const ProfileSettings = () => {
                   onClick={() => setIsBusinessDialogOpen(true)}
                 >
                   <Edit className="w-4 h-4" />
-                  Edit Business Info
+                  Edit
                 </Button>
               </div>
 
               {/* Business Overview */}
-              <div className="flex items-center gap-4 mb-6">
-                <Avatar className="w-16 h-16 border-2 border-white shadow-sm">
-                  <AvatarImage src={orgAvatarSrc} />
-                  <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-lg">
-                    {user?.orgName?.slice(0, 1)}
-                  </AvatarFallback>
-                </Avatar>
+              <div className="flex items-center gap-4 mt-2">
+                <div className="relative">
+                  <Avatar className="w-16 h-16 border-2 border-white shadow-sm">
+                    <AvatarImage src={orgAvatarSrc} />
+                    <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-lg">
+                      {user?.orgName?.slice(0, 1)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    onClick={() => setIsBusinessDialogOpen(true)}
+                    className="absolute bottom-0 right-0 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-full p-1 sm:p-1.5 shadow-md transition-all group-hover:scale-110"
+                  >
+                    <Camera className="w-3 h-3 text-gray-600" />
+                  </button>
+                </div>
                 <div>
                   <p className="font-medium text-base">{user?.orgName}</p>
                   <p className="text-xs text-gray-500 mt-1">
