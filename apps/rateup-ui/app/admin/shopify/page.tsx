@@ -2,26 +2,32 @@
 
 import { useState } from "react";
 
-import { Box, Group, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconTrash } from "@tabler/icons-react";
-import {
-  DataGrid,
-  GridActionsCellItem,
-  GridColDef,
-  GridRenderCellParams,
-} from "@mui/x-data-grid";
+import { ColumnDef } from "@tanstack/react-table";
+import { Building2, Calendar, ShoppingBag, Store, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { IntegratedApps } from "@/types/enums";
 import { ActiveStatusBadge } from "@/app/dashboard/apps&services/shopify/page";
 import { useGetAllIntegrations } from "@/backend/appsIntegration/integration.query";
 import { useDeleteShopifyIntegrationByShop } from "@/backend/appsIntegration/shopify/shopify.query";
-import styles from "@/components/adminPanel/admin.module.css";
 import RefreshButton from "@/components/Button/RefreshButton";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatIsoDateStringWithTime } from "@/utils/dateTime";
 import { showLoadingToast } from "@/utils/notifications";
+
+import { DataTableToolbar } from "./data-table-toolbar";
+
+interface ShopifyTableData {
+  id: string;
+  shop: string;
+  orgId: string;
+  createdAt: string;
+  status: boolean;
+}
 
 const Shopify = () => {
   const { data: integrations } = useGetAllIntegrations();
@@ -29,7 +35,78 @@ const Shopify = () => {
   const [opened, { open: openConfirmModal, close }] = useDisclosure(false);
   const deleteIntegration = useDeleteShopifyIntegrationByShop();
   const translations = useTranslations();
-  const rows = integrations
+
+  const columns: ColumnDef<ShopifyTableData>[] = [
+    {
+      accessorKey: "id",
+      header: "ID",
+      cell: ({ row }) => (
+        <div className="font-mono text-xs text-muted-foreground max-w-[200px] truncate">
+          {row.getValue("id")}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "shop",
+      header: createSortableHeader("Shop"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Store className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium">{row.getValue("shop")}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "orgId",
+      header: createSortableHeader("Organization ID"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-muted-foreground" />
+          <div className="font-mono text-xs text-muted-foreground max-w-[200px] truncate">
+            {row.getValue("orgId")}
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: createSortableHeader("Status"),
+      cell: ({ row }) => {
+        const status = row.getValue("status") as boolean;
+        return <ActiveStatusBadge active={status} />;
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: createSortableHeader("Created At"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm">{row.getValue("createdAt")}</span>
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedShop(row.original.shop);
+            openConfirmModal();
+          }}
+          className="h-8 w-8 p-0"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ];
+
+  const tableData: ShopifyTableData[] = integrations
     ? integrations
         .filter((integration) => integration.name === IntegratedApps.shopify)
         ?.map((integration) => ({
@@ -40,71 +117,65 @@ const Shopify = () => {
           status: integration.active,
         }))
     : [];
-  const columns: GridColDef[] = [
-    {
-      field: "id",
-      headerName: translations("Id"),
-      width: 250,
-      cellClassName: styles.idCell,
-    },
-    { field: "shop", headerName: translations("Shop"), width: 250 },
-    {
-      field: "orgId",
-      headerName: translations("Org Id"),
-      width: 250,
-      cellClassName: styles.idCell,
-    },
-    {
-      field: "status",
-      headerName: translations("Status"),
-      width: 200,
-      renderCell: (params: GridRenderCellParams<any, any>) => {
-        return <ActiveStatusBadge active={params.value} />;
-      },
-    },
-    { field: "createdAt", headerName: translations("Created At"), width: 200 },
-    {
-      field: "action",
-      headerName: translations("Actions"),
-      type: "actions",
-      width: 200,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={<IconTrash />}
-          onClick={() => {
-            setSelectedShop(params.row.shop);
-            openConfirmModal();
-          }}
-          label={translations("Delete")}
-          showInMenu
-          key={params.id + "delete-action"}
-        />,
-      ],
-    },
-  ];
 
   const handleDelete = () => {
     showLoadingToast("Deleting...", "integration");
     deleteIntegration.mutate({ shop: selectedShop });
   };
+
+  // Calculate stats
+  const totalIntegrations = tableData.length;
+  const activeIntegrations = tableData.filter((item) => item.status).length;
+  const inactiveIntegrations = tableData.filter((item) => !item.status).length;
+
   return (
-    <Stack>
-      <Group>
-        <Title order={2}>{translations("Integrated Shopify")}</Title>
-        <RefreshButton queryKeys={["integrations"]} />
-      </Group>
-      <Box h={"70vh"}>
-        <DataGrid
-          columns={columns}
-          rows={rows}
-          showToolbar
-          slotProps={{
-            toolbar: {
-              showQuickFilter: true,
-            },
-          }}
-        />
-      </Box>
+    <div className="container mx-auto space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <ShoppingBag className="h-5 w-5 text-primary" />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {translations("Integrated Shopify")}
+              </h1>
+            </div>
+            <RefreshButton queryKeys={["integrations"]} />
+          </div>
+        </div>
+      </div>
+
+      {/* Info Alert */}
+      <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm text-blue-800 dark:text-blue-200">
+              Shopify Integration Management
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            Manage all Shopify store integrations connected to your platform.
+            You can view integration status and remove integrations when needed.
+          </p>
+        </CardContent>
+      </Card>
+
+      <h2 className="text-xl font-semibold tracking-tight">
+        Integration Management
+      </h2>
+      <p className="text-sm text-muted-foreground">
+        View and manage all Shopify store integrations
+      </p>
+
+      <DataTable
+        columns={columns}
+        data={tableData}
+        DataTableToolbar={DataTableToolbar}
+      />
+
       <ConfirmationModal
         confirmLabel={translations("Yes")}
         headerLabel={translations("Are you sure, you want to delete it?")}
@@ -115,7 +186,7 @@ const Shopify = () => {
         opened={opened}
         closeLabel="No"
       />
-    </Stack>
+    </div>
   );
 };
 
