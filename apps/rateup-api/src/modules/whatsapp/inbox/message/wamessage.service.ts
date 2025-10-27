@@ -251,13 +251,10 @@ export async function filterChats(
         if (bodyFilterProps?.messageType === "usermessages") {
           filters.push(`c."lastReceivedMessageTimeStamp" IS NOT NULL`);
         } else if (bodyFilterProps?.messageType === "all") {
-          if (bodyFilterProps.waMessageAssignStatus === "Sent") {
-            filters.push(`c."lastSentMessageTimeStamp" IS NOT NULL`);
-          } else {
-            filters.push(`EXISTS (
-                SELECT 1 FROM "WaMessage" wm
-                WHERE wm."contactId" = c.id
-              )`);
+          if (bodyFilterProps.waMessageAssignStatus !== "Sent") {
+            filters.push(
+              `(c."lastReceivedMessageTimeStamp" IS NOT NULL OR c."lastSentMessageTimeStamp" IS NOT NULL)`,
+            );
           }
           orderBy = `c."lastMessageWaCreatedAt"`;
         }
@@ -532,6 +529,7 @@ export async function filterChats(
       FROM filtered_contacts fc
       LEFT JOIN assigned_users au ON au."contactId" = fc.id
       LEFT JOIN "Lifecycle" l ON l.id = fc."lifecycleId"
+      ORDER BY fc."lastMessageWaCreatedAt" DESC NULLS LAST;
     `;
 
     const contacts: any[] = await prisma.$queryRawUnsafe(query, ...params);
