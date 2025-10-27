@@ -90,11 +90,16 @@ async function handleCreateUser(values) {
   return createGoogleUser(values);
 }
 
-export function useChangePasswordMutation(setIsLoading) {
-  const router = useRouter();
+export function useChangePasswordMutation(
+  setIsLoading,
+  passwordForm,
+  passwordModal,
+) {
   return useMutation({
     mutationFn: (values: IChangePassword) => changeUserPassword(values),
     onSuccess: () => {
+      passwordForm.reset();
+      passwordModal.close();
       notifications.show({
         id: "load-data",
         color: "teal",

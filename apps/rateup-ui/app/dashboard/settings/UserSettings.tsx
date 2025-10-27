@@ -111,7 +111,11 @@ const ProfileSettings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [openedPasswordModal, passwordModal] = useDisclosure(false);
   const updateProfile = useUpdateProfileMutation(setIsLoading);
-  const changePassword = useChangePasswordMutation(setIsLoading);
+  const changePassword = useChangePasswordMutation(
+    setIsLoading,
+    passwordForm,
+    passwordModal,
+  );
 
   const onSubmit = (values) => {
     setIsLoading(true);
@@ -133,8 +137,6 @@ const ProfileSettings = () => {
     };
 
     changePassword.mutate(data);
-    passwordForm.reset();
-    passwordModal.close();
   };
 
   const [avatarSrc, setAvatarSrc] = useState(
