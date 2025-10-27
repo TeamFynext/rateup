@@ -1,11 +1,16 @@
-import { Button, Group, Menu, Text } from "@mantine/core";
-import {
-  IconArrowDown,
-  IconArrowUp,
-  IconEyeOff,
-  IconSelector,
-} from "@tabler/icons-react";
 import { Column } from "@tanstack/react-table";
+import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 interface DataTableColumnHeaderProps<TData, TValue> {
   column: Column<TData, TValue>;
@@ -17,56 +22,46 @@ export function DataTableColumnHeader<TData, TValue>({
   column,
   title,
   className,
-}: Readonly<DataTableColumnHeaderProps<TData, TValue>>) {
+}: DataTableColumnHeaderProps<TData, TValue>) {
   if (!column.getCanSort()) {
-    return <Text className={className}>{title}</Text>;
+    return <div className={cn(className)}>{title}</div>;
   }
 
   return (
-    <Group gap="xs" className={className}>
-      <Menu position="bottom-start">
-        <Menu.Target>
+    <div className={cn("flex items-center gap-2", className)}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
-            variant="subtle"
-            size="compact-sm"
-            color="light-dark('black', 'white')"
-            pl={0}
-            fw={500}
-            rightSection={
-              column.getIsSorted() === "desc" ? (
-                <IconArrowDown size={16} />
-              ) : column.getIsSorted() === "asc" ? (
-                <IconArrowUp size={16} />
-              ) : (
-                <IconSelector size={16} />
-              )
-            }
+            variant="ghost"
+            size="sm"
+            className="data-[state=open]:bg-accent -ml-3 h-8"
           >
-            {title}
+            <span>{title}</span>
+            {column.getIsSorted() === "desc" ? (
+              <ArrowDown />
+            ) : column.getIsSorted() === "asc" ? (
+              <ArrowUp />
+            ) : (
+              <ChevronsUpDown />
+            )}
           </Button>
-        </Menu.Target>
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<IconArrowUp size={16} />}
-            onClick={() => column.toggleSorting(false)}
-          >
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
+            <ArrowUp />
             Asc
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconArrowDown size={16} />}
-            onClick={() => column.toggleSorting(true)}
-          >
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
+            <ArrowDown />
             Desc
-          </Menu.Item>
-          <Menu.Divider />
-          <Menu.Item
-            leftSection={<IconEyeOff size={16} />}
-            onClick={() => column.toggleVisibility(false)}
-          >
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
+            <EyeOff />
             Hide
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
-    </Group>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
