@@ -20,7 +20,7 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconCheck, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 
 import {
   useChangePasswordMutation,
@@ -111,11 +111,7 @@ const ProfileSettings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [openedPasswordModal, passwordModal] = useDisclosure(false);
   const updateProfile = useUpdateProfileMutation(setIsLoading);
-  const changePassword = useChangePasswordMutation(
-    setIsLoading,
-    passwordForm,
-    passwordModal,
-  );
+  const changePassword = useChangePasswordMutation();
 
   const onSubmit = (values) => {
     setIsLoading(true);
@@ -136,7 +132,34 @@ const ProfileSettings = () => {
       newPassword: values.newPassword,
     };
 
-    changePassword.mutate(data);
+    changePassword.mutate(data, {
+      onSuccess: () => {
+        passwordForm.reset();
+        passwordModal.close();
+        notifications.show({
+          id: "load-data",
+          color: "teal",
+          title: "Success",
+          message: "Password Changed Successfully!",
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+        setIsLoading(false);
+      },
+      onError: (error: any) => {
+        console.error("Error changed password:", error.message);
+        notifications.show({
+          id: "load-data",
+          color: "red",
+          title: "Failed",
+          message: error?.response?.data?.message,
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+
+        setIsLoading(false);
+      },
+    });
   };
 
   const [avatarSrc, setAvatarSrc] = useState(
