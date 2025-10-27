@@ -251,10 +251,13 @@ export async function filterChats(
         if (bodyFilterProps?.messageType === "usermessages") {
           filters.push(`c."lastReceivedMessageTimeStamp" IS NOT NULL`);
         } else if (bodyFilterProps?.messageType === "all") {
-          if (bodyFilterProps.waMessageAssignStatus !== "Sent") {
-            filters.push(
-              `c."lastReceivedMessageTimeStamp" IS NOT NULL OR c."lastSentMessageTimeStamp" IS NOT NULL`,
-            );
+          if (bodyFilterProps.waMessageAssignStatus === "Sent") {
+            filters.push(`c."lastSentMessageTimeStamp" IS NOT NULL`);
+          } else {
+            filters.push(`EXISTS (
+                SELECT 1 FROM "WaMessage" wm
+                WHERE wm."contactId" = c.id
+              )`);
           }
           orderBy = `c."lastMessageWaCreatedAt"`;
         }
