@@ -432,33 +432,34 @@ export function getNavTopData(
     {
       icon: IconUser,
       label: translations("Account"),
-      children: [
-        {
-          label: translations("User"),
-          link: "/dashboard/settings?tab=user",
-          icon: IconUser,
-        },
-        {
-          label: translations("Organization"),
-          link: "/dashboard/settings?tab=organization",
-          icon: IconBuildings,
-        },
-        {
-          label: translations("Account"),
-          link: "/dashboard/settings?tab=account",
-          icon: IconUserShare,
-        },
+      link: "/dashboard/settings",
+      // children: [
+      //   {
+      //     label: translations("User"),
+      //     link: "/dashboard/settings?tab=user",
+      //     icon: IconUser,
+      //   },
+      //   {
+      //     label: translations("Organization"),
+      //     link: "/dashboard/settings?tab=organization",
+      //     icon: IconBuildings,
+      //   },
+      //   {
+      //     label: translations("Account"),
+      //     link: "/dashboard/settings?tab=account",
+      //     icon: IconUserShare,
+      //   },
 
-        ...(subscription?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
-          ? [
-              {
-                label: translations("Admin"),
-                link: "/admin",
-                icon: IconTerminal2,
-              },
-            ]
-          : []),
-      ],
+      //   ...(subscription?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
+      //     ? [
+      //         {
+      //           label: translations("Admin"),
+      //           link: "/admin",
+      //           icon: IconTerminal2,
+      //         },
+      //       ]
+      //     : []),
+      // ],
     },
   ];
   return [navLinks, lastLinksData];

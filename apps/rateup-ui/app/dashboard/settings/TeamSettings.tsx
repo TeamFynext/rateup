@@ -4,13 +4,14 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
-import { Plus, Trash2, User, Users, XCircle } from "lucide-react";
+import { Clock, Plus, Trash2, User, Users, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import {
   useAddUsertoTeams,
   useCreateTeamMutation,
+  useDeleteTeamMutation,
   useEditTeamMutation,
   useNotTeamMembers,
   useTeamMembersFromInvitation,
@@ -42,11 +43,13 @@ import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
 
 let colorArray = [
-  { from: "#3B82F6", to: "#2563EB" },
-  { from: "#F97316", to: "#EA580C" },
-  { from: "#22C55E", to: "#16A34A" },
-  { from: "#A855F7", to: "#9333EA" },
-  { from: "#EC4899", to: "#DB2777" },
+  { from: "#3B82F6", to: "#2563EB" }, // Blue
+  { from: "#F97316", to: "#EA580C" }, // Orange
+  { from: "#22C55E", to: "#16A34A" }, // Green
+  { from: "#A855F7", to: "#9333EA" }, // Purple
+  { from: "#EC4899", to: "#DB2777" }, // Pink
+  { from: "#EAB308", to: "#CA8A04" }, // Yellow
+  { from: "#6366F1", to: "#4F46E5" }, // Indigo
 ];
 
 const Team = () => {
@@ -221,7 +224,7 @@ const Team = () => {
         open={isCreateTeamDialogOpen}
         onOpenChange={setIsCreateTeamDialogOpen}
       >
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Team</DialogTitle>
             <DialogDescription>
@@ -243,7 +246,7 @@ const Team = () => {
               <Label htmlFor="team-name">Team Code</Label>
               <Input
                 id="team-code"
-                placeholder="e.g., Team123"
+                placeholder="e.g., TEAM"
                 className="h-10 border-2 border-gray-200 focus:border-rateup-blue"
                 {...createTeamForm.getInputProps("code")}
               />
@@ -251,14 +254,18 @@ const Team = () => {
 
             <div className="space-y-2">
               <Label>Team Color</Label>
-              <div className="flex gap-3">
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                 {colorArray.map((color, index) => {
                   const isSelected = createTeamForm.values.color === color.from;
                   return (
                     <button
                       key={index}
                       type="button"
-                      className={`w-12 h-12 rounded-lg border-2 ${isSelected ? "border-black" : "border-transparent"} transition-all`}
+                      className={`w-full aspect-square rounded-lg border-2 ${
+                        isSelected
+                          ? "border-black scale-105"
+                          : "border-transparent"
+                      } transition-all hover:scale-105`}
                       style={{
                         background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
                       }}
@@ -295,7 +302,7 @@ const Team = () => {
         open={isManageTeamDialogOpen}
         onOpenChange={setIsManageTeamDialogOpen}
       >
-        <DialogContent className="sm:max-w-[500px] h-[65vh]">
+        <DialogContent className="sm:max-w-[500px]">
           <div className="py-2 flex flex-col gap-4">
             <DialogHeader>
               <div className="flex items-center gap-3">
@@ -322,9 +329,7 @@ const Team = () => {
             <Tabs defaultValue="details" className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-4">
                 <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="members">
-                  Members ({selectedTeam?._count?.members || 0})
-                </TabsTrigger>
+                <TabsTrigger value="members">Members</TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               </TabsList>
               <ScrollArea className="h-[45vh]">
@@ -341,10 +346,13 @@ const Team = () => {
                   <AddMembers selectedTeam={selectedTeam} />
                 </TabsContent>
 
-                <TabsContent
-                  value="settings"
-                  className="space-y-4"
-                ></TabsContent>
+                <TabsContent value="settings" className="space-y-4">
+                  <DeleteTeam
+                    selectedTeam={selectedTeam}
+                    translations={translations}
+                    setIsManageTeamDialogOpen={setIsManageTeamDialogOpen}
+                  />
+                </TabsContent>
               </ScrollArea>
             </Tabs>
           </div>
@@ -399,52 +407,57 @@ function EditTeam({
   };
 
   return (
-    <form onSubmit={editTeamForm.onSubmit(onSubmit)} className="space-y-4">
-      {/* Team Name */}
-      <div className="space-y-2">
-        <Label htmlFor="edit-team-name">Team Name</Label>
-        <Input
-          id="edit-team-name"
-          placeholder="Enter team name"
-          {...editTeamForm.getInputProps("name")}
-          className="border-2 border-gray-200 focus:border-rateup-blue"
-        />
-      </div>
+    <form
+      onSubmit={editTeamForm.onSubmit(onSubmit)}
+      className="flex flex-col gap-4 min-h-[calc(45vh-2rem)]"
+    >
+      <div className="flex-1 space-y-4">
+        {/* Team Name */}
+        <div className="space-y-2">
+          <Label htmlFor="edit-team-name">Team Name</Label>
+          <Input
+            id="edit-team-name"
+            placeholder="Enter team name"
+            {...editTeamForm.getInputProps("name")}
+            className="border-2 border-gray-200 focus:border-rateup-blue"
+          />
+        </div>
 
-      {/* Team Code */}
-      <div className="space-y-2">
-        <Label htmlFor="edit-team-code">Team Code</Label>
-        <Input
-          id="edit-team-code"
-          placeholder="Enter team code"
-          {...editTeamForm.getInputProps("code")}
-          className="border-2 border-gray-200 focus:border-rateup-blue"
-        />
-      </div>
+        {/* Team Code */}
+        <div className="space-y-2">
+          <Label htmlFor="edit-team-code">Team Code</Label>
+          <Input
+            id="edit-team-code"
+            placeholder="Enter team code"
+            {...editTeamForm.getInputProps("code")}
+            className="border-2 border-gray-200 focus:border-rateup-blue"
+          />
+        </div>
 
-      {/* Team Color */}
-      <div className="space-y-2">
-        <Label>Team Color</Label>
-        <div className="flex gap-3">
-          {colorArray.map((color, index) => {
-            const isSelected = editedColor === color.from;
-            return (
-              <button
-                key={index}
-                type="button"
-                className={`w-12 h-12 rounded-lg border-2 ${
-                  isSelected ? "border-black" : "border-transparent"
-                } transition-all`}
-                style={{
-                  background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
-                }}
-                onClick={() => {
-                  setEditedColor(color.from);
-                  editTeamForm.setFieldValue("color", color.from);
-                }}
-              />
-            );
-          })}
+        {/* Team Color */}
+        <div className="space-y-2">
+          <Label>Team Color</Label>
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+            {colorArray.map((color, index) => {
+              const isSelected = editedColor === color.from;
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  className={`w-12 h-12 flex-shrink-0 rounded-lg border-2 ${
+                    isSelected ? "border-black scale-105" : "border-transparent"
+                  } transition-all hover:scale-105`}
+                  style={{
+                    background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
+                  }}
+                  onClick={() => {
+                    setEditedColor(color.from);
+                    editTeamForm.setFieldValue("color", color.from);
+                  }}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -498,10 +511,10 @@ function AddMembers({ selectedTeam }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between pb-2 border-b">
-        <p className="text-sm text-muted-foreground">
-          {selectedTeam?._count?.members || 0} member
-          {(selectedTeam?._count?.members || 0) !== 1 ? "s" : ""} in this team
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 border-b gap-2 sm:gap-0">
+        <p className="text-sm sm:text-base text-muted-foreground">
+          {teamMembersObjArr?.length || 0} member
+          {(teamMembersObjArr?.length || 0) !== 1 ? "s" : ""} in this team
         </p>
         <Popover>
           <PopoverTrigger asChild>
@@ -510,14 +523,15 @@ function AddMembers({ selectedTeam }) {
               className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add Member
+              <span className="hidden sm:inline">Add Member</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-4 h-[300px]" align="end">
             <div className="space-y-3">
               <div>
-                <h4 className="text-sm ">Add Members to Team</h4>
-                <p className="text-xs text-muted-foreground">
+                <h4 className="text-sm sm:text-base">Add Members to Team</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Select users to add to {selectedTeam?.name}
                 </p>
               </div>
@@ -534,24 +548,26 @@ function AddMembers({ selectedTeam }) {
                             teamIds: selectedTeam.id,
                           });
                         }}
-                        className="flex w-full items-center gap-2 p-2 rounded-lg text-left hover:bg-gray-50 transition-colors"
+                        className="flex flex-col sm:flex-row w-full items-start sm:items-center gap-2 sm:gap-2 p-2 rounded-lg text-left hover:bg-gray-50 transition-colors"
                       >
                         <Avatar className="w-8 h-8 shrink-0">
-                          <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs">
+                          <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs sm:text-sm">
                             {user.name?.[0] ?? "?"}
                           </AvatarFallback>
                         </Avatar>
 
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm truncate">{user.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-sm sm:text-base truncate">
+                            {user.name}
+                          </p>
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">
                             {user.email}
                           </p>
                         </div>
 
                         <Badge
                           variant="outline"
-                          className="text-xs capitalize shrink-0"
+                          className="text-xs sm:text-sm capitalize shrink-0"
                         >
                           {user.role}
                         </Badge>
@@ -595,93 +611,179 @@ function AddMembers({ selectedTeam }) {
 
 function TeamMember({ member }) {
   return (
-    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-0">
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <Avatar className="w-9 h-9 flex-shrink-0">
-          <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs">
+          <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs sm:text-sm">
             {member?.name?.slice(0, 1)}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="text-sm truncate">{member.name}</p>
-          <p className="text-xs text-muted-foreground truncate">
+          <p className="text-sm sm:text-base truncate">{member?.name}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">
             {member.email}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-2 flex-shrink-0 mt-2 sm:mt-0">
         {member?.status === "PENDING" ? (
           ""
         ) : (
-          <Badge variant="outline" className="text-xs capitalize">
+          <Badge variant="outline" className="text-xs sm:text-sm capitalize">
             {member?.role}
           </Badge>
         )}
-
-        {/* <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => {
-                    if (selectedTeam) {
-                      setTeams(
-                        teams.map((t) =>
-                          t.id === selectedTeam.id
-                            ? {
-                                ...t,
-                                members: t.members.filter(
-                                  (id) => id !== memberId,
-                                ),
-                              }
-                            : t,
-                        ),
-                      );
-                      setSelectedTeam({
-                        ...selectedTeam,
-                        members: selectedTeam.members.filter(
-                          (id) => id !== memberId,
-                        ),
-                      });
-                      toast.success(`${member.name} removed from team`);
-                    }
-                  }}
-                >
-                  <XCircle className="w-4 h-4" />
-                </Button> */}
       </div>
     </div>
   );
 }
 
-// function DeleteTeam() {
-//   return (
-//     <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-//       <div className="flex items-start gap-3">
-//         <Trash2 className="w-5 h-5 text-red-600 flex-shrink-0" />
-//         <div className="flex-1">
-//           <h4 className="text-sm text-red-700 ">Delete Team</h4>
-//           <p className="text-xs text-muted-foreground">
-//             Permanently delete this team. Team members will remain in your
-//             organization.
-//           </p>
-//           <Button
-//             variant="destructive"
-//             size="sm"
-//             onClick={() => {
-//               if (
-//                 window.confirm(
-//                   `Are you sure you want to delete "${selectedTeam?.name}"? This action cannot be undone.`,
-//                 )
-//               ) {
-//                 setTeams(teams.filter((t) => t.id !== selectedTeam?.id));
-//                 setIsManageTeamDialogOpen(false);
-//               }
-//             }}
-//           >
-//             Delete Team
-//           </Button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
+function DeleteTeam({ selectedTeam, translations, setIsManageTeamDialogOpen }) {
+  const teamId = selectedTeam.id;
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const deleteTeamMutation = useDeleteTeamMutation();
+
+  const {
+    isLoading: isLoadingMembers,
+    data: teamsMembersData,
+    refetch: refetchInvitedTeamMembers,
+    error: teamsMembersError,
+  } = useTeamMembersFromInvitation(teamId);
+
+  const form = useForm({
+    initialValues: {
+      googleLink: teamsMembersData?.googleLink || "",
+    },
+    validate: {
+      googleLink: (value) =>
+        value.startsWith("https://") || value === ""
+          ? null
+          : translations("Please enter a valid url (https://...)"),
+    },
+  });
+
+  useEffect(() => {
+    if (teamsMembersData?.googleLink) {
+      form.setValues({
+        googleLink: teamsMembersData?.googleLink,
+      });
+    }
+  }, [teamsMembersData?.googleLink]);
+
+  const editTeamMutation = useEditTeamMutation(teamId, () => {});
+
+  function handleSave() {
+    const res = form.validate();
+    if (res.hasErrors) {
+      return;
+    }
+    editTeamMutation.mutate(form.values);
+  }
+  const handleDeleteTeam = async (deleteTeamId: string) => {
+    setIsDeleting(true);
+    notifications.show({
+      id: "load-data",
+      loading: true,
+      title: translations("Deleting Team"),
+      message: translations("Hold on, Your team is getting deleted"),
+      autoClose: false,
+      withCloseButton: false,
+    });
+    deleteTeamMutation.mutate(deleteTeamId, {
+      onSuccess: () => {
+        setIsDeleting(false);
+        setIsDialogOpen(false);
+        setIsManageTeamDialogOpen(false);
+      },
+    });
+  };
+  return (
+    <>
+      <div className="space-y-2">
+        <Label htmlFor="google-link">Google review link</Label>
+        <div>
+          <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
+            <Input
+              id="google-link"
+              placeholder="Enter team name"
+              {...form.getInputProps("googleLink")}
+              className="border-2 border-gray-200 focus:border-rateup-blue"
+            />
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-rateup-blue to-rateup-blue min-w-full sm:min-w-18"
+              onClick={handleSave}
+              disabled={editTeamMutation.isPending}
+            >
+              {editTeamMutation.isPending ? <Clock /> : "Save"}
+            </Button>
+          </div>
+          {form.errors.googleLink && (
+            <p className="text-xs text-red-600 mt-1">
+              {form.errors.googleLink}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="flex items-start gap-3">
+          <Trash2 className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <div className="flex flex-col gap-2 items-start">
+            <div>
+              <h4 className="text-sm font-medium text-red-700">Delete Team</h4>
+              <p className="text-xs text-muted-foreground">
+                Permanently delete this team. Team members will remain in your
+                organization.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="cursor-pointer hover:bg-red-700 transition-colors"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              Delete Team
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-sm border border-red-200 bg-red-50">
+          <DialogHeader>
+            <DialogTitle className="text-red-700 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" />
+              Confirm Deletion
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              This action <strong>cannot be undone.</strong> Are you sure you
+              want to permanently delete this team?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="outline"
+              className="text-sm"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="text-sm hover:bg-red-700"
+              onClick={() => handleDeleteTeam(teamId)}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

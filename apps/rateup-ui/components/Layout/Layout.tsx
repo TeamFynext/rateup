@@ -324,7 +324,12 @@ const LastLinks = ({
             setActiveMainLink(link.label);
             setActiveSubLink(link.link);
             showOfflineNotification(status);
-            router.push(link?.children[0]?.link);
+            // router.push(link?.children[0]?.link);
+            if (link?.link) {
+              router.push(link?.link);
+            } else {
+              router.push(link?.children[0]?.link);
+            }
           }
         }}
         className={classes.mainLink}

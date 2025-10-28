@@ -128,8 +128,6 @@ export function useEditTeamMutation(
 
 export function useDeleteTeamMutation() {
   const queryClient = useQueryClient();
-  const router = useRouter();
-
   return useMutation({
     mutationFn: deleteTeamById,
     onSuccess: () => {
@@ -143,7 +141,6 @@ export function useDeleteTeamMutation() {
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
-      router.push("/dashboard/teams");
     },
     onError: (error: any) => {
       notifications.update({
@@ -230,6 +227,7 @@ export function useAddUsertoTeams() {
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
       queryClient.invalidateQueries({ queryKey: ["notTeamMembers"] });
       queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
       showSuccessToast("success");
     },
     onError: () => {

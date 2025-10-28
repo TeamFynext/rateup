@@ -16,35 +16,35 @@ import OrgSettings from "./OrgSettings";
 import ProfileSettings from "./UserSettingsNew";
 
 const Settings = () => {
-  const router = useRouter();
-  const translations = useTranslations();
+  // const router = useRouter();
+  // const translations = useTranslations();
   const session = useCheckSession();
   const { user } = useUser();
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
   if (!session || !user) return;
 
-  const tab = searchParams.get("tab") || "account";
-  if (retrieveRole(user?.role) === "Super Admin") {
-    return (
-      <StyledTabs
-        value={tab}
-        onChange={(value) => router.push(`?tab=${value}`)}
-        w="100%"
-      >
-        <Tabs.Panel value="user">
-          <ProfileSettings />
-        </Tabs.Panel>
-        <Tabs.Panel value="organization">
-          <OrgSettings />
-        </Tabs.Panel>
-        <Tabs.Panel value="account">
-          <AccountSettings />
-        </Tabs.Panel>
-      </StyledTabs>
-    );
-  } else {
-    return <ProfileSettings />;
-  }
+  // const tab = searchParams.get("tab") || "account";
+  // if (retrieveRole(user?.role) === "Super Admin") {
+  //   return (
+  //     <StyledTabs
+  //       value={tab}
+  //       onChange={(value) => router.push(`?tab=${value}`)}
+  //       w="100%"
+  //     >
+  //       <Tabs.Panel value="user">
+  //         <ProfileSettings />
+  //       </Tabs.Panel>
+  //       <Tabs.Panel value="organization">
+  //         <OrgSettings />
+  //       </Tabs.Panel>
+  //       <Tabs.Panel value="account">
+  //         <AccountSettings />
+  //       </Tabs.Panel>
+  //     </StyledTabs>
+  //   );
+  // } else {
+  return <ProfileSettings />;
+  // }
 };
 
 export default Settings;

@@ -130,14 +130,38 @@ const ProfileSettings = () => {
     },
   });
 
+  const passwordForm = useForm({
+    initialValues: {
+      existingPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+    validate: {
+      existingPassword: isNotEmpty("Enter your existing password"),
+      newPassword: (value) => {
+        if (!value) return "Enter your new password";
+
+        const passwordRegex =
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+        if (!passwordRegex.test(value)) {
+          return "Password must be at least 8 characters long, include 1 uppercase, 1 lowercase, 1 number, and 1 special character.";
+        }
+        return null;
+      },
+      confirmPassword: (value, values) => {
+        if (!value) return "Please confirm your new password";
+        if (value !== values.newPassword) return "Passwords do not match";
+        return null;
+      },
+    },
+  });
+
   const profileForm = useForm({
     initialValues: {
       title: "",
       fullname: "",
       phone: "",
-      existingPassword: "",
-      newPassword: "",
-      confirmPassword: "",
     },
     validate: {
       title: isNotEmpty(translations("Select a title")),
@@ -147,31 +171,8 @@ const ProfileSettings = () => {
           return translations("Invalid phone number");
         return null;
       },
-      existingPassword: (value, values) =>
-        isAnyPasswordFieldDirty(values) ? passwordValidation(value) : null,
-      newPassword: (value, values) =>
-        isAnyPasswordFieldDirty(values) ? passwordValidation(value) : null,
-      confirmPassword: (value, values) => {
-        if (value !== values.newPassword && isAnyPasswordFieldDirty(values)) {
-          return translations(
-            "New Password and Confirm Password did not match",
-          );
-        }
-        return null;
-      },
     },
   });
-
-  function isAnyPasswordFieldDirty(values) {
-    return (
-      values.existingPassword !== "" ||
-      values.newPassword !== "" ||
-      values.confirmPassword !== "" ||
-      profileForm.isDirty("existingPassword") ||
-      profileForm.isDirty("newPassword") ||
-      profileForm.isDirty("confirmPassword")
-    );
-  }
 
   const settingsSections = [
     {
@@ -231,36 +232,7 @@ const ProfileSettings = () => {
       phone: values.phone ?? "",
     };
 
-    if (isAnyPasswordFieldDirty(values)) {
-      const passwordData = {
-        existingPassword: values.existingPassword,
-        newPassword: values.newPassword,
-      };
-      changePassword.mutate(passwordData);
-      profileForm.setValues({
-        existingPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    }
-
-    updateProfile.mutate(data, {
-      onSuccess: () => {
-        setIsEditProfileDialogOpen(false);
-        notifications.show({
-          title: translations("Success"),
-          message: translations("Profile updated successfully"),
-          color: "green",
-        });
-      },
-      onError: () => {
-        notifications.show({
-          title: translations("Error"),
-          message: translations("Failed to update profile"),
-          color: "red",
-        });
-      },
-    });
+    updateProfile.mutate(data);
   };
 
   // ============ Effects ============
