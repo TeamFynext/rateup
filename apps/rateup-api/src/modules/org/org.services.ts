@@ -76,7 +76,7 @@ export async function getTeamsMembers(orgId: string) {
 export async function getAllMembersWithTeams(orgId: string) {
   const members = await prisma.orgMember.findMany({
     where: { orgId: orgId, user: { active: true } },
-    include: {
+    select: {
       user: {
         select: {
           id: true,
@@ -90,6 +90,8 @@ export async function getAllMembersWithTeams(orgId: string) {
           isPaused: true,
         },
       },
+      status: true,
+      role: true,
     },
   });
   return members.map((m) => ({
@@ -103,6 +105,7 @@ export async function getAllMembersWithTeams(orgId: string) {
       team_code: tm.team.code,
     })),
     isPaused: m.user.isPaused,
+    status: m.status,
   }));
 }
 
