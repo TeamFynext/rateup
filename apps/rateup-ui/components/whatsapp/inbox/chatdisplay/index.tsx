@@ -92,7 +92,7 @@ export default function WaInboxChatDisplay({
             <WaInboxChatDisplayBody smallScreen={smallScreen} />
             {!isLoading && footerContent}
           </div>
-          <WaInboxContactDetails contact={contact} />
+          <WaInboxContactDetails contact={contact} groupId={""} />
         </div>
       )}
     </Paper>

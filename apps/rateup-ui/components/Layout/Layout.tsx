@@ -322,8 +322,11 @@ const SubNavLinks = ({
       ? [
           ...regularLinksText,
           <Divider key="label-text-divider" my="9.5" />,
-          <p className="text-muted-foreground text-xs mb-7" key="life-cycle">
-            LIFE CYCLE
+          <p
+            className="text-muted-foreground text-xs mb-7 font-medium"
+            key="life-cycle"
+          >
+            LIFECYCLE
           </p>,
           ...labelTexts,
         ]
