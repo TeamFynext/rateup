@@ -208,8 +208,12 @@ export const useContactsStore = create<ContactsStoreState>()(
               }))
               .sort(
                 (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime(),
+                  (filterKey.includes("sortBy:oldest")
+                    ? new Date(a.createdAt).getTime()
+                    : new Date(b.createdAt).getTime()) -
+                  (filterKey.includes("sortBy:oldest")
+                    ? new Date(b.createdAt).getTime()
+                    : new Date(a.createdAt).getTime()),
               )
               .map((c) => c.id);
             state.contactsByFilter[filterKey] = newList;
@@ -270,8 +274,12 @@ export const useContactsStore = create<ContactsStoreState>()(
                 }))
                 .sort(
                   (a, b) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime(),
+                    (state.currentFilterKey.includes("sortBy:oldest")
+                      ? new Date(a.createdAt).getTime()
+                      : new Date(b.createdAt).getTime()) -
+                    (state.currentFilterKey.includes("sortBy:oldest")
+                      ? new Date(b.createdAt).getTime()
+                      : new Date(a.createdAt).getTime()),
                 )
                 .map((c) => c.id);
 

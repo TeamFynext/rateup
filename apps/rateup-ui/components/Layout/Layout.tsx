@@ -30,7 +30,15 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
-import { PanelLeft, PanelLeftClose } from "lucide-react";
+import {
+  Bot,
+  ChevronDown,
+  ChevronRight,
+  Megaphone,
+  MessageCircle,
+  PanelLeft,
+  PanelLeftClose,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import SessionReact from "supertokens-auth-react/recipe/session";
@@ -63,6 +71,11 @@ import NavbarSkeleton from "../animation/skeleton/Navbar.Skeleton";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible";
 import CustomTooltip from "../ui/custom/CustomTooltip";
 import { useChatFilterStore } from "../whatsapp/inbox/chatselect/chatFilter";
 import classes from "./DoubleNavbar.module.css";
@@ -104,7 +117,6 @@ const MainNavLinks = ({
 }) => {
   return links.map((link, index) => {
     const LinkIcon = link.icon;
-    console.log("LinkIcon", LinkIcon);
     return (
       <CustomTooltip
         key={index}
@@ -158,7 +170,6 @@ const SubNavLinks = ({
 }) => {
   // Handler for label filter click
   const chatFilterStore = useChatFilterStore();
-  console.log("links", links);
   const handleLabelFilter = (labelName: string) => {
     // Update your filter state here
     chatFilterStore.setFilter({
@@ -178,6 +189,10 @@ const SubNavLinks = ({
   // Find labels section if it exists
   const labelsSection = links.find((link) => link.label === "Labels");
   const regularLinks = links.filter((link) => link.label !== "Labels");
+  const [isLifecycleOpen, setIsLifecycleOpen] = useState(true);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
+  const filter = useChatFilterStore.getState().filter;
+  const setFilter = useChatFilterStore.getState().setFilter;
 
   // Create icon links for regular items
   const regularLinksIcons = regularLinks
@@ -243,11 +258,44 @@ const SubNavLinks = ({
       />
     )) || [];
 
+  const inboxCategories = [
+    { id: "conversation", label: "Conversations", icon: MessageCircle },
+    { id: "campaign", label: "Campaigns", icon: Megaphone },
+    { id: "automation", label: "Automation", icon: Bot },
+  ];
+
+  const categoryIcons = inboxCategories.map((category) => {
+    const CategoryIcon = category?.icon;
+    return (
+      <CustomTooltip
+        trigger={
+          <Button
+            key={category.id}
+            variant={filter.category === category.id ? "secondary" : "ghost"}
+            className="h-9 w-full mb-2"
+            onClick={() => {
+              setFilter({
+                ...filter,
+                category:
+                  filter.category === category.id ? null : (category.id as any),
+              });
+            }}
+          >
+            <CategoryIcon className="w-5 h-5" />
+          </Button>
+        }
+        content={<p>{category.label}</p>}
+        side="right"
+      />
+    );
+  });
   // Combine all icon links, with divider if labels exist
   const linksIcon =
     labelsSection?.children?.length > 0
       ? [
           ...regularLinksIcons,
+          <Divider key="category-divider" my="xs" mr={"xs"} />,
+          ...categoryIcons,
           <Divider key="label-divider" my="xs" mr={"xs"} />,
           ...labelIcons,
         ]
@@ -303,11 +351,12 @@ const SubNavLinks = ({
             ? "secondary"
             : "ghost"
         }
+        key={`${label.label}-${index}`}
       >
         <div className="flex justify-between w-full">
           <div className="flex gap-2 items-center">
             <span className="text-sm">{label.emoji}</span>
-            <span className="text-sm">{label.label}</span>
+            <span className="text-sm font-medium">{label.label}</span>
           </div>
           {label?.count > 0 && (
             <Badge variant="secondary">{label?.count}</Badge>
@@ -316,19 +365,82 @@ const SubNavLinks = ({
       </Button>
     )) || [];
 
+  const Categories = () => (
+    <Collapsible open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="ghost"
+          className="w-full justify-between text-sm h-9 px-2"
+        >
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Categories
+          </span>
+          {isCategoriesOpen ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-0.5 pt-1">
+        {inboxCategories.map((category) => (
+          <Button
+            key={category.id}
+            variant={filter.category === category.id ? "secondary" : "ghost"}
+            className="w-full justify-start text-sm h-9"
+            onClick={() => {
+              setFilter({
+                ...filter,
+                category:
+                  filter.category === category.id ? null : (category.id as any),
+              });
+            }}
+          >
+            <div className="flex gap-2 items-center">
+              <category.icon className="w-4 h-4" />
+              <span className="text-sm font-medium">{category.label}</span>
+            </div>
+            {/* {category?.count > 0 && (
+              <Badge variant="secondary" className="ml-auto text-xs">
+                {category?.count}
+              </Badge>
+            )} */}
+          </Button>
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+  const LifeCycleLabel = () => (
+    <Collapsible open={isLifecycleOpen} onOpenChange={setIsLifecycleOpen}>
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="ghost"
+          className="w-full justify-between text-sm h-9 px-2"
+        >
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Lifecycle
+          </span>
+          {isLifecycleOpen ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-0.5 pt-1">
+        {...labelTexts}
+      </CollapsibleContent>
+    </Collapsible>
+  );
   // Combine all text links with divider if labels exist
   const linksText =
     labelsSection?.children?.length > 0
       ? [
           ...regularLinksText,
           <Divider key="label-text-divider" my="9.5" />,
-          <p
-            className="text-muted-foreground text-xs mb-7 font-medium"
-            key="life-cycle"
-          >
-            LIFECYCLE
-          </p>,
-          ...labelTexts,
+          <Categories key={"categories"} />,
+          <Divider key="categories-text-divider" my="9.5" />,
+          <LifeCycleLabel key={"lifecycles"} />,
         ]
       : regularLinksText;
 
@@ -543,9 +655,10 @@ const Navbar = ({
       setStatus(user?.status);
     }
   }, [user]);
-  const MainNavlink = mainNavLinks?.find(
+  const mainNavLink = mainNavLinks?.find(
     (link) => link.label === activeMainLink,
   );
+  const MainNavLinkIcon = mainNavLink?.icon;
   if (isPending) return <NavbarSkeleton />;
   return (
     <nav className={classes.navbar}>
@@ -605,13 +718,18 @@ const Navbar = ({
                 {largeScreen
                   ? desktopOpened && (
                       <div className="flex items-center gap-2">
-                        <MainNavlink.icon className="w-5 h-5 text-muted-foreground" />
+                        {MainNavLinkIcon && (
+                          <MainNavLinkIcon className="w-5 h-5 text-muted-foreground" />
+                        )}
+
                         <h3 className="text-lg font-bold">{activeMainLink}</h3>
                       </div>
                     )
                   : mobileOpened && (
                       <div className="flex items-center gap-2">
-                        <MainNavlink.icon className="w-5 h-5 text-muted-foreground" />
+                        {MainNavLinkIcon && (
+                          <MainNavLinkIcon className="w-5 h-5 text-muted-foreground" />
+                        )}
                         <h3 className="text-lg font-bold">{activeMainLink}</h3>
                       </div>
                     )}
@@ -794,8 +912,8 @@ export default function Layout({ children }) {
     if (!isFetched || isLoadingUserInfo) return;
 
     if (
-      "data" in userQueryData &&
-      userQueryData.data?.onboardingCompleted === false
+      userQueryData["data"] &&
+      userQueryData["data"]?.onboardingCompleted === false
     ) {
       router.replace("/login/complete-login");
     }
@@ -977,7 +1095,7 @@ export default function Layout({ children }) {
         setTotalCount(rest);
       }
     }
-  }, [inboxCount, filter.assignedTeams]);
+  }, [inboxCount, filter.assignedTeams, activeMainLink]);
 
   // Function to check if user has WhatsApp settings
   const checkWhatsAppSettings = (route?: string) => {
@@ -1033,7 +1151,6 @@ export default function Layout({ children }) {
       status={userInfo?.data?.status || UserAvailabilityStatus.offline}
     />
   );
-  console.log("activeMainlinl", activeMainLink);
   if (!pathname) return null;
 
   return (

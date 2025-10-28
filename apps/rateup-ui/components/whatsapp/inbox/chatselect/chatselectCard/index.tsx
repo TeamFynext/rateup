@@ -40,6 +40,7 @@ export default function WaInboxChatSelectCard({
 }: Readonly<WaInboxChatSelectCardProps>) {
   const params = useSearchParams();
   const lastMessage = contact?.lastMessage;
+  console.log("contact", contact);
 
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   let tab = params.get("tab") ?? "New";

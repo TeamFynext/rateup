@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 import { Flex, Group, Paper, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
+import { MessageSquare } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import useContactStore, {
@@ -78,21 +79,34 @@ export default function WaInboxChatDisplay({
   return (
     <Paper withBorder p={0} className="h-full">
       {!contact ? (
-        <NothingFound text={translations("Select a chat to see messages")} />
+        <div className="flex-1 flex items-center justify-center bg-muted/20 h-full">
+          <div className="text-center">
+            <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="mb-2">
+              {translations("Select a chat to see messages")}
+            </h3>
+          </div>
+        </div>
       ) : (
-        <div
-          className={`flex min-w-0 h-full ${showCustomerInfo ? "flex-1" : "flex-[2.2]"}`}
-        >
+        <div className={`flex min-w-0 h-full flex-1}`}>
           <div className="flex-1 flex flex-col min-w-0">
             <WaInboxChatDisplayHeader
               contact={contact}
               smallScreen={smallScreen}
               waSettings={waSettings}
             />
-            <WaInboxChatDisplayBody smallScreen={smallScreen} />
+            <WaInboxChatDisplayBody
+              smallScreen={smallScreen}
+              isContactDetailsOpened={showCustomerInfo}
+            />
             {!isLoading && footerContent}
           </div>
-          <WaInboxContactDetails contact={contact} groupId={""} />
+          <WaInboxContactDetails
+            contact={contact}
+            groupId={""}
+            isOpen={showCustomerInfo}
+            setIsOpen={setShowCustomerInfo}
+          />
         </div>
       )}
     </Paper>

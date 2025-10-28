@@ -1,9 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { JSX } from "react";
 
-import { Center, Paper, Stack, Table, Text } from "@mantine/core";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -19,12 +17,24 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
+import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTablePagination } from "./data-table-pagination";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  DataTableToolbar?: (props: DataTableToolbarProps<TData>) => JSX.Element;
+  DataTableToolbar?: (
+    props: DataTableToolbarProps<TData>,
+  ) => React.ReactElement;
+  onRowClick?: (row: TData) => void;
 }
 
 interface DataTableToolbarProps<TData> {
@@ -35,6 +45,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   DataTableToolbar,
+  onRowClick,
 }: Readonly<DataTableProps<TData, TValue>>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -72,61 +83,66 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <Stack gap="md" h={"100%"}>
+    <div className="flex flex-col gap-4">
       {DataTableToolbar && <DataTableToolbar table={table} />}
-      <Paper withBorder h={"100%"}>
-        <Table.ScrollContainer
-          maxHeight={"calc(100dvh - 160px)"}
-          minWidth={300}
-        >
-          <Table striped highlightOnHover stickyHeader>
-            <Table.Thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <Table.Tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Table.Th key={header.id}>
+      <div className="overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id} colSpan={header.colSpan}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
                           )}
-                    </Table.Th>
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  onClick={() => onRowClick?.(row.original)}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
                   ))}
-                </Table.Tr>
-              ))}
-            </Table.Thead>
-            <Table.Tbody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <Table.Tr
-                    key={row.id}
-                    bg={row.getIsSelected() ? "blue.0" : undefined}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <Table.Td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </Table.Td>
-                    ))}
-                  </Table.Tr>
-                ))
-              ) : (
-                <Table.Tr>
-                  <Table.Td colSpan={columns.length}>
-                    <Center h={96}>
-                      <Text c="dimmed">No results.</Text>
-                    </Center>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
-        </Table.ScrollContainer>
-      </Paper>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
       <DataTablePagination table={table} />
-    </Stack>
+    </div>
   );
 }
+
+export const createSortableHeader = (title: string) => {
+  return ({ column }: { column: any }) => {
+    return <DataTableColumnHeader column={column} title={title} />;
+  };
+};

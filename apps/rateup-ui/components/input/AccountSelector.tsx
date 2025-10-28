@@ -37,6 +37,7 @@ interface CommonAccountSelectorProps {
   multiple?: boolean;
   label?: string;
   value?: any;
+  hideLabel?: boolean;
 }
 
 type AccountSelectorProps =
@@ -52,6 +53,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     withAllOption = false,
     platform = MessagePlatform.WHATSAPP,
     multiple = false,
+    hideLabel = false,
     ...restProps
   } = props;
   const { data, isPending, isError } = useWaSettings();
@@ -116,15 +118,19 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     );
   }
   return (
-    <div className="flex flex-col">
-      {label && <p className="text-xs text-muted-foreground">{label}</p>}
+    <div>
+      {!hideLabel && (
+        <p className="text-xs text-muted-foreground">
+          {label ?? translations("Account")}
+        </p>
+      )}
       <Select
         value={value}
         defaultValue={accountOptions?.length && accountOptions[0]?.value}
         onValueChange={onChange}
         required
       >
-        <SelectTrigger className="w-[180px] !text-xs text-muted-foreground cursor-pointer hover:bg-accent">
+        <SelectTrigger className="!text-xs text-muted-foreground cursor-pointer hover:bg-accent">
           <SelectValue placeholder={translations("Select Account")} />
         </SelectTrigger>
         <SelectContent>
@@ -136,19 +142,5 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
         </SelectContent>
       </Select>
     </div>
-  );
-  return (
-    <ContainedSelection
-      allowDeselect={false}
-      data={accountOptions}
-      defaultValue={accountOptions?.length && accountOptions[0]?.value}
-      onChange={onChange}
-      value={value}
-      label={label ?? translations("Account")}
-      placeholder={translations("Select Account")}
-      nothingFoundMessage={translations("No account found!")}
-      required
-      // {...props}
-    />
   );
 }

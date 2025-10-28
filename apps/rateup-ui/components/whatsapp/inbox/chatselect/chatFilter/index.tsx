@@ -38,6 +38,7 @@ export type ChatFilter = {
   phone?: string;
   labels: string[];
   sortBy: "newest" | "oldest";
+  category: "conversation" | "campaign" | "automation";
 };
 interface Props {
   setFilterCount: (value: number) => void;
@@ -282,6 +283,7 @@ export const useChatFilterStore = create<ChatFilterStore>()(
         phone: "all",
         labels: [],
         sortBy: "newest",
+        category: null,
       },
       setFilter: (value) => set({ filter: value }),
     }),

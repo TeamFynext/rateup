@@ -90,34 +90,9 @@ async function handleCreateUser(values) {
   return createGoogleUser(values);
 }
 
-export function useChangePasswordMutation(setIsLoading) {
-  const router = useRouter();
+export function useChangePasswordMutation() {
   return useMutation({
     mutationFn: (values: IChangePassword) => changeUserPassword(values),
-    onSuccess: () => {
-      notifications.show({
-        id: "load-data",
-        color: "teal",
-        title: "Success",
-        message: "Password Changed Successfully!",
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
-      setIsLoading(false);
-    },
-    onError: (error: any) => {
-      console.error("Error changed password:", error.message);
-      notifications.show({
-        id: "load-data",
-        color: "red",
-        title: "Failed",
-        message: error?.response?.data?.message,
-        icon: <IconCheck size="1rem" />,
-        autoClose: 3000,
-      });
-
-      setIsLoading(false);
-    },
   });
 }
 

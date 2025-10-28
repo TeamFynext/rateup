@@ -2,20 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  ActionIcon,
-  Avatar,
-  Divider,
-  Group,
-  NumberInput,
-  Paper,
-  ScrollAreaAutosize,
-  Select,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { NumberInput, Paper, Select, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
   IconBrandWhatsapp,
@@ -59,6 +46,7 @@ import { LifecycleInput } from "@/components/Contacts/LifecycleSelector";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CreativeAvatar } from "@/components/ui/creative-avatar";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -74,6 +62,8 @@ import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 interface WaInboxContactDetailsProps {
   contact: any;
   groupId: string;
+  isOpen: boolean;
+  setIsOpen: (value: boolean) => void;
 }
 
 const contactSchema = z.object({
@@ -101,8 +91,9 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 export default function WaInboxContactDetails({
   contact,
   groupId,
+  isOpen,
+  setIsOpen,
 }: WaInboxContactDetailsProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const editContactMutation = useEditContactMutation(null);
   const { customFields } = useCustomFieldsContext();
   const { updateContactById, setSelectedContact } = useContactsStore();
@@ -341,12 +332,10 @@ export default function WaInboxContactDetails({
           transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
         >
           <div className="mx-auto mb-2.5 inline-block">
-            <Avatar
+            <CreativeAvatar
               src={contact?.profilePic}
               size="xl"
-              radius="50%"
               name={contact?.name || contact?.phone}
-              color="initials"
             />
           </div>
           <h3 className="mb-1 text-sm">{contact?.name || contact?.phone}</h3>
@@ -585,12 +574,10 @@ export default function WaInboxContactDetails({
         transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
       >
         <div className="mx-auto mb-2.5 inline-block">
-          <Avatar
+          <CreativeAvatar
             src={contact?.profilePic}
             size="xl"
-            radius="50%"
             name={contact?.name || contact?.phone}
-            color="initials"
           />
         </div>
         <h3 className="mb-1 text-sm">{contact?.name || contact?.phone}</h3>

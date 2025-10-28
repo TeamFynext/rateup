@@ -10,11 +10,13 @@ import React, {
 import { ActionIcon, Center, Loader } from "@mantine/core";
 import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import clsx from "clsx";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { IgReceiveMessageBody } from "@/types/global";
+import { cn } from "@/lib/utils";
 import { getMessagesFromIDB } from "@/app/dashboard/inbox/idb";
 import {
   useContactsStore,
@@ -41,7 +43,7 @@ const reverseScroll = (e) => {
   e.currentTarget.scrollTop -= e.deltaY;
 };
 
-const WaInboxChatDisplayBody = (props) => {
+const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
   const parentRef = useRef(null);
   const { selectedContact } = useContactsStore();
   const { filter } = useChatFilterStore();
@@ -147,7 +149,7 @@ const WaInboxChatDisplayBody = (props) => {
     <>
       <div
         ref={parentRef}
-        className="relative h-full p-2 scale-y-[-1] overflow-y-auto bg-gradient-to-b from-muted/10 to-background "
+        className="relative h-full p-2 scale-y-[-1] overflow-y-auto bg-gradient-to-b from-muted/10 to-background"
       >
         {tempMessages?.[selectedContact.id]?.length > 0 && (
           <div className="relative p-6 max-w-4xl mx-auto mb-8">
@@ -221,7 +223,13 @@ const WaInboxChatDisplayBody = (props) => {
           })}
         </div>
       </div>
-      <div className={classes.affix}>
+      <div
+        className={classes.affix}
+        style={{
+          right: isContactDetailsOpened ? "395px" : "58px",
+          bottom: isContactDetailsOpened ? "180px" : "155px",
+        }}
+      >
         <ActionIcon
           variant="transparent"
           onClick={() => rowVirtualizer.scrollToIndex(0)}

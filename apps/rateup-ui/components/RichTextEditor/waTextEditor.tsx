@@ -236,6 +236,7 @@ function WaTextEditor({
         }}
         platform={platform as MessagePlatform}
         disabled={platform === MessagePlatform.INSTAGRAM}
+        hideLabel={true}
       />
     );
   };
@@ -371,7 +372,7 @@ function WaTextEditor({
               </div>
             </div>
             <div className="flex justify-between items-center">
-              <div className="flex p-2">
+              <div className="flex flex-wrap p-2">
                 <RichTextEditor.ControlsGroup className="mt-1">
                   <InsertEmoji />
                 </RichTextEditor.ControlsGroup>

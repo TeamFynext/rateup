@@ -20,6 +20,18 @@ function subscriptionErrorHandler(error: AxiosError) {
   return Promise.reject(error);
 }
 axiosClient.interceptors.response.use((_) => _, subscriptionErrorHandler);
+// TODO: Enable this generic error handler after testing
+// axiosClient.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response?.data?.message) {
+//       error.message = error.response.data.message;
+//     } else if (error.response?.data?.error) {
+//       error.message = error.response.data.error;
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 const axiosClientIP = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_API_IP}/api`,

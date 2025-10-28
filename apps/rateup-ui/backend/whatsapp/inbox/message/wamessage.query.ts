@@ -86,13 +86,14 @@ export const useChatFilterData = () => {
   });
 };
 
-export const useFilteredContacts = (filterData: string) => {
+export const useFilteredContacts = (filterData: string, isEnabled: boolean) => {
   return useInfiniteQuery({
     queryKey: ["contacts", "filtered", filterData],
     initialPageParam: 1,
     queryFn: ({ pageParam }) => getFilteredContacts(filterData, pageParam),
     getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
     placeholderData: { pages: [], pageParams: [] },
+    enabled: isEnabled,
   });
 };
 

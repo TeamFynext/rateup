@@ -1,62 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { CreditCard, Package, Receipt } from "lucide-react";
 
-import { Stack, Tabs, Title } from "@mantine/core";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { RateupButtonPrimary } from "../../../components/Button/RateupButtons";
 import RazorpayPlans from "./plans";
 import RazorpaySubscriptions from "./subscriptions";
 
-enum RazorpayTabs {
-  plans = "Plans",
-  subscriptions = "Subscriptions",
-}
 const index = () => {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<RazorpayTabs>(RazorpayTabs.plans);
-
   return (
-    <Stack>
-      <Title order={3}>Razorpay Dashboard</Title>
-      <Tabs
-        value={activeTab}
-        onChange={(value) => setActiveTab(value as RazorpayTabs)}
-        keepMounted={false}
-        styles={{ tab: { fontSize: "18px", borderBottomWidth: "3px" } }}
-      >
-        <Tabs.List>
-          <Tabs.Tab
-            value={RazorpayTabs.plans}
-            c={
-              activeTab === RazorpayTabs.plans
-                ? "var(--tertiary-color)"
-                : "GrayText"
-            }
-          >
-            Plans
-          </Tabs.Tab>
-          <Tabs.Tab
-            value={RazorpayTabs.subscriptions}
-            c={
-              activeTab === RazorpayTabs.subscriptions
-                ? "var(--tertiary-color)"
-                : "GrayText"
-            }
-          >
-            Subscriptions
-          </Tabs.Tab>
-        </Tabs.List>
+    <div>
+      {/* Header Section */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <CreditCard className="h-5 w-5 text-primary" />
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Razorpay Dashboard
+          </h1>
+        </div>
+      </div>
 
-        <Tabs.Panel value={RazorpayTabs.plans}>
+      <p className="text-sm text-muted-foreground">
+        Manage your Razorpay plans and subscriptions from a unified dashboard
+      </p>
+      <Tabs defaultValue="plans">
+        <TabsList>
+          <TabsTrigger value="plans">
+            <Package className="h-4 w-4" />
+            Plans
+          </TabsTrigger>
+          <TabsTrigger value="subscriptions">
+            <Receipt className="h-4 w-4" />
+            Subscriptions
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="plans">
           <RazorpayPlans />
-        </Tabs.Panel>
-        <Tabs.Panel value={RazorpayTabs.subscriptions}>
+        </TabsContent>
+        <TabsContent value="subscriptions">
           <RazorpaySubscriptions />
-        </Tabs.Panel>
+        </TabsContent>
       </Tabs>
-    </Stack>
+    </div>
   );
 };
 

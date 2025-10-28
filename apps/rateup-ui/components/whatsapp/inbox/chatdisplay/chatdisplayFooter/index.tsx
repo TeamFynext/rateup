@@ -68,15 +68,6 @@ export default function WaInboxChatDisplayFooter({
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
   const { data: waSettings } = useWaSettings();
-  const phone_number_id = useMemo(
-    () =>
-      waSettings
-        ? waSettings?.find(
-            (s) => s?.phone === contact?.lastMessage?.sourceIdentifier,
-          )?.phoneId
-        : "",
-    [waSettings],
-  );
   const { updateContactById } = useContactsStore();
   const form = useForm({
     initialValues: {
