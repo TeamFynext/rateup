@@ -15,6 +15,7 @@ import {
   getTeamById,
   deleteTeamMember,
   addMemberToTeams,
+  getUsersNotInTeam,
 } from "./team.service";
 import {
   CreateTeamInput,
@@ -199,6 +200,23 @@ export async function getTeamMembersHandler(
     } else {
       reply.send(members);
     }
+  } catch (e) {
+    reply.code(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function getUsersNotInTeamHandler(
+  request: FastifyRequest<{
+    Params: GetTeamMembersInput;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const teamId = request.params.teamId;
+    const members = await getUsersNotInTeam(teamId, orgId);
+
+    reply.send(members);
   } catch (e) {
     reply.code(500).send({ message: "Internal server error" });
   }

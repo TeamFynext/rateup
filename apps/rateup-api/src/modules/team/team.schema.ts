@@ -75,6 +75,7 @@ const editTeamSchema = z.object({
   googleLink: z.string().optional(),
   reviewPageLinks: z.any().optional(),
   tags: z.array(z.string()).optional(),
+  color: z.string().optional(),
 });
 
 const idParamRequestSchema = z.object({

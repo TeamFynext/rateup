@@ -303,7 +303,7 @@ model Team {
   createdAt       DateTime @default(now())
   name            String
   code            String
-  color           String   @default("null")
+  color           String   @default("blue")
   googleLink      String?
   reviewPageLinks Json?
   tags            String[] @default([])

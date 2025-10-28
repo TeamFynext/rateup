@@ -567,6 +567,31 @@ export function getTeamMembers(input: GetTeamMembersInput) {
   });
 }
 
+export async function getUsersNotInTeam(teamId: string, orgId: string) {
+  return prisma.$queryRawUnsafe<
+    { id: string; name: string | null; email: string; role: string }[]
+  >(
+    `
+    SELECT 
+      u.id,
+      u.name,
+      u.email,
+      om.role
+    FROM "User" u
+    INNER JOIN "OrgMember" om ON om."userId" = u.id
+    WHERE om."orgId" = $1
+      AND u.id NOT IN (
+        SELECT "userId"
+        FROM "TeamMember"
+        WHERE "teamId" = $2
+      )
+    ORDER BY u.name ASC;
+  `,
+    orgId,
+    teamId,
+  );
+}
+
 export async function getTeamMembersAndFromInvitation(
   orgId: string,
   input: GetTeamMembersInput,
@@ -724,7 +749,7 @@ export async function getTeamIdsBySurveyMapId(mapId: string[]) {
   return teams.map(({ teamId }) => teamId);
 }
 export async function editTeam(
-  { name, code, googleLink, reviewPageLinks }: EditTeamInput,
+  { name, code, googleLink, reviewPageLinks, color }: EditTeamInput,
   params: IdParamInput,
   request: FastifyRequest,
   reply: FastifyReply,
@@ -743,6 +768,7 @@ export async function editTeam(
         code,
         googleLink,
         reviewPageLinks,
+        color,
       },
     });
     return team;
