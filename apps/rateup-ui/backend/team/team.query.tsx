@@ -13,6 +13,7 @@ import {
   deleteInviteById,
   deleteTeamById,
   editTeam,
+  getNotTeamMembers,
   getSurveyLanguagesFromTeam,
   getTeamMembersFromInvitation,
   getTeamsByUser,
@@ -31,6 +32,14 @@ export function useTeamMembersFromInvitation(teamId: string) {
   return useQuery({
     queryKey: ["invitedTeamMembers", teamId],
     queryFn: () => getTeamMembersFromInvitation(teamId),
+    enabled: !!teamId,
+  });
+}
+
+export function useNotTeamMembers(teamId: string) {
+  return useQuery({
+    queryKey: ["notTeamMembers", teamId],
+    queryFn: () => getNotTeamMembers(teamId),
     enabled: !!teamId,
   });
 }
@@ -219,6 +228,8 @@ export function useAddUsertoTeams() {
     mutationFn: addUsertoTeams,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["notTeamMembers"] });
+      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
       showSuccessToast("success");
     },
     onError: () => {
