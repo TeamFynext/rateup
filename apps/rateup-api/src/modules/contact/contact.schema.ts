@@ -44,6 +44,12 @@ const updateContactSchema = z.object({
   igsId: z.string().optional(),
   profilePic: z.string().optional(),
   source: z.string().optional(),
+  lastMessageBody: z.any().optional(),
+  lastMessageWaCreatedAt: z.string().optional(),
+  lastMessagePlatform: z.string().optional(),
+  lastReceivedMetadata: z.any().optional(),
+  lastSentMessageTimeStamp: z.string().optional(),
+  lastMessageSourceIdentifier: z.string().optional(),
 });
 const updateContactLabelsSchema = z.object({
   lifecycleId: z.string(),

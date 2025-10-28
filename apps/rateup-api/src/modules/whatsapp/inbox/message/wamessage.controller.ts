@@ -131,6 +131,17 @@ export async function handleWaMessages(
       ...(type === "receive"
         ? { lastReceivedMessageTimeStamp: waTimeStamp }
         : {}),
+      ...(type === "send" ? { lastSentMessageTimeStamp: waTimeStamp } : {}),
+      lastMessageBody: messageBody,
+      lastMessageWaCreatedAt: waTimeStamp,
+      lastMessagePlatform: sourcePlatform,
+      ...(type === "receive"
+        ? {
+            lastReceivedMetadata: messageBody?.receive?.metadata || null,
+          }
+        : {}),
+      lastMessageSourceIdentifier: sourceIdentifier,
+
       ...contactCore,
       ...additionalData,
     };

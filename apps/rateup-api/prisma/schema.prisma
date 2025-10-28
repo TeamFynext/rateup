@@ -123,8 +123,8 @@ model Org {
   isPaused                 Boolean? @default(false)
   waAssignedChatPermission String   @default("All")
 
-  onboarding              Json?
-  onboardingCompleted     Boolean @default(false)
+  onboarding          Json?
+  onboardingCompleted Boolean @default(false)
 
   members                  OrgMember[]
   teams                    Team[]
@@ -537,6 +537,13 @@ model Contact {
   lifecycleId                  String?                   @db.Uuid
   customFields                 ContactCustomFieldValue[]
 
+  lastMessageBody          Json?
+  lastMessageWaCreatedAt   DateTime?
+  lastMessagePlatform      String?
+  lastReceivedMetadata     Json?
+  lastMessageSourceIdentifier String?
+  lastSentMessageTimeStamp DateTime?
+
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
   @@unique([igsId, orgId], name: "contact_igsid_org_id_unique")
@@ -544,6 +551,10 @@ model Contact {
   @@index([orgId, id])
   @@index([orgId, waMessageAssignStatus])
   @@index([lastReceivedMessageTimeStamp])
+  @@index([orgId, waMessageAssignStatus, lastReceivedMessageTimeStamp(sort: Desc)])
+  @@index([orgId, blockedOnWhatsApp, lastReceivedMessageTimeStamp(sort: Desc)])
+  @@index([orgId, lifecycleId])
+  @@index([name])
 }
 
 model ContactCustomField {
@@ -582,6 +593,9 @@ model WaInboxAssign {
 
   @@unique([contactId, assignedUserId], name: "contact_id_assigned_user_id_unique")
   @@index([contactId, assignedUserId])
+  @@index([contactId, teamId])
+  @@index([assignedUserId])
+  @@index([teamId])
 }
 
 model UserAssignedCount {
@@ -1342,6 +1356,8 @@ model WaMessage {
 
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
+  @@index([sourceIdentifier, contactId])
+  @@index([contactId, sourceIdentifier])
 }
 
 model WaMessageCampaginParticipantMap {
@@ -1369,8 +1385,8 @@ model WaAutomatedReply {
   whatsappSettingsPhoneId  String?
   whatsappSettingsPhoneIds String[] @default([]) //for multiple whatsapp integration
 
-  isEnabled                Boolean  @default(true)
-  sendOnceIn24Hours        Boolean  @default(true)
+  isEnabled         Boolean @default(true)
+  sendOnceIn24Hours Boolean @default(true)
 
   waAutomatedReplyMessages WaAutomatedReplyMessage[]
   WaAutomatedReplyCommands WaAutomatedReplyCommands[]
@@ -1780,16 +1796,16 @@ model NotificationSetting {
 }
 
 model BookDemo {
-  id              String  @id @default(cuid())
-  firstName       String
-  lastName        String
-  workEmail       String
-  phoneNumber     String
-  companyName     String
-  teamSize        String
-  preferredTime   String
-  primaryUseCase  String
-  additionalInfo  String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  firstName      String
+  lastName       String
+  workEmail      String
+  phoneNumber    String
+  companyName    String
+  teamSize       String
+  preferredTime  String
+  primaryUseCase String
+  additionalInfo String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
