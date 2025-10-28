@@ -82,6 +82,7 @@ const WaChatFilterSchema = z.object({
   phone: z.string(),
   labels: z.array(z.string()).optional(),
   sortBy: z.string().optional(),
+  category: z.string().optional(),
 });
 
 const waChatFilterQuerySchema = PaginateQuerySchema.extend({
