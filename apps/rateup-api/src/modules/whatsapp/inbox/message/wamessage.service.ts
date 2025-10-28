@@ -451,7 +451,6 @@ export async function filterChats(
 
       //category filter
       if (bodyFilterProps?.category?.length) {
-        console.log("bodyFilterProps?.category", bodyFilterProps?.category);
         if (bodyFilterProps?.category === "conversation") {
           filters.push(`NOT EXISTS (SELECT 1 FROM "CampaignParticipant" cpt WHERE cpt."contactId" = c.id) AND 
               NOT EXISTS (SELECT 1 FROM "WaAutomatedReplyMessage" aut WHERE aut."phone" = c."phone")`);
