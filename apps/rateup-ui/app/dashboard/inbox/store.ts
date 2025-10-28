@@ -489,9 +489,6 @@ export const useMessagesStore = create<MessagesStore>()(
           const updatedMessages = [...entry.messages];
           const updatedMessage = { ...updatedMessages[idx], ...data };
           updatedMessages[idx] = updatedMessage;
-          console.log("updatedMessages[idx]", updatedMessage[idx]);
-          console.log("data", data);
-          console.log("updatedMessage", updatedMessage);
           const sorted = data.waCreatedAt
             ? updatedMessages.sort(
                 (a, b) =>
