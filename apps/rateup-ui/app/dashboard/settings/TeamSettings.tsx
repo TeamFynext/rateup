@@ -132,13 +132,15 @@ const Team = () => {
             Organize members into teams and manage roles
           </p>
         </div>
-        <Button
-          className="bg-gradient-to-r from-rateup-blue to-rateup-blue hover:shadow-lg transition-all"
-          onClick={() => setIsCreateTeamDialogOpen(true)}
-        >
-          <Plus className="w-4 h-4" />
-          Create Team
-        </Button>
+        {user?.role === UserRole.SUPADM && (
+          <Button
+            className="bg-gradient-to-r from-rateup-blue to-rateup-blue hover:shadow-lg transition-all"
+            onClick={() => setIsCreateTeamDialogOpen(true)}
+          >
+            <Plus className="w-4 h-4" />
+            Create Team
+          </Button>
+        )}
       </div>
       {/* show teams */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -220,144 +222,149 @@ const Team = () => {
         ))}
       </div>
       {/* create team */}
-      <Dialog
-        open={isCreateTeamDialogOpen}
-        onOpenChange={setIsCreateTeamDialogOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Team</DialogTitle>
-            <DialogDescription>
-              Organize your team members into groups for better collaboration
-              and management
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="team-name">Team Name</Label>
-              <Input
-                id="team-name"
-                placeholder="e.g., Customer Support Team"
-                className="h-10 border-2 border-gray-200 focus:border-rateup-blue"
-                {...createTeamForm.getInputProps("name")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="team-name">Team Code</Label>
-              <Input
-                id="team-code"
-                placeholder="e.g., TEAM"
-                className="h-10 border-2 border-gray-200 focus:border-rateup-blue"
-                {...createTeamForm.getInputProps("code")}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Team Color</Label>
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                {colorArray.map((color, index) => {
-                  const isSelected = createTeamForm.values.color === color.from;
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      className={`w-full aspect-square rounded-lg border-2 ${
-                        isSelected
-                          ? "border-black scale-105"
-                          : "border-transparent"
-                      } transition-all hover:scale-105`}
-                      style={{
-                        background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
-                      }}
-                      onClick={() =>
-                        createTeamForm.setFieldValue("color", color.from)
-                      }
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              disabled={isCreating}
-              className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
-              onClick={() => {
-                const values = createTeamForm.values;
-
-                // Validate first
-                const validation = createTeamForm.validate();
-                if (validation.hasErrors) return; // stop if validation fails
-
-                handleSubmit(values);
-              }}
-            >
-              {isCreating ? "Creating..." : "Create Team"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {/* manage teams */}
-      <Dialog
-        open={isManageTeamDialogOpen}
-        onOpenChange={setIsManageTeamDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[500px]">
-          <div className="py-2 flex flex-col gap-4">
+      {user?.role === UserRole.SUPADM && (
+        <Dialog
+          open={isCreateTeamDialogOpen}
+          onOpenChange={setIsCreateTeamDialogOpen}
+        >
+          <DialogContent>
             <DialogHeader>
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all`}
-                  style={{
-                    backgroundColor: editedColor,
-                  }}
-                >
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <DialogTitle>{selectedTeam?.name}</DialogTitle>
-                  <DialogDescription className="text-xs">
-                    Created:{" "}
-                    {selectedTeam?.createdAt
-                      ? dayjs(selectedTeam.createdAt).format("DD MMM YYYY")
-                      : "—"}
-                  </DialogDescription>
+              <DialogTitle>Create New Team</DialogTitle>
+              <DialogDescription>
+                Organize your team members into groups for better collaboration
+                and management
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="team-name">Team Name</Label>
+                <Input
+                  id="team-name"
+                  placeholder="e.g., Customer Support Team"
+                  className="h-10 border-2 border-gray-200 focus:border-rateup-blue"
+                  {...createTeamForm.getInputProps("name")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="team-name">Team Code</Label>
+                <Input
+                  id="team-code"
+                  placeholder="e.g., TEAM"
+                  className="h-10 border-2 border-gray-200 focus:border-rateup-blue"
+                  {...createTeamForm.getInputProps("code")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Team Color</Label>
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                  {colorArray.map((color, index) => {
+                    const isSelected =
+                      createTeamForm.values.color === color.from;
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        className={`w-full aspect-square rounded-lg border-2 ${
+                          isSelected
+                            ? "border-black scale-105"
+                            : "border-transparent"
+                        } transition-all hover:scale-105`}
+                        style={{
+                          background: `linear-gradient(to bottom right, ${color.from}, ${color.to})`,
+                        }}
+                        onClick={() =>
+                          createTeamForm.setFieldValue("color", color.from)
+                        }
+                      />
+                    );
+                  })}
                 </div>
               </div>
-            </DialogHeader>
+            </div>
+            <DialogFooter>
+              <Button
+                disabled={isCreating}
+                className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
+                onClick={() => {
+                  const values = createTeamForm.values;
 
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4">
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="members">Members</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
-              <ScrollArea className="h-[45vh]">
-                <TabsContent value="details">
-                  <EditTeam
-                    selectedTeam={selectedTeam}
-                    editedColor={editedColor}
-                    setIsManageTeamDialogOpen={setIsManageTeamDialogOpen}
-                    setEditedColor={setEditedColor}
-                  />
-                </TabsContent>
+                  // Validate first
+                  const validation = createTeamForm.validate();
+                  if (validation.hasErrors) return; // stop if validation fails
 
-                <TabsContent value="members" className="space-y-3">
-                  <AddMembers selectedTeam={selectedTeam} />
-                </TabsContent>
+                  handleSubmit(values);
+                }}
+              >
+                {isCreating ? "Creating..." : "Create Team"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+      {/* manage teams */}
+      {user?.role === UserRole.SUPADM && (
+        <Dialog
+          open={isManageTeamDialogOpen}
+          onOpenChange={setIsManageTeamDialogOpen}
+        >
+          <DialogContent className="sm:max-w-[500px]">
+            <div className="py-2 flex flex-col gap-4">
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all`}
+                    style={{
+                      backgroundColor: editedColor,
+                    }}
+                  >
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle>{selectedTeam?.name}</DialogTitle>
+                    <DialogDescription className="text-xs">
+                      Created:{" "}
+                      {selectedTeam?.createdAt
+                        ? dayjs(selectedTeam.createdAt).format("DD MMM YYYY")
+                        : "—"}
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
 
-                <TabsContent value="settings" className="space-y-4">
-                  <DeleteTeam
-                    selectedTeam={selectedTeam}
-                    translations={translations}
-                    setIsManageTeamDialogOpen={setIsManageTeamDialogOpen}
-                  />
-                </TabsContent>
-              </ScrollArea>
-            </Tabs>
-          </div>
-        </DialogContent>
-      </Dialog>
+              <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                  <TabsTrigger value="members">Members</TabsTrigger>
+                  <TabsTrigger value="settings">Settings</TabsTrigger>
+                </TabsList>
+                <ScrollArea className="h-[45vh]">
+                  <TabsContent value="details">
+                    <EditTeam
+                      selectedTeam={selectedTeam}
+                      editedColor={editedColor}
+                      setIsManageTeamDialogOpen={setIsManageTeamDialogOpen}
+                      setEditedColor={setEditedColor}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="members" className="space-y-3">
+                    <AddMembers selectedTeam={selectedTeam} />
+                  </TabsContent>
+
+                  <TabsContent value="settings" className="space-y-4">
+                    <DeleteTeam
+                      selectedTeam={selectedTeam}
+                      translations={translations}
+                      setIsManageTeamDialogOpen={setIsManageTeamDialogOpen}
+                    />
+                  </TabsContent>
+                </ScrollArea>
+              </Tabs>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
@@ -527,7 +534,7 @@ function AddMembers({ selectedTeam }) {
               <span className="sm:hidden">Add</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-4 h-[300px]" align="end">
+          <PopoverContent className="p-4 h-[300px]" align="end">
             <div className="space-y-3">
               <div>
                 <h4 className="text-sm sm:text-base">Add Members to Team</h4>
@@ -548,7 +555,7 @@ function AddMembers({ selectedTeam }) {
                             teamIds: selectedTeam.id,
                           });
                         }}
-                        className="flex flex-col sm:flex-row w-full items-start sm:items-center gap-2 sm:gap-2 p-2 rounded-lg text-left hover:bg-gray-50 transition-colors"
+                        className="flex w-full items-start sm:items-center gap-2 sm:gap-2 p-2 rounded-lg text-left hover:bg-gray-50 transition-colors"
                       >
                         <Avatar className="w-8 h-8 shrink-0">
                           <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs sm:text-sm">
@@ -557,20 +564,19 @@ function AddMembers({ selectedTeam }) {
                         </Avatar>
 
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm sm:text-base truncate">
-                            {user.name}
-                          </p>
-                          <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                          <div className="flex gap-1 items-center">
+                            <p className="text-sm truncate">{user.name}</p>
+                            <Badge
+                              variant="outline"
+                              className="text-xs capitalize shrink-0"
+                            >
+                              {user.role}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
                             {user.email}
                           </p>
                         </div>
-
-                        <Badge
-                          variant="outline"
-                          className="text-xs sm:text-sm capitalize shrink-0"
-                        >
-                          {user.role}
-                        </Badge>
                       </button>
                     ))}
                   </div>

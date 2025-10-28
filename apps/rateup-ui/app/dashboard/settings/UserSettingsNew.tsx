@@ -88,6 +88,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/context/UserContext";
+import { UserRole } from "@/utils/enums";
 
 import { SAVE_HOTKEY } from "../../../utils/constants";
 import Team from "./TeamSettings";
@@ -479,15 +480,17 @@ const ProfileSettings = () => {
                     </p>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => setIsBusinessDialogOpen(true)}
-                >
-                  <Edit className="w-4 h-4" />
-                  Edit
-                </Button>
+                {user?.role === UserRole.SUPADM && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setIsBusinessDialogOpen(true)}
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit
+                  </Button>
+                )}
               </div>
 
               {/* Business Overview */}
@@ -499,12 +502,14 @@ const ProfileSettings = () => {
                       {user?.orgName?.slice(0, 1)}
                     </AvatarFallback>
                   </Avatar>
-                  <button
-                    onClick={() => setIsBusinessDialogOpen(true)}
-                    className="absolute bottom-0 right-0 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-full p-1 sm:p-1.5 shadow-md transition-all group-hover:scale-110"
-                  >
-                    <Camera className="w-3 h-3 text-gray-600" />
-                  </button>
+                  {user?.role === UserRole.SUPADM && (
+                    <button
+                      onClick={() => setIsBusinessDialogOpen(true)}
+                      className="absolute bottom-0 right-0 bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-full p-1 sm:p-1.5 shadow-md transition-all hover:scale-110"
+                    >
+                      <Camera className="w-3 h-3 text-gray-600" />
+                    </button>
+                  )}
                 </div>
                 <div>
                   <p className="font-medium text-base">{user?.orgName}</p>
@@ -568,172 +573,180 @@ const ProfileSettings = () => {
               </div>
             </Card>
             {/* Business Information Dialog */}
-            <Dialog
-              open={isBusinessDialogOpen}
-              onOpenChange={setIsBusinessDialogOpen}
-            >
-              <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                  <DialogTitle>Business Information</DialogTitle>
-                  <DialogDescription>
-                    Update your organization details and upload your company
-                    logo.
-                  </DialogDescription>
-                </DialogHeader>
+            {user?.role === UserRole.SUPADM && (
+              <Dialog
+                open={isBusinessDialogOpen}
+                onOpenChange={setIsBusinessDialogOpen}
+              >
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Business Information</DialogTitle>
+                    <DialogDescription>
+                      Update your organization details and upload your company
+                      logo.
+                    </DialogDescription>
+                  </DialogHeader>
 
-                <form
-                  onSubmit={orgForm.onSubmit(onOrgSubmit)}
-                  className="space-y-4 py-4"
-                >
-                  {/* Logo Upload */}
-                  <div className="flex items-center gap-6">
-                    <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
-                      <AvatarImage src={orgAvatarSrc || ""} />
-                      <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xl">
-                        {user?.orgName?.slice(0, 1)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <Label htmlFor="orgLogoUpload" className="cursor-pointer">
-                        <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
-                          <Upload className="w-4 h-4" />
-                          <span className="text-sm">Upload Logo</span>
-                        </div>
-                        <input
-                          id="orgLogoUpload"
-                          type="file"
-                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              toggleCropDialog();
-                              setSelectedImage({
-                                name: file.name,
-                                url: URL.createObjectURL(file),
-                              });
-                              e.target.value = "";
-                              setIsLogoUpload(true);
-                            }
-                          }}
+                  <form
+                    onSubmit={orgForm.onSubmit(onOrgSubmit)}
+                    className="space-y-4 py-4"
+                  >
+                    {/* Logo Upload */}
+                    <div className="flex items-center gap-6">
+                      <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
+                        <AvatarImage src={orgAvatarSrc || ""} />
+                        <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xl">
+                          {user?.orgName?.slice(0, 1)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <Label
+                          htmlFor="orgLogoUpload"
+                          className="cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
+                            <Upload className="w-4 h-4" />
+                            <span className="text-sm">Upload Logo</span>
+                          </div>
+                          <input
+                            id="orgLogoUpload"
+                            type="file"
+                            accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                toggleCropDialog();
+                                setSelectedImage({
+                                  name: file.name,
+                                  url: URL.createObjectURL(file),
+                                });
+                                e.target.value = "";
+                                setIsLogoUpload(true);
+                              }
+                            }}
+                          />
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          JPG, PNG or GIF. Max size 2MB.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Organization Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="businessName">Business Name</Label>
+                        <Input
+                          id="businessName"
+                          {...orgForm.getInputProps("name")}
+                          placeholder="Enter your business name"
                         />
-                      </Label>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        JPG, PNG or GIF. Max size 2MB.
-                      </p>
-                    </div>
-                  </div>
+                      </div>
 
-                  {/* Organization Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="businessName">Business Name</Label>
-                      <Input
-                        id="businessName"
-                        {...orgForm.getInputProps("name")}
-                        placeholder="Enter your business name"
-                      />
+                      <div className="space-y-2">
+                        <Label htmlFor="industry">Industry</Label>
+                        <Select
+                          defaultValue={
+                            user?.onboarding?.industry || "E-commerce"
+                          }
+                          onValueChange={(val) =>
+                            orgForm.setFieldValue("industry", val)
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {industries.map((industry) => (
+                              <SelectItem key={industry} value={industry}>
+                                {industry}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="website">Website</Label>
+                        <Input
+                          id="website"
+                          {...orgForm.getInputProps("website")}
+                          placeholder="https://your-website.com"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="businessPhone">Business Phone</Label>
+                        <Input
+                          id="businessPhone"
+                          {...orgForm.getInputProps("phone")}
+                          placeholder="+1 (555) 123-4567"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="businessEmail">Business Email</Label>
+                        <Input
+                          id="businessEmail"
+                          {...orgForm.getInputProps("businessmail")}
+                          placeholder="business@company.com"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="location">Location</Label>
+                        <SelectR
+                          options={countries}
+                          value={
+                            countries.find(
+                              (country) =>
+                                country.label === orgForm.values.location,
+                            ) || null
+                          }
+                          onChange={(option) =>
+                            orgForm.setFieldValue(
+                              "location",
+                              option?.label || "",
+                            )
+                          }
+                          placeholder={translations("Select Your Location")}
+                          isSearchable
+                          className="rounded-md text-sm bg-white [&>input]:w-full border-gray-200"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 space-y-2">
+                        <Label htmlFor="address">Address</Label>
+                        <Textarea
+                          id="address"
+                          {...orgForm.getInputProps("address")}
+                          placeholder="Enter your complete business address"
+                          className="resize-none"
+                          rows={2}
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="industry">Industry</Label>
-                      <Select
-                        defaultValue={
-                          user?.onboarding?.industry || "E-commerce"
-                        }
-                        onValueChange={(val) =>
-                          orgForm.setFieldValue("industry", val)
-                        }
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsBusinessDialogOpen(false)}
                       >
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {industries.map((industry) => (
-                            <SelectItem key={industry} value={industry}>
-                              {industry}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="website">Website</Label>
-                      <Input
-                        id="website"
-                        {...orgForm.getInputProps("website")}
-                        placeholder="https://your-website.com"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="businessPhone">Business Phone</Label>
-                      <Input
-                        id="businessPhone"
-                        {...orgForm.getInputProps("phone")}
-                        placeholder="+1 (555) 123-4567"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="businessEmail">Business Email</Label>
-                      <Input
-                        id="businessEmail"
-                        {...orgForm.getInputProps("businessmail")}
-                        placeholder="business@company.com"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="location">Location</Label>
-                      <SelectR
-                        options={countries}
-                        value={
-                          countries.find(
-                            (country) =>
-                              country.label === orgForm.values.location,
-                          ) || null
-                        }
-                        onChange={(option) =>
-                          orgForm.setFieldValue("location", option?.label || "")
-                        }
-                        placeholder={translations("Select Your Location")}
-                        isSearchable
-                        className="rounded-md text-sm bg-white [&>input]:w-full border-gray-200"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2 space-y-2">
-                      <Label htmlFor="address">Address</Label>
-                      <Textarea
-                        id="address"
-                        {...orgForm.getInputProps("address")}
-                        placeholder="Enter your complete business address"
-                        className="resize-none"
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsBusinessDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
-                    >
-                      Save Changes
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
+                      >
+                        Save Changes
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
 
             <Card className="p-5 shadow-sm border-gray-200">
               <div className="flex items-center gap-3 mb-4">
