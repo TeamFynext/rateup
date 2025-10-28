@@ -557,24 +557,30 @@ export async function pauseOrg(id, data: PauseOrgInput) {
 export async function completeOrgDetails(
   userId: string,
   data: {
-    onboarding?: any;
+    onboarding?: Record<string, any>;
     onboardingCompleted?: boolean;
   },
 ) {
   return prisma.$transaction(async (tx) => {
     const org = await tx.org.findFirst({
       where: { ownerId: userId },
-      select: { id: true },
+      select: { id: true, onboarding: true },
     });
 
     if (!org) {
       throw new Error("Organization not found for this user");
     }
+    const existingOnboarding = (org.onboarding as Record<string, any>) || {};
+
+    const mergedOnboarding = {
+      ...existingOnboarding,
+      ...(data.onboarding || {}),
+    };
 
     const updatedOrg = await tx.org.update({
       where: { id: org.id },
       data: {
-        ...(data.onboarding && { onboarding: data.onboarding }),
+        onboarding: mergedOnboarding,
         ...(typeof data.onboardingCompleted === "boolean" && {
           onboardingCompleted: data.onboardingCompleted,
         }),

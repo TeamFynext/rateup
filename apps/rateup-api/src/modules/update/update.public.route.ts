@@ -12,6 +12,7 @@ import {
   updateUsageStatsTemplateMessageHandler,
   migrateTagsHandle,
   migratePhoneIdsHandle,
+  backfillWithSQLHandler,
 } from "./update.controller";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
@@ -24,4 +25,5 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/add-default-lifecycle", updateDefaultLifecycleHandler);
   server.put("/migrate-tags", migrateTagsHandle);
   server.put("/migrate-to-whatsapp-phone-ids", migratePhoneIdsHandle);
+  server.put("/backfill", backfillWithSQLHandler);
 }

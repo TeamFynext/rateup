@@ -237,3 +237,82 @@ export async function updateFreePlanExpiry() {
     },
   });
 }
+
+export async function backfillWithSQL() {
+  console.log("\n🚀 Starting SQL-based backfill...\n");
+  try {
+    const startTime = Date.now();
+
+    // Step 2: Backfill last message data
+    console.log("2️⃣  Backfilling last message data...");
+    const lastMessageResult = await prisma.$executeRaw`
+      WITH last_messages AS (
+        SELECT DISTINCT ON (w."contactId")
+          w."contactId",
+          w."messageBody",
+          w."waCreatedAt",
+          w."sourcePlatform"
+        FROM "WaMessage" w
+        WHERE w."contactId" IS NOT NULL
+        ORDER BY w."contactId", w."waCreatedAt" DESC
+      )
+      UPDATE "Contact" c
+      SET 
+        "lastMessageBody" = lm."messageBody",
+        "lastMessageWaCreatedAt" = lm."waCreatedAt",
+        "lastMessagePlatform" = lm."sourcePlatform"
+      FROM last_messages lm
+      WHERE c.id = lm."contactId"
+      AND c."lastMessageBody" IS NULL
+    `;
+    console.log(`   ✓ Updated ${lastMessageResult} contacts\n`);
+
+    // Step 3: Backfill lastSentMessageTimeStamp
+    console.log("3️⃣  Backfilling lastSentMessageTimeStamp...");
+    const lastSentResult = await prisma.$executeRaw`
+      WITH last_sent AS (
+        SELECT DISTINCT ON (w."contactId")
+          w."contactId",
+          w."waCreatedAt"
+        FROM "WaMessage" w
+        WHERE w."messageBody"->>'exchangeProcess' = 'send'
+        AND w."contactId" IS NOT NULL
+        ORDER BY w."contactId", w."waCreatedAt" DESC
+      )
+      UPDATE "Contact" c
+      SET "lastSentMessageTimeStamp" = ls."waCreatedAt"
+      FROM last_sent ls
+      WHERE c.id = ls."contactId"
+      AND c."lastSentMessageTimeStamp" IS NULL
+    `;
+    console.log(`   ✓ Updated ${lastSentResult} contacts\n`);
+
+    // Step 4: Backfill lastReceivedMetadata
+    console.log("4️⃣  Backfilling lastReceivedMetadata...");
+    const metadataResult = await prisma.$executeRaw`
+      WITH last_received AS (
+        SELECT DISTINCT ON (w."contactId")
+          w."contactId",
+          w."messageBody"->'receive'->'metadata' as metadata
+        FROM "WaMessage" w
+        WHERE w."messageBody"->>'exchangeProcess' = 'receive'
+        AND w."contactId" IS NOT NULL
+        ORDER BY w."contactId", w."waCreatedAt" DESC
+      )
+      UPDATE "Contact" c
+      SET "lastReceivedMetadata" = lr.metadata
+      FROM last_received lr
+      WHERE c.id = lr."contactId"
+      AND lr.metadata IS NOT NULL
+      AND c."lastReceivedMetadata" IS NULL
+    `;
+    console.log(`   ✓ Updated ${metadataResult} contacts\n`);
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`✅ SQL backfill completed in ${duration}s\n`);
+  } catch (error) {
+    console.error("❌ Error during SQL backfill:", error);
+    throw error;
+  }
+}
+// backfillWithSQL()

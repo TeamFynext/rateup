@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { log } from "../../utils/logger";
 import {
+  backfillWithSQL,
   updateFreePlanExpiry,
   updatePlanFeatures,
   updateRateupPlanFeature,
@@ -294,5 +295,27 @@ export async function migratePhoneIdsHandle(
   } catch (error) {
     log.error(error);
     res.code(500).send("Error migrating Phone IDs");
+  }
+}
+
+export async function backfillWithSQLHandler(
+  req: FastifyRequest,
+  res: FastifyReply,
+) {
+  try {
+    const fi = await prisma.contact.findFirst({
+      where: {
+        lastMessageWaCreatedAt: {
+          not: null,
+        },
+      },
+    });
+    if (fi) return res.code(400).send("Backfill already done");
+
+    await backfillWithSQL();
+    res.code(200).send("Backfill completed successfully");
+  } catch (error) {
+    log.error(error);
+    res.code(500).send("Error during backfill");
   }
 }
