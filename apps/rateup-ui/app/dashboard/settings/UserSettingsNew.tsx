@@ -217,7 +217,7 @@ const ProfileSettings = () => {
 
   // ============ Mutations ============
   const updateProfile = useUpdateProfileMutation(setIsLoading);
-  const changePassword = useChangePasswordMutation(setIsLoading);
+  const changePassword = useChangePasswordMutation();
   const updateLogo = useUpdateOrgLogoMutation(setIsLoading);
   const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoading);
   const orgDetailsUpdate = useUpdateOrgDetailsMutation();
