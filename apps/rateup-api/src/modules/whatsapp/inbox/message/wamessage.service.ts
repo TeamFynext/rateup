@@ -891,19 +891,6 @@ export async function assignWaMessageToUser(
     },
     orgId,
   );
-  // const currentAssignedUsers = await prisma.waInboxAssign.findMany({
-  //   where: {
-  //     contactId: data.contactId,
-  //   },
-  //   select: {
-  //     assignedUser: {
-  //       select: {
-  //         id: true,
-  //         name: true,
-  //       },
-  //     },
-  //   },
-  // });
   return data.assignees;
 }
 
