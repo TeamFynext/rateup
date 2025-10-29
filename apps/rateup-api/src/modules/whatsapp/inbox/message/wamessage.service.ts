@@ -88,7 +88,16 @@ export async function addNewWaMessage(
       sourceIdentifier,
       ...statsData,
     },
+    include: {
+      sender: {
+        select: {
+          name: true,
+          profilePhoto: true,
+        },
+      },
+    },
   });
+
   return newMessage;
 }
 
@@ -242,6 +251,11 @@ export async function filterChats(
     let paramIndex = 4;
     const filters: string[] = [`c."orgId" = $1::uuid`];
     let orderBy = `c."lastReceivedMessageTimeStamp"`;
+    let allOrderBy = `fc."lastReceivedMessageTimeStamp"`;
+    let sortBy = "DESC";
+    if (bodyFilterProps?.sortBy === "oldest") {
+      sortBy = "ASC";
+    }
 
     const isSearchMode = bodyFilterProps?.searchTerm?.length > 0;
 
@@ -257,6 +271,7 @@ export async function filterChats(
             );
           }
           orderBy = `c."lastMessageWaCreatedAt"`;
+          allOrderBy = `fc."lastMessageWaCreatedAt"`;
         }
       }
 
@@ -434,6 +449,23 @@ export async function filterChats(
         }
       }
 
+      //category filter
+      if (bodyFilterProps?.category?.length) {
+        if (bodyFilterProps?.category === "conversation") {
+          filters.push(`NOT EXISTS (SELECT 1 FROM "CampaignParticipant" cpt WHERE cpt."contactId" = c.id) AND 
+              NOT EXISTS (SELECT 1 FROM "WaAutomatedReplyMessage" aut WHERE aut."phone" = c."phone")`);
+        }
+        if (bodyFilterProps?.category === "campaign") {
+          filters.push(
+            `EXISTS (SELECT 1 FROM "CampaignParticipant" cpt WHERE cpt."contactId" = c.id)`,
+          );
+        }
+        if (bodyFilterProps?.category === "automation") {
+          filters.push(
+            `EXISTS (SELECT 1 FROM "WaAutomatedReplyMessage" aut WHERE aut."phone" = c."phone")`,
+          );
+        }
+      }
       // Phone filter
       // if (bodyFilterProps?.phone && bodyFilterProps.phone !== "all") {
       //   params.push(bodyFilterProps.phone);
@@ -508,7 +540,7 @@ export async function filterChats(
           c."lastReceivedMetadata"
         FROM "Contact" c
         WHERE ${whereClause}
-        ORDER BY ${orderBy} DESC NULLS LAST
+        ORDER BY ${orderBy} ${sortBy} NULLS LAST
         LIMIT 20 OFFSET $2
       ),
       assigned_users AS (
@@ -529,7 +561,7 @@ export async function filterChats(
       FROM filtered_contacts fc
       LEFT JOIN assigned_users au ON au."contactId" = fc.id
       LEFT JOIN "Lifecycle" l ON l.id = fc."lifecycleId"
-      ORDER BY fc."lastMessageWaCreatedAt" DESC NULLS LAST;
+      ORDER BY ${allOrderBy} ${sortBy} NULLS LAST;
     `;
 
     const contacts: any[] = await prisma.$queryRawUnsafe(query, ...params);
@@ -743,56 +775,72 @@ export async function assignWaMessageToUser(
   const existingUsers = await prisma.waInboxAssign.findMany({
     where: {
       contactId: data.contactId,
-      assignedUserId: {
-        in: data.assignedUserIds,
-      },
     },
   });
   const assignIfOnline = data.assignIfOnline ?? true;
   const newUsers = [];
-  for (const userId of data.assignedUserIds) {
-    if (!existingUsers.some((user) => user.assignedUserId === userId)) {
+  for (const assignee of data.assignees) {
+    let updateCount = false;
+    const existingUser = existingUsers.find(
+      (existingUser) => existingUser.assignedUserId === assignee.userId,
+    );
+    if (!existingUser) {
       if (assignIfOnline) {
         const user = await prisma.orgMember.findUnique({
           where: {
             userId_orgId: {
-              userId,
+              userId: assignee.userId,
               orgId,
             },
           },
         });
         if (user?.status === UserAvailabilityStatus.online) {
-          newUsers.push(userId);
+          newUsers.push(assignee);
+          updateCount = true;
         }
       } else {
-        newUsers.push(userId);
+        newUsers.push(assignee);
+        updateCount = true;
       }
+    } else if (existingUser.teamId !== assignee.teamId) {
+      await prisma.waInboxAssign.update({
+        where: {
+          contact_id_assigned_user_id_unique: {
+            contactId: data.contactId,
+            assignedUserId: existingUser.assignedUserId,
+          },
+        },
+        data: {
+          teamId: assignee.teamId,
+        },
+      });
     }
-    await prisma.userAssignedCount.upsert({
-      where: {
-        user_org_unique: {
-          userId,
+    if (updateCount)
+      await prisma.userAssignedCount.upsert({
+        where: {
+          user_org_unique: {
+            userId: assignee.userId,
+            orgId,
+          },
+        },
+        update: {
+          assignCount: {
+            increment: 1,
+          },
+        },
+        create: {
+          userId: assignee.userId,
           orgId,
+          assignCount: 1,
         },
-      },
-      update: {
-        assignCount: {
-          increment: 1,
-        },
-      },
-      create: {
-        userId,
-        orgId,
-        assignCount: 1,
-      },
-    });
+      });
   }
 
   const res = await prisma.waInboxAssign.createMany({
-    data: newUsers.map((userId) => ({
+    data: newUsers.map((user) => ({
       contactId: data.contactId,
-      assignedUserId: userId,
-      teamId: data.teamId,
+      assignedUserId: user.userId,
+      teamId: user.teamId,
     })),
     skipDuplicates: true,
   });
@@ -801,7 +849,7 @@ export async function assignWaMessageToUser(
     where: {
       contactId: data.contactId,
       assignedUserId: {
-        notIn: data.assignedUserIds,
+        notIn: data.assignees.map((assignee) => assignee.userId),
       },
     },
   });
@@ -809,9 +857,9 @@ export async function assignWaMessageToUser(
     waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
   });
 
-  for (const userId of newUsers) {
+  for (const user of newUsers) {
     const notificationSetting = await getNotificationSettings(
-      userId,
+      user.userId,
       updatedContact.orgId,
     );
     if (
@@ -819,7 +867,7 @@ export async function assignWaMessageToUser(
       notificationSetting.waMessageAssignNotification
     ) {
       await createNotification(
-        userId,
+        user.userId,
         updatedContact.orgId,
         "whatsapp",
         "chat-assigned",
@@ -831,31 +879,18 @@ export async function assignWaMessageToUser(
     }
   }
 
+  //Change zapier schema
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_ASSIGN,
     {
       [ZapierTriggers.CONTACT_ASSIGN]: {
         contact: updatedContact,
-        teamId: data.teamId,
-        assignedUserIds: newUsers,
+        newAssignees: newUsers,
       },
     },
     orgId,
   );
-  const currentAssignedUsers = await prisma.waInboxAssign.findMany({
-    where: {
-      contactId: data.contactId,
-    },
-    select: {
-      assignedUser: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  });
-  return currentAssignedUsers.map((c) => c.assignedUser);
+  return data.assignees;
 }
 
 export async function getAssignedUserForContact(contactId) {

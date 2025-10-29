@@ -194,7 +194,7 @@ export async function verifyAutomationTriggerLimit(orgId) {
     return false;
   }
   if (
-    usageStats.monthlyAutomationTriggerCount >=
+    usageStats?.monthlyAutomationTriggerCount >=
     subscription.features.whatsapp.automation.automationTrigger.count.max
   ) {
     log.error("Automtion Trigger Limit reached. Aborting automation check...");

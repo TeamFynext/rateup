@@ -1076,8 +1076,7 @@ export async function processNextNode(
         if (assignedUserIds.length > 0 && teamId && contact?.id) {
           await assignWaMessageToUser(
             {
-              assignedUserIds,
-              teamId,
+              assignees: assignedUserIds.map((userId) => ({ userId, teamId })),
               contactId: contact.id,
               assignIfOnline: assignData?.assign?.assignIfOnline ?? true,
             },

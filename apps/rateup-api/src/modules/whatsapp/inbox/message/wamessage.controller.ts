@@ -132,7 +132,7 @@ export async function handleWaMessages(
         ? { lastReceivedMessageTimeStamp: waTimeStamp }
         : {}),
       ...(type === "send" ? { lastSentMessageTimeStamp: waTimeStamp } : {}),
-      lastMessageBody: messageBody,
+      lastMessageBody: waMessageBody,
       lastMessageWaCreatedAt: waTimeStamp,
       lastMessagePlatform: sourcePlatform,
       ...(type === "receive"
