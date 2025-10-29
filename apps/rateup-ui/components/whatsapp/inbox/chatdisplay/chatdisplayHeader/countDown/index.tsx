@@ -2,18 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 
-import {
-  Badge,
-  Loader,
-  Progress,
-  RingProgress,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
 import { IconPointFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { TimerIcon } from "lucide-react";
+
+import CustomTooltip from "@/components/ui/custom/CustomTooltip";
+import { Loader } from "@/components/ui/loader";
+import { Progress } from "@/components/ui/progressnew";
 
 import { isInboxSessionExpired } from "../../../../../../utils/whatsapp/inbox";
 import classes from "./styles.module.css";
@@ -44,28 +40,35 @@ export default function WaInboxCountdownTimer({
 
   if (!timeStamp || isInboxSessionExpired(timeStamp)) {
     return (
-      <Badge variant="light" fz={10} color="red">
-        No Session
-      </Badge>
+      <CustomTooltip
+        trigger={<TimerIcon className="text-muted" />}
+        content={<span>No Session</span>}
+        side="bottom"
+      />
     );
   }
   if (!percentageDifference || !timeStamp) {
-    return <Loader size={"xs"} />;
+    return <Loader className="text-xs" />;
   }
+  const Timer = () => {
+    return (
+      <div>
+        <div className="flex flex-col items-center">
+          <span className="text-primary text-xs font-medium">{`${hours ?? 0} : ${minutes ?? 0}`}</span>
+          <Progress value={percentageDifference} className="w-24" />
+        </div>
+      </div>
+    );
+  };
   return (
-    <Tooltip label={"Session"}>
-      <Stack gap={2}>
-        <Text
-          className={classes.timer_text}
-          fw={500}
-        >{`${hours ?? 0} : ${minutes ?? 0}`}</Text>
-        <Progress
-          size={"md"}
-          value={Math.floor((hours * 100) / 24)}
-          w={120}
-          color={hours === 1 && "red"}
-        />
-      </Stack>
-    </Tooltip>
+    <CustomTooltip
+      trigger={<Timer />}
+      content={
+        <span>
+          Session: {hours}hrs and {minutes}m Left
+        </span>
+      }
+      side="bottom"
+    />
   );
 }

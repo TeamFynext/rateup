@@ -149,3 +149,14 @@ export function getTimeRemaining(targetDate) {
     return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} left`;
   }
 }
+
+export function formatDateWithRelativeTime(date) {
+  const d = dayjs(date);
+  if (isToday(date)) {
+    return `Today ${d.format("hh:mm A")}`;
+  } else if (isYesterday(date)) {
+    return `Yesterday ${d.format("hh:mm A")}`;
+  } else {
+    return d.format("DD/MM/YY hh:mm A");
+  }
+}

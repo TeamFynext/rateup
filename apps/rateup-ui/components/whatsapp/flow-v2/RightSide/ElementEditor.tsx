@@ -160,6 +160,22 @@ function ElementEditor() {
     [element, updateComponentInScreen, addComponentToScreen],
   );
 
+  function getChoiceCount(type) {
+    switch (type) {
+      case QuestionType2.CheckboxGroup:
+      case QuestionType2.RadioButtonsGroup:
+      case QuestionType2.LD:
+      case QuestionType2.YN:
+        return { max: 20, min: 1 };
+      case QuestionType2.Dropdown:
+      case QuestionType2.Rating:
+      case QuestionType2.Smiley:
+      case QuestionType2.Opinion:
+        return { max: 200, min: 1 };
+      default:
+        return { max: 20, min: 1 };
+    }
+  }
   const renderField = (field) => {
     const fieldType = initialValues[field].type;
     const FieldComponent = FieldComponentMap[fieldType] || ContainedTextField;
@@ -190,6 +206,10 @@ function ElementEditor() {
             insertListItem: form2.insertListItem,
             removeListItem: form2.removeListItem,
             metaType: currentElementType,
+            maxChoice:
+              getChoiceCount(
+                QuestionType2?.[form2.getValues().metaType as string],
+              )?.max ?? 20,
           })}
           {...(field === "init-value" && {
             dataSource: form2?.values?.["data-source"],

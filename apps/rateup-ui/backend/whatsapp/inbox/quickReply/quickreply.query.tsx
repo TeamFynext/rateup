@@ -8,15 +8,16 @@ import {
   updateQuickReplyOrder,
 } from "./quickreply.api";
 
-export const useWaQuickReplies = () => {
-  const useGetWaQuickReplies = useQuery({
+export const useGetWaQuickReplies = () => {
+  return useQuery({
     queryFn: getWaQuickReplies,
     queryKey: ["quick-reply"],
   });
+};
 
+export const useCreateWaQuickReply = () => {
   const qc = useQueryClient();
-
-  const useCreateWaQuickReply = useMutation({
+  return useMutation({
     mutationFn: createWaQuickReply,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["quick-reply"] });
@@ -25,8 +26,11 @@ export const useWaQuickReplies = () => {
       console.error(e);
     },
   });
+};
 
-  const useUpdateReplyOrder = useMutation({
+export const useUpdateReplyOrder = () => {
+  const qc = useQueryClient();
+  return useMutation({
     mutationFn: updateQuickReplyOrder,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["quick-reply"] });
@@ -35,8 +39,11 @@ export const useWaQuickReplies = () => {
       console.error(e);
     },
   });
+};
 
-  const useUpdateReply = useMutation({
+export const useUpdateReply = () => {
+  const qc = useQueryClient();
+  return useMutation({
     mutationFn: updateQuickReplyById,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["quick-reply"] });
@@ -45,8 +52,11 @@ export const useWaQuickReplies = () => {
       console.error(e);
     },
   });
+};
 
-  const useDeleteReply = useMutation({
+export const useDeleteReply = () => {
+  const qc = useQueryClient();
+  return useMutation({
     mutationFn: deleteQuickReplyById,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["quick-reply"] });
@@ -55,12 +65,4 @@ export const useWaQuickReplies = () => {
       console.error(e);
     },
   });
-
-  return {
-    waQuickReplies: useGetWaQuickReplies,
-    createQuickReply: useCreateWaQuickReply,
-    updateQuickReplyOrder: useUpdateReplyOrder,
-    updateQuickReply: useUpdateReply,
-    deleteQuickReplyById: useDeleteReply,
-  };
 };

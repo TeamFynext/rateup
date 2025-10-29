@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Flex, Group, Paper, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
+import { MessageSquare } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import useContactStore, {
@@ -48,6 +49,7 @@ export default function WaInboxChatDisplay({
 
   const translations = useTranslations();
   const { isLoading } = useMessagesStore();
+  const [showCustomerInfo, setShowCustomerInfo] = useState(false);
 
   let footerContent = null;
   if (contact?.blockedOnWhatsApp) {
@@ -77,19 +79,34 @@ export default function WaInboxChatDisplay({
   return (
     <Paper withBorder p={0} className="h-full">
       {!contact ? (
-        <NothingFound text={translations("Select a chat to see messages")} />
+        <div className="flex-1 flex items-center justify-center bg-muted/20 h-full">
+          <div className="text-center">
+            <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="mb-2">
+              {translations("Select a chat to see messages")}
+            </h3>
+          </div>
+        </div>
       ) : (
-        <div className="sm:flex h-full w-full">
-          <div className={classes.inner_animated}>
+        <div className={`flex min-w-0 h-full flex-1}`}>
+          <div className="flex-1 flex flex-col min-w-0">
             <WaInboxChatDisplayHeader
               contact={contact}
               smallScreen={smallScreen}
               waSettings={waSettings}
             />
-            <WaInboxChatDisplayBody smallScreen={smallScreen} />
+            <WaInboxChatDisplayBody
+              smallScreen={smallScreen}
+              isContactDetailsOpened={showCustomerInfo}
+            />
             {!isLoading && footerContent}
           </div>
-          <WaInboxContactDetails contact={contact} />
+          <WaInboxContactDetails
+            contact={contact}
+            groupId={""}
+            isOpen={showCustomerInfo}
+            setIsOpen={setShowCustomerInfo}
+          />
         </div>
       )}
     </Paper>
