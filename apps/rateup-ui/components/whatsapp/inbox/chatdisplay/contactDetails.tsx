@@ -4,16 +4,9 @@ import { useEffect, useState } from "react";
 
 import { NumberInput, Paper, Select, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import {
-  IconBrandWhatsapp,
-  IconClock,
-  IconUser,
-  IconX,
-} from "@tabler/icons-react";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
-import { AnimatePresence, motion } from "framer-motion";
 import {
-  Activity,
   Bot,
   ChevronRight,
   Clock,
@@ -24,15 +17,14 @@ import {
   Phone,
   Save,
   Shield,
-  Tag,
   Trash2,
-  TruckElectric,
   User,
   UserCheck,
   X,
   Zap,
 } from "lucide-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";

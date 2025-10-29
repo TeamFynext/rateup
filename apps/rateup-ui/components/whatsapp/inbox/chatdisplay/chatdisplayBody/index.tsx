@@ -152,31 +152,24 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
         className="relative h-full p-2 scale-y-[-1] overflow-y-auto bg-gradient-to-b from-muted/10 to-background"
       >
         {tempMessages?.[selectedContact.id]?.length > 0 && (
-          <div className="relative p-6 max-w-4xl mx-auto mb-8">
+          <div className="relative p-6 max-w-4xl mx-auto">
             {tempMessages?.[selectedContact.id]?.map((msg, i) => (
               <div
-                key={`temp-${i}`}
+                key={msg?.id || i}
                 style={{
                   transform: `scaleY(-1)`,
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
                   width: "100%",
                 }}
                 className="flex flex-col items-end gap-6"
               >
-                <TempMessageBody
-                  body={msg?.body}
-                  timestamp={msg.timestamp}
-                  key={i}
-                />
+                <TempMessageBody body={msg?.body} timestamp={msg.timestamp} />
               </div>
             ))}
           </div>
         )}
         <div
           style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-          className="relative p-6 max-w-4xl mx-auto"
+          className="relative p-6 max-w-4xl mx-auto mt-"
         >
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const message = allMessages[virtualRow.index];

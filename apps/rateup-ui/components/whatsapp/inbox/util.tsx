@@ -28,11 +28,7 @@ export function getSoucePlatformIconAndColor(sourcePlatform) {
 export function getInboxNavContactCount(tab) {
   const totalCount = useChatContactCountStore.getState().totalCount;
   let count = 0;
-  switch (tab) {
-    case "mine":
-      count = totalCount?.assignedToMe;
-      break;
-  }
+  if (tab === "mine") count = totalCount?.assignedToMe;
   return count;
 }
 
