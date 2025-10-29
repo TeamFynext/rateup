@@ -24,6 +24,7 @@ import { IconDownload } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 
+import useContactStore from "@/app/dashboard/inbox/store";
 import { showLoadingToast } from "@/utils/notifications";
 
 import { useExportWaChats } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
@@ -35,10 +36,11 @@ enum DateType {
   AFTER = "after",
   ON = "on",
 }
-export default function WaInboxChatExport({ filter }) {
+export default function WaInboxChatExport() {
   const [chatsExporting, setChatsExporting] = useState(false);
   const exportChats = useExportWaChats();
   const translations = useTranslations();
+  const { filterData } = useContactStore();
   const form = useForm({
     initialValues: {
       date: {
@@ -100,7 +102,7 @@ export default function WaInboxChatExport({ filter }) {
     exportChats.mutate(
       {
         constraints: encodeURIComponent(JSON.stringify(values)),
-        filterData: encodeURIComponent(JSON.stringify(filter)),
+        filterData,
       },
       {
         onSettled: () => {

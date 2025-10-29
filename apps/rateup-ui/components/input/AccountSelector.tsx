@@ -16,6 +16,15 @@ import { MessagePlatform } from "@/types/enums";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import {
   ContainedMultiSelect,
   ContainedSelection,
 } from "./ContainedInput/ContainedInput";
@@ -28,6 +37,7 @@ interface CommonAccountSelectorProps {
   multiple?: boolean;
   label?: string;
   value?: any;
+  hideLabel?: boolean;
 }
 
 type AccountSelectorProps =
@@ -43,6 +53,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     withAllOption = false,
     platform = MessagePlatform.WHATSAPP,
     multiple = false,
+    hideLabel = false,
     ...restProps
   } = props;
   const { data, isPending, isError } = useWaSettings();
@@ -107,17 +118,29 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     );
   }
   return (
-    <ContainedSelection
-      allowDeselect={false}
-      data={accountOptions}
-      defaultValue={accountOptions?.length && accountOptions[0]?.value}
-      onChange={onChange}
-      value={value}
-      label={label ?? translations("Account")}
-      placeholder={translations("Select Account")}
-      nothingFoundMessage={translations("No account found!")}
-      required
-      // {...props}
-    />
+    <div>
+      {!hideLabel && (
+        <p className="text-xs text-muted-foreground">
+          {label ?? translations("Account")}
+        </p>
+      )}
+      <Select
+        value={value}
+        defaultValue={accountOptions?.length && accountOptions[0]?.value}
+        onValueChange={onChange}
+        required
+      >
+        <SelectTrigger className="!text-xs text-muted-foreground cursor-pointer hover:bg-accent">
+          <SelectValue placeholder={translations("Select Account")} />
+        </SelectTrigger>
+        <SelectContent>
+          {accountOptions.map((account) => (
+            <SelectItem value={account?.value} key={account?.value}>
+              {account?.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

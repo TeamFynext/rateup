@@ -3,14 +3,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
-import {
-  ActionIcon,
-  Box,
-  Divider,
-  Group,
-  Popover,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Box, Divider, Group, Tooltip } from "@mantine/core";
 import {
   IconArrowBackUp,
   IconBold,
@@ -21,7 +14,16 @@ import {
   IconStrikethrough,
 } from "@tabler/icons-react";
 import { EmojiClickData } from "emoji-picker-react";
+import { Smile } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+import { Button } from "@/components/ui/button";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
 
@@ -125,20 +127,18 @@ export const PopoverEmojiPicker = ({
 }) => {
   const translations = useTranslations();
   return (
-    <Popover withArrow shadow="md" floatingStrategy="fixed">
-      <Popover.Target>
-        <Tooltip label={translations("Insert an emoji")}>
-          {showIcon ?? (
-            <ActionIcon variant={"transparent"} size={size}>
-              <IconMoodHappy
-                color="var(--grey-color)"
-                size={size === "xs" ? 14 : 30}
-              />
-            </ActionIcon>
-          )}
-        </Tooltip>
-      </Popover.Target>
-      <Popover.Dropdown p={0}>
+    <Popover>
+      <PopoverTrigger>
+        <CustomTooltip
+          trigger={
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              {showIcon ?? <Smile className="w-5 h-5" />}
+            </Button>
+          }
+          content={<span>{translations("Insert an emoji")}</span>}
+        />
+      </PopoverTrigger>
+      <PopoverContent className="w-full">
         <Suspense
           fallback={
             <div
@@ -155,7 +155,7 @@ export const PopoverEmojiPicker = ({
             onEmojiClick={(emoji) => onEmojiClick(emoji.emoji, emoji)}
           />
         </Suspense>
-      </Popover.Dropdown>
+      </PopoverContent>
     </Popover>
   );
 };

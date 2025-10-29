@@ -9,6 +9,7 @@ import {
   Group,
   Loader,
   Popover,
+  ScrollAreaAutosize,
   Stack,
   Text,
 } from "@mantine/core";
@@ -22,7 +23,13 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 
-import { useWaQuickReplies } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
+import {
+  useCreateWaQuickReply,
+  useDeleteReply,
+  useGetWaQuickReplies,
+  useUpdateReply,
+  useUpdateReplyOrder,
+} from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
 import {
   RateupButtonPrimary,
   RateupButtonSecondary,
@@ -30,14 +37,24 @@ import {
 import Reorder from "@/components/Linktree/LinktreeEditor/LinksEditor/components/Reorder";
 import ReorderItem from "@/components/Linktree/LinktreeEditor/LinksEditor/components/Reorder/ReorderItem";
 
-import WaTextEditor, { parseToWhatsAppFormat } from "../waTextEditor";
+import WaTextEditor, {
+  parseFromWhatsAppFormat,
+  parseJsonToReact,
+  parseToWhatsAppFormat,
+} from "../waTextEditor";
 import styles from "./quickeReply.module.css";
 
-const WaQuickReplyControl = () => {
+export const WaQuickReplyControl = () => {
   const { editor } = useRichTextEditorContext();
   const [opened, setOpened] = useState(false);
   return (
-    <Popover position="top" opened={opened} onChange={setOpened}>
+    <Popover
+      position="top"
+      opened={opened}
+      onChange={setOpened}
+      closeOnClickOutside={false}
+      withinPortal
+    >
       <Popover.Target>
         <RichTextEditor.Control
           title="Insert quick replies"
@@ -47,30 +64,46 @@ const WaQuickReplyControl = () => {
         </RichTextEditor.Control>
       </Popover.Target>
       <Popover.Dropdown>
-        <WaQuickReply
-          handleSelectQuickReply={(value) => {
-            if (editor) {
-              editor.commands.insertContent(value);
-              setOpened((o) => !o);
-            }
-          }}
-        />
+        <ScrollAreaAutosize
+          miw={400}
+          mah={500}
+          maw={700}
+          type="scroll"
+          offsetScrollbars
+          scrollbarSize={6}
+        >
+          <WaQuickReply
+            handleSelectQuickReply={(value) => {
+              if (editor) {
+                const parsedValue = !isJSONString(value)
+                  ? parseFromWhatsAppFormat(value)
+                  : JSON.parse(value);
+                editor.commands.insertContent(parsedValue);
+                setOpened((o) => !o);
+              }
+            }}
+          />
+        </ScrollAreaAutosize>
       </Popover.Dropdown>
     </Popover>
   );
 };
 
-const WaQuickReply = ({ handleSelectQuickReply }) => {
-  const {
-    waQuickReplies,
-    updateQuickReplyOrder,
-    deleteQuickReplyById,
-    updateQuickReply,
-    createQuickReply,
-  } = useWaQuickReplies();
+export function isJSONString(string) {
+  return /^\s*\{.*\}\s*$/.test(string);
+}
+
+export const WaQuickReply = ({ handleSelectQuickReply }) => {
   const [opened, { toggle }] = useDisclosure(false);
   const [updateOpend, { toggle: updateToggle }] = useDisclosure(false);
   const [selectedReplyId, setSelectedReplyId] = useState("");
+
+  const updateQuickReplyOrder = useUpdateReplyOrder();
+  const deleteQuickReplyById = useDeleteReply();
+  const updateQuickReply = useUpdateReply();
+  const createQuickReply = useCreateWaQuickReply();
+
+  const waQuickReplies = useGetWaQuickReplies();
 
   function handleDragEnd(orderedReplies) {
     const data = orderedReplies.map((r, index) => ({
@@ -136,27 +169,38 @@ const WaQuickReply = ({ handleSelectQuickReply }) => {
           className={styles["cards-container-div"]}
         >
           {quickReplies.map((quickReply, index) => {
+            const json = !isJSONString(quickReply.text)
+              ? parseFromWhatsAppFormat(quickReply.text)
+              : JSON.parse(quickReply.text);
             return updateOpend && quickReply.id === selectedReplyId ? (
-              <Collapse in={updateOpend}>
+              <Collapse in={updateOpend} key={index}>
                 <WaQuickReplyEditor
                   onClick={(value, onClose) =>
                     handleUpdate(quickReply.id, { text: value }, onClose)
                   }
-                  initialValues={{ text: quickReply.text }}
+                  initialValues={{
+                    text: !isJSONString(quickReply.text)
+                      ? quickReply.text
+                      : parseToWhatsAppFormat(JSON.parse(quickReply.text)),
+                  }}
                   close={updateToggle}
                   loading={updateQuickReply.isPending}
                 />
               </Collapse>
             ) : (
-              <ReorderItem key={quickReply.id} id={quickReply.id} index={index}>
+              <ReorderItem
+                key={quickReply.id}
+                id={quickReply.id}
+                index={index}
+                className="bg-gray-100"
+              >
                 <Group
                   onClick={() => handleSelectQuickReply(quickReply.text)}
                   style={{ cursor: "pointer" }}
                   justify="space-between"
                 >
-                  <Text size="sm" w={500}>
-                    {quickReply.text}
-                  </Text>
+                  <div>{parseJsonToReact(json)}</div>
+
                   <Group gap={2} px={"sm"}>
                     <ActionIcon
                       variant="subtle"
@@ -212,7 +256,7 @@ const WaQuickReplyEditor = ({
 
   function handleSave() {
     if (form.validate().hasErrors) return;
-    onClick(parseToWhatsAppFormat(form.values.text), onClose);
+    onClick(JSON.stringify(form.values.text), onClose);
   }
 
   function onClose() {
@@ -225,7 +269,7 @@ const WaQuickReplyEditor = ({
       <WaTextEditor
         handleInputChange={(value) => form.setFieldValue("text", value)}
         content={form.values.text}
-        mah={50}
+        isQuickReplyEditor={true}
       />
       <Group justify={"flex-end"} gap={"xs"}>
         <RateupButtonSecondary
@@ -246,4 +290,4 @@ const WaQuickReplyEditor = ({
   );
 };
 
-export default WaQuickReplyControl;
+export default WaQuickReply;

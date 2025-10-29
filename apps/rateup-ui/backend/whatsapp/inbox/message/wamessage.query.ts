@@ -8,10 +8,11 @@ import {
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
-import {
+import useContactStore, {
   useContactsStore,
   useMessagesStore,
 } from "@/app/dashboard/inbox/store";
+import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilter";
 import {
   showErrorToast,
   showSuccessToast,
@@ -131,21 +132,21 @@ export const useGetMediaFile = () => {
 
 export const useAssignInboxToUer = (contactId, filterData) => {
   const qc = useQueryClient();
-  const { updateContactById } = useContactsStore();
+  // const { updateContactById } = useContactsStore();
   return useMutation({
     mutationFn: assignInboxToUser,
-    onSuccess: (data: { id: string; name: string }[]) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
       qc.invalidateQueries({ queryKey: ["contacts", "filtered", filterData] });
       qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
       qc.invalidateQueries({ queryKey: ["notification"] });
       qc.invalidateQueries({ queryKey: ["notificationCount"] });
       showSuccessToast("Assigned successfully");
-      updateContactById(contactId, (contact) => ({
-        ...contact,
-        assignedUsers: data,
-        waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-      }));
+      // updateContactById(contactId, (contact) => ({
+      //   ...contact,
+      //   assignedUsers: data,
+      //   waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+      // }));
     },
     onError: (e) => {
       showWarnToast("Something went wrong" + JSON.stringify(e));
@@ -178,7 +179,8 @@ export const useMarkWaMessagesAsRead = (contactId: string, filterData) => {
   });
 };
 
-export const useBlockWhatsAppUser = (filterData) => {
+export const useBlockWhatsAppUser = () => {
+  const { filterData } = useContactStore();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: blockWhatsAppUser,

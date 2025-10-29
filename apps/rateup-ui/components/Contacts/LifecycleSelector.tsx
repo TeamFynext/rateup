@@ -9,6 +9,7 @@ import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useLabelsContext } from "@/context/LabelsContext";
 
 import { useEditContactLabelsMutation } from "../../backend/campaign/contacts/contacts.query";
+import DropdownSelector from "../ui/custom/DropDownSelector";
 
 export const LifecycleSelector = ({
   value,
@@ -31,7 +32,12 @@ export const LifecycleSelector = ({
             ?.filter((label) => label?.category !== "lost")
             .map((label) => ({
               value: label?.id,
-              label: label?.emoji + " " + label?.name,
+              label: label?.name,
+              icon: () => (
+                <span role="img" className="text-[10px]">
+                  {label?.emoji}
+                </span>
+              ),
             })) || [],
       },
       {
@@ -41,7 +47,12 @@ export const LifecycleSelector = ({
             ?.filter((label) => label?.category === "lost")
             .map((label) => ({
               value: label?.id,
-              label: label?.emoji + " " + label?.name,
+              label: label?.name,
+              icon: () => (
+                <span role="img" className="text-[10px]">
+                  {label?.emoji}
+                </span>
+              ),
             })) || [],
       },
     ],
@@ -88,34 +99,11 @@ export const LifecycleSelector = ({
   };
 
   return (
-    <Button.Group>
-      <Select
-        placeholder="Select lifecycle"
-        data={inboxLabels}
-        value={value}
-        onChange={handleSubmit}
-        size="xs"
-        searchable
-        w={115}
-        radius={0}
-        aria-label="Lifecycle stage"
-        comboboxProps={{ width: 150, withArrow: true }}
-      />
-      <Button
-        variant="default"
-        size="compact-md"
-        onClick={handleNextStage}
-        aria-label="Next lifecycle stage"
-        title={
-          isLostCategory
-            ? "Cannot advance from lost stage"
-            : "Move to next stage"
-        }
-        disabled={isLostCategory}
-      >
-        <IconChevronRight size="1rem" />
-      </Button>
-    </Button.Group>
+    <DropdownSelector
+      value={value}
+      data={inboxLabels}
+      onChange={handleSubmit}
+    />
   );
 };
 

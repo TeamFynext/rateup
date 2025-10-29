@@ -42,6 +42,7 @@ import {
   IconWallpaper,
   IconWaveSine,
 } from "@tabler/icons-react";
+import { FileChartColumn, House, Inbox, User, UserPlus } from "lucide-react";
 
 import { GetLabelsRes } from "@/backend/label/label.types";
 import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
@@ -52,6 +53,7 @@ import {
   ClosedInboxIcon,
   NewInboxIcon,
 } from "@/components/whatsapp/inbox/chatselect";
+import { getInboxNavContactCount } from "@/components/whatsapp/inbox/util";
 
 import {
   SubscriptionFeaturePathName as sfpn,
@@ -102,7 +104,7 @@ export function getNavTopData(
     ...(hasFeature(sfpn.Whatsapp)
       ? [
           {
-            icon: IconBrandHipchat,
+            icon: Inbox,
             label: translations("Inbox"),
             hasSubmenu: true,
             children: [
@@ -110,22 +112,23 @@ export function getNavTopData(
               {
                 label: translations("All"),
                 link: "/dashboard/inbox?tab=All",
-                icon: IconMessage,
+                icon: Inbox,
               },
               {
                 label: translations("Mine"),
                 link: "/dashboard/inbox?tab=mine",
-                icon: AssignedToMeInboxIcon,
+                icon: User,
+                count: getInboxNavContactCount("mine"),
               },
               {
                 label: translations("UnAssigned"),
                 link: "/dashboard/inbox?tab=UnAssigned",
-                icon: IconUserX,
+                icon: UserPlus,
               },
               {
                 label: translations("Analytics"),
                 link: "/dashboard/inbox?tab=analytics",
-                icon: IconFileAnalytics,
+                icon: FileChartColumn,
               },
               {
                 label: "Labels",

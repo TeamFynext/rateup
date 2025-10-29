@@ -1,6 +1,11 @@
 import { Anchor, Text } from "@mantine/core";
 
-import { parseWhatsAppToReact } from "@/components/RichTextEditor/waTextEditor";
+import {
+  parseFromWhatsAppFormat,
+  parseJsonToReact,
+  parseWhatsAppToReact,
+  whatsappToHTML,
+} from "@/components/RichTextEditor/waTextEditor";
 
 import classes from "./styles.module.css";
 
@@ -15,7 +20,7 @@ export default function WaInboxText(props: Props) {
   const parts = message.split(urlRegex).filter(Boolean);
 
   return (
-    <Text size="sm" className="line-clamp-2" component="span">
+    <Text size="sm" className="w-80 break-words" component="span">
       {parts.map((text, index) =>
         urlRegex.test(text) ? (
           <Anchor
@@ -28,7 +33,10 @@ export default function WaInboxText(props: Props) {
             {text}
           </Anchor>
         ) : (
-          <span key={index}>{parseWhatsAppToReact(text) || text}</span>
+          <div
+            key={index}
+            dangerouslySetInnerHTML={{ __html: whatsappToHTML(text) }}
+          />
         ),
       )}
     </Text>
