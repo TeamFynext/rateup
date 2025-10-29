@@ -432,7 +432,7 @@ export function getNavTopData(
     {
       icon: IconUser,
       label: translations("Account"),
-      link: "/dashboard/settings",
+      link: "/dashboard/settings?tab=account",
       // children: [
       //   {
       //     label: translations("User"),

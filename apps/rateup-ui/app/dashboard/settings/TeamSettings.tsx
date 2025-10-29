@@ -4,10 +4,9 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
-import { Clock, Plus, Trash2, User, Users, XCircle } from "lucide-react";
+import { Clock, Plus, Trash2, User, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import {
   useAddUsertoTeams,
   useCreateTeamMutation,
@@ -28,16 +27,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
@@ -51,10 +47,8 @@ let colorArray = [
   { from: "#EAB308", to: "#CA8A04" }, // Yellow
   { from: "#6366F1", to: "#4F46E5" }, // Indigo
 ];
-
 const Team = () => {
   const translations = useTranslations();
-  const [sortOption, setSortOption] = useState("");
   const searchParams = useSearchParams();
   const action = searchParams?.get("action");
   const { user } = useUser();
@@ -76,13 +70,13 @@ const Team = () => {
         if (value.length < 3) {
           return translations("Team Name should be at least 3 characters long");
         }
-        return null; // Validation passed
+        return null;
       },
       code: (value) => {
         if (value.length < 2) {
           return translations("Team Code should be at least 2 characters long");
         }
-        return null; // Validation passed
+        return null;
       },
     },
   });
@@ -117,6 +111,7 @@ const Team = () => {
     });
     createTeamMutation.mutate(values);
   };
+
   useEffect(() => {
     if (action === "create") {
       open();
@@ -142,85 +137,117 @@ const Team = () => {
           </Button>
         )}
       </div>
-      {/* show teams */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {teamsData?.data?.map((team) => (
-          <Card
-            key={team.id}
-            className="p-5 shadow-sm border-gray-200 hover:shadow-md hover:border-rateup-blue/30 transition-all"
-          >
-            <div className="flex justify-between flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center`}
-                  style={{
-                    backgroundColor:
-                      team.color === "null" ? "blue" : team.color,
-                  }}
-                >
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-start gap-1">
-                    <h4>{team.name}</h4>
-                    <p className="text-xs text-muted-foreground border border-gray-300 rounded-xl px-2 py-0.5">
-                      {team.code}
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Created:{" "}
-                    {team?.createdAt
-                      ? dayjs(team.createdAt).format("DD MMM YYYY")
-                      : "—"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    {Array.from({
-                      length: Math.min(team._count.members, 3),
-                    }).map((_, index) => (
-                      <div
-                        key={index}
-                        className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center text-white text-xs font-medium"
-                      >
-                        <User className="h-4 w-4" />
-                      </div>
-                    ))}
 
-                    {team._count.members > 3 && (
-                      <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
-                        <span className="text-xs text-gray-600">
-                          +{team._count.members - 3}
-                        </span>
+      {/* Teams Grid with Skeletons */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {isLoadingTeamsUser
+          ? // Show 4 skeleton cards while loading
+            Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index} className="p-5 shadow-sm border-gray-200">
+                <div className="flex justify-between flex-col gap-6">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-12 h-12 rounded-xl" />
+                    <div className="flex flex-col gap-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-4 w-16 rounded-xl" />
                       </div>
+                      <Skeleton className="h-3 w-40" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-2">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <Skeleton key={i} className="w-8 h-8 rounded-full" />
+                        ))}
+                      </div>
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                    <Skeleton className="h-8 w-20 rounded-md" />
+                  </div>
+                </div>
+              </Card>
+            ))
+          : // Show actual teams
+            teamsData?.data?.map((team) => (
+              <Card
+                key={team.id}
+                className="p-5 shadow-sm border-gray-200 hover:shadow-md hover:border-rateup-blue/30 transition-all"
+              >
+                <div className="flex justify-between flex-col gap-6">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center`}
+                      style={{
+                        backgroundColor:
+                          team.color === "null" ? "blue" : team.color,
+                      }}
+                    >
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-start gap-1">
+                        <h4>{team.name}</h4>
+                        <p className="text-xs text-muted-foreground border border-gray-300 rounded-xl px-2 py-0.5">
+                          {team.code}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Created:{" "}
+                        {team?.createdAt
+                          ? dayjs(team.createdAt).format("DD MMM YYYY")
+                          : "—"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-2">
+                        {Array.from({
+                          length: Math.min(team._count.members, 3),
+                        }).map((_, index) => (
+                          <div
+                            key={index}
+                            className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center text-white text-xs font-medium"
+                          >
+                            <User className="h-4 w-4" />
+                          </div>
+                        ))}
+
+                        {team._count.members > 3 && (
+                          <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
+                            <span className="text-xs text-gray-600">
+                              +{team._count.members - 3}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <span className="text-sm text-muted-foreground">
+                        {team._count.members}{" "}
+                        {team._count.members === 1 ? "member" : "members"}
+                      </span>
+                    </div>
+                    {user?.role === UserRole.SUPADM && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedTeam(team);
+                          setEditedColor(team.color || "blue");
+                          setIsManageTeamDialogOpen(true);
+                        }}
+                      >
+                        Manage
+                      </Button>
                     )}
                   </div>
-
-                  <span className="text-sm text-muted-foreground">
-                    {team._count.members}{" "}
-                    {team._count.members === 1 ? "member" : "members"}
-                  </span>
                 </div>
-                {user?.role === UserRole.SUPADM && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedTeam(team);
-                      setEditedColor(team.color || "blue");
-                      setIsManageTeamDialogOpen(true);
-                    }}
-                  >
-                    Manage
-                  </Button>
-                )}
-              </div>
-            </div>
-          </Card>
-        ))}
+              </Card>
+            ))}
       </div>
+
       {/* create team */}
       {user?.role === UserRole.SUPADM && (
         <Dialog
@@ -302,6 +329,7 @@ const Team = () => {
           </DialogContent>
         </Dialog>
       )}
+
       {/* manage teams */}
       {user?.role === UserRole.SUPADM && (
         <Dialog
@@ -492,6 +520,7 @@ function EditTeam({
 
 function AddMembers({ selectedTeam }) {
   const teamID = selectedTeam.id;
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
   const {
     isLoading: isLoadingNotTeamsUser,
@@ -499,8 +528,6 @@ function AddMembers({ selectedTeam }) {
     error: errorTeamsDataUser,
     refetch: reftchTeams,
   } = useNotTeamMembers(teamID);
-
-  // console.log("memnbers", notTeamMembersData.data);
 
   const {
     isLoading: isLoadingMembers,
@@ -515,16 +542,19 @@ function AddMembers({ selectedTeam }) {
     ...(teamsMembersData?.invitations || []),
     ...(teamsMembersData?.members || []),
   ];
-
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2 border-b gap-2 sm:gap-0">
-        <p className="text-sm sm:text-base text-muted-foreground">
-          {teamMembersObjArr?.length || 0} member
-          {(teamMembersObjArr?.length || 0) !== 1 ? "s" : ""} in this team
-        </p>
-        <Popover>
-          <PopoverTrigger asChild>
+        {isLoadingMembers ? (
+          <Skeleton className="h-5 w-32" />
+        ) : (
+          <p className="text-sm sm:text-base text-muted-foreground">
+            {teamMembersObjArr?.length || 0} member
+            {(teamMembersObjArr?.length || 0) !== 1 ? "s" : ""} in this team
+          </p>
+        )}
+        <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+          <DialogTrigger asChild>
             <Button
               size="sm"
               className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
@@ -533,51 +563,85 @@ function AddMembers({ selectedTeam }) {
               <span className="hidden sm:inline">Add Member</span>
               <span className="sm:hidden">Add</span>
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="p-4 h-[300px]" align="end">
+          </DialogTrigger>
+          <DialogContent className="p-4">
             <div className="space-y-3">
-              <div>
-                <h4 className="text-sm sm:text-base">Add Members to Team</h4>
-                <p className="text-xs sm:text-sm text-muted-foreground">
+              <DialogHeader>
+                <DialogTitle className="text-sm sm:text-base">
+                  Add Members to Team
+                </DialogTitle>
+                <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
                   Select users to add to {selectedTeam?.name}
-                </p>
-              </div>
+                </DialogDescription>
+              </DialogHeader>
               <Separator />
               <ScrollArea className="h-[240px]">
-                {notTeamMembersData?.data?.length ? (
+                {isLoadingNotTeamsUser ? (
+                  // Skeleton for loading available members
                   <div className="space-y-1">
-                    {notTeamMembersData.data.map((user) => (
-                      <button
-                        key={user.id}
-                        onClick={() => {
-                          addTeams.mutate({
-                            userId: user.id,
-                            teamIds: selectedTeam.id,
-                          });
-                        }}
-                        className="flex w-full items-start sm:items-center gap-2 sm:gap-2 p-2 rounded-lg text-left hover:bg-gray-50 transition-colors"
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="w-full py-2 rounded-lg flex items-center justify-between px-6"
                       >
-                        <Avatar className="w-8 h-8 shrink-0">
-                          <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs sm:text-sm">
-                            {user.name?.[0] ?? "?"}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex gap-1 items-center">
-                            <p className="text-sm truncate">{user.name}</p>
-                            <Badge
-                              variant="outline"
-                              className="text-xs capitalize shrink-0"
-                            >
-                              {user.role}
-                            </Badge>
+                        <div className="flex items-center gap-2 flex-1">
+                          <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                          <div className="flex-1 space-y-2">
+                            <div className="flex gap-2 items-center">
+                              <Skeleton className="h-4 w-24" />
+                              <Skeleton className="h-4 w-16 rounded-full" />
+                            </div>
+                            <Skeleton className="h-3 w-32" />
                           </div>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {user.email}
-                          </p>
                         </div>
-                      </button>
+                        <Skeleton className="h-8 w-16 rounded-md" />
+                      </div>
+                    ))}
+                  </div>
+                ) : notTeamMembersData?.data?.length ? (
+                  <div className="space-y-1">
+                    {notTeamMembersData?.data?.map((user) => (
+                      <div
+                        key={user.id}
+                        className="w-full py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-between px-6"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Avatar className="w-8 h-8 shrink-0">
+                            <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs sm:text-sm">
+                              {user.name?.[0] ?? "?"}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex gap-1 items-center">
+                              <p className="text-sm truncate">{user.name}</p>
+                              <Badge
+                                variant="outline"
+                                className="text-xs capitalize shrink-0"
+                              >
+                                {user.role}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            addTeams.mutate({
+                              userId: user.id,
+                              teamIds: selectedTeam.id,
+                            });
+                          }}
+                          className="cursor-pointer hover:scale-105 hover:bg-white"
+                        >
+                          <Plus className="w-2 h-2" />
+                          Add
+                        </Button>
+                      </div>
                     ))}
                   </div>
                 ) : (
@@ -590,26 +654,50 @@ function AddMembers({ selectedTeam }) {
                 )}
               </ScrollArea>
             </div>
-          </PopoverContent>
-        </Popover>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* view members */}
       <ScrollArea className="h-[260px] pr-3">
-        <div className="space-y-2">
-          {teamMembersObjArr?.map((member, i) => (
-            <div key={i}>
-              <TeamMember member={member} />
-            </div>
-          ))}
-          {(!teamMembersObjArr || teamMembersObjArr.length === 0) && (
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="w-12 h-12 mx-auto opacity-30" />
-              <p className="text-sm ">No members in this team yet</p>
-              <p className="text-xs">Click "Add Member" to get started</p>
-            </div>
-          )}
-        </div>
+        {isLoadingMembers ? (
+          // Skeleton for loading team members
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between py-2 px-3 rounded-lg border"
+              >
+                <div className="flex items-center gap-2 flex-1">
+                  <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex gap-2 items-center">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-4 w-16 rounded-full" />
+                    </div>
+                    <Skeleton className="h-3 w-36" />
+                  </div>
+                </div>
+                <Skeleton className="h-8 w-20 rounded-md" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {teamMembersObjArr?.map((member, i) => (
+              <div key={i}>
+                <TeamMember member={member} />
+              </div>
+            ))}
+            {(!teamMembersObjArr || teamMembersObjArr.length === 0) && (
+              <div className="text-center py-12 text-muted-foreground">
+                <Users className="w-12 h-12 mx-auto opacity-30" />
+                <p className="text-sm ">No members in this team yet</p>
+                <p className="text-xs">Click "Add Member" to get started</p>
+              </div>
+            )}
+          </div>
+        )}
       </ScrollArea>
     </div>
   );
