@@ -3,8 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { ChevronRight, CreditCard, Shield, User, Users } from "lucide-react";
+import {
+  ChevronRight,
+  CreditCard,
+  Crown,
+  Shield,
+  User,
+  Users,
+} from "lucide-react";
 
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -20,10 +28,12 @@ type SettingsSection =
   | "integrations"
   | "team"
   | "billing"
+  | "admin"
   | "security";
 
 const Settings = () => {
   const router = useRouter();
+  const { data: sub, isPending } = useSubscription();
   const searchParams = useSearchParams();
 
   const tabParam = (searchParams.get("tab") as SettingsSection) || "account";
@@ -38,7 +48,10 @@ const Settings = () => {
 
   const handleTabChange = (section: SettingsSection) => {
     setActiveSection(section);
-    router.replace(`?tab=${section}`); // updates URL without reload
+    if (section === "admin") {
+      return router.replace("/admin");
+    }
+    router.replace(`?tab=${section}`);
   };
 
   const settingsSections = [
@@ -76,6 +89,21 @@ const Settings = () => {
         },
       ],
     },
+    ...(sub?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
+      ? [
+          {
+            category: "Admin Settings",
+            items: [
+              {
+                id: "admin" as SettingsSection,
+                label: "Admin",
+                icon: Crown,
+                description: "Admin settings",
+              },
+            ],
+          },
+        ]
+      : []),
   ];
 
   const renderContent = () => {

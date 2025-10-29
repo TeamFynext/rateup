@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/context/UserContext";
+import { UserRole } from "@/utils/enums";
 
 export default function Security() {
   const translations = useTranslations();
@@ -282,146 +283,153 @@ export default function Security() {
           </form>
         </Card>
 
-        <Card className="p-6 border-red-200 bg-gradient-to-br from-red-50 to-orange-50 shadow-sm">
-          <h3 className="mb-4 text-red-700">Danger Zone</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-5 bg-white border-2 border-red-200 rounded-xl">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Trash2 className="w-4 h-4 text-red-600" />
-                  <Label className="text-red-700">Delete Organization</Label>
+        {user.role === UserRole.SUPADM && (
+          <Card className="p-6 border-red-200 bg-gradient-to-br from-red-50 to-orange-50 shadow-sm">
+            <h3 className="mb-4 text-red-700">Danger Zone</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-5 bg-white border-2 border-red-200 rounded-xl">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Label className="text-red-700">Delete Organization</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Permanently delete your organization and all associated
+                    data. This action cannot be undone.
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Permanently delete your organization and all associated data.
-                  This action cannot be undone.
-                </p>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="ml-4"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  Delete Organization
+                </Button>
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                className="ml-4"
-                onClick={() => setIsDeleteDialogOpen(true)}
-              >
-                Delete Organization
-              </Button>
             </div>
-          </div>
-        </Card>
+          </Card>
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+      {user.role === UserRole.SUPADM && (
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl text-red-700">
+                    Delete Organization?
+                  </DialogTitle>
+                  <DialogDescription>
+                    This action is permanent and irreversible
+                  </DialogDescription>
+                </div>
               </div>
-              <div>
-                <DialogTitle className="text-xl text-red-700">
-                  Delete Organization?
-                </DialogTitle>
-                <DialogDescription>
-                  This action is permanent and irreversible
-                </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <Alert variant="destructive" className="border-red-200 bg-red-50">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Warning: High Risk Action</AlertTitle>
+                <AlertDescription className="text-sm">
+                  Deleting your organization will permanently remove:
+                </AlertDescription>
+              </Alert>
+
+              <div className="pl-4 space-y-2 text-sm text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                  <span>All team members and their access</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                  <span>All chats and contacts</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                  <span>All billing information</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                  <span>All integrations</span>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <Label
+                  htmlFor="confirm-delete"
+                  className="text-sm font-semibold"
+                >
+                  Type{" "}
+                  <code className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-mono">
+                    DELETE ORGANIZATION
+                  </code>{" "}
+                  to confirm
+                </Label>
+                <Input
+                  id="confirm-delete"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="Type here to confirm..."
+                  className="border-2 border-red-200 focus:border-red-400"
+                  autoComplete="off"
+                />
               </div>
             </div>
-          </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <Alert variant="destructive" className="border-red-200 bg-red-50">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Warning: High Risk Action</AlertTitle>
-              <AlertDescription className="text-sm">
-                Deleting your organization will permanently remove:
-              </AlertDescription>
-            </Alert>
-
-            <div className="pl-4 space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-start gap-2">
-                <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                <span>All team members and their access</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                <span>All chats and contacts</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                <span>All billing information</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                <span>All integrations</span>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <Label htmlFor="confirm-delete" className="text-sm font-semibold">
-                Type{" "}
-                <code className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-mono">
-                  DELETE ORGANIZATION
-                </code>{" "}
-                to confirm
-              </Label>
-              <Input
-                id="confirm-delete"
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                placeholder="Type here to confirm..."
-                className="border-2 border-red-200 focus:border-red-400"
-                autoComplete="off"
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsDeleteDialogOpen(false);
-                setConfirmText("");
-              }}
-              disabled={isDeleting}
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                notifications.show({
-                  id: "delete-data",
-                  loading: true,
-                  title: translations("Deleting Organization"),
-                  message: translations(
-                    "Hold on, your organization is getting deleted",
-                  ),
-                  autoClose: false,
-                  withCloseButton: false,
-                });
-                await orgDeleteMutation.mutateAsync({ id: user?.orgId });
-              }}
-              disabled={!isConfirmValid || isDeleting}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Organization
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsDeleteDialogOpen(false);
+                  setConfirmText("");
+                }}
+                disabled={isDeleting}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  notifications.show({
+                    id: "delete-data",
+                    loading: true,
+                    title: translations("Deleting Organization"),
+                    message: translations(
+                      "Hold on, your organization is getting deleted",
+                    ),
+                    autoClose: false,
+                    withCloseButton: false,
+                  });
+                  await orgDeleteMutation.mutateAsync({ id: user?.orgId });
+                }}
+                disabled={!isConfirmValid || isDeleting}
+                className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Organization
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

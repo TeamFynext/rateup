@@ -415,6 +415,12 @@ export function getNavTopData(
           },
         ]
       : []),
+    {
+      icon: IconSettings,
+      label: translations("Settings"),
+      link: "/dashboard/settings?tab=account",
+      hasSubmenu: false,
+    },
   ];
   const lastLinksData = [
     { icon: NotificationBellIcon, label: "Notifications" },
@@ -436,33 +442,6 @@ export function getNavTopData(
       icon: IconUser,
       label: translations("Account"),
       link: "/dashboard/settings?tab=account",
-      // children: [
-      //   {
-      //     label: translations("User"),
-      //     link: "/dashboard/settings?tab=user",
-      //     icon: IconUser,
-      //   },
-      //   {
-      //     label: translations("Organization"),
-      //     link: "/dashboard/settings?tab=organization",
-      //     icon: IconBuildings,
-      //   },
-      //   {
-      //     label: translations("Account"),
-      //     link: "/dashboard/settings?tab=account",
-      //     icon: IconUserShare,
-      //   },
-
-      //   ...(subscription?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
-      //     ? [
-      //         {
-      //           label: translations("Admin"),
-      //           link: "/admin",
-      //           icon: IconTerminal2,
-      //         },
-      //       ]
-      //     : []),
-      // ],
     },
   ];
   return [navLinks, lastLinksData];

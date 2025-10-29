@@ -6,7 +6,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   AppShell,
-  Avatar,
   // Badge,
   Box,
   Burger,
@@ -19,7 +18,6 @@ import {
   rgba,
   ScrollAreaAutosize,
   Stack,
-  Switch,
   Text,
   Title,
   Tooltip,
@@ -34,10 +32,13 @@ import {
   Bot,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
+  LogOut,
   Megaphone,
   MessageCircle,
   PanelLeft,
   PanelLeftClose,
+  User,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -69,6 +70,7 @@ import { useNotifyWsMessages } from "../../hooks/useNotifyWsMessages";
 import { orgWsMessage } from "../../types/global";
 import NavbarSkeleton from "../animation/skeleton/Navbar.Skeleton";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
@@ -77,10 +79,21 @@ import {
   CollapsibleTrigger,
 } from "../ui/collapsible";
 import CustomTooltip from "../ui/custom/CustomTooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Separator } from "../ui/separator";
+import { Switch } from "../ui/switch";
 import { useChatFilterStore } from "../whatsapp/inbox/chatselect/chatFilter";
 import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
 import { getNavTopData } from "./Navbar/navbar.constants";
+import NotificationBellIcon from "./Notification";
 import TopNavbar from "./TopLayout";
 
 const showOfflineNotification = (status) => {
@@ -646,6 +659,9 @@ const Navbar = ({
 }) => {
   const updateUserStatus = useUpdateUserAvailabilityStatus();
   const [status, setStatus] = useState(user?.status);
+  const [opened, setOpened] = useState(false);
+  const [openLogoutModal, setOpenLogoutModal] = useState(false);
+  const translations = useTranslations();
   const router = useRouter();
   useEffect(() => {
     if (status !== user?.status) {
@@ -674,11 +690,12 @@ const Navbar = ({
               <div className={classes.logo}>
                 <HoverCard shadow="md" position="right-end">
                   <HoverCard.Target>
-                    <Avatar
-                      name={user?.orgName}
-                      color="initials"
-                      src={getFileUrlFromKey(user?.orgLogo)}
-                    />
+                    <Avatar className="w-12 h-12 border-4 border-white shadow-lg">
+                      <AvatarImage src={getFileUrlFromKey(user?.orgLogo)} />
+                      <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
+                        {user?.orgName?.slice(0, 2) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
                   </HoverCard.Target>
                   <HoverCard.Dropdown>
                     <Flex
@@ -692,12 +709,12 @@ const Navbar = ({
                         cursor: "pointer",
                       }}
                     >
-                      <Avatar
-                        name={user?.orgName}
-                        color="initials"
-                        src={getFileUrlFromKey(user?.orgLogo)}
-                        size={30}
-                      />
+                      <Avatar className="w-12 h-12 border-4 border-white shadow-lg">
+                        <AvatarImage src={getFileUrlFromKey(user?.orgLogo)} />
+                        <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
+                          {user?.orgName?.slice(0, 2) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
                       <Text fw={500} size="sm">
                         {user?.orgName || "No Organization"}
                       </Text>
@@ -714,6 +731,149 @@ const Navbar = ({
               {mainLinks}
             </ScrollAreaAutosize>
           </div>
+          <div className="flex flex-col items-center justify-between gap-2 py-1">
+            <Separator />
+            <Popover open={opened} onOpenChange={setOpened}>
+              <PopoverTrigger asChild>
+                <div
+                  className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => setOpened(true)}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage
+                          src={getFileUrlFromKey(user?.profilePhoto)}
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
+                          {user?.userName?.toUpperCase().slice(0, 2) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span
+                        className={`absolute top-0 right-0 h-3 w-3 rounded-full border-2 border-background ${
+                          status === "online"
+                            ? "bg-[#69f0ae] animate-pulse"
+                            : "bg-[#cacaca]"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </PopoverTrigger>
+
+              <PopoverContent
+                className="w-[260px] p-3 rounded-lg shadow-md"
+                align="end"
+                side="right"
+              >
+                {/* Status */}
+                <div className="mt-2">
+                  <p className="text-xs text-muted-foreground">Status</p>
+                  <div className="flex justify-between items-center mt-1">
+                    <p
+                      className={`text-sm font-semibold ${
+                        status === "online"
+                          ? "text-teal-600"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {status === "online" ? "Online" : "Offline"}
+                    </p>
+                    <Switch
+                      checked={status === "online"}
+                      onCheckedChange={(checked) => {
+                        setStatus(checked ? "online" : "offline");
+                      }}
+                      className="data-[state=checked]:bg-teal-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Organization */}
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground">Organization</p>
+                  <p className="text-sm font-semibold">
+                    {user?.orgName || "N/A"}
+                  </p>
+                </div>
+
+                {/* Email */}
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground">Email</p>
+                  <p className="text-sm font-semibold">
+                    {user?.email || "No email"}
+                  </p>
+                </div>
+
+                {/* Role */}
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground">Role</p>
+                  <p className="text-sm font-semibold">{user?.role || "N/A"}</p>
+                </div>
+
+                <Separator className="my-3" />
+
+                {/* Actions */}
+                <div className="flex flex-col gap-1">
+                  <div
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors"
+                    onClick={() =>
+                      router.push("/dashboard/settings?tab=account")
+                    }
+                  >
+                    <User size={16} />
+                    <span className="text-sm">Profile</span>
+                  </div>
+
+                  <div
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors text-red-600 font-medium"
+                    onClick={() => setOpenLogoutModal(true)}
+                  >
+                    <LogOut size={16} />
+                    <span className="text-sm">Logout</span>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <div>
+              <NotificationBellIcon />
+            </div>
+          </div>
+          <Dialog open={openLogoutModal} onOpenChange={setOpenLogoutModal}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader className="flex flex-col items-center space-y-4 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#004F98]/10">
+                  <LogOut
+                    size={28}
+                    className="text-[#004F98]"
+                    strokeWidth={2}
+                  />
+                </div>
+                <DialogTitle className="text-xl font-semibold">
+                  {translations("Are you sure you want to logout?")}
+                </DialogTitle>
+              </DialogHeader>
+
+              <DialogFooter className="flex-row justify-center gap-2 sm:justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenLogoutModal(false)}
+                  className="min-w-[100px]"
+                >
+                  {translations("Cancel")}
+                </Button>
+                <Button
+                  onClick={() => {
+                    router.push("/logout");
+                    setOpenLogoutModal(false);
+                  }}
+                  className="min-w-[100px]"
+                >
+                  {translations("Logout")}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {linksIcon?.length > 0 && (
@@ -824,7 +984,7 @@ const Navbar = ({
         )}
       </div>
 
-      <div>{lastLinks}</div>
+      {/* <div>{lastLinks}</div> */}
     </nav>
   );
 };
