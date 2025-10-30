@@ -11,6 +11,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
@@ -27,6 +28,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+} from "@/components/ui/select";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal";
 import WaInboxChatExport from "./chatExport";
@@ -40,10 +49,16 @@ const ChatselectPanelHeader = ({
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [filterCount, setFilterCount] = useState(0);
   const sortData = [
-    { label: "Newest First", value: "newest" },
-    { label: "Oldest First", value: "oldest" },
+    {
+      groupName: "Message received",
+      items: [
+        { label: "Newest First", value: "newest" },
+        { label: "Oldest First", value: "oldest" },
+      ],
+    },
   ];
   const { filter, setFilter } = useChatFilterStore();
+  const translations = useTranslations();
   return (
     <div className="p-3 border-b space-y-3 flex-shrink-0 relative">
       {showSearchBar && (
@@ -74,10 +89,6 @@ const ChatselectPanelHeader = ({
         </div>
       )}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center">
-          <MessageSquare className="w-4 h-4 mr-1" />
-          Chats
-        </div>
         <div className="flex items-center gap-2">
           <Dialog>
             <DialogTrigger>
@@ -146,26 +157,32 @@ const ChatselectPanelHeader = ({
               <WaInboxChatExport />
             </PopoverContent>
           </Popover>
-        </div>
-      </div>
-      <div className="flex items-center text-xs">
-        <Button
-          variant="secondary"
-          size="sm"
-          className="text-muted-foreground"
-          onClick={() => refetchFilteredContacts()}
-        >
-          <RefreshCcw
-            className={`w-3 h-3 ${isRefetchingFilteredContacts ? "animate-spin" : ""}`}
+          <CustomTooltip
+            trigger={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetchFilteredContacts()}
+              >
+                <RefreshCcw
+                  className={`w-3 h-3 ${isRefetchingFilteredContacts ? "animate-spin" : ""}`}
+                />
+              </Button>
+            }
+            content={<span>{translations("Refresh")}</span>}
           />
-          {isRefetchingFilteredContacts ? "Loading..." : "Reload"}
-        </Button>
-        <div className="ml-auto">
-          <SortMenu
-            data={sortData}
-            value={filter?.sortBy}
-            onChange={(value) => setFilter({ ...filter, sortBy: value })}
-            defaultValue="newest"
+        </div>
+        <div className="flex items-center text-xs">
+          <CustomTooltip
+            trigger={
+              <SortMenu
+                data={sortData}
+                value={filter?.sortBy}
+                onChange={(value) => setFilter({ ...filter, sortBy: value })}
+                defaultValue="newest"
+              />
+            }
+            content={<span>{translations("Sort")}</span>}
           />
         </div>
       </div>
@@ -178,41 +195,32 @@ const SortMenu = ({
   onChange,
   value,
   defaultValue,
+  customSelectTrigger,
 }: {
-  data: { label: string; value: string }[];
+  data: { items: { label: string; value: string }[]; groupName: string }[];
   value: string;
   onChange: (value) => void;
   defaultValue: string;
+  customSelectTrigger?: React.ReactNode;
 }) => {
-  const selected = data?.find((item) => item?.value === value);
-  const defaultItem = data?.find((item) => item?.value === defaultValue);
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 text-xs text-muted-foreground"
-        >
-          <Clock className="w-3 h-3 mr-1" />
-          {selected?.label || defaultItem?.label || "Select"}
-          <ChevronDown className="w-3 h-3 ml-1" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {data?.map((item) => (
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.preventDefault();
-              onChange(item?.value);
-            }}
-            key={item?.value}
-          >
-            {item?.label}
-          </DropdownMenuItem>
+    <Select onValueChange={onChange} value={value} defaultValue={defaultValue}>
+      <SelectTrigger>
+        {customSelectTrigger ?? <Clock className="w-3 h-3 mr-1" />}
+      </SelectTrigger>
+      <SelectContent>
+        {data.map((g, index) => (
+          <SelectGroup key={g?.groupName}>
+            <SelectLabel>{g?.groupName}</SelectLabel>
+            {g?.items?.map((item) => (
+              <SelectItem key={item?.value} value={item?.value}>
+                {item?.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </SelectContent>
+    </Select>
   );
 };
 

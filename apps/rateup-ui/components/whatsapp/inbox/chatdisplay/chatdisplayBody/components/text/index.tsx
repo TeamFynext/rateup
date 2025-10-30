@@ -1,13 +1,4 @@
-import { Anchor, Text } from "@mantine/core";
-
-import {
-  parseFromWhatsAppFormat,
-  parseJsonToReact,
-  parseWhatsAppToReact,
-  whatsappToHTML,
-} from "@/components/RichTextEditor/waTextEditor";
-
-import classes from "./styles.module.css";
+import { whatsappToHTML } from "@/components/RichTextEditor/waTextEditor";
 
 interface Props {
   messageContent: string;
@@ -20,18 +11,17 @@ export default function WaInboxText(props: Props) {
   const parts = message.split(urlRegex).filter(Boolean);
 
   return (
-    <Text size="sm" className="w-80 break-words" component="span">
+    <div className="text-sm overflow-hidden">
       {parts.map((text, index) =>
         urlRegex.test(text) ? (
-          <Anchor
-            className={classes.text}
+          <a
             key={index}
             href={text}
             target="_blank"
-            rel="noopener noreferrer"
+            className="no-underline hover:underline text-blue-600 break-all"
           >
             {text}
-          </Anchor>
+          </a>
         ) : (
           <div
             key={index}
@@ -39,6 +29,6 @@ export default function WaInboxText(props: Props) {
           />
         ),
       )}
-    </Text>
+    </div>
   );
 }
