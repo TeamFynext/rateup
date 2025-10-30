@@ -29,6 +29,7 @@ import RateupLoader from "@/components/Loaders/RateupLoader";
 import { allModalManagerModalsObj } from "@/components/Modal/ModalManagerModals/allModalManagerModalsObj";
 import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { isProduction, rateupUrl } from "@/utils/constants";
 import { geist, notoColorEmogi } from "@/utils/fonts";
 
@@ -101,6 +102,7 @@ export default async function RootLayout({
             </SuperTokensProvider>
           </Suspense>
         </MantineProvider>
+        <Toaster />
       </body>
     </html>
   );
