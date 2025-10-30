@@ -422,27 +422,27 @@ export function getNavTopData(
       hasSubmenu: false,
     },
   ];
-  const lastLinksData = [
-    { icon: NotificationBellIcon, label: "Notifications" },
-    ...(process.env.NEXT_PUBLIC_EXPERIMENT
-      ? [{ icon: ColorSchemaButton, label: "Dark Mode" }]
-      : []),
-    {
-      icon: IconLogout,
-      label: "Logout",
-      children: [
-        {
-          label: "Logout",
-          link: "/logout",
-          icon: IconLogout,
-        },
-      ],
-    },
-    {
-      icon: IconUser,
-      label: translations("Account"),
-      link: "/dashboard/settings?tab=account",
-    },
-  ];
-  return [navLinks, lastLinksData];
+  // const lastLinksData = [
+  //   { icon: NotificationBellIcon, label: "Notifications" },
+  //   ...(process.env.NEXT_PUBLIC_EXPERIMENT
+  //     ? [{ icon: ColorSchemaButton, label: "Dark Mode" }]
+  //     : []),
+  //   {
+  //     icon: IconLogout,
+  //     label: "Logout",
+  //     children: [
+  //       {
+  //         label: "Logout",
+  //         link: "/logout",
+  //         icon: IconLogout,
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     icon: IconUser,
+  //     label: translations("Account"),
+  //     link: "/dashboard/settings?tab=account",
+  //   },
+  // ];
+  return [navLinks];
 }

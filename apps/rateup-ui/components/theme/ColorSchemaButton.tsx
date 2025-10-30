@@ -30,8 +30,16 @@ export default function ColorSchemaButton() {
       aria-label="Toggle color scheme"
       className="mr-2"
     >
-      <IconSun className={cx(classes.icon, classes.light)} stroke={1.5} />
-      <IconMoon className={cx(classes.icon, classes.dark)} stroke={1.5} />
+      <IconSun
+        className={cx(classes.icon, classes.light)}
+        stroke={1.5}
+        strokeWidth={2}
+      />
+      <IconMoon
+        className={cx(classes.icon, classes.dark)}
+        stroke={1.5}
+        strokeWidth={2}
+      />
     </Box>
   );
 }

@@ -70,6 +70,7 @@ import { useNotifyWsMessages } from "../../hooks/useNotifyWsMessages";
 import { orgWsMessage } from "../../types/global";
 import NavbarSkeleton from "../animation/skeleton/Navbar.Skeleton";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
+import ColorSchemaButton from "../theme/ColorSchemaButton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -461,44 +462,44 @@ const SubNavLinks = ({
 };
 
 // LastLinks Component
-const LastLinks = ({
-  links,
-  activeMainLink,
-  setActiveMainLink,
-  setActiveSubLink,
-  router,
-  status,
-}) => {
-  return links.map((link, index) => (
-    <Tooltip
-      label={link.label}
-      position="right"
-      withArrow
-      transitionProps={{ duration: 0 }}
-      key={index}
-    >
-      <UnstyledButton
-        onClick={() => {
-          if (link?.label !== "Dark Mode" && link?.label !== "Notifications") {
-            setActiveMainLink(link.label);
-            setActiveSubLink(link.link);
-            showOfflineNotification(status);
-            // router.push(link?.children[0]?.link);
-            if (link?.link) {
-              router.push(link?.link);
-            } else {
-              router.push(link?.children[0]?.link);
-            }
-          }
-        }}
-        className={classes.mainLink}
-        data-active={link.label === activeMainLink || undefined}
-      >
-        <link.icon size={22} stroke={1.5} />
-      </UnstyledButton>
-    </Tooltip>
-  ));
-};
+// const LastLinks = ({
+//   links,
+//   activeMainLink,
+//   setActiveMainLink,
+//   setActiveSubLink,
+//   router,
+//   status,
+// }) => {
+//   return links.map((link, index) => (
+//     <Tooltip
+//       label={link.label}
+//       position="right"
+//       withArrow
+//       transitionProps={{ duration: 0 }}
+//       key={index}
+//     >
+//       <UnstyledButton
+//         onClick={() => {
+//           if (link?.label !== "Dark Mode" && link?.label !== "Notifications") {
+//             setActiveMainLink(link.label);
+//             setActiveSubLink(link.link);
+//             showOfflineNotification(status);
+//             // router.push(link?.children[0]?.link);
+//             if (link?.link) {
+//               router.push(link?.link);
+//             } else {
+//               router.push(link?.children[0]?.link);
+//             }
+//           }
+//         }}
+//         className={classes.mainLink}
+//         data-active={link.label === activeMainLink || undefined}
+//       >
+//         <link.icon size={22} stroke={1.5} />
+//       </UnstyledButton>
+//     </Tooltip>
+//   ));
+// };
 export const handleWebSocketMessage = ({
   newMessagePayload,
   queryClient,
@@ -648,7 +649,7 @@ const Navbar = ({
   activeMainLink,
   linksIcon,
   linksText,
-  lastLinks,
+  // lastLinks,
   mobileOpened,
   toggleMobile,
   desktopOpened,
@@ -723,11 +724,7 @@ const Navbar = ({
                 </HoverCard>
               </div>
             </Stack>
-            <ScrollAreaAutosize
-              mah={"calc(100dvh - 80px)"}
-              scrollbarSize={6}
-              p={"xs"}
-            >
+            <ScrollAreaAutosize mah={"70dvh"} scrollbarSize={6} p={"xs"}>
               {mainLinks}
             </ScrollAreaAutosize>
           </div>
@@ -835,6 +832,9 @@ const Navbar = ({
                 </div>
               </PopoverContent>
             </Popover>
+            <div className="flex items-center justify-center ml-2">
+              <ColorSchemaButton />
+            </div>
             <div>
               <NotificationBellIcon />
             </div>
@@ -1114,7 +1114,7 @@ export default function Layout({ children }) {
 
   const translations = useTranslations();
   const [navLinks, setNavLinks] = useState([]);
-  const [lastLinksData, setLastLinksData] = useState([]);
+  // const [lastLinksData, setLastLinksData] = useState([]);
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
   const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
   const isLoading =
@@ -1131,7 +1131,7 @@ export default function Layout({ children }) {
         labels, // pass dynamic labels
       );
       setNavLinks(nLinks);
-      setLastLinksData(lLinks);
+      // setLastLinksData(lLinks);
     }
   }, [isLoading, sub, translations, userInfo?.data?.role, labels]);
 
@@ -1204,12 +1204,13 @@ export default function Layout({ children }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
 
   // Create linksMapping object from navLinks
-  const linksMapping = [...navLinks, ...lastLinksData]?.reduce<
-    Record<string, NavLinkItem[]>
-  >((acc, link) => {
-    acc[link.label] = link.children || [];
-    return acc;
-  }, {});
+  const linksMapping = [...navLinks]?.reduce<Record<string, NavLinkItem[]>>(
+    (acc, link) => {
+      acc[link.label] = link.children || [];
+      return acc;
+    },
+    {},
+  );
 
   // On reload, set active main/sub link based on route
   useEffect(() => {
@@ -1308,16 +1309,16 @@ export default function Layout({ children }) {
     labels,
   });
 
-  const lastLinks = (
-    <LastLinks
-      links={lastLinksData}
-      activeMainLink={activeMainLink}
-      setActiveMainLink={setActiveMainLink}
-      setActiveSubLink={setActiveSubLink}
-      router={router}
-      status={userInfo?.data?.status || UserAvailabilityStatus.offline}
-    />
-  );
+  // const lastLinks = (
+  //   <LastLinks
+  //     links={lastLinksData}
+  //     activeMainLink={activeMainLink}
+  //     setActiveMainLink={setActiveMainLink}
+  //     setActiveSubLink={setActiveSubLink}
+  //     router={router}
+  //     status={userInfo?.data?.status || UserAvailabilityStatus.offline}
+  //   />
+  // );
   if (!pathname) return null;
 
   return (
@@ -1361,7 +1362,7 @@ export default function Layout({ children }) {
             activeMainLink={activeMainLink}
             linksIcon={linksIcon}
             linksText={linksText}
-            lastLinks={lastLinks}
+            // lastLinks={lastLinks}
             mobileOpened={mobileOpened}
             toggleMobile={toggleMobile}
             desktopOpened={desktopOpened}

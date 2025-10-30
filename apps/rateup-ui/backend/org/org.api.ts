@@ -13,6 +13,19 @@ export async function getTeamsMembersOfOrg() {
     //return { error: "Error Occured!" };
   }
 }
+
+export async function getAllTeamsMembersOfOrg() {
+  try {
+    let members = (
+      await axiosClient.get("/org/members-with-teams-and-invitation")
+    ).data;
+    return members;
+  } catch (e) {
+    console.error(e);
+    //return { error: "Error Occured!" };
+  }
+}
+
 export interface IUpdateRole {
   role: string;
 }

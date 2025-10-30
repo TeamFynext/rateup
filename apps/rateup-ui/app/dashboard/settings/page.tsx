@@ -7,18 +7,24 @@ import {
   ChevronRight,
   CreditCard,
   Crown,
+  Menu,
   Shield,
   User,
+  UserCog,
   Users,
+  X,
 } from "lucide-react";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useUser } from "@/context/UserContext";
+import { UserRole } from "@/utils/enums";
 
 import Security from "./SecuritySettings";
 import Team from "./TeamSettings";
 import { Account } from "./UserSettingsNew";
+import UsersPage from "./UsersSettings";
 
 type SettingsSection =
   | "account"
@@ -33,13 +39,14 @@ type SettingsSection =
 
 const Settings = () => {
   const router = useRouter();
+  const { user } = useUser();
   const { data: sub, isPending } = useSubscription();
   const searchParams = useSearchParams();
 
   const tabParam = (searchParams.get("tab") as SettingsSection) || "account";
   const [activeSection, setActiveSection] = useState<SettingsSection>(tabParam);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Keep state synced with URL param changes
   useEffect(() => {
     if (tabParam !== activeSection) {
       setActiveSection(tabParam);
@@ -48,6 +55,7 @@ const Settings = () => {
 
   const handleTabChange = (section: SettingsSection) => {
     setActiveSection(section);
+    setSidebarOpen(false);
     if (section === "admin") {
       return router.replace("/admin");
     }
@@ -64,6 +72,16 @@ const Settings = () => {
           icon: User,
           description: "Business profile & preferences",
         },
+        ...(user?.role === UserRole.SUPADM
+          ? [
+              {
+                id: "users" as SettingsSection,
+                label: "Users",
+                icon: UserCog,
+                description: "User accounts & access",
+              },
+            ]
+          : []),
         {
           id: "team" as SettingsSection,
           label: "Team",
@@ -114,18 +132,57 @@ const Settings = () => {
         return <Team />;
       case "security":
         return <Security />;
+      case "users":
+        if (user?.role !== UserRole.SUPADM) return null;
+        return <UsersPage />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="h-full flex bg-background overflow-hidden">
+    <div className="h-full flex flex-col md:flex-row bg-background overflow-hidden">
+      <div className="md:hidden flex items-center justify-between p-4 border-b bg-card">
+        <h1 className="text-lg font-semibold">Settings</h1>
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          aria-label="Toggle sidebar"
+        >
+          {sidebarOpen ? (
+            <X className="w-5 h-5" />
+          ) : (
+            <Menu className="w-5 h-5" />
+          )}
+        </button>
+      </div>
+
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40 top-16"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
       <nav
-        className="w-64 border-r bg-card flex flex-col h-full"
+        className={`fixed md:static inset-y-0 left-0 z-50 w-64 border-r border-l bg-card flex flex-col h-full transition-transform duration-300 ease-in-out md:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:top-0 top-16`}
         aria-label="Settings navigation"
       >
+        <div className="md:hidden flex items-center justify-between p-3 border-b">
+          <h2 className="font-semibold">Menu</h2>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            aria-label="Close sidebar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
         <div className="flex-1 px-3 py-2.5">
           {settingsSections.map((category, i) => (
             <div key={i} className="mb-1.5 last:mb-0">
@@ -154,11 +211,7 @@ const Settings = () => {
                       }`}
                     >
                       <item.icon
-                        className={`w-3.5 h-3.5 ${
-                          activeSection === item.id
-                            ? "text-white"
-                            : "text-muted-foreground"
-                        }`}
+                        className={`w-3.5 h-3.5 ${activeSection === item.id ? "text-white" : "text-muted-foreground"}`}
                       />
                     </div>
                     <div className="flex-1 text-left min-w-0">
@@ -187,19 +240,6 @@ const Settings = () => {
               )}
             </div>
           ))}
-        </div>
-
-        {/* Footer */}
-        <div className="p-3 border-t bg-gradient-to-r from-blue-50 to-orange-50">
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground mb-1">Need help?</p>
-            <Button
-              variant="link"
-              className="h-auto p-0 text-xs text-rateup-blue hover:text-rateup-orange transition-colors"
-            >
-              Contact Support
-            </Button>
-          </div>
         </div>
       </nav>
 
