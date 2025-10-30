@@ -3,6 +3,7 @@ import {
   completeOrgDetailsHandler,
   createOrgHandler,
   deleteOrgHandler,
+  getAllMembersWithTeamsAndInvitationHandler,
   getAllMembersWithTeamsHandler,
   getAllOrgsHandler,
   getAllTeamsAndMembers,
@@ -73,6 +74,11 @@ export async function orgRoutes(server: FastifyInstance) {
   );
 
   server.get("/members-with-teams", getAllMembersWithTeamsHandler);
+
+  server.get(
+    "/members-with-teams-and-invitation",
+    getAllMembersWithTeamsAndInvitationHandler,
+  );
 
   server.put(
     "/update-logo",
