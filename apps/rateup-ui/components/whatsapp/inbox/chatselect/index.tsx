@@ -338,6 +338,7 @@ const WaInboxChatSelect = () => {
                 }
                 return (
                   <div
+                    data-index={virtualRow.index}
                     key={virtualRow.index}
                     ref={rowVirtualizer.measureElement}
                     style={{

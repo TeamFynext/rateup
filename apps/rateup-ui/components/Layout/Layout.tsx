@@ -270,7 +270,6 @@ const SubNavLinks = ({
       <CustomTooltip
         trigger={
           <Button
-            key={category.id}
             variant={filter.category === category.id ? "secondary" : "ghost"}
             className="h-9 w-full mb-2"
             onClick={() => {
@@ -286,6 +285,7 @@ const SubNavLinks = ({
         }
         content={<p>{category.label}</p>}
         side="right"
+        key={category.id}
       />
     );
   });
@@ -706,7 +706,7 @@ const Navbar = ({
               scrollbarSize={6}
               p={"xs"}
             >
-              {mainLinks}
+              <div className="flex flex-col gap-2">{mainLinks}</div>
             </ScrollAreaAutosize>
           </div>
         </div>

@@ -254,8 +254,9 @@ export const useContactsStore = create<ContactsStoreState>()(
               filter = true;
             }
             if (
-              updated.lastMessage.waCreatedAt >
-                contact.lastMessage.waCreatedAt ||
+              (updated.lastMessage &&
+                updated.lastMessage.waCreatedAt >
+                  contact.lastMessage.waCreatedAt) ||
               filter
             ) {
               state.isLoading = true;

@@ -1,11 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
-  ChevronDown,
   Clock,
   Download,
   Filter,
-  MessageSquare,
   RefreshCcw,
   Search,
   UserPlus,
@@ -16,12 +14,6 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -59,6 +51,9 @@ const ChatselectPanelHeader = ({
   ];
   const { filter, setFilter } = useChatFilterStore();
   const translations = useTranslations();
+  useEffect(() => {
+    if (filter.searchTerm.length && !showSearchBar) setShowSearchBar(true);
+  }, [filter]);
   return (
     <div className="p-3 border-b space-y-3 flex-shrink-0 relative">
       {showSearchBar && (
