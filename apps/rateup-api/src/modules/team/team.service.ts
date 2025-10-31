@@ -569,13 +569,20 @@ export function getTeamMembers(input: GetTeamMembersInput) {
 
 export async function getUsersNotInTeam(teamId: string, orgId: string) {
   return prisma.$queryRawUnsafe<
-    { id: string; name: string | null; email: string; role: string }[]
+    {
+      id: string;
+      name: string | null;
+      email: string;
+      role: string;
+      profilePhoto: string | null;
+    }[]
   >(
     `
     SELECT 
       u.id,
       u.name,
       u.email,
+      u."profilePhoto",
       om.role
     FROM "User" u
     INNER JOIN "OrgMember" om ON om."userId" = u.id
@@ -627,6 +634,7 @@ export async function getTeamMembersAndFromInvitation(
               id: true,
               name: true,
               email: true,
+              profilePhoto: true,
               active: true,
               orgMember: {
                 where: {
@@ -657,6 +665,7 @@ export async function getTeamMembersAndFromInvitation(
         active: member.user.active,
         role: member.user.orgMember[0].role,
         userId: member.user.orgMember[0].userId,
+        profilePhoto: member.user.profilePhoto,
       };
     }),
     invitations: team.invitations.map((invite) => {
