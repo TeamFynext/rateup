@@ -2,13 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 
 import lodash from "lodash";
 import {
+  Check,
   CheckCheck,
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  CircleDashed,
   UserRoundCheck,
   Users,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
@@ -29,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Loader } from "@/components/ui/loader";
+import { useUser } from "@/context/UserContext";
 
 const AssignUser = ({ contactId }) => {
   const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
@@ -39,6 +43,8 @@ const AssignUser = ({ contactId }) => {
     error,
   } = useTeamsByUser();
   const { filterData } = useContactStore();
+  const translations = useTranslations();
+  const { user } = useUser();
   const { data: assignedUsers, isLoading: isAssignedLoading } =
     useGetAssignedUserForContact(contactId);
   const assignMut = useAssignInboxToUer(contactId, filterData);
@@ -232,6 +238,9 @@ const AssignUser = ({ contactId }) => {
           const allSelected = teamStaff.every((s) =>
             isSelectedForTeam(s.id, team.id),
           );
+          const hasOtherTeamsSelected = assignedStaff.some(
+            (a) => a.teamId !== team.id,
+          );
           const partiallySelected =
             !allSelected &&
             teamStaff.some((s) =>
@@ -252,11 +261,9 @@ const AssignUser = ({ contactId }) => {
                 </div>
                 <div className="flex items-center gap-1">
                   {partiallySelected && !allSelected && (
-                    <div className="w-3 h-3 rounded-sm border border-green-600 bg-green-300" />
+                    <CircleDashed className="w-4 h-4 text-green-600" />
                   )}
-                  {allSelected && (
-                    <CheckCheck className="w-4 h-4 text-green-600" />
-                  )}
+                  {allSelected && <Check className="w-4 h-4 text-green-600" />}
                   {openTeams.includes(team.id) ? (
                     <ChevronUp className="w-3 h-3" />
                   ) : (
@@ -271,6 +278,7 @@ const AssignUser = ({ contactId }) => {
                     onSelect={(e) => e.preventDefault()}
                     onClick={() => handleSelectTeam(team)}
                     className="text-xs text-muted-foreground cursor-pointer"
+                    disabled={allSelected && !hasOtherTeamsSelected}
                   >
                     {allSelected
                       ? "Unassign entire team"
@@ -308,7 +316,14 @@ const AssignUser = ({ contactId }) => {
                               size="xs"
                             />
                             <div>
-                              <div className="text-sm">{staff.name}</div>
+                              <div className="text-sm">
+                                {staff.name}
+                                {staff.id === user.userId && (
+                                  <span className="ml-1">
+                                    ( {translations("You")} )
+                                  </span>
+                                )}
+                              </div>
                               <div className="text-[11px] text-muted-foreground">
                                 {staff.status === "online"
                                   ? "Online"
@@ -338,7 +353,7 @@ const AssignUser = ({ contactId }) => {
                               />
                             )}
                             {isSelected && (
-                              <CheckCheck className="w-4 h-4 text-green-600" />
+                              <Check className="w-4 h-4 text-green-600" />
                             )}
                           </div>
                         </div>
