@@ -36,7 +36,7 @@ import {
   useUpdateActiveStatusMutation,
   useUpdateUserPause,
 } from "@/backend/user/user.query";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -59,8 +59,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
 import { getOrgIdRole, getUserID } from "@/utils/userInfo";
 
@@ -80,7 +87,6 @@ export default function UsersPage() {
   const translations = useTranslations();
   const queryClient = useQueryClient();
   const { data, isLoading } = useAllTeamsMembersOfOrg();
-  console.log("data", data);
   // Fetch Teams
   const {
     isLoading: isLoadingTeamsUser,
@@ -236,7 +242,7 @@ export default function UsersPage() {
   });
 
   return (
-    <div>
+    <div className="flex flex-col items-start w-full gap-4">
       <div>
         <h2 className="text-2xl mb-1">User Management</h2>
         <p className="text-sm text-muted-foreground">
@@ -244,8 +250,8 @@ export default function UsersPage() {
         </p>
       </div>
 
-      <Card className="p-4">
-        <div className="flex items-center gap-3">
+      <Card className="p-4 w-full">
+        <div className="flex items-center gap-3 w-full">
           {/* Add User Dialog */}
           <Dialog
             open={isAddUserDialogOpen}
@@ -323,31 +329,37 @@ export default function UsersPage() {
                     <Label htmlFor="new-team" className="text-xs">
                       Team Assignment
                     </Label>
+                    {isLoadingTeamsUser ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="h-9 w-full rounded-md bg-muted animate-pulse" />
+                        <div className="h-9 w-full rounded-md bg-muted animate-pulse" />
+                      </div>
+                    ) : (
+                      <Select
+                        value={userForm.values.team}
+                        onValueChange={(value) =>
+                          userForm.setFieldValue("team", value)
+                        }
+                      >
+                        <SelectTrigger className="h-9 w-full">
+                          <SelectValue placeholder="Select team" />
+                        </SelectTrigger>
 
-                    <Select
-                      value={userForm.values.team}
-                      onValueChange={(value) =>
-                        userForm.setFieldValue("team", value)
-                      }
-                    >
-                      <SelectTrigger className="h-9 w-full">
-                        <SelectValue placeholder="Select team" />
-                      </SelectTrigger>
-
-                      <SelectContent>
-                        {teamsDataUser?.data?.map((team) => (
-                          <SelectItem key={team.id} value={team.id}>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-2 h-2 rounded-full"
-                                style={{ backgroundColor: team.color }}
-                              />
-                              {team.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectContent>
+                          {teamsDataUser?.data?.map((team) => (
+                            <SelectItem key={team.id} value={team.id}>
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ backgroundColor: team.color }}
+                                />
+                                {team.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
 
                   {/* Extra Settings */}
@@ -391,7 +403,7 @@ export default function UsersPage() {
           </Dialog>
 
           {/* Search Bar */}
-          <div className="relative flex-1">
+          <div className="relative w-full bg-gray-50">
             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search users by name or email..."
@@ -418,11 +430,11 @@ export default function UsersPage() {
                     {/* Avatar */}
                     <div className="relative mb-2">
                       <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
+                        <AvatarImage
+                          src={getFileUrlFromKey(user.profilePhoto)}
+                        />
                         <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white">
-                          {user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
+                          {user.name?.toUpperCase().slice(0, 2)}
                         </AvatarFallback>
                       </Avatar>
                       {user.status === "online" && (
@@ -445,9 +457,42 @@ export default function UsersPage() {
                     {/* Team info */}
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-2">
                       <Users className="w-3 h-3" />
-                      <span className="line-clamp-1">
-                        {user.teams.map((t) => t.team_name).join(", ")}
-                      </span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1 cursor-default">
+                              <span className="line-clamp-1">
+                                {user?.teams.length === 0
+                                  ? "Not in any team"
+                                  : user.teams
+                                      .slice(0, 2)
+                                      .map((t) => t.team_name)
+                                      .join(", ")}
+                                {user.teams.length > 2 ? "..." : ""}
+                              </span>
+                            </div>
+                          </TooltipTrigger>
+
+                          <TooltipContent className="border shadow-md rounded-lg p-2 text-xs max-w-[200px]">
+                            <div className="flex flex-col gap-1">
+                              {user.teams.map((t: any) => (
+                                <div
+                                  key={t.id}
+                                  className="flex items-center gap-2"
+                                >
+                                  <span
+                                    className="w-2 h-2 rounded-full"
+                                    style={{
+                                      backgroundColor: t.team_color || "#ccc",
+                                    }}
+                                  />
+                                  <span>{t.team_name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
 
                     <Button
@@ -486,10 +531,7 @@ export default function UsersPage() {
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
                       <AvatarFallback className="bg-gradient-to-br from-rateup-orange to-yellow-500 text-white">
-                        {invite.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
+                        {invite?.name?.slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
 
@@ -567,7 +609,6 @@ function EditMember({
   const updatePauseStatus = useUpdateUserPause();
   const updateRole = useUpdateRoleMutation();
   const [role, setRole] = useState(selectedUser?.role);
-  const { user } = useUser();
 
   function onChangeRole(id: string, role: string) {
     const data = { memberId: id, body: { role: role } };
@@ -616,13 +657,13 @@ function EditMember({
             {/* Left: Profile Picture */}
             <div className="flex flex-col items-center gap-2">
               <Avatar className="w-32 h-32 ring-2 ring-gray-200">
-                {/* {profileImage ? (
-                        <AvatarImage src={profileImage} />
-                      ) : ( */}
+                <AvatarImage
+                  src={getFileUrlFromKey(selectedUser?.profilePhoto)}
+                />
+
                 <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white">
                   <User className="w-12 h-12" />
                 </AvatarFallback>
-                {/* )} */}
               </Avatar>
 
               <div className="flex items-center gap-2 mt-2">
@@ -703,12 +744,10 @@ function EditMember({
                     setRole(newRole);
                     onChangeRole(selectedUser.id, newRole);
                   }}
+                  defaultValue={selectedUser?.role}
                 >
                   <SelectTrigger className="h-9 w-full">
-                    <SelectValue
-                      defaultValue={selectedUser?.role}
-                      placeholder="Select role"
-                    />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={UserRole.SUPADM}>

@@ -704,7 +704,7 @@ const Navbar = ({
                       align={"center"}
                       gap={"xs"}
                       onClick={() =>
-                        router.push("/dashboard/settings?tab=organization")
+                        router.push("/dashboard/settings?tab=account")
                       }
                       style={{
                         cursor: "pointer",

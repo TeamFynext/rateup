@@ -3,8 +3,9 @@ import { useSearchParams } from "next/navigation";
 
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
+import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { Clock, Plus, Trash2, User, Users } from "lucide-react";
+import { Clock, Plus, Trash2, User, Users, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -13,10 +14,11 @@ import {
   useDeleteTeamMutation,
   useEditTeamMutation,
   useNotTeamMembers,
+  useRemoveUserFromTeam,
   useTeamMembersFromInvitation,
   useTeamsByUser,
 } from "@/backend/team/team.query";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -37,6 +39,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
+import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 let colorArray = [
   { from: "#3B82F6", to: "#2563EB" }, // Blue
@@ -361,7 +364,7 @@ const Team = () => {
               </DialogHeader>
 
               <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsList className="flex w-full mb-4">
                   <TabsTrigger value="details">Details</TabsTrigger>
                   <TabsTrigger value="members">Members</TabsTrigger>
                   <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -377,7 +380,10 @@ const Team = () => {
                   </TabsContent>
 
                   <TabsContent value="members" className="space-y-3">
-                    <AddMembers selectedTeam={selectedTeam} />
+                    <AddMembers
+                      selectedTeam={selectedTeam}
+                      refetchTeams={refetchTeams}
+                    />
                   </TabsContent>
 
                   <TabsContent value="settings" className="space-y-4">
@@ -518,17 +524,16 @@ function EditTeam({
   );
 }
 
-function AddMembers({ selectedTeam }) {
+function AddMembers({ selectedTeam, refetchTeams }) {
   const teamID = selectedTeam.id;
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-
   const {
     isLoading: isLoadingNotTeamsUser,
     data: notTeamMembersData,
     error: errorTeamsDataUser,
     refetch: reftchTeams,
   } = useNotTeamMembers(teamID);
-
+  console.log("notTeam", notTeamMembersData);
   const {
     isLoading: isLoadingMembers,
     data: teamsMembersData,
@@ -607,8 +612,11 @@ function AddMembers({ selectedTeam }) {
                       >
                         <div className="flex items-center gap-2">
                           <Avatar className="w-8 h-8 shrink-0">
+                            <AvatarImage
+                              src={getFileUrlFromKey(user?.profilePhoto)}
+                            />
                             <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs sm:text-sm">
-                              {user.name?.[0] ?? "?"}
+                              {user.name?.toUpperCase().slice(0, 2)}
                             </AvatarFallback>
                           </Avatar>
 
@@ -686,7 +694,11 @@ function AddMembers({ selectedTeam }) {
           <div className="space-y-2">
             {teamMembersObjArr?.map((member, i) => (
               <div key={i}>
-                <TeamMember member={member} />
+                <TeamMember
+                  member={member}
+                  selectedTeam={selectedTeam}
+                  refetchTeams={refetchTeams}
+                />
               </div>
             ))}
             {(!teamMembersObjArr || teamMembersObjArr.length === 0) && (
@@ -703,31 +715,80 @@ function AddMembers({ selectedTeam }) {
   );
 }
 
-function TeamMember({ member }) {
+function TeamMember({ member, selectedTeam, refetchTeams }) {
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const removeteam = useRemoveUserFromTeam(selectedTeam.id);
+
+  const removeTeam = (userid) => {
+    removeteam.mutate(
+      { teamId: selectedTeam.id, userId: userid },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
+          queryClient.invalidateQueries({ queryKey: ["notTeamMembers"] });
+          refetchTeams();
+        },
+      },
+    );
+  };
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-0">
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <Avatar className="w-9 h-9 flex-shrink-0">
+          <AvatarImage src={getFileUrlFromKey(member?.profilePhoto)} />
           <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs sm:text-sm">
-            {member?.name?.slice(0, 1)}
+            {member?.name?.toUpperCase().slice(0, 2)}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm sm:text-base truncate">{member?.name}</p>
+        <div className="flex-1 flex-col min-w-0">
+          <div className="flex gap-1">
+            <p className="text-sm sm:text-base truncate">{member?.name}</p>
+            <div className="flex items-center flex-shrink-0 ">
+              {member?.status === "PENDING" ? (
+                ""
+              ) : (
+                <Badge variant="outline" className="text-xs capitalize">
+                  {member?.role}
+                </Badge>
+              )}
+            </div>
+          </div>
           <p className="text-xs sm:text-sm text-muted-foreground truncate">
             {member.email}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0 mt-2 sm:mt-0">
-        {member?.status === "PENDING" ? (
-          ""
-        ) : (
-          <Badge variant="outline" className="text-xs sm:text-sm capitalize">
-            {member?.role}
-          </Badge>
-        )}
-      </div>
+      {member.role !== UserRole.SUPADM && (
+        <Button
+          variant="destructive"
+          className="flex items-center justify-center gap-1"
+          onClick={() => setOpen(true)}
+        >
+          <X />
+          Remove
+        </Button>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove</DialogTitle>
+            <DialogDescription>
+              Are you sure to remove this user from {selectedTeam?.name}?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => removeTeam(member.id)}>
+              Confirm Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
