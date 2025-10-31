@@ -81,6 +81,8 @@ const WaChatFilterSchema = z.object({
   assignedTeams: z.array(z.string()).optional(),
   phone: z.string(),
   labels: z.array(z.string()).optional(),
+  sortBy: z.string().optional(),
+  category: z.string().optional(),
 });
 
 const waChatFilterQuerySchema = PaginateQuerySchema.extend({
@@ -108,8 +110,7 @@ const waChatExportQuerySchema = z.object({
 
 const waMessageAssignBody = z.object({
   contactId: z.string(),
-  assignedUserIds: z.array(z.string()),
-  teamId: z.string(),
+  assignees: z.array(z.object({ userId: z.string(), teamId: z.string() })),
   assignIfOnline: z.boolean().default(true),
 });
 
