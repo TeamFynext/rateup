@@ -912,5 +912,5 @@ export function whatsappToHTML(text) {
   // Optional: convert multiple <br> sequences into paragraph breaks
   html = html.replace(/(<br>\s*){2,}/g, "</p><p>");
 
-  return `<p>${html}</p>`;
+  return `<p style="font-size:0.875rem;line-spacing:1.25rem;">${html}</p>`;
 }

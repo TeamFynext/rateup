@@ -7,12 +7,12 @@ import { MantineProvider, Stack } from "@mantine/core";
 
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import Analytics from "@/components/whatsapp/inbox/analytics/analaytics";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "@/components/whatsapp/inbox/resizeable";
+} from "@/components/ui/resizable";
+import Analytics from "@/components/whatsapp/inbox/analytics/analaytics";
 
 import WaInboxChatDisplay from "../../../components/whatsapp/inbox/chatdisplay";
 import WaInboxChatSelect from "../../../components/whatsapp/inbox/chatselect";
@@ -46,6 +46,21 @@ const ResizeableChat = () => {
   const isChatDisplayOpen = useIsChatDisplayOpen();
   const { data, isPending } = useWaSettings();
   if (isPending) return <RateupLoader />;
+  return (
+    <ResizablePanelGroup direction="horizontal" className="h-full">
+      <ResizablePanel defaultSize={25} minSize={23} maxSize={60}>
+        <div>
+          <WaInboxChatSelect />
+        </div>
+      </ResizablePanel>
+      <ResizableHandle />
+      <ResizablePanel defaultSize={75} minSize={40} maxSize={77}>
+        <div className="h-full">
+          <WaInboxChatDisplay waSettings={data} />
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
+  );
   return (
     <ResizablePanelGroup
       direction="horizontal"

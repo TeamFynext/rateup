@@ -49,7 +49,7 @@ const DropdownSelector = ({
                     <IconComponent className={`w-2.5 h-2.5`} />
                   </div>
                 )}
-                <span className="text-xs max-w-[80px] truncate">
+                <span className="text-sm max-w-[80px] truncate font-medium">
                   {item?.label}
                 </span>
                 <ChevronDown className="w-3 h-3 text-muted-foreground" />

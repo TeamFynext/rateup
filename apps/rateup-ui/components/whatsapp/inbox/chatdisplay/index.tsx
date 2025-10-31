@@ -77,7 +77,7 @@ export default function WaInboxChatDisplay({
   }
 
   return (
-    <Paper withBorder p={0} className="h-full">
+    <div className="h-full">
       {!contact ? (
         <div className="flex-1 flex items-center justify-center bg-muted/20 h-full">
           <div className="text-center">
@@ -109,6 +109,6 @@ export default function WaInboxChatDisplay({
           />
         </div>
       )}
-    </Paper>
+    </div>
   );
 }

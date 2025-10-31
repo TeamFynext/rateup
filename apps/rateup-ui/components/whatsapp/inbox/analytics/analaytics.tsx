@@ -39,7 +39,7 @@ const Analytics = () => {
     <Container
       w={"100%"}
       h={"100%"}
-      p={0}
+      p={"sm"}
       className="flex flex-col"
       size={"xl"}
     >

@@ -297,7 +297,7 @@ const WaInboxChatSelect = () => {
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
 
   return (
-    <Paper withBorder p={0} className="h-full">
+    <div className="h-full">
       <ChatselectPanelHeader
         isRefetchingFilteredContacts={isRefetchingFilteredContacts}
         onUnknownContactAddSuccess={onUnknownContactAddSuccess}
@@ -394,7 +394,7 @@ const WaInboxChatSelect = () => {
           </div>
         )}
       </div>
-    </Paper>
+    </div>
   );
 };
 

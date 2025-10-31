@@ -149,7 +149,7 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
     <>
       <div
         ref={parentRef}
-        className="relative h-full p-2 scale-y-[-1] overflow-y-auto bg-gradient-to-b from-muted/10 to-background"
+        className="relative h-full p-2 scale-y-[-1] overflow-y-auto bg-gray-50"
       >
         {tempMessages?.[selectedContact.id]?.length > 0 && (
           <div className="relative p-6 max-w-4xl mx-auto">

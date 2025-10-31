@@ -5,8 +5,10 @@ import { useSearchParams } from "next/navigation";
 
 import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { BadgeCheck, CircleCheckBig } from "lucide-react";
+import { useTranslations } from "next-intl";
 
-import { MessagePlatform } from "@/types/enums";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContext";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
@@ -40,7 +42,7 @@ export default function WaInboxChatSelectCard({
 }: Readonly<WaInboxChatSelectCardProps>) {
   const params = useSearchParams();
   const lastMessage = contact?.lastMessage;
-
+  const translations = useTranslations();
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   let tab = params.get("tab") ?? "New";
 
@@ -149,7 +151,7 @@ export default function WaInboxChatSelectCard({
                   "Unknown"}
               </p>
               {contact?.isIgVerifiedUser && (
-                <IconRosetteDiscountCheckFilled size={12} color="blue" />
+                <BadgeCheck size={12} color="blue" />
               )}
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -197,59 +199,70 @@ export default function WaInboxChatSelectCard({
               )}
             </div>
 
-            {contact?.assignedUsers?.length > 0 && (
+            {contact?.waMessageAssignStatus === WaMessageAssignStatus.CLOSED ? (
               <CustomTooltip
                 trigger={
-                  <div className="flex -space-x-1 relative">
-                    {contact.assignedUsers.slice(0, 1).map((a) => {
-                      return (
-                        <div
-                          key={a?.id}
-                          className="relative flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                        >
-                          <Avatar className="w-5 h-5">
-                            <AvatarFallback
-                              className={`${getStringColor(a?.name).bg} text-white text-[10px]`}
-                            >
-                              {a?.name
-                                ?.split(" ")
-                                .map((s) => s[0]?.toUpperCase())
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                      );
-                    })}
-                    {contact.assignedUsers.length > 1 && (
-                      <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
-                        +{contact.assignedUsers.length - 1}
-                      </div>
-                    )}
-                  </div>
+                  <CircleCheckBig
+                    className={`text-[10px] h-4 text-blue-500 dark:text-blue-600 rounded-2xl`}
+                  />
                 }
-                content={
-                  <div>
-                    <p>Assigned Users:</p>
-                    <div className="flex flex-col gap-2 mt-1">
-                      {contact.assignedUsers.map((user) => (
-                        <div
-                          className="flex items-center gap-0.5"
-                          key={user.id}
-                        >
-                          <CreativeAvatar name={user?.name} size="xs" />
-                          <span
-                            key={user.id}
-                            className="p-1 rounded-md text-xs"
-                          >
-                            {user.name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                }
-                side="bottom"
+                content={<span>{translations("CLOSED")}</span>}
               />
+            ) : (
+              contact?.assignedUsers?.length > 0 && (
+                <CustomTooltip
+                  trigger={
+                    <div className="flex -space-x-1 relative">
+                      {contact.assignedUsers.slice(0, 1).map((a) => {
+                        return (
+                          <div
+                            key={a?.id}
+                            className="relative flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                          >
+                            <Avatar className="w-5 h-5">
+                              <AvatarFallback
+                                className={`${getStringColor(a?.name).bg} text-white text-[10px]`}
+                              >
+                                {a?.name
+                                  ?.split(" ")
+                                  .map((s) => s[0]?.toUpperCase())
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                        );
+                      })}
+                      {contact.assignedUsers.length > 1 && (
+                        <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
+                          +{contact.assignedUsers.length - 1}
+                        </div>
+                      )}
+                    </div>
+                  }
+                  content={
+                    <div>
+                      <p>Assigned Users:</p>
+                      <div className="flex flex-col gap-2 mt-1">
+                        {contact.assignedUsers.map((user) => (
+                          <div
+                            className="flex items-center gap-0.5"
+                            key={user.id}
+                          >
+                            <CreativeAvatar name={user?.name} size="xs" />
+                            <span
+                              key={user.id}
+                              className="p-1 rounded-md text-xs"
+                            >
+                              {user.name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  }
+                  side="bottom"
+                />
+              )
             )}
           </div>
         </div>
