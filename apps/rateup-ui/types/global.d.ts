@@ -395,6 +395,7 @@ declare global {
     role: string;
     teams: Team[];
     isPaused?: boolean;
+    status: "online" | "offline";
   }
 
   export interface Member {

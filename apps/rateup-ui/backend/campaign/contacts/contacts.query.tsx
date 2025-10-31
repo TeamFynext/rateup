@@ -5,7 +5,11 @@ import { ContactGroupType } from "@/types/enums";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
 
 import { CONTACT_SORT } from "../../../components/Contacts/utils/utils";
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
+import {
+  showErrorToast,
+  showLoadingToast,
+  showSuccessToast,
+} from "../../../utils/notifications";
 import {
   createContact,
   createCustomField,
@@ -14,6 +18,7 @@ import {
   deleteManyContacts,
   editContact,
   editContactLabels,
+  exportContacts,
   getContactById,
   getContactsList,
   getCustomField,
@@ -298,6 +303,31 @@ export const useDeleteCustomFieldMutation = () => {
         `Error deleting custom field: ${error?.response?.data?.error}`,
         "custom-field-delete",
         <IconX />,
+      );
+    },
+  });
+};
+
+export const useExportContactsMutation = () => {
+  return useMutation({
+    mutationFn: exportContacts,
+    onMutate: () => {
+      showLoadingToast("Preparing contacts for export...", "contact-export");
+    },
+    onSuccess: () => {
+      showSuccessToast(
+        "Contacts export initiated successfully.",
+        "contact-export",
+        <IconCheck />,
+        true,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error exporting contacts: ${error?.response?.data?.error}`,
+        "contact-export",
+        <IconX />,
+        true,
       );
     },
   });

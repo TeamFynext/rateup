@@ -32,12 +32,6 @@ import {
   IconPlayerPlay,
   IconX,
 } from "@tabler/icons-react";
-import {
-  gridFilteredSortedRowIdsSelector,
-  GridPrintGetRowsToExportParams,
-  GridRowId,
-  gridRowSelectionIdsSelector,
-} from "@mui/x-data-grid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -246,17 +240,6 @@ const ShareSurvey = ({
     value: index.toString(),
     label: team?.code,
   }));
-
-  const getSelectedRowsToExport = ({
-    apiRef,
-  }: GridPrintGetRowsToExportParams): GridRowId[] => {
-    const selectedRowIds = gridRowSelectionIdsSelector(apiRef);
-    if (selectedRowIds.size > 0) {
-      return Array.from(selectedRowIds.keys());
-    }
-
-    return gridFilteredSortedRowIdsSelector(apiRef);
-  };
 
   const disableShare = !(isPublished || isScheduled || allowUnpublishedShare);
 

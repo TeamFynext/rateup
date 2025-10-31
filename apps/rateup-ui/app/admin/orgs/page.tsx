@@ -3,15 +3,31 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { ActionIcon, Box, Group, Stack, Title } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import { ColumnDef } from "@tanstack/react-table";
+import {
+  ArrowRight,
+  Building2,
+  Calendar,
+  Mail,
+  Send,
+  UserCheck,
+  Users,
+} from "lucide-react";
+
+import { createSortableHeader, DataTable } from "@/components/Table/data-table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 import { useAllOrgs } from "../../../backend/org/org.query";
-import styles from "../../../components/adminPanel/admin.module.css";
 import RefreshButton from "../../../components/Button/RefreshButton";
 import RateupLoader from "../../../components/Loaders/RateupLoader";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import {
   formatIsoDateStringWithTime,
   isInLastSevenDays,
@@ -19,61 +35,148 @@ import {
   isToday,
   isYesterday,
 } from "../../../utils/dateTime";
-import { CountStatsCard } from "../userstats/page";
+import { DataTableToolbar } from "./data-table-toolbar";
 
-const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", width: 220, cellClassName: styles.idCell },
-  { field: "name", headerName: "Name", width: 200 },
-  { field: "createdAt", headerName: "Created At", width: 200 },
-  { field: "owner", headerName: "Owner", width: 150 },
-  { field: "ownerEmail", headerName: "Owner Email", width: 200 },
-  { field: "teams", headerName: "Teams", width: 100 },
-  { field: "members", headerName: "Staff", width: 100 },
-  { field: "invitations", headerName: "Invitations", width: 100 },
-  {
-    field: "actions",
-    headerName: "Actions",
-    width: 100,
-    renderCell: renderActions,
-  },
-];
-
-function renderActions(params: GridRenderCellParams<any, Org>) {
-  const router = useRouter();
-  return (
-    <Group>
-      <ActionIcon
-        onClick={(e) => {
-          e.stopPropagation();
-          router.push(`/admin/orgs/${params.row.id}`);
-        }}
-      >
-        <IconArrowRight />
-      </ActionIcon>
-    </Group>
-  );
+interface OrgTableData {
+  id: string;
+  name: string;
+  createdAt: string;
+  owner: string;
+  ownerEmail: string;
+  teams: number;
+  members: number;
+  invitations: number;
 }
+
 export default function OrgDisplay() {
+  const router = useRouter();
   const { data: orgs, isLoading, isError } = useAllOrgs();
   const [orgStats, setOrgStats] = useState({
-    today: null,
-    yesterday: null,
-    lastWeek: null,
-    thisMonth: null,
+    today: 0,
+    yesterday: 0,
+    lastWeek: 0,
+    thisMonth: 0,
   });
+
+  const columns: ColumnDef<OrgTableData>[] = [
+    {
+      accessorKey: "id",
+      header: "ID",
+      cell: ({ row }) => (
+        <div className="font-mono text-xs text-muted-foreground">
+          {row.getValue("id")}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: createSortableHeader("Name"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium">{row.getValue("name")}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "createdAt",
+      header: createSortableHeader("Created At"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm">{row.getValue("createdAt")}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "owner",
+      header: createSortableHeader("Owner"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <UserCheck className="h-4 w-4 text-muted-foreground" />
+          <span>{row.getValue("owner")}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "ownerEmail",
+      header: createSortableHeader("Owner Email"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Mail className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm">{row.getValue("ownerEmail")}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "teams",
+      header: createSortableHeader("Teams"),
+      cell: ({ row }) => (
+        <Badge variant="secondary" className="font-mono">
+          {row.getValue("teams")}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "members",
+      header: createSortableHeader("Staff"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <Badge variant="outline" className="font-mono">
+            {row.getValue("members")}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "invitations",
+      header: createSortableHeader("Invitations"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Send className="h-4 w-4 text-muted-foreground" />
+          <Badge
+            variant={
+              (row.getValue("invitations") as number) > 0
+                ? "default"
+                : "secondary"
+            }
+            className="font-mono"
+          >
+            {row.getValue("invitations")}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/admin/orgs/${row.original.id}`);
+          }}
+          className="h-8 w-8 p-0"
+        >
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ];
 
   useEffect(() => {
     if (orgs) {
-      const today = orgs.filter((org) => isToday(org.createdAt))?.length;
-      const yesterday = orgs.filter((org) =>
-        isYesterday(org.createdAt),
-      )?.length;
-      const lastWeek = orgs.filter((org) =>
-        isInLastSevenDays(org.createdAt),
-      )?.length;
-      const thisMonth = orgs.filter((org) =>
-        isThisMonth(org.createdAt),
-      )?.length;
+      const today = orgs.filter((org) => isToday(org.createdAt))?.length || 0;
+      const yesterday =
+        orgs.filter((org) => isYesterday(org.createdAt))?.length || 0;
+      const lastWeek =
+        orgs.filter((org) => isInLastSevenDays(org.createdAt))?.length || 0;
+      const thisMonth =
+        orgs.filter((org) => isThisMonth(org.createdAt))?.length || 0;
+
       setOrgStats({
         today,
         yesterday,
@@ -83,56 +186,169 @@ export default function OrgDisplay() {
     }
   }, [orgs]);
 
-  if (isError) return <div>error occured</div>;
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error</CardTitle>
+            <CardDescription>
+              An error occurred while loading organizations.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   if (isLoading) return <RateupLoader h={"100dvh"} />;
 
-  const rows = orgs.map((o) => ({
-    id: o.id,
-    name: o.name,
-    createdAt: formatIsoDateStringWithTime(o.createdAt),
-    owner: o.owner.name,
-    ownerEmail: o.owner.email,
-    members: o._count.members,
-    teams: o._count.teams,
-    invitations: o._count.invitations,
+  const tableData: OrgTableData[] = orgs.map((org) => ({
+    id: org.id,
+    name: org.name,
+    createdAt: formatIsoDateStringWithTime(org.createdAt),
+    owner: org.owner.name,
+    ownerEmail: org.owner.email,
+    teams: org._count.teams,
+    members: org._count.members,
+    invitations: org._count.invitations,
   }));
 
   return (
-    <Stack mah={"100%"}>
-      <Group justify="space-between">
-        <Group flex={1}>
-          <Title>Orgs</Title>
-          <RefreshButton queryKeys={["org"]} />
-        </Group>
+    <div className="container mx-auto space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Building2 className="h-5 w-5 text-primary" />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Organizations
+              </h1>
+            </div>
+            <RefreshButton queryKeys={["org"]} />
+          </div>
+        </div>
 
-        <PaperLayout w={200} py={28}>
-          <CountStatsCard label={"Organizations"} count={orgs?.length} />
-        </PaperLayout>
-        <PaperLayout w={500}>
-          <Title order={5}>Org Stats</Title>
-          <Group justify="space-between" px={"sm"}>
-            <CountStatsCard label={"Today"} count={orgStats.today} />
-            <CountStatsCard label={"Yesterday"} count={orgStats.yesterday} />
-            <CountStatsCard label={"Last Week"} count={orgStats.lastWeek} />
-            <CountStatsCard label={"This Month"} count={orgStats.thisMonth} />
-          </Group>
-        </PaperLayout>
-      </Group>
-      <Box h="65vh">
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          getRowHeight={() => "auto"}
-          disableColumnSelector
-          disableDensitySelector
-          showToolbar
-          slotProps={{
-            toolbar: {
-              showQuickFilter: true,
-            },
-          }}
-        />
-      </Box>
-    </Stack>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <Card className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Organizations
+                </CardTitle>
+                <Building2 className="h-4 w-4 text-blue-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">
+                {orgs?.length || 0}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Active organizations
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-green-200 dark:border-green-800">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Created Today
+                </CardTitle>
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-green-700 dark:text-green-400">
+                {orgStats.today}
+              </div>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                New registrations
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-amber-200 dark:border-amber-800">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Created Yesterday
+                </CardTitle>
+                <Calendar className="h-4 w-4 text-amber-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">
+                {orgStats.yesterday}
+              </div>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                Previous day
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-purple-200 dark:border-purple-800">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Last 7 Days
+                </CardTitle>
+                <Badge variant="outline" className="text-xs px-2 py-0 h-5">
+                  7d
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-purple-700 dark:text-purple-400">
+                {orgStats.lastWeek}
+              </div>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                Weekly growth
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-rose-200 dark:border-rose-800">
+            <div className="absolute inset-0 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  This Month
+                </CardTitle>
+                <Badge variant="outline" className="text-xs px-2 py-0 h-5">
+                  30d
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-rose-700 dark:text-rose-400">
+                {orgStats.thisMonth}
+              </div>
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
+                Monthly total
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <h2 className="text-xl font-semibold tracking-tight">
+        Organization Management
+      </h2>
+      <p className="text-sm text-muted-foreground">
+        Manage and view all organizations in your system
+      </p>
+      <DataTable
+        columns={columns}
+        data={tableData}
+        DataTableToolbar={DataTableToolbar}
+      />
+    </div>
   );
 }

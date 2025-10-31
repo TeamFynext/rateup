@@ -25,6 +25,8 @@ export function useTeamsByUser() {
   return useQuery({
     queryKey: ["teamsDataUserQuery"],
     queryFn: getTeamsByUser,
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 }
 export function useTeamMembersFromInvitation(teamId: string) {

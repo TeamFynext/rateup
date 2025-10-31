@@ -104,6 +104,7 @@ interface ContactsStoreState {
   updateContactById: (
     contactId: string,
     updater: (c: ContactWithUpdatedAt) => ContactWithUpdatedAt,
+    markUnread?: boolean,
   ) => void;
   resetUnreadForContact: (
     contactId: string,
@@ -208,8 +209,12 @@ export const useContactsStore = create<ContactsStoreState>()(
               }))
               .sort(
                 (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime(),
+                  (filterKey.includes("sortBy:oldest")
+                    ? new Date(a.createdAt).getTime()
+                    : new Date(b.createdAt).getTime()) -
+                  (filterKey.includes("sortBy:oldest")
+                    ? new Date(b.createdAt).getTime()
+                    : new Date(a.createdAt).getTime()),
               )
               .map((c) => c.id);
             state.contactsByFilter[filterKey] = newList;
@@ -226,7 +231,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         ]);
       },
 
-      updateContactById(contactId, updater) {
+      updateContactById(contactId, updater, markUnread) {
         const contact = get().contactsById.get(contactId);
         if (!contact) return;
         const updated = {
@@ -249,8 +254,9 @@ export const useContactsStore = create<ContactsStoreState>()(
               filter = true;
             }
             if (
-              updated.lastMessage.waCreatedAt >
-                contact.lastMessage.waCreatedAt ||
+              (updated.lastMessage &&
+                updated.lastMessage.waCreatedAt >
+                  contact.lastMessage.waCreatedAt) ||
               filter
             ) {
               state.isLoading = true;
@@ -270,8 +276,12 @@ export const useContactsStore = create<ContactsStoreState>()(
                 }))
                 .sort(
                   (a, b) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime(),
+                    (state.currentFilterKey.includes("sortBy:oldest")
+                      ? new Date(a.createdAt).getTime()
+                      : new Date(b.createdAt).getTime()) -
+                    (state.currentFilterKey.includes("sortBy:oldest")
+                      ? new Date(b.createdAt).getTime()
+                      : new Date(a.createdAt).getTime()),
                 )
                 .map((c) => c.id);
 
@@ -280,7 +290,14 @@ export const useContactsStore = create<ContactsStoreState>()(
             }
           }),
         );
-        saveContactToDB(updated);
+        try {
+          if (contactId === get().selectedContact?.id && markUnread) {
+            markWaMessagesAsRead(contactId);
+          }
+          saveContactToDB(updated);
+        } catch (e) {
+          console.error(e);
+        }
       },
 
       resetUnreadForContact(contactId, contact) {

@@ -1,13 +1,22 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { ActionIcon, Center, Loader } from "@mantine/core";
 import { IconSquareRoundedChevronDown } from "@tabler/icons-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import clsx from "clsx";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { IgReceiveMessageBody } from "@/types/global";
+import { cn } from "@/lib/utils";
 import { getMessagesFromIDB } from "@/app/dashboard/inbox/idb";
 import {
   useContactsStore,
@@ -34,7 +43,7 @@ const reverseScroll = (e) => {
   e.currentTarget.scrollTop -= e.deltaY;
 };
 
-const WaInboxChatDisplayBody = (props) => {
+const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
   const parentRef = useRef(null);
   const { selectedContact } = useContactsStore();
   const { filter } = useChatFilterStore();
@@ -52,6 +61,13 @@ const WaInboxChatDisplayBody = (props) => {
     () => messagesByKey.get(selectedKey)?.messages || [],
     [selectedKey, messagesByKey],
   );
+  const { messages: tempMessages } = useTemperoryMessageStore();
+
+  useEffect(() => {
+    if (tempMessages[selectedContact?.id]?.length) {
+      rowVirtualizer.scrollToIndex(0);
+    }
+  }, [tempMessages]);
 
   useEffect(() => {
     if (!selectedContact || !filter?.phone) return;
@@ -66,7 +82,6 @@ const WaInboxChatDisplayBody = (props) => {
     isFetchingNextPage,
     isPending,
   } = useGetMessagesByContactId(selectedContact?.id, filter?.phone, enable);
-  const { messages: tempMessages } = useTemperoryMessageStore();
 
   useEffect(() => {
     if (!data || !selectedKey || !selectedContact) return;
@@ -128,16 +143,34 @@ const WaInboxChatDisplayBody = (props) => {
       !messagesByKey?.get(selectedKey)?.messages?.length && isPending,
     );
   }, [selectedKey, isPending, messagesByKey, enable]);
-
   if (isLoading) return <WhatsAppInboxLoader isLoading={isLoading} />;
 
   return (
     <>
       <div
         ref={parentRef}
-        className="relative h-full p-2 scale-y-[-1] overflow-y-auto"
+        className="relative h-full p-2 scale-y-[-1] overflow-y-auto bg-gray-50"
       >
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+        {tempMessages?.[selectedContact.id]?.length > 0 && (
+          <div className="relative p-6 max-w-4xl mx-auto">
+            {tempMessages?.[selectedContact.id]?.map((msg, i) => (
+              <div
+                key={msg?.id || i}
+                style={{
+                  transform: `scaleY(-1)`,
+                  width: "100%",
+                }}
+                className="flex flex-col items-end gap-6"
+              >
+                <TempMessageBody body={msg?.body} timestamp={msg.timestamp} />
+              </div>
+            ))}
+          </div>
+        )}
+        <div
+          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+          className="relative p-6 max-w-4xl mx-auto mt-"
+        >
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const message = allMessages[virtualRow.index];
             const nextMessage =
@@ -174,7 +207,6 @@ const WaInboxChatDisplayBody = (props) => {
                 {!isLoaderRow && (
                   <MessageItem
                     message={message}
-                    props={props}
                     selectedContact={selectedContact}
                     nextMessage={nextMessage}
                   />
@@ -182,16 +214,15 @@ const WaInboxChatDisplayBody = (props) => {
               </div>
             );
           })}
-          {tempMessages?.[selectedContact.id]?.map((msg, i) => (
-            <TempMessageBody
-              body={msg?.body}
-              timestamp={msg.timestamp}
-              key={i}
-            />
-          ))}
         </div>
       </div>
-      <div className={classes.affix}>
+      <div
+        className={classes.affix}
+        style={{
+          right: isContactDetailsOpened ? "395px" : "58px",
+          bottom: isContactDetailsOpened ? "180px" : "155px",
+        }}
+      >
         <ActionIcon
           variant="transparent"
           onClick={() => rowVirtualizer.scrollToIndex(0)}
@@ -204,10 +235,11 @@ const WaInboxChatDisplayBody = (props) => {
 };
 export default WaInboxChatDisplayBody;
 
-const MessageItem = ({ message, props, selectedContact, nextMessage }) => {
+const MessageItem = ({ message, selectedContact, nextMessage }) => {
   const translations = useTranslations();
   if (!message) return null;
   const { exchangeProcess, receive } = message.messageBody;
+  const { messagesByKey, selectedKey } = useMessagesStore();
   const { messageType } = parseWaMessage(message);
   if (messageType === "reaction") return null;
   if (
@@ -221,7 +253,7 @@ const MessageItem = ({ message, props, selectedContact, nextMessage }) => {
     !dayjs(message.waCreatedAt).isSame(dayjs(nextMessage.waCreatedAt), "day");
   const reaction = getReactionMessage({
     message,
-    props,
+    allMessages: messagesByKey.get(selectedKey)?.messages || [],
     selectedContact,
   });
   return (

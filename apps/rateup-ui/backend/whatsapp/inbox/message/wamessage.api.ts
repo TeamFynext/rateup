@@ -25,7 +25,7 @@ export type WaGetMessagesBody = {
   stats?: { read: string; delivered: string; sent: string; failed: string };
   sender?: {
     name?: string;
-    profile_photo?: string;
+    profilePhoto?: string;
   };
   messageId?: string;
   readUsers?: string[];
@@ -35,7 +35,7 @@ export type WaGetMessagesBody = {
     createdAt: string;
     sender?: {
       name?: string;
-      profile_photo?: string;
+      profilePhoto?: string;
     };
   };
   sourcePlatform: MessagePlatform;
@@ -170,8 +170,7 @@ export async function getWaChatMediaFile(mediaId: string) {
 
 export async function assignInboxToUser(data: {
   contactId: string;
-  assignedUserIds: string[];
-  teamId: string;
+  assignees: { userId: string; teamId: string }[];
 }): Promise<{ id: string; name: string }[]> {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data)).data;
 }

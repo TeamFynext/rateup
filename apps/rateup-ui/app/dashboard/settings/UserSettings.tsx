@@ -20,7 +20,7 @@ import {
 import { isNotEmpty, useForm } from "@mantine/form";
 import { getHotkeyHandler, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconCheck, IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 
 import {
   useChangePasswordMutation,
@@ -61,6 +61,34 @@ const ProfileSettings = () => {
     error: profileError,
     data: profileData,
   } = useGetUserProfile();
+  const [isPassLoading, setIsPassLoading] = useState(false);
+
+  const passwordForm = useForm({
+    initialValues: {
+      existingPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+    validate: {
+      existingPassword: isNotEmpty("Enter your existing password"),
+      newPassword: (value) => {
+        if (!value) return "Enter your new password";
+
+        const passwordRegex =
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+        if (!passwordRegex.test(value)) {
+          return "Password must be at least 8 characters long, include 1 uppercase, 1 lowercase, 1 number, and 1 special character.";
+        }
+        return null;
+      },
+      confirmPassword: (value, values) => {
+        if (!value) return "Please confirm your new password";
+        if (value !== values.newPassword) return "Passwords do not match";
+        return null;
+      },
+    },
+  });
 
   const profileForm = useForm({
     initialValues: {
@@ -68,9 +96,6 @@ const ProfileSettings = () => {
       firstname: "",
       lastname: "",
       phone: "",
-      existingPassword: "",
-      newPassword: "",
-      confirmPassword: "",
     },
     validate: {
       title: isNotEmpty(translations("Select a title")),
@@ -80,41 +105,13 @@ const ProfileSettings = () => {
           return translations("Invalid phone number");
         return null;
       },
-      existingPassword: (value, values) =>
-        isAnyPasswordFieldDirty(values) ? passwordValidation(value) : null,
-      newPassword: (value, values) =>
-        isAnyPasswordFieldDirty(values) ? passwordValidation(value) : null,
-      confirmPassword: (value, values) => {
-        if (value !== values.newPassword && isAnyPasswordFieldDirty(values)) {
-          return translations(
-            "New Password  and Confirm Password did not match",
-          );
-        }
-        return null; // Validation passed
-      },
     },
   });
-  function isAnyPasswordFieldDirty(
-    values: {
-      existingPassword: string;
-      newPassword: string;
-      confirmPassword: string;
-    } = { confirmPassword: "", existingPassword: "", newPassword: "" },
-  ) {
-    return (
-      values.existingPassword !== "" ||
-      values.newPassword !== "" ||
-      values.confirmPassword != "" ||
-      profileForm.isDirty("existingPassword") ||
-      profileForm.isDirty("newPassword") ||
-      profileForm.isDirty("confirmPassword")
-    );
-  }
 
   const [isLoading, setIsLoading] = useState(false);
   const [openedPasswordModal, passwordModal] = useDisclosure(false);
   const updateProfile = useUpdateProfileMutation(setIsLoading);
-  const changePassword = useChangePasswordMutation(setIsLoading);
+  const changePassword = useChangePasswordMutation();
 
   const onSubmit = (values) => {
     setIsLoading(true);
@@ -123,16 +120,46 @@ const ProfileSettings = () => {
       name: mergeNames(values.firstname, values.lastname),
       phone: values.phone ?? "",
     };
-    if (isAnyPasswordFieldDirty(values)) {
-      const passwordData = {
-        existingPassword: values.existingPassword,
-        newPassword: values.newPassword,
-      };
-      changePassword.mutate(passwordData);
-      profileForm.reset();
-    }
-
     updateProfile.mutate(data);
+  };
+
+  const onPasswordSubmit = (values) => {
+    setIsPassLoading(true);
+    const validation = passwordForm.validate();
+    if (validation.hasErrors) return;
+    const data = {
+      existingPassword: values.existingPassword,
+      newPassword: values.newPassword,
+    };
+
+    changePassword.mutate(data, {
+      onSuccess: () => {
+        passwordForm.reset();
+        passwordModal.close();
+        notifications.show({
+          id: "load-data",
+          color: "teal",
+          title: "Success",
+          message: "Password Changed Successfully!",
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+        setIsLoading(false);
+      },
+      onError: (error: any) => {
+        console.error("Error changed password:", error.message);
+        notifications.show({
+          id: "load-data",
+          color: "red",
+          title: "Failed",
+          message: error?.response?.data?.message,
+          icon: <IconCheck size="1rem" />,
+          autoClose: 3000,
+        });
+
+        setIsLoading(false);
+      },
+    });
   };
 
   const [avatarSrc, setAvatarSrc] = useState(
@@ -238,25 +265,22 @@ const ProfileSettings = () => {
         radius="lg"
       >
         <form
-          onSubmit={profileForm.onSubmit(onSubmit)}
+          onSubmit={passwordForm.onSubmit(onPasswordSubmit)}
           className="flex flex-col gap-5"
         >
           <Flex gap={"md"} wrap="wrap" direction={"column"}>
             <ContainedPasswordInput
-              required={isAnyPasswordFieldDirty()}
               w={"100%"}
               placeholder={translations("Enter existing password")}
-              {...profileForm.getInputProps("existingPassword")}
+              {...passwordForm.getInputProps("existingPassword")}
             />
             <ContainedPasswordInput
-              required={isAnyPasswordFieldDirty()}
               placeholder={translations("Enter new password")}
-              {...profileForm.getInputProps("newPassword")}
+              {...passwordForm.getInputProps("newPassword")}
             />
             <ContainedPasswordInput
-              required={isAnyPasswordFieldDirty()}
               placeholder={translations("Enter new password again")}
-              {...profileForm.getInputProps("confirmPassword")}
+              {...passwordForm.getInputProps("confirmPassword")}
             />
           </Flex>
           <Flex justify="flex-end" mt="md">

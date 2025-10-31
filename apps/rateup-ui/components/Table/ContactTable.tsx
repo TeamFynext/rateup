@@ -29,7 +29,10 @@ import {
   useDeleteManyContactGroupsMutation,
   useRemoveContactsFromGroup,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
-import { useDeleteManyContactsMutation } from "../../backend/campaign/contacts/contacts.query";
+import {
+  useDeleteManyContactsMutation,
+  useExportContactsMutation,
+} from "../../backend/campaign/contacts/contacts.query";
 import { docsPath, PAGE_SIZE } from "../../utils/constants";
 import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 import InfoButton from "../Button/InfoButton";
@@ -108,6 +111,8 @@ function ContactTable({
   const deleteManyContactsMutation = useDeleteManyContactsMutation(() => {
     setRowSelection({});
   });
+  const exportContact = useExportContactsMutation();
+
   const deleteManyContactGroupsMutation = useDeleteManyContactGroupsMutation(
     () => {
       setRowSelection({});
@@ -313,6 +318,8 @@ function ContactTable({
           tempVisibleColumnArray={tempVisibleColumnArray}
           enableColumnSelection={enableColumnSelection}
           setFilterVisibility={setFilterVisibility}
+          enableExport={tab === WhatsappTableType.CONTACTS}
+          onExport={exportContact}
         />
       </Flex>
       <Divider />

@@ -106,7 +106,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
             header: () => data?.name,
             accessorFn: (row) =>
               row?.customFields?.find((f) => f?.fieldId === data?.id)?.value,
-            id: data?.id,
+            id: data?.name,
             cell: (info) => info.getValue()?.toString() ?? "-",
 
             enableSorting: false,

@@ -28,6 +28,7 @@ export default function ColorSchemaButton() {
       variant="default"
       size="xl"
       aria-label="Toggle color scheme"
+      className="mr-2"
     >
       <IconSun className={cx(classes.icon, classes.light)} stroke={1.5} />
       <IconMoon className={cx(classes.icon, classes.dark)} stroke={1.5} />

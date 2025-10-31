@@ -1,5 +1,6 @@
 import { IndicatorProps } from "@mantine/core";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 
 import {
   MessagePlatform,
@@ -18,6 +19,8 @@ import {
   WaTemplateFetchBody,
   WaTemplateFetchBodyComponent,
 } from "../../types/global";
+
+dayjs.extend(utc);
 
 export type ParsedWaMessageReturn = {
   timeStamp: string;
@@ -281,4 +284,32 @@ export function validateInboxTemplateSending(
         return true;
     }
   });
+}
+
+export function getMessageSourceName(sourceIdentifier, waSettings, platform) {
+  if (!waSettings) return sourceIdentifier;
+  const settings = waSettings?.find(
+    (setting) =>
+      sourceIdentifier === setting.ibaId ||
+      sourceIdentifier === setting.phone ||
+      `+${sourceIdentifier}` === setting.phone,
+  );
+  if (platform === MessagePlatform.INSTAGRAM)
+    return (settings?.igDisplayName ?? settings?.igUserName)
+      ? `@${settings?.igUserName}`
+      : sourceIdentifier;
+  return settings?.phoneDisplayName || settings?.phone || sourceIdentifier;
+}
+
+export function getSourceDiplayLabel(platform) {
+  switch (platform) {
+    case MessagePlatform.WHATSAPP:
+      return "WhatsApp Business";
+    case MessagePlatform.INSTAGRAM:
+      return "Instagram";
+    case MessagePlatform.WEBCHAT:
+      return "Web Chat";
+    default:
+      return "Unsupported";
+  }
 }

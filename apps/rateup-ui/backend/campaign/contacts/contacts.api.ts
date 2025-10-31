@@ -1,3 +1,5 @@
+import { saveAs } from "file-saver";
+
 import { ContactGroupType } from "@/types/enums";
 
 import { axiosClient } from "../../apiClient";
@@ -117,4 +119,18 @@ export const deleteCustomField = async (fieldId: string) => {
     `${CONTACT_BASE_URL}/custom-fields/${fieldId}`,
   );
   return res?.data as CustomFieldData;
+};
+
+export const exportContacts = async (data: {
+  type: string;
+  fields: string[];
+}) => {
+  let response = await axiosClient.post(`${CONTACT_BASE_URL}/export`, data, {
+    responseType: "blob",
+  });
+  const blob = new Blob([response.data], {
+    type: response.headers["content-type"],
+  });
+
+  return saveAs(blob, `contacts.${data.type}`);
 };

@@ -11,6 +11,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import WavesurferPlayer from "@wavesurfer/react";
+import { Mic, Pause, Play, Square, Trash } from "lucide-react";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
@@ -20,6 +21,8 @@ import {
   uploadFile,
 } from "@/utils/file-upload/upload";
 
+import { Button } from "../ui/button";
+import CustomTooltip from "../ui/custom/CustomTooltip";
 import classes from "./VoiceRecorder.module.css";
 
 interface VoiceRecordState {
@@ -193,8 +196,7 @@ const VoiceRecorder = () => {
       if (fileKey) {
         await deleteUploadedFiles({ fileKeyArray: [{ Key: fileKey }] });
       }
-      setAudioUrl(null);
-      setFileKey(null);
+      stopAndReset();
     } catch (error) {
       console.error(error);
     }
@@ -223,13 +225,24 @@ const VoiceRecorder = () => {
     <Group>
       {audioUrl && (
         <Group>
-          <ActionIcon variant="subtle" onClick={onPlayPause}>
-            {isPlaying ? (
-              <IconPlayerPauseFilled size={22} />
-            ) : (
-              <IconPlayerPlayFilled size={22} />
-            )}
-          </ActionIcon>
+          <CustomTooltip
+            trigger={
+              <Button
+                onClick={onPlayPause}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+              >
+                {isPlaying ? (
+                  <Pause className="w-5 h-5" />
+                ) : (
+                  <Play className="w-5 h-5" />
+                )}
+              </Button>
+            }
+            content={<p>{isPlaying ? "Pause" : "Play"}</p>}
+          />
+
           <WavesurferPlayer
             url={audioUrl}
             height={20}
@@ -264,36 +277,56 @@ const VoiceRecorder = () => {
       )}
 
       {(isRecording || audioUrl) && (
-        <ActionIcon
-          onClick={async () => {
-            if (isRecording) stopRecording();
-            else await deleteUploadedAudio();
-          }}
-          variant="subtle"
-        >
-          <IconTrash size={22} />
-        </ActionIcon>
+        <CustomTooltip
+          trigger={
+            <Button
+              onClick={async () => {
+                if (isRecording) stopRecording();
+                else await deleteUploadedAudio();
+              }}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <Trash className="w-5 h-5 text-red-500" />
+            </Button>
+          }
+          content={<p>Delete</p>}
+        />
       )}
       {!isRecording ? (
-        <ActionIcon
-          variant="light"
-          radius={"lg"}
-          onClick={async () => {
-            if (audioUrl) {
-              await deleteUploadedAudio();
-            }
-            startRecording();
-          }}
-        >
-          <IconMicrophone size={22} />
-        </ActionIcon>
+        <CustomTooltip
+          trigger={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={async () => {
+                if (audioUrl) {
+                  await deleteUploadedAudio();
+                }
+                startRecording();
+              }}
+            >
+              <Mic className="w-5 h-5" />
+            </Button>
+          }
+          content={<p>Record</p>}
+        />
       ) : (
-        <ActionIcon
-          variant="subtle"
-          onClick={async () => await stopAndUploadRecording()}
-        >
-          <IconPlayerStopFilled size={22} />
-        </ActionIcon>
+        <CustomTooltip
+          trigger={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={async () => await stopAndUploadRecording()}
+            >
+              <Square className="w-5 h-5" />
+            </Button>
+          }
+          content={<p>Stop</p>}
+        />
       )}
     </Group>
   );

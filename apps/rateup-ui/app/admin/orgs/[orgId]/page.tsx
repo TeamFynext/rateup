@@ -3,15 +3,42 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-import { Button, Group, Stack, Switch, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconInfoCircle,
-  IconPencil,
-  IconPlayerPause,
-  IconPlayerPlay,
-} from "@tabler/icons-react";
+  Building2,
+  Calendar,
+  Edit,
+  Globe,
+  Info,
+  MessageSquare,
+  Pause,
+  Play,
+  Settings,
+  Shield,
+  Star,
+  Users,
+  Utensils,
+  Zap,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import {
   useAllOrgs,
@@ -22,17 +49,73 @@ import {
   useSubscriptionByOrgId,
   useUpdateSubscriptionMutation,
 } from "../../../../backend/subscription/subscription.query";
-import {
-  CountCard,
-  CountSectionContainer,
-} from "../../../../components/adminPanel/stats/Count";
 import { SubscriptionEditorModal } from "../../../../components/adminPanel/Subscription/SubscriptionEditorModal";
 import RefreshButton from "../../../../components/Button/RefreshButton";
 import RateupLoader from "../../../../components/Loaders/RateupLoader";
 import ConfirmationModal from "../../../../components/Modal/ConfirmationModal";
 
+const StatCard = ({ title, count, icon: Icon, color = "blue" }) => {
+  const getColorClasses = () => {
+    switch (color) {
+      case "green":
+        return "from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800";
+      case "purple":
+        return "from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20 border-purple-200 dark:border-purple-800";
+      case "amber":
+        return "from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 border-amber-200 dark:border-amber-800";
+      case "rose":
+        return "from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20 border-rose-200 dark:border-rose-800";
+      default:
+        return "from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800";
+    }
+  };
+
+  const getIconColor = () => {
+    switch (color) {
+      case "green":
+        return "text-green-600";
+      case "purple":
+        return "text-purple-600";
+      case "amber":
+        return "text-amber-600";
+      case "rose":
+        return "text-rose-600";
+      default:
+        return "text-blue-600";
+    }
+  };
+
+  return (
+    <Card className={`relative overflow-hidden ${getColorClasses()}`}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            {title}
+          </CardTitle>
+          <Icon className={`h-4 w-4 ${getIconColor()}`} />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className={`text-2xl font-bold ${getIconColor()}`}>
+          {count || 0}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const StatSection = ({ title, children, icon: Icon }) => (
+  <div className="space-y-4">
+    <div className="flex items-center gap-2">
+      <Icon className="h-5 w-5 text-muted-foreground" />
+      <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
+    </div>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">{children}</div>
+  </div>
+);
+
 export default function OrgById() {
-  const [opened, { close, open }] = useDisclosure(false); // subscription editor
+  const [opened, { close, open }] = useDisclosure(false);
   const [isAnnualMessageLimit, setIsAnnualMessageLimit] = useState(false);
   const [
     openedConfirmModal,
@@ -47,10 +130,11 @@ export default function OrgById() {
   } = useSubscriptionByOrgId(orgId);
   const { data: orgs, isLoading: isOrgsLoading } = useAllOrgs();
   const { data: stats, isLoading, isError } = useOrgStats(orgId);
-  const [orgDetails, setOrgDetails] = useState<Org>(null);
+  const [orgDetails, setOrgDetails] = useState<any>(null);
   const updatePauseStatus = useUpdateOrgPause();
   const translations = useTranslations();
   const updateSubscription = useUpdateSubscriptionMutation();
+
   useEffect(() => {
     if (orgs) {
       setOrgDetails(orgs.find((org) => org.id === orgId));
@@ -64,7 +148,7 @@ export default function OrgById() {
     });
   };
 
-  const handleAnnualMessageLimit = (checked) => {
+  const handleAnnualMessageLimit = (checked: boolean) => {
     updateSubscription.mutate(
       { orgId, updatedData: { isAnnualMessageLimit: checked } },
       {
@@ -80,140 +164,240 @@ export default function OrgById() {
       setIsAnnualMessageLimit(subscription.isAnnualMessageLimit);
   }, [subscription]);
 
-  if (isError || isSubErr) return <div>error occured</div>;
+  if (isError || isSubErr) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error</CardTitle>
+            <CardDescription>
+              An error occurred while loading organization data.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   if (isLoading || isOrgsLoading || !stats || isSubLoading)
     return <RateupLoader h={"100dvh"} />;
 
   return (
-    <Stack>
-      <Group justify="space-between">
-        <Group flex={1}>
-          <Title order={2}>{stats.name}</Title>
-          <RefreshButton queryKeys={["org", "stats"]} />
-        </Group>
-        {orgDetails?.id !== process.env.NEXT_PUBLIC_ROOT_ORG && (
-          <Button
-            style={{ fontSize: "1.2rem", height: "unset" }}
-            leftSection={
-              orgDetails?.isPaused ? (
-                <IconPlayerPause size={"1rem"} />
-              ) : (
-                <IconPlayerPlay size={"1rem"} />
-              )
-            }
-            variant="outline"
-            onClick={openConfirmModal}
-            styles={{
-              inner: {
-                height: "40px",
-              },
-            }}
-          >
-            {orgDetails?.isPaused
-              ? translations("Resume Organization")
-              : translations("Pause Organization")}
-          </Button>
-        )}
-        <Group>
-          {(!subscription?.basePlan?.paymentPlan ||
-            subscription?.basePlan?.paymentPlan?.period === "yearly") && (
-            <Group gap={1}>
-              <Switch
-                label={"Annual Message limit"}
-                checked={isAnnualMessageLimit}
-                onChange={(e) =>
-                  handleAnnualMessageLimit(e.currentTarget.checked)
-                }
-              />
-              {subscription?.basePlan?.paymentPlan && (
-                <Tooltip label="Updation will affect only in current subscription year">
-                  <IconInfoCircle size={"1rem"} color="grey" />
-                </Tooltip>
+    <div className="container mx-auto space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Building2 className="h-5 w-5 text-primary" />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {stats.name}
+              </h1>
+              {orgDetails?.isPaused && (
+                <Badge variant="destructive">Paused</Badge>
               )}
-            </Group>
-          )}
-          <Button
-            style={{ fontSize: "1.2rem", height: "unset" }}
-            rightSection={<IconPencil />}
-            variant="outline"
-            onClick={open}
-            styles={{
-              inner: {
-                height: "40px",
-              },
-            }}
-          >
-            {translations("Manage Subscription")}
-          </Button>
-        </Group>
-      </Group>
-      <Group>
-        <CountSectionContainer label="Org">
-          <CountCard count={stats.members} label={["Staff", "Staff"]} />
-          <CountCard
+            </div>
+            <RefreshButton queryKeys={["org", "stats"]} />
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* Annual Message Limit Toggle */}
+            {(!subscription?.basePlan?.paymentPlan ||
+              subscription?.basePlan?.paymentPlan?.period === "yearly") && (
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="annual-limit"
+                  checked={isAnnualMessageLimit}
+                  onCheckedChange={handleAnnualMessageLimit}
+                />
+                <Label htmlFor="annual-limit" className="text-sm">
+                  Annual Message Limit
+                </Label>
+                {subscription?.basePlan?.paymentPlan && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          Updation will affect only in current subscription year
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <Button variant="outline" onClick={open}>
+              <Settings className="h-4 w-4 mr-2" />
+              {translations("Manage Subscription")}
+            </Button>
+
+            {orgDetails?.id !== process.env.NEXT_PUBLIC_ROOT_ORG && (
+              <Button
+                variant={orgDetails?.isPaused ? "default" : "destructive"}
+                onClick={openConfirmModal}
+              >
+                {orgDetails?.isPaused ? (
+                  <Play className="h-4 w-4 mr-2" />
+                ) : (
+                  <Pause className="h-4 w-4 mr-2" />
+                )}
+                {orgDetails?.isPaused
+                  ? translations("Resume Organization")
+                  : translations("Pause Organization")}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Sections */}
+      <div className="space-y-8">
+        {/* Organization Stats */}
+        <StatSection title="Organization" icon={Building2}>
+          <StatCard
+            title="Staff"
+            count={stats.members}
+            icon={Users}
+            color="blue"
+          />
+          <StatCard
+            title="Invitations"
             count={stats.invitations}
-            label={["Invitation", "Invitations"]}
+            icon={Calendar}
+            color="amber"
           />
-        </CountSectionContainer>
-        <CountSectionContainer label={translations("Teams")}>
-          <CountCard count={stats.teams.total} label={["Team", "Teams"]} />
-          <CountCard count={stats.teams.members} label={["Staff", "Staff"]} />
-          <CountCard
+        </StatSection>
+
+        {/* Teams Stats */}
+        <StatSection title={translations("Teams")} icon={Users}>
+          <StatCard
+            title="Total Teams"
+            count={stats.teams.total}
+            icon={Users}
+            color="purple"
+          />
+          <StatCard
+            title="Team Staff"
+            count={stats.teams.members}
+            icon={Users}
+            color="blue"
+          />
+          <StatCard
+            title="Team Invitations"
             count={stats.teams.invitations}
-            label={["Invitation", "Invitations"]}
+            icon={Calendar}
+            color="amber"
           />
-        </CountSectionContainer>
-        <CountSectionContainer label={translations("Web Surveys")}>
-          <CountCard count={stats.web.surveys} label={["Survey", "Surveys"]} />
-          <CountCard
+        </StatSection>
+
+        {/* Web Surveys Stats */}
+        <StatSection title={translations("Web Surveys")} icon={Globe}>
+          <StatCard
+            title="Surveys"
+            count={stats.web.surveys}
+            icon={Globe}
+            color="green"
+          />
+          <StatCard
+            title="Responses"
             count={stats.web.responses}
-            label={["Response", "Responses"]}
+            icon={Star}
+            color="blue"
           />
-          <CountCard count={stats.web.visited} label={["Visited", "Visited"]} />
-        </CountSectionContainer>
-        <CountSectionContainer label={translations("WhatsApp Surveys")}>
-          <CountCard
+          <StatCard
+            title="Visited"
+            count={stats.web.visited}
+            icon={Users}
+            color="purple"
+          />
+        </StatSection>
+
+        {/* WhatsApp Surveys Stats */}
+        <StatSection
+          title={translations("WhatsApp Surveys")}
+          icon={MessageSquare}
+        >
+          <StatCard
+            title="Surveys"
             count={stats.whatsapp.surveys}
-            label={["Survey", "Surveys"]}
+            icon={MessageSquare}
+            color="green"
           />
-          <CountCard
+          <StatCard
+            title="Responses"
             count={stats.whatsapp.responses}
-            label={["Response", "Responses"]}
+            icon={Star}
+            color="blue"
           />
-          <CountCard
+          <StatCard
+            title="Templates"
             count={stats.whatsapp.templates}
-            label={["Template", "Templates"]}
+            icon={Settings}
+            color="purple"
           />
-          <CountCard
+          <StatCard
+            title="Visited"
             count={stats.whatsapp.visited}
-            label={["Visited", "Visited"]}
+            icon={Users}
+            color="amber"
           />
-        </CountSectionContainer>
-        <CountSectionContainer label={translations("Reputation Mangement")}>
-          <CountCard count={stats.rm.reviews} label={["Review", "Reviews"]} />
-          <CountCard
+        </StatSection>
+
+        {/* Reputation Management Stats */}
+        <StatSection title={translations("Reputation Mangement")} icon={Star}>
+          <StatCard
+            title="Reviews"
+            count={stats.rm.reviews}
+            icon={Star}
+            color="rose"
+          />
+          <StatCard
+            title="Analyzed Reviews"
             count={stats.rm.analyzedReviews}
-            label={["Analyzed Review", "Analyzed Reviews"]}
+            icon={Shield}
+            color="blue"
           />
-        </CountSectionContainer>
-        <CountSectionContainer label={translations("Campaigns")}>
-          <CountCard
+        </StatSection>
+
+        {/* Campaigns Stats */}
+        <StatSection title={translations("Campaigns")} icon={Zap}>
+          <StatCard
+            title="Campaigns"
             count={stats.campaigns.campaigns}
-            label={["Campaign", "Campaigns"]}
+            icon={Zap}
+            color="purple"
           />
-          <CountCard
+          <StatCard
+            title="Participants"
             count={stats.campaigns.participants}
-            label={["Participant", "Participants"]}
+            icon={Users}
+            color="green"
           />
-        </CountSectionContainer>
-        <CountSectionContainer label={translations("Digitl Menu")}>
-          <CountCard count={stats.menu.total} label={["Menu", "Menu"]} />
-          <CountCard count={stats.menu.banners} label={["Banner", "Banners"]} />
-        </CountSectionContainer>
-      </Group>
+        </StatSection>
 
-      <Group justify="center"></Group>
+        {/* Digital Menu Stats */}
+        <StatSection title={translations("Digitl Menu")} icon={Utensils}>
+          <StatCard
+            title="Menus"
+            count={stats.menu.total}
+            icon={Utensils}
+            color="amber"
+          />
+          <StatCard
+            title="Banners"
+            count={stats.menu.banners}
+            icon={Settings}
+            color="rose"
+          />
+        </StatSection>
+      </div>
 
+      {/* Modals */}
       {subscription && (
         <SubscriptionEditorModal
           subscription={subscription}
@@ -221,6 +405,7 @@ export default function OrgById() {
           onClose={close}
         />
       )}
+
       <ConfirmationModal
         opened={openedConfirmModal}
         onClose={closeConfirmModal}
@@ -236,6 +421,6 @@ export default function OrgById() {
         headerLabel={`Are you sure to ${orgDetails?.isPaused ? "resume" : "pause"} this organization?`}
         closeLabel={translations("cancel")}
       />
-    </Stack>
+    </div>
   );
 }
