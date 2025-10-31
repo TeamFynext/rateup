@@ -43,7 +43,9 @@ import {
   replacedContentByDynamicVariable,
 } from "../loyalty/settings/settings.service";
 import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service";
-
+import prisma from "../../utils/prisma";
+import Papa from "papaparse";
+import xlsx from "node-xlsx";
 //used in zapier
 export async function createContactHandler(
   request: FastifyRequest<{
@@ -323,4 +325,132 @@ export async function deleteCustomFieldHandler(
     log.error(e);
     reply.code(500).send({ message: "Error deleting field" });
   }
+}
+
+export async function exportContactHandler(
+  request: FastifyRequest<{
+    Body: { type?: "csv" | "xlsx"; fields?: string[] };
+  }>,
+  reply: FastifyReply,
+) {
+  const { type = "csv", fields = ["id", "name", "phone"] } = request.body || {};
+  const { orgId } = request.user;
+  if (!orgId) {
+    reply.code(400).send({ error: "orgId is required" });
+    return;
+  }
+
+  const standardFields = [
+    "id",
+    "name",
+    "phone",
+    "blockedOnWhatsApp",
+    "other",
+    "source",
+    "consent",
+    "createdAt",
+  ];
+  const customFields = fields.filter((f) => !standardFields.includes(f));
+  const requestedStandardFields = fields.filter((f) =>
+    standardFields.includes(f),
+  );
+
+  const PAGE_SIZE = 10000;
+  let cursor = undefined;
+  const allContacts = [];
+
+  // Paginate through contacts
+  while (true) {
+    const contacts = await prisma.contact.findMany({
+      where: { orgId },
+      take: PAGE_SIZE,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        ...Object.fromEntries(requestedStandardFields.map((f) => [f, true])),
+        ...(customFields.length > 0 && {
+          customFields: {
+            select: {
+              value: true,
+              field: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        }),
+      },
+    });
+
+    if (contacts.length === 0) break;
+
+    // Transform contacts to flatten custom fields
+    const transformedContacts = contacts.map((contact) => {
+      const result = { ...contact };
+
+      if (contact.customFields) {
+        // Add custom field values to the contact object
+        for (const cfv of contact.customFields) {
+          if (customFields.includes(cfv.field.name)) {
+            result[cfv.field.name] = cfv.value;
+          }
+        }
+        // Remove the nested customFields from result
+        delete result.customFields;
+      }
+
+      // Ensure all requested custom fields are present (with empty string if missing)
+      for (const fieldName of customFields) {
+        if (!(fieldName in result)) {
+          result[fieldName] = "";
+        }
+      }
+
+      return result;
+    });
+
+    allContacts.push(...transformedContacts);
+    cursor = contacts.at(-1).id;
+  }
+
+  // --- CSV export ---
+  if (type === "csv") {
+    const csv = Papa.unparse(allContacts, { columns: fields });
+    reply
+      .header("Content-Type", "text/csv")
+      .header(
+        "Content-Disposition",
+        `attachment; filename="contacts_${orgId}.csv"`,
+      )
+      .send(csv);
+    return;
+  }
+
+  // --- Excel export ---
+  if (type === "xlsx") {
+    const sheetData = [
+      fields, // headers
+      ...allContacts.map((row) => fields.map((f) => row[f] ?? "")),
+    ];
+    const buffer = xlsx.build([
+      { name: "Contacts", data: sheetData, options: {} },
+    ]);
+
+    reply
+      .header(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      )
+      .header(
+        "Content-Disposition",
+        `attachment; filename="contacts_${orgId}.xlsx"`,
+      )
+      .send(buffer);
+    return;
+  }
+
+  reply.code(400).send({ error: 'Invalid export type. Use "csv" or "excel".' });
 }

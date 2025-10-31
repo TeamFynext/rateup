@@ -7,6 +7,7 @@ import {
   deleteContactByIdHandler,
   deleteCustomFieldHandler,
   deleteManyContactsHandler,
+  exportContactHandler,
   getAllContactsHandler,
   getContactByIdHandler,
   getCustomFieldHandler,
@@ -160,4 +161,5 @@ export async function contactRoutes(server: FastifyInstance) {
     },
     deleteCustomFieldHandler,
   );
+  server.post("/export", exportContactHandler);
 }

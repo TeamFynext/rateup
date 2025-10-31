@@ -255,6 +255,13 @@ export async function filterChats(
     let sortBy = "DESC";
     if (bodyFilterProps?.sortBy === "oldest") {
       sortBy = "ASC";
+    } else if (bodyFilterProps?.sortBy === "newest_wa_created") {
+      orderBy = `c."lastMessageWaCreatedAt"`;
+      allOrderBy = `fc."lastMessageWaCreatedAt"`;
+    } else if (bodyFilterProps?.sortBy === "oldest_wa_created") {
+      orderBy = `c."lastMessageWaCreatedAt"`;
+      allOrderBy = `fc."lastMessageWaCreatedAt"`;
+      sortBy = "ASC";
     }
 
     const isSearchMode = bodyFilterProps?.searchTerm?.length > 0;
@@ -270,8 +277,6 @@ export async function filterChats(
               `(c."lastReceivedMessageTimeStamp" IS NOT NULL OR c."lastSentMessageTimeStamp" IS NOT NULL)`,
             );
           }
-          orderBy = `c."lastMessageWaCreatedAt"`;
-          allOrderBy = `fc."lastMessageWaCreatedAt"`;
         }
       }
 
@@ -1331,7 +1336,7 @@ export async function generateInboxResponse(
   });
   const settings = await getWaSettings(orgId);
 
-  for await (const contact of contacts) {
+  for (const contact of contacts) {
     console.log(
       `Seeding chats for contact: ${contact.name} (${contact.phone})`,
     );
@@ -1339,14 +1344,16 @@ export async function generateInboxResponse(
     let lastReceivedTime: Date | null = null;
 
     for (let i = 0; i < (body.messagesPerContact || 1); i++) {
-      const isSend = faker.datatype.boolean();
+      // const isSend = faker.datatype.boolean();
+      const isSend = false; // For testing, making all messages as receive messages
       const messageBody = isSend
         ? generateSendMessage(contact)
         : generateReceiveMessage(contact, settings);
 
       // Prepare message creation data
       const now = new Date();
-      const base = faker.date.recent({ days: 10, refDate: now });
+      // const base = faker.date.recent({ days: 1, refDate: now });
+      const base = now; // For testing, making all messages as current time
       let sent = base;
       let delivered: Date | null = faker.date.between({ from: sent, to: now });
       let read: Date | null = null;
@@ -1357,10 +1364,8 @@ export async function generateInboxResponse(
         failed = faker.date.between({ from: sent, to: now });
         delivered = null;
         read = null;
-      } else {
-        if (faker.datatype.boolean()) {
-          read = faker.date.between({ from: delivered!, to: now });
-        }
+      } else if (faker.datatype.boolean()) {
+        read = faker.date.between({ from: delivered!, to: now });
       }
 
       messagesToCreate.push({
@@ -1397,12 +1402,18 @@ export async function generateInboxResponse(
 
     // Update lastReceivedMessageTimeStamp only once per contact
     if (lastReceivedTime) {
+      const lastMessage = messagesToCreate?.at(-1);
       await prisma.contact.update({
         where: {
           id: contact?.id,
         },
         data: {
           lastReceivedMessageTimeStamp: lastReceivedTime.toISOString(),
+          lastMessageWaCreatedAt: lastReceivedTime.toISOString(),
+          lastMessageBody: lastMessage?.messageBody || null,
+          lastMessagePlatform: "WHATSAPP",
+          lastReceivedMetadata: lastMessage?.receive?.metadata || null,
+          lastMessageSourceIdentifier: lastMessage?.sourceIdentifier || null,
         },
       });
     }
