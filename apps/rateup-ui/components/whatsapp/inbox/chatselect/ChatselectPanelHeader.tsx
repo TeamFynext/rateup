@@ -48,6 +48,13 @@ const ChatselectPanelHeader = ({
         { label: "Oldest First", value: "oldest" },
       ],
     },
+    {
+      groupName: "Message Created",
+      items: [
+        { label: "Newest First", value: "newest_wa_created" },
+        { label: "Oldest First", value: "oldest_wa_created" },
+      ],
+    },
   ];
   const { filter, setFilter } = useChatFilterStore();
   const translations = useTranslations();
