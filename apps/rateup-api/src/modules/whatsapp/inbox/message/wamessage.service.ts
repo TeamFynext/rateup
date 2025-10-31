@@ -255,6 +255,9 @@ export async function filterChats(
     let sortBy = "DESC";
     if (bodyFilterProps?.sortBy === "oldest") {
       sortBy = "ASC";
+    } else if (bodyFilterProps?.sortBy === "newest_wa_created") {
+      orderBy = `c."lastMessageWaCreatedAt"`;
+      allOrderBy = `fc."lastMessageWaCreatedAt"`;
     }
 
     const isSearchMode = bodyFilterProps?.searchTerm?.length > 0;
@@ -270,8 +273,6 @@ export async function filterChats(
               `(c."lastReceivedMessageTimeStamp" IS NOT NULL OR c."lastSentMessageTimeStamp" IS NOT NULL)`,
             );
           }
-          orderBy = `c."lastMessageWaCreatedAt"`;
-          allOrderBy = `fc."lastMessageWaCreatedAt"`;
         }
       }
 
