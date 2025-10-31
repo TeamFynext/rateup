@@ -14,10 +14,19 @@ import {
   ScrollArea,
   Tooltip,
 } from "@mantine/core";
-import { IconFilter } from "@tabler/icons-react";
+import { IconChevronDown, IconDownload, IconFilter } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
 import { useResponseFilterStore } from "@/components/Survey/Response/store";
+import { Button } from "@/components/ui/button";
+// Add shadcn UI imports
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { showErrorToast } from "@/utils/notifications";
 
 import { extractText } from "../../../utils";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
@@ -29,11 +38,57 @@ const FilterToggles = ({
   filterVisibility,
   enableColumnSelection,
   tempVisibleColumnArray,
+  enableExport = false,
+  onExport,
 }) => {
   const translations = useTranslations();
   const { setServerFilters } = useResponseFilterStore();
+
+  const leafColumns = table
+    .getAllLeafColumns()
+    ?.filter(
+      (column) =>
+        column.getIsVisible() && !["select", "action"].includes(column.id),
+    )
+    ?.map((col) => col.id);
+
+  const handleExport = (type: string) => {
+    if (!leafColumns?.length) {
+      showErrorToast(
+        translations("Please select at least one field to export."),
+      );
+      return;
+    }
+    onExport.mutate({
+      type,
+      fields: leafColumns,
+    });
+  };
   return (
     <Group>
+      {enableExport && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <IconDownload
+                style={{ width: rem(16), height: rem(16), marginRight: rem(8) }}
+              />
+              Export
+              <IconChevronDown
+                style={{ width: rem(14), height: rem(14), marginLeft: rem(4) }}
+              />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleExport("csv")}>
+              Download as CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport("xlsx")}>
+              Download as Excel
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
       {enableFilter && (
         <ActionIcon
           onClick={() => setFilterVisibility((el) => !el)}

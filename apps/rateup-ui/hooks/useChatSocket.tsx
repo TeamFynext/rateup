@@ -24,7 +24,6 @@ export const useChatSocket = () => {
   const router = useRouter();
   const messageStore = useMessagesStore.getState();
   const { selectedContact, updateContactById } = useContactsStore();
-  const markMessageAsRead = useMarkWaMessagesAsRead(selectedContact?.id, null);
 
   useEffect(() => {
     if (!browserId) return;
@@ -43,31 +42,38 @@ export const useChatSocket = () => {
         switch (data.type) {
           case "inbox":
             const { message, contact: incomingContact } = data.inbox;
-            updateContactById(incomingContact.id, (contact) => ({
-              ...contact,
-              unReadMessageCount:
-                selectedContact?.id === incomingContact?.id
-                  ? 0
-                  : (contact.unReadMessageCount ?? 0) + 1,
-              lastMessage: {
-                messageBody: message.messageBody,
-                sourceIdentifier: message.sourceIdentifier,
-                sourcePlatform: message.sourcePlatform,
-                waCreatedAt: message.waCreatedAt,
-              },
-              ...(message.messageBody.exchangeProcess === "receive"
-                ? {
-                    lastReceivedMessageTimeStamp: message.waCreatedAt,
-                  }
-                : {}),
-            }));
+            let markUnread = false;
+            if (selectedContact?.id === incomingContact?.id) {
+              markUnread = true;
+            }
+            updateContactById(
+              incomingContact.id,
+              (contact) => ({
+                ...contact,
+                unReadMessageCount:
+                  selectedContact?.id === incomingContact?.id
+                    ? 0
+                    : (contact.unReadMessageCount ?? 0) + 1,
+                lastMessage: {
+                  messageBody: message.messageBody,
+                  sourceIdentifier: message.sourceIdentifier,
+                  sourcePlatform: message.sourcePlatform,
+                  waCreatedAt: message.waCreatedAt,
+                },
+                ...(message.messageBody.exchangeProcess === "receive"
+                  ? {
+                      lastReceivedMessageTimeStamp: message.waCreatedAt,
+                    }
+                  : {}),
+              }),
+              markUnread,
+            );
             for (const key of [
               `${incomingContact?.id}_all`,
               `${incomingContact?.id}_${message.sourceIdentifier}`,
             ]) {
               messageStore.mergeMessages(key, [message]);
             }
-            markMessageAsRead.mutate();
             break;
           case "message_status_update":
             if (

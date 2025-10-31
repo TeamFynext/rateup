@@ -66,7 +66,12 @@ const SurveySettings = ({
   useEffect(() => {
     setHasGoogleReview(
       survey?.questions?.some(
-        (item) => item.googleReview !== null && item.googleReview !== undefined,
+        (item) =>
+          item?.googleReview?.length ||
+          !!(
+            item?.reviewPageOptions &&
+            Object.keys(item?.reviewPageOptions).length
+          ),
       ),
     );
   }, [survey]);

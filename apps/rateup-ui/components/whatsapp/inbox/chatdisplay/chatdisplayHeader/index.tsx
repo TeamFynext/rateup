@@ -1,19 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
-import {
-  ActionIcon,
-  Group,
-  Menu,
-  Radio,
-  RadioGroup,
-  Skeleton,
-  Stack,
-  Text,
-  ThemeIcon,
-} from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
+import { Group, Radio, RadioGroup, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconBrandInstagram,
@@ -24,18 +13,11 @@ import {
   Ban,
   BellOff,
   Bot,
-  CheckCheck,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
+  CircleCheckBig,
   InstagramIcon,
-  MessageCircle,
   MoreVertical,
   Ticket,
-  Trash2,
-  Users,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
 
 import {
   MessagePlatform,
@@ -43,28 +25,19 @@ import {
   WaMessageAssignStatus,
 } from "@/types/enums";
 import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContext";
-import useContactStore, {
+import {
   ContactWithUpdatedAt,
   useContactsStore,
 } from "@/app/dashboard/inbox/store";
 import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
 import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
-import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
-import {
-  useAssignInboxToUer,
-  useBlockWhatsAppUser,
-  useGetAssignedUserForContact,
-} from "@/backend/whatsapp/inbox/message/wamessage.query";
-import CopyIcon from "@/components/Button/CopyIcon";
+import { useBlockWhatsAppUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
-import FormModalLayout from "@/components/Modal/FormModalLayout";
 import { CreateTicketCard } from "@/components/Tickets/CreateTicketModal";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
@@ -91,7 +64,6 @@ import { isInboxSessionExpired } from "@/utils/whatsapp/inbox";
 import { getSoucePlatformIconAndColor } from "../../util";
 import AssignUser from "./AssignUser";
 import WaInboxCountdownTimer from "./countDown";
-import classes from "./styles.module.css";
 
 interface WaInboxChatDisplayHeaderProps {
   contact: ContactWithUpdatedAt;
@@ -305,7 +277,7 @@ const ChatHeaderMenu = ({ contact }) => {
             contact?.waMessageAssignStatus === WaMessageAssignStatus.CLOSED
           }
         >
-          <CheckCheck className="w-4 h-4 mr-2" />
+          <CircleCheckBig className="w-4 h-4 mr-2" />
           Mark as Closed
         </DropdownMenuItem>
 
@@ -315,16 +287,18 @@ const ChatHeaderMenu = ({ contact }) => {
             Create Ticket
           </DropdownMenuItem>
         )}
-        <DropdownMenuSeparator />
         {!isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp) &&
           !contact?.blockedOnWhatsApp && (
-            <DropdownMenuItem
-              onClick={openConfirm}
-              className="text-destructive"
-            >
-              <Ban className="w-4 h-4 mr-2 text-destructive" />
-              Block contact
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={openConfirm}
+                className="text-destructive"
+              >
+                <Ban className="w-4 h-4 mr-2 text-destructive" />
+                Block contact
+              </DropdownMenuItem>
+            </>
           )}
       </DropdownMenuContent>
       <ConfirmationModal

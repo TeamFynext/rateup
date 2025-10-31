@@ -297,7 +297,7 @@ const WaInboxChatSelect = () => {
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
 
   return (
-    <Paper withBorder p={0} className="h-full">
+    <div className="h-full">
       <ChatselectPanelHeader
         isRefetchingFilteredContacts={isRefetchingFilteredContacts}
         onUnknownContactAddSuccess={onUnknownContactAddSuccess}
@@ -338,6 +338,7 @@ const WaInboxChatSelect = () => {
                 }
                 return (
                   <div
+                    data-index={virtualRow.index}
                     key={virtualRow.index}
                     ref={rowVirtualizer.measureElement}
                     style={{
@@ -394,7 +395,7 @@ const WaInboxChatSelect = () => {
           </div>
         )}
       </div>
-    </Paper>
+    </div>
   );
 };
 
