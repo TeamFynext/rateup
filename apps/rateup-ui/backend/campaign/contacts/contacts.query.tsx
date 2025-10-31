@@ -312,7 +312,14 @@ export const useExportContactsMutation = () => {
   return useMutation({
     mutationFn: exportContacts,
     onMutate: () => {
-      showLoadingToast("Preparing contacts for export...", "contact-export");
+      showLoadingToast(
+        "Preparing contacts for export...",
+        "contact-export",
+        undefined,
+        undefined,
+        undefined,
+        false,
+      );
     },
     onSuccess: () => {
       showSuccessToast(

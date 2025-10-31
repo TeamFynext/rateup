@@ -127,6 +127,7 @@ export const exportContacts = async (data: {
 }) => {
   let response = await axiosClient.post(`${CONTACT_BASE_URL}/export`, data, {
     responseType: "blob",
+    timeout: 0,
   });
   const blob = new Blob([response.data], {
     type: response.headers["content-type"],
