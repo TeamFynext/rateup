@@ -102,7 +102,7 @@ export default async function RootLayout({
             </SuperTokensProvider>
           </Suspense>
         </MantineProvider>
-        <Toaster />
+        <Toaster richColors />
       </body>
     </html>
   );
