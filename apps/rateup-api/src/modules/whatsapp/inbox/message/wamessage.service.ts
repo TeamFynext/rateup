@@ -258,6 +258,10 @@ export async function filterChats(
     } else if (bodyFilterProps?.sortBy === "newest_wa_created") {
       orderBy = `c."lastMessageWaCreatedAt"`;
       allOrderBy = `fc."lastMessageWaCreatedAt"`;
+    } else if (bodyFilterProps?.sortBy === "oldest_wa_created") {
+      orderBy = `c."lastMessageWaCreatedAt"`;
+      allOrderBy = `fc."lastMessageWaCreatedAt"`;
+      sortBy = "ASC";
     }
 
     const isSearchMode = bodyFilterProps?.searchTerm?.length > 0;
