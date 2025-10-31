@@ -117,6 +117,7 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
       user: {
         select: {
           id: true,
+          profilePhoto: true,
           email: true,
           name: true,
           teamMember: {
@@ -137,11 +138,13 @@ export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
     id: m.user.id,
     name: m.user.name,
     email: m.user.email,
+    profilePhoto: m.user.profilePhoto,
     role: m.role,
     teams: m.user.teamMember.map((tm) => ({
       team_id: tm.team.id,
       team_name: tm.team.name,
       team_code: tm.team.code,
+      team_color: tm.team.color,
     })),
     isPaused: m.user.isPaused,
     status: m.status,
