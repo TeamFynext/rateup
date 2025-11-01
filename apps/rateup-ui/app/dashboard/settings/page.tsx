@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
 
+import BillingPage from "./BillingSettings";
 import Security from "./SecuritySettings";
 import Team from "./TeamSettings";
 import { Account } from "./UserSettingsNew";
@@ -99,12 +100,16 @@ const Settings = () => {
           icon: Shield,
           description: "Password & security",
         },
-        {
-          id: "billing" as SettingsSection,
-          label: "Billing",
-          icon: CreditCard,
-          description: "Subscription & payments",
-        },
+        ...(user?.role === UserRole.SUPADM
+          ? [
+              {
+                id: "billing" as SettingsSection,
+                label: "Billing",
+                icon: CreditCard,
+                description: "Subscription & payments",
+              },
+            ]
+          : []),
       ],
     },
     ...(sub?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
@@ -135,6 +140,9 @@ const Settings = () => {
       case "users":
         if (user?.role !== UserRole.SUPADM) return null;
         return <UsersPage />;
+      case "billing":
+        if (user?.role !== UserRole.SUPADM) return null;
+        return <BillingPage />;
       default:
         return null;
     }

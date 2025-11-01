@@ -728,12 +728,18 @@ const Navbar = ({
               {mainLinks}
             </ScrollAreaAutosize>
           </div>
-          <div className="flex flex-col items-center justify-between gap-2 py-1">
+          <div className="flex flex-col items-center justify-between gap-2 py-4">
             <Separator />
+            <div className="flex items-center justify-center ml-2">
+              <ColorSchemaButton />
+            </div>
+            <div>
+              <NotificationBellIcon />
+            </div>
             <Popover open={opened} onOpenChange={setOpened}>
               <PopoverTrigger asChild>
                 <div
-                  className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
+                  className="flex items-center rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
                   onClick={() => setOpened(true)}
                 >
                   <div className="flex items-center gap-2">
@@ -832,12 +838,6 @@ const Navbar = ({
                 </div>
               </PopoverContent>
             </Popover>
-            <div className="flex items-center justify-center ml-2">
-              <ColorSchemaButton />
-            </div>
-            <div>
-              <NotificationBellIcon />
-            </div>
           </div>
           <Dialog open={openLogoutModal} onOpenChange={setOpenLogoutModal}>
             <DialogContent className="sm:max-w-md">
