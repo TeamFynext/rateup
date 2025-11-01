@@ -252,7 +252,7 @@ const Settings = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-gradient-to-br from-gray-50/30 to-blue-50/20">
+      <main className="flex-1 overflow-auto bg-gradient-to-br from-gray-50/30 to-blue-50/20 py-4 px-2">
         <div className="pl-6 pr-6 pb-6 max-w-7xl">{renderContent()}</div>
       </main>
     </div>

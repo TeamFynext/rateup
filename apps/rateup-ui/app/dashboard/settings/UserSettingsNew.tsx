@@ -289,7 +289,7 @@ export function Account() {
     "Other",
   ];
   return (
-    <div className="p-4 flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       <div>
         <h2 className="text-2xl mb-1">Account Settings</h2>
         <p className="text-sm text-muted-foreground">

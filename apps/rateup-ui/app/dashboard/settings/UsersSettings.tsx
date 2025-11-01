@@ -87,6 +87,8 @@ export default function UsersPage() {
   const translations = useTranslations();
   const queryClient = useQueryClient();
   const { data, isLoading } = useAllTeamsMembersOfOrg();
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Fetch Teams
   const {
     isLoading: isLoadingTeamsUser,
@@ -241,6 +243,22 @@ export default function UsersPage() {
     },
   });
 
+  const filteredMembers = data?.data?.members?.filter((user) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      user.name?.toLowerCase().includes(q) ||
+      user.email?.toLowerCase().includes(q)
+    );
+  });
+
+  const filteredInvitations = data?.data?.invitations?.filter((invite) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      invite.name?.toLowerCase().includes(q) ||
+      invite.email?.toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div className="flex flex-col items-start w-full gap-4">
       <div>
@@ -250,181 +268,181 @@ export default function UsersPage() {
         </p>
       </div>
 
-      <Card className="p-4 w-full">
-        <div className="flex items-center gap-3 w-full">
-          {/* Add User Dialog */}
-          <Dialog
-            open={isAddUserDialogOpen}
-            onOpenChange={setIsAddUserDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-rateup-blue to-rateup-blue h-10">
-                <Plus className="w-4 h-4 mr-2" />
+      <div className="flex flex-col md:flex-row items-center gap-3 w-full py-4">
+        {/* Add User Dialog */}
+        <Dialog
+          open={isAddUserDialogOpen}
+          onOpenChange={setIsAddUserDialogOpen}
+        >
+          <DialogTrigger asChild>
+            <Button className="bg-gradient-to-r from-rateup-blue to-rateup-blue h-10">
+              <Plus className="w-4 h-4 mr-2" />
+              Add New User
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent className="sm:max-w-xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center">
+                  <Plus className="w-4 h-4 text-white" />
+                </div>
                 Add New User
-              </Button>
-            </DialogTrigger>
+              </DialogTitle>
+              <DialogDescription>
+                Create a new user account and assign roles and team membership.
+              </DialogDescription>
+            </DialogHeader>
 
-            <DialogContent className="sm:max-w-xl">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center">
-                    <Plus className="w-4 h-4 text-white" />
-                  </div>
-                  Add New User
-                </DialogTitle>
-                <DialogDescription>
-                  Create a new user account and assign roles and team
-                  membership.
-                </DialogDescription>
-              </DialogHeader>
-
-              {/* Form Content */}
-              <form
-                onSubmit={userForm.onSubmit(() => addResourceMutation.mutate())}
-                className="space-y-4 py-3"
-              >
-                <div className="flex flex-col gap-4">
-                  {/* Name */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="new-name" className="text-xs">
-                      Full Name <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="new-name"
-                      placeholder="John Doe"
-                      className="h-9"
-                      {...userForm.getInputProps("name")}
-                    />
-                    {userForm.errors.name && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {userForm.errors.name}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Email */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="new-email" className="text-xs">
-                      Email Address <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        id="new-email"
-                        type="email"
-                        placeholder="john@company.com"
-                        className="h-9 pl-9"
-                        {...userForm.getInputProps("email")}
-                      />
-                    </div>
-                    {userForm.errors.name && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {userForm.errors.email}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Team Assignment */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="new-team" className="text-xs">
-                      Team Assignment
-                    </Label>
-                    {isLoadingTeamsUser ? (
-                      <div className="flex flex-col gap-2">
-                        <div className="h-9 w-full rounded-md bg-muted animate-pulse" />
-                        <div className="h-9 w-full rounded-md bg-muted animate-pulse" />
-                      </div>
-                    ) : (
-                      <Select
-                        value={userForm.values.team}
-                        onValueChange={(value) =>
-                          userForm.setFieldValue("team", value)
-                        }
-                      >
-                        <SelectTrigger className="h-9 w-full">
-                          <SelectValue placeholder="Select team" />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                          {teamsDataUser?.data?.map((team) => (
-                            <SelectItem key={team.id} value={team.id}>
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="w-2 h-2 rounded-full"
-                                  style={{ backgroundColor: team.color }}
-                                />
-                                {team.name}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-
-                  {/* Extra Settings */}
-                  <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs mb-0">Send welcome email</Label>
-                      <Switch defaultChecked disabled />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs mb-0">
-                        Require password change
-                      </Label>
-                      <Switch defaultChecked disabled />
-                    </div>
-                  </div>
+            {/* Form Content */}
+            <form
+              onSubmit={userForm.onSubmit(() => addResourceMutation.mutate())}
+              className="space-y-4 py-3"
+            >
+              <div className="flex flex-col gap-4">
+                {/* Name */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-name" className="text-xs">
+                    Full Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="new-name"
+                    placeholder="John Doe"
+                    className="h-9"
+                    {...userForm.getInputProps("name")}
+                  />
+                  {userForm.errors.name && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {userForm.errors.name}
+                    </p>
+                  )}
                 </div>
 
-                {/* Footer */}
-                <DialogFooter className="flex items-center justify-end gap-4 mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsAddUserDialogOpen(false);
-                      userForm.reset();
-                    }}
-                  >
-                    Cancel
-                  </Button>
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-email" className="text-xs">
+                    Email Address <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="new-email"
+                      type="email"
+                      placeholder="john@company.com"
+                      className="h-9 pl-9"
+                      {...userForm.getInputProps("email")}
+                    />
+                  </div>
+                  {userForm.errors.name && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {userForm.errors.email}
+                    </p>
+                  )}
+                </div>
 
-                  <Button
-                    type="submit"
-                    disabled={addResourceMutation.isPending}
-                    className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    {addResourceMutation.isPending ? "Creating" : "Create User"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+                {/* Team Assignment */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-team" className="text-xs">
+                    Team Assignment
+                  </Label>
+                  {isLoadingTeamsUser ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="h-9 w-full rounded-md bg-muted animate-pulse" />
+                      <div className="h-9 w-full rounded-md bg-muted animate-pulse" />
+                    </div>
+                  ) : (
+                    <Select
+                      value={userForm.values.team}
+                      onValueChange={(value) =>
+                        userForm.setFieldValue("team", value)
+                      }
+                    >
+                      <SelectTrigger className="h-9 w-full">
+                        <SelectValue placeholder="Select team" />
+                      </SelectTrigger>
 
-          {/* Search Bar */}
-          <div className="relative w-full bg-gray-50">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search users by name or email..."
-              className="pl-10 h-10"
-            />
-          </div>
+                      <SelectContent>
+                        {teamsDataUser?.data?.map((team) => (
+                          <SelectItem key={team.id} value={team.id}>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: team.color }}
+                              />
+                              {team.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                {/* Extra Settings */}
+                <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs mb-0">Send welcome email</Label>
+                    <Switch defaultChecked disabled />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs mb-0">
+                      Require password change
+                    </Label>
+                    <Switch defaultChecked disabled />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <DialogFooter className="flex items-center justify-end gap-4 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsAddUserDialogOpen(false);
+                    userForm.reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  type="submit"
+                  disabled={addResourceMutation.isPending}
+                  className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  {addResourceMutation.isPending ? "Creating" : "Create User"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Search Bar */}
+        <div className="relative w-full bg-gray-50">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search users by name or email..."
+            className="pl-10 h-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
-      </Card>
+      </div>
+
       {/* Users Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="flex flex-col w-full">
         {/* --- ACTIVE MEMBERS --- */}
         {data?.data?.members?.length > 0 && (
           <>
             <h3 className="col-span-full text-sm font-semibold text-gray-500 uppercase">
               Active Members
             </h3>
-            <div className="flex items-center gap-4">
-              {data?.data?.members.map((user) => (
+            <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4">
+              {filteredMembers.map((user) => (
                 <Card
                   key={user.id}
-                  className="p-3 shadow-sm border-gray-200 hover:shadow-md hover:border-rateup-blue/30 transition-all group relative min-w-[15vw] max-w-[15vw]"
+                  className="p-3 shadow-sm border-gray-200 hover:shadow-md hover:border-rateup-blue/30 transition-all group relative min-w-[15vw] lg:max-w-[15vw]"
                 >
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     {/* Avatar */}
@@ -522,8 +540,8 @@ export default function UsersPage() {
             <h3 className="col-span-full text-sm font-semibold text-gray-500 uppercase mt-6">
               Pending Invitations
             </h3>
-            <div className="flex items-center gap-4">
-              {data?.data?.invitations.map((invite) => (
+            <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4">
+              {filteredInvitations.map((invite) => (
                 <Card
                   key={invite.id}
                   className="p-3 max-w-[15vw] min-w-[15vw] border-dashed border-gray-300 hover:border-rateup-orange/40 hover:shadow-md transition-all group relative"

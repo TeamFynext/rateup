@@ -761,12 +761,12 @@ function TeamMember({ member, selectedTeam, refetchTeams }) {
       </div>
       {member.role !== UserRole.SUPADM && (
         <Button
+          size="sm"
           variant="destructive"
           className="flex items-center justify-center gap-1"
           onClick={() => setOpen(true)}
         >
           <X />
-          Remove
         </Button>
       )}
 
