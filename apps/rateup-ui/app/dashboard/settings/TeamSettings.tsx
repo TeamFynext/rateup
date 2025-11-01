@@ -127,7 +127,7 @@ const Team = () => {
         <div>
           <h2 className="text-2xl">Team Management</h2>
           <p className="text-sm text-muted-foreground">
-            Organize members into teams and manage roles
+            {translations("Organize members into teams and manage roles")}
           </p>
         </div>
         {user?.role === UserRole.SUPADM && (
@@ -136,7 +136,7 @@ const Team = () => {
             onClick={() => setIsCreateTeamDialogOpen(true)}
           >
             <Plus className="w-4 h-4" />
-            Create Team
+            {translations("Create Team")}
           </Button>
         )}
       </div>
@@ -197,7 +197,7 @@ const Team = () => {
                         </p>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Created:{" "}
+                        {translations("Created")}:{" "}
                         {team?.createdAt
                           ? dayjs(team.createdAt).format("DD MMM YYYY")
                           : "—"}
@@ -229,7 +229,9 @@ const Team = () => {
 
                       <span className="text-sm text-muted-foreground">
                         {team._count.members}{" "}
-                        {team._count.members === 1 ? "member" : "members"}
+                        {team._count.members === 1
+                          ? translations("member")
+                          : translations("members")}
                       </span>
                     </div>
                     {user?.role === UserRole.SUPADM && (
@@ -242,7 +244,7 @@ const Team = () => {
                           setIsManageTeamDialogOpen(true);
                         }}
                       >
-                        Manage
+                        {translations("Manage")}
                       </Button>
                     )}
                   </div>
@@ -261,13 +263,14 @@ const Team = () => {
             <DialogHeader>
               <DialogTitle>Create New Team</DialogTitle>
               <DialogDescription>
-                Organize your team members into groups for better collaboration
-                and management
+                {translations(
+                  "Organize your team members into groups for better collaboration and management",
+                )}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="team-name">Team Name</Label>
+                <Label htmlFor="team-name">{translations("Team Name")}</Label>
                 <Input
                   id="team-name"
                   placeholder="e.g., Customer Support Team"
@@ -276,7 +279,7 @@ const Team = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="team-name">Team Code</Label>
+                <Label htmlFor="team-name">{translations("Team Code")}</Label>
                 <Input
                   id="team-code"
                   placeholder="e.g., TEAM"
@@ -286,7 +289,7 @@ const Team = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Team Color</Label>
+                <Label>{translations("Team Color")}</Label>
                 <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                   {colorArray.map((color, index) => {
                     const isSelected =
@@ -326,7 +329,9 @@ const Team = () => {
                   handleSubmit(values);
                 }}
               >
-                {isCreating ? "Creating..." : "Create Team"}
+                {isCreating
+                  ? translations("Creating")
+                  : translations("Create Team")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -354,7 +359,7 @@ const Team = () => {
                   <div>
                     <DialogTitle>{selectedTeam?.name}</DialogTitle>
                     <DialogDescription className="text-xs">
-                      Created:{" "}
+                      {translations("Created")}:{" "}
                       {selectedTeam?.createdAt
                         ? dayjs(selectedTeam.createdAt).format("DD MMM YYYY")
                         : "—"}
@@ -365,9 +370,15 @@ const Team = () => {
 
               <Tabs defaultValue="details" className="w-full">
                 <TabsList className="flex w-full mb-4">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="members">Members</TabsTrigger>
-                  <TabsTrigger value="settings">Settings</TabsTrigger>
+                  <TabsTrigger value="details">
+                    {translations("Details")}
+                  </TabsTrigger>
+                  <TabsTrigger value="members">
+                    {translations("Members")}
+                  </TabsTrigger>
+                  <TabsTrigger value="settings">
+                    {translations("Settings")}
+                  </TabsTrigger>
                 </TabsList>
                 <ScrollArea className="h-[45vh]">
                   <TabsContent value="details">
@@ -376,6 +387,7 @@ const Team = () => {
                       editedColor={editedColor}
                       setIsManageTeamDialogOpen={setIsManageTeamDialogOpen}
                       setEditedColor={setEditedColor}
+                      translations={translations}
                     />
                   </TabsContent>
 
@@ -383,6 +395,7 @@ const Team = () => {
                     <AddMembers
                       selectedTeam={selectedTeam}
                       refetchTeams={refetchTeams}
+                      translations={translations}
                     />
                   </TabsContent>
 
@@ -410,6 +423,7 @@ function EditTeam({
   editedColor,
   setIsManageTeamDialogOpen,
   setEditedColor,
+  translations,
 }) {
   const editTeamForm = useForm({
     initialValues: {
@@ -455,10 +469,10 @@ function EditTeam({
       <div className="flex-1 space-y-4">
         {/* Team Name */}
         <div className="space-y-2">
-          <Label htmlFor="edit-team-name">Team Name</Label>
+          <Label htmlFor="edit-team-name">{translations("Team Name")}</Label>
           <Input
             id="edit-team-name"
-            placeholder="Enter team name"
+            placeholder={translations("Enter Team name")}
             {...editTeamForm.getInputProps("name")}
             className="border-2 border-gray-200 focus:border-rateup-blue"
           />
@@ -466,10 +480,10 @@ function EditTeam({
 
         {/* Team Code */}
         <div className="space-y-2">
-          <Label htmlFor="edit-team-code">Team Code</Label>
+          <Label htmlFor="edit-team-code">{translations("Team Code")}</Label>
           <Input
             id="edit-team-code"
-            placeholder="Enter team code"
+            placeholder={translations("Enter Team code")}
             {...editTeamForm.getInputProps("code")}
             className="border-2 border-gray-200 focus:border-rateup-blue"
           />
@@ -477,7 +491,7 @@ function EditTeam({
 
         {/* Team Color */}
         <div className="space-y-2">
-          <Label>Team Color</Label>
+          <Label>{translations("Team Color")}</Label>
           <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
             {colorArray.map((color, index) => {
               const isSelected = editedColor === color.from;
@@ -509,7 +523,7 @@ function EditTeam({
           type="button"
           onClick={() => setIsManageTeamDialogOpen(false)}
         >
-          Cancel
+          {translations("Cancel")}
         </Button>
 
         <Button
@@ -517,14 +531,14 @@ function EditTeam({
           disabled={isLoading}
           className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
         >
-          {isLoading ? "Saving..." : "Save Changes"}
+          {isLoading ? translations("Saving") : translations("Save Changes")}
         </Button>
       </div>
     </form>
   );
 }
 
-function AddMembers({ selectedTeam, refetchTeams }) {
+function AddMembers({ selectedTeam, refetchTeams, translations }) {
   const teamID = selectedTeam.id;
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const {
@@ -533,7 +547,7 @@ function AddMembers({ selectedTeam, refetchTeams }) {
     error: errorTeamsDataUser,
     refetch: reftchTeams,
   } = useNotTeamMembers(teamID);
-  console.log("notTeam", notTeamMembersData);
+
   const {
     isLoading: isLoadingMembers,
     data: teamsMembersData,
@@ -554,8 +568,10 @@ function AddMembers({ selectedTeam, refetchTeams }) {
           <Skeleton className="h-5 w-32" />
         ) : (
           <p className="text-sm sm:text-base text-muted-foreground">
-            {teamMembersObjArr?.length || 0} member
-            {(teamMembersObjArr?.length || 0) !== 1 ? "s" : ""} in this team
+            {(teamMembersObjArr?.length || 0) !== 1
+              ? translations("members")
+              : translations("member")}
+            {translations("in this team")}
           </p>
         )}
         <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
@@ -565,18 +581,20 @@ function AddMembers({ selectedTeam, refetchTeams }) {
               className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Add Member</span>
-              <span className="sm:hidden">Add</span>
+              <span className="hidden sm:inline">
+                {translations("Add Member")}
+              </span>
+              <span className="sm:hidden">{translations("Add")}</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="p-4">
             <div className="space-y-3">
               <DialogHeader>
                 <DialogTitle className="text-sm sm:text-base">
-                  Add Members to Team
+                  {translations("Add Members to Team")}
                 </DialogTitle>
                 <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
-                  Select users to add to {selectedTeam?.name}
+                  {translations("Select users to add to")} {selectedTeam?.name}
                 </DialogDescription>
               </DialogHeader>
               <Separator />
@@ -647,7 +665,7 @@ function AddMembers({ selectedTeam, refetchTeams }) {
                           className="cursor-pointer hover:scale-105 hover:bg-white"
                         >
                           <Plus className="w-2 h-2" />
-                          Add
+                          {translations("Add")}
                         </Button>
                       </div>
                     ))}
@@ -656,7 +674,7 @@ function AddMembers({ selectedTeam, refetchTeams }) {
                   <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
                     <Users className="w-8 h-8 opacity-50" />
                     <p className="text-sm text-center">
-                      All users are already in this team
+                      {translations("All users are already in this team")}
                     </p>
                   </div>
                 )}
@@ -698,14 +716,19 @@ function AddMembers({ selectedTeam, refetchTeams }) {
                   member={member}
                   selectedTeam={selectedTeam}
                   refetchTeams={refetchTeams}
+                  translations={translations}
                 />
               </div>
             ))}
             {(!teamMembersObjArr || teamMembersObjArr.length === 0) && (
               <div className="text-center py-12 text-muted-foreground">
                 <Users className="w-12 h-12 mx-auto opacity-30" />
-                <p className="text-sm ">No members in this team yet</p>
-                <p className="text-xs">Click "Add Member" to get started</p>
+                <p className="text-sm ">
+                  {translations("No members in this team yet")}
+                </p>
+                <p className="text-xs">
+                  {translations("Click 'Add Member' to get started")}
+                </p>
               </div>
             )}
           </div>
@@ -715,7 +738,7 @@ function AddMembers({ selectedTeam, refetchTeams }) {
   );
 }
 
-function TeamMember({ member, selectedTeam, refetchTeams }) {
+function TeamMember({ member, selectedTeam, refetchTeams, translations }) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const removeteam = useRemoveUserFromTeam(selectedTeam.id);
@@ -775,16 +798,17 @@ function TeamMember({ member, selectedTeam, refetchTeams }) {
           <DialogHeader>
             <DialogTitle>Remove</DialogTitle>
             <DialogDescription>
-              Are you sure to remove this user from {selectedTeam?.name}?
+              {translations("Are you sure to remove this user from")}{" "}
+              {selectedTeam?.name}?
             </DialogDescription>
           </DialogHeader>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {translations("Cancel")}
             </Button>
             <Button variant="destructive" onClick={() => removeTeam(member.id)}>
-              Confirm Delete
+              {translations("Confirm Delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -857,12 +881,14 @@ function DeleteTeam({ selectedTeam, translations, setIsManageTeamDialogOpen }) {
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="google-link">Google review link</Label>
+        <Label htmlFor="google-link">
+          {translations("Google review link")}
+        </Label>
         <div>
           <div className="flex flex-col items-center justify-between gap-1 sm:flex-row">
             <Input
               id="google-link"
-              placeholder="Enter team name"
+              placeholder={translations("Enter google link")}
               {...form.getInputProps("googleLink")}
               className="border-2 border-gray-200 focus:border-rateup-blue"
             />
@@ -872,7 +898,7 @@ function DeleteTeam({ selectedTeam, translations, setIsManageTeamDialogOpen }) {
               onClick={handleSave}
               disabled={editTeamMutation.isPending}
             >
-              {editTeamMutation.isPending ? <Clock /> : "Save"}
+              {editTeamMutation.isPending ? <Clock /> : translations("Save")}
             </Button>
           </div>
           {form.errors.googleLink && (
@@ -890,8 +916,10 @@ function DeleteTeam({ selectedTeam, translations, setIsManageTeamDialogOpen }) {
             <div>
               <h4 className="text-sm font-medium text-red-700">Delete Team</h4>
               <p className="text-xs text-muted-foreground">
-                Permanently delete this team. Team members will remain in your
-                organization.
+                {translations(
+                  "Permanently delete this team? Team members will remain in your organization",
+                )}{" "}
+                .
               </p>
             </div>
             <Button
@@ -900,7 +928,7 @@ function DeleteTeam({ selectedTeam, translations, setIsManageTeamDialogOpen }) {
               className="cursor-pointer hover:bg-red-700 transition-colors"
               onClick={() => setIsDialogOpen(true)}
             >
-              Delete Team
+              {translations("Delete Team")}
             </Button>
           </div>
         </div>
@@ -911,11 +939,15 @@ function DeleteTeam({ selectedTeam, translations, setIsManageTeamDialogOpen }) {
           <DialogHeader>
             <DialogTitle className="text-red-700 flex items-center gap-2">
               <Trash2 className="w-5 h-5 text-red-600" />
-              Confirm Deletion
+              {translations("Confirm Deletion")}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              This action <strong>cannot be undone.</strong> Are you sure you
-              want to permanently delete this team?
+              {translations("This action")}
+              <strong>{translations("cannot be undone")}.</strong>{" "}
+              {translations(
+                "Are you sure you want to permanently delete this team",
+              )}
+              ?
             </DialogDescription>
           </DialogHeader>
 
@@ -926,7 +958,7 @@ function DeleteTeam({ selectedTeam, translations, setIsManageTeamDialogOpen }) {
               onClick={() => setIsDialogOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              {translations("Cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -934,7 +966,7 @@ function DeleteTeam({ selectedTeam, translations, setIsManageTeamDialogOpen }) {
               onClick={() => handleDeleteTeam(teamId)}
               disabled={isDeleting}
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? translations("Deleting") : translations("Delete")}
             </Button>
           </div>
         </DialogContent>

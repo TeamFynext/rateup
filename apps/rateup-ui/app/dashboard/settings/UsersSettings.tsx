@@ -106,14 +106,14 @@ export default function UsersPage() {
     },
     validate: {
       name: (value) => {
-        if (!value.trim()) return "Name is required";
-        if (value.trim().length < 2) return "Name is too short";
+        if (!value.trim()) return translations("Name is required");
+        if (value.trim().length < 2) return translations("Name is too short");
         return null;
       },
       email: (value) => {
-        if (!value.trim()) return "Email is required";
+        if (!value.trim()) return translations("Email is required");
         if (!/^\S+@\S+$/.test(value))
-          return "Please enter a valid email address";
+          return translations("Please enter a valid email address");
         return null;
       },
     },
@@ -262,9 +262,9 @@ export default function UsersPage() {
   return (
     <div className="flex flex-col items-start w-full gap-4">
       <div>
-        <h2 className="text-2xl mb-1">User Management</h2>
+        <h2 className="text-2xl mb-1">{translations("User Management")}</h2>
         <p className="text-sm text-muted-foreground">
-          Add and manage users with different access levels
+          {translations("Add and manage users with different access levels")}
         </p>
       </div>
 
@@ -277,7 +277,7 @@ export default function UsersPage() {
           <DialogTrigger asChild>
             <Button className="bg-gradient-to-r from-rateup-blue to-rateup-blue h-10">
               <Plus className="w-4 h-4 mr-2" />
-              Add New User
+              {translations("Add New User")}
             </Button>
           </DialogTrigger>
 
@@ -287,10 +287,13 @@ export default function UsersPage() {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center">
                   <Plus className="w-4 h-4 text-white" />
                 </div>
-                Add New User
+                {translations("Add New User")}
               </DialogTitle>
               <DialogDescription>
-                Create a new user account and assign roles and team membership.
+                {translations(
+                  "Create a new user account and assign roles and team membership",
+                )}{" "}
+                .
               </DialogDescription>
             </DialogHeader>
 
@@ -303,7 +306,8 @@ export default function UsersPage() {
                 {/* Name */}
                 <div className="space-y-1.5">
                   <Label htmlFor="new-name" className="text-xs">
-                    Full Name <span className="text-red-500">*</span>
+                    {translations("Full Name")}{" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="new-name"
@@ -321,7 +325,8 @@ export default function UsersPage() {
                 {/* Email */}
                 <div className="space-y-1.5">
                   <Label htmlFor="new-email" className="text-xs">
-                    Email Address <span className="text-red-500">*</span>
+                    {translations("Email Address")}{" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
                     <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
@@ -343,7 +348,7 @@ export default function UsersPage() {
                 {/* Team Assignment */}
                 <div className="space-y-1.5">
                   <Label htmlFor="new-team" className="text-xs">
-                    Team Assignment
+                    {translations("Team Assignment")}
                   </Label>
                   {isLoadingTeamsUser ? (
                     <div className="flex flex-col gap-2">
@@ -358,7 +363,9 @@ export default function UsersPage() {
                       }
                     >
                       <SelectTrigger className="h-9 w-full">
-                        <SelectValue placeholder="Select team" />
+                        <SelectValue
+                          placeholder={translations("Select team")}
+                        />
                       </SelectTrigger>
 
                       <SelectContent>
@@ -381,12 +388,14 @@ export default function UsersPage() {
                 {/* Extra Settings */}
                 <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs mb-0">Send welcome email</Label>
+                    <Label className="text-xs mb-0">
+                      {translations("Send welcome email")}
+                    </Label>
                     <Switch defaultChecked disabled />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label className="text-xs mb-0">
-                      Require password change
+                      {translations("Require password change")}
                     </Label>
                     <Switch defaultChecked disabled />
                   </div>
@@ -402,7 +411,7 @@ export default function UsersPage() {
                     userForm.reset();
                   }}
                 >
-                  Cancel
+                  {translations("Cancel")}
                 </Button>
 
                 <Button
@@ -411,7 +420,9 @@ export default function UsersPage() {
                   className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  {addResourceMutation.isPending ? "Creating" : "Create User"}
+                  {addResourceMutation.isPending
+                    ? translations("Creating")
+                    : translations("Create User")}
                 </Button>
               </DialogFooter>
             </form>
@@ -422,7 +433,7 @@ export default function UsersPage() {
         <div className="relative w-full bg-gray-50">
           <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search users by name or email..."
+            placeholder={translations("Search users by name or email")}
             className="pl-10 h-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -436,7 +447,7 @@ export default function UsersPage() {
         {data?.data?.members?.length > 0 && (
           <>
             <h3 className="col-span-full text-sm font-semibold text-gray-500 uppercase">
-              Active Members
+              {translations("Active Members")}
             </h3>
             <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4">
               {filteredMembers.map((user) => (
@@ -525,7 +536,7 @@ export default function UsersPage() {
                       }}
                     >
                       <Pencil className="w-3 h-3 mr-1" />
-                      Edit Profile
+                      {translations("Edit Profile")}
                     </Button>
                   </div>
                 </Card>
@@ -538,7 +549,7 @@ export default function UsersPage() {
         {data?.data?.invitations?.length > 0 && (
           <>
             <h3 className="col-span-full text-sm font-semibold text-gray-500 uppercase mt-6">
-              Pending Invitations
+              {translations("Pending Invitations")}
             </h3>
             <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4">
               {filteredInvitations.map((invite) => (
@@ -584,7 +595,7 @@ export default function UsersPage() {
                       disabled={resendInviteMutation.isPending}
                     >
                       <Mail className="w-3 h-3 mr-1" />
-                      Resend Invite
+                      {translations("Resend Invite")}
                     </Button>
                     <Button
                       variant="outline"
@@ -597,7 +608,7 @@ export default function UsersPage() {
                       disabled={deleteInviteMutation.isPending}
                     >
                       <Trash2 className="w-3 h-3 mr-1" />
-                      Delete Invite
+                      {translations("Delete Invite")}
                     </Button>
                   </div>
                 </Card>
@@ -664,10 +675,13 @@ function EditMember({
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center">
               <Pencil className="w-4 h-4 text-white" />
             </div>
-            Edit User
+            {translations("Edit User")}
           </DialogTitle>
           <DialogDescription>
-            Update user information, role, and account settings.
+            {translations(
+              "Update user information, role, and account settings",
+            )}
+            .
           </DialogDescription>
         </DialogHeader>
         {selectedUser && (
@@ -704,7 +718,8 @@ function EditMember({
 
               <div className="space-y-1.5">
                 <Label htmlFor="edit-name" className="text-xs">
-                  Full Name <span className="text-red-500">*</span>
+                  {translations("Full Name")}{" "}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="edit-name"
@@ -717,7 +732,8 @@ function EditMember({
 
               <div className="space-y-1.5">
                 <Label htmlFor="edit-email" className="text-xs">
-                  Email Address <span className="text-red-500">*</span>
+                  {translations("Email Address")}{" "}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                   <Mail className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
@@ -733,7 +749,9 @@ function EditMember({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs">Account Status</Label>
+                <Label className="text-xs">
+                  {translations("Account Status")}
+                </Label>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
                   <div className="flex items-center gap-2">
                     <div
@@ -744,7 +762,9 @@ function EditMember({
                       }`}
                     />
                     <span className="text-sm">
-                      {selectedUser.isPaused === true ? "Paused" : "Active"}
+                      {selectedUser.isPaused === true
+                        ? translations("Paused")
+                        : translations("Active")}
                     </span>
                   </div>
                   <Switch
@@ -755,7 +775,7 @@ function EditMember({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs">Role</Label>
+                <Label className="text-xs">{translations("Role")}</Label>
                 <Select
                   value={role}
                   onValueChange={(newRole) => {
@@ -789,22 +809,19 @@ function EditMember({
             onClick={() => {
               setIsEditUserDialogOpen(false);
               setSelectedUser(null);
-              // setProfileImage(null);
             }}
           >
-            Cancel
+            {translations("Cancel")}
           </Button>
           <Button
             className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
             onClick={() => {
               setIsEditUserDialogOpen(false);
               setSelectedUser(null);
-              // setProfileImage(null);
-              // toast.success("User updated successfully!");
             }}
           >
             <Save className="w-4 h-4 mr-2" />
-            Save Changes
+            {translations("Save Changes")}
           </Button>
         </DialogFooter>
       </DialogContent>

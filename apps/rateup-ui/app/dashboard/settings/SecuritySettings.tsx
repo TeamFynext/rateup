@@ -58,21 +58,26 @@ export default function Security() {
       confirmPassword: "",
     },
     validate: {
-      existingPassword: isNotEmpty("Enter your existing password"),
+      existingPassword: isNotEmpty(
+        translations("Enter your existing password"),
+      ),
       newPassword: (value) => {
-        if (!value) return "Enter your new password";
+        if (!value) return translations("Enter your new password");
 
         const passwordRegex =
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
         if (!passwordRegex.test(value)) {
-          return "Password must be at least 8 characters long, include 1 uppercase, 1 lowercase, 1 number, and 1 special character.";
+          return translations(
+            "Password must be at least 8 characters long, include 1 uppercase, 1 lowercase, 1 number, and 1 special character",
+          );
         }
         return null;
       },
       confirmPassword: (value, values) => {
-        if (!value) return "Please confirm your new password";
-        if (value !== values.newPassword) return "Passwords do not match";
+        if (!value) return translations("Please confirm your new password");
+        if (value !== values.newPassword)
+          return translations("Passwords do not match");
         return null;
       },
     },
@@ -94,7 +99,7 @@ export default function Security() {
           id: "load-data",
           color: "teal",
           title: "Success",
-          message: "Password Changed Successfully!",
+          message: translations("Password Changed Successfully"),
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
@@ -146,15 +151,17 @@ export default function Security() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl mb-1">Security Settings</h2>
+        <h2 className="text-2xl mb-1">{translations("Security Settings")}</h2>
         <p className="text-sm text-muted-foreground">
-          Manage your password, authentication, and security preferences
+          {translations(
+            "Manage your password, authentication, and security preferences",
+          )}
         </p>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6 shadow-sm border-gray-200">
           <h3 className="mb-5 text-lg font-medium text-gray-800">
-            Change Password
+            {translations("Change Password")}
           </h3>
 
           <form
@@ -167,14 +174,14 @@ export default function Security() {
                 htmlFor="currentPassword"
                 className="text-sm text-gray-700"
               >
-                Current Password
+                {translations("Current Password")}
               </Label>
               <div className="relative">
                 <Input
                   id="currentPassword"
                   type={showCurrent ? "text" : "password"}
                   className="h-10 border-2 border-gray-200 focus:border-rateup-blue pr-10"
-                  placeholder="Enter current password"
+                  placeholder={translations("Enter current password")}
                   {...passwordForm.getInputProps("existingPassword")}
                 />
                 <button
@@ -195,14 +202,14 @@ export default function Security() {
             {/* New Password */}
             <div className="space-y-1 relative">
               <Label htmlFor="newPassword" className="text-sm text-gray-700">
-                New Password
+                {translations("New Password")}
               </Label>
               <div className="relative">
                 <Input
                   id="newPassword"
                   type={showNew ? "text" : "password"}
                   className="h-10 border-2 border-gray-200 focus:border-rateup-blue pr-10"
-                  placeholder="Enter new password"
+                  placeholder={translations("Enter new password")}
                   {...passwordForm.getInputProps("newPassword")}
                 />
                 <button
@@ -226,14 +233,14 @@ export default function Security() {
                 htmlFor="confirmPassword"
                 className="text-sm text-gray-700"
               >
-                Confirm New Password
+                {translations("Confirm New Password")}
               </Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
                   type={showConfirm ? "text" : "password"}
                   className="h-10 border-2 border-gray-200 focus:border-rateup-blue pr-10"
-                  placeholder="Confirm new password"
+                  placeholder={translations("Confirm new password")}
                   {...passwordForm.getInputProps("confirmPassword")}
                 />
                 <button
@@ -267,8 +274,10 @@ export default function Security() {
             {/* Info Box */}
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-xs text-gray-700">
-                Password must be at least 8 characters with uppercase,
-                lowercase, numbers and a special character.
+                {translations(
+                  "Password must be at least 8 characters with uppercase, lowercase, numbers and a special character",
+                )}
+                .
               </p>
             </div>
 
@@ -278,24 +287,30 @@ export default function Security() {
               disabled={isLoading}
             >
               <Lock className="w-4 h-4 mr-2" />
-              {isLoading ? "Updating" : "Update Password"}
+              {isLoading
+                ? translations("Updating")
+                : translations("Update Password")}
             </Button>
           </form>
         </Card>
 
         {user.role === UserRole.SUPADM && (
           <Card className="p-6 border-red-200 bg-gradient-to-br from-red-50 to-orange-50 shadow-sm">
-            <h3 className="mb-4 text-red-700">Danger Zone</h3>
+            <h3 className="mb-4 text-red-700">{translations("Danger Zone")}</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-5 bg-white border-2 border-red-200 rounded-xl">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Trash2 className="w-4 h-4 text-red-600" />
-                    <Label className="text-red-700">Delete Organization</Label>
+                    <Label className="text-red-700">
+                      {translations("Delete Organization")}
+                    </Label>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Permanently delete your organization and all associated
-                    data. This action cannot be undone.
+                    {translations(
+                      "Permanently delete your organization and all associated data",
+                    )}
+                    .{translations("This action cannot be undone")}.
                   </p>
                 </div>
                 <Button
@@ -304,7 +319,7 @@ export default function Security() {
                   className="ml-4"
                   onClick={() => setIsDeleteDialogOpen(true)}
                 >
-                  Delete Organization
+                  {translations("Delete Organization")}
                 </Button>
               </div>
             </div>
@@ -323,10 +338,10 @@ export default function Security() {
                 </div>
                 <div>
                   <DialogTitle className="text-xl text-red-700">
-                    Delete Organization?
+                    {translations("Delete Organization")}?
                   </DialogTitle>
                   <DialogDescription>
-                    This action is permanent and irreversible
+                    {translations("This action is permanent and irreversible")}
                   </DialogDescription>
                 </div>
               </div>
@@ -335,28 +350,35 @@ export default function Security() {
             <div className="space-y-4 py-4">
               <Alert variant="destructive" className="border-red-200 bg-red-50">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Warning: High Risk Action</AlertTitle>
+                <AlertTitle>
+                  {translations("Warning: High Risk Action")}
+                </AlertTitle>
                 <AlertDescription className="text-sm">
-                  Deleting your organization will permanently remove:
+                  {translations(
+                    "Deleting your organization will permanently remove",
+                  )}
+                  :
                 </AlertDescription>
               </Alert>
 
               <div className="pl-4 space-y-2 text-sm text-muted-foreground">
                 <div className="flex items-start gap-2">
                   <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                  <span>All team members and their access</span>
+                  <span>
+                    {translations("All team members and their access")}
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                  <span>All chats and contacts</span>
+                  <span>{translations("All chats and contacts")}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                  <span>All billing information</span>
+                  <span>{translations("All billing information")}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <X className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                  <span>All integrations</span>
+                  <span>{translations("All integrations")}</span>
                 </div>
               </div>
 
@@ -371,7 +393,7 @@ export default function Security() {
                   <code className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-mono">
                     DELETE ORGANIZATION
                   </code>{" "}
-                  to confirm
+                  {translations("to confirm")}
                 </Label>
                 <Input
                   id="confirm-delete"
@@ -394,7 +416,7 @@ export default function Security() {
                 disabled={isDeleting}
                 className="w-full sm:w-auto"
               >
-                Cancel
+                {translations("Cancel")}
               </Button>
               <Button
                 variant="destructive"
@@ -417,12 +439,12 @@ export default function Security() {
                 {isDeleting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Deleting...
+                    {translations("Deleting")}
                   </>
                 ) : (
                   <>
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Organization
+                    {translations("Delete Organization")}
                   </>
                 )}
               </Button>

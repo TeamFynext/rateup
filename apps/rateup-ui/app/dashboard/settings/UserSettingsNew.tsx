@@ -291,9 +291,11 @@ export function Account() {
   return (
     <div className="flex flex-col gap-2">
       <div>
-        <h2 className="text-2xl mb-1">Account Settings</h2>
+        <h2 className="text-2xl mb-1">{translations("Account Settings")}</h2>
         <p className="text-sm text-muted-foreground">
-          Manage your profile, business information and account preferences
+          {translations(
+            "Manage your profile, business information and account preferences",
+          )}
         </p>
       </div>
 
@@ -351,7 +353,8 @@ export function Account() {
                     {profileData?.data?.data?.name}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-600">
-                    {profileData?.data?.data?.email} • Member since{" "}
+                    {profileData?.data?.data?.email} •{" "}
+                    {translations("Member since")}{" "}
                     {new Date(profileData?.data?.data?.createdAt).getFullYear()}
                   </p>
 
@@ -386,7 +389,7 @@ export function Account() {
                     onClick={() => setIsEditProfileDialogOpen(true)}
                   >
                     <Edit className="w-4 h-4" />
-                    Edit
+                    {translations("Edit")}
                   </Button>
                 </div>
               </div>
@@ -403,9 +406,9 @@ export function Account() {
               <Building className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="">Business Information</h3>
+              <h3 className="">{translations("Business Information")}</h3>
               <p className="text-xs text-muted-foreground">
-                Your company details and contact information
+                {translations("Your company details and contact information")}
               </p>
             </div>
           </div>
@@ -417,7 +420,7 @@ export function Account() {
               onClick={() => setIsBusinessDialogOpen(true)}
             >
               <Edit className="w-4 h-4" />
-              Edit
+              {translations("Edit")}
             </Button>
           )}
         </div>
@@ -453,7 +456,9 @@ export function Account() {
           <div className="flex items-start gap-2.5">
             <Phone className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">Phone</p>
+              <p className="font-medium text-gray-700 mb-0.5">
+                {translations("Phone")}
+              </p>
               <p className="text-gray-500">{orgForm?.values?.phone || "—"}</p>
             </div>
           </div>
@@ -461,7 +466,9 @@ export function Account() {
           <div className="flex items-start gap-2.5">
             <Mail className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">Email</p>
+              <p className="font-medium text-gray-700 mb-0.5">
+                {translations("Email")}
+              </p>
               <p className="text-gray-500">
                 {user?.onboarding?.businessmail || "—"}
               </p>
@@ -471,7 +478,9 @@ export function Account() {
           <div className="flex items-start gap-2.5">
             <Globe className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">Website</p>
+              <p className="font-medium text-gray-700 mb-0.5">
+                {translations("Website")}
+              </p>
               <p className="text-gray-500">
                 {user?.onboarding?.website || "—"}
               </p>
@@ -481,7 +490,9 @@ export function Account() {
           <div className="flex items-start gap-2.5">
             <MapPin className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">Location</p>
+              <p className="font-medium text-gray-700 mb-0.5">
+                {translations("Location")}
+              </p>
               <p className="text-gray-500">
                 {user?.onboarding?.location || "—"}
               </p>
@@ -491,7 +502,9 @@ export function Account() {
           <div className="flex items-start gap-2.5 md:col-span-2">
             <Home className="w-4 h-4 mt-0.5 text-gray-500" />
             <div>
-              <p className="font-medium text-gray-700 mb-0.5">Address</p>
+              <p className="font-medium text-gray-700 mb-0.5">
+                {translations("Address")}
+              </p>
               <p className="text-gray-500">{orgForm?.values?.address || "—"}</p>
             </div>
           </div>
@@ -505,9 +518,12 @@ export function Account() {
         >
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>Business Information</DialogTitle>
+              <DialogTitle>{translations("Business Information")}</DialogTitle>
               <DialogDescription>
-                Update your organization details and upload your company logo.
+                {translations(
+                  "Update your organization details and upload your company logo",
+                )}
+                .
               </DialogDescription>
             </DialogHeader>
 
@@ -527,7 +543,9 @@ export function Account() {
                   <Label htmlFor="orgLogoUpload" className="cursor-pointer">
                     <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
                       <Upload className="w-4 h-4" />
-                      <span className="text-sm">Upload Logo</span>
+                      <span className="text-sm">
+                        {translations("Upload Logo")}
+                      </span>
                     </div>
                     <input
                       id="orgLogoUpload"
@@ -549,7 +567,8 @@ export function Account() {
                     />
                   </Label>
                   <p className="text-xs text-muted-foreground mt-2">
-                    JPG, PNG or GIF. Max size 2MB.
+                    {translations("JPG, PNG or GIF")}.
+                    {translations("Max size 2MB")}.
                   </p>
                 </div>
               </div>
@@ -557,16 +576,18 @@ export function Account() {
               {/* Organization Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="businessName">Business Name</Label>
+                  <Label htmlFor="businessName">
+                    {translations("Business Name")}
+                  </Label>
                   <Input
                     id="businessName"
                     {...orgForm.getInputProps("name")}
-                    placeholder="Enter your business name"
+                    placeholder={translations("Enter your business name")}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="industry">Industry</Label>
+                  <Label htmlFor="industry">{translations("Industry")}</Label>
                   <Select
                     defaultValue={user?.onboarding?.industry || "E-commerce"}
                     onValueChange={(val) =>
@@ -587,7 +608,7 @@ export function Account() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="website">Website</Label>
+                  <Label htmlFor="website">{translations("Website")}</Label>
                   <Input
                     id="website"
                     {...orgForm.getInputProps("website")}
@@ -596,7 +617,9 @@ export function Account() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="businessPhone">Business Phone</Label>
+                  <Label htmlFor="businessPhone">
+                    {translations("Business Phone")}
+                  </Label>
                   <PhoneInputWithCountrySelect
                     defaultCountry="IN"
                     international
@@ -614,7 +637,9 @@ export function Account() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="businessEmail">Business Email</Label>
+                  <Label htmlFor="businessEmail">
+                    {translations("Business Email")}
+                  </Label>
                   <Input
                     id="businessEmail"
                     {...orgForm.getInputProps("businessmail")}
@@ -628,7 +653,7 @@ export function Account() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
+                  <Label htmlFor="location">{translations("Location")}</Label>
                   <SelectR
                     options={countries}
                     value={
@@ -646,11 +671,13 @@ export function Account() {
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address">{translations("Address")}</Label>
                   <Textarea
                     id="address"
                     {...orgForm.getInputProps("address")}
-                    placeholder="Enter your complete business address"
+                    placeholder={translations(
+                      "Enter your complete business address",
+                    )}
                     className="resize-none"
                     rows={2}
                   />
@@ -663,13 +690,13 @@ export function Account() {
                   variant="outline"
                   onClick={() => setIsBusinessDialogOpen(false)}
                 >
-                  Cancel
+                  {translations("Cancel")}
                 </Button>
                 <Button
                   type="submit"
                   className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
                 >
-                  Save Changes
+                  {translations("Save Changes")}
                 </Button>
               </DialogFooter>
             </form>
@@ -683,9 +710,9 @@ export function Account() {
             <Globe className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h4 className="mb-0">Regional Settings</h4>
+            <h4 className="mb-0">{translations("Regional Settings")}</h4>
             <p className="text-xs text-muted-foreground">
-              language preferences
+              {translations("language preferences")}
             </p>
           </div>
         </div>
@@ -709,9 +736,9 @@ export function Account() {
       >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogTitle>{translations("Edit Profile")}</DialogTitle>
             <DialogDescription>
-              Update your personal information and preferences
+              {translations("Update your personal information and preferences")}
             </DialogDescription>
           </DialogHeader>
 
@@ -731,7 +758,9 @@ export function Account() {
                 <Label htmlFor="profileImageUpload" className="cursor-pointer">
                   <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors w-fit">
                     <Upload className="w-4 h-4" />
-                    <span className="text-sm">Upload Photo</span>
+                    <span className="text-sm">
+                      {translations("Upload Photo")}
+                    </span>
                   </div>
                   <input
                     ref={resetRef}
@@ -743,7 +772,8 @@ export function Account() {
                   />
                 </Label>
                 <p className="text-xs text-muted-foreground mt-2">
-                  JPG, PNG or GIF. Max size 2MB.
+                  {translations("JPG, PNG or GIF")}.{" "}
+                  {translations("Max size 2MB")}.
                 </p>
               </div>
             </div>
@@ -751,7 +781,7 @@ export function Account() {
             {/* Title/Gender */}
             <div className="space-y-2">
               <Label htmlFor="title">
-                Title <span className="text-red-500">*</span>
+                {translations("Title")} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={profileForm.values.title}
@@ -779,11 +809,12 @@ export function Account() {
             {/* Full Name */}
             <div className="space-y-2">
               <Label htmlFor="fullname">
-                Full Name <span className="text-red-500">*</span>
+                {translations("Full Name")}{" "}
+                <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="fullname"
-                placeholder="Enter your full name"
+                placeholder={translations("Enter your full name")}
                 {...profileForm.getInputProps("fullname")}
               />
               {profileForm.errors.fullname && (
@@ -795,7 +826,9 @@ export function Account() {
 
             {/* Email - Read Only */}
             <div className="space-y-2">
-              <Label htmlFor="profileEmail">Email Address</Label>
+              <Label htmlFor="profileEmail">
+                {translations("Email Address")}
+              </Label>
               <Input
                 id="profileEmail"
                 type="email"
@@ -813,12 +846,14 @@ export function Account() {
 
             {/* Phone */}
             <div className="space-y-2">
-              <Label htmlFor="profilePhone">Phone Number</Label>
+              <Label htmlFor="profilePhone">
+                {translations("Phone Number")}
+              </Label>
               <PhoneInputWithCountrySelect
                 defaultCountry="IN"
                 international
                 countryCallingCodeEditable={false}
-                placeholder="Phone Number"
+                placeholder={translations("Phone Number")}
                 {...profileForm.getInputProps("phone")}
                 className="rounded-md border border-gray-300 px-2 py-1 w-full"
               />
@@ -831,7 +866,7 @@ export function Account() {
 
             {/* Role - Read Only */}
             <div className="space-y-2">
-              <Label htmlFor="profileRole">Role</Label>
+              <Label htmlFor="profileRole">{translations("Role")}</Label>
               <Input
                 id="profileRole"
                 value={profileData?.data?.data?.role || ""}
@@ -846,14 +881,16 @@ export function Account() {
                 variant="outline"
                 onClick={() => setIsEditProfileDialogOpen(false)}
               >
-                Cancel
+                {translations("Cancel")}
               </Button>
               <Button
                 type="submit"
                 className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
                 disabled={isLoading}
               >
-                {isLoading ? "Saving..." : "Save Changes"}
+                {isLoading
+                  ? translations("Saving")
+                  : translations("Save Changes")}
               </Button>
             </DialogFooter>
           </form>

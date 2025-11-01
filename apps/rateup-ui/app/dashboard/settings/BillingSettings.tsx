@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { useElementSize } from "@mantine/hooks";
 import dayjs from "dayjs";
 import {
   AlertCircle,
@@ -13,12 +12,9 @@ import {
   ClipboardList,
   ClipboardX,
   Clock,
-  CreditCard,
   DollarSign,
   Gift,
   Info,
-  Link,
-  Loader2,
   Mail,
   MessageCircle,
   Package,
@@ -233,9 +229,9 @@ export default function BillingPage() {
     <div className="flex flex-col gap-4">
       <div className="w-full flex items-center justify-between">
         <div>
-          <h2 className="text-2xl">Billing & Subscription</h2>
+          <h2 className="text-2xl">{translations("Billing & Subscription")}</h2>
           <p className="text-sm text-muted-foreground">
-            Manage your subscription plan and payment methods
+            {translations("Manage your subscription plan and payment methods")}
           </p>
         </div>
         <div className="flex items-center justify-between">
@@ -267,6 +263,7 @@ export default function BillingPage() {
         orders={orders?.data}
         refresh={refreshOrders}
         isRefetching={isRefetchOrders}
+        translations={translations}
       />
       {/* Order Confirmation Modal */}
       <Dialog
@@ -300,7 +297,7 @@ export default function BillingPage() {
                         onCheckedChange={setIsAnnualMessageLimit}
                       />
                       <Label htmlFor="annual-limit" className="cursor-pointer">
-                        Annual Message limit
+                        {translations("Annual Message limit")}
                       </Label>
                     </div>
                   )}
@@ -341,7 +338,7 @@ export default function BillingPage() {
 
               <div className="flex items-center gap-4 px-4">
                 <h4 className="text-lg font-semibold min-w-[140px]">
-                  {translations("Current Plan :")}
+                  {translations("Current Plan")}:
                 </h4>
                 <p className="text-base text-muted-foreground">
                   {subscription?.basePlan?.displayName}
@@ -349,7 +346,9 @@ export default function BillingPage() {
               </div>
 
               <div className="flex justify-center pt-4">
-                <Button className="w-full sm:w-auto">Buy Addons</Button>
+                <Button className="w-full sm:w-auto">
+                  {translations("Buy Addons")}
+                </Button>
               </div>
             </div>
           )}
@@ -389,7 +388,7 @@ export default function BillingPage() {
                 {isLoading ? (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
+                    {translations("Processing")}
                   </>
                 ) : (
                   translations("Continue to Payment")
@@ -413,7 +412,7 @@ export default function BillingPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-2xl">
               <CheckCircle className="h-6 w-6 text-green-600" />
-              {translations("Order Processing Started 🎉")}
+              {translations("Order Processing Started")}
             </DialogTitle>
           </DialogHeader>
 
@@ -522,8 +521,8 @@ const TeamStats = ({ stats, refetch, isRefetching, subscription }) => {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                {percentage.toFixed(0)}% used • {remaining.toLocaleString()}{" "}
-                remaining
+                {percentage.toFixed(0)}% {translations("used")} •{" "}
+                {remaining.toLocaleString()} {translations("remaining")}
               </p>
             </div>
           );
@@ -589,8 +588,8 @@ const MenuStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% used • {remaining.toLocaleString()}{" "}
-                    remaining
+                    {percentage.toFixed(0)}% {translations("used")} •{" "}
+                    {remaining.toLocaleString()} {translations("remaining")}
                   </p>
                 </>
               )}
@@ -659,8 +658,8 @@ const SurveyStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% used • {remaining.toLocaleString()}{" "}
-                    remaining
+                    {percentage.toFixed(0)}% {translations("used")} •{" "}
+                    {remaining.toLocaleString()} {translations("remaining")}
                   </p>
                 </>
               )}
@@ -746,8 +745,8 @@ const WhatsappStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% used • {remaining.toLocaleString()}{" "}
-                    remaining
+                    {percentage.toFixed(0)}% {translations("used")} •{" "}
+                    {remaining.toLocaleString()} {translations("remaining")}
                   </p>
                 </>
               )}
@@ -811,8 +810,8 @@ const AIStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% used • {remaining.toLocaleString()}{" "}
-                    remaining
+                    {percentage.toFixed(0)}%{translations("used")} •{" "}
+                    {remaining.toLocaleString()} {translations("remaining")}
                   </p>
                 </>
               )}
@@ -881,8 +880,8 @@ const LoyaltyStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}% used • {remaining.toLocaleString()}{" "}
-                    remaining
+                    {percentage.toFixed(0)}% {translations("used")} •{" "}
+                    {remaining.toLocaleString()} {translations("remaining")}
                   </p>
                 </>
               )}
@@ -894,14 +893,14 @@ const LoyaltyStats = ({ stats, subscription }) => {
   );
 };
 
-function OrderHistory({ orders, refresh, isRefetching }) {
+function OrderHistory({ orders, refresh, isRefetching, translations }) {
   const [selectedOrder, setSelectedOrder] = useState([]);
   const [opened, setOpened] = useState(false);
   return (
     <>
       <Card className="p-6 shadow-sm border-gray-200">
         <div className="flex items-center justify-between">
-          <h3>Billing History</h3>
+          <h3>{translations("Billing History")}</h3>
           <Button
             variant="outline"
             size="sm"
@@ -912,13 +911,13 @@ function OrderHistory({ orders, refresh, isRefetching }) {
             <RefreshCcw
               className={`w-4 h-4 transition-transform ${isRefetching ? "animate-spin" : ""}`}
             />
-            Refresh
+            {translations("Refresh")}
           </Button>
         </div>
         {orders?.length === 0 ? (
           <div className="flex items-center justify-center gap-1 p-8">
             <ClipboardX />
-            No Orders Found
+            {translations("No Orders Found")}
           </div>
         ) : (
           <div className="space-y-3">
@@ -958,7 +957,7 @@ function OrderHistory({ orders, refresh, isRefetching }) {
                         setOpened(true);
                       }}
                     >
-                      Details
+                      {translations("Details")}
                     </Button>
                   </div>
                 </div>
@@ -1078,7 +1077,7 @@ const Billing = ({
   if (processingPayment) {
     return (
       <div className="min-h-screen w-full flex justify-center items-center">
-        <p>Processing....</p>
+        <p>{translations("Processing")}</p>
       </div>
     );
   }
@@ -1204,7 +1203,7 @@ const Billing = ({
                     <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
                       <span className="font-medium">
-                        {translations("Next Charging on:")}
+                        {translations("Next Charging on")}:
                       </span>
                     </div>
                     <p className="text-lg font-semibold">
@@ -1222,7 +1221,7 @@ const Billing = ({
                     <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
                       <X className="h-4 w-4" />
                       <span className="font-medium">
-                        {translations("Cancelled on:")}
+                        {translations("Cancelled on")}:
                       </span>
                     </div>
                     <p className="text-lg font-semibold">
@@ -1233,52 +1232,6 @@ const Billing = ({
                   </div>
                 )}
             </div>
-
-            {/* Action Button */}
-            {/* <div className="flex justify-end">
-              {subscription?.basePlan?.name === "RATEUP TRIAL" ||
-              (isFreePlan && !isCustomPlan && !isProcessingPlan) ? (
-                <Button
-                  onClick={() => router.push("/pricing")}
-                  className="gap-2"
-                >
-                  <TrendingUp className="h-4 w-4" />
-                  {translations("Upgrade plan")}
-                </Button>
-              ) : (
-                subscription?.basePlan?.name &&
-                (activeOrderData?.subscriptionStatus === "cancelled" &&
-                !isCustomPlan ? (
-                  <Button disabled variant="secondary" className="gap-2">
-                    <X className="h-4 w-4" />
-                    {translations("Cancelled")}
-                  </Button>
-                ) : (
-                  !isCustomPlan &&
-                  !isProcessingPlan &&
-                  !isShopifyPlan && (
-                    <Button
-                      variant="destructive"
-                      onClick={() => setCancelDialogOpened(true)}
-                      className="gap-2"
-                    >
-                      <X className="h-4 w-4" />
-                      {translations("Cancel Subscription")}
-                    </Button>
-                  )
-                ))
-              )}
-
-              {isCustomPlan && (
-                <Button
-                  onClick={() => setCustomUpgradeModal(true)}
-                  className="gap-2"
-                >
-                  <TrendingUp className="h-4 w-4" />
-                  {translations("Upgrade plan")}
-                </Button>
-              )}
-            </div> */}
 
             <Separator />
 
@@ -1479,7 +1432,9 @@ const Billing = ({
             <Separator />
             <div className="flex items-center justify-center gap-2 pt-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Need help?</span>
+              <span className="text-sm text-muted-foreground">
+                {translations("Need help")}?
+              </span>
               <a
                 href="mailto:hello@rateup.app"
                 className="text-sm font-medium hover:underline text-primary"
@@ -1509,7 +1464,7 @@ const Billing = ({
             <div className="flex items-center justify-center gap-2 pt-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
-                Contact us at
+                {translations("Contact us at")}
               </span>
               <a
                 href="mailto:hello@rateup.app"
@@ -1532,10 +1487,13 @@ const Billing = ({
             </DialogTitle>
             <DialogDescription className="text-base pt-2">
               {translations(
-                "Are you sure you want to cancel your active subscription?",
-              )}{" "}
-              You will lose access to premium features once the current billing
-              period ends.
+                "Are you sure you want to cancel your active subscription",
+              )}
+              ?{" "}
+              {translations(
+                "You will lose access to premium features once the current billing period ends",
+              )}
+              .
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
@@ -1543,7 +1501,7 @@ const Billing = ({
               variant="outline"
               onClick={() => setCancelDialogOpened(false)}
             >
-              {translations("Close ")}
+              {translations("Close")}
             </Button>
             <Button onClick={handleCancelSubscription} variant="destructive">
               {translations("Confirm Cancel")}
