@@ -1,26 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 
-import { ActionIcon, Flex, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { Flex, Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
+import { IconExclamationCircle } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { create } from "zustand";
 
-import { MessagePlatform } from "@/types/enums";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import useContactStore, {
   ContactWithUpdatedAt,
   useContactsStore,
 } from "@/app/dashboard/inbox/store";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
-import { AccountSelector } from "@/components/input/AccountSelector";
-import VoiceRecorder, {
-  useVoiceRecordStore,
-} from "@/components/input/VoiceRecorder";
+import { useVoiceRecordStore } from "@/components/input/VoiceRecorder";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
   parseToWhatsAppFormat,
@@ -30,7 +27,6 @@ import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
 
-import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
   useSendNewWaMessage,
@@ -40,11 +36,9 @@ import {
   isInboxSessionExpired,
   returnMessageContentBasedOnParsedMessage,
 } from "../../../../../utils/whatsapp/inbox";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "../../../../Button/RateupButtons";
+import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { usePhoneIdStore } from "../../chatselect/accountSelectorStore";
+import AssignUser from "../chatdisplayHeader/AssignUser";
 import WaInboxFooterMenu from "./footerMenu";
 import classes from "./styles.module.css";
 
@@ -310,21 +304,54 @@ export default function WaInboxChatDisplayFooter({
 
 export const WaInboxAssignUserFooter = ({ contactId, user }) => {
   const { filterData } = useContactStore();
+  const assignMut = useAssignInboxToUer(contactId, filterData);
+  const { updateContactById } = useContactsStore();
+
+  function handleAssignToMe() {
+    if (!user) {
+      return showErrorToast("failed!try again");
+    }
+
+    assignMut.mutate(
+      {
+        contactId,
+        assignees: [
+          {
+            userId: user.userId,
+            teamId: user.teams?.[0],
+          },
+        ],
+      },
+      {
+        onSuccess: () => {
+          updateContactById(contactId, (contact) => ({
+            ...contact,
+            waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+            assignedUsers: [
+              {
+                id: user.userId,
+                name: user?.userName,
+              },
+            ],
+          }));
+        },
+      },
+    );
+  }
 
   return (
-    <Stack gap={"xs"} pb={"xs"}>
-      <Group
-        bg={"black"}
-        justify="center"
-        c={"white"}
-        color="white"
-        gap={2}
-        py={2}
-      >
+    <div className="flex flex-col gap-2 pb-2">
+      <div className="bg-black flex justify-center items-center text-white gap-0.5 py-1">
         <IconExclamationCircle size={"1rem"} />
-        <Text size="xs">Please Assign to start the chat</Text>
-      </Group>
-    </Stack>
+        <span className="text-xs">Please Assign to start the chat</span>
+      </div>
+      <div className="flex justify-center items-center gap-2">
+        <Button variant="outline" onClick={handleAssignToMe} size="sm">
+          <div className="text-sm">Assign To Me</div>
+        </Button>
+        <AssignUser contactId={contactId} variant="default" />
+      </div>
+    </div>
   );
 };
 
