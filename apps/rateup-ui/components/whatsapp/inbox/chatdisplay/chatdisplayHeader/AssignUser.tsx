@@ -34,7 +34,19 @@ import {
 import { Loader } from "@/components/ui/loader";
 import { useUser } from "@/context/UserContext";
 
-const AssignUser = ({ contactId }) => {
+const AssignUser = ({
+  contactId,
+  variant = "ghost",
+}: {
+  contactId: string;
+  variant?:
+    | "ghost"
+    | "link"
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary";
+}) => {
   const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
   const {
     data: teamRes,
@@ -57,6 +69,8 @@ const AssignUser = ({ contactId }) => {
   );
 
   const { updateContactById } = useContactsStore();
+  const isDefault = variant === "default";
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedAssignedStaff(assignedStaff);
@@ -175,7 +189,7 @@ const AssignUser = ({ contactId }) => {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 px-2 gap-1.5">
+        <Button variant={variant} size="sm" className="h-8 px-2 gap-1.5">
           <div className="flex items-center gap-2">
             <div className="flex -space-x-1 relative">
               {assignedStaff.slice(0, 3).map((a) => {
@@ -202,11 +216,17 @@ const AssignUser = ({ contactId }) => {
               trigger={
                 !assignedStaff.length ? (
                   <div className="flex items-center gap-1">
-                    <UserRoundCheck className="w-4 h-4 text-muted-foreground" />
-                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                    <UserRoundCheck
+                      className={`w-4 h-4 ${isDefault ? "" : "text-muted-foreground"}`}
+                    />
+                    <ChevronDown
+                      className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`}
+                    />
                   </div>
                 ) : (
-                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                  <ChevronDown
+                    className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`}
+                  />
                 )
               }
               side="bottom"
