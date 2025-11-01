@@ -14,17 +14,17 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { useSubscription } from "@/backend/subscription/subscription.query";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
 
+import { Account } from "./AccountSetting";
 import BillingPage from "./BillingSettings";
 import Security from "./SecuritySettings";
 import Team from "./TeamSettings";
-import { Account } from "./UserSettingsNew";
 import UsersPage from "./UsersSettings";
 
 type SettingsSection =
@@ -47,6 +47,7 @@ const Settings = () => {
   const tabParam = (searchParams.get("tab") as SettingsSection) || "account";
   const [activeSection, setActiveSection] = useState<SettingsSection>(tabParam);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const translations = useTranslations();
 
   useEffect(() => {
     if (tabParam !== activeSection) {
@@ -65,13 +66,13 @@ const Settings = () => {
 
   const settingsSections = [
     {
-      category: "Account Settings",
+      category: translations("Account Settings"),
       items: [
         {
           id: "account" as SettingsSection,
-          label: "Account",
+          label: translations("Account"),
           icon: User,
-          description: "Business profile & preferences",
+          description: translations("Business profile & preferences"),
         },
         ...(user?.role === UserRole.SUPADM
           ? [
@@ -79,34 +80,34 @@ const Settings = () => {
                 id: "users" as SettingsSection,
                 label: "Users",
                 icon: UserCog,
-                description: "User accounts & access",
+                description: translations("User accounts & access"),
               },
             ]
           : []),
         {
           id: "team" as SettingsSection,
-          label: "Team",
+          label: translations("Team"),
           icon: Users,
-          description: "Team members & roles",
+          description: translations("Team members & roles"),
         },
       ],
     },
     {
-      category: "System Settings",
+      category: translations("System Settings"),
       items: [
         {
           id: "security" as SettingsSection,
-          label: "Security",
+          label: translations("Security"),
           icon: Shield,
-          description: "Password & security",
+          description: translations("Password & security"),
         },
         ...(user?.role === UserRole.SUPADM
           ? [
               {
                 id: "billing" as SettingsSection,
-                label: "Billing",
+                label: translations("Billing"),
                 icon: CreditCard,
-                description: "Subscription & payments",
+                description: translations("Subscription & payments"),
               },
             ]
           : []),
@@ -115,13 +116,13 @@ const Settings = () => {
     ...(sub?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
       ? [
           {
-            category: "Admin Settings",
+            category: translations("Admin Settings"),
             items: [
               {
                 id: "admin" as SettingsSection,
-                label: "Admin",
+                label: translations("Admin"),
                 icon: Crown,
-                description: "Admin settings",
+                description: translations("Admin settings"),
               },
             ],
           },
@@ -181,7 +182,7 @@ const Settings = () => {
         aria-label="Settings navigation"
       >
         <div className="md:hidden flex items-center justify-between p-3 border-b">
-          <h2 className="font-semibold">Menu</h2>
+          <h2 className="font-semibold">{translations("Menu")}</h2>
           <button
             onClick={() => setSidebarOpen(false)}
             className="p-2 hover:bg-muted rounded-lg transition-colors"

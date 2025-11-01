@@ -2373,5 +2373,15 @@
   "Create User": "Créer un utilisateur",
   "Search users by name or email": "Rechercher des utilisateurs par nom ou e-mail",
   "Active Members": "Membres actifs",
-  "Pending Invitations": "Invitations en attente"
+  "Pending Invitations": "Invitations en attente",
+  "Business profile & preferences": "Profil d’entreprise et préférences",
+  "User accounts & access": "Comptes utilisateurs et accès",
+  "Team members & roles": "Membres de l’équipe et rôles",
+  "System Settings": "Paramètres du système",
+  "Security": "Sécurité",
+  "Password & security": "Mot de passe et sécurité",
+  "Billing": "Facturation",
+  "Subscription & payments": "Abonnement et paiements",
+  "Admin Settings": "Paramètres administrateur",
+  "Admin settings": "Paramètres administrateur"
 }

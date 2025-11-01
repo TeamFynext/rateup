@@ -2375,5 +2375,15 @@
   "Create User": "Benutzer erstellen",
   "Search users by name or email": "Benutzer nach Name oder E-Mail suchen",
   "Active Members": "Aktive Mitglieder",
-  "Pending Invitations": "Ausstehende Einladungen"
+  "Pending Invitations": "Ausstehende Einladungen",
+  "Business profile & preferences": "Unternehmensprofil und Präferenzen",
+  "User accounts & access": "Benutzerkonten und Zugriff",
+  "Team members & roles": "Teammitglieder und Rollen",
+  "System Settings": "Systemeinstellungen",
+  "Security": "Sicherheit",
+  "Password & security": "Passwort und Sicherheit",
+  "Billing": "Abrechnung",
+  "Subscription & payments": "Abonnements und Zahlungen",
+  "Admin Settings": "Administrator­einstellungen",
+  "Admin settings": "Administrator­einstellungen"
 }

@@ -2369,5 +2369,15 @@
   "Create User": "Create User",
   "Search users by name or email": "Search users by name or email",
   "Active Members": "Active Members",
-  "Pending Invitations": "Pending Invitations"
+  "Pending Invitations": "Pending Invitations",
+  "Business profile & preferences": "Business profile & preferences",
+  "User accounts & access": "User accounts & access",
+  "Team members & roles": "Team members & roles",
+  "System Settings": "System Settings",
+  "Security": "Security",
+  "Password & security": "Password & security",
+  "Billing": "Billing",
+  "Subscription & payments": "Subscription & payments",
+  "Admin Settings": "Admin Settings",
+  "Admin settings": "Admin settings"
 }

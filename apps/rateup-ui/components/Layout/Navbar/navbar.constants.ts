@@ -343,30 +343,30 @@ export function getNavTopData(
         ]
       : []),
 
-    {
-      icon: IconBrandTeams,
-      label: translations("Teams"),
-      link: "/dashboard/teams",
-      disabled: role !== "SUPER_ADMIN",
-      hasSubmenu: true,
-      children: [
-        {
-          label: translations("Teams"),
-          link: "/dashboard/teams",
-          icon: IconSocial,
-          disabled: role !== "SUPER_ADMIN",
-        },
-        ...(role === "SUPER_ADMIN"
-          ? [
-              {
-                label: translations("All Members"),
-                link: "/dashboard/members",
-                icon: IconUsers,
-              },
-            ]
-          : []),
-      ],
-    },
+    // {
+    //   icon: IconBrandTeams,
+    //   label: translations("Teams"),
+    //   link: "/dashboard/teams",
+    //   disabled: role !== "SUPER_ADMIN",
+    //   hasSubmenu: true,
+    //   children: [
+    //     {
+    //       label: translations("Teams"),
+    //       link: "/dashboard/teams",
+    //       icon: IconSocial,
+    //       disabled: role !== "SUPER_ADMIN",
+    //     },
+    //     ...(role === "SUPER_ADMIN"
+    //       ? [
+    //           {
+    //             label: translations("All Members"),
+    //             link: "/dashboard/members",
+    //             icon: IconUsers,
+    //           },
+    //         ]
+    //       : []),
+    //   ],
+    // },
     {
       icon: IconQrcode,
       label: translations("QR Studio"),

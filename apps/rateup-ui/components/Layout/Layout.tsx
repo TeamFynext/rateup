@@ -878,7 +878,7 @@ const Navbar = ({
 
         {linksIcon?.length > 0 && (
           <div>
-            <div className="px-3 py-2 border-b border-b-2">
+            <div className="px-3 py-2 border-b-2">
               <div className="flex justify-between items-center">
                 {largeScreen
                   ? desktopOpened && (

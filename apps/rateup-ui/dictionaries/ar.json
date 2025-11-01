@@ -2370,5 +2370,15 @@
   "Create User": "إنشاء مستخدم",
   "Search users by name or email": "ابحث عن المستخدمين حسب الاسم أو البريد الإلكتروني",
   "Active Members": "الأعضاء النشطون",
-  "Pending Invitations": "الدعوات المعلقة"
+  "Pending Invitations": "الدعوات المعلقة",
+  "Business profile & preferences": "الملف التجاري والتفضيلات",
+  "User accounts & access": "حسابات المستخدمين والوصول",
+  "Team members & roles": "أعضاء الفريق والأدوار",
+  "System Settings": "إعدادات النظام",
+  "Security": "الأمان",
+  "Password & security": "كلمة المرور والأمان",
+  "Billing": "الفوترة",
+  "Subscription & payments": "الاشتراك والمدفوعات",
+  "Admin Settings": "إعدادات المسؤول",
+  "Admin settings": "إعدادات المسؤول"
 }

@@ -2374,5 +2374,15 @@
   "Create User": "उपयोगकर्ता बनाएं",
   "Search users by name or email": "नाम या ईमेल द्वारा उपयोगकर्ताओं को खोजें",
   "Active Members": "सक्रिय सदस्य",
-  "Pending Invitations": "लंबित निमंत्रण"
+  "Pending Invitations": "लंबित निमंत्रण",
+  "Business profile & preferences": "व्यवसाय प्रोफ़ाइल और प्राथमिकताएँ",
+  "User accounts & access": "उपयोगकर्ता खाते और पहुँच",
+  "Team members & roles": "टीम सदस्य और भूमिकाएँ",
+  "System Settings": "सिस्टम सेटिंग्स",
+  "Security": "सुरक्षा",
+  "Password & security": "पासवर्ड और सुरक्षा",
+  "Billing": "बिलिंग",
+  "Subscription & payments": "सदस्यता और भुगतान",
+  "Admin Settings": "प्रशासनिक सेटिंग्स",
+  "Admin settings": "प्रशासनिक सेटिंग्स"
 }
