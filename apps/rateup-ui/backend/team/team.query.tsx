@@ -231,6 +231,8 @@ export function useAddUsertoTeams() {
       queryClient.invalidateQueries({ queryKey: ["notTeamMembers"] });
       queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
       queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+
       showSuccessToast("success");
     },
     onError: () => {
@@ -245,6 +247,7 @@ export function useRemoveUserFromTeam(teamId) {
     mutationFn: removeUserFromTeam,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
       queryClient.invalidateQueries({
         queryKey: ["invitedTeamMembers", teamId],
       });

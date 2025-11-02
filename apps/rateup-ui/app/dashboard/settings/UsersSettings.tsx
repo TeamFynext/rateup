@@ -560,7 +560,7 @@ export default function UsersPage() {
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
                       <AvatarFallback className="bg-gradient-to-br from-rateup-orange to-yellow-500 text-white">
-                        {invite?.name?.slice(0, 2)}
+                        {invite?.name?.toUpperCase().slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
 

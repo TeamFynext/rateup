@@ -5,7 +5,7 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { Clock, Plus, Trash2, User, Users, X } from "lucide-react";
+import { Clock, Plus, Trash2, User, Users, UserX, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -119,7 +119,7 @@ const Team = () => {
   }, [action]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 w-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl">Team Management</h2>
@@ -139,115 +139,122 @@ const Team = () => {
       </div>
 
       {/* Teams Grid with Skeletons */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {isLoadingTeamsUser
-          ? // Show 4 skeleton cards while loading
-            Array.from({ length: 4 }).map((_, index) => (
-              <Card key={index} className="p-5 shadow-sm border-gray-200">
-                <div className="flex justify-between flex-col gap-6">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="w-12 h-12 rounded-xl" />
-                    <div className="flex flex-col gap-2 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-5 w-32" />
-                        <Skeleton className="h-4 w-16 rounded-xl" />
-                      </div>
-                      <Skeleton className="h-3 w-40" />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
+        {isLoadingTeamsUser ? (
+          // Show 4 skeleton cards while loading
+          Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index} className="p-5 shadow-sm border-gray-200">
+              <div className="flex justify-between flex-col gap-6">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-12 h-12 rounded-xl" />
+                  <div className="flex flex-col gap-2 flex-1">
                     <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                          <Skeleton key={i} className="w-8 h-8 rounded-full" />
-                        ))}
-                      </div>
-                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-5 w-32" />
+                      <Skeleton className="h-4 w-16 rounded-xl" />
                     </div>
-                    <Skeleton className="h-8 w-20 rounded-md" />
+                    <Skeleton className="h-3 w-40" />
                   </div>
                 </div>
-              </Card>
-            ))
-          : // Show actual teams
-            teamsData?.data?.map((team) => (
-              <Card
-                key={team.id}
-                className="p-5 shadow-sm border-gray-200 hover:shadow-md hover:border-rateup-blue/30 transition-all"
-              >
-                <div className="flex justify-between flex-col gap-6">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center`}
-                      style={{
-                        backgroundColor:
-                          team.color === "null" ? "blue" : team.color,
-                      }}
-                    >
-                      <Users className="w-6 h-6 text-white" />
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <div className="flex -space-x-2">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="w-8 h-8 rounded-full" />
+                      ))}
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center justify-start gap-1">
-                        <h4>{team.name}</h4>
-                        <p className="text-xs text-muted-foreground border border-gray-300 rounded-xl px-2 py-0.5">
-                          {team.code}
-                        </p>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {translations("Created")}:{" "}
-                        {team?.createdAt
-                          ? dayjs(team.createdAt).format("DD MMM YYYY")
-                          : "—"}
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                </div>
+              </div>
+            </Card>
+          ))
+        ) : // Show actual teams
+        teamsData?.data?.length > 0 ? (
+          teamsData?.data?.map((team) => (
+            <Card
+              key={team.id}
+              className="p-5 shadow-sm border-gray-200 hover:shadow-md hover:border-rateup-blue/30 transition-all"
+            >
+              <div className="flex justify-between flex-col gap-6">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center`}
+                    style={{
+                      backgroundColor:
+                        team.color === "null" ? "blue" : team.color,
+                    }}
+                  >
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-start gap-1">
+                      <h4>{team.name}</h4>
+                      <p className="text-xs text-muted-foreground border border-gray-300 rounded-xl px-2 py-0.5">
+                        {team.code}
                       </p>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {Array.from({
-                          length: Math.min(team._count.members, 3),
-                        }).map((_, index) => (
-                          <div
-                            key={index}
-                            className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center text-white text-xs font-medium"
-                          >
-                            <User className="h-4 w-4" />
-                          </div>
-                        ))}
-
-                        {team._count.members > 3 && (
-                          <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
-                            <span className="text-xs text-gray-600">
-                              +{team._count.members - 3}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <span className="text-sm text-muted-foreground">
-                        {team._count.members}{" "}
-                        {team._count.members === 1
-                          ? translations("member")
-                          : translations("members")}
-                      </span>
-                    </div>
-                    {user?.role === UserRole.SUPADM && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedTeam(team);
-                          setEditedColor(team.color || "blue");
-                          setIsManageTeamDialogOpen(true);
-                        }}
-                      >
-                        {translations("Manage")}
-                      </Button>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {translations("Created")}:{" "}
+                      {team?.createdAt
+                        ? dayjs(team.createdAt).format("DD MMM YYYY")
+                        : "—"}
+                    </p>
                   </div>
                 </div>
-              </Card>
-            ))}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <div className="flex -space-x-2">
+                      {Array.from({
+                        length: Math.min(team._count.members, 3),
+                      }).map((_, index) => (
+                        <div
+                          key={index}
+                          className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center text-white text-xs font-medium"
+                        >
+                          <User className="h-4 w-4" />
+                        </div>
+                      ))}
+
+                      {team._count.members > 3 && (
+                        <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
+                          <span className="text-xs text-gray-600">
+                            +{team._count.members - 3}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <span className="text-sm text-muted-foreground">
+                      {team._count.members}{" "}
+                      {team._count.members === 1
+                        ? translations("member")
+                        : translations("members")}
+                    </span>
+                  </div>
+                  {user?.role === UserRole.SUPADM && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedTeam(team);
+                        setEditedColor(team.color || "blue");
+                        setIsManageTeamDialogOpen(true);
+                      }}
+                    >
+                      {translations("Manage")}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <div className="p-10 flex gap-1 min-w-full text-gray-300">
+            <UserX />
+            <h2>{translations("You are not in any team")}</h2>
+          </div>
+        )}
       </div>
 
       {/* create team */}

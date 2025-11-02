@@ -378,6 +378,7 @@ export function TeamMember({
       { teamId: selectedTeam.id, userId: userid },
       {
         onSuccess: () => {
+          setOpen(false);
           queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
           queryClient.invalidateQueries({ queryKey: ["notTeamMembers"] });
           refetchTeams();

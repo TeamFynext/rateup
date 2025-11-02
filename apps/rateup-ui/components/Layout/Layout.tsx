@@ -694,7 +694,7 @@ const Navbar = ({
                     <Avatar className="w-12 h-12 border-4 border-white shadow-lg">
                       <AvatarImage src={getFileUrlFromKey(user?.orgLogo)} />
                       <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
-                        {user?.orgName?.slice(0, 2) || "U"}
+                        {user?.orgName?.toUpperCase().slice(0, 2) || "O"}
                       </AvatarFallback>
                     </Avatar>
                   </HoverCard.Target>
@@ -713,7 +713,7 @@ const Navbar = ({
                       <Avatar className="w-12 h-12 border-4 border-white shadow-lg">
                         <AvatarImage src={getFileUrlFromKey(user?.orgLogo)} />
                         <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
-                          {user?.orgName?.slice(0, 2) || "U"}
+                          {user?.orgName?.toUpperCase().slice(0, 2) || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <Text fw={500} size="sm">
