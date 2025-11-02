@@ -275,6 +275,7 @@ New Organization "${orgData.updatedOrg.name}".
 
 Details:
 - Created At: ${orgData.updatedOrg.createdAt.toISOString()}
+-Phone : ${orgData?.updatedOrg?.phone}
 Onboarding:
 - Services: ${(tellUsMore?.["services"] || []).join(", ")}
 - Industry: ${tellUsMore?.["industry"]}
@@ -283,6 +284,7 @@ Onboarding:
       `,
       html: `
       <h2>Organization Updated: ${orgData.updatedOrg.name}</h2>
+      <h3>Phone: ${orgData?.updatedOrg?.phone}</h3>
       <p><strong>Created At:</strong> ${orgData.updatedOrg.createdAt.toISOString()}</p>
       <h3>Onboarding Details</h3>
       <ul>
