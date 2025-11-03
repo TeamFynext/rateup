@@ -1,16 +1,10 @@
+"use client";
+
 import React, { useEffect, useRef, useState } from "react";
 
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-
-import {
-  useGetUserProfile,
-  useUpdateProfileMutation,
-  useUpdateProfilePhotoMutation,
-} from "../../../backend/user/user.query";
-import { ImageCropModal } from "../../../components/Modal/ImageCropModal";
-import { uploadFile } from "../../../utils/file-upload/upload";
 
 import "react-phone-number-input/style.css";
 
@@ -36,6 +30,12 @@ import {
   useUpdateOrgDetailsMutation,
   useUpdateOrgLogoMutation,
 } from "@/backend/org/org.query";
+import {
+  useGetUserProfile,
+  useUpdateProfileMutation,
+  useUpdateProfilePhotoMutation,
+} from "@/backend/user/user.query";
+import { ImageCropModal } from "@/components/Modal/ImageCropModal";
 import LocaleSwitcher from "@/components/translation/LocaleSwitcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -62,8 +62,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
+import { uploadFile } from "@/utils/file-upload/upload";
 
-export function Account() {
+export default function Account() {
   const translations = useTranslations();
   const { isLoading: isProfileLoading, data: profileData } =
     useGetUserProfile();

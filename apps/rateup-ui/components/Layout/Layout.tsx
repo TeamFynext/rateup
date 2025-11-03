@@ -703,9 +703,7 @@ const Navbar = ({
                       justify={"center"}
                       align={"center"}
                       gap={"xs"}
-                      onClick={() =>
-                        router.push("/dashboard/settings?tab=account")
-                      }
+                      onClick={() => router.push("/dashboard/settings/account")}
                       style={{
                         cursor: "pointer",
                       }}
@@ -820,9 +818,7 @@ const Navbar = ({
                 <div className="flex flex-col gap-1">
                   <div
                     className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors"
-                    onClick={() =>
-                      router.push("/dashboard/settings?tab=account")
-                    }
+                    onClick={() => router.push("/dashboard/settings/account")}
                   >
                     <User size={16} />
                     <span className="text-sm">Profile</span>

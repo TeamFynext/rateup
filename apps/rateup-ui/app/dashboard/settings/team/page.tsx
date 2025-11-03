@@ -1,21 +1,17 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { Clock, Plus, Trash2, User, Users, UserX, X } from "lucide-react";
+import { Plus, RefreshCcw, User, Users, UserX } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { createTeam } from "@/backend/team/team.api";
 import {
-  useAddUsertoTeams,
   useCreateTeamMutation,
-  useDeleteTeamMutation,
-  useEditTeamMutation,
-  useNotTeamMembers,
-  useRemoveUserFromTeam,
-  useTeamMembersFromInvitation,
   useTeamsByUser,
 } from "@/backend/team/team.query";
 import {
@@ -24,8 +20,6 @@ import {
   DeleteTeam,
   EditTeam,
 } from "@/components/settings/team";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -35,17 +29,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/context/UserContext";
 import { UserRole } from "@/utils/enums";
-import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 const Team = () => {
   const translations = useTranslations();
@@ -122,11 +113,23 @@ const Team = () => {
     <div className="flex flex-col gap-4 w-full">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl">Team Management</h2>
+          <div className="flex items-center gap-1">
+            <h2 className="text-2xl">Team Management </h2>
+            <Button
+              disabled={isLoadingTeamsUser}
+              variant="outline"
+              onClick={refetchTeams}
+              className="flex items-center justify-center gap-1"
+            >
+              <RefreshCcw />
+            </Button>
+          </div>
+
           <p className="text-sm text-muted-foreground">
             {translations("Organize members into teams and manage roles")}
           </p>
         </div>
+
         {user?.role === UserRole.SUPADM && (
           <Button
             className="bg-gradient-to-r from-rateup-blue to-rateup-blue hover:shadow-lg transition-all"
@@ -281,6 +284,11 @@ const Team = () => {
                   className="h-10 border-2 border-gray-200 focus:border-rateup-blue"
                   {...createTeamForm.getInputProps("name")}
                 />
+                {createTeamForm.errors.name && (
+                  <p className="text-xs text-red-500">
+                    {createTeamForm.errors.name}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="team-name">{translations("Team Code")}</Label>
@@ -290,6 +298,11 @@ const Team = () => {
                   className="h-10 border-2 border-gray-200 focus:border-rateup-blue"
                   {...createTeamForm.getInputProps("code")}
                 />
+                {createTeamForm.errors.code && (
+                  <p className="text-xs text-red-500">
+                    {createTeamForm.errors.code}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
