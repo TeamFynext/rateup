@@ -13,6 +13,7 @@ import {
   resendInviteMemberHandler,
   deleteTeamMemberHandler,
   addMembertoTeamsHandler,
+  getUsersNotInTeamHandler,
 } from "./team.controller";
 import { $Tref } from "./team.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
@@ -175,6 +176,21 @@ export async function teamRoutes(server: FastifyInstance) {
       },
     },
     getTeamMembersHandler,
+  );
+
+  server.get(
+    "/notmembers/:teamId",
+    {
+      preHandler: [
+        checkSession,
+        getVerifySubscriptionHandler([sf.Team]),
+        checkRoleHandler(["SUPER_ADMIN"]),
+      ],
+      schema: {
+        params: $Tref("getTeamMembersRequestSchema"),
+      },
+    },
+    getUsersNotInTeamHandler,
   );
 
   server.get(

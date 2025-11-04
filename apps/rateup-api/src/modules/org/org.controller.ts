@@ -4,6 +4,7 @@ import {
   createOrg,
   deleteOrg,
   getAllMembersWithTeams,
+  getAllMembersWithTeamsAndInvitation,
   getAllOrgs,
   getOrgNameAndUserPhone,
   getOrgStats,
@@ -85,6 +86,25 @@ export async function getAllMembersWithTeamsHandler(
     } else {
       reply.send({ message: `Success`, data: teamsMembers });
     }
+  } catch (e) {
+    console.error(e);
+    reply.code(500).send();
+  }
+}
+
+export async function getAllMembersWithTeamsAndInvitationHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    let session = await Session.getSession(request, reply);
+
+    const accessTokenPayload = session.getAccessTokenPayload();
+    const orgId = accessTokenPayload.orgId;
+
+    const teamsMembers = await getAllMembersWithTeamsAndInvitation(orgId);
+
+    reply.send({ message: `Success`, data: teamsMembers });
   } catch (e) {
     console.error(e);
     reply.code(500).send();
@@ -255,6 +275,7 @@ New Organization "${orgData.updatedOrg.name}".
 
 Details:
 - Created At: ${orgData.updatedOrg.createdAt.toISOString()}
+-Phone : ${orgData?.updatedOrg?.phone}
 Onboarding:
 - Services: ${(tellUsMore?.["services"] || []).join(", ")}
 - Industry: ${tellUsMore?.["industry"]}
@@ -263,6 +284,7 @@ Onboarding:
       `,
       html: `
       <h2>Organization Updated: ${orgData.updatedOrg.name}</h2>
+      <h3>Phone: ${orgData?.updatedOrg?.phone}</h3>
       <p><strong>Created At:</strong> ${orgData.updatedOrg.createdAt.toISOString()}</p>
       <h3>Onboarding Details</h3>
       <ul>
