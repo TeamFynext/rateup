@@ -418,31 +418,10 @@ export function getNavTopData(
     {
       icon: IconSettings,
       label: translations("Settings"),
-      link: "/dashboard/settings?tab=account",
+      link: "/dashboard/settings/account",
       hasSubmenu: false,
     },
   ];
-  // const lastLinksData = [
-  //   { icon: NotificationBellIcon, label: "Notifications" },
-  //   ...(process.env.NEXT_PUBLIC_EXPERIMENT
-  //     ? [{ icon: ColorSchemaButton, label: "Dark Mode" }]
-  //     : []),
-  //   {
-  //     icon: IconLogout,
-  //     label: "Logout",
-  //     children: [
-  //       {
-  //         label: "Logout",
-  //         link: "/logout",
-  //         icon: IconLogout,
-  //       },
-  //     ],
-  //   },
-  //   {
-  //     icon: IconUser,
-  //     label: translations("Account"),
-  //     link: "/dashboard/settings?tab=account",
-  //   },
-  // ];
+
   return [navLinks];
 }
