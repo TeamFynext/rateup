@@ -7,6 +7,7 @@ import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   completeOrgDetails,
   getAllOrgs,
+  getAllTeamsMembersOfOrg,
   getOrgStats,
   getTeamsMembersOfOrg,
   getWebhookClientSecret,
@@ -23,6 +24,13 @@ export const useTeamsMembersOfOrg = () => {
   return useQuery({
     queryKey: ["orgTeamsDataQuery"],
     queryFn: () => getTeamsMembersOfOrg(),
+  });
+};
+
+export const useAllTeamsMembersOfOrg = () => {
+  return useQuery({
+    queryKey: ["orgTeamsAllDataQuery"],
+    queryFn: () => getAllTeamsMembersOfOrg(),
   });
 };
 
@@ -56,6 +64,7 @@ export function useUpdateRoleMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
       queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
     },
     onError: (error: any) => {
       console.error("Error Role Update:", error.message);

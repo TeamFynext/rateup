@@ -343,30 +343,30 @@ export function getNavTopData(
         ]
       : []),
 
-    {
-      icon: IconBrandTeams,
-      label: translations("Teams"),
-      link: "/dashboard/teams",
-      disabled: role !== "SUPER_ADMIN",
-      hasSubmenu: true,
-      children: [
-        {
-          label: translations("Teams"),
-          link: "/dashboard/teams",
-          icon: IconSocial,
-          disabled: role !== "SUPER_ADMIN",
-        },
-        ...(role === "SUPER_ADMIN"
-          ? [
-              {
-                label: translations("All Members"),
-                link: "/dashboard/members",
-                icon: IconUsers,
-              },
-            ]
-          : []),
-      ],
-    },
+    // {
+    //   icon: IconBrandTeams,
+    //   label: translations("Teams"),
+    //   link: "/dashboard/teams",
+    //   disabled: role !== "SUPER_ADMIN",
+    //   hasSubmenu: true,
+    //   children: [
+    //     {
+    //       label: translations("Teams"),
+    //       link: "/dashboard/teams",
+    //       icon: IconSocial,
+    //       disabled: role !== "SUPER_ADMIN",
+    //     },
+    //     ...(role === "SUPER_ADMIN"
+    //       ? [
+    //           {
+    //             label: translations("All Members"),
+    //             link: "/dashboard/members",
+    //             icon: IconUsers,
+    //           },
+    //         ]
+    //       : []),
+    //   ],
+    // },
     {
       icon: IconQrcode,
       label: translations("QR Studio"),
@@ -415,54 +415,34 @@ export function getNavTopData(
           },
         ]
       : []),
-  ];
-  const lastLinksData = [
-    { icon: NotificationBellIcon, label: "Notifications" },
-    ...(process.env.NEXT_PUBLIC_EXPERIMENT
-      ? [{ icon: ColorSchemaButton, label: "Dark Mode" }]
-      : []),
     {
-      icon: IconLogout,
-      label: "Logout",
-      children: [
-        {
-          label: "Logout",
-          link: "/logout",
-          icon: IconLogout,
-        },
-      ],
-    },
-    {
-      icon: IconUser,
-      label: translations("Account"),
-      children: [
-        {
-          label: translations("User"),
-          link: "/dashboard/settings?tab=user",
-          icon: IconUser,
-        },
-        {
-          label: translations("Organization"),
-          link: "/dashboard/settings?tab=organization",
-          icon: IconBuildings,
-        },
-        {
-          label: translations("Account"),
-          link: "/dashboard/settings?tab=account",
-          icon: IconUserShare,
-        },
-
-        ...(subscription?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
-          ? [
-              {
-                label: translations("Admin"),
-                link: "/admin",
-                icon: IconTerminal2,
-              },
-            ]
-          : []),
-      ],
+      icon: IconSettings,
+      label: translations("Settings"),
+      link: "/dashboard/settings?tab=account",
+      hasSubmenu: false,
     },
   ];
-  return [navLinks, lastLinksData];
+  // const lastLinksData = [
+  //   { icon: NotificationBellIcon, label: "Notifications" },
+  //   ...(process.env.NEXT_PUBLIC_EXPERIMENT
+  //     ? [{ icon: ColorSchemaButton, label: "Dark Mode" }]
+  //     : []),
+  //   {
+  //     icon: IconLogout,
+  //     label: "Logout",
+  //     children: [
+  //       {
+  //         label: "Logout",
+  //         link: "/logout",
+  //         icon: IconLogout,
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     icon: IconUser,
+  //     label: translations("Account"),
+  //     link: "/dashboard/settings?tab=account",
+  //   },
+  // ];
+  return [navLinks];
 }

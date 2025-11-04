@@ -21,6 +21,7 @@ export interface IEditTeam {
   reviewPageLinks?: object;
   code?: string;
   tags?: string[];
+  color?: string;
 }
 
 export const createTeam = (data: ICreateTeam) =>
@@ -82,6 +83,12 @@ export const deleteInviteById = (id: String) =>
 export const getTeamMembers = (teamId: String) =>
   axiosClient({
     url: `/team/members/${teamId}`,
+    method: "GET",
+  });
+
+export const getNotTeamMembers = (teamId: String) =>
+  axiosClient({
+    url: `/team/notmembers/${teamId}`,
     method: "GET",
   });
 
