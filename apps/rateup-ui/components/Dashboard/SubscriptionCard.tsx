@@ -99,11 +99,7 @@ const SubscriptionCard = () => {
           </div>
 
           <div className="w-full flex justify-center items-center">
-            <Button
-              onClick={() =>
-                router.push("/dashboard/settings?tab=account&view=billing")
-              }
-            >
+            <Button onClick={() => router.push("/dashboard/settings/billing")}>
               <div className="text-white text-sm font-medium">
                 {translations("Manage Subscription") || "Manage Subscription"}
               </div>

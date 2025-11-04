@@ -133,7 +133,9 @@ export default function Account() {
 
   const updateProfile = useUpdateProfileMutation(setIsLoading);
   const updateLogo = useUpdateOrgLogoMutation(setIsLoading);
-  const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoading);
+  // const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoading);
+  const { mutate: updateProfilePhoto, isPending: isUpdatingPhoto } =
+    useUpdateProfilePhotoMutation(setIsLoading);
   const orgDetailsUpdate = useUpdateOrgDetailsMutation();
 
   const onSubmit = (values) => {
@@ -208,7 +210,17 @@ export default function Account() {
             }
           } else {
             const data = { profilePhoto: fileKey };
-            updateProfilePhoto.mutate(data, {
+            if (isUpdatingPhoto) {
+              return notifications.show({
+                id: "upload-photo",
+                loading: true,
+                title: translations("Uploading photo"),
+                message: translations("Hold on, changing your profile photo"),
+                autoClose: false,
+                withCloseButton: false,
+              });
+            }
+            updateProfilePhoto(data, {
               onSuccess: () => {
                 notifications.update({
                   id: "upload-photo",
@@ -356,7 +368,9 @@ export default function Account() {
                   <p className="text-xs sm:text-sm text-gray-600">
                     {profileData?.data?.data?.email} •{" "}
                     {translations("Member since")}{" "}
-                    {new Date(profileData?.data?.data?.createdAt).getFullYear()}
+                    {profileData?.data?.data?.createdAt
+                      ? new Date(profileData.data.data.createdAt).getFullYear()
+                      : "—"}
                   </p>
 
                   {/* Status Badges */}

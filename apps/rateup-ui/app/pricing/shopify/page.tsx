@@ -57,7 +57,7 @@ const ShopifySubscriptionApprovalCallback = () => {
 
   const updateRoute = () => {
     localStorage.removeItem("shopify-subscription-callback");
-    router.push(`/dashboard/settings?tab=account&view=myOrders`);
+    router.push(`/dashboard/settings/billing#order-history`);
   };
 
   const isSubscribtionUpdated = charge_id

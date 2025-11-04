@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 const Payment = () => {
   const router = useRouter();
-  router.push(`/dashboard/settings?tab=account&view=billing`);
+  router.push(`/dashboard/settings/billing`);
   return <div></div>;
 };
 
