@@ -133,9 +133,7 @@ export default function Account() {
 
   const updateProfile = useUpdateProfileMutation(setIsLoading);
   const updateLogo = useUpdateOrgLogoMutation(setIsLoading);
-  // const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoading);
-  const { mutate: updateProfilePhoto, isPending: isUpdatingPhoto } =
-    useUpdateProfilePhotoMutation(setIsLoading);
+  const updateProfilePhoto = useUpdateProfilePhotoMutation(setIsLoading);
   const orgDetailsUpdate = useUpdateOrgDetailsMutation();
 
   const onSubmit = (values) => {
@@ -210,17 +208,7 @@ export default function Account() {
             }
           } else {
             const data = { profilePhoto: fileKey };
-            if (isUpdatingPhoto) {
-              return notifications.show({
-                id: "upload-photo",
-                loading: true,
-                title: translations("Uploading photo"),
-                message: translations("Hold on, changing your profile photo"),
-                autoClose: false,
-                withCloseButton: false,
-              });
-            }
-            updateProfilePhoto(data, {
+            updateProfilePhoto.mutate(data, {
               onSuccess: () => {
                 notifications.update({
                   id: "upload-photo",
@@ -231,14 +219,6 @@ export default function Account() {
                   autoClose: 3000,
                 });
               },
-            });
-            notifications.show({
-              id: "upload-photo",
-              loading: true,
-              title: translations("Uploading photo"),
-              message: translations("Hold on, changing your profile photo"),
-              autoClose: false,
-              withCloseButton: false,
             });
           }
         }
@@ -301,6 +281,30 @@ export default function Account() {
     "Entertainment",
     "Other",
   ];
+
+  useEffect(() => {
+    if (updateProfilePhoto.isPending) {
+      notifications.show({
+        id: "upload-photo",
+        loading: true,
+        title: translations("Uploading photo"),
+        message: translations("Hold on, changing your profile photo"),
+        autoClose: false,
+        withCloseButton: false,
+      });
+      if (updateLogo.isPending) {
+        notifications.show({
+          id: "upload-photo",
+          loading: true,
+          title: translations("Uploading photo"),
+          message: translations("Hold on, changing your organization photo"),
+          autoClose: false,
+          withCloseButton: false,
+        });
+      }
+    }
+  }, [updateLogo.isPending, updateProfilePhoto.isPending]);
+
   return (
     <div className="flex flex-col gap-2">
       <div>
