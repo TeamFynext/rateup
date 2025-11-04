@@ -1335,11 +1335,20 @@ export async function generateInboxResponse(
   if (body.numberOfContacts === 1) {
     skip = Math.floor(Math.random() * 100);
   }
-  const contacts = await prisma.contact.findMany({
+  let contacts = await prisma.contact.findMany({
     where: { orgId: orgId },
     take: body.numberOfContacts || 5,
     skip,
   });
+
+  //if contact table does n't have 100 records
+  if (body.numberOfContacts === 1 && !contacts.length) {
+    contacts = await prisma.contact.findMany({
+      where: { orgId: orgId },
+      take: body.numberOfContacts || 5,
+    });
+  }
+
   const settings = await getWaSettings(orgId);
 
   for (const contact of contacts) {
