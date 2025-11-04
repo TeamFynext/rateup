@@ -220,14 +220,6 @@ export default function Account() {
                 });
               },
             });
-            notifications.show({
-              id: "upload-photo",
-              loading: true,
-              title: translations("Uploading photo"),
-              message: translations("Hold on, changing your profile photo"),
-              autoClose: false,
-              withCloseButton: false,
-            });
           }
         }
       };
@@ -289,6 +281,30 @@ export default function Account() {
     "Entertainment",
     "Other",
   ];
+
+  useEffect(() => {
+    if (updateProfilePhoto.isPending) {
+      notifications.show({
+        id: "upload-photo",
+        loading: true,
+        title: translations("Uploading photo"),
+        message: translations("Hold on, changing your profile photo"),
+        autoClose: false,
+        withCloseButton: false,
+      });
+      if (updateLogo.isPending) {
+        notifications.show({
+          id: "upload-photo",
+          loading: true,
+          title: translations("Uploading photo"),
+          message: translations("Hold on, changing your organization photo"),
+          autoClose: false,
+          withCloseButton: false,
+        });
+      }
+    }
+  }, [updateLogo.isPending, updateProfilePhoto.isPending]);
+
   return (
     <div className="flex flex-col gap-2">
       <div>
@@ -356,7 +372,9 @@ export default function Account() {
                   <p className="text-xs sm:text-sm text-gray-600">
                     {profileData?.data?.data?.email} •{" "}
                     {translations("Member since")}{" "}
-                    {new Date(profileData?.data?.data?.createdAt).getFullYear()}
+                    {profileData?.data?.data?.createdAt
+                      ? new Date(profileData.data.data.createdAt).getFullYear()
+                      : "—"}
                   </p>
 
                   {/* Status Badges */}

@@ -58,7 +58,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
       return;
     }
 
-    let route = "/dashboard/settings?tab=account";
+    let route = "/dashboard/settings/billing";
     const cartData = {
       id: plan.id,
       amount: plan.paymentPlan.amount,
@@ -219,7 +219,7 @@ const MailForm = ({ opened, close, plan, currencySymbol }) => {
     };
     sendMail.mutate(data, {
       onSettled: () => {
-        let route = "/dashboard/settings?tab=account";
+        let route = "/dashboard/settings/billing";
         const cartData = {
           id: plan.id,
           amount: plan.paymentPlan.amount,

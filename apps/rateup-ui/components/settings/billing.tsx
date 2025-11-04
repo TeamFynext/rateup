@@ -74,7 +74,7 @@ export function OrderHistory({ orders, refresh, isRefetching, translations }) {
   const [opened, setOpened] = useState(false);
   return (
     <>
-      <Card className="p-6 shadow-sm border-gray-200">
+      <Card id="order-history" className="p-6 shadow-sm border-gray-200">
         <div className="flex items-center justify-between">
           <h3>{translations("Billing History")}</h3>
           <Button
