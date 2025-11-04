@@ -99,7 +99,6 @@ interface ContactsStoreState {
   addContactsForFilter: (
     filterKey: string,
     contacts: Array<ContactsWithLastMessage & { updatedAt: string }>,
-    tab: string,
   ) => Promise<void>;
   updateContactById: (
     contactId: string,
@@ -170,7 +169,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         );
       },
 
-      addContactsForFilter: async (filterKey, contacts, tab) => {
+      addContactsForFilter: async (filterKey, contacts) => {
         const { currentFilterKey } = get();
         if (currentFilterKey !== filterKey) return;
         set(
@@ -200,12 +199,10 @@ export const useContactsStore = create<ContactsStoreState>()(
             const newList = allIds
               .map((id) => ({
                 id,
-                createdAt:
-                  tab === "All"
-                    ? (state.contactsById.get(id)?.lastMessage?.waCreatedAt ??
-                      0)
-                    : (state.contactsById.get(id)
-                        ?.lastReceivedMessageTimeStamp ?? 0),
+                createdAt: filterKey.includes("messageType:all")
+                  ? (state.contactsById.get(id)?.lastMessage?.waCreatedAt ?? 0)
+                  : (state.contactsById.get(id)?.lastReceivedMessageTimeStamp ??
+                    0),
               }))
               .sort(
                 (a, b) =>

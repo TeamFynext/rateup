@@ -1,5 +1,7 @@
 import React from "react";
 
+import { MessagePlatform } from "@/types/enums";
+
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 
 interface CreativeAvatarProps {
@@ -11,6 +13,7 @@ interface CreativeAvatarProps {
   onlineStatusPosition?: "topLeft" | "bottomRight";
   src?: string | null;
   showRing?: boolean;
+  platform?: string;
 }
 
 // Generate a consistent color based on the name
@@ -139,6 +142,28 @@ const sizeClasses = {
   },
 };
 
+function getAvatarColorFromPlatform(platform: string) {
+  switch (platform) {
+    case MessagePlatform.WHATSAPP:
+      return {
+        bg: "bg-gradient-to-br from-emerald-500 to-emerald-600",
+        ring: "ring-green-200",
+      };
+    case MessagePlatform.INSTAGRAM:
+      return {
+        bg: "bg-gradient-to-br from-pink-500 to-pink-600",
+        ring: "ring-pink-200",
+      };
+    case MessagePlatform.WEBCHAT:
+      return {
+        bg: "bg-gradient-to-br from-blue-500 to-blue-600",
+        ring: "ring-blue-200",
+      };
+    default:
+      return getAvatarColor("default");
+  }
+}
+
 export function CreativeAvatar({
   name,
   size = "md",
@@ -148,9 +173,12 @@ export function CreativeAvatar({
   onlineStatusPosition = "bottomRight",
   src = null,
   showRing = false,
+  platform,
 }: CreativeAvatarProps) {
   const initials = getInitials(name);
-  const colors = getAvatarColor(name);
+  const colors = platform
+    ? getAvatarColorFromPlatform(platform)
+    : getAvatarColor(name);
   const sizes = sizeClasses[size];
 
   return (

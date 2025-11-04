@@ -107,15 +107,6 @@ export default function WaInboxChatSelectCard({
               "Unknown"
             }
             size="md"
-            className={
-              contact?.unReadMessageCount > 0
-                ? platform === MessagePlatform.WHATSAPP
-                  ? "ring-2 ring-green-600 rounded-full"
-                  : platform === MessagePlatform.INSTAGRAM
-                    ? "ring-2 ring-pink-500 rounded-full"
-                    : "ring-2 ring-blue-500 rounded-full"
-                : ""
-            }
             showOnlineStatus={
               !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)
             }
@@ -125,6 +116,7 @@ export default function WaInboxChatSelectCard({
             onlineStatusPosition="topLeft"
             src={contact?.profilePic}
             showRing={true}
+            platform={platform}
           />
           <div
             className={`absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 ${

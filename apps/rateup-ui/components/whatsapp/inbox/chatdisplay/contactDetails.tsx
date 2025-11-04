@@ -29,6 +29,7 @@ import { useTranslations } from "next-intl";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod/v4";
 
+import { MessagePlatform } from "@/types/enums";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
 import {
   useContactDeleteMutation,
@@ -91,6 +92,8 @@ export default function WaInboxContactDetails({
   const { updateContactById, setSelectedContact } = useContactsStore();
   const deleteContactMutation = useContactDeleteMutation(groupId);
   const [editable, setEditable] = useState(false);
+  const platform =
+    contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const form = useForm<ContactFormValues>({
     validate: zod4Resolver(contactSchema),
     initialValues: {
@@ -328,6 +331,7 @@ export default function WaInboxContactDetails({
               src={contact?.profilePic}
               size="xl"
               name={contact?.name || contact?.phone}
+              platform={platform}
             />
           </div>
           <h3 className="mb-1 text-sm">{contact?.name || contact?.phone}</h3>
@@ -570,6 +574,7 @@ export default function WaInboxContactDetails({
             src={contact?.profilePic}
             size="xl"
             name={contact?.name || contact?.phone}
+            platform={platform}
           />
         </div>
         <h3 className="mb-1 text-sm">{contact?.name || contact?.phone}</h3>
