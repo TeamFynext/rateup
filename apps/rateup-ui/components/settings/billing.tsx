@@ -1021,7 +1021,7 @@ const AIStats = ({ stats, subscription }) => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {percentage.toFixed(0)}%{translations("used")} •{" "}
+                    {percentage.toFixed(0)}% {translations("used")} •{" "}
                     {remaining.toLocaleString()} {translations("remaining")}
                   </p>
                 </>

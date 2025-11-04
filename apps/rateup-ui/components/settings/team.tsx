@@ -166,19 +166,11 @@ export function EditTeam({
 export function AddMembers({ selectedTeam, refetchTeams, translations }) {
   const teamID = selectedTeam.id;
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-  const {
-    isLoading: isLoadingNotTeamsUser,
-    data: notTeamMembersData,
-    error: errorTeamsDataUser,
-    refetch: reftchTeams,
-  } = useNotTeamMembers(teamID);
+  const { isLoading: isLoadingNotTeamsUser, data: notTeamMembersData } =
+    useNotTeamMembers(teamID);
 
-  const {
-    isLoading: isLoadingMembers,
-    data: teamsMembersData,
-    refetch: refetchInvitedTeamMembers,
-    error: teamsMembersError,
-  } = useTeamMembersFromInvitation(teamID);
+  const { isLoading: isLoadingMembers, data: teamsMembersData } =
+    useTeamMembersFromInvitation(teamID);
 
   const addTeams = useAddUsertoTeams();
 
@@ -193,9 +185,10 @@ export function AddMembers({ selectedTeam, refetchTeams, translations }) {
           <Skeleton className="h-5 w-32" />
         ) : (
           <p className="text-sm sm:text-base text-muted-foreground">
+            {teamMembersObjArr?.length || 0}{" "}
             {(teamMembersObjArr?.length || 0) !== 1
               ? translations("members")
-              : translations("member")}
+              : translations("member")}{" "}
             {translations("in this team")}
           </p>
         )}
@@ -459,12 +452,7 @@ export function DeleteTeam({
 
   const deleteTeamMutation = useDeleteTeamMutation();
 
-  const {
-    isLoading: isLoadingMembers,
-    data: teamsMembersData,
-    refetch: refetchInvitedTeamMembers,
-    error: teamsMembersError,
-  } = useTeamMembersFromInvitation(teamId);
+  const { data: teamsMembersData } = useTeamMembersFromInvitation(teamId);
 
   const form = useForm({
     initialValues: {

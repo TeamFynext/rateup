@@ -184,8 +184,7 @@ const Team = () => {
                   <div
                     className={`w-12 h-12 rounded-xl flex items-center justify-center`}
                     style={{
-                      backgroundColor:
-                        team.color === "null" ? "blue" : team.color,
+                      backgroundColor: team.color ? team.color : "blue",
                     }}
                   >
                     <Users className="w-6 h-6 text-white" />
