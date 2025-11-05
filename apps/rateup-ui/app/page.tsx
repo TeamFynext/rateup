@@ -18,6 +18,7 @@ import IntegrationHero from "@/components/RateupHomePage/shared/IntegrationAndCl
 import LoyalityAd from "@/components/RateupHomePage/shared/LoyalityAd";
 import MobileAppSection from "@/components/RateupHomePage/shared/MobileAppSection";
 import ObstaclesOverview from "@/components/RateupHomePage/shared/ObstaclesOverview";
+import StartRateupHero from "@/components/RateupHomePage/shared/StartRateup";
 import TabComponent from "@/components/RateupHomePage/shared/TabComponent";
 
 const SupportWidget = dynamic(
@@ -42,6 +43,7 @@ const page = () => {
       <AudienceOverview />
       <MobileAppSection />
       <CallToAction />
+      <StartRateupHero />
       <HomePageFooter />
       <ScrollToTop />
       <SupportWidget
