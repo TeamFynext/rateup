@@ -159,4 +159,23 @@ export const pageMetadata: Record<string, Metadata> = {
       canonical: "/blog",
     },
   },
+  "/blog/tag": {
+    title:
+      "Read Blogs on Customer Engagement, WhatsApp Automation and Marketing",
+    description:
+      "Read the RateUp blog for insights on WhatsApp Business API, customer engagement tools, automation, NPS surveys, loyalty & omnichannel marketing strategies.",
+    openGraph: {
+      title:
+        "Read Blogs on Customer Engagement, WhatsApp Automation and Marketing",
+      description:
+        "Read the RateUp blog for insights on WhatsApp Business API, customer engagement tools, automation, NPS surveys, loyalty & omnichannel marketing strategies.",
+    },
+    alternates: {
+      canonical: "/blog",
+    },
+    robots: {
+      index: false,
+      follow: true,
+    },
+  },
 };

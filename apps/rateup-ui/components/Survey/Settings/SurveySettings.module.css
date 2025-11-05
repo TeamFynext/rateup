@@ -39,7 +39,7 @@
 .survey-settings-root-div :global(.section-div) {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
   flex-shrink: 0;
 }
 

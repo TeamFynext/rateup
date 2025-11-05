@@ -42,6 +42,7 @@ import {
   IconWallpaper,
   IconWaveSine,
 } from "@tabler/icons-react";
+import { FileChartColumn, House, Inbox, User, UserPlus } from "lucide-react";
 
 import { GetLabelsRes } from "@/backend/label/label.types";
 import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
@@ -52,6 +53,7 @@ import {
   ClosedInboxIcon,
   NewInboxIcon,
 } from "@/components/whatsapp/inbox/chatselect";
+import { getInboxNavContactCount } from "@/components/whatsapp/inbox/util";
 
 import {
   SubscriptionFeaturePathName as sfpn,
@@ -102,34 +104,35 @@ export function getNavTopData(
     ...(hasFeature(sfpn.Whatsapp)
       ? [
           {
-            icon: IconBrandHipchat,
+            icon: Inbox,
             label: translations("Inbox"),
             hasSubmenu: true,
             children: [
               // new,assigned,closed,sent,blocked
               {
+                label: translations("All"),
+                link: "/dashboard/inbox?tab=All",
+                icon: Inbox,
+              },
+              {
                 label: translations("Mine"),
-                link: "/dashboard/whatsapp/inbox?tab=mine",
-                icon: AssignedToMeInboxIcon,
+                link: "/dashboard/inbox?tab=mine",
+                icon: User,
+                count: getInboxNavContactCount("mine"),
               },
               {
                 label: translations("UnAssigned"),
-                link: "/dashboard/whatsapp/inbox?tab=UnAssigned",
-                icon: IconUserX,
-              },
-              {
-                label: translations("All"),
-                link: "/dashboard/whatsapp/inbox?tab=All",
-                icon: IconMessage,
+                link: "/dashboard/inbox?tab=UnAssigned",
+                icon: UserPlus,
               },
               {
                 label: translations("Analytics"),
-                link: "/dashboard/whatsapp/inbox?tab=analytics",
-                icon: IconFileAnalytics,
+                link: "/dashboard/inbox?tab=analytics",
+                icon: FileChartColumn,
               },
               {
                 label: "Labels",
-                icon: IconBrandHipchat,
+                icon: IconLabel,
                 hasSubmenu: true,
                 children: [
                   ...(labels?.length
@@ -141,7 +144,7 @@ export function getNavTopData(
                                 label: lbl.name,
                                 value: lbl.id,
                                 emoji: lbl.emoji,
-                                icon: IconBrandHipchat,
+                                icon: IconLabel,
                               }))
                           : []),
                       ]
@@ -160,14 +163,24 @@ export function getNavTopData(
             hasSubmenu: true,
             children: [
               {
-                label: translations("Contacts"),
+                label: translations("All Contacts"),
                 link: "/dashboard/contacts",
                 icon: IconAddressBook,
               },
               {
-                label: translations("labels"),
-                link: "/dashboard/contacts/labels",
-                icon: IconLabel,
+                label: translations("Groups"),
+                link: "/dashboard/groups",
+                icon: IconUsers,
+              },
+              {
+                label: translations("Custom Fields"),
+                link: "/dashboard/contacts/custom-fields",
+                icon: IconFileDescription,
+              },
+              {
+                label: translations("Lifecycle"),
+                link: "/dashboard/lifecycle",
+                icon: IconActivity,
               },
             ],
           },
@@ -330,30 +343,30 @@ export function getNavTopData(
         ]
       : []),
 
-    {
-      icon: IconBrandTeams,
-      label: translations("Teams"),
-      link: "/dashboard/teams",
-      disabled: role !== "SUPER_ADMIN",
-      hasSubmenu: true,
-      children: [
-        {
-          label: translations("Teams"),
-          link: "/dashboard/teams",
-          icon: IconSocial,
-          disabled: role !== "SUPER_ADMIN",
-        },
-        ...(role === "SUPER_ADMIN"
-          ? [
-              {
-                label: translations("All Members"),
-                link: "/dashboard/members",
-                icon: IconUsers,
-              },
-            ]
-          : []),
-      ],
-    },
+    // {
+    //   icon: IconBrandTeams,
+    //   label: translations("Teams"),
+    //   link: "/dashboard/teams",
+    //   disabled: role !== "SUPER_ADMIN",
+    //   hasSubmenu: true,
+    //   children: [
+    //     {
+    //       label: translations("Teams"),
+    //       link: "/dashboard/teams",
+    //       icon: IconSocial,
+    //       disabled: role !== "SUPER_ADMIN",
+    //     },
+    //     ...(role === "SUPER_ADMIN"
+    //       ? [
+    //           {
+    //             label: translations("All Members"),
+    //             link: "/dashboard/members",
+    //             icon: IconUsers,
+    //           },
+    //         ]
+    //       : []),
+    //   ],
+    // },
     {
       icon: IconQrcode,
       label: translations("QR Studio"),
@@ -402,54 +415,13 @@ export function getNavTopData(
           },
         ]
       : []),
-  ];
-  const lastLinksData = [
-    { icon: NotificationBellIcon, label: "Notifications" },
-    ...(process.env.NEXT_PUBLIC_EXPERIMENT
-      ? [{ icon: ColorSchemaButton, label: "Dark Mode" }]
-      : []),
     {
-      icon: IconLogout,
-      label: "Logout",
-      children: [
-        {
-          label: "Logout",
-          link: "/logout",
-          icon: IconLogout,
-        },
-      ],
+      icon: IconSettings,
+      label: translations("Settings"),
+      link: "/dashboard/settings/account",
+      hasSubmenu: false,
     },
-    {
-      icon: IconUser,
-      label: translations("Account"),
-      children: [
-        {
-          label: translations("User"),
-          link: "/dashboard/settings?tab=user",
-          icon: IconUser,
-        },
-        {
-          label: translations("Organization"),
-          link: "/dashboard/settings?tab=organization",
-          icon: IconBuildings,
-        },
-        {
-          label: translations("Account"),
-          link: "/dashboard/settings?tab=account",
-          icon: IconUserShare,
-        },
+  ];
 
-        ...(subscription?.orgId === process.env.NEXT_PUBLIC_ROOT_ORG
-          ? [
-              {
-                label: translations("Admin"),
-                link: "/admin",
-                icon: IconTerminal2,
-              },
-            ]
-          : []),
-      ],
-    },
-  ];
-  return [navLinks, lastLinksData];
+  return [navLinks];
 }

@@ -22,14 +22,17 @@ import {
 import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
-import { GetContactTagsRes } from "@/backend/whatsapp/settings/waSettings.api";
+import { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 
 import { useRemoveMulitpleGroupParticipants } from "../../backend/campaign/campaignParticipants/campaignParticipants.query";
 import {
   useDeleteManyContactGroupsMutation,
   useRemoveContactsFromGroup,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
-import { useDeleteManyContactsMutation } from "../../backend/campaign/contacts/contacts.query";
+import {
+  useDeleteManyContactsMutation,
+  useExportContactsMutation,
+} from "../../backend/campaign/contacts/contacts.query";
 import { docsPath, PAGE_SIZE } from "../../utils/constants";
 import { showLoadingToast, showSuccessToast } from "../../utils/notifications";
 import InfoButton from "../Button/InfoButton";
@@ -53,7 +56,6 @@ function ContactTable({
   enableFilter = true,
   enablePagination = true,
   enableColumnSelection = true,
-  tags = { contactTags: [], contactGroupTags: [] },
   tab = WhatsappTableType.CONTACTS,
   open = () => {},
   groupId = "",
@@ -77,7 +79,6 @@ function ContactTable({
   enableFilter?: boolean;
   enablePagination?: boolean;
   enableColumnSelection?: boolean;
-  tags?: GetContactTagsRes;
   tab?: string;
   open?: () => void;
   groupId?: string;
@@ -110,6 +111,8 @@ function ContactTable({
   const deleteManyContactsMutation = useDeleteManyContactsMutation(() => {
     setRowSelection({});
   });
+  const exportContact = useExportContactsMutation();
+
   const deleteManyContactGroupsMutation = useDeleteManyContactGroupsMutation(
     () => {
       setRowSelection({});
@@ -275,7 +278,6 @@ function ContactTable({
               ) : (
                 <Group gap={"sm"}>
                   <OpenCreateMenu
-                    tags={tags}
                     tab={tab}
                     toggle={open}
                     isPending={isPending}
@@ -316,6 +318,8 @@ function ContactTable({
           tempVisibleColumnArray={tempVisibleColumnArray}
           enableColumnSelection={enableColumnSelection}
           setFilterVisibility={setFilterVisibility}
+          enableExport={tab === WhatsappTableType.CONTACTS}
+          onExport={exportContact}
         />
       </Flex>
       <Divider />

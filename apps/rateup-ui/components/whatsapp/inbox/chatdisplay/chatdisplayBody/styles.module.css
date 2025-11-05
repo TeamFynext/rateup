@@ -18,13 +18,12 @@
 .affix {
   position: absolute !important;
   background-color: #ffffff;
-  right: 6px;
-  bottom: 0;
+  right: 58px;
+  bottom: 155px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--mantine-spacing-xs) var(--mantine-spacing-lg);
-  bottom: 15px;
   border-radius: var(--mantine-radius-md);
   border-top-right-radius: 0px;
   border-bottom-right-radius: 0px;

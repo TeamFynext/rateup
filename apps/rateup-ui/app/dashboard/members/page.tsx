@@ -1,14 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
+  ActionIcon,
   Badge,
   Button,
+  Checkbox,
   Divider,
+  Flex,
   Group,
   Loader,
+  Menu,
+  MultiSelect,
+  NativeSelect,
+  Pill,
+  Popover,
   ScrollArea,
   Stack,
   Text,
@@ -17,13 +25,22 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
+  IconCheck,
   IconPlayerPause,
   IconPlayerPlay,
+  IconPlus,
   IconTrash,
   IconUserEdit,
+  IconX,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
+import {
+  useAddUsertoTeams,
+  useRemoveUserFromTeam,
+  useTeamsByUser,
+} from "@/backend/team/team.query";
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import { getUserRoleLabel } from "@/utils";
 
 import {
@@ -75,7 +92,7 @@ const Members = () => {
           <Stack>
             {membersData?.data?.map(
               ({ email, id, role, teams, name, isPaused }, i: number) => (
-                <>
+                <Stack gap={"sm"} p={0} key={id}>
                   <LongMemberCard
                     key={id}
                     openModal={() => setMemberModalOpenedId(id)}
@@ -89,7 +106,7 @@ const Members = () => {
                     teams={teams}
                   />
                   {i !== membersData?.data?.length - 1 && <Divider />}
-                </>
+                </Stack>
               ),
             )}
             {memberModalOpenedId && (
@@ -226,6 +243,7 @@ const LongMemberCard = ({
   const translations = useTranslations();
   const updateStatus = useUpdateActiveStatusMutation();
   const updatePauseStatus = useUpdateUserPause();
+  const { data: teamsData, isLoading } = useTeamsByUser();
   function onUpdateStatus() {
     updateStatus.mutate(member?.id);
     notifications.show({
@@ -238,7 +256,22 @@ const LongMemberCard = ({
     });
     close();
   }
+  const [newTeams, setNewTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState(null);
 
+  const [openedConfirm, { open: openConfirm, close: closeConfirm }] =
+    useDisclosure(false);
+  const teamsnotPartOf = useMemo(
+    () =>
+      teamsData
+        ? teamsData?.data.filter(
+            (t) => !teams.some((tm) => tm.team_id === t.id),
+          )
+        : [],
+    [teamsData],
+  );
+  const addTeams = useAddUsertoTeams();
+  const removeteam = useRemoveUserFromTeam(selectedTeam?.id);
   const handleUserStatus = () => {
     const data = {
       isPaused: !member.isPaused,
@@ -279,20 +312,90 @@ const LongMemberCard = ({
           <Text size="xs" fw={400} c={"dimmed"}>
             {translations("Teams joined")} :
           </Text>
-          <ScrollArea
-            style={{ flex: 1 }}
-            scrollbarSize={1}
-            offsetScrollbars={"x"}
-            miw={250}
-          >
-            <Group style={{ flex: 1 }} justify="flex-start" wrap="nowrap">
-              {teams.map(({ team_code, team_id, team_name }) => (
-                <Badge key={team_id} variant="outline">
-                  {team_code}
-                </Badge>
-              ))}
-            </Group>
-          </ScrollArea>
+          <Group>
+            <ScrollArea
+              style={{ flex: 1 }}
+              scrollbarSize={3}
+              offsetScrollbars={"x"}
+              miw={250}
+              maw={750}
+            >
+              <Group
+                style={{ flex: 1 }}
+                p={"sm"}
+                justify="flex-start"
+                wrap="nowrap"
+              >
+                {teams.map(({ team_code, team_id, team_name }) => (
+                  <Pill
+                    size="xs"
+                    variant="contrast"
+                    radius={"md"}
+                    styles={{
+                      root: { outline: "1px solid var(--tertiary-color)" },
+                      label: {
+                        fontWeight: "bold",
+                        color: "var(--tertiary-color)",
+                        textTransform: "uppercase",
+                      },
+                      remove: {
+                        color: "var(--tertiary-color)",
+                      },
+                    }}
+                    key={team_code}
+                    withRemoveButton
+                    onRemove={() => {
+                      setSelectedTeam({ id: team_id, name: team_name });
+                      openConfirm();
+                    }}
+                  >
+                    {team_code}
+                  </Pill>
+                ))}
+              </Group>
+            </ScrollArea>
+            <Popover width={200} position="bottom" withArrow shadow="md">
+              <Popover.Target>
+                <Tooltip label={translations("Add to teams")}>
+                  <ActionIcon variant="light" radius={"xl"}>
+                    <IconPlus size={"1rem"} />
+                  </ActionIcon>
+                </Tooltip>
+              </Popover.Target>
+              <Popover.Dropdown p={"sm"} h={200} w={300}>
+                <Flex justify={"flex-end"}>
+                  <RateupButtonBlue
+                    disabled={!newTeams.length}
+                    radius={"md"}
+                    size="xs"
+                    mb={"sm"}
+                    title={"Done"}
+                    onClick={() => {
+                      addTeams.mutate(
+                        { userId: member.id, teamIds: newTeams },
+                        {
+                          onSettled: () => {
+                            setNewTeams([]);
+                          },
+                        },
+                      );
+                    }}
+                    loading={addTeams.isPending}
+                  />
+                </Flex>
+                <MultiSelect
+                  comboboxProps={{ withinPortal: false }}
+                  value={newTeams}
+                  onChange={setNewTeams}
+                  data={teamsnotPartOf.map((t) => ({
+                    value: t.id,
+                    label: t.name,
+                  }))}
+                  placeholder="click to select"
+                />
+              </Popover.Dropdown>
+            </Popover>
+          </Group>
         </Stack>
         <Group>
           <Tooltip
@@ -353,6 +456,24 @@ const LongMemberCard = ({
         headerLabel={translations("Are you sure to delete this team staff?")}
         onConfirm={onUpdateStatus}
         onClose={close}
+      />
+      <ConfirmationModal
+        forDeleteFunctionality
+        opened={openedConfirm}
+        confirmLabel={translations("Remove")}
+        headerTitle={translations("Remove Staff")}
+        headerLabel={`${translations("Are you sure to remove this staff from")} ${selectedTeam?.name}?`}
+        onConfirm={() => {
+          removeteam.mutate(
+            { teamId: selectedTeam.id, userId: member.id },
+            {
+              onSettled: () => {
+                setSelectedTeam(null);
+              },
+            },
+          );
+        }}
+        onClose={closeConfirm}
       />
       <ConfirmationModal
         opened={pauseModalOpened}

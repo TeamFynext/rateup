@@ -213,6 +213,8 @@ function TanstackTable({
           tempVisibleColumnArray={tempVisibleColumnArray}
           enableColumnSelection={enableColumnSelection}
           setFilterVisibility={setFilterVisibility}
+          enableExport={false}
+          onExport={() => {}}
         />
       </Flex>
       <Divider />

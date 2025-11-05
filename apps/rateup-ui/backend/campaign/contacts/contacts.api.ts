@@ -1,3 +1,5 @@
+import { saveAs } from "file-saver";
+
 import { ContactGroupType } from "@/types/enums";
 
 import { axiosClient } from "../../apiClient";
@@ -81,4 +83,55 @@ export const editContactLabels = async ({ data, contactId }) => {
     data,
   );
   return res;
+};
+export type CustomFieldData = {
+  id: string;
+  orgId: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  visibility: boolean;
+  type: string;
+  createdAt: string;
+  values: string;
+  listValues?: string[];
+};
+
+export const getCustomField = async () => {
+  let res = await axiosClient.get(`${CONTACT_BASE_URL}/custom-fields`);
+  return res?.data as CustomFieldData[];
+};
+export const createCustomField = async (data) => {
+  let res = await axiosClient.post(`${CONTACT_BASE_URL}/custom-fields`, data);
+  return res?.data as CustomFieldData;
+};
+
+export const updateCustomField = async (fieldId: string, data) => {
+  let res = await axiosClient.put(
+    `${CONTACT_BASE_URL}/custom-fields/${fieldId}`,
+    data,
+  );
+  return res?.data as CustomFieldData;
+};
+
+export const deleteCustomField = async (fieldId: string) => {
+  let res = await axiosClient.delete(
+    `${CONTACT_BASE_URL}/custom-fields/${fieldId}`,
+  );
+  return res?.data as CustomFieldData;
+};
+
+export const exportContacts = async (data: {
+  type: string;
+  fields: string[];
+}) => {
+  let response = await axiosClient.post(`${CONTACT_BASE_URL}/export`, data, {
+    responseType: "blob",
+    timeout: 0,
+  });
+  const blob = new Blob([response.data], {
+    type: response.headers["content-type"],
+  });
+
+  return saveAs(blob, `contacts.${data.type}`);
 };

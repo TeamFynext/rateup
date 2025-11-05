@@ -19,6 +19,7 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import classNames from "classnames/bind";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { QuestionType } from "@/types/enums";
 import { useQuestionUpdateMutation } from "@/backend/surveys/questions/questions.query";
@@ -127,6 +128,11 @@ function QuestionReviewPageEditor({ selectedQ, survey, setActiveTab }) {
   const handleSwitchChange = async (event) => {
     const isChecked = event?.currentTarget?.checked;
     if (isChecked) {
+      if (survey.kioskMode) {
+        toast.warning(
+          "Kiosk mode has been turned off automatically as the review page is enabled.",
+        );
+      }
       const data = { reviewPageOptions: {} };
       if (selectedQ.type === QuestionType.Rating) {
         data["reviewPageOptions"]["minRating"] = 3;

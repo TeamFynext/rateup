@@ -80,7 +80,7 @@ export default function WaInboxAutomationDisplayModal(props: Props) {
                 onChange={setSelectedAutomationId}
               >
                 {automations?.map((automation) => (
-                  <Card className={classes2.wrapper}>
+                  <Card className={classes2.wrapper} key={automation?.id}>
                     <Radio
                       className={classes2.inner}
                       value={automation?.id}

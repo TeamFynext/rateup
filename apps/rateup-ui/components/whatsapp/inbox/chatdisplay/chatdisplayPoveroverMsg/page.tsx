@@ -26,7 +26,7 @@ import {
   IconTicket,
 } from "@tabler/icons-react";
 
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore from "@/app/dashboard/inbox/store";
 import {
   useCreateCommentMutation,
   useUpdateTicketMutation,

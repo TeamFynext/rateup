@@ -2,54 +2,50 @@
 
 import { useEffect, useRef } from "react";
 
-import {
-  ActionIcon,
-  Button,
-  Flex,
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { Flex, Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { IconExclamationCircle, IconSend } from "@tabler/icons-react";
+import { IconExclamationCircle } from "@tabler/icons-react";
+import dayjs from "dayjs";
+import { Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { create } from "zustand";
 
-import { MessagePlatform } from "@/types/enums";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
-import { AccountSelector } from "@/components/input/AccountSelector";
-import VoiceRecorder, {
-  useVoiceRecordStore,
-} from "@/components/input/VoiceRecorder";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
+import useContactStore, {
+  ContactWithUpdatedAt,
+  useContactsStore,
+} from "@/app/dashboard/inbox/store";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
+import { useVoiceRecordStore } from "@/components/input/VoiceRecorder";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
 import WaTextEditor, {
   parseToWhatsAppFormat,
 } from "@/components/RichTextEditor/waTextEditor";
+import { Button } from "@/components/ui/button";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
 
-import { ContactsWithLastMessage } from "../../../../../backend/whatsapp/inbox/message/wamessage.api";
 import {
   useAssignInboxToUer,
   useSendNewWaMessage,
   useUnBlockWhatsAppUser,
 } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
-import { isInboxSessionExpired } from "../../../../../utils/whatsapp/inbox";
 import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "../../../../Button/RateupButtons";
+  isInboxSessionExpired,
+  returnMessageContentBasedOnParsedMessage,
+} from "../../../../../utils/whatsapp/inbox";
+import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { usePhoneIdStore } from "../../chatselect/accountSelectorStore";
-import { AssignInbox } from "../chatdisplayHeader";
+import AssignUser from "../chatdisplayHeader/AssignUser";
 import WaInboxFooterMenu from "./footerMenu";
 import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplayFooter({
   contact,
 }: Readonly<{
-  contact: ContactsWithLastMessage;
+  contact: ContactWithUpdatedAt;
 }>) {
   const inputRef = useRef(null);
   const submiRef = useRef(null);
@@ -61,11 +57,12 @@ export default function WaInboxChatDisplayFooter({
     whatsappSettingsPhoneId,
     platform as MessagePlatform,
   );
-  const { addMessage, removeMessage } = useMessageStore();
+  const { addMessage, removeMessage } = useTemperoryMessageStore();
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
-  const phone_number_id = contact?.metadata?.phone_number_id || "";
+  const { data: waSettings } = useWaSettings();
+  const { updateContactById } = useContactsStore();
   const form = useForm({
     initialValues: {
       type: "text",
@@ -172,6 +169,58 @@ export default function WaInboxChatDisplayFooter({
         },
       },
     );
+    updateContactById(contact.id, (contact) => ({
+      ...contact,
+      lastMessage: {
+        messageBody: {
+          send:
+            platform === MessagePlatform.INSTAGRAM
+              ? {
+                  recipient: {
+                    id: contact.igsId,
+                  },
+                  message: {
+                    ...(values.type === "text"
+                      ? { text: parseToWhatsAppFormat(values.text.body) }
+                      : values.type === "media"
+                        ? {
+                            attachment: {
+                              type: values.media[values.media.length - 1].type,
+                            },
+                          }
+                        : {}),
+                  },
+                }
+              : {
+                  messaging_product: "whatsapp",
+                  recipient_type: "individual",
+                  to: contact.phone,
+                  type: "text",
+                  text: {
+                    body:
+                      values.type === "text"
+                        ? parseToWhatsAppFormat(values.text.body)
+                        : values.type === "media"
+                          ? returnMessageContentBasedOnParsedMessage(
+                              {
+                                messageType:
+                                  values.media[media.length - 1].type,
+                                messageContent: "",
+                                timeStamp: dayjs().unix().toString(),
+                              },
+                              "send",
+                            )
+                          : "",
+                  },
+                },
+          exchangeProcess: "send",
+          receive: null,
+        },
+        waCreatedAt: new Date().toISOString(),
+        sourceIdentifier: whatsappSettingsPhoneId,
+        sourcePlatform: platform as MessagePlatform,
+      },
+    }));
   }
   function insertEmoji(value: string) {
     const { selectionStart, selectionEnd } = inputRef.current;
@@ -201,70 +250,25 @@ export default function WaInboxChatDisplayFooter({
     resetMedia();
   }, [contact]);
 
-  useEffect(() => {
-    if (!whatsappSettingsPhoneId && phone_number_id) {
-      updatePhoneId(phone_number_id);
-    }
-    if (
-      platform === MessagePlatform.INSTAGRAM &&
-      whatsappSettingsPhoneId !== contact?.lastMessage?.sourceIdentifier
-    ) {
-      updatePhoneId(contact.lastMessage.sourceIdentifier);
-    }
-  }, [whatsappSettingsPhoneId, phone_number_id, updatePhoneId]);
-
-  const AccountSelectComponent = () => {
-    if (platform === MessagePlatform.WEBCHAT) return null;
-    return (
-      <Group>
-        <AccountSelector
-          onChange={(phoneId) => {
-            updatePhoneId(phoneId);
-          }}
-          value={whatsappSettingsPhoneId}
-          w={150}
-          size="xs"
-          styles={{
-            input: {
-              background: "var(--mantine-primary-color-light)",
-              color: "var(--mantine-primary-color-filled)",
-              borderRadius: "5px",
-              fontWeight: "400",
-            },
-            label: {
-              display: "none",
-            },
-          }}
-          platform={platform as MessagePlatform}
-          disabled={platform === MessagePlatform.INSTAGRAM}
-        />
-        {platform !== MessagePlatform.INSTAGRAM &&
-          platform !== MessagePlatform.WEBCHAT && (
-            <WaInboxFooterMenu
-              sessionExpired={isSessionExpired}
-              contact={contact}
-            />
-          )}
-      </Group>
-    );
-  };
   const SendMessageComponent = () => {
     return (
-      <Group gap={"xs"} flex={1} justify={"space-between"}>
-        <Group>
-          {platform !== MessagePlatform.WEBCHAT && <VoiceRecorder />}
-          <Tooltip label={translations("Send")}>
-            <Button
-              rightSection={<IconSend size={16} />}
-              size="xs"
-              onClick={handleSendMessage}
-              disabled={isSessionExpired || isRecording}
-            >
-              Send
-            </Button>
-          </Tooltip>
-        </Group>
-      </Group>
+      <CustomTooltip
+        trigger={
+          <Button
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 h-[60px] px-6"
+            onClick={handleSendMessage}
+            disabled={
+              isSessionExpired ||
+              isRecording ||
+              (!media.length && !form.isValid("text"))
+            }
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        }
+        content={<span>{translations("Send")}</span>}
+      />
     );
   };
 
@@ -279,93 +283,81 @@ export default function WaInboxChatDisplayFooter({
       </Flex>
     );
   }
-
   return (
-    <Stack gap={0}>
-      <div className={classes.wrapper}>
-        <form className={classes.form}>
-          <div ref={inputRef} style={{ display: "flex", flex: 1 }}>
-            <WaTextEditor
-              handleInputChange={(value) => {
-                setBody({ ...body, text: { ...body.text, body: value } });
-              }}
-              content={body.text.body}
-              mih={50}
-              flex={1}
-              inbox={true}
-              customEnter={() => submiRef.current()}
-              editable={
-                !isSessionExpired &&
-                !isRecording &&
-                !audioUrl &&
-                body.type === "text"
-              }
-              placeholder="Type a message..."
-              customHeaders={<SendMessageComponent />}
-              otherHeaders={<AccountSelectComponent />}
-            />
-          </div>
-        </form>
-      </div>
-    </Stack>
+    <WaTextEditor
+      handleInputChange={(value) => {
+        setBody({ ...body, text: { ...body.text, body: value } });
+      }}
+      content={body.text.body}
+      mih={50}
+      flex={1}
+      inbox={true}
+      customEnter={() => submiRef.current()}
+      editable={
+        !isSessionExpired && !isRecording && !audioUrl && body.type === "text"
+      }
+      placeholder="Type a message..."
+      sendMessageButton={<SendMessageComponent />}
+    />
   );
 }
 
 export const WaInboxAssignUserFooter = ({ contactId, user }) => {
   const { filterData } = useContactStore();
-  const assignMut = useAssignInboxToUer(filterData);
-  const [openedAssign, { open: openAssign, close: closeAssign }] =
-    useDisclosure(false);
+  const assignMut = useAssignInboxToUer(contactId, filterData);
+  const { updateContactById } = useContactsStore();
 
   function handleAssignToMe() {
     if (!user) {
       return showErrorToast("failed!try again");
     }
-    assignMut.mutate({
-      contactId,
-      assignedUserIds: [user.userId],
-      teamId: user.teams[0],
-    });
+
+    assignMut.mutate(
+      {
+        contactId,
+        assignees: [
+          {
+            userId: user.userId,
+            teamId: user.teams?.[0],
+          },
+        ],
+      },
+      {
+        onSuccess: () => {
+          updateContactById(contactId, (contact) => ({
+            ...contact,
+            waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+            assignedUsers: [
+              {
+                id: user.userId,
+                name: user?.userName,
+              },
+            ],
+          }));
+        },
+      },
+    );
   }
 
   return (
-    <Stack gap={"xs"} pb={"xs"}>
-      <Group
-        bg={"black"}
-        justify="center"
-        c={"white"}
-        color="white"
-        gap={2}
-        py={2}
-      >
+    <div className="flex flex-col gap-2 pb-2">
+      <div className="bg-black flex justify-center items-center text-white gap-0.5 py-1">
         <IconExclamationCircle size={"1rem"} />
-        <Text size="xs">Please Assign to start the chat</Text>
-      </Group>
-      <Group justify={"center"} gap={"xs"}>
-        <RateupButtonSecondary
-          title="Assign To Me"
-          onClick={handleAssignToMe}
-          size="xs"
-          radius={"md"}
-        />
-        <RateupButtonPrimary
-          title="Assign To Staff"
-          onClick={openAssign}
-          size="xs"
-          radius={"md"}
-        />
-      </Group>
-      <AssignInbox
-        contactId={contactId}
-        opened={openedAssign}
-        close={closeAssign}
-      />
-    </Stack>
+        <span className="text-xs">Please Assign to start the chat</span>
+      </div>
+      <div className="flex justify-center items-center gap-2">
+        <Button variant="outline" onClick={handleAssignToMe} size="sm">
+          <div className="text-sm">Assign To Me</div>
+        </Button>
+        <AssignUser contactId={contactId} variant="default" />
+      </div>
+    </div>
   );
 };
 
 export const WaInboxBlockedContactFooter = ({ contact }) => {
-  const { setSelectedContact, filterData } = useContactStore();
+  const { filterData } = useContactStore();
+  const { setSelectedContact } = useContactsStore();
   const [opened, { open, close }] = useDisclosure(false);
   const unblockMut = useUnBlockWhatsAppUser(filterData);
   function handleUnblock() {
@@ -436,7 +428,7 @@ interface MessageState {
   removeMessage: (contactId: string) => void;
 }
 
-export const useMessageStore = create<MessageState>((set, get) => ({
+export const useTemperoryMessageStore = create<MessageState>((set, get) => ({
   messages: {},
   addMessage: (contactId, message) =>
     set((state) => {

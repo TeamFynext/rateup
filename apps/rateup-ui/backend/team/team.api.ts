@@ -21,6 +21,7 @@ export interface IEditTeam {
   reviewPageLinks?: object;
   code?: string;
   tags?: string[];
+  color?: string;
 }
 
 export const createTeam = (data: ICreateTeam) =>
@@ -54,7 +55,7 @@ export const deleteTeamById = (id: String) =>
     method: "DELETE",
   });
 
-export const inviteTeamMember = (data: IInviteMember) =>
+export const inviteTeamMember = async (data: IInviteMember) =>
   axiosClient({
     url: `/team/invite`,
     method: "POST",
@@ -85,6 +86,12 @@ export const getTeamMembers = (teamId: String) =>
     method: "GET",
   });
 
+export const getNotTeamMembers = (teamId: String) =>
+  axiosClient({
+    url: `/team/notmembers/${teamId}`,
+    method: "GET",
+  });
+
 export async function getTeamMembersFromInvitation(teamId: String) {
   let teamData: ITeamResponseData = (
     await axiosClient.get(`/team/invitation/${teamId}`)
@@ -101,4 +108,12 @@ export const getTeamSurveys = (teamId: String) =>
 export async function getSurveyLanguagesFromTeam(teamId: string) {
   const res = await axiosClient.get(`/team/${teamId}/survey-languages`);
   return res.data as string[];
+}
+
+export async function addUsertoTeams({ userId, teamIds }) {
+  await axiosClient.post(`/team/members/${userId}`, { teamIds });
+}
+
+export async function removeUserFromTeam({ teamId, userId }) {
+  await axiosClient.delete(`/team/member?teamId=${teamId}&userId=${userId}`);
 }

@@ -2,16 +2,31 @@
 
 import { useEffect, useState } from "react";
 
-import { Badge, Box, Flex, Group, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
+import { ColumnDef } from "@tanstack/react-table";
 import {
-  DataGrid,
-  GridActionsCellItem,
-  GridColDef,
-  GridRenderCellParams,
-} from "@mui/x-data-grid";
+  Building2,
+  Calendar,
+  Mail,
+  Pause,
+  Play,
+  Shield,
+  UserCheck,
+  Users,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
+
+import { createSortableHeader, DataTable } from "@/components/Table/data-table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 
 import { useAllOrgs } from "../../../backend/org/org.query";
 import {
@@ -19,11 +34,9 @@ import {
   useUpdateRecipeNameMutation,
   useUpdateUserPause,
 } from "../../../backend/user/user.query";
-import { RateupButtonBlue } from "../../../components/Button/RateupButtons";
 import RefreshButton from "../../../components/Button/RefreshButton";
 import ConfirmationModal from "../../../components/Modal/ConfirmationModal";
 import FormModalLayout from "../../../components/Modal/FormModalLayout";
-import PaperLayout from "../../../components/styled/Layouts/PaperLayout";
 import { getUserRoleColor, getUserRoleLabel } from "../../../utils";
 import {
   formatIsoDateStringWithTime,
@@ -33,32 +46,32 @@ import {
   isYesterday,
 } from "../../../utils/dateTime";
 import { showLoadingToast } from "../../../utils/notifications";
+import { DataTableToolbar } from "./data-table-toolbar";
 import UserModal from "./UserModal";
 
+interface UserTableData {
+  id: string;
+  name: string;
+  orgName: string;
+  role: string;
+  signupDate: string;
+  recipeName: string;
+  status: boolean;
+  isPaused: boolean;
+}
+
 const index = () => {
-  const { data: orgs } = useAllOrgs();
-  const { data: users } = useGetAllUsers();
+  const { data: orgs, isLoading: orgsLoading } = useAllOrgs();
+  const { data: users, isLoading: usersLoading, isError } = useGetAllUsers();
   const updateRecipeMutation = useUpdateRecipeNameMutation();
   const updatePauseStatus = useUpdateUserPause();
   const translations = useTranslations();
-  const rows = users
-    ? users?.map((user) => ({
-        id: user?.email,
-        name: user?.userName,
-        orgName: user?.orgName,
-        role: user?.role,
-        signupDate: formatIsoDateStringWithTime(user?.createdAt),
-        recipeName: user?.recipeName,
-        status: user?.active,
-        isPaused: user?.isPaused ? "YES" : "NO",
-      }))
-    : [];
 
   const [userStats, setUserStats] = useState({
-    today: null,
-    yesterday: null,
-    lastWeek: null,
-    thisMonth: null,
+    today: 0,
+    yesterday: 0,
+    lastWeek: 0,
+    thisMonth: 0,
   });
 
   const [opened, { open, close }] = useDisclosure(false);
@@ -66,78 +79,126 @@ const index = () => {
     openedConfirmModal,
     { open: openConfirmModal, close: closeConfirmModal },
   ] = useDisclosure(false);
-  const [selectedUser, setSelectedUser] = useState<UserData>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isUpdatedRecipe, setIsUpdatedRecipe] = useState(false);
 
-  const columns: GridColDef[] = [
-    { field: "id", headerName: translations("Email ID"), width: 300 },
-    { field: "name", headerName: translations("Name"), width: 200 },
+  const columns: ColumnDef<UserTableData>[] = [
     {
-      field: "orgName",
-      headerName: translations("Organization"),
-      width: 200,
+      accessorKey: "id",
+      header: createSortableHeader("Email ID"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Mail className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{row.getValue("id")}</span>
+        </div>
+      ),
     },
     {
-      field: "role",
-      headerName: translations("Role"),
-      renderCell: (params: GridRenderCellParams<any, any>) => {
-        const role = params.value;
+      accessorKey: "name",
+      header: createSortableHeader("Name"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <UserCheck className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium">{row.getValue("name")}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "orgName",
+      header: createSortableHeader("Organization"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm">{row.getValue("orgName")}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "role",
+      header: createSortableHeader("Role"),
+      cell: ({ row }) => {
+        const role = row.getValue("role") as string;
         return (
-          <Badge color={getUserRoleColor(role)}>
-            {getUserRoleLabel(role, translations)}
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-muted-foreground" />
+            <Badge
+              variant="outline"
+              className={`text-${getUserRoleColor(role)}-600`}
+            >
+              {getUserRoleLabel(role, translations)}
+            </Badge>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "signupDate",
+      header: createSortableHeader("SignUp Date"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm">{row.getValue("signupDate")}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "recipeName",
+      header: createSortableHeader("Recipe"),
+      cell: ({ row }) => (
+        <span className="text-sm">{row.getValue("recipeName") || "N/A"}</span>
+      ),
+    },
+    {
+      accessorKey: "isPaused",
+      header: createSortableHeader("Is Paused"),
+      cell: ({ row }) => {
+        const isPaused = row.getValue("isPaused") as boolean;
+        return (
+          <Badge variant={isPaused ? "destructive" : "secondary"}>
+            {isPaused ? "YES" : "NO"}
           </Badge>
         );
       },
-      width: 200,
     },
     {
-      field: "signupDate",
-      headerName: translations("SignUp Date"),
-      width: 200,
-    },
-    { field: "recipeName", headerName: translations("Recipe"), width: 200 },
-    { field: "isPaused", headerName: translations("Is Paused"), width: 200 },
-    {
-      field: "status",
-      headerName: translations("Status"),
-      renderCell: (params) => {
-        const active = params.value;
+      accessorKey: "status",
+      header: createSortableHeader("Status"),
+      cell: ({ row }) => {
+        const active = row.getValue("status") as boolean;
         return (
-          <Badge color={active ? "green" : "red"}>
+          <Badge variant={active ? "default" : "destructive"}>
             {active ? translations("Active") : translations("Inactive")}
           </Badge>
         );
       },
-      width: 200,
     },
     {
-      field: "action",
-      headerName: translations("Actions"),
-      type: "actions",
-      width: 200,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={
-            params.row.isPaused === "YES" ? (
-              <IconPlayerPause size={"1rem"} />
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const isPaused = row.original.isPaused;
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              const user = users?.find(
+                (user) => user.email === row.original.id,
+              );
+              setSelectedUser(user);
+              openConfirmModal();
+            }}
+            className="h-8 w-8 p-0"
+          >
+            {isPaused ? (
+              <Play className="h-4 w-4" />
             ) : (
-              <IconPlayerPlay size={"1rem"} />
-            )
-          }
-          onClick={() => {
-            const user = users?.find((user) => user.email === params.id);
-            setSelectedUser(user);
-            openConfirmModal();
-          }}
-          label={
-            params.row.isPaused === "YES"
-              ? translations("Resume")
-              : translations("Pause")
-          }
-          showInMenu
-          key={params.id + "pause-action"}
-        />,
-      ],
+              <Pause className="h-4 w-4" />
+            )}
+          </Button>
+        );
+      },
     },
   ];
 
@@ -161,94 +222,226 @@ const index = () => {
 
   useEffect(() => {
     if (users) {
-      const today = users.filter((user) => isToday(user?.createdAt))?.length;
-      const yesterday = users.filter((user) =>
-        isYesterday(user.createdAt),
-      )?.length;
-      const lastWeek = users.filter((user) =>
-        isInLastSevenDays(user?.createdAt),
-      )?.length;
-      const thisMonth = users.filter((user) =>
-        isThisMonth(user?.createdAt),
-      )?.length;
+      const today =
+        users.filter((user) => isToday(user?.createdAt))?.length || 0;
+      const yesterday =
+        users.filter((user) => isYesterday(user.createdAt))?.length || 0;
+      const lastWeek =
+        users.filter((user) => isInLastSevenDays(user?.createdAt))?.length || 0;
+      const thisMonth =
+        users.filter((user) => isThisMonth(user?.createdAt))?.length || 0;
+
       setUserStats({
         today,
         yesterday,
         lastWeek,
         thisMonth,
       });
-      //To check is all users recipe name has updated
+
       setIsUpdatedRecipe(
         users.filter((user) => !user.recipeName)?.length ? false : true,
       );
     }
   }, [users]);
 
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error</CardTitle>
+            <CardDescription>
+              An error occurred while loading users.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  if (usersLoading || orgsLoading)
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
+
+  const tableData: UserTableData[] =
+    users?.map((user) => ({
+      id: user?.email,
+      name: user?.userName,
+      orgName: user?.orgName,
+      role: user?.role,
+      signupDate: formatIsoDateStringWithTime(user?.createdAt),
+      recipeName: user?.recipeName,
+      status: user?.active,
+      isPaused: user?.isPaused,
+    })) || [];
+
   return (
-    <Stack gap={"xs"}>
-      <Flex gap={"xl"} pr={"lg"}>
-        <Group flex={1} align="flex-start">
-          <Title order={2}>{translations("User Stats")}</Title>
-          <RefreshButton queryKeys={["allUsers", "org"]} />
-        </Group>
-        <RateupButtonBlue
-          title={translations("Update User Recipe")}
-          onClick={handleUpdateUserRecipe}
-          disabled={isUpdatedRecipe}
-        />
-        <PaperLayout w={300}>
-          <Title order={5}>{translations("Total")}</Title>
-          <Group justify="space-between" px={"sm"}>
-            <CountStatsCard
-              label={translations("Organizations")}
-              count={orgs?.length}
-            />
-            <CountStatsCard
-              label={translations("Users")}
-              count={users?.length}
-            />
-          </Group>
-        </PaperLayout>
-        <PaperLayout w={500}>
-          <Title order={5}>User Stats</Title>
-          <Group justify="space-between" px={"sm"}>
-            <CountStatsCard
-              label={translations("Today")}
-              count={userStats.today}
-            />
-            <CountStatsCard
-              label={translations("Yesterday")}
-              count={userStats.yesterday}
-            />
-            <CountStatsCard
-              label={translations("Last 7 days")}
-              count={userStats.lastWeek}
-            />
-            <CountStatsCard
-              label={translations("This Month")}
-              count={userStats.thisMonth}
-            />
-          </Group>
-        </PaperLayout>
-      </Flex>
-      <Title order={4}>{translations("Most Recent SignUps")}</Title>
-      <Box h={"60vh"} w={"100%"}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          onRowClick={(params) => {
-            const user = users?.find((user) => user.email === params.id);
-            setSelectedUser(user);
-            open();
-          }}
-          showToolbar
-          slotProps={{
-            toolbar: {
-              showQuickFilter: true,
-            },
-          }}
-        />
-      </Box>
+    <div className="container mx-auto space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Users className="h-5 w-5 text-primary" />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {translations("User Stats")}
+              </h1>
+            </div>
+            <RefreshButton queryKeys={["allUsers", "org"]} />
+          </div>
+          <Button
+            onClick={handleUpdateUserRecipe}
+            disabled={isUpdatedRecipe}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {translations("Update User Recipe")}
+          </Button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+          <Card className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Organizations
+                </CardTitle>
+                <Building2 className="h-4 w-4 text-blue-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">
+                {orgs?.length || 0}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Total orgs</p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Users
+                </CardTitle>
+                <Users className="h-4 w-4 text-purple-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-purple-700 dark:text-purple-400">
+                {users?.length || 0}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Total users</p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-green-200 dark:border-green-800">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {translations("Today")}
+                </CardTitle>
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-green-700 dark:text-green-400">
+                {userStats.today}
+              </div>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                New users
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-amber-200 dark:border-amber-800">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {translations("Yesterday")}
+                </CardTitle>
+                <Calendar className="h-4 w-4 text-amber-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">
+                {userStats.yesterday}
+              </div>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                Previous day
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-purple-200 dark:border-purple-800">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {translations("Last 7 days")}
+                </CardTitle>
+                <Badge variant="outline" className="text-xs px-2 py-0 h-5">
+                  7d
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-purple-700 dark:text-purple-400">
+                {userStats.lastWeek}
+              </div>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                Weekly growth
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative overflow-hidden border-rose-200 dark:border-rose-800">
+            <div className="absolute inset-0 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20" />
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {translations("This Month")}
+                </CardTitle>
+                <Badge variant="outline" className="text-xs px-2 py-0 h-5">
+                  30d
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-rose-700 dark:text-rose-400">
+                {userStats.thisMonth}
+              </div>
+              <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">
+                Monthly total
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <h2 className="text-xl font-semibold tracking-tight">
+        {translations("Most Recent SignUps")}
+      </h2>
+      <p className="text-sm text-muted-foreground">
+        Manage and view all users in your system
+      </p>
+      <DataTable
+        columns={columns}
+        data={tableData}
+        DataTableToolbar={DataTableToolbar}
+        onRowClick={(row) => {
+          const user = users?.find((user) => user.email === row.id);
+          setSelectedUser(user);
+          open();
+        }}
+      />
+
       <FormModalLayout
         centered
         opened={opened}
@@ -258,6 +451,7 @@ const index = () => {
       >
         <UserModal selectedUser={selectedUser} />
       </FormModalLayout>
+
       <ConfirmationModal
         opened={openedConfirmModal}
         onClose={closeConfirmModal}
@@ -270,21 +464,14 @@ const index = () => {
         onConfirm={() => {
           handleUserStatus();
         }}
-        headerLabel={` ${translations("Are you sure to")} ${selectedUser?.isPaused ? translations("resume") : translations("pause")} ${translations("this user?")}`}
+        headerLabel={` ${translations("Are you sure to")} ${
+          selectedUser?.isPaused
+            ? translations("resume")
+            : translations("pause")
+        } ${translations("this user?")}`}
         closeLabel={translations("cancel")}
       />
-    </Stack>
-  );
-};
-
-export const CountStatsCard = ({ label, count }) => {
-  return (
-    <Stack gap={1} align="center">
-      <Title>{count}</Title>
-      <Text fw={600} c={"dimmed"}>
-        {label}
-      </Text>
-    </Stack>
+    </div>
   );
 };
 

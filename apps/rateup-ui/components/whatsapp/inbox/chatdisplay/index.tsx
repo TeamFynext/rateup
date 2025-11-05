@@ -1,18 +1,21 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { Flex, Group, Text } from "@mantine/core";
+import { Flex, Group, Paper, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
+import { MessageSquare } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore, {
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
 import {
   useGetAssignedUserForContact,
   useGetMessagesByContactId,
 } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { useGetContactTags } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { useUser } from "@/context/UserContext";
 
@@ -35,47 +38,23 @@ export default function WaInboxChatDisplay({
   smallScreen?: boolean;
   waSettings?: any;
 }) {
-  const searchParams = useSearchParams();
-  const { selectedContact: contact } = useContactStore();
-  const { filter } = useChatFilterStore();
-  const currentContactId = contact?.id || searchParams.get("contactId");
+  const contact = useContactsStore((s) => s.selectedContact);
 
-  const { data, error, isPending, isFetching, isFetched } =
-    useGetMessagesByContactId(currentContactId, filter?.phone);
-  const { data: cTags } = useGetContactTags();
-
-  const messages = useMemo(
-    () =>
-      !isPending && data
-        ? data.pages
-            .map((page) =>
-              page?.messages?.toSorted(
-                (a, b) =>
-                  new Date(a.waCreatedAt).getTime() -
-                  new Date(b.waCreatedAt).getTime(),
-              ),
-            )
-            .flat()
-        : [],
-    [data, isPending],
-  );
-
-  const { data: assignedUsers } = useGetAssignedUserForContact(contact?.id);
   const { user } = useUser();
   const isAssignedToMe = useMemo(
     () =>
-      assignedUsers &&
-      !!assignedUsers?.find((c) => c.assignedUserId === user?.userId),
-    [assignedUsers, user],
+      contact && !!contact.assignedUsers?.find((c) => c.id === user?.userId),
+    [contact, user],
   );
 
   const translations = useTranslations();
-  if (error) return <div>Error: {error.message}</div>;
+  const { isLoading } = useMessagesStore();
+  const [showCustomerInfo, setShowCustomerInfo] = useState(false);
 
   let footerContent = null;
   if (contact?.blockedOnWhatsApp) {
     footerContent = <WaInboxBlockedContactFooter contact={contact} />;
-  } else if (!assignedUsers?.length) {
+  } else if (!contact?.assignedUsers?.length) {
     footerContent = (
       <WaInboxAssignUserFooter contactId={contact?.id} user={user} />
     );
@@ -97,38 +76,39 @@ export default function WaInboxChatDisplay({
     );
   }
 
-  const showLoading = isPending || (isFetching && !isFetched);
-
   return (
-    <PaperLayout p={0} className="h-full">
-      {!contact && messages?.length === 0 ? (
-        <NothingFound text={translations("Select a chat to see messages")} />
-      ) : (
-        <div className={classes.inner_animated}>
-          <WaInboxChatDisplayHeader
-            contact={contact}
-            smallScreen={smallScreen}
-            waSettings={waSettings}
-          />
-          <div className={"flex h-[93.2%]"}>
-            <div className="flex flex-1 flex-col">
-              {showLoading ? (
-                <WhatsAppInboxLoader isLoading={showLoading} />
-              ) : (
-                <WaInboxChatDisplayBody
-                  data={messages}
-                  smallScreen={smallScreen}
-                />
-              )}
-              {!showLoading && footerContent}
-            </div>
-            <WaInboxContactDetails
-              contact={contact}
-              cTags={cTags?.contactTags}
-            />
+    <div className="h-full">
+      {!contact ? (
+        <div className="flex-1 flex items-center justify-center bg-muted/20 h-full">
+          <div className="text-center">
+            <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="mb-2">
+              {translations("Select a chat to see messages")}
+            </h3>
           </div>
         </div>
+      ) : (
+        <div className={`flex min-w-0 h-full flex-1}`}>
+          <div className="flex-1 flex flex-col min-w-0">
+            <WaInboxChatDisplayHeader
+              contact={contact}
+              smallScreen={smallScreen}
+              waSettings={waSettings}
+            />
+            <WaInboxChatDisplayBody
+              smallScreen={smallScreen}
+              isContactDetailsOpened={showCustomerInfo}
+            />
+            {!isLoading && footerContent}
+          </div>
+          <WaInboxContactDetails
+            contact={contact}
+            groupId={""}
+            isOpen={showCustomerInfo}
+            setIsOpen={setShowCustomerInfo}
+          />
+        </div>
       )}
-    </PaperLayout>
+    </div>
   );
 }

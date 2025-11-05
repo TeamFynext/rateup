@@ -27,6 +27,13 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
   const userTimeZone = useTimeZone();
   let currencySymbol = userTimeZone === "Asia/Calcutta" ? "₹" : "$";
   const currency = userTimeZone === "Asia/Calcutta" ? "INR" : "USD";
+  const isMiddleEast = [
+    "Asia/Dubai",
+    "Asia/Qatar",
+    "Asia/Riyadh",
+    "Asia/Muscat",
+  ].includes(userTimeZone);
+
   const rateupPlans = useMemo(
     () =>
       plans
@@ -51,7 +58,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
       return;
     }
 
-    let route = "/dashboard/settings?tab=account";
+    let route = "/dashboard/settings/billing";
     const cartData = {
       id: plan.id,
       amount: plan.paymentPlan.amount,
@@ -143,14 +150,15 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        {rateupPlans.map((plan) => (
-          <PlanCardNew
-            key={plan.id}
-            plan={plan}
-            onButtonClick={() => handlePlanSelection(plan)}
-            currencySymbol={currencySymbol}
-          />
-        ))}
+        {!isMiddleEast &&
+          rateupPlans.map((plan) => (
+            <PlanCardNew
+              key={plan.id}
+              plan={plan}
+              onButtonClick={() => handlePlanSelection(plan)}
+              currencySymbol={currencySymbol}
+            />
+          ))}
       </motion.div>
       <div
         className="flex flex-col text-center  bg-white shadow-lg transition-all 
@@ -211,7 +219,7 @@ const MailForm = ({ opened, close, plan, currencySymbol }) => {
     };
     sendMail.mutate(data, {
       onSettled: () => {
-        let route = "/dashboard/settings?tab=account";
+        let route = "/dashboard/settings/billing";
         const cartData = {
           id: plan.id,
           amount: plan.paymentPlan.amount,

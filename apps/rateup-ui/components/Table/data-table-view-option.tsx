@@ -1,8 +1,17 @@
 "use client";
 
-import { Button, Checkbox, Divider, Menu, Text } from "@mantine/core";
-import { IconAdjustmentsHorizontal } from "@tabler/icons-react";
+import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Table } from "@tanstack/react-table";
+import { Settings2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export function DataTableViewOptions<TData>({
   table,
@@ -10,25 +19,20 @@ export function DataTableViewOptions<TData>({
   table: Table<TData>;
 }) {
   return (
-    <Menu position="bottom-end" width={150}>
-      <Menu.Target>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
           size="sm"
-          leftSection={<IconAdjustmentsHorizontal size={16} />}
           className="ml-auto hidden h-8 lg:flex"
         >
+          <Settings2 />
           View
         </Button>
-      </Menu.Target>
-
-      <Menu.Dropdown>
-        <Menu.Label>
-          <Text size="sm" fw={500}>
-            Toggle columns
-          </Text>
-        </Menu.Label>
-        <Divider />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[150px]">
+        <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+        <DropdownMenuSeparator />
         {table
           .getAllColumns()
           .filter(
@@ -37,21 +41,17 @@ export function DataTableViewOptions<TData>({
           )
           .map((column) => {
             return (
-              <Menu.Item key={column.id} closeMenuOnClick={false}>
-                <Checkbox
-                  label={column.id}
-                  checked={column.getIsVisible()}
-                  onChange={(event) =>
-                    column.toggleVisibility(event.currentTarget.checked)
-                  }
-                  styles={{
-                    label: { textTransform: "capitalize" },
-                  }}
-                />
-              </Menu.Item>
+              <DropdownMenuCheckboxItem
+                key={column.id}
+                className="capitalize"
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+              >
+                {column.id}
+              </DropdownMenuCheckboxItem>
             );
           })}
-      </Menu.Dropdown>
-    </Menu>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

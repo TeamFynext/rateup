@@ -25,6 +25,7 @@
   border-right: 1px solid
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-7));
   justify-content: space-between;
+  padding: 2px 0;
 }
 .asideRight {
   border-right: 0;
@@ -73,7 +74,7 @@
 .title {
   margin-bottom: var(--mantine-spacing-xs);
   background-color: var(--mantine-color-body);
-  padding: var(--mantine-spacing-md);
+  /* padding: var(--mantine-spacing-md); */
   height: 50px;
   border-bottom: 1px solid
     light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-7));

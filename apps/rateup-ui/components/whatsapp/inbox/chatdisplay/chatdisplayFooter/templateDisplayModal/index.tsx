@@ -30,7 +30,7 @@ export default function WaInboxTemplateDisplayModal({
   onClose,
 }: Readonly<Props>) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const sendTemplate = useSendWaTemplateToUser(contact.phone, contact.id);
+  const sendTemplate = useSendWaTemplateToUser(contact?.phone, contact?.id);
   const [teamId, setTeamId] = useState<string>("");
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const templatesAvailableForTeam = useTemplatesAvailableForTeam(teamId);

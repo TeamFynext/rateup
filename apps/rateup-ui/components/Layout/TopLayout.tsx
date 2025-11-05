@@ -92,10 +92,6 @@ export default function TopNavbar({ user }) {
             {translations("Are you sure you want to logout?")}
           </Title>
 
-          <Text size="sm" c="dimmed" ta="center" maw={280}>
-            {translations("You’ll need to log in again to access your account")}
-          </Text>
-
           <Flex gap="sm" mt="md" w="100%" justify="center">
             <Button variant="outline" radius="md" onClick={logoutModal.close}>
               {translations("Cancel")}
@@ -115,12 +111,14 @@ export default function TopNavbar({ user }) {
       {/* RIGHT: Notifications + Settings + Profile */}
       <Group gap="md">
         <Flex align={"center"} justify={"center"} gap={8}>
-          <ActionIcon
-            variant="transparent"
-            className={classes["theme-toggle-icon"]}
-          >
-            <ColorSchemaButton />
-          </ActionIcon>
+          {process.env.NEXT_PUBLIC_EXPERIMENT && (
+            <ActionIcon
+              variant="transparent"
+              className={classes["theme-toggle-icon"]}
+            >
+              <ColorSchemaButton />
+            </ActionIcon>
+          )}
 
           <Box mt={5} className={classes["bell-icon"]}>
             <NotificationBellIcon strokeWidth={1.5} />
@@ -128,7 +126,7 @@ export default function TopNavbar({ user }) {
 
           <ActionIcon
             variant="transparent"
-            onClick={() => router.push("/dashboard/settings?tab=account")}
+            onClick={() => router.push("/dashboard/settings/billing")}
             className={classes["settings-icon"]}
           >
             <Settings size={20} />

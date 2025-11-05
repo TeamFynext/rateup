@@ -6,8 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   AppShell,
-  Avatar,
-  Badge,
+  // Badge,
   Box,
   Burger,
   Divider,
@@ -19,7 +18,6 @@ import {
   rgba,
   ScrollAreaAutosize,
   Stack,
-  Switch,
   Text,
   Title,
   Tooltip,
@@ -30,17 +28,30 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
+import {
+  Bot,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  LogOut,
+  Megaphone,
+  MessageCircle,
+  PanelLeft,
+  PanelLeftClose,
+  User,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import SessionReact from "supertokens-auth-react/recipe/session";
 
 import { WaMessageAssignStatus } from "@/types/enums";
 import { useChatSocket } from "@/hooks/useChatSocket";
-import { useChatContactCountStore } from "@/app/dashboard/whatsapp/inbox/store";
+import { useChatContactCountStore } from "@/app/dashboard/inbox/store";
+import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
 import { useLabelsQuery } from "@/backend/label/label.query";
-import { useIsTellUsMoreCompleted } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { CustomFieldsProvider } from "@/context/CustomFieldsContext";
 import { LabelsContext } from "@/context/LabelsContext";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
@@ -59,10 +70,31 @@ import { useNotifyWsMessages } from "../../hooks/useNotifyWsMessages";
 import { orgWsMessage } from "../../types/global";
 import NavbarSkeleton from "../animation/skeleton/Navbar.Skeleton";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
+import ColorSchemaButton from "../theme/ColorSchemaButton";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible";
+import CustomTooltip from "../ui/custom/CustomTooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Separator } from "../ui/separator";
+import { Switch } from "../ui/switch";
 import { useChatFilterStore } from "../whatsapp/inbox/chatselect/chatFilter";
 import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
 import { getNavTopData } from "./Navbar/navbar.constants";
+import NotificationBellIcon from "./Notification";
 import TopNavbar from "./TopLayout";
 
 const showOfflineNotification = (status) => {
@@ -97,44 +129,47 @@ const MainNavLinks = ({
   status,
   checkWhatsAppSettings,
 }) => {
-  return links.map((link, index) => (
-    <Tooltip
-      label={link.label}
-      position="right"
-      withArrow
-      transitionProps={{ duration: 0 }}
-      key={index}
-    >
-      <UnstyledButton
-        onClick={() => {
-          const isWhatsAppRoute = link.label.toLowerCase().includes("whatsapp");
-
-          if (
-            isWhatsAppRoute &&
-            !checkWhatsAppSettings(link?.children?.[0]?.link)
-          ) {
-            return; // Don't proceed if no WhatsApp settings
-          }
-          if (link.hasSubmenu && link.children?.length > 0) {
-            setActiveMainLink(link.label);
-            setActiveSubLink(link.children[0].link);
-            showOfflineNotification(status);
-            router.push(link.children[0].link);
-            open();
-          } else if (link.link && !link?.disabled) {
-            setActiveMainLink(link.label);
-            setActiveSubLink(link.link);
-            showOfflineNotification(status);
-            router.push(link.link);
-          }
-        }}
-        className={classes.mainLink}
-        data-active={link.label === activeMainLink || undefined}
-      >
-        <link.icon size={22} stroke={1.5} />
-      </UnstyledButton>
-    </Tooltip>
-  ));
+  return links.map((link, index) => {
+    const LinkIcon = link.icon;
+    return (
+      <CustomTooltip
+        key={index}
+        trigger={
+          <Button
+            variant={link.label === activeMainLink ? "default" : "ghost"}
+            className="w-full mb-2 p-2"
+            onClick={() => {
+              const isWhatsAppRoute = link.label
+                .toLowerCase()
+                .includes("whatsapp");
+              if (
+                isWhatsAppRoute &&
+                !checkWhatsAppSettings(link?.children?.[0]?.link)
+              ) {
+                return; // Don't proceed if no WhatsApp settings
+              }
+              if (link.hasSubmenu && link.children?.length > 0) {
+                setActiveMainLink(link.label);
+                setActiveSubLink(link.children[0].link);
+                showOfflineNotification(status);
+                router.push(link.children[0].link);
+                open();
+              } else if (link.link && !link?.disabled) {
+                setActiveMainLink(link.label);
+                setActiveSubLink(link.link);
+                showOfflineNotification(status);
+                router.push(link.link);
+              }
+            }}
+          >
+            <LinkIcon className={`!w-6 !h-5`} />
+          </Button>
+        }
+        content={<p>{link.label}</p>}
+        side="right"
+      />
+    );
+  });
 };
 
 // SubNavLinks Component
@@ -168,72 +203,114 @@ const SubNavLinks = ({
   // Find labels section if it exists
   const labelsSection = links.find((link) => link.label === "Labels");
   const regularLinks = links.filter((link) => link.label !== "Labels");
+  const [isLifecycleOpen, setIsLifecycleOpen] = useState(true);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
+  const filter = useChatFilterStore.getState().filter;
+  const setFilter = useChatFilterStore.getState().setFilter;
 
   // Create icon links for regular items
   const regularLinksIcons = regularLinks
     .filter((d) => !d?.disabled)
-    .map((link, index) => (
-      <Tooltip
-        label={link.label}
-        position="right"
-        withArrow
-        transitionProps={{ duration: 0 }}
-        key={index}
-      >
-        <UnstyledButton
-          onClick={(event) => {
-            if (link.link) {
-              event.preventDefault();
-              if (
-                link.link?.includes("/whatsapp") &&
-                !checkWhatsAppSettings(link?.link)
-              ) {
-                return;
-              }
-              handleLabelFilter(""); // Clear label filter on regular link click
-              setActiveSubLink(link.link);
-              showOfflineNotification(status);
-              router.push(link.link);
-            }
-          }}
-          className={classes.link}
-          data-active={link.link === activeSubLink || undefined}
-          w={60}
-        >
-          <link.icon size={22} stroke={1.5} />
-        </UnstyledButton>
-      </Tooltip>
-    ));
+    .map((link, index) => {
+      const LinkIcon = link.icon;
+      return (
+        <CustomTooltip
+          trigger={
+            <div className="relative">
+              <Button
+                variant={link.link === activeSubLink ? "secondary" : "ghost"}
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (
+                    link.link?.includes("/whatsapp") &&
+                    !checkWhatsAppSettings(link?.link)
+                  ) {
+                    return;
+                  }
+                  handleLabelFilter(""); // Clear label filter on regular link click
+                  setActiveSubLink(link.link);
+                  router.push(link.link);
+                }}
+                className="h-9 w-full mb-2"
+              >
+                <LinkIcon className="w-5 h-5" />
+              </Button>
+              {link?.count > 0 && (
+                <span className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full px-1 text-[10px] font-medium">
+                  {link?.count > 9 ? "9+" : link?.count}
+                </span>
+              )}
+            </div>
+          }
+          content={<p>{link.label}</p>}
+          side="right"
+          key={link.label}
+        />
+      );
+    });
 
   // Create label icons if labels exist
   const labelIcons =
     labelsSection?.children?.map((label, index) => (
-      <Tooltip
-        label={label.label}
-        position="right"
-        withArrow
-        transitionProps={{ duration: 0 }}
-        key={`label-${index}`}
-      >
-        <UnstyledButton
-          onClick={() => handleLabelFilter(label?.value)}
-          className={classes.link}
-          w={60}
-          data-active={
-            chatFilterStore.filter.labels.includes(label?.value) || undefined
-          }
-        >
-          <div className="ml-1">{label.emoji}</div>
-        </UnstyledButton>
-      </Tooltip>
+      <CustomTooltip
+        key={`${label}-${index}`}
+        trigger={
+          <Button
+            className="h-9 w-9 mb-2"
+            onClick={() => handleLabelFilter(label?.value)}
+            variant={
+              chatFilterStore.filter.labels.includes(label?.value)
+                ? "secondary"
+                : "ghost"
+            }
+          >
+            <p className="text-center text-xs">{label.emoji}</p>
+          </Button>
+        }
+        content={<p>{label.label}</p>}
+        side="right"
+      />
     )) || [];
 
+  const inboxCategories = [
+    { id: "conversation", label: "Conversations", icon: MessageCircle },
+    { id: "campaign", label: "Campaigns", icon: Megaphone },
+    { id: "automation", label: "Automation", icon: Bot },
+  ];
+
+  const categoryIcons = inboxCategories.map((category) => {
+    const CategoryIcon = category?.icon;
+    return (
+      <CustomTooltip
+        trigger={
+          <Button
+            variant={filter.category === category.id ? "secondary" : "ghost"}
+            className="h-9 w-full mb-2"
+            onClick={() => {
+              setFilter({
+                ...filter,
+                category:
+                  filter.category === category.id ? null : (category.id as any),
+              });
+            }}
+          >
+            <CategoryIcon className="w-5 h-5" />
+          </Button>
+        }
+        content={<p>{category.label}</p>}
+        side="right"
+        key={category.id}
+      />
+    );
+  });
   // Combine all icon links, with divider if labels exist
   const linksIcon =
     labelsSection?.children?.length > 0
       ? [
           ...regularLinksIcons,
-          <Divider key="label-divider" my="xs" />,
+          <Divider key="category-divider" my="xs" mr={"xs"} />,
+          ...categoryIcons,
+          <Divider key="label-divider" my="xs" mr={"xs"} />,
           ...labelIcons,
         ]
       : regularLinksIcons;
@@ -241,59 +318,143 @@ const SubNavLinks = ({
   // Create text links (similar approach as icons)
   const regularLinksText = regularLinks
     .filter((d) => !d?.disabled)
-    .map((link, index) => (
-      <Link
-        className={classes.link}
-        data-active={link.link === activeSubLink || undefined}
-        href="#"
-        onClick={(event) => {
-          event.preventDefault();
-          if (
-            link.link?.includes("/whatsapp") &&
-            !checkWhatsAppSettings(link?.link)
-          ) {
-            return;
-          }
-          handleLabelFilter(""); // Clear label filter on regular link click
-          setActiveSubLink(link.link);
-          router.push(link.link);
-        }}
-        key={index}
-        style={{ paddingLeft: 0 }}
-      >
-        {link.label}
-      </Link>
-    ));
+    .map((link, index) => {
+      const LinkIcon = link.icon;
+      return (
+        <Button
+          className="w-full my-1"
+          variant={link.link === activeSubLink ? "secondary" : "ghost"}
+          key={link.link}
+          onClick={(event) => {
+            event.preventDefault();
+            if (
+              link.link?.includes("/whatsapp") &&
+              !checkWhatsAppSettings(link?.link)
+            ) {
+              return;
+            }
+            handleLabelFilter(""); // Clear label filter on regular link click
+            setActiveSubLink(link.link);
+            router.push(link.link);
+          }}
+        >
+          <div className="flex justify-between w-full">
+            <div className="flex gap-2 items-center">
+              <LinkIcon className="w-5 h-5" />
+              <span className="text-sm font-medium">{link.label}</span>
+            </div>
+            {link?.count > 0 && (
+              <Badge variant="secondary">{link?.count}</Badge>
+            )}
+          </div>
+        </Button>
+      );
+    });
 
   // Create label text links
   const labelTexts =
     labelsSection?.children?.map((label, index) => (
-      <Link
-        className={classes.link}
-        href="#"
+      <Button
         onClick={(event) => {
           event.preventDefault();
           handleLabelFilter(label?.value);
         }}
-        key={`label-text-${index}`}
-        data-active={
-          chatFilterStore.filter.labels.includes(label?.value) || undefined
+        className="w-full my-1"
+        variant={
+          chatFilterStore.filter.labels.includes(label?.value)
+            ? "secondary"
+            : "ghost"
         }
-        style={{ paddingLeft: 0, height: 44 }}
+        key={`${label.label}-${index}`}
       >
-        <Flex align="center" gap="xs">
-          {label.label}
-        </Flex>
-      </Link>
+        <div className="flex justify-between w-full">
+          <div className="flex gap-2 items-center">
+            <span className="text-sm">{label.emoji}</span>
+            <span className="text-sm font-medium">{label.label}</span>
+          </div>
+          {label?.count > 0 && (
+            <Badge variant="secondary">{label?.count}</Badge>
+          )}
+        </div>
+      </Button>
     )) || [];
 
+  const Categories = () => (
+    <Collapsible open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="ghost"
+          className="w-full justify-between text-sm h-9 px-2"
+        >
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Categories
+          </span>
+          {isCategoriesOpen ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-0.5 pt-1">
+        {inboxCategories.map((category) => (
+          <Button
+            key={category.id}
+            variant={filter.category === category.id ? "secondary" : "ghost"}
+            className="w-full justify-start text-sm h-9"
+            onClick={() => {
+              setFilter({
+                ...filter,
+                category:
+                  filter.category === category.id ? null : (category.id as any),
+              });
+            }}
+          >
+            <div className="flex gap-2 items-center">
+              <category.icon className="w-4 h-4" />
+              <span className="text-sm font-medium">{category.label}</span>
+            </div>
+            {/* {category?.count > 0 && (
+              <Badge variant="secondary" className="ml-auto text-xs">
+                {category?.count}
+              </Badge>
+            )} */}
+          </Button>
+        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+  const LifeCycleLabel = () => (
+    <Collapsible open={isLifecycleOpen} onOpenChange={setIsLifecycleOpen}>
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="ghost"
+          className="w-full justify-between text-sm h-9 px-2"
+        >
+          <span className="text-xs uppercase tracking-wide text-muted-foreground">
+            Lifecycle
+          </span>
+          {isLifecycleOpen ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-0.5 pt-1">
+        {...labelTexts}
+      </CollapsibleContent>
+    </Collapsible>
+  );
   // Combine all text links with divider if labels exist
   const linksText =
     labelsSection?.children?.length > 0
       ? [
           ...regularLinksText,
           <Divider key="label-text-divider" my="9.5" />,
-          ...labelTexts,
+          <Categories key={"categories"} />,
+          <Divider key="categories-text-divider" my="9.5" />,
+          <LifeCycleLabel key={"lifecycles"} />,
         ]
       : regularLinksText;
 
@@ -301,72 +462,99 @@ const SubNavLinks = ({
 };
 
 // LastLinks Component
-const LastLinks = ({
-  links,
-  activeMainLink,
-  setActiveMainLink,
-  setActiveSubLink,
-  router,
-  status,
-}) => {
-  return links.map((link, index) => (
-    <Tooltip
-      label={link.label}
-      position="right"
-      withArrow
-      transitionProps={{ duration: 0 }}
-      key={index}
-    >
-      <UnstyledButton
-        onClick={() => {
-          if (link?.label !== "Dark Mode" && link?.label !== "Notifications") {
-            setActiveMainLink(link.label);
-            setActiveSubLink(link.link);
-            showOfflineNotification(status);
-            router.push(link?.children[0]?.link);
-          }
-        }}
-        className={classes.mainLink}
-        data-active={link.label === activeMainLink || undefined}
-      >
-        <link.icon size={22} stroke={1.5} />
-      </UnstyledButton>
-    </Tooltip>
-  ));
-};
+// const LastLinks = ({
+//   links,
+//   activeMainLink,
+//   setActiveMainLink,
+//   setActiveSubLink,
+//   router,
+//   status,
+// }) => {
+//   return links.map((link, index) => (
+//     <Tooltip
+//       label={link.label}
+//       position="right"
+//       withArrow
+//       transitionProps={{ duration: 0 }}
+//       key={index}
+//     >
+//       <UnstyledButton
+//         onClick={() => {
+//           if (link?.label !== "Dark Mode" && link?.label !== "Notifications") {
+//             setActiveMainLink(link.label);
+//             setActiveSubLink(link.link);
+//             showOfflineNotification(status);
+//             // router.push(link?.children[0]?.link);
+//             if (link?.link) {
+//               router.push(link?.link);
+//             } else {
+//               router.push(link?.children[0]?.link);
+//             }
+//           }
+//         }}
+//         className={classes.mainLink}
+//         data-active={link.label === activeMainLink || undefined}
+//       >
+//         <link.icon size={22} stroke={1.5} />
+//       </UnstyledButton>
+//     </Tooltip>
+//   ));
+// };
 export const handleWebSocketMessage = ({
   newMessagePayload,
   queryClient,
+  userId,
 }: {
   newMessagePayload: orgWsMessage;
   queryClient: QueryClient;
+  userId: string | undefined;
 }) => {
+  // Handle WhatsApp message status update
+  if (newMessagePayload.type === "message_status_update") {
+    const { message_status_update } = newMessagePayload;
+    queryClient.setQueriesData(
+      {
+        queryKey: ["wa-messages", message_status_update?.contactId],
+        exact: false,
+      },
+      (old: any) => {
+        if (!old) return old;
+        // Update the stats for the matching messageId
+        return {
+          ...old,
+          pages: (old.pages ?? []).map((page) => ({
+            ...page,
+            messages: (page.messages ?? []).map((msg) =>
+              msg.messageId === message_status_update.messageId
+                ? { ...msg, stats: message_status_update.stats }
+                : msg,
+            ),
+          })),
+        };
+      },
+    );
+    return;
+  }
+
+  // Only handle inbox type
   if (newMessagePayload.type !== "inbox") return;
 
-  const newMessage = newMessagePayload.inbox.message;
-  const contact = newMessagePayload.inbox.contact;
+  const { inbox } = newMessagePayload;
+  const { message: newMessage, contact } = inbox;
   const contactId = contact.id;
 
-  const urlContactId = new URLSearchParams(window.location?.search)?.get(
-    "contactId",
-  );
-  const urlTab = new URLSearchParams(window.location?.search)?.get("tab");
-  const waMessageAssignStatus = contact.waMessageAssignStatus;
-  const blockedOnWhatsApp = contact.blockedOnWhatsApp;
+  const urlParams = new URLSearchParams(window.location?.search);
+  const urlContactId = urlParams.get("contactId");
+  const urlTab = urlParams.get("tab");
+  // If tab is "mine" and user is not assigned, ignore
+  if (
+    urlTab === "mine" &&
+    !contact?.waInboxAssign?.some((assign) => assign.assignedUser.id === userId)
+  )
+    return;
 
-  // Only update contact list if tab matches relevant status
-  const tabMatches =
-    urlTab &&
-    (["New", "All", "Sent"].includes(urlTab) ||
-      (urlTab === "UnAssigned" &&
-        waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED) ||
-      (urlTab === "Assigned" &&
-        waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED) ||
-      (urlTab === "Closed" &&
-        waMessageAssignStatus === WaMessageAssignStatus.CLOSED) ||
-      (urlTab === "blocked" && blockedOnWhatsApp));
-
-  if (tabMatches) {
+  // Update filtered contacts list if tab is present
+  if (urlTab) {
     queryClient.setQueriesData(
       { queryKey: ["contacts", "filtered"], exact: false },
       (old: any) => {
@@ -380,7 +568,13 @@ export const handleWebSocketMessage = ({
               return {
                 ...row,
                 lastMessage: newMessage,
-                lastReceivedMessageTimeStamp: newMessage.waCreatedAt,
+                lastReceivedMessageTimeStamp:
+                  contact.lastReceivedMessageTimeStamp,
+                waMessageAssignStatus: contact.waMessageAssignStatus,
+                assignedUsers: contact.waInboxAssign?.map((assign) => ({
+                  id: assign.assignedUser.id,
+                  name: assign.assignedUser.name,
+                })),
               };
             }
             return row;
@@ -393,9 +587,15 @@ export const handleWebSocketMessage = ({
           const newContactRow = {
             id: contactId,
             lastMessage: newMessage,
-            lastReceivedMessageTimeStamp: newMessage.waCreatedAt,
+            lastReceivedMessageTimeStamp: contact.lastReceivedMessageTimeStamp,
             name: contact.name,
             phone: contact.phone,
+            waMessageAssignStatus: contact.waMessageAssignStatus,
+
+            assignedUsers: contact.waInboxAssign?.map((assign) => ({
+              id: assign.assignedUser.id,
+              name: assign.assignedUser.name,
+            })),
           };
           if (updatedPages.length > 0) {
             updatedPages[0] = {
@@ -410,22 +610,17 @@ export const handleWebSocketMessage = ({
         return { ...old, pages: updatedPages };
       },
     );
-  } else if (urlTab === "AssignedToMe") {
-    queryClient.invalidateQueries({
-      queryKey: ["contacts", "filtered"],
-      exact: false,
-    });
   }
 
+  // Only update wa-messages if viewing the correct contact
   if (!urlContactId || urlContactId !== contactId) return;
 
-  // Update wa-messages only if first message differs
   queryClient.setQueriesData(
     { queryKey: ["wa-messages", contactId], exact: false },
     (old: any) => {
       if (!old) return old;
-
       const firstMessage = old.pages?.[0]?.messages?.[0];
+      // Avoid duplicate if already present
       if (firstMessage?.messageId === newMessage.messageId) return old;
 
       const updatedFirstPage = {
@@ -450,10 +645,11 @@ const WebSocketHandler = () => {
 // Navbar Component
 const Navbar = ({
   mainLinks,
+  mainNavLinks,
   activeMainLink,
   linksIcon,
   linksText,
-  lastLinks,
+  // lastLinks,
   mobileOpened,
   toggleMobile,
   desktopOpened,
@@ -464,6 +660,9 @@ const Navbar = ({
 }) => {
   const updateUserStatus = useUpdateUserAvailabilityStatus();
   const [status, setStatus] = useState(user?.status);
+  const [opened, setOpened] = useState(false);
+  const [openLogoutModal, setOpenLogoutModal] = useState(false);
+  const translations = useTranslations();
   const router = useRouter();
   useEffect(() => {
     if (status !== user?.status) {
@@ -478,6 +677,10 @@ const Navbar = ({
       setStatus(user?.status);
     }
   }, [user]);
+  const mainNavLink = mainNavLinks?.find(
+    (link) => link.label === activeMainLink,
+  );
+  const MainNavLinkIcon = mainNavLink?.icon;
   if (isPending) return <NavbarSkeleton />;
   return (
     <nav className={classes.navbar}>
@@ -488,30 +691,29 @@ const Navbar = ({
               <div className={classes.logo}>
                 <HoverCard shadow="md" position="right-end">
                   <HoverCard.Target>
-                    <Avatar
-                      name={user?.orgName}
-                      color="initials"
-                      src={getFileUrlFromKey(user?.orgLogo)}
-                    />
+                    <Avatar className="w-12 h-12 border-4 border-white shadow-lg">
+                      <AvatarImage src={getFileUrlFromKey(user?.orgLogo)} />
+                      <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
+                        {user?.orgName?.toUpperCase().slice(0, 2) || "O"}
+                      </AvatarFallback>
+                    </Avatar>
                   </HoverCard.Target>
                   <HoverCard.Dropdown>
                     <Flex
                       justify={"center"}
                       align={"center"}
                       gap={"xs"}
-                      onClick={() =>
-                        router.push("/dashboard/settings?tab=organization")
-                      }
+                      onClick={() => router.push("/dashboard/settings/account")}
                       style={{
                         cursor: "pointer",
                       }}
                     >
-                      <Avatar
-                        name={user?.orgName}
-                        color="initials"
-                        src={getFileUrlFromKey(user?.orgLogo)}
-                        size={30}
-                      />
+                      <Avatar className="w-12 h-12 border-4 border-white shadow-lg">
+                        <AvatarImage src={getFileUrlFromKey(user?.orgLogo)} />
+                        <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
+                          {user?.orgName?.toUpperCase().slice(0, 2) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
                       <Text fw={500} size="sm">
                         {user?.orgName || "No Organization"}
                       </Text>
@@ -520,20 +722,214 @@ const Navbar = ({
                 </HoverCard>
               </div>
             </Stack>
-            <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
+            <ScrollAreaAutosize mah={"70dvh"} scrollbarSize={6} p={"xs"}>
               {mainLinks}
             </ScrollAreaAutosize>
           </div>
+          <div className="flex flex-col items-center justify-between gap-2 py-4">
+            <Separator />
+            <div className="flex items-center justify-center ml-2">
+              <ColorSchemaButton />
+            </div>
+            <div>
+              <NotificationBellIcon />
+            </div>
+            <Popover open={opened} onOpenChange={setOpened}>
+              <PopoverTrigger asChild>
+                <div
+                  className="flex items-center rounded-lg cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => setOpened(true)}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage
+                          src={getFileUrlFromKey(user?.profilePhoto)}
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
+                          {user?.userName?.toUpperCase().slice(0, 2) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span
+                        className={`absolute top-0 right-0 h-3 w-3 rounded-full border-2 border-background ${
+                          status === "online"
+                            ? "bg-[#69f0ae] animate-pulse"
+                            : "bg-[#cacaca]"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </PopoverTrigger>
+
+              <PopoverContent
+                className="w-[260px] p-3 rounded-lg shadow-md"
+                align="end"
+                side="right"
+              >
+                {/* Status */}
+                <div className="mt-2">
+                  <p className="text-xs text-muted-foreground">Status</p>
+                  <div className="flex justify-between items-center mt-1">
+                    <p
+                      className={`text-sm font-semibold ${
+                        status === "online"
+                          ? "text-teal-600"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {status === "online" ? "Online" : "Offline"}
+                    </p>
+                    <Switch
+                      checked={status === "online"}
+                      onCheckedChange={(checked) => {
+                        setStatus(checked ? "online" : "offline");
+                      }}
+                      className="data-[state=checked]:bg-teal-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Organization */}
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground">Organization</p>
+                  <p className="text-sm font-semibold">
+                    {user?.orgName || "N/A"}
+                  </p>
+                </div>
+
+                {/* Email */}
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground">Email</p>
+                  <p className="text-sm font-semibold">
+                    {user?.email || "No email"}
+                  </p>
+                </div>
+
+                {/* Role */}
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground">Role</p>
+                  <p className="text-sm font-semibold">{user?.role || "N/A"}</p>
+                </div>
+
+                <Separator className="my-3" />
+
+                {/* Actions */}
+                <div className="flex flex-col gap-1">
+                  <div
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors"
+                    onClick={() => router.push("/dashboard/settings/account")}
+                  >
+                    <User size={16} />
+                    <span className="text-sm">Profile</span>
+                  </div>
+
+                  <div
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors text-red-600 font-medium"
+                    onClick={() => setOpenLogoutModal(true)}
+                  >
+                    <LogOut size={16} />
+                    <span className="text-sm">Logout</span>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <Dialog open={openLogoutModal} onOpenChange={setOpenLogoutModal}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader className="flex flex-col items-center space-y-4 text-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#004F98]/10">
+                  <LogOut
+                    size={28}
+                    className="text-[#004F98]"
+                    strokeWidth={2}
+                  />
+                </div>
+                <DialogTitle className="text-xl font-semibold">
+                  {translations("Are you sure you want to logout?")}
+                </DialogTitle>
+              </DialogHeader>
+
+              <DialogFooter className="flex-row justify-center gap-2 sm:justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenLogoutModal(false)}
+                  className="min-w-[100px]"
+                >
+                  {translations("Cancel")}
+                </Button>
+                <Button
+                  onClick={() => {
+                    router.push("/logout");
+                    setOpenLogoutModal(false);
+                  }}
+                  className="min-w-[100px]"
+                >
+                  {translations("Logout")}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {linksIcon?.length > 0 && (
-          <div className={classes.main}>
-            <Title order={5} className={classes.title}>
-              <Group justify="space-between">
+          <div>
+            <div className="px-3 py-2 border-b-2">
+              <div className="flex justify-between items-center">
                 {largeScreen
-                  ? desktopOpened && activeMainLink
-                  : mobileOpened && activeMainLink}
-                <Burger
+                  ? desktopOpened && (
+                      <div className="flex items-center gap-2">
+                        {MainNavLinkIcon && (
+                          <MainNavLinkIcon className="w-5 h-5 text-muted-foreground" />
+                        )}
+
+                        <h3 className="text-lg font-bold">{activeMainLink}</h3>
+                      </div>
+                    )
+                  : mobileOpened && (
+                      <div className="flex items-center gap-2">
+                        {MainNavLinkIcon && (
+                          <MainNavLinkIcon className="w-5 h-5 text-muted-foreground" />
+                        )}
+                        <h3 className="text-lg font-bold">{activeMainLink}</h3>
+                      </div>
+                    )}
+
+                <CustomTooltip
+                  trigger={
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0"
+                      onClick={largeScreen ? toggleDesktop : toggleMobile}
+                    >
+                      {largeScreen ? (
+                        desktopOpened ? (
+                          <PanelLeftClose className="w-4 h-4" />
+                        ) : (
+                          <PanelLeft className="w-4 h-4" />
+                        )
+                      ) : mobileOpened ? (
+                        <PanelLeftClose className="w-4 h-4" />
+                      ) : (
+                        <PanelLeft className="w-4 h-4" />
+                      )}
+                    </Button>
+                  }
+                  content={
+                    <p>
+                      {largeScreen
+                        ? desktopOpened
+                          ? "Hide"
+                          : "Collapse"
+                        : mobileOpened
+                          ? "Hide"
+                          : "Collapse"}
+                    </p>
+                  }
+                  side="right"
+                />
+                {/* <Burger
                   opened={mobileOpened}
                   onClick={toggleMobile}
                   hiddenFrom="sm"
@@ -544,27 +940,47 @@ const Navbar = ({
                   onClick={toggleDesktop}
                   visibleFrom="sm"
                   size="sm"
-                />
-              </Group>
-            </Title>
+                /> */}
+              </div>
+            </div>
             <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
-              <Flex gap={0}>
-                <div>{linksIcon}</div>
-                <Transition
-                  mounted={largeScreen ? desktopOpened : mobileOpened}
-                  transition="fade"
-                  duration={50}
-                  timingFunction="ease"
-                >
-                  {(styles) => (
-                    <div style={{ ...styles, flex: 1 }}>{linksText}</div>
-                  )}
-                </Transition>
-              </Flex>
+              <div className="p-1">
+                {largeScreen ? (
+                  desktopOpened ? (
+                    <Transition
+                      mounted={largeScreen ? desktopOpened : mobileOpened}
+                      transition="fade"
+                      duration={50}
+                      timingFunction="ease"
+                    >
+                      {(styles) => (
+                        <div style={{ ...styles, flex: 1 }}>{linksText}</div>
+                      )}
+                    </Transition>
+                  ) : (
+                    <div>{linksIcon}</div>
+                  )
+                ) : mobileOpened ? (
+                  <Transition
+                    mounted={largeScreen ? desktopOpened : mobileOpened}
+                    transition="fade"
+                    duration={50}
+                    timingFunction="ease"
+                  >
+                    {(styles) => (
+                      <div style={{ ...styles, flex: 1 }}>{linksText}</div>
+                    )}
+                  </Transition>
+                ) : (
+                  <div>{linksIcon}</div>
+                )}
+              </div>
             </ScrollAreaAutosize>
           </div>
         )}
       </div>
+
+      {/* <div>{lastLinks}</div> */}
     </nav>
   );
 };
@@ -616,55 +1032,55 @@ const MainContent = ({
   navOpened,
   setNavOpened,
   labels,
+  customFieldData,
 }) => {
   return (
     <motion.div className={styles["content-container"]}>
       <Flex className={`${styles["content-wrapper"]}`}>
         <LabelsContext value={labels}>
-          <NavControlContext value={{ navOpened, setNavOpened }}>
-            <AnimatePresence key={appProps.router.pathname}>
-              <motion.div
-                className={styles["content-div"]}
-                initial={
-                  !(
-                    appProps.router.pathname.includes("login") ||
-                    appProps.router.pathname.includes("signup")
-                  ) && { opacity: 0 }
-                }
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                {children}
-              </motion.div>
-            </AnimatePresence>
-          </NavControlContext>
+          <CustomFieldsProvider initialFields={customFieldData || []}>
+            <NavControlContext value={{ navOpened, setNavOpened }}>
+              <AnimatePresence key={appProps.router.pathname}>
+                <motion.div
+                  className={styles["content-div"]}
+                  initial={
+                    !(
+                      appProps.router.pathname.includes("login") ||
+                      appProps.router.pathname.includes("signup")
+                    ) && { opacity: 0 }
+                  }
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            </NavControlContext>
+          </CustomFieldsProvider>
         </LabelsContext>
       </Flex>
     </motion.div>
   );
 };
 
-// @ts-ignore
 export default function Layout({ children }) {
-  const {
-    data: isTellUsMoreComplete,
-    isLoading: isTellUsMoreCompleteLoading,
-    isFetched,
-  } = useIsTellUsMoreCompleted();
-
   const {
     isPending: isLoadingUserInfo,
     data: userQueryData,
+    isFetched,
     refetch,
   } = useUserInfo();
 
   useEffect(() => {
-    if (!isFetched || isTellUsMoreCompleteLoading || isLoadingUserInfo) return;
+    if (!isFetched || isLoadingUserInfo) return;
 
-    if (isTellUsMoreComplete === false) {
+    if (
+      userQueryData["data"] &&
+      userQueryData["data"]?.onboardingCompleted === false
+    ) {
       router.replace("/login/complete-login");
     }
-  }, [isTellUsMoreComplete, isFetched, isTellUsMoreCompleteLoading]);
+  }, [userQueryData, isFetched, isLoadingUserInfo]);
   const router = useRouter();
   const query = useSearchParams() as {
     msg?: string;
@@ -689,13 +1105,16 @@ export default function Layout({ children }) {
   const [desktopOpened, { toggle: toggleDesktop, open }] = useDisclosure(false);
   const { data: sub, isPending } = useSubscription();
   const { isPending: isPendingLabels, data: labels } = useLabelsQuery();
+  const { isPending: isCustomFieldPending, data: customFieldData } =
+    useCustomFields();
 
   const translations = useTranslations();
   const [navLinks, setNavLinks] = useState([]);
-  const [lastLinksData, setLastLinksData] = useState([]);
+  // const [lastLinksData, setLastLinksData] = useState([]);
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
   const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
-  const isLoading = isPending || isPendingLabels || isLoadingUserInfo;
+  const isLoading =
+    isPending || isPendingLabels || isLoadingUserInfo || isCustomFieldPending;
   // Fetch inbox labels from DB
   // const { data: inboxLabelsData } = useGetInboxLabels();
 
@@ -708,7 +1127,7 @@ export default function Layout({ children }) {
         labels, // pass dynamic labels
       );
       setNavLinks(nLinks);
-      setLastLinksData(lLinks);
+      // setLastLinksData(lLinks);
     }
   }, [isLoading, sub, translations, userInfo?.data?.role, labels]);
 
@@ -781,12 +1200,13 @@ export default function Layout({ children }) {
   const largeScreen = useMediaQuery("(min-width: 40em)");
 
   // Create linksMapping object from navLinks
-  const linksMapping = [...navLinks, ...lastLinksData]?.reduce<
-    Record<string, NavLinkItem[]>
-  >((acc, link) => {
-    acc[link.label] = link.children || [];
-    return acc;
-  }, {});
+  const linksMapping = [...navLinks]?.reduce<Record<string, NavLinkItem[]>>(
+    (acc, link) => {
+      acc[link.label] = link.children || [];
+      return acc;
+    },
+    {},
+  );
 
   // On reload, set active main/sub link based on route
   useEffect(() => {
@@ -839,7 +1259,7 @@ export default function Layout({ children }) {
         setTotalCount(rest);
       }
     }
-  }, [inboxCount, filter.assignedTeams]);
+  }, [inboxCount, filter.assignedTeams, activeMainLink]);
 
   // Function to check if user has WhatsApp settings
   const checkWhatsAppSettings = (route?: string) => {
@@ -885,16 +1305,16 @@ export default function Layout({ children }) {
     labels,
   });
 
-  const lastLinks = (
-    <LastLinks
-      links={lastLinksData}
-      activeMainLink={activeMainLink}
-      setActiveMainLink={setActiveMainLink}
-      setActiveSubLink={setActiveSubLink}
-      router={router}
-      status={userInfo?.data?.status || UserAvailabilityStatus.offline}
-    />
-  );
+  // const lastLinks = (
+  //   <LastLinks
+  //     links={lastLinksData}
+  //     activeMainLink={activeMainLink}
+  //     setActiveMainLink={setActiveMainLink}
+  //     setActiveSubLink={setActiveSubLink}
+  //     router={router}
+  //     status={userInfo?.data?.status || UserAvailabilityStatus.offline}
+  //   />
+  // );
   if (!pathname) return null;
 
   return (
@@ -917,16 +1337,11 @@ export default function Layout({ children }) {
           breakpoint: "sm",
           collapsed: { mobile: !mobileOpened },
         }}
-        header={{
-          height: {
-            sm: 0,
-            base: 40,
-          },
-        }}
-        padding="xs"
+        footer={{ height: 0 }}
+        padding={activeMainLink === "Inbox" ? undefined : 7}
         layout="alt"
       >
-        <AppShell.Header>
+        <AppShell.Header zIndex={0}>
           <Burger
             opened={mobileOpened}
             onClick={toggleMobile}
@@ -934,16 +1349,16 @@ export default function Layout({ children }) {
             size="sm"
             p={"md"}
           />
-          <TopNavbar user={userInfo.data} />
+          {/* <TopNavbar user={userInfo.data} /> */}
         </AppShell.Header>
-
-        <AppShell.Navbar>
+        <AppShell.Navbar zIndex={0}>
           <Navbar
             mainLinks={mainLinks}
+            mainNavLinks={navLinks}
             activeMainLink={activeMainLink}
             linksIcon={linksIcon}
             linksText={linksText}
-            lastLinks={lastLinks}
+            // lastLinks={lastLinks}
             mobileOpened={mobileOpened}
             toggleMobile={toggleMobile}
             desktopOpened={desktopOpened}
@@ -964,6 +1379,7 @@ export default function Layout({ children }) {
             navOpened={navOpened}
             setNavOpened={setNavOpened}
             labels={labels}
+            customFieldData={customFieldData}
           >
             {children}
           </MainContent>

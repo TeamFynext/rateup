@@ -15,6 +15,7 @@ import {
   Divider,
   Group,
   Indicator,
+  Paper,
   Stack,
   Text,
 } from "@mantine/core";
@@ -30,32 +31,80 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import {
+  ChevronDown,
+  Clock,
+  Download,
+  Filter,
+  Key,
+  Loader,
+  MessageSquare,
+  RefreshCcw,
+  Search,
+  UserPlus,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
+import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
 import useContactStore, {
+  makeFilterKey,
   useChatContactCountStore,
-} from "@/app/dashboard/whatsapp/inbox/store";
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
+import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { Button } from "@/components/ui/button";
+import { useLabelsContext } from "@/context/LabelsContext";
+import { useUser } from "@/context/UserContext";
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
 import WhatsAppInboxLoader from "../loader";
-import AddUnknownContactModal from "./addUnknownContactModal";
-import { ChatFilter, useChatFilterStore } from "./chatFilter";
+import AddUnknownContactModal, {
+  AddUnknownContactForm,
+} from "./addUnknownContactModal";
+import WaInboxChatFilter, {
+  ChatFilter,
+  useChatFilterStore,
+} from "./chatFilter";
 import WaInboxChatSelectCard from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
-import InboxSettings from "./InboxSettings";
+import ChatselectPanelHeader from "./ChatselectPanelHeader";
+import InboxSettings, { InboxChatFilterAndSettings } from "./InboxSettings";
 import classes from "./styles.module.css";
 
 const WaInboxChatSelect = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as string) ?? "New";
   const { filter, setFilter } = useChatFilterStore();
-  const [processedFilter, setProcessedFilter] = useState<ChatFilter>(filter);
+  const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
+  const {
+    setSelectedContact,
+    loadContactsFromDB,
+    isLoading: isStoreLoading,
+  } = useContactsStore();
+  const currentFilterKey = useContactsStore((s) => s.currentFilterKey);
+  const contactsById = useContactsStore((s) => s.contactsById);
+  const contactsByFilter = useContactsStore((s) => s.contactsByFilter);
+  const { mergeMessages } = useMessagesStore();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      await loadContactsFromDB(processedFilter);
+      if (cancelled) return;
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [processedFilter]);
 
   const queryClient = useQueryClient();
 
@@ -85,142 +134,16 @@ const WaInboxChatSelect = () => {
     hasNextPage: hasNextPageFilteredContacts,
     isLoading: isContactLoading,
     isFetching,
-  } = useFilteredContacts(encodeURIComponent(JSON.stringify(processedFilter)));
+  } = useFilteredContacts(
+    encodeURIComponent(JSON.stringify(processedFilter)),
+    !!processedFilter,
+  );
 
   const { data: waSettings, isLoading } = useWaSettings();
 
-  const {
-    setSelectedContact,
-    selectedContact,
-    setFilterData,
-    openedContactIds,
-    setOpenedContactIds,
-  } = useContactStore();
-
-  const allFilteredContactsRow = useMemo(
-    () =>
-      filteredContacts
-        ? filteredContacts.pages.flatMap((d) =>
-            d.rows.map((r) => ({
-              ...r,
-              unReadMessageCount: openedContactIds.includes(r.id)
-                ? 0
-                : r.unReadMessageCount,
-            })),
-          )
-        : [],
-    [filteredContacts, openedContactIds],
-  );
-
-  useEffect(() => {
-    if (isRefetchingFilteredContacts) setOpenedContactIds([]);
-  }, [isRefetchingFilteredContacts]);
+  const { setFilterData, filterData } = useContactStore();
 
   const parentRef = useRef(null);
-
-  // The virtualizer
-  const contactRowVirtualizer = useVirtualizer({
-    count: hasNextPageFilteredContacts
-      ? allFilteredContactsRow.length + 1
-      : allFilteredContactsRow.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 82,
-    overscan: 5,
-  });
-  useEffect(() => {
-    const [lastItem] = [...contactRowVirtualizer.getVirtualItems()].reverse();
-
-    if (!lastItem) {
-      return;
-    }
-
-    if (
-      checkIfAnyFilterisActive(filter) &&
-      lastItem.index >= allFilteredContactsRow.length - 1 &&
-      hasNextPageFilteredContacts &&
-      !isFilteredContactsFetchingNextPage
-    ) {
-      fetchNextPageFilteredContacts();
-    }
-  }, [
-    allFilteredContactsRow.length,
-    fetchNextPageFilteredContacts,
-    hasNextPageFilteredContacts,
-    isFilteredContactsFetchingNextPage,
-    contactRowVirtualizer.getVirtualItems(), // This is the key change - use getVirtualItems()
-  ]);
-
-  // const { wsData } = useWsData();
-
-  // const findAndReturnTheIndexOfTheContact = useCallback(
-  //   (list: ContactsWithLastMessage[], contactId: string) => {
-  //     return list.findIndex((contact) => contact.id === contactId);
-  //   },
-  //   [],
-  // );
-
-  // const updateTheContactObject = useCallback(
-  //   (cObj: ContactsWithLastMessage, newMessage: WaGetMessagesBody) => {
-  //     return {
-  //       ...cObj,
-  //       lastMessage: newMessage,
-  //       lastReceivedMessageTimeStamp:
-  //         newMessage.messageBody.exchangeProcess === "receive"
-  //           ? newMessage.waCreatedAt
-  //           : cObj?.lastReceivedMessageTimeStamp,
-  //     };
-  //   },
-  //   [],
-  // );
-
-  // const updateWaContactsList = useCallback(
-  //   (newMessage: { contact: ContactsData; message: WaGetMessagesBody }) => {
-  //     let updatedContacts = [...allFilteredContactsRow];
-  //     const contactIndex = findAndReturnTheIndexOfTheContact(
-  //       updatedContacts,
-  //       newMessage.contact.id,
-  //     );
-  //     const contactId = useContactStore.getState().selectedContact?.id;
-  //     if (
-  //       contactIndex !== -1 &&
-  //       contactId === updatedContacts?.[contactIndex]?.id
-  //     ) {
-  //       let data = updateTheContactObject(
-  //         updatedContacts[contactIndex],
-  //         newMessage.message,
-  //       );
-  //       if (data) setSelectedContact(data);
-  //     } else {
-  //       queryClient.invalidateQueries({
-  //         queryKey: ["contacts", "filtered"],
-  //       });
-  //     }
-  //   },
-  //   [
-  //     findAndReturnTheIndexOfTheContact,
-  //     allFilteredContactsRow,
-  //     queryClient,
-  //     setSelectedContact,
-  //     updateTheContactObject,
-  //   ],
-  // );
-
-  useEffect(() => {
-    let contactId = searchParams.get("contactId");
-    if (contactId && !selectedContact) {
-      let contact = allFilteredContactsRow.find(
-        (contact) => contact.id === searchParams.get("contactId"),
-      );
-      if (contact && selectedContact !== contact) {
-        setSelectedContact(contact);
-      }
-    }
-  }, [
-    allFilteredContactsRow,
-    searchParams,
-    selectedContact,
-    setSelectedContact,
-  ]);
 
   const prepareFilters = useCallback(
     (filters: any) => {
@@ -234,7 +157,7 @@ const WaInboxChatSelect = () => {
           })),
         };
         setProcessedFilter(processedFilters);
-        setFilterData(encodeURIComponent(JSON.stringify(processedFilter)));
+        setFilterData(encodeURIComponent(JSON.stringify(processedFilters)));
       }
     },
     [checkIfAnyFilterisActive],
@@ -246,13 +169,77 @@ const WaInboxChatSelect = () => {
     },
     [],
   );
+  function updateInitialMessagesToStore(contacts) {
+    contacts.map((c) => {
+      const messageMap = new Map();
+      c.messages.map((m) => {
+        const key = `${c.id}_${m.sourceIdentifier}`;
+        const all = `${c.id}_all`;
+        messageMap.set(key, [...(messageMap.get(key) ?? []), m]);
+        messageMap.set(all, [...(messageMap.get(all) ?? []), m]);
+      });
+      Array.from(messageMap.entries()).map(([key, messages]) => {
+        mergeMessages(key, messages, false);
+      });
+    });
+  }
+  useEffect(() => {
+    if (!filteredContacts || !currentFilterKey) return;
+    const filterKey = makeFilterKey(processedFilter);
+    if (filterKey !== currentFilterKey) return;
+    let isActive = true;
+    (async () => {
+      for (const page of filteredContacts.pages) {
+        if (!isActive || !page.rows?.length) continue;
+        const state = useContactsStore.getState();
+        const existingIds = new Set(state.contactsByFilter[filterKey] || []);
+        const newContacts = page.rows
+          .filter((c) => !existingIds.has(c.id))
+          .map((c) => ({ ...c, updatedAt: new Date().toISOString() }));
+        if (newContacts.length) {
+          await state.addContactsForFilter(filterKey, newContacts);
+          updateInitialMessagesToStore(newContacts);
+        }
+      }
+    })();
+    return () => {
+      isActive = false;
+    };
+  }, [filteredContacts, currentFilterKey, processedFilter, tab]);
 
-  const openChatDisplayForContact = useCallback(
-    (data: Partial<ContactsData>) => {
-      router.push(`/dashboard/whatsapp/inbox?tab=${tab}&contactId=${data.id}`);
-    },
-    [router],
+  const contactIds = useMemo(
+    () => contactsByFilter[currentFilterKey] || [],
+    [contactsById, currentFilterKey, contactsByFilter],
   );
+
+  const rowCount = contactIds.length + (hasNextPageFilteredContacts ? 1 : 0);
+
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 90,
+    overscan: 5,
+  });
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+  const lastItem = virtualItems.at(-1);
+
+  useEffect(() => {
+    if (!lastItem || !hasNextPageFilteredContacts) return;
+    if (
+      lastItem.index === rowCount - 1 &&
+      !isFilteredContactsFetchingNextPage &&
+      hasNextPageFilteredContacts
+    ) {
+      fetchNextPageFilteredContacts();
+    }
+  }, [
+    lastItem?.index,
+    rowCount,
+    isFilteredContactsFetchingNextPage,
+    hasNextPageFilteredContacts,
+    fetchNextPageFilteredContacts,
+  ]);
 
   const onUnknownContactAddSuccess = useCallback(
     (contact: ContactsData) => {
@@ -268,12 +255,10 @@ const WaInboxChatSelect = () => {
         },
         assignedUsers: [],
       });
-      openChatDisplayForContact(contact);
     },
-    [openChatDisplayForContact, setSelectedContact],
+    [setSelectedContact],
   );
   useEffect(() => {
-    let tab = searchParams.get("tab") as string;
     if (!tab) return;
     if (tab === "blocked") {
       prepareFilters({
@@ -288,7 +273,7 @@ const WaInboxChatSelect = () => {
       prepareFilters({
         ...filter,
         messageType: "all",
-        waMessageAssignStatus: undefined,
+        waMessageAssignStatus: null,
         blockedUsers: false,
       });
     } else {
@@ -299,158 +284,118 @@ const WaInboxChatSelect = () => {
         blockedUsers: false,
       });
     }
-  }, [searchParams, filter, prepareFilters]);
+  }, [tab, filter, prepareFilters]);
+
+  useEffect(() => {
+    if (parentRef.current) {
+      parentRef.current.scrollTop = 0;
+    }
+  }, [tab]);
+  const lifeCycleLabels = useLabelsContext();
 
   if (isContactLoading || isLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
 
   return (
-    <PaperLayout p={0} className="h-full">
-      <Stack className={classes.wrapper} gap={"xs"}>
-        <Group
-          className={classes.chat_select_header}
-          gap="xs"
-          align="center"
-          wrap="nowrap"
-        >
-          <ContainedTextField
-            leftSection={<IconSearch size={18} color="gray" stroke={1.5} />}
-            rightSection={
-              filter.searchTerm ? (
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => setFilter({ ...filter, searchTerm: "" })}
-                  aria-label={translations("Clear search")}
-                >
-                  <IconSquareRoundedX size={18} />
-                </ActionIcon>
-              ) : null
-            }
-            placeholder={translations("Search Contacts")}
-            value={filter?.searchTerm || ""}
-            onChange={(e) =>
-              setFilter({ ...filter, searchTerm: e.currentTarget.value })
-            }
-            autoFocus
-            flex={1}
-          />
-          <Group
-            className={classes.chat_select_filter_indicator_wrapper}
-            gap={4}
+    <div className="h-full">
+      <ChatselectPanelHeader
+        isRefetchingFilteredContacts={isRefetchingFilteredContacts}
+        onUnknownContactAddSuccess={onUnknownContactAddSuccess}
+        refetchFilteredContacts={refetchFilteredContacts}
+      />
+      <div>
+        {isStoreLoading ||
+        (!contactIds.length && filteredContactsStatus === "pending") ? (
+          <Text px={"md"}>Loading...</Text>
+        ) : !contactIds.length && filteredContactsStatus === "error" ? (
+          <Text px={"md"}>Error: {filteredContactsError?.message}</Text>
+        ) : (
+          <div
+            ref={parentRef}
+            className="List"
+            style={{
+              height: `calc(100dvh - 130px)`,
+              width: `100%`,
+              overflow: "auto",
+            }}
           >
-            <ActionIcon
-              h={30}
-              w={30}
-              variant="light"
-              radius="md"
-              loading={
-                isFilteredContactsFetchingNextPage ||
-                isRefetchingFilteredContacts
-              }
-              onClick={() => {
-                refetchFilteredContacts();
-                queryClient.invalidateQueries({
-                  queryKey: ["contactInboxCount"],
-                });
-              }}
-              aria-label={translations("Refresh")}
-            >
-              <IconRefresh />
-            </ActionIcon>
-          </Group>
-          <InboxSettings
-            tab={tab}
-            onUnknownContactAddSuccess={onUnknownContactAddSuccess}
-          />
-        </Group>
-        <div>
-          {filteredContactsStatus === "pending" ? (
-            <Text px={"md"}>Loading...</Text>
-          ) : filteredContactsStatus === "error" ? (
-            <Text px={"md"}>Error: {filteredContactsError?.message}</Text>
-          ) : (
+            <Divider />
             <div
-              ref={parentRef}
-              className="List"
               style={{
-                height: `calc(100dvh - 130px)`,
-                width: `100%`,
-                overflow: "auto",
+                // height: `${rowVirtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
               }}
             >
-              <Divider />
-              <div
-                style={{
-                  height: `${contactRowVirtualizer.getTotalSize()}px`,
-                  width: "100%",
-                  position: "relative",
-                }}
-              >
-                {contactRowVirtualizer.getVirtualItems().map((virtualRow) => {
-                  const isLoaderRow =
-                    virtualRow.index > allFilteredContactsRow.length - 1;
-                  const post = allFilteredContactsRow[virtualRow.index];
-
-                  return (
-                    <div
-                      key={virtualRow.index}
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: `${virtualRow.size}px`,
-                        transform: `translateY(${virtualRow.start}px)`,
-                      }}
-                    >
-                      {isLoaderRow ? (
-                        hasNextPageFilteredContacts ? (
-                          "Loading more..."
-                        ) : (
-                          "Nothing more to load"
-                        )
-                      ) : (
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const isBottomLoader =
+                  hasNextPageFilteredContacts &&
+                  isFilteredContactsFetchingNextPage &&
+                  virtualRow.index === rowCount - 1;
+                let contact: any = null;
+                if (!isBottomLoader) {
+                  contact = contactsById.get(contactIds[virtualRow.index]);
+                }
+                return (
+                  <div
+                    data-index={virtualRow.index}
+                    key={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      // height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    {isBottomLoader ? (
+                      <div className="flex items-center justify-center py-2">
+                        <Loader className="h-5 w-5 animate-spin text-[#009987]" />
+                      </div>
+                    ) : (
+                      <>
                         <WaInboxChatSelectCard
-                          contact={post}
+                          contact={contact}
                           waSettings={waSettings}
+                          lifeCycleLabels={lifeCycleLabels}
                         />
+                        <Divider />
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+              {rowVirtualizer.getVirtualItems()?.length === 0 &&
+                (validateSearchStringAsMobileNumber(filter.searchTerm) ? (
+                  <AddUnknownContactModal
+                    phone={filter.searchTerm}
+                    successCallback={(contact) => {
+                      setFilter({
+                        ...filter,
+                        searchTerm: "",
+                      });
+                      onUnknownContactAddSuccess(contact);
+                    }}
+                  />
+                ) : !contactIds.length && (isContactLoading || isFetching) ? (
+                  <ChatSelectSkeletonCardList />
+                ) : (
+                  <Card component={Group}>
+                    <Text c="dimmed" size="sm" ta="center">
+                      {translations("No chats found")} <br />
+                      {translations(
+                        "search for a valid phone number or contact name",
                       )}
-                      <Divider />
-                    </div>
-                  );
-                })}
-                {contactRowVirtualizer.getVirtualItems()?.length === 0 &&
-                  (validateSearchStringAsMobileNumber(filter.searchTerm) ? (
-                    <AddUnknownContactModal
-                      phone={filter.searchTerm}
-                      successCallback={(contact) => {
-                        setFilter({
-                          ...filter,
-                          searchTerm: "",
-                        });
-                        onUnknownContactAddSuccess(contact);
-                      }}
-                    />
-                  ) : isContactLoading || isFetching ? (
-                    <ChatSelectSkeletonCardList />
-                  ) : (
-                    <Card component={Group}>
-                      <Text c="dimmed" size="sm" ta="center">
-                        {translations("No chats found")} <br />
-                        {translations(
-                          "search for a valid phone number or contact name",
-                        )}
-                      </Text>
-                    </Card>
-                  ))}
-              </div>
+                    </Text>
+                  </Card>
+                ))}
             </div>
-          )}
-        </div>
-      </Stack>
-    </PaperLayout>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

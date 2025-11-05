@@ -44,3 +44,25 @@ export async function updateLifecycle() {
     timeout: 60000,
   });
 }
+
+export async function updateCustomField() {
+  return await axiosClient.put(`${baseUrl}/migrate-tags`, null, {
+    timeout: 60000,
+  });
+}
+
+export async function updateAutomationPhoneId() {
+  return await axiosClient.put(
+    `${baseUrl}/migrate-to-whatsapp-phone-ids`,
+    null,
+    {
+      timeout: 60000,
+    },
+  );
+}
+
+export async function updateBackfillMessageData() {
+  return await axiosClient.put(`${baseUrl}/backfill`, null, {
+    timeout: 60000,
+  });
+}

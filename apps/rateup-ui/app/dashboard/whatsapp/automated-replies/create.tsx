@@ -91,8 +91,9 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
       caseSensitive: false,
     },
     commands: [],
-    whatsappSettingsPhoneId: "",
+    whatsappSettingsPhoneIds: [],
     isEnabled: true,
+    sendOnceIn24Hours: true,
   };
 }
 
@@ -232,7 +233,8 @@ export function AutomatedReplyForm({
           {...rootForm.getInputProps("name")}
         />
         <AccountSelector
-          {...rootForm.getInputProps("whatsappSettingsPhoneId")}
+          multiple
+          {...rootForm.getInputProps("whatsappSettingsPhoneIds")}
         />
 
         <Tabs
@@ -308,6 +310,14 @@ export function AutomatedReplyForm({
             <ContainedSwitchInput
               label="Enable WhatsApp Automation"
               {...rootForm.getInputProps("isEnabled", { type: "checkbox" })}
+              defaultChecked={true}
+              my={"xs"}
+            />
+            <ContainedSwitchInput
+              label="Send only once in 24 hours to the same user"
+              {...rootForm.getInputProps("sendOnceIn24Hours", {
+                type: "checkbox",
+              })}
               defaultChecked={true}
               my={"xs"}
             />

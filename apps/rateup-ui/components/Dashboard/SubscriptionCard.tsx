@@ -67,7 +67,7 @@ const SubscriptionCard = () => {
               {dayjs(createdAt).format("DD MMM YYYY")}
             </p>
           </div>
-          {!subscription.basePlan.name.includes("FREE") && (
+          {!subscription.basePlan?.name.includes("FREE") && (
             <>
               <div className="space-y-1">
                 <p className="text-xs text-gray-500">
@@ -99,11 +99,7 @@ const SubscriptionCard = () => {
           </div>
 
           <div className="w-full flex justify-center items-center">
-            <Button
-              onClick={() =>
-                router.push("/dashboard/settings?tab=account&view=billing")
-              }
-            >
+            <Button onClick={() => router.push("/dashboard/settings/billing")}>
               <div className="text-white text-sm font-medium">
                 {translations("Manage Subscription") || "Manage Subscription"}
               </div>

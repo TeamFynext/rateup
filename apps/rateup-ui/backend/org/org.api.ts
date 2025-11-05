@@ -13,6 +13,19 @@ export async function getTeamsMembersOfOrg() {
     //return { error: "Error Occured!" };
   }
 }
+
+export async function getAllTeamsMembersOfOrg() {
+  try {
+    let members = (
+      await axiosClient.get("/org/members-with-teams-and-invitation")
+    ).data;
+    return members;
+  } catch (e) {
+    console.error(e);
+    //return { error: "Error Occured!" };
+  }
+}
+
 export interface IUpdateRole {
   role: string;
 }
@@ -39,6 +52,10 @@ export interface IUpdateOrgDetails {
   name: string;
   phone: string;
   address: string;
+  businessmail: string;
+  location: string;
+  industry: string;
+  website: string;
   encryptionKeys: EncryptionKeys;
   waAssignedChatPermission: WaAssignedChatPermission;
 }
@@ -69,20 +86,13 @@ export async function getWebhookClientSecret() {
   return (await axiosClient.get(`org/webhook-client-secret`)).data;
 }
 
-export async function completeOrgDetails(orgName, tellUsMore, phone) {
+export async function completeOrgDetails(onboarding) {
   await axiosClient.put("/org/completeorgdetails", {
-    orgName,
-    tellUsMore,
-    phone,
+    onboarding,
   });
 }
 
 export async function orgNameAndPhone() {
   const res = await axiosClient.get("/org/orgnameandphone");
-  return res.data;
-}
-
-export async function istellusmorecompleted() {
-  const res = await axiosClient.get("/org/istellusmorecomplete");
   return res.data;
 }

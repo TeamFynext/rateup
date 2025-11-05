@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import {
   Flex,
@@ -55,7 +55,8 @@ export default function ThankYou({
     sid = searchParams.get("sid");
     surveyId = searchParams.get("surveyId") as string;
   }
-
+  const params = useParams();
+  const shortId = params?.shortId;
   const { height, width } = useViewportSize();
   useEffect(() => {
     //kioskMode redirect
@@ -64,7 +65,7 @@ export default function ThankYou({
         k === "cs"
           ? router.push(`/public/survey/cs`)
           : fromShortUrl
-            ? router.push(`/ws/${searchParams.get("shortId")}/`)
+            ? router.push(`/ws/${shortId}/`)
             : router.push(`/public/survey/${surveyId}`);
       }, 5000);
 

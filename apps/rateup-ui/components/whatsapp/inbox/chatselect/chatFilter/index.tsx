@@ -1,21 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
-import {
-  Button,
-  HoverCard,
-  HoverCardDropdown,
-  HoverCardTarget,
-  Indicator,
-  Loader,
-  SegmentedControl,
-  Stack,
-  Text,
-  ThemeIcon,
-} from "@mantine/core";
+import { Loader, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconFilter } from "@tabler/icons-react";
+import { RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -23,6 +14,7 @@ import { persist } from "zustand/middleware";
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
+import { Button } from "@/components/ui/button";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
@@ -45,17 +37,20 @@ export type ChatFilter = {
   assignedTeams: string[];
   phone?: string;
   labels: string[];
+  sortBy: "newest" | "oldest";
+  category: "conversation" | "campaign" | "automation";
 };
 interface Props {
-  tab: string;
   setFilterCount: (value: number) => void;
 }
 
-export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
+export default function WaInboxChatFilter({ setFilterCount }: Props) {
   const { data, isLoading, error } = useChatFilterData();
   const { filter, setFilter } = useChatFilterStore();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const translations = useTranslations();
+  const searchParams = useSearchParams();
+  const tab = (searchParams.get("tab") as string) ?? "New";
   const {
     data: teamRes,
     isLoading: teamsLoading,
@@ -133,7 +128,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
     if (filter.strictFilter !== false) {
       count += 1;
     }
-    if (tab === WaMessageAssignStatusTab.NEW && filter.newStatuses.length) {
+    if (tab === "All" && filter.newStatuses.length) {
       count += filter.newStatuses.length;
     }
     if (["Assigned", "AssignedToMe"].includes(tab) && filter.assignedTeams) {
@@ -149,27 +144,34 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
       tags: [],
       strictFilter: false,
       searchTerm: "",
-      newStatuses: [
-        WaMessageAssignStatus.ASSIGNED,
-        WaMessageAssignStatus.UNASSIGNED,
-      ],
+      newStatuses: [],
       assignedTeams: [],
     });
   }
 
   const statusData = [
     WaMessageAssignStatus.ASSIGNED,
-    WaMessageAssignStatus.UNASSIGNED,
-    "ASSIGNEDTOME",
-  ].map((status) => ({
-    value: status,
-    label: WaMessageAssignStatusTab[status],
-  }));
+    WaMessageAssignStatus.CLOSED,
+  ];
+
+  // const statusData = [
+  //   WaMessageAssignStatus.ASSIGNED,
+  //   WaMessageAssignStatus.UNASSIGNED,
+  //   "ASSIGNEDTOME",
+  // ].map((status) => ({
+  //   value: status,
+  //   label: WaMessageAssignStatusTab[status],
+  // }));
 
   return (
     <Stack>
-      <Button size="compact-xs" ml={"auto"} onClick={clearFilters}>
-        {translations("clear filters")}
+      <Button
+        onClick={clearFilters}
+        variant="secondary"
+        className="ml-auto !text-xs text-muted-foreground h-5 p-1 hover:text-blue-500 cursor-pointer"
+      >
+        <RotateCcw className="w-1.5 h-1.5" />
+        Reset
       </Button>
       <AccountSelector
         onChange={(phone) => {
@@ -190,6 +192,7 @@ export default function WaInboxChatFilter({ tab, setFilterCount }: Props) {
           },
         }}
         platform="all"
+        label={translations("Account")}
       />
       <ContainedMultiSelect
         maw={250}
@@ -273,15 +276,14 @@ export const useChatFilterStore = create<ChatFilterStore>()(
         contactGroups: [],
         campaigns: [],
         tags: [],
-        waMessageAssignStatus: "New",
+        waMessageAssignStatus: null,
         blockedUsers: false,
-        newStatuses: [
-          WaMessageAssignStatus.ASSIGNED,
-          WaMessageAssignStatus.UNASSIGNED,
-        ],
+        newStatuses: [],
         assignedTeams: [],
         phone: "all",
         labels: [],
+        sortBy: "newest",
+        category: null,
       },
       setFilter: (value) => set({ filter: value }),
     }),

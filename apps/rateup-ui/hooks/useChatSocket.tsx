@@ -7,7 +7,12 @@ import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { getBrowserId } from "@/lib/utils";
+import {
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
+import { useMarkWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { handleWebSocketMessage } from "@/components/Layout/Layout";
 import { showInfoToast } from "@/utils/notifications";
 
@@ -17,6 +22,9 @@ export const useChatSocket = () => {
   const browserId = getBrowserId();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const messageStore = useMessagesStore.getState();
+  const { selectedContact, updateContactById, addContactsForFilter } =
+    useContactsStore();
 
   useEffect(() => {
     if (!browserId) return;
@@ -30,13 +38,99 @@ export const useChatSocket = () => {
       );
       socketRef.current = ws;
 
-      ws.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        handleWebSocketMessage({
-          newMessagePayload: message,
-          queryClient,
-        });
-        handleNotificationWithSound({ message, router });
+      ws.onmessage = async (event) => {
+        const data = JSON.parse(event.data);
+        switch (data.type) {
+          case "inbox":
+            const { message, contact: incomingContact } = data.inbox;
+            let markUnread = false;
+            if (selectedContact?.id === incomingContact?.id) {
+              markUnread = true;
+            }
+            const contactInStore = useContactsStore
+              .getState()
+              .contactsById.get(incomingContact.id);
+            if (contactInStore) {
+              updateContactById(
+                incomingContact.id,
+                (contact) => ({
+                  ...contact,
+                  unReadMessageCount:
+                    selectedContact?.id === incomingContact?.id
+                      ? 0
+                      : (contact.unReadMessageCount ?? 0) + 1,
+                  lastMessage: {
+                    messageBody: message.messageBody,
+                    sourceIdentifier: message.sourceIdentifier,
+                    sourcePlatform: message.sourcePlatform,
+                    waCreatedAt: message.waCreatedAt,
+                  },
+                  ...(message.messageBody.exchangeProcess === "receive"
+                    ? {
+                        lastReceivedMessageTimeStamp: message.waCreatedAt,
+                      }
+                    : {}),
+                }),
+                markUnread,
+              );
+            } else {
+              addContactsForFilter(
+                useContactsStore.getState().currentFilterKey,
+                [
+                  {
+                    ...incomingContact,
+                    unReadMessageCount: 1,
+                    lastMessage: {
+                      messageBody: message.messageBody,
+                      sourceIdentifier: message.sourceIdentifier,
+                      sourcePlatform: message.sourcePlatform,
+                      waCreatedAt: message.waCreatedAt,
+                    },
+                    ...(message.messageBody.exchangeProcess === "receive"
+                      ? {
+                          lastReceivedMessageTimeStamp: message.waCreatedAt,
+                        }
+                      : {}),
+                  },
+                ],
+              );
+            }
+
+            for (const key of [
+              `${incomingContact?.id}_all`,
+              `${incomingContact?.id}_${message.sourceIdentifier}`,
+            ]) {
+              messageStore.mergeMessages(key, [message]);
+            }
+            break;
+          case "message_status_update":
+            if (
+              selectedContact &&
+              selectedContact?.id === data?.message_status_update?.contactId
+            ) {
+              messageStore.updateMessageByMessageId(
+                `${selectedContact?.id}_${data.message_status_update.sourceIdentifier}`,
+                data?.message_status_update.messageId,
+                { stats: data?.message_status_update?.stats },
+              );
+              messageStore.updateMessageByMessageId(
+                `${selectedContact?.id}_all`,
+                data?.message_status_update.messageId,
+                { stats: data?.message_status_update?.stats },
+              );
+            }
+
+            break;
+          default:
+            break;
+        }
+
+        // handleWebSocketMessage({
+        //   newMessagePayload: data,
+        //   queryClient,
+        //   userId: user?.userId,
+        // });
+        handleNotificationWithSound({ message: data, router });
       };
 
       ws.onclose = () => {
@@ -54,12 +148,12 @@ export const useChatSocket = () => {
       closedByUser = true;
       ws?.close();
     };
-  }, [browserId, queryClient, router]);
+  }, [browserId, queryClient, router, messageStore]);
 };
 
 const handleNotificationWithSound = ({ message, router }) => {
   const pathnamesMap = {
-    inbox: "/dashboard/whatsapp/inbox",
+    inbox: "/dashboard/inbox",
   };
   if (
     !message ||

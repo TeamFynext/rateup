@@ -1,12 +1,15 @@
 import { memo } from "react";
 
-import { IconInputAi } from "@tabler/icons-react";
+import { IconInputSpark } from "@tabler/icons-react";
 import type { NodeProps } from "@xyflow/react";
 
+import { parseJsonToReact } from "@/components/RichTextEditor/waTextEditor";
+
+import { InputNodeData } from "../../types/node-types";
 import BaseNode from "./base-node";
 import styles from "./node-styles.module.css";
 
-function InputNode(props: NodeProps) {
+function InputNode(props: NodeProps & { data: InputNodeData }) {
   const { data, type } = props;
   // Determine input type from node type
   const nodeType = data.type || type;
@@ -36,14 +39,16 @@ function InputNode(props: NodeProps) {
   }
 
   return (
-    <BaseNode {...props} icon={<IconInputAi size={16} />} color={color}>
+    <BaseNode {...props} icon={<IconInputSpark size={16} />} color={color}>
       <div className={styles.inputContent}>
-        {/* <div className={styles.question}>
-          {data.question || "Enter your question"}
+        <div className={styles.question}>
+          {data.question
+            ? parseJsonToReact(data.question)
+            : "Double-click to edit question"}
         </div>
         {data.variableName && (
           <div className={styles.variable}>Variable: {data.variableName}</div>
-        )} */}
+        )}
       </div>
     </BaseNode>
   );

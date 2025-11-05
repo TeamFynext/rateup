@@ -10,9 +10,6 @@ const bundleAnalyzer = withBundleAnalyzer({
 
 const nextConfig: NextConfig = bundleAnalyzer({
   reactStrictMode: false,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // typedRoutes: false,
   images: {
     remotePatterns: [
@@ -56,6 +53,11 @@ const nextConfig: NextConfig = bundleAnalyzer({
         source: "/cancellation-and-refund",
         destination: "/terms-of-service#cancellation-and-refund",
         permanent: false,
+      },
+      {
+        source: "/blog/about",
+        destination: "blog",
+        permanent: true,
       },
     ];
   },

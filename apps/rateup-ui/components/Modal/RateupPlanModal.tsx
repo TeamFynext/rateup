@@ -187,9 +187,11 @@ const RateupPlanModal = ({ opened, close, planList }) => {
         />
         <ContainedTagInput
           label={translations("Description")}
+          description={"Use || for split"}
           placeholder={translations("Type Description and press enter")}
           withAsterisk
           {...form.getInputProps("description")}
+          splitChars={["||"]}
         />
         <ContainedNumberInput
           label={"Trial Days"}

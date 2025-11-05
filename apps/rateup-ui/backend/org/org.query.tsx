@@ -7,10 +7,10 @@ import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   completeOrgDetails,
   getAllOrgs,
+  getAllTeamsMembersOfOrg,
   getOrgStats,
   getTeamsMembersOfOrg,
   getWebhookClientSecret,
-  istellusmorecompleted,
   IUpdateLogo,
   IUpdateOrgDetails,
   orgNameAndPhone,
@@ -24,6 +24,13 @@ export const useTeamsMembersOfOrg = () => {
   return useQuery({
     queryKey: ["orgTeamsDataQuery"],
     queryFn: () => getTeamsMembersOfOrg(),
+  });
+};
+
+export const useAllTeamsMembersOfOrg = () => {
+  return useQuery({
+    queryKey: ["orgTeamsAllDataQuery"],
+    queryFn: () => getAllTeamsMembersOfOrg(),
   });
 };
 
@@ -57,6 +64,7 @@ export function useUpdateRoleMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
       queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
     },
     onError: (error: any) => {
       console.error("Error Role Update:", error.message);
@@ -164,15 +172,8 @@ export const useGetWebhookClientSecret = (webhookUrl) => {
 
 export function useCompleteOrgDetails() {
   return useMutation({
-    mutationFn: ({
-      orgName,
-      tellUsMore,
-      phone,
-    }: {
-      orgName?: string;
-      tellUsMore?: Record<string, unknown>;
-      phone: string;
-    }) => completeOrgDetails(orgName, tellUsMore, phone),
+    mutationFn: ({ onboarding }: { onboarding?: Record<string, unknown> }) =>
+      completeOrgDetails(onboarding),
   });
 }
 
@@ -180,12 +181,5 @@ export function useOrgNameAndPhone() {
   return useQuery({
     queryKey: ["orgNameAndPhone"],
     queryFn: orgNameAndPhone,
-  });
-}
-
-export function useIsTellUsMoreCompleted() {
-  return useQuery({
-    queryKey: ["istellusmorecomplete"],
-    queryFn: istellusmorecompleted,
   });
 }

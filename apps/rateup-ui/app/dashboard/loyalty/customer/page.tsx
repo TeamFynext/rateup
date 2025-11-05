@@ -1,14 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import {
   Anchor,
   Box,
   Center,
   Flex,
-  Portal,
   Stack,
   Tabs,
   Text,
@@ -25,20 +24,12 @@ import { useTranslations } from "next-intl";
 
 import { ContactGroupType, LoyaltyActionType } from "@/types/enums";
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
-import {
-  useGetContactTags,
-  useUpdateContactTagsMutation,
-} from "@/backend/whatsapp/settings/waSettings.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
-import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
 import {
   CONTACT_SORT,
   loyaltyGroupColumn,
 } from "@/components/Contacts/utils/utils";
-import {
-  ContainedMultiSelect,
-  ContainedTagInput,
-} from "@/components/input/ContainedInput/ContainedInput";
+import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import { CustomerMenu } from "@/components/LoyaltyComponents/Customer/LCustomerCard";
 import LCustomerPage from "@/components/LoyaltyComponents/Customer/LCustomerPage";
@@ -46,8 +37,8 @@ import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TabsListComp from "@/components/Survey/Tabs/TabsList";
 import ContactTable from "@/components/Table/ContactTable";
 import { formatDate } from "@/utils/dateTime";
-import { showLoadingToast } from "@/utils/notifications";
 
+import { CustomFieldsSettings } from "../../contacts/custom-fields/page";
 import Redeems from "../redeem/page";
 import styles from "./contacts.module.css";
 
@@ -59,12 +50,10 @@ export enum CustomerTabs {
 }
 export default function Contacts() {
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") || CustomerTabs.CUSTOMERS;
   const [activeTab, setActiveTab] = useState(tab?.toString() as CustomerTabs);
   const [selectedTeamID, setSelectedTeamID] = useState("");
-  const [contactTags, setContactTags] = useState([]);
   const [sortingGroup, setSortingGroup] = useState<SortingState>([
     CONTACT_SORT,
   ]);
@@ -77,8 +66,6 @@ export default function Contacts() {
     isRefetching: isRefetchingGroups,
     isError: isErrorGroup,
   } = useContactGroup(ContactGroupType.LOYALTY);
-  const { isPending, data: cTags } = useGetContactTags();
-  const updateContactTagsMutation = useUpdateContactTagsMutation();
   const translations = useTranslations();
   const contactGroups =
     selectedTeamID == "all" || !selectedTeamID
@@ -132,7 +119,6 @@ export default function Contacts() {
                 <ContactTable
                   columns={columnGroup}
                   data={contactGroups}
-                  tags={cTags}
                   tab={activeTab}
                   refetch={refetchGroups}
                   setSorting={setSortingGroup}
@@ -140,9 +126,7 @@ export default function Contacts() {
                   columnFilters={columnFiltersGroup}
                   setColumnFilters={setColumnFiltersGroup}
                   detailBtn
-                  isPending={
-                    isLoadingContactgroup || isRefetchingGroups || isPending
-                  }
+                  isPending={isLoadingContactgroup || isRefetchingGroups}
                   contactGroupType={ContactGroupType.LOYALTY}
                 />
               )}
@@ -152,33 +136,7 @@ export default function Contacts() {
             <Redeems />
           </Tabs.Panel>
           <Tabs.Panel value={CustomerTabs.SETTINGS}>
-            <PaperLayout p="xl">
-              <Stack align="start">
-                <ContainedTagInput
-                  placeholder={translations("Type field name and press enter")}
-                  label={translations(
-                    "Enter the Field name you want to add along with the existing fields in Csv Import",
-                  )}
-                  w={"25rem"}
-                  onChange={setContactTags}
-                  defaultValue={cTags?.contactTags}
-                />
-                <RateupButtonPrimary
-                  title={translations("Update")}
-                  onClick={() => {
-                    updateContactTagsMutation.mutate({
-                      tags: contactTags,
-                    });
-                    showLoadingToast(
-                      translations("Contact tags updated successfully"),
-                      "c-tags",
-                      true,
-                      translations("Loading"),
-                    );
-                  }}
-                />
-              </Stack>
-            </PaperLayout>
+            <CustomFieldsSettings />
           </Tabs.Panel>
         </Box>
       </Tabs>

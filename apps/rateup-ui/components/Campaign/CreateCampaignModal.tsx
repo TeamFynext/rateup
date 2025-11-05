@@ -47,6 +47,7 @@ import {
   useCreateCampaignMutation,
   useUpdateCampaignMutation,
 } from "@/backend/campaign/campaign.query";
+import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { SAVE_HOTKEY } from "@/utils/constants";
 
 import { RateupButtonPrimary } from "../Button/RateupButtons";
@@ -76,7 +77,7 @@ const CreateCampaignModal = ({
 }: CreateCampaignProps) => {
   const [activeTab, setActiveTab] = useState("basic");
   const translations = useTranslations();
-
+  const { customFields } = useCustomFieldsContext();
   const schema = z
     .object({
       teamId: z.string().min(1, { message: "Must select a team" }),
@@ -458,7 +459,6 @@ const CreateCampaignModal = ({
       )}
     </Card>
   );
-
   const renderTemplateSelection = () => (
     <Card withBorder radius="md" p="xl" mb="md">
       <Group mb="lg">
@@ -605,7 +605,14 @@ const CreateCampaignModal = ({
                   <ContainedSelection
                     key={i}
                     label={`Variable {{${i + 1}}}`}
-                    data={["name", ...(campaign?.contactTags || [])]}
+                    data={[
+                      { value: "name", label: "Name" },
+                      ...(customFields?.map((field) => ({
+                        value: field.slug,
+                        label: field.name,
+                      })) || []),
+                    ]}
+                    withAsterisk
                     placeholder="Select dynamic tag"
                     {...form.getInputProps(`dynamicTags.${i}`)}
                   />

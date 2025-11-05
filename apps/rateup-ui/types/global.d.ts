@@ -367,6 +367,7 @@ declare global {
     waAssignedChatPermission: WaAssignedChatPermission;
     status: UserAvailabilityStatus;
     hasWhatsAppSettings: boolean;
+    onboardingCompleted?: boolean;
   };
 
   interface UserInfoQueryData {
@@ -394,6 +395,7 @@ declare global {
     role: string;
     teams: Team[];
     isPaused?: boolean;
+    status: "online" | "offline";
   }
 
   export interface Member {
@@ -416,6 +418,8 @@ declare global {
     id: string;
     name: string;
     code: string;
+    color: string;
+    createdAt: string;
     _count: {
       members: number;
     };
@@ -588,6 +592,7 @@ declare global {
     isIgVerifiedUser: boolean;
     followerCount: number;
     profilePic: string;
+    lastReceivedMessageTimeStamp: string;
     loyaltyCustomer?: {
       id: string;
       email?: string;
@@ -615,6 +620,19 @@ declare global {
     ];
     campaignParticipants: any[];
     aiWaChat: boolean;
+    customFields?: Array<{
+      id: string;
+      contactId: string;
+      fieldId: string;
+      value: string;
+      createdAt: string;
+    }>;
+    waInboxAssign: Array<{
+      assignedUser: {
+        name: string;
+        id: string;
+      };
+    }>;
   };
 
   type ContactsResponse = {
@@ -1145,6 +1163,7 @@ export type WaAutomatedReply = {
     choice: string;
   };
   whatsappSettingsPhoneId: string;
+  sendOnceIn24Hours: boolean;
 };
 
 //types related to wa inbox
@@ -1655,10 +1674,17 @@ export type Campaign = {
 
 //type for org websocket messages
 export type orgWsMessage = {
-  type: "inbox";
+  type: "inbox" | "message_status_update";
   inbox?: {
     contact: ContactsData;
     message: WaGetMessagesBody;
+  };
+  message_status_update?: {
+    messageId: string;
+    contactId: string;
+    stats: any;
+    timestamp: string;
+    sourceIdentifier: string;
   };
 };
 
@@ -1756,4 +1782,18 @@ export type ShopifySchedule = ScheduleObj & {
   actionStatus?: "success" | "failed";
   history: ScheduleObj[];
   apiStatus?: string;
+};
+
+export type ZapierIntegration = Integration & {
+  credential: {
+    accessToken: string;
+    triggerSubscriptions: {
+      hookUrl: string;
+      subscribed_field: ZapierTriggers;
+      active: boolean;
+      zapId: string;
+      createdAt: string;
+      updatedAt: string;
+    }[];
+  };
 };

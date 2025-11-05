@@ -1,36 +1,51 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
+  ActionIcon,
   Avatar,
+  CopyButton,
   Group,
   Indicator,
   IndicatorProps,
   Paper,
-  Popover,
   Stack,
   Text,
+  Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconCheck,
   IconChecks,
   IconClock,
+  IconCopy,
   IconExclamationCircleFilled,
 } from "@tabler/icons-react";
 import { EmojiClickData } from "emoji-picker-react";
+import { Check, CheckCheck, CircleAlertIcon, Clock } from "lucide-react";
 
 import { MessagePlatform } from "@/types/enums";
 import { WaReceiveMessageBody, WaSendMessageBody } from "@/types/global";
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { CreativeAvatar } from "@/components/ui/creative-avatar";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { usePhoneIdStore } from "@/components/whatsapp/inbox/chatselect/accountSelectorStore";
 import { PopoverEmojiPicker } from "@/components/whatsapp/templates/Details/TextFormateToolBar";
 import { showErrorToast } from "@/utils/notifications";
 
 import { WaGetMessagesBody } from "../../../../../../../backend/whatsapp/inbox/message/wamessage.api";
-import { formatToCustomTime } from "../../../../../../../utils/dateTime";
+import {
+  formatDateWithRelativeTime,
+  formatDateWithTime,
+  formatToCustomTime,
+  formatToRelativeTime,
+} from "../../../../../../../utils/dateTime";
 import classes from "./styles.module.css";
 
 interface Props {
@@ -47,41 +62,19 @@ interface Props {
   };
 }
 export default function WaInboxSingleMessageLayout(props: Props) {
-  const { exchangeProcess } = props;
+  const { exchangeProcess, messageObject, reaction } = props;
   const [isHovered, setIsHovered] = useState(false);
-  const { selectedContact } = useContactStore();
+  const { selectedContact } = useContactsStore();
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
+  const messageContentRef = React.useRef(null);
   const platform =
-    selectedContact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
-      ? MessagePlatform.WHATSAPP
-      : MessagePlatform.INSTAGRAM;
+    selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const sendnewWaMessage = useSendNewWaMessage(
     selectedContact?.id,
     whatsappSettingsPhoneId,
     platform,
   );
 
-  function getWrapperProps() {
-    if (exchangeProcess === "send") {
-      return {
-        align: "end",
-        w: props?.forPreview ? "fit-content" : "100%",
-      };
-    }
-    return { align: "start" };
-  }
-
-  function getInnerProps() {
-    if (exchangeProcess === "send") {
-      return {
-        bg:
-          platform === MessagePlatform.INSTAGRAM
-            ? "#D6297614"
-            : "light-dark(#dcf0e4,#0f2a1e)",
-      };
-    }
-    return { bg: "light-dark(#ffffff, var(--mantine-color-dark-6))" };
-  }
   const getColorForUser = (userName = "") => {
     const colors = [
       "#1E90FF", // Blue
@@ -105,12 +98,15 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     return colors[colorIndex];
   };
   const getLatestStatus = (statusObj: { [key: string]: string }) => {
-    if (statusObj?.read) return <IconChecks size={14} color="#34B7F1" />;
-    if (statusObj?.delivered) return <IconChecks size={14} color="gray" />;
+    if (statusObj?.read)
+      return <CheckCheck className="w-3.5 h-3.5 text-blue-600" />;
+    if (statusObj?.delivered)
+      return <CheckCheck className="w-3.5 h-3.5 text-muted-foreground" />;
     if (statusObj?.failed)
-      return <IconExclamationCircleFilled size={14} color="red" />;
-    if (statusObj?.sent) return <IconCheck size={14} color="gray" />;
-    return <IconClock size={13} color="gray" />;
+      return <CircleAlertIcon className="w-3.5 h-3.5 text-red-500" />;
+    if (statusObj?.sent)
+      return <Check className="w-3.5 h-3.5 text-muted-foreground" />;
+    return <Clock className="w-3.5 h-3.5 text-gray-500" />;
   };
 
   function emojiReactionMap(emojiUnified) {
@@ -149,62 +145,161 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     sendnewWaMessage.mutate({ reaction, type: "reaction" });
   }
 
+  const MessageStats = ({ status }) => {
+    if (status?.failed?.length) return;
+    return (
+      <div className="flex flex-col text-xs gap-1">
+        <p>
+          Read:{" "}
+          {status?.read ? formatDateWithRelativeTime(status?.read) : "..."}
+        </p>
+        <p>
+          Delivered:{" "}
+          {status?.delivered
+            ? formatDateWithRelativeTime(status?.delivered)
+            : "..."}
+        </p>
+        <p>
+          Sent:{" "}
+          {status?.sent ? formatDateWithRelativeTime(status?.sent) : "..."}
+        </p>
+      </div>
+    );
+  };
+
   return (
-    <Stack
-      className={classes.wrapper}
-      {...getWrapperProps()}
+    <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      key={messageObject.id}
+      className={`flex ${exchangeProcess === "send" ? "justify-end" : "justify-start"}`}
     >
-      <Group gap={4}>
-        <Indicator
-          disabled={!props.reaction}
-          label={
-            <ReactionPopOver
-              reaction={props.reaction}
-              bg={getInnerProps().bg}
-            />
-          }
-          inline
-          position={props.reaction?.pos}
-          color={"transparent"}
-        >
-          <Paper className={classes.inner} {...getInnerProps()} py={2}>
-            <div>
-              <Text
-                fz={"xs"}
-                c={getColorForUser(props?.messageObject?.sender?.name)}
-                fw={500}
-                tt={"capitalize"}
+      {exchangeProcess === "send" && isHovered && (
+        <CopyButton value={messageContentRef?.current?.innerText ?? ""}>
+          {({ copied, copy }) => (
+            <Tooltip
+              label={copied ? "Copied" : "Copy"}
+              withArrow
+              position="right"
+            >
+              <ActionIcon
+                color={copied ? "teal" : "gray"}
+                variant="subtle"
+                onClick={copy}
               >
-                {props?.messageObject?.sender?.name}
-              </Text>
-              {props?.children}
-            </div>
-            <Group justify="flex-end" gap={4}>
-              <Text fz={10} c={"dimmed"}>
-                {formatToCustomTime(props?.messageObject?.waCreatedAt)}
-              </Text>
+                {copied ? <Check size={16} /> : <IconCopy size={16} />}
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </CopyButton>
+      )}
+      <div className="flex items-end space-x-2 max-w-[75%]">
+        {exchangeProcess === "receive" && (
+          <div className="mb-1">
+            <CreativeAvatar
+              name={selectedContact?.name}
+              size="xs"
+              src={selectedContact?.profilePic}
+              showRing={true}
+              platform={platform}
+            />
+          </div>
+        )}
+        <div className="flex gap-2">
+          <div>
+            <div
+              className={`px-4 py-2.5 rounded-2xl shadow-sm ${
+                exchangeProcess === "send"
+                  ? messageObject.sourcePlatform === MessagePlatform.INSTAGRAM
+                    ? "bg-pink-300/10"
+                    : messageObject.sourcePlatform === MessagePlatform.WHATSAPP
+                      ? "bg-green-500/10 dark:bg-green-950"
+                      : "bg-cyan-300"
+                  : "bg-white dark:bg-gray-900"
+              } ${
+                exchangeProcess === "send"
+                  ? "rounded-br-sm"
+                  : "border border-border rounded-bl-sm"
+              } relative`}
+            >
               {exchangeProcess === "send" && (
-                <Text>{getLatestStatus(props?.messageObject?.stats)}</Text>
+                <span
+                  style={{
+                    color: getColorForUser(messageObject?.sender?.name),
+                  }}
+                  className={`text-sm`}
+                >
+                  {messageObject?.sender?.name}
+                </span>
               )}
-            </Group>
-          </Paper>
-        </Indicator>
-        {exchangeProcess === "receive" && isHovered && (
+              <div ref={messageContentRef}>{props?.children}</div>
+              <div
+                className={`absolute ${exchangeProcess === "send" ? "-bottom-1.5 right-0" : "-bottom-3 right-2"}`}
+              >
+                <ReactionPopOver reaction={reaction} />
+              </div>
+            </div>
+            <div
+              className={`flex items-center space-x-2 mt-1 px-2 ${
+                exchangeProcess === "send" ? "justify-end" : "justify-start"
+              }`}
+            >
+              {!messageObject?.stats?.failed && exchangeProcess === "send" ? (
+                <CustomTooltip
+                  trigger={
+                    <span className="text-xs text-muted-foreground">
+                      {formatToCustomTime(messageObject?.waCreatedAt)}
+                    </span>
+                  }
+                  content={<MessageStats status={messageObject?.stats} />}
+                  side="bottom"
+                />
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  {formatToCustomTime(messageObject?.waCreatedAt)}
+                </span>
+              )}
+              {exchangeProcess === "send" && messageObject.stats && (
+                <div>{getLatestStatus(messageObject?.stats)}</div>
+              )}
+            </div>
+          </div>
+          {exchangeProcess === "send" && (
+            <div className="mb-1">
+              <CreativeAvatar
+                name={messageObject?.sender?.name}
+                size="xs"
+                src={messageObject?.sender?.profilePhoto}
+                showRing={true}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {exchangeProcess === "receive" && isHovered && (
+        <div className="flex gap-1 items-center">
           <PopoverEmojiPicker onEmojiClick={sendReaction} />
-        )}
-        {exchangeProcess === "send" && (
-          <Avatar
-            name={props?.messageObject?.sender?.name}
-            color="initials"
-            src={props?.messageObject?.sender?.profile_photo}
-            size={"sm"}
-            mb={"auto"}
-          />
-        )}
-      </Group>
-    </Stack>
+          <CopyButton value={messageContentRef?.current?.innerText}>
+            {({ copied, copy }) => (
+              <Tooltip
+                label={copied ? "Copied" : "Copy"}
+                withArrow
+                position="right"
+              >
+                <ActionIcon
+                  color={copied ? "teal" : "gray"}
+                  variant="subtle"
+                  onClick={copy}
+                >
+                  {copied ? <Check size={16} /> : <IconCopy size={16} />}
+                </ActionIcon>
+              </Tooltip>
+            )}
+          </CopyButton>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -217,33 +312,24 @@ export function reactionEmojiMap(reaction) {
   }
 }
 
-const ReactionPopOver = ({ reaction, bg }) => {
+const ReactionPopOver = ({ reaction }) => {
+  if (!reaction) return null;
   return (
-    <Popover width={200} position="bottom" withArrow shadow="md">
-      <Popover.Target>
-        <Text
-          style={{
-            border: "1px solid var(--light-grey-color-4)",
-            borderRadius: "40%",
-          }}
-          px={4}
-          bg={bg}
-          mt={"lg"}
-          mr={reaction.pos === "bottom-end" && "xl"}
-          ml={reaction.pos === "bottom-start" && "xl"}
-        >
+    <Popover>
+      <PopoverTrigger>
+        <p className="text-center bg-gray-100 p-1 rounded-lg text-xs cursor-pointer">
           {reaction?.emoji || reactionEmojiMap(reaction?.reaction)}
-        </Text>
-      </Popover.Target>
-      <Popover.Dropdown p={"xs"}>
-        <Group justify="space-between">
-          <Group gap={0}>
-            <Avatar size={"sm"} />
-            <Text size="xs">{reaction.from}</Text>
-          </Group>
-          <Text>{reaction?.emoji || reactionEmojiMap(reaction?.reaction)}</Text>
-        </Group>
-      </Popover.Dropdown>
+        </p>
+      </PopoverTrigger>
+      <PopoverContent className="flex justify-between">
+        <div className="flex gap-1 items-center">
+          <CreativeAvatar name={reaction.from} size="xs" />
+          <p className="text-sm font-medium">{reaction.from}</p>
+        </div>
+        <p className="text-xl">
+          {reaction?.emoji || reactionEmojiMap(reaction?.reaction)}
+        </p>
+      </PopoverContent>
     </Popover>
   );
 };

@@ -460,7 +460,7 @@ export function validateNodeData(node: TypedNode): {
     case "phoneInputNode":
     case "dateInputNode": {
       const data = node.data as NodeTypeMap[typeof nodeType];
-      if (!data.question || data.question.trim() === "") {
+      if (!data.question || data.question === "") {
         return {
           valid: false,
           message: `${node.data.label}: Question is required.`,

@@ -1,3 +1,4 @@
+import { notifications } from "@mantine/notifications";
 import {
   useInfiniteQuery,
   useMutation,
@@ -5,7 +6,13 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import { MessagePlatform } from "@/types/enums";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
+import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
+import useContactStore, {
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
+import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilter";
 import {
   showErrorToast,
   showSuccessToast,
@@ -16,6 +23,7 @@ import {
   assignInboxToUser,
   blockWhatsAppUser,
   exportWaChats,
+  generateInboxResponse,
   getAssignedUserForContact,
   getChatFilterData,
   getFilteredContacts,
@@ -31,6 +39,7 @@ import {
 export const useGetMessagesByContactId = (
   contactId: string,
   selectedPhone: string,
+  enabled: boolean,
 ) => {
   return useInfiniteQuery({
     queryKey: ["wa-messages", contactId, selectedPhone],
@@ -40,11 +49,11 @@ export const useGetMessagesByContactId = (
       getMessagesByContactId(contactId, pageParam, selectedPhone),
     getNextPageParam: (lastPage) =>
       lastPage.hasNextPage ? lastPage.nextCursor : undefined,
-    select: (data) => ({
-      pages: [...data.pages].reverse(),
-      pageParams: [...data.pageParams].reverse(),
-    }),
-    enabled: !!contactId && !!selectedPhone,
+    // select: (data) => ({
+    //   pages: [...data.pages].reverse(),
+    //   pageParams: [...data.pageParams].reverse(),
+    // }),
+    enabled: !!contactId && !!selectedPhone && enabled,
   });
 };
 
@@ -77,13 +86,14 @@ export const useChatFilterData = () => {
   });
 };
 
-export const useFilteredContacts = (filterData: string) => {
+export const useFilteredContacts = (filterData: string, isEnabled: boolean) => {
   return useInfiniteQuery({
     queryKey: ["contacts", "filtered", filterData],
     initialPageParam: 1,
     queryFn: ({ pageParam }) => getFilteredContacts(filterData, pageParam),
     getNextPageParam: (lastGroup) => lastGroup?.nextOffset,
     placeholderData: { pages: [], pageParams: [] },
+    enabled: isEnabled,
   });
 };
 
@@ -120,8 +130,9 @@ export const useGetMediaFile = () => {
   });
 };
 
-export const useAssignInboxToUer = (filterData) => {
+export const useAssignInboxToUer = (contactId, filterData) => {
   const qc = useQueryClient();
+  // const { updateContactById } = useContactsStore();
   return useMutation({
     mutationFn: assignInboxToUser,
     onSuccess: () => {
@@ -131,6 +142,11 @@ export const useAssignInboxToUer = (filterData) => {
       qc.invalidateQueries({ queryKey: ["notification"] });
       qc.invalidateQueries({ queryKey: ["notificationCount"] });
       showSuccessToast("Assigned successfully");
+      // updateContactById(contactId, (contact) => ({
+      //   ...contact,
+      //   assignedUsers: data,
+      //   waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+      // }));
     },
     onError: (e) => {
       showWarnToast("Something went wrong" + JSON.stringify(e));
@@ -163,7 +179,8 @@ export const useMarkWaMessagesAsRead = (contactId: string, filterData) => {
   });
 };
 
-export const useBlockWhatsAppUser = (filterData) => {
+export const useBlockWhatsAppUser = () => {
+  const { filterData } = useContactStore();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: blockWhatsAppUser,
@@ -216,3 +233,40 @@ export const useGetInboxAnalytics = () => {
     queryFn: getInboxAnalytics,
   });
 };
+
+export function useGenerateInboxResponse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: generateInboxResponse,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({
+        queryKey: ["wa-messages"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["contacts", "filtered"],
+        exact: false,
+      });
+
+      notifications.update({
+        id: "generateWaChat",
+        loading: false,
+        color: "green",
+        title: "Response Generate Success",
+        message: "Generate Response successfully",
+        autoClose: 3000,
+      });
+    },
+    onError: (error: any) => {
+      notifications.update({
+        id: "generateWaChat",
+        color: "red",
+        loading: false,
+        title: "Failed Response Generate",
+        message: error?.response?.data?.message ?? error?.response?.data,
+        autoClose: 3000,
+      });
+    },
+  });
+}

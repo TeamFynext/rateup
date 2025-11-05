@@ -5,10 +5,11 @@ import React from "react";
 import { Button, Select, SelectProps } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 
-import useContactStore from "@/app/dashboard/whatsapp/inbox/store";
+import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useLabelsContext } from "@/context/LabelsContext";
 
 import { useEditContactLabelsMutation } from "../../backend/campaign/contacts/contacts.query";
+import DropdownSelector from "../ui/custom/DropDownSelector";
 
 export const LifecycleSelector = ({
   value,
@@ -18,7 +19,7 @@ export const LifecycleSelector = ({
   id: string;
 }) => {
   const tags = useLabelsContext();
-  const { setSelectedContact, selectedContact } = useContactStore();
+  const { updateContactById } = useContactsStore();
   const editContactMutation = useEditContactLabelsMutation(id);
 
   // Memoize the labels to prevent unnecessary recalculations
@@ -31,7 +32,12 @@ export const LifecycleSelector = ({
             ?.filter((label) => label?.category !== "lost")
             .map((label) => ({
               value: label?.id,
-              label: label?.emoji + " " + label?.name,
+              label: label?.name,
+              icon: () => (
+                <span role="img" className="text-[10px]">
+                  {label?.emoji}
+                </span>
+              ),
             })) || [],
       },
       {
@@ -41,7 +47,12 @@ export const LifecycleSelector = ({
             ?.filter((label) => label?.category === "lost")
             .map((label) => ({
               value: label?.id,
-              label: label?.emoji + " " + label?.name,
+              label: label?.name,
+              icon: () => (
+                <span role="img" className="text-[10px]">
+                  {label?.emoji}
+                </span>
+              ),
             })) || [],
       },
     ],
@@ -62,12 +73,13 @@ export const LifecycleSelector = ({
 
   const handleSubmit = (newValue: string) => {
     if (newValue === value) return; // Prevent unnecessary updates
-
-    setSelectedContact({
-      ...selectedContact,
+    updateContactById(id, (contact) => ({
+      ...contact,
       lifecycleId: newValue,
-    });
-
+      lifecycleName: inboxLabels
+        .flatMap((c) => c.items)
+        .find((c) => c.value === newValue).label,
+    }));
     editContactMutation.mutate({
       data: { lifecycleId: newValue },
       contactId: id,
@@ -87,34 +99,11 @@ export const LifecycleSelector = ({
   };
 
   return (
-    <Button.Group>
-      <Select
-        placeholder="Select lifecycle"
-        data={inboxLabels}
-        value={value}
-        onChange={handleSubmit}
-        size="xs"
-        searchable
-        w={115}
-        radius={0}
-        aria-label="Lifecycle stage"
-        comboboxProps={{ width: 150, withArrow: true }}
-      />
-      <Button
-        variant="default"
-        size="compact-md"
-        onClick={handleNextStage}
-        aria-label="Next lifecycle stage"
-        title={
-          isLostCategory
-            ? "Cannot advance from lost stage"
-            : "Move to next stage"
-        }
-        disabled={isLostCategory}
-      >
-        <IconChevronRight size="1rem" />
-      </Button>
-    </Button.Group>
+    <DropdownSelector
+      value={value}
+      data={inboxLabels}
+      onChange={handleSubmit}
+    />
   );
 };
 

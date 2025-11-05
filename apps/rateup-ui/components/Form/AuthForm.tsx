@@ -17,9 +17,9 @@ import { AuthMode } from "../../utils/enums";
 import { rateupLogoUrl } from "../HomePage/constants";
 import { useRouteAndCartStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import styles from "./AuthForm.module.css";
-import AuthTypeSignupForm from "./AuthTypeSignupForm";
-import LoginForm from "./LoginForm";
-import SignupForm from "./SignupForm";
+import AuthTypeSignupForm from "./AuthTypeSignupFormNew";
+import SignInFlow from "./LoginFormNew";
+import { SignUpFlow } from "./SignupFormNew";
 import VerifyEmailPage from "./VerifyEmailPage";
 import VerifyPhoneNumberPage from "./VerifyPhoneNumberPage";
 
@@ -65,7 +65,7 @@ const AuthForm = ({
   } else {
     if (isLogin) {
       jsxToReturn = (
-        <LoginForm
+        <SignInFlow
           setIsLoading={setIsLoading}
           signIn={signIn}
           isLoading={isLoading}
@@ -83,7 +83,7 @@ const AuthForm = ({
         );
       else
         jsxToReturn = (
-          <SignupForm
+          <SignUpFlow
             setIsLoading={setIsLoading}
             signUp={signUp}
             isLoading={isLoading}

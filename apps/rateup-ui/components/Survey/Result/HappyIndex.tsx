@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useContext } from "react";
 
 import {
   Card,
@@ -23,9 +23,11 @@ import {
 } from "@tabler/icons-react";
 
 import { useHappyIndex } from "@/backend/surveys/response/response.query";
+import SurveyContext from "@/context/SurveyContext";
 
 const HappyIndex = ({ surveyId, translations }) => {
-  const { data, isLoading } = useHappyIndex(surveyId);
+  const { filterTeams } = useContext(SurveyContext);
+  const { data, isLoading } = useHappyIndex(surveyId, filterTeams);
   const h_index = Number(((data?.happinessIndex ?? 0) / 10).toFixed(1));
 
   if (isLoading || !data) return <HappyIndexSkeleton />;

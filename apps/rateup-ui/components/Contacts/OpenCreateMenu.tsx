@@ -10,16 +10,13 @@ import { ContactTabs } from "@/app/dashboard/contacts/page";
 import { useImportCSVContactMutation } from "../../backend/campaign/contacts/contacts.query";
 import { RateupButtonBlue } from "../Button/RateupButtons";
 import FormModalLayout from "../Modal/FormModalLayout";
+import SimpleModalLayout from "../Modal/SimpleModalLayout";
 import ContactImportErrorModal from "./ContactImportErrorModal";
 import CreateContactModal from "./CreateContactModal";
 import CreateGroupModal from "./CreateGroupModal";
 import { WhatsappTableType } from "./utils/utils";
 
 const OpenCreateMenu = ({
-  tags = {
-    contactTags: [],
-    contactGroupTags: [],
-  },
   tab,
   toggle = () => {},
   isPending = false,
@@ -55,7 +52,7 @@ const OpenCreateMenu = ({
           }
         }}
       />
-      <FormModalLayout
+      <SimpleModalLayout
         centered
         opened={contactOpened}
         onClose={contactClose}
@@ -65,10 +62,9 @@ const OpenCreateMenu = ({
         <CreateContactModal
           contactClose={contactClose}
           close={close}
-          cTags={tags.contactTags}
           importCSVContactMutation={importCSVContactMutation}
         />
-      </FormModalLayout>
+      </SimpleModalLayout>
       <FormModalLayout
         centered
         opened={groupOpened}
@@ -80,12 +76,7 @@ const OpenCreateMenu = ({
         }
         size="lg"
       >
-        <CreateGroupModal
-          groupClose={groupClose}
-          close={close}
-          type={type}
-          gTags={tags.contactGroupTags}
-        />
+        <CreateGroupModal groupClose={groupClose} close={close} type={type} />
       </FormModalLayout>
     </>
   );

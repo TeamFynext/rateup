@@ -78,7 +78,6 @@ const WpAmelia = () => {
           baseUrl: form.getValues().baseUrl,
           serviceId: form.getValues().serviceId,
         },
-        name: IntegratedApps.amelia,
       });
     }
   };
@@ -128,7 +127,7 @@ const WpAmelia = () => {
                     "",
                     false,
                   );
-                  deleteIntegrationMutation.mutate(IntegratedApps.amelia);
+                  deleteIntegrationMutation.mutate();
                 }}
               >
                 <IconTrash />

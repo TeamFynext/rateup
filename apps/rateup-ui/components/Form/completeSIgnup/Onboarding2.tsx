@@ -1,210 +1,136 @@
 "use client";
 
-import { Button, Card, Checkbox, Radio, Text, Title } from "@mantine/core";
+import { motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, Building, Sparkles } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function OnboardingStep2({
-  onNext,
-  onBack,
+  currentStep,
   data,
-  setData,
+  handleInputChange,
+  handleBack,
+  handleNext,
 }: {
-  onNext: () => void;
-  onBack: () => void;
+  currentStep: number;
   data: any;
-  setData: (data: any) => void;
+  handleInputChange: any;
+  handleNext: any;
+  handleBack: any;
 }) {
-  const isValid =
-    data.team_size &&
-    data.which_platforms_do_you_actively_use &&
-    data.do_you_currently_use_any_tools_for_engagement &&
-    data.interest_in_whatsapp_loyality_or_web_surveys;
+  const canProceed = () => {
+    return data.industry !== "";
+  };
 
+  const industries = [
+    "E-commerce",
+    "Retail",
+    "Restaurant & Food",
+    "Healthcare",
+    "Education",
+    "Real Estate",
+    "Financial Services",
+    "Travel & Tourism",
+    "Technology",
+    "Beauty & Wellness",
+    "Automotive",
+    "Entertainment",
+    "Other",
+  ];
   return (
-    <div className="max-w-xl mx-auto px-4 sm:px-6">
-      <Card
-        radius="lg"
-        shadow="sm"
-        styles={{
-          root: {
-            backgroundColor: "#FFFFFF",
-            padding: "24px",
-            border: "1px solid #E5E5E5",
-          },
-        }}
-      >
-        {/* Step indicator */}
-        <div className="mb-6">
-          <div className="h-1 bg-[#F5F5F5] rounded-full w-full">
-            <div className="h-1 bg-[#004F98] rounded-full w-2/3" />
-          </div>
-          <Text size="sm" mt="xs" c="dimmed">
-            Step 2 of 3
-          </Text>
-        </div>
+    <div className="space-y-4">
+      <div className="text-center">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", duration: 0.6 }}
+          className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-pink-500 shadow-lg shadow-orange-500/30 mx-auto mb-1"
+        >
+          <Building className="w-5 h-5 text-white" />
+        </motion.div>
+        <h2 className="text-gray-900">What's Your Industry?</h2>
+        <p className="text-gray-600 text-sm">
+          This helps us provide industry-specific recommendations
+        </p>
+      </div>
 
-        {/* Title + subtitle */}
-        <Title order={3} mb="sm" className="text-[#004F98] text-lg sm:text-xl">
-          Let’s create the best experience for you
-        </Title>
-        <Text size="sm" c="dimmed" mb="lg" className="text-gray-600">
-          Choose the options that best describe your business needs.
-        </Text>
-
-        {/* Team Size */}
-        <div className="mt-6">
-          <Text size="sm" fw={500} mb={8}>
-            Team Size <span className="text-red-500">*</span>
-          </Text>
-          <Radio.Group
-            value={data.team_size}
-            onChange={(val) => setData({ ...data, team_size: val })}
+      <div className="space-y-3 w-full">
+        <div className="space-y-1.5 w-full">
+          <label className="text-gray-700">Select Your Industry</label>
+          <Select
+            onValueChange={(value) => handleInputChange("industry", value)}
+            value={data.industry}
           >
-            {[
-              "Just me (1 Person)",
-              "Small Team (2-10 people)",
-              "Larger Team (10+ people)",
-            ].map((size) => (
-              <Radio
-                key={size}
-                value={size}
-                label={size}
-                styles={{
-                  radio: { borderColor: "#E5E5E5" },
-                  label: { color: "#000" },
-                }}
-              />
-            ))}
-          </Radio.Group>
+            <SelectTrigger className="h-11 border-2 border-gray-300 focus:border-orange-400 bg-white text-gray-900 shadow-sm w-full">
+              <SelectValue placeholder="Choose your industry..." />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-gray-200 w-full">
+              {industries.map((industry) => (
+                <SelectItem
+                  key={industry}
+                  value={industry}
+                  className="text-gray-900 focus:bg-gray-100 focus:text-gray-900 w-full"
+                >
+                  {industry}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Platforms */}
-        <div className="mt-6">
-          <Text size="sm" fw={500} mb={8}>
-            Which platforms do you actively use?{" "}
-            <span className="text-red-500">*</span>
-          </Text>
-          <Radio.Group
-            value={data.which_platforms_do_you_actively_use}
-            onChange={(val) =>
-              setData({ ...data, which_platforms_do_you_actively_use: val })
-            }
+        {/* Industry Selection feedback */}
+        {data.industry && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-orange-100 to-pink-100 border border-orange-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm"
           >
-            {[
-              "WhatsApp Business",
-              "Instagram Business/Creator Account",
-              "Facebook Page",
-              "None yet, but planning to start",
-            ].map((item) => (
-              <Radio
-                key={item}
-                value={item}
-                label={item}
-                styles={{
-                  radio: { borderColor: "#E5E5E5" },
-                  label: { color: "#000" },
-                }}
-              />
-            ))}
-          </Radio.Group>
-        </div>
+            <div className="flex items-start space-x-3">
+              <Sparkles className="w-3 h-3 text-orange-600" />
+              <div>
+                <p className="text-orange-700 text-sm">
+                  Perfect! We'll customize your experience
+                </p>
+                <p className="text-gray-700 text-sm">
+                  Expect industry-specific templates and features for{" "}
+                  {data.industry}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+      <div className="flex justify-between mt-5 pt-4 border-t border-gray-200">
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          disabled={currentStep === 1}
+          className="flex items-center px-4 py-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
 
-        {/* Engagement Tools */}
-        <div className="mt-6">
-          <Text size="sm" fw={500} mb={8}>
-            Do you currently use any tools for engagement?{" "}
-            <span className="text-red-500">*</span>
-          </Text>
-          <Radio.Group
-            value={data.do_you_currently_use_any_tools_for_engagement}
-            onChange={(val) =>
-              setData({
-                ...data,
-                do_you_currently_use_any_tools_for_engagement: val,
-              })
-            }
-          >
-            {[
-              "WhatsApp Business App",
-              "CRM (Zoho, HubSpot, Salesforce, etc.)",
-              "Loyality App",
-              "Others",
-              "None",
-            ].map((item) => (
-              <Radio
-                key={item}
-                value={item}
-                label={item}
-                styles={{
-                  radio: { borderColor: "#E5E5E5" },
-                  label: { color: "#000" },
-                }}
-              />
-            ))}
-          </Radio.Group>
-        </div>
-
-        {/* Loyalty/Survey Interest */}
-        <div>
-          <Text size="sm" fw={500} mb={8}>
-            Are you interested in WhatsApp Loyalty, Web Survey Programs for your
-            Business <span className="text-red-500">*</span>
-          </Text>
-          <Radio.Group
-            value={data.interest_in_whatsapp_loyality_or_web_surveys}
-            onChange={(val) =>
-              setData({
-                ...data,
-                interest_in_whatsapp_loyality_or_web_surveys: val,
-              })
-            }
-          >
-            {["Yes", "No"].map((item) => (
-              <Radio
-                key={item}
-                value={item}
-                label={item}
-                styles={{
-                  radio: { borderColor: "#E5E5E5" },
-                  label: { color: "#000" },
-                }}
-              />
-            ))}
-          </Radio.Group>
-        </div>
-
-        {/* Footer */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
+        <div className="flex space-x-2">
           <Button
-            variant="outline"
-            onClick={onBack}
-            className="w-full sm:w-auto"
-            styles={{
-              root: {
-                borderColor: "#E5E5E5",
-                color: "#004F98",
-                "&:hover": { backgroundColor: "#F5F5F5" },
-              },
-            }}
+            onClick={handleNext}
+            disabled={!canProceed()}
+            className={`flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+              canProceed() ? "hover:scale-105" : ""
+            }`}
           >
-            ← Back
-          </Button>
-
-          <Button
-            onClick={onNext}
-            disabled={!isValid}
-            className="w-full sm:w-auto"
-            styles={{
-              root: {
-                backgroundColor: isValid ? "#004F98" : "#E5E5E5",
-                color: "white",
-                "&:hover": { backgroundColor: isValid ? "#003B73" : "#E5E5E5" },
-              },
-            }}
-          >
-            Next →
+            Continue
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

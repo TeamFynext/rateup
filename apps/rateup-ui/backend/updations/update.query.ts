@@ -6,6 +6,9 @@ import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   automationSubscription,
+  updateAutomationPhoneId,
+  updateBackfillMessageData,
+  updateCustomField,
   updateFreePlanSubscriptionExpiry,
   updateLifecycle,
   updateSubscriptionNewFeat,
@@ -95,6 +98,48 @@ export const useUpdateLifecycle = () => {
     },
     onError: () => {
       showErrorToast("Failed to add lifecycle");
+    },
+  });
+};
+
+export const useUpdateCustomField = () => {
+  return useMutation({
+    mutationFn: () => {
+      return updateCustomField();
+    },
+    onSuccess: () => {
+      showSuccessToast("Custom fields migrated successfully");
+    },
+    onError: () => {
+      showErrorToast("Failed to migrate custom fields");
+    },
+  });
+};
+
+export const useUpdateAutomationPhoneId = () => {
+  return useMutation({
+    mutationFn: () => {
+      return updateAutomationPhoneId();
+    },
+    onSuccess: () => {
+      showSuccessToast("Automation phoneId migrated successfully");
+    },
+    onError: () => {
+      showErrorToast("Failed to migrate automation phoneId");
+    },
+  });
+};
+
+export const useUpdateBackfillMessageData = () => {
+  return useMutation({
+    mutationFn: updateBackfillMessageData,
+    onSuccess: () => {
+      showSuccessToast("Message data backfilled to contact successfully");
+    },
+    onError: (e: any) => {
+      showErrorToast(
+        e?.response?.data || "Failed to backfill message data to contact",
+      );
     },
   });
 };

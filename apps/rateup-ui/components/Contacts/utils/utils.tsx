@@ -26,6 +26,8 @@ import { rankItem } from "@tanstack/match-sorter-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
+import { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
+
 import { CampaignParticipantStatus, CampaignType } from "../../../types/enums";
 import { fallbackImage } from "../../../utils/constants";
 import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
@@ -73,7 +75,7 @@ const contactDetailsColumn: ColumnDef<any>[] = [
   },
 ];
 
-export const contactColumn = (contactTags = []) => {
+export const contactColumn = (contactTags: CustomFieldData[] = []) => {
   return [
     ...selectCheckBox,
     ...contactDetailsColumn,
@@ -92,14 +94,23 @@ export const contactColumn = (contactTags = []) => {
           <IconCircleX color="red" />
         ),
     },
+    {
+      header: () => "Other",
+      accessorKey: "other",
+      cell: (info) => info.getValue() ?? "-",
+    },
     ...(contactTags?.length > 0
-      ? contactTags?.map((data) => ({
-          header: () => data,
-          accessorFn: (row) => row?.tags?.[data],
-          id: data,
-          cell: (info) => info.getValue()?.toString(),
-          enableSorting: false,
-        }))
+      ? contactTags
+          ?.filter((tag) => tag?.visibility)
+          ?.map((data) => ({
+            header: () => data?.name,
+            accessorFn: (row) =>
+              row?.customFields?.find((f) => f?.fieldId === data?.id)?.value,
+            id: data?.name,
+            cell: (info) => info.getValue()?.toString() ?? "-",
+
+            enableSorting: false,
+          }))
       : []),
 
     {
@@ -175,7 +186,7 @@ export const contactGroupColumn = [
   {
     header: () => "Detail View",
     id: DETAIL_BTN,
-    accessorFn: (row) => `contacts/${row.id}`,
+    accessorFn: (row) => `groups/${row.id}`,
     enableSorting: false,
     enableColumnFilter: false,
   },

@@ -84,7 +84,7 @@ export const useCreateContactGroupMutation = () => {
 export const useAddNewContactMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: addNewContact,
+    mutationFn: (data) => addNewContact({ data, groupId }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
@@ -109,7 +109,7 @@ export const useAddNewContactMutation = (groupId: string) => {
 export const useAddNewContactFromCSVMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: addNewContactFromCSV,
+    mutationFn: (data) => addNewContactFromCSV({ data, groupId }),
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
