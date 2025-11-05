@@ -55,8 +55,8 @@ export const getStringColor = (string: string) => {
   ];
 
   let hash = 0;
-  for (let i = 0; i < string.length; i++) {
-    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < string?.length; i++) {
+    hash = (string?.codePointAt(i) || 0) + ((hash << 5) - hash);
   }
 
   const index = Math.abs(hash) % colors.length;

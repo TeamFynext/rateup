@@ -1,7 +1,7 @@
-import { Geist, Noto_Color_Emoji } from "next/font/google";
+import { Inter, Noto_Color_Emoji } from "next/font/google";
 
-export const geist = Geist({
-  variable: "--font-geist",
+export const inter = Inter({
+  variable: "--font-inter",
   preload: false,
 });
 
