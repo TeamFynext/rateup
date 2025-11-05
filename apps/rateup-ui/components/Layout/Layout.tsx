@@ -138,6 +138,7 @@ const MainNavLinks = ({
           <Button
             variant={link.label === activeMainLink ? "default" : "ghost"}
             className="w-full mb-2 p-2"
+            size="icon"
             onClick={() => {
               const isWhatsAppRoute = link.label
                 .toLowerCase()
@@ -236,7 +237,7 @@ const SubNavLinks = ({
                 <LinkIcon className="w-5 h-5" />
               </Button>
               {link?.count > 0 && (
-                <span className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full px-1 text-[10px] font-medium">
+                <span className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full px-1 text-[10px]">
                   {link?.count > 9 ? "9+" : link?.count}
                 </span>
               )}
@@ -341,7 +342,7 @@ const SubNavLinks = ({
           <div className="flex justify-between w-full">
             <div className="flex gap-2 items-center">
               <LinkIcon className="w-5 h-5" />
-              <span className="text-sm font-medium">{link.label}</span>
+              <span className="text-sm">{link.label}</span>
             </div>
             {link?.count > 0 && (
               <Badge variant="secondary">{link?.count}</Badge>
@@ -370,7 +371,7 @@ const SubNavLinks = ({
         <div className="flex justify-between w-full">
           <div className="flex gap-2 items-center">
             <span className="text-sm">{label.emoji}</span>
-            <span className="text-sm font-medium">{label.label}</span>
+            <span className="text-sm">{label.label}</span>
           </div>
           {label?.count > 0 && (
             <Badge variant="secondary">{label?.count}</Badge>
@@ -412,7 +413,7 @@ const SubNavLinks = ({
           >
             <div className="flex gap-2 items-center">
               <category.icon className="w-4 h-4" />
-              <span className="text-sm font-medium">{category.label}</span>
+              <span className="text-sm">{category.label}</span>
             </div>
             {/* {category?.count > 0 && (
               <Badge variant="secondary" className="ml-auto text-xs">
@@ -827,7 +828,7 @@ const Navbar = ({
                   </div>
 
                   <div
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors text-red-600 font-medium"
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors text-red-600"
                     onClick={() => setOpenLogoutModal(true)}
                   >
                     <LogOut size={16} />

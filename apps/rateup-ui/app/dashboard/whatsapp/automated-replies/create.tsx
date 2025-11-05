@@ -1,33 +1,38 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
-import {
-  Button,
-  Card,
-  Checkbox,
-  Group,
-  Radio,
-  SegmentedControl,
-  Stack,
-  Switch,
-  Tabs,
-  Text,
-} from "@mantine/core";
+import { TimePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import {
   IconBrandMeta,
-  IconExclamationCircle,
+  IconInfoCircle,
   IconMessageCircle,
   IconPhoto,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
+import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
-import { AssignInboxContent } from "@/components/whatsapp/inbox/chatdisplay/chatdisplayHeader";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { showSuccessToast } from "@/utils/notifications";
 import { hasFeature } from "@/utils/subscription/subscription";
 
@@ -36,7 +41,7 @@ import {
   useUpdateWaAutomatedReplyMutation,
 } from "../../../../backend/whatsapp/automated-reply/automatedReply.query";
 import {
-  ContainedSwitchInput,
+  ContainedMultiSelect,
   ContainedTagInput,
   ContainedTextField,
 } from "../../../../components/input/ContainedInput/ContainedInput";
@@ -44,17 +49,19 @@ import {
   SubscriptionFeaturePathName,
   WaAutomatedReplyMatchType,
 } from "../../../../types/enums";
-import {
-  WaAutomatedReply,
-  WaAutomatedReplyMatchData,
-} from "../../../../types/global";
+import { WaAutomatedReply } from "../../../../types/global";
 
 export default function CreateAutomatedReplyPage() {
   return (
-    <Stack>
-      <h1>Create Automation</h1>
+    <div className="space-y-6 p-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Create Automation</h1>
+        <p className="text-muted-foreground">
+          Set up automated replies for your WhatsApp conversations
+        </p>
+      </div>
       <AutomatedReplyForm />
-    </Stack>
+    </div>
   );
 }
 
@@ -110,17 +117,59 @@ export function AutomatedReplyForm({
   const rootForm = useForm({
     initialValues: getInitialValues(initialValues),
   });
+  const { data: contactGroups } = useContactGroup();
+  const { customFields } = useCustomFieldsContext();
 
-  const matchDataForm = useForm<WaAutomatedReplyMatchData>({
-    initialValues: getInitialValues(initialValues).matchData,
+  // Relax type to allow new optional fields in matchData without touching shared types
+  const matchDataForm = useForm<any>({
+    initialValues: {
+      ...getInitialValues(initialValues).matchData,
+      contactFilters: {
+        newContactsOnly: false,
+        inGroups: [],
+        requiredFieldsWithAnyValue: [],
+        ...(getInitialValues(initialValues).matchData as any)?.contactFilters,
+      },
+      timeWindow: {
+        enabled: false,
+        days: [],
+        allDay: true,
+        startTime: "00:00",
+        endTime: "23:59",
+        ...(getInitialValues(initialValues).matchData as any)?.timeWindow,
+      },
+    },
   });
-  const [activetab, setActiveTab] = useState("keywords");
+  const [activeTab, setActiveTab] = useState<string>("keywords");
 
   useEffect(() => {
     if (!initialValues) return;
     const init = getInitialValues(initialValues);
     rootForm.setInitialValues(init);
-    matchDataForm.setInitialValues(init.matchData);
+
+    // Deep-merge defaults for new fields so older records hydrate safely
+    const initMatch = (init.matchData || {}) as any;
+    const mergedMatch = {
+      ...initMatch,
+      contactFilters: {
+        newContactsOnly: false,
+        inGroups: [],
+        hasLabels: [],
+        requiredFieldsWithAnyValue: [],
+        ...(initMatch?.contactFilters || {}),
+      },
+      timeWindow: {
+        enabled: false,
+        days: [],
+        allDay: true,
+        startTime: "00:00",
+        endTime: "23:59",
+        ...(initMatch?.timeWindow || {}),
+      },
+    };
+    matchDataForm.setInitialValues(mergedMatch);
+    matchDataForm.setValues(mergedMatch);
+
     setActiveTab(
       initialValues?.commands.includes("*")
         ? "allOthers"
@@ -132,11 +181,11 @@ export function AutomatedReplyForm({
 
   const qc = useQueryClient();
   const searchParams = useSearchParams();
-  const waAutomatedReplyId = searchParams.get("waAutomatedReplyId") as string;
+  const waAutomatedReplyId = searchParams.get("waAutomatedReplyId");
 
   const createMutation = useCreateWaAutomatedReplyMutation();
   const updateMutation = useUpdateWaAutomatedReplyMutation();
-  const { data: subscription, isLoading } = useSubscription();
+  const { data: subscription } = useSubscription();
 
   function handleCancelClick() {
     rootForm.reset();
@@ -147,7 +196,7 @@ export function AutomatedReplyForm({
   function handleSubmitClick() {
     let jsonData = matchDataForm.values.json;
 
-    if (activetab === "leadgen" && !editMode) {
+    if (activeTab === "leadgen" && !editMode) {
       jsonData = {
         nodes: [
           {
@@ -223,163 +272,418 @@ export function AutomatedReplyForm({
   }
 
   return (
-    <form onSubmit={rootForm.onSubmit(handleSubmitClick)}>
-      <Stack>
-        <ContainedTextField
-          label="Name"
-          placeholder="Enter name"
-          required
-          style={{ flex: 4 }}
-          {...rootForm.getInputProps("name")}
-        />
-        <AccountSelector
-          multiple
-          {...rootForm.getInputProps("whatsappSettingsPhoneIds")}
-        />
+    <form
+      onSubmit={rootForm.onSubmit(handleSubmitClick)}
+      className="space-y-6 "
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle>Basic Information</CardTitle>
+          <CardDescription>
+            Configure the basic settings for your automation
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ContainedTextField
+            label="Name"
+            placeholder="Enter automation name"
+            required
+            {...rootForm.getInputProps("name")}
+          />
+          <div className="space-y-2">
+            <Label>WhatsApp Accounts</Label>
+            <AccountSelector
+              multiple
+              {...rootForm.getInputProps("whatsappSettingsPhoneIds")}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        <Tabs
-          defaultValue="keywords"
-          variant="pills"
-          onChange={(e) => {
-            if (e === "allOthers") {
-              rootForm.setFieldValue("commands", ["*"]);
-            } else if (e === "leadgen") {
-              rootForm.setFieldValue("commands", ["lead"]);
-            } else {
-              rootForm.setFieldValue("commands", []);
-            }
-            setActiveTab(e);
-          }}
-          value={activetab}
-        >
-          <Tabs.List>
-            <Tabs.Tab
-              value="keywords"
-              leftSection={<IconMessageCircle size={12} />}
-            >
-              Keywords
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="leadgen"
-              disabled={
-                !subscription ||
-                !hasFeature(
-                  subscription,
-                  SubscriptionFeaturePathName.LeadAdAutomation,
-                )
+      <Card>
+        <CardHeader>
+          <CardTitle>Trigger Configuration</CardTitle>
+          <CardDescription>
+            Define when this automation should be triggered
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs
+            defaultValue="keywords"
+            value={activeTab}
+            onValueChange={(e) => {
+              if (e === "allOthers") {
+                rootForm.setFieldValue("commands", ["*"]);
+              } else if (e === "leadgen") {
+                rootForm.setFieldValue("commands", ["lead"]);
+              } else {
+                rootForm.setFieldValue("commands", []);
               }
-              leftSection={<IconBrandMeta size={12} />}
-            >
-              Lead generation
-            </Tabs.Tab>
-            <Tabs.Tab value="allOthers" leftSection={<IconPhoto size={12} />}>
-              All Others
-            </Tabs.Tab>
-          </Tabs.List>
-
-          <Tabs.Panel value="keywords">
-            <Radio.Group
-              label="Match Type"
-              required
-              {...rootForm.getInputProps("matchType")}
-              onChange={(e) => {
-                rootForm.setFieldValue("matchType", e as any);
-                if (e === WaAutomatedReplyMatchType.Exact) {
-                  rootForm.values?.commands?.length &&
-                    rootForm.setFieldValue("commands", [
-                      rootForm.values?.commands?.[0],
-                    ]);
+              setActiveTab(e);
+            }}
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="keywords">
+                <IconMessageCircle size={16} />
+                <span>Keywords</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="leadgen"
+                disabled={
+                  !subscription ||
+                  !hasFeature(
+                    subscription,
+                    SubscriptionFeaturePathName.LeadAdAutomation,
+                  )
                 }
-              }}
-            >
-              <Group pl={"xs"} pt={"xs"}>
-                <Radio
-                  value={WaAutomatedReplyMatchType.ContainsAnyOf}
-                  label={"Contains Any Of"}
-                />
-                <Radio
-                  value={WaAutomatedReplyMatchType.ContainsAllOf}
-                  label={"Contains All Of"}
-                />
-                <Radio
-                  value={WaAutomatedReplyMatchType.Exact}
-                  label={"Exactly Equals"}
-                />
-              </Group>
-            </Radio.Group>
-            <ContainedSwitchInput
-              label="Enable WhatsApp Automation"
-              {...rootForm.getInputProps("isEnabled", { type: "checkbox" })}
-              defaultChecked={true}
-              my={"xs"}
-            />
-            <ContainedSwitchInput
-              label="Send only once in 24 hours to the same user"
-              {...rootForm.getInputProps("sendOnceIn24Hours", {
-                type: "checkbox",
-              })}
-              defaultChecked={true}
-              my={"xs"}
-            />
-            <Group>
+              >
+                <IconBrandMeta size={16} />
+                <span>Lead Generation</span>
+              </TabsTrigger>
+              <TabsTrigger value="allOthers">
+                <IconPhoto size={16} />
+                <span>All Others</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="keywords">
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <Label className="text-base">Match Type</Label>
+                  <RadioGroup
+                    value={rootForm.values.matchType}
+                    onValueChange={(e) => {
+                      rootForm.setFieldValue("matchType", e as any);
+                      if (e === WaAutomatedReplyMatchType.Exact) {
+                        rootForm.values?.commands?.length &&
+                          rootForm.setFieldValue("commands", [
+                            rootForm.values?.commands?.[0],
+                          ]);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value={WaAutomatedReplyMatchType.ContainsAnyOf}
+                        id="contains-any"
+                      />
+                      <Label
+                        htmlFor="contains-any"
+                        className="font-normal cursor-pointer"
+                      >
+                        Contains Any Of
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value={WaAutomatedReplyMatchType.ContainsAllOf}
+                        id="contains-all"
+                      />
+                      <Label
+                        htmlFor="contains-all"
+                        className="font-normal cursor-pointer"
+                      >
+                        Contains All Of
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value={WaAutomatedReplyMatchType.Exact}
+                        id="exact"
+                      />
+                      <Label
+                        htmlFor="exact"
+                        className="font-normal cursor-pointer"
+                      >
+                        Exactly Equals
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">
+                      Enable WhatsApp Automation
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Turn on to activate this automation
+                    </p>
+                  </div>
+                  <Switch
+                    checked={rootForm.values.isEnabled}
+                    onCheckedChange={(checked) =>
+                      rootForm.setFieldValue("isEnabled", checked)
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">
+                      Send only once in 24 hours
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Prevent duplicate messages to the same user
+                    </p>
+                  </div>
+                  <Switch
+                    checked={rootForm.values.sendOnceIn24Hours}
+                    onCheckedChange={(checked) =>
+                      rootForm.setFieldValue("sendOnceIn24Hours", checked)
+                    }
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <ContainedTagInput
+                    required
+                    label="Keywords"
+                    placeholder="Enter keywords to trigger automation"
+                    {...rootForm.getInputProps("commands")}
+                    maxTags={
+                      rootForm?.values?.matchType ===
+                      WaAutomatedReplyMatchType.Exact
+                        ? 1
+                        : Infinity
+                    }
+                  />
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="case-sensitive"
+                      checked={matchDataForm.values.caseSensitive}
+                      onCheckedChange={(checked) =>
+                        matchDataForm.setFieldValue(
+                          "caseSensitive",
+                          checked as boolean,
+                        )
+                      }
+                    />
+                    <Label
+                      htmlFor="case-sensitive"
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      Case Sensitive
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="allOthers">
+              <Alert>
+                <IconInfoCircle className="h-4 w-4" />
+                <AlertDescription>
+                  This automation will trigger for all messages that don't match
+                  other automations.
+                </AlertDescription>
+              </Alert>
               <ContainedTagInput
                 required
+                readOnly
+                disabled
                 label="Keywords"
-                placeholder="Enter keywords"
+                placeholder="Matches all other messages"
                 {...rootForm.getInputProps("commands")}
-                flex={1}
-                maxTags={
-                  rootForm?.values?.matchType ===
-                  WaAutomatedReplyMatchType.Exact
-                    ? 1
-                    : Infinity
+              />
+            </TabsContent>
+
+            <TabsContent value="leadgen">
+              <Alert>
+                <IconBrandMeta className="h-4 w-4" />
+                <AlertDescription>
+                  This automation will trigger when leads are generated from
+                  Meta ads.
+                </AlertDescription>
+              </Alert>
+              <ContainedTagInput
+                required
+                readOnly
+                disabled
+                label="Keywords"
+                placeholder="Triggered by lead generation"
+                {...rootForm.getInputProps("commands")}
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Trigger Conditions</CardTitle>
+          <CardDescription>
+            Set additional conditions for when this automation should run
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <h4 className="text-sm">Contact Filters</h4>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>New contacts only</Label>
+                <p className="text-sm text-muted-foreground">
+                  Only trigger for contacts who message for the first time
+                </p>
+              </div>
+              <Switch
+                checked={matchDataForm.values.contactFilters?.newContactsOnly}
+                onCheckedChange={(checked) =>
+                  matchDataForm.setFieldValue(
+                    "contactFilters.newContactsOnly",
+                    checked,
+                  )
                 }
               />
-              <Checkbox
-                mt={"lg"}
-                label="Case Sensitive"
-                {...matchDataForm.getInputProps("caseSensitive", {
-                  type: "checkbox",
-                })}
+            </div>
+
+            <ContainedMultiSelect
+              placeholder="Select contact groups"
+              label="Contact groups (match if contact is in any)"
+              data={contactGroups?.map((group) => ({
+                value: group.id,
+                label: group.name,
+              }))}
+              {...matchDataForm.getInputProps("contactFilters.inGroups")}
+            />
+
+            <ContainedMultiSelect
+              label="Required fields with any value"
+              placeholder="Select fields that must have a value"
+              data={customFields.map((field) => ({
+                value: field.id,
+                label: field.name,
+              }))}
+              {...matchDataForm.getInputProps(
+                "contactFilters.requiredFieldsWithAnyValue",
+              )}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base">Time-based triggering</Label>
+                <p className="text-sm text-muted-foreground">
+                  Only trigger during specific days and hours
+                </p>
+              </div>
+              <Switch
+                checked={matchDataForm.values.timeWindow?.enabled}
+                onCheckedChange={(checked) =>
+                  matchDataForm.setFieldValue("timeWindow.enabled", checked)
+                }
               />
-            </Group>
-          </Tabs.Panel>
+            </div>
 
-          <Tabs.Panel value="allOthers">
-            <ContainedTagInput
-              required
-              readOnly
-              disabled
-              label="Keywords"
-              placeholder="Enter keywords"
-              {...rootForm.getInputProps("commands")}
-            />
-          </Tabs.Panel>
+            {matchDataForm.values?.timeWindow?.enabled && (
+              <div className="space-y-4 pl-6 border-l-2">
+                <div className="space-y-3">
+                  <Label>Allowed days</Label>
+                  <div className="flex flex-wrap gap-3">
+                    {[
+                      { value: "mon", label: "Mon" },
+                      { value: "tue", label: "Tue" },
+                      { value: "wed", label: "Wed" },
+                      { value: "thu", label: "Thu" },
+                      { value: "fri", label: "Fri" },
+                      { value: "sat", label: "Sat" },
+                      { value: "sun", label: "Sun" },
+                    ].map((day) => (
+                      <div
+                        key={day.value}
+                        className="flex items-center space-x-2"
+                      >
+                        <Checkbox
+                          id={day.value}
+                          checked={matchDataForm.values.timeWindow?.days?.includes(
+                            day.value,
+                          )}
+                          onCheckedChange={(checked) => {
+                            const currentDays =
+                              matchDataForm.values.timeWindow?.days || [];
+                            const newDays = checked
+                              ? [...currentDays, day.value]
+                              : currentDays.filter((d) => d !== day.value);
+                            matchDataForm.setFieldValue(
+                              "timeWindow.days",
+                              newDays,
+                            );
+                          }}
+                        />
+                        <Label
+                          htmlFor={day.value}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {day.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-          <Tabs.Panel value="leadgen">
-            <ContainedTagInput
-              required
-              readOnly
-              disabled
-              label="Keywords"
-              placeholder="Enter keywords"
-              {...rootForm.getInputProps("commands")}
-            />
-          </Tabs.Panel>
-        </Tabs>
+                <div className="flex items-center justify-between">
+                  <Label>All day</Label>
+                  <Switch
+                    checked={matchDataForm.values.timeWindow?.allDay}
+                    onCheckedChange={(checked) =>
+                      matchDataForm.setFieldValue("timeWindow.allDay", checked)
+                    }
+                  />
+                </div>
 
-        <Group justify={"space-between"}>
-          <Button onClick={handleCancelClick} variant="light">
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            loading={createMutation.isPending || updateMutation.isPending}
-          >
-            Save
-          </Button>
-        </Group>
-      </Stack>
+                {!matchDataForm.values?.timeWindow?.allDay && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <TimePicker
+                      label="Start time (HH:mm)"
+                      withDropdown
+                      {...matchDataForm.getInputProps("timeWindow.startTime")}
+                    />
+                    <TimePicker
+                      label="End time (HH:mm)"
+                      withDropdown
+                      {...matchDataForm.getInputProps("timeWindow.endTime")}
+                    />
+                  </div>
+                )}
+
+                <Alert>
+                  <IconInfoCircle className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    Overnight ranges are supported (e.g., 20:00 to 08:00).
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-between items-center pt-6">
+        <Button type="button" variant="outline" onClick={handleCancelClick}>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={createMutation.isPending || updateMutation.isPending}
+        >
+          {createMutation.isPending || updateMutation.isPending ? (
+            <>
+              <span className="mr-2">Saving...</span>
+              <span className="animate-spin">⏳</span>
+            </>
+          ) : (
+            "Save Automation"
+          )}
+        </Button>
+      </div>
     </form>
   );
 }

@@ -289,7 +289,7 @@ export default function WaInboxChatDisplayFooter({
         setBody({ ...body, text: { ...body.text, body: value } });
       }}
       content={body.text.body}
-      mih={50}
+      mih={60}
       flex={1}
       inbox={true}
       customEnter={() => submiRef.current()}
