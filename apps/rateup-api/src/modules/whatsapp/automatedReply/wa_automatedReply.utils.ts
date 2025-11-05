@@ -15,8 +15,18 @@ import { templateData } from "../messageTemplates/wa_templates.service";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { getNestedProperty } from "../../../utils/misc/obj.utils";
 import { findRecentAutomation } from "../whatsappSurvey/automation-logger.utils";
+import { getContactByPhoneNumberAndOrgId } from "../../contact/contact.service";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 
-export function validateAutomationMatchCondition(
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+/**
+ * Enhanced validation for automation match conditions including contact and time filters
+ */
+export async function validateAutomationMatchCondition(
   automation: {
     commands: string[];
     matchType: string;
@@ -25,10 +35,22 @@ export function validateAutomationMatchCondition(
     name: string;
     createdAt: Date;
     teamId?: string;
+    sendOnceIn24Hours?: boolean;
   },
   message: string,
-): boolean {
+  orgId?: string,
+  phone?: string,
+  orgTimezone?: string,
+): Promise<boolean> {
   const { matchType, matchData, commands } = automation;
+  if (automation.sendOnceIn24Hours) {
+    const recentActivity = await findRecentAutomation(phone, orgId, {
+      timeWindow: 24 * 60 * 60 * 1000, // 24 hours
+    });
+    if (recentActivity) return;
+  }
+  // First validate the message matching logic (existing logic)
+  let messageMatches = false;
 
   // Helper to check whole word match
   function includesWholeWord(
@@ -37,7 +59,6 @@ export function validateAutomationMatchCondition(
     caseSensitive: boolean,
   ) {
     const flags = caseSensitive ? "g" : "gi";
-    // Escape special regex characters in word
     const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`\\b${escapedWord}\\b`, flags);
     return regex.test(text);
@@ -45,9 +66,9 @@ export function validateAutomationMatchCondition(
 
   if (matchType === WaAutomatedReplyMatchType.Exact) {
     if (matchData.caseSensitive) {
-      return commands?.[0] === message;
+      messageMatches = commands?.[0] === message;
     } else {
-      return commands?.[0]?.toLowerCase() === message?.toLowerCase();
+      messageMatches = commands?.[0]?.toLowerCase() === message?.toLowerCase();
     }
   } else if (
     [
@@ -63,12 +84,32 @@ export function validateAutomationMatchCondition(
       comparator = "some";
 
     const caseSensitive = !!matchData.caseSensitive;
-    return commands[comparator]((keyword) =>
+    messageMatches = commands[comparator]((keyword) =>
       includesWholeWord(message, keyword, caseSensitive),
     );
   } else {
     throw new Error(`WaAutomation not implemented for: ${matchType}`);
   }
+
+  // If message doesn't match, return false early
+  if (!messageMatches) return false;
+
+  // If we don't have orgId and phone for additional validations, return message match result
+  if (!orgId || !phone) return messageMatches;
+
+  // Validate contact filters
+  const contactFiltersValid = await validateContactFilters(
+    matchData.contactFilters,
+    orgId,
+    phone,
+  );
+  if (!contactFiltersValid) return false;
+
+  // Validate time window
+  const timeWindowValid = validateTimeWindow(matchData.timeWindow, orgTimezone);
+  if (!timeWindowValid) return false;
+
+  return true;
 }
 
 /**
@@ -88,15 +129,19 @@ export async function checkIfMessageMatchesAnyAutomation(
     orgId,
     phone_number_id,
   );
+  const orgTimezone =
+    //  org?.timezone ||
+    "UTC";
 
   for (const automation of automatedReplies) {
-    if (validateAutomationMatchCondition(automation, message)) {
-      if (automation.sendOnceIn24Hours) {
-        const recentActivity = await findRecentAutomation(phone, orgId, {
-          timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-        });
-        if (recentActivity) return;
-      }
+    const isMatch = await validateAutomationMatchCondition(
+      automation,
+      message,
+      orgId,
+      phone,
+      orgTimezone,
+    );
+    if (isMatch) {
       log.trace("Automation Matched! %o", automation);
       return automation;
     }
@@ -277,5 +322,113 @@ export async function verifyAutomationLimit(
       message: e?.message,
       displayMessageInClient: true,
     });
+  }
+}
+
+/**
+ * Validates contact-based filter conditions
+ */
+async function validateContactFilters(
+  contactFilters: any,
+  orgId: string,
+  phone: string,
+): Promise<boolean> {
+  if (!contactFilters) return true;
+
+  const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
+  if (!contact) return false;
+
+  // Check if automation should only trigger for new contacts
+  if (contactFilters.newContactsOnly) {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    if (contact.createdAt < oneDayAgo) {
+      return false;
+    }
+  }
+
+  // Check if contact is in required groups
+  if (contactFilters.inGroups?.length > 0) {
+    const contactGroups =
+      contact?.contactGroups?.map((g) => g.contactGroupId) || [];
+    const requiredGroups = contactFilters.inGroups;
+    const hasRequiredGroup = requiredGroups.some((group) =>
+      contactGroups.includes(group),
+    );
+    return hasRequiredGroup;
+  }
+
+  // Check if contact has values for required fields
+  if (contactFilters.requiredFieldsWithAnyValue?.length > 0) {
+    const customFieldsMap = new Map(
+      contact.customFields?.map((cf) => [cf.fieldId, cf.value]) || [],
+    );
+
+    for (const fieldSlug of contactFilters.requiredFieldsWithAnyValue) {
+      const fieldValue = customFieldsMap.get(fieldSlug);
+
+      // Check custom fields first
+      if (fieldValue && fieldValue.trim()) continue;
+
+      // Check built-in fields
+      switch (fieldSlug.toLowerCase()) {
+        case "email":
+          if (contact.email && contact.email.trim()) continue;
+          break;
+        case "name":
+          if (contact.name && contact.name.trim()) continue;
+          break;
+        case "phone":
+          if (contact.phone && contact.phone.trim()) continue;
+          break;
+        default:
+          // Field doesn't have a value
+          return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Validates time window conditions
+ */
+function validateTimeWindow(
+  timeWindow: any,
+  orgTimezone: string = "UTC",
+): boolean {
+  if (!timeWindow?.enabled) return true;
+
+  const now = dayjs();
+  // .tz(orgTimezone);
+  const currentDay = now.format("ddd").toLowerCase();
+  const currentTime = now.format("HH:mm");
+
+  // Check if current day is in allowed days
+  const allowedDays = timeWindow.days || [];
+  if (allowedDays.length > 0 && !allowedDays.includes(currentDay)) {
+    return false;
+  }
+
+  // If all day is enabled, we only check the day
+  if (timeWindow.allDay) {
+    return true;
+  }
+
+  // Validate time range
+  const startTime = timeWindow.startTime;
+  const endTime = timeWindow.endTime;
+
+  if (!startTime || !endTime) {
+    return true; // If no time specified, allow all times
+  }
+  const current = dayjs(currentTime, "HH:mm");
+  const start = dayjs(startTime, "HH:mm");
+  const end = dayjs(endTime, "HH:mm");
+
+  if (start.isAfter(end)) {
+    return current.isAfter(start) || current.isBefore(end);
+  } else {
+    return current.isAfter(start) && current.isBefore(end);
   }
 }
