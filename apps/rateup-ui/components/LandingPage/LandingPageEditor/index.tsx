@@ -6,8 +6,6 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Box, Button, Center, Flex, Loader } from "@mantine/core";
 import { useTranslations } from "next-intl";
 
-import { geist } from "@/utils/fonts";
-
 import { useGetLandingPageWithShortId } from "../../../backend/landingPage/landingPage.query";
 import { useRouteParams } from "../../../context/RouteParamsContext";
 import { LandingPageContextProvider } from "./LandingPageContext/LandingPageContext";

@@ -31,7 +31,7 @@ import { SuperTokensProvider } from "@/components/SuperToken/supertokensProvider
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { isProduction, rateupUrl } from "@/utils/constants";
-import { geist, notoColorEmogi } from "@/utils/fonts";
+import { inter, notoColorEmogi } from "@/utils/fonts";
 
 import Providers from "./providers";
 
@@ -72,7 +72,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${geist.className},${notoColorEmogi.className}`}
+      className={`${inter.className},${notoColorEmogi.className}`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
       {...mantineHtmlProps}

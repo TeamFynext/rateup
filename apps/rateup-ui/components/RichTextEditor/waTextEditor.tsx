@@ -318,11 +318,11 @@ function WaTextEditor({
           </div>
         </div>
       )}
-      <div className="flex items-start p-4 space-x-2">
+      <div className="flex items-start p-4 pb-0 space-x-2">
         <div className="flex-1">
           <RichTextEditor
             classNames={{
-              content: "rounded-xl overflow-y-auto min-h-[60px] max-h-[200px]",
+              content: `rounded-xl overflow-y-auto max-h-[200px] min-h-[${mih}px]`,
             }}
             editor={editor}
             styles={{
