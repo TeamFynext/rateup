@@ -118,11 +118,7 @@ export default function ETESettings(props: ETESettingsInterface) {
             >
               <ActionIcon
                 color="red"
-                onClick={() =>
-                  router.push(
-                    "/dashboard/settings?tab=organization&highlighted=true",
-                  )
-                }
+                onClick={() => router.push("/dashboard/settings/account")}
               >
                 <IconKey />
               </ActionIcon>

@@ -68,9 +68,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
   const { whatsappSettingsPhoneId } = usePhoneIdStore();
   const messageContentRef = React.useRef(null);
   const platform =
-    selectedContact?.source?.toUpperCase() !== MessagePlatform.INSTAGRAM
-      ? MessagePlatform.WHATSAPP
-      : MessagePlatform.INSTAGRAM;
+    selectedContact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const sendnewWaMessage = useSendNewWaMessage(
     selectedContact?.id,
     whatsappSettingsPhoneId,
@@ -203,6 +201,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
               size="xs"
               src={selectedContact?.profilePic}
               showRing={true}
+              platform={platform}
             />
           </div>
         )}

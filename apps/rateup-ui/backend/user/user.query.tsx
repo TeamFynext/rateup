@@ -217,6 +217,7 @@ export function useUpdateActiveStatusMutation() {
       queryClient.resetQueries({ queryKey: ["userInfoQuery"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
     },
     onError: (error: any) => {
       console.error("Error deleting member", error.message);
@@ -271,6 +272,7 @@ export const useUpdateUserPause = () => {
       showSuccessToast("Pause status has been updated");
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
     },
     onError: () => {
       showErrorToast("Error in updating pause status");

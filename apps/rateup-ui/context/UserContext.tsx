@@ -23,6 +23,7 @@ export interface User {
   };
   waAssignedChatPermission: WaAssignedChatPermission;
   status: UserAvailabilityStatus;
+  onboarding?: any;
 }
 
 interface UserContextProps {

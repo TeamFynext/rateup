@@ -136,6 +136,7 @@ export default function WaInboxChatDisplayHeader({
               showOnlineStatus={!isSessionExpired}
               onlineStatusPosition="topLeft"
               showRing={true}
+              platform={platform}
             />
             <div
               className={`absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 shadow-sm ${

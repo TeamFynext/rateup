@@ -197,7 +197,7 @@ const WaInboxChatSelect = () => {
           .filter((c) => !existingIds.has(c.id))
           .map((c) => ({ ...c, updatedAt: new Date().toISOString() }));
         if (newContacts.length) {
-          await state.addContactsForFilter(filterKey, newContacts, tab);
+          await state.addContactsForFilter(filterKey, newContacts);
           updateInitialMessagesToStore(newContacts);
         }
       }

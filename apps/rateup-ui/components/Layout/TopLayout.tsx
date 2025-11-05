@@ -126,7 +126,7 @@ export default function TopNavbar({ user }) {
 
           <ActionIcon
             variant="transparent"
-            onClick={() => router.push("/dashboard/settings?tab=account")}
+            onClick={() => router.push("/dashboard/settings/billing")}
             className={classes["settings-icon"]}
           >
             <Settings size={20} />

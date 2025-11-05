@@ -23,7 +23,8 @@ export const useChatSocket = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
   const messageStore = useMessagesStore.getState();
-  const { selectedContact, updateContactById } = useContactsStore();
+  const { selectedContact, updateContactById, addContactsForFilter } =
+    useContactsStore();
 
   useEffect(() => {
     if (!browserId) return;
@@ -46,28 +47,55 @@ export const useChatSocket = () => {
             if (selectedContact?.id === incomingContact?.id) {
               markUnread = true;
             }
-            updateContactById(
-              incomingContact.id,
-              (contact) => ({
-                ...contact,
-                unReadMessageCount:
-                  selectedContact?.id === incomingContact?.id
-                    ? 0
-                    : (contact.unReadMessageCount ?? 0) + 1,
-                lastMessage: {
-                  messageBody: message.messageBody,
-                  sourceIdentifier: message.sourceIdentifier,
-                  sourcePlatform: message.sourcePlatform,
-                  waCreatedAt: message.waCreatedAt,
-                },
-                ...(message.messageBody.exchangeProcess === "receive"
-                  ? {
-                      lastReceivedMessageTimeStamp: message.waCreatedAt,
-                    }
-                  : {}),
-              }),
-              markUnread,
-            );
+            const contactInStore = useContactsStore
+              .getState()
+              .contactsById.get(incomingContact.id);
+            if (contactInStore) {
+              updateContactById(
+                incomingContact.id,
+                (contact) => ({
+                  ...contact,
+                  unReadMessageCount:
+                    selectedContact?.id === incomingContact?.id
+                      ? 0
+                      : (contact.unReadMessageCount ?? 0) + 1,
+                  lastMessage: {
+                    messageBody: message.messageBody,
+                    sourceIdentifier: message.sourceIdentifier,
+                    sourcePlatform: message.sourcePlatform,
+                    waCreatedAt: message.waCreatedAt,
+                  },
+                  ...(message.messageBody.exchangeProcess === "receive"
+                    ? {
+                        lastReceivedMessageTimeStamp: message.waCreatedAt,
+                      }
+                    : {}),
+                }),
+                markUnread,
+              );
+            } else {
+              addContactsForFilter(
+                useContactsStore.getState().currentFilterKey,
+                [
+                  {
+                    ...incomingContact,
+                    unReadMessageCount: 1,
+                    lastMessage: {
+                      messageBody: message.messageBody,
+                      sourceIdentifier: message.sourceIdentifier,
+                      sourcePlatform: message.sourcePlatform,
+                      waCreatedAt: message.waCreatedAt,
+                    },
+                    ...(message.messageBody.exchangeProcess === "receive"
+                      ? {
+                          lastReceivedMessageTimeStamp: message.waCreatedAt,
+                        }
+                      : {}),
+                  },
+                ],
+              );
+            }
+
             for (const key of [
               `${incomingContact?.id}_all`,
               `${incomingContact?.id}_${message.sourceIdentifier}`,

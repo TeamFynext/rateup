@@ -13,6 +13,7 @@ import {
   deleteInviteById,
   deleteTeamById,
   editTeam,
+  getNotTeamMembers,
   getSurveyLanguagesFromTeam,
   getTeamMembersFromInvitation,
   getTeamsByUser,
@@ -37,8 +38,16 @@ export function useTeamMembersFromInvitation(teamId: string) {
   });
 }
 
+export function useNotTeamMembers(teamId: string) {
+  return useQuery({
+    queryKey: ["notTeamMembers", teamId],
+    queryFn: () => getNotTeamMembers(teamId),
+    enabled: !!teamId,
+  });
+}
+
 export function useCreateTeamMutation(
-  close: () => void,
+  setIsCreateTeamDialogOpen: (arg: boolean) => void,
   createTeamForm: any,
   setIsCreating: React.Dispatch<React.SetStateAction<boolean>>,
 ) {
@@ -57,7 +66,7 @@ export function useCreateTeamMutation(
           autoClose: 3000,
         });
       setIsCreating(false);
-      close();
+      setIsCreateTeamDialogOpen(false);
       createTeamForm.reset();
     },
     onError: (error: any) => {
@@ -121,8 +130,6 @@ export function useEditTeamMutation(
 
 export function useDeleteTeamMutation() {
   const queryClient = useQueryClient();
-  const router = useRouter();
-
   return useMutation({
     mutationFn: deleteTeamById,
     onSuccess: () => {
@@ -136,7 +143,6 @@ export function useDeleteTeamMutation() {
           icon: <IconCheck size="1rem" />,
           autoClose: 3000,
         });
-      router.push("/dashboard/teams");
     },
     onError: (error: any) => {
       notifications.update({
@@ -158,6 +164,7 @@ async function handleCreateTeam(values) {
   const data = {
     name: values.name,
     code: values.code,
+    color: values.color,
     orgId,
     userId,
     whatsappAccessToken: values.whatsappAccessToken,
@@ -192,15 +199,16 @@ export function useDeleteInviteMutation(teamId) {
         queryClient.invalidateQueries({
           queryKey: ["invitedTeamMembers", teamId],
         }),
-        notifications.update({
-          id: "load-data-deleting",
-          color: "teal",
-          title: "Success",
-          loading: false,
-          message: "Invite deleted successfully.",
-          icon: <IconCheck size="1rem" />,
-          autoClose: 3000,
-        });
+        queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+      notifications.update({
+        id: "load-data-deleting",
+        color: "teal",
+        title: "Success",
+        loading: false,
+        message: "Invite deleted successfully.",
+        icon: <IconCheck size="1rem" />,
+        autoClose: 3000,
+      });
       close();
     },
   });
@@ -220,6 +228,11 @@ export function useAddUsertoTeams() {
     mutationFn: addUsertoTeams,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["notTeamMembers"] });
+      queryClient.invalidateQueries({ queryKey: ["teamsDataUserQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["invitedTeamMembers"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
+
       showSuccessToast("success");
     },
     onError: () => {
@@ -234,6 +247,7 @@ export function useRemoveUserFromTeam(teamId) {
     mutationFn: removeUserFromTeam,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orgTeamsDataQuery"] });
+      queryClient.invalidateQueries({ queryKey: ["orgTeamsAllDataQuery"] });
       queryClient.invalidateQueries({
         queryKey: ["invitedTeamMembers", teamId],
       });

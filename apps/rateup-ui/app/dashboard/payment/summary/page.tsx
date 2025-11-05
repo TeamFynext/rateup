@@ -52,7 +52,7 @@ const CheckoutReturn = () => {
           </Text>
           <RateupButtonPrimary
             onClick={() =>
-              router.push("/dashboard/settings?tab=account&view=myOrders")
+              router.push("/dashboard/settings/billing#order-history")
             }
             title={translations("Go to My Orders")}
             leftIcon={<IconChevronLeft />}
