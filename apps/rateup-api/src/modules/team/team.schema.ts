@@ -6,6 +6,7 @@ const teamCore = {
   code: z.string(),
   orgId: z.string(),
   userId: z.string(),
+  color: z.string().optional(),
 };
 
 const createTeamRequestSchema = z.object({
@@ -74,6 +75,7 @@ const editTeamSchema = z.object({
   googleLink: z.string().optional(),
   reviewPageLinks: z.any().optional(),
   tags: z.array(z.string()).optional(),
+  color: z.string().optional(),
 });
 
 const idParamRequestSchema = z.object({

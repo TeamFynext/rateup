@@ -1277,6 +1277,7 @@ export async function getChatByContactId(req, res) {
 import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
 import { WaMessageBody } from "../../../../types/whatsapp.types";
+import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
 
 /**
  * Generate a "send" text message
@@ -1330,10 +1331,24 @@ export async function generateInboxResponse(
   orgId: string,
   userId: string,
 ) {
-  const contacts = await prisma.contact.findMany({
+  let skip = 0;
+  if (body.numberOfContacts === 1) {
+    skip = Math.floor(Math.random() * 100);
+  }
+  let contacts = await prisma.contact.findMany({
     where: { orgId: orgId },
     take: body.numberOfContacts || 5,
+    skip,
   });
+
+  //if contact table does n't have 100 records
+  if (body.numberOfContacts === 1 && !contacts.length) {
+    contacts = await prisma.contact.findMany({
+      where: { orgId: orgId },
+      take: body.numberOfContacts || 5,
+    });
+  }
+
   const settings = await getWaSettings(orgId);
 
   for (const contact of contacts) {
@@ -1417,5 +1432,19 @@ export async function generateInboxResponse(
         },
       });
     }
+
+    await sendViaWstoOrgHandler(
+      orgId,
+      {
+        type: "inbox",
+        inbox: {
+          contact,
+          message: messagesToCreate?.at(-1),
+        },
+      },
+      messagesToCreate?.at(-1)?.sourcePlatform === PlatformType.WEBCHAT
+        ? "fab"
+        : "main",
+    );
   }
 }

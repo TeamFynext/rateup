@@ -40,6 +40,10 @@ const updateOrgDetailsSchema = z.object({
   name: z.string().optional(),
   phone: z.string().optional(),
   address: z.string().optional(),
+  industry: z.string().optional(),
+  businessmail: z.string().optional(),
+  website: z.string().optional(),
+  location: z.string().optional(),
   encryptionKeys: z
     .object({
       publicKey: z.string(),

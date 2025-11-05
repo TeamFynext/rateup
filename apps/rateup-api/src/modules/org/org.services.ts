@@ -109,6 +109,96 @@ export async function getAllMembersWithTeams(orgId: string) {
   }));
 }
 
+export async function getAllMembersWithTeamsAndInvitation(orgId: string) {
+  // Fetch active org members
+  const members = await prisma.orgMember.findMany({
+    where: { orgId, user: { active: true } },
+    select: {
+      user: {
+        select: {
+          id: true,
+          profilePhoto: true,
+          email: true,
+          name: true,
+          teamMember: {
+            include: {
+              team: true,
+            },
+          },
+          isPaused: true,
+        },
+      },
+      status: true,
+      role: true,
+    },
+  });
+
+  // Transform into cleaner structure
+  const formattedMembers = members.map((m) => ({
+    id: m.user.id,
+    name: m.user.name,
+    email: m.user.email,
+    profilePhoto: m.user.profilePhoto,
+    role: m.role,
+    teams: m.user.teamMember.map((tm) => ({
+      team_id: tm.team.id,
+      team_name: tm.team.name,
+      team_code: tm.team.code,
+      team_color: tm.team.color,
+    })),
+    isPaused: m.user.isPaused,
+    status: m.status,
+  }));
+
+  // Fetch pending invitations for the same org
+  const invitations = await prisma.invitation.findMany({
+    where: {
+      orgId,
+      status: "PENDING",
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      status: true,
+      type: true,
+      invitedBy: true,
+      team: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+        },
+      },
+    },
+  });
+
+  // Transform invitations
+  const formattedInvitations = invitations.map((invite) => ({
+    id: invite.id,
+    email: invite.email,
+    name: invite.name,
+    status: invite.status,
+    type: invite.type,
+    invitedBy: invite.invitedBy,
+    teams: invite.team
+      ? [
+          {
+            team_id: invite.team.id,
+            team_name: invite.team.name,
+            team_code: invite.team.code,
+          },
+        ]
+      : [],
+  }));
+
+  // Return unified object
+  return {
+    members: formattedMembers,
+    invitations: formattedInvitations,
+  };
+}
+
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
@@ -180,6 +270,10 @@ export async function updateOrgDetails(
     address,
     phone,
     name,
+    industry,
+    location,
+    website,
+    businessmail,
     encryptionKeys,
     waAssignedChatPermission,
   }: UpdateOrgDetailsInput,
@@ -189,7 +283,12 @@ export async function updateOrgDetails(
   let session = await Session.getSession(request, reply);
   const accessTokenPayload = session.getAccessTokenPayload();
   let orgId = accessTokenPayload.orgId;
-  console.log(address, phone, name);
+  const existingOrg = await prisma.org.findUnique({
+    where: { id: orgId },
+    select: { onboarding: true },
+  });
+  const existingOnboarding =
+    (existingOrg?.onboarding as Record<string, any>) ?? {};
   const org = await prisma.org.update({
     where: { id: orgId },
     data: {
@@ -198,6 +297,13 @@ export async function updateOrgDetails(
       name,
       encryptionKeys,
       waAssignedChatPermission,
+      onboarding: {
+        ...existingOnboarding,
+        industry: industry,
+        website: website,
+        location: location,
+        businessmail: businessmail,
+      },
     },
   });
   return org;

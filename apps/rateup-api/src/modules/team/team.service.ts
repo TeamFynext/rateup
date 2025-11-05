@@ -67,6 +67,7 @@ export async function createTeam(input: CreateTeamInput) {
             name: input.name,
             code: input.code.trim(),
             orgId: input.orgId,
+            color: input.color,
           },
           select: {
             id: true,
@@ -566,6 +567,38 @@ export function getTeamMembers(input: GetTeamMembersInput) {
   });
 }
 
+export async function getUsersNotInTeam(teamId: string, orgId: string) {
+  return prisma.$queryRawUnsafe<
+    {
+      id: string;
+      name: string | null;
+      email: string;
+      role: string;
+      profilePhoto: string | null;
+    }[]
+  >(
+    `
+    SELECT 
+      u.id,
+      u.name,
+      u.email,
+      u."profilePhoto",
+      om.role
+    FROM "User" u
+    INNER JOIN "OrgMember" om ON om."userId" = u.id
+    WHERE om."orgId" = $1
+      AND u.id NOT IN (
+        SELECT "userId"
+        FROM "TeamMember"
+        WHERE "teamId" = $2
+      )
+    ORDER BY u.name ASC;
+  `,
+    orgId,
+    teamId,
+  );
+}
+
 export async function getTeamMembersAndFromInvitation(
   orgId: string,
   input: GetTeamMembersInput,
@@ -601,6 +634,7 @@ export async function getTeamMembersAndFromInvitation(
               id: true,
               name: true,
               email: true,
+              profilePhoto: true,
               active: true,
               orgMember: {
                 where: {
@@ -631,6 +665,7 @@ export async function getTeamMembersAndFromInvitation(
         active: member.user.active,
         role: member.user.orgMember[0].role,
         userId: member.user.orgMember[0].userId,
+        profilePhoto: member.user.profilePhoto,
       };
     }),
     invitations: team.invitations.map((invite) => {
@@ -673,6 +708,8 @@ export async function getTeamsByUserId(userId: string) {
           id: true,
           name: true, // Team name
           code: true,
+          color: true,
+          createdAt: true,
           googleLink: true,
           reviewPageLinks: true,
           _count: {
@@ -721,7 +758,7 @@ export async function getTeamIdsBySurveyMapId(mapId: string[]) {
   return teams.map(({ teamId }) => teamId);
 }
 export async function editTeam(
-  { name, code, googleLink, reviewPageLinks }: EditTeamInput,
+  { name, code, googleLink, reviewPageLinks, color }: EditTeamInput,
   params: IdParamInput,
   request: FastifyRequest,
   reply: FastifyReply,
@@ -740,6 +777,7 @@ export async function editTeam(
         code,
         googleLink,
         reviewPageLinks,
+        color,
       },
     });
     return team;
