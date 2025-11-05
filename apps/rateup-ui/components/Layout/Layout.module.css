@@ -16,8 +16,7 @@
   flex: 1 1 auto;
   overflow: auto;
   flex-direction: column;
-  height: calc(100vh - 65px);
-  height: calc(100dvh - 65px);
+  height: 100dvh;
   max-height: 1100px;
   overflow-x: hidden;
 }

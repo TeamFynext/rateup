@@ -133,9 +133,7 @@ export default function WaInboxChatSelectCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-0.5">
             <div className="flex items-center gap-1 flex-1 min-w-0">
-              <p
-                className={`truncate text-sm ${contact?.unReadMessageCount > 0 ? "font-semibold" : "font-medium"}`}
-              >
+              <p className={`truncate text-sm`}>
                 {contact?.name ||
                   contact?.whatsappUserName ||
                   contact?.phone ||

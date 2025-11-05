@@ -314,7 +314,7 @@ const WaInboxChatSelect = () => {
             ref={parentRef}
             className="List"
             style={{
-              height: `calc(100dvh - 130px)`,
+              height: `calc(100dvh - 65px)`,
               width: `100%`,
               overflow: "auto",
             }}

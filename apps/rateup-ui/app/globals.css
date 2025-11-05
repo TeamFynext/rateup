@@ -243,15 +243,6 @@ html {
   padding: 0;
   width: 100%;
 }
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 500;
-  margin: 0;
-}
 
 p {
   margin: 0;
@@ -289,10 +280,6 @@ p {
   .cards-grid-global-class {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
-}
-/* Added to prevent using the system theme when an error occurs in a component and is caught by the error boundary */
-body {
-  font-weight: 300;
 }
 .react-flow {
   --xy-edge-stroke-default: rgb(129, 126, 126) !important;
@@ -380,65 +367,6 @@ body {
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/**
- * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
- */
-@layer base {
-  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
-    h1 {
-      font-size: var(--text-2xl);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    h2 {
-      font-size: var(--text-xl);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    h3 {
-      font-size: var(--text-lg);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    h4 {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    p {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-normal);
-      line-height: 1.5;
-    }
-
-    label {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    button {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    input {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-normal);
-      line-height: 1.5;
-    }
-  }
-}
-
-html {
-  font-size: var(--font-size);
 }
 
 /* Custom animations */
