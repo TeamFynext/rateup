@@ -333,6 +333,10 @@ export async function getContactByPhoneNumberAndOrgId(
       phone,
       orgId,
     },
+    include: {
+      customFields: true,
+      contactGroups: true,
+    },
   });
   return contact;
 }
