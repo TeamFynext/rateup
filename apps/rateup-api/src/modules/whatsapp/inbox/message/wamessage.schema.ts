@@ -77,7 +77,7 @@ const WaChatFilterSchema = z.object({
   tags: z.array(z.any()).optional(),
   waMessageAssignStatus: z.string().optional(),
   blockedUsers: z.boolean().optional(),
-  newStatuses: z.array(z.string()).optional(),
+  status: z.array(z.string()).optional(),
   assignedTeams: z.array(z.string()).optional(),
   phone: z.string(),
   labels: z.array(z.string()).optional(),

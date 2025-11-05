@@ -327,82 +327,13 @@ export async function filterChats(
       const isAssignedToMe = bodyFilterProps?.waMessageAssignStatus === "mine";
       const isNew = bodyFilterProps?.waMessageAssignStatus === "New";
       const isNotSent = bodyFilterProps?.waMessageAssignStatus !== "Sent";
-      const newStatuses = bodyFilterProps?.newStatuses?.length
-        ? bodyFilterProps.newStatuses
-        : [WaMessageAssignStatus.ASSIGNED, WaMessageAssignStatus.UNASSIGNED];
 
       if (bodyFilterProps?.waMessageAssignStatus && isNotSent) {
         if (isNew) {
-          params.push(WaMessageAssignStatus.CLOSED);
+          params.push(WaMessageAssignStatus.UNASSIGNED);
           filters.push(
-            `c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."waMessageAssignStatus" != $${paramIndex++}::TEXT`,
+            `c."lastReceivedMessageTimeStamp" > NOW() - INTERVAL '24 hours' AND c."waMessageAssignStatus" = $${paramIndex++}::TEXT`,
           );
-
-          if (newStatuses.length) {
-            params.push(
-              newStatuses.map((status) =>
-                status === "MINE" ? "ASSIGNED" : status,
-              ),
-            );
-            let newQuery = `(c."waMessageAssignStatus" = ANY($${paramIndex++}::TEXT[])`;
-
-            if (newStatuses.includes("MINE")) {
-              params.push(userId);
-              filters.push(`EXISTS (
-                SELECT 1 FROM "WaInboxAssign" winb 
-                WHERE winb."contactId" = c.id 
-                AND winb."assignedUserId" = $${paramIndex++}::uuid
-              )`);
-            }
-
-            if (
-              newStatuses.includes("ASSIGNED") ||
-              newStatuses.includes("MINE")
-            ) {
-              if (
-                waAssignedChatPermission ===
-                WaAssignedChatPermission.TeamMembers
-              ) {
-                const teamIds = await getTeamIdsLazy();
-                params.push(teamIds);
-                const teamCondition = `EXISTS (
-                  SELECT 1 FROM "WaInboxAssign" winb 
-                  WHERE winb."contactId" = c.id 
-                  AND winb."teamId" = ANY($${paramIndex++}::uuid[])
-                )`;
-
-                if (newStatuses.includes("UNASSIGNED")) {
-                  params.push(WaMessageAssignStatus.UNASSIGNED);
-                  params.push(WaMessageAssignStatus.ASSIGNED);
-                  newQuery += ` AND c."waMessageAssignStatus" = $${paramIndex++} OR (c."waMessageAssignStatus" = $${paramIndex++} AND ${teamCondition})`;
-                } else {
-                  newQuery += ` AND ${teamCondition}`;
-                }
-              } else if (
-                waAssignedChatPermission === WaAssignedChatPermission.Admins &&
-                role === Role.MEMBER
-              ) {
-                if (!newStatuses.includes("UNASSIGNED")) {
-                  params.push(userId);
-                  newQuery += ` AND EXISTS (
-                    SELECT 1 FROM "WaInboxAssign" winb 
-                    WHERE winb."contactId" = c.id 
-                    AND winb."assignedUserId" = $${paramIndex++}::uuid
-                  )`;
-                } else {
-                  params.push("UNASSIGNED");
-                  params.push(userId);
-                  newQuery += ` AND (c."waMessageAssignStatus" = $${paramIndex++}::TEXT OR EXISTS (
-                    SELECT 1 FROM "WaInboxAssign" winb 
-                    WHERE winb."contactId" = c.id 
-                    AND winb."assignedUserId" = $${paramIndex++}::uuid
-                  ))`;
-                }
-              }
-            }
-
-            filters.push(newQuery);
-          }
         } else {
           const assignedStatus =
             WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
@@ -451,6 +382,56 @@ export async function filterChats(
               return [];
             }
           }
+        }
+      }
+      if (!bodyFilterProps?.waMessageAssignStatus) {
+        if (bodyFilterProps.status.length) {
+          params.push(bodyFilterProps.status);
+          let newQuery = `(c."waMessageAssignStatus" = ANY($${paramIndex++}::TEXT[]))`;
+
+          if (bodyFilterProps.status.includes("ASSIGNED")) {
+            if (
+              waAssignedChatPermission === WaAssignedChatPermission.TeamMembers
+            ) {
+              const teamIds = await getTeamIdsLazy();
+              params.push(teamIds);
+              const teamCondition = `EXISTS (
+                  SELECT 1 FROM "WaInboxAssign" winb 
+                  WHERE winb."contactId" = c.id 
+                  AND winb."teamId" = ANY($${paramIndex++}::uuid[])
+                )`;
+
+              if (bodyFilterProps.status.includes("UNASSIGNED")) {
+                params.push(WaMessageAssignStatus.UNASSIGNED);
+                params.push(WaMessageAssignStatus.ASSIGNED);
+                newQuery += ` AND c."waMessageAssignStatus" = $${paramIndex++} OR (c."waMessageAssignStatus" = $${paramIndex++} AND ${teamCondition})`;
+              } else {
+                newQuery += ` AND ${teamCondition}`;
+              }
+            } else if (
+              waAssignedChatPermission === WaAssignedChatPermission.Admins &&
+              role === Role.MEMBER
+            ) {
+              if (!bodyFilterProps.status.includes("UNASSIGNED")) {
+                params.push(userId);
+                newQuery += ` AND EXISTS (
+                    SELECT 1 FROM "WaInboxAssign" winb 
+                    WHERE winb."contactId" = c.id 
+                    AND winb."assignedUserId" = $${paramIndex++}::uuid
+                  )`;
+              } else {
+                params.push("UNASSIGNED");
+                params.push(userId);
+                newQuery += ` AND (c."waMessageAssignStatus" = $${paramIndex++}::TEXT OR EXISTS (
+                    SELECT 1 FROM "WaInboxAssign" winb 
+                    WHERE winb."contactId" = c.id 
+                    AND winb."assignedUserId" = $${paramIndex++}::uuid
+                  ))`;
+              }
+            }
+          }
+
+          filters.push(newQuery);
         }
       }
 
