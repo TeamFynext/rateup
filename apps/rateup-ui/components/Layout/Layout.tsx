@@ -728,9 +728,11 @@ const Navbar = ({
           </div>
           <div className="flex flex-col items-center justify-between gap-2 py-4">
             <Separator />
-            <div className="flex items-center justify-center ml-2">
-              <ColorSchemaButton />
-            </div>
+            {process.env.NEXT_PUBLIC_EXPERIMENT && (
+              <div className="flex items-center justify-center ml-2">
+                <ColorSchemaButton />
+              </div>
+            )}
             <div>
               <NotificationBellIcon />
             </div>
