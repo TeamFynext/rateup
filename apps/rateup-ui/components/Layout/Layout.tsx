@@ -308,9 +308,9 @@ const SubNavLinks = ({
     labelsSection?.children?.length > 0
       ? [
           ...regularLinksIcons,
-          <Divider key="category-divider" my="xs" mr={"xs"} />,
+          <Divider key="category-divider" my="xs" />,
           ...categoryIcons,
-          <Divider key="label-divider" my="xs" mr={"xs"} />,
+          <Divider key="label-divider" my="xs" />,
           ...labelIcons,
         ]
       : regularLinksIcons;
@@ -945,8 +945,8 @@ const Navbar = ({
                 /> */}
               </div>
             </div>
-            <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
-              <div className="p-1">
+            <ScrollAreaAutosize mah={"100dvh"} scrollbarSize={6}>
+              <div className="px-2 py-1 space-y-1">
                 {largeScreen ? (
                   desktopOpened ? (
                     <Transition
@@ -1333,8 +1333,8 @@ export default function Layout({ children }) {
       <AppShell
         navbar={{
           width: {
-            sm: linksIcon?.length > 0 ? (desktopOpened ? 260 : 120) : 60,
-            base: linksIcon?.length > 0 ? (mobileOpened ? 260 : 120) : 60,
+            sm: linksIcon?.length > 0 ? (desktopOpened ? 260 : 125) : 60,
+            base: linksIcon?.length > 0 ? (mobileOpened ? 260 : 125) : 60,
           },
           breakpoint: "sm",
           collapsed: { mobile: !mobileOpened },
