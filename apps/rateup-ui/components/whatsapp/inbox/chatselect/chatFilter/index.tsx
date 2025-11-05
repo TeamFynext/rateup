@@ -15,6 +15,8 @@ import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
@@ -33,7 +35,7 @@ export type ChatFilter = {
   tags: Array<MultiGV>;
   waMessageAssignStatus?: string;
   blockedUsers: boolean;
-  newStatuses: string[];
+  status: string[];
   assignedTeams: string[];
   phone?: string;
   labels: string[];
@@ -128,8 +130,8 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
     if (filter.strictFilter !== false) {
       count += 1;
     }
-    if (tab === "All" && filter.newStatuses.length) {
-      count += filter.newStatuses.length;
+    if (tab === "All" && filter.status?.length) {
+      count += filter.status.length;
     }
     if (["Assigned", "AssignedToMe"].includes(tab) && filter.assignedTeams) {
       count += filter.assignedTeams.length;
@@ -144,24 +146,29 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
       tags: [],
       strictFilter: false,
       searchTerm: "",
-      newStatuses: [],
+      status: [
+        WaMessageAssignStatus.UNASSIGNED,
+        WaMessageAssignStatus.ASSIGNED,
+        WaMessageAssignStatus.CLOSED,
+      ],
       assignedTeams: [],
     });
   }
 
   const statusData = [
-    WaMessageAssignStatus.ASSIGNED,
-    WaMessageAssignStatus.CLOSED,
+    {
+      id: WaMessageAssignStatus.UNASSIGNED,
+      label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNASSIGNED],
+    },
+    {
+      id: WaMessageAssignStatus.ASSIGNED,
+      label: WaMessageAssignStatusTab[WaMessageAssignStatus.ASSIGNED],
+    },
+    {
+      id: WaMessageAssignStatus.CLOSED,
+      label: WaMessageAssignStatusTab[WaMessageAssignStatus.CLOSED],
+    },
   ];
-
-  // const statusData = [
-  //   WaMessageAssignStatus.ASSIGNED,
-  //   WaMessageAssignStatus.UNASSIGNED,
-  //   "ASSIGNEDTOME",
-  // ].map((status) => ({
-  //   value: status,
-  //   label: WaMessageAssignStatusTab[status],
-  // }));
 
   return (
     <Stack>
@@ -228,19 +235,36 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
           );
         }}
       />
-      {tab === "New" && (
-        <ContainedMultiSelect
-          data={statusData}
-          placeholder="statuses"
-          w={220}
-          value={filter.newStatuses}
-          onChange={(values) =>
-            setFilter({
-              ...filter,
-              newStatuses: values as WaMessageAssignStatus[],
-            })
-          }
-        />
+      {tab === "All" && (
+        <div className="space-y-2">
+          <span className="text-xs font-medium text-muted-foreground mb-2">
+            {translations("Status")}
+          </span>
+          {statusData.map((status) => (
+            <div key={status.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={status.id}
+                checked={filter.status?.includes(status.id)}
+                onCheckedChange={(checked) =>
+                  setFilter({
+                    ...filter,
+                    status: checked
+                      ? Array.from(
+                          new Set([...(filter.status || []), status.id]),
+                        )
+                      : filter.status?.filter((s) => s !== status.id),
+                  })
+                }
+              />
+              <Label
+                htmlFor={status.id}
+                className="text-xs font-light text-muted-foreground cursor-pointer select-none"
+              >
+                {status.label}
+              </Label>
+            </div>
+          ))}
+        </div>
       )}
       {["Assigned", "mine"].includes(tab) && (
         <ContainedMultiSelect
@@ -278,7 +302,11 @@ export const useChatFilterStore = create<ChatFilterStore>()(
         tags: [],
         waMessageAssignStatus: null,
         blockedUsers: false,
-        newStatuses: [],
+        status: [
+          WaMessageAssignStatus.UNASSIGNED,
+          WaMessageAssignStatus.ASSIGNED,
+          WaMessageAssignStatus.CLOSED,
+        ],
         assignedTeams: [],
         phone: "all",
         labels: [],
