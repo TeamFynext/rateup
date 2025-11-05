@@ -141,19 +141,25 @@ import Image from "next/image";
 import Link from "next/link";
 
 import {
+  IconArrowRight,
   IconAutomation,
+  IconChartBar,
   IconGitMerge,
   IconMessages,
+  IconUser,
   IconWaveSine,
 } from "@tabler/icons-react";
 import { ArrowRightIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
+import { Button } from "@/components/ui/button";
 import { imagesPath } from "@/utils/constants";
 
-import { BookDemoModal } from "../helpers/BookDemoModal";
-
-type TabKey = "AI-Workflows" | "Unified-Inbox" | "Automation" | "WhatsApp-Flow";
+type TabKey =
+  | "Smart Automation & AI Chatbot"
+  | "Omnichannel Inbox"
+  | "Customer Profiles & Retention AI"
+  | "Feedback & Insights";
 
 const tabContent: Record<
   TabKey,
@@ -165,61 +171,70 @@ const tabContent: Record<
     link: string;
   }
 > = {
-  "AI-Workflows": {
-    Icon: IconGitMerge,
-    title: "AI Workflows",
+  "Smart Automation & AI Chatbot": {
+    Icon: IconAutomation,
+    title: "Smart Automation & AI Chatbot",
     description:
-      "Build intelligent conversational experiences that understand customer intent and respond with personalized solutions—no coding required.",
+      "Design complex workflows with our intuitive drag-and-drop builder to trigger messages, assign tasks, and personalize responses—while our smart multi-language AI chatbot delivers round-the-clock support across WhatsApp and your website.",
     image: `${imagesPath}/AI WORKFLOW (1).png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/ai-automation",
   },
-  "Unified-Inbox": {
+  "Omnichannel Inbox": {
     Icon: IconMessages,
-    title: "Unified Inbox",
+    title: "Omnichannel Inbox",
     description:
-      "Manage all customer conversations in one place with team collaboration tools, customer context cards, and AI-assisted responses.",
+      "Manage every customer interaction from one place. RateUp’s unified inbox keeps WhatsApp, Instagram, and other channels connected — enabling faster responses, seamless collaboration, and better customer experiences.",
     image: `${imagesPath}/UNIFIED INBOX (1).png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/inbox",
   },
-  Automation: {
-    Icon: IconAutomation,
-    title: "Automation",
+  "Customer Profiles & Retention AI": {
+    Icon: IconUser,
+    title: "Customer Profiles & Retention AI",
     description:
-      "Design complex workflows with our intuitive drag-and-drop builder—trigger messages, assign tasks, and personalize responses automatically.",
+      "Unify customer data, predict churn, and power loyalty with AI that turns insights into retention strategies. RateUp helps you understand every interaction, predict what they need next, and engage them at the perfect moment",
     image: `${imagesPath}/AUTOMATION (1).png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/ai-automation",
   },
-  "WhatsApp-Flow": {
-    Icon: IconWaveSine,
-    title: "WhatsApp Flow",
+  "Feedback & Insights": {
+    Icon: IconChartBar,
+    title: "Feedback & Insights",
     description:
-      "Create interactive applications like appointment booking, product browsing, and feedback collection without leaving WhatsApp.",
+      "Turn every message, survey, and chat into meaningful data. With AI-powered analysis, RateUp identifies satisfaction drivers, detects sentiment shifts, and delivers insights that boost customer experience and retention.",
     image: `${imagesPath}/WHATSAPP FLOW (1).png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/whatsapp-loyalty",
   },
 };
 
 export default function TabComponent() {
-  const [activeTab, setActiveTab] = useState<TabKey>("AI-Workflows");
+  const [activeTab, setActiveTab] = useState<TabKey>(
+    "Smart Automation & AI Chatbot",
+  );
   const active = tabContent[activeTab];
 
   return (
     <div className="mx-auto px-4 sm:px-8 lg:px-12 sm:pt-14 py-6 bg-[#F5F5F5] flex items-center justify-center">
       <div className="w-full max-w-6xl flex flex-col items-center gap-12">
         {/* Heading */}
-        <div className="relative flex flex-col items-center justify-center gap-1 text-center">
+        <div className="flex flex-col items-center justify-center text-center gap-1 relative">
+          {/* Title Line 1 */}
           <span className="text-2xl sm:text-3xl md:text-4xl text-[#343A40] font-semibold">
-            Your Complete
+            Powerful Features For
           </span>
-          <motion.span
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute -inset-x-2 bottom-0 h-3 bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] z-0 rounded-sm origin-left"
-          />
-          <span className="relative z-10 bg-gradient-to-r from-[#004F98] to-[#001747] bg-clip-text text-transparent text-2xl sm:text-3xl md:text-4xl font-semibold">
-            Customer Engagement Solution
-          </span>
+
+          {/* Title Line 2 with gradient + underline */}
+          <div className="relative inline-block">
+            <span className="relative z-10 bg-gradient-to-r from-[#001747] to-[#004F98] bg-clip-text text-transparent text-2xl sm:text-3xl md:text-4xl font-semibold">
+              Modern Businesses
+            </span>
+
+            {/* Animated Underline */}
+            <motion.span
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="absolute bottom-0 left-0 right-0 h-[6px] bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] rounded-full origin-left"
+            />
+          </div>
         </div>
 
         {/* Tabs */}
@@ -285,20 +300,28 @@ export default function TabComponent() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.4 }}
-                className="text-center md:text-left px-2"
+                className="text-center md:text-left px-2 flex flex-col gap-4"
               >
-                <h2 className="text-2xl sm:text-3xl md:text-4xl text-white pb-4 sm:pb-6 leading-snug">
+                <span className="text-2xl sm:text-3xl md:text-5xl text-white leading-snug">
                   {active.title}
-                </h2>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl pb-4 sm:pb-6 text-gray-400 max-w-xl mx-auto md:mx-0">
+                </span>
+                <p className="text-xs sm:text-xs md:text-sm lg:text-base text-[#93C6F5] max-w-xl mx-auto md:mx-0">
                   {active.description}
                 </p>
-                <Link
-                  href={active.link}
-                  className="text-[#66D7FF] font-semibold text-sm sm:text-lg hover:underline inline-flex items-center gap-1"
-                >
-                  Let&apos;s find out →
-                </Link>
+                <div className="flex items-center gap-4 w-full">
+                  <Link
+                    href={active.link}
+                    className="text-white bg-rateup-gold font-semibold text-sm sm:text-lg hover:scale-105 inline-flex items-center gap-1 px-4 py-2 rounded-sm transition-all"
+                  >
+                    <div className="text-sm flex items-center justify-center">
+                      Get Started Now <IconArrowRight />
+                    </div>
+                  </Link>
+
+                  <button className="rounded-sm bg-rateup-blue font-semibold text-sm sm:text-lg hover:scale-105 px-4 py-2 text-white transition-all cursor-pointer">
+                    Know More
+                  </button>
+                </div>
               </motion.div>
             </AnimatePresence>
           </div>

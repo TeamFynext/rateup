@@ -10,9 +10,9 @@ import AudienceOverview from "@/components/RateupHomePage/shared/AudienceOvervie
 import CallToAction from "@/components/RateupHomePage/shared/CallToAction";
 import FeatureCards1 from "@/components/RateupHomePage/shared/FeatureCard1";
 import FeatureCards2 from "@/components/RateupHomePage/shared/FeatureCards2";
-import HeroAnalytics from "@/components/RateupHomePage/shared/HeroAnalytics";
+import HeroAnalytics from "@/components/RateupHomePage/shared/HeroAnalyticsNew";
 import HeroMarketingDashboard from "@/components/RateupHomePage/shared/HeroMarketingDashboard";
-import HeroSection from "@/components/RateupHomePage/shared/HeroSection";
+import HeroSection from "@/components/RateupHomePage/shared/HeroSectionNew";
 import HomePageQrSection from "@/components/RateupHomePage/shared/HomePageQrSection";
 import IntegrationHero from "@/components/RateupHomePage/shared/IntegrationAndClients";
 import LoyalityAd from "@/components/RateupHomePage/shared/LoyalityAd";
@@ -29,11 +29,11 @@ const page = () => {
   return (
     <Layout>
       <HeroSection />
-      <HeroMarketingDashboard />
+      {/* <HeroMarketingDashboard /> */}
       <HeroAnalytics />
       <ClientLogos />
-      <ObstaclesOverview />
       <TabComponent />
+      <ObstaclesOverview />
       <FeatureCards1 />
       <FeatureCards2 />
       <LoyalityAd />

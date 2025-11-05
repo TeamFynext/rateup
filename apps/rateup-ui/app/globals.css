@@ -114,8 +114,11 @@
   --board-card-shadow: #e5e5e5;
   --font-size: 16px;
   --rateup-orange: #ff9500;
+  --rateup-gold: #eb7d00;
   --rateup-orange-foreground: oklch(1 0 0);
-  --rateup-blue: #2e5bff;
+  --rateup-graytext: #343a40;
+  --rateup-dark-blue: #001747;
+  --rateup-blue: #004f98;
   --rateup-blue-foreground: oklch(1 0 0);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
@@ -196,6 +199,9 @@
   --color-rateup-orange-foreground: var(--rateup-orange-foreground);
   --color-rateup-blue: var(--rateup-blue);
   --color-rateup-blue-foreground: var(--rateup-blue-foreground);
+  --color-rateup-graytext: var(--rateup-graytext);
+  --color-rateup-darkblue: var(--rateup-dark-blue);
+  --color-rateup-gold: var(--rateup-gold);
 }
 
 @layer base {
