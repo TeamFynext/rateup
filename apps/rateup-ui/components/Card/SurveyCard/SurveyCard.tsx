@@ -57,7 +57,6 @@ export function SurveyCard({
               style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}
               truncate="end"
               size="xl"
-              fw={500}
             >
               {survey?.title}
             </Text>

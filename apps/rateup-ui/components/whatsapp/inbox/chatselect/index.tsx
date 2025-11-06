@@ -314,7 +314,7 @@ const WaInboxChatSelect = () => {
             ref={parentRef}
             className="List"
             style={{
-              height: `calc(100dvh - 130px)`,
+              height: `calc(100dvh - 65px)`,
               width: `100%`,
               overflow: "auto",
             }}
@@ -395,39 +395,6 @@ const WaInboxChatSelect = () => {
           </div>
         )}
       </div>
-    </div>
-  );
-};
-
-export const NewInboxIcon = (props) => {
-  const { totalCount } = useChatContactCountStore();
-  const { filter } = useChatFilterStore();
-  const count = useMemo(() => {
-    const mapStatus = {
-      ASSIGNED: "newAssigned",
-      UNASSIGNED: "newUnassigned",
-      ASSIGNEDTOME: "newAssignedTome",
-    };
-    if (filter.newStatuses.length) {
-      const newStatuses = [...filter.newStatuses].filter((status) =>
-        filter.newStatuses.includes("ASSIGNED")
-          ? status !== "ASSIGNEDTOME"
-          : true,
-      );
-      return newStatuses.reduce((acc, status) => {
-        acc += totalCount[mapStatus[status]];
-        return acc;
-      }, 0);
-    } else {
-      return totalCount.new;
-    }
-  }, [filter.newStatuses, totalCount]);
-  if (!count) return <IconMessageBolt {...props} />;
-  return (
-    <div className="flex">
-      <Indicator label={count} inline size={16} color="black">
-        <IconMessageBolt {...props} />
-      </Indicator>
     </div>
   );
 };

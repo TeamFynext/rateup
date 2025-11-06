@@ -6,7 +6,14 @@ import "@xyflow/react/dist/style.css";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
-import { Group, Stack, Tabs, Text, Title } from "@mantine/core";
+import {
+  Group,
+  ScrollAreaAutosize,
+  Stack,
+  Tabs,
+  Text,
+  Title,
+} from "@mantine/core";
 import {
   IconDatabase,
   IconSettings,
@@ -113,10 +120,9 @@ const WaAutomatedReplyId = () => {
       </Tabs.Panel>
       <Tabs.Panel value="settings">
         <Stack align="center">
-          <div>
-            <Title>{data?.name}</Title>
+          <ScrollAreaAutosize mah={"calc(100vh - 80px)"}>
             <AutomatedReplyForm initialValues={data} editMode />
-          </div>
+          </ScrollAreaAutosize>
         </Stack>
       </Tabs.Panel>
       <Tabs.Panel value="share">

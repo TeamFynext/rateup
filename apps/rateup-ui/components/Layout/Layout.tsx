@@ -1,28 +1,20 @@
 ﻿"use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   AppShell,
-  // Badge,
-  Box,
   Burger,
   Divider,
   Flex,
   Group,
   HoverCard,
-  Indicator,
   Modal,
-  rgba,
   ScrollAreaAutosize,
   Stack,
   Text,
-  Title,
-  Tooltip,
   Transition,
-  UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
@@ -32,7 +24,6 @@ import {
   Bot,
   ChevronDown,
   ChevronRight,
-  ChevronUp,
   LogOut,
   Megaphone,
   MessageCircle,
@@ -40,11 +31,10 @@ import {
   PanelLeftClose,
   User,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import SessionReact from "supertokens-auth-react/recipe/session";
 
-import { WaMessageAssignStatus } from "@/types/enums";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useChatContactCountStore } from "@/app/dashboard/inbox/store";
 import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
@@ -95,7 +85,6 @@ import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
 import { getNavTopData } from "./Navbar/navbar.constants";
 import NotificationBellIcon from "./Notification";
-import TopNavbar from "./TopLayout";
 
 const showOfflineNotification = (status) => {
   if (status === UserAvailabilityStatus.offline) {
@@ -138,6 +127,7 @@ const MainNavLinks = ({
           <Button
             variant={link.label === activeMainLink ? "default" : "ghost"}
             className="w-full mb-2 p-2"
+            size="icon"
             onClick={() => {
               const isWhatsAppRoute = link.label
                 .toLowerCase()
@@ -202,7 +192,10 @@ const SubNavLinks = ({
 
   // Find labels section if it exists
   const labelsSection = links.find((link) => link.label === "Labels");
-  const regularLinks = links.filter((link) => link.label !== "Labels");
+  const categorySection = links.find((link) => link.label === "Categories");
+  const regularLinks = links.filter(
+    (link) => link.label !== "Labels" && link.label !== "Categories",
+  );
   const [isLifecycleOpen, setIsLifecycleOpen] = useState(true);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
   const filter = useChatFilterStore.getState().filter;
@@ -236,7 +229,7 @@ const SubNavLinks = ({
                 <LinkIcon className="w-5 h-5" />
               </Button>
               {link?.count > 0 && (
-                <span className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full px-1 text-[10px] font-medium">
+                <span className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full px-1 text-[10px]">
                   {link?.count > 9 ? "9+" : link?.count}
                 </span>
               )}
@@ -272,13 +265,7 @@ const SubNavLinks = ({
       />
     )) || [];
 
-  const inboxCategories = [
-    { id: "conversation", label: "Conversations", icon: MessageCircle },
-    { id: "campaign", label: "Campaigns", icon: Megaphone },
-    { id: "automation", label: "Automation", icon: Bot },
-  ];
-
-  const categoryIcons = inboxCategories.map((category) => {
+  const categoryIcons = categorySection?.children?.map((category) => {
     const CategoryIcon = category?.icon;
     return (
       <CustomTooltip
@@ -304,16 +291,15 @@ const SubNavLinks = ({
     );
   });
   // Combine all icon links, with divider if labels exist
-  const linksIcon =
-    labelsSection?.children?.length > 0
-      ? [
-          ...regularLinksIcons,
-          <Divider key="category-divider" my="xs" mr={"xs"} />,
-          ...categoryIcons,
-          <Divider key="label-divider" my="xs" mr={"xs"} />,
-          ...labelIcons,
-        ]
-      : regularLinksIcons;
+  const linksIcon = [
+    ...regularLinksIcons,
+    ...(categorySection?.children?.length > 0
+      ? [<Divider key="category-divider" my="xs" />, ...categoryIcons]
+      : []),
+    ...(labelsSection?.children?.length > 0
+      ? [<Divider key="label-divider" my="xs" />, ...labelIcons]
+      : []),
+  ];
 
   // Create text links (similar approach as icons)
   const regularLinksText = regularLinks
@@ -341,7 +327,7 @@ const SubNavLinks = ({
           <div className="flex justify-between w-full">
             <div className="flex gap-2 items-center">
               <LinkIcon className="w-5 h-5" />
-              <span className="text-sm font-medium">{link.label}</span>
+              <span className="text-sm">{link.label}</span>
             </div>
             {link?.count > 0 && (
               <Badge variant="secondary">{link?.count}</Badge>
@@ -370,7 +356,7 @@ const SubNavLinks = ({
         <div className="flex justify-between w-full">
           <div className="flex gap-2 items-center">
             <span className="text-sm">{label.emoji}</span>
-            <span className="text-sm font-medium">{label.label}</span>
+            <span className="text-sm">{label.label}</span>
           </div>
           {label?.count > 0 && (
             <Badge variant="secondary">{label?.count}</Badge>
@@ -397,7 +383,7 @@ const SubNavLinks = ({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-0.5 pt-1">
-        {inboxCategories.map((category) => (
+        {categorySection?.children?.map((category) => (
           <Button
             key={category.id}
             variant={filter.category === category.id ? "secondary" : "ghost"}
@@ -412,7 +398,7 @@ const SubNavLinks = ({
           >
             <div className="flex gap-2 items-center">
               <category.icon className="w-4 h-4" />
-              <span className="text-sm font-medium">{category.label}</span>
+              <span className="text-sm">{category.label}</span>
             </div>
             {/* {category?.count > 0 && (
               <Badge variant="secondary" className="ml-auto text-xs">
@@ -447,16 +433,21 @@ const SubNavLinks = ({
     </Collapsible>
   );
   // Combine all text links with divider if labels exist
-  const linksText =
-    labelsSection?.children?.length > 0
+  const linksText = [
+    ...regularLinksText,
+    ...(categorySection?.children?.length > 0
       ? [
-          ...regularLinksText,
           <Divider key="label-text-divider" my="9.5" />,
           <Categories key={"categories"} />,
+        ]
+      : []),
+    ...(labelTexts.length > 0
+      ? [
           <Divider key="categories-text-divider" my="9.5" />,
           <LifeCycleLabel key={"lifecycles"} />,
         ]
-      : regularLinksText;
+      : []),
+  ];
 
   return { linksIcon, linksText };
 };
@@ -703,7 +694,7 @@ const Navbar = ({
                       justify={"center"}
                       align={"center"}
                       gap={"xs"}
-                      onClick={() => router.push("/dashboard/settings/account")}
+                      onClick={() => router.push("/dashboard/settings")}
                       style={{
                         cursor: "pointer",
                       }}
@@ -819,15 +810,7 @@ const Navbar = ({
                 {/* Actions */}
                 <div className="flex flex-col gap-1">
                   <div
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors"
-                    onClick={() => router.push("/dashboard/settings/account")}
-                  >
-                    <User size={16} />
-                    <span className="text-sm">Profile</span>
-                  </div>
-
-                  <div
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors text-red-600 font-medium"
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors text-red-600"
                     onClick={() => setOpenLogoutModal(true)}
                   >
                     <LogOut size={16} />
@@ -945,8 +928,8 @@ const Navbar = ({
                 /> */}
               </div>
             </div>
-            <ScrollAreaAutosize mah={"calc(100dvh - 80px)"} scrollbarSize={6}>
-              <div className="p-1">
+            <ScrollAreaAutosize mah={"100dvh"} scrollbarSize={6}>
+              <div className="px-2 py-1 space-y-1">
                 {largeScreen ? (
                   desktopOpened ? (
                     <Transition
@@ -1030,7 +1013,6 @@ const WhatsAppSettingsModal = ({
 // MainContent Component
 const MainContent = ({
   children,
-  appProps,
   navOpened,
   setNavOpened,
   labels,
@@ -1042,21 +1024,7 @@ const MainContent = ({
         <LabelsContext value={labels}>
           <CustomFieldsProvider initialFields={customFieldData || []}>
             <NavControlContext value={{ navOpened, setNavOpened }}>
-              <AnimatePresence key={appProps.router.pathname}>
-                <motion.div
-                  className={styles["content-div"]}
-                  initial={
-                    !(
-                      appProps.router.pathname.includes("login") ||
-                      appProps.router.pathname.includes("signup")
-                    ) && { opacity: 0 }
-                  }
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  {children}
-                </motion.div>
-              </AnimatePresence>
+              <div className={styles["content-div"]}>{children}</div>
             </NavControlContext>
           </CustomFieldsProvider>
         </LabelsContext>
@@ -1333,8 +1301,8 @@ export default function Layout({ children }) {
       <AppShell
         navbar={{
           width: {
-            sm: linksIcon?.length > 0 ? (desktopOpened ? 260 : 120) : 60,
-            base: linksIcon?.length > 0 ? (mobileOpened ? 260 : 120) : 60,
+            sm: linksIcon?.length > 0 ? (desktopOpened ? 260 : 125) : 60,
+            base: linksIcon?.length > 0 ? (mobileOpened ? 260 : 125) : 60,
           },
           breakpoint: "sm",
           collapsed: { mobile: !mobileOpened },
@@ -1373,11 +1341,6 @@ export default function Layout({ children }) {
 
         <AppShell.Main>
           <MainContent
-            appProps={{
-              router: {
-                pathname: pathname,
-              },
-            }}
             navOpened={navOpened}
             setNavOpened={setNavOpened}
             labels={labels}

@@ -42,17 +42,20 @@ import {
   IconWallpaper,
   IconWaveSine,
 } from "@tabler/icons-react";
-import { FileChartColumn, House, Inbox, User, UserPlus } from "lucide-react";
+import {
+  Bot,
+  FileChartColumn,
+  House,
+  Inbox,
+  Megaphone,
+  MessageCircle,
+  MessageSquareDot,
+  User,
+  UserPlus,
+  UserX,
+} from "lucide-react";
 
 import { GetLabelsRes } from "@/backend/label/label.types";
-import ColorSchemaButton from "@/components/theme/ColorSchemaButton";
-import {
-  AssignedInboxIcon,
-  AssignedToMeInboxIcon,
-  BlockedInboxIcon,
-  ClosedInboxIcon,
-  NewInboxIcon,
-} from "@/components/whatsapp/inbox/chatselect";
 import { getInboxNavContactCount } from "@/components/whatsapp/inbox/util";
 
 import {
@@ -115,6 +118,11 @@ export function getNavTopData(
                 icon: Inbox,
               },
               {
+                label: translations("New"),
+                link: "/dashboard/inbox?tab=New",
+                icon: MessageSquareDot,
+              },
+              {
                 label: translations("Mine"),
                 link: "/dashboard/inbox?tab=mine",
                 icon: User,
@@ -123,12 +131,26 @@ export function getNavTopData(
               {
                 label: translations("UnAssigned"),
                 link: "/dashboard/inbox?tab=UnAssigned",
-                icon: UserPlus,
+                icon: UserX,
               },
               {
                 label: translations("Analytics"),
                 link: "/dashboard/inbox?tab=analytics",
                 icon: FileChartColumn,
+              },
+              {
+                label: "Categories",
+                icon: IconBuildings,
+                hasSubmenu: true,
+                children: [
+                  {
+                    id: "conversation",
+                    label: "Conversations",
+                    icon: MessageCircle,
+                  },
+                  { id: "campaign", label: "Campaigns", icon: Megaphone },
+                  { id: "automation", label: "Automation", icon: Bot },
+                ],
               },
               {
                 label: "Labels",
@@ -418,7 +440,7 @@ export function getNavTopData(
     {
       icon: IconSettings,
       label: translations("Settings"),
-      link: "/dashboard/settings/account",
+      link: "/dashboard/settings",
       hasSubmenu: false,
     },
   ];
