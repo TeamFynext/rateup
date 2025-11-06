@@ -293,9 +293,9 @@ const SubNavLinks = ({
   // Combine all icon links, with divider if labels exist
   const linksIcon = [
     ...regularLinksIcons,
-    categorySection?.children?.length > 0
+    ...(categorySection?.children?.length > 0
       ? [<Divider key="category-divider" my="xs" />, ...categoryIcons]
-      : [],
+      : []),
     ...(labelsSection?.children?.length > 0
       ? [<Divider key="label-divider" my="xs" />, ...labelIcons]
       : []),
@@ -383,7 +383,7 @@ const SubNavLinks = ({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-0.5 pt-1">
-        {categorySection?.children.map((category) => (
+        {categorySection?.children?.map((category) => (
           <Button
             key={category.id}
             variant={filter.category === category.id ? "secondary" : "ghost"}
@@ -435,12 +435,12 @@ const SubNavLinks = ({
   // Combine all text links with divider if labels exist
   const linksText = [
     ...regularLinksText,
-    categorySection?.children?.length > 0
+    ...(categorySection?.children?.length > 0
       ? [
           <Divider key="label-text-divider" my="9.5" />,
           <Categories key={"categories"} />,
         ]
-      : [],
+      : []),
     ...(labelTexts.length > 0
       ? [
           <Divider key="categories-text-divider" my="9.5" />,
