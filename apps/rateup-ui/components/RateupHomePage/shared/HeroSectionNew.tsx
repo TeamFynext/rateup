@@ -1,11 +1,22 @@
+import { Sora } from "next/font/google";
+
 import { IconCheck } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 
 import { Separator } from "@/components/ui/separator";
 
+import { BookDemoModal } from "../helpers/BookDemoModal";
+
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export default function HeroSection() {
   return (
-    <section className="flex flex-col items-center justify-center gap-8 bg-rateup-darkblue py-16">
+    <section
+      className={`${sora.className} flex flex-col items-center justify-center gap-8 bg-rateup-darkblue py-16`}
+    >
       {/* Heading */}
       <div className="flex flex-col items-center justify-center gap-2">
         <span className="text-[#E2E5ED] font-semibold text-5xl text-center">
@@ -46,9 +57,11 @@ export default function HeroSection() {
           <button className="bg-rateup-blue text-white font-semibold px-4 py-2 rounded-sm hover:scale-105 transition-transform duration-200">
             Start Free Trial
           </button>
-          <button className="bg-rateup-gold text-white font-semibold px-4 py-2 rounded-sm hover:scale-105 transition-transform duration-200">
-            Book A Demo
-          </button>
+          <BookDemoModal>
+            <button className="bg-rateup-gold text-white font-semibold px-4 py-2 rounded-sm hover:scale-105 transition-transform duration-200">
+              Book A Demo
+            </button>
+          </BookDemoModal>
         </div>
 
         <Separator />

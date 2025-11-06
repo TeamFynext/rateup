@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { imagePath } from "@/components/HomePage/pages/constants";
 import { Separator } from "@/components/ui/separator";
 
+import { BookDemoModal } from "../helpers/BookDemoModal";
+
 const sora = Sora({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -89,12 +91,14 @@ export default function StartRateupHero() {
           <div className="flex flex-col items-center justify-center gap-4">
             {/* CTA buttons */}
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <button className="bg-rateup-blue hover:bg-[#0b4d95] transition px-4 py-2 rounded-md text-white font-semibold text-sm sm:text-base">
+              <button className="bg-rateup-blue hover:bg-[#0b4d95] transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base">
                 Start Free Trial
               </button>
-              <button className="bg-rateup-gold hover:bg-[#d46c00] transition px-4 py-2 rounded-md text-white font-semibold text-sm sm:text-base">
-                Book A Demo
-              </button>
+              <BookDemoModal>
+                <button className="bg-rateup-gold hover:bg-[#d46c00] transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base">
+                  Book A Demo
+                </button>
+              </BookDemoModal>
             </div>
 
             <Separator className="max-w-[20vw] bg-rateup-blue" />

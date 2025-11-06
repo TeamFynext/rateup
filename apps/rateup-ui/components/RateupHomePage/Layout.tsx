@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { useCheckSession } from "@/hooks/checkSession";
 import {
@@ -17,6 +18,8 @@ import {
 
 import CookieConsentBanner from "../Analytics/CookieConsentBanner";
 import { rateupLogoBlueTextUrl } from "../HomePage/constants";
+import { Button } from "../ui/button";
+import { BookDemoModal } from "./helpers/BookDemoModal";
 import DropDownMobileNavItems from "./helpers/DropDownMobileNavItems";
 
 interface LayoutProps {
@@ -83,6 +86,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   ];
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="relative w-full">
@@ -118,21 +122,27 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
           ) : (
             <div className="flex  items-center gap-4">
               <Link
-                href="/login"
-                className="px-4 py-1.5 font-medium relative rounded-lg border cursor-pointer
-             text-[#1c518e] border-[#1c518e] hover:bg-[#1c518e]
-             hover:text-white transition inline-block"
-              >
-                Login
-              </Link>
-              <Link
                 href={"/signup"}
-                className="px-6 relative py-1.5 rounded-lg border font-medium 
+                className="px-4 text-sm relative py-2 rounded-sm border font-semibold 
                border-[#1c518e] bg-[#1c518e]
               text-white transition"
               >
-                SignUp
+                Start Free Trial
               </Link>
+              <BookDemoModal>
+                <button className="bg-rateup-gold px-4 font-semibold py-1.5 rounded-sm text-sm text-white cursor-pointer hover:bg-rateup-orange">
+                  Book A Demo
+                </button>
+              </BookDemoModal>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/login")}
+                className="px-8 py-2 font-semibold flex items-center justify-center rounded-sm border cursor-pointer
+             text-rateup-blue border-[#C4D7F5] hover:bg-[#1c518e]
+             hover:text-white transition text-sm"
+              >
+                Login
+              </Button>
             </div>
           )}
         </NavBody>

@@ -7,6 +7,7 @@ import HomePageFooter from "@/components/RateupHomePage/helpers/HomePageFooter";
 import ScrollToTop from "@/components/RateupHomePage/helpers/ScrollToTop";
 import Layout from "@/components/RateupHomePage/Layout";
 import AudienceOverview from "@/components/RateupHomePage/shared/AudienceOverview";
+import AutomateInteraction from "@/components/RateupHomePage/shared/AutomateInteraction";
 import CallToAction from "@/components/RateupHomePage/shared/CallToAction";
 import FeatureCards1 from "@/components/RateupHomePage/shared/FeatureCard1";
 import FeatureCards2 from "@/components/RateupHomePage/shared/FeatureCards2";
@@ -15,7 +16,7 @@ import HeroMarketingDashboard from "@/components/RateupHomePage/shared/HeroMarke
 import HeroSection from "@/components/RateupHomePage/shared/HeroSectionNew";
 import HomePageQrSection from "@/components/RateupHomePage/shared/HomePageQrSection";
 import IntegrationHero from "@/components/RateupHomePage/shared/IntegrationAndClients";
-import LoyalityAd from "@/components/RateupHomePage/shared/LoyalityAd";
+import LoyalityAd from "@/components/RateupHomePage/shared/LoyalityAdNew";
 import MobileAppSection from "@/components/RateupHomePage/shared/MobileAppSection";
 import ObstaclesOverview from "@/components/RateupHomePage/shared/ObstaclesOverview";
 import StartRateupHero from "@/components/RateupHomePage/shared/StartRateup";
@@ -34,10 +35,11 @@ const page = () => {
       <HeroAnalytics />
       <ClientLogos />
       <TabComponent />
-      <ObstaclesOverview />
-      <FeatureCards1 />
-      <FeatureCards2 />
+      {/* <ObstaclesOverview /> */}
+      {/* <FeatureCards1 /> */}
+      {/* <FeatureCards2 /> */}
       <LoyalityAd />
+      <AutomateInteraction />
       <IntegrationHero />
       <HomePageQrSection />
       <AudienceOverview />

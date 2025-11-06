@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Sora } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -14,6 +15,11 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 
 import { imagesPath } from "@/utils/constants";
+
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 type TabKey =
   | "Smart Automation & AI Chatbot"
@@ -72,7 +78,9 @@ export default function TabComponent() {
   const active = tabContent[activeTab];
 
   return (
-    <div className="mx-auto px-4 sm:px-8 lg:px-12 sm:pt-14 py-6 bg-[#F5F5F5] flex items-center justify-center">
+    <div
+      className={`${sora.className} mx-auto px-4 sm:px-8 lg:px-12 sm:pt-14 py-6 bg-white flex items-center justify-center`}
+    >
       <div className="w-full max-w-6xl flex flex-col items-center gap-12">
         {/* Heading */}
         <div className="flex flex-col items-center justify-center text-center gap-1 relative">
