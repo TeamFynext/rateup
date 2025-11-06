@@ -203,7 +203,10 @@ const SubNavLinks = ({
 
   // Find labels section if it exists
   const labelsSection = links.find((link) => link.label === "Labels");
-  const regularLinks = links.filter((link) => link.label !== "Labels");
+  const categorySection = links.find((link) => link.label === "Categories");
+  const regularLinks = links.filter(
+    (link) => link.label !== "Labels" && link.label !== "Categories",
+  );
   const [isLifecycleOpen, setIsLifecycleOpen] = useState(true);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
   const filter = useChatFilterStore.getState().filter;
@@ -273,13 +276,7 @@ const SubNavLinks = ({
       />
     )) || [];
 
-  const inboxCategories = [
-    { id: "conversation", label: "Conversations", icon: MessageCircle },
-    { id: "campaign", label: "Campaigns", icon: Megaphone },
-    { id: "automation", label: "Automation", icon: Bot },
-  ];
-
-  const categoryIcons = inboxCategories.map((category) => {
+  const categoryIcons = categorySection?.children?.map((category) => {
     const CategoryIcon = category?.icon;
     return (
       <CustomTooltip
@@ -305,16 +302,15 @@ const SubNavLinks = ({
     );
   });
   // Combine all icon links, with divider if labels exist
-  const linksIcon =
-    labelsSection?.children?.length > 0
-      ? [
-          ...regularLinksIcons,
-          <Divider key="category-divider" my="xs" />,
-          ...categoryIcons,
-          <Divider key="label-divider" my="xs" />,
-          ...labelIcons,
-        ]
-      : regularLinksIcons;
+  const linksIcon = [
+    ...regularLinksIcons,
+    categorySection?.children?.length > 0
+      ? [<Divider key="category-divider" my="xs" />, ...categoryIcons]
+      : [],
+    ...(labelsSection?.children?.length > 0
+      ? [<Divider key="label-divider" my="xs" />, ...labelIcons]
+      : []),
+  ];
 
   // Create text links (similar approach as icons)
   const regularLinksText = regularLinks
@@ -398,7 +394,7 @@ const SubNavLinks = ({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-0.5 pt-1">
-        {inboxCategories.map((category) => (
+        {categorySection?.children.map((category) => (
           <Button
             key={category.id}
             variant={filter.category === category.id ? "secondary" : "ghost"}
@@ -448,16 +444,21 @@ const SubNavLinks = ({
     </Collapsible>
   );
   // Combine all text links with divider if labels exist
-  const linksText =
-    labelsSection?.children?.length > 0
+  const linksText = [
+    ...regularLinksText,
+    categorySection?.children?.length > 0
       ? [
-          ...regularLinksText,
           <Divider key="label-text-divider" my="9.5" />,
           <Categories key={"categories"} />,
+        ]
+      : [],
+    ...(labelTexts.length > 0
+      ? [
           <Divider key="categories-text-divider" my="9.5" />,
           <LifeCycleLabel key={"lifecycles"} />,
         ]
-      : regularLinksText;
+      : []),
+  ];
 
   return { linksIcon, linksText };
 };
