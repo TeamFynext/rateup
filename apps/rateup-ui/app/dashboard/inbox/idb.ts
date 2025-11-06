@@ -67,6 +67,7 @@ export async function clearAllContactsFromDB() {
   const db = await getDB();
   await db.clear(STORE_GLOBAL);
   await db.clear(STORE_FILTERS);
+  await db.clear(STORE_MESSAGES);
 }
 
 export async function saveContactIdsForFilter(

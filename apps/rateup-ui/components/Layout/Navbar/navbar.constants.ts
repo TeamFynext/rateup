@@ -43,9 +43,12 @@ import {
   IconWaveSine,
 } from "@tabler/icons-react";
 import {
+  Bot,
   FileChartColumn,
   House,
   Inbox,
+  Megaphone,
+  MessageCircle,
   MessageSquareDot,
   User,
   UserPlus,
@@ -134,6 +137,20 @@ export function getNavTopData(
                 label: translations("Analytics"),
                 link: "/dashboard/inbox?tab=analytics",
                 icon: FileChartColumn,
+              },
+              {
+                label: "Categories",
+                icon: IconBuildings,
+                hasSubmenu: true,
+                children: [
+                  {
+                    id: "conversation",
+                    label: "Conversations",
+                    icon: MessageCircle,
+                  },
+                  { id: "campaign", label: "Campaigns", icon: Megaphone },
+                  { id: "automation", label: "Automation", icon: Bot },
+                ],
               },
               {
                 label: "Labels",

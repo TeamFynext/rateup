@@ -35,7 +35,7 @@ const DropdownSelector = ({
             if (!item) {
               return (
                 <>
-                  <span className="text-xs">{translations("Select")}</span>
+                  <span className="text-xs">{translations("Lifecycle")}</span>
                   <ChevronDown className="w-3 h-3 text-muted-foreground" />
                 </>
               );
