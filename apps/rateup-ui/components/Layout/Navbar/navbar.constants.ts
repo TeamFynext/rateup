@@ -423,7 +423,7 @@ export function getNavTopData(
     {
       icon: IconSettings,
       label: translations("Settings"),
-      link: "/dashboard/settings/account",
+      link: "/dashboard/settings",
       hasSubmenu: false,
     },
   ];

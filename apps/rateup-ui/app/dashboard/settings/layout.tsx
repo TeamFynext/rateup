@@ -162,7 +162,7 @@ const SettingsLayout = ({ children }) => {
 
       {/* Sidebar */}
       <nav
-        className={`fixed md:static inset-y-0 left-0 z-50 w-64 border-r border-l bg-card flex flex-col h-full transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        className={`fixed md:static inset-y-0 left-0 z-50 w-64 border-r bg-card flex flex-col h-full transition-transform duration-300 ease-in-out md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:top-0 top-16`}
         aria-label="Settings navigation"
@@ -178,24 +178,25 @@ const SettingsLayout = ({ children }) => {
           </button>
         </div>
 
-        <div className="flex-1 px-3 py-3">
+        <div className="flex flex-col px-2 py-3">
           {settingsSections.map((category, i) => (
             <div key={i} className="py-2">
-              <div className="px-2 mb-1">
+              <div className="px-2 mb-2">
                 <h3 className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
                   {category.category}
                 </h3>
               </div>
 
-              <div className="space-y-1">
+              <div className="flex flex-col items-center justify-center gap-1">
                 {category.items.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => handleTabChange(item.id)}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all ${
+                    // Make each item the same height and center aligned so selected/unselected look identical height-wise
+                    className={`w-full flex items-center gap-2.5 px-2.5 h-12 rounded-lg transition-all text-left ${
                       activeSection === item.id
                         ? "bg-gradient-to-r from-rateup-blue/10 to-rateup-orange/10 border border-rateup-blue/20 shadow-sm"
-                        : "hover:bg-muted/50"
+                        : "hover:bg-muted/50 border border-transparent"
                     }`}
                   >
                     <div
@@ -209,7 +210,8 @@ const SettingsLayout = ({ children }) => {
                         className={`w-3.5 h-3.5 ${activeSection === item.id ? "text-white" : "text-muted-foreground"}`}
                       />
                     </div>
-                    <div className="flex-1 text-left min-w-0">
+
+                    <div className="flex-1 min-w-0">
                       <p
                         className={`text-sm truncate ${
                           activeSection === item.id
@@ -219,13 +221,17 @@ const SettingsLayout = ({ children }) => {
                       >
                         {item.label}
                       </p>
-                      <p className="text-[11px] text-muted-foreground truncate">
+                      <p className="text-[11px] text-muted-foreground truncate leading-tight">
                         {item.description}
                       </p>
                     </div>
-                    {activeSection === item.id && (
-                      <ChevronRight className="w-4 h-4 text-rateup-blue flex-shrink-0" />
-                    )}
+
+                    {/* keep space reserved so presence/absence of chevron doesn't change layout width */}
+                    <div className="w-4 flex-shrink-0 flex items-center justify-center">
+                      {activeSection === item.id && (
+                        <ChevronRight className="w-4 h-4 text-rateup-blue" />
+                      )}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -239,6 +245,7 @@ const SettingsLayout = ({ children }) => {
       </nav>
 
       {/* Main Content */}
+      {/* Add md:ml-64 so the main content sits to the right of the sidebar on medium+ screens */}
       <main className="flex-1 overflow-auto bg-gradient-to-br from-gray-50/30 to-blue-50/20 py-4 px-2">
         <div className="pl-6 pr-6 pb-6 max-w-7xl">{children}</div>
       </main>
