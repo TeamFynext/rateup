@@ -1,28 +1,20 @@
 ﻿"use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   AppShell,
-  // Badge,
-  Box,
   Burger,
   Divider,
   Flex,
   Group,
   HoverCard,
-  Indicator,
   Modal,
-  rgba,
   ScrollAreaAutosize,
   Stack,
   Text,
-  Title,
-  Tooltip,
   Transition,
-  UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
@@ -32,7 +24,6 @@ import {
   Bot,
   ChevronDown,
   ChevronRight,
-  ChevronUp,
   LogOut,
   Megaphone,
   MessageCircle,
@@ -40,11 +31,10 @@ import {
   PanelLeftClose,
   User,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import SessionReact from "supertokens-auth-react/recipe/session";
 
-import { WaMessageAssignStatus } from "@/types/enums";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useChatContactCountStore } from "@/app/dashboard/inbox/store";
 import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
@@ -95,7 +85,6 @@ import classes from "./DoubleNavbar.module.css";
 import styles from "./Layout.module.css";
 import { getNavTopData } from "./Navbar/navbar.constants";
 import NotificationBellIcon from "./Notification";
-import TopNavbar from "./TopLayout";
 
 const showOfflineNotification = (status) => {
   if (status === UserAvailabilityStatus.offline) {
@@ -1032,7 +1021,6 @@ const WhatsAppSettingsModal = ({
 // MainContent Component
 const MainContent = ({
   children,
-  appProps,
   navOpened,
   setNavOpened,
   labels,
@@ -1044,21 +1032,7 @@ const MainContent = ({
         <LabelsContext value={labels}>
           <CustomFieldsProvider initialFields={customFieldData || []}>
             <NavControlContext value={{ navOpened, setNavOpened }}>
-              <AnimatePresence key={appProps.router.pathname}>
-                <motion.div
-                  className={styles["content-div"]}
-                  initial={
-                    !(
-                      appProps.router.pathname.includes("login") ||
-                      appProps.router.pathname.includes("signup")
-                    ) && { opacity: 0 }
-                  }
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  {children}
-                </motion.div>
-              </AnimatePresence>
+              <div className={styles["content-div"]}>{children}</div>
             </NavControlContext>
           </CustomFieldsProvider>
         </LabelsContext>
@@ -1375,11 +1349,6 @@ export default function Layout({ children }) {
 
         <AppShell.Main>
           <MainContent
-            appProps={{
-              router: {
-                pathname: pathname,
-              },
-            }}
             navOpened={navOpened}
             setNavOpened={setNavOpened}
             labels={labels}
