@@ -99,7 +99,13 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
     >
       <Stack className={classes.card_wrapper}>
         <Group justify={"space-between"}>
-          <Title order={3}>{automation.name}</Title>
+          <Text
+            style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}
+            truncate="end"
+            size="xl"
+          >
+            {automation.name}
+          </Text>
           <CardMenu>
             <LCampaignCardMenuItems campaignId={automation.id} />
           </CardMenu>
