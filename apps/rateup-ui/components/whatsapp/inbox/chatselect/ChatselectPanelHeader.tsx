@@ -6,10 +6,12 @@ import {
   Filter,
   RefreshCcw,
   Search,
+  UserLock,
   UserPlus,
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSearchParam } from "react-use";
 
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
@@ -28,10 +30,13 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@/components/ui/select";
+import { useUser } from "@/context/UserContext";
+import { UserRole } from "@/utils/enums";
 
 import { AddUnknownContactForm } from "./addUnknownContactModal";
 import WaInboxChatExport from "./chatExport";
 import WaInboxChatFilter, { useChatFilterStore } from "./chatFilter";
+import WaInboxPermissions from "./permissions";
 
 const ChatselectPanelHeader = ({
   isRefetchingFilteredContacts,
@@ -58,6 +63,7 @@ const ChatselectPanelHeader = ({
   ];
   const { filter, setFilter } = useChatFilterStore();
   const translations = useTranslations();
+  const { user } = useUser();
   useEffect(() => {
     if (filter.searchTerm.length && !showSearchBar) setShowSearchBar(true);
   }, [filter]);
@@ -159,6 +165,28 @@ const ChatselectPanelHeader = ({
               <WaInboxChatExport />
             </PopoverContent>
           </Popover>
+          {user && user.role === UserRole.SUPADM && (
+            <Popover>
+              <PopoverTrigger>
+                <CustomTooltip
+                  trigger={
+                    <Button
+                      size="sm"
+                      variant={"outline"}
+                      className="h-8 w-8 p-0"
+                    >
+                      <UserLock className="w-3.5 h-3.5" />
+                    </Button>
+                  }
+                  content={<p>Manage permissions for viewing assigned chats</p>}
+                  side="bottom"
+                />
+              </PopoverTrigger>
+              <PopoverContent className="w-full">
+                <WaInboxPermissions />
+              </PopoverContent>
+            </Popover>
+          )}
           <CustomTooltip
             trigger={
               <Button

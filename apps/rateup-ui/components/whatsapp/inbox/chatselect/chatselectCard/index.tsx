@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { BadgeCheck, CircleCheckBig } from "lucide-react";
+import { BadgeCheck, CircleCheckBig, UserX } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
@@ -196,7 +196,17 @@ export default function WaInboxChatSelectCard({
                     className={`text-[10px] h-4 text-blue-500 dark:text-blue-600 rounded-2xl`}
                   />
                 }
-                content={<span>{translations("CLOSED")}</span>}
+                content={<span>{translations("Closed")}</span>}
+              />
+            ) : contact?.waMessageAssignStatus ===
+              WaMessageAssignStatus.UNASSIGNED ? (
+              <CustomTooltip
+                trigger={
+                  <UserX
+                    className={`text-[10px] h-4 text-gray-500 dark:text-gray-400 rounded-2xl`}
+                  />
+                }
+                content={<span>{translations("UnAssigned")}</span>}
               />
             ) : (
               contact?.assignedUsers?.length > 0 && (
