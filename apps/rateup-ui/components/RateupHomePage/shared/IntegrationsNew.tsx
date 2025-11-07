@@ -1,6 +1,8 @@
 import { Sora } from "next/font/google";
 import Image from "next/image";
 
+import { imagePath } from "@/components/HomePage/pages/constants";
+
 const sora = Sora({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -11,13 +13,13 @@ export default function Integration() {
     <section
       className={`${sora.className} bg-rateup-darkblue w-full flex items-center justify-center py-12 px-4`}
     >
-      <div className="max-w-6xl w-full flex flex-col items-center gap-6">
+      <div className="max-w-6xl w-full flex flex-col items-center gap-2">
         {/* Top illustration / flow graphic */}
         <div className="w-full">
-          <div className="w-full rounded-t-2xl overflow-hidden">
+          <div className="w-full rounded-t-2xl overflow-hidden bg-[#C4D7F5] p-10">
             {/* Replace src with the path you want; this uses the uploaded image */}
             <Image
-              src="/mnt/data/00502d1a-b25d-4816-b138-c8b76893300c.png"
+              src={`${imagePath}/homepage/Integrationssvg.svg`}
               alt="Integrations flow illustration"
               width={1600}
               height={420}
@@ -29,7 +31,7 @@ export default function Integration() {
 
         {/* Card-like content area */}
         <div className="w-full bg-[#052259] rounded-b-2xl px-6 py-10 sm:px-12 sm:py-14 flex flex-col items-center justify-center gap-4 text-center">
-          <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-normal leading-tight max-w-4xl">
+          <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-normal leading-tight max-w-5xl">
             Build Your Business With Favorite Integrations
           </h2>
 

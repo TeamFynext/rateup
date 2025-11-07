@@ -1,6 +1,9 @@
 import { Sora } from "next/font/google";
+import Image from "next/image";
 
 import { IconArrowRight } from "@tabler/icons-react";
+
+import { imagePath } from "@/components/HomePage/pages/constants";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -12,9 +15,9 @@ export default function LoyaltyAd() {
     <section
       className={`${sora.className} flex items-center justify-center w-full py-10 sm:py-16 bg-white`}
     >
-      <div className="flex flex-col lg:flex-row items-center justify-between w-full max-w-6xl border rounded-3xl sm:rounded-4xl p-6 sm:p-10 shadow-sm">
+      <div className="flex flex-col lg:flex-row items-start justify-between w-full max-w-6xl border rounded-3xl sm:rounded-4xl pl-6 sm:pl-10 shadow-sm">
         {/* Left Content */}
-        <div className="flex flex-col gap-4 max-w-lg">
+        <div className="flex flex-col gap-4 max-w-lg pt-6">
           <span className="text-4xl sm:text-5xl font-semibold text-rateup-graytext leading-tight">
             Loyalty That Drives <br className="hidden sm:block" /> Engagement
             And Growth
@@ -32,11 +35,15 @@ export default function LoyaltyAd() {
         </div>
 
         {/* Right Image Placeholder */}
-        <div className="mt-10 lg:mt-0 flex justify-center w-full lg:w-1/2">
-          {/* Replace this with your actual image later */}
-          <div className="w-full max-w-md h-80 bg-gray-100 rounded-2xl border border-gray-200 flex items-center justify-center text-gray-400 text-sm">
-            Image Placeholder
-          </div>
+        <div className="rounded-r-3xl sm:rounded-r-4xl">
+          <Image
+            src={`${imagePath}/homepage/loyaltyad.png`}
+            alt="loyalty"
+            width={600}
+            height={600}
+            className="w-full h-auto object-contain rounded-r-3xl sm:rounded-r-4xl"
+            priority
+          />
         </div>
       </div>
     </section>

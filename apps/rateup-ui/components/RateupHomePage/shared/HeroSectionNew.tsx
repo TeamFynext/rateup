@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Sora } from "next/font/google";
 import Image from "next/image";
 
@@ -6,6 +7,7 @@ import { motion } from "framer-motion";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
 import { Separator } from "@/components/ui/separator";
+import { imagesPath } from "@/utils/constants";
 
 import { BookDemoModal } from "../helpers/BookDemoModal";
 
@@ -15,6 +17,16 @@ const sora = Sora({
 });
 
 export default function HeroSection() {
+  const [showDashboard, setShowDashboard] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowDashboard((prev) => !prev);
+    }, 6000); // Switch every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section
       className={`${sora.className} flex flex-col items-center justify-center gap-4 sm:gap-8 bg-rateup-darkblue pt-12 sm:pt-16 lg:pt-20 px-6 sm:px-8`}
@@ -93,13 +105,46 @@ export default function HeroSection() {
         </div>
       </div>
 
-      <div className="relative w-full h-[100px] sm:h-[180px] md:h-[200px] lg:h-[300px] xl:h-[400px]">
-        <Image
-          fill
-          src={`${imagePath}/homepage/coverimage.svg`}
-          alt="image"
-          className="object-contain"
-        />
+      {/* Images Container with Stacking */}
+      <div className="relative w-full overflow-hidden">
+        <motion.div
+          animate={{
+            opacity: showDashboard ? 0 : 1,
+            y: showDashboard ? "100%" : 0,
+          }}
+          transition={{ duration: 1, ease: [0.43, 0.13, 0.23, 0.96] }}
+        >
+          <Image
+            src={`${imagePath}/homepage/coverimage.svg`}
+            alt="image"
+            width={600}
+            height={600}
+            className="w-full h-auto object-contain"
+            priority
+          />
+        </motion.div>
+
+        {/* Second Image - Slides up from below */}
+        <motion.div
+          animate={{
+            y: showDashboard ? 0 : "100%",
+            opacity: showDashboard ? 1 : 0,
+          }}
+          transition={{
+            duration: 1,
+            ease: [0.43, 0.13, 0.23, 0.96],
+          }}
+          className="absolute top-0 left-0 w-full"
+        >
+          <Image
+            src={`${imagesPath}/DASHBOARD%20(1).png`}
+            alt="Smart QR Code Showcase"
+            width={900}
+            height={700}
+            className="w-full h-auto object-contain max-w-6xl mx-auto"
+            priority
+          />
+        </motion.div>
       </div>
     </section>
   );
