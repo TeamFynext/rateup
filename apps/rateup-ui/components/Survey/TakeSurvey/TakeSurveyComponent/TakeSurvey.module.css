@@ -196,3 +196,9 @@
 .questionDesc {
   line-height: 1.2;
 }
+
+.questionRichText * {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
