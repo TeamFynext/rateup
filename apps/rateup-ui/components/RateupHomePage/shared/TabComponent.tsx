@@ -42,7 +42,7 @@ const tabContent: Record<
     title: "Smart Automation & AI Chatbot",
     description:
       "Design complex workflows with our intuitive drag-and-drop builder to trigger messages, assign tasks, and personalize responses—while our smart multi-language AI chatbot delivers round-the-clock support across WhatsApp and your website.",
-    image: `${imagesPath}/AI WORKFLOW (1).png`,
+    image: `${imagesPath}/homepage/smartautomationai.png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/ai-automation",
   },
   "Omnichannel Inbox": {
@@ -50,7 +50,7 @@ const tabContent: Record<
     title: "Omnichannel Inbox",
     description:
       "Manage every customer interaction from one place. RateUp’s unified inbox keeps WhatsApp, Instagram, and other channels connected — enabling faster responses, seamless collaboration, and better customer experiences.",
-    image: `${imagesPath}/UNIFIED INBOX (1).png`,
+    image: `${imagesPath}/homepage/omnichannelinbox.png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/inbox",
   },
   "Customer Profiles & Retention AI": {
@@ -58,7 +58,7 @@ const tabContent: Record<
     title: "Customer Profiles & Retention AI",
     description:
       "Unify customer data, predict churn, and power loyalty with AI that turns insights into retention strategies. RateUp helps you understand every interaction, predict what they need next, and engage them at the perfect moment",
-    image: `${imagesPath}/AUTOMATION (1).png`,
+    image: `${imagesPath}/homepage/customerprofiles.png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/ai-automation",
   },
   "Feedback & Insights": {
@@ -66,7 +66,7 @@ const tabContent: Record<
     title: "Feedback & Insights",
     description:
       "Turn every message, survey, and chat into meaningful data. With AI-powered analysis, RateUp identifies satisfaction drivers, detects sentiment shifts, and delivers insights that boost customer experience and retention.",
-    image: `${imagesPath}/WHATSAPP FLOW (1).png`,
+    image: `${imagesPath}/homepage/feedbackinsights.png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/whatsapp-loyalty",
   },
 };

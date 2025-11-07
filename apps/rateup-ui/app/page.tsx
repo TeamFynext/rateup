@@ -11,11 +11,13 @@ import AutomateInteraction from "@/components/RateupHomePage/shared/AutomateInte
 import CallToAction from "@/components/RateupHomePage/shared/CallToAction";
 import FeatureCards1 from "@/components/RateupHomePage/shared/FeatureCard1";
 import FeatureCards2 from "@/components/RateupHomePage/shared/FeatureCards2";
+import Features from "@/components/RateupHomePage/shared/FeaturesNew";
 import HeroAnalytics from "@/components/RateupHomePage/shared/HeroAnalyticsNew";
 import HeroMarketingDashboard from "@/components/RateupHomePage/shared/HeroMarketingDashboard";
 import HeroSection from "@/components/RateupHomePage/shared/HeroSectionNew";
 import HomePageQrSection from "@/components/RateupHomePage/shared/HomePageQrSection";
 import IntegrationHero from "@/components/RateupHomePage/shared/IntegrationAndClients";
+import Integration from "@/components/RateupHomePage/shared/IntegrationsNew";
 import LoyalityAd from "@/components/RateupHomePage/shared/LoyalityAdNew";
 import MobileAppSection from "@/components/RateupHomePage/shared/MobileAppSection";
 import ObstaclesOverview from "@/components/RateupHomePage/shared/ObstaclesOverview";
@@ -39,8 +41,10 @@ const page = () => {
       {/* <FeatureCards1 /> */}
       {/* <FeatureCards2 /> */}
       <LoyalityAd />
+      <Features />
       <AutomateInteraction />
-      <IntegrationHero />
+      <Integration />
+      {/* <IntegrationHero /> */}
       <HomePageQrSection />
       <AudienceOverview />
       <MobileAppSection />

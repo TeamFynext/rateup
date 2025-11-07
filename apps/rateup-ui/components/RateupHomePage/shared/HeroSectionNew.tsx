@@ -1,8 +1,10 @@
 import { Sora } from "next/font/google";
+import Image from "next/image";
 
 import { IconCheck } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 
+import { imagePath } from "@/components/HomePage/pages/constants";
 import { Separator } from "@/components/ui/separator";
 
 import { BookDemoModal } from "../helpers/BookDemoModal";
@@ -15,17 +17,17 @@ const sora = Sora({
 export default function HeroSection() {
   return (
     <section
-      className={`${sora.className} flex flex-col items-center justify-center gap-8 bg-rateup-darkblue py-16`}
+      className={`${sora.className} flex flex-col items-center justify-center gap-4 sm:gap-8 bg-rateup-darkblue pt-12 sm:pt-16 lg:pt-20 px-6 sm:px-8`}
     >
       {/* Heading */}
-      <div className="flex flex-col items-center justify-center gap-2">
-        <span className="text-[#E2E5ED] font-semibold text-5xl text-center">
+      <div className="flex flex-col items-center justify-center gap-2 max-w-4xl text-center">
+        <span className="text-[#E2E5ED] font-semibold text-3xl sm:text-4xl md:text-5xl leading-tight">
           Reimagine Customer Engagement -
         </span>
 
         {/* Gradient text + underline container */}
         <div className="relative inline-block">
-          <span className="text-5xl bg-[linear-gradient(to_right,#66D7FF,#2D74E0)] bg-clip-text text-transparent font-semibold">
+          <span className="text-3xl sm:text-4xl md:text-5xl bg-[linear-gradient(to_right,#66D7FF,#2D74E0)] bg-clip-text text-transparent font-semibold leading-tight">
             Unified. Automated. Intelligent.
           </span>
 
@@ -34,31 +36,36 @@ export default function HeroSection() {
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute -bottom-2 left-0 right-0 h-[6px] bg-[#C4D7F5] rounded-full origin-left"
+            className="absolute -bottom-2 left-0 right-0 h-1.5 sm:h-2 md:h-2.5 bg-[#C4D7F5] rounded-full origin-left"
           />
         </div>
       </div>
 
       {/* Subtext */}
-      <div className="flex flex-col items-center justify-center text-center">
-        <span className="text-[#93C6F5] font-medium text-sm">
+      <div className="flex flex-col items-center justify-center text-center max-w-2xl">
+        <span className="text-[#93C6F5] font-medium text-sm sm:text-base">
           Unify all customer chats in one intelligent platform. RateUp
-          automates, analyzes, and connects
-        </span>
-        <span className="text-[#93C6F5] font-medium text-sm">
-          — helping you engage smarter across every channel.
+          automates, analyzes, and connects — helping you engage smarter across
+          every channel.
         </span>
       </div>
 
       {/* CTA Buttons + Highlights */}
-      <div className="flex flex-col justify-center items-center gap-4">
-        {/* Buttons */}
-        <div className="flex items-center justify-center gap-4">
-          <button className="bg-rateup-blue text-white font-semibold px-4 py-2 rounded-sm hover:scale-105 transition-transform duration-200">
+      <div className="flex flex-col items-center justify-center gap-4 max-w-2xl">
+        {/* Buttons: stack on xs, row on sm+ */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+          <button
+            type="button"
+            className="sm:w-auto bg-rateup-blue text-white font-semibold px-4 py-2 rounded-md hover:scale-105 transition-transform duration-200"
+          >
             Start Free Trial
           </button>
+
           <BookDemoModal>
-            <button className="bg-rateup-gold text-white font-semibold px-4 py-2 rounded-sm hover:scale-105 transition-transform duration-200">
+            <button
+              type="button"
+              className="w-full sm:w-auto bg-rateup-gold text-white font-semibold px-4 py-2 rounded-md hover:scale-105 transition-transform duration-200"
+            >
               Book A Demo
             </button>
           </BookDemoModal>
@@ -67,22 +74,32 @@ export default function HeroSection() {
         <Separator />
 
         {/* Checkpoints */}
-        <div className="flex flex-col items-center justify-center gap-2">
-          <div className="flex items-center justify-center gap-10">
-            <div className="flex items-center justify-center gap-1">
-              <div className="flex items-center justify-center p-1 bg-[#69F0AE] rounded-full">
-                <IconCheck className="h-3 w-3" />
-              </div>
-              <span className="text-[#E2E5ED] text-sm">No Credit Card</span>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center p-1.5 bg-[#69F0AE] rounded-full">
+              <IconCheck className="h-3 w-3 sm:h-4 sm:w-4" />
             </div>
-            <div className="flex items-center justify-center gap-1">
-              <div className="flex items-center justify-center p-1 bg-[#69F0AE] rounded-full">
-                <IconCheck className="h-3 w-3" />
-              </div>
-              <span className="text-[#E2E5ED] text-sm">No Expiry</span>
+            <span className="text-[#E2E5ED] text-xs sm:text-sm">
+              No Credit Card
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center p-1.5 bg-[#69F0AE] rounded-full">
+              <IconCheck className="h-3 w-3 sm:h-4 sm:w-4" />
             </div>
+            <span className="text-[#E2E5ED] text-xs sm:text-sm">No Expiry</span>
           </div>
         </div>
+      </div>
+
+      <div className="relative w-full h-[100px] sm:h-[180px] md:h-[200px] lg:h-[300px] xl:h-[400px]">
+        <Image
+          fill
+          src={`${imagePath}/homepage/coverimage.svg`}
+          alt="image"
+          className="object-contain"
+        />
       </div>
     </section>
   );
