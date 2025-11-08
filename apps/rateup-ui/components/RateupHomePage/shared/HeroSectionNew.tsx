@@ -22,7 +22,7 @@ export default function HeroSection() {
   useEffect(() => {
     const interval = setInterval(() => {
       setShowDashboard((prev) => !prev);
-    }, 6000); // Switch every 3 seconds
+    }, 6000); // Switch every 6 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -33,13 +33,13 @@ export default function HeroSection() {
     >
       {/* Heading */}
       <div className="flex flex-col items-center justify-center gap-2 max-w-4xl text-center">
-        <span className="text-[#E2E5ED] font-semibold text-3xl sm:text-4xl md:text-5xl leading-tight">
+        <span className="text-[#E2E5ED] font-semibold text-xl sm:text-4xl md:text-5xl leading-tight">
           Reimagine Customer Engagement -
         </span>
 
         {/* Gradient text + underline container */}
         <div className="relative inline-block">
-          <span className="text-3xl sm:text-4xl md:text-5xl bg-[linear-gradient(to_right,#66D7FF,#2D74E0)] bg-clip-text text-transparent font-semibold leading-tight">
+          <span className="text-xl sm:text-4xl md:text-5xl bg-[linear-gradient(to_right,#66D7FF,#2D74E0)] bg-clip-text text-transparent font-semibold leading-tight">
             Unified. Automated. Intelligent.
           </span>
 
@@ -55,7 +55,7 @@ export default function HeroSection() {
 
       {/* Subtext */}
       <div className="flex flex-col items-center justify-center text-center max-w-2xl">
-        <span className="text-[#93C6F5] font-medium text-sm sm:text-base">
+        <span className="text-[#93C6F5] font-normal sm:font-medium text-xs sm:text-sm">
           Unify all customer chats in one intelligent platform. RateUp
           automates, analyzes, and connects — helping you engage smarter across
           every channel.
@@ -107,6 +107,7 @@ export default function HeroSection() {
 
       {/* Images Container with Stacking */}
       <div className="relative w-full overflow-hidden">
+        {/* First Image - Base Layer */}
         <motion.div
           animate={{
             opacity: showDashboard ? 0 : 1,

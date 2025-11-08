@@ -1,8 +1,10 @@
+"use client";
+
 import { Sora } from "next/font/google";
 import Image from "next/image";
 
-import { IconCheck, IconClockX, IconCreditCardOff } from "@tabler/icons-react";
-import { motion } from "framer-motion";
+import { IconClockX, IconCreditCardOff } from "@tabler/icons-react";
+import { motion, type Transition } from "framer-motion";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
 import { Separator } from "@/components/ui/separator";
@@ -25,12 +27,24 @@ const benefits = [
 
 const looped = [...benefits, ...benefits];
 
+// Typed transitions for safety
+const springUp: Transition = { type: "spring", stiffness: 120, damping: 16 };
+
 export default function StartRateupHero() {
   return (
-    <section
+    <motion.section
       className={`${sora.className} w-full flex items-center justify-center py-8 sm:py-10`}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={springUp}
     >
-      <div className="relative w-[95%] max-w-6xl rounded-4xl overflow-hidden bg-rateup-darkblue">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative w-[95%] max-w-6xl rounded-4xl overflow-hidden bg-rateup-darkblue shadow-md"
+      >
         {/* Background image */}
         <div className="absolute inset-0 pointer-events-none">
           <Image
@@ -45,7 +59,12 @@ export default function StartRateupHero() {
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center text-center py-12 px-4 sm:py-16 sm:px-8 gap-8">
           {/* Headline */}
-          <div className="flex flex-col items-center justify-center gap-3">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springUp}
+            className="flex flex-col items-center justify-center gap-3"
+          >
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-white leading-snug">
               Start Engaging Smarter
             </h1>
@@ -55,16 +74,25 @@ export default function StartRateupHero() {
                 with RateUp
               </span>
 
+              {/* Underline animation */}
               <motion.div
                 initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
                 className="h-[6px] w-40 sm:w-60 rounded-full bg-[#C4D7F5]"
               />
             </div>
-          </div>
-          {/* Highlight bar */}
-          <div className="w-full flex items-center justify-center">
+          </motion.div>
+
+          {/* Scrolling highlights */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, ...springUp }}
+            className="w-full flex items-center justify-center"
+          >
             <div className="relative flex items-center justify-center bg-[linear-gradient(to_right,#001747,#004F98,#001747)] rounded-full overflow-hidden max-w-[25vw] min-w-[250px] py-2 px-2">
               <motion.div
                 className="flex gap-4 min-w-max items-center"
@@ -86,18 +114,33 @@ export default function StartRateupHero() {
                 ))}
               </motion.div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-col items-center justify-center gap-4">
+          {/* CTA buttons + features */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4, ...springUp }}
+            className="flex flex-col items-center justify-center gap-4"
+          >
             {/* CTA buttons */}
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <button className="bg-rateup-blue hover:bg-[#0b4d95] transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                transition={{ type: "spring", stiffness: 250, damping: 18 }}
+                className="bg-rateup-blue hover:bg-[#0b4d95] transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base"
+              >
                 Start Free Trial
-              </button>
+              </motion.button>
               <BookDemoModal>
-                <button className="bg-rateup-gold hover:bg-[#d46c00] transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  transition={{ type: "spring", stiffness: 250, damping: 18 }}
+                  className="bg-rateup-gold hover:bg-[#d46c00] transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base"
+                >
                   Book A Demo
-                </button>
+                </motion.button>
               </BookDemoModal>
             </div>
 
@@ -114,9 +157,9 @@ export default function StartRateupHero() {
                 No Expiry
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
-    </section>
+      </motion.div>
+    </motion.section>
   );
 }

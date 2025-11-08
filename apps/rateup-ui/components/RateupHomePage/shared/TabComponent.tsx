@@ -77,9 +77,16 @@ export default function TabComponent() {
   );
   const active = tabContent[activeTab];
 
+  // shared easing that's typed-safe for motion/react
+  const ease = [0.22, 1, 0.36, 1];
+
   return (
-    <div
+    <motion.div
       className={`${sora.className} mx-auto px-4 sm:px-8 lg:px-12 sm:pt-14 py-6 bg-white flex items-center justify-center`}
+      initial={{ opacity: 0, y: 6 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.12 }}
+      transition={{ duration: 0.6, ease: "easeInOut" }}
     >
       <div className="w-full max-w-6xl flex flex-col items-center gap-12">
         {/* Heading */}
@@ -99,7 +106,7 @@ export default function TabComponent() {
             <motion.span
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
               className="absolute bottom-0 left-0 right-0 h-[6px] bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] rounded-full origin-left"
             />
           </div>
@@ -116,12 +123,21 @@ export default function TabComponent() {
                   const { Icon } = tabContent[key];
                   const isActive = key === activeTab;
                   return (
-                    <span
+                    <motion.span
                       key={key}
                       onClick={() => setActiveTab(key)}
                       className={`relative mb-2 text-md cursor-pointer font-medium transition-colors duration-200 ${
                         isActive ? "text-[#C4D7F5]" : "text-[#004F98]"
                       }`}
+                      whileHover={{ y: -4 }}
+                      transition={{ duration: 0.18, ease: "easeInOut" }}
+                      role="tab"
+                      aria-selected={isActive}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ")
+                          setActiveTab(key);
+                      }}
                     >
                       <div className="flex items-center justify-center gap-1">
                         <Icon />
@@ -130,7 +146,7 @@ export default function TabComponent() {
                       {isActive && (
                         <span className="absolute left-0 -bottom-[8px] sm:-bottom-[10px] h-[3px] w-full bg-[#C4D7F5] rounded-full" />
                       )}
-                    </span>
+                    </motion.span>
                   );
                 })}
               </div>
@@ -143,10 +159,10 @@ export default function TabComponent() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={active.image}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
+                initial={{ opacity: 0, x: -24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 24 }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
                 className="relative w-full h-[220px] sm:h-[300px] md:h-[400px] lg:h-[460px] rounded-xl overflow-hidden bg-gray-100"
               >
                 <Image
@@ -164,10 +180,10 @@ export default function TabComponent() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={active.title}
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 18 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.4 }}
+                exit={{ opacity: 0, x: -18 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="text-center md:text-left px-2 flex flex-col gap-4"
               >
                 <span className="text-2xl sm:text-3xl md:text-5xl text-white leading-snug">
@@ -177,24 +193,33 @@ export default function TabComponent() {
                   {active.description}
                 </p>
                 <div className="flex items-center gap-4 w-full">
-                  <Link
-                    href={active.link}
-                    className="text-white bg-rateup-gold font-semibold text-sm sm:text-lg hover:scale-105 inline-flex items-center gap-1 px-4 py-2 rounded-sm transition-all"
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.18, ease: "easeInOut" }}
                   >
-                    <div className="text-sm flex items-center justify-center">
-                      Get Started Now <IconArrowRight />
-                    </div>
-                  </Link>
+                    <Link
+                      href={active.link}
+                      className="text-white bg-rateup-gold font-semibold text-sm sm:text-lg hover:scale-105 inline-flex items-center gap-1 px-4 py-2 rounded-sm transition-all"
+                    >
+                      <div className="text-sm flex items-center justify-center">
+                        Get Started Now <IconArrowRight />
+                      </div>
+                    </Link>
+                  </motion.div>
 
-                  <button className="rounded-sm bg-rateup-blue font-semibold text-sm sm:text-lg hover:scale-105 px-4 py-2 text-white transition-all cursor-pointer">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.18, ease: "easeInOut" }}
+                    className="rounded-sm bg-rateup-blue font-semibold text-sm sm:text-lg hover:scale-105 px-4 py-2 text-white transition-all cursor-pointer"
+                  >
                     Know More
-                  </button>
+                  </motion.button>
                 </div>
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

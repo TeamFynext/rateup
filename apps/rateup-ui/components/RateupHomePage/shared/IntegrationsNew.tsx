@@ -1,6 +1,8 @@
 import { Sora } from "next/font/google";
 import Image from "next/image";
 
+import { motion, type Transition, type Variants } from "framer-motion";
+
 import { imagePath } from "@/components/HomePage/pages/constants";
 
 const sora = Sora({
@@ -8,16 +10,44 @@ const sora = Sora({
   weight: ["400", "500", "600", "700"],
 });
 
+const container: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08 } },
+};
+
+// typed Transition objects
+const springUp: Transition = { type: "spring", stiffness: 120, damping: 16 };
+const springBtn: Transition = { type: "spring", stiffness: 260, damping: 24 };
+
+const illustrationVariant: Variants = {
+  hidden: { opacity: 0, y: -30 },
+  visible: { opacity: 1, y: 0, transition: springUp },
+};
+
+const contentVariant: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: springUp },
+};
+
+const btnHover = {
+  y: -4,
+  scale: 1.02,
+  boxShadow: "0 10px 24px rgba(10,20,50,0.08)",
+};
+
 export default function Integration() {
   return (
-    <section
+    <motion.section
       className={`${sora.className} bg-rateup-darkblue w-full flex items-center justify-center py-12 px-4`}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.12 }}
+      variants={container}
     >
       <div className="max-w-6xl w-full flex flex-col items-center gap-2">
         {/* Top illustration / flow graphic */}
-        <div className="w-full">
+        <motion.div className="w-full" variants={illustrationVariant}>
           <div className="w-full rounded-t-2xl overflow-hidden bg-[#C4D7F5] p-10">
-            {/* Replace src with the path you want; this uses the uploaded image */}
             <Image
               src={`${imagePath}/homepage/Integrationssvg.svg`}
               alt="Integrations flow illustration"
@@ -27,10 +57,13 @@ export default function Integration() {
               priority
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Card-like content area */}
-        <div className="w-full bg-[#052259] rounded-b-2xl px-6 py-10 sm:px-12 sm:py-14 flex flex-col items-center justify-center gap-4 text-center">
+        <motion.div
+          className="w-full bg-[#052259] rounded-b-2xl px-6 py-10 sm:px-12 sm:py-14 flex flex-col items-center justify-center gap-4 text-center"
+          variants={contentVariant}
+        >
           <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-normal leading-tight max-w-5xl">
             Build Your Business With Favorite Integrations
           </h2>
@@ -43,16 +76,18 @@ export default function Integration() {
           </p>
 
           <div className="">
-            <button
+            <motion.button
               type="button"
               className="inline-flex items-center justify-center bg-rateup-blue text-white font-medium px-4 py-2 rounded-sm shadow-sm hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2d74e0] transition"
+              whileHover={btnHover}
+              transition={springBtn}
               aria-label="View all integrations"
             >
               <span className="text-sm font-normal">View All Integrations</span>
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }

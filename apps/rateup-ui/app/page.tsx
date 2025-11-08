@@ -45,10 +45,10 @@ const page = () => {
       <AutomateInteraction />
       <Integration />
       {/* <IntegrationHero /> */}
-      <HomePageQrSection />
+      {/* <HomePageQrSection />
       <AudienceOverview />
       <MobileAppSection />
-      <CallToAction />
+      <CallToAction /> */}
       <StartRateupHero />
       <HomePageFooter />
       <ScrollToTop />
