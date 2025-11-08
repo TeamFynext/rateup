@@ -137,7 +137,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
         <Link
           onMouseEnter={() => setHovered(idx)}
           onClick={onItemClick}
-          className={`relative px-4 py-1.5 text-[#3f5ba9] text-[17px] font-semibold
+          className={`relative px-4 py-1.5 text-rateup-graytext text-[17px] font-semibold
            dark:text-neutral-300 ${
              item.link === pathname
                ? `rounded-xl

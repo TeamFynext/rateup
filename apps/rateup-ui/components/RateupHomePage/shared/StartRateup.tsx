@@ -27,7 +27,7 @@ const benefits = [
 
 const looped = [...benefits, ...benefits];
 
-// Typed transitions for safety
+// Smooth spring transition for content
 const springUp: Transition = { type: "spring", stiffness: 120, damping: 16 };
 
 export default function StartRateupHero() {
@@ -45,8 +45,16 @@ export default function StartRateupHero() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative w-[95%] max-w-6xl rounded-4xl overflow-hidden bg-rateup-darkblue shadow-md"
       >
-        {/* Background image */}
-        <div className="absolute inset-0 pointer-events-none">
+        {/* Smooth pulsing background image */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          animate={{ scale: [1, 1.03, 1] }}
+          transition={{
+            duration: 8, // slow, subtle
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
           <Image
             src={heroGraphic}
             alt="hero graphic"
@@ -54,7 +62,7 @@ export default function StartRateupHero() {
             className="object-contain object-left"
             priority
           />
-        </div>
+        </motion.div>
 
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center text-center py-12 px-4 sm:py-16 sm:px-8 gap-8">

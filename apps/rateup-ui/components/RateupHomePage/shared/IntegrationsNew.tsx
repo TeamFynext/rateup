@@ -15,7 +15,6 @@ const container: Variants = {
   visible: { transition: { staggerChildren: 0.08 } },
 };
 
-// typed Transition objects
 const springUp: Transition = { type: "spring", stiffness: 120, damping: 16 };
 const springBtn: Transition = { type: "spring", stiffness: 260, damping: 24 };
 
@@ -46,7 +45,11 @@ export default function Integration() {
     >
       <div className="max-w-6xl w-full flex flex-col items-center gap-2">
         {/* Top illustration / flow graphic */}
-        <motion.div className="w-full" variants={illustrationVariant}>
+        <motion.div
+          className="relative w-full flex items-center justify-center"
+          variants={illustrationVariant}
+        >
+          {/* Background Illustration */}
           <div className="w-full rounded-t-2xl overflow-hidden bg-[#C4D7F5] p-10">
             <Image
               src={`${imagePath}/homepage/Integrationssvg.svg`}
@@ -57,6 +60,28 @@ export default function Integration() {
               priority
             />
           </div>
+
+          {/* Animated Icon (centered & pulsing) */}
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[30px] w-[30px] sm:h-[40px] sm:w-[40px] lg:w-[75px] lg:h-[75px]"
+            animate={{
+              scale: [1, 1.25, 1, 1.15, 1], // heartbeat pattern
+            }}
+            transition={{
+              duration: 1.8, // one heartbeat cycle
+              ease: "easeInOut",
+              repeat: Infinity,
+              repeatType: "loop",
+            }}
+          >
+            <Image
+              src={`${imagePath}/homepage/rateupiconblue.svg`}
+              alt="Rateup Icon"
+              fill
+              className="object-contain"
+              priority
+            />
+          </motion.div>
         </motion.div>
 
         {/* Card-like content area */}
@@ -75,17 +100,15 @@ export default function Integration() {
             workflow.
           </p>
 
-          <div className="">
-            <motion.button
-              type="button"
-              className="inline-flex items-center justify-center bg-rateup-blue text-white font-medium px-4 py-2 rounded-sm shadow-sm hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2d74e0] transition"
-              whileHover={btnHover}
-              transition={springBtn}
-              aria-label="View all integrations"
-            >
-              <span className="text-sm font-normal">View All Integrations</span>
-            </motion.button>
-          </div>
+          <motion.button
+            type="button"
+            className="inline-flex items-center justify-center bg-rateup-blue text-white font-medium px-4 py-2 rounded-sm shadow-sm hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2d74e0] transition"
+            whileHover={btnHover}
+            transition={springBtn}
+            aria-label="View all integrations"
+          >
+            <span className="text-sm font-normal">View All Integrations</span>
+          </motion.button>
         </motion.div>
       </div>
     </motion.section>

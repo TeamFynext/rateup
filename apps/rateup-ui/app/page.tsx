@@ -19,7 +19,7 @@ import HomePageQrSection from "@/components/RateupHomePage/shared/HomePageQrSect
 import IntegrationHero from "@/components/RateupHomePage/shared/IntegrationAndClients";
 import Integration from "@/components/RateupHomePage/shared/IntegrationsNew";
 import LoyalityAd from "@/components/RateupHomePage/shared/LoyalityAdNew";
-import MobileAppSection from "@/components/RateupHomePage/shared/MobileAppSection";
+import MobileAppSection from "@/components/RateupHomePage/shared/MobileAppSectionNew";
 import ObstaclesOverview from "@/components/RateupHomePage/shared/ObstaclesOverview";
 import StartRateupHero from "@/components/RateupHomePage/shared/StartRateup";
 import TabComponent from "@/components/RateupHomePage/shared/TabComponent";
@@ -45,10 +45,10 @@ const page = () => {
       <AutomateInteraction />
       <Integration />
       {/* <IntegrationHero /> */}
-      {/* <HomePageQrSection />
-      <AudienceOverview />
+      {/* <HomePageQrSection /> */}
+      {/* <AudienceOverview /> */}
       <MobileAppSection />
-      <CallToAction /> */}
+      {/* <CallToAction /> */}
       <StartRateupHero />
       <HomePageFooter />
       <ScrollToTop />

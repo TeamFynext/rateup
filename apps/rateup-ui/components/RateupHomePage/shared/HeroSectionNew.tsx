@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Sora } from "next/font/google";
 import Image from "next/image";
 
@@ -17,15 +17,7 @@ const sora = Sora({
 });
 
 export default function HeroSection() {
-  const [showDashboard, setShowDashboard] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowDashboard((prev) => !prev);
-    }, 6000); // Switch every 6 seconds
-
-    return () => clearInterval(interval);
-  }, []);
+  const [showDashboard, setShowDashboard] = useState(false); // default: first image visible
 
   return (
     <section
@@ -105,8 +97,12 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Images Container with Stacking */}
-      <div className="relative w-full overflow-hidden">
+      {/* Images Container with Stacking (mouseenter shows second image) */}
+      <div
+        className="relative w-full overflow-hidden"
+        onMouseEnter={() => setShowDashboard(true)}
+        onMouseLeave={() => setShowDashboard(false)}
+      >
         {/* First Image - Base Layer */}
         <motion.div
           animate={{
@@ -125,7 +121,7 @@ export default function HeroSection() {
           />
         </motion.div>
 
-        {/* Second Image - Slides up from below */}
+        {/* Second Image - Slides up from below on hover */}
         <motion.div
           animate={{
             y: showDashboard ? 0 : "100%",

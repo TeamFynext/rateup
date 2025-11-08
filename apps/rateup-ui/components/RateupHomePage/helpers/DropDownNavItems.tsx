@@ -24,13 +24,13 @@ export default function DropDownNavItems() {
 
   const items = [
     {
-      icon: <MessageCircle className="w-6 h-6 text-[#1c518e]" />,
+      icon: <MessageCircle className="w-6 h-6 text-rateup-graytext" />,
       title: "Whatsapp Loyalty",
       description: "Engage where your customers are most active",
       href: "/products/whatsapp-loyalty",
     },
     {
-      icon: <Monitor className="w-6 h-6 text-[#1c518e]" />,
+      icon: <Monitor className="w-6 h-6 text-rateup-graytext" />,
       title: "Web Survey",
       description: "Collect and analyze customer insights easily",
       href: "/products/whatsapp-survey",
@@ -102,14 +102,16 @@ export default function DropDownNavItems() {
     >
       <span
         onClick={() => setOpen(!open)}
-        className="px-4 py-2 text-[#3f5ba9] text-[17px] font-semibold cursor-pointer flex items-center gap-1 hover:text-[#1c518e] transition-colors duration-200"
+        className="px-4 py-2 text-rateup-graytext text-[17px] font-semibold cursor-pointer flex items-center gap-1 hover:text-gray-600 transition-colors duration-200"
       >
         Platform
-        <ChevronDown
-          className={`h-5 w-5 text-[#3f5ba9] transition-transform duration-300 ${
-            open ? "rotate-180" : ""
-          }`}
-        />
+        <div className="bg-[#F5F5F5] p-1 rounded-full">
+          <ChevronDown
+            className={`h-5 w-5 text-rateup-graytext transition-transform duration-300 ${
+              open ? "rotate-180" : ""
+            }`}
+          />
+        </div>
       </span>
 
       {/* {open && (
@@ -137,7 +139,7 @@ export default function DropDownNavItems() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="absolute left-0 z-50 mt-3 w-[340px] max-h-[75vh] overflow-y-auto rounded-xl border border-[#3f5ba9] bg-white shadow-2xl p-4 space-y-4"
+            className="absolute left-0 z-50 mt-3 w-[340px] max-h-[75vh] overflow-y-auto rounded-xl border border-rateup-graytext bg-white shadow-2xl p-4 space-y-4"
           >
             {items.map((item, idx) => (
               <button
@@ -149,7 +151,7 @@ export default function DropDownNavItems() {
               >
                 <div>{item.icon}</div>
                 <div>
-                  <div className="font-semibold text-[#00397b]">
+                  <div className="font-semibold text-rateup-graytext">
                     {item.title}
                   </div>
                   <p className="text-sm text-gray-600">{item.description}</p>
