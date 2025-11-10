@@ -107,9 +107,8 @@ export default function HeroSection() {
         <motion.div
           animate={{
             opacity: showDashboard ? 0 : 1,
-            y: showDashboard ? "100%" : 0,
           }}
-          transition={{ duration: 1, ease: [0.43, 0.13, 0.23, 0.96] }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
         >
           <Image
             src={`${imagePath}/homepage/coverimage.svg`}

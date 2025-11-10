@@ -1,12 +1,21 @@
+import { Sora } from "next/font/google";
+
 import {
   IconMessageCirclePlus,
   IconRefresh,
   IconUser,
 } from "@tabler/icons-react";
 
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export default function HeroAnalytics() {
   return (
-    <section className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-40 py-10 px-4">
+    <section
+      className={`flex flex-col md:flex-row items-center justify-center gap-10 md:gap-40 py-10 px-4 ${sora.className}`}
+    >
       {/* Block 1 */}
       <div className="flex flex-col items-center justify-center text-center w-full md:w-auto">
         <span className="bg-[linear-gradient(to_right,#004F98,#001747)] bg-clip-text text-transparent font-bold text-5xl md:text-6xl">

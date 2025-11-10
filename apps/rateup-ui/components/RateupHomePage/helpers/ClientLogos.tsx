@@ -1,10 +1,16 @@
 "use client";
 
+import { Sora } from "next/font/google";
 import Image from "next/image";
 
 import { motion } from "motion/react";
 
 import { imagesPath } from "@/utils/constants";
+
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 const logo1 = `${imagesPath}/homepage/CLIENTS/1.png`;
 const logo2 = `${imagesPath}/homepage/CLIENTS/2.png`;
@@ -42,7 +48,9 @@ const ClientLogos = () => {
   const allLogos = [...logos, ...logos]; // duplicate for seamless loop
 
   return (
-    <section className="flex items-center justify-center py-6 sm:py-8 lg:pb-7">
+    <section
+      className={`flex items-center justify-center py-6 sm:py-8 lg:pb-7 ${sora.className}`}
+    >
       <div className="border border-[#E2E5ED] w-[95vw] sm:w-[90vw] lg:w-[80vw] flex flex-col sm:flex-row items-stretch justify-between rounded-lg overflow-hidden">
         {/* Left Section */}
         <div className="flex flex-col items-center justify-center px-4 sm:px-6 w-full sm:w-[200px] lg:w-[13vw] bg-[#F5F5F5] text-center">

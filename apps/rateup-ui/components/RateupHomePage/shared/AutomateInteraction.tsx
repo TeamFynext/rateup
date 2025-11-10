@@ -119,9 +119,8 @@ export default function AutomateInteraction() {
           className="flex items-center justify-center"
         >
           <motion.button
-            whileHover={{ y: -6, scale: 1.02 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="flex items-center justify-center gap-2 bg-rateup-gold rounded-md px-5 py-2 sm:px-6 sm:py-3 hover:opacity-90 transition"
+            className="flex items-center justify-center gap-2 bg-rateup-gold rounded-md px-5 py-2 sm:px-6 sm:py-3 hover:opacity-90 transition hover:shadow-sm"
           >
             <span className="text-white text-sm  font-semibold">
               Launch In Minutes
