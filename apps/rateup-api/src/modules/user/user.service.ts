@@ -630,3 +630,61 @@ export async function updateUserAvailablityStatus(
     },
   });
 }
+
+export async function auditLog(
+  orgId: string,
+  page: number = 1,
+  limit: number = 25,
+  sortBy?: string,
+  sortOrder?: "asc" | "desc",
+) {
+  const skip = (page - 1) * limit;
+  let orderBy = {};
+
+  if (sortBy === "user") {
+    orderBy = {
+      user: {
+        name: sortOrder ?? "desc",
+      },
+    };
+  } else {
+    orderBy = {
+      [sortBy ?? "createdAt"]: sortOrder ?? "desc",
+    };
+  }
+
+  const [logs, total] = await prisma.$transaction([
+    prisma.auditLog.findMany({
+      where: {
+        orgId,
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy,
+      skip,
+      take: limit,
+    }),
+    prisma.auditLog.count({
+      where: {
+        orgId,
+      },
+    }),
+  ]);
+
+  return {
+    data: logs,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page < Math.ceil(total / limit),
+      hasPrevPage: page > 1,
+    },
+  };
+}
