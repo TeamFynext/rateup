@@ -95,17 +95,22 @@ export function DataTable<TData, TValue>({
     ...(isManualPagination
       ? {
           onPaginationChange: manualPagination.onPaginationChange,
-          onSortingChange: manualPagination.onSortingChange,
         }
       : {}),
     onRowSelectionChange: setRowSelection,
-    // onSortingChange: setSorting,
+    onSortingChange: isManualPagination
+      ? manualPagination.onSortingChange
+      : setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    // getSortedRowModel: getSortedRowModel(),
+    ...(isManualPagination
+      ? {}
+      : {
+          getPaginationRowModel: getPaginationRowModel(),
+          getSortedRowModel: getSortedRowModel(),
+        }),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
