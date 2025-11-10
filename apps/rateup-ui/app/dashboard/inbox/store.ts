@@ -3,12 +3,15 @@ import lodash from "lodash";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
 import {
   ContactsWithLastMessage,
   markWaMessagesAsRead,
   WaGetMessagesBody,
 } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { ChatFilter } from "@/components/whatsapp/inbox/chatselect/chatFilter";
+import { User } from "@/context/UserContext";
+import { isInboxSessionExpired } from "@/utils/whatsapp/inbox";
 
 import {
   clearAllContactsFromDB,
@@ -92,13 +95,15 @@ interface ContactsStoreState {
   selectedContact: ContactWithUpdatedAt | null;
   currentFilterKey: string;
   isLoading: boolean;
+  currentUser: User;
 
   // Actions
   setFilter: (filter: ChatFilter) => void;
-  loadContactsFromDB: (filter: ChatFilter) => Promise<void>;
+  loadContactsFromDB: (filter: ChatFilter, user) => Promise<void>;
   addContactsForFilter: (
     filterKey: string,
     contacts: Array<ContactsWithLastMessage & { updatedAt: string }>,
+    updateOtherTabs?: boolean,
   ) => Promise<void>;
   updateContactById: (
     contactId: string,
@@ -113,6 +118,8 @@ interface ContactsStoreState {
   getContactsByIds: (ids: string[]) => Promise<ContactWithUpdatedAt[]>;
   clearAllContacts: () => Promise<void>;
   deleteContactsByIds: (contactIds: string[]) => Promise<void>;
+  clearContactsForFilter: (filter: ChatFilter) => void;
+  updateContactList: (tab, contactId, isMessageUpdated: boolean) => void;
 }
 
 enableMapSet();
@@ -127,38 +134,42 @@ export const useContactsStore = create<ContactsStoreState>()(
       selectedContact: null,
       currentFilterKey: null,
       isLoading: false,
+      currentUser: null,
 
       setFilter: (filter) => {
         set({ currentFilterKey: makeFilterKey(filter) });
       },
 
-      loadContactsFromDB: async (filter) => {
+      loadContactsFromDB: async (filter, user) => {
+        if (!filter) return;
         const loadToken = ++currentLoadToken;
         const filterKey = makeFilterKey(filter);
         set(
           produce((state) => {
             state.currentFilterKey = filterKey;
+            if (!state.currentUser) state.currentUser = user;
           }),
         );
-        if (get().currentFilterKey[filterKey]?.length) return;
+        if (get().contactsByFilter[filterKey]?.length) return;
         const ids = await loadContactIdsForFilter(filterKey);
         if (!ids.length || loadToken !== currentLoadToken) return;
 
         const contacts = await loadContactsFromDB(ids);
         if (!contacts.length || loadToken !== currentLoadToken) return;
-
         set(
           produce((state: ContactsStoreState) => {
             if (loadToken !== currentLoadToken) return;
+            const contactsByIdMap = new Map(state.contactsById);
             contacts.forEach((c) => {
-              const existing = state.contactsById.get(c.id);
+              const existing = contactsByIdMap.get(c.id);
               if (
                 !existing ||
                 new Date(c.updatedAt) > new Date(existing.updatedAt)
               ) {
-                state.contactsById.set(c.id, c);
+                contactsByIdMap.set(c.id, c);
               }
             });
+            state.contactsById = contactsByIdMap;
 
             const existingIds = new Set(
               state.contactsByFilter[filterKey] || [],
@@ -169,22 +180,28 @@ export const useContactsStore = create<ContactsStoreState>()(
         );
       },
 
-      addContactsForFilter: async (filterKey, contacts) => {
+      addContactsForFilter: async (
+        filterKey,
+        contacts,
+        updateOtherTabs = false,
+      ) => {
         const { currentFilterKey } = get();
-        if (currentFilterKey !== filterKey) return;
+        if (!filterKey || currentFilterKey !== filterKey) return;
+        let sortedList = [];
         set(
           produce((state: ContactsStoreState) => {
             state.isLoading = true;
             const existingIds = state.contactsByFilter[filterKey] || [];
             const contactIdsSet = new Set(existingIds);
+            const contactsByIdMap = new Map(state.contactsById);
             contacts.forEach((c) => {
               const { messages, ...rest } = c;
-              const existing = state.contactsById.get(c.id);
+              const existing = contactsByIdMap.get(c.id);
               if (
                 !existing ||
                 new Date(c.updatedAt) > new Date(existing.updatedAt)
               ) {
-                state.contactsById.set(c.id, {
+                contactsByIdMap.set(c.id, {
                   ...rest,
                   unReadMessageCount:
                     state.selectedContact?.id === c.id
@@ -192,109 +209,468 @@ export const useContactsStore = create<ContactsStoreState>()(
                       : c.unReadMessageCount,
                 });
               }
+              const updatedContact = contactsByIdMap.get(c.id);
+
+              const isUnAssigned =
+                updatedContact.waMessageAssignStatus ===
+                WaMessageAssignStatus.UNASSIGNED;
+              const isAssigned =
+                updatedContact.waMessageAssignStatus ===
+                WaMessageAssignStatus.ASSIGNED;
+              if (
+                !isUnAssigned &&
+                (currentFilterKey?.includes(
+                  "waMessageAssignStatus:UnAssigned",
+                ) ||
+                  currentFilterKey?.includes("waMessageAssignStatus:New"))
+              )
+                return false;
+              if (
+                !isAssigned &&
+                currentFilterKey?.includes("waMessageAssignStatus:mine")
+              )
+                return false;
               contactIdsSet.add(c.id);
             });
+            state.contactsById = contactsByIdMap;
 
             let allIds = Array.from(contactIdsSet);
-            const newList = allIds
-              .map((id) => ({
-                id,
-                createdAt: filterKey.includes("messageType:all")
-                  ? (state.contactsById.get(id)?.lastMessage?.waCreatedAt ?? 0)
-                  : (state.contactsById.get(id)?.lastReceivedMessageTimeStamp ??
-                    0),
-              }))
-              .sort(
-                (a, b) =>
-                  (filterKey.includes("sortBy:oldest")
-                    ? new Date(a.createdAt).getTime()
-                    : new Date(b.createdAt).getTime()) -
-                  (filterKey.includes("sortBy:oldest")
-                    ? new Date(b.createdAt).getTime()
-                    : new Date(a.createdAt).getTime()),
-              )
+
+            sortedList = allIds
+              .map((id) => {
+                const c = state.contactsById.get(id);
+                const sortByWaCreated =
+                  currentFilterKey.includes("sortBy:newest_wa_created") ||
+                  currentFilterKey.includes("sortBy:oldest_wa_created");
+                const createdAt = sortByWaCreated
+                  ? (c?.lastMessage?.waCreatedAt ?? 0)
+                  : (c?.lastReceivedMessageTimeStamp ?? 0);
+                return { id, createdAt };
+              })
+              .sort((a, b) => {
+                const oldestSort =
+                  currentFilterKey.includes("sortBy:oldest") ||
+                  currentFilterKey.includes("sortBy:oldest_wa_created");
+                const timeA = new Date(a.createdAt).getTime();
+                const timeB = new Date(b.createdAt).getTime();
+
+                return oldestSort ? timeA - timeB : timeB - timeA;
+              })
               .map((c) => c.id);
-            state.contactsByFilter[filterKey] = newList;
+            state.contactsByFilter[currentFilterKey] = sortedList;
             state.isLoading = false;
           }),
         );
-
         Promise.all([
           saveContactsToDB(contacts),
-          saveContactIdsForFilter(
-            filterKey,
-            contacts.map((c) => c.id),
-          ),
+          saveContactIdsForFilter(filterKey, sortedList),
         ]);
+        const state = get();
+        if (updateOtherTabs && contacts.length === 1) {
+          const contactId = contacts[0].id;
+          if (!state.currentFilterKey?.includes("waMessageAssignStatus:New")) {
+            state.updateContactList("New", contactId, true);
+          }
+          if (
+            !state.currentFilterKey?.includes(
+              "waMessageAssignStatus:UnAssigned",
+            )
+          ) {
+            state.updateContactList("UnAssigned", contactId, true);
+          }
+          if (!state.currentFilterKey?.includes("waMessageAssignStatus:mine")) {
+            state.updateContactList("mine", contactId, true);
+          }
+          if (!state.currentFilterKey?.includes("messageType:all")) {
+            state.updateContactList("All", contactId, true);
+          }
+        }
       },
 
       updateContactById(contactId, updater, markUnread) {
-        const contact = get().contactsById.get(contactId);
+        const state = get();
+        const contact = state.contactsById.get(contactId);
         if (!contact) return;
-        const updated = {
+        const updateIdb = [];
+        const updatedContact = {
           ...updater(contact),
           updatedAt: new Date().toISOString(),
         };
+        let messageUpdated = false;
+        let assignStatusChanged = false;
         set(
-          produce((state) => {
-            const newMap = new Map(state.contactsById);
-            newMap.set(contactId, updated);
-            state.contactsById = newMap;
-            if (contactId === get().selectedContact?.id) {
-              state.selectedContact = updated;
-            }
-            let filter = false;
-            if (
-              updated.waMessageAssignStatus !== contact.waMessageAssignStatus &&
-              !state.currentFilterKey?.includes("messageType:all")
-            ) {
-              filter = true;
-            }
-            if (
-              (updated.lastMessage &&
-                updated.lastMessage.waCreatedAt >
-                  contact.lastMessage.waCreatedAt) ||
-              filter
-            ) {
-              state.isLoading = true;
-              const list = filter
-                ? state.contactsByFilter[state.currentFilterKey].filter(
-                    (id) => id !== contactId,
-                  )
-                : state.contactsByFilter[state.currentFilterKey];
-              const newList = list
-                .map((id) => ({
-                  id,
-                  createdAt: state.currentFilterKey?.includes("messageType:all")
-                    ? (state.contactsById.get(id)?.lastMessage?.waCreatedAt ??
-                      0)
-                    : (state.contactsById.get(id)
-                        ?.lastReceivedMessageTimeStamp ?? 0),
-                }))
-                .sort(
-                  (a, b) =>
-                    (state.currentFilterKey.includes("sortBy:oldest")
-                      ? new Date(a.createdAt).getTime()
-                      : new Date(b.createdAt).getTime()) -
-                    (state.currentFilterKey.includes("sortBy:oldest")
-                      ? new Date(b.createdAt).getTime()
-                      : new Date(a.createdAt).getTime()),
-                )
-                .map((c) => c.id);
+          produce((draft) => {
+            const { currentFilterKey, contactsByFilter, contactsById } = draft;
+            const newContactsById = new Map(contactsById);
+            newContactsById.set(contactId, updatedContact);
+            draft.contactsById = newContactsById;
 
-              state.contactsByFilter[state.currentFilterKey] = newList;
-              state.isLoading = false;
+            if (contactId === state.selectedContact?.id) {
+              draft.selectedContact = updatedContact;
+            }
+
+            const currentList = contactsByFilter[currentFilterKey] || [];
+            let contactIncluded = currentList.includes(contactId);
+            const isUnassigned =
+              updatedContact.waMessageAssignStatus ===
+              WaMessageAssignStatus.UNASSIGNED;
+            assignStatusChanged =
+              updatedContact.waMessageAssignStatus !==
+              contact.waMessageAssignStatus;
+            const filterExcludesAll =
+              !currentFilterKey?.includes("messageType:all") &&
+              (!currentFilterKey?.includes("waMessageAssignStatus:New") ||
+                (currentFilterKey?.includes("waMessageAssignStatus:New") &&
+                  !isUnassigned));
+            const shouldFilterOut = assignStatusChanged && filterExcludesAll;
+
+            messageUpdated =
+              updatedContact.lastMessage &&
+              updatedContact.lastMessage.waCreatedAt >
+                contact.lastMessage.waCreatedAt;
+            if (!contactIncluded) {
+              const isNewFilter = currentFilterKey?.includes(
+                "waMessageAssignStatus:New",
+              );
+
+              if (isNewFilter && isUnassigned) {
+                currentList.push(contactId);
+                contactIncluded = true;
+              }
+
+              if (!contactIncluded) return;
+            }
+            if (messageUpdated || shouldFilterOut) {
+              draft.isLoading = true;
+
+              const baseList = shouldFilterOut
+                ? currentList.filter((id) => id !== contactId)
+                : currentList;
+              const sortedList = baseList
+                .map((id) => {
+                  const c = draft.contactsById.get(id);
+                  const sortByWaCreated =
+                    currentFilterKey.includes("sortBy:newest_wa_created") ||
+                    currentFilterKey.includes("sortBy:oldest_wa_created");
+                  const createdAt = sortByWaCreated
+                    ? (c?.lastMessage?.waCreatedAt ?? 0)
+                    : (c?.lastReceivedMessageTimeStamp ?? 0);
+
+                  return { id, createdAt };
+                })
+                .sort((a, b) => {
+                  const oldestSort =
+                    currentFilterKey.includes("sortBy:oldest") ||
+                    currentFilterKey.includes("sortBy:oldest_wa_created");
+                  const timeA = new Date(a.createdAt).getTime();
+                  const timeB = new Date(b.createdAt).getTime();
+
+                  return oldestSort ? timeA - timeB : timeB - timeA;
+                })
+                .map((c) => c.id);
+              draft.contactsByFilter[currentFilterKey] = sortedList;
+              updateIdb.push({ key: currentFilterKey, contactIds: sortedList });
+              draft.isLoading = false;
             }
           }),
         );
+
+        if (
+          !state.currentFilterKey?.includes("waMessageAssignStatus:New") &&
+          (messageUpdated || assignStatusChanged)
+        ) {
+          state.updateContactList("New", contactId, messageUpdated);
+        }
+        if (
+          !state.currentFilterKey?.includes(
+            "waMessageAssignStatus:UnAssigned",
+          ) &&
+          (messageUpdated || assignStatusChanged)
+        ) {
+          state.updateContactList("UnAssigned", contactId, messageUpdated);
+        }
+        if (
+          !state.currentFilterKey?.includes("waMessageAssignStatus:mine") &&
+          (messageUpdated || assignStatusChanged)
+        ) {
+          state.updateContactList("mine", contactId, messageUpdated);
+        }
+        if (
+          !state.currentFilterKey?.includes("messageType:all") &&
+          messageUpdated
+        ) {
+          state.updateContactList("All", contactId, messageUpdated);
+        }
+
         try {
+          Promise.all(
+            updateIdb.map(async (i) => {
+              saveContactIdsForFilter(i.key, i.contatIds);
+            }),
+          );
           if (contactId === get().selectedContact?.id && markUnread) {
             markWaMessagesAsRead(contactId);
           }
-          saveContactToDB(updated);
+          saveContactToDB(updatedContact);
         } catch (e) {
           console.error(e);
         }
+      },
+
+      updateContactList: (tab, contactId, isMessageUpdated) => {
+        const updateIdb = [];
+        switch (tab) {
+          case "All":
+            set(
+              produce((draft) => {
+                const state = get();
+                const contact = state.contactsById.get(contactId);
+
+                const isNew = !isInboxSessionExpired(
+                  contact.lastReceivedMessageTimeStamp,
+                );
+                const filterList = Object.keys(draft.contactsByFilter).filter(
+                  (key) => key.includes("messageType:all"),
+                );
+                filterList.forEach((filterKey) => {
+                  const contactIds = draft.contactsByFilter[filterKey] || [];
+                  const isInFilter = contactIds.includes(contactId);
+                  let newList = [...contactIds];
+                  let changed = false;
+                  if (isNew) {
+                    if (!isInFilter) {
+                      newList.push(contactId);
+                      changed = true;
+                    }
+                  }
+                  if (!changed && !isMessageUpdated) return;
+                  const sortedList = newList
+                    .map((id) => {
+                      const c = draft.contactsById.get(id);
+                      const sortByWaCreated =
+                        filterKey.includes("sortBy:newest_wa_created") ||
+                        filterKey.includes("sortBy:oldest_wa_created");
+                      const createdAt = sortByWaCreated
+                        ? (c?.lastMessage?.waCreatedAt ?? 0)
+                        : (c?.lastReceivedMessageTimeStamp ?? 0);
+
+                      return { id, createdAt };
+                    })
+                    .sort((a, b) => {
+                      const oldestSort =
+                        filterKey.includes("sortBy:oldest") ||
+                        filterKey.includes("sortBy:oldest_wa_created");
+                      const timeA = new Date(a.createdAt).getTime();
+                      const timeB = new Date(b.createdAt).getTime();
+
+                      return oldestSort ? timeA - timeB : timeB - timeA;
+                    })
+                    .map((c) => c.id);
+                  draft.contactsByFilter[filterKey] = sortedList;
+                  updateIdb.push({ key: filterKey, contactIds: sortedList });
+                });
+              }),
+            );
+            break;
+          case "UnAssigned":
+            set(
+              produce((draft) => {
+                const state = get();
+                const contact = state.contactsById.get(contactId);
+                const isUnassigned =
+                  contact.waMessageAssignStatus ===
+                  WaMessageAssignStatus.UNASSIGNED;
+
+                const filterList = Object.keys(draft.contactsByFilter).filter(
+                  (key) => key.includes("waMessageAssignStatus:UnAssigned"),
+                );
+                filterList.forEach((filterKey) => {
+                  const contactIds = draft.contactsByFilter[filterKey] || [];
+                  const isInFilter = contactIds.includes(contactId);
+                  let newList = [...contactIds];
+                  let changed = false;
+                  if (isUnassigned) {
+                    if (!isInFilter) {
+                      newList.push(contactId);
+                      changed = true;
+                    }
+                  } else {
+                    if (isInFilter && !isUnassigned) {
+                      newList = contactIds.filter((id) => id !== contactId);
+                      changed = true;
+                    }
+                  }
+                  if (!changed && !isMessageUpdated) return;
+                  const sortedList = newList
+                    .map((id) => {
+                      const c = draft.contactsById.get(id);
+                      const sortByWaCreated =
+                        filterKey.includes("sortBy:newest_wa_created") ||
+                        filterKey.includes("sortBy:oldest_wa_created");
+                      const createdAt = sortByWaCreated
+                        ? (c?.lastMessage?.waCreatedAt ?? 0)
+                        : (c?.lastReceivedMessageTimeStamp ?? 0);
+
+                      return { id, createdAt };
+                    })
+                    .sort((a, b) => {
+                      const oldestSort =
+                        filterKey.includes("sortBy:oldest") ||
+                        filterKey.includes("sortBy:oldest_wa_created");
+                      const timeA = new Date(a.createdAt).getTime();
+                      const timeB = new Date(b.createdAt).getTime();
+
+                      return oldestSort ? timeA - timeB : timeB - timeA;
+                    })
+                    .map((c) => c.id);
+                  draft.contactsByFilter[filterKey] = sortedList;
+                  updateIdb.push({ key: filterKey, contactIds: sortedList });
+                });
+              }),
+            );
+            break;
+          case "mine":
+            set(
+              produce((draft) => {
+                const state = get();
+
+                const contact = state.contactsById.get(contactId);
+
+                const isAssigned =
+                  contact.waMessageAssignStatus ===
+                  WaMessageAssignStatus.ASSIGNED;
+                const filterList = Object.keys(draft.contactsByFilter).filter(
+                  (key) => key.includes("waMessageAssignStatus:mine"),
+                );
+                filterList.forEach((filterKey) => {
+                  const contactIds = draft.contactsByFilter[filterKey] || [];
+                  const isInFilter = contactIds.includes(contactId);
+                  let newList = [...contactIds];
+                  let changed = false;
+                  if (
+                    isAssigned &&
+                    contact.assignedUsers.some(
+                      (a) => a.id === state.currentUser.userId,
+                    )
+                  ) {
+                    if (!isInFilter) {
+                      newList.push(contactId);
+                      changed = true;
+                    }
+                  } else {
+                    if (isInFilter) {
+                      newList = contactIds.filter((id) => id !== contactId);
+                      changed = true;
+                    }
+                  }
+
+                  if (!changed && !isMessageUpdated) return;
+                  const sortedList = newList
+                    .map((id) => {
+                      const c = draft.contactsById.get(id);
+                      const sortByWaCreated =
+                        filterKey.includes("sortBy:newest_wa_created") ||
+                        filterKey.includes("sortBy:oldest_wa_created");
+                      const createdAt = sortByWaCreated
+                        ? (c?.lastMessage?.waCreatedAt ?? 0)
+                        : (c?.lastReceivedMessageTimeStamp ?? 0);
+
+                      return { id, createdAt };
+                    })
+                    .sort((a, b) => {
+                      const oldestSort =
+                        filterKey.includes("sortBy:oldest") ||
+                        filterKey.includes("sortBy:oldest_wa_created");
+                      const timeA = new Date(a.createdAt).getTime();
+                      const timeB = new Date(b.createdAt).getTime();
+
+                      return oldestSort ? timeA - timeB : timeB - timeA;
+                    })
+                    .map((c) => c.id);
+                  draft.contactsByFilter[filterKey] = sortedList;
+                  updateIdb.push({ key: filterKey, contactIds: sortedList });
+                });
+              }),
+            );
+            break;
+          case "New":
+            set(
+              produce((draft) => {
+                const state = get();
+                const contact = state.contactsById.get(contactId);
+                const isUnassigned =
+                  contact.waMessageAssignStatus ===
+                  WaMessageAssignStatus.UNASSIGNED;
+                const isNew = isInboxSessionExpired(
+                  contact.lastReceivedMessageTimeStamp,
+                );
+                const filterList = Object.keys(draft.contactsByFilter).filter(
+                  (key) => key.includes("waMessageAssignStatus:New"),
+                );
+                filterList.forEach((filterKey) => {
+                  const contactIds = draft.contactsByFilter[filterKey] || [];
+                  const isInFilter = contactIds.includes(contactId);
+                  let newList = [...contactIds];
+                  let changed = false;
+                  if (isUnassigned && isNew) {
+                    if (!isInFilter) {
+                      newList.push(contactId);
+                      changed = true;
+                    }
+                  } else {
+                    if (isInFilter) {
+                      newList = contactIds.filter((id) => id !== contactId);
+                      changed = true;
+                    }
+                  }
+                  if (!changed && !isMessageUpdated) return;
+                  const sortedList = newList
+                    .map((id) => {
+                      const c = draft.contactsById.get(id);
+                      const sortByWaCreated =
+                        filterKey.includes("sortBy:newest_wa_created") ||
+                        filterKey.includes("sortBy:oldest_wa_created");
+                      const createdAt = sortByWaCreated
+                        ? (c?.lastMessage?.waCreatedAt ?? 0)
+                        : (c?.lastReceivedMessageTimeStamp ?? 0);
+
+                      return { id, createdAt };
+                    })
+                    .sort((a, b) => {
+                      const oldestSort =
+                        filterKey.includes("sortBy:oldest") ||
+                        filterKey.includes("sortBy:oldest_wa_created");
+                      const timeA = new Date(a.createdAt).getTime();
+                      const timeB = new Date(b.createdAt).getTime();
+
+                      return oldestSort ? timeA - timeB : timeB - timeA;
+                    })
+                    .map((c) => c.id);
+                  draft.contactsByFilter[filterKey] = sortedList;
+                  updateIdb.push({ key: filterKey, contactIds: sortedList });
+                });
+              }),
+            );
+            break;
+        }
+        Promise.all(
+          updateIdb.map(async (i) => {
+            saveContactIdsForFilter(i.key, i.contatIds);
+          }),
+        );
+      },
+
+      clearContactsForFilter: (filter) => {
+        if (!filter) return;
+        const filterKey = makeFilterKey(filter);
+        if (!filterKey || get().currentFilterKey !== filterKey) return;
+        if (!get().contactsByFilter[filterKey]?.length) return;
+        set(
+          produce((draft) => {
+            draft.contactsByFilter[filterKey] = [];
+          }),
+        );
+        saveContactIdsForFilter(filterKey, []);
       },
 
       resetUnreadForContact(contactId, contact) {

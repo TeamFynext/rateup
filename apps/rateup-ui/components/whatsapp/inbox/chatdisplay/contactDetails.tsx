@@ -133,7 +133,7 @@ export default function WaInboxContactDetails({
           data,
         },
         {
-          onSettled: () => {
+          onSuccess: () => {
             updateContactById(contact.id, (c) => ({
               ...c,
               name: values.name,
