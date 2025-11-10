@@ -25,7 +25,7 @@ export async function auditLogHook(
     await prisma.auditLog.create({
       data: {
         userId,
-        action: `${readableAction} ${route}`,
+        action: readableAction,
         method: request.method,
         route: route,
         body: request.body ?? {},
