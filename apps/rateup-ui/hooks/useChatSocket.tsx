@@ -23,9 +23,7 @@ export const useChatSocket = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
   const messageStore = useMessagesStore.getState();
-  const { selectedContact, updateContactById, addContactsForFilter } =
-    useContactsStore();
-
+  const { updateContactById, addContactsForFilter } = useContactsStore();
   useEffect(() => {
     if (!browserId) return;
 
@@ -40,6 +38,7 @@ export const useChatSocket = () => {
 
       ws.onmessage = async (event) => {
         const data = JSON.parse(event.data);
+        const selectedContact = useContactsStore.getState().selectedContact;
         switch (data.type) {
           case "inbox":
             const { message, contact: incomingContact } = data.inbox;
@@ -55,6 +54,7 @@ export const useChatSocket = () => {
                 incomingContact.id,
                 (contact) => ({
                   ...contact,
+                  waMessageAssignStatus: incomingContact.waMessageAssignStatus,
                   unReadMessageCount:
                     selectedContact?.id === incomingContact?.id
                       ? 0
@@ -91,8 +91,10 @@ export const useChatSocket = () => {
                           lastReceivedMessageTimeStamp: message.waCreatedAt,
                         }
                       : {}),
+                    updatedAt: new Date().toISOString(),
                   },
                 ],
+                true,
               );
             }
 

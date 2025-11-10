@@ -31,6 +31,7 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import lodash from "lodash";
 import {
   ChevronDown,
   Clock,
@@ -75,8 +76,6 @@ import WaInboxChatFilter, {
 import WaInboxChatSelectCard from "./chatselectCard";
 import ChatSelectSkeletonCardList from "./chatselectCard/Skeleton";
 import ChatselectPanelHeader from "./ChatselectPanelHeader";
-import InboxSettings, { InboxChatFilterAndSettings } from "./InboxSettings";
-import classes from "./styles.module.css";
 
 const WaInboxChatSelect = () => {
   const searchParams = useSearchParams();
@@ -85,19 +84,22 @@ const WaInboxChatSelect = () => {
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
   const {
     setSelectedContact,
+    selectedContact,
     loadContactsFromDB,
     isLoading: isStoreLoading,
+    clearContactsForFilter,
   } = useContactsStore();
   const currentFilterKey = useContactsStore((s) => s.currentFilterKey);
   const contactsById = useContactsStore((s) => s.contactsById);
   const contactsByFilter = useContactsStore((s) => s.contactsByFilter);
   const { mergeMessages } = useMessagesStore();
+  const { user } = useUser();
 
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
-      await loadContactsFromDB(processedFilter);
+      await loadContactsFromDB(processedFilter, user);
       if (cancelled) return;
     })();
 
@@ -187,21 +189,49 @@ const WaInboxChatSelect = () => {
     if (!filteredContacts || !currentFilterKey) return;
     const filterKey = makeFilterKey(processedFilter);
     if (filterKey !== currentFilterKey) return;
+
     let isActive = true;
-    (async () => {
+
+    const state = useContactsStore.getState();
+
+    const getNewContacts = (page) => {
+      const existingIds = new Set(state.contactsByFilter[filterKey] || []);
+      const filteredContacts = page.rows.filter((c) => {
+        const existingContact = state.contactsById.get(c.id);
+        if (!existingContact) return true;
+        return !existingIds.has(c.id);
+      });
+
+      return filteredContacts.map((c) => {
+        if (state.contactsById.get(c.id)) return c;
+        return { ...c, updatedAt: new Date().toISOString() };
+      });
+    };
+
+    const syncContacts = async () => {
+      if (!filteredContacts || !isActive) return;
+      const allContacts = filteredContacts.pages.flatMap((p) => p.rows) ?? [];
+      if (!allContacts?.length) {
+        clearContactsForFilter(processedFilter);
+        return;
+      }
+
       for (const page of filteredContacts.pages) {
         if (!isActive || !page.rows?.length) continue;
-        const state = useContactsStore.getState();
-        const existingIds = new Set(state.contactsByFilter[filterKey] || []);
-        const newContacts = page.rows
-          .filter((c) => !existingIds.has(c.id))
-          .map((c) => ({ ...c, updatedAt: new Date().toISOString() }));
+
+        const newContacts = getNewContacts(page);
+
         if (newContacts.length) {
           await state.addContactsForFilter(filterKey, newContacts);
           updateInitialMessagesToStore(newContacts);
         }
       }
+    };
+
+    (async () => {
+      await syncContacts();
     })();
+
     return () => {
       isActive = false;
     };
@@ -291,6 +321,7 @@ const WaInboxChatSelect = () => {
       parentRef.current.scrollTop = 0;
     }
   }, [tab]);
+
   const lifeCycleLabels = useLabelsContext();
 
   if (isContactLoading || isLoading)
@@ -301,7 +332,9 @@ const WaInboxChatSelect = () => {
       <ChatselectPanelHeader
         isRefetchingFilteredContacts={isRefetchingFilteredContacts}
         onUnknownContactAddSuccess={onUnknownContactAddSuccess}
-        refetchFilteredContacts={refetchFilteredContacts}
+        refetchFilteredContacts={() => {
+          refetchFilteredContacts();
+        }}
       />
       <div>
         {isStoreLoading ||

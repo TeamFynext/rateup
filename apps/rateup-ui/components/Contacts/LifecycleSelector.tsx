@@ -73,17 +73,23 @@ export const LifecycleSelector = ({
 
   const handleSubmit = (newValue: string) => {
     if (newValue === value) return; // Prevent unnecessary updates
-    updateContactById(id, (contact) => ({
-      ...contact,
-      lifecycleId: newValue,
-      lifecycleName: inboxLabels
-        .flatMap((c) => c.items)
-        .find((c) => c.value === newValue).label,
-    }));
-    editContactMutation.mutate({
-      data: { lifecycleId: newValue },
-      contactId: id,
-    });
+    editContactMutation.mutate(
+      {
+        data: { lifecycleId: newValue },
+        contactId: id,
+      },
+      {
+        onSuccess: () => {
+          updateContactById(id, (contact) => ({
+            ...contact,
+            lifecycleId: newValue,
+            lifecycleName: inboxLabels
+              .flatMap((c) => c.items)
+              .find((c) => c.value === newValue).label,
+          }));
+        },
+      },
+    );
   };
 
   const handleNextStage = () => {

@@ -66,7 +66,8 @@ export function formatIsoDateStringWithTime(isoDateString) {
   if (!isoDateString) return null;
   return dayjs(isoDateString).format("Do MMM, YYYY, h:mm A");
 }
-export function formatToRelativeTime(date) {
+export function formatToRelativeTime(date, isUtc = false) {
+  if (isUtc) return dayjs.utc(date).fromNow();
   return dayjs(date).fromNow();
 }
 const currentTime = dayjs().format("HH:mm");

@@ -113,14 +113,14 @@ export function getNavTopData(
             children: [
               // new,assigned,closed,sent,blocked
               {
-                label: translations("All"),
-                link: "/dashboard/inbox?tab=All",
-                icon: Inbox,
-              },
-              {
                 label: translations("New"),
                 link: "/dashboard/inbox?tab=New",
                 icon: MessageSquareDot,
+              },
+              {
+                label: translations("All"),
+                link: "/dashboard/inbox?tab=All",
+                icon: Inbox,
               },
               {
                 label: translations("Mine"),
