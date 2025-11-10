@@ -177,7 +177,7 @@ export async function handleWaMessages(
         waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
       }
       if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
-        await updateContactById(contact.id, {
+        contact = await updateContactById(contact.id, {
           waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
         });
       }
