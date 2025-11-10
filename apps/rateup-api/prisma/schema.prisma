@@ -108,6 +108,7 @@ model User {
   expoPushTokens      ExpoPushToken[]
   // Add relation for WaAutomatedReply many-to-many
   UserAssignedCount   UserAssignedCount[]
+  AuditLog            AuditLog[]
 }
 
 model Org {
@@ -161,6 +162,7 @@ model Org {
   UserAssignedCount        UserAssignedCount[]
   Lifecycle                Lifecycle[]
   ContactCustomField       ContactCustomField[]
+  AuditLog                 AuditLog[]
 }
 
 model UsageStats {
@@ -537,12 +539,12 @@ model Contact {
   lifecycleId                  String?                   @db.Uuid
   customFields                 ContactCustomFieldValue[]
 
-  lastMessageBody          Json?
-  lastMessageWaCreatedAt   DateTime?
-  lastMessagePlatform      String?
-  lastReceivedMetadata     Json?
+  lastMessageBody             Json?
+  lastMessageWaCreatedAt      DateTime?
+  lastMessagePlatform         String?
+  lastReceivedMetadata        Json?
   lastMessageSourceIdentifier String?
-  lastSentMessageTimeStamp DateTime?
+  lastSentMessageTimeStamp    DateTime?
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -1808,4 +1810,20 @@ model BookDemo {
   additionalInfo String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  action    String
+  method    String
+  route     String
+  body      Json?
+  createdAt DateTime @default(now())
+  orgId     String   @db.Uuid
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
 }
