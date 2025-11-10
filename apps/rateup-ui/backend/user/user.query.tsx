@@ -2,7 +2,13 @@ import { useRouter } from "next/navigation";
 
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import {
   showErrorToast,
@@ -16,6 +22,7 @@ import {
   fetchUserInfo,
   fetchUserProfile,
   getAllUsers,
+  getAuditLogs,
   IChangePassword,
   ICreateGoogleUser,
   IUpdateProfile,
@@ -303,3 +310,11 @@ export const useUpdateUserAvailabilityStatus = () => {
     },
   });
 };
+
+export function useUserAuditLogs(pagination) {
+  return useQuery({
+    queryKey: ["user-audit-logs", pagination],
+    queryFn: () => getAuditLogs(pagination),
+    placeholderData: keepPreviousData, // don't have 0 rows flash while changing pages/loading next page
+  });
+}
