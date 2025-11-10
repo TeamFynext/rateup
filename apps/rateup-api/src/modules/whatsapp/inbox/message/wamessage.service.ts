@@ -1413,13 +1413,19 @@ export async function generateInboxResponse(
         },
       });
     }
+    let updatedContact = { ...contact };
+    if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
+      updatedContact = await updateContactById(contact.id, {
+        waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+      });
+    }
 
     await sendViaWstoOrgHandler(
       orgId,
       {
         type: "inbox",
         inbox: {
-          contact,
+          contact: updatedContact,
           message: messagesToCreate?.at(-1),
         },
       },
