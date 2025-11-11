@@ -12,6 +12,7 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  PaginationState,
   SortingState,
   useReactTable,
   VisibilityState,
@@ -35,6 +36,15 @@ interface DataTableProps<TData, TValue> {
     props: DataTableToolbarProps<TData>,
   ) => React.ReactElement;
   onRowClick?: (row: TData) => void;
+  manualPagination?: {
+    pagination: PaginationState;
+    onPaginationChange: (
+      updater: React.SetStateAction<PaginationState>,
+    ) => void;
+    rowCount: number;
+    sorting?: SortingState;
+    onSortingChange?: (updater: React.SetStateAction<SortingState>) => void;
+  };
 }
 
 interface DataTableToolbarProps<TData> {
@@ -46,6 +56,7 @@ export function DataTable<TData, TValue>({
   data,
   DataTableToolbar,
   onRowClick,
+  manualPagination = undefined,
 }: Readonly<DataTableProps<TData, TValue>>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -54,7 +65,7 @@ export function DataTable<TData, TValue>({
     [],
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
-
+  const isManualPagination = manualPagination !== undefined;
   const table = useReactTable({
     data,
     columns,
@@ -63,21 +74,43 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
       columnFilters,
+      ...(isManualPagination
+        ? {
+            pagination: manualPagination.pagination,
+            sorting: manualPagination.sorting,
+          }
+        : undefined),
     },
+    ...(isManualPagination
+      ? { rowCount: manualPagination?.rowCount }
+      : undefined),
     initialState: {
       pagination: {
         pageSize: 25,
       },
     },
     enableRowSelection: true,
+    manualPagination: isManualPagination,
+    manualSorting: isManualPagination,
+    ...(isManualPagination
+      ? {
+          onPaginationChange: manualPagination.onPaginationChange,
+        }
+      : {}),
     onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
+    onSortingChange: isManualPagination
+      ? manualPagination.onSortingChange
+      : setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    ...(isManualPagination
+      ? {}
+      : {
+          getPaginationRowModel: getPaginationRowModel(),
+          getSortedRowModel: getSortedRowModel(),
+        }),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
