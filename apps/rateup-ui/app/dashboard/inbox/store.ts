@@ -317,8 +317,12 @@ export const useContactsStore = create<ContactsStoreState>()(
             assignStatusChanged =
               updatedContact.waMessageAssignStatus !==
               contact.waMessageAssignStatus;
+            const status = currentFilterKey?.match(/status:[^|]*\|/) || [];
             const filterExcludesAll =
-              !currentFilterKey?.includes("messageType:all") &&
+              (!currentFilterKey?.includes("messageType:all") ||
+                (currentFilterKey?.includes("messageType:all") &&
+                  status.length &&
+                  !status[0].includes(updatedContact.waMessageAssignStatus))) &&
               (!currentFilterKey?.includes("waMessageAssignStatus:New") ||
                 (currentFilterKey?.includes("waMessageAssignStatus:New") &&
                   !isUnassigned));
@@ -397,7 +401,7 @@ export const useContactsStore = create<ContactsStoreState>()(
         }
         if (
           !state.currentFilterKey?.includes("messageType:all") &&
-          messageUpdated
+          (assignStatusChanged || messageUpdated)
         ) {
           state.updateContactList("All", contactId, messageUpdated);
         }
@@ -437,11 +441,24 @@ export const useContactsStore = create<ContactsStoreState>()(
                   const isInFilter = contactIds.includes(contactId);
                   let newList = [...contactIds];
                   let changed = false;
+                  const status = filterKey?.match(/status:[^|]*\|/) || [];
                   if (isNew) {
-                    if (!isInFilter) {
+                    if (
+                      !isInFilter &&
+                      (!status.length ||
+                        status[0].includes(contact.waMessageAssignStatus))
+                    ) {
                       newList.push(contactId);
                       changed = true;
                     }
+                  }
+                  if (
+                    isInFilter &&
+                    status.length &&
+                    !status[0].includes(contact.waMessageAssignStatus)
+                  ) {
+                    newList = contactIds.filter((id) => id !== contactId);
+                    changed = true;
                   }
                   if (!changed && !isMessageUpdated) return;
                   const sortedList = newList
