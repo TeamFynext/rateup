@@ -21,7 +21,7 @@ export async function auditLogHook(
     if (!userId) return; // skip if unauthenticated
 
     const readableAction = actionMap[request.method] ?? "Other";
-    const route = request.routeOptions?.url ?? request.url;
+    const route = request.url ?? request.routeOptions?.url;
     await prisma.auditLog.create({
       data: {
         userId,
