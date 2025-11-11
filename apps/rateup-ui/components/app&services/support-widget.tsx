@@ -284,7 +284,7 @@ export default function SupportWidget({
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/90">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#66D7FF] to-[#2D74E0] flex items-center justify-center">
                   <span className="text-white font-bold text-base">
                     {companyName[0]}
                   </span>
@@ -508,10 +508,10 @@ export default function SupportWidget({
         <div className="flex justify-end">
           <button
             onClick={() => setIsOpen((prev) => !prev)}
-            className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:to-pink-700 text-white rounded-full shadow-2xl w-12 h-12 flex items-center justify-center focus:outline-none transition-transform duration-300 hover:scale-110 animate-bounce-in border-2 border-background"
+            className="bg-gradient-to-br from-[#66D7FF] to-[#2D74E0] hover:from-[#00bbff] hover:to-[#005de9] text-white rounded-full shadow-2xl w-16 h-16 flex items-center justify-center focus:outline-none transition-transform duration-300 hover:scale-105 animate-bounce-in border-2 border-background"
             aria-label="Open chat"
           >
-            <MessageCircle className="h-6 w-6" />
+            <MessageCircle className="h-8 w-8" />
           </button>
         </div>
       )}

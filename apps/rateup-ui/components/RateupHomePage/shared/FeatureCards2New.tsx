@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { IconArrowRight } from "@tabler/icons-react";
+import { motion } from "framer-motion";
 
 import { imagesPath } from "@/utils/constants";
 
@@ -48,62 +49,81 @@ const features = [
 export default function FeatureCards2() {
   return (
     <section
-      className={`relative h-[400vh] bg-white px-4 pb-8 ${sora.className}`}
+      className={`relative h-[400vh] bg-white px-4 py-16 ${sora.className}`}
     >
-      {features.map((feature, index) => (
-        <div
-          key={index}
-          className="sticky top-0 h-screen flex items-center justify-center z-[10]"
-          style={{ zIndex: 10 + index }}
-        >
+      <div className="absolute inset-x-0 top-10 z-30 flex flex-col items-center text-center pointer-events-none">
+        <span className="pointer-events-auto text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-[#343A40]">
+          Powerful Features For
+        </span>
+        <div className="relative inline-block pointer-events-auto">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#001747] to-[#004F98] text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold">
+            Modern Businesses
+          </span>
+          {/* animated underline... */}
+          <motion.span
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="absolute bottom-0 left-0 right-0 h-[6px] bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] rounded-full origin-left"
+          />
+        </div>
+      </div>
+      <div className="h-[400vh] px-4 pb-8">
+        {features.map((feature, index) => (
           <div
-            className={`
+            key={index}
+            className="sticky top-0 h-screen flex items-center justify-center z-[10]"
+            style={{ zIndex: 10 + index }}
+          >
+            <div
+              className={`
               flex flex-col lg:flex-row items-center justify-between
-              max-w-[78rem] w-full mx-auto gap-10 px-6 py-10 rounded-3xl
+              max-w-6xl w-full mx-auto gap-10 px-6 py-10 rounded-3xl
                transition-all duration-300
               bg-rateup-darkblue
             `}
-          >
-            {/* Image Section */}
-            <div className="w-full lg:w-1/2 flex justify-center">
-              <div className="relative w-full max-w-md h-[280px] sm:h-[380px] lg:h-[460px]">
-                <Image
-                  src={feature.image}
-                  alt={feature.title}
-                  fill
-                  className="object-contain rounded-2xl "
-                />
+            >
+              {/* Image Section */}
+              <div className="w-full lg:w-1/2 flex justify-center">
+                <div className="relative w-full max-w-md h-[280px] sm:h-[380px] lg:h-[460px]">
+                  <Image
+                    src={feature.image}
+                    alt={feature.title}
+                    fill
+                    className="object-contain rounded-2xl "
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Content Section */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center px-4 text-left gap-4">
-              <span className="text-2xl sm:text-3xl md:text-5xl text-white leading-snug">
-                {feature.title}
-              </span>
+              {/* Content Section */}
+              <div className="w-full lg:w-1/2 flex flex-col justify-center px-4 text-left gap-4">
+                <span className="text-2xl sm:text-3xl md:text-5xl text-white leading-snug">
+                  {feature.title}
+                </span>
 
-              <p
-                className={`text-xs sm:text-xs md:text-sm lg:text-base text-[#93C6F5] max-w-xl mx-auto md:mx-0 `}
-              >
-                {feature.description}
-              </p>
-              <div className="flex items-center gap-4 w-full">
-                <Link
-                  href={feature.link}
-                  className="text-white bg-rateup-gold font-semibold text-sm sm:text-lg hover:scale-105 inline-flex items-center gap-1 px-4 py-2 rounded-sm transition-all"
+                <p
+                  className={`text-xs sm:text-xs md:text-sm lg:text-base text-[#93C6F5] max-w-xl mx-auto md:mx-0 `}
                 >
-                  <div className="text-sm flex items-center justify-center">
-                    Get Started Now <IconArrowRight />
-                  </div>
-                </Link>
-                <button className="rounded-sm bg-rateup-blue font-semibold text-sm sm:text-lg hover:scale-105 px-4 py-2 text-white transition-all cursor-pointer">
-                  Know More
-                </button>
+                  {feature.description}
+                </p>
+                <div className="flex items-center gap-4 w-full">
+                  <Link
+                    href={feature.link}
+                    className="text-white bg-rateup-gold font-semibold text-sm sm:text-lg hover:scale-105 inline-flex items-center gap-1 px-4 py-2 rounded-sm transition-all"
+                  >
+                    <div className="text-sm flex items-center justify-center">
+                      Get Started Now <IconArrowRight />
+                    </div>
+                  </Link>
+                  <button className="rounded-sm bg-rateup-blue font-semibold text-sm sm:text-lg hover:scale-105 px-4 py-2 text-white transition-all cursor-pointer">
+                    Know More
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </section>
   );
 }

@@ -51,7 +51,7 @@ const page = () => {
       {/* <CallToAction /> */}
       <StartRateupHero />
       <HomePageFooter />
-      <ScrollToTop />
+      {/* <ScrollToTop /> */}
       <SupportWidget
         orgId={process.env.NEXT_PUBLIC_ROOT_ORG}
         token={process.env.NEXT_PUBLIC_ROOT_TOKEN}
