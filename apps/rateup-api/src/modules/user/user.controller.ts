@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
+  auditLog,
   checkEmailExist,
   createUserSignup,
   getAllUsers,
@@ -340,5 +341,33 @@ export async function updateUserAvailabilityStatusHandler(
   } catch (e) {
     log.error(e);
     reply.code(500).send({ message: "Unable to update status" });
+  }
+}
+
+export async function auditLogHandler(
+  request: FastifyRequest<{
+    Querystring: {
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { page = 1, limit = 25, sortBy, sortOrder } = request.query;
+    const logs = await auditLog(
+      orgId,
+      Number(page),
+      Number(limit),
+      sortBy,
+      sortOrder,
+    );
+    reply.send(logs);
+  } catch (error) {
+    log.error("Error fetching audit logs: %o", error);
+    reply.code(500).send({ message: "Failed to fetch audit logs" });
   }
 }
