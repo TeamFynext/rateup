@@ -115,7 +115,7 @@ const LargeTextResponseSummary = ({
     const teamWiseSummary = questionSummary?.team;
 
     return (
-      <Stack h={height}>
+      <Stack h={height} style={{ minHeight: "50vh" }}>
         <Group gap={"sm"}>
           <ActionIcon
             onClick={() => setSummaryTab(ResponseSummaryType.All)}
