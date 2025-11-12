@@ -280,7 +280,7 @@ export default function SupportWidget({
           className="transition-all duration-500 ease-in-out transform scale-100 opacity-100 animate-fade-in"
           ref={ref}
         >
-          <div className="w-80 h-[550px] bg-background/80 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-border animate-slide-up dark:bg-background/90">
+          <div className="w-96 h-[550px] bg-background/80 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-border animate-slide-up dark:bg-background/90">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/90">
               <div className="flex items-center gap-2">
@@ -330,9 +330,9 @@ export default function SupportWidget({
                         </Label>
                         <div className="flex items-center bg-background rounded-lg shadow-sm border border-border px-2">
                           <Smile className="h-4 w-4 text-muted-foreground mr-1" />
-                          <Input
+                          <input
                             {...form.getInputProps("name")}
-                            className="flex-1 border-0 bg-transparent focus:ring-0 focus:outline-none h-8 text-sm px-1"
+                            className="flex-1 bg-transparent h-8 text-sm px-1 outline-none border-none"
                             placeholder="Your name"
                           />
                         </div>
@@ -370,7 +370,7 @@ export default function SupportWidget({
                         </Label>
                         <div className="flex items-center bg-background rounded-lg shadow-sm border border-border px-2">
                           <MoreHorizontal className="h-4 w-4 text-muted-foreground mr-1" />
-                          <Input
+                          <input
                             type="email"
                             {...form.getInputProps("email")}
                             className="flex-1 border-0 bg-transparent focus:ring-0 focus:outline-none h-8 text-sm px-1"

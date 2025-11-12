@@ -226,7 +226,7 @@ export function SignUpFlow({ setIsLoading, signUp, isLoading }) {
             />
           </div>
         </div>
-        <Card className="flex flex-col items-center px-6 py-4 sm:min-w-lg max-w-2xl">
+        <Card className="flex flex-col items-center px-6 py-4 sm:min-w-lg max-w-lg">
           {currentStep === 1 && (
             <Step1
               formData={signupForm}
@@ -389,10 +389,10 @@ export function Step1({ formData, handleNext, translations, google }) {
       <div className="space-y-3">
         {/* Name field (always visible) */}
         <div className="space-y-1">
-          <Label htmlFor="name" className="text-gray-700 text-sm">
+          {/* <Label htmlFor="name" className="text-gray-700 text-sm">
             {translations("Name")}
             <span className="text-red-500">*</span>
-          </Label>
+          </Label> */}
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -409,16 +409,16 @@ export function Step1({ formData, handleNext, translations, google }) {
         {!google && (
           <>
             <div className="space-y-1">
-              <Label htmlFor="email" className="text-gray-700 text-sm">
+              {/* <Label htmlFor="email" className="text-gray-700 text-sm">
                 {translations("Email")}
                 <span className="text-red-500">*</span>
-              </Label>
+              </Label> */}
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@company.com"
+                  placeholder={translations("Email")}
                   className={`pl-10 h-9 border-2 bg-white text-sm transition-colors duration-200 focus:ring-2 ${
                     emailError
                       ? "border-red-400 focus:border-red-500 focus:ring-red-100"
@@ -461,16 +461,16 @@ export function Step1({ formData, handleNext, translations, google }) {
 
             {/* Password */}
             <div className="space-y-1">
-              <Label htmlFor="password" className="text-gray-700 text-sm">
+              {/* <Label htmlFor="password" className="text-gray-700 text-sm">
                 {translations("Password")}
                 <span className="text-red-500">*</span>
-              </Label>
+              </Label> */}
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder={translations("Create a strong password")}
+                  placeholder={translations("Password")}
                   className="pl-10 pr-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
                   {...formData.getInputProps("password")}
                   onFocus={() => setIsPasswordFocused(true)}
@@ -492,19 +492,19 @@ export function Step1({ formData, handleNext, translations, google }) {
 
             {/* Confirm Password */}
             <div className="space-y-1">
-              <Label
+              {/* <Label
                 htmlFor="confirmPassword"
                 className="text-gray-700 text-sm"
               >
                 {translations("Confirm Password")}
                 <span className="text-red-500">*</span>
-              </Label>
+              </Label> */}
               <div className="relative">
                 <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder={translations("Confirm your password")}
+                  placeholder={translations("Confirm Password")}
                   className="pl-10 pr-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
                   {...formData.getInputProps("confirmPassword")}
                 />
@@ -735,17 +735,17 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         </p>
       </div>
 
-      <div className="flex flex-col justify-center w-full gap-2">
+      <div className="flex flex-col justify-center w-full gap-4">
         <div className="space-y-1">
-          <Label htmlFor="orgName" className="text-gray-700 text-sm">
+          {/* <Label htmlFor="orgName" className="text-gray-700 text-sm">
             {translations("Business Name")}
             <span className="text-red-500">*</span>
-          </Label>
+          </Label> */}
           <div className="relative">
             <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               id="orgName"
-              placeholder={translations("Business Name")}
+              placeholder={`${translations("Business Name")} *`}
               className="pl-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
               {...formData.getInputProps("orgName")}
             />
@@ -753,14 +753,14 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         </div>
 
         <div className="space-y-1">
-          <Label htmlFor="website" className="text-gray-700 text-sm">
+          {/* <Label htmlFor="website" className="text-gray-700 text-sm">
             {translations("Website")} URL
-          </Label>
+          </Label> */}
           <div className="relative">
             <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               id="website"
-              placeholder="https://yourcompany.com"
+              placeholder={`${translations("Website")} URL`}
               className="pl-10 h-9 border-2 border-gray-200 focus:border-rateup-blue focus:ring-rateup-blue/20 bg-white text-sm"
               {...formData.getInputProps("website")}
             />
@@ -768,30 +768,30 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         </div>
 
         <div className="space-y-1">
-          <Label className="text-gray-700 text-sm">
+          {/* <Label className="text-gray-700 text-sm">
             {translations("Phone Number")}
             <span className="text-red-500">*</span>
-          </Label>
+          </Label> */}
           <PhoneInput
             international
             defaultCountry="IN"
             value={formData.values.phoneNumber}
             onChange={(val) => formData.setFieldValue("phoneNumber", val || "")}
-            className="border-2 border-gray-200 focus:border-rateup-blue focus-within:ring-2 focus-within:ring-rateup-blue/20 rounded-md px-3 py-2 text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full "
+            className="border-2 border-gray-200 focus:border-rateup-blue focus-within:ring-2 focus-within:ring-rateup-blue/20 rounded-md px-3 py-2 text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full"
           />
         </div>
 
         <div className="space-y-1">
-          <Label className="text-gray-700 text-sm">
+          {/* <Label className="text-gray-700 text-sm">
             {translations("Industry")}
             <span className="text-red-500">*</span>
-          </Label>
+          </Label> */}
           <Select
             value={formData.values.industry}
             onValueChange={(val) => formData.setFieldValue("industry", val)}
           >
             <SelectTrigger className="w-full h-7 border-2 border-gray-200 focus:border-orange-500 bg-white text-sm">
-              <SelectValue placeholder={translations("Select your Industry")} />
+              <SelectValue placeholder={`${translations("Industry")} *`} />
             </SelectTrigger>
             <SelectContent side="bottom" align="start">
               {industries.map((industry) => (
@@ -804,17 +804,17 @@ export function Step2({ formData, handleBack, handleNext, translations }) {
         </div>
 
         <div className="space-y-1">
-          <Label className="text-gray-700 text-sm">
+          {/* <Label className="text-gray-700 text-sm">
             {translations("Location")}
             <span className="text-red-500">*</span>
-          </Label>
+          </Label> */}
           <SelectR
             options={countries}
             value={countries.find((c) => c.value === formData.values.location)}
             onChange={(option) =>
               formData.setFieldValue("location", option?.label || "")
             }
-            placeholder={translations("Select Your Location")}
+            placeholder={`${translations("Location")} *`}
             isSearchable
             className="rounded-md text-sm bg-white [&>input]:w-full border-gray-200"
           />
@@ -917,26 +917,26 @@ export function Step3({
   return (
     <div className="w-full">
       <div className="space-y-4">
-        <div className="text-center mb-5">
+        <div className="text-center mb-2">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", duration: 0.6 }}
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-500 shadow-lg shadow-purple-500/30 mb-4 mx-auto"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 shadow-lg shadow-purple-500/30 mb-2 mx-auto"
           >
-            <Target className="w-7 h-7 text-white" />
+            <Target className="w-6 h-6 text-white" />
           </motion.div>
-          <h2 className="text-gray-900 mb-2">
+          <h2 className="text-gray-900 text-sm">
             {translations("What Are Your Goals")}?
           </h2>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-xs">
             {translations(
               "Select all that apply to personalize your RateUp experience",
             )}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-1 gap-2">
           {businessGoals.map((goal) => (
             <motion.div
               key={goal.id}
@@ -944,7 +944,7 @@ export function Step3({
               whileTap={{ scale: 0.98 }}
             >
               <Card
-                className={`p-4 cursor-pointer transition-all duration-300 hover:shadow-md border-2 ${
+                className={`p-2 cursor-pointer transition-all duration-300 hover:shadow-md border-2 ${
                   formData.values.goals.includes(goal.id)
                     ? "border-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/60"
                     : "border-gray-200 hover:border-blue-300 bg-white"
@@ -953,14 +953,14 @@ export function Step3({
               >
                 <div className="flex items-center space-x-3">
                   <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors shadow-md ${
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shadow-md ${
                       formData.values.goals.includes(goal.id)
                         ? `bg-gradient-to-r ${goal.color}`
                         : "bg-gradient-to-br from-gray-200 to-gray-300"
                     }`}
                   >
                     <goal.icon
-                      className={`w-5 h-5 ${
+                      className={`w-4 h-4 ${
                         formData.values.goals.includes(goal.id)
                           ? "text-white"
                           : "text-gray-600"
@@ -969,7 +969,7 @@ export function Step3({
                   </div>
                   <div className="flex-1">
                     <span
-                      className={`${
+                      className={`text-sm ${
                         formData.values.goals.includes(goal.id)
                           ? "text-gray-900"
                           : "text-gray-700"
@@ -994,17 +994,17 @@ export function Step3({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-3 mt-4 shadow-sm backdrop-blur-sm"
+            className="bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-300/60 rounded-lg p-2 shadow-sm backdrop-blur-sm"
           >
             <div className="flex items-center space-x-3">
               <CheckCircle className="w-4 h-4 text-blue-600" />
               <div>
-                <p className="text-blue-700">
+                <p className="text-blue-700 text-xs">
                   {translations("Great")}! {translations("You've selected")}{" "}
                   {formData.values.goals.length} goal
                   {formData.values.goals.length !== 1 ? "s" : ""}
                 </p>
-                <p className="text-gray-700 mt-1">
+                <p className="text-gray-700 text-xs">
                   {translations(
                     "We'll prioritize these features in your dashboard",
                   )}
