@@ -7,7 +7,9 @@ const byQuickReplyIdParamSchema = z.object({
 
 export const quickReplyCore = z.object({
   text: z.string(),
-  priority: z.number(),
+  category: z.string(),
+  topic: z.string(),
+  key: z.string(),
 });
 
 const updateQuickReplyShema = quickReplyCore.partial();

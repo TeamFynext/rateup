@@ -13,7 +13,6 @@ import {
   getWaQuickReplyById,
   QuickReply,
   updateWaQuickReplyById,
-  updateWaQuickReplyOrder,
 } from "./quickReply.service";
 
 export async function createWaQuickReplyHandler(
@@ -83,21 +82,6 @@ export async function updateWaQuickReplyByIdHandler(
       request.params.quickReplyId,
       request.body,
     );
-    reply.code(200).send(res);
-  } catch (e) {
-    log.error(e);
-    reply.code(500).send(e);
-  }
-}
-
-export async function updateWaQuickReplyOrderHandler(
-  request: FastifyRequest<{
-    Body: UpdateOrderBody;
-  }>,
-  reply: FastifyReply,
-) {
-  try {
-    const res = await updateWaQuickReplyOrder(request.body);
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
