@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ActionIcon,
@@ -40,6 +40,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { Plugin } from "prosemirror-state";
 
 import { MessagePlatform } from "@/types/enums";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
@@ -89,6 +90,7 @@ interface WaTextEditorProps extends BoxComponentProps {
   sendMessageButton?: React.ReactNode;
   otherHeaders?: React.ReactNode;
   isQuickReplyEditor?: boolean;
+  border?: boolean;
 }
 
 export const CustomEnter = Extension.create({
@@ -114,7 +116,7 @@ function WaTextEditor({
   handleInputChange,
   content = "",
   className = "",
-  mah = 350,
+  mah = 200,
   placeholder = "Enter your text",
   label = "",
   max = 1024,
@@ -126,10 +128,12 @@ function WaTextEditor({
   sendMessageButton = null,
   otherHeaders = null,
   isQuickReplyEditor = false,
+  border,
   ...props
 }: WaTextEditorProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
+  const [quickReplySearchQuery, setQuickReplySearchQuery] = useState("");
   const extensions = useMemo(() => {
     const ext = [
       StarterKit.configure({ link: false }),
@@ -148,12 +152,61 @@ function WaTextEditor({
       );
     return ext;
   }, [customEnter]);
+  const [searchTerm, setSearchTerm] = useState("");
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setQuickReplySearchQuery(searchTerm.trim());
+    }, 250);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
   const editor = useEditor({
     extensions,
     immediatelyRender: false,
     shouldRerenderOnTransaction: true,
+    onCreate({ editor }) {
+      editor.registerPlugin(
+        new Plugin({
+          props: {
+            handleTextInput(view, from, to, text) {
+              if (text === "/" && !isQuickReplyEditor) {
+                const slice = view.state.doc.slice(0, from);
+                const textBefore = slice.content.textBetween(
+                  0,
+                  slice.content.size,
+                  "\n",
+                  "\n",
+                );
+
+                const match = textBefore.match(/\/([^\n]*)$/);
+                const search = match?.[1]?.trim() ?? "";
+
+                setSearchTerm(search);
+
+                setShowQuickReplies(true);
+              }
+              return false;
+            },
+          },
+        }),
+      );
+    },
     onUpdate: ({ editor }) => {
       handleInputChange(editor.getJSON());
+      if (!showQuickReplies) return;
+      const { from } = editor.state.selection;
+      const textBefore = editor.state.doc.textBetween(0, from, "\n", "\n");
+      if (!textBefore.includes("/")) {
+        setShowQuickReplies(false);
+        setSearchTerm("");
+        return;
+      }
+      const match = textBefore.match(/\/([^\n]*)$/);
+      const search = match?.[1]?.trim() ?? "";
+      if (textBefore.endsWith("/")) {
+        setSearchTerm("");
+      } else {
+        setSearchTerm(search);
+      }
     },
     editable,
   });
@@ -184,6 +237,7 @@ function WaTextEditor({
   const [isModalOpened, { close: onModalClose, open: openModal }] =
     useDisclosure(false);
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
+
   const platform = selectedContact
     ? selectedContact.lastMessage?.sourcePlatform
     : null;
@@ -242,7 +296,7 @@ function WaTextEditor({
   };
 
   return (
-    <div className="border-t bg-card  flex-shrink-0">
+    <div className={border ? "border-t" : "" + "bg-card flex-shrink-0"}>
       <div className="flex gap-1">
         {media.length > 0 &&
           media.map((me) => {
@@ -310,19 +364,39 @@ function WaTextEditor({
                   const parsedValue = !isJSONString(value)
                     ? parseFromWhatsAppFormat(value)
                     : JSON.parse(value);
-                  editor.commands.insertContent(parsedValue);
+
+                  const { from } = editor.state.selection;
+                  const textBefore = editor.state.doc.textBetween(
+                    0,
+                    from,
+                    "\n",
+                    "\n",
+                  );
+
+                  const match = textBefore.match(/\/[^\n]*$/);
+                  if (match) {
+                    editor
+                      .chain()
+                      .focus()
+                      .deleteRange({ from: from - match[0].length, to: from })
+                      .run();
+                  }
+
+                  editor.chain().focus().insertContent(parsedValue).run();
                   setShowQuickReplies(false);
+                  setSearchTerm("");
                 }
               }}
+              searchQuery={quickReplySearchQuery}
             />
           </div>
         </div>
       )}
-      <div className="flex items-start p-4 pb-0 space-x-2">
+      <div className={`flex items-start ${border ? "p-4" : ""} pb-0 space-x-2`}>
         <div className="flex-1">
           <RichTextEditor
             classNames={{
-              content: `rounded-xl overflow-y-auto max-h-[200px] min-h-[${mih}px]`,
+              content: `rounded-xl overflow-y-auto`,
             }}
             editor={editor}
             styles={{
@@ -331,6 +405,10 @@ function WaTextEditor({
               },
               control: {
                 border: "none",
+              },
+              content: {
+                maxHeight: `${mah}px`,
+                minHeight: `${mih}px`,
               },
             }}
           >
