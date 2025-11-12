@@ -9,6 +9,8 @@ import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 import { Margin, usePDF } from "react-to-pdf";
 
+import { QuestionType, WaQuestions } from "@/types/enums";
+import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useAllResponseNPSForGraph } from "@/backend/surveys/surveys.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonPrimary } from "@/components/Button/RateupButtons";
@@ -22,6 +24,7 @@ import { useResponseAnalytics } from "../../../backend/surveys/response/response
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import SurveyContext from "../../../context/SurveyContext";
 import HappyIndex from "./HappyIndex";
+import LargeTextResponseSummary from "./LargeTextResponseSummary";
 import SurveyQuestion from "./SurveyQuestion";
 import SurveyStatsWebForm from "./SurveyStatsWebForm";
 
@@ -46,6 +49,7 @@ const ResultsOverviewWebForm = ({
       margin: Margin.MEDIUM,
     },
   });
+  const { data: subscription } = useSubscription();
 
   const {
     data: responseAnalytics,
@@ -93,6 +97,14 @@ const ResultsOverviewWebForm = ({
         : [[], []],
     [responseAnalytics],
   );
+
+  const textAreaQuestions = useMemo(() => {
+    return version === 1
+      ? questions?.filter(
+          (question) => question?.type === QuestionType.TextArea,
+        )
+      : flowQuestions.filter((q) => q.metaType === WaQuestions.TextArea);
+  }, [questions, flowQuestions, version]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -152,6 +164,13 @@ const ResultsOverviewWebForm = ({
           defaultLanguage={defaultLanguage}
         />
       </div>
+      <LargeTextResponseSummary
+        surveyId={surveyId}
+        questions={textAreaQuestions}
+        subscription={subscription}
+        currentSummary={aiResponseSummary}
+        version={version}
+      />
     </div>
   );
 };

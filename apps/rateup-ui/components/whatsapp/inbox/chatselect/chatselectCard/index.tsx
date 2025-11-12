@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { getStringColor } from "@/components/ui/utils";
+import { formatToRelativeTime } from "@/utils/dateTime";
 import {
   isInboxSessionExpired,
   parseWaMessage,
@@ -147,7 +148,7 @@ export default function WaInboxChatSelectCard({
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {contact?.lastMessage &&
-                  dayjs.utc(contact?.lastMessage?.waCreatedAt).fromNow()}
+                  formatToRelativeTime(contact?.lastMessage?.waCreatedAt, true)}
               </span>
             </div>
           </div>

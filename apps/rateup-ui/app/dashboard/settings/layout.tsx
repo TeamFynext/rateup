@@ -86,6 +86,13 @@ const SettingsLayout = ({ children }) => {
         ...(user?.role === UserRole.SUPADM
           ? [
               {
+                id: "audit" as SettingsSection,
+                label: translations("Audit Log"),
+                icon: Shield,
+                description: translations("Activity & change history"),
+                href: "/dashboard/settings/audit-log",
+              },
+              {
                 id: "billing" as SettingsSection,
                 label: translations("Billing"),
                 icon: CreditCard,

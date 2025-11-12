@@ -61,6 +61,28 @@ interface Props {
     reactedAt?: string;
   };
 }
+export const getColorForUser = (userName = "") => {
+  const colors = [
+    "#1E90FF", // Blue
+    "#32CD32", // Green
+    "#FF4500", // Red
+    "#8A2BE2", // Purple
+    "#20B2AA", // Teal
+    "#FFA500", // Orange
+    "#00CED1", // Cyan
+    "#FF69B4", // Pink
+    "#FFD700", // Yellow
+    "#4B0082", // Indigo
+  ];
+  // Create a simple hash from the user's name (or other identifier)
+  let hash = 0;
+  for (let i = 0; i < userName.length; i++) {
+    hash = userName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  // Map the hash to a color
+  const colorIndex = Math.abs(hash) % colors.length;
+  return colors[colorIndex];
+};
 export default function WaInboxSingleMessageLayout(props: Props) {
   const { exchangeProcess, messageObject, reaction } = props;
   const [isHovered, setIsHovered] = useState(false);
@@ -75,28 +97,6 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     platform,
   );
 
-  const getColorForUser = (userName = "") => {
-    const colors = [
-      "#1E90FF", // Blue
-      "#32CD32", // Green
-      "#FF4500", // Red
-      "#8A2BE2", // Purple
-      "#20B2AA", // Teal
-      "#FFA500", // Orange
-      "#00CED1", // Cyan
-      "#FF69B4", // Pink
-      "#FFD700", // Yellow
-      "#4B0082", // Indigo
-    ];
-    // Create a simple hash from the user's name (or other identifier)
-    let hash = 0;
-    for (let i = 0; i < userName.length; i++) {
-      hash = userName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    // Map the hash to a color
-    const colorIndex = Math.abs(hash) % colors.length;
-    return colors[colorIndex];
-  };
   const getLatestStatus = (statusObj: { [key: string]: string }) => {
     if (statusObj?.read)
       return <CheckCheck className="w-3.5 h-3.5 text-blue-600" />;

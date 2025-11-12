@@ -59,7 +59,7 @@ const SurveyResultByType = ({ questionType, chartData, version }) => {
   );
 
   const renderAll = (renderFn) => (
-    <div className="space-y-2 max-h-[500px]">{renderFn()}</div>
+    <div className="space-y-2 max-h-[500px] overflow-scroll">{renderFn()}</div>
   );
 
   const getValue = (res) =>

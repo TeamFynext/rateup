@@ -132,7 +132,6 @@ export const useGetMediaFile = () => {
 
 export const useAssignInboxToUer = (contactId, filterData) => {
   const qc = useQueryClient();
-  // const { updateContactById } = useContactsStore();
   return useMutation({
     mutationFn: assignInboxToUser,
     onSuccess: () => {
@@ -142,11 +141,6 @@ export const useAssignInboxToUer = (contactId, filterData) => {
       qc.invalidateQueries({ queryKey: ["notification"] });
       qc.invalidateQueries({ queryKey: ["notificationCount"] });
       showSuccessToast("Assigned successfully");
-      // updateContactById(contactId, (contact) => ({
-      //   ...contact,
-      //   assignedUsers: data,
-      //   waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-      // }));
     },
     onError: (e) => {
       showWarnToast("Something went wrong" + JSON.stringify(e));

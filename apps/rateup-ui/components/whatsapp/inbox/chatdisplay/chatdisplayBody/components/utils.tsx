@@ -21,7 +21,10 @@ import { useUser } from "@/context/UserContext";
 import { formatDate, formatToCustomTime } from "@/utils/dateTime";
 import { parseWaMessage } from "@/utils/whatsapp/inbox";
 
-import { reactionEmojiMap } from "../layout/singleMessageLayout";
+import {
+  getColorForUser,
+  reactionEmojiMap,
+} from "../layout/singleMessageLayout";
 import classes from "../styles.module.css";
 import WaInboxAttachments from "./attachments";
 import WaInboxAudio from "./audio";
@@ -159,10 +162,14 @@ export function getReactionMessage({
 
 export const TempMessageBody = ({ body, timestamp }) => {
   const { user } = useUser();
+  const userColor = getColorForUser(user?.userName) || "blue";
   return (
     <div className="flex gap-2 pb-4 pr-4 pl-6">
       <div className="flex flex-col gap-2">
         <div className="bg-green-500/10 px-4 py-2.5 rounded-2xl shadow-sm rounded-br-sm">
+          <p className={`text-sm`} style={{ color: userColor }}>
+            {user?.userName}
+          </p>
           {body.url && body.urlType === "image" && (
             <Image
               src={body.url}
