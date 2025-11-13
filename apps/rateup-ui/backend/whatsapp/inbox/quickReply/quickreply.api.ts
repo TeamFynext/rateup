@@ -1,4 +1,7 @@
+import z from "zod";
+
 import { axiosClient } from "@/backend/apiClient";
+import { quickReplySchema } from "@/components/RichTextEditor/WaQuickReply/WaQuickReplySettings";
 
 import { WA_INBOX_BASE_PATH } from "..";
 
@@ -8,10 +11,9 @@ export async function getWaQuickReplies() {
   return (await axiosClient.get(WA_QUICK_REPLY_BASE)).data;
 }
 
-export async function createWaQuickReply(data: {
-  text: string;
-  priority: number;
-}) {
+export async function createWaQuickReply(
+  data: z.infer<typeof quickReplySchema>,
+) {
   await axiosClient.post(WA_QUICK_REPLY_BASE, data);
 }
 

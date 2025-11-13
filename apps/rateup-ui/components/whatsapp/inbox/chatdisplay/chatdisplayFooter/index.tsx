@@ -296,8 +296,9 @@ export default function WaInboxChatDisplayFooter({
       editable={
         !isSessionExpired && !isRecording && !audioUrl && body.type === "text"
       }
-      placeholder="Type a message..."
+      placeholder="Type a message...Type / for quick replies"
       sendMessageButton={<SendMessageComponent />}
+      border={true}
     />
   );
 }

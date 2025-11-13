@@ -2385,5 +2385,18 @@
   "Admin Settings": "Paramètres administrateur",
   "Admin settings": "Paramètres administrateur",
   "You are not in any team": "Vous n'êtes dans aucune équipe",
-  "Hold on, changing your organization photo": "Veuillez patienter, modification de la photo de votre organisation"
+  "Hold on, changing your organization photo": "Veuillez patienter, modification de la photo de votre organisation",
+  "Click save when you are done.": "Cliquez sur Enregistrer lorsque vous avez terminé.",
+  "Edit Quick Reply": "Modifier la réponse rapide",
+  "Add Quick Reply": "Ajouter une réponse rapide",
+  "Quick Replies": "Réponses rapides",
+  "Quick Reply": "Réponse rapide",
+  "Choose a clear topic that describes the customer issue or task this reply text addresses for easy reference": "Choisissez un sujet clair qui décrit le problème client ou la tâche à laquelle ce texte de réponse répond pour une référence facile.",
+  "Choose a high-level category to organize this reply text, Examples: 'Billing', 'Technical', or 'Account'": "Choisissez une catégorie de haut niveau pour organiser ce texte de réponse, exemples : 'Facturation', 'Technique' ou 'Compte'.",
+  "Use a clear, unique key (letters, numbers, or underscores) that represents this reply text for quick lookup": "Utilisez une clé claire et unique (lettres, chiffres ou traits de soulignement) représentant ce texte de réponse pour une recherche rapide.",
+  "Key": "Clé",
+  "Topic": "Sujet",
+  "key not found": "clé non trouvée",
+  "No quick replies found": "Aucune réponse rapide trouvée",
+  "Reply Text": "Texte de réponse"
 }

@@ -2382,5 +2382,18 @@
   "Admin Settings": "إعدادات المسؤول",
   "Admin settings": "إعدادات المسؤول",
   "You are not in any team": "أنت لست في أي فريق",
-  "Hold on, changing your organization photo": "انتظر قليلاً، يتم تغيير صورة مؤسستك"
+  "Hold on, changing your organization photo": "انتظر قليلاً، يتم تغيير صورة مؤسستك",
+  "Click save when you are done.": "انقر على حفظ عند الانتهاء.",
+  "Edit Quick Reply": "تحرير الرد السريع",
+  "Add Quick Reply": "إضافة رد سريع",
+  "Quick Replies": "الردود السريعة",
+  "Quick Reply": "رد سريع",
+  "Choose a clear topic that describes the customer issue or task this reply text addresses for easy reference": "اختر موضوعًا واضحًا يصف مشكلة العميل أو المهمة التي يعالجها نص هذا الرد لسهولة الرجوع إليها.",
+  "Choose a high-level category to organize this reply text, Examples: 'Billing', 'Technical', or 'Account'": "اختر فئة عامة لتنظيم نص هذا الرد، أمثلة: 'الفواتير'، 'الفني'، أو 'الحساب'.",
+  "Use a clear, unique key (letters, numbers, or underscores) that represents this reply text for quick lookup": "استخدم مفتاحًا واضحًا وفريدًا (أحرف أو أرقام أو شرطات سفلية) يمثل نص هذا الرد للبحث السريع.",
+  "Key": "المفتاح",
+  "Topic": "الموضوع",
+  "key not found": "المفتاح غير موجود",
+  "No quick replies found": "لم يتم العثور على ردود سريعة",
+  "Reply Text": "نص الرد"
 }

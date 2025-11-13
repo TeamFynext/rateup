@@ -99,6 +99,27 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
       accessorKey: "other",
       cell: (info) => info.getValue() ?? "-",
     },
+    {
+      header: () => "Label",
+      accessorKey: "ContactLabelMap",
+      cell: (info) => {
+        const labels =
+          info.row.original.ContactLabelMap?.map(
+            (label) => label?.label?.name,
+          ) || [];
+        return labels.length > 0 ? (
+          <Box style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+            {labels.map((label, index) => (
+              <Badge key={label?.id} size="sm" variant="light" color="blue">
+                {label}
+              </Badge>
+            ))}
+          </Box>
+        ) : (
+          "-"
+        );
+      },
+    },
     ...(contactTags?.length > 0
       ? contactTags
           ?.filter((tag) => tag?.visibility)

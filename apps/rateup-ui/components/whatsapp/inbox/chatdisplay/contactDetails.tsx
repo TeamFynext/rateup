@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-import { NumberInput, Paper, Select, Stack, TextInput } from "@mantine/core";
+import {
+  MultiSelect,
+  NumberInput,
+  Paper,
+  Select,
+  Stack,
+  TextInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
@@ -33,6 +40,7 @@ import { MessagePlatform } from "@/types/enums";
 import { useContactsStore } from "@/app/dashboard/inbox/store";
 import {
   useContactDeleteMutation,
+  useContactLabels,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { LifecycleInput } from "@/components/Contacts/LifecycleSelector";
@@ -77,6 +85,7 @@ const contactSchema = z.object({
       }),
     )
     .optional(),
+  labels: z.array(z.string()).optional(),
 });
 
 type ContactFormValues = z.infer<typeof contactSchema>;
@@ -86,7 +95,7 @@ export default function WaInboxContactDetails({
   groupId,
   isOpen,
   setIsOpen,
-}: WaInboxContactDetailsProps) {
+}: Readonly<WaInboxContactDetailsProps>) {
   const editContactMutation = useEditContactMutation(null);
   const { customFields } = useCustomFieldsContext();
   const { updateContactById, setSelectedContact } = useContactsStore();
@@ -94,6 +103,7 @@ export default function WaInboxContactDetails({
   const [editable, setEditable] = useState(false);
   const platform =
     contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
+  const labels = contact?.contactLabels?.map((label) => label?.id);
   const form = useForm<ContactFormValues>({
     validate: zod4Resolver(contactSchema),
     initialValues: {
@@ -103,8 +113,10 @@ export default function WaInboxContactDetails({
       other: contact?.other || "",
       lifecycleId: contact?.lifecycleId || "",
       customFields: contact?.customFields || [],
+      labels: labels,
     },
   });
+  const { data: contactLabels = [], isPending } = useContactLabels();
 
   const t = useTranslations();
 
@@ -116,6 +128,7 @@ export default function WaInboxContactDetails({
       other: contact?.other || "",
       lifecycleId: contact?.lifecycleId || "",
       customFields: contact?.customFields || [],
+      labels: labels,
     });
   }, [contact]);
 
@@ -134,11 +147,19 @@ export default function WaInboxContactDetails({
         },
         {
           onSuccess: () => {
+            const updatedLabels = contactLabels?.filter((label) =>
+              values.labels?.includes(label.id),
+            );
             updateContactById(contact.id, (c) => ({
               ...c,
               name: values.name,
+              contactLabels: updatedLabels,
             }));
-            setSelectedContact({ ...contact, ...data });
+            setSelectedContact({
+              ...contact,
+              ...data,
+              contactLabels: updatedLabels,
+            });
           },
         },
       );
@@ -244,6 +265,8 @@ export default function WaInboxContactDetails({
         );
     }
   };
+
+  if (isPending) return <div>Loading...</div>;
 
   // Icon-only view when closed
   if (!isOpen) {
@@ -458,6 +481,19 @@ export default function WaInboxContactDetails({
                       {...form.getInputProps("other")}
                     />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-muted-foreground">
+                      {t("Other")}
+                    </label>
+                    <MultiSelect
+                      placeholder={t("Select labels")}
+                      data={contactLabels?.map((label) => ({
+                        value: label.id,
+                        label: label.name,
+                      }))}
+                      {...form.getInputProps("labels")}
+                    />
+                  </div>
                 </div>
               </motion.div>
 
@@ -525,7 +561,6 @@ export default function WaInboxContactDetails({
       </motion.div>
     );
   }
-
   return (
     <motion.div
       className="p-3.5 border flex-shrink-0 min-w-[25vw] max-w-[25vw]"
@@ -587,7 +622,7 @@ export default function WaInboxContactDetails({
         </div>
       </motion.div>
 
-      <ScrollArea className="flex-1 h-[calc(100vh-250px)] py-4">
+      <ScrollArea className="flex-1 h-[calc(100vh-180px)] py-4">
         <div className="p-3.5 flex flex-col gap-2">
           {/* Contact Information */}
           <motion.div
@@ -677,6 +712,36 @@ export default function WaInboxContactDetails({
                       >
                         <Copy className="w-3 h-3" />
                       </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+              {contact?.contactLabels?.length > 0 && (
+                <motion.div
+                  className="flex items-start space-x-1.5 group"
+                  whileHover={{ scale: 1.01, x: 2 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] text-muted-foreground">Labels</p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {contact.contactLabels.map((label) => (
+                        <Badge
+                          key={label.id}
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0.5 h-auto"
+                          style={{
+                            borderColor: label.color,
+                            color: label.color,
+                            backgroundColor: `${label.color}10`,
+                          }}
+                        >
+                          {label.name}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
                 </motion.div>
