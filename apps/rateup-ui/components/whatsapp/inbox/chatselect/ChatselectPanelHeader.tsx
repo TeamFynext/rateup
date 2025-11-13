@@ -165,28 +165,6 @@ const ChatselectPanelHeader = ({
               <WaInboxChatExport />
             </PopoverContent>
           </Popover>
-          {user && user.role === UserRole.SUPADM && (
-            <Popover>
-              <PopoverTrigger>
-                <CustomTooltip
-                  trigger={
-                    <Button
-                      size="sm"
-                      variant={"outline"}
-                      className="h-8 w-8 p-0"
-                    >
-                      <UserLock className="w-3.5 h-3.5" />
-                    </Button>
-                  }
-                  content={<p>Manage permissions for viewing assigned chats</p>}
-                  side="bottom"
-                />
-              </PopoverTrigger>
-              <PopoverContent className="w-full">
-                <WaInboxPermissions />
-              </PopoverContent>
-            </Popover>
-          )}
           <CustomTooltip
             trigger={
               <Button

@@ -2381,5 +2381,18 @@
   "Admin Settings": "Admin Settings",
   "Admin settings": "Admin settings",
   "You are not in any team": "You are not in any team",
-  "Hold on, changing your organization photo": "Hold on, changing your organization photo"
+  "Hold on, changing your organization photo": "Hold on, changing your organization photo",
+  "Click save when you are done": "Click save when you are done.",
+  "Edit Quick Reply": "Edit Quick Reply",
+  "Add Quick Reply": "Add Quick Reply",
+  "Quick Replies": "Quick Replies",
+  "Quick Reply": "Quick Reply",
+  "Choose a clear topic that describes the customer issue or task this reply text addresses for easy reference": "Choose a clear topic that describes the customer issue or task this reply text addresses for easy reference",
+  "Choose a high-level category to organize this reply text, Examples: 'Billing', 'Technical', or 'Account'": "Choose a high-level category to organize this reply text, Examples: 'Billing', 'Technical', or 'Account'",
+  "Use a clear, unique key (letters, numbers, or underscores) that represents this reply text for quick lookup": "Use a clear, unique key (letters, numbers, or underscores) that represents this reply text for quick lookup",
+  "Key": "Key",
+  "Topic": "Topic",
+  "key not found": "key not found",
+  "No quick replies found": "No quick replies found",
+  "Reply Text": "Reply Text"
 }
