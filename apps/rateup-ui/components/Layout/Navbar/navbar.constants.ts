@@ -200,6 +200,11 @@ export function getNavTopData(
                 icon: IconFileDescription,
               },
               {
+                label: translations("Labels "),
+                link: "/dashboard/contacts/labels",
+                icon: IconLabel,
+              },
+              {
                 label: translations("Lifecycle"),
                 link: "/dashboard/lifecycle",
                 icon: IconActivity,

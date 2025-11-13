@@ -1,27 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 
-import { Flex, Group, Paper, Text } from "@mantine/core";
+import { Group, Text } from "@mantine/core";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { MessageSquare } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import useContactStore, {
+import {
   useContactsStore,
   useMessagesStore,
 } from "@/app/dashboard/inbox/store";
-import {
-  useGetAssignedUserForContact,
-  useGetMessagesByContactId,
-} from "@/backend/whatsapp/inbox/message/wamessage.query";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { useUser } from "@/context/UserContext";
 
-import NothingFound from "../../../NothingFound/NothingFound";
-import { useChatFilterStore } from "../chatselect/chatFilter";
-import WhatsAppInboxLoader from "../loader";
 import WaInboxChatDisplayBody from "./chatdisplayBody";
 import WaInboxChatDisplayFooter, {
   WaInboxAssignUserFooter,
@@ -29,15 +20,14 @@ import WaInboxChatDisplayFooter, {
 } from "./chatdisplayFooter";
 import WaInboxChatDisplayHeader from "./chatdisplayHeader";
 import WaInboxContactDetails from "./contactDetails";
-import classes from "./styles.module.css";
 
 export default function WaInboxChatDisplay({
   smallScreen = false,
   waSettings,
-}: {
+}: Readonly<{
   smallScreen?: boolean;
   waSettings?: any;
-}) {
+}>) {
   const contact = useContactsStore((s) => s.selectedContact);
 
   const { user } = useUser();
