@@ -232,7 +232,6 @@ export function returnMessageContentBasedOnParsedMessage(
 
 export function isInboxSessionExpired(timeStamp: string) {
   if (!timeStamp) return true;
-  return false;
   const currentTime = dayjs().utc();
   const givenTime = dayjs(timeStamp).utc();
   const diffInHours = currentTime.diff(givenTime, "hours");
