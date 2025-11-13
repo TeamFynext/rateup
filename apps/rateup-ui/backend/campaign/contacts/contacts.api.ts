@@ -14,6 +14,18 @@ export interface ICreateContact {
   external_id?: string;
 }
 
+export interface ICreateContactLabel {
+  name: string;
+  color?: string;
+  description?: string;
+}
+
+export interface IUpdateContactLabel {
+  name?: string;
+  color?: string;
+  description?: string;
+}
+
 const CONTACT_BASE_URL = "/contact";
 
 export const getContactsList = async (
@@ -84,6 +96,33 @@ export const editContactLabels = async ({ data, contactId }) => {
   );
   return res;
 };
+
+export const getContactLabels = async () => {
+  let res = await axiosClient.get(`${CONTACT_BASE_URL}/labels`);
+  return res.data;
+};
+
+export const createContactLabel = async (data: ICreateContactLabel) => {
+  let res = await axiosClient.post(`${CONTACT_BASE_URL}/labels`, data);
+  return res.data;
+};
+
+export const updateContactLabel = async (
+  labelId: string,
+  data: IUpdateContactLabel,
+) => {
+  let res = await axiosClient.put(
+    `${CONTACT_BASE_URL}/labels/${labelId}`,
+    data,
+  );
+  return res.data;
+};
+
+export const deleteContactLabel = async (labelId: string) => {
+  let res = await axiosClient.delete(`${CONTACT_BASE_URL}/labels/${labelId}`);
+  return res.data;
+};
+
 export type CustomFieldData = {
   id: string;
   orgId: string;

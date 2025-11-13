@@ -27,6 +27,7 @@ import PhoneInputWithCountrySelect, {
 
 import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import {
+  useContactLabels,
   useCreateContactMutation,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
@@ -39,7 +40,10 @@ import {
   RateupButtonBlue,
   RateupButtonSecondary,
 } from "../Button/RateupButtons";
-import { ContainedFileInput } from "../input/ContainedInput/ContainedInput";
+import {
+  ContainedFileInput,
+  ContainedMultiSelect,
+} from "../input/ContainedInput/ContainedInput";
 
 import "react-phone-number-input/style.css";
 
@@ -93,6 +97,7 @@ const CreateContactModal = ({
       customFields: [],
       updateExisting: false,
       external_id: "",
+      labels: [],
     },
     validate: {
       phone: (value, values) => {
@@ -361,6 +366,7 @@ export default CreateContactModal;
 
 export const ContactForm = ({ form, customFields, type }) => {
   const translations = useTranslations();
+  const { data: labels = [], isPending } = useContactLabels();
 
   const getCustomFieldValue = (fieldId) => {
     const customField = form
@@ -473,6 +479,7 @@ export const ContactForm = ({ form, customFields, type }) => {
         );
     }
   };
+  if (isPending) return <div>Loading...</div>;
 
   return (
     <SimpleGrid cols={2}>
@@ -507,6 +514,16 @@ export const ContactForm = ({ form, customFields, type }) => {
           </Text>
         </Box>
       </Stack>
+      <ContainedMultiSelect
+        label={translations("Labels")}
+        placeholder={translations("Select labels")}
+        data={labels?.map((label) => ({
+          value: label.id,
+          label: label.name,
+        }))}
+        key={form.key("labels")}
+        {...form.getInputProps("labels")}
+      />
       {type === ContactGroupType.LOYALTY && (
         <>
           <TextInput
