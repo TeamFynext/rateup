@@ -135,16 +135,6 @@ export function getNavTopData(
                 icon: UserX,
               },
               {
-                label: translations("Analytics"),
-                link: "/dashboard/inbox?tab=analytics",
-                icon: FileChartColumn,
-              },
-              {
-                label: translations("Settings"),
-                link: "/dashboard/inbox?tab=settings",
-                icon: Settings,
-              },
-              {
                 label: "Categories",
                 icon: IconBuildings,
                 hasSubmenu: true,
@@ -177,6 +167,23 @@ export function getNavTopData(
                           : []),
                       ]
                     : []),
+                ],
+              },
+              {
+                label: "Settings",
+                icon: Settings,
+                hasSubMenu: true,
+                children: [
+                  {
+                    label: translations("Analytics"),
+                    link: "/dashboard/inbox?tab=analytics",
+                    icon: FileChartColumn,
+                  },
+                  {
+                    label: translations("Settings"),
+                    link: "/dashboard/inbox?tab=settings",
+                    icon: Settings,
+                  },
                 ],
               },
             ],

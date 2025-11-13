@@ -105,6 +105,7 @@ interface NavLinkItem {
   link: string;
   icon?: React.ComponentType<any>;
   disabled?: boolean;
+  children?: [NavLinkItem];
 }
 
 // MainNavLinks Component
@@ -193,13 +194,19 @@ const SubNavLinks = ({
   // Find labels section if it exists
   const labelsSection = links.find((link) => link.label === "Labels");
   const categorySection = links.find((link) => link.label === "Categories");
+  const settingSection = links.find((link) => link.label === "Settings");
   const regularLinks = links.filter(
-    (link) => link.label !== "Labels" && link.label !== "Categories",
+    (link) =>
+      link.label !== "Labels" &&
+      link.label !== "Categories" &&
+      link.label !== "Settings",
   );
   const [isLifecycleOpen, setIsLifecycleOpen] = useState(true);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
   const filter = useChatFilterStore.getState().filter;
   const setFilter = useChatFilterStore.getState().setFilter;
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
 
   // Create icon links for regular items
   const regularLinksIcons = regularLinks
@@ -256,6 +263,7 @@ const SubNavLinks = ({
                 ? "secondary"
                 : "ghost"
             }
+            disabled={["analytics", "settings"].includes(tab)}
           >
             <p className="text-center text-xs">{label.emoji}</p>
           </Button>
@@ -280,6 +288,7 @@ const SubNavLinks = ({
                   filter.category === category.id ? null : (category.id as any),
               });
             }}
+            disabled={["analytics", "settings"].includes(tab)}
           >
             <CategoryIcon className="w-5 h-5" />
           </Button>
@@ -290,6 +299,38 @@ const SubNavLinks = ({
       />
     );
   });
+  const settingsIcons =
+    settingSection?.children?.map((link, index) => (
+      <CustomTooltip
+        key={link.label}
+        trigger={
+          <Button
+            className="h-9 w-9 mb-2"
+            onClick={(event) => {
+              event.preventDefault();
+              if (
+                link.link?.includes("/whatsapp") &&
+                !checkWhatsAppSettings(link?.link)
+              ) {
+                return;
+              }
+              handleLabelFilter("");
+              setFilter({
+                ...filter,
+                category: null,
+              });
+              setActiveSubLink(link.link);
+              router.push(link.link);
+            }}
+            variant={link.link === activeSubLink ? "secondary" : "ghost"}
+          >
+            <link.icon />
+          </Button>
+        }
+        content={<p>{link.label}</p>}
+        side="right"
+      />
+    )) || [];
   // Combine all icon links, with divider if labels exist
   const linksIcon = [
     ...regularLinksIcons,
@@ -298,6 +339,9 @@ const SubNavLinks = ({
       : []),
     ...(labelsSection?.children?.length > 0
       ? [<Divider key="label-divider" my="xs" />, ...labelIcons]
+      : []),
+    ...(settingSection?.children?.length > 0
+      ? [<Divider key="settings-divider" my="xs" />, ...settingsIcons]
       : []),
   ];
 
@@ -352,6 +396,7 @@ const SubNavLinks = ({
             : "ghost"
         }
         key={`${label.label}-${index}`}
+        disabled={["analytics", "settings"].includes(tab)}
       >
         <div className="flex justify-between w-full">
           <div className="flex gap-2 items-center">
@@ -395,6 +440,7 @@ const SubNavLinks = ({
                   filter.category === category.id ? null : (category.id as any),
               });
             }}
+            disabled={["analytics", "settings"].includes(tab)}
           >
             <div className="flex gap-2 items-center">
               <category.icon className="w-4 h-4" />
@@ -432,6 +478,40 @@ const SubNavLinks = ({
       </CollapsibleContent>
     </Collapsible>
   );
+  const settingLinkText = settingSection?.children?.map((link, index) => {
+    const LinkIcon = link.icon;
+    return (
+      <Button
+        className="w-full my-1"
+        variant={link.link === activeSubLink ? "secondary" : "ghost"}
+        key={link.link}
+        onClick={(event) => {
+          event.preventDefault();
+          if (
+            link.link?.includes("/whatsapp") &&
+            !checkWhatsAppSettings(link?.link)
+          ) {
+            return;
+          }
+          handleLabelFilter(""); // Clear label filter on regular link click
+          setFilter({
+            ...filter,
+            category: null,
+          });
+          setActiveSubLink(link.link);
+          router.push(link.link);
+        }}
+      >
+        <div className="flex justify-between w-full">
+          <div className="flex gap-2 items-center">
+            <LinkIcon className="w-5 h-5" />
+            <span className="text-sm">{link.label}</span>
+          </div>
+          {link?.count > 0 && <Badge variant="secondary">{link?.count}</Badge>}
+        </div>
+      </Button>
+    );
+  });
   // Combine all text links with divider if labels exist
   const linksText = [
     ...regularLinksText,
@@ -441,11 +521,14 @@ const SubNavLinks = ({
           <Categories key={"categories"} />,
         ]
       : []),
-    ...(labelTexts.length > 0
+    ...(categorySection?.children?.length > 0
       ? [
           <Divider key="categories-text-divider" my="9.5" />,
           <LifeCycleLabel key={"lifecycles"} />,
         ]
+      : []),
+    ...(settingSection?.children?.length > 0
+      ? [<Divider key="settings-text-divider" my="9.5" />, ...settingLinkText]
       : []),
   ];
 
@@ -1177,7 +1260,6 @@ export default function Layout({ children }) {
     },
     {},
   );
-
   // On reload, set active main/sub link based on route
   useEffect(() => {
     if (!pathname) return;
@@ -1188,6 +1270,16 @@ export default function Layout({ children }) {
           setActiveMainLink(mainLabel);
           setActiveSubLink(child.link);
           found = true;
+        }
+        if (child.children) {
+          const subChild = child.children.find((c) =>
+            fullPath.startsWith(c.link),
+          );
+          if (subChild) {
+            setActiveMainLink(mainLabel);
+            setActiveSubLink(subChild.link);
+            found = true;
+          }
         }
       });
     });
