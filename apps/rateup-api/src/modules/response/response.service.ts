@@ -1607,18 +1607,30 @@ export async function getResponseSummary(
     existingSummary = responseSummary?.team?.find((t) => t.teamId === teamId);
   }
   const responseIds = filteredResponses.map((r) => r.responseId);
-  const responsesNotSummarised = existingSummary
-    ? filteredResponses.filter(
-        (r) => !existingSummary.responseIds.includes(r.responseId),
+  const deletedResponses = existingSummary
+    ? existingSummary.responseIds.filter(
+        (responseId) => !responseIds.includes(responseId),
       )
-    : filteredResponses;
+    : [];
+  let responsesNotSummarised = [];
+  if (deletedResponses.length) {
+    responsesNotSummarised = [...filteredResponses];
+  } else {
+    responsesNotSummarised = existingSummary
+      ? filteredResponses.filter(
+          (r) => !existingSummary.responseIds.includes(r.responseId),
+        )
+      : filteredResponses;
+  }
+
   if (!responsesNotSummarised.length) return;
   const responseTexts = responsesNotSummarised.map((r) =>
     r.response.type
       ? r.response.response[r.response.type]
       : r.response.response,
   );
-  if (existingSummary) responseTexts.push(existingSummary.summary);
+  if (existingSummary && !deletedResponses.length)
+    responseTexts.push(existingSummary.summary);
   const res = await getTextSummaryByAI(
     responseTexts,
     request,

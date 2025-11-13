@@ -5,7 +5,6 @@ import {
   getWaQuickReplyByIdHandler,
   deleteWaQuickReplyByIdHandler,
   updateWaQuickReplyByIdHandler,
-  updateWaQuickReplyOrderHandler,
 } from "./quickReply.controller";
 import { $quickReplyRef } from "./quickReply.schema";
 import { checkSession } from "../../../../utils/checkSession";
@@ -49,15 +48,5 @@ export async function waQuickReplyRoutes(server: FastifyInstance) {
       },
     },
     updateWaQuickReplyByIdHandler,
-  );
-
-  server.put(
-    "/order",
-    {
-      schema: {
-        body: $quickReplyRef("updateOrderSchema"),
-      },
-    },
-    updateWaQuickReplyOrderHandler,
   );
 }

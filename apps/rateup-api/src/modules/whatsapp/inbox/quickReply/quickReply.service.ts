@@ -20,9 +20,6 @@ export async function getWaQuickReplies(orgId: string) {
     where: {
       orgId,
     },
-    orderBy: {
-      priority: "asc",
-    },
   });
 }
 
@@ -52,17 +49,4 @@ export async function updateWaQuickReplyById(
     },
     data,
   });
-}
-
-export async function updateWaQuickReplyOrder(data: UpdateOrderBody) {
-  for (const quickReply of data) {
-    await prisma.whatsappQuickReply.update({
-      where: {
-        id: quickReply.id,
-      },
-      data: {
-        priority: quickReply.priority,
-      },
-    });
-  }
 }

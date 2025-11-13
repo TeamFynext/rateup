@@ -1709,7 +1709,10 @@ model WhatsappQuickReply {
   orgId    String @db.Uuid
   org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   text     String
-  priority Int
+  category String @default("General")
+  topic    String @default("General Inquiry")
+  key      String?
+  createdAt DateTime    @default(now())
 }
 
 model LoyaltyApiSettings {
