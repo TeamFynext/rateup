@@ -35,11 +35,20 @@ export async function createContact(contact: ContactCore & { orgId: string }) {
     throw new Error("Phone must be provided");
   }
   const chatbot = await getChatbotDetails(contact.orgId);
-  if (chatbot && chatbot.enableAllWaChat) contact.aiWaChat = true;
-  const { customFields, ...rest } = contact;
+  if (chatbot?.enableAllWaChat) contact.aiWaChat = true;
+  const { customFields, labels, ...rest } = contact;
   const user = await prisma.contact.create({
     data: rest,
   });
+  if (labels && labels.length > 0) {
+    await prisma.contactLabelMap.createMany({
+      data: labels.map((labelId) => ({
+        contactId: user.id,
+        labelId,
+      })),
+      skipDuplicates: true,
+    });
+  }
   if (customFields?.length) {
     await prisma.contactCustomFieldValue.createMany({
       data: customFields.map((field) => ({
@@ -180,6 +189,18 @@ export async function getContactById(contactId: string) {
     where: {
       id: contactId,
     },
+    include: {
+      ContactLabelMap: {
+        select: {
+          label: {
+            select: {
+              name: true,
+              id: true,
+            },
+          },
+        },
+      },
+    },
   });
   return user;
 }
@@ -205,7 +226,7 @@ export async function getContactsByOrgId(
   let filterData = [];
   if (filter) {
     const params = new URLSearchParams(filter);
-    for await (const [key, value] of params.entries()) {
+    for (const [key, value] of params.entries()) {
       if (["name", "phone", "source"].includes(key)) {
         filterData.push({
           [key]: {
@@ -305,6 +326,16 @@ export async function getContactsByOrgId(
         campaignId: true,
       },
     },
+    ContactLabelMap: {
+      select: {
+        label: {
+          select: {
+            name: true,
+            id: true,
+          },
+        },
+      },
+    },
   };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / Number(limit)));
@@ -361,6 +392,20 @@ export async function updateContactById(
   contactId: string,
   contact: updateContactSchema,
 ) {
+  if (contact.labels && contact.labels.length > 0) {
+    await prisma.contactLabelMap.deleteMany({
+      where: {
+        contactId,
+      },
+    });
+    await prisma.contactLabelMap.createMany({
+      data: contact.labels.map((labelId) => ({
+        contactId,
+        labelId,
+      })),
+      skipDuplicates: true,
+    });
+  }
   if (contact.customFields?.length) {
     await prisma.contactCustomFieldValue.deleteMany({
       where: {
@@ -376,7 +421,7 @@ export async function updateContactById(
       skipDuplicates: true,
     });
   }
-  const user = await prisma.contact.update({
+  const updatedContact = await prisma.contact.update({
     where: {
       id: contactId,
     },
@@ -391,40 +436,37 @@ export async function updateContactById(
   });
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_UPDATED,
-    { [ZapierTriggers.CONTACT_UPDATED]: user },
-    user.orgId,
+    { [ZapierTriggers.CONTACT_UPDATED]: updatedContact },
+    updatedContact.orgId,
   );
   if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
     await addZapierTriggerToQueue(
       ZapierTriggers.CONVERSATION_CLOSED,
-      { [ZapierTriggers.CONVERSATION_CLOSED]: user },
-      user.orgId,
+      { [ZapierTriggers.CONVERSATION_CLOSED]: updatedContact },
+      updatedContact.orgId,
     );
-    const assignedUsers = await getAssignedUserForContact(user.id);
-    await deleteAssignedUsersforContact(user.id);
+    const assignedUsers = await getAssignedUserForContact(updatedContact.id);
+    await deleteAssignedUsersforContact(updatedContact.id);
     for (const assignee of assignedUsers) {
       const notificationSetting = await getNotificationSettings(
         assignee.assignedUserId,
-        user.orgId,
+        updatedContact.orgId,
       );
-      if (
-        notificationSetting &&
-        notificationSetting.waMessageClosedNotification
-      ) {
+      if (notificationSetting?.waMessageClosedNotification) {
         await createNotification(
           assignee.assignedUserId,
-          user.orgId,
+          updatedContact.orgId,
           "whatsapp",
           "chat-closed",
           {
-            contactId: user.id,
-            contactName: user.name,
+            contactId: updatedContact.id,
+            contactName: updatedContact.name,
           },
         );
       }
     }
   }
-  return user;
+  return updatedContact;
 }
 
 export async function updateContactLabelsById(

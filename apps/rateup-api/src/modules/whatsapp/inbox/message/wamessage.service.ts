@@ -539,13 +539,26 @@ export async function filterChats(
         INNER JOIN "User" u ON winb."assignedUserId" = u.id
         WHERE winb."contactId" IN (SELECT id FROM filtered_contacts)
         GROUP BY winb."contactId"
+      ),
+      contact_labels AS (
+        SELECT 
+          clm."contactId",
+          json_agg(
+            json_build_object('id', cl.id, 'name', cl.name, 'color', cl.color)
+          ) as labels
+        FROM "ContactLabelMap" clm
+        INNER JOIN "ContactLabel" cl ON clm."labelId" = cl.id
+        WHERE clm."contactId" IN (SELECT id FROM filtered_contacts)
+        GROUP BY clm."contactId"
       )
       SELECT 
         fc.*,
         COALESCE(au.users, '[]'::json) as "assignedUsers",
+        COALESCE(cls.labels, '[]'::json) as "contactLabels",
         l."name" as "lifecycleName"
       FROM filtered_contacts fc
       LEFT JOIN assigned_users au ON au."contactId" = fc.id
+      LEFT JOIN contact_labels cls ON cls."contactId" = fc.id
       LEFT JOIN "Lifecycle" l ON l.id = fc."lifecycleId"
       ORDER BY ${allOrderBy} ${sortBy} NULLS LAST;
     `;
