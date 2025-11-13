@@ -18,6 +18,8 @@ import {
 } from "./contact.controller";
 import { contactGroupRoutes } from "./contactGroup/contactGroup.route";
 import { contactGroupSchemas } from "./contactGroup/contactGroup.schema";
+import { contactLabelRoutes } from "./contactLabel/contactLabel.route";
+import { contactLabelSchemas } from "./contactLabel/contactLabel.schema";
 import { checkSession } from "../../utils/checkSession";
 import fastifyMultipart from "@fastify/multipart";
 import { getVerifySubscriptionHandler } from "../../utils/auth";
@@ -29,6 +31,10 @@ export async function contactRoutes(server: FastifyInstance) {
 
   contactGroupSchemas.forEach((schema) => server.addSchema(schema));
   server.register(contactGroupRoutes, { prefix: "/group" });
+
+  contactLabelSchemas.forEach((schema) => server.addSchema(schema));
+  server.register(contactLabelRoutes, { prefix: "/labels" });
+
   server.register(fastifyMultipart, {
     limits: {
       fileSize: 1048576 * 10,

@@ -163,6 +163,7 @@ model Org {
   Lifecycle                Lifecycle[]
   ContactCustomField       ContactCustomField[]
   AuditLog                 AuditLog[]
+  ContactLabel             ContactLabel[]
 }
 
 model UsageStats {
@@ -545,6 +546,7 @@ model Contact {
   lastReceivedMetadata        Json?
   lastMessageSourceIdentifier String?
   lastSentMessageTimeStamp    DateTime?
+  ContactLabelMap             ContactLabelMap[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -557,6 +559,35 @@ model Contact {
   @@index([orgId, blockedOnWhatsApp, lastReceivedMessageTimeStamp(sort: Desc)])
   @@index([orgId, lifecycleId])
   @@index([name])
+}
+
+model ContactLabel {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  color       String?  @default("#3b82f6")
+  description String?
+  createdAt   DateTime @default(now())
+  orgId       String   @db.Uuid
+  org         Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  contactLabels ContactLabelMap[]
+
+  @@unique([name, orgId], name: "label_name_org_id_unique")
+  @@index([orgId])
+}
+
+model ContactLabelMap {
+  contactId String  @db.Uuid
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  labelId String       @db.Uuid
+  label   ContactLabel @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([contactId, labelId])
+  @@index([contactId])
+  @@index([labelId])
 }
 
 model ContactCustomField {

@@ -20,6 +20,7 @@ export const contactCoreSchema = z.object({
   external_id: z.string().optional(),
   aiWaChat: z.boolean().optional(),
   igsId: z.string().optional(),
+  labels: z.array(z.string().uuid()).optional(),
 });
 
 export const createMultipleContactSchema = z.array(contactCoreSchema);
@@ -50,6 +51,7 @@ const updateContactSchema = z.object({
   lastReceivedMetadata: z.any().optional(),
   lastSentMessageTimeStamp: z.string().optional(),
   lastMessageSourceIdentifier: z.string().optional(),
+  labels: z.array(z.string().uuid()).optional(),
 });
 const updateContactLabelsSchema = z.object({
   lifecycleId: z.string(),
@@ -85,6 +87,10 @@ const byFieldIdSchema = z.object({
   fieldId: z.string(),
 });
 
+const assignLabelsToContactSchema = z.object({
+  labelIds: z.array(z.string().uuid()),
+});
+
 export const { schemas: contactSchemas, $ref: $contactRef } = buildJsonSchemas(
   {
     byContactIdSchema,
@@ -96,6 +102,7 @@ export const { schemas: contactSchemas, $ref: $contactRef } = buildJsonSchemas(
     updateContactLabelsSchema,
     customFieldSchema,
     byFieldIdSchema,
+    assignLabelsToContactSchema,
   },
   {
     $id: "contactSchema",
@@ -116,3 +123,6 @@ export type UpdateContactLabelsSchema = z.infer<
 export type CustomFieldSchema = z.infer<typeof customFieldSchema>;
 
 export type ByFieldIdSchema = z.infer<typeof byFieldIdSchema>;
+export type AssignLabelsToContactSchema = z.infer<
+  typeof assignLabelsToContactSchema
+>;
