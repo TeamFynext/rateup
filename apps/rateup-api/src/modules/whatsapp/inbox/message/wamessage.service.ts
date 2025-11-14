@@ -313,7 +313,17 @@ export async function filterChats(
 
       // Labels filter
       if (bodyFilterProps?.labels?.length > 0) {
-        params.push(bodyFilterProps.labels[0]);
+        params.push(bodyFilterProps.labels);
+        filters.push(`EXISTS (
+          SELECT 1 FROM "ContactLabelMap" clm 
+          WHERE clm."contactId" = c.id 
+          AND clm."labelId" = ANY($${paramIndex++}::uuid[])
+        )`);
+      }
+
+      // Lifecycle filter
+      if (bodyFilterProps?.lifecycle) {
+        params.push(bodyFilterProps.lifecycle);
         filters.push(`c."lifecycleId" = $${paramIndex++}::uuid`);
       }
 
