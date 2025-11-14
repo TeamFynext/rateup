@@ -349,7 +349,7 @@ export default function Account() {
             <div className="relative group">
               <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-white shadow-lg">
                 <AvatarImage src={avatarSrc || ""} />
-                <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-2xl">
+                <AvatarFallback className="bg-primary text-white text-2xl">
                   {profileData?.data?.data?.name?.slice(0, 1)}
                 </AvatarFallback>
               </Avatar>
@@ -421,7 +421,7 @@ export default function Account() {
       <Card className="p-6 shadow-sm border-gray-200 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <Building className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -449,7 +449,7 @@ export default function Account() {
           <div className="relative">
             <Avatar className="w-16 h-16 border-2 border-white shadow-sm">
               <AvatarImage src={orgAvatarSrc} />
-              <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-lg">
+              <AvatarFallback className="bg-primary text-white text-lg">
                 {user?.orgName?.slice(0, 1)}
               </AvatarFallback>
             </Avatar>
@@ -554,7 +554,7 @@ export default function Account() {
               <div className="flex items-center gap-6">
                 <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
                   <AvatarImage src={orgAvatarSrc || ""} />
-                  <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xl">
+                  <AvatarFallback className="bg-primary text-white text-xl">
                     {user?.orgName?.slice(0, 1)}
                   </AvatarFallback>
                 </Avatar>
@@ -711,10 +711,7 @@ export default function Account() {
                 >
                   {translations("Cancel")}
                 </Button>
-                <Button
-                  type="submit"
-                  className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
-                >
+                <Button type="submit" className="bg-primary">
                   {translations("Save Changes")}
                 </Button>
               </DialogFooter>
@@ -725,7 +722,7 @@ export default function Account() {
 
       <Card className="p-5 shadow-sm border-gray-200">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
             <Globe className="w-4 h-4 text-white" />
           </div>
           <div>
@@ -769,7 +766,7 @@ export default function Account() {
             <div className="flex items-center gap-6">
               <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
                 <AvatarImage src={avatarSrc} />
-                <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xl">
+                <AvatarFallback className="bg-primary text-white text-xl">
                   {profileData?.data?.data?.name?.slice(0, 1) || "U"}
                 </AvatarFallback>
               </Avatar>
@@ -902,11 +899,7 @@ export default function Account() {
               >
                 {translations("Cancel")}
               </Button>
-              <Button
-                type="submit"
-                className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
-                disabled={isLoading}
-              >
+              <Button type="submit" className="bg-primary" disabled={isLoading}>
                 {isLoading
                   ? translations("Saving")
                   : translations("Save Changes")}

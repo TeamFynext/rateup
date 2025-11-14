@@ -762,7 +762,7 @@ const Navbar = ({
                   <HoverCard.Target>
                     <Avatar className="w-12 h-12 border-4 border-white shadow-lg">
                       <AvatarImage src={getFileUrlFromKey(user?.orgLogo)} />
-                      <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
+                      <AvatarFallback className="bg-primary text-white text-sm font-bold">
                         {user?.orgName?.toUpperCase().slice(0, 2) || "O"}
                       </AvatarFallback>
                     </Avatar>
@@ -779,7 +779,7 @@ const Navbar = ({
                     >
                       <Avatar className="w-12 h-12 border-4 border-white shadow-lg">
                         <AvatarImage src={getFileUrlFromKey(user?.orgLogo)} />
-                        <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
+                        <AvatarFallback className="bg-primary text-white text-sm font-bold">
                           {user?.orgName?.toUpperCase().slice(0, 2) || "U"}
                         </AvatarFallback>
                       </Avatar>
@@ -817,7 +817,7 @@ const Navbar = ({
                         <AvatarImage
                           src={getFileUrlFromKey(user?.profilePhoto)}
                         />
-                        <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-sm font-bold">
+                        <AvatarFallback className="bg-primary text-white text-sm font-bold">
                           {user?.userName?.toUpperCase().slice(0, 2) || "U"}
                         </AvatarFallback>
                       </Avatar>

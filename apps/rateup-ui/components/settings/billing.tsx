@@ -727,7 +727,7 @@ const TeamStats = ({ stats, refetch, isRefetching, subscription }) => {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-rateup-blue to-rateup-orange h-3 rounded-full transition-all"
+                  className="bg-primary h-3 rounded-full transition-all"
                   style={{ width: `${Math.min(percentage, 100)}%` }}
                 />
               </div>
@@ -794,7 +794,7 @@ const MenuStats = ({ stats, subscription }) => {
                 <>
                   <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-rateup-blue to-rateup-orange h-3 rounded-full transition-all"
+                      className="bg-primary h-3 rounded-full transition-all"
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
                   </div>
@@ -864,7 +864,7 @@ const SurveyStats = ({ stats, subscription }) => {
                 <>
                   <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-rateup-blue to-rateup-orange h-3 rounded-full transition-all"
+                      className="bg-primary h-3 rounded-full transition-all"
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
                   </div>
@@ -951,7 +951,7 @@ const WhatsappStats = ({ stats, subscription }) => {
                 <>
                   <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-rateup-blue to-rateup-orange h-3 rounded-full transition-all"
+                      className="bg-primary h-3 rounded-full transition-all"
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
                   </div>
@@ -1016,7 +1016,7 @@ const AIStats = ({ stats, subscription }) => {
                 <>
                   <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-rateup-blue to-rateup-orange h-3 rounded-full transition-all"
+                      className="bg-primary h-3 rounded-full transition-all"
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
                   </div>
@@ -1086,7 +1086,7 @@ const LoyaltyStats = ({ stats, subscription }) => {
                 <>
                   <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-rateup-blue to-rateup-orange h-3 rounded-full transition-all"
+                      className="bg-primary h-3 rounded-full transition-all"
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     />
                   </div>
