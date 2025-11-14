@@ -483,7 +483,7 @@ export default function WaInboxContactDetails({
                   </div>
                   <div className="space-y-1">
                     <label className="text-[11px] text-muted-foreground">
-                      {t("Other")}
+                      {t("Labels")}
                     </label>
                     <MultiSelect
                       placeholder={t("Select labels")}
@@ -716,36 +716,6 @@ export default function WaInboxContactDetails({
                   </div>
                 </motion.div>
               )}
-              {contact?.contactLabels?.length > 0 && (
-                <motion.div
-                  className="flex items-start space-x-1.5 group"
-                  whileHover={{ scale: 1.01, x: 2 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-muted-foreground">Labels</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {contact.contactLabels.map((label) => (
-                        <Badge
-                          key={label.id}
-                          variant="outline"
-                          className="text-[10px] px-1.5 py-0.5 h-auto"
-                          style={{
-                            borderColor: label.color,
-                            color: label.color,
-                            backgroundColor: `${label.color}10`,
-                          }}
-                        >
-                          {label.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
             </div>
           </motion.div>
 
@@ -907,7 +877,36 @@ export default function WaInboxContactDetails({
               </div>
             )}
           </motion.div>
-
+          {contact?.contactLabels?.length > 0 && (
+            <motion.div
+              className="flex items-start space-x-1.5 group"
+              whileHover={{ scale: 1.01, x: 2 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] text-muted-foreground">Labels</p>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {contact.contactLabels.map((label) => (
+                    <Badge
+                      key={label.id}
+                      variant="outline"
+                      className="text-[10px] px-1.5 py-0.5 h-auto"
+                      style={{
+                        borderColor: label.color,
+                        color: label.color,
+                        backgroundColor: `${label.color}10`,
+                      }}
+                    >
+                      {label.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
           <Separator />
 
           {/* Quick Actions */}

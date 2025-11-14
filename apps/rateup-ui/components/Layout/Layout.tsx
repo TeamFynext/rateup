@@ -176,17 +176,12 @@ const SubNavLinks = ({
   const chatFilterStore = useChatFilterStore();
   const handleLabelFilter = (labelName: string) => {
     // Update your filter state here
+    let lifecycle =
+      chatFilterStore.filter.lifecycle === labelName ? "" : labelName;
+
     chatFilterStore.setFilter({
       ...chatFilterStore.filter,
-      labels: labelName ? [labelName] : [],
-    });
-  };
-  const handleAddLabel = () => {
-    modals.openContextModal({
-      modal: "addLabelModal",
-      title: "Add Label",
-      centered: true,
-      innerProps: {},
+      lifecycle: lifecycle,
     });
   };
 
@@ -252,7 +247,7 @@ const SubNavLinks = ({
             className="h-9 w-9 mb-2"
             onClick={() => handleLabelFilter(label?.value)}
             variant={
-              chatFilterStore.filter.labels.includes(label?.value)
+              chatFilterStore.filter?.lifecycle === label?.value
                 ? "secondary"
                 : "ghost"
             }
@@ -347,7 +342,7 @@ const SubNavLinks = ({
         }}
         className="w-full my-1"
         variant={
-          chatFilterStore.filter.labels.includes(label?.value)
+          chatFilterStore.filter?.lifecycle === label?.value
             ? "secondary"
             : "ghost"
         }
