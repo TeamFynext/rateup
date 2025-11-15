@@ -284,10 +284,7 @@ export default function Security() {
             </div>
 
             {/* Submit Button */}
-            <Button
-              className="w-full bg-gradient-to-r from-rateup-blue to-rateup-blue"
-              disabled={isLoading}
-            >
+            <Button className="w-full bg-primary" disabled={isLoading}>
               <Lock className="w-4 h-4 mr-2" />
               {isLoading
                 ? translations("Updating")

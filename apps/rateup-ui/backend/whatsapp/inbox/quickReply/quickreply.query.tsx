@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { showErrorToast, showSuccessToast } from "@/utils/notifications";
+
 import {
   createWaQuickReply,
   deleteQuickReplyById,
@@ -50,6 +52,7 @@ export const useUpdateReply = () => {
     },
     onError: (e) => {
       console.error(e);
+      showErrorToast("Updation failed");
     },
   });
 };

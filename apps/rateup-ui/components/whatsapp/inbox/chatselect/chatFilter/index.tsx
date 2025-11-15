@@ -12,6 +12,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
+import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ export type ChatFilter = {
   labels: string[];
   sortBy: "newest" | "oldest";
   category: "conversation" | "campaign" | "automation";
+  lifecycle?: string;
 };
 interface Props {
   setFilterCount: (value: number) => void;
@@ -48,8 +50,11 @@ interface Props {
 
 export default function WaInboxChatFilter({ setFilterCount }: Props) {
   const { data, isLoading, error } = useChatFilterData();
+  const { data: labels = [], isPending } = useContactLabels();
+
   const { filter, setFilter } = useChatFilterStore();
   const isMobile = useMediaQuery("(max-width: 768px)");
+
   const translations = useTranslations();
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as string) ?? "New";
@@ -63,7 +68,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
   useEffect(() => {
     setFilterCount(getFilterActiveCount());
   }, [filter]);
-  if (isLoading || teamsLoading) {
+  if (isLoading || teamsLoading || isPending) {
     return <Loader size={"xs"} />;
   }
   if (error) {
@@ -152,6 +157,8 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
         WaMessageAssignStatus.CLOSED,
       ],
       assignedTeams: [],
+      labels: [],
+      lifecycle: "",
     });
   }
 
@@ -235,6 +242,23 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
           );
         }}
       />
+      <ContainedMultiSelect
+        radius="md"
+        maw={250}
+        value={filter.labels || []}
+        onChange={(values) =>
+          setFilter({
+            ...filter,
+            labels: values,
+          })
+        }
+        placeholder={translations("Select labels (type in to search)")}
+        data={labels.map((label) => ({
+          value: label.id,
+          label: label.name,
+        }))}
+        searchable
+      />
       {tab === "All" && (
         <div className="space-y-2">
           <span className="text-xs font-medium text-muted-foreground mb-2">
@@ -310,6 +334,7 @@ export const useChatFilterStore = create<ChatFilterStore>()(
         assignedTeams: [],
         phone: "all",
         labels: [],
+        lifecycle: "",
         sortBy: "newest",
         category: null,
       },

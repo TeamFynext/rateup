@@ -50,6 +50,7 @@ import {
   Megaphone,
   MessageCircle,
   MessageSquareDot,
+  Settings,
   User,
   UserPlus,
   UserX,
@@ -134,11 +135,6 @@ export function getNavTopData(
                 icon: UserX,
               },
               {
-                label: translations("Analytics"),
-                link: "/dashboard/inbox?tab=analytics",
-                icon: FileChartColumn,
-              },
-              {
                 label: "Categories",
                 icon: IconBuildings,
                 hasSubmenu: true,
@@ -173,6 +169,23 @@ export function getNavTopData(
                     : []),
                 ],
               },
+              {
+                label: "Settings",
+                icon: Settings,
+                hasSubMenu: true,
+                children: [
+                  {
+                    label: translations("Analytics"),
+                    link: "/dashboard/inbox?tab=analytics",
+                    icon: FileChartColumn,
+                  },
+                  {
+                    label: translations("Settings"),
+                    link: "/dashboard/inbox?tab=settings",
+                    icon: Settings,
+                  },
+                ],
+              },
             ],
           },
         ]
@@ -198,6 +211,11 @@ export function getNavTopData(
                 label: translations("Custom Fields"),
                 link: "/dashboard/contacts/custom-fields",
                 icon: IconFileDescription,
+              },
+              {
+                label: translations("Labels "),
+                link: "/dashboard/contacts/labels",
+                icon: IconLabel,
               },
               {
                 label: translations("Lifecycle"),

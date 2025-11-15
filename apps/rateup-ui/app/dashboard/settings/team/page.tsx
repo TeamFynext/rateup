@@ -132,7 +132,7 @@ const Team = () => {
 
         {user?.role === UserRole.SUPADM && (
           <Button
-            className="bg-gradient-to-r from-rateup-blue to-rateup-blue hover:shadow-lg transition-all"
+            className="bg-primary hover:shadow-lg transition-all"
             onClick={() => setIsCreateTeamDialogOpen(true)}
           >
             <Plus className="w-4 h-4" />
@@ -212,7 +212,7 @@ const Team = () => {
                       }).map((_, index) => (
                         <div
                           key={index}
-                          className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center text-white text-xs font-medium"
+                          className="w-8 h-8 rounded-full border-2 border-white bg-primary flex items-center justify-center text-white text-xs font-medium"
                         >
                           <User className="h-4 w-4" />
                         </div>
@@ -334,7 +334,7 @@ const Team = () => {
             <DialogFooter>
               <Button
                 disabled={isCreating}
-                className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
+                className="bg-primary"
                 onClick={() => {
                   const values = createTeamForm.values;
 

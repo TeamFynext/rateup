@@ -12,18 +12,22 @@ import {
 } from "../../../utils/notifications";
 import {
   createContact,
+  createContactLabel,
   createCustomField,
   deleteContact,
+  deleteContactLabel,
   deleteCustomField,
   deleteManyContacts,
   editContact,
   editContactLabels,
   exportContacts,
   getContactById,
+  getContactLabels,
   getContactsList,
   getCustomField,
   importContacts,
   importCSVContacts,
+  updateContactLabel,
   updateCustomField,
 } from "./contacts.api";
 
@@ -335,6 +339,80 @@ export const useExportContactsMutation = () => {
         "contact-export",
         <IconX />,
         true,
+      );
+    },
+  });
+};
+
+export const useContactLabels = () => {
+  return useQuery({
+    queryKey: ["contactLabels"],
+    queryFn: getContactLabels,
+  });
+};
+
+export const useCreateContactLabelMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createContactLabel,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contactLabels"] });
+      showSuccessToast(
+        "Label created successfully",
+        "label-create",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error creating label: ${error?.response?.data?.message}`,
+        "label-create",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useUpdateContactLabelMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ labelId, data }: { labelId: string; data: any }) =>
+      updateContactLabel(labelId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contactLabels"] });
+      showSuccessToast(
+        "Label updated successfully",
+        "label-update",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error updating label: ${error?.response?.data?.message}`,
+        "label-update",
+        <IconX />,
+      );
+    },
+  });
+};
+
+export const useDeleteContactLabelMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteContactLabel,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contactLabels"] });
+      showSuccessToast(
+        "Label deleted successfully",
+        "label-delete",
+        <IconCheck />,
+      );
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error deleting label: ${error?.response?.data?.message}`,
+        "label-delete",
+        <IconX />,
       );
     },
   });

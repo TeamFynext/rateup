@@ -2386,5 +2386,18 @@
   "Admin Settings": "प्रशासनिक सेटिंग्स",
   "Admin settings": "प्रशासनिक सेटिंग्स",
   "You are not in any team": "आप किसी टीम में नहीं हैं",
-  "Hold on, changing your organization photo": "रुकिए, आपकी संस्था की फोटो बदली जा रही है"
+  "Hold on, changing your organization photo": "रुकिए, आपकी संस्था की फोटो बदली जा रही है",
+  "Click save when you are done.": "पूरा होने पर सहेजें पर क्लिक करें।",
+  "Edit Quick Reply": "त्वरित उत्तर संपादित करें",
+  "Add Quick Reply": "त्वरित उत्तर जोड़ें",
+  "Quick Replies": "त्वरित उत्तर",
+  "Quick Reply": "त्वरित उत्तर",
+  "Choose a clear topic that describes the customer issue or task this reply text addresses for easy reference": "आसान संदर्भ के लिए एक स्पष्ट विषय चुनें जो इस उत्तर पाठ द्वारा संबोधित ग्राहक समस्या या कार्य का वर्णन करे।",
+  "Choose a high-level category to organize this reply text, Examples: 'Billing', 'Technical', or 'Account'": "इस उत्तर पाठ को व्यवस्थित करने के लिए एक उच्च-स्तरीय श्रेणी चुनें, उदाहरण: 'बिलिंग', 'तकनीकी', या 'खाता'।",
+  "Use a clear, unique key (letters, numbers, or underscores) that represents this reply text for quick lookup": "त्वरित खोज के लिए इस उत्तर पाठ का प्रतिनिधित्व करने वाली एक स्पष्ट, अनोखी कुंजी (अक्षर, संख्या, या अंडरस्कोर) का उपयोग करें।",
+  "Key": "कुंजी",
+  "Topic": "विषय",
+  "key not found": "कुंजी नहीं मिली",
+  "No quick replies found": "कोई त्वरित उत्तर नहीं मिला",
+  "Reply Text": "उत्तर पाठ"
 }
