@@ -2,6 +2,7 @@
 
 import { Sora } from "next/font/google";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import { IconClockX, IconCreditCardOff } from "@tabler/icons-react";
 import { motion, type Transition } from "framer-motion";
@@ -31,6 +32,7 @@ const looped = [...benefits, ...benefits];
 const springUp: Transition = { type: "spring", stiffness: 120, damping: 16 };
 
 export default function StartRateupHero() {
+  const router = useRouter();
   return (
     <motion.section
       className={`${sora.className} w-full flex items-center justify-center py-8 sm:py-10`}
@@ -138,6 +140,7 @@ export default function StartRateupHero() {
                 whileHover={{ scale: 1.03 }}
                 transition={{ type: "spring", stiffness: 250, damping: 18 }}
                 className="bg-rateup-blue hover:bg-[#0b4d95] transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base"
+                onClick={() => router.push("/signup")}
               >
                 Start Free Trial
               </motion.button>

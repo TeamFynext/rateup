@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Sora } from "next/font/google";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import { IconCheck } from "@tabler/icons-react";
 import { motion } from "framer-motion";
@@ -17,6 +18,7 @@ const sora = Sora({
 });
 
 export default function HeroSection() {
+  const router = useRouter();
   const [showDashboard, setShowDashboard] = useState(false); // default: first image visible
 
   return (
@@ -61,6 +63,7 @@ export default function HeroSection() {
           <button
             type="button"
             className="sm:w-auto bg-rateup-blue text-white font-semibold px-4 py-2 rounded-md hover:scale-105 transition-transform duration-200"
+            onClick={() => router.push("/signup")}
           >
             Start Free Trial
           </button>

@@ -9,6 +9,7 @@ import Layout from "@/components/RateupHomePage/Layout";
 import AudienceOverview from "@/components/RateupHomePage/shared/AudienceOverview";
 import AutomateInteraction from "@/components/RateupHomePage/shared/AutomateInteraction";
 import CallToAction from "@/components/RateupHomePage/shared/CallToAction";
+import Clients from "@/components/RateupHomePage/shared/ClientNew";
 import FeatureCards1 from "@/components/RateupHomePage/shared/FeatureCard1";
 import FeatureCards2 from "@/components/RateupHomePage/shared/FeatureCards2New";
 import Features from "@/components/RateupHomePage/shared/FeaturesNew";
@@ -43,6 +44,7 @@ const page = () => {
       <LoyalityAd />
       <Features />
       <AutomateInteraction />
+      {/* <Clients/> */}
       <Integration />
       {/* <IntegrationHero /> */}
       {/* <HomePageQrSection /> */}

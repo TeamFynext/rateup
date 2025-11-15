@@ -2,6 +2,7 @@
 
 import { Sora } from "next/font/google";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import { IconArrowRight } from "@tabler/icons-react";
 import { motion, type Variants } from "framer-motion";
@@ -53,6 +54,7 @@ const btnHover = {
 };
 
 export default function LoyaltyAd() {
+  const router = useRouter();
   return (
     <motion.section
       className={`${sora.className} flex items-center justify-center w-full py-10 sm:py-16 bg-white`}
@@ -90,6 +92,7 @@ export default function LoyaltyAd() {
           <motion.button
             className="inline-flex items-center justify-center bg-rateup-gold hover:bg-orange-600 text-white font-semibold px-3 py-1 rounded-sm w-fit transition-all gap-2"
             whileHover={btnHover}
+            onClick={() => router.push("/signup")}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             aria-label="Try for free"
           >

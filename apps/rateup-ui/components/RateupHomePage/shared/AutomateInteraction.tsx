@@ -135,13 +135,13 @@ export default function AutomateInteraction() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ ...springUp, delay: 0.32 }}
-          className="relative lg:h-[300px] md:h-[200px] sm:h-[150px] xl:w-6xl lg:w-4xl md:w-3xl sm:w-xl h-[100px] w-90"
         >
           <Image
             src={`${imagePath}/homepage/automateinteraction.svg`}
             alt="automate interaction"
-            fill
-            className="object-contain"
+            width={600}
+            height={600}
+            className="w-full h-auto object-contain  sm:rounded-r-4xl"
             priority
           />
         </motion.div>

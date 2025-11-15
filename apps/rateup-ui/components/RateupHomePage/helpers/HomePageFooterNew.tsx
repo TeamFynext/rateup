@@ -6,6 +6,8 @@ import {
   IconBrandFacebookFilled,
   IconBrandInstagram,
   IconBrandInstagramFilled,
+  IconBrandPinterest,
+  IconBrandThreads,
   IconBrandX,
   IconBrandYoutube,
 } from "@tabler/icons-react";
@@ -78,11 +80,11 @@ const integrations = [
 export default function HomePageFooter() {
   return (
     <section className="bg-white flex justify-center flex-col">
-      <div className="flex justify-center py-8">
-        <div className="max-w-7xl flex items-start justify-between w-full">
-          <div className="flex items-start gap-30">
+      <div className="flex justify-center py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl flex flex-col lg:flex-row items-start justify-between w-full gap-8 lg:gap-0">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap items-start gap-8 sm:gap-10 lg:gap-30 w-full lg:w-auto">
             {/* Products */}
-            <div className="flex flex-col justify-between h-full">
+            <div className="flex flex-col justify-between h-full w-full sm:w-auto">
               <div className="flex flex-col text-xs text-gray-700 gap-3">
                 <h4 className="text-xs font-semibold text-rateup-blue">
                   Product
@@ -100,7 +102,7 @@ export default function HomePageFooter() {
             </div>
 
             {/* Solutions + Company */}
-            <div className="flex flex-col justify-between h-full gap-10">
+            <div className="flex flex-col justify-between h-full gap-10 w-full sm:w-auto">
               <div className="flex flex-col text-xs text-gray-700 gap-3">
                 <h4 className="text-xs font-semibold text-rateup-blue">
                   Solutions
@@ -125,7 +127,7 @@ export default function HomePageFooter() {
             </div>
 
             {/* Resources + Pricing */}
-            <div className="flex flex-col justify-between h-full gap-35">
+            <div className="flex flex-col justify-between h-full gap-10 lg:gap-35 w-full sm:w-auto">
               <div className="flex flex-col text-xs text-gray-700 gap-3">
                 <h4 className="text-xs font-semibold text-rateup-blue">
                   Resources
@@ -150,7 +152,7 @@ export default function HomePageFooter() {
             </div>
 
             {/* Comparison + Integrations */}
-            <div className="flex flex-col justify-between h-full gap-17">
+            <div className="flex flex-col justify-between h-full gap-10 lg:gap-17 w-full sm:w-auto">
               <div className="flex flex-col text-xs text-gray-700 gap-3">
                 <h4 className="text-xs font-semibold text-rateup-blue">
                   Comparison
@@ -175,9 +177,15 @@ export default function HomePageFooter() {
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center min-w-[15vw] gap-20">
-            <div className="flex flex-col items-center justify-center gap-4">
-              <div className="border border-[#E2E5ED] rounded-xl px-4 py-2 flex w-[10vw] items-center justify-between cursor-pointer">
+          <div className="flex flex-col items-center justify-center w-full lg:min-w-[15vw] gap-8 lg:gap-20 mt-8 lg:mt-0">
+            <div className="flex flex-col items-center justify-center gap-4 w-full">
+              <Link
+                href={
+                  "https://play.google.com/store/apps/details?id=com.rateupapp.rateup&pcampaignid=web_share"
+                }
+                target="_blank"
+                className="border border-[#E2E5ED] rounded-xl px-4 py-2 flex w-full sm:w-[300px] lg:w-[12vw] items-center justify-between cursor-pointer"
+              >
                 <div>
                   <Image
                     src={`${imagePath}/homepage/googleplay.svg`}
@@ -191,8 +199,8 @@ export default function HomePageFooter() {
                   <span className="text-xs text-[#7A8289]">Get it on</span>
                   <span className="text-sm font-semibold">Google Play</span>
                 </div>
-              </div>
-              <div className="border border-[#E2E5ED] rounded-xl px-4 py-2 flex w-[10vw] items-center justify-between cursor-pointer">
+              </Link>
+              <div className="border border-[#E2E5ED] rounded-xl px-4 py-2 flex w-full sm:w-[300px] lg:w-[12vw] items-center justify-between cursor-pointer">
                 <div>
                   <Image
                     src={`${imagePath}/homepage/apple.svg`}
@@ -211,19 +219,40 @@ export default function HomePageFooter() {
               </div>
             </div>
 
-            <div>
-              <span>Follow Us</span>
-              <div className="flex items-center gap-4 justify-center">
-                <Link href={"#"}>
+            <div className="w-full">
+              <div className="text-center mb-2">Follow Us</div>
+              <div className="flex items-center gap-4 justify-center flex-wrap">
+                <Link
+                  href={"https://www.instagram.com/rateupsoftware"}
+                  target="_blank"
+                >
                   <IconBrandInstagram width={30} height={30} color="#D62976" />
                 </Link>
-                <Link href={"#"}>
+                <Link
+                  href={"https://www.facebook.com/rateupsapp"}
+                  target="_blank"
+                >
                   <IconBrandFacebook width={30} height={30} color="#1877F2" />
                 </Link>
-                <Link href={"#"}>
+                <Link href={"https://x.com/rateup_app"} target="_blank">
                   <IconBrandX width={30} height={30} color="#000000" />
                 </Link>
-                <Link href={"#"}>
+                <Link
+                  href={"https://www.pinterest.com/rateupapp/"}
+                  target="_blank"
+                >
+                  <IconBrandPinterest width={30} height={30} color="#FF0000" />
+                </Link>
+                <Link
+                  href={"https://www.threads.com/@rateupsoftware"}
+                  target="_blank"
+                >
+                  <IconBrandThreads width={30} height={30} color="#000000" />
+                </Link>
+                <Link
+                  href={"https://www.youtube.com/@TeamRateup"}
+                  target="_blank"
+                >
                   <IconBrandYoutube width={30} height={30} color="#FF0000" />
                 </Link>
               </div>
@@ -246,17 +275,17 @@ export default function HomePageFooter() {
           </div>
         </div>
       </div>
-      <div className="bg-rateup-darkblue flex items-center justify-between px-40 py-4">
-        <span className="bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] bg-clip-text text-transparent text-xs">
+      <div className="bg-rateup-darkblue flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 lg:px-40 py-4 gap-4">
+        <span className="bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] bg-clip-text text-transparent text-xs text-center sm:text-left">
           ©2025 RateUp. All rights reserved.
         </span>
-        <span>
-          <ul className="flex items-center justify-center gap-4 text-[#E2E5ED] text-xs">
+        <span className="w-full sm:w-auto">
+          <ul className="flex items-center justify-center flex-wrap gap-2 sm:gap-4 text-[#E2E5ED] text-xs">
             <li>
-              <Link href={"#"}>Privacy Policy</Link>
+              <Link href={"/privacy-policy"}>Privacy Policy</Link>
             </li>
             <li>
-              <Link href={"#"}>Terms of Service</Link>
+              <Link href={"/terms-of-service"}>Terms of Service</Link>
             </li>
             <li>
               <Link href={"#"}>Cookie Policy</Link>
