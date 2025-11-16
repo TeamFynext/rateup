@@ -14,7 +14,7 @@ interface DataTableToolbarProps<TData> {
 export function DataTableToolbar<TData>({
   table,
 }: Readonly<DataTableToolbarProps<TData>>) {
-  const isFiltered = table.getState().columnFilters.length > 0;
+  // const isFiltered = table.getState().columnFilters.length > 0;
 
   return (
     <div className="flex items-center justify-between">
@@ -28,7 +28,7 @@ export function DataTableToolbar<TData>({
           }}
           className="h-8 w-[150px] lg:w-[250px]"
         /> */}
-        {isFiltered && (
+        {/* {isFiltered && (
           <Button
             variant="ghost"
             size="sm"
@@ -37,7 +37,7 @@ export function DataTableToolbar<TData>({
             Reset
             <X />
           </Button>
-        )}
+        )} */}
       </div>
       <div className="flex items-center gap-2">
         <DataTableViewOptions table={table} />
