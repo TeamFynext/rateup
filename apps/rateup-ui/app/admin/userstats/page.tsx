@@ -431,16 +431,18 @@ const index = () => {
       <p className="text-sm text-muted-foreground">
         Manage and view all users in your system
       </p>
-      <DataTable
-        columns={columns}
-        data={tableData}
-        DataTableToolbar={DataTableToolbar}
-        onRowClick={(row) => {
-          const user = users?.find((user) => user.email === row.id);
-          setSelectedUser(user);
-          open();
-        }}
-      />
+      <div>
+        <DataTable
+          columns={columns}
+          data={tableData}
+          DataTableToolbar={DataTableToolbar}
+          onRowClick={(row) => {
+            const user = users?.find((user) => user.email === row.id);
+            setSelectedUser(user);
+            open();
+          }}
+        />
+      </div>
 
       <FormModalLayout
         centered

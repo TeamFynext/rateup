@@ -170,11 +170,13 @@ const Shopify = () => {
         View and manage all Shopify store integrations
       </p>
 
-      <DataTable
-        columns={columns}
-        data={tableData}
-        DataTableToolbar={DataTableToolbar}
-      />
+      <div>
+        <DataTable
+          columns={columns}
+          data={tableData}
+          DataTableToolbar={DataTableToolbar}
+        />
+      </div>
 
       <ConfirmationModal
         confirmLabel={translations("Yes")}

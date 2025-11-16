@@ -77,18 +77,17 @@ export function DataTable<TData, TValue>({
     state: {
       columnVisibility,
       rowSelection,
-      ...(isManualPagination
-        ? {
-            pagination: manualPagination.pagination,
-            sorting: manualPagination.sorting,
-            columnFilters: manualPagination.columnFilters,
-          }
-        : {
-            sorting,
-            columnFilters,
-          }),
+      ...(manualPagination?.pagination
+        ? { pagination: manualPagination.pagination }
+        : {}),
+      ...(manualPagination?.sorting
+        ? { sorting: manualPagination.sorting }
+        : { sorting }),
+      ...(manualPagination?.columnFilters
+        ? { columnFilters: manualPagination.columnFilters }
+        : { columnFilters }),
     },
-    ...(isManualPagination
+    ...(manualPagination?.rowCount
       ? { rowCount: manualPagination?.rowCount }
       : undefined),
     initialState: {
@@ -100,27 +99,30 @@ export function DataTable<TData, TValue>({
     manualPagination: isManualPagination,
     manualSorting: isManualPagination,
     manualFiltering: isManualPagination,
-    ...(isManualPagination
+    ...(manualPagination?.onPaginationChange
       ? {
           onPaginationChange: manualPagination.onPaginationChange,
         }
       : {}),
     onRowSelectionChange: setRowSelection,
-    onSortingChange: isManualPagination
+    onSortingChange: manualPagination?.onSortingChange
       ? manualPagination.onSortingChange
       : setSorting,
-    onColumnFiltersChange: isManualPagination
+    onColumnFiltersChange: manualPagination?.onColumnFiltersChange
       ? manualPagination.onColumnFiltersChange
       : setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
-    ...(isManualPagination
+    ...(manualPagination?.pagination
       ? {}
-      : {
-          getPaginationRowModel: getPaginationRowModel(),
-          getSortedRowModel: getSortedRowModel(),
-          getFilteredRowModel: getFilteredRowModel(),
-        }),
+      : { getPaginationRowModel: getPaginationRowModel() }),
+    ...(manualPagination?.sorting
+      ? {}
+      : { getSortedRowModel: getSortedRowModel() }),
+    ...(manualPagination?.columnFilters
+      ? {}
+      : { getFilteredRowModel: getFilteredRowModel() }),
+
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });

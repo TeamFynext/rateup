@@ -382,11 +382,13 @@ export default function SubscriptionPage() {
       <p className="text-sm text-muted-foreground">
         Manage and view all subscriptions in your system
       </p>
-      <DataTable
-        columns={columns}
-        data={tableData}
-        DataTableToolbar={DataTableToolbar}
-      />
+      <div>
+        <DataTable
+          columns={columns}
+          data={tableData}
+          DataTableToolbar={DataTableToolbar}
+        />
+      </div>
 
       <ConfirmationModal
         opened={openedDialog}

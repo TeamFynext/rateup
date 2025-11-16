@@ -393,13 +393,15 @@ const RateupPlan = () => {
       <p className="text-sm text-muted-foreground">
         Manage and configure all RateUp plans in your system
       </p>
-      <DataTable
-        columns={columns}
-        data={tableData}
-        DataTableToolbar={(props) => (
-          <DataTableToolbar {...props} onCreatePlan={toggle} />
-        )}
-      />
+      <div>
+        <DataTable
+          columns={columns}
+          data={tableData}
+          DataTableToolbar={(props) => (
+            <DataTableToolbar {...props} onCreatePlan={toggle} />
+          )}
+        />
+      </div>
 
       <RateupPlanModal opened={opened} close={close} planList={planList} />
 
