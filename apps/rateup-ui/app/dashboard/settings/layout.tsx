@@ -202,15 +202,13 @@ const SettingsLayout = ({ children }) => {
                     // Make each item the same height and center aligned so selected/unselected look identical height-wise
                     className={`w-full flex items-center gap-2.5 px-2.5 h-12 rounded-lg transition-all text-left ${
                       activeSection === item.id
-                        ? "bg-gradient-to-r from-rateup-blue/10 to-rateup-orange/10 border border-rateup-blue/20 shadow-sm"
+                        ? "bg-primary/10 border border-rateup-blue/20 shadow-sm"
                         : "hover:bg-muted/50 border border-transparent"
                     }`}
                   >
                     <div
                       className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        activeSection === item.id
-                          ? "bg-gradient-to-br from-rateup-blue to-rateup-orange"
-                          : "bg-muted"
+                        activeSection === item.id ? "bg-primary" : "bg-muted"
                       }`}
                     >
                       <item.icon

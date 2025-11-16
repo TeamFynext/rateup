@@ -270,7 +270,7 @@ export default function WhatsappTemplateById() {
   );
 
   const { data: catalog } = useConnectedWaCatalog(
-    form.values.defaultValues.whatsappSettingsPhoneId,
+    form.values.defaultValues?.whatsappSettingsPhoneId,
   );
   const productRetailerIds = useMemo(
     () => (catalog ? catalog.products?.map((p) => p.retailer_id) : []),

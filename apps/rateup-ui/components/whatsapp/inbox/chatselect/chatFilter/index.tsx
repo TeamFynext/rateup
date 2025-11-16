@@ -42,6 +42,7 @@ export type ChatFilter = {
   labels: string[];
   sortBy: "newest" | "oldest";
   category: "conversation" | "campaign" | "automation";
+  lifecycle?: string;
 };
 interface Props {
   setFilterCount: (value: number) => void;
@@ -156,6 +157,8 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
         WaMessageAssignStatus.CLOSED,
       ],
       assignedTeams: [],
+      labels: [],
+      lifecycle: "",
     });
   }
 
@@ -239,7 +242,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
           );
         }}
       />
-      {/* <ContainedMultiSelect
+      <ContainedMultiSelect
         radius="md"
         maw={250}
         value={filter.labels || []}
@@ -255,7 +258,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
           label: label.name,
         }))}
         searchable
-      /> */}
+      />
       {tab === "All" && (
         <div className="space-y-2">
           <span className="text-xs font-medium text-muted-foreground mb-2">
@@ -331,6 +334,7 @@ export const useChatFilterStore = create<ChatFilterStore>()(
         assignedTeams: [],
         phone: "all",
         labels: [],
+        lifecycle: "",
         sortBy: "newest",
         category: null,
       },

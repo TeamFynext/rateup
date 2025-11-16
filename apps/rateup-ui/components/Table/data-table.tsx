@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { ScrollArea, ScrollAreaAutosize } from "@mantine/core";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -44,6 +45,10 @@ interface DataTableProps<TData, TValue> {
     rowCount: number;
     sorting?: SortingState;
     onSortingChange?: (updater: React.SetStateAction<SortingState>) => void;
+    columnFilters?: ColumnFiltersState;
+    onColumnFiltersChange?: (
+      updater: React.SetStateAction<ColumnFiltersState>,
+    ) => void;
   };
 }
 
@@ -70,16 +75,18 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     state: {
-      sorting,
       columnVisibility,
       rowSelection,
-      columnFilters,
       ...(isManualPagination
         ? {
             pagination: manualPagination.pagination,
             sorting: manualPagination.sorting,
+            columnFilters: manualPagination.columnFilters,
           }
-        : undefined),
+        : {
+            sorting,
+            columnFilters,
+          }),
     },
     ...(isManualPagination
       ? { rowCount: manualPagination?.rowCount }
@@ -92,6 +99,7 @@ export function DataTable<TData, TValue>({
     enableRowSelection: true,
     manualPagination: isManualPagination,
     manualSorting: isManualPagination,
+    manualFiltering: isManualPagination,
     ...(isManualPagination
       ? {
           onPaginationChange: manualPagination.onPaginationChange,
@@ -101,73 +109,77 @@ export function DataTable<TData, TValue>({
     onSortingChange: isManualPagination
       ? manualPagination.onSortingChange
       : setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: isManualPagination
+      ? manualPagination.onColumnFiltersChange
+      : setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     ...(isManualPagination
       ? {}
       : {
           getPaginationRowModel: getPaginationRowModel(),
           getSortedRowModel: getSortedRowModel(),
+          getFilteredRowModel: getFilteredRowModel(),
         }),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 h-full">
       {DataTableToolbar && <DataTableToolbar table={table} />}
-      <div className="overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  onClick={() => onRowClick?.(row.original)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+      <div className="overflow-hidden rounded-md border h-full">
+        <ScrollAreaAutosize mah={"100%"}>
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id} colSpan={header.colSpan}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    onClick={() => onRowClick?.(row.original)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </ScrollAreaAutosize>
       </div>
       <DataTablePagination table={table} />
     </div>

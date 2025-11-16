@@ -151,11 +151,7 @@ export function EditTeam({
           {translations("Cancel")}
         </Button>
 
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
-        >
+        <Button type="submit" disabled={isLoading} className="bg-primary">
           {isLoading ? translations("Saving") : translations("Save Changes")}
         </Button>
       </div>
@@ -194,10 +190,7 @@ export function AddMembers({ selectedTeam, refetchTeams, translations }) {
         )}
         <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
           <DialogTrigger asChild>
-            <Button
-              size="sm"
-              className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
-            >
+            <Button size="sm" className="bg-primary">
               <Plus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">
                 {translations("Add Member")}
@@ -251,7 +244,7 @@ export function AddMembers({ selectedTeam, refetchTeams, translations }) {
                             <AvatarImage
                               src={getFileUrlFromKey(user?.profilePhoto)}
                             />
-                            <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs sm:text-sm">
+                            <AvatarFallback className="bg-primary text-white text-xs sm:text-sm">
                               {user.name?.toUpperCase().slice(0, 2)}
                             </AvatarFallback>
                           </Avatar>
@@ -384,7 +377,7 @@ export function TeamMember({
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <Avatar className="w-9 h-9 flex-shrink-0">
           <AvatarImage src={getFileUrlFromKey(member?.profilePhoto)} />
-          <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white text-xs sm:text-sm">
+          <AvatarFallback className="bg-primary text-white text-xs sm:text-sm">
             {member?.name?.toUpperCase().slice(0, 2)}
           </AvatarFallback>
         </Avatar>
@@ -517,7 +510,7 @@ export function DeleteTeam({
             />
             <Button
               size="sm"
-              className="bg-gradient-to-r from-rateup-blue to-rateup-blue min-w-full sm:min-w-18"
+              className="bg-primary min-w-full sm:min-w-18"
               onClick={handleSave}
               disabled={editTeamMutation.isPending}
             >

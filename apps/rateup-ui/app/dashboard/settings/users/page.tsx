@@ -277,7 +277,7 @@ export default function UsersPage() {
           onOpenChange={setIsAddUserDialogOpen}
         >
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-rateup-blue to-rateup-blue h-10">
+            <Button className="bg-primary h-10">
               <Plus className="w-4 h-4 mr-2" />
               {translations("Add New User")}
             </Button>
@@ -286,7 +286,7 @@ export default function UsersPage() {
           <DialogContent className="sm:max-w-xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                   <Plus className="w-4 h-4 text-white" />
                 </div>
                 {translations("Add New User")}
@@ -419,7 +419,7 @@ export default function UsersPage() {
                 <Button
                   type="submit"
                   disabled={addResourceMutation.isPending}
-                  className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
+                  className="bg-primary"
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
                   {addResourceMutation.isPending
@@ -464,7 +464,7 @@ export default function UsersPage() {
                         <AvatarImage
                           src={getFileUrlFromKey(user.profilePhoto)}
                         />
-                        <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white">
+                        <AvatarFallback className="bg-primary text-white">
                           {user.name?.toUpperCase().slice(0, 2)}
                         </AvatarFallback>
                       </Avatar>
@@ -561,7 +561,7 @@ export default function UsersPage() {
                 >
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
-                      <AvatarFallback className="bg-gradient-to-br from-rateup-orange to-yellow-500 text-white">
+                      <AvatarFallback className="bg-yellow-500 text-white">
                         {invite?.name?.toUpperCase().slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
@@ -674,7 +674,7 @@ function EditMember({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rateup-blue to-rateup-orange flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Pencil className="w-4 h-4 text-white" />
             </div>
             {translations("Edit User")}
@@ -695,7 +695,7 @@ function EditMember({
                   src={getFileUrlFromKey(selectedUser?.profilePhoto)}
                 />
 
-                <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-rateup-orange text-white">
+                <AvatarFallback className="bg-primary text-white">
                   <User className="w-12 h-12" />
                 </AvatarFallback>
               </Avatar>
@@ -816,7 +816,7 @@ function EditMember({
             {translations("Cancel")}
           </Button>
           <Button
-            className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
+            className="bg-primary"
             onClick={() => {
               setIsEditUserDialogOpen(false);
               setSelectedUser(null);
