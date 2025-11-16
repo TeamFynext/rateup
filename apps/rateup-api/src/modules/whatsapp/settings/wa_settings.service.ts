@@ -306,9 +306,7 @@ export async function getWaLogs(orgId: string, query: PaginationQuery) {
       orgId,
       phone: phone ? { contains: phone } : undefined,
     },
-    orderBy: {
-      createdAt: desc,
-    },
+    orderBy: [{ createdAt: desc }, { phone: desc }],
     skip: page && limit ? Number(page) * Number(limit) : undefined,
     take: limit ? Number(limit) : undefined,
   });

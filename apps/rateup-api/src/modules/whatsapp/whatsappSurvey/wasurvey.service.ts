@@ -152,7 +152,11 @@ export async function sendMessage(
     );
     return { status: true, message: messageId };
   } catch (e: any) {
-    console.log("🚀 ~ e:", e);
+    console.log("🚀 main:", {
+      orgId,
+      phone: to,
+      logs: e?.error,
+    });
     await handleWaMessages(
       "send",
       messageData,
@@ -165,6 +169,13 @@ export async function sendMessage(
       userId,
       true,
     );
+    await prisma.waLogs.create({
+      data: {
+        orgId,
+        phone: to,
+        logs: [e?.error],
+      },
+    });
     log.error("Error sending message", e);
     let errorMessage = `Failed to send message`;
     if (e instanceof GraphApiError) {
