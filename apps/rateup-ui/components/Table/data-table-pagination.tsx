@@ -23,7 +23,7 @@ export function DataTablePagination<TData>({
   table,
 }: Readonly<DataTablePaginationProps<TData>>) {
   return (
-    <div className="flex items-center justify-between px-2">
+    <div className="flex items-center justify-between border-t px-2 py-2">
       <div className="text-muted-foreground flex-1 text-sm">
         {table.getFilteredSelectedRowModel().rows.length} of{" "}
         {table.getFilteredRowModel().rows.length} row(s) selected.
@@ -49,7 +49,7 @@ export function DataTablePagination<TData>({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+        <div className="flex items-center justify-center text-sm font-medium">
           Page {table.getState().pagination.pageIndex + 1} of{" "}
           {table.getPageCount()}
         </div>

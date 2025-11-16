@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
-import { ActionIcon, Box, List, Tooltip } from "@mantine/core";
+import { List } from "@mantine/core";
 import { useDebouncedState } from "@mantine/hooks";
-import { IconCheck, IconRefresh } from "@tabler/icons-react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -12,14 +11,13 @@ import {
 } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { useTranslations } from "next-intl";
 
 import { useWaLogs } from "@/backend/whatsapp/settings/waSettings.query";
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import ContactTable from "@/components/Table/ContactTable";
-import { PAGE_SIZE } from "@/utils/constants";
-import { showLoadingToast, showSuccessToast } from "@/utils/notifications";
+import { createSortableHeader, DataTable } from "@/components/Table/data-table";
+import { Spinner } from "@/components/ui/spinner";
+
+import { DataTableToolbar } from "./data-table-toolbar";
 
 dayjs.extend(utc);
 
@@ -29,89 +27,95 @@ const Logs = () => {
     useDebouncedState<ColumnFiltersState>([], 200);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: PAGE_SIZE[0],
+    pageSize: 25,
   });
-  const [searchText, setSearchText] = useDebouncedState("", 200);
-  const { data, isPending, refetch } = useWaLogs(
+
+  const { data, isPending } = useWaLogs(
     pagination,
-    searchText,
+    "",
     sorting?.[0],
     columnFilters,
   );
-  const translations = useTranslations();
 
   const columns: ColumnDef<any>[] = [
     {
-      header: () => "Time",
+      header: createSortableHeader("Timestamp"),
       accessorKey: "createdAt",
       cell: (info) =>
         info.getValue() &&
         dayjs.utc(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
     },
     {
-      header: () => "Phone",
+      header: () => "Phone Number",
       accessorKey: "phone",
     },
     {
-      header: () => "Error",
+      header: () => "Error Messages",
       id: "logs",
       enableColumnFilter: false,
       accessorFn: (row) => row?.logs,
       cell: (info) => {
-        const logs = info.getValue() as { code: number; title: string }[];
+        const logs = info.getValue() as {
+          code: number;
+          title: string;
+          message: string;
+        }[];
         return (
-          <List size="sm" variant="" icon={logs?.length > 0 && <></>}>
+          <List size="sm" variant="">
             {logs?.map((data, index) => (
-              <List.Item key={data?.code || index}>{data?.title}</List.Item>
+              <List.Item key={data?.code || index}>
+                {data?.message || data?.title}
+              </List.Item>
+            ))}
+          </List>
+        );
+      },
+    },
+    {
+      header: () => "Error Details",
+      id: "logsDetail",
+      enableColumnFilter: false,
+      accessorFn: (row) => row?.logs,
+      cell: (info) => {
+        const logs = info.getValue() as {
+          code: number;
+          error_data: {
+            details: string;
+          };
+        }[];
+        return (
+          <List size="sm" variant="">
+            {logs?.map((data, index) => (
+              <List.Item key={data?.code || index}>
+                {data?.error_data?.details || "N/A"}
+              </List.Item>
             ))}
           </List>
         );
       },
     },
   ];
-  const refreshButton = (
-    <Tooltip label={translations("Refresh")}>
-      <ActionIcon
-        variant="light"
-        onClick={async () => {
-          showLoadingToast(
-            translations("Data getting loaded"),
-            "contacts",
-            true,
-            translations("Loading"),
-          );
-          await refetch();
-          showSuccessToast(
-            translations("Data updated"),
-            "contacts",
-            <IconCheck />,
-            true,
-          );
-        }}
-      >
-        <IconRefresh stroke={1.5} />
-      </ActionIcon>
-    </Tooltip>
-  );
+  if (isPending)
+    return (
+      <div className="flex justify-center items-center h-full">
+        <Spinner />
+      </div>
+    );
   return (
-    <Box m={"xs"} h={"97%"}>
-      <PaperLayout p={0} h={"100%"}>
-        <ContactTable
-          data={data?.logs ?? []}
-          columns={columns}
-          isPending={isPending}
-          refetch={refetch}
-          setSorting={setSorting}
-          sorting={sorting}
-          columnFilters={columnFilters}
-          setColumnFilters={setColumnFilters}
-          setPagination={setPagination}
-          pagination={pagination}
-          leftSection={refreshButton}
-          totalCount={data?.totalCount ?? 0}
-        />
-      </PaperLayout>
-    </Box>
+    <DataTable
+      columns={columns}
+      data={(data?.logs as any) ?? []}
+      DataTableToolbar={DataTableToolbar}
+      manualPagination={{
+        pagination,
+        onPaginationChange: (updater) => setPagination(updater),
+        rowCount: data?.totalCount || 0,
+        sorting,
+        onSortingChange: (updater) => setSorting(updater),
+        columnFilters,
+        onColumnFiltersChange: (updater) => setColumnFilters(updater),
+      }}
+    />
   );
 };
 
