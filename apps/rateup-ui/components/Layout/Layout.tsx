@@ -1095,6 +1095,7 @@ const MainContent = ({
   setNavOpened,
   labels,
   customFieldData,
+  pathname,
 }) => {
   return (
     <motion.div className={styles["content-container"]}>
@@ -1102,7 +1103,14 @@ const MainContent = ({
         <LabelsContext value={labels}>
           <CustomFieldsProvider initialFields={customFieldData || []}>
             <NavControlContext value={{ navOpened, setNavOpened }}>
-              <div className={styles["content-div"]}>{children}</div>
+              <div
+                className={styles["content-div"]}
+                style={{
+                  padding: pathname?.includes("inbox") ? "0px" : "7px",
+                }}
+              >
+                {children}
+              </div>
             </NavControlContext>
           </CustomFieldsProvider>
         </LabelsContext>
@@ -1395,7 +1403,6 @@ export default function Layout({ children }) {
           collapsed: { mobile: !mobileOpened },
         }}
         footer={{ height: 0 }}
-        padding={activeMainLink === "Inbox" ? undefined : 7}
         layout="alt"
       >
         <AppShell.Header zIndex={0}>
@@ -1432,6 +1439,7 @@ export default function Layout({ children }) {
             setNavOpened={setNavOpened}
             labels={labels}
             customFieldData={customFieldData}
+            pathname={pathname}
           >
             {children}
           </MainContent>
