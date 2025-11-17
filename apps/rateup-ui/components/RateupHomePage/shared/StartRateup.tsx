@@ -1,21 +1,16 @@
 "use client";
 
-import { Sora } from "next/font/google";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { IconClockX, IconCreditCardOff } from "@tabler/icons-react";
-import { motion, type Transition } from "framer-motion";
+import { motion, Transition } from "motion/react";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
 import { Separator } from "@/components/ui/separator";
+import { sora } from "@/utils/fonts";
 
 import { BookDemoModal } from "../helpers/BookDemoModal";
-
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 const heroGraphic = `${imagePath}/homepage/GRAPHICS.png`;
 
@@ -80,7 +75,7 @@ export default function StartRateupHero() {
             </h1>
 
             <div className="flex flex-col items-center justify-center gap-2">
-              <span className="font-semibold block bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl">
+              <span className="font-semibold block bg-gradient-to-r from-rateup-blue-3 to-rateup-blue-2 bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl">
                 with RateUp
               </span>
 
@@ -90,7 +85,7 @@ export default function StartRateupHero() {
                 whileInView={{ scaleX: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="h-[6px] w-40 sm:w-60 rounded-full bg-[#C4D7F5]"
+                className="h-[6px] w-40 sm:w-60 rounded-full bg-rateup-light-blue"
               />
             </div>
           </motion.div>
@@ -116,9 +111,9 @@ export default function StartRateupHero() {
                 {looped.map((label, idx) => (
                   <div
                     key={`${label}-${idx}`}
-                    className="inline-flex items-center gap-2 px-4 py-1 text-[10px] sm:text-xs text-[#bcd8ff]"
+                    className="inline-flex items-center gap-2 px-4 py-1 text-[10px] sm:text-xs text-rateup-light-blue-3"
                   >
-                    <span className="h-2 w-2 rounded-full bg-[#36d07e]" />
+                    <span className="h-2 w-2 rounded-full bg-active-green-3" />
                     <span>{label}</span>
                   </div>
                 ))}
@@ -139,7 +134,7 @@ export default function StartRateupHero() {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 transition={{ type: "spring", stiffness: 250, damping: 18 }}
-                className="bg-rateup-blue hover:bg-[#0b4d95] transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base"
+                className="bg-rateup-blue hover:bg-rateup-darkblue-2 transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base"
                 onClick={() => router.push("/signup")}
               >
                 Start Free Trial
@@ -148,7 +143,7 @@ export default function StartRateupHero() {
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   transition={{ type: "spring", stiffness: 250, damping: 18 }}
-                  className="bg-rateup-gold hover:bg-[#d46c00] transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base"
+                  className="bg-rateup-gold hover:bg-rateup-orange transition px-4 py-2 rounded-sm text-white font-semibold text-sm sm:text-base"
                 >
                   Book A Demo
                 </motion.button>
@@ -159,12 +154,12 @@ export default function StartRateupHero() {
 
             {/* Feature icons */}
             <div className="flex items-center justify-center gap-8 sm:gap-10">
-              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-[#cfe8ff]">
-                <IconCreditCardOff className="text-[#2D74E0]" />
+              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-rateup-light-blue-3">
+                <IconCreditCardOff className="text-rateup-blue-2" />
                 No Credit Card
               </div>
-              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-[#cfe8ff]">
-                <IconClockX className="text-[#2D74E0]" />
+              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-rateup-light-blue-3">
+                <IconClockX className="text-rateup-blue-2" />
                 No Expiry
               </div>
             </div>

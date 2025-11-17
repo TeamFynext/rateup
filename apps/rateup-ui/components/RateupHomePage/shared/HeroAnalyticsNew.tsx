@@ -1,15 +1,10 @@
-import { Sora } from "next/font/google";
-
 import {
   IconMessageCirclePlus,
   IconRefresh,
   IconUser,
 } from "@tabler/icons-react";
 
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { sora } from "@/utils/fonts";
 
 export default function HeroAnalytics() {
   return (
@@ -24,7 +19,7 @@ export default function HeroAnalytics() {
         <span className="text-rateup-graytext font-semibold mt-2 text-base md:text-lg">
           More Engagement
         </span>
-        <div className="flex items-center justify-center gap-2 bg-[#F5F5F5] rounded-full mt-4 px-3 py-1">
+        <div className="flex items-center justify-center gap-2 bg-grey-color-5 rounded-full mt-4 px-3 py-1">
           <div className="flex items-center justify-center p-1 bg-rateup-graytext rounded-full">
             <IconMessageCirclePlus className="text-white h-4 w-4" />
           </div>
@@ -42,7 +37,7 @@ export default function HeroAnalytics() {
         <span className="text-rateup-graytext font-semibold mt-2 text-base md:text-lg">
           Less Manual Effort
         </span>
-        <div className="flex items-center justify-center gap-2 bg-[#F5F5F5] rounded-full mt-4 px-3 py-1">
+        <div className="flex items-center justify-center gap-2 bg-grey-color-5 rounded-full mt-4 px-3 py-1">
           <div className="flex items-center justify-center p-1 bg-rateup-graytext rounded-full">
             <IconRefresh className="text-white h-4 w-4" />
           </div>
@@ -60,7 +55,7 @@ export default function HeroAnalytics() {
         <span className="text-rateup-graytext font-semibold mt-2 text-base md:text-lg">
           Higher Customer Retention
         </span>
-        <div className="flex items-center justify-center gap-2 bg-[#F5F5F5] rounded-full mt-4 px-3 py-1">
+        <div className="flex items-center justify-center gap-2 bg-grey-color-5 rounded-full mt-4 px-3 py-1">
           <div className="flex items-center justify-center p-1 bg-rateup-graytext rounded-full">
             <IconUser className="text-white h-4 w-4" />
           </div>

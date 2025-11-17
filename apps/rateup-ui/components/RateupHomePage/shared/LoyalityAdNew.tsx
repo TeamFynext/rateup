@@ -1,18 +1,13 @@
 "use client";
 
-import { Sora } from "next/font/google";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { IconArrowRight } from "@tabler/icons-react";
-import { motion, type Variants } from "framer-motion";
+import { motion, Variants } from "motion/react";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
-
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { sora } from "@/utils/fonts";
 
 const containerVariants: Variants = {
   hidden: {},

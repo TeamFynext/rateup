@@ -3,15 +3,12 @@ import Link from "next/link";
 
 import {
   IconBrandFacebook,
-  IconBrandFacebookFilled,
   IconBrandInstagram,
-  IconBrandInstagramFilled,
   IconBrandPinterest,
   IconBrandThreads,
   IconBrandX,
   IconBrandYoutube,
 } from "@tabler/icons-react";
-import { InstagramIcon } from "next-share";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
 
@@ -184,7 +181,7 @@ export default function HomePageFooter() {
                   "https://play.google.com/store/apps/details?id=com.rateupapp.rateup&pcampaignid=web_share"
                 }
                 target="_blank"
-                className="border border-[#E2E5ED] rounded-xl px-4 py-2 flex w-full sm:w-[300px] lg:w-[12vw] items-center justify-between cursor-pointer"
+                className="border border-light-blue-5 rounded-xl px-4 py-2 flex w-[60vw] sm:w-[300px] lg:w-[12vw] items-center justify-between cursor-pointer"
               >
                 <div>
                   <Image
@@ -196,11 +193,11 @@ export default function HomePageFooter() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs text-[#7A8289]">Get it on</span>
+                  <span className="text-xs text-grey-color-6">Get it on</span>
                   <span className="text-sm font-semibold">Google Play</span>
                 </div>
               </Link>
-              <div className="border border-[#E2E5ED] rounded-xl px-4 py-2 flex w-full sm:w-[300px] lg:w-[12vw] items-center justify-between cursor-pointer">
+              <div className="border border-light-blue-5 rounded-xl px-4 py-2 flex w-[60vw] sm:w-[300px] lg:w-[12vw] items-center justify-between cursor-pointer">
                 <div>
                   <Image
                     src={`${imagePath}/homepage/apple.svg`}
@@ -211,7 +208,7 @@ export default function HomePageFooter() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs text-[#7A8289]">
+                  <span className="text-xs text-grey-color-6">
                     Download on the
                   </span>
                   <span className="text-sm font-semibold">App Store</span>
@@ -269,18 +266,20 @@ export default function HomePageFooter() {
               </div>
               <div className="flex flex-col items-start justify-center">
                 <span className="font-semibold text-base">Meta</span>
-                <span className="text-sm text-[#7A8289]">Business Partner</span>
+                <span className="text-sm text-grey-color-6">
+                  Business Partner
+                </span>
               </div>
             </div>
           </div>
         </div>
       </div>
       <div className="bg-rateup-darkblue flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 lg:px-40 py-4 gap-4">
-        <span className="bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] bg-clip-text text-transparent text-xs text-center sm:text-left">
+        <span className="bg-gradient-to-r from-rateup-blue-3 to-rateup-blue-2 bg-clip-text text-transparent text-xs text-center sm:text-left">
           ©2025 RateUp. All rights reserved.
         </span>
         <span className="w-full sm:w-auto">
-          <ul className="flex items-center justify-center flex-wrap gap-2 sm:gap-4 text-[#E2E5ED] text-xs">
+          <ul className="flex items-center justify-center flex-wrap gap-2 sm:gap-4 text-light-blue-5 text-xs">
             <li>
               <Link href={"/privacy-policy"}>Privacy Policy</Link>
             </li>

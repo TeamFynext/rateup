@@ -1,16 +1,11 @@
 "use client";
 
-import { Sora } from "next/font/google";
 import Image from "next/image";
 
 import { motion } from "motion/react";
 
 import { imagesPath } from "@/utils/constants";
-
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { sora } from "@/utils/fonts";
 
 const logo1 = `${imagesPath}/homepage/CLIENTS/1.png`;
 const logo2 = `${imagesPath}/homepage/CLIENTS/2.png`;
@@ -51,19 +46,19 @@ const ClientLogos = () => {
     <section
       className={`flex items-center justify-center py-6 sm:py-8 lg:pb-7 ${sora.className}`}
     >
-      <div className="border border-[#E2E5ED] w-[95vw] sm:w-[90vw] lg:w-[80vw] flex flex-col sm:flex-row items-stretch justify-between rounded-lg overflow-hidden">
+      <div className="border border-light-blue-5 w-[95vw] sm:w-[90vw] lg:w-[80vw] flex flex-col sm:flex-row items-stretch justify-between rounded-lg overflow-hidden">
         {/* Left Section */}
-        <div className="flex flex-col items-center justify-center px-4 sm:px-6 w-full sm:w-[200px] lg:w-[13vw] bg-[#F5F5F5] text-center">
-          <span className="text-[#7A8289] text-sm sm:text-base font-semibold">
+        <div className="flex flex-col items-center justify-center px-4 sm:px-6 w-full sm:w-[200px] lg:w-[13vw] bg-grey-color-5 text-center">
+          <span className="text-rateup-lightgraytext text-sm sm:text-base font-semibold">
             Trusted By
           </span>
-          <span className="bg-gradient-to-r from-[#004F98] to-[#001747] bg-clip-text text-transparent font-bold text-base sm:text-lg lg:text-xl">
+          <span className="bg-gradient-to-r from-rateup-blue to-rateup-darkblue bg-clip-text text-transparent font-bold text-base sm:text-lg lg:text-xl">
             100+ Clients
           </span>
         </div>
 
         {/* Scrolling Logos */}
-        <div className="relative overflow-hidden w-full border-t sm:border-t-0 sm:border-l border-[#E2E5ED] py-4 flex items-center">
+        <div className="relative overflow-hidden w-full border-t sm:border-t-0 sm:border-l border-light-blue-5 py-4 flex items-center">
           <motion.div
             className="flex gap-8 sm:gap-12 min-w-max"
             animate={{ x: ["0%", "-50%"] }}

@@ -100,6 +100,7 @@
   --gift-black: #2f2f2f;
   --sucess-green: #39c907;
   --active-green-2: #69f0ae;
+  --active-green-3: #36d07e;
   --pink: #cc2960;
   --text-color-sp: light-dark(var(--grey-color), white);
   /* colors of ticket board */
@@ -117,8 +118,15 @@
   --rateup-gold: #eb7d00;
   --rateup-orange-foreground: oklch(1 0 0);
   --rateup-graytext: #343a40;
+  --rateup-lightgraytext: #7a8289;
   --rateup-dark-blue: #001747;
+  --rateup-dark-blue-2: #052259;
   --rateup-blue: #004f98;
+  --rateup-blue-2: #2d74e0;
+  --rateup-blue-3: #66d7ff;
+  --rateup-light-blue: #c4d7f5;
+  --rateup-light-blue-2: #93c6f5;
+  --rateup-light-blue-3: #bcd8ff;
   --rateup-blue-foreground: oklch(1 0 0);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
@@ -198,10 +206,23 @@
   --color-rateup-orange: var(--rateup-orange);
   --color-rateup-orange-foreground: var(--rateup-orange-foreground);
   --color-rateup-blue: var(--rateup-blue);
+  --color-rateup-blue-2: var(--rateup-blue-2);
+  --color-rateup-blue-3: var(--rateup-blue-3);
   --color-rateup-blue-foreground: var(--rateup-blue-foreground);
   --color-rateup-graytext: var(--rateup-graytext);
+  --color-rateup-lightgraytext: var(--rateup-lightgraytext);
   --color-rateup-darkblue: var(--rateup-dark-blue);
+  --color-rateup-darkblue-2: var(--rateup-dark-blue-2);
+  --color-rateup-light-blue: var(--rateup-light-blue);
+  --color-rateup-light-blue-2: var(--rateup-light-blue-2);
+  --color-rateup-light-blue-3: var(--rateup-light-blue-3);
   --color-rateup-gold: var(--rateup-gold);
+  --color-grey-color-5: var(--grey-color-5);
+  --color-grey-color-6: var(--grey-color-6);
+  --color-grey-color-7: var(--grey-color-7);
+  --color-light-blue-5: var(--light-blue-5);
+  --color-active-green-2: var(--active-green-2);
+  --color-active-green-3: var(--active-green-3);
 }
 
 @layer base {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Sora } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -15,11 +14,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 
 import { imagesPath } from "@/utils/constants";
-
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { sora } from "@/utils/fonts";
 
 type TabKey =
   | "Smart Automation & AI Chatbot"

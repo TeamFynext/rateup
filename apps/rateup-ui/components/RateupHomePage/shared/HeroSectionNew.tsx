@@ -1,21 +1,16 @@
 import { useState } from "react";
-import { Sora } from "next/font/google";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { IconCheck } from "@tabler/icons-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
 import { Separator } from "@/components/ui/separator";
 import { imagesPath } from "@/utils/constants";
+import { sora } from "@/utils/fonts";
 
 import { BookDemoModal } from "../helpers/BookDemoModal";
-
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 export default function HeroSection() {
   const router = useRouter();
@@ -27,7 +22,7 @@ export default function HeroSection() {
     >
       {/* Heading */}
       <div className="flex flex-col items-center justify-center gap-2 max-w-4xl text-center">
-        <span className="text-[#E2E5ED] font-semibold text-xl sm:text-4xl md:text-5xl leading-tight">
+        <span className="text-light-blue-5 font-semibold text-xl sm:text-4xl md:text-5xl leading-tight">
           Reimagine Customer Engagement -
         </span>
 
@@ -42,14 +37,14 @@ export default function HeroSection() {
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute -bottom-2 left-0 right-0 h-1.5 sm:h-2 md:h-2.5 bg-[#C4D7F5] rounded-full origin-left"
+            className="absolute -bottom-2 left-0 right-0 h-1.5 sm:h-2 md:h-2.5 bg-rateup-light-blue rounded-full origin-left"
           />
         </div>
       </div>
 
       {/* Subtext */}
       <div className="flex flex-col items-center justify-center text-center max-w-2xl">
-        <span className="text-[#93C6F5] font-normal sm:font-medium text-xs sm:text-sm">
+        <span className="text-rateup-light-blue-2 font-normal sm:font-medium text-xs sm:text-sm">
           Unify all customer chats in one intelligent platform. RateUp
           automates, analyzes, and connects — helping you engage smarter across
           every channel.
@@ -83,19 +78,21 @@ export default function HeroSection() {
         {/* Checkpoints */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center p-1.5 bg-[#69F0AE] rounded-full">
+            <div className="flex items-center justify-center p-1.5 bg-active-green-2 rounded-full">
               <IconCheck className="h-3 w-3 sm:h-4 sm:w-4" />
             </div>
-            <span className="text-[#E2E5ED] text-xs sm:text-sm">
+            <span className="text-light-blue-5 text-xs sm:text-sm">
               No Credit Card
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center p-1.5 bg-[#69F0AE] rounded-full">
+            <div className="flex items-center justify-center p-1.5 bg-active-green-2 rounded-full">
               <IconCheck className="h-3 w-3 sm:h-4 sm:w-4" />
             </div>
-            <span className="text-[#E2E5ED] text-xs sm:text-sm">No Expiry</span>
+            <span className="text-light-blue-5 text-xs sm:text-sm">
+              No Expiry
+            </span>
           </div>
         </div>
       </div>

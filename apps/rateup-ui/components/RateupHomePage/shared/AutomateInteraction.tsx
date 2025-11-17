@@ -1,6 +1,5 @@
 "use client";
 
-import { Sora } from "next/font/google";
 import Image from "next/image";
 
 import {
@@ -9,14 +8,10 @@ import {
   IconCode,
   IconHeadphones,
 } from "@tabler/icons-react";
-import { motion, type Transition } from "framer-motion";
+import { motion, type Transition } from "motion/react";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
-
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { sora } from "@/utils/fonts";
 
 // typed transition used for entry animations
 const springUp: Transition = { type: "spring", stiffness: 120, damping: 18 };
@@ -67,7 +62,7 @@ export default function AutomateInteraction() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ ...springUp, delay: 0.08 }}
-            className="inline-flex items-center bg-[#F5F5F5] rounded-full py-1 px-3 gap-2"
+            className="inline-flex items-center bg-grey-color-5 rounded-full py-1 px-3 gap-2"
           >
             <div className="bg-rateup-graytext p-1 rounded-full flex justify-center items-center">
               <IconClock className="text-white h-4 w-4 sm:h-5 sm:w-5" />
@@ -83,7 +78,7 @@ export default function AutomateInteraction() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ ...springUp, delay: 0.14 }}
-            className="inline-flex items-center bg-[#F5F5F5] rounded-full py-1 px-3 gap-2"
+            className="inline-flex items-center bg-grey-color-5 rounded-full py-1 px-3 gap-2"
           >
             <div className="bg-rateup-graytext p-1 rounded-full flex justify-center items-center">
               <IconCode className="text-white h-4 w-4 sm:h-5 sm:w-5" />
@@ -99,7 +94,7 @@ export default function AutomateInteraction() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ ...springUp, delay: 0.2 }}
-            className="inline-flex items-center bg-[#F5F5F5] rounded-full py-1 px-3 gap-2"
+            className="inline-flex items-center bg-grey-color-5 rounded-full py-1 px-3 gap-2"
           >
             <div className="bg-rateup-graytext p-1 rounded-full flex justify-center items-center">
               <IconHeadphones className="text-white h-4 w-4 sm:h-5 sm:w-5" />

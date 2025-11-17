@@ -1,16 +1,11 @@
-import { Sora } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 
 import { IconArrowRight } from "@tabler/icons-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 import { imagesPath } from "@/utils/constants";
-
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { sora } from "@/utils/fonts";
 
 const features = [
   {
@@ -52,11 +47,11 @@ export default function FeatureCards2() {
       className={`relative h-auto lg:h-[400vh] bg-white px-4 py-16 ${sora.className}`}
     >
       <div className="relative lg:absolute inset-x-0 top-0 lg:top-10 z-30 flex flex-col items-center text-center pointer-events-none mb-12 lg:mb-0">
-        <span className="pointer-events-auto text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-[#343A40]">
+        <span className="pointer-events-auto text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-grey-color-7">
           Powerful Features For
         </span>
         <div className="relative inline-block pointer-events-auto">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#001747] to-[#004F98] text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-rateup-darkblue to-rateup-blue text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold">
             Modern Businesses
           </span>
           {/* animated underline... */}
@@ -64,7 +59,7 @@ export default function FeatureCards2() {
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="absolute bottom-0 left-0 right-0 h-[4px] sm:h-[6px] bg-gradient-to-r from-[#66D7FF] to-[#2D74E0] rounded-full origin-left"
+            className="absolute bottom-0 left-0 right-0 h-[4px] sm:h-[6px] bg-gradient-to-r from-rateup-blue-3 to-rateup-blue-2 rounded-full origin-left"
           />
         </div>
       </div>
@@ -102,7 +97,7 @@ export default function FeatureCards2() {
                 </span>
 
                 <p
-                  className={`text-xs sm:text-sm md:text-base text-[#93C6F5] max-w-xl`}
+                  className={`text-xs sm:text-sm md:text-base text-rateup-light-blue-2 max-w-xl`}
                 >
                   {feature.description}
                 </p>

@@ -1,15 +1,10 @@
-import { Sora } from "next/font/google";
 import Image from "next/image";
 
 import { motion } from "framer-motion";
-import type { Variants } from "framer-motion";
+import { Variants } from "motion/react";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
-
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { sora } from "@/utils/fonts";
 
 const containerVariants: Variants = {
   hidden: {},
@@ -59,7 +54,7 @@ export default function Features() {
       <div className="max-w-6xl flex flex-col items-center justify-center gap-3">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <motion.div
-            className="border border-[#C4D7F5] rounded-xl col-span-2 flex flex-col justify-center items-start gap-2"
+            className="border border-rateup-light-blue rounded-xl col-span-2 flex flex-col justify-center items-start gap-2"
             variants={cardVariantsLeft}
             whileHover={{ y: -6, scale: 1.008 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -68,7 +63,7 @@ export default function Features() {
               <span className="text-rateup-graytext text-xl font-semibold">
                 Campaign Management
               </span>
-              <p className="text-[#7A8289] text-xs font-normal">
+              <p className="text-grey-color-6 text-xs font-normal">
                 Turn Campaigns into Conversations / Conversations That Sell.
                 Send promos, reminders, or surveys in minutes—no tech skills
                 needed. Manage campaigns across channels with ease.
@@ -88,7 +83,7 @@ export default function Features() {
           </motion.div>
 
           <motion.div
-            className="border border-[#C4D7F5] rounded-xl flex flex-col justify-center items-start gap-2"
+            className="border border-rateup-light-blue rounded-xl flex flex-col justify-center items-start gap-2"
             variants={cardVariantsRight}
             whileHover={{ y: -6, scale: 1.008 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -97,7 +92,7 @@ export default function Features() {
               <span className="text-rateup-graytext text-xl font-semibold">
                 WhatsApp Business API
               </span>
-              <p className="text-[#7A8289] text-xs font-normal">
+              <p className="text-grey-color-6 text-xs font-normal">
                 Official WhatsApp Business API integration with bulk messaging,
                 templates, and automated responses.
               </p>
@@ -117,7 +112,7 @@ export default function Features() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <motion.div
-            className="border border-[#C4D7F5] rounded-xl flex flex-col justify-center items-start gap-2"
+            className="border border-rateup-light-blue rounded-xl flex flex-col justify-center items-start gap-2"
             variants={cardVariantsLeft}
             whileHover={{ y: -6, scale: 1.008 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -126,7 +121,7 @@ export default function Features() {
               <span className="text-rateup-graytext text-xl font-semibold">
                 Ticketing & Escalation
               </span>
-              <p className="text-[#7A8289] text-xs font-normal">
+              <p className="text-grey-color-6 text-xs font-normal">
                 Convert support inquiries and complaints into trackable tickets
                 that can be automatically or manually assigned to team members.
               </p>
@@ -144,7 +139,7 @@ export default function Features() {
           </motion.div>
 
           <motion.div
-            className="border border-[#C4D7F5] rounded-xl col-span-2 flex flex-col justify-center items-start gap-2"
+            className="border border-rateup-light-blue rounded-xl col-span-2 flex flex-col justify-center items-start gap-2"
             variants={cardVariantsRight}
             whileHover={{ y: -6, scale: 1.008 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -153,7 +148,7 @@ export default function Features() {
               <span className="text-rateup-graytext text-xl font-semibold">
                 Multi-branch
               </span>
-              <p className="text-[#7A8289] text-xs font-normal">
+              <p className="text-grey-color-6 text-xs font-normal">
                 Super admins can add unlimited branches, track performance, and
                 compare results across teams. Branch members see only their own
                 activities, while admins oversee everything —ensuring service
@@ -175,7 +170,7 @@ export default function Features() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <motion.div
-            className="border border-[#C4D7F5] rounded-xl col-span-2 flex flex-col justify-center items-start gap-2"
+            className="border border-rateup-light-blue rounded-xl col-span-2 flex flex-col justify-center items-start gap-2"
             variants={cardVariantsLeft}
             whileHover={{ y: -6, scale: 1.008 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -184,7 +179,7 @@ export default function Features() {
               <span className="text-rateup-graytext text-xl font-semibold">
                 WhatsApp Flow
               </span>
-              <p className="text-[#7A8289] text-xs font-normal">
+              <p className="text-grey-color-6 text-xs font-normal">
                 Build smart, automated workflows that respond instantly,
                 personalize conversations, and move customers from hello to
                 purchase — effortlessly.
@@ -203,7 +198,7 @@ export default function Features() {
           </motion.div>
 
           <motion.div
-            className="border border-[#C4D7F5] rounded-xl p-4"
+            className="border border-rateup-light-blue rounded-xl p-4"
             variants={cardVariantsRight}
             whileHover={{ y: -6, scale: 1.008 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -212,7 +207,7 @@ export default function Features() {
               <span className="text-rateup-graytext text-xl font-semibold">
                 QR Codes: Offline → Online
               </span>
-              <p className="text-[#7A8289] text-xs font-normal">
+              <p className="text-grey-color-6 text-xs font-normal">
                 Turn receipts, posters, or tables into digital touchpoints for
                 offers, feedback, or loyalty sign-ups.
               </p>

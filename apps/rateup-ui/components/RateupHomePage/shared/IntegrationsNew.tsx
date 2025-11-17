@@ -1,14 +1,9 @@
-import { Sora } from "next/font/google";
 import Image from "next/image";
 
-import { motion, type Transition, type Variants } from "framer-motion";
+import { motion, Transition, Variants } from "motion/react";
 
 import { imagePath } from "@/components/HomePage/pages/constants";
-
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
+import { sora } from "@/utils/fonts";
 
 const container: Variants = {
   hidden: {},
@@ -50,7 +45,7 @@ export default function Integration() {
           variants={illustrationVariant}
         >
           {/* Background Illustration */}
-          <div className="w-full rounded-t-2xl overflow-hidden bg-[#C4D7F5] p-10">
+          <div className="w-full rounded-t-2xl overflow-hidden bg-rateup-light-blue p-10">
             <Image
               src={`${imagePath}/homepage/Integrationssvg.svg`}
               alt="Integrations flow illustration"
@@ -86,14 +81,14 @@ export default function Integration() {
 
         {/* Card-like content area */}
         <motion.div
-          className="w-full bg-[#052259] rounded-b-2xl px-6 py-10 sm:px-12 sm:py-14 flex flex-col items-center justify-center gap-4 text-center"
+          className="w-full bg-rateup-darkblue-2 rounded-b-2xl px-6 py-10 sm:px-12 sm:py-14 flex flex-col items-center justify-center gap-4 text-center"
           variants={contentVariant}
         >
           <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-normal leading-tight max-w-5xl">
             Build Your Business With Favorite Integrations
           </h2>
 
-          <p className="text-[#93C6F5] text-sm max-w-3xl">
+          <p className="text-rateup-light-blue-2 text-sm max-w-3xl">
             Our software seamlessly integrates with internal CRM systems,
             streamlining data management, optimizing internal data use, and
             increasing productivity and profitability through a more efficient
@@ -102,7 +97,7 @@ export default function Integration() {
 
           <motion.button
             type="button"
-            className="inline-flex items-center justify-center bg-rateup-blue text-white font-medium px-4 py-2 rounded-sm shadow-sm hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2d74e0] transition"
+            className="inline-flex items-center justify-center bg-rateup-blue text-white font-medium px-4 py-2 rounded-sm shadow-sm hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rateup-blue-2 transition"
             whileHover={btnHover}
             transition={springBtn}
             aria-label="View all integrations"
