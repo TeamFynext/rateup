@@ -55,13 +55,13 @@ const ResizeableChat = () => {
   if (isPending) return <RateupLoader />;
   return (
     <ResizablePanelGroup direction="horizontal" className="h-full">
-      <ResizablePanel defaultSize={25} minSize={24} maxSize={60}>
+      <ResizablePanel defaultSize={26} minSize={26} maxSize={60}>
         <div>
           <WaInboxChatSelect />
         </div>
       </ResizablePanel>
       <ResizableHandle />
-      <ResizablePanel defaultSize={75} minSize={40} maxSize={76}>
+      <ResizablePanel defaultSize={74} minSize={40} maxSize={74}>
         <div className="h-full">
           <WaInboxChatDisplay waSettings={data} />
         </div>

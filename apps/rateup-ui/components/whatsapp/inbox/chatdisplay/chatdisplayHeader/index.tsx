@@ -56,6 +56,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { useUser } from "@/context/UserContext";
 import { useChatbotStore } from "@/store/chatbot.store";
 import { TicketType } from "@/utils/enums/ticket";
 import { hasFeature } from "@/utils/subscription/subscription";
@@ -220,6 +221,7 @@ export default function WaInboxChatDisplayHeader({
 
 const ChatHeaderMenu = ({ contact }) => {
   const editContactMutation = useEditContactMutation(null);
+  const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
   const [
     openedCreateTicket,
@@ -257,6 +259,11 @@ const ChatHeaderMenu = ({ contact }) => {
           updateContactById(contact.id, (existing) => ({
             ...existing,
             waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+            closedAt: new Date().toISOString(),
+            closedUser: {
+              name: user?.userName,
+              id: user.userId,
+            },
             assignedUsers: [],
           }));
         },

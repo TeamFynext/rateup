@@ -113,6 +113,13 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
       rowVirtualizer.scrollToIndex(0);
   }, [selectedKey]);
 
+  const isAtBottom = () => {
+    if (!parentRef.current) return false;
+    const { scrollTop } = parentRef.current;
+    const threshold = 5;
+    return scrollTop <= threshold;
+  };
+
   useEffect(() => {
     const lastItem = rowVirtualizer.getVirtualItems().at(-1);
     if (lastItem && lastItem?.index >= allMessages.length - 1) setEnabled(true);
@@ -216,20 +223,22 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
           })}
         </div>
       </div>
-      <div
-        className={classes.affix}
-        style={{
-          right: isContactDetailsOpened ? "395px" : "58px",
-          bottom: isContactDetailsOpened ? "180px" : "155px",
-        }}
-      >
-        <ActionIcon
-          variant="transparent"
-          onClick={() => rowVirtualizer.scrollToIndex(0)}
+      {!isAtBottom() && (
+        <div
+          className={classes.affix}
+          style={{
+            right: isContactDetailsOpened ? "395px" : "58px",
+            bottom: isContactDetailsOpened ? "180px" : "155px",
+          }}
         >
-          <IconSquareRoundedChevronDown size={20} />
-        </ActionIcon>
-      </div>
+          <ActionIcon
+            variant="transparent"
+            onClick={() => rowVirtualizer.scrollToIndex(0)}
+          >
+            <IconSquareRoundedChevronDown size={20} />
+          </ActionIcon>
+        </div>
+      )}
     </>
   );
 };
