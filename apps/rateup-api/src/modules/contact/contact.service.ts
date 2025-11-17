@@ -391,7 +391,13 @@ export async function deleteContactById(contactId: string) {
 export async function updateContactById(
   contactId: string,
   contact: updateContactSchema,
+  userId?: string,
 ) {
+  const existing = await prisma.contact.findUnique({
+    where: {
+      id: contactId,
+    },
+  });
   if (contact.labels && contact.labels.length > 0) {
     await prisma.contactLabelMap.deleteMany({
       where: {
@@ -432,6 +438,13 @@ export async function updateContactById(
       waMessageAssignStatus: contact.waMessageAssignStatus,
       lastReceivedMessageTimeStamp:
         contact.lastReceivedMessageTimeStamp || undefined,
+      ...(existing.waMessageAssignStatus !== contact.waMessageAssignStatus &&
+      contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED
+        ? {
+            closedAt: new Date(),
+            closedBy: userId,
+          }
+        : {}),
     },
   });
   await addZapierTriggerToQueue(

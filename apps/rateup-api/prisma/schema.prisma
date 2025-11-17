@@ -109,6 +109,7 @@ model User {
   // Add relation for WaAutomatedReply many-to-many
   UserAssignedCount   UserAssignedCount[]
   AuditLog            AuditLog[]
+  ClosedContacts             Contact[]
 }
 
 model Org {
@@ -539,6 +540,9 @@ model Contact {
   Lifecycle                    Lifecycle?                @relation(fields: [lifecycleId], references: [id])
   lifecycleId                  String?                   @db.Uuid
   customFields                 ContactCustomFieldValue[]
+  closedAt                    DateTime?
+  closedBy                    String?   @db.Uuid
+  closedByUser                User?           @relation(fields: [closedBy], references: [id])
 
   lastMessageBody             Json?
   lastMessageWaCreatedAt      DateTime?

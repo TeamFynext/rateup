@@ -182,6 +182,7 @@ export async function updateContactByIdHandler(
     const contact = await updateContactById(
       request.params.contactId,
       request.body,
+      request.userId,
     );
     return reply.code(200).send(contact);
   } catch (error) {
