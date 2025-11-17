@@ -1,16 +1,17 @@
 import { Button, Group, Image, Text } from "@mantine/core";
 import { IconCircleDashedCheck } from "@tabler/icons-react";
-import { CornerUpLeft, List } from "lucide-react";
+import { CornerUpLeft, ExternalLink, List } from "lucide-react";
 
+import { whatsappToHTML } from "@/components/RichTextEditor/waTextEditor";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 import { WaSendMessageBody } from "../../../../../../../../types/global";
-import WaInboxText from "../../text";
 import classes from "./styles.module.css";
 
 interface Props {
@@ -35,14 +36,20 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
         <WaInboxInteractiveHeader interactiveBody={props?.interactiveBody} />
       )}
       {props?.interactiveBody?.body && (
-        <Text className={classes.body_text}>
-          {props?.interactiveBody?.body?.text}
-        </Text>
+        <Text
+          className={classes.body_text}
+          dangerouslySetInnerHTML={{
+            __html: whatsappToHTML(props?.interactiveBody?.body?.text),
+          }}
+        />
       )}
       {props?.interactiveBody?.footer && (
-        <Text className={classes.footer_text}>
-          {props?.interactiveBody?.footer?.text}
-        </Text>
+        <Text
+          className={classes.footer_text}
+          dangerouslySetInnerHTML={{
+            __html: whatsappToHTML(props?.interactiveBody?.footer?.text),
+          }}
+        />
       )}
       {props?.interactiveBody?.action?.buttons?.map((button) => (
         <Button
@@ -57,6 +64,18 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
       {props?.interactiveBody?.action?.parameters?.flow_cta && (
         <Button variant="light">
           {props?.interactiveBody?.action?.parameters?.flow_cta}
+        </Button>
+      )}
+      {props?.interactiveBody?.action?.name === "cta_url" && (
+        <Button
+          variant="light"
+          component="a"
+          href={props?.interactiveBody?.action?.parameters?.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          leftSection={<ExternalLink size={16} />}
+        >
+          {props?.interactiveBody?.action?.parameters?.display_text}
         </Button>
       )}
       {props?.interactiveBody?.action?.button && (
@@ -75,25 +94,27 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
           </PopoverTrigger>
           <PopoverContent>
             <div className="flex flex-col gap-1">
-              {props?.interactiveBody?.action?.sections?.map((section) => (
-                <div className="flex flex-col gap-2" key={section.title}>
-                  <p className="text-muted-foreground font-semibold text-sm">
-                    {section.title}
-                  </p>
-                  <Separator />
-                  {section?.rows?.map((r) => (
-                    <div key={r.id} className="flex flex-col gap-1">
-                      <div>
-                        <p className="text-sm">{r.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {r.description}
-                        </p>
+              <ScrollArea className="p-2 h-80">
+                {props?.interactiveBody?.action?.sections?.map((section) => (
+                  <div className="flex flex-col gap-2" key={section.title}>
+                    <p className="text-muted-foreground font-semibold text-sm">
+                      {section.title}
+                    </p>
+                    <Separator />
+                    {section?.rows?.map((r) => (
+                      <div key={r.id} className="flex flex-col gap-1">
+                        <div>
+                          <p className="text-sm">{r.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {r.description}
+                          </p>
+                        </div>
+                        <Separator className="my-1" />
                       </div>
-                      <Separator className="my-1" />
-                    </div>
-                  ))}
-                </div>
-              ))}
+                    ))}
+                  </div>
+                ))}
+              </ScrollArea>
             </div>
           </PopoverContent>
         </Popover>
