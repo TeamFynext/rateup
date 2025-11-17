@@ -20,6 +20,7 @@ import {
   IconClock,
   IconCopy,
   IconExclamationCircleFilled,
+  IconRobot,
 } from "@tabler/icons-react";
 import { EmojiClickData } from "emoji-picker-react";
 import { Check, CheckCheck, CircleAlertIcon, Clock } from "lucide-react";
@@ -225,11 +226,15 @@ export default function WaInboxSingleMessageLayout(props: Props) {
               {exchangeProcess === "send" && (
                 <span
                   style={{
-                    color: getColorForUser(messageObject?.sender?.name),
+                    color: !messageObject?.sender
+                      ? "#3B82F6"
+                      : getColorForUser(messageObject?.sender?.name),
                   }}
                   className={`text-sm`}
                 >
-                  {messageObject?.sender?.name}
+                  {!messageObject?.sender
+                    ? "Automation"
+                    : messageObject?.sender?.name}
                 </span>
               )}
               <div ref={messageContentRef}>{props?.children}</div>
@@ -266,12 +271,18 @@ export default function WaInboxSingleMessageLayout(props: Props) {
           </div>
           {exchangeProcess === "send" && (
             <div className="mb-1">
-              <CreativeAvatar
-                name={messageObject?.sender?.name}
-                size="xs"
-                src={messageObject?.sender?.profilePhoto}
-                showRing={true}
-              />
+              {!messageObject?.sender ? (
+                <div className="rounded-xl bg-blue-500 text-white p-1">
+                  <IconRobot className="w-4 h-4" />
+                </div>
+              ) : (
+                <CreativeAvatar
+                  name={messageObject?.sender?.name}
+                  size="xs"
+                  src={messageObject?.sender?.profilePhoto}
+                  showRing={true}
+                />
+              )}
             </div>
           )}
         </div>

@@ -211,58 +211,24 @@ export default function WaInboxChatSelectCard({
               />
             ) : (
               contact?.assignedUsers?.length > 0 && (
-                <CustomTooltip
-                  trigger={
-                    <div className="flex -space-x-1 relative">
-                      {contact.assignedUsers.slice(0, 1).map((a) => {
-                        return (
-                          <div
-                            key={a?.id}
-                            className="relative flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                          >
-                            <Avatar className="w-5 h-5">
-                              <AvatarFallback
-                                className={`${getStringColor(a?.name).bg} text-white text-[10px]`}
-                              >
-                                {a?.name
-                                  ?.split(" ")
-                                  .map((s) => s[0]?.toUpperCase())
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-                        );
-                      })}
-                      {contact.assignedUsers.length > 1 && (
-                        <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
-                          +{contact.assignedUsers.length - 1}
-                        </div>
-                      )}
+                <div className="flex space-x-1">
+                  {contact?.assignedUsers?.slice(0, 2).map((a) => {
+                    return (
+                      <Badge
+                        variant="outline"
+                        key={a?.id}
+                        className="border-blue-500 text-blue-500"
+                      >
+                        {a?.name}
+                      </Badge>
+                    );
+                  })}
+                  {contact?.assignedUsers.length > 2 && (
+                    <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
+                      +{contact?.assignedUsers?.length - 2}
                     </div>
-                  }
-                  content={
-                    <div>
-                      <p>Assigned Users:</p>
-                      <div className="flex flex-col gap-2 mt-1">
-                        {contact.assignedUsers.map((user) => (
-                          <div
-                            className="flex items-center gap-0.5"
-                            key={user.id}
-                          >
-                            <CreativeAvatar name={user?.name} size="xs" />
-                            <span
-                              key={user.id}
-                              className="p-1 rounded-md text-xs"
-                            >
-                              {user.name}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  }
-                  side="bottom"
-                />
+                  )}
+                </div>
               )
             )}
           </div>
