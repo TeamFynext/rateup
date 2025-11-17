@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { FaApple, FaGooglePlay } from "react-icons/fa";
+import { IconBrandApple, IconBrandGooglePlay } from "@tabler/icons-react";
 
 import { imagesPath } from "@/utils/constants";
 
@@ -31,7 +31,7 @@ export default function MobileAppSection() {
               href="#"
               className="bg-[#1c518e] text-white px-5 py-3 rounded-full font-semibold flex items-center gap-2 hover:bg-[#00397b] transition duration-300 shadow-md"
             >
-              <FaGooglePlay size={22} />
+              <IconBrandGooglePlay size={22} />
               <span className="text-sm sm:text-base">Google Play</span>
             </Link>
 
@@ -39,7 +39,7 @@ export default function MobileAppSection() {
               href="#"
               className="bg-black text-white px-5 py-3 rounded-full font-semibold flex items-center gap-2 hover:bg-gray-800 transition duration-300 shadow-md"
             >
-              <FaApple size={22} />
+              <IconBrandApple size={22} />
               <span className="text-sm sm:text-base">App Store</span>
             </Link>
           </div>

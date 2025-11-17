@@ -33,14 +33,16 @@
   outline: none;
   height: 2.5rem;
   border-radius: 1rem;
+  outline: none;
 }
 
 .inputBox {
   background-color: var(--input-background-color, white);
   color: var(--input-text-color, black);
-  border-radius: 1rem;
   padding: 0px var(--input-padding, 12px);
-  border-color: var(--mantine-color-gray-4);
-  border-width: 1px;
-  border-style: solid;
+}
+
+.inputPhone input:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
