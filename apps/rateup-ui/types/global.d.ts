@@ -593,6 +593,11 @@ declare global {
     followerCount: number;
     profilePic: string;
     lastReceivedMessageTimeStamp: string;
+    closedAt: string;
+    closedUser: {
+      id: sytring;
+      name: string;
+    };
     loyaltyCustomer?: {
       id: string;
       email?: string;

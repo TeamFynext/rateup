@@ -45,9 +45,7 @@ export default function WaInboxChatDisplay({
   if (contact?.blockedOnWhatsApp) {
     footerContent = <WaInboxBlockedContactFooter contact={contact} />;
   } else if (!contact?.assignedUsers?.length) {
-    footerContent = (
-      <WaInboxAssignUserFooter contactId={contact?.id} user={user} />
-    );
+    footerContent = <WaInboxAssignUserFooter contact={contact} user={user} />;
   } else if (isAssignedToMe) {
     footerContent = <WaInboxChatDisplayFooter contact={contact} />;
   } else {

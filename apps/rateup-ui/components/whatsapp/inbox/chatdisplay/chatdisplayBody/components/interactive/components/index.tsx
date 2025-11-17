@@ -1,6 +1,13 @@
 import { Button, Group, Image, Text } from "@mantine/core";
 import { IconCircleDashedCheck } from "@tabler/icons-react";
-import { CornerUpLeft } from "lucide-react";
+import { CornerUpLeft, List } from "lucide-react";
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 
 import { WaSendMessageBody } from "../../../../../../../../types/global";
 import WaInboxText from "../../text";
@@ -51,6 +58,45 @@ export default function WaInboxInteractiveComponents(props: Readonly<Props>) {
         <Button variant="light">
           {props?.interactiveBody?.action?.parameters?.flow_cta}
         </Button>
+      )}
+      {props?.interactiveBody?.action?.button && (
+        <Popover>
+          <PopoverTrigger
+            disabled={!props?.interactiveBody?.action?.sections?.length}
+          >
+            <Button
+              key={props?.interactiveBody?.action?.button}
+              fullWidth
+              variant="light"
+            >
+              <List className="w-5 h-5 mr-1" />
+              {props?.interactiveBody?.action?.button}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <div className="flex flex-col gap-1">
+              {props?.interactiveBody?.action?.sections?.map((section) => (
+                <div className="flex flex-col gap-2" key={section.title}>
+                  <p className="text-muted-foreground font-semibold text-sm">
+                    {section.title}
+                  </p>
+                  <Separator />
+                  {section?.rows?.map((r) => (
+                    <div key={r.id} className="flex flex-col gap-1">
+                      <div>
+                        <p className="text-sm">{r.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {r.description}
+                        </p>
+                      </div>
+                      <Separator className="my-1" />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
       )}
     </>
   );
