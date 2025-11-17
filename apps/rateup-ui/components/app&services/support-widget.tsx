@@ -280,11 +280,11 @@ export default function SupportWidget({
           className="transition-all duration-500 ease-in-out transform scale-100 opacity-100 animate-fade-in"
           ref={ref}
         >
-          <div className="w-80 h-[550px] bg-background/80 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-border animate-slide-up dark:bg-background/90">
+          <div className="w-96 h-[550px] bg-background/80 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-border animate-slide-up dark:bg-background/90">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/90">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#66D7FF] to-[#2D74E0] flex items-center justify-center">
                   <span className="text-white font-bold text-base">
                     {companyName[0]}
                   </span>
@@ -330,9 +330,9 @@ export default function SupportWidget({
                         </Label>
                         <div className="flex items-center bg-background rounded-lg shadow-sm border border-border px-2">
                           <Smile className="h-4 w-4 text-muted-foreground mr-1" />
-                          <Input
+                          <input
                             {...form.getInputProps("name")}
-                            className="flex-1 border-0 bg-transparent focus:ring-0 focus:outline-none h-8 text-sm px-1"
+                            className="flex-1 bg-transparent h-8 text-sm px-1 outline-none border-none"
                             placeholder="Your name"
                           />
                         </div>
@@ -370,7 +370,7 @@ export default function SupportWidget({
                         </Label>
                         <div className="flex items-center bg-background rounded-lg shadow-sm border border-border px-2">
                           <MoreHorizontal className="h-4 w-4 text-muted-foreground mr-1" />
-                          <Input
+                          <input
                             type="email"
                             {...form.getInputProps("email")}
                             className="flex-1 border-0 bg-transparent focus:ring-0 focus:outline-none h-8 text-sm px-1"
@@ -508,10 +508,10 @@ export default function SupportWidget({
         <div className="flex justify-end">
           <button
             onClick={() => setIsOpen((prev) => !prev)}
-            className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:to-pink-700 text-white rounded-full shadow-2xl w-12 h-12 flex items-center justify-center focus:outline-none transition-transform duration-300 hover:scale-110 animate-bounce-in border-2 border-background"
+            className="bg-gradient-to-br from-[#66D7FF] to-[#2D74E0] hover:from-[#00bbff] hover:to-[#005de9] text-white rounded-full shadow-2xl w-16 h-16 flex items-center justify-center focus:outline-none transition-transform duration-300 hover:scale-105 animate-bounce-in border-2 border-background"
             aria-label="Open chat"
           >
-            <MessageCircle className="h-6 w-6" />
+            <MessageCircle className="h-8 w-8" />
           </button>
         </div>
       )}
