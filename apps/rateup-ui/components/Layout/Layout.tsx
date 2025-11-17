@@ -37,7 +37,10 @@ import SessionReact from "supertokens-auth-react/recipe/session";
 
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useChatContactCountStore } from "@/app/dashboard/inbox/store";
-import { useCustomFields } from "@/backend/campaign/contacts/contacts.query";
+import {
+  useContactLabels,
+  useCustomFields,
+} from "@/backend/campaign/contacts/contacts.query";
 import { useLabelsQuery } from "@/backend/label/label.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
@@ -171,33 +174,45 @@ const SubNavLinks = ({
   router,
   status,
   checkWhatsAppSettings,
-  labels,
 }) => {
   // Handler for label filter click
   const chatFilterStore = useChatFilterStore();
-  const handleLabelFilter = (labelName: string) => {
+  const handleLifecycleFilter = (lifecycle: string) => {
     // Update your filter state here
-    let lifecycle =
-      chatFilterStore.filter.lifecycle === labelName ? "" : labelName;
+    let updatedLifecycle =
+      chatFilterStore.filter.lifecycle === lifecycle ? "" : lifecycle;
 
     chatFilterStore.setFilter({
       ...chatFilterStore.filter,
-      lifecycle: lifecycle,
+      lifecycle: updatedLifecycle,
+    });
+  };
+  const handleLabelsFilter = (label: string) => {
+    // Update your filter state here
+    let updatedLabels = chatFilterStore.filter.labels?.includes(label)
+      ? chatFilterStore.filter.labels?.filter((l) => l !== label)
+      : [...chatFilterStore.filter.labels, label];
+
+    chatFilterStore.setFilter({
+      ...chatFilterStore.filter,
+      labels: updatedLabels,
     });
   };
 
   // Find labels section if it exists
   const labelsSection = links.find((link) => link.label === "Labels");
-  const categorySection = links.find((link) => link.label === "Categories");
-  const settingSection = links.find((link) => link.label === "Inbox Settings");
-  const regularLinks = links.filter(
-    (link) =>
-      link.label !== "Labels" &&
-      link.label !== "Categories" &&
-      link.label !== "Inbox Settings",
-  );
-  const [isLifecycleOpen, setIsLifecycleOpen] = useState(true);
-  const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);
+  const lifecycleSection = links.find((link) => link.label === "Lifecycle");
+  const settingSection = links.find((link) => link.label === "Settings");
+  const regularLinks = links?.[0]?.link?.includes("inbox")
+    ? links.filter(
+        (link) =>
+          link.label !== "Labels" &&
+          link.label !== "Lifecycle" &&
+          link.label !== "Settings",
+      )
+    : links;
+  const [isLifecycleOpen, setIsLifecycleOpen] = useState(false);
+  const [isLabelsOpen, setIsLabelsOpen] = useState(false);
   const filter = useChatFilterStore.getState().filter;
   const setFilter = useChatFilterStore.getState().setFilter;
   const searchParams = useSearchParams();
@@ -222,7 +237,7 @@ const SubNavLinks = ({
                   ) {
                     return;
                   }
-                  handleLabelFilter(""); // Clear label filter on regular link click
+                  handleLifecycleFilter(""); // Clear label filter on regular link click
                   setActiveSubLink(link.link);
                   router.push(link.link);
                 }}
@@ -252,9 +267,37 @@ const SubNavLinks = ({
         trigger={
           <Button
             className="h-9 w-9 mb-2"
-            onClick={() => handleLabelFilter(label?.value)}
+            onClick={() => handleLabelsFilter(label?.value)}
             variant={
-              chatFilterStore.filter?.lifecycle === label?.value
+              chatFilterStore.filter?.labels?.includes(label?.value)
+                ? "secondary"
+                : "ghost"
+            }
+            disabled={["analytics", "settings"].includes(tab)}
+          >
+            <p className="text-center text-xs">
+              <div
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: label.color }}
+              />
+            </p>
+          </Button>
+        }
+        content={<p>{label.label}</p>}
+        side="right"
+      />
+    )) || [];
+
+  const lifecycleIcons =
+    lifecycleSection?.children?.map((label, index) => (
+      <CustomTooltip
+        key={`${label}-${index}`}
+        trigger={
+          <Button
+            className="h-9 w-9 mb-2"
+            onClick={() => handleLifecycleFilter(label?.value)}
+            variant={
+              chatFilterStore.filter?.labels === label?.value
                 ? "secondary"
                 : "ghost"
             }
@@ -267,33 +310,6 @@ const SubNavLinks = ({
         side="right"
       />
     )) || [];
-
-  const categoryIcons = categorySection?.children?.map((category) => {
-    const CategoryIcon = category?.icon;
-    return (
-      <CustomTooltip
-        trigger={
-          <Button
-            variant={filter.category === category.id ? "secondary" : "ghost"}
-            className="h-9 w-full mb-2"
-            onClick={() => {
-              setFilter({
-                ...filter,
-                category:
-                  filter.category === category.id ? null : (category.id as any),
-              });
-            }}
-            disabled={["analytics", "settings"].includes(tab)}
-          >
-            <CategoryIcon className="w-5 h-5" />
-          </Button>
-        }
-        content={<p>{category.label}</p>}
-        side="right"
-        key={category.id}
-      />
-    );
-  });
   const settingsIcons =
     settingSection?.children?.map((link, index) => (
       <CustomTooltip
@@ -309,7 +325,7 @@ const SubNavLinks = ({
               ) {
                 return;
               }
-              handleLabelFilter("");
+              handleLifecycleFilter("");
               setFilter({
                 ...filter,
                 category: null,
@@ -329,8 +345,8 @@ const SubNavLinks = ({
   // Combine all icon links, with divider if labels exist
   const linksIcon = [
     ...regularLinksIcons,
-    ...(categorySection?.children?.length > 0
-      ? [<Divider key="category-divider" my="xs" />, ...categoryIcons]
+    ...(lifecycleSection?.children?.length > 0
+      ? [<Divider key="category-divider" my="xs" />, ...lifecycleIcons]
       : []),
     ...(labelsSection?.children?.length > 0
       ? [<Divider key="label-divider" my="xs" />, ...labelIcons]
@@ -358,7 +374,7 @@ const SubNavLinks = ({
             ) {
               return;
             }
-            handleLabelFilter(""); // Clear label filter on regular link click
+            handleLifecycleFilter(""); // Clear label filter on regular link click
             setActiveSubLink(link.link);
             router.push(link.link);
           }}
@@ -376,13 +392,12 @@ const SubNavLinks = ({
       );
     });
 
-  // Create label text links
-  const labelTexts =
-    labelsSection?.children?.map((label, index) => (
+  const lifecycleTexts =
+    lifecycleSection?.children?.map((label, index) => (
       <Button
         onClick={(event) => {
           event.preventDefault();
-          handleLabelFilter(label?.value);
+          handleLifecycleFilter(label?.value);
         }}
         className="w-full my-1"
         variant={
@@ -405,17 +420,17 @@ const SubNavLinks = ({
       </Button>
     )) || [];
 
-  const Categories = () => (
-    <Collapsible open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
+  const Labels = () => (
+    <Collapsible open={isLabelsOpen} onOpenChange={setIsLabelsOpen}>
       <CollapsibleTrigger asChild>
         <Button
           variant="ghost"
           className="w-full justify-between text-sm h-9 px-2"
         >
           <span className="text-xs uppercase tracking-wide text-muted-foreground">
-            Categories
+            Labels
           </span>
-          {isCategoriesOpen ? (
+          {isLabelsOpen ? (
             <ChevronDown className="w-4 h-4" />
           ) : (
             <ChevronRight className="w-4 h-4" />
@@ -423,23 +438,24 @@ const SubNavLinks = ({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-0.5 pt-1">
-        {categorySection?.children?.map((category) => (
+        {labelsSection?.children?.map((label) => (
           <Button
-            key={category.id}
-            variant={filter.category === category.id ? "secondary" : "ghost"}
+            key={label.id}
             className="w-full justify-start text-sm h-9"
-            onClick={() => {
-              setFilter({
-                ...filter,
-                category:
-                  filter.category === category.id ? null : (category.id as any),
-              });
-            }}
+            onClick={() => handleLabelsFilter(label?.value)}
+            variant={
+              chatFilterStore.filter?.labels?.includes(label?.value)
+                ? "secondary"
+                : "ghost"
+            }
             disabled={["analytics", "settings"].includes(tab)}
           >
             <div className="flex gap-2 items-center">
-              <category.icon className="w-4 h-4" />
-              <span className="text-sm">{category.label}</span>
+              <div
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: label?.color }}
+              />
+              <span className="text-sm">{label.label}</span>
             </div>
             {/* {category?.count > 0 && (
               <Badge variant="secondary" className="ml-auto text-xs">
@@ -469,7 +485,7 @@ const SubNavLinks = ({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-0.5 pt-1">
-        {...labelTexts}
+        {...lifecycleTexts}
       </CollapsibleContent>
     </Collapsible>
   );
@@ -488,7 +504,7 @@ const SubNavLinks = ({
           ) {
             return;
           }
-          handleLabelFilter(""); // Clear label filter on regular link click
+          handleLifecycleFilter(""); // Clear label filter on regular link click
           setFilter({
             ...filter,
             category: null,
@@ -510,16 +526,16 @@ const SubNavLinks = ({
   // Combine all text links with divider if labels exist
   const linksText = [
     ...regularLinksText,
-    ...(categorySection?.children?.length > 0
-      ? [
-          <Divider key="label-text-divider" my="9.5" />,
-          <Categories key={"categories"} />,
-        ]
-      : []),
-    ...(categorySection?.children?.length > 0
+    ...(lifecycleSection?.children?.length > 0
       ? [
           <Divider key="categories-text-divider" my="9.5" />,
           <LifeCycleLabel key={"lifecycles"} />,
+        ]
+      : []),
+    ...(lifecycleSection?.children?.length > 0
+      ? [
+          <Divider key="label-text-divider" my="9.5" />,
+          <Labels key={"labels"} />,
         ]
       : []),
     ...(settingSection?.children?.length > 0
@@ -1006,7 +1022,7 @@ const Navbar = ({
                 /> */}
               </div>
             </div>
-            <ScrollAreaAutosize mah={"100dvh"} scrollbarSize={6}>
+            <ScrollAreaAutosize mah={"calc(100dvh - 50px)"} scrollbarSize={6}>
               <div className="px-2 py-1 space-y-1">
                 {largeScreen ? (
                   desktopOpened ? (
@@ -1160,9 +1176,11 @@ export default function Layout({ children }) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop, open }] = useDisclosure(false);
   const { data: sub, isPending } = useSubscription();
-  const { isPending: isPendingLabels, data: labels } = useLabelsQuery();
+  const { isPending: isPendingLabels, data: lifecycles } = useLabelsQuery();
   const { isPending: isCustomFieldPending, data: customFieldData } =
     useCustomFields();
+  const { data: contactLabels = [], isPending: isPendingContactLabels } =
+    useContactLabels();
 
   const translations = useTranslations();
   const [navLinks, setNavLinks] = useState([]);
@@ -1170,7 +1188,11 @@ export default function Layout({ children }) {
   const [whatsAppModalOpened, setWhatsAppModalOpened] = useState(false);
   const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
   const isLoading =
-    isPending || isPendingLabels || isLoadingUserInfo || isCustomFieldPending;
+    isPending ||
+    isPendingLabels ||
+    isLoadingUserInfo ||
+    isCustomFieldPending ||
+    isPendingContactLabels;
   // Fetch inbox labels from DB
   // const { data: inboxLabelsData } = useGetInboxLabels();
 
@@ -1180,12 +1202,20 @@ export default function Layout({ children }) {
         sub,
         translations,
         userInfo?.data?.role,
-        labels, // pass dynamic labels
+        lifecycles,
+        contactLabels,
       );
       setNavLinks(nLinks);
       // setLastLinksData(lLinks);
     }
-  }, [isLoading, sub, translations, userInfo?.data?.role, labels]);
+  }, [
+    isLoading,
+    sub,
+    translations,
+    userInfo?.data?.role,
+    lifecycles,
+    contactLabels,
+  ]);
 
   if (query.msg === "welcome") {
     refetch();
@@ -1367,7 +1397,6 @@ export default function Layout({ children }) {
     router,
     status: userInfo?.data?.status || UserAvailabilityStatus.offline,
     checkWhatsAppSettings,
-    labels,
   });
 
   // const lastLinks = (
@@ -1437,7 +1466,7 @@ export default function Layout({ children }) {
           <MainContent
             navOpened={navOpened}
             setNavOpened={setNavOpened}
-            labels={labels}
+            labels={lifecycles}
             customFieldData={customFieldData}
             pathname={pathname}
           >

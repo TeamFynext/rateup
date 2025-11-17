@@ -20,7 +20,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
-import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
+import {
+  ContainedMultiSelect,
+  ContainedSelection,
+} from "../../../../input/ContainedInput/ContainedInput";
 import classes from "./styles.module.css";
 
 export type MultiGV = {
@@ -159,6 +162,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
       assignedTeams: [],
       labels: [],
       lifecycle: "",
+      category: null,
     });
   }
 
@@ -257,6 +261,27 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
           value: label.id,
           label: label.name,
         }))}
+        searchable
+      />
+      <ContainedSelection
+        radius="md"
+        maw={250}
+        value={filter.category}
+        onChange={(value: any) =>
+          setFilter({
+            ...filter,
+            category: filter.category === value ? null : value,
+          })
+        }
+        placeholder={translations("Select category (type in to search)")}
+        data={[
+          {
+            value: "conversation",
+            label: "Conversations",
+          },
+          { value: "campaign", label: "Campaigns" },
+          { value: "automation", label: "Automation" },
+        ]}
         searchable
       />
       {tab === "All" && (
