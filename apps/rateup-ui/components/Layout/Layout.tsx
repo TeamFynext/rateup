@@ -189,12 +189,12 @@ const SubNavLinks = ({
   // Find labels section if it exists
   const labelsSection = links.find((link) => link.label === "Labels");
   const categorySection = links.find((link) => link.label === "Categories");
-  const settingSection = links.find((link) => link.label === "Settings");
+  const settingSection = links.find((link) => link.label === "Inbox Settings");
   const regularLinks = links.filter(
     (link) =>
       link.label !== "Labels" &&
       link.label !== "Categories" &&
-      link.label !== "Settings",
+      link.label !== "Inbox Settings",
   );
   const [isLifecycleOpen, setIsLifecycleOpen] = useState(true);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(true);

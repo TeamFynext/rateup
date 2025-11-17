@@ -170,7 +170,7 @@ export function getNavTopData(
                 ],
               },
               {
-                label: "Settings",
+                label: "Inbox Settings",
                 icon: Settings,
                 hasSubMenu: true,
                 children: [
