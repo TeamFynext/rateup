@@ -53,6 +53,7 @@ export default function Integration() {
               height={420}
               className="w-full h-auto object-cover"
               priority
+              quality={60}
             />
           </div>
 
@@ -75,6 +76,7 @@ export default function Integration() {
               fill
               className="object-contain"
               priority
+              quality={60}
             />
           </motion.div>
         </motion.div>
