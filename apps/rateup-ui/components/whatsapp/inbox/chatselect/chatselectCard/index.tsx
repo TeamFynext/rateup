@@ -18,7 +18,10 @@ import { Badge } from "@/components/ui/badge";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { getStringColor } from "@/components/ui/utils";
-import { formatToRelativeTime } from "@/utils/dateTime";
+import {
+  formatDateWithRelativeTime,
+  formatToRelativeTime,
+} from "@/utils/dateTime";
 import {
   isInboxSessionExpired,
   parseWaMessage,
@@ -191,14 +194,27 @@ export default function WaInboxChatSelectCard({
             </div>
 
             {contact?.waMessageAssignStatus === WaMessageAssignStatus.CLOSED ? (
-              <CustomTooltip
-                trigger={
-                  <CircleCheckBig
-                    className={`text-[10px] h-4 text-blue-500 dark:text-blue-600 rounded-2xl`}
-                  />
-                }
-                content={<span>{translations("Closed")}</span>}
-              />
+              <div className="flex ">
+                <CustomTooltip
+                  trigger={
+                    <CircleCheckBig
+                      className={`text-[10px] h-4 text-blue-500 dark:text-blue-600 rounded-2xl`}
+                    />
+                  }
+                  content={
+                    <span>
+                      {contact.closedAt
+                        ? `Closed by ${contact.closedUser?.name} at ${formatDateWithRelativeTime(contact.closedAt)}`
+                        : translations("Closed")}
+                    </span>
+                  }
+                />
+                {contact.closedAt && (
+                  <span className="text-xs text-muted-foreground">
+                    {formatToRelativeTime(contact.closedAt)}
+                  </span>
+                )}
+              </div>
             ) : contact?.waMessageAssignStatus ===
               WaMessageAssignStatus.UNASSIGNED ? (
               <CustomTooltip
@@ -213,55 +229,37 @@ export default function WaInboxChatSelectCard({
               contact?.assignedUsers?.length > 0 && (
                 <CustomTooltip
                   trigger={
-                    <div className="flex -space-x-1 relative">
-                      {contact.assignedUsers.slice(0, 1).map((a) => {
+                    <div className="flex space-x-1">
+                      {contact?.assignedUsers?.slice(0, 2).map((a) => {
                         return (
-                          <div
+                          <Badge
+                            variant="outline"
                             key={a?.id}
-                            className="relative flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                            className="border-blue-500 text-blue-500"
                           >
-                            <Avatar className="w-5 h-5">
-                              <AvatarFallback
-                                className={`${getStringColor(a?.name).bg} text-white text-[10px]`}
-                              >
-                                {a?.name
-                                  ?.split(" ")
-                                  .map((s) => s[0]?.toUpperCase())
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
+                            {a?.name}
+                          </Badge>
                         );
                       })}
-                      {contact.assignedUsers.length > 1 && (
+                      {contact?.assignedUsers.length > 2 && (
                         <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
-                          +{contact.assignedUsers.length - 1}
+                          +{contact?.assignedUsers?.length - 2}
                         </div>
                       )}
                     </div>
                   }
                   content={
                     <div>
-                      <p>Assigned Users:</p>
-                      <div className="flex flex-col gap-2 mt-1">
-                        {contact.assignedUsers.map((user) => (
-                          <div
-                            className="flex items-center gap-0.5"
-                            key={user.id}
-                          >
-                            <CreativeAvatar name={user?.name} size="xs" />
-                            <span
-                              key={user.id}
-                              className="p-1 rounded-md text-xs"
-                            >
-                              {user.name}
-                            </span>
-                          </div>
+                      <p className="mb-1">Assigned Staff:</p>
+                      <div className="flex gap-1 flex-wrap max-w-lg py-2">
+                        {contact?.assignedUsers.map((user) => (
+                          <Badge key={user?.id} className="h-4 p-2 text-[10px]">
+                            {user?.name}
+                          </Badge>
                         ))}
                       </div>
                     </div>
                   }
-                  side="bottom"
                 />
               )
             )}

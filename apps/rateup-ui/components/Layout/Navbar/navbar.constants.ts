@@ -84,13 +84,22 @@ export interface NavbarLinkProps {
   hasSubmenu?: boolean; // new: indicates if main link opens submenu
   onClick?: () => void; // new: for custom click handlers
 }
-
+// Additional interfaces for labels and navigation items
+export interface LabelData {
+  id: string;
+  name: string;
+  color: string;
+  description?: string;
+  orgId: string;
+  createdAt: string;
+}
 //data Array consisting of NavbarTopData
 export function getNavTopData(
   subscription?: Subscription,
   translations?: any,
   role?: string,
-  labels?: GetLabelsRes[],
+  lifecycles?: GetLabelsRes[],
+  contactLabels?: LabelData[],
 ) {
   function hasFeature(featurePath: SubscriptionFeaturePathName) {
     if (!subscription) return false;
@@ -135,17 +144,22 @@ export function getNavTopData(
                 icon: UserX,
               },
               {
-                label: "Categories",
-                icon: IconBuildings,
+                label: "Lifecycle",
+                icon: IconLabel,
                 hasSubmenu: true,
                 children: [
-                  {
-                    id: "conversation",
-                    label: "Conversations",
-                    icon: MessageCircle,
-                  },
-                  { id: "campaign", label: "Campaigns", icon: Megaphone },
-                  { id: "automation", label: "Automation", icon: Bot },
+                  ...(lifecycles?.length
+                    ? [
+                        ...(Array.isArray(lifecycles)
+                          ? (lifecycles || []).map((lbl) => ({
+                              label: lbl.name,
+                              value: lbl.id,
+                              emoji: lbl.emoji,
+                              icon: IconLabel,
+                            }))
+                          : []),
+                      ]
+                    : []),
                 ],
               },
               {
@@ -153,22 +167,20 @@ export function getNavTopData(
                 icon: IconLabel,
                 hasSubmenu: true,
                 children: [
-                  ...(labels?.length
+                  ...(contactLabels?.length
                     ? [
-                        ...(Array.isArray(labels)
-                          ? labels
-                              ?.filter((lbl) => lbl?.category !== "lost")
-                              .map((lbl) => ({
-                                label: lbl.name,
-                                value: lbl.id,
-                                emoji: lbl.emoji,
-                                icon: IconLabel,
-                              }))
+                        ...(Array.isArray(contactLabels)
+                          ? contactLabels.map((lbl) => ({
+                              label: lbl.name,
+                              value: lbl.id,
+                              color: lbl.color,
+                            }))
                           : []),
                       ]
                     : []),
                 ],
               },
+
               {
                 label: "Settings",
                 icon: Settings,

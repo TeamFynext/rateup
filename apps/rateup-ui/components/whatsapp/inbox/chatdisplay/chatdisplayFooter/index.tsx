@@ -24,6 +24,8 @@ import WaTextEditor, {
 } from "@/components/RichTextEditor/waTextEditor";
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
+import { User } from "@/context/UserContext";
+import { formatDateWithRelativeTime } from "@/utils/dateTime";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
 
@@ -303,7 +305,19 @@ export default function WaInboxChatDisplayFooter({
   );
 }
 
-export const WaInboxAssignUserFooter = ({ contactId, user }) => {
+export const WaInboxAssignUserFooter = ({
+  contact,
+  user,
+}: {
+  contact: ContactWithUpdatedAt;
+  user: User;
+}) => {
+  const {
+    id: contactId,
+    waMessageAssignStatus,
+    closedAt,
+    closedUser,
+  } = contact ?? {};
   const { filterData } = useContactStore();
   const assignMut = useAssignInboxToUer(contactId, filterData);
   const { updateContactById } = useContactsStore();
@@ -344,7 +358,18 @@ export const WaInboxAssignUserFooter = ({ contactId, user }) => {
     <div className="flex flex-col gap-2 pb-2">
       <div className="bg-black flex justify-center items-center text-white gap-0.5 py-1">
         <IconExclamationCircle size={"1rem"} />
-        <span className="text-xs">Please Assign to start the chat</span>
+        {waMessageAssignStatus === WaMessageAssignStatus.CLOSED && (
+          <>
+            <span className="text-xs">This chat has been closed</span>
+            {closedAt && (
+              <span className="text-xs lowercase">
+                by {closedUser.name} at{" "}
+                {formatDateWithRelativeTime(contact.closedAt)}.
+              </span>
+            )}
+          </>
+        )}
+        <span className="text-xs">Please Assign to start the chat.</span>
       </div>
       <div className="flex justify-center items-center gap-2">
         <Button variant="outline" onClick={handleAssignToMe} size="sm">

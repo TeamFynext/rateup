@@ -251,8 +251,8 @@ const SettingsLayout = ({ children }) => {
 
       {/* Main Content */}
       {/* Add md:ml-64 so the main content sits to the right of the sidebar on medium+ screens */}
-      <main className="flex-1 overflow-auto bg-gradient-to-br from-gray-50/30 to-blue-50/20 py-4 px-2">
-        <div className="pl-6 pr-6 pb-6 max-w-7xl">{children}</div>
+      <main className="flex-1 overflow-auto">
+        <div className="p-4 max-w-7xl h-full">{children}</div>
       </main>
     </div>
   );

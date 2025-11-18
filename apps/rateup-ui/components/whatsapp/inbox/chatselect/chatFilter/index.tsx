@@ -4,15 +4,12 @@ import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Loader, Stack, Text } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
-import { IconFilter } from "@tabler/icons-react";
 import { RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { WaMessageAssignStatus, WaMessageAssignStatusTab } from "@/types/enums";
-import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
@@ -20,8 +17,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
-import { ContainedMultiSelect } from "../../../../input/ContainedInput/ContainedInput";
-import classes from "./styles.module.css";
+import {
+  ContainedMultiSelect,
+  ContainedSelection,
+} from "../../../../input/ContainedInput/ContainedInput";
 
 export type MultiGV = {
   group: string;
@@ -50,25 +49,18 @@ interface Props {
 
 export default function WaInboxChatFilter({ setFilterCount }: Props) {
   const { data, isLoading, error } = useChatFilterData();
-  const { data: labels = [], isPending } = useContactLabels();
 
   const { filter, setFilter } = useChatFilterStore();
-  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const translations = useTranslations();
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as string) ?? "New";
-  const {
-    data: teamRes,
-    isLoading: teamsLoading,
-    isError,
-    error: teamsError,
-  } = useTeamsByUser();
+  const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
 
   useEffect(() => {
     setFilterCount(getFilterActiveCount());
   }, [filter]);
-  if (isLoading || teamsLoading || isPending) {
+  if (isLoading || teamsLoading) {
     return <Loader size={"xs"} />;
   }
   if (error) {
@@ -159,6 +151,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
       assignedTeams: [],
       labels: [],
       lifecycle: "",
+      category: null,
     });
   }
 
@@ -242,21 +235,25 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
           );
         }}
       />
-      <ContainedMultiSelect
+      <ContainedSelection
         radius="md"
         maw={250}
-        value={filter.labels || []}
-        onChange={(values) =>
+        value={filter.category}
+        onChange={(value: any) =>
           setFilter({
             ...filter,
-            labels: values,
+            category: filter.category === value ? null : value,
           })
         }
-        placeholder={translations("Select labels (type in to search)")}
-        data={labels.map((label) => ({
-          value: label.id,
-          label: label.name,
-        }))}
+        placeholder={translations("Select category (type in to search)")}
+        data={[
+          {
+            value: "conversation",
+            label: "Conversations",
+          },
+          { value: "campaign", label: "Campaigns" },
+          { value: "automation", label: "Automation" },
+        ]}
         searchable
       />
       {tab === "All" && (
@@ -316,7 +313,7 @@ type ChatFilterStore = {
 
 export const useChatFilterStore = create<ChatFilterStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       filter: {
         messageType: "usermessages",
         strictFilter: false,

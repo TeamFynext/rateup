@@ -344,11 +344,13 @@ export default function OrgDisplay() {
       <p className="text-sm text-muted-foreground">
         Manage and view all organizations in your system
       </p>
-      <DataTable
-        columns={columns}
-        data={tableData}
-        DataTableToolbar={DataTableToolbar}
-      />
+      <div>
+        <DataTable
+          columns={columns}
+          data={tableData}
+          DataTableToolbar={DataTableToolbar}
+        />
+      </div>
     </div>
   );
 }

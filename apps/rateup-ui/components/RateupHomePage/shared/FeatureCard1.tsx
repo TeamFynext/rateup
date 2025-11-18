@@ -1,15 +1,29 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { ArrowRight } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 
 import { imagesPath } from "@/utils/constants";
 
-const features = [
+type FeatureKey = "24/7 Chatbot" | "Loyalty Programs" | "WhatsApp Campaigns";
+// | "QR Codes"
+// | "";
+
+const featureContent: Record<
+  FeatureKey,
   {
+    title?: string;
+    description?: string;
+    benefit?: string;
+    image?: string;
+    link?: string;
+  }
+> = {
+  "24/7 Chatbot": {
     title: "24/7 AI Chatbot for Instant Support",
     description:
       "Provide round-the-clock support with our smart, multi-language AI chatbot, seamlessly integrated into WhatsApp and your website.",
@@ -17,9 +31,8 @@ const features = [
       "Benefit: Deliver highly personalized experiences that truly connect, boosting customer loyalty and making your marketing efforts more effective.",
     image: `${imagesPath}/CHATBOT (3).png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/ai-automation",
-    reverse: true,
   },
-  {
+  "Loyalty Programs": {
     title: "Loyalty Programs Your Customers Will Actually Use",
     description:
       "Forget physical cards and complex sign-ups. Your customers can join loyalty programs, earn points, and refer friends, all through a simple WhatsApp chat.",
@@ -27,9 +40,8 @@ const features = [
       "Benefit: Watch your customer retention and word-of-mouth growth soar with loyalty programs that are easy and rewarding for everyone.",
     image: `${imagesPath}/LOYALTY PROGRAM (2).png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/whatsapp-loyalty",
-    reverse: false,
   },
-  {
+  "WhatsApp Campaigns": {
     title: "Easy WhatsApp Marketing Campaigns",
     description:
       "Send personalized messages, promotions, and surveys directly on WhatsApp. Our simple drag-and-drop builder means you can create campaigns in minutes, no tech skills needed.",
@@ -37,92 +49,95 @@ const features = [
       "Benefit: Your messages get seen and acted on, with incredibly high open and click rates, driving more sales and interactions.",
     image: `${imagesPath}/WHATSAPP CAMPAIGN.png`,
     link: "https://rateup-homepage-dev.up.railway.app/products/whatsapp-survey",
-    reverse: true,
   },
-];
+};
 
-export default function FeatureCards1() {
+export default function FeatureTabs() {
+  const [activeTab, setActiveTab] = useState<FeatureKey>("24/7 Chatbot");
+  const active = featureContent[activeTab];
+
   return (
-    <section className="bg-white mt-8 sm:mt-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-3 sm:space-y-4">
+    <section className="bg-white mt-12 sm:mt-20 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto flex flex-col items-center gap-12">
         {/* Section Header */}
-        <motion.div
+        <motion.h2
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="text-center"
+          className="text-center text-[30px] sm:text-[45px] font-semibold text-[#1c518e]"
         >
-          <h2 className="text-[30px] sm:text-[45px]  text-[#1c518e] leading-tight">
-            <span className="relative inline-block font-semibold">
-              <span className="absolute -inset-x-2 bottom-0.5 h-3 bg-[#bcd6fc] z-0 rounded-sm" />
-              <span className="relative z-10 text-[#1c518e]">
-                {" "}
-                Your Complete{" "}
-              </span>
-            </span>{" "}
-            <br className="hidden sm:block" />
-            <span className="font-semibold"> Customer Engagement Solution</span>
-          </h2>
-        </motion.div>
+          Your Complete <br />
+          Customer Engagement Solution
+        </motion.h2>
 
-        {/* Feature Rows */}
-        {features.map((feature, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, y: 60 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.7,
-              ease: "easeOut",
-              delay: idx * 0.15,
-            }}
-            viewport={{ once: true }}
-            className={`flex flex-col lg:flex-row ${
-              feature.reverse ? "lg:flex-row-reverse" : ""
-            } items-stretch gap-6 sm:gap-10 sm:gap-x-20 border-t-[1.5px] pt-3 sm:pt-2 sm:pb-6`}
-          >
-            {/* Image */}
-            <div className="w-full lg:w-1/2 px-3.5 sm:px-0 flex items-center justify-center">
-              <div className="w-full h-full overflow-hidden ">
-                <Image
-                  src={feature.image}
-                  alt={`feature-${idx}`}
-                  width={600}
-                  height={520}
-                  className="w-full h-full object-contain rounded-4xl"
-                />
-              </div>
-            </div>
+        {/* Tabs */}
+        <div className="flex gap-6 border-b border-gray-300 overflow-x-auto">
+          {(Object.keys(featureContent) as FeatureKey[]).map((key) => {
+            const isActive = key === activeTab;
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`pb-2 text-lg font-medium ${
+                  isActive
+                    ? "text-[#1c518e] border-b-2 border-[#1c518e]"
+                    : "text-gray-500"
+                }`}
+              >
+                {key}
+              </button>
+            );
+          })}
+        </div>
 
-            {/* Text Content */}
-            <div className="w-full lg:w-1/2 px-3.5 sm:px-0 flex items-center">
-              <div className="min-h-[280px] sm:min-h-[360px] lg:min-h-[460px] xl:min-h-[520px] flex flex-col justify-center gap-y-4 sm:gap-y-8">
-                {/* Step Number */}
-                <p className="text-lg font-semibold text-[#1c518e]">
-                  {String(idx + 1).padStart(2, "0")}.
-                </p>
+        {/* Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center w-full">
+          {/* Image */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={active.image}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="relative w-full h-[250px] sm:h-[350px] md:h-[420px] rounded-xl overflow-hidden"
+            >
+              <Image
+                src={active.image}
+                alt={active.title}
+                fill
+                className="object-contain"
+              />
+            </motion.div>
+          </AnimatePresence>
 
-                <h3 className="text-xl sm:text-[36px] font-semibold text-black leading-tight mb-2 sm:mb-4">
-                  {feature.title}
-                </h3>
-                <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
-                <Link
-                  href={feature.link}
-                  className="text-[#00397b] font-semibold text-lg hover:underline
-              sm:text-xl inline-flex items-center gap-1"
-                >
-                  Let&apos;s find out <ArrowRight />
-                </Link>
-
-                {/* Benefit Box */}
-                {/* Benefit Box */}
-              </div>
-            </div>
-          </motion.div>
-        ))}
+          {/* Text */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={active.title}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-4 text-center md:text-left"
+            >
+              <h3 className="text-2xl sm:text-3xl font-semibold text-gray-900">
+                {active.title}
+              </h3>
+              <p className="text-gray-600">{active.description}</p>
+              <p className="text-sm sm:text-base font-medium text-[#1c518e]">
+                {active.benefit}
+              </p>
+              <Link
+                href={active.link}
+                className="text-[#00397b] font-semibold text-lg hover:underline inline-flex items-center gap-1"
+              >
+                Let&apos;s find out <ArrowRight />
+              </Link>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </section>
   );

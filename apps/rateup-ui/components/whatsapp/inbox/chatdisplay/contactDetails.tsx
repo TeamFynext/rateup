@@ -816,24 +816,6 @@ export default function WaInboxContactDetails({
                 {contact?.waMessageAssignStatus || t("Unknown")}
               </span>
             </motion.div>
-
-            <motion.div
-              className="flex items-center justify-between p-1.5 rounded-lg bg-muted/50"
-              whileHover={{ scale: 1.01, backgroundColor: "rgba(0,0,0,0.06)" }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flex items-center space-x-1.5">
-                <Clock className="w-3.5 h-3.5 text-orange-600" />
-                <span className="text-xs">{t("Last seen")}</span>
-              </div>
-              <span className="text-[11px] font-medium">
-                {contact?.lastReceivedMessageTimeStamp
-                  ? new Date(
-                      contact.lastReceivedMessageTimeStamp,
-                    ).toLocaleString()
-                  : t("Unknown")}
-              </span>
-            </motion.div>
           </motion.div>
 
           <Separator />

@@ -1,11 +1,11 @@
 "use client";
 
 import { Table } from "@tanstack/react-table";
-import { X } from "lucide-react";
+import { Shield } from "lucide-react";
+import { useTranslations } from "next-intl";
 
+import RefreshButton from "@/components/Button/RefreshButton";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -14,30 +14,23 @@ interface DataTableToolbarProps<TData> {
 export function DataTableToolbar<TData>({
   table,
 }: Readonly<DataTableToolbarProps<TData>>) {
-  // const isFiltered = table.getState().columnFilters.length > 0;
-
+  const translations = useTranslations();
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center gap-2">
-        {/* <Input
-          placeholder="Filter by name or organization..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => {
-            const value = event.target.value;
-            table.getColumn("name")?.setFilterValue(value);
-          }}
-          className="h-8 w-[150px] lg:w-[250px]"
-        /> */}
-        {/* {isFiltered && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => table.resetColumnFilters()}
-          >
-            Reset
-            <X />
-          </Button>
-        )} */}
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <Shield className="h-5 w-5 text-primary" />
+                <h1 className="text-2xl font-semibold tracking-tight">
+                  {translations("AuditLogs")}
+                </h1>
+              </div>
+              <RefreshButton queryKeys={["userAuditLogs"]} />
+            </div>
+          </div>
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <DataTableViewOptions table={table} />
