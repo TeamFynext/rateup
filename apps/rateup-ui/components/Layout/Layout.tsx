@@ -41,11 +41,11 @@ import {
   useContactLabels,
   useCustomFields,
 } from "@/backend/campaign/contacts/contacts.query";
-import { useLabelsQuery } from "@/backend/label/label.query";
+import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { CustomFieldsProvider } from "@/context/CustomFieldsContext";
-import { LabelsContext } from "@/context/LabelsContext";
+import { LifecycleContext } from "@/context/LifecycleContext";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import {
@@ -1109,14 +1109,14 @@ const MainContent = ({
   children,
   navOpened,
   setNavOpened,
-  labels,
+  lifecycles,
   customFieldData,
   pathname,
 }) => {
   return (
     <motion.div className={styles["content-container"]}>
       <Flex className={`${styles["content-wrapper"]}`}>
-        <LabelsContext value={labels}>
+        <LifecycleContext value={lifecycles}>
           <CustomFieldsProvider initialFields={customFieldData || []}>
             <NavControlContext value={{ navOpened, setNavOpened }}>
               <div
@@ -1129,7 +1129,7 @@ const MainContent = ({
               </div>
             </NavControlContext>
           </CustomFieldsProvider>
-        </LabelsContext>
+        </LifecycleContext>
       </Flex>
     </motion.div>
   );
@@ -1176,7 +1176,8 @@ export default function Layout({ children }) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop, open }] = useDisclosure(false);
   const { data: sub, isPending } = useSubscription();
-  const { isPending: isPendingLabels, data: lifecycles } = useLabelsQuery();
+  const { isPending: isPendingLifecycles, data: lifecycles } =
+    useLifeCyclesQuery();
   const { isPending: isCustomFieldPending, data: customFieldData } =
     useCustomFields();
   const { data: contactLabels = [], isPending: isPendingContactLabels } =
@@ -1189,7 +1190,7 @@ export default function Layout({ children }) {
   const [intendedRoute, setIntendedRoute] = useState<string | null>(null);
   const isLoading =
     isPending ||
-    isPendingLabels ||
+    isPendingLifecycles ||
     isLoadingUserInfo ||
     isCustomFieldPending ||
     isPendingContactLabels;
@@ -1466,7 +1467,7 @@ export default function Layout({ children }) {
           <MainContent
             navOpened={navOpened}
             setNavOpened={setNavOpened}
-            labels={lifecycles}
+            lifecycles={lifecycles}
             customFieldData={customFieldData}
             pathname={pathname}
           >

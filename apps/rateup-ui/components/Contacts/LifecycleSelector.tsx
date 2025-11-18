@@ -6,7 +6,7 @@ import { Button, Select, SelectProps } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 
 import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
-import { useLabelsContext } from "@/context/LabelsContext";
+import { useLifecycleContext } from "@/context/LifecycleContext";
 
 import { useEditContactLabelsMutation } from "../../backend/campaign/contacts/contacts.query";
 import DropdownSelector from "../ui/custom/DropDownSelector";
@@ -18,7 +18,7 @@ export const LifecycleSelector = ({
   value: string;
   id: string;
 }) => {
-  const tags = useLabelsContext();
+  const tags = useLifecycleContext();
   const { updateContactById } = useContactsStore();
   const editContactMutation = useEditContactLabelsMutation(id);
 
@@ -124,7 +124,7 @@ export const LifecycleInput = ({
   disabled = false,
   ...props
 }: SelectProps) => {
-  const tags = useLabelsContext();
+  const tags = useLifecycleContext();
 
   // Memoize the labels to prevent unnecessary recalculations
   const lifecycleLabels = React.useMemo(

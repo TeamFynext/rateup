@@ -1,7 +1,7 @@
 import { WHATSAPP_URL } from "..";
 import { MetaLoginAssets, WaConfigType } from "../../../types/enums";
 import { axiosClient } from "../../apiClient";
-import { GetLabelsRes } from "../../label/label.types";
+import { GetLabelsRes } from "../../lifecycle/lifecycle.types";
 
 const SettingsUrl = `${WHATSAPP_URL}/settings`;
 const authUrl = `${WHATSAPP_URL}/auth`;

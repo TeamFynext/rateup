@@ -56,7 +56,7 @@ import {
   UserX,
 } from "lucide-react";
 
-import { GetLabelsRes } from "@/backend/label/label.types";
+import { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import { getInboxNavContactCount } from "@/components/whatsapp/inbox/util";
 
 import {
