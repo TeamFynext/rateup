@@ -521,6 +521,8 @@ export async function filterChats(
           c."followerCount",
           c."isIgVerifiedUser",
           c."lifecycleId",
+          c."closedAt",
+          json_build_object('id', c."closedBy", 'name', cu.name)  AS "closedUser",
           COALESCE(c.tags, '{}'::jsonb) as tags,
          (
       SELECT COUNT(*)::INTEGER 
@@ -535,6 +537,7 @@ export async function filterChats(
           c."lastMessageSourceIdentifier",
           c."lastReceivedMetadata"
         FROM "Contact" c
+        LEFT JOIN "User" cu ON cu.id = c."closedBy"
         WHERE ${whereClause}
         ORDER BY ${orderBy} ${sortBy} NULLS LAST
         LIMIT 20 OFFSET $2
