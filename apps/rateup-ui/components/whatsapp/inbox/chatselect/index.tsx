@@ -61,7 +61,7 @@ import { useFilteredContacts } from "@/backend/whatsapp/inbox/message/wamessage.
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import { Button } from "@/components/ui/button";
-import { useLabelsContext } from "@/context/LabelsContext";
+import { useLifecycleContext } from "@/context/LifecycleContext";
 import { useUser } from "@/context/UserContext";
 
 import { ContainedTextField } from "../../../input/ContainedInput/ContainedInput";
@@ -322,7 +322,7 @@ const WaInboxChatSelect = () => {
     }
   }, [tab]);
 
-  const lifeCycleLabels = useLabelsContext();
+  const lifeCycleLabels = useLifecycleContext();
 
   if (isContactLoading || isLoading)
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
