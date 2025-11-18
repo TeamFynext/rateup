@@ -123,6 +123,8 @@ export const getFileNameFromFile = (data: File | string, label: string) => {
   else return label;
 };
 export const getLabel = (data: File | string, label: string) => {
-  if (data) return `Update ${label}`;
+  if (data instanceof File) return `${data?.name}`;
+  else if (data && typeof data === "string" && data.length > 0)
+    return `Update ${label}`;
   else return `Select a ${label}`;
 };
