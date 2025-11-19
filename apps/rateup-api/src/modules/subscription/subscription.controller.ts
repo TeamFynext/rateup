@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   deleteSubscriptions,
   getAllSubscriptions,
+  getMessageStatsByOrgId,
   getSubscription,
   updateSubscription,
 } from "./subscription.service";
@@ -17,6 +18,7 @@ import {
   updateAnnualMessageCount,
   updateUsageStatsLastReset,
 } from "../stats/stats.service";
+import { log } from "../../utils/logger";
 
 export async function getUserSubscriptionHandler(req, res) {
   const { orgId } = req.user;
@@ -81,4 +83,21 @@ export async function deleteSubscriptionsHandler(
   const orgIds = req.body;
   const subscriptions = await deleteSubscriptions(orgIds);
   return res.send(subscriptions);
+}
+
+export async function getMessageStatsHandler(
+  req: FastifyRequest<{
+    Params: ByOrgIdParams;
+    QueryString: { dateRange?: string };
+  }>,
+  res: FastifyReply,
+) {
+  try {
+    const orgId = req.params.orgId;
+    const subscriptions = await getMessageStatsByOrgId(orgId, req.query);
+    return res.send(subscriptions);
+  } catch (e) {
+    log.error(e);
+    res.code(500).send(e);
+  }
 }
