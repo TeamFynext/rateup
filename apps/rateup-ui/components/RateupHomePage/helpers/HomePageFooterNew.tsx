@@ -78,7 +78,7 @@ export default function HomePageFooter() {
   return (
     <section className="bg-white flex justify-center flex-col">
       <div className="flex justify-center py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl flex flex-col lg:flex-row items-start justify-between w-full gap-8 lg:gap-0">
+        <div className="max-w-7xl flex flex-col lg:flex-row items-start justify-between w-full gap-8 lg:gap-10">
           <div className="flex flex-col sm:flex-row sm:flex-wrap lg:flex-nowrap items-start gap-8 sm:gap-10 lg:gap-30 w-full lg:w-auto">
             {/* Products */}
             <div className="flex flex-col justify-between h-full w-full sm:w-auto">
@@ -174,7 +174,7 @@ export default function HomePageFooter() {
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center w-full lg:min-w-[15vw] gap-8 lg:gap-20 mt-8 lg:mt-0">
+          <div className="flex flex-col items-center justify-center lg:min-w-[15vw] gap-8 lg:gap-20 mt-8 lg:mt-0">
             <div className="flex flex-col items-center justify-center gap-4 w-full">
               <Link
                 href={

@@ -56,6 +56,7 @@ export default function Clients() {
                   width={400}
                   height={400}
                   priority
+                  quality={60}
                   className="h-auto w-full object-contain max-w-[25vw] rounded-tr-4xl"
                 />
               </div>

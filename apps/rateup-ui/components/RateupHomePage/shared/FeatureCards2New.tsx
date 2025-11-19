@@ -84,6 +84,7 @@ export default function FeatureCards2() {
                   <Image
                     src={feature.image}
                     alt={feature.title}
+                    quality={60}
                     fill
                     className="object-contain rounded-xl sm:rounded-2xl"
                   />

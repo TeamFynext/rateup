@@ -76,7 +76,8 @@ export default function Features() {
                 alt="Campaign management"
                 width={600}
                 height={600}
-                className="w-full h-auto object-contain"
+                quality={60}
+                className="w-full h-auto object-contain rounded-br-xl"
                 priority
               />
             </motion.div>
@@ -103,6 +104,7 @@ export default function Features() {
                 alt="WhatsApp Business API"
                 width={600}
                 height={600}
+                quality={60}
                 className="w-full h-auto object-contain"
                 priority
               />
@@ -132,6 +134,7 @@ export default function Features() {
                 alt="Ticketing and escalation"
                 width={600}
                 height={600}
+                quality={60}
                 className="w-full h-auto object-contain"
                 priority
               />
@@ -161,7 +164,8 @@ export default function Features() {
                 alt="Multi-branch"
                 width={600}
                 height={600}
-                className="w-full h-auto object-contain"
+                quality={60}
+                className="w-full h-auto object-contain rounded-br-xl"
                 priority
               />
             </motion.div>
@@ -189,6 +193,7 @@ export default function Features() {
               <Image
                 src={`${imagePath}/homepage/whatsappflow.svg`}
                 alt="WhatsApp Flow"
+                quality={60}
                 width={600}
                 height={600}
                 className="w-full h-auto object-contain"
@@ -218,6 +223,7 @@ export default function Features() {
                 alt="QR Codes"
                 width={600}
                 height={600}
+                quality={60}
                 className="w-full h-auto object-contain"
                 priority
               />
