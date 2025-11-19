@@ -44,7 +44,7 @@ function OnboardingStep4({
                 : "border-gray-200 bg-white hover:border-blue-300"
             }`}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex sm:flex-row flex-col sm:items-center justify-between">
               <div className="flex items-center space-x-3">
                 <Checkbox
                   checked={data.integrationsSelected.includes(integration.id)}
@@ -53,7 +53,7 @@ function OnboardingStep4({
                   }
                   className="border-2 border-gray-300"
                 />
-                <div className="flex items-center space-x-2.5">
+                <div className="flex items-center space-x-1 sm:space-x-2.5">
                   <div
                     className={`w-9 h-9 rounded-lg flex items-center justify-center ${integration.color} shadow-md`}
                   >
@@ -62,11 +62,13 @@ function OnboardingStep4({
                   <div>
                     <div className="flex items-center space-x-2">
                       <span className="text-gray-900">{integration.name}</span>
-                      {integration.required && (
-                        <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white px-2 py-0.5 rounded-full shadow-sm">
-                          Recommended
-                        </span>
-                      )}
+                      <div className="hidden sm:block">
+                        {integration.required && (
+                          <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white px-2 py-0.5 rounded-full shadow-sm">
+                            Recommended
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-gray-600">{integration.description}</p>
                   </div>
@@ -111,7 +113,7 @@ function OnboardingStep4({
         <div className="flex space-x-2">
           <Button
             onClick={handleSubmit}
-            className={`flex items-center px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`flex items-center px-6 py-2 bg-primary hover:bg-rateup-blue text-white shadow-lg hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {loading ? <Loader /> : "Continue"}
             <ArrowRight className="w-4 h-4 ml-2" />
