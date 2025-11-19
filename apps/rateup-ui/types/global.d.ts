@@ -1169,6 +1169,25 @@ export type WaAutomatedReply = {
   };
   whatsappSettingsPhoneId: string;
   sendOnceIn24Hours: boolean;
+  businessHourId: string | null;
+  businessHour?: {
+    id: string;
+    name: string;
+    timezone: string;
+    schedule: {
+      [day: string]: {
+        isOpen: boolean;
+        timeSlots: Array<{
+          openTime: string;
+          closeTime: string;
+        }>;
+      };
+    };
+    channels: string[];
+    description?: string;
+    createdAt: string;
+    updatedAt: string;
+  };
 };
 
 //types related to wa inbox

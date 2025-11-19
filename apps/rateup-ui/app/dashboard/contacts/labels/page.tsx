@@ -22,7 +22,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -133,60 +132,43 @@ export default function LabelsPage() {
     deleteLabelMutation.isPending;
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Contact Labels</h1>
-          <p className="text-gray-600 mt-1">
-            Organize your contacts with custom labels
-          </p>
+    <div className="h-full">
+      {labels.length === 0 ? (
+        <div className="grid place-content-center py-12 h-full">
+          <div className="text-center">
+            <Tag className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No labels yet
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Create your first label to start organizing contacts.
+            </p>
+            <Button
+              onClick={() => {
+                resetForm();
+                setIsCreateModalOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Label
+            </Button>
+          </div>
         </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Tag className="w-5 h-5 mr-2" />
-            All Labels ({labels.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {labels.length === 0 ? (
-            <div className="text-center py-12">
-              <Tag className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No labels yet
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Create your first label to start organizing contacts.
-              </p>
-              <Button
-                onClick={() => {
-                  resetForm();
-                  setIsCreateModalOpen(true);
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Label
-              </Button>
-            </div>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={labels}
-              DataTableToolbar={(props) => (
-                <DataTableToolbar
-                  {...props}
-                  onCreateClick={() => {
-                    resetForm();
-                    setIsCreateModalOpen(true);
-                  }}
-                />
-              )}
+      ) : (
+        <DataTable
+          columns={columns}
+          data={labels}
+          DataTableToolbar={(props) => (
+            <DataTableToolbar
+              {...props}
+              onCreateClick={() => {
+                resetForm();
+                setIsCreateModalOpen(true);
+              }}
             />
           )}
-        </CardContent>
-      </Card>
+        />
+      )}
 
       {/* Create Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
