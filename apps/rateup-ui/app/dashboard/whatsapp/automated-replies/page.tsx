@@ -33,6 +33,7 @@ export default function AutomatedRepliesPage() {
           opened={opened}
           onClose={close}
           title={translations("Create Automation")}
+          size={"lg"}
         >
           <AutomatedReplyForm close={close} />
         </SimpleModalLayout>

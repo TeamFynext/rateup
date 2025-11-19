@@ -1,13 +1,20 @@
 "use client";
 
-import { Button, Flex, Group, Modal, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconX } from "@tabler/icons-react";
 import { Table } from "@tanstack/react-table";
+import { Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { CustomFieldForm } from "@/components/Contacts/label-form";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -19,37 +26,39 @@ export function DataTableToolbar<TData>({
   const isFiltered = table.getState().columnFilters.length > 0;
 
   return (
-    <Flex justify="space-between" align="center">
-      <Flex align="center" gap="sm" style={{ flex: 1 }}>
-        <TextInput
-          placeholder="Filter labels..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.currentTarget.value)
-          }
-          size="sm"
-          style={{ width: 250 }}
-        />
+    <div className="flex items-center justify-between">
+      <div className="flex flex-1 items-center space-x-2">
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search custom fields..."
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("name")?.setFilterValue(event.target.value)
+            }
+            className="pl-8 w-[250px] lg:w-[300px]"
+          />
+        </div>
         {isFiltered && (
           <Button
-            variant="subtle"
-            size="sm"
+            variant="ghost"
             onClick={() => table.resetColumnFilters()}
-            rightSection={<IconX size={16} />}
+            className="h-8 px-2 lg:px-3"
           >
             Reset
+            <X className="ml-2 h-4 w-4" />
           </Button>
         )}
-      </Flex>
-      <Group gap="sm">
+      </div>
+      <div className="flex items-center gap-2">
         <DataTableViewOptions table={table} />
-        <AddLabels />
-      </Group>
-    </Flex>
+        <AddCustomField />
+      </div>
+    </div>
   );
 }
 
-const AddLabels = () => {
+const AddCustomField = () => {
   const [opened, { toggle, close }] = useDisclosure();
   const t = useTranslations();
 
@@ -58,14 +67,14 @@ const AddLabels = () => {
       <Button size="sm" onClick={toggle}>
         {t("Add Custom Field")}
       </Button>
-      <Modal
-        opened={opened}
-        onClose={close}
-        title={t("Add Custom Field")}
-        centered
-      >
-        <CustomFieldForm close={close} />
-      </Modal>
+      <Dialog open={opened} onOpenChange={toggle}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("Add Custom Field")}</DialogTitle>
+          </DialogHeader>
+          <CustomFieldForm close={close} />
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
