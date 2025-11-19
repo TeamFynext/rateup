@@ -27,6 +27,7 @@ export async function getMessageStats(orgId, filter = "") {
   return (
     await axiosClient.get(
       `${SUBSCRIPTION_URL}/message-stats/${orgId}?${filter}`,
+      { timeout: 0 },
     )
   ).data;
 }

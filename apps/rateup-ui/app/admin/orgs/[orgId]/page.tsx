@@ -35,6 +35,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
@@ -193,7 +194,7 @@ export default function OrgById() {
     }
   }, [ranges]);
 
-  if (isError || isSubErr || messageError) {
+  if (isError || isSubErr) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <Card className="w-96">
@@ -208,13 +209,7 @@ export default function OrgById() {
     );
   }
 
-  if (
-    isLoading ||
-    isOrgsLoading ||
-    !stats ||
-    isSubLoading ||
-    isMessageStatsLoading
-  )
+  if (isLoading || isOrgsLoading || !stats || isSubLoading)
     return <RateupLoader h={"100dvh"} />;
 
   return (
@@ -440,15 +435,20 @@ export default function OrgById() {
           <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            title="Template Messages Sent"
-            count={messageStats?.count}
-            icon={LayoutTemplate}
-            color="green"
-          />
+          {isMessageStatsLoading ? (
+            <Spinner />
+          ) : messageError ? (
+            <p>Error getting message stats</p>
+          ) : (
+            <StatCard
+              title="Template Messages Sent"
+              count={messageStats?.count}
+              icon={LayoutTemplate}
+              color="green"
+            />
+          )}
         </div>
       </div>
-
       {/* Modals */}
       {subscription && (
         <SubscriptionEditorModal
