@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { showErrorToast, showSuccessToast } from "../../utils/notifications";
 import {
   getAllSubscriptions,
+  getMessageStats,
   getSubscription,
   getUserSubscription,
   updateSubscription,
@@ -51,5 +52,16 @@ export const useUpdateSubscriptionMutation = () => {
         `Error updating subscription ${error?.response?.data?.message ?? ""}`,
       );
     },
+  });
+};
+
+export const useMessageStats = (orgId, filter: any) => {
+  const filterQuery = Object.entries(filter)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
+  return useQuery({
+    queryFn: () => getMessageStats(orgId, filterQuery),
+    queryKey: ["messageStats", orgId, filter],
+    enabled: !!orgId,
   });
 };

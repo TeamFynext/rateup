@@ -10,6 +10,7 @@ import {
   Edit,
   Globe,
   Info,
+  LayoutTemplate,
   MessageSquare,
   Pause,
   Play,
@@ -21,7 +22,9 @@ import {
   Zap,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Range } from "react-date-range";
 
+import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +49,7 @@ import {
   useUpdateOrgPause,
 } from "../../../../backend/org/org.query";
 import {
+  useMessageStats,
   useSubscriptionByOrgId,
   useUpdateSubscriptionMutation,
 } from "../../../../backend/subscription/subscription.query";
@@ -164,7 +168,32 @@ export default function OrgById() {
       setIsAnnualMessageLimit(subscription.isAnnualMessageLimit);
   }, [subscription]);
 
-  if (isError || isSubErr) {
+  const [ranges, setRange] = useState<Range[]>([
+    {
+      key: "selection",
+    },
+  ]);
+  const {
+    data: messageStats,
+    isLoading: isMessageStatsLoading,
+    error: messageError,
+  } = useMessageStats(orgId, {
+    dateRange:
+      !ranges.length || !ranges[0].startDate || !ranges[0].endDate
+        ? []
+        : [
+            ranges[0]?.startDate.toISOString(),
+            ranges[0]?.endDate.toISOString(),
+          ],
+  });
+
+  useEffect(() => {
+    if (ranges.length === 0) {
+      setRange([{ key: "selction" }]);
+    }
+  }, [ranges]);
+
+  if (isError || isSubErr || messageError) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <Card className="w-96">
@@ -179,7 +208,13 @@ export default function OrgById() {
     );
   }
 
-  if (isLoading || isOrgsLoading || !stats || isSubLoading)
+  if (
+    isLoading ||
+    isOrgsLoading ||
+    !stats ||
+    isSubLoading ||
+    isMessageStatsLoading
+  )
     return <RateupLoader h={"100dvh"} />;
 
   return (
@@ -395,6 +430,23 @@ export default function OrgById() {
             color="rose"
           />
         </StatSection>
+      </div>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <LayoutTemplate className="h-5 w-5 text-muted-foreground" />
+          <h3 className="text-lg font-semibold tracking-tight">
+            Template Message Count
+          </h3>
+          <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard
+            title="Template Messages Sent"
+            count={messageStats?.count}
+            icon={LayoutTemplate}
+            color="green"
+          />
+        </div>
       </div>
 
       {/* Modals */}
