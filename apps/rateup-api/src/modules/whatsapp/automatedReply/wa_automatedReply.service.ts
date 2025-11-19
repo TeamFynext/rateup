@@ -1,11 +1,10 @@
 import dayjs from "dayjs";
 import prisma from "../../../utils/prisma";
-import { getTeamIdsByUserId } from "../../team/team.service";
-import { getUserIdsByTeamId } from "../../user/user.service";
 import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema";
-import { getUsageStat, updateMonthlyStat } from "../../stats/stats.service";
+import { getUsageStat } from "../../stats/stats.service";
 import { getSubscription } from "../../subscription/subscription.service";
 import { log } from "../../../utils/logger";
+import { selectAutomationByBusinessHours } from "./wa_automatedReply.utils";
 
 export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
   const automatedReplies = await prisma.waAutomatedReplyMessage.findMany({
@@ -37,6 +36,7 @@ export async function getAutomatedRepliesByOrgId(
       WaAutomatedReplyCommands: {
         select: {
           command: true,
+          businessHour: true,
         },
       },
     },
@@ -49,6 +49,7 @@ export async function getAutomatedRepliesByOrgId(
     return {
       ...rest,
       commands: WaAutomatedReplyCommands.map((c) => c.command),
+      businessHour: WaAutomatedReplyCommands?.[0]?.businessHour,
     };
   });
 }
@@ -62,6 +63,7 @@ export async function getAutomatedReplyById(id: string) {
       WaAutomatedReplyCommands: {
         select: {
           command: true,
+          businessHourId: true,
         },
       },
     },
@@ -70,14 +72,69 @@ export async function getAutomatedReplyById(id: string) {
   return {
     ...rest,
     commands: WaAutomatedReplyCommands.map((c) => c.command),
+    businessHourId: WaAutomatedReplyCommands?.[0]?.businessHourId,
   };
+}
+
+async function validateUniqueCommands(
+  orgId: string,
+  commands: string[],
+  businessHourId?: string | null,
+) {
+  for (const command of commands) {
+    const existingCommand = await prisma.waAutomatedReplyCommands.findFirst({
+      where: {
+        orgId,
+        command,
+        businessHourId: businessHourId || null,
+      },
+    });
+
+    if (existingCommand) {
+      throw new Error(
+        `Command '${command}' already exists for this organization with the same business hour configuration`,
+        {
+          cause: { code: "P2002" },
+        },
+      );
+    }
+  }
+}
+
+async function validateUniqueCommandsForUpdate(
+  orgId: string,
+  commands: string[],
+  businessHourId: string | null | undefined,
+  excludeAutomatedReplyId: string,
+) {
+  for (const command of commands) {
+    const existingCommand = await prisma.waAutomatedReplyCommands.findFirst({
+      where: {
+        orgId,
+        command,
+        businessHourId: businessHourId || null,
+        waAutomatedReplyId: {
+          not: excludeAutomatedReplyId,
+        },
+      },
+    });
+
+    if (existingCommand) {
+      throw new Error(
+        `Command '${command}' already exists for this organization with the same business hour configuration`,
+      );
+    }
+  }
 }
 
 export async function createAutomatedReply(
   data: CreateAutomatedReplySchema,
   orgId: string,
 ) {
-  const { commands = [], ...restData } = data;
+  const { commands = [], businessHourId, ...restData } = data;
+
+  // Validate unique commands before creating
+  await validateUniqueCommands(orgId, commands, businessHourId);
 
   const automatedReply = await prisma.$transaction(async (prisma) => {
     const createdAutomatedReply = await prisma.waAutomatedReply.create({
@@ -94,6 +151,7 @@ export async function createAutomatedReply(
         orgId,
         command: c === "lead" ? `${c}_${dayjs().unix()}` : c,
         waAutomatedReplyId: createdAutomatedReply.id,
+        businessHourId,
       })),
     });
     return createdAutomatedReply;
@@ -112,7 +170,11 @@ export async function updateAutomatedReply(
   data: any,
   orgId: string,
 ) {
-  const { commands = [], ...restData } = data;
+  const { commands = [], businessHourId, ...restData } = data;
+
+  // Validate unique commands before updating, excluding current automated reply
+  await validateUniqueCommandsForUpdate(orgId, commands, businessHourId, id);
+
   return prisma.$transaction(async (prisma) => {
     const updatedAutomatedReply = await prisma.waAutomatedReply.update({
       where: {
@@ -133,6 +195,7 @@ export async function updateAutomatedReply(
         orgId,
         command: c,
         waAutomatedReplyId: updatedAutomatedReply.id,
+        businessHourId,
       })),
     });
     return updatedAutomatedReply;
@@ -164,13 +227,11 @@ export async function getCommandByOrgIdAndCommand(
   orgId: string,
   command: string,
 ) {
-  const AutomatedReplyCommand =
-    await prisma.waAutomatedReplyCommands.findUnique({
+  const AutomatedReplyCommands = await prisma.waAutomatedReplyCommands.findMany(
+    {
       where: {
-        command_org_id_unique: {
-          orgId,
-          command,
-        },
+        orgId,
+        command,
         waAutomatedReply: {
           isEnabled: true,
         },
@@ -179,9 +240,12 @@ export async function getCommandByOrgIdAndCommand(
         command: true,
         waAutomatedReplyId: true,
         waAutomatedReply: true,
+        businessHour: true,
       },
-    });
-  return AutomatedReplyCommand;
+    },
+  );
+
+  return selectAutomationByBusinessHours(AutomatedReplyCommands);
 }
 
 export async function verifyAutomationTriggerLimit(orgId) {

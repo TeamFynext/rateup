@@ -15,7 +15,15 @@ import {
   updateOrgDetailsHandler,
   updateRoleController,
 } from "./org.controller";
+import {
+  createBusinessHourHandler,
+  deleteBusinessHourHandler,
+  getAllBusinessHoursHandler,
+  getBusinessHourHandler,
+  updateBusinessHourHandler,
+} from "./businessHour.controller";
 import { $Sref } from "./org.schema";
+import { $BusinessHourRef } from "./businessHour.schema";
 import { checkRoleHandler } from "../../utils/checkRoleHandler";
 import { checkSession } from "../../utils/checkSession";
 import { assertRootOrg } from "../../utils/auth";
@@ -127,4 +135,57 @@ export async function orgRoutes(server: FastifyInstance) {
 
   server.put("/completeorgdetails", completeOrgDetailsHandler);
   server.get("/orgnameandphone", orgNameAndPhoneNumber);
+
+  // BusinessHour routes
+  server.post(
+    "/business-hours",
+    {
+      schema: {
+        body: $BusinessHourRef("createBusinessHourSchema"),
+        response: {
+          201: $BusinessHourRef("businessHourResponseSchema"),
+        },
+      },
+    },
+    createBusinessHourHandler,
+  );
+
+  server.get("/business-hours", getAllBusinessHoursHandler);
+
+  server.get(
+    "/business-hours/:id",
+    {
+      schema: {
+        params: $BusinessHourRef("businessHourParamsSchema"),
+        response: {
+          200: $BusinessHourRef("businessHourResponseSchema"),
+        },
+      },
+    },
+    getBusinessHourHandler,
+  );
+
+  server.put(
+    "/business-hours/:id",
+    {
+      schema: {
+        params: $BusinessHourRef("businessHourParamsSchema"),
+        body: $BusinessHourRef("updateBusinessHourSchema"),
+        response: {
+          200: $BusinessHourRef("businessHourResponseSchema"),
+        },
+      },
+    },
+    updateBusinessHourHandler,
+  );
+
+  server.delete(
+    "/business-hours/:id",
+    {
+      schema: {
+        params: $BusinessHourRef("businessHourParamsSchema"),
+      },
+    },
+    deleteBusinessHourHandler,
+  );
 }

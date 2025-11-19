@@ -165,6 +165,7 @@ model Org {
   ContactCustomField       ContactCustomField[]
   AuditLog                 AuditLog[]
   ContactLabel             ContactLabel[]
+  businessHours            BusinessHour[]
 }
 
 model UsageStats {
@@ -1437,8 +1438,10 @@ model WaAutomatedReplyCommands {
   org                Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
   waAutomatedReply   WaAutomatedReply? @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
   waAutomatedReplyId String?           @db.Uuid
+  businessHourId     String?           @db.Uuid
+  businessHour       BusinessHour?     @relation(fields: [businessHourId], references: [id], onDelete: Cascade)
 
-  @@unique([command, orgId], name: "command_org_id_unique")
+  @@unique([command, orgId, businessHourId], name: "org_command_businessHour_unique")
 }
 
 enum WaAutomationProgressStatus {
@@ -1709,14 +1712,14 @@ model LoyaltyReferralCode {
 }
 
 model WhatsappQuickReply {
-  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orgId    String @db.Uuid
-  org      Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  text     String
-  category String @default("General")
-  topic    String @default("General Inquiry")
-  key      String?
-  createdAt DateTime    @default(now())
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orgId     String   @db.Uuid
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  text      String
+  category  String   @default("General")
+  topic     String   @default("General Inquiry")
+  key       String?
+  createdAt DateTime @default(now())
 }
 
 model LoyaltyApiSettings {
@@ -1864,4 +1867,22 @@ model AuditLog {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([orgId])
+}
+
+model BusinessHour {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  orgId String @db.Uuid
+  org   Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  name        String
+  timezone    String
+  channels    String[]
+  description String?
+
+  schedule Json // <---- stores 7 days + timeslots
+
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  waAutomatedReplyCommands WaAutomatedReplyCommands[]
 }
