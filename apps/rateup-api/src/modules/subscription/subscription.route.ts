@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { checkSession } from "../../utils/checkSession";
 import {
   getAllSubscriptionsHandler,
+  getMessageStatsHandler,
   getSubscriptionHandler,
   getUserSubscriptionHandler,
   updateSubscriptionHandler,
@@ -50,4 +51,6 @@ export async function subscriptionRoutes(server: FastifyInstance) {
     },
     updateSubscriptionHandler,
   );
+
+  server.get("/message-stats/:orgId", getMessageStatsHandler);
 }
