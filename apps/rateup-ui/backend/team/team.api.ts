@@ -110,8 +110,8 @@ export async function getSurveyLanguagesFromTeam(teamId: string) {
   return res.data as string[];
 }
 
-export async function addUsertoTeams({ userId, teamIds }) {
-  await axiosClient.post(`/team/members/${userId}`, { teamIds });
+export async function addUsertoTeams({ userId, teamIds, userEmail }) {
+  await axiosClient.post(`/team/members/${userId}`, { teamIds, userEmail });
 }
 
 export async function removeUserFromTeam({ teamId, userId }) {
