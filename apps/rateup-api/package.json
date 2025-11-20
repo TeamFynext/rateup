@@ -64,7 +64,8 @@
     "start": "sleep 3 && node dist/src/index.js",
     "dev": "tsx watch src/index.ts",
     "test": "jest --silent",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "postinstall": "prisma generate"
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
@@ -90,6 +91,9 @@
   },
   "lint-staged": {
     "*.{ts,js,md}": "prettier --write"
+  },
+  "engines": {
+    "node": "22.x"
   },
   "overrides": {
     "fastify-zod": {
