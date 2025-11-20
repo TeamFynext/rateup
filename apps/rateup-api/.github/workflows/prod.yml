@@ -19,6 +19,8 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
       - name: Install
         run: npm install
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
   generate:
     runs-on: ubuntu-latest
     needs: install

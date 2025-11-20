@@ -35,6 +35,8 @@ jobs:
       - run: rm -rf node_modules/.prisma
       - name: Generate Prisma Client
         run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
   migrate:
     runs-on: ubuntu-latest
     needs: install
