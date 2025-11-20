@@ -69,6 +69,7 @@ function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
         id: automation.id,
         isEnabled: !automation.isEnabled,
         commands: automation.commands,
+        businessHourId: automation?.businessHour?.id,
       },
       {
         onSuccess: () => {
