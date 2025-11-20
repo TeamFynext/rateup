@@ -9,7 +9,6 @@ import {
   Button,
   Center,
   Checkbox,
-  CopyButton,
   Divider,
   Flex,
   Group,
@@ -28,7 +27,6 @@ import {
   IconBrandInstagram,
   IconBrandMeta,
   IconCheck,
-  IconChecks,
   IconCopy,
   IconHelp,
   IconLogout,
@@ -39,6 +37,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import {
   MetaLoginAssets,
@@ -76,8 +75,27 @@ import FormModalLayout from "@/components/Modal/FormModalLayout";
 import PremiumFeature from "@/components/Premium/PremiumFeature";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import StyledTabs from "@/components/styled/StyledTabs/StyledTabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button as ShadButton } from "@/components/ui/button";
+// shadcn imports
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { SAVE_HOTKEY } from "@/utils/constants";
-import { showErrorToast, showWarnToast } from "@/utils/notifications";
 import { hasFeature } from "@/utils/subscription/subscription";
 
 function WhatsAppManualConfiguration({ waSettings }) {
@@ -125,187 +143,253 @@ function WhatsAppManualConfiguration({ waSettings }) {
     : [];
   const webhookUrl = `${process.env.NEXT_PUBLIC_API_URL}/api${WHATSAPP_URL}/webhook`;
   const instaWebhhokUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/instagram/webhook`;
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(translations("Copied to clipboard"));
+  };
+
   return (
-    <>
-      <Flex w="100%" align="stretch" gap={"sm"}>
-        <form
-          onSubmit={form.onSubmit(handleSubmit)}
-          style={{ flexGrow: 1 }}
-          onKeyDown={getHotkeyHandler([
-            [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
-          ])}
-        >
-          <Stack px="md">
-            <ContainedTextField
-              label={"WABA ID"}
-              placeholder={translations(
-                "Enter your Whatsapp Business Account ID",
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+      {/* Configuration Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle>WhatsApp Configuration</CardTitle>
+          <CardDescription>
+            Configure your WhatsApp Business Account manually
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            onSubmit={form.onSubmit(handleSubmit)}
+            onKeyDown={getHotkeyHandler([
+              [SAVE_HOTKEY, (event: any) => form.onSubmit(handleSubmit)(event)],
+            ])}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="wabaId">
+                WABA ID <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="wabaId"
+                placeholder={translations(
+                  "Enter your Whatsapp Business Account ID",
+                )}
+                {...form.getInputProps("wabaId")}
+              />
+              {form.errors.wabaId && (
+                <p className="text-sm text-red-500">{form.errors.wabaId}</p>
               )}
-              {...form.getInputProps("wabaId")}
-              required
-            />
-            <ContainedTextField
-              label={translations("Phone ID")}
-              placeholder={translations("Enter your phone ID")}
-              required
-              {...form.getInputProps("phoneId")}
-            />
-            <ContainedTextField
-              label={translations("App Id")}
-              placeholder={translations("Enter your app ID")}
-              required
-              {...form.getInputProps("appId")}
-            />
-            <ContainedTextArea
-              label={translations("Access Token")}
-              placeholder={translations("Enter your access token")}
-              autosize
-              minRows={2}
-              maxRows={4}
-              required
-              {...form.getInputProps("accessToken")}
-            />
-            <ContainedTextField
-              label={translations("Webhook Password")}
-              placeholder={translations("Create a webhook password")}
-              required
-              {...form.getInputProps("webhookPassword")}
-            />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phoneId">
+                Phone ID <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="phoneId"
+                placeholder={translations("Enter your phone ID")}
+                {...form.getInputProps("phoneId")}
+              />
+              {form.errors.phoneId && (
+                <p className="text-sm text-red-500">{form.errors.phoneId}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="appId">
+                App ID <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="appId"
+                placeholder={translations("Enter your app ID")}
+                {...form.getInputProps("appId")}
+              />
+              {form.errors.appId && (
+                <p className="text-sm text-red-500">{form.errors.appId}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="accessToken">
+                Access Token <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="accessToken"
+                placeholder={translations("Enter your access token")}
+                rows={3}
+                {...form.getInputProps("accessToken")}
+              />
+              {form.errors.accessToken && (
+                <p className="text-sm text-red-500">
+                  {form.errors.accessToken}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="webhookPassword">
+                Webhook Password <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="webhookPassword"
+                type="password"
+                placeholder={translations("Create a webhook password")}
+                {...form.getInputProps("webhookPassword")}
+              />
+              {form.errors.webhookPassword && (
+                <p className="text-sm text-red-500">
+                  {form.errors.webhookPassword}
+                </p>
+              )}
+            </div>
+
             {waSettings?.accessToken && (
               <Skeleton visible={isLoading}>
-                <Group gap={"xs"}>
-                  <ContainedSelection
-                    data={fbPages}
-                    value={form.values.fbPageId}
-                    label={"Instagram Connected Facebook Page"}
-                    onChange={(value) => {
-                      if (!value) {
-                        form.setFieldValue("fbPageId", null);
-                        form.setFieldValue("pageAccessToken", null);
-                        form.setFieldValue("ibaId", null);
-                        return;
-                      }
-                      const page = metaAssets.pages.find(
-                        (page) => page.id === value,
-                      );
-                      if (!page.instagram_business_account) {
-                        return showErrorToast(
-                          "Instagram account not found.Try after syncing page or choose another page",
+                <div className="space-y-2">
+                  <Label htmlFor="fbPageId">
+                    Instagram Connected Facebook Page
+                  </Label>
+                  <div className="flex gap-2">
+                    <Select
+                      value={form.values.fbPageId || ""}
+                      onValueChange={(value) => {
+                        if (!value) {
+                          form.setFieldValue("fbPageId", null);
+                          form.setFieldValue("pageAccessToken", null);
+                          form.setFieldValue("ibaId", null);
+                          return;
+                        }
+                        const page = metaAssets.pages.find(
+                          (page) => page.id === value,
                         );
-                      }
-                      form.setValues({
-                        ...form.values,
-                        fbPageId: page.id,
-                        pageAccessToken: page.access_token,
-                        ibaId: page.instagram_business_account?.id,
-                      });
-                    }}
-                  />
-                  <Tooltip label={"Sync FB pages"}>
-                    <ActionIcon
-                      variant="light"
-                      mt={20}
-                      onClick={() => syncfbpageMut.mutate()}
-                      loading={syncfbpageMut.isPending}
+                        if (!page.instagram_business_account) {
+                          return toast.error(
+                            "Instagram account not found. Try after syncing page or choose another page",
+                          );
+                        }
+                        form.setValues({
+                          ...form.values,
+                          fbPageId: page.id,
+                          pageAccessToken: page.access_token,
+                          ibaId: page.instagram_business_account?.id,
+                        });
+                      }}
                     >
-                      <IconRefresh size={20} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a Facebook page" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fbPages.map((page) => (
+                          <SelectItem key={page.value} value={page.value}>
+                            {page.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <ShadButton
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => syncfbpageMut.mutate()}
+                      disabled={syncfbpageMut.isPending}
+                    >
+                      <IconRefresh
+                        size={18}
+                        className={
+                          syncfbpageMut.isPending ? "animate-spin" : ""
+                        }
+                      />
+                    </ShadButton>
+                  </div>
+                </div>
               </Skeleton>
             )}
-            <Group justify={"space-between"}>
-              <Button
-                color="red"
-                variant="outline"
-                leftSection={<IconTrash />}
+
+            <div className="flex justify-between pt-4">
+              <ShadButton
+                type="button"
+                variant="destructive"
                 onClick={handleDelete}
-                radius="lg"
                 disabled={!waSettings}
               >
+                <IconTrash size={18} className="mr-2" />
                 {translations("Delete Configuration")}
-              </Button>
-              <RateupButtonPrimary
-                type="submit"
-                title={translations("Save Changes")}
-              />
-            </Group>
-          </Stack>
-        </form>
-        <Divider
-          orientation="vertical"
-          style={{
-            flexGrow: 0,
-          }}
-        />
-        <Stack style={{ flexGrow: 1 }} px="md">
-          <Box>
-            <Group>
-              <Text>{translations("Webhook URL")}</Text>
+              </ShadButton>
+              <ShadButton type="submit" disabled={upsertMutation.isPending}>
+                {upsertMutation.isPending
+                  ? "Saving..."
+                  : translations("Save Changes")}
+              </ShadButton>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Webhook Information */}
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Webhook Configuration
               <Tooltip
                 label={translations(
-                  "Paste this url in your facebook app under whatsapp configuration @developersfacebookcom/apps/",
+                  "Paste this url in your facebook app under whatsapp configuration @developers.facebook.com/apps/",
                 )}
               >
-                <ActionIcon variant="transparent" color="gray">
-                  <IconHelp />
-                </ActionIcon>
+                <IconHelp size={18} className="text-gray-500 cursor-help" />
               </Tooltip>
-            </Group>
-            <ContainedTextField
-              readOnly
-              value={webhookUrl}
-              rightSection={
-                <CopyButton value={webhookUrl}>
-                  {({ copied, copy }) => (
-                    <ActionIcon
-                      variant={copied ? "filled" : "transparent"}
-                      color={copied ? "teal" : "blue"}
-                      onClick={copy}
-                    >
-                      {copied ? <IconChecks /> : <IconCopy />}
-                    </ActionIcon>
-                  )}
-                </CopyButton>
-              }
-            />
-          </Box>
-          {waSettings?.fbPageId && (
-            <Box>
-              <Group>
-                <Text>Instagram Webhook URL</Text>
-                <Tooltip
-                  label={
-                    "Paste this url in your facebook app under webhook -> instagram product configuration @developers.facebook.com/apps/"
-                  }
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>WhatsApp Webhook URL</Label>
+              <div className="flex gap-2">
+                <Input readOnly value={webhookUrl} className="flex-1" />
+                <ShadButton
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copyToClipboard(webhookUrl)}
                 >
-                  <ActionIcon variant="transparent" color="gray">
-                    <IconHelp />
-                  </ActionIcon>
-                </Tooltip>
-              </Group>
-              <ContainedTextField
-                readOnly
-                value={instaWebhhokUrl}
-                rightSection={
-                  <CopyButton value={instaWebhhokUrl}>
-                    {({ copied, copy }) => (
-                      <ActionIcon
-                        variant={copied ? "filled" : "transparent"}
-                        color={copied ? "teal" : "blue"}
-                        onClick={copy}
-                      >
-                        {copied ? <IconChecks /> : <IconCopy />}
-                      </ActionIcon>
-                    )}
-                  </CopyButton>
-                }
-              />
-            </Box>
-          )}
-        </Stack>
-      </Flex>
-    </>
+                  <IconCopy size={18} />
+                </ShadButton>
+              </div>
+            </div>
+
+            {waSettings?.fbPageId && (
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  Instagram Webhook URL
+                  <Tooltip label="Paste this url in your facebook app under webhook -> instagram product configuration @developers.facebook.com/apps/">
+                    <IconHelp size={18} className="text-gray-500 cursor-help" />
+                  </Tooltip>
+                </Label>
+                <div className="flex gap-2">
+                  <Input readOnly value={instaWebhhokUrl} className="flex-1" />
+                  <ShadButton
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyToClipboard(instaWebhhokUrl)}
+                  >
+                    <IconCopy size={18} />
+                  </ShadButton>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Alert>
+          <AlertDescription>
+            <strong>Note:</strong> Make sure to configure the webhook in your
+            Facebook App settings with the URL provided above.
+          </AlertDescription>
+        </Alert>
+      </div>
+    </div>
   );
 }
 
@@ -390,12 +474,12 @@ function MetaLoginButton({
             const { current_step } = data.data;
             setWData({ phone_number_id: "", waba_id: "" });
             setCode("");
-            showWarnToast("Meta login cancelled at " + current_step);
+            toast.warning("Meta login cancelled at " + current_step);
           } else if (data.event === "ERROR") {
             const { error_message } = data.data;
             setWData({ phone_number_id: "", waba_id: "" });
             setCode("");
-            showErrorToast(JSON.stringify(error_message));
+            toast.error(JSON.stringify(error_message));
           }
         }
       } catch {
@@ -418,10 +502,10 @@ function MetaLoginButton({
         setCode(code);
       } else {
         setCode("");
-        showErrorToast("Error in meta login, Try again later");
+        toast.error("Error in meta login, Try again later");
       }
     } else if (response.status === "not_authorized") {
-      showErrorToast("Not authorized");
+      toast.error("Not authorized");
     }
   }
   return (
@@ -739,9 +823,10 @@ function MetaLoginStatus({ waSettings }) {
                     (page) => page.id === value,
                   );
                   if (!page.instagram_business_account) {
-                    return showErrorToast(
+                    toast.error(
                       "Instagram account not found.Try after syncing page or choose another page",
                     );
+                    return;
                   }
                   const data = {
                     fbPageId: page.id,
@@ -782,7 +867,7 @@ function MetaLoginStatus({ waSettings }) {
                   !selectedWaSettings.fbPageId?.length &&
                   !data.fbPageId?.length
                 )
-                  return showWarnToast("Please select a page");
+                  return toast.warning("Please select a page");
                 upsertMutation.mutate(data, {
                   onSuccess: () => {
                     close();

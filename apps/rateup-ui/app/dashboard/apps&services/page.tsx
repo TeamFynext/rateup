@@ -9,37 +9,36 @@ import { IntegratedApps } from "types/enums";
 
 import { ActionsGrid } from "@/components/Card/ActionGrid";
 
+function getAppIconImageUrl(app) {
+  switch (app) {
+    case IntegratedApps.shopify:
+      return {
+        src: "/images/shopifyicon.png",
+      };
+    case IntegratedApps.googlesheet:
+      return {
+        src: "/images/googlesheeticon.png",
+      };
+    case IntegratedApps.amelia:
+      return {
+        src: "/images/amelia.png",
+      };
+    case IntegratedApps.waPayment:
+      return {
+        src: "/images/whatsapp.png",
+      };
+    case IntegratedApps.petpooja:
+      return {
+        src: "/images/petpooja.png",
+      };
+    case IntegratedApps.zapier:
+      return {
+        src: "/images/zapier.png",
+      };
+  }
+}
 const WaPayment = () => {
   const router = useRouter();
-
-  function getAppIconImageUrl(app) {
-    switch (app) {
-      case IntegratedApps.shopify:
-        return {
-          src: "/images/shopifyicon.png",
-        };
-      case IntegratedApps.googlesheet:
-        return {
-          src: "/images/googlesheeticon.png",
-        };
-      case IntegratedApps.amelia:
-        return {
-          src: "/images/amelia.png",
-        };
-      case IntegratedApps.waPayment:
-        return {
-          src: "/images/whatsapp.png",
-        };
-      case IntegratedApps.petpooja:
-        return {
-          src: "/images/petpooja.png",
-        };
-      case IntegratedApps.zapier:
-        return {
-          src: "/images/zapier.png",
-        };
-    }
-  }
 
   return (
     <Stack p={"xl"}>
