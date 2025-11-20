@@ -1,7 +1,7 @@
 import { FastifyReply } from "fastify";
 import { FastifyRequest } from "fastify/types/request";
 import { RegisterBusinessBody } from "./wa_auth.schema";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import {
   debug_token,
   getAccessTokenFromCode,

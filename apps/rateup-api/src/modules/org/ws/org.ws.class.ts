@@ -1,5 +1,5 @@
 import { WebSocket } from "@fastify/websocket";
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 class ConnectionManager {
   orgIdToAfterAuthIds = new Map<string, string[]>();

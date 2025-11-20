@@ -8,7 +8,7 @@ import {
   verifyEmailUsingToken,
 } from "supertokens-node/recipe/emailverification";
 import Session from "supertokens-node/recipe/session";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { getAsRecipeUserIdType } from "../supertoken/supertoken";
 
 export const test_user_password = "tester1!";
