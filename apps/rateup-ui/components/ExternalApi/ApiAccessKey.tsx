@@ -3,22 +3,26 @@
 import React, { useState } from "react";
 
 import {
-  ActionIcon,
-  Button,
-  CopyButton,
-  Group,
-  Stack,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
-import {
+  IconAlertCircle,
   IconCheck,
   IconCopy,
+  IconKey,
   IconReload,
+  IconServer,
   IconTrash,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 import {
   useCreateLoyaltyApiKey,
@@ -27,14 +31,21 @@ import {
   useRegenerateLoyaltyApiKey,
 } from "../../backend/loyalty/apiKey/loyaltyApiKey.query";
 import { useUser } from "../../context/UserContext";
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
-import PaperLayout from "../styled/Layouts/PaperLayout";
+import ConfirmationModal from "../Modal/ConfirmationModal";
 
 export default function ApiAccessKeyPage() {
   const { data } = useLoyaltyApiKey();
   const generateMutation = useCreateLoyaltyApiKey();
-
   const [apiKey, setApiKey] = useState("");
+  const { user } = useUser();
+  const translations = useTranslations();
+
+  const apiEndpoint =
+    process.env.NEXT_PUBLIC_API_URL +
+    "/api/external/" +
+    "v1/" +
+    user?.orgId +
+    "/";
 
   function handleGenerateApiKey() {
     generateMutation.mutate(undefined, {
@@ -44,185 +55,244 @@ export default function ApiAccessKeyPage() {
     });
   }
 
-  const { user } = useUser();
-  const translations = useTranslations();
-  const apiEndpoint =
-    process.env.NEXT_PUBLIC_API_URL +
-    "/api/external/" +
-    "v1/" +
-    user?.orgId +
-    "/";
-
-  if (!data) return;
+  if (!data) return null;
 
   return (
-    <Stack mt="xl">
-      <Title order={3}> API Config </Title>
-      <PaperLayout>
-        <Stack>
-          <Title order={4}>Api Access Key</Title>
-          {data.createdAt ? (
-            <Tooltip
-              openDelay={150}
-              label={
-                apiKey
-                  ? translations("Api Access Key")
-                  : translations(
-                      "You can only view access key at the time of creation If you lost the key, you can regenerate it",
-                    )
-              }
-            >
-              <ContainedTextField
-                value={apiKey || "*".repeat(128)}
-                disabled={!apiKey}
-                styles={{
-                  section: {
-                    width: "fit-content",
-                  },
-                  input: {
-                    paddingRight: "92px", // 46px * 2 (copy/regen and delete button)
-                  },
-                }}
-                rightSection={
-                  <Group
-                    gap={0}
-                    bg={"white"}
-                    h={"100%"}
-                    style={{
-                      borderRadius: "0 12px 12px 0",
-                      overflow: "hidden",
-                    }}
-                  >
+    <div className="container mx-auto py-8 space-y-8">
+      <div>
+        <h3 className="text-2xl font-semibold tracking-tight text-foreground">
+          API Configuration
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage your API access keys and view connection details.
+        </p>
+      </div>
+
+      <div className="grid gap-6">
+        {/* API Access Key Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-blue-50 rounded-lg dark:bg-blue-900/20">
+                <IconKey
+                  size={20}
+                  className="text-blue-600 dark:text-blue-400"
+                />
+              </div>
+              <CardTitle>API Access Key</CardTitle>
+            </div>
+            <CardDescription>{translations("Api Access Key")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data.createdAt ? (
+              <div className="space-y-4">
+                <div className="relative">
+                  <Input
+                    readOnly
+                    value={apiKey || "•".repeat(48)}
+                    className="font-mono pr-24"
+                  />
+                  <div className="absolute right-1 top-0 h-full flex items-center gap-1 p-1">
                     {apiKey ? (
                       <ApiCopyButton value={apiKey} />
                     ) : (
                       <ApiRegenerateButton onRegenerate={setApiKey} />
                     )}
                     <ApiDeleteButton onDelete={() => setApiKey("")} />
-                  </Group>
-                }
-              />
-            </Tooltip>
-          ) : (
-            <>
-              <Text>
-                {translations(
-                  "You have not generated an API Access Key yet API Access Key is required to access the all API endpoints",
+                  </div>
+                </div>
+                {!apiKey && (
+                  <Alert
+                    variant="default"
+                    className="bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/50"
+                  >
+                    <IconAlertCircle className="h-4 w-4 !text-amber-600 dark:!text-amber-400" />
+                    <AlertDescription>
+                      {translations(
+                        "You can only view access key at the time of creation If you lost the key, you can regenerate it",
+                      )}
+                    </AlertDescription>
+                  </Alert>
                 )}
-              </Text>
-              <Button
-                onClick={handleGenerateApiKey}
-                loading={generateMutation.isPending}
-              >
-                {translations("Generate Api Key")}
-              </Button>
-            </>
-          )}
-        </Stack>
-      </PaperLayout>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 text-center space-y-4 bg-muted/50 rounded-lg border border-dashed">
+                <div className="p-3 bg-background rounded-full shadow-sm">
+                  <IconKey size={24} className="text-muted-foreground" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    No API Key Found
+                  </p>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    {translations(
+                      "You have not generated an API Access Key yet API Access Key is required to access the all API endpoints",
+                    )}
+                  </p>
+                </div>
+                <Button
+                  onClick={handleGenerateApiKey}
+                  disabled={generateMutation.isPending}
+                >
+                  {generateMutation.isPending ? (
+                    <IconReload className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <IconKey className="mr-2 h-4 w-4" />
+                  )}
+                  {translations("Generate Api Key")}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      <PaperLayout>
-        <Stack>
-          <Title order={4}>{translations("API Base URL")}</Title>
-          <ContainedTextField
-            value={apiEndpoint}
-            styles={{
-              section: {
-                width: "fit-content",
-              },
-              input: {
-                paddingRight: "46px",
-              },
-              root: {
-                borderRadius: "12px",
-                overflow: "hidden",
-              },
-            }}
-            rightSection={<ApiCopyButton value={apiEndpoint} />}
-          />
-        </Stack>
-      </PaperLayout>
-    </Stack>
+        {/* API Base URL Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-purple-50 rounded-lg dark:bg-purple-900/20">
+                <IconServer
+                  size={20}
+                  className="text-purple-600 dark:text-purple-400"
+                />
+              </div>
+              <CardTitle>{translations("API Base URL")}</CardTitle>
+            </div>
+            <CardDescription>
+              Use this base URL for all your API requests.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <Input
+                readOnly
+                value={apiEndpoint}
+                className="font-mono pr-12 bg-muted/50"
+              />
+              <div className="absolute right-1 top-0 h-full flex items-center p-1">
+                <ApiCopyButton value={apiEndpoint} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
 
-export function ApiCopyButton({ value }) {
+export function ApiCopyButton({ value }: Readonly<{ value: string }>) {
+  const [copied, setCopied] = useState(false);
   const translations = useTranslations();
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <CopyButton value={value}>
-      {({ copy, copied }) => (
-        <Tooltip label={translations("Copy")} position="top" withArrow>
-          <ActionIcon
-            onClick={copy}
-            variant={"subtle"}
-            h={"100%"}
-            w={"46px"}
-            px={8}
-            radius={0}
-          >
-            {copied ? <IconCheck /> : <IconCopy />}
-          </ActionIcon>
-        </Tooltip>
-      )}
-    </CopyButton>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8"
+      onClick={handleCopy}
+      title={translations("Copy")}
+    >
+      {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+    </Button>
   );
 }
 
 interface ApiRegenerateButtonProps {
   onRegenerate: (apiKey: string) => void;
 }
-function ApiRegenerateButton({ onRegenerate }: ApiRegenerateButtonProps) {
+
+function ApiRegenerateButton({
+  onRegenerate,
+}: Readonly<ApiRegenerateButtonProps>) {
   const regenerateMutation = useRegenerateLoyaltyApiKey();
   const translations = useTranslations();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   function handleRegenerate() {
     regenerateMutation.mutate(undefined, {
       onSuccess: (data) => {
         onRegenerate(data.apiKey);
+        setIsModalOpen(false);
       },
     });
   }
+
   return (
-    <Tooltip label={translations("Regenerate")} position="top" withArrow>
-      <ActionIcon
-        onClick={handleRegenerate}
-        variant={"subtle"}
-        h={"100%"}
-        w={"46px"}
-        px={8}
-        radius={0}
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => setIsModalOpen(true)}
+        title={translations("Regenerate")}
       >
-        <IconReload />
-      </ActionIcon>
-    </Tooltip>
+        <IconReload size={16} />
+      </Button>
+
+      <ConfirmationModal
+        opened={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        confirmLabel={translations("Regenerate")}
+        headerTitle={translations("Confirm API Key Regeneration")}
+        onConfirm={handleRegenerate}
+        headerLabel={translations(
+          "Are you sure you want to regenerate the API key? The old key will be immediately invalidated and all applications using it will stop working.",
+        )}
+        closeLabel={translations("Cancel")}
+        forDeleteFunctionality
+      />
+    </>
   );
 }
 
 interface ApiDeleteButtonProps {
   onDelete: () => void;
 }
-function ApiDeleteButton({ onDelete }: ApiDeleteButtonProps) {
+
+function ApiDeleteButton({ onDelete }: Readonly<ApiDeleteButtonProps>) {
   const deleteMutation = useDeleteLoyaltyApiKey();
   const translations = useTranslations();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   function handleDelete() {
     deleteMutation.mutate(undefined, {
       onSuccess: () => {
         onDelete();
+        setIsModalOpen(false);
       },
     });
   }
+
   return (
-    <Tooltip label={translations("Delete")} position="top" withArrow>
-      <ActionIcon
-        onClick={handleDelete}
-        variant={"subtle"}
-        h={"100%"}
-        w={"46px"}
-        px={8}
-        color={"red"}
-        radius={0}
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+        onClick={() => setIsModalOpen(true)}
+        title={translations("Delete")}
       >
-        <IconTrash />
-      </ActionIcon>
-    </Tooltip>
+        <IconTrash size={16} />
+      </Button>
+
+      <ConfirmationModal
+        opened={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        confirmLabel={translations("Delete")}
+        headerTitle={translations("Confirm API Key Deletion")}
+        onConfirm={handleDelete}
+        headerLabel={translations(
+          "Are you sure you want to delete the API key? All applications using this key will immediately stop working.",
+        )}
+        closeLabel={translations("Cancel")}
+        forDeleteFunctionality
+      />
+    </>
   );
 }
