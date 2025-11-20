@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { uploadFile, deleteFile } from "../../utils/upload/s3Upload";
 
 async function onFile(part) {

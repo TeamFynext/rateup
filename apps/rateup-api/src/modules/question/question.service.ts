@@ -1,5 +1,5 @@
 import { MultipartFile } from "@fastify/multipart";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import xlsx from "node-xlsx";
 import Papa from "papaparse";
 import prisma from "../../utils/prisma";
