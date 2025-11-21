@@ -33,6 +33,6 @@ export async function auditLogHook(
       },
     });
   } catch (err) {
-    request.log.error("Failed to record audit log:", err);
+    request.log.error({ err }, "Failed to record audit log");
   }
 }

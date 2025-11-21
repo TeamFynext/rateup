@@ -14,7 +14,7 @@ jobs:
       - name: Setup Nodejs
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.x
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - name: Install
@@ -27,7 +27,7 @@ jobs:
       - name: Setup Nodejs
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.x
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - name: Install
@@ -35,6 +35,8 @@ jobs:
       - run: rm -rf node_modules/.prisma
       - name: Generate Prisma Client
         run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
   migrate:
     runs-on: ubuntu-latest
     needs: install
@@ -43,7 +45,7 @@ jobs:
       - name: Setup Nodejs
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.x
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - name: Install
