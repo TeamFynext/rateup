@@ -116,6 +116,7 @@ export async function createMultipleContacts(
     orgId,
     aiWaChat,
     customFields: undefined,
+    labels: undefined,
   }));
 
   // Batch size for DB operations
@@ -126,6 +127,18 @@ export async function createMultipleContacts(
     const batchCreated = await prisma.contact.createManyAndReturn({
       skipDuplicates: true,
       data: batch,
+    });
+    batchCreated.forEach(async (contact) => {
+      const inputData = contacts.find((c) => contact.phone === c.phone);
+      if (inputData.labels && inputData.labels.length > 0) {
+        await prisma.contactLabelMap.createMany({
+          data: inputData.labels.map((labelId) => ({
+            contactId: contact.id,
+            labelId,
+          })),
+          skipDuplicates: true,
+        });
+      }
     });
     createdContacts = createdContacts.concat(batchCreated);
   }
@@ -227,7 +240,7 @@ export async function getContactsByOrgId(
   if (filter) {
     const params = new URLSearchParams(filter);
     for (const [key, value] of params.entries()) {
-      if (["name", "phone", "source"].includes(key)) {
+      if (["name", "phone"].includes(key)) {
         filterData.push({
           [key]: {
             contains: value,
@@ -258,12 +271,9 @@ export async function getContactsByOrgId(
             },
           },
         });
-      } else {
+      } else if (["source", "lifecycleId"].includes(key) && value !== "all") {
         filterData.push({
-          tags: {
-            path: [key],
-            string_contains: value,
-          },
+          [key]: value,
         });
       }
     }

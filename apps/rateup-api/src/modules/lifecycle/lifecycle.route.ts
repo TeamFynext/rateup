@@ -4,6 +4,7 @@ import {
   createLifecycleHandler,
   deleteLifecycleByIdHandler,
   getLifecyclesHandler,
+  getLifecyclesWithContatsCountHandler,
   reorderLabelsHandler,
   updateLifecycleHandler,
 } from "./lifecycle.controller";
@@ -12,6 +13,7 @@ import { $LifecycleRef } from "./lifecycle.schema";
 export async function lifecycleRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
   server.get("/", getLifecyclesHandler);
+  server.get("/contacts", getLifecyclesWithContatsCountHandler);
   server.post(
     "/",
     {
@@ -31,7 +33,7 @@ export async function lifecycleRoutes(server: FastifyInstance) {
     reorderLabelsHandler,
   );
   server.put(
-    "/:labelId",
+    "/:lifecycleId",
     {
       schema: {
         body: $LifecycleRef("lifecycleBodySchema"),
