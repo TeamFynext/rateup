@@ -227,7 +227,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
           text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
           html: getEmailBodyTemplate("GeneralTemplate", {
             body: `Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details`,
-            buttonLink: `${process.env.FRONTEND_URL}/dashboard/teams`,
+            buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
           }),
         };
         try {
@@ -840,4 +840,43 @@ export async function addMemberToTeams(teamIds, userId) {
     })),
     skipDuplicates: true,
   });
+}
+
+export async function addMembersToTeamsMail(email, teamName, user) {
+  const invitedPerson = await prisma.orgMember.findFirst({
+    where: {
+      userId: user.id,
+      orgId: user.orgId,
+    },
+    select: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
+      org: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  const msg = {
+    to: email,
+    subject: `You have been added to the team ${teamName} - RateUp.app`,
+    text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
+    html: getEmailBodyTemplate("GeneralTemplate", {
+      body: `
+      <p>You have been added to manage a Team in RateUp by ${invitedPerson.org.name}</p>
+      Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details
+      `,
+      buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
+    }),
+  };
+  try {
+    sendAWSEmail(msg);
+  } catch (error) {
+    console.error(error);
+    throw new Error("Email sending failed. E:" + error);
+  }
 }
