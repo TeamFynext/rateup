@@ -16,6 +16,7 @@ import {
   deleteTeamMember,
   addMemberToTeams,
   getUsersNotInTeam,
+  addMembersToTeamsMail,
 } from "./team.service";
 import {
   CreateTeamInput,
@@ -299,12 +300,15 @@ export async function deleteTeamMemberHandler(
 export async function addMembertoTeamsHandler(
   request: FastifyRequest<{
     Params: { id: string };
-    Body: { teamIds: string[] };
+    Body: { teamIds: string[]; userEmail: string };
   }>,
   reply: FastifyReply,
 ) {
   try {
+    const user = request.user;
     const res = await addMemberToTeams(request.body.teamIds, request.params.id);
+    const team = await getTeamById(request.body.teamIds[0]);
+    await addMembersToTeamsMail(request.body.userEmail, team.name, user);
     reply.send(res);
   } catch (e) {
     log.error(e);

@@ -19,50 +19,91 @@ import { getContactByPhoneNumberAndOrgId } from "../../contact/contact.service";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(isSameOrAfter);
+
+export type automationProps = {
+  commands: string[];
+  businessHour: {
+    id: string;
+    name: string;
+    createdAt: Date;
+    orgId: string;
+    timezone: string;
+    channels: string[];
+    description: string | null;
+    schedule: {
+      friday: {
+        isOpen: boolean;
+        timeSlots: [{ openTime: string; closeTime: string }];
+      };
+      monday: {
+        isOpen: boolean;
+        timeSlots: [{ openTime: string; closeTime: string }];
+      };
+      sunday: {
+        isOpen: boolean;
+        timeSlots: [{ openTime: string; closeTime: string }];
+      };
+      tuesday: {
+        isOpen: boolean;
+        timeSlots: [{ openTime: string; closeTime: string }];
+      };
+      saturday: {
+        isOpen: boolean;
+        timeSlots: [{ openTime: string; closeTime: string }];
+      };
+      thursday: {
+        isOpen: boolean;
+        timeSlots: [{ openTime: string; closeTime: string }];
+      };
+      wednesday: {
+        isOpen: boolean;
+        timeSlots: [{ openTime: string; closeTime: string }];
+      };
+    } | null;
+    updatedAt: Date;
+  } | null;
+  id: string;
+  name: string;
+  createdAt: Date;
+  matchData: any;
+  matchType: string;
+  orgId: string | null;
+  whatsappSettingsPhoneId: string | null;
+  whatsappSettingsPhoneIds: string[];
+  isEnabled: boolean;
+  sendOnceIn24Hours: boolean;
+};
+// Helper to check whole word match
+function includesWholeWord(text: string, word: string, caseSensitive: boolean) {
+  const flags = caseSensitive ? "g" : "gi";
+  const escapedWord = word.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+  const regex = new RegExp(`\\b${escapedWord}\\b`, flags);
+  return regex.test(text);
+}
 
 /**
  * Enhanced validation for automation match conditions including contact and time filters
  */
 export async function validateAutomationMatchCondition(
-  automation: {
-    commands: string[];
-    matchType: string;
-    matchData: any;
-    id: string;
-    name: string;
-    createdAt: Date;
-    teamId?: string;
-    sendOnceIn24Hours?: boolean;
-  },
+  automation: automationProps,
   message: string,
   orgId?: string,
   phone?: string,
-  orgTimezone?: string,
 ): Promise<boolean> {
   const { matchType, matchData, commands } = automation;
   if (automation.sendOnceIn24Hours) {
     const recentActivity = await findRecentAutomation(phone, orgId, {
       timeWindow: 24 * 60 * 60 * 1000, // 24 hours
     });
-    if (recentActivity) return;
+    if (recentActivity) return false;
   }
   // First validate the message matching logic (existing logic)
   let messageMatches = false;
-
-  // Helper to check whole word match
-  function includesWholeWord(
-    text: string,
-    word: string,
-    caseSensitive: boolean,
-  ) {
-    const flags = caseSensitive ? "g" : "gi";
-    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`\\b${escapedWord}\\b`, flags);
-    return regex.test(text);
-  }
 
   if (matchType === WaAutomatedReplyMatchType.Exact) {
     if (matchData.caseSensitive) {
@@ -105,10 +146,6 @@ export async function validateAutomationMatchCondition(
   );
   if (!contactFiltersValid) return false;
 
-  // Validate time window
-  const timeWindowValid = validateTimeWindow(matchData.timeWindow, orgTimezone);
-  if (!timeWindowValid) return false;
-
   return true;
 }
 
@@ -129,22 +166,31 @@ export async function checkIfMessageMatchesAnyAutomation(
     orgId,
     phone_number_id,
   );
-  const orgTimezone =
-    //  org?.timezone ||
-    "UTC";
 
+  // First, filter automations that match the message conditions
+  const matchingAutomations = [];
   for (const automation of automatedReplies) {
     const isMatch = await validateAutomationMatchCondition(
-      automation,
+      automation as automationProps,
       message,
       orgId,
       phone,
-      orgTimezone,
     );
     if (isMatch) {
-      log.trace("Automation Matched! %o", automation);
-      return automation;
+      matchingAutomations.push(automation);
     }
+  }
+
+  if (matchingAutomations.length === 0) {
+    return undefined;
+  }
+
+  const selectedAutomation =
+    selectAutomationByBusinessHours(matchingAutomations);
+
+  if (selectedAutomation) {
+    log.trace("Automation Matched! %o", selectedAutomation);
+    return selectedAutomation;
   }
 }
 type prevIntractionProps = {
@@ -393,42 +439,74 @@ async function validateContactFilters(
 /**
  * Validates time window conditions
  */
-function validateTimeWindow(
-  timeWindow: any,
-  orgTimezone: string = "UTC",
+export function validateTimeWindow(
+  businessHour: automationProps["businessHour"],
 ): boolean {
-  if (!timeWindow?.enabled) return true;
+  if (!businessHour?.schedule) return true;
 
-  const now = dayjs();
-  // .tz(orgTimezone);
-  const currentDay = now.format("ddd").toLowerCase();
+  const now = dayjs().tz(businessHour.timezone);
+  const currentDay = now
+    .format("dddd")
+    .toLowerCase() as keyof typeof businessHour.schedule;
   const currentTime = now.format("HH:mm");
 
-  // Check if current day is in allowed days
-  const allowedDays = timeWindow.days || [];
-  if (allowedDays.length > 0 && !allowedDays.includes(currentDay)) {
+  const daySchedule = businessHour.schedule[currentDay];
+
+  // Check if business is open on current day
+  if (!daySchedule?.isOpen) {
     return false;
   }
 
-  // If all day is enabled, we only check the day
-  if (timeWindow.allDay) {
-    return true;
+  // Check if current time falls within any of the time slots
+  for (const slot of daySchedule.timeSlots) {
+    const current = dayjs(currentTime, "HH:mm");
+    const start = dayjs(slot.openTime, "HH:mm");
+    const end = dayjs(slot.closeTime, "HH:mm");
+
+    if (start.isAfter(end)) {
+      // Handles overnight shifts (e.g., 22:00 to 06:00)
+      if (current.isAfter(start) || current.isBefore(end)) {
+        return true;
+      }
+    } else if (current.isSameOrAfter(start) && current.isBefore(end)) {
+      return true;
+    }
   }
 
-  // Validate time range
-  const startTime = timeWindow.startTime;
-  const endTime = timeWindow.endTime;
+  return false;
+}
 
-  if (!startTime || !endTime) {
-    return true; // If no time specified, allow all times
-  }
-  const current = dayjs(currentTime, "HH:mm");
-  const start = dayjs(startTime, "HH:mm");
-  const end = dayjs(endTime, "HH:mm");
+/**
+ * Selects the best automation from a list based on business hour validation
+ * @param automations Array of automations with businessHour property
+ * @returns Selected automation or undefined if none match
+ */
+export function selectAutomationByBusinessHours<
+  T extends { businessHour: any },
+>(automations: T[]): T | undefined {
+  let selectedAutomation: T | undefined;
 
-  if (start.isAfter(end)) {
-    return current.isAfter(start) || current.isBefore(end);
-  } else {
-    return current.isAfter(start) && current.isBefore(end);
+  // First priority: Look for automations with business hours that are currently valid
+  const businessHourAutomations = automations.filter(
+    (automation) => automation.businessHour !== null,
+  );
+
+  for (const automation of businessHourAutomations) {
+    const timeWindowValid = validateTimeWindow(
+      automation.businessHour as automationProps["businessHour"],
+    );
+    if (timeWindowValid) {
+      selectedAutomation = automation;
+      break;
+    }
   }
+
+  // Second priority: If no valid business hour automation found, use null business hour automation
+  if (!selectedAutomation) {
+    selectedAutomation = automations.find(
+      (automation) => automation.businessHour === null,
+    );
+  }
+
+  return selectedAutomation;
 }

@@ -2,10 +2,10 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { deleteFile, uploadFile } from "../../utils/upload/s3Upload";
 import { fileDeleteInput } from "./fileUpload.schema";
 import sharp from "sharp";
-import fs from "fs";
-import { randomUUID } from "crypto";
+import fs from "node:fs";
+import { randomUUID } from "node:crypto";
 import ffmpeg from "fluent-ffmpeg";
-import path from "path";
+import path from "node:path";
 import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import { validateFile } from "../../utils/upload/validate";
 

@@ -52,7 +52,6 @@ import {
   getDbTemplate,
 } from "../messageTemplates/wa_templates.service";
 import {
-  getMetaAssets,
   getWaSettingsByPhoneId,
   MetaAsset,
 } from "../settings/wa_settings.service";
@@ -60,7 +59,6 @@ import {
   WaMessageBody,
   WaMessageTypes,
   WaReceiveMessageBody,
-  WaSessionType,
 } from "../../../types/whatsapp.types";
 import {
   addWaMessageCampaignParticipantMap,
@@ -76,11 +74,13 @@ import {
   handleStaticFlowReply,
   sendFlow,
 } from "../flows/flow.service";
-import { checkIfMessageMatchesAnyAutomation } from "../automatedReply/wa_automatedReply.utils";
+import {
+  checkIfMessageMatchesAnyAutomation,
+  selectAutomationByBusinessHours,
+} from "../automatedReply/wa_automatedReply.utils";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
 import {
   CampaignParticipant,
-  Chatbot,
   Contact,
   PlatformType,
   WhatsappSettings,
@@ -103,7 +103,6 @@ import {
   getLoyaltyWaCommandByRequestMessage,
   handleLoyaltyWaCommand,
 } from "../../loyalty/settings/settings.service";
-import dayjs from "dayjs";
 import { getSubscription, getUsageStats } from "../../campaign/campaign.auth";
 import { createJWT } from "../../../utils/jwt";
 import {
@@ -1239,40 +1238,40 @@ async function handleInitialInteraction(
   phone_number_id: string,
 ) {
   try {
-    // Look for a wildcard automation command
-    const wildcardAutomation = await prisma.waAutomatedReplyCommands.findUnique(
-      {
-        where: {
-          command_org_id_unique: {
-            command: "*",
-            orgId: orgId,
+    // Look for wildcard automation commands
+    const wildcardAutomations = await prisma.waAutomatedReplyCommands.findMany({
+      where: {
+        command: "*",
+        orgId: orgId,
+        waAutomatedReply: {
+          isEnabled: true,
+          whatsappSettingsPhoneIds: {
+            has: phone_number_id,
           },
-          waAutomatedReply: {
-            isEnabled: true,
-            whatsappSettingsPhoneIds: {
-              has: phone_number_id,
-            },
-          },
-        },
-        include: {
-          waAutomatedReply: true,
         },
       },
-    );
+      include: {
+        waAutomatedReply: true,
+        businessHour: true,
+      },
+    });
 
-    if (!wildcardAutomation?.waAutomatedReply) {
+    const selectedAutomation =
+      selectAutomationByBusinessHours(wildcardAutomations);
+
+    if (!selectedAutomation?.waAutomatedReply) {
       log.info(`No wildcard automation found for org ${orgId}`);
       return;
     }
 
     // Check if wildcard automation has an AI bot node
     const aiBotNode = (
-      wildcardAutomation?.waAutomatedReply?.matchData as any
+      selectedAutomation?.waAutomatedReply?.matchData as any
     )?.json?.nodes?.find((node: any) => node?.type === "aibotNode");
 
     if (!aiBotNode) {
       // If there's no AI bot node, check for recent activity
-      if (wildcardAutomation?.waAutomatedReply?.sendOnceIn24Hours) {
+      if (selectedAutomation?.waAutomatedReply?.sendOnceIn24Hours) {
         const recentActivity = await findRecentAutomation(phone, orgId, {
           timeWindow: 24 * 60 * 60 * 1000, // 24 hours
         });
@@ -1280,7 +1279,7 @@ async function handleInitialInteraction(
       }
     }
 
-    const automation = wildcardAutomation.waAutomatedReply as {
+    const automation = selectedAutomation.waAutomatedReply as {
       id: string;
       matchData: { json: { nodes: any[]; edges: any[] } };
     };

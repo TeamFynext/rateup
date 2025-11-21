@@ -96,13 +96,14 @@ import { dashboardRoutes } from "./modules/dashboard/dashboard.route";
 import { notificationRoutes } from "./modules/notification/notification.route";
 import { notificationSchema } from "./modules/notification/notification.schema";
 import { instagramWebhookRoutes } from "./modules/whatsapp/instagram/instagram.webhook.route";
-import { labelRoutes } from "./modules/label/label.route";
-import { labelSchema } from "./modules/label/label.schema";
+import { lifecycleRoutes } from "./modules/lifecycle/lifecycle.route";
+import { lifecycleSchema } from "./modules/lifecycle/lifecycle.schema";
 import { bookDemoSchemas } from "./modules/BookDemo/bookDemo.schema";
 import { bookDemoRoutes } from "./modules/BookDemo/bookDemo.route";
 import { supportUserWebhookRoutes } from "./modules/whatsapp/support-user/suport-user.webhook.route";
 import { externalIntegrationRoutes } from "./modules/integrations/external/external.route";
 import { zapierSchemas } from "./modules/integrations/external/zapier/zapier.schema";
+import { businessHourSchemas } from "./modules/org/businessHour.schema";
 
 export function registerRoutes(server: FastifyInstance): void {
   const modules = [
@@ -150,9 +151,10 @@ export function registerRoutes(server: FastifyInstance): void {
     loyaltyApiSettingSchemas,
     expoSchemas,
     notificationSchema,
-    labelSchema,
+    lifecycleSchema,
     bookDemoSchemas,
     zapierSchemas,
+    businessHourSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {
@@ -229,7 +231,7 @@ export function registerRoutes(server: FastifyInstance): void {
   server.register(notificationRoutes, { prefix: "api/notification" });
   server.register(instagramWebhookRoutes, { prefix: "api/instagram/webhook" });
   server.register(supportUserWebhookRoutes, { prefix: "api/support" });
-  server.register(labelRoutes, { prefix: "api/lifecycles" });
+  server.register(lifecycleRoutes, { prefix: "api/lifecycles" });
   server.register(bookDemoRoutes, { prefix: "api/bookdemo" });
   server.register(externalIntegrationRoutes, {
     prefix: "api/integration/external",

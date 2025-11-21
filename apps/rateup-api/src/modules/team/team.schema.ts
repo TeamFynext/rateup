@@ -63,6 +63,7 @@ const deleteTeamMemberSchema = z.object({
 
 const addTeamMemberSchema = z.object({
   teamIds: z.array(z.string()),
+  userEmail: z.string(),
 });
 
 const inviteCompleteRequestSchema = z.object({
