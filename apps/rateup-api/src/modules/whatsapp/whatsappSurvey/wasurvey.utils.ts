@@ -36,7 +36,7 @@ import {
 } from "./node-types";
 import { ContactCore } from "../../contact/contact.schema";
 import connection from "../../../utils/redisConnection";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { PlatformType } from "../../../../generated/prisma/enums";
 import { WaMedia } from "../inbox/message/wamessage.service";
 

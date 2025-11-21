@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { aes_decrypt, aes_encrypt } from "./encryption.utils";
 
 describe("Encryption Utils", () => {

@@ -61,7 +61,9 @@ export async function createAutomatedReplyHandler(
         .send("Some specified keywords already exist for this organization.");
     } else {
       log.error(error);
-      reply.code(500).send("error in creating automatedReply");
+      reply
+        .code(500)
+        .send(error?.message || "error in creating automatedReply");
     }
   }
 }
@@ -87,7 +89,9 @@ export async function updateAutomatedReplyHandler(
         .send("Some specified keywords already exist for this organization.");
     } else {
       log.error(error);
-      reply.code(500).send("error in updating automatedReply");
+      reply
+        .code(500)
+        .send(error?.message || "error in updating automatedReply");
     }
   }
 }
