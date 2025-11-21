@@ -227,7 +227,7 @@ export async function inviteTeamMember(input: InviteMemberInput) {
           text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
           html: getEmailBodyTemplate("GeneralTemplate", {
             body: `Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details`,
-            buttonLink: `${process.env.FRONTEND_URL}/dashboard/teams`,
+            buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
           }),
         };
         try {
@@ -863,11 +863,14 @@ export async function addMembersToTeamsMail(email, teamName, user) {
   });
   const msg = {
     to: email,
-    subject: `You have been added to the Team ${teamName} - RateUp.app`,
+    subject: `You are added to the Team ${teamName} - RateUp.app`,
     text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
     html: getEmailBodyTemplate("GeneralTemplate", {
-      body: `Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details`,
-      buttonLink: `${process.env.FRONTEND_URL}/dashboard/teams`,
+      body: `
+      <p>You have been added to manage a Team in RateUp by ${invitedPerson.org.name}</p>
+      Explore features of new team by visiting RateUp. You can switch between teams to view the team wise details
+      `,
+      buttonLink: `${process.env.FRONTEND_URL}/dashboard`,
     }),
   };
   try {
