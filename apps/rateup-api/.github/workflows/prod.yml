@@ -18,7 +18,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - name: Install
-        run: npm install
+        run: npm install --ignore-scripts
         env:
           DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
   generate:
@@ -33,7 +33,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - name: Install
-        run: npm install
+        run: npm install --ignore-scripts
       - run: rm -rf node_modules/.prisma
       - name: Generate Prisma Client
         run: npx prisma generate
@@ -49,7 +49,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
       - name: Install
-        run: npm install
+        run: npm install --ignore-scripts
       - run: rm -rf node_modules/.prisma
       - name: Deploy Migrations
         run: npx prisma migrate deploy
