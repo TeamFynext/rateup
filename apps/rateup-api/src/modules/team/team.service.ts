@@ -863,7 +863,7 @@ export async function addMembersToTeamsMail(email, teamName, user) {
   });
   const msg = {
     to: email,
-    subject: `You are added to the Team ${teamName} - RateUp.app`,
+    subject: `You have been added to the team ${teamName} - RateUp.app`,
     text: `You have been added to manage a Team in RateUp by ${invitedPerson.org.name}`,
     html: getEmailBodyTemplate("GeneralTemplate", {
       body: `
