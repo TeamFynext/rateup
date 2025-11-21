@@ -6,6 +6,7 @@ import { Box, Menu, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconChevronDown, IconEdit, IconTrash } from "@tabler/icons-react";
+import { EllipsisVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { PAGE_SIZE } from "@/utils/constants";
@@ -49,12 +50,13 @@ export const ContactMenu = ({ contact, groupId }) => {
     <Menu shadow="xl" position="bottom-start">
       <Menu.Target>
         <Box>
-          <RateupButtonPrimary
+          <EllipsisVertical className="w-5 " />
+          {/* <RateupButtonPrimary
             title={translations("Select action")}
             variant="light"
             rightIcon={<IconChevronDown size="1rem" />}
             size="xs"
-          />
+          /> */}
         </Box>
       </Menu.Target>
       <Menu.Dropdown>

@@ -62,13 +62,13 @@ export const useCreateContactGroupMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
-      }),
-        showSuccessToast(
-          "Contact Group created successfully.",
-          "contact-group-create",
-          <IconCheck />,
-          true,
-        );
+      });
+      // showSuccessToast(
+      //   "Contact Group created successfully.",
+      //   "contact-group-create",
+      //   <IconCheck />,
+      //   true,
+      // );
     },
     onError: (error: any) => {
       showErrorToast(
@@ -159,7 +159,8 @@ export const useDeleteGroupMutation = () => {
 export const useEditContactGroupMutation = (groupId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateContactGroup,
+    mutationFn: (data: Omit<Partial<ContactGroup>, "tags">) =>
+      updateContactGroup(groupId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
@@ -167,19 +168,19 @@ export const useEditContactGroupMutation = (groupId: string) => {
       queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       });
-      showSuccessToast(
-        "Contact Group Updated Successfully.",
-        "contact-group-update",
-        <IconCheck />,
-      );
+      // showSuccessToast(
+      //   "Contact Group Updated Successfully.",
+      //   "contact-group-update",
+      //   <IconCheck />,
+      // );
     },
     onError: (error: any) => {
-      showErrorToast(
-        `Error updating contact group:
-        ${error?.response?.data?.error}`,
-        "contact-group-update",
-        <IconX />,
-      );
+      // showErrorToast(
+      //   `Error updating contact group:
+      //   ${error?.response?.data?.error}`,
+      //   "contact-group-update",
+      //   <IconX />,
+      // );
     },
   });
 };
@@ -211,10 +212,7 @@ export const useAddExistingContactMutation = (groupId: string) => {
   });
 };
 
-export const useRemoveContactsFromGroup = (
-  groupId: string,
-  onSucess: () => void,
-) => {
+export const useRemoveContactsFromGroup = (groupId) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: removeContactsFromGroup,
@@ -231,7 +229,6 @@ export const useRemoveContactsFromGroup = (
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
       });
-      onSucess();
     },
     onError(error: any) {
       showErrorToast(

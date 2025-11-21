@@ -24,3 +24,7 @@ export const reorderLifeCycles = async (data) => {
     await axiosClient.put(`${LIFECYCLE_URL}/reorder`, { lifecycles: data })
   ).data;
 };
+
+export const getLifecyclesWithContactCount = async () => {
+  return (await axiosClient.get(`${LIFECYCLE_URL}/contacts`)).data;
+};

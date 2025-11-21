@@ -509,10 +509,8 @@ export const ContactForm = ({ form, customFields, type }) => {
             {...form.getInputProps("phone")}
             className={styles.inputPhone}
           />
-          <Text size="sm" c={"red"}>
-            {form?.errors?.phone}
-          </Text>
         </Box>
+        <p className="text-sm text-red-500">{form?.errors?.phone}</p>
       </Stack>
       <ContainedMultiSelect
         label={translations("Labels")}

@@ -205,34 +205,35 @@ export function getNavTopData(
           {
             icon: IconAddressBook,
             label: translations("Contacts"),
-            hasSubmenu: true,
-            children: [
-              {
-                label: translations("All Contacts"),
-                link: "/dashboard/contacts",
-                icon: IconAddressBook,
-              },
-              {
-                label: translations("Groups"),
-                link: "/dashboard/groups",
-                icon: IconUsers,
-              },
-              {
-                label: translations("Custom Fields"),
-                link: "/dashboard/contacts/custom-fields",
-                icon: IconFileDescription,
-              },
-              {
-                label: translations("Labels "),
-                link: "/dashboard/contacts/labels",
-                icon: IconLabel,
-              },
-              {
-                label: translations("Lifecycle"),
-                link: "/dashboard/lifecycle",
-                icon: IconActivity,
-              },
-            ],
+            link: "/dashboard/contacts",
+            // hasSubmenu: true,
+            // children: [
+            //   {
+            //     label: translations("All Contacts"),
+            //     link: "/dashboard/contacts",
+            //     icon: IconAddressBook,
+            //   },
+            //   {
+            //     label: translations("Groups"),
+            //     link: "/dashboard/groups",
+            //     icon: IconUsers,
+            //   },
+            //   {
+            //     label: translations("Custom Fields"),
+            //     link: "/dashboard/contacts/custom-fields",
+            //     icon: IconFileDescription,
+            //   },
+            //   {
+            //     label: translations("Labels "),
+            //     link: "/dashboard/contacts/labels",
+            //     icon: IconLabel,
+            //   },
+            //   {
+            //     label: translations("Lifecycle"),
+            //     link: "/dashboard/lifecycle",
+            //     icon: IconActivity,
+            //   },
+            // ],
           },
         ]
       : []),

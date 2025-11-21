@@ -7,6 +7,7 @@ import {
   createLifeCycle,
   deleteLifeCycle,
   getLifeCycles,
+  getLifecyclesWithContactCount,
   reorderLifeCycles,
   updateLifeCycle,
 } from "./lifecycle.api";
@@ -24,6 +25,9 @@ export function useCreateLifeCycleMutation() {
         true,
       );
       queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
+      queryClient.invalidateQueries({
+        queryKey: ["lifecyclesWithContactCount"],
+      });
     },
     onError: (error: any) => {
       showErrorToast(
@@ -49,6 +53,9 @@ export function useUpdateLifeCycleMutation() {
         true,
       );
       queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
+      queryClient.invalidateQueries({
+        queryKey: ["lifecyclesWithContactCount"],
+      });
     },
     onError: (error: any) => {
       showErrorToast(
@@ -73,6 +80,9 @@ export function useDeleteLifeCycleMutation() {
         true,
       );
       queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
+      queryClient.invalidateQueries({
+        queryKey: ["lifecyclesWithContactCount"],
+      });
     },
     onError: (error: any) => {
       showErrorToast(
@@ -104,6 +114,9 @@ export function useReorderLifeCycleMutation() {
         true,
       );
       queryClient.invalidateQueries({ queryKey: ["lifecycles"] });
+      queryClient.invalidateQueries({
+        queryKey: ["lifecyclesWithContactCount"],
+      });
     },
     onError: (error: any) => {
       showErrorToast(
@@ -115,3 +128,9 @@ export function useReorderLifeCycleMutation() {
     },
   });
 }
+
+export const useLifecyclesWithContactCount = () =>
+  useQuery({
+    queryKey: ["lifecyclesWithContactCount"],
+    queryFn: getLifecyclesWithContactCount,
+  });

@@ -130,8 +130,8 @@ const MainNavLinks = ({
         trigger={
           <Button
             variant={link.label === activeMainLink ? "default" : "ghost"}
-            className="w-full mb-2 p-2"
-            size="icon"
+            color="bg-rateup-blue"
+            className={`w-full mb-2 p-2 ${link.label === activeMainLink ? "bg-rateup-blue" : ""}`}
             onClick={() => {
               const isWhatsAppRoute = link.label
                 .toLowerCase()

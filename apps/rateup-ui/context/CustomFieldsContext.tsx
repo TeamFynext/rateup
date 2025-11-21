@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, ReactNode, useContext, useState } from "react";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 interface CustomField {
   id: string;
@@ -55,6 +61,10 @@ export function CustomFieldsProvider({
       prev.map((field) => ({ ...field, value: undefined })),
     );
   };
+
+  useEffect(() => {
+    setCustomFields(initialFields || []);
+  }, [initialFields]);
 
   return (
     <CustomFieldsContext.Provider

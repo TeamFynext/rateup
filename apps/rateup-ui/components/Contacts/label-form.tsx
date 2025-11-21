@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { Button, Group, Select, Stack, TagsInput } from "@mantine/core";
+import { Select, TagsInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { useTranslations } from "next-intl";
@@ -15,13 +15,19 @@ import {
   ContainedTextArea,
   ContainedTextField,
 } from "../input/ContainedInput/ContainedInput";
+import { Button } from "../ui/button";
+import { DialogClose, DialogFooter } from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Spinner } from "../ui/spinner";
+import { Textarea } from "../ui/textarea";
 
 export const CustomFieldForm = ({
   data,
-  close,
+  onSubmitCallback,
 }: {
   data?: any;
-  close: () => void;
+  onSubmitCallback: () => void;
 }) => {
   const t = useTranslations();
   const updateCustomFieldMutation = useUpdateCustomFieldMutation();
@@ -75,7 +81,7 @@ export const CustomFieldForm = ({
         {
           onSettled() {
             form.reset();
-            close();
+            onSubmitCallback();
           },
         },
       );
@@ -83,7 +89,7 @@ export const CustomFieldForm = ({
       createCustomFieldMutation.mutate(form.getValues(), {
         onSettled() {
           form.reset();
-          close();
+          onSubmitCallback();
         },
       });
     }
@@ -103,20 +109,25 @@ export const CustomFieldForm = ({
 
   return (
     <form onSubmit={form.onSubmit(handleSubmit)} style={{ width: "100%" }}>
-      <Stack>
-        <ContainedTextField
-          label={t("Name")}
-          placeholder={t("Custom field name")}
-          required
-          {...form.getInputProps("name")}
-        />
-        <ContainedTextField
-          label={t("Field ID")}
-          placeholder={t("Auto-generated from name")}
-          required
-          disabled={!!data}
-          {...form.getInputProps("slug")}
-        />
+      <div className="flex flex-col gap-4">
+        <div className="space-y-1">
+          <Label>{t("Name")}</Label>
+          <Input
+            placeholder={t("Custom field name")}
+            required
+            {...form.getInputProps("name")}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label>{t("Field ID")}</Label>
+          <Input
+            placeholder={t("Auto-generated from name")}
+            required
+            disabled={!!data}
+            {...form.getInputProps("slug")}
+          />
+        </div>
+
         <Select
           label={t("Type")}
           placeholder={t("Select field type")}
@@ -142,21 +153,28 @@ export const CustomFieldForm = ({
           }
           error={form.errors.visibility}
         />
-        <ContainedTextArea
-          label={t("Description")}
-          placeholder={t("Describe this custom field")}
-          minRows={3}
-          {...form.getInputProps("description")}
-        />
-        <Group justify="flex-end" mt="md">
-          <Button variant="default" onClick={close}>
-            {t("Cancel")}
-          </Button>
+        <div className="space-y-1">
+          <Label>{t("Description")}</Label>
+          <Textarea
+            placeholder={t("Describe this custom field")}
+            {...form.getInputProps("description")}
+          />
+        </div>
+        <DialogFooter>
+          <DialogClose>
+            <Button variant="secondary">
+              <span className="text-sm font-normal">{t("Cancel")}</span>
+            </Button>
+          </DialogClose>
           <Button type="submit">
-            {data ? t("Update Custom Field") : t("Create Custom Field")}
+            {(updateCustomFieldMutation.isPending ||
+              createCustomFieldMutation.isPending) && <Spinner />}
+            <span className="text-sm font-normal">
+              {data ? t("Update Custom Field") : t("Create Custom Field")}
+            </span>
           </Button>
-        </Group>
-      </Stack>
+        </DialogFooter>
+      </div>
     </form>
   );
 };

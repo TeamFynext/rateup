@@ -43,7 +43,7 @@ import {
   useContactLabels,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
-import { LifecycleInput } from "@/components/Contacts/LifecycleSelector";
+import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -460,13 +460,13 @@ export default function WaInboxContactDetails({
                     <label className="text-[11px] text-muted-foreground">
                       {t("Lifecycle")}
                     </label>
-                    <LifecycleInput
+                    <LifecycleSelector
                       value={form.values.lifecycleId}
                       onChange={(value) =>
                         form.setFieldValue("lifecycleId", value)
                       }
+                      className="w-full"
                       placeholder={t("Enter lifecycle")}
-                      width={"100%"}
                     />
                   </div>
 

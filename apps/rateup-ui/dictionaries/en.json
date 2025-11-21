@@ -2394,5 +2394,7 @@
   "Topic": "Topic",
   "key not found": "key not found",
   "No quick replies found": "No quick replies found",
-  "Reply Text": "Reply Text"
+  "Reply Text": "Reply Text",
+  "Import contacts from a CSV file to add them to your contact list": "Import contacts from a CSV file to add them to your contact list.",
+  "Fill the details and click save": "Fill the details and click save."
 }
