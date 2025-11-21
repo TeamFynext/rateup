@@ -271,6 +271,7 @@ export function AddMembers({ selectedTeam, refetchTeams, translations }) {
                             addTeams.mutate({
                               userId: user.id,
                               teamIds: selectedTeam.id,
+                              userEmail: user.email,
                             });
                           }}
                           className="cursor-pointer hover:scale-105 hover:bg-white"

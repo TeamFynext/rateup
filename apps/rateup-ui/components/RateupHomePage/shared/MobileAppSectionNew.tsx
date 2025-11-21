@@ -51,6 +51,7 @@ export default function MobileAppSection() {
               height={600}
               className="w-full h-auto object-contain"
               priority
+              quality={60}
             />
           </div>
         </div>

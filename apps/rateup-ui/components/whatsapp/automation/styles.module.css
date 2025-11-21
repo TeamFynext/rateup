@@ -5,4 +5,5 @@
 }
 .card_footer {
   gap: var(--mantine-spacing-xs);
+  justify-content: space-between;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 
 import {
@@ -33,11 +33,14 @@ import { zod4Resolver } from "mantine-form-zod-resolver";
 import { z } from "zod/v4";
 
 import {
-  useCreateLabelMutation,
-  useDeleteLabelMutation,
-  useUpdateLabelMutation,
-} from "@/backend/label/label.query";
-import { useLabelsContext } from "@/context/LabelsContext";
+  useCreateLifeCycleMutation,
+  useDeleteLifeCycleMutation,
+  useLifeCyclesQuery,
+  useReorderLifeCycleMutation,
+  useUpdateLifeCycleMutation,
+} from "@/backend/lifecycle/lifecycle.query";
+import { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
+import { Spinner } from "@/components/ui/spinner";
 import { showErrorToast } from "@/utils/notifications";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false });
@@ -55,22 +58,12 @@ const stageSchema = z.object({
 
 type StageFormData = z.infer<typeof stageSchema>;
 
-interface LifecycleStage {
-  id?: string;
-  name: string;
-  ordering: number;
-  isDefault: boolean;
-  category: "active" | "won" | "lost";
-  emoji: string;
-  description: string;
-  isWon: boolean;
-}
-
-const ContactSettings = () => {
-  const labels = useLabelsContext();
-  const updateLabel = useUpdateLabelMutation();
-  const createLabel = useCreateLabelMutation();
-  const deleteLabel = useDeleteLabelMutation();
+const LifecycleSettings = () => {
+  const { data: labels, isPending } = useLifeCyclesQuery();
+  const updateLifeCycle = useUpdateLifeCycleMutation();
+  const createLifeCycle = useCreateLifeCycleMutation();
+  const deleteLifeCycle = useDeleteLifeCycleMutation();
+  const reorderLifeCycle = useReorderLifeCycleMutation();
   const [editingStage, setEditingStage] = useState<string | null>(null);
   const [isAddingStage, setIsAddingStage] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("lifecycle");
@@ -88,10 +81,10 @@ const ContactSettings = () => {
 
   // Separate stages by category
   const lifecycleStages = labels
-    .filter((stage) => stage.category === "active" || stage.category === "won")
+    ?.filter((stage) => stage.category === "active" || stage.category === "won")
     .sort((a, b) => a.ordering - b.ordering);
   const lostStages = labels
-    .filter((stage) => stage.category === "lost")
+    ?.filter((stage) => stage.category === "lost")
     .sort((a, b) => a.ordering - b.ordering);
 
   const onDragEnd = async (result: any) => {
@@ -103,8 +96,6 @@ const ContactSettings = () => {
     // Get the appropriate stage array
     const sourceStages =
       sourceDroppableId === "lifecycle-stages" ? lifecycleStages : lostStages;
-    const destStages =
-      destDroppableId === "lifecycle-stages" ? lifecycleStages : lostStages;
 
     // Don't allow moving between different droppables
     if (sourceDroppableId !== destDroppableId) return;
@@ -120,20 +111,31 @@ const ContactSettings = () => {
       // Don't allow moving to the last position if it would displace a won stage
       const wouldDisplaceWonStage =
         result.destination.index === lifecycleStages.length - 1 &&
-        lifecycleStages[lifecycleStages.length - 1].category === "won";
+        lifecycleStages.at(-1)?.category === "won";
       if (wouldDisplaceWonStage && draggedStage.category !== "won") return;
     }
+
+    // No movement occurred
+    if (result.source.index === result.destination.index) return;
 
     const items = Array.from(sourceStages);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    // Update ordering in the backend would go here
-    try {
-      // Implementation for updating ordering
-    } catch (error) {
-      console.error("Failed to update stage ordering:", error);
-    }
+    // Create new items with updated ordering values
+    const updatedItems = items.map((item: any, index) => ({
+      ...item,
+      ordering: index,
+    }));
+
+    // Pass only id and ordering to the mutation
+    const reorderData = updatedItems.map((item) => ({
+      id: item.id!,
+      ordering: item.ordering,
+      category: item.category,
+    }));
+
+    reorderLifeCycle.mutate(reorderData);
   };
 
   const handleAddStage = async (values: StageFormData) => {
@@ -148,17 +150,17 @@ const ContactSettings = () => {
     const currentStages =
       activeTab === "lifecycle" ? lifecycleStages : lostStages;
 
-    const newStageData: LifecycleStage = {
+    const newStageData: Partial<GetLabelsRes> = {
       name: values.name,
       ordering: currentStages.length - 1 <= 0 ? 1 : currentStages.length - 1,
       isDefault: false,
-      category: category as "active" | "won" | "lost",
+      category: category,
       emoji: values.emoji,
       description: values.description || "",
       isWon: category === "won",
     };
 
-    createLabel.mutate(newStageData, {
+    createLifeCycle.mutate(newStageData, {
       onSettled: () => {
         setIsAddingStage(false);
         addStageForm.reset();
@@ -184,14 +186,14 @@ const ContactSettings = () => {
       }
     }
 
-    deleteLabel.mutate(id);
+    deleteLifeCycle.mutate(id);
   };
 
   const handleUpdateStage = async (
     id: string,
-    updates: Partial<LifecycleStage>,
+    updates: Partial<GetLabelsRes>,
   ) => {
-    updateLabel.mutate(
+    updateLifeCycle.mutate(
       { id, data: updates },
       {
         onSettled: () => {
@@ -223,7 +225,7 @@ const ContactSettings = () => {
     }
   };
 
-  const canDeleteStage = (stage: LifecycleStage) => {
+  const canDeleteStage = (stage: GetLabelsRes) => {
     if (stage.isDefault) return false;
     if (stage.category === "won") {
       const wonStages = lifecycleStages.filter((s) => s.category === "won");
@@ -233,9 +235,9 @@ const ContactSettings = () => {
   };
 
   const canMoveStage = (
-    stage: LifecycleStage,
+    stage: GetLabelsRes,
     index: number,
-    stages: LifecycleStage[],
+    stages: GetLabelsRes[],
   ) => {
     if (stage.category === "won" && index === stages.length - 1) {
       return false; // Last won stage cannot be moved
@@ -244,9 +246,9 @@ const ContactSettings = () => {
   };
 
   const renderStageCard = (
-    stage: LifecycleStage,
+    stage: GetLabelsRes,
     index: number,
-    stages: LifecycleStage[],
+    stages: GetLabelsRes[],
     provided: any,
     snapshot: any,
   ) => (
@@ -381,7 +383,7 @@ const ContactSettings = () => {
           </Group>
 
           <Group gap="xs">
-            <Button size="xs" type="submit" loading={createLabel.isPending}>
+            <Button size="xs" type="submit" loading={createLifeCycle.isPending}>
               <Save size={12} style={{ marginRight: 4 }} /> Save
             </Button>
             <Button
@@ -399,7 +401,7 @@ const ContactSettings = () => {
       </form>
     </Paper>
   );
-
+  if (isPending) return <Spinner />;
   return (
     <Container size="md" p="md">
       <Tabs
@@ -527,15 +529,15 @@ const EditStageForm = ({
   onSave,
   onCancel,
 }: {
-  stage: LifecycleStage;
-  onSave: (updates: Partial<LifecycleStage>) => void;
+  stage: GetLabelsRes;
+  onSave: (updates: Partial<GetLabelsRes>) => void;
   onCancel: () => void;
 }) => {
   const editStageForm = useForm<StageFormData>({
     validate: zod4Resolver(stageSchema),
     initialValues: {
       name: stage.name,
-      category: stage.category,
+      category: stage.category as "active" | "won" | "lost",
       emoji: stage.emoji,
       description: stage.description,
     },
@@ -607,4 +609,4 @@ const EditStageForm = ({
   );
 };
 
-export default ContactSettings;
+export default LifecycleSettings;

@@ -116,6 +116,8 @@ export default function HeroSection() {
             width={600}
             height={600}
             className="w-full h-auto object-contain"
+            fetchPriority="high"
+            quality={60}
             priority
           />
         </motion.div>
@@ -137,7 +139,9 @@ export default function HeroSection() {
             alt="Smart QR Code Showcase"
             width={900}
             height={700}
+            quality={60}
             className="w-full h-auto object-contain max-w-6xl mx-auto"
+            fetchPriority="high"
             priority
           />
         </motion.div>

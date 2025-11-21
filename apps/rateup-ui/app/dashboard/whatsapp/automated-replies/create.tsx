@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { TimePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import {
   IconBrandMeta,
@@ -14,10 +13,10 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
+import { useGetAllBusinessHours } from "@/backend/org/business-hours/business-hours.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -42,6 +41,7 @@ import {
 } from "../../../../backend/whatsapp/automated-reply/automatedReply.query";
 import {
   ContainedMultiSelect,
+  ContainedSelection,
   ContainedTagInput,
   ContainedTextField,
 } from "../../../../components/input/ContainedInput/ContainedInput";
@@ -83,7 +83,6 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
             data: {
               label: "Start",
               type: "startNode",
-              // startMessage: rootForm?.values?.commands?.join(", "),
               startMessage: "",
             },
             measured: {
@@ -101,6 +100,7 @@ function getInitialValues(initialValues?: WaAutomatedReply) {
     whatsappSettingsPhoneIds: [],
     isEnabled: true,
     sendOnceIn24Hours: true,
+    businessHourId: null,
   };
 }
 
@@ -118,9 +118,9 @@ export function AutomatedReplyForm({
     initialValues: getInitialValues(initialValues),
   });
   const { data: contactGroups } = useContactGroup();
+  const { data: businessHours, isPending } = useGetAllBusinessHours();
   const { customFields } = useCustomFieldsContext();
 
-  // Relax type to allow new optional fields in matchData without touching shared types
   const matchDataForm = useForm<any>({
     initialValues: {
       ...getInitialValues(initialValues).matchData,
@@ -129,14 +129,6 @@ export function AutomatedReplyForm({
         inGroups: [],
         requiredFieldsWithAnyValue: [],
         ...(getInitialValues(initialValues).matchData as any)?.contactFilters,
-      },
-      timeWindow: {
-        enabled: false,
-        days: [],
-        allDay: true,
-        startTime: "00:00",
-        endTime: "23:59",
-        ...(getInitialValues(initialValues).matchData as any)?.timeWindow,
       },
     },
   });
@@ -147,7 +139,6 @@ export function AutomatedReplyForm({
     const init = getInitialValues(initialValues);
     rootForm.setInitialValues(init);
 
-    // Deep-merge defaults for new fields so older records hydrate safely
     const initMatch = (init.matchData || {}) as any;
     const mergedMatch = {
       ...initMatch,
@@ -157,14 +148,6 @@ export function AutomatedReplyForm({
         hasLabels: [],
         requiredFieldsWithAnyValue: [],
         ...(initMatch?.contactFilters || {}),
-      },
-      timeWindow: {
-        enabled: false,
-        days: [],
-        allDay: true,
-        startTime: "00:00",
-        endTime: "23:59",
-        ...(initMatch?.timeWindow || {}),
       },
     };
     matchDataForm.setInitialValues(mergedMatch);
@@ -568,99 +551,35 @@ export function AutomatedReplyForm({
           <Separator />
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="text-base">Time-based triggering</Label>
-                <p className="text-sm text-muted-foreground">
-                  Only trigger during specific days and hours
-                </p>
-              </div>
-              <Switch
-                checked={matchDataForm.values.timeWindow?.enabled}
-                onCheckedChange={(checked) =>
-                  matchDataForm.setFieldValue("timeWindow.enabled", checked)
-                }
-              />
+            <div className="space-y-2">
+              <Label>Business Hours</Label>
+              {isPending ? (
+                "Loading business hours..."
+              ) : (
+                <ContainedSelection
+                  placeholder="Select business hours (optional)"
+                  label="Select business hours (optional)"
+                  data={businessHours?.map((businessHour) => ({
+                    value: businessHour.id,
+                    label: businessHour.name,
+                  }))}
+                  {...rootForm.getInputProps("businessHourId")}
+                />
+              )}
+
+              <p className="text-sm text-muted-foreground">
+                Only trigger automation during specified business hours
+              </p>
             </div>
 
-            {matchDataForm.values?.timeWindow?.enabled && (
-              <div className="space-y-4 pl-6 border-l-2">
-                <div className="space-y-3">
-                  <Label>Allowed days</Label>
-                  <div className="flex flex-wrap gap-3">
-                    {[
-                      { value: "mon", label: "Mon" },
-                      { value: "tue", label: "Tue" },
-                      { value: "wed", label: "Wed" },
-                      { value: "thu", label: "Thu" },
-                      { value: "fri", label: "Fri" },
-                      { value: "sat", label: "Sat" },
-                      { value: "sun", label: "Sun" },
-                    ].map((day) => (
-                      <div
-                        key={day.value}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={day.value}
-                          checked={matchDataForm.values.timeWindow?.days?.includes(
-                            day.value,
-                          )}
-                          onCheckedChange={(checked) => {
-                            const currentDays =
-                              matchDataForm.values.timeWindow?.days || [];
-                            const newDays = checked
-                              ? [...currentDays, day.value]
-                              : currentDays.filter((d) => d !== day.value);
-                            matchDataForm.setFieldValue(
-                              "timeWindow.days",
-                              newDays,
-                            );
-                          }}
-                        />
-                        <Label
-                          htmlFor={day.value}
-                          className="text-sm font-normal cursor-pointer"
-                        >
-                          {day.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label>All day</Label>
-                  <Switch
-                    checked={matchDataForm.values.timeWindow?.allDay}
-                    onCheckedChange={(checked) =>
-                      matchDataForm.setFieldValue("timeWindow.allDay", checked)
-                    }
-                  />
-                </div>
-
-                {!matchDataForm.values?.timeWindow?.allDay && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <TimePicker
-                      label="Start time (HH:mm)"
-                      withDropdown
-                      {...matchDataForm.getInputProps("timeWindow.startTime")}
-                    />
-                    <TimePicker
-                      label="End time (HH:mm)"
-                      withDropdown
-                      {...matchDataForm.getInputProps("timeWindow.endTime")}
-                    />
-                  </div>
-                )}
-
-                <Alert>
-                  <IconInfoCircle className="h-4 w-4" />
-                  <AlertDescription className="text-xs">
-                    Overnight ranges are supported (e.g., 20:00 to 08:00).
-                  </AlertDescription>
-                </Alert>
-              </div>
+            {rootForm.values.businessHourId && (
+              <Alert>
+                <IconInfoCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  This automation will only trigger during the selected business
+                  hours.
+                </AlertDescription>
+              </Alert>
             )}
           </div>
         </CardContent>

@@ -52,7 +52,7 @@ export default function LoyaltyAd() {
   const router = useRouter();
   return (
     <motion.section
-      className={`${sora.className} flex items-center justify-center w-full py-10 sm:py-16 bg-white`}
+      className={`${sora.className} flex items-center p-4 justify-center w-full py-10 sm:py-16 bg-white`}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.18 }}
@@ -108,6 +108,7 @@ export default function LoyaltyAd() {
             height={600}
             className="w-full h-auto object-contain rounded-r-3xl sm:rounded-r-4xl"
             priority
+            quality={60}
           />
         </motion.div>
       </motion.div>

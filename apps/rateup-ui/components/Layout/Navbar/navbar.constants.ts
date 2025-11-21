@@ -56,7 +56,7 @@ import {
   UserX,
 } from "lucide-react";
 
-import { GetLabelsRes } from "@/backend/label/label.types";
+import { GetLabelsRes } from "@/backend/lifecycle/lifecycle.types";
 import { getInboxNavContactCount } from "@/components/whatsapp/inbox/util";
 
 import {
@@ -121,7 +121,6 @@ export function getNavTopData(
             label: translations("Inbox"),
             hasSubmenu: true,
             children: [
-              // new,assigned,closed,sent,blocked
               {
                 label: translations("New"),
                 link: "/dashboard/inbox?tab=New",
@@ -180,7 +179,6 @@ export function getNavTopData(
                     : []),
                 ],
               },
-
               {
                 label: "Settings",
                 icon: Settings,
@@ -259,7 +257,6 @@ export function getNavTopData(
           },
         ]
       : []),
-
     ...(hasFeature(sfpn.Whatsapp)
       ? [
           {
@@ -394,31 +391,6 @@ export function getNavTopData(
           },
         ]
       : []),
-
-    // {
-    //   icon: IconBrandTeams,
-    //   label: translations("Teams"),
-    //   link: "/dashboard/teams",
-    //   disabled: role !== "SUPER_ADMIN",
-    //   hasSubmenu: true,
-    //   children: [
-    //     {
-    //       label: translations("Teams"),
-    //       link: "/dashboard/teams",
-    //       icon: IconSocial,
-    //       disabled: role !== "SUPER_ADMIN",
-    //     },
-    //     ...(role === "SUPER_ADMIN"
-    //       ? [
-    //           {
-    //             label: translations("All Members"),
-    //             link: "/dashboard/members",
-    //             icon: IconUsers,
-    //           },
-    //         ]
-    //       : []),
-    //   ],
-    // },
     {
       icon: IconQrcode,
       label: translations("QR Studio"),
@@ -455,7 +427,59 @@ export function getNavTopData(
       icon: IconApps,
       label: translations("Apps & Services"),
       link: "/dashboard/apps&services",
-      hasSubmenu: false,
+      hasSubmenu: true,
+      children: [
+        {
+          label: "home",
+          link: "/dashboard/apps&services",
+          icon: IconApps,
+        },
+        {
+          label: "Shopify",
+          link: "/dashboard/apps&services/shopify",
+          icon: IconBuildingStore,
+        },
+        {
+          label: "Google Sheet",
+          link: "/dashboard/apps&services/google-sheet",
+          icon: IconFileAnalytics,
+        },
+        {
+          label: "Amelia",
+          link: "/dashboard/apps&services/amelia",
+          icon: IconUser,
+        },
+        {
+          label: "Whatsapp Payment",
+          link: "/dashboard/apps&services/whatsapp-payment",
+          icon: IconBrandWhatsapp,
+        },
+        {
+          label: "Petpooja",
+          link: "/dashboard/apps&services/petpooja",
+          icon: IconBuildings,
+        },
+        {
+          label: "Zapier",
+          link: "/dashboard/apps&services/zapier",
+          icon: IconApi,
+        },
+        {
+          label: "Encryption",
+          link: "/dashboard/apps&services/encryption",
+          icon: IconTerminal2,
+        },
+        {
+          label: "API Service",
+          link: "/dashboard/apps&services/apiservice",
+          icon: IconApi,
+        },
+        {
+          label: "Widget",
+          link: "/dashboard/apps&services/widget",
+          icon: IconBrowser,
+        },
+      ],
     },
     ...(hasFeature(sfpn.Menu)
       ? [

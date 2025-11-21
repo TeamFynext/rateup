@@ -35,7 +35,7 @@ import classes from "./styles.module.css";
 interface WaAutomationCardsProps {
   data: any;
 }
-export function WaAutomationCards({ data }: WaAutomationCardsProps) {
+export function WaAutomationCards({ data }: Readonly<WaAutomationCardsProps>) {
   if (!data || !Array.isArray(data)) return null;
 
   return (
@@ -50,7 +50,7 @@ export function WaAutomationCards({ data }: WaAutomationCardsProps) {
 interface WaAutomationCardProps {
   automation: WaAutomatedReply;
 }
-function AutomationCard({ automation }: WaAutomationCardProps) {
+function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
   const timeSince = useTimeSince(automation.createdAt);
   const router = useRouter();
   const qc = useQueryClient();
@@ -69,6 +69,7 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
         id: automation.id,
         isEnabled: !automation.isEnabled,
         commands: automation.commands,
+        businessHourId: automation?.businessHour?.id,
       },
       {
         onSuccess: () => {
@@ -121,15 +122,22 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
           )}
         </Group>
         <Group className={classes.card_footer}>
-          <Text fz={"xs"} fw={600}>
-            {translations("For")}
-          </Text>
+          <Group>
+            <Text fz={"xs"} fw={600}>
+              {translations("For")}
+            </Text>
 
-          {automation?.commands?.map((kw) => (
-            <Badge size="xs" variant="outline" key={kw}>
-              {kw}
+            {automation?.commands?.map((kw) => (
+              <Badge size="xs" variant="outline" key={kw}>
+                {kw}
+              </Badge>
+            )) ?? ""}
+          </Group>
+          <Group>
+            <Badge size={"xs"} variant="light">
+              {automation?.businessHour?.name ?? "All Hours"}
             </Badge>
-          )) ?? ""}
+          </Group>
         </Group>
         <Group justify="space-between">
           <Badge
@@ -161,10 +169,10 @@ function AutomationCard({ automation }: WaAutomationCardProps) {
 export function CardMenu({
   children,
   position,
-}: {
+}: Readonly<{
   children: ReactNode;
   position?: FloatingPosition;
-}) {
+}>) {
   return (
     <div
       onClick={(e) => {

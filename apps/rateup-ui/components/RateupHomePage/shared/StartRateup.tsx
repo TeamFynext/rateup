@@ -58,6 +58,7 @@ export default function StartRateupHero() {
             fill
             className="object-contain object-left"
             priority
+            quality={60}
           />
         </motion.div>
 
