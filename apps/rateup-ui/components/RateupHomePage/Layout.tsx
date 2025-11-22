@@ -90,144 +90,146 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
 
   return (
     <div className="relative w-full">
-      <Navbar>
-        {/* Desktop Navigation */}
-        <NavBody>
-          <Link
-            href="/"
-            className="relative z-20 mr-4 flex items-center
-             space-x-2 px-2 py-1 text-sm font-normal text-black"
-          >
-            <Image
-              src={rateupLogoBlueTextUrl}
-              alt="logo"
-              width={70}
-              height={30}
-              className="w-14 h-14"
-              priority
-            />
-          </Link>
-          <NavItems items={navItems} />
-          {hasSession ? (
-            <div className="flex  items-center gap-4">
-              <Link
-                href={"/dashboard"}
-                className="px-6 relative py-1.5 rounded-lg border font-medium 
-               border-[#1c518e] bg-[#1c518e]
-              text-white transition"
-              >
-                Dashboard
-              </Link>
-            </div>
-          ) : (
-            <div className="flex  items-center gap-4">
-              <Link
-                href={"/signup"}
-                className="px-4 text-sm relative py-2 rounded-sm border font-semibold 
-               border-[#1c518e] bg-[#1c518e]
-              text-white transition"
-              >
-                Start Free Trial
-              </Link>
-              <BookDemoModal>
-                <button className="bg-rateup-gold px-4 font-semibold py-1.5 rounded-sm text-sm text-white cursor-pointer hover:bg-rateup-orange">
-                  Book A Demo
-                </button>
-              </BookDemoModal>
-              <Button
-                variant="outline"
-                onClick={() => router.push("/login")}
-                className="px-8 py-2 font-semibold flex items-center justify-center rounded-sm border cursor-pointer
-             text-rateup-blue border-[#C4D7F5] hover:bg-[#1c518e]
-             hover:text-white transition text-sm"
-              >
-                Login
-              </Button>
-            </div>
-          )}
-        </NavBody>
-
-        {/* Mobile Navigation */}
-        <MobileNav>
-          <MobileNavHeader>
+      <div className="bg-rateup-darkblue">
+        <Navbar className="bg-rateup-darkblue">
+          {/* Desktop Navigation */}
+          <NavBody>
             <Link
               href="/"
-              className="relative z-20 mr-4 flex items-center 
-              space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
+              className="relative z-20 mr-4 flex items-center
+             space-x-2 px-2 py-1 text-sm font-normal text-black"
             >
               <Image
                 src={rateupLogoBlueTextUrl}
                 alt="logo"
                 width={70}
                 height={30}
-                className="w-14 h-10"
+                className="w-14 h-14"
                 priority
               />
             </Link>
-            <MobileNavToggle
-              isOpen={isMobileMenuOpen}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            />
-          </MobileNavHeader>
+            <NavItems items={navItems} />
+            {hasSession ? (
+              <div className="flex  items-center gap-4">
+                <Link
+                  href={"/dashboard"}
+                  className="px-6 relative py-1.5 rounded-lg border font-medium 
+               border-[#1c518e] bg-[#1c518e]
+              text-white transition"
+                >
+                  Dashboard
+                </Link>
+              </div>
+            ) : (
+              <div className="flex  items-center gap-4">
+                <Link
+                  href={"/signup"}
+                  className="px-4 text-sm relative py-2 rounded-sm border font-semibold 
+               border-[#1c518e] bg-[#1c518e]
+              text-white transition"
+                >
+                  Start Free Trial
+                </Link>
+                <BookDemoModal>
+                  <button className="bg-rateup-gold px-4 font-semibold py-1.5 rounded-sm text-sm text-white cursor-pointer hover:bg-rateup-orange">
+                    Book A Demo
+                  </button>
+                </BookDemoModal>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push("/login")}
+                  className="px-8 py-2 font-semibold flex items-center justify-center rounded-sm border cursor-pointer
+             text-rateup-blue border-[#C4D7F5] hover:bg-[#1c518e]
+             hover:text-white transition text-sm"
+                >
+                  Login
+                </Button>
+              </div>
+            )}
+          </NavBody>
 
-          <MobileNavMenu
-            isOpen={isMobileMenuOpen}
-            onClose={() => setIsMobileMenuOpen(false)}
-          >
-            <div
-              className={`fixed top-0 left-0 w-full rounded-xl bg-white z-50 flex flex-col p-6 transform transition-transform duration-300 ease-in-out ${
-                isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-              }`}
-            >
-              <div className="flex justify-between items-center mb-6">
+          {/* Mobile Navigation */}
+          <MobileNav>
+            <MobileNavHeader>
+              <Link
+                href="/"
+                className="relative z-20 mr-4 flex items-center 
+              space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
+              >
                 <Image
                   src={rateupLogoBlueTextUrl}
                   alt="logo"
-                  width={60}
+                  width={70}
                   height={30}
+                  className="w-14 h-10"
+                  priority
                 />
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-2xl font-bold"
-                  aria-label="Close menu"
-                >
-                  ✕
-                </button>
+              </Link>
+              <MobileNavToggle
+                isOpen={isMobileMenuOpen}
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              />
+            </MobileNavHeader>
+
+            <MobileNavMenu
+              isOpen={isMobileMenuOpen}
+              onClose={() => setIsMobileMenuOpen(false)}
+            >
+              <div
+                className={`fixed top-0 left-0 w-full rounded-xl bg-white z-50 flex flex-col p-6 transform transition-transform duration-300 ease-in-out ${
+                  isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+                }`}
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <Image
+                    src={rateupLogoBlueTextUrl}
+                    alt="logo"
+                    width={60}
+                    height={30}
+                  />
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-2xl font-bold"
+                    aria-label="Close menu"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <DropDownMobileNavItems />
+                {navItems.map((item, idx) => (
+                  <Link
+                    key={`mobile-link-${idx}`}
+                    href={item.link}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="py-3 text-lg text-neutral-700 hover:text-[#1c518e]"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+
+                <div className="mt-6 flex flex-col gap-3">
+                  <Link
+                    href={"https://rateup.app/login"}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="px-6 py-2 border text-[#1c518e] text-center border-[#1c518e] rounded hover:bg-[#1c518e] hover:text-white transition"
+                  >
+                    Login
+                  </Link>
+
+                  <Link
+                    href={"https://rateup.app/signup"}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="px-6 py-2 bg-[#1c518e] text-center text-white rounded hover:opacity-90 transition"
+                  >
+                    SignUp
+                  </Link>
+                </div>
               </div>
-
-              <DropDownMobileNavItems />
-              {navItems.map((item, idx) => (
-                <Link
-                  key={`mobile-link-${idx}`}
-                  href={item.link}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="py-3 text-lg text-neutral-700 hover:text-[#1c518e]"
-                >
-                  {item.name}
-                </Link>
-              ))}
-
-              <div className="mt-6 flex flex-col gap-3">
-                <Link
-                  href={"https://rateup.app/login"}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="px-6 py-2 border text-[#1c518e] text-center border-[#1c518e] rounded hover:bg-[#1c518e] hover:text-white transition"
-                >
-                  Login
-                </Link>
-
-                <Link
-                  href={"https://rateup.app/signup"}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="px-6 py-2 bg-[#1c518e] text-center text-white rounded hover:opacity-90 transition"
-                >
-                  SignUp
-                </Link>
-              </div>
-            </div>
-          </MobileNavMenu>
-        </MobileNav>
-      </Navbar>
+            </MobileNavMenu>
+          </MobileNav>
+        </Navbar>
+      </div>
 
       {children}
       <CookieConsentBanner />
