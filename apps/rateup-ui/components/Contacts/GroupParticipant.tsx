@@ -8,7 +8,7 @@ import { useRemoveContactsFromGroup } from "../../backend/campaign/contactGroup/
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 
 export const ParticipantMenu = ({ contactId, groupId }) => {
-  const removeContactsMutation = useRemoveContactsFromGroup(groupId, () => {});
+  const removeContactsMutation = useRemoveContactsFromGroup(groupId);
   const translations = useTranslations();
   const openDeleteModal = () => {
     modals.openConfirmModal({

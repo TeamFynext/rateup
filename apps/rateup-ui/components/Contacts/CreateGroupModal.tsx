@@ -37,7 +37,7 @@ interface GroupModalProps {
   opened: boolean;
   setOpened: (value) => void;
   isEdit?: boolean;
-  groupDetails?: ContactGroup;
+  groupDetails?: any;
   type?: ContactGroupType;
 }
 
@@ -146,7 +146,7 @@ const CreateGroupModal = ({
 
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent>
+      <DialogContent onClick={(e) => e.stopPropagation()}>
         <form
           onSubmit={handleSubmit}
           onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
@@ -165,6 +165,7 @@ const CreateGroupModal = ({
                   {...form.getInputProps("name")}
                   required
                   placeholder={translations("Enter group name")}
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
               <TeamSelector
@@ -172,6 +173,7 @@ const CreateGroupModal = ({
                 label={translations("Select Team")}
                 readOnly={isEdit}
                 className="w-full"
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
             <div className="flex flex-col gap-2 mt-4 ">

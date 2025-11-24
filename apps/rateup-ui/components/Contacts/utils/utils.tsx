@@ -23,6 +23,7 @@ import { rankItem } from "@tanstack/match-sorter-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
+  Gift,
   Globe,
   Instagram,
   MessageSquare,
@@ -88,7 +89,7 @@ const contactDetailsColumn: ColumnDef<any>[] = [
   },
 ];
 
-const getSourceBadge = (source: string) => {
+export const getSourceBadge = (source: string) => {
   const config = {
     whatsapp: {
       icon: MessageSquare,
@@ -110,6 +111,11 @@ const getSourceBadge = (source: string) => {
       icon: Upload,
       label: "Imported",
       className: "bg-gray-100 text-gray-700",
+    },
+    LOYALTY: {
+      icon: Gift,
+      label: "Loyalty Customer",
+      className: "bg-orange-100 text-orange-700",
     },
   };
   const {
@@ -211,10 +217,18 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
       },
     },
     {
-      header: () => "Created",
+      header: () => "Date Added",
       accessorKey: "createdAt",
       cell: (info) =>
         dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+    },
+    {
+      header: () => "Last Contact",
+      accessorKey: "lastMessageWaCreatedAt",
+      cell: (info) =>
+        info.getValue()
+          ? dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A")
+          : "",
     },
   ];
 };

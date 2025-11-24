@@ -9,6 +9,8 @@ type ContactTableFilter = {
 export const useContactTableStore = create<{
   filter: ContactTableFilter;
   setFilter: (value: ContactTableFilter) => void;
+  selectedContact: ContactsData;
+  setSelectedContact: (contact: ContactsData) => void;
 }>()(
   immer((set, get) => ({
     filter: {
@@ -16,8 +18,10 @@ export const useContactTableStore = create<{
       lifecycleId: "all",
       source: "all",
     },
+    selectedContact: null,
     setFilter: (filter: ContactTableFilter) => {
       set({ filter });
     },
+    setSelectedContact: (contact) => set({ selectedContact: contact }),
   })),
 );

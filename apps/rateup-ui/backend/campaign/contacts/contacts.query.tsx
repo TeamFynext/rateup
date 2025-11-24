@@ -66,19 +66,8 @@ export const useCreateContactMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["contacts", "filtered"],
       });
-      showSuccessToast(
-        "Contact created successfully.",
-        "contact-create",
-        <IconCheck />,
-      );
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating the contact: ${error?.response?.data?.error}`,
-        "contact-create",
-        <IconX />,
-      );
-    },
+    onError: (error: any) => {},
   });
 };
 

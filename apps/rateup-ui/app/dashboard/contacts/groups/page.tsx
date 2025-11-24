@@ -19,9 +19,13 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { ContactGroupType } from "@/types/enums";
-import { useContactGroup } from "@/backend/campaign/contactGroup/contactGroup.query";
+import {
+  useContactGroup,
+  useDeleteGroupMutation,
+} from "@/backend/campaign/contactGroup/contactGroup.query";
 import CreateGroupModal from "@/components/Contacts/CreateGroupModal";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
@@ -30,6 +34,7 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import CustomAlertDialog from "@/components/ui/custom/CustomAlertDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,31 +75,30 @@ const GroupPage = () => {
               group?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
           ) || [];
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
+  const [isDeleteGroupOpen, setIsDeleteGroupOpen] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
 
-  const getColorClass = (str: string) => {
-    const colors = [
-      "bg-blue-100 text-blue-700 border-blue-300",
-      "bg-green-100 text-green-700 border-green-300",
-      "bg-purple-100 text-purple-700 border-purple-300",
-      "bg-pink-100 text-pink-700 border-pink-300",
-      "bg-orange-100 text-orange-700 border-orange-300",
-      "bg-emerald-100 text-emerald-700 border-emerald-300",
-      "bg-indigo-100 text-indigo-700 border-indigo-300",
-      "bg-red-100 text-red-700 border-red-300",
-    ];
+  function handleEditGroup(group) {
+    setSelectedGroup(group);
+    setIsCreateGroupOpen(true);
+  }
 
-    // Simple deterministic hash
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
+  function handleDeleteGroup(group) {
+    setSelectedGroup(group);
+    setIsDeleteGroupOpen(true);
+  }
+  const deleteGroupMutation = useDeleteGroupMutation();
+  function onDeleteGroupConfirm(selectedGroup) {
+    deleteGroupMutation.mutate(selectedGroup.id, {
+      onSuccess: () => {
+        toast.success("Group deleted successfully");
+      },
+      onError: () => {
+        toast.error("Error in deleting group");
+      },
+    });
+  }
 
-    // Convert hash to an index
-    const index = Math.abs(hash) % colors.length;
-
-    return colors[index];
-  };
-  const router = useRouter();
   if (isLoadingContactgroup) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -125,7 +129,10 @@ const GroupPage = () => {
           />
           <Button
             size="sm"
-            onClick={() => setIsCreateGroupOpen(true)}
+            onClick={() => {
+              setSelectedGroup(null);
+              setIsCreateGroupOpen(true);
+            }}
             className="bg-rateup-blue"
           >
             <Plus />
@@ -139,46 +146,11 @@ const GroupPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-1">
           {contactGroups.map((group) => {
             return (
-              <Card
-                key={group.id}
-                className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => {
-                  router.push(`/dashboard/contacts/groups/${group.id}`);
-                }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div
-                    className={`p-2 rounded-lg ${getColorClass(group.name)}`}
-                  >
-                    {group.icon ? (
-                      <Avatar className="w-5 h-5">
-                        <AvatarImage src={getFileUrlFromKey(group.icon)} />
-                      </Avatar>
-                    ) : (
-                      <Folder className="w-5 h-5" />
-                    )}
-                  </div>
-                  <GroupCardMenu group={group} />
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="truncate">{group.name}</h3>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="text-xs">
-                      {group.team.name}
-                    </Badge>
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        {group._count.contacts}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Created {formatDate(group.createdAt)}
-                  </p>
-                </div>
-              </Card>
+              <ContactGroupCard
+                group={group}
+                handleEdit={handleEditGroup}
+                handleDelete={handleDeleteGroup}
+              />
             );
           })}
         </div>
@@ -208,8 +180,18 @@ const GroupPage = () => {
         opened={isCreateGroupOpen}
         setOpened={setIsCreateGroupOpen}
         type={ContactGroupType.NORMAL}
+        isEdit={!!selectedGroup}
+        groupDetails={selectedGroup}
       />
-
+      <CustomAlertDialog
+        opened={isDeleteGroupOpen}
+        buttonTitle="Delete"
+        description="Are you sure you want to delete this group?"
+        title="Delete Group"
+        setOpened={setIsDeleteGroupOpen}
+        buttonColor="bg-red-500"
+        onAction={() => onDeleteGroupConfirm(selectedGroup)}
+      />
       {/* <PaperLayout p={0} className="flex-1">
         <ContactTable
           columns={columnGroup}
@@ -228,9 +210,78 @@ const GroupPage = () => {
   );
 };
 
-const GroupCardMenu = ({ group }) => {
-  function handleEditGroup(group) {}
-  function handleDeleteGroup(groupId) {}
+const ContactGroupCard = ({ group, handleEdit, handleDelete }) => {
+  const getColorClass = (str: string) => {
+    const colors = [
+      "bg-blue-100 text-blue-700 border-blue-300",
+      "bg-green-100 text-green-700 border-green-300",
+      "bg-purple-100 text-purple-700 border-purple-300",
+      "bg-pink-100 text-pink-700 border-pink-300",
+      "bg-orange-100 text-orange-700 border-orange-300",
+      "bg-emerald-100 text-emerald-700 border-emerald-300",
+      "bg-indigo-100 text-indigo-700 border-indigo-300",
+      "bg-red-100 text-red-700 border-red-300",
+    ];
+
+    // Simple deterministic hash
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    // Convert hash to an index
+    const index = Math.abs(hash) % colors.length;
+
+    return colors[index];
+  };
+  const router = useRouter();
+  return (
+    <Card
+      key={group.id}
+      className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={(e) => {
+        router.push(`/dashboard/contacts/groups/${group.id}`);
+      }}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div className={`p-2 rounded-lg ${getColorClass(group.name)}`}>
+          {group.icon ? (
+            <Avatar className="w-5 h-5">
+              <AvatarImage src={getFileUrlFromKey(group.icon)} />
+            </Avatar>
+          ) : (
+            <Folder className="w-5 h-5" />
+          )}
+        </div>
+        <GroupCardMenu
+          group={group}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="truncate">{group.name}</h3>
+        <div className="flex items-center justify-between">
+          <Badge variant="outline" className="text-xs">
+            {group.team.name}
+          </Badge>
+          <div className="flex items-center gap-1">
+            <Users className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              {group._count.contacts}
+            </span>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Created {formatDate(group.createdAt)}
+        </p>
+      </div>
+    </Card>
+  );
+};
+
+const GroupCardMenu = ({ group, handleEdit, handleDelete }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -241,15 +292,23 @@ const GroupCardMenu = ({ group }) => {
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => handleEditGroup(group)}>
+        <DropdownMenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEdit(group);
+          }}
+        >
           <Edit className="w-4 h-4 mr-2" />
           Edit Group
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => handleDeleteGroup(group.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete(group);
+          }}
           className="text-red-600"
         >
-          <Trash2 className="w-4 h-4 mr-2" />
+          <Trash2 className="w-4 h-4 mr-2 text-red-500" />
           Delete Group
         </DropdownMenuItem>
       </DropdownMenuContent>

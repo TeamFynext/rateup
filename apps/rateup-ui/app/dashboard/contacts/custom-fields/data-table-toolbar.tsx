@@ -56,7 +56,7 @@ export function DataTableToolbar<TData>({
           </Button>
         </div>
         <div className="flex items-center gap-2">
-          <AddLabels
+          <AddCustomField
             opened={isOpenedAddModal}
             setOpened={setIsOpenedAddModal}
           />
@@ -67,7 +67,7 @@ export function DataTableToolbar<TData>({
   );
 }
 
-const AddLabels = ({ opened, setOpened }) => {
+const AddCustomField = ({ opened, setOpened }) => {
   const t = useTranslations();
 
   return (

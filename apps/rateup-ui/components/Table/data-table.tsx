@@ -83,7 +83,7 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const isManualPagination = manualPagination !== undefined;
   const table = useReactTable({
-    data: useMemo(() => data, [data]),
+    data,
     columns,
     state: {
       columnVisibility,

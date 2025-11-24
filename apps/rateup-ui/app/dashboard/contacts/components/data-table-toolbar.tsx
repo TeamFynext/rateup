@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import { Table } from "@tanstack/react-table";
 import {
+  CheckCircle2,
   Download,
   Globe,
   Info,
@@ -21,6 +22,7 @@ import {
   Search,
   Trash,
   Upload,
+  UserPlus,
   UserRoundPlus,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -35,11 +37,14 @@ import {
   useExportContactsMutation,
   useImportCSVContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
+import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal";
 import { ContactForm } from "@/components/Contacts/CreateContactModal";
 import { CustomFieldForm } from "@/components/Contacts/label-form";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector";
+import { getSourceBadge } from "@/components/Contacts/utils/utils";
 import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -73,6 +78,7 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { getInitials } from "@/components/ui/utils";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { importMethod } from "@/utils/enums";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
@@ -276,7 +282,7 @@ const ExportContacts = ({ table }) => {
   );
 };
 
-const CreateOrEditContactModal = ({
+export const CreateOrEditContactModal = ({
   opened,
   setOpened,
   initialValues,
@@ -420,14 +426,39 @@ const CreateOrEditContactModal = ({
   }, [customFields]);
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent className="min-w-[700px]">
+      <DialogContent className="min-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t("Add Contact")}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            {!initialValues && (
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rateup-blue to-blue-600 flex items-center justify-center">
+                <UserPlus className="w-4 h-4 text-white" />
+              </div>
+            )}
+            {initialValues ? t("Edit Contact") : t("Add Contact")}
+          </DialogTitle>
           <DialogDescription>
-            {t("Fill the details and click save")}
+            {initialValues
+              ? t("Update contact information and preferences")
+              : t("Fill the details and click save")}
           </DialogDescription>
         </DialogHeader>
-        <div>
+        <div className="space-y-4">
+          {initialValues && (
+            <div className="flex items-center gap-3 pb-3 border-b">
+              <Avatar className="w-16 h-16">
+                <AvatarImage src={initialValues.profilePic} />
+                <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-blue-600 text-white">
+                  {getInitials(initialValues.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <p className="font-medium">{initialValues.name}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  {getSourceBadge(initialValues.source)}
+                </div>
+              </div>
+            </div>
+          )}
           {customFields?.length > 0 && (
             <div className="border flex self-end gap-1 p-1 w-fit">
               {customFields.map((field) => (
@@ -462,8 +493,13 @@ const CreateOrEditContactModal = ({
               </Button>
             </DialogClose>
             <Button onClick={handleSubmit}>
-              {(createContactMutation.isPending ||
-                createNewContactMutation?.isPending) && <Spinner />}
+              {createContactMutation.isPending ||
+              createNewContactMutation?.isPending ||
+              editContactMutation.isPending ? (
+                <Spinner />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+              )}
               <span className="text-sm font-normal">{t("Save")}</span>
             </Button>
           </DialogFooter>
@@ -522,6 +558,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
       },
       onError: () => {
         toast.error("Importing failed");
+        setOpened(false);
       },
     });
   }
@@ -620,6 +657,10 @@ const ImportContactModal = ({ opened, setOpened }) => {
           </div>
         </div>
       </DialogContent>
+      <ContactImportErrorModal
+        body={importCSVContactMutation?.error?.response?.data}
+        isError={importCSVContactMutation.isError}
+      />
     </Dialog>
   );
 };

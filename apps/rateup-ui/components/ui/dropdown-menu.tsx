@@ -28,6 +28,7 @@ function DropdownMenuTrigger({
     <DropdownMenuPrimitive.Trigger
       data-slot="dropdown-menu-trigger"
       {...props}
+      asChild
     />
   );
 }

@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Activity, FileSpreadsheet, Folder, Tag, Users } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Tooltip,
@@ -68,9 +69,9 @@ export default function ContactLayout({
     <section className="h-screen">
       <div className="flex h-full">
         <div>
-          <Card className="flex-shrink-0 w-20 p-2 items-center flex flex-col h-full">
+          <Card className="h-full">
             <TooltipProvider delayDuration={200}>
-              <nav className="space-y-2 flex-1">
+              <nav className="flex flex-col items-center h-full flex-shrink-0 w-20 gap-3">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeItem.label === item.label;
@@ -78,20 +79,16 @@ export default function ContactLayout({
                   return (
                     <Tooltip key={item.label}>
                       <TooltipTrigger asChild>
-                        <button
+                        <Button
+                          variant={isActive ? "default" : "ghost"}
                           onClick={() => {
                             setActiveItem(item);
                             router.push(item.link);
                             router.refresh();
                           }}
-                          className={`w-full flex items-center justify-center p-3 rounded-lg transition-all ${
-                            isActive
-                              ? "bg-rateup-blue text-white shadow-md"
-                              : "hover:bg-muted"
-                          }`}
                         >
-                          <Icon className="w-5 h-5 flex-shrink-0" />
-                        </button>
+                          <Icon />
+                        </Button>
                       </TooltipTrigger>
                       <TooltipContent
                         side="right"
