@@ -93,7 +93,7 @@ export function Board({
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to delete this? This action cannot be undone.
+          Are you sure you want to delete this? This action cannot be undone
         </Text>
       ),
       labels: { confirm: "Delete", cancel: "Cancel" },

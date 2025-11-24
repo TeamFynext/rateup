@@ -13,7 +13,6 @@ import {
 } from "@/app/dashboard/inbox/store";
 import { WA_INBOX_WEBSOCKET_CONNECTION_STRING } from "@/backend/org/ws/org.ws.api";
 import { useMarkWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.query";
-import { handleWebSocketMessage } from "@/components/Layout/Layout";
 import { showInfoToast } from "@/utils/notifications";
 
 export const useChatSocket = () => {
