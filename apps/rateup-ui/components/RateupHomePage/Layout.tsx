@@ -114,7 +114,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
                 <Link
                   href={"/dashboard"}
                   className="px-6 relative py-1.5 rounded-lg border font-medium 
-               border-[#1c518e] bg-[#1c518e]
+               border-rateup-blue-4 bg-rateup-blue-4
               text-white transition"
                 >
                   Dashboard
@@ -125,7 +125,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
                 <Link
                   href={"/signup"}
                   className="px-4 text-sm relative py-2 rounded-sm border font-semibold 
-               border-[#1c518e] bg-[#1c518e]
+               border-rateup-blue-4 bg-rateup-blue-4
               text-white transition"
                 >
                   Start Free Trial
@@ -138,8 +138,8 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
                 <Button
                   variant="outline"
                   onClick={() => router.push("/login")}
-                  className="px-8 py-2 font-semibold flex items-center justify-center rounded-sm border cursor-pointer
-             text-rateup-blue border-[#C4D7F5] hover:bg-[#1c518e]
+                  className="px-8 py-2 font-semibold flex items-center justify-center rounded-sm cursor-pointer
+             text-rateup-blue border-2 border-rateup-light-blue hover:bg-rateup-blue-4
              hover:text-white transition text-sm"
                 >
                   Login
@@ -202,7 +202,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
                     key={`mobile-link-${idx}`}
                     href={item.link}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="py-3 text-lg text-neutral-700 hover:text-[#1c518e]"
+                    className="py-3 text-lg text-neutral-700 hover:text-rateup-blue-4"
                   >
                     {item.name}
                   </Link>
@@ -212,7 +212,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
                   <Link
                     href={"https://rateup.app/login"}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="px-6 py-2 border text-[#1c518e] text-center border-[#1c518e] rounded hover:bg-[#1c518e] hover:text-white transition"
+                    className="px-6 py-2 border text-rateup-blue-4 text-center border-rateup-blue-4 rounded hover:bg-rateup-blue-4 hover:text-white transition"
                   >
                     Login
                   </Link>
@@ -220,7 +220,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
                   <Link
                     href={"https://rateup.app/signup"}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="px-6 py-2 bg-[#1c518e] text-center text-white rounded hover:opacity-90 transition"
+                    className="px-6 py-2 bg-rateup-blue-4 text-center text-white rounded hover:opacity-90 transition"
                   >
                     SignUp
                   </Link>
