@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
 import { UserRecipes } from "../../types/enums";
+import { UserPresenceMode } from "../../../generated/prisma/enums";
 
 const userCore = {
   id: z.string().uuid(),
@@ -77,10 +78,12 @@ const userEmailCheckSchema = z.object({
 export enum UserAvailabilityStatus {
   offline = "offline",
   online = "online",
+  busy = "busy",
 }
 
 const userStatusSchema = z.object({
   status: z.nativeEnum(UserAvailabilityStatus),
+  presenceMode: z.nativeEnum(UserPresenceMode),
 });
 
 export const { schemas: userSchemas, $ref: $UserRef } = buildJsonSchemas(
