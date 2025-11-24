@@ -19,7 +19,7 @@ const springUp: Transition = { type: "spring", stiffness: 120, damping: 18 };
 export default function AutomateInteraction() {
   return (
     <motion.section
-      className={`${sora.className} py-10 flex items-center justify-center px-4`}
+      className={`${sora.className} py-10 flex items-center justify-center px-4 bg-white`}
       initial={{ opacity: 0, y: 32 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.18 }}

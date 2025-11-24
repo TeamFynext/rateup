@@ -30,7 +30,7 @@ export default function StartRateupHero() {
   const router = useRouter();
   return (
     <motion.section
-      className={`${sora.className} w-full flex items-center justify-center py-8 sm:py-10`}
+      className={`${sora.className} w-full flex items-center justify-center py-8 sm:py-10 bg-white`}
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}

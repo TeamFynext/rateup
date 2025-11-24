@@ -127,6 +127,7 @@
   --rateup-light-blue: #c4d7f5;
   --rateup-light-blue-2: #93c6f5;
   --rateup-light-blue-3: #bcd8ff;
+  --rateup-blue-4: #1c518e;
   --rateup-blue-foreground: oklch(1 0 0);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
@@ -223,6 +224,7 @@
   --color-light-blue-5: var(--light-blue-5);
   --color-active-green-2: var(--active-green-2);
   --color-active-green-3: var(--active-green-3);
+  --color-rateup-blue-4: var(--rateup-blue-4);
 }
 
 @layer base {
