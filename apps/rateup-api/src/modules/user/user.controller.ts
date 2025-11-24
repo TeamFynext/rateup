@@ -335,8 +335,13 @@ export async function updateUserAvailabilityStatusHandler(
 ) {
   try {
     const { userId, orgId } = request.user;
-    const { status } = request.body;
-    const res = await updateUserAvailablityStatus(userId, orgId, status);
+    const { presenceMode, status } = request.body;
+    const res = await updateUserAvailablityStatus(
+      userId,
+      orgId,
+      status,
+      presenceMode,
+    );
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
