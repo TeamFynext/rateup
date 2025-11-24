@@ -27,6 +27,7 @@ import Session from "supertokens-node/recipe/session";
 import { log } from "../../utils/logger";
 import { getWebhookSecret } from "../../utils/webhook";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
+import { getUserByEmail } from "../user/user.service";
 
 export async function createOrgHandler(
   request: FastifyRequest<{
@@ -262,6 +263,7 @@ export async function completeOrgDetailsHandler(
 ) {
   try {
     const userId = request.user.userId;
+    const user = await getUserByEmail(request.user.email);
     const orgData = await completeOrgDetails(userId, {
       onboarding: request.body.onboarding,
       onboardingCompleted: true,
@@ -274,24 +276,24 @@ export async function completeOrgDetailsHandler(
 New Organization "${orgData.updatedOrg.name}".
 
 Details:
-- Created At: ${orgData.updatedOrg.createdAt.toISOString()}
+-Name : ${user?.name}
+-Email: ${user?.email}
 -Phone : ${orgData?.updatedOrg?.phone}
-Onboarding:
+Onboarding Questionnaire:
 - Services: ${(tellUsMore?.["services"] || []).join(", ")}
 - Industry: ${tellUsMore?.["industry"]}
-- Template: ${tellUsMore?.["template"]}
-- Integration: ${tellUsMore?.["integration"]}
+- Integration: ${tellUsMore?.["integration"] || "No Integration selected"}
       `,
       html: `
-      <h2>Organization Updated: ${orgData.updatedOrg.name}</h2>
+      <h2>New Organization: ${orgData.updatedOrg.name}</h2>
+      <h3>Name: ${user?.name}</h3>
+      <h3>Email: ${user?.email}</h3>
       <h3>Phone: ${orgData?.updatedOrg?.phone}</h3>
-      <p><strong>Created At:</strong> ${orgData.updatedOrg.createdAt.toISOString()}</p>
-      <h3>Onboarding Details</h3>
+      <h3>Onboarding Questionnaire</h3>
       <ul>
         <li><strong>Services:</strong> ${(tellUsMore?.["services"] || []).join(", ")}</li>
         <li><strong>Industry:</strong> ${tellUsMore?.["industry"]}</li>
-        <li><strong>Template:</strong> ${tellUsMore?.["template"]}</li>
-        <li><strong>Integration:</strong> ${tellUsMore?.["integration"]}</li>
+        <li><strong>Integration:</strong> ${tellUsMore?.["integration"] || "No Integration selected"}</li>
       </ul>
       `,
     };
