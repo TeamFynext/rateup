@@ -45,7 +45,7 @@ const imageVariants: Variants = {
 export default function Features() {
   return (
     <motion.section
-      className={`${sora.className} flex items-center justify-center p-4`}
+      className={`${sora.className} flex items-center justify-center p-4 bg-white`}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.12 }}

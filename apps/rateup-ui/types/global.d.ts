@@ -368,6 +368,7 @@ declare global {
     status: UserAvailabilityStatus;
     hasWhatsAppSettings: boolean;
     onboardingCompleted?: boolean;
+    presenceMode: UserPresenceMode;
   };
 
   interface UserInfoQueryData {

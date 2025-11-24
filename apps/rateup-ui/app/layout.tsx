@@ -84,25 +84,25 @@ export default async function RootLayout({
         <GoogleTagManager gtmId="GTM-NDC3D7DP" />
       </head>
       <body>
-        <MantineProvider theme={theme}>
-          <Suspense fallback={<RateupLoader h={"100dvh"} />}>
-            <Notifications />
-            <SuperTokensProvider>
-              <Providers locale={locale} messages={messages}>
-                <ModalsProvider modals={allModalManagerModalsObj}>
-                  <ThemeProvider
-                    attribute="class"
-                    defaultTheme="light"
-                    disableTransitionOnChange
-                  >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          disableTransitionOnChange
+        >
+          <MantineProvider theme={theme}>
+            <Suspense fallback={<RateupLoader h={"100dvh"} />}>
+              <Notifications />
+              <SuperTokensProvider>
+                <Providers locale={locale} messages={messages}>
+                  <ModalsProvider modals={allModalManagerModalsObj}>
                     {children}
-                  </ThemeProvider>
-                </ModalsProvider>
-              </Providers>
-            </SuperTokensProvider>
-          </Suspense>
-        </MantineProvider>
-        <Toaster richColors />
+                  </ModalsProvider>
+                </Providers>
+              </SuperTokensProvider>
+            </Suspense>
+          </MantineProvider>
+          <Toaster richColors />
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -44,7 +44,7 @@ const ClientLogos = () => {
 
   return (
     <section
-      className={`flex items-center justify-center py-6 sm:py-8 lg:pb-7 ${sora.className}`}
+      className={`bg-white flex items-center justify-center py-6 sm:py-8 lg:pb-7 ${sora.className}`}
     >
       <div className="border border-light-blue-5 w-[95vw] sm:w-[90vw] lg:w-[80vw] flex flex-col sm:flex-row items-stretch justify-between rounded-lg overflow-hidden">
         {/* Left Section */}

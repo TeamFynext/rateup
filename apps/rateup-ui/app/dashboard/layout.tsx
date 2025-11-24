@@ -1,7 +1,7 @@
 import React from "react";
 import { cookies } from "next/headers";
 
-import Layout from "@/components/Layout/Layout";
+import MainSidebar from "@/components/Layout/Navbar/main-sidebar";
 import { SessionAuthForNextJS } from "@/components/SuperToken/sessionAuthForNextJS";
 import { TryRefreshComponent } from "@/components/SuperToken/tryRefreshClientComponent";
 
@@ -55,7 +55,7 @@ export default async function DashboardLayout({
   //  */
   return (
     <SessionAuthForNextJS>
-      <Layout>{children}</Layout>
+      <MainSidebar>{children}</MainSidebar>
     </SessionAuthForNextJS>
   );
 }

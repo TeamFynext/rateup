@@ -35,9 +35,10 @@ import Session from "supertokens-auth-react/recipe/session";
 export const useCheckSession = () => {
   const router = useRouter();
   const pathname = usePathname();
+
   const searchParams = useSearchParams();
   const auth = searchParams.get("auth");
-
+  const redirectTo = searchParams?.get("redirectToPath");
   const [doesSessionExist, setDoesSessionExist] = useState(false);
   const checkSession = useCallback(async () => {
     try {
@@ -45,7 +46,7 @@ export const useCheckSession = () => {
       if (auth === "google") return;
       const doesSessionExist = await Session.doesSessionExist();
       if (["/login", "/signup"].includes(pathname) && doesSessionExist) {
-        router.push("/dashboard");
+        router.push(redirectTo || "/dashboard");
       }
       setDoesSessionExist(doesSessionExist);
     } catch (error) {

@@ -132,10 +132,17 @@ export async function updateUserPause({ userId, data }) {
 export enum UserAvailabilityStatus {
   offline = "offline",
   online = "online",
+  busy = "busy",
+}
+
+export enum UserPresenceMode {
+  automatic = "automatic",
+  manual = "manual",
 }
 
 export async function updateUserAvailabilityStatus(data: {
   status: UserAvailabilityStatus;
+  presenceMode: UserPresenceMode;
 }) {
   return await axiosClient.put(`user/status`, data);
 }

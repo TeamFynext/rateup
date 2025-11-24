@@ -9,7 +9,7 @@ import { sora } from "@/utils/fonts";
 export default function HeroAnalytics() {
   return (
     <section
-      className={`flex flex-col md:flex-row items-center justify-center gap-10 md:gap-40 py-10 px-4 ${sora.className}`}
+      className={`bg-white flex flex-col md:flex-row items-center justify-center gap-10 md:gap-40 py-10 px-4 ${sora.className}`}
     >
       {/* Block 1 */}
       <div className="flex flex-col items-center justify-center text-center w-full md:w-auto">
