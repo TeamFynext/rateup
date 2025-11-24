@@ -41,6 +41,7 @@ const pauseUserSchema = z.object({
 const createUserGoogleSchema = z.object({
   name: z.string().min(4),
   orgName: z.string().min(4),
+  phoneNumber: z.string(),
   type: z.string(),
   email: z.string().optional(),
 });
