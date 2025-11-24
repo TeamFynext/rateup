@@ -73,7 +73,7 @@ export async function createUserSignup({
           id,
           email,
           name,
-          phone,
+          phone: phoneNumber,
           recipeName,
           prefLanguage,
         },
