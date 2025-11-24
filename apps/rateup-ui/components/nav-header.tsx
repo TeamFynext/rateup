@@ -1,6 +1,6 @@
 "use client";
 
-import ColorSchemaButton from "./theme/ColorSchemaButton";
+import { ModeToggle } from "./theme/ModeToggle";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -48,7 +48,7 @@ const NavHeader = ({ pathname }: { pathname: string }) => {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <ColorSchemaButton />
+      <ModeToggle />
     </header>
   );
 };

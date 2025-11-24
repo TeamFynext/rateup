@@ -36,6 +36,7 @@ import {
   updateUserProfile,
   updateUserProfilePhoto,
   UserAvailabilityStatus,
+  UserPresenceMode,
 } from "./user.api";
 
 export const useGetUserProfile = () =>
@@ -289,8 +290,11 @@ export const useUpdateUserPause = () => {
 
 export const useUpdateUserAvailabilityStatus = () => {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: { status: UserAvailabilityStatus }) => {
+  const mutation = useMutation({
+    mutationFn: (data: {
+      status: UserAvailabilityStatus;
+      presenceMode: UserPresenceMode;
+    }) => {
       showLoadingToast("Updating status...", "user-status", true, "Updating");
       return updateUserAvailabilityStatus(data);
     },
@@ -309,6 +313,7 @@ export const useUpdateUserAvailabilityStatus = () => {
       );
     },
   });
+  return { ...mutation, queryClient };
 };
 
 export function useUserAuditLogs(pagination) {
