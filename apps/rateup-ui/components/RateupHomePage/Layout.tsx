@@ -89,147 +89,144 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const router = useRouter();
 
   return (
-    <div className="relative w-full">
-      <div className="bg-rateup-darkblue">
-        <Navbar className="bg-rateup-darkblue">
-          {/* Desktop Navigation */}
-          <NavBody>
+    <div className="relative w-full bg-rateup-darkblue">
+      <Navbar>
+        {/* Desktop Navigation */}
+        <NavBody>
+          <Link
+            href="/"
+            className="relative z-20 mr-4 flex items-center
+             space-x-2 px-2 py-1 text-sm font-normal text-black"
+          >
+            <Image
+              src={rateupLogoBlueTextUrl}
+              alt="logo"
+              width={70}
+              height={30}
+              className="w-14 h-14"
+              priority
+            />
+          </Link>
+          <NavItems items={navItems} />
+          {hasSession ? (
+            <div className="flex  items-center gap-4">
+              <Link
+                href={"/dashboard"}
+                className="px-6 relative py-1.5 rounded-lg border font-medium 
+               border-rateup-blue-4 bg-rateup-blue-4
+              text-white transition"
+              >
+                Dashboard
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4 justify-center">
+              <Link
+                href={"/signup"}
+                className="px-4 text-[16px] relative py-2 rounded-sm border font-semibold 
+               border-rateup-blue-4 bg-rateup-blue-4
+              text-white transition"
+              >
+                Start Free Trial
+              </Link>
+              <BookDemoModal>
+                <button className="bg-rateup-gold px-4 py-2 rounded-sm text-white cursor-pointer hover:bg-rateup-orange">
+                  <span className="font-semibold text-[16px]">Book A Demo</span>
+                </button>
+              </BookDemoModal>
+              <button
+                onClick={() => router.push("/login")}
+                className="px-8 flex items-center justify-center rounded-sm cursor-pointer
+             text-rateup-blue border border-rateup-light-blue hover:bg-rateup-blue-4
+             hover:text-white transition bg-white py-2"
+              >
+                <span className="font-semibold text-[16px]">Login</span>
+              </button>
+            </div>
+          )}
+        </NavBody>
+
+        {/* Mobile Navigation */}
+        <MobileNav>
+          <MobileNavHeader>
             <Link
               href="/"
-              className="relative z-20 mr-4 flex items-center
-             space-x-2 px-2 py-1 text-sm font-normal text-black"
+              className="relative z-20 mr-4 flex items-center 
+              space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
             >
               <Image
                 src={rateupLogoBlueTextUrl}
                 alt="logo"
                 width={70}
                 height={30}
-                className="w-14 h-14"
+                className="w-14 h-10"
                 priority
               />
             </Link>
-            <NavItems items={navItems} />
-            {hasSession ? (
-              <div className="flex  items-center gap-4">
-                <Link
-                  href={"/dashboard"}
-                  className="px-6 relative py-1.5 rounded-lg border font-medium 
-               border-rateup-blue-4 bg-rateup-blue-4
-              text-white transition"
-                >
-                  Dashboard
-                </Link>
-              </div>
-            ) : (
-              <div className="flex  items-center gap-4">
-                <Link
-                  href={"/signup"}
-                  className="px-4 text-sm relative py-2 rounded-sm border font-semibold 
-               border-rateup-blue-4 bg-rateup-blue-4
-              text-white transition"
-                >
-                  Start Free Trial
-                </Link>
-                <BookDemoModal>
-                  <button className="bg-rateup-gold px-4 font-semibold py-1.5 rounded-sm text-sm text-white cursor-pointer hover:bg-rateup-orange">
-                    Book A Demo
-                  </button>
-                </BookDemoModal>
-                <Button
-                  variant="outline"
-                  onClick={() => router.push("/login")}
-                  className="px-8 py-2 font-semibold flex items-center justify-center rounded-sm cursor-pointer
-             text-rateup-blue border-2 border-rateup-light-blue hover:bg-rateup-blue-4
-             hover:text-white transition text-sm"
-                >
-                  Login
-                </Button>
-              </div>
-            )}
-          </NavBody>
+            <MobileNavToggle
+              isOpen={isMobileMenuOpen}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            />
+          </MobileNavHeader>
 
-          {/* Mobile Navigation */}
-          <MobileNav>
-            <MobileNavHeader>
-              <Link
-                href="/"
-                className="relative z-20 mr-4 flex items-center 
-              space-x-2 lg:px-8 px-2 py-1 text-sm font-normal text-black"
-              >
+          <MobileNavMenu
+            isOpen={isMobileMenuOpen}
+            onClose={() => setIsMobileMenuOpen(false)}
+          >
+            <div
+              className={`fixed top-0 left-0 w-full rounded-xl bg-white z-50 flex flex-col p-6 transform transition-transform duration-300 ease-in-out ${
+                isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
+            >
+              <div className="flex justify-between items-center mb-6">
                 <Image
                   src={rateupLogoBlueTextUrl}
                   alt="logo"
-                  width={70}
+                  width={60}
                   height={30}
-                  className="w-14 h-10"
-                  priority
                 />
-              </Link>
-              <MobileNavToggle
-                isOpen={isMobileMenuOpen}
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              />
-            </MobileNavHeader>
-
-            <MobileNavMenu
-              isOpen={isMobileMenuOpen}
-              onClose={() => setIsMobileMenuOpen(false)}
-            >
-              <div
-                className={`fixed top-0 left-0 w-full rounded-xl bg-white z-50 flex flex-col p-6 transform transition-transform duration-300 ease-in-out ${
-                  isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-                }`}
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <Image
-                    src={rateupLogoBlueTextUrl}
-                    alt="logo"
-                    width={60}
-                    height={30}
-                  />
-                  <button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-2xl font-bold"
-                    aria-label="Close menu"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <DropDownMobileNavItems />
-                {navItems.map((item, idx) => (
-                  <Link
-                    key={`mobile-link-${idx}`}
-                    href={item.link}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="py-3 text-lg text-neutral-700 hover:text-rateup-blue-4"
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-
-                <div className="mt-6 flex flex-col gap-3">
-                  <Link
-                    href={"https://rateup.app/login"}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="px-6 py-2 border text-rateup-blue-4 text-center border-rateup-blue-4 rounded hover:bg-rateup-blue-4 hover:text-white transition"
-                  >
-                    Login
-                  </Link>
-
-                  <Link
-                    href={"https://rateup.app/signup"}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="px-6 py-2 bg-rateup-blue-4 text-center text-white rounded hover:opacity-90 transition"
-                  >
-                    SignUp
-                  </Link>
-                </div>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-2xl font-bold"
+                  aria-label="Close menu"
+                >
+                  ✕
+                </button>
               </div>
-            </MobileNavMenu>
-          </MobileNav>
-        </Navbar>
-      </div>
+
+              <DropDownMobileNavItems />
+              {navItems.map((item, idx) => (
+                <Link
+                  key={`mobile-link-${idx}`}
+                  href={item.link}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-3 text-lg text-neutral-700 hover:text-rateup-blue-4"
+                >
+                  {item.name}
+                </Link>
+              ))}
+
+              <div className="mt-6 flex flex-col gap-3">
+                <Link
+                  href={"https://rateup.app/login"}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-6 py-2 border text-rateup-blue-4 text-center border-rateup-blue-4 rounded hover:bg-rateup-blue-4 hover:text-white transition"
+                >
+                  Login
+                </Link>
+
+                <Link
+                  href={"https://rateup.app/signup"}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-6 py-2 bg-rateup-blue-4 text-center text-white rounded hover:opacity-90 transition"
+                >
+                  SignUp
+                </Link>
+              </div>
+            </div>
+          </MobileNavMenu>
+        </MobileNav>
+      </Navbar>
 
       {children}
       <CookieConsentBanner />
