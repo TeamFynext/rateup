@@ -118,7 +118,6 @@ export default function WaInboxContactDetails({
       labels: labels,
     },
   });
-  console.log(contact);
   const { data: contactLabels = [], isPending } = useContactLabels();
 
   const t = useTranslations();
@@ -607,15 +606,20 @@ export default function WaInboxContactDetails({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
       >
-        <div className="mx-auto mb-2.5 inline-block">
+        <div className="mx-auto mb-2.5 inline-block relative">
           <CreativeAvatar
             src={contact?.profilePic}
             size="xl"
             name={contact?.name || contact?.phone}
             platform={platform}
           />
+          <div className="bg-green-600 w-6 h-6 rounded-full flex items-center justify-center absolute bottom-0 right-0">
+            <IconBrandWhatsapp color="white" size={16} />
+          </div>
         </div>
-        <h3 className="mb-1 text-sm">{contact?.name || contact?.phone}</h3>
+        <h3 className="mb-1 text-base font-bold">
+          {contact?.name || contact?.phone}
+        </h3>
         <div className="flex items-center justify-center space-x-2 mb-2.5">
           {contact?.lifecycleName && (
             <Badge variant="outline" className={`text-[11px]`}>
