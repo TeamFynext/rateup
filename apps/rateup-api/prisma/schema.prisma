@@ -557,6 +557,7 @@ model Contact {
   lastMessageSourceIdentifier String?
   lastSentMessageTimeStamp    DateTime?
   ContactLabelMap             ContactLabelMap[]
+  notes                       String?
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
