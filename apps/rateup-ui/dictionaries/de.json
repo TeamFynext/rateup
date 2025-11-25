@@ -2420,5 +2420,10 @@
   "Are you sure you want to delete": "Sind Sie sicher, dass Sie löschen möchten",
   "Add Business Hours": "Geschäftszeiten hinzufügen",
   "Configure your business hours with timezone and channel settings": "Konfigurieren Sie Ihre Geschäftszeiten mit Zeitzonen- und Kanaleinstellungen",
-  "Save Hours": "Zeiten speichern"
+  "Save Hours": "Zeiten speichern",
+  "Start Conversation": "Konversation starten",
+  "WhatsApp Number": "WhatsApp-Nummer",
+  "Lifecycle Stage": "Lebenszyklusphase",
+  "Add a contact to start WhatsApp conversation. Enter their details below to begin messaging": "Fügen Sie einen Kontakt hinzu, um eine WhatsApp-Konversation zu starten. Geben Sie unten die Details ein, um mit dem Nachrichtenversand zu beginnen.",
+  "Add New WhatsApp contact": "Neuen WhatsApp-Kontakt hinzufügen"
 }

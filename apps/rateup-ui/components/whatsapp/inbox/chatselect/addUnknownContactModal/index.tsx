@@ -2,28 +2,23 @@
 
 import { useEffect, useState } from "react";
 
-import { Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
-import PhoneInputWithCountrySelect, {
-  isValidPhoneNumber,
-} from "react-phone-number-input";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 
 import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
-import {
-  RateupButtonPrimary,
-  RateupButtonSecondary,
-} from "@/components/Button/RateupButtons";
-import { ContainedTextField } from "@/components/input/ContainedInput/ContainedInput";
-import FormModalLayout from "@/components/Modal/FormModalLayout";
+import { LifecycleInputs } from "@/components/Contacts/LifecycleSelector";
 import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { importMethod } from "@/utils/enums";
 
 import ActionButtonTrigger from "./actionButtonTrigger";
 import CardTrigger from "./cardTrigger";
-import classes from "./styles.module.css";
 
 interface UnknownContactModalProps {
   phone: string;
@@ -73,90 +68,153 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
   const contactMutation = useCreateContactMutation();
   const [loading, setLoading] = useState(false);
   const translations = useTranslations();
-  useEffect(() => {
-    if (props.phone) {
-      form.setFieldValue("phone", "+" + form.values.countryCode + props.phone);
-    }
-  }, [props]);
+
   const form = useForm({
     initialValues: {
       name: "",
       phone: "",
       email: "",
       countryCode: "91",
+      lifecycleId: "",
       source: importMethod.MANUAL,
     },
     validate: {
       name: (value) =>
-        value.length ? null : translations("Name cannot be blank"),
+        value && value.length ? null : translations("Name cannot be blank"),
       phone: (value) =>
         !value
           ? translations("Phone Number cannot be blank")
           : !isValidPhoneNumber(value)
             ? translations("Invalid phone number")
             : null,
+      email: (value) =>
+        !value
+          ? null //
+          : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+            ? null
+            : translations("Invalid email address"),
     },
   });
 
+  useEffect(() => {
+    if (!props.phone) return;
+
+    // If prop already includes +, use it; otherwise prefix +
+    const normalized =
+      typeof props.phone === "string" && props.phone.startsWith("+")
+        ? props.phone
+        : `+${props.phone}`;
+
+    // Only set if different from current to avoid extra renders
+    if (form.values.phone !== normalized) {
+      form.setFieldValue("phone", normalized);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.phone]);
+
   function onSubmit(values: ICreateContact) {
     setLoading(true);
-    values.phone = values.phone.slice(1);
-    contactMutation.mutate(values, {
+
+    // Defensive: ensure phone is string, strip leading + if backend expects number without +
+    const rawPhone = (values.phone ?? "") as string;
+    const phoneToSend = rawPhone.replace(/^\+/, "");
+
+    const payload: ICreateContact = {
+      ...values,
+      phone: phoneToSend,
+    };
+
+    contactMutation.mutate(payload, {
       onSuccess(data) {
         form.reset();
         form.resetDirty();
-        props.successCallback(data.data);
+        props.successCallback?.(data.data);
         setLoading(false);
       },
       onError(error) {
+        // handle / surface error as needed
         setLoading(false);
       },
     });
   }
+
+  const nameError = form.errors.name;
+  const phoneError = form.errors.phone;
+  const emailError = form.errors.email;
+
   return (
-    <form onSubmit={form.onSubmit(onSubmit)}>
-      <Stack gap={5}>
-        <ContainedTextField
-          label={translations("Name")}
-          withAsterisk
-          {...form.getInputProps("name")}
-        />
-        <Stack gap={0}>
-          <Group gap={3}>
-            <Text className={classes.inputLabel}>
-              {translations("Phone Number")}
-            </Text>
-            <Text c="red">*</Text>
-          </Group>
-          <PhoneInputWithCountrySelect
-            international
-            defaultCountry="IN"
-            countryCallingCodeEditable={false}
-            placeholder={translations("Enter phone number")}
-            className={classes.inputPhone}
-            key={form.key("phone")}
-            {...form.getInputProps("phone")}
+    <div className="flex flex-col w-full gap-4">
+      <form onSubmit={form.onSubmit(onSubmit)} className="flex flex-col gap-4">
+        {/* Full name */}
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="fullName">
+            {translations("Full Name")} <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="fullName"
+            placeholder="Enter contact name"
+            {...form.getInputProps("name")}
           />
-          <Text size="sm" c={"red"}>
-            {form?.errors?.phone}
-          </Text>
-        </Stack>
-        <ContainedTextField
-          label={translations("Email")}
-          {...form.getInputProps("email")}
-        />
-        <Group>
-          <RateupButtonSecondary
-            title={translations("Cancel")}
-            variant="light"
+          {nameError && (
+            <p className="text-xs text-red-500 mt-1">{nameError}</p>
+          )}
+        </div>
+
+        {/* two-column row: WhatsApp + Email */}
+        <div className="flex items-center justify-center gap-4">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="whatsapp">
+              {translations("WhatsApp Number")}{" "}
+              <span className="text-red-500">*</span>
+            </Label>
+            <PhoneInput
+              international
+              defaultCountry="IN"
+              value={form.values.phone}
+              onChange={(val) => form.setFieldValue("phone", val || "")}
+              className="border-2 border-gray-200 focus:border-rateup-blue focus-within:ring-2 focus-within:ring-rateup-blue/20 rounded-md px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full"
+            />
+            {phoneError && (
+              <p className="text-xs text-red-500 mt-1">{phoneError}</p>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="email">{translations("Email Address")}</Label>
+            <Input
+              id="email"
+              placeholder="contact@email.com"
+              {...form.getInputProps("email")}
+            />
+            {emailError && (
+              <p className="text-xs text-red-500 mt-1">{emailError}</p>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="lifecycle">{translations("Lifecycle Stage")}</Label>
+          <LifecycleInputs
+            value={form.values.lifecycleId}
+            onChange={(value) => form.setFieldValue("lifecycleId", value)}
+            placeholder={"Enter lifecycle"}
+            width={"100%"}
           />
-          <RateupButtonPrimary
-            type={"submit"}
-            title={translations("Add Contact")}
-            loading={loading}
-          />
-        </Group>
-      </Stack>
-    </form>
+        </div>
+        <div className="w-full flex items-center justify-end gap-4">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="bg-green-500 hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-1 min-w-[12vw]"
+          >
+            <IconBrandWhatsapp color="white" size={28} />
+            <span className="font-semibold">
+              {loading
+                ? translations("Please wait")
+                : translations("Start Conversation")}
+            </span>
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };

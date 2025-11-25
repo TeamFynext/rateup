@@ -4,6 +4,7 @@ import React from "react";
 
 import { Button, Select, SelectProps } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
+import SelectR from "react-select";
 
 import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useLifecycleContext } from "@/context/LifecycleContext";
@@ -167,5 +168,78 @@ export const LifecycleInput = ({
       aria-label="Lifecycle stage"
       comboboxProps={{ withArrow: true }}
     />
+  );
+};
+
+export const LifecycleInputs = ({
+  label,
+  value,
+  onChange,
+  placeholder = "Select lifecycle",
+  size, // ignored for react-select but kept for compatibility
+  width = 200,
+  searchable = true,
+  disabled = false,
+  ...props
+}: SelectProps) => {
+  const tags = useLifecycleContext();
+
+  // Grouped options for react-select: [{ label, options: [...] }]
+  const options = React.useMemo(
+    () => [
+      {
+        label: "Lifecycle Stages",
+        options:
+          tags
+            ?.filter((label) => label?.category !== "lost")
+            .map((label) => ({
+              value: label?.id,
+              label: `${label?.emoji} ${label?.name}`,
+            })) || [],
+      },
+      {
+        label: "Lost Stages",
+        options:
+          tags
+            ?.filter((label) => label?.category === "lost")
+            .map((label) => ({
+              value: label?.id,
+              label: `${label?.emoji} ${label?.name}`,
+            })) || [],
+      },
+    ],
+    [tags],
+  );
+
+  // Map string lifecycleId -> react-select option object
+  const selectedOption = React.useMemo(() => {
+    if (!value) return null;
+    const flat = options.flatMap((g) => g.options);
+    return flat.find((opt) => opt.value === value) || null;
+  }, [value, options]);
+
+  const handleChange = (opt: any) => {
+    // opt can be null or { value, label }
+    const val = opt?.value ?? "";
+    // keep same API: string in, string out
+    (onChange as any)?.(val);
+  };
+
+  const pixelWidth = typeof width === "number" ? `${width}px` : width || "100%";
+
+  return (
+    <div style={{ width: pixelWidth }}>
+      {label && (
+        <label className="mb-1 block text-sm font-medium">{label}</label>
+      )}
+      <SelectR
+        options={options}
+        value={selectedOption}
+        onChange={handleChange}
+        placeholder={placeholder}
+        isSearchable={searchable}
+        isDisabled={disabled}
+      />
+    </div>
   );
 };

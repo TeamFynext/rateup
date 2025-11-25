@@ -2414,5 +2414,10 @@
   "Are you sure you want to delete": "Are you sure you want to delete",
   "Add Business Hours": "Add Business Hours",
   "Configure your business hours with timezone and channel settings": "Configure your business hours with timezone and channel settings",
-  "Save Hours": "Save Hours"
+  "Save Hours": "Save Hours",
+  "Start Conversation": "Start Conversation",
+  "WhatsApp Number": "WhatsApp Number",
+  "Lifecycle Stage": "Lifecycle Stage",
+  "Add New WhatsApp contact": "Add New WhatsApp contact",
+  "Add a contact to start WhatsApp conversation. Enter their details below to begin messaging": "Add a contact to start WhatsApp conversation. Enter their details below to begin messaging"
 }
