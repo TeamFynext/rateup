@@ -2,16 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 
-import { Select as MantineSelect, SelectProps } from "@mantine/core";
-import { IconChevronRight } from "@tabler/icons-react";
 import { Infinity } from "lucide-react";
 
-import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useLifecycleContext } from "@/context/LifecycleContext";
 
-import { useEditContactLabelsMutation } from "../../backend/campaign/contacts/contacts.query";
-import { Button } from "../ui/button";
-import DropdownSelector from "../ui/custom/DropDownSelector";
 import {
   Select,
   SelectContent,
@@ -204,60 +198,3 @@ export const LifecycleSelector = ({
     </Select>
   );
 };
-
-// export const LifecycleInput = ({
-//   label,
-//   value,
-//   onChange,
-//   placeholder = "Select lifecycle",
-//   size = "sm",
-//   width = 200,
-//   searchable = true,
-//   disabled = false,
-//   ...props
-// }: SelectProps) => {
-//   const tags = useLabelsContext();
-
-//   // Memoize the labels to prevent unnecessary recalculations
-//   const lifecycleLabels = React.useMemo(
-//     () => [
-//       {
-//         group: "Lifecycle Stages",
-//         items:
-//           tags
-//             ?.filter((label) => label?.category !== "lost")
-//             .map((label) => ({
-//               value: label?.id,
-//               label: label?.emoji + " " + label?.name,
-//             })) || [],
-//       },
-//       {
-//         group: "Lost Stages",
-//         items:
-//           tags
-//             ?.filter((label) => label?.category === "lost")
-//             .map((label) => ({
-//               value: label?.id,
-//               label: label?.emoji + " " + label?.name,
-//             })) || [],
-//       },
-//     ],
-//     [tags],
-//   );
-
-//   return (
-//     <MantineSelect
-//       label={label}
-//       placeholder={placeholder}
-//       data={lifecycleLabels}
-//       value={value}
-//       onChange={onChange}
-//       size={size}
-//       searchable={searchable}
-//       w={width}
-//       disabled={disabled}
-//       aria-label="Lifecycle stage"
-//       comboboxProps={{ withArrow: true }}
-//     />
-//   );
-// };

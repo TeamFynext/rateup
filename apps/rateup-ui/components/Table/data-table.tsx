@@ -63,7 +63,6 @@ export interface DataTableProps<TData, TValue> {
 
 interface DataTableToolbarProps<TData, TValue> {
   table: ReturnType<typeof useReactTable<TData>>;
-  manualPagination?: DataTableProps<TData, TValue>["manualPagination"];
 }
 
 export function DataTable<TData, TValue>({
@@ -142,9 +141,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="flex flex-col h-full h-full">
-      {DataTableToolbar && (
-        <DataTableToolbar table={table} manualPagination={manualPagination} />
-      )}
+      {DataTableToolbar && <DataTableToolbar table={table} />}
       <div className="overflow-auto rounded-md border h-full bg-card">
         <ScrollAreaAutosize mah={"100%"}>
           <Table>

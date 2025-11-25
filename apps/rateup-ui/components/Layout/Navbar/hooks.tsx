@@ -36,10 +36,15 @@ import {
   IconWaveSine,
 } from "@tabler/icons-react";
 import {
+  Activity,
   FileChartColumn,
+  FileSpreadsheet,
+  Folder,
   Inbox,
   MessageSquareDot,
   Settings,
+  Tag,
+  Users,
 } from "lucide-react";
 
 import { SubscriptionFeaturePathName as sfpn } from "@/types/enums";
@@ -142,7 +147,34 @@ export function useNavMain({
             {
               title: t("Contacts"),
               url: "/dashboard/contacts",
-              icon: IconAddressBook,
+              icon: Users,
+              items: [
+                {
+                  title: t("All Contacts"),
+                  url: "/dashboard/contacts",
+                  icon: Users,
+                },
+                {
+                  title: t("Groups"),
+                  url: "/dashboard/contacts/groups",
+                  icon: Folder,
+                },
+                {
+                  title: t("Custom Fields"),
+                  url: "/dashboard/contacts/custom-fields",
+                  icon: FileSpreadsheet,
+                },
+                {
+                  title: t("Labels"),
+                  url: "/dashboard/contacts/labels",
+                  icon: Tag,
+                },
+                {
+                  title: t("Lifecycle"),
+                  url: "/dashboard/contacts/lifecycle",
+                  icon: Activity,
+                },
+              ],
             },
           ]
         : []),
