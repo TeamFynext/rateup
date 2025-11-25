@@ -350,7 +350,7 @@ const ContactSettings = () => {
   }
 
   return (
-    <div className="space-y-4 h-full overflow-auto p-1">
+    <div className="space-y-4 h-full">
       <Card className="p-4">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div>

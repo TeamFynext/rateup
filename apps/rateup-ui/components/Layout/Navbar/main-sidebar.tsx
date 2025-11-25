@@ -137,9 +137,7 @@ export default function MainSidebar({ children }) {
 
   const { setTotalCount } = useChatContactCountStore();
   const { filter } = useChatFilterStore();
-  const isInbox =
-    pathname?.includes("/dashboard/inbox") ||
-    pathname?.includes("/dashboard/contacts");
+  const isInbox = pathname?.includes("/dashboard/inbox");
   const paddingExclusion = isInbox
     ? true
     : pathname?.includes("/dashboard/settings");
@@ -176,7 +174,14 @@ export default function MainSidebar({ children }) {
     <SessionReact.SessionAuth>
       <WebSocketHandler />
 
-      <SidebarProvider defaultOpen={false}>
+      <SidebarProvider
+        defaultOpen={false}
+        style={
+          {
+            "--sidebar-width-icon": "53px",
+          } as React.CSSProperties
+        }
+      >
         {isLoading ? (
           <NavbarSkeleton />
         ) : (
@@ -195,7 +200,7 @@ export default function MainSidebar({ children }) {
         )}
 
         <div
-          className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-scroll bg-background`}
+          className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-background`}
         >
           <LifecycleContext value={lifecycles || []}>
             <CustomFieldsProvider initialFields={customFieldData || []}>

@@ -79,7 +79,7 @@ export default function Contacts() {
   if (isError) return <ErrorComponent refetch={refetchContacts} />;
 
   return (
-    <div className="p-3 flex flex-col pb-3 h-full">
+    <div className="h-full">
       <DataTable
         columns={column}
         data={contactMemoData ?? []}

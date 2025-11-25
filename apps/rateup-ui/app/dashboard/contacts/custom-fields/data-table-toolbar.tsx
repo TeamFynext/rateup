@@ -29,7 +29,7 @@ export function DataTableToolbar<TData>({
   const [searchTerm, setSearchTerm] = useDebouncedState("", 200);
   const t = useTranslations();
   return (
-    <Card className="p-4 my-2">
+    <Card className="p-2 mb-4">
       <div className="flex justify-between gap-2">
         <div className="flex items-center gap-2 flex-1">
           <div className="flex-1 relative">

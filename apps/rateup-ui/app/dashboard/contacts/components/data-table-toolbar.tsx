@@ -148,7 +148,7 @@ export function DataTableToolbar<TData>({
   }
 
   return (
-    <Card className="p-4 mb-4">
+    <Card className="p-2 mb-4">
       <div className="flex justify-between gap-2">
         <div className="flex items-center gap-2 flex-1">
           {table.getState().rowSelection.length && (

@@ -43,6 +43,12 @@ import { useNavMain } from "./hooks";
 import { NavUser } from "./user-nav";
 import { WhatsAppSettingsModal } from "./utils";
 
+// Icon config for sidebar icons
+const sidebarIconProps = {
+  className: "size-5!",
+  strokeWidth: 1.7,
+};
+
 export default function AppSidebar({
   subscription,
   lifecycles,
@@ -184,7 +190,10 @@ export default function AppSidebar({
       />
       <div className="flex w-full h-screen">
         {/* Sidebar: Icons Only */}
-        <Sidebar className="w-12 border-r" collapsible="none">
+        <Sidebar
+          className="w-[var(--sidebar-width-icon)] border-r"
+          collapsible="none"
+        >
           <SidebarHeader>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -195,7 +204,7 @@ export default function AppSidebar({
                   tooltip={userData?.data?.orgName}
                 >
                   <Link href="#" aria-label="Organization">
-                    <Avatar className="bg-sidebar-primary text-sidebar-primary-foreground size-8 rounded-lg">
+                    <Avatar className="bg-sidebar-primary text-sidebar-primary-foreground size-8 w-10 rounded-lg">
                       <AvatarImage
                         src={getFileUrlFromKey(userData?.data.orgLogo)}
                         alt={userData?.data?.orgName}
@@ -241,12 +250,12 @@ export default function AppSidebar({
                       >
                         {item.url && item.url !== "#" ? (
                           <Link href={item.url}>
-                            <item.icon />
+                            <item.icon {...sidebarIconProps} />
                             <span className="sr-only">{item.title}</span>
                           </Link>
                         ) : (
                           <>
-                            <item.icon />
+                            <item.icon {...sidebarIconProps} />
                             <span className="sr-only">{item.title}</span>
                           </>
                         )}
@@ -294,8 +303,13 @@ export default function AppSidebar({
                         >
                           <SidebarMenuItem>
                             <CollapsibleTrigger asChild>
-                              <SidebarMenuButton tooltip={item.title}>
-                                {item.icon && <item.icon />}
+                              <SidebarMenuButton
+                                tooltip={item.title}
+                                variant="light"
+                              >
+                                {item.icon && (
+                                  <item.icon {...sidebarIconProps} />
+                                )}
                                 <span>{item.title}</span>
                                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                               </SidebarMenuButton>
@@ -321,11 +335,13 @@ export default function AppSidebar({
                                         fullPathname === subItem.url
                                       }
                                       aria-label={subItem.title}
+                                      variant="light"
                                     >
                                       <Link href={subItem.url || "#"}>
                                         {subItem.icon && (
                                           <subItem.icon
-                                            className="size-4 mr-2"
+                                            {...sidebarIconProps}
+                                            className={`mr-2 ${sidebarIconProps.className}`}
                                             color="var(--foreground)"
                                           />
                                         )}
@@ -351,9 +367,10 @@ export default function AppSidebar({
                                 e.preventDefault();
                               }
                             }}
+                            variant="light"
                           >
                             <Link href={item.url || "#"}>
-                              {item.icon && <item.icon />}
+                              {item.icon && <item.icon {...sidebarIconProps} />}
                               <span>{item.title}</span>
                             </Link>
                           </SidebarMenuButton>

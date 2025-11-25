@@ -140,7 +140,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="flex flex-col h-full h-full">
+    <div className="flex flex-col h-full">
       {DataTableToolbar && <DataTableToolbar table={table} />}
       <div className="overflow-auto rounded-md border h-full bg-card">
         <ScrollAreaAutosize mah={"100%"}>
