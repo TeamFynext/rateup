@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
+import { toast } from "sonner";
 
 import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
@@ -105,10 +106,12 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
       onSuccess(data) {
         form.reset();
         form.resetDirty();
+        toast.success("contact added");
         props.successCallback(data.data);
         setLoading(false);
       },
       onError(error) {
+        toast.error("error adding contact");
         setLoading(false);
       },
     });

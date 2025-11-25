@@ -108,9 +108,7 @@ function ContactTable({
     dialogOpened,
     { toggle: toggleConfirmationModal, close: closeDialog },
   ] = useDisclosure(false);
-  const deleteManyContactsMutation = useDeleteManyContactsMutation(() => {
-    setRowSelection({});
-  });
+  const deleteManyContactsMutation = useDeleteManyContactsMutation();
   const exportContact = useExportContactsMutation();
 
   const deleteManyContactGroupsMutation = useDeleteManyContactGroupsMutation(
@@ -118,9 +116,7 @@ function ContactTable({
       setRowSelection({});
     },
   );
-  const removeContactsMutation = useRemoveContactsFromGroup(groupId, () => {
-    setRowSelection({});
-  });
+  const removeContactsMutation = useRemoveContactsFromGroup(groupId);
   const removeMulitpleGroupParticipants = useRemoveMulitpleGroupParticipants(
     groupId,
     () => {

@@ -20,7 +20,12 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { IconDownload, IconInfoCircle } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconDownload,
+  IconInfoCircle,
+  IconX,
+} from "@tabler/icons-react";
 import PhoneInputWithCountrySelect, {
   isValidPhoneNumber,
 } from "react-phone-number-input";
@@ -34,7 +39,7 @@ import {
 import { SAVE_HOTKEY } from "@/utils/constants";
 import { importMethod } from "@/utils/enums";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
-import { showErrorToast } from "@/utils/notifications";
+import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
   RateupButtonBlue,
@@ -47,12 +52,22 @@ import {
 
 import "react-phone-number-input/style.css";
 
+import { error } from "console";
+
 import { DatePickerInput } from "@mantine/dates";
+import { ChevronDownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 
+import PhoneInputWithCountry from "../input/PhoneInputWithCountry";
+import { Button } from "../ui/button";
+import { Calendar } from "../ui/calendar";
+import { Field, FieldError, FieldLabel } from "../ui/field";
+import { Input } from "../ui/input";
+import { MultiSelect } from "../ui/multi-select";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import styles from "./contact.module.css";
 
 export interface ImportContact {
@@ -210,12 +225,22 @@ const CreateContactModal = ({
         } else {
           createContactMutation.mutate(contactData, {
             onSuccess: () => {
+              showSuccessToast(
+                "Contact created successfully.",
+                "contact-create",
+                <IconCheck />,
+              );
               setIsCreating(false);
               contactClose();
               close();
               form.reset();
             },
-            onError: () => {
+            onError: (error) => {
+              showErrorToast(
+                `Error creating the contact: ${error?.response?.data?.error}`,
+                "contact-create",
+                <IconX />,
+              );
               setIsCreating(false);
             },
           });
@@ -482,78 +507,89 @@ export const ContactForm = ({ form, customFields, type }) => {
   if (isPending) return <div>Loading...</div>;
 
   return (
-    <SimpleGrid cols={2}>
-      <TextInput
-        label={translations("Name")}
-        placeholder={translations("Enter name")}
-        radius={"md"}
-        size="md"
-        required
-        key={form.key("name")}
-        {...form.getInputProps("name")}
-      />
-      <Stack gap={0}>
-        <Group gap={3}>
-          <Text>{translations("Phone Number")}</Text>
-          <Text c="red">*</Text>
-        </Group>
-        <Box
-          className={`${styles["phone-input-container"]} ${form?.errors?.phone ? styles["phone-input-error"] : ""}`}
-        >
-          <PhoneInputWithCountrySelect
-            defaultCountry="IN"
-            international
-            countryCallingCodeEditable={false}
-            placeholder={translations("Enter phone number")}
-            value={form.values.phone ?? ""}
-            {...form.getInputProps("phone")}
-            className={styles.inputPhone}
-          />
-          <Text size="sm" c={"red"}>
-            {form?.errors?.phone}
-          </Text>
-        </Box>
-      </Stack>
-      <ContainedMultiSelect
-        label={translations("Labels")}
-        placeholder={translations("Select labels")}
-        data={labels?.map((label) => ({
-          value: label.id,
-          label: label.name,
-        }))}
-        key={form.key("labels")}
-        {...form.getInputProps("labels")}
-      />
+    <div className="grid grid-cols-2 gap-2">
+      <Field className="col-span-2">
+        <FieldLabel>{translations("Name")}</FieldLabel>
+        <Input
+          placeholder={translations("Enter name")}
+          required
+          {...form.getInputProps("name")}
+        />
+      </Field>
+      <Field>
+        <FieldLabel>{translations("Phone Number")}</FieldLabel>
+        <PhoneInputWithCountrySelect
+          defaultCountry="IN"
+          international
+          countryCallingCodeEditable={false}
+          placeholder={translations("Enter phone number")}
+          value={form.values.phone ?? ""}
+          {...form.getInputProps("phone")}
+          className="border-2 border-gray-200 focus:border-gray-700 focus-within:ring-2 focus-within:ring-gray-200 rounded-md px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full"
+        />
+        {form?.errors?.phone && <FieldError>*{form?.errors?.phone}</FieldError>}
+      </Field>
+      <Field>
+        <FieldLabel>{translations("Labels")}</FieldLabel>
+        <MultiSelect
+          onValueChange={(values) => form.setFieldValue("labels", values)}
+          options={labels?.map((label) => ({
+            value: label.id,
+            label: label.name,
+          }))}
+          defaultValue={form.values.labels}
+        />
+      </Field>
       {type === ContactGroupType.LOYALTY && (
         <>
-          <TextInput
-            label={translations("email")}
-            placeholder={translations("Enter the email")}
-            radius={"md"}
-            size="md"
-            type="email"
-            {...form.getInputProps("email")}
-          />
-          <DatePickerInput
-            label={translations("dob")}
-            placeholder={translations("Enter the dob")}
-            radius={"md"}
-            size="md"
-            maxDate={new Date()}
-            {...form.getInputProps("dob")}
-          />
-          <TextInput
-            label={translations("External ID")}
-            placeholder={translations("Enter External ID")}
-            radius={"md"}
-            size="md"
-            {...form.getInputProps("external_id")}
-          />
+          <Field>
+            <FieldLabel>{translations("email")}</FieldLabel>
+            <Input
+              placeholder={translations("Enter the email")}
+              type="email"
+              {...form.getInputProps("email")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel>{translations("dob")}</FieldLabel>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  id="date"
+                  className="w-48 justify-between font-normal"
+                >
+                  {form.values.dob || "Select date"}
+                  <ChevronDownIcon />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto overflow-hidden p-0"
+                align="start"
+              >
+                <Calendar
+                  mode="single"
+                  selected={form.values.dob}
+                  captionLayout="dropdown"
+                  onSelect={(date) => {
+                    form.setFieldValue("dob", date);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </Field>
+          <Field>
+            <FieldLabel>{translations("External ID")}</FieldLabel>
+            <Input
+              placeholder={translations("Enter External ID")}
+              {...form.getInputProps("external_id")}
+            />
+          </Field>
         </>
       )}
       {form
         .getValues()
         .contactType?.map((fieldId) => renderCustomField(fieldId))}
-    </SimpleGrid>
+    </div>
   );
 };

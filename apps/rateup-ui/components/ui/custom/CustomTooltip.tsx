@@ -19,7 +19,7 @@ const CustomTooltip = ({
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger>{trigger}</TooltipTrigger>
+        <TooltipTrigger asChild>{trigger}</TooltipTrigger>
         <TooltipContent side={side}>{content}</TooltipContent>
       </Tooltip>
     </TooltipProvider>

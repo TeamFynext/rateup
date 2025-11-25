@@ -1,26 +1,41 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
-import { Button, Select, SelectProps } from "@mantine/core";
-import { IconChevronRight } from "@tabler/icons-react";
+import { Infinity } from "lucide-react";
 
-import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useLifecycleContext } from "@/context/LifecycleContext";
 
-import { useEditContactLabelsMutation } from "../../backend/campaign/contacts/contacts.query";
-import DropdownSelector from "../ui/custom/DropDownSelector";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 export const LifecycleSelector = ({
   value,
-  id,
+  onChange,
+  placeholder,
+  customTrigger,
+  className = "",
+  all = false,
 }: {
   value: string;
-  id: string;
+  onChange: (
+    value: string,
+    lifecycleObj: { id: string; name: string; emoji: string; category: string },
+  ) => void;
+  placeholder?: string;
+  className?: string;
+  customTrigger?: React.ReactNode;
+  all?: boolean;
 }) => {
   const tags = useLifecycleContext();
-  const { updateContactById } = useContactsStore();
-  const editContactMutation = useEditContactLabelsMutation(id);
+  const [selectedLifeCycle, setSelectedLifeCycle] = useState(null);
 
   // Memoize the labels to prevent unnecessary recalculations
   const inboxLabels = React.useMemo(
@@ -33,10 +48,14 @@ export const LifecycleSelector = ({
             .map((label) => ({
               value: label?.id,
               label: label?.name,
-              icon: () => (
-                <span role="img" className="text-[10px]">
-                  {label?.emoji}
-                </span>
+              icon: ({ className }) => (
+                <div
+                  className={`w-5 h-5 p-2 rounded-full bg-blue-50 flex items-center justify-center ${className}`}
+                >
+                  <span role="img" className="text-[12px]">
+                    {label?.emoji}
+                  </span>
+                </div>
               ),
             })) || [],
       },
@@ -48,10 +67,14 @@ export const LifecycleSelector = ({
             .map((label) => ({
               value: label?.id,
               label: label?.name,
-              icon: () => (
-                <span role="img" className="text-[10px]">
-                  {label?.emoji}
-                </span>
+              icon: ({ className }) => (
+                <div
+                  className={`w-4 h-4 rounded-full bg-blue-50 flex items-center justify-center ${className}`}
+                >
+                  <span role="img" className="text-[15px]">
+                    {label?.emoji}
+                  </span>
+                </div>
               ),
             })) || [],
       },
@@ -59,11 +82,30 @@ export const LifecycleSelector = ({
     [tags],
   );
 
+  useEffect(() => {
+    const itemWithIcon = allItems?.find((i) => i.value === value);
+    setSelectedLifeCycle(itemWithIcon);
+  }, [value]);
   // Flatten all items for easier navigation
   const allItems = React.useMemo(
     () => [...inboxLabels[0].items, ...inboxLabels[1].items],
     [inboxLabels],
   );
+  if (all && !allItems.find((i) => i.value === "all")) {
+    allItems.unshift({
+      value: "all",
+      label: "All Lifecycles",
+      icon: ({ className }) => (
+        <div
+          className={`w-5 h-5 p-1 rounded-full bg-blue-50 flex items-center justify-center ${className}`}
+        >
+          <span role="img" className="text-[15px]">
+            <Infinity className="w-3 h-3" />
+          </span>
+        </div>
+      ),
+    });
+  }
 
   // Check if current item is in lost category
   const isLostCategory = React.useMemo(() => {
@@ -73,23 +115,10 @@ export const LifecycleSelector = ({
 
   const handleSubmit = (newValue: string) => {
     if (newValue === value) return; // Prevent unnecessary updates
-    editContactMutation.mutate(
-      {
-        data: { lifecycleId: newValue },
-        contactId: id,
-      },
-      {
-        onSuccess: () => {
-          updateContactById(id, (contact) => ({
-            ...contact,
-            lifecycleId: newValue,
-            lifecycleName: inboxLabels
-              .flatMap((c) => c.items)
-              .find((c) => c.value === newValue).label,
-          }));
-        },
-      },
-    );
+    const lifecycle = tags?.find((t) => t.id === newValue);
+    const itemWithIcon = allItems?.find((i) => i.value === newValue);
+    setSelectedLifeCycle(itemWithIcon);
+    onChange(newValue, lifecycle);
   };
 
   const handleNextStage = () => {
@@ -103,69 +132,69 @@ export const LifecycleSelector = ({
       handleSubmit(nextItem.value);
     }
   };
+  const TriggerComponent = () => {
+    if (customTrigger) {
+      if (value) return customTrigger;
+      return (
+        <span className="text-muted-foreground text-sm">
+          {placeholder ?? "Select a lifecycle stage"}
+        </span>
+      );
+    }
+    if (selectedLifeCycle) {
+      return (
+        <div className="flex gap-2">
+          <selectedLifeCycle.icon />
+          <span className="text-sm">{selectedLifeCycle.label}</span>
+        </div>
+      );
+    }
+    return (
+      <span className="text-muted-foreground text-sm">
+        {placeholder ?? "Select a lifecycle stage"}
+      </span>
+    );
+  };
 
+  if (all) {
+    return (
+      <Select value={value} onValueChange={handleSubmit} defaultValue={"all"}>
+        <SelectTrigger className={className}>
+          <TriggerComponent />
+        </SelectTrigger>
+        <SelectContent>
+          {allItems.map((lifecycle) => (
+            <SelectItem
+              value={lifecycle.value}
+              key={lifecycle.value}
+              className="data-[highlighted]:text-blue-500 cursor-pointer"
+            >
+              <lifecycle.icon />
+              <span className="ml-1">{lifecycle.label}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
   return (
-    <DropdownSelector
-      value={value}
-      data={inboxLabels}
-      onChange={handleSubmit}
-    />
-  );
-};
-
-export const LifecycleInput = ({
-  label,
-  value,
-  onChange,
-  placeholder = "Select lifecycle",
-  size = "sm",
-  width = 200,
-  searchable = true,
-  disabled = false,
-  ...props
-}: SelectProps) => {
-  const tags = useLifecycleContext();
-
-  // Memoize the labels to prevent unnecessary recalculations
-  const lifecycleLabels = React.useMemo(
-    () => [
-      {
-        group: "Lifecycle Stages",
-        items:
-          tags
-            ?.filter((label) => label?.category !== "lost")
-            .map((label) => ({
-              value: label?.id,
-              label: label?.emoji + " " + label?.name,
-            })) || [],
-      },
-      {
-        group: "Lost Stages",
-        items:
-          tags
-            ?.filter((label) => label?.category === "lost")
-            .map((label) => ({
-              value: label?.id,
-              label: label?.emoji + " " + label?.name,
-            })) || [],
-      },
-    ],
-    [tags],
-  );
-
-  return (
-    <Select
-      label={label}
-      placeholder={placeholder}
-      data={lifecycleLabels}
-      value={value}
-      onChange={onChange}
-      size={size}
-      searchable={searchable}
-      w={width}
-      disabled={disabled}
-      aria-label="Lifecycle stage"
-      comboboxProps={{ withArrow: true }}
-    />
+    <Select value={value} onValueChange={handleSubmit}>
+      <SelectTrigger className={className}>
+        <TriggerComponent />
+      </SelectTrigger>
+      <SelectContent>
+        {inboxLabels.map((group) => (
+          <SelectGroup key={group.group}>
+            <SelectLabel>{group.group}</SelectLabel>
+            {group.items.map((label) => (
+              <SelectItem value={label.value} key={label.value}>
+                <label.icon />
+                <span className="ml-1">{label.label}</span>
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };

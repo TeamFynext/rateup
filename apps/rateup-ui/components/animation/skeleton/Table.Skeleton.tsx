@@ -4,6 +4,8 @@ import React from "react";
 
 import { Skeleton, Table } from "@mantine/core";
 
+import { TableCell, TableHead, TableRow } from "@/components/ui/table";
+
 import useTableLoadingDataCount from "../../../hooks/useTableLoadingDataCount";
 
 const columns = [
@@ -19,17 +21,17 @@ const columns = [
 
 export const TableHeadSkeleton = () => {
   return (
-    <Table.Tr>
+    <TableRow>
       {columns.map((_, i) => (
-        <Table.Th key={i}>
+        <TableHead key={i}>
           <Skeleton
             height={30}
             maw={i === 0 ? "30%" : "80%"}
             miw={i === 0 ? 30 : 80}
           />
-        </Table.Th>
+        </TableHead>
       ))}
-    </Table.Tr>
+    </TableRow>
   );
 };
 export const TableBodySkeleton = () => {
@@ -37,17 +39,17 @@ export const TableBodySkeleton = () => {
   return (
     <>
       {Array.from({ length: count }).map((_, rowIndex) => (
-        <Table.Tr key={rowIndex}>
+        <TableRow key={rowIndex}>
           {columns.map((_, i) => (
-            <Table.Td key={i}>
+            <TableCell key={i}>
               <Skeleton
                 height={30}
                 maw={i === 0 ? "30%" : "100%"}
                 miw={i === 0 ? 30 : 100}
               />
-            </Table.Td>
+            </TableCell>
           ))}
-        </Table.Tr>
+        </TableRow>
       ))}
     </>
   );

@@ -3,19 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  Avatar,
-  Box,
-  Button,
-  FileButton,
-  Group,
-  SimpleGrid,
-  Stack,
-  Text,
-} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
-import { IconUpload } from "@tabler/icons-react";
+import { Folder } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
@@ -27,32 +17,39 @@ import {
 import { SAVE_HOTKEY } from "../../utils/constants";
 import { getFileUrlFromKey, uploadFile } from "../../utils/file-upload/upload";
 import { showErrorToast } from "../../utils/notifications";
-import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../Button/RateupButtons";
-import { ContainedTextField } from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
+import { Avatar, AvatarImage } from "../ui/avatar";
+import { Button } from "../ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Spinner } from "../ui/spinner";
 
 interface GroupModalProps {
-  groupClose: () => void;
-  close?: () => void;
+  opened: boolean;
+  setOpened: (value) => void;
   isEdit?: boolean;
-  groupDetails?: ContactGroup;
+  groupDetails?: any;
   type?: ContactGroupType;
 }
 
 const CreateGroupModal = ({
-  groupClose,
-  close,
+  opened,
+  setOpened,
   isEdit,
   groupDetails,
   type,
 }: GroupModalProps) => {
   const [file, setFile] = useState<File | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedTeamId, setSelectedTeamId] = useState("");
   const router = useRouter();
   const translations = useTranslations();
   const form = useForm({
@@ -87,12 +84,12 @@ const CreateGroupModal = ({
     groupDetails?.id,
   );
 
-  const handleSubmit = () => {
+  const handleSubmit = (event) => {
+    event.preventDefault();
     const validation = form.validate();
     if (validation.hasErrors) {
       return;
     }
-    setIsCreating(true);
 
     // Process tags for selected contact types
     const result = {};
@@ -111,40 +108,27 @@ const CreateGroupModal = ({
     if (isEdit) {
       editContactGroupMutation.mutate(updatedValues, {
         onSuccess: () => {
-          groupClose();
-          setIsCreating(false);
+          setOpened(false);
           form.reset();
         },
         onError: () => {
-          groupClose();
-          setIsCreating(false);
           form.reset();
         },
       });
     } else {
       createContactGroupMutation.mutate(updatedValues, {
         onSuccess: (data) => {
-          groupClose();
-          close();
-          setIsCreating(false);
+          setOpened(false);
           form.reset();
-          router.push(
-            `/dashboard/${type === ContactGroupType.LOYALTY ? "loyalty/customer/group" : "groups"}/${data?.data?.id}`,
-          );
+          const route = `/dashboard/${type === ContactGroupType.LOYALTY ? "loyalty/customer/group" : "contacts/groups"}/${data?.data?.id}`;
+          router.push(route);
         },
         onError: () => {
-          groupClose();
-          close();
-          setIsCreating(false);
           form.reset();
         },
       });
     }
   };
-
-  useEffect(() => {
-    form.setFieldValue("teamId", selectedTeamId);
-  }, [selectedTeamId]);
 
   useEffect(() => {
     if (!file) return;
@@ -161,65 +145,86 @@ const CreateGroupModal = ({
   }, [file]);
 
   return (
-    <Box>
-      <form
-        onSubmit={handleSubmit}
-        onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
-      >
-        <SimpleGrid cols={2}>
-          <Stack>
-            <ContainedTextField
-              required
-              label={translations("Group Name")}
-              placeholder={translations("Enter group name")}
-              {...form.getInputProps("name")}
-            />
-            <TeamSelector
-              value={selectedTeamId}
-              onChange={(value) => setSelectedTeamId(value)}
-              label={translations("Select Team")}
-              readOnly={isEdit}
-            />
-          </Stack>
-          <Stack>
-            <Avatar
-              size={"xl"}
-              color="initials"
-              name={form?.values?.name}
-              src={form?.values?.icon && getFileUrlFromKey(form.values.icon)}
-              radius={"sm"}
-              mx={"auto"}
-            />
-            <FileButton onChange={setFile} accept="image/png,image/jpeg">
-              {(props) => (
-                <Button
-                  size="md"
-                  radius="md"
-                  {...props}
-                  variant="outline"
-                  leftSection={<IconUpload size={15}></IconUpload>}
-                >
-                  <Text size="sm">{translations("Upload Icon")}</Text>
-                </Button>
+    <Dialog open={opened} onOpenChange={setOpened}>
+      <DialogContent onClick={(e) => e.stopPropagation()}>
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={getHotkeyHandler([[SAVE_HOTKEY, handleSubmit]])}
+        >
+          <DialogHeader>
+            <DialogTitle>Create New Group</DialogTitle>
+            <DialogDescription>
+              Create a new contact group with team
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-5">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col space-y-2">
+                <Label>{translations("Group Name")}</Label>
+                <Input
+                  {...form.getInputProps("name")}
+                  required
+                  placeholder={translations("Enter group name")}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              <TeamSelector
+                {...form.getInputProps("teamId")}
+                label={translations("Select Team")}
+                readOnly={isEdit}
+                className="w-full"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            <div className="flex flex-col gap-2 mt-4 ">
+              {form.values.icon?.length ? (
+                <Avatar>
+                  <AvatarImage
+                    src={getFileUrlFromKey(form.values.icon)}
+                    alt={form.values.name}
+                  />
+                </Avatar>
+              ) : (
+                <Folder />
               )}
-            </FileButton>
-          </Stack>
-        </SimpleGrid>
+              <div className="space-y-4">
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files?.[0])}
+                />
 
-        <Group justify="flex-end" mt={"md"}>
-          <RateupButtonSecondary
-            title={translations("cancel")}
-            onClick={groupClose}
-          />
-          <RateupButtonBlue
-            title={isEdit ? translations("Save") : translations("Create Group")}
-            onClick={handleSubmit}
-            loading={isCreating}
-            disabled={isUploading}
-          />
-        </Group>
-      </form>
-    </Box>
+                <Button asChild>
+                  <Label htmlFor="file-upload">
+                    {file
+                      ? `Selected: ${file.name}`
+                      : translations("Upload Icon")}
+                  </Label>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="secondary">
+                <span className="text-sm font-normal">
+                  {translations("Cancel")}
+                </span>
+              </Button>
+            </DialogClose>
+            <Button disabled={isUploading} type="submit">
+              {(editContactGroupMutation.isPending ||
+                createContactGroupMutation.isPending) && <Spinner />}
+              <span className="text-sm font-normal">
+                {isEdit ? translations("Save") : translations("Create Group")}
+              </span>
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

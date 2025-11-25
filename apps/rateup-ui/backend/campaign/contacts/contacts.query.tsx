@@ -66,19 +66,8 @@ export const useCreateContactMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["contacts", "filtered"],
       });
-      showSuccessToast(
-        "Contact created successfully.",
-        "contact-create",
-        <IconCheck />,
-      );
     },
-    onError: (error: any) => {
-      showErrorToast(
-        `Error creating the contact: ${error?.response?.data?.error}`,
-        "contact-create",
-        <IconX />,
-      );
-    },
+    onError: (error: any) => {},
   });
 };
 
@@ -113,18 +102,18 @@ export const useImportCSVContactMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["contacts", "filtered"],
       });
-      showSuccessToast(
-        "Contacts imported successfully",
-        "contact-create",
-        <IconCheck />,
-      );
+      // showSuccessToast(
+      //   "Contacts imported successfully",
+      //   "contact-create",
+      //   <IconCheck />,
+      // );
     },
     onError: (error: any) => {
-      showErrorToast(
-        `Error creating the contact: ${error?.response?.data?.error}`,
-        "contact-create",
-        <IconX />,
-      );
+      // showErrorToast(
+      //   `Error creating the contact: ${error?.response?.data?.error}`,
+      //   "contact-create",
+      //   <IconX />,
+      // );
     },
   });
 };
@@ -155,7 +144,7 @@ export const useContactDeleteMutation = (groupId: string) => {
   });
 };
 
-export const useEditContactMutation = (groupId) => {
+export const useEditContactMutation = (groupId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: editContact,
@@ -209,7 +198,7 @@ export const useEditContactLabelsMutation = (contactId: string) => {
   });
 };
 
-export const useDeleteManyContactsMutation = (onSucess: () => void) => {
+export const useDeleteManyContactsMutation = () => {
   const queryClient = useQueryClient();
   const { deleteContactsByIds } = useContactsStore();
   return useMutation({
@@ -219,14 +208,14 @@ export const useDeleteManyContactsMutation = (onSucess: () => void) => {
       queryClient.invalidateQueries({
         queryKey: ["campaignContactGroupsData"],
       });
-      showSuccessToast(
-        "Contact Deleted successfully",
-        "contact-delete",
-        <IconCheck />,
-        true,
-      );
+      // showSuccessToast(
+      //   "Contact Deleted successfully",
+      //   "contact-delete",
+      //   <IconCheck />,
+      //   true,
+      // );
       deleteContactsByIds([...variables]);
-      onSucess();
+      // onSucess();
     },
     onError: (error: any) => {
       showErrorToast(

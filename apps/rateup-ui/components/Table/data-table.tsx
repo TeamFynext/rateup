@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { useMemo } from "react";
 
-import { ScrollArea, ScrollAreaAutosize } from "@mantine/core";
+import { ScrollAreaAutosize } from "@mantine/core";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -19,6 +20,13 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 
+import { PAGE_SIZE } from "@/utils/constants";
+
+import {
+  TableBodySkeleton,
+  TableHeadSkeleton,
+} from "../animation/skeleton/Table.Skeleton";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -30,11 +38,11 @@ import {
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTablePagination } from "./data-table-pagination";
 
-interface DataTableProps<TData, TValue> {
+export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   DataTableToolbar?: (
-    props: DataTableToolbarProps<TData>,
+    props: DataTableToolbarProps<TData, TValue>,
   ) => React.ReactElement;
   onRowClick?: (row: TData) => void;
   manualPagination?: {
@@ -50,9 +58,10 @@ interface DataTableProps<TData, TValue> {
       updater: React.SetStateAction<ColumnFiltersState>,
     ) => void;
   };
+  isPending?: boolean;
 }
 
-interface DataTableToolbarProps<TData> {
+interface DataTableToolbarProps<TData, TValue> {
   table: ReturnType<typeof useReactTable<TData>>;
 }
 
@@ -61,6 +70,7 @@ export function DataTable<TData, TValue>({
   data,
   DataTableToolbar,
   onRowClick,
+  isPending,
   manualPagination = undefined,
 }: Readonly<DataTableProps<TData, TValue>>) {
   const [rowSelection, setRowSelection] = React.useState({});
@@ -76,6 +86,7 @@ export function DataTable<TData, TValue>({
     columns,
     state: {
       columnVisibility,
+      sorting,
       rowSelection,
       ...(manualPagination?.pagination
         ? { pagination: manualPagination.pagination }
@@ -125,34 +136,41 @@ export function DataTable<TData, TValue>({
 
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    getRowId: (row: any) => row.id,
   });
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex flex-col h-full h-full">
       {DataTableToolbar && <DataTableToolbar table={table} />}
-      <div className="overflow-hidden rounded-md border h-full">
+      <div className="overflow-auto rounded-md border h-full bg-card">
         <ScrollAreaAutosize mah={"100%"}>
           <Table>
             <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
+              {isPending ? (
+                <TableHeadSkeleton />
+              ) : (
+                table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id} colSpan={header.colSpan}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))
+              )}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
+              {isPending ? (
+                <TableBodySkeleton />
+              ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
