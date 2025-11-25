@@ -2419,5 +2419,15 @@
   "WhatsApp Number": "WhatsApp Number",
   "Lifecycle Stage": "Lifecycle Stage",
   "Add New WhatsApp contact": "Add New WhatsApp contact",
-  "Add a contact to start WhatsApp conversation. Enter their details below to begin messaging": "Add a contact to start WhatsApp conversation. Enter their details below to begin messaging"
+  "Add a contact to start WhatsApp conversation Enter their details below to begin messaging": "Add a contact to start WhatsApp conversation. Enter their details below to begin messaging",
+  "Collapse Panel": "Collapse Panel",
+  "Contact Information": "Contact Information",
+  "Whatsapp Username": "Whatsapp Username",
+  "Customer Stats": "Customer Stats",
+  "Unknown": "Unknown",
+  "Customer Since": "Customer Since",
+  "Not given": "Not given",
+  "Quick Actions": "Quick Actions",
+  "Additional Details": "Additional Details",
+  "Select labels": "Select labels"
 }

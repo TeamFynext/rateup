@@ -120,12 +120,12 @@ const ChatselectPanelHeader = ({
                       <IconBrandWhatsapp color="white" size={26} />
                     </div>
                     <h1 className="font-semibold text-lg">
-                      {translations("Add New WhatsApp Contact")}
+                      {translations("Add New WhatsApp contact")}
                     </h1>
                   </div>
                   <p className="text-xs text-gray-500">
                     {translations(
-                      "Add a contact to start WhatsApp conversation. Enter their details below to begin messaging",
+                      "Add a contact to start WhatsApp conversation Enter their details below to begin messaging",
                     )}
                     .
                   </p>

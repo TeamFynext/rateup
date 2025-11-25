@@ -2423,6 +2423,16 @@
   "Start Conversation": "बातचीत शुरू करें",
   "WhatsApp Number": "व्हाट्सऐप नंबर",
   "Lifecycle Stage": "लाइफ़साइकल चरण",
-  "Add a contact to start WhatsApp conversation. Enter their details below to begin messaging": "WhatsApp बातचीत शुरू करने के लिए एक संपर्क जोड़ें। संदेश भेजना शुरू करने के लिए नीचे उनकी जानकारी दर्ज करें।",
-  "Add New WhatsApp contact": "नया WhatsApp संपर्क जोड़ें"
+  "Add a contact to start WhatsApp conversation Enter their details below to begin messaging": "WhatsApp बातचीत शुरू करने के लिए एक संपर्क जोड़ें। संदेश भेजना शुरू करने के लिए नीचे उनकी जानकारी दर्ज करें।",
+  "Add New WhatsApp contact": "नया WhatsApp संपर्क जोड़ें",
+  "Collapse Panel": "पैनल बंद करें",
+  "Contact Information": "संपर्क जानकारी",
+  "Whatsapp Username": "व्हाट्सऐप उपयोगकर्ता नाम",
+  "Customer Stats": "ग्राहक आँकड़े",
+  "Unknown": "अज्ञात",
+  "Customer Since": "ग्राहक तब से",
+  "Not given": "प्रदान नहीं किया गया",
+  "Quick Actions": "त्वरित कार्य",
+  "Additional Details": "अतिरिक्त विवरण",
+  "Select labels": "लेबल चुनें"
 }

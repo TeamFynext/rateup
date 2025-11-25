@@ -2419,6 +2419,16 @@
   "Start Conversation": "ابدأ المحادثة",
   "WhatsApp Number": "رقم واتساب",
   "Lifecycle Stage": "مرحلة دورة الحياة",
-  "Add a contact to start WhatsApp conversation. Enter their details below to begin messaging": "واتساب محادثة لبدء جهة اتصال أضف. الرسائل لبدء أدناه تفاصيلهم أدخل",
-  "Add New WhatsApp contact": "جهة اتصال واتساب جديدة أضف"
+  "Add a contact to start WhatsApp conversation Enter their details below to begin messaging": "واتساب محادثة لبدء جهة اتصال أضف. الرسائل لبدء أدناه تفاصيلهم أدخل",
+  "Add New WhatsApp contact": "جهة اتصال واتساب جديدة أضف",
+  "Collapse Panel": "طي اللوحة",
+  "Contact Information": "معلومات الاتصال",
+  "Whatsapp Username": "اسم مستخدم واتساب",
+  "Customer Stats": "إحصائيات العميل",
+  "Unknown": "غير معروف",
+  "Customer Since": "عميل منذ",
+  "Not given": "غير مُقدم",
+  "Quick Actions": "إجراءات سريعة",
+  "Additional Details": "تفاصيل إضافية",
+  "Select labels": "اختر التصنيفات"
 }
