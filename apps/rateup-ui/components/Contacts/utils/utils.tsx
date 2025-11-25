@@ -105,7 +105,11 @@ export const getSourceBadge = (source: string) => {
       label: "Instagram",
       className: "bg-pink-100 text-pink-700",
     },
-    web: { icon: Globe, label: "Web", className: "bg-blue-100 text-blue-700" },
+    WEBCHAT: {
+      icon: Globe,
+      label: "Web Chat",
+      className: "bg-blue-100 text-blue-700",
+    },
     MANUAL: {
       icon: UserPlus,
       label: "Manual",
