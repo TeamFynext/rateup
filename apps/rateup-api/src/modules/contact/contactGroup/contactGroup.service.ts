@@ -162,7 +162,7 @@ export async function getContactsByContactGroupIdWithPagination(
   if (filter) {
     const params = new URLSearchParams(filter as any);
     for await (const [key, value] of params.entries()) {
-      if (["name", "phone", "source"].includes(key)) {
+      if (["name", "phone"].includes(key)) {
         filterData.push({
           [key]: {
             contains: value,
@@ -193,12 +193,9 @@ export async function getContactsByContactGroupIdWithPagination(
             },
           },
         });
-      } else {
+      } else if (["source", "lifecycleId"].includes(key) && value !== "all") {
         filterData.push({
-          tags: {
-            path: [key],
-            string_contains: value,
-          },
+          [key]: value,
         });
       }
     }
@@ -217,9 +214,13 @@ export async function getContactsByContactGroupIdWithPagination(
       },
     });
   }
-  const searchCondition: any = filterData.reduce((acc, curr) => {
-    return { ...acc, ...curr };
-  }, {});
+
+  const searchCondition: any =
+    filterData?.length > 0
+      ? {
+          OR: filterData,
+        }
+      : {};
 
   const totalCount = await prisma.contact.count({
     where: {

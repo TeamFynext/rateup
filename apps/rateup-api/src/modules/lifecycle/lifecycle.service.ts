@@ -15,6 +15,24 @@ export async function getLifecycles(orgId: string) {
   });
 }
 
+export async function getLifeCyclesWithContactCount(orgId: string) {
+  return await prisma.lifecycle.findMany({
+    where: {
+      orgId,
+    },
+    orderBy: {
+      ordering: "asc",
+    },
+    include: {
+      _count: {
+        select: {
+          contacts: true,
+        },
+      },
+    },
+  });
+}
+
 export async function updateLifecycle(
   lifecycleId: string,
   data: LifecycleBodySchema,
