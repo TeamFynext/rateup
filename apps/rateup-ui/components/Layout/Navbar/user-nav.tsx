@@ -259,7 +259,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
               </DropdownMenuSub>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
+            {/* <DropdownMenuGroup>
               <Link href="/pricing">
                 <DropdownMenuItem>
                   <Sparkles />
@@ -286,7 +286,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator /> */}
             <Link href="/logout">
               <DropdownMenuItem>
                 <LogOut />
