@@ -87,7 +87,10 @@ const WaAutomatedReplyId = () => {
       defaultValue="flow"
       h={"100%"}
       value={selectedTab}
-      onChange={(value) => router.push(`${automatedId}?tab=${value}`)}
+      onChange={(value) => {
+        refetch();
+        router.push(`${automatedId}?tab=${value}`);
+      }}
     >
       <Group
         justify="space-between"
