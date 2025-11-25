@@ -128,15 +128,21 @@ export default function WaInboxChatDisplayHeader({
   const { updateContactById } = useContactsStore();
 
   function handleLifecycleChange(value, lifecycleObj) {
-    updateContactById(contact.id, (contact) => ({
-      ...contact,
-      lifecycleId: value,
-      lifecycleName: `${lifecycleObj.emoji} ${lifecycleObj.name}`,
-    }));
-    editContactMutation.mutate({
-      data: { lifecycleId: value },
-      contactId: contact.id,
-    });
+    editContactMutation.mutate(
+      {
+        data: { lifecycleId: value },
+        contactId: contact.id,
+      },
+      {
+        onSuccess: () => {
+          updateContactById(contact.id, (contact) => ({
+            ...contact,
+            lifecycleId: value,
+            lifecycleName: `${lifecycleObj.emoji} ${lifecycleObj.name}`,
+          }));
+        },
+      },
+    );
   }
 
   const sourcePlatform = getSoucePlatformIconAndColor(platform);
@@ -198,6 +204,7 @@ export default function WaInboxChatDisplayHeader({
                 }
                 className="border-none hover:bg-gray-100"
                 onChange={handleLifecycleChange}
+                placeholder="Lifecycle"
               />
             </div>
           </div>

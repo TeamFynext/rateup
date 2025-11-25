@@ -187,10 +187,6 @@ const CreateGroupModal = ({
               ) : (
                 <Folder />
               )}
-              {/* <div className="grid w-full max-w-sm items-center gap-3">
-              <Label htmlFor="icon">{translations("Upload Icon")}</Label>
-              <Input id="icon" type="file" onChange={(e) => setFile(e.target.files?.[0])}  accept="image/png,image/jpeg" />
-            </div> */}
               <div className="space-y-4">
                 <input
                   id="file-upload"

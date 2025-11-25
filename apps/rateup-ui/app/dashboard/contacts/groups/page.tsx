@@ -192,20 +192,6 @@ const GroupPage = () => {
         buttonColor="bg-red-500"
         onAction={() => onDeleteGroupConfirm(selectedGroup)}
       />
-      {/* <PaperLayout p={0} className="flex-1">
-        <ContactTable
-          columns={columnGroup}
-          data={contactGroups}
-          tab={"groups"}
-          refetch={refetchGroups}
-          setSorting={setSortingGroup}
-          sorting={sortingGroup}
-          columnFilters={columnFiltersGroup}
-          setColumnFilters={setColumnFiltersGroup}
-          detailBtn
-          isPending={isLoadingContactgroup || isRefetchingGroups}
-        />
-      </PaperLayout> */}
     </div>
   );
 };

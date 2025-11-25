@@ -137,7 +137,9 @@ export default function MainSidebar({ children }) {
 
   const { setTotalCount } = useChatContactCountStore();
   const { filter } = useChatFilterStore();
-  const isInbox = pathname?.includes("/dashboard/inbox");
+  const isInbox =
+    pathname?.includes("/dashboard/inbox") ||
+    pathname?.includes("/dashboard/contacts");
   const paddingExclusion = isInbox
     ? true
     : pathname?.includes("/dashboard/settings");

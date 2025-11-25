@@ -578,14 +578,6 @@ export const ContactForm = ({ form, customFields, type }) => {
               </PopoverContent>
             </Popover>
           </Field>
-          {/* <DatePickerInput
-            label={translations("dob")}
-            placeholder={translations("Enter the dob")}
-            radius={"md"}
-            size="md"
-            maxDate={new Date()}
-            {...form.getInputProps("dob")}
-          /> */}
           <Field>
             <FieldLabel>{translations("External ID")}</FieldLabel>
             <Input

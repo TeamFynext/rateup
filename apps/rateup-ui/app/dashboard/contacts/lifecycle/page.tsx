@@ -147,7 +147,6 @@ function getColorClasses(str: string) {
   };
 
   const keys = Object.keys(colors);
-  console.log("str", str);
 
   const getStringHash = (str: string) => {
     let hash = 0;

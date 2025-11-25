@@ -143,33 +143,6 @@ export function useNavMain({
               title: t("Contacts"),
               url: "/dashboard/contacts",
               icon: IconAddressBook,
-              items: [
-                {
-                  title: t("All Contacts"),
-                  url: "/dashboard/contacts",
-                  icon: IconAddressBook,
-                },
-                {
-                  title: t("Groups"),
-                  url: "/dashboard/groups",
-                  icon: IconUsers,
-                },
-                {
-                  title: t("Custom Fields"),
-                  url: "/dashboard/contacts/custom-fields",
-                  icon: IconFileDescription,
-                },
-                {
-                  title: t("Labels"),
-                  url: "/dashboard/contacts/labels",
-                  icon: IconLabel,
-                },
-                {
-                  title: t("Lifecycle"),
-                  url: "/dashboard/lifecycle",
-                  icon: IconActivity,
-                },
-              ],
             },
           ]
         : []),

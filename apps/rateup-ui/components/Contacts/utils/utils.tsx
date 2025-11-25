@@ -23,12 +23,16 @@ import { rankItem } from "@tanstack/match-sorter-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
+  Ban,
+  CircleCheck,
+  CircleX,
   Gift,
   Globe,
   Instagram,
   MessageSquare,
   Upload,
   UserPlus,
+  Zap,
 } from "lucide-react";
 
 import { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
@@ -141,13 +145,19 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
       cell: (info) => info.getValue(),
     },
     {
-      header: () => "Not Blocked",
+      header: () => "Status",
       accessorKey: "blockedOnWhatsApp",
       cell: (info) =>
         !info.getValue() ? (
-          <IconCircleCheck color="green" />
+          <Badge variant="secondary" className="bg-green-100 text-green-700">
+            <CircleCheck />
+            Active
+          </Badge>
         ) : (
-          <IconCircleX color="red" />
+          <Badge variant="secondary" className="bg-red-100 text-red-700">
+            <CircleX />
+            Blocked
+          </Badge>
         ),
     },
     {
@@ -200,9 +210,15 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
       accessorKey: "consent",
       cell: (info) =>
         info.getValue() ? (
-          <IconCircleCheck color="green" />
+          <Badge variant="secondary" className="bg-green-100 text-green-700">
+            <CircleCheck />
+            Granted
+          </Badge>
         ) : (
-          <IconCircleX color="red" />
+          <Badge variant="secondary" className="bg-red-100 text-red-700">
+            <CircleX />
+            Denied
+          </Badge>
         ),
       meta: {
         filterComponent: (setFilterValue) => {

@@ -80,24 +80,6 @@ export default function Contacts() {
 
   return (
     <div className="p-3 flex flex-col pb-3 h-full">
-      {/* <TextInput
-        leftSection={<IconSearch size="17.6px" stroke={1.5} />}
-        placeholder={translations("Search contact")}
-        rightSectionWidth={60}
-        defaultValue={searchTerm}
-        onChange={(event) => setSearchTerm(event.currentTarget.value)}
-        maw={300}
-        mb={"xs"}
-      /> */}
-
-      {/* <FilterSelect
-        setFilterByTag={setColumnFilters}
-        filterByTag={columnFilters}
-        contactArray={contactGroups?.map((data) => ({
-        value: data?.id,
-        label: data?.name,
-        }))}
-      /> */}
       <DataTable
         columns={column}
         data={contactMemoData ?? []}
@@ -111,23 +93,6 @@ export default function Contacts() {
         }}
         isPending={isLoadingContacts}
       />
-      {/* 
-      <PaperLayout className="flex-1">
-
-        <ContactTable
-          columns={column}
-          data={contactMemoData ?? []}
-          refetch={refetchContacts}
-          pagination={pagination}
-          setPagination={setPagination}
-          totalCount={contactData?.totalCount}
-          setSorting={setSorting}
-          sorting={sorting}
-          columnFilters={columnFilters}
-          setColumnFilters={setColumnFilters}
-          isPending={isLoadingContacts || isRefetching}
-        />
-      </PaperLayout> */}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import {
+  CircleCheck,
   Edit,
   EllipsisVertical,
   Eye,
@@ -40,8 +41,12 @@ import {
   useContactGroup,
   useContactGroupById,
   useDeleteGroupMutation,
+  useRemoveContactsFromGroup,
 } from "../../backend/campaign/contactGroup/contactGroup.query";
-import { useContactDeleteMutation } from "../../backend/campaign/contacts/contacts.query";
+import {
+  useContactDeleteMutation,
+  useEditContactMutation,
+} from "../../backend/campaign/contacts/contacts.query";
 import { RateupButtonPrimary } from "../Button/RateupButtons";
 import CreateContactModal from "../Contacts/CreateContactModal";
 import CreateGroupModal from "../Contacts/CreateGroupModal";
@@ -52,6 +57,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
+import CustomAlertDialog from "../ui/custom/CustomAlertDialog";
 import {
   Dialog,
   DialogClose,
@@ -261,8 +267,43 @@ const ContactDetailedView = ({
   setIsSendMessageOpen,
   setIsAddToGroupOpen,
 }) => {
-  function handleRemoveContactFromGroup(group) {}
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [openedConfirm, setOpenedConfirm] = useState(false);
+  const [editNotes, setEditNotes] = useState(false);
+  const [notes, setNotes] = useState("");
+  const removeContacts = useRemoveContactsFromGroup(selectedGroup?.id);
+  const updateContact = useEditContactMutation();
+  function handleRemoveContactFromGroup(group, contactIds) {
+    removeContacts.mutate(
+      { contactIds, groupId: group.id },
+      {
+        onSuccess: () => {
+          toast.success("contact removed from group");
+        },
+        onError: () => {
+          toast.error("something went wrong");
+        },
+      },
+    );
+  }
+  function handleRemoveCancel() {
+    setSelectedGroup(null);
+  }
 
+  function handleSaveNotes() {
+    updateContact.mutate(
+      { contactId: selectedContact.id, data: { notes } },
+      {
+        onSuccess: () => {
+          toast.success("notes saved");
+          setEditNotes(false);
+        },
+        onError: () => {
+          toast.error("Something went wrong");
+        },
+      },
+    );
+  }
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
       <DialogContent>
@@ -373,7 +414,7 @@ const ContactDetailedView = ({
                     const group = contactGroup.contactGroup;
 
                     return (
-                      <Card key={group.id} className="p-3">
+                      <Card key={group.id} className="p-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <Folder className="w-4 h-4 text-indigo-600" />
@@ -382,7 +423,10 @@ const ContactDetailedView = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleRemoveContactFromGroup(group)}
+                            onClick={() => {
+                              setSelectedGroup(group);
+                              setOpenedConfirm(true);
+                            }}
                           >
                             <X className="w-4 h-4" />
                           </Button>
@@ -400,6 +444,20 @@ const ContactDetailedView = ({
                   </p>
                 </div>
               )}
+              <CustomAlertDialog
+                title="Remove Contact from Group"
+                buttonTitle="Remove"
+                description={`Are you sure you want to remove ${selectedContact.name} from group ${selectedGroup?.name}?`}
+                onAction={() =>
+                  handleRemoveContactFromGroup(selectedGroup, [
+                    selectedContact.id,
+                  ])
+                }
+                opened={openedConfirm}
+                setOpened={setOpenedConfirm}
+                buttonColor="bg-red-500"
+                onCancel={handleRemoveCancel}
+              />
             </div>
           </TabsContent>
           <TabsContent value="activity" className="space-y-4">
@@ -414,14 +472,38 @@ const ContactDetailedView = ({
                 placeholder="Add notes about this contact..."
                 rows={5}
                 defaultValue={selectedContact.notes}
+                readOnly={!editNotes}
+                value={notes}
+                onChange={(e) => setNotes(e.currentTarget.value)}
               />
-              <Button
-                size="sm"
-                className="bg-gradient-to-r from-rateup-blue to-rateup-orange"
-                onClick={() => {}}
-              >
-                Save Notes
-              </Button>
+              {!editNotes ? (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setNotes(selectedContact.notes);
+                    setEditNotes(true);
+                  }}
+                >
+                  <Edit />
+                  Edit Notes
+                </Button>
+              ) : (
+                <div className="space-x-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setEditNotes(false);
+                    }}
+                    variant={"secondary"}
+                  >
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleSaveNotes}>
+                    {updateContact.isPending ? <Spinner /> : <CircleCheck />}
+                    Save Notes
+                  </Button>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

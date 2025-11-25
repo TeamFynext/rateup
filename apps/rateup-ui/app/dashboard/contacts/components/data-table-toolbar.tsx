@@ -97,11 +97,7 @@ export function DataTableToolbar<TData>({
   const t = useTranslations();
 
   const [isOpenedAddContactModal, setIsOpenedAddContactModal] = useState(false);
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
-  function handleExportContacts() {
-    // Implement export functionality here
-  }
   const SourceSelector = () => {
     const ContactSources = [
       { label: "All Sources", value: "all", icon: Layers },
@@ -644,7 +640,7 @@ const ImportContactModal = ({ opened, setOpened }) => {
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <div className="flex justify-end gap-2 mt-6 text-sm">
-            <DialogClose>
+            <DialogClose asChild>
               <Button variant="secondary" onClick={reset}>
                 {t("Cancel")}
               </Button>
