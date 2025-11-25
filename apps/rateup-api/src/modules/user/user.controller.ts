@@ -87,12 +87,12 @@ export async function createGoogleUserHandler(
     // userInfo = await PasswordLess.getUserById({ userId }); //STT
     userInfo = await supertokens.getUser(userId);
     userInfo.emails[0] = request?.body?.email;
+    userInfo.phoneNumbers[0] = request?.body?.phoneNumber;
   }
-
   let data = {
     id: userId,
     email: userInfo?.emails[0] !== undefined ? userInfo?.emails[0] : "",
-    phone: userInfo?.phoneNumber !== undefined ? userInfo.phoneNumber : "",
+    phoneNumber: request?.body?.phoneNumber,
     name: request?.body?.name,
     orgName: request?.body?.orgName,
     recipeName: getUserRecipeName("thirdparty") ?? null,
@@ -335,8 +335,13 @@ export async function updateUserAvailabilityStatusHandler(
 ) {
   try {
     const { userId, orgId } = request.user;
-    const { status } = request.body;
-    const res = await updateUserAvailablityStatus(userId, orgId, status);
+    const { presenceMode, status } = request.body;
+    const res = await updateUserAvailablityStatus(
+      userId,
+      orgId,
+      status,
+      presenceMode,
+    );
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);

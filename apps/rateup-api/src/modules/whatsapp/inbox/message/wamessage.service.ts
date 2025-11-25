@@ -806,7 +806,11 @@ export async function assignWaMessageToUser(
             },
           },
         });
-        if (user?.status === UserAvailabilityStatus.online) {
+        if (
+          [UserAvailabilityStatus.busy, UserAvailabilityStatus.online].includes(
+            user?.status as UserAvailabilityStatus,
+          )
+        ) {
           newUsers.push(assignee);
           updateCount = true;
         }
