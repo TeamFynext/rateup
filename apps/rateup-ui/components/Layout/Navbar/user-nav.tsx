@@ -15,6 +15,7 @@ import {
   Bell,
   ChevronsUpDown,
   Circle,
+  CircleX,
   CreditCard,
   LogOut,
   Sparkles,
@@ -62,17 +63,17 @@ const statusOptions: {
   {
     value: "online",
     label: "Available",
-    icon: <Circle className="mr-2 h-4 w-4 text-green-500" />,
+    icon: <Circle className="mr-2 h-4 w-4 text-green-500 fill-green-500" />,
   },
   {
     value: "busy",
     label: "Busy",
-    icon: <Circle className="mr-2 h-4 w-4 text-yellow-500" />,
+    icon: <Circle className="mr-2 h-4 w-4 text-red-500 fill-red-500" />,
   },
   {
     value: "offline",
     label: "Offline",
-    icon: <Circle className="mr-2 h-4 w-4 text-red-500" />,
+    icon: <CircleX className="mr-2 h-4 w-4 text-black " />,
   },
 ];
 
@@ -82,9 +83,9 @@ const getStatusRing = (status: UserAvailabilityStatus): string => {
     case UserAvailabilityStatus.online:
       return "ring-2 ring-green-500";
     case UserAvailabilityStatus.busy:
-      return "ring-2 ring-yellow-500";
-    case UserAvailabilityStatus.offline:
       return "ring-2 ring-red-500";
+    case UserAvailabilityStatus.offline:
+      return "ring-2 ring-black";
     default:
       return "ring-2 ring-blue-500";
   }

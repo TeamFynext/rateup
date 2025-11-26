@@ -178,6 +178,7 @@ export default function MainSidebar({ children }) {
         defaultOpen={false}
         style={
           {
+            "--sidebar-width": "0px", // for custom second sidebar width
             "--sidebar-width-icon": "53px",
           } as React.CSSProperties
         }
