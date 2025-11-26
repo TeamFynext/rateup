@@ -458,21 +458,60 @@ export function AutomatedReplyForm({
             </TabsContent>
 
             <TabsContent value="allOthers">
-              <Alert>
-                <IconInfoCircle className="h-4 w-4" />
-                <AlertDescription>
-                  This automation will trigger for all messages that don't match
-                  other automations.
-                </AlertDescription>
-              </Alert>
-              <ContainedTagInput
-                required
-                readOnly
-                disabled
-                label="Keywords"
-                placeholder="Matches all other messages"
-                {...rootForm.getInputProps("commands")}
-              />
+              <div className="space-y-4">
+                <Alert>
+                  <IconInfoCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    This automation will trigger for all messages that don't
+                    match other automations.
+                  </AlertDescription>
+                </Alert>
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">
+                      Enable WhatsApp Automation
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Turn on to activate this automation
+                    </p>
+                  </div>
+                  <Switch
+                    checked={rootForm.values.isEnabled}
+                    onCheckedChange={(checked) =>
+                      rootForm.setFieldValue("isEnabled", checked)
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">
+                      Send only once in 24 hours
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Prevent duplicate messages to the same user
+                    </p>
+                  </div>
+                  <Switch
+                    checked={rootForm.values.sendOnceIn24Hours}
+                    onCheckedChange={(checked) =>
+                      rootForm.setFieldValue("sendOnceIn24Hours", checked)
+                    }
+                  />
+                </div>
+                <Separator />
+
+                <ContainedTagInput
+                  required
+                  readOnly
+                  disabled
+                  label="Keywords"
+                  placeholder="Matches all other messages"
+                  {...rootForm.getInputProps("commands")}
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="leadgen">
