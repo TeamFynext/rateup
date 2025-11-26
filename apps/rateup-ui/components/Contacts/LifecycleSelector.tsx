@@ -167,7 +167,7 @@ export const LifecycleSelector = ({
             <SelectItem
               value={lifecycle.value}
               key={lifecycle.value}
-              className="data-[highlighted]:text-blue-500 cursor-pointer"
+              className={`data-[highlighted]:text-blue-500 cursor-pointer ${className}`}
             >
               <lifecycle.icon />
               <span className="ml-1">{lifecycle.label}</span>

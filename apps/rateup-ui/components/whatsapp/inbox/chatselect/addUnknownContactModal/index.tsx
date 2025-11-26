@@ -6,14 +6,12 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
-import PhoneInputWithCountrySelect, {
-  isValidPhoneNumber,
-} from "react-phone-number-input";
+import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
 import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
-import { LifecycleInputs } from "@/components/Contacts/LifecycleSelector";
+import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector";
 import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -197,11 +195,11 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="lifecycle">{translations("Lifecycle Stage")}</Label>
-          <LifecycleInputs
+          <LifecycleSelector
             value={form.values.lifecycleId}
             onChange={(value) => form.setFieldValue("lifecycleId", value)}
             placeholder={"Enter lifecycle"}
-            width={"100%"}
+            className="w-full"
           />
         </div>
         <div className="w-full flex items-center justify-end gap-4">
