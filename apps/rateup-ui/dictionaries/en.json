@@ -2429,5 +2429,9 @@
   "Not given": "Not given",
   "Quick Actions": "Quick Actions",
   "Additional Details": "Additional Details",
-  "Select labels": "Select labels"
+  "Select labels": "Select labels",
+  "Send Template Message": "Send Template Message",
+  "Select an approved template for messages sent after 24 hours of inactivity": "Select an approved template for messages sent after 24 hours of inactivity",
+  "Send Template": "Send Template",
+  "Sending": "Sending"
 }

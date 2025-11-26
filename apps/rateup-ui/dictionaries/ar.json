@@ -2430,5 +2430,9 @@
   "Not given": "غير مُقدم",
   "Quick Actions": "إجراءات سريعة",
   "Additional Details": "تفاصيل إضافية",
-  "Select labels": "اختر التصنيفات"
+  "Select labels": "اختر التصنيفات",
+  "Send Template Message": "إرسال رسالة قالب",
+  "Select an approved template for messages sent after 24 hours of inactivity": "اختر قالبًا معتمدًا للرسائل المرسلة بعد 24 ساعة من عدم النشاط",
+  "Send Template": "إرسال القالب",
+  "Sending": "جارٍ الإرسال"
 }

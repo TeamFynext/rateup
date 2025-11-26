@@ -2433,5 +2433,9 @@
   "Not given": "Non fourni",
   "Quick Actions": "Actions rapides",
   "Additional Details": "Détails supplémentaires",
-  "Select labels": "Sélectionner des étiquettes"
+  "Select labels": "Sélectionner des étiquettes",
+  "Send Template Message": "Envoyer un message modèle",
+  "Select an approved template for messages sent after 24 hours of inactivity": "Sélectionnez un modèle approuvé pour les messages envoyés après 24 heures d’inactivité",
+  "Send Template": "Envoyer le modèle",
+  "Sending": "Envoi en cours"
 }

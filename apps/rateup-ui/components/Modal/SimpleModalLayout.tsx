@@ -1,9 +1,10 @@
 import { Modal, Space, Stack, Title } from "@mantine/core";
+
 interface FormModalLayoutProps {
   centered?: boolean;
   onClose: () => void;
   opened: boolean;
-  title: string;
+  title?: string;
   children: React.ReactNode;
   noCustomHeader?: boolean;
   size?: string | number;
@@ -30,13 +31,13 @@ export default function SimpleModalLayout({
       onClose={onClose}
       radius="lg"
       bg={"red"}
-      style={{ zIndex: 9999999 }}
+      style={{ zIndex: 999999 }}
       size={size}
       onClick={(e) => {
         e.stopPropagation();
       }}
     >
-      {!noCustomHeader && (
+      {!noCustomHeader && title && (
         <Stack align={"center"}>
           <Title size={30}>{title}</Title>
         </Stack>

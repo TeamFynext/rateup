@@ -2435,5 +2435,9 @@
   "Not given": "Nicht angegeben",
   "Quick Actions": "Schnellaktionen",
   "Additional Details": "Weitere Details",
-  "Select labels": "Labels auswählen"
+  "Select labels": "Labels auswählen",
+  "Send Template Message": "Vorlagen-Nachricht senden",
+  "Select an approved template for messages sent after 24 hours of inactivity": "Wählen Sie eine genehmigte Vorlage für Nachrichten, die nach 24 Stunden Inaktivität gesendet werden",
+  "Send Template": "Vorlage senden",
+  "Sending": "Wird gesendet"
 }

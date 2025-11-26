@@ -2434,5 +2434,9 @@
   "Not given": "प्रदान नहीं किया गया",
   "Quick Actions": "त्वरित कार्य",
   "Additional Details": "अतिरिक्त विवरण",
-  "Select labels": "लेबल चुनें"
+  "Select labels": "लेबल चुनें",
+  "Send Template Message": "टेम्पलेट संदेश भेजें",
+  "Select an approved template for messages sent after 24 hours of inactivity": "24 घंटे की निष्क्रियता के बाद भेजे गए संदेशों के लिए एक स्वीकृत टेम्पलेट चुनें",
+  "Send Template": "टेम्पलेट भेजें",
+  "Sending": "भेजा जा रहा है"
 }
