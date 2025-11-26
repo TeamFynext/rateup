@@ -19,6 +19,11 @@ const nextConfig: NextConfig = bundleAnalyzer({
         port: "",
       },
       {
+        protocol: "http",
+        hostname: "d2uj946b0i8y27.cloudfront.net",
+        // pathname: "/**",
+      },
+      {
         protocol: "https",
         hostname: "blog.rateup.app",
       },
