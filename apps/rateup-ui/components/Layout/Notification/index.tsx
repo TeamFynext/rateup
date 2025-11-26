@@ -100,8 +100,14 @@ const NotificationBellIcon = (props) => {
           style={{ color: "light-dark(black, white)" }}
           onClick={open}
           variant="secondary"
+          className="h-9 w-9"
         >
-          <IconBell onClick={open} {...props} />
+          <IconBell
+            className="size-5"
+            strokeWidth={1.8}
+            onClick={open}
+            {...props}
+          />
         </Button>
       </Indicator>
     </>

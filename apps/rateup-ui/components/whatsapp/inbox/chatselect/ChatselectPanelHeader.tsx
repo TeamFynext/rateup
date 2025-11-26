@@ -77,7 +77,7 @@ const ChatselectPanelHeader = ({
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search contact..."
-              className="pl-8 pr-8 h-8 text-xs w-full"
+              className="pl-8 pr-8 h-8 text-xs w-full placeholder:text-sm"
               value={filter?.searchTerm}
               onChange={(e) =>
                 setFilter({ ...filter, searchTerm: e.currentTarget.value })

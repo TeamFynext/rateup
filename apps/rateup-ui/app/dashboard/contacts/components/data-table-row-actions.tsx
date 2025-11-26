@@ -8,8 +8,14 @@ import { IconDots, IconEdit, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
 import { useDeleteCustomFieldMutation } from "@/backend/campaign/contacts/contacts.query";
-
-import { EditModal } from "./edit-modal";
+import { CustomFieldForm } from "@/components/Contacts/label-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface DataTableRowActionsProps<TData> {
   row: {
@@ -81,11 +87,34 @@ export function DataTableRowActions<TData>({
         </Menu.Dropdown>
       </Menu>
 
-      <EditModal
+      <EditCustomFieldModal
         opened={editOpen}
-        onClose={() => setEditOpen(false)}
-        data={row.original}
+        setOpened={setEditOpen}
+        customField={row.original}
       />
     </>
   );
 }
+
+const EditCustomFieldModal = ({ opened, setOpened, customField }) => {
+  const t = useTranslations();
+
+  return (
+    <Dialog open={opened} onOpenChange={setOpened}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{t("Edit Custom Field")}</DialogTitle>
+          <DialogDescription>
+            {t(
+              "Edit custom field to store additional information about your contacts.",
+            )}
+          </DialogDescription>
+        </DialogHeader>
+        <CustomFieldForm
+          onSubmitCallback={() => setOpened(false)}
+          data={customField}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};

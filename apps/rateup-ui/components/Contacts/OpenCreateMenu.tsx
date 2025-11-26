@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
@@ -24,8 +26,7 @@ const OpenCreateMenu = ({
 }) => {
   const [contactOpened, { open: contactOpen, close: contactClose }] =
     useDisclosure(false);
-  const [groupOpened, { open: groupOpen, close: groupClose }] =
-    useDisclosure(false);
+  const [groupOpened, setGroupOpened] = useState(false);
   const importCSVContactMutation = useImportCSVContactMutation();
   const translations = useTranslations();
   return (
@@ -46,7 +47,7 @@ const OpenCreateMenu = ({
           if (tab === WhatsappTableType.CONTACTS) {
             contactOpen();
           } else if (tab === ContactTabs.GROUPS) {
-            groupOpen();
+            setGroupOpened(true);
           } else {
             toggle();
           }
@@ -65,19 +66,11 @@ const OpenCreateMenu = ({
           importCSVContactMutation={importCSVContactMutation}
         />
       </SimpleModalLayout>
-      <FormModalLayout
-        centered
+      <CreateGroupModal
         opened={groupOpened}
-        onClose={groupClose}
-        title={
-          type === ContactGroupType.LOYALTY
-            ? "Create Customer Group"
-            : translations("Create contact group")
-        }
-        size="lg"
-      >
-        <CreateGroupModal groupClose={groupClose} close={close} type={type} />
-      </FormModalLayout>
+        setOpened={setGroupOpened}
+        type={type}
+      />
     </>
   );
 };

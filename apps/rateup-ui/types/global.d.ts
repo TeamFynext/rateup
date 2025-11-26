@@ -655,6 +655,9 @@ declare global {
     type: string;
     tags: string[];
     contactType: string[];
+    team: {
+      name: string;
+    };
     _count: {
       contacts: number;
       LoyaltyCustomerMap: number;

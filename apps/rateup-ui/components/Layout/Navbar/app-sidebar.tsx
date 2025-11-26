@@ -43,6 +43,12 @@ import { useNavMain } from "./hooks";
 import { NavUser } from "./user-nav";
 import { WhatsAppSettingsModal } from "./utils";
 
+// Icon config for sidebar icons
+const sidebarIconProps = {
+  className: "size-5!",
+  strokeWidth: 1.7,
+};
+
 export default function AppSidebar({
   subscription,
   lifecycles,
@@ -184,7 +190,10 @@ export default function AppSidebar({
       />
       <div className="flex w-full h-screen">
         {/* Sidebar: Icons Only */}
-        <Sidebar className="w-12 border-r" collapsible="none">
+        <Sidebar
+          className="w-[var(--sidebar-width-icon)] border-r"
+          collapsible="none"
+        >
           <SidebarHeader>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -195,7 +204,9 @@ export default function AppSidebar({
                   tooltip={userData?.data?.orgName}
                 >
                   <Link href="#" aria-label="Organization">
-                    <Avatar className="bg-sidebar-primary text-sidebar-primary-foreground size-8 rounded-lg">
+                    <Avatar
+                      className={`${userData?.data.orgLogo ? "bg-background" : "bg-sidebar-primary"} text-sidebar-primary-foreground size-8 w-10 rounded-lg`}
+                    >
                       <AvatarImage
                         src={getFileUrlFromKey(userData?.data.orgLogo)}
                         alt={userData?.data?.orgName}
@@ -230,7 +241,7 @@ export default function AppSidebar({
                         onClick={(e) => {
                           const allow = handleRouteGuard(item.url);
                           setActiveItem(item);
-                          setOpen(true);
+                          setOpen(false);
                           if (!allow) {
                             e.preventDefault();
                           }
@@ -241,12 +252,12 @@ export default function AppSidebar({
                       >
                         {item.url && item.url !== "#" ? (
                           <Link href={item.url}>
-                            <item.icon />
+                            <item.icon {...sidebarIconProps} />
                             <span className="sr-only">{item.title}</span>
                           </Link>
                         ) : (
                           <>
-                            <item.icon />
+                            <item.icon {...sidebarIconProps} />
                             <span className="sr-only">{item.title}</span>
                           </>
                         )}
@@ -267,20 +278,25 @@ export default function AppSidebar({
         {/* Sidebar: Icon + Text (Collapsible) */}
         {activeItem?.items && activeItem.items.length > 0 && (
           <Sidebar
-            className="w-64 border-r relative hidden md:flex"
+            className="w-52 border-r relative hidden md:flex"
             collapsible="icon"
           >
-            <SidebarHeader className="gap-3.5 border-b p-3">
+            <SidebarHeader className="gap-3.5 border-b p-3 bg-background">
               <div className="flex w-full items-center justify-between">
                 <h2
-                  className={`text-foreground text-base font-medium ${isCollapsed ? "hidden" : ""}`}
+                  className={`flex text-foreground text-lg gap-1 font-bold ${isCollapsed ? "hidden" : ""}`}
                 >
+                  {activeItem.icon && (
+                    <activeItem.icon
+                      className={`${isCollapsed ? "hidden" : "ml-1 size-5 m-auto"}`}
+                    />
+                  )}
                   {activeItem?.title}
                 </h2>
-                <SidebarTrigger className="-ml-1" />
+                <SidebarTrigger />
               </div>
             </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className="bg-background">
               <SidebarGroup>
                 <SidebarGroupContent>
                   <SidebarMenu>
@@ -294,9 +310,19 @@ export default function AppSidebar({
                         >
                           <SidebarMenuItem>
                             <CollapsibleTrigger asChild>
-                              <SidebarMenuButton tooltip={item.title}>
-                                {item.icon && <item.icon />}
-                                <span>{item.title}</span>
+                              <SidebarMenuButton
+                                tooltip={item.title}
+                                variant="light"
+                                onClick={() => {
+                                  setOpen(true);
+                                }}
+                              >
+                                {item.icon && (
+                                  <item.icon {...sidebarIconProps} />
+                                )}
+                                <span className="font-medium">
+                                  {item.title}
+                                </span>
                                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                               </SidebarMenuButton>
                             </CollapsibleTrigger>
@@ -321,15 +347,19 @@ export default function AppSidebar({
                                         fullPathname === subItem.url
                                       }
                                       aria-label={subItem.title}
+                                      variant="light"
                                     >
                                       <Link href={subItem.url || "#"}>
                                         {subItem.icon && (
                                           <subItem.icon
-                                            className="size-4 mr-2"
+                                            {...sidebarIconProps}
+                                            className={`mr-2 ${sidebarIconProps.className}`}
                                             color="var(--foreground)"
                                           />
                                         )}
-                                        <span>{subItem.title}</span>
+                                        <span className="font-medium">
+                                          {subItem.title}
+                                        </span>
                                       </Link>
                                     </SidebarMenuSubButton>
                                   </SidebarMenuSubItem>
@@ -351,10 +381,11 @@ export default function AppSidebar({
                                 e.preventDefault();
                               }
                             }}
+                            variant="light"
                           >
                             <Link href={item.url || "#"}>
-                              {item.icon && <item.icon />}
-                              <span>{item.title}</span>
+                              {item.icon && <item.icon {...sidebarIconProps} />}
+                              <span className="font-medium">{item.title}</span>
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>

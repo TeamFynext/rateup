@@ -174,7 +174,15 @@ export default function MainSidebar({ children }) {
     <SessionReact.SessionAuth>
       <WebSocketHandler />
 
-      <SidebarProvider defaultOpen={false}>
+      <SidebarProvider
+        defaultOpen={false}
+        style={
+          {
+            "--sidebar-width": "0px", // for custom second sidebar width
+            "--sidebar-width-icon": "53px",
+          } as React.CSSProperties
+        }
+      >
         {isLoading ? (
           <NavbarSkeleton />
         ) : (
@@ -193,7 +201,7 @@ export default function MainSidebar({ children }) {
         )}
 
         <div
-          className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-scroll bg-background`}
+          className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-background`}
         >
           <LifecycleContext value={lifecycles || []}>
             <CustomFieldsProvider initialFields={customFieldData || []}>

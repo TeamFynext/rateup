@@ -53,7 +53,8 @@ export default function WaInboxChatDisplayFooter({
   const submiRef = useRef(null);
   const translations = useTranslations();
   const { whatsappSettingsPhoneId, updatePhoneId } = usePhoneIdStore();
-  const platform = contact?.source?.toUpperCase() || MessagePlatform.WHATSAPP;
+  const platform =
+    contact?.lastMessage?.sourcePlatform || MessagePlatform.WHATSAPP;
   const sendnewWaMessage = useSendNewWaMessage(
     contact.id,
     whatsappSettingsPhoneId,

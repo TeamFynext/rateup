@@ -15,6 +15,7 @@ import {
   Bell,
   ChevronsUpDown,
   Circle,
+  CircleX,
   CreditCard,
   LogOut,
   Sparkles,
@@ -62,17 +63,17 @@ const statusOptions: {
   {
     value: "online",
     label: "Available",
-    icon: <Circle className="mr-2 h-4 w-4 text-green-500" />,
+    icon: <Circle className="mr-2 h-4 w-4 text-green-500 fill-green-500" />,
   },
   {
     value: "busy",
     label: "Busy",
-    icon: <Circle className="mr-2 h-4 w-4 text-yellow-500" />,
+    icon: <Circle className="mr-2 h-4 w-4 text-red-500 fill-red-500" />,
   },
   {
     value: "offline",
     label: "Offline",
-    icon: <Circle className="mr-2 h-4 w-4 text-red-500" />,
+    icon: <CircleX className="mr-2 h-4 w-4 text-black " />,
   },
 ];
 
@@ -82,9 +83,9 @@ const getStatusRing = (status: UserAvailabilityStatus): string => {
     case UserAvailabilityStatus.online:
       return "ring-2 ring-green-500";
     case UserAvailabilityStatus.busy:
-      return "ring-2 ring-yellow-500";
-    case UserAvailabilityStatus.offline:
       return "ring-2 ring-red-500";
+    case UserAvailabilityStatus.offline:
+      return "ring-2 ring-black";
     default:
       return "ring-2 ring-blue-500";
   }
@@ -175,9 +176,9 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-8 md:p-0 rounded-lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-9 md:p-0 rounded-lg"
             >
-              <Avatar className="h-8 w-8 rounded-lg text-accent-foreground">
+              <Avatar className="h-9 w-9 rounded-lg text-accent-foreground">
                 <AvatarImage
                   src={getFileUrlFromKey(user.profilePhoto)}
                   alt={user.userName}
@@ -259,7 +260,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
               </DropdownMenuSub>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
+            {/* <DropdownMenuGroup>
               <Link href="/pricing">
                 <DropdownMenuItem>
                   <Sparkles />
@@ -286,7 +287,7 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator /> */}
             <Link href="/logout">
               <DropdownMenuItem>
                 <LogOut />

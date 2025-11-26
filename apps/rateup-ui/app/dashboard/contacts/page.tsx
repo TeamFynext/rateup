@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { TextInput } from "@mantine/core";
 import { useDebouncedState } from "@mantine/hooks";
@@ -15,8 +15,13 @@ import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import ContactTable from "@/components/Table/ContactTable";
+import { DataTable } from "@/components/Table/data-table";
+import { Input } from "@/components/ui/input";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { PAGE_SIZE } from "@/utils/constants";
+
+import { DataTableToolbar } from "./components/data-table-toolbar";
+import { useContactTableStore } from "./store/contact-table-store";
 
 export enum ContactTabs {
   GROUPS = "groups",
@@ -32,7 +37,7 @@ export default function Contacts() {
     pageIndex: 0,
     pageSize: Number(PAGE_SIZE[0]),
   });
-
+  const { filter } = useContactTableStore();
   const {
     isPending: isLoadingContacts,
     data: contactData,
@@ -40,6 +45,14 @@ export default function Contacts() {
     isRefetching,
     isError,
   } = useContacts(pagination, searchTerm, sorting?.[0], columnFilters);
+
+  useEffect(() => {
+    const filterKeys = Object.keys(filter).filter((f) => f !== "searchTerm");
+    setSearchTerm(filter.searchTerm);
+    setColumnFilters(
+      filterKeys.map((key) => ({ id: key, value: filter[key] })),
+    );
+  }, [filter]);
 
   const { customFields } = useCustomFieldsContext();
   const translations = useTranslations();
@@ -63,44 +76,23 @@ export default function Contacts() {
     () => contactData?.users ?? [],
     [contactData?.users],
   );
-
   if (isError) return <ErrorComponent refetch={refetchContacts} />;
 
   return (
-    <div className="p-2 flex flex-col h-full">
-      <TextInput
-        leftSection={<IconSearch size="17.6px" stroke={1.5} />}
-        placeholder={translations("Search contact")}
-        rightSectionWidth={60}
-        defaultValue={searchTerm}
-        onChange={(event) => setSearchTerm(event.currentTarget.value)}
-        maw={300}
-        mb={"xs"}
+    <div className="h-full">
+      <DataTable
+        columns={column}
+        data={contactMemoData ?? []}
+        DataTableToolbar={DataTableToolbar}
+        manualPagination={{
+          pagination,
+          onPaginationChange: setPagination,
+          rowCount: contactData?.totalCount || 0,
+          sorting,
+          onSortingChange: setSorting,
+        }}
+        isPending={isLoadingContacts}
       />
-
-      {/* <FilterSelect
-        setFilterByTag={setColumnFilters}
-        filterByTag={columnFilters}
-        contactArray={contactGroups?.map((data) => ({
-        value: data?.id,
-        label: data?.name,
-        }))}
-      /> */}
-      <PaperLayout p={0} className="flex-1">
-        <ContactTable
-          columns={column}
-          data={contactMemoData ?? []}
-          refetch={refetchContacts}
-          pagination={pagination}
-          setPagination={setPagination}
-          totalCount={contactData?.totalCount}
-          setSorting={setSorting}
-          sorting={sorting}
-          columnFilters={columnFilters}
-          setColumnFilters={setColumnFilters}
-          isPending={isLoadingContacts || isRefetching}
-        />
-      </PaperLayout>
     </div>
   );
 }

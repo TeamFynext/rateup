@@ -6,7 +6,10 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import PhoneInputWithCountrySelect, {
+  isValidPhoneNumber,
+} from "react-phone-number-input";
+import { toast } from "sonner";
 
 import { ICreateContact } from "@/backend/campaign/contacts/contacts.api";
 import { useCreateContactMutation } from "@/backend/campaign/contacts/contacts.query";
@@ -128,11 +131,12 @@ export const AddUnknownContactForm = (props: UnknownContactModalProps) => {
       onSuccess(data) {
         form.reset();
         form.resetDirty();
-        props.successCallback?.(data.data);
+        toast.success("contact added");
+        props.successCallback(data.data);
         setLoading(false);
       },
       onError(error) {
-        // handle / surface error as needed
+        toast.error("error adding contact");
         setLoading(false);
       },
     });
