@@ -241,7 +241,7 @@ export default function AppSidebar({
                         onClick={(e) => {
                           const allow = handleRouteGuard(item.url);
                           setActiveItem(item);
-                          setOpen(false);
+                          setOpen(true);
                           if (!allow) {
                             e.preventDefault();
                           }
@@ -313,9 +313,6 @@ export default function AppSidebar({
                               <SidebarMenuButton
                                 tooltip={item.title}
                                 variant="light"
-                                onClick={() => {
-                                  setOpen(true);
-                                }}
                               >
                                 {item.icon && (
                                   <item.icon {...sidebarIconProps} />

@@ -41,6 +41,8 @@ export function parseTemplate(template) {
       parsedTemplate["example"] = component.example?.body_text?.[0] ?? [];
     } else if ("footer" === component.type.toLowerCase()) {
       parsedTemplate[component.type.toLowerCase()] = component.text;
+      parsedTemplate.code_expiration_minutes =
+        component?.code_expiration_minutes;
     } else if (component.type.toLowerCase() === "buttons") {
       if (template?.data?.category !== WaTemplateCategory.AUTHENTICATION) {
         component.buttons.map((data) => {

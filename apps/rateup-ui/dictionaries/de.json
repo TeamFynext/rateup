@@ -2443,12 +2443,18 @@
   "Send Message": "Nachricht senden",
   "Update contact information and preferences": "Kontaktinformationen und Präferenzen aktualisieren",
   "Enter full name": "Vollständigen Namen eingeben",
-  "email@example.com": "email@example.com",
+  "email@example": "email@example.com",
   "Group": "Gruppe",
   "Assignee": "Zuständige Person",
   "notes": "Notizen",
   "contacts selected": "Kontakte ausgewählt",
   "Apply Labels to Contacts": "Labels auf Kontakte anwenden",
   "Apply Label to contacts to identify and distinguish customers": "Label auf Kontakte anwenden, um Kunden zu identifizieren und zu unterscheiden",
-  "Update Lifecycle Stage": "Lebenszyklusphase aktualisieren"
+  "Update Lifecycle Stage": "Lebenszyklusphase aktualisieren",
+  "Code Expiration (minutes)": "Code-Ablauf (Minuten)",
+  "Expiration time": "Ablaufzeit",
+  "Only authentication buttons are allowed for this template": "Für diese Vorlage sind nur Authentifizierungsschaltflächen erlaubt",
+  "Authentication Buttons": "Authentifizierungsschaltflächen",
+  "Only one authentication button allowed": "Nur eine Authentifizierungsschaltfläche erlaubt",
+  "OTP (One-Time Password)": "Einmalpasswort (OTP)"
 }

@@ -2438,12 +2438,18 @@
   "Send Message": "إرسال رسالة",
   "Update contact information and preferences": "تحديث معلومات وجهات الاتصال والتفضيلات",
   "Enter full name": "أدخل الاسم الكامل",
-  "email@example.com": "email@example.com",
+  "email@example": "email@example.com",
   "Group": "مجموعة",
   "Assignee": "المسؤول",
   "notes": "ملاحظات",
   "contacts selected": "جهات اتصال محددة",
   "Apply Labels to Contacts": "تطبيق التسميات على جهات الاتصال",
   "Apply Label to contacts to identify and distinguish customers": "تطبيق تسمية على جهات الاتصال للتعرّف على العملاء وتمييزهم",
-  "Update Lifecycle Stage": "تحديث مرحلة دورة الحياة"
+  "Update Lifecycle Stage": "تحديث مرحلة دورة الحياة",
+  "Code Expiration (minutes)": "انتهاء صلاحية الرمز (بالدقائق)",
+  "Expiration time": "وقت الانتهاء",
+  "Only authentication buttons are allowed for this template": "يُسمح فقط بأزرار المصادقة لهذا النموذج",
+  "Authentication Buttons": "أزرار المصادقة",
+  "Only one authentication button allowed": "يُسمح بزر مصادقة واحد فقط",
+  "OTP (One-Time Password)": "كلمة مرور لمرة واحدة (OTP)"
 }
