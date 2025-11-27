@@ -44,7 +44,7 @@ export default function HeroSection() {
 
       {/* Subtext */}
       <div className="flex flex-col items-center justify-center text-center max-w-2xl">
-        <span className="text-rateup-light-blue-2 font-normal sm:font-medium text-xs sm:text-sm">
+        <span className="text-rateup-light-blue-2 font-normal sm:font-medium text-xs sm:text-lg">
           Unify all customer chats in one intelligent platform. RateUp
           automates, analyzes, and connects — helping you engage smarter across
           every channel.

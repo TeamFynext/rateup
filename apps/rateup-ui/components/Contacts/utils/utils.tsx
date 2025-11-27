@@ -4,10 +4,7 @@ import React from "react";
 import Link from "next/link";
 
 import {
-  Avatar,
-  Badge,
   Box,
-  Checkbox,
   CheckboxProps,
   HoverCard,
   Image,
@@ -25,8 +22,24 @@ import {
 import { rankItem } from "@tanstack/match-sorter-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import {
+  Ban,
+  CircleCheck,
+  CircleX,
+  Gift,
+  Globe,
+  Instagram,
+  MessageSquare,
+  Upload,
+  UserPlus,
+  Zap,
+} from "lucide-react";
 
 import { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { getInitials } from "@/components/ui/utils";
 
 import { CampaignParticipantStatus, CampaignType } from "../../../types/enums";
 import { fallbackImage } from "../../../utils/constants";
@@ -34,74 +47,139 @@ import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import { CampaignParticipantMenu } from "../../Campaign/CampaignParticipantCard";
 import { CampaignMenu, renderBadge } from "../../Card/CampaignCard";
-import { ContactGroupMenu } from "../../Card/ContactCard";
+import ContactGroupMenu from "../ContactGroupMenu";
 
 export const DETAIL_BTN = "detail_btn_link_123";
 
 export const selectCheckBox: ColumnDef<any>[] = [
   {
     id: "select",
-    enableSorting: false,
-    maxSize: 10,
     header: ({ table }) => (
-      <IndeterminateCheckbox
-        {...{
-          checked: table.getIsAllRowsSelected(),
-          indeterminate: table.getIsSomeRowsSelected(),
-          onChange: table.getToggleAllRowsSelectedHandler(),
-        }}
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() ? "indeterminate" : false)
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
       />
     ),
     cell: ({ row }) => (
-      <div className="px-1">
-        <IndeterminateCheckbox
-          {...{
-            checked: row.getIsSelected(),
-            disabled: !row.getCanSelect(),
-            indeterminate: row.getIsSomeSelected(),
-            onChange: row.getToggleSelectedHandler(),
-          }}
-          onClick={(e) => e.stopPropagation()}
-        />
-      </div>
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
     ),
+    enableSorting: false,
+    enableHiding: false,
   },
 ];
+
 const contactDetailsColumn: ColumnDef<any>[] = [
   {
-    header: () => "Name",
+    header: "Name",
     accessorKey: "name",
-    cell: (info) => info.getValue(),
+    cell: (info) => (
+      <div className="flex gap-1 items-center">
+        <Avatar>
+          <AvatarFallback className="rounded-lg bg-blue-200 text-rateup-blue p-1 text-xs">
+            {getInitials(info?.getValue() as string)}
+          </AvatarFallback>
+        </Avatar>
+        <span>{info?.getValue() as string}</span>
+      </div>
+    ),
+    enableSorting: true,
   },
 ];
+
+export const getSourceBadge = (source: string) => {
+  const config = {
+    whatsapp: {
+      icon: MessageSquare,
+      label: "WhatsApp",
+      className: "bg-green-100 text-green-700",
+    },
+    instagram: {
+      icon: Instagram,
+      label: "Instagram",
+      className: "bg-pink-100 text-pink-700",
+    },
+    WEBCHAT: {
+      icon: Globe,
+      label: "Web Chat",
+      className: "bg-blue-100 text-blue-700",
+    },
+    MANUAL: {
+      icon: UserPlus,
+      label: "Manual",
+      className: "bg-gray-100 text-gray-700",
+    },
+    "CSV IMPORT": {
+      icon: Upload,
+      label: "Imported",
+      className: "bg-gray-100 text-gray-700",
+    },
+    LOYALTY: {
+      icon: Gift,
+      label: "Loyalty Customer",
+      className: "bg-orange-100 text-orange-700",
+    },
+  };
+  const {
+    icon: Icon,
+    label,
+    className,
+  } = config[source as keyof typeof config];
+  return (
+    <Badge variant="outline" className={className}>
+      <Icon className="w-3 h-3 mr-1" />
+      {label}
+    </Badge>
+  );
+};
 
 export const contactColumn = (contactTags: CustomFieldData[] = []) => {
   return [
     ...selectCheckBox,
     ...contactDetailsColumn,
     {
-      header: () => "Phone/IGSID",
+      header: "Phone/IGSID",
       accessorKey: "phone",
       cell: (info) => info.getValue(),
+      id: "phone",
+      enableSorting: false,
     },
     {
-      header: () => "Not Blocked",
+      header: "Status",
       accessorKey: "blockedOnWhatsApp",
       cell: (info) =>
         !info.getValue() ? (
-          <IconCircleCheck color="green" />
+          <Badge variant="secondary" className="bg-green-100 text-green-700">
+            <Zap />
+            Active
+          </Badge>
         ) : (
-          <IconCircleX color="red" />
+          <Badge variant="secondary" className="bg-red-100 text-red-700">
+            <Ban />
+            Blocked
+          </Badge>
         ),
+      id: "blockedOnWhatsApp",
+      enableSorting: false,
     },
     {
-      header: () => "Other",
+      header: "Other",
       accessorKey: "other",
       cell: (info) => info.getValue() ?? "-",
+      id: "other",
+      enableSorting: false,
     },
     {
-      header: () => "Label",
+      header: "Label",
       accessorKey: "ContactLabelMap",
+      id: "ContactLabelMap",
       cell: (info) => {
         const labels =
           info.row.original.ContactLabelMap?.map(
@@ -110,7 +188,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
         return labels.length > 0 ? (
           <Box style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
             {labels.map((label, index) => (
-              <Badge key={label?.id} size="sm" variant="light" color="blue">
+              <Badge key={index} variant="secondary" color="blue">
                 {label}
               </Badge>
             ))}
@@ -119,12 +197,13 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
           "-"
         );
       },
+      enableSorting: false,
     },
     ...(contactTags?.length > 0
       ? contactTags
           ?.filter((tag) => tag?.visibility)
           ?.map((data) => ({
-            header: () => data?.name,
+            header: data?.name,
             accessorFn: (row) =>
               row?.customFields?.find((f) => f?.fieldId === data?.id)?.value,
             id: data?.name,
@@ -133,24 +212,28 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
             enableSorting: false,
           }))
       : []),
-
     {
-      header: () => "Source",
+      header: "Source",
       accessorKey: "source",
-      cell: (info) => (
-        <Badge size="md" variant="light" color="green" mt={"auto"}>
-          {(info.getValue() as string) ?? "NA"}
-        </Badge>
-      ),
+      id: "source",
+      cell: (info) => getSourceBadge((info?.getValue() as string) || "MANUAL"),
+      enableSorting: false,
     },
     {
-      header: () => "Consent",
+      header: "Consent",
       accessorKey: "consent",
+      id: "consent",
       cell: (info) =>
         info.getValue() ? (
-          <IconCircleCheck color="green" />
+          <Badge variant="secondary" className="bg-green-100 text-green-700">
+            <CircleCheck />
+            Granted
+          </Badge>
         ) : (
-          <IconCircleX color="red" />
+          <Badge variant="secondary" className="bg-red-100 text-red-700">
+            <CircleX />
+            Denied
+          </Badge>
         ),
       meta: {
         filterComponent: (setFilterValue) => {
@@ -163,65 +246,29 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
           );
         },
       },
+      enableSorting: false,
     },
     {
-      header: () => "Created",
+      header: "Date Added",
       accessorKey: "createdAt",
+      id: "createdAt",
       cell: (info) =>
         dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+      enableSorting: true,
+    },
+    {
+      header: "Last Contact",
+      accessorKey: "lastMessageWaCreatedAt",
+      id: "lastMessageWaCreatedAt",
+      cell: (info) =>
+        info.getValue()
+          ? dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A")
+          : "",
+      enableSorting: true,
     },
   ];
 };
-export const contactGroupColumn = [
-  ...selectCheckBox,
-  {
-    header: () => "image",
-    accessorKey: "icon",
-    size: 10,
-    cell: (info) => (
-      <Avatar
-        color="initials"
-        name={info.getValue()}
-        src={info.getValue() && getFileUrlFromKey(info.getValue())}
-        radius={"sm"}
-      />
-    ),
-  },
-  ...contactDetailsColumn,
-  {
-    header: () => "Team",
-    accessorKey: "team.name",
-    id: "Team",
-    cell: (info) => (
-      <Badge size="md" variant="light" color="green" mt={"auto"}>
-        {(info.getValue() as string) ?? "NA"}
-      </Badge>
-    ),
-  },
-  {
-    header: () => "Created",
-    accessorKey: "createdAt",
-    cell: (info) =>
-      dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
-  },
-  {
-    header: () => "Detail View",
-    id: DETAIL_BTN,
-    accessorFn: (row) => `groups/${row.id}`,
-    enableSorting: false,
-    enableColumnFilter: false,
-  },
 
-  {
-    header: () => "Action",
-    accessorFn: (row) => row,
-    maxSize: 10,
-    enableSorting: false,
-    enableColumnFilter: false,
-    id: "action",
-    cell: (info) => <ContactGroupMenu groupId={info?.row.original?.id} />,
-  },
-];
 export const loyaltyGroupColumn = [
   ...selectCheckBox,
   {
@@ -247,7 +294,7 @@ export const loyaltyGroupColumn = [
     accessorKey: "team.name",
     id: "Team",
     cell: (info) => (
-      <Badge size="md" variant="light" color="green" mt={"auto"}>
+      <Badge variant="secondary" color="green">
         {(info.getValue() as string) ?? "NA"}
       </Badge>
     ),
@@ -302,7 +349,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     accessorKey: "teamName",
     id: "Team",
     cell: (info) => (
-      <Badge size="md" variant="light" color="green" mt={"auto"}>
+      <Badge variant="secondary" color="green">
         {(info.getValue() as string) ?? "NA"}
       </Badge>
     ),
@@ -311,7 +358,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     header: () => "Status",
     accessorKey: "status",
     cell: (info) => (
-      <Badge variant="light" color={renderBadge(info.getValue()).color}>
+      <Badge variant="secondary" color={renderBadge(info.getValue()).color}>
         {info.getValue() as string}
       </Badge>
     ),
@@ -321,9 +368,7 @@ export const contactParticipentColumn: ColumnDef<any>[] = [
     accessorKey: "campaignParticipantsCount",
     id: "participants",
     cell: (info) => (
-      <Badge variant="light" ml={"xl"}>
-        {info.getValue() as string}
-      </Badge>
+      <Badge variant="secondary">{info.getValue() as string}</Badge>
     ),
   },
 
@@ -443,9 +488,7 @@ export const contactParticipentDetailColumn = [
             <Badge
               color={renderBadge(statusData).color}
               variant={renderBadge(statusData).variant}
-              radius={"sm"}
-              size={"lg"}
-              tt={"capitalize"}
+              className="rounded-md capitalize"
             >
               {(statusData as string) ?? "NA"}
             </Badge>
@@ -458,9 +501,7 @@ export const contactParticipentDetailColumn = [
         <Badge
           color={renderBadge(statusData).color}
           variant={renderBadge(statusData).variant}
-          radius={"sm"}
-          size={"lg"}
-          tt={"uppercase"}
+          className="rounded-md uppercase"
         >
           {(statusData as string) ?? "NA"}
         </Badge>
@@ -516,10 +557,10 @@ export const contactParticipentDetailColumn = [
   },
 ];
 
-export function IndeterminateCheckbox(props: CheckboxProps) {
-  const ref = React.useRef<HTMLInputElement>(null!);
-  return <Checkbox ref={ref} {...props} />;
-}
+// export function IndeterminateCheckbox(props: CheckboxProps) {
+//   const ref = React.useRef<HTMLInputElement>(null!);
+//   return <Checkbox ref={ref} {...props} />;
+// }
 
 export enum WhatsappTableType {
   CONTACTS = "contacts",

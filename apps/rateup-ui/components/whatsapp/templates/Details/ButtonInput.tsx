@@ -80,8 +80,12 @@ const ButtonInput = ({
       catalog: { ...catalog, mpm },
     });
   }
+  let type = data.type;
+  if (data?.url?.includes("COPY_CODE")) {
+    type = WHATSAPP_BUTTON_TYPE.OTP;
+  }
 
-  switch (data.type) {
+  switch (type) {
     case WHATSAPP_BUTTON_TYPE.QUICK_REPLY:
       return (
         <>
@@ -239,6 +243,34 @@ const ButtonInput = ({
           </>
         </>
       );
+    case WHATSAPP_BUTTON_TYPE.OTP:
+      return (
+        <>
+          <ContainedTextField
+            label={
+              <Text fz={14} fw={500}>
+                {translations("Type of action")}
+              </Text>
+            }
+            defaultValue={"otp"}
+            readOnly
+          />
+
+          <ContainedTextField
+            label={translations("Button text)")}
+            {...form.getInputProps(`buttons.${index}.text`)}
+            placeholder="Copy code"
+          />
+          <ActionIcon
+            mt={24}
+            variant="transparent"
+            onClick={() => deleteButton(index)}
+          >
+            <IconX />
+          </ActionIcon>
+        </>
+      );
+
     case WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE:
       return (
         <>

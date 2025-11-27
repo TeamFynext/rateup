@@ -62,3 +62,13 @@ export const getStringColor = (string: string) => {
   const index = Math.abs(hash) % colors.length;
   return colors[index];
 };
+
+export const getInitials = (name: string) => {
+  if (!name) return "";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+};

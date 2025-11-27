@@ -22,7 +22,7 @@ export function showInfoToast(
 }
 export function showSuccessToast(
   message: string,
-  id = undefined,
+  id: string | undefined = undefined,
   icon?: React.ReactNode,
   updateNotification = false,
 ) {

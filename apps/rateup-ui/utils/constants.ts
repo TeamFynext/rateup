@@ -241,6 +241,7 @@ export enum WHATSAPP_BUTTON_TYPE {
   CATALOG = "CATALOG",
   MPM = "MPM",
   SPM = "SPM",
+  OTP = "OTP",
 }
 
 export const MIN_AMOUNT_ERROR = "Purchase amount ineligible for gift.";

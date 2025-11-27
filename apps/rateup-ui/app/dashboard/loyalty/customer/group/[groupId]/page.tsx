@@ -78,8 +78,7 @@ export default function ContactGroup() {
   const params = useParams();
   const groupId = params?.groupId as string;
 
-  const [openedEditModal, { open: openEditModal, close: closeEditModal }] =
-    useDisclosure(false);
+  const [openedEditModal, setOpenEditModal] = useState(false);
   const { update } = useRouteParams();
   const createNewContactsFromCSV = useAddNewContactFromCSVMutation(
     groupId?.toString(),
@@ -193,26 +192,19 @@ export default function ContactGroup() {
                 <Group>
                   <Button
                     leftSection={<IconEdit></IconEdit>}
-                    onClick={openEditModal}
+                    onClick={() => setOpenEditModal(true)}
                     variant="default"
                     disabled={loadingState}
                   >
                     {translations("Edit Profile")}
                   </Button>
-                  <FormModalLayout
-                    centered
-                    title={translations("Edit Group")}
+                  <CreateGroupModal
                     opened={openedEditModal}
-                    onClose={closeEditModal}
-                    size="lg"
-                  >
-                    <CreateGroupModal
-                      groupClose={closeEditModal}
-                      isEdit={true}
-                      groupDetails={groupDetails}
-                    />
-                  </FormModalLayout>
-
+                    setOpened={setOpenEditModal}
+                    isEdit={true}
+                    groupDetails={groupDetails}
+                    type={ContactGroupType.LOYALTY}
+                  />
                   <Button
                     variant="light"
                     leftSection={<IconTrash></IconTrash>}

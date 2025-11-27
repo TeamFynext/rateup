@@ -29,7 +29,10 @@ import {
   ContactWithUpdatedAt,
   useContactsStore,
 } from "@/app/dashboard/inbox/store";
-import { useEditContactMutation } from "@/backend/campaign/contacts/contacts.query";
+import {
+  useEditContactLabelsMutation,
+  useEditContactMutation,
+} from "@/backend/campaign/contacts/contacts.query";
 import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useBlockWhatsAppUser } from "@/backend/whatsapp/inbox/message/wamessage.query";
@@ -122,6 +125,25 @@ export default function WaInboxChatDisplayHeader({
   const isSessionExpired = isInboxSessionExpired(
     contact?.lastReceivedMessageTimeStamp,
   );
+  const { updateContactById } = useContactsStore();
+
+  function handleLifecycleChange(value, lifecycleObj) {
+    editContactMutation.mutate(
+      {
+        data: { lifecycleId: value },
+        contactId: contact.id,
+      },
+      {
+        onSuccess: () => {
+          updateContactById(contact.id, (contact) => ({
+            ...contact,
+            lifecycleId: value,
+            lifecycleName: `${lifecycleObj.emoji} ${lifecycleObj.name}`,
+          }));
+        },
+      },
+    );
+  }
 
   const sourcePlatform = getSoucePlatformIconAndColor(platform);
   if (!contact) return null;
@@ -173,7 +195,17 @@ export default function WaInboxChatDisplayHeader({
                   />
                 )}
               </div>
-              <LifecycleSelector value={contact.lifecycleId} id={contact.id} />
+              <LifecycleSelector
+                value={contact.lifecycleId}
+                customTrigger={
+                  <span className="text-sm font-medium">
+                    {contact.lifecycleName}
+                  </span>
+                }
+                className="border-none hover:bg-gray-100"
+                onChange={handleLifecycleChange}
+                placeholder="Lifecycle"
+              />
             </div>
           </div>
         </div>

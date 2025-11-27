@@ -72,7 +72,7 @@ const WaQuickReplySettings = () => {
         </h3>
         <Button
           size="sm"
-          className="bg-gradient-to-br from-rateup-blue to-rateup-orange"
+          className="rateup-blue"
           onClick={() => {
             setSelectedItem(null);
             setOpened(true);

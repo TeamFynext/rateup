@@ -37,6 +37,7 @@ import {
   OrderType,
   SubscriptionFeaturePathName,
   TemplateType,
+  WaTemplateCategory,
   WaTemplateStatus,
 } from "@/types/enums";
 import { whatsappTheme } from "@/config/mantineTheme";
@@ -511,12 +512,20 @@ export default function WhatsappTemplateById() {
     input.focus();
   };
   const handleMenuSelection = (e: string, text: string = "") => {
-    const newObject =
-      e === WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE
-        ? { type: e, example: "" }
-        : e === WHATSAPP_BUTTON_TYPE.WEBSURVEY
-          ? { type: WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE, text: "", example: [] }
-          : { type: e, text };
+    let newObject;
+    if (e === WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE) {
+      newObject = { type: e, example: "" };
+    } else if (e === WHATSAPP_BUTTON_TYPE.WEBSURVEY) {
+      newObject = {
+        type: WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE,
+        text: "",
+        example: [],
+      };
+    } else if (e === WHATSAPP_BUTTON_TYPE.OTP) {
+      newObject = { type: e, text, otp_type: "copy_code" };
+    } else {
+      newObject = { type: e, text };
+    }
     if (e !== WHATSAPP_BUTTON_TYPE.QUICK_REPLY) {
       const btn = form.values?.buttons?.filter(
         (data) => data.type === (e as WHATSAPP_BUTTON_TYPE),
@@ -670,7 +679,7 @@ export default function WhatsappTemplateById() {
             <Grid.Col span={{ xs: 12, sm: 7, xl: 9 }} pos={"relative"}>
               <PaperLayout
                 className={styles["template-content-container"]}
-                h={"80dvh"}
+                h={"85dvh"}
                 // style={{
                 //   overflow: editingItem?.data?.id && value ? "hidden" : "auto",
                 // }}
@@ -776,8 +785,10 @@ export default function WhatsappTemplateById() {
                       allowDeselect={false}
                     />
                   </SimpleGrid>
-                  {form.getValues().templateType !==
-                    TemplateType.PAYMENT_CONFIRMATION &&
+                  {form.values?.category !==
+                    WaTemplateCategory.AUTHENTICATION &&
+                    form.getValues().templateType !==
+                      TemplateType.PAYMENT_CONFIRMATION &&
                     form.getValues().templateType !== TemplateType.CAROUSEL && (
                       <Grid pos={"relative"}>
                         <ReadonlyOverlay />
@@ -843,83 +854,106 @@ export default function WhatsappTemplateById() {
 
                   <Stack gap={0} pos={"relative"}>
                     <ReadonlyOverlay />
-
-                    <Text fz={14} fw={500}>
-                      {translations("Body")} {requiredIcon}
-                    </Text>
-                    <Text fz={13}>
-                      {translations(
-                        "Make your messages personal using variables and get more replies!",
-                      )}
-                    </Text>
-                    <TextFormateToolBar
-                      applyFormatting={applyFormatting}
-                      insertValue={insertValue}
-                      undo={undo}
-                      dynamicVariables={dynamicVariables}
-                    />
-                    <Textarea
-                      ref={inputRef}
-                      styles={{
-                        input: {
-                          borderRadius: "0px 0px 12px 12px",
-                          paddingRight: 90,
-                        },
-                        section: {
-                          width: "fit-content",
-                        },
-                      }}
-                      placeholder={translations("Enter the text")}
-                      autosize
-                      minRows={3}
-                      onSelect={handleSelect}
-                      {...form.getInputProps("body")}
-                      rightSection={
-                        <LengthTracker
-                          length={form?.values?.body?.length}
-                          maxValue={1024}
-                          atStart
+                    {form.values?.category !==
+                      WaTemplateCategory.AUTHENTICATION && (
+                      <>
+                        <Text fz={14} fw={500}>
+                          {translations("Body")} {requiredIcon}
+                        </Text>
+                        <Text fz={13}>
+                          {translations(
+                            "Make your messages personal using variables and get more replies!",
+                          )}
+                        </Text>
+                        <TextFormateToolBar
+                          applyFormatting={applyFormatting}
+                          insertValue={insertValue}
+                          undo={undo}
+                          dynamicVariables={dynamicVariables}
                         />
-                      }
-                    />
+                        <Textarea
+                          ref={inputRef}
+                          styles={{
+                            input: {
+                              borderRadius: "0px 0px 12px 12px",
+                              paddingRight: 90,
+                            },
+                            section: {
+                              width: "fit-content",
+                            },
+                          }}
+                          placeholder={translations("Enter the text")}
+                          autosize
+                          minRows={3}
+                          onSelect={handleSelect}
+                          {...form.getInputProps("body")}
+                          rightSection={
+                            <LengthTracker
+                              length={form?.values?.body?.length}
+                              maxValue={1024}
+                              atStart
+                            />
+                          }
+                        />
+                      </>
+                    )}
                   </Stack>
                   <Stack gap={0} pos={"relative"}>
                     <ReadonlyOverlay />
-                    {dynamicVariables?.map((data, index) => (
-                      <ContainedTextField
-                        key={data}
-                        placeholder={`${translations("Enter the content for")} {{${data}}}`}
-                        {...form.getInputProps(`example.${index}`)}
-                      />
-                    ))}
+                    {form.values?.category !==
+                      WaTemplateCategory.AUTHENTICATION &&
+                      dynamicVariables?.map((data, index) => (
+                        <ContainedTextField
+                          key={data}
+                          placeholder={`${translations("Enter the content for")} {{${data}}}`}
+                          {...form.getInputProps(`example.${index}`)}
+                        />
+                      ))}
+
                     {form.getValues().templateType !==
                       TemplateType.PAYMENT_CONFIRMATION &&
                       form.getValues().templateType !==
                         TemplateType.CAROUSEL && (
                         <>
-                          <ContainedTextField
-                            label={
-                              <>
+                          {form.values?.category !==
+                          WaTemplateCategory.AUTHENTICATION ? (
+                            <ContainedTextField
+                              label={
+                                <>
+                                  <Text fz={14} fw={500}>
+                                    {translations("Footer (Optional)")}
+                                  </Text>
+                                  <Text fz={13}>
+                                    {translations(
+                                      "Footers are great to add any disclaimers or to add a thoughtful PS",
+                                    )}
+                                  </Text>
+                                </>
+                              }
+                              placeholder={translations("Footer")}
+                              {...form.getInputProps("footer")}
+                              rightSection={
+                                <LengthTracker
+                                  length={form?.values?.footer?.length}
+                                  maxValue={60}
+                                  atStart
+                                />
+                              }
+                            />
+                          ) : (
+                            <ContainedNumberInput
+                              label={
                                 <Text fz={14} fw={500}>
-                                  {translations("Footer (Optional)")}
+                                  {translations("Code Expiration (minutes)")}
                                 </Text>
-                                <Text fz={13}>
-                                  {translations(
-                                    "Footers are great to add any disclaimers or to add a thoughtful PS",
-                                  )}
-                                </Text>
-                              </>
-                            }
-                            placeholder={translations("Footer")}
-                            {...form.getInputProps("footer")}
-                            rightSection={
-                              <LengthTracker
-                                length={form?.values?.footer?.length}
-                                maxValue={60}
-                                atStart
-                              />
-                            }
-                          />
+                              }
+                              placeholder={translations("Expiration time")}
+                              min={1}
+                              max={90}
+                              {...form.getInputProps("code_expiration_minutes")}
+                            />
+                          )}
+
                           <ButtonSelection
                             handleMenuSelection={handleMenuSelection}
                             flowBtn={flowBtn}
@@ -929,6 +963,7 @@ export default function WhatsappTemplateById() {
                             spmBtn={spmBtn}
                             btnLen={form?.values?.buttons?.length}
                             disabled={isOrderCreate}
+                            category={form.values?.category as any}
                           />
                           {form.values?.buttons?.length > 0 && (
                             <>
@@ -1061,6 +1096,7 @@ export default function WhatsappTemplateById() {
                           {TextWithFormatting(
                             form.values?.body,
                             form.values?.example,
+                            form?.values?.category,
                           )}
                         </Text>
                         <Text
@@ -1122,7 +1158,11 @@ export default function WhatsappTemplateById() {
                                 component="pre"
                                 p={"xs"}
                               >
-                                {TextWithFormatting(card?.body, card?.example)}
+                                {TextWithFormatting(
+                                  card?.body,
+                                  card?.example,
+                                  form?.values?.category,
+                                )}
                               </Text>
                               {card?.buttons.map((data) => (
                                 <QuickReplyButton

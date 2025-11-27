@@ -20,6 +20,7 @@ import {
   useNotificationSettings,
 } from "@/backend/notification/notification.query";
 import RefreshButton from "@/components/Button/RefreshButton";
+import { Button } from "@/components/ui/button";
 
 import NotificationList from "./NotificationList";
 import NotificationSettings from "./NotificationSettings";
@@ -93,13 +94,22 @@ const NotificationBellIcon = (props) => {
         color="red"
         inline
         size={isLoadingCount ? 8 : 16}
+        className="mx-auto"
       >
-        <ActionIcon
-          variant="transparent"
+        <Button
+          size="icon-sm"
           style={{ color: "light-dark(black, white)" }}
+          onClick={open}
+          variant="secondary"
+          className="h-8 w-8"
         >
-          <IconBell onClick={open} {...props} />
-        </ActionIcon>
+          <IconBell
+            className="size-5"
+            strokeWidth={1.8}
+            onClick={open}
+            {...props}
+          />
+        </Button>
       </Indicator>
     </>
   );

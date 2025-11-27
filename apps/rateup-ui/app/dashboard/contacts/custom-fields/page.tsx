@@ -6,7 +6,7 @@ import { DataTable } from "@/components/Table/data-table";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 
 import { columns } from "../components/columns";
-import { DataTableToolbar } from "../components/data-table-toolbar";
+import { DataTableToolbar } from "./data-table-toolbar";
 
 const CustomFields = () => {
   return <CustomFieldsSettings />;

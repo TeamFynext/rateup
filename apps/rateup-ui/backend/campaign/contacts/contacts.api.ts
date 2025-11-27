@@ -123,6 +123,24 @@ export const deleteContactLabel = async (labelId: string) => {
   return res.data;
 };
 
+export const assignContactLabelsToMultipleContacts = async (data: {
+  labelIds: string[];
+  contactIds: string[];
+}) => {
+  let res = await axiosClient.put(`${CONTACT_BASE_URL}/labels/assign`, data);
+  return res.data;
+};
+
+export const updateLifecycleofMultipleContacts = async (data: {
+  lifecycleId;
+  contactIds: string[];
+}) => {
+  let res = await axiosClient.put(
+    `${CONTACT_BASE_URL}/lifecycle-stage-update/${data.lifecycleId}`,
+    { contactIds: data.contactIds },
+  );
+  return res.data;
+};
 export type CustomFieldData = {
   id: string;
   orgId: string;

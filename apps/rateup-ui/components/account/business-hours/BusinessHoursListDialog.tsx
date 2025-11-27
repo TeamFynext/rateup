@@ -157,7 +157,7 @@ export function BusinessHoursListDialog({
             <AlertDialogDescription>
               {t("Are you sure you want to delete")}{" "}
               <strong>"{itemToDelete?.name}"</strong>?{" "}
-              {t("This action cannot be undone.")}
+              {t("This action cannot be undone")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -368,6 +368,7 @@ declare global {
     status: UserAvailabilityStatus;
     hasWhatsAppSettings: boolean;
     onboardingCompleted?: boolean;
+    presenceMode: UserPresenceMode;
   };
 
   interface UserInfoQueryData {
@@ -654,6 +655,9 @@ declare global {
     type: string;
     tags: string[];
     contactType: string[];
+    team: {
+      name: string;
+    };
     _count: {
       contacts: number;
       LoyaltyCustomerMap: number;

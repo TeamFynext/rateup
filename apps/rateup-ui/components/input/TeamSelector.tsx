@@ -6,6 +6,13 @@ import { Card, Group, SelectProps, Skeleton, Text } from "@mantine/core";
 import { useTranslations } from "next-intl";
 
 import { useTeamsByUser } from "../../backend/team/team.query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { ContainedSelection } from "./ContainedInput/ContainedInput";
 
 interface TeamSelectorProps extends SelectProps {
@@ -21,6 +28,7 @@ export function TeamSelector({
   label = "",
   enableAll = false,
   enableDefaultValue = true,
+  className,
   ...props
 }: TeamSelectorProps) {
   // TODO: remove some nesting on results of the query?
@@ -70,6 +78,21 @@ export function TeamSelector({
       </Card>
     );
   }
+
+  return (
+    <Select value={value} onValueChange={onChange} defaultValue={label}>
+      <SelectTrigger className={`${className || ""}`}>
+        <SelectValue placeholder="Team" />
+      </SelectTrigger>
+      <SelectContent className="z-70">
+        {teamOptions.map((team) => (
+          <SelectItem key={team.value} value={team.value}>
+            {team.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
 
   return (
     <ContainedSelection
