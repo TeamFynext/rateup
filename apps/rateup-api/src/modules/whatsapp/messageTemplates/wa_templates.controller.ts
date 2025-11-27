@@ -570,6 +570,18 @@ export async function sendTemplateToUserCore(
                   },
                 ],
               });
+            } else if (button?.url?.includes("COPY_CODE")) {
+              components.push({
+                type: "button",
+                sub_type: button.type,
+                index: 0,
+                parameters: [
+                  {
+                    type: "text",
+                    text: components?.[0]?.parameters?.[0]?.text || "123",
+                  },
+                ],
+              });
             } else {
               components.push({
                 type: "button",
