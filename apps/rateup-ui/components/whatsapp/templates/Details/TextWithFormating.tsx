@@ -2,7 +2,7 @@ import React from "react";
 
 import { WaTemplateCategory } from "@/types/enums";
 
-export default function TextWithFormatting(text, examples, category) {
+export default function TextWithFormatting(text, examples, category?) {
   if (category === WaTemplateCategory.AUTHENTICATION) {
     return (
       <span>
