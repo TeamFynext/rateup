@@ -2438,5 +2438,16 @@
   "Send Template Message": "टेम्पलेट संदेश भेजें",
   "Select an approved template for messages sent after 24 hours of inactivity": "24 घंटे की निष्क्रियता के बाद भेजे गए संदेशों के लिए एक स्वीकृत टेम्पलेट चुनें",
   "Send Template": "टेम्पलेट भेजें",
-  "Sending": "भेजा जा रहा है"
+  "Sending": "भेजा जा रहा है",
+  "Send Message": "संदेश भेजें",
+  "Update contact information and preferences": "संपर्क जानकारी और प्राथमिकताएँ अपडेट करें",
+  "Enter full name": "पूरा नाम दर्ज करें",
+  "email@example.com": "email@example.com",
+  "Group": "समूह",
+  "Assignee": "जिम्मेदार व्यक्ति",
+  "notes": "नोट्स",
+  "contacts selected": "संपर्क चुने गए",
+  "Apply Labels to Contacts": "संपर्कों पर लेबल लागू करें",
+  "Apply Label to contacts to identify and distinguish customers": "ग्राहकों की पहचान और भेद करने के लिए संपर्कों पर लेबल लागू करें",
+  "Update Lifecycle Stage": "लाइफसाइकल चरण अपडेट करें"
 }

@@ -47,7 +47,7 @@ import { getFileUrlFromKey } from "../../../utils/file-upload/upload";
 import { RateupButtonPrimary } from "../../Button/RateupButtons";
 import { CampaignParticipantMenu } from "../../Campaign/CampaignParticipantCard";
 import { CampaignMenu, renderBadge } from "../../Card/CampaignCard";
-import { ContactGroupMenu } from "../../Card/ContactCard";
+import ContactGroupMenu from "../ContactGroupMenu";
 
 export const DETAIL_BTN = "detail_btn_link_123";
 
@@ -78,7 +78,7 @@ export const selectCheckBox: ColumnDef<any>[] = [
 
 const contactDetailsColumn: ColumnDef<any>[] = [
   {
-    header: () => "Name",
+    header: "Name",
     accessorKey: "name",
     cell: (info) => (
       <div className="flex gap-1 items-center">
@@ -90,6 +90,7 @@ const contactDetailsColumn: ColumnDef<any>[] = [
         <span>{info?.getValue() as string}</span>
       </div>
     ),
+    enableSorting: true,
   },
 ];
 
@@ -144,34 +145,41 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
     ...selectCheckBox,
     ...contactDetailsColumn,
     {
-      header: () => "Phone/IGSID",
+      header: "Phone/IGSID",
       accessorKey: "phone",
       cell: (info) => info.getValue(),
+      id: "phone",
+      enableSorting: false,
     },
     {
-      header: () => "Status",
+      header: "Status",
       accessorKey: "blockedOnWhatsApp",
       cell: (info) =>
         !info.getValue() ? (
           <Badge variant="secondary" className="bg-green-100 text-green-700">
-            <CircleCheck />
+            <Zap />
             Active
           </Badge>
         ) : (
           <Badge variant="secondary" className="bg-red-100 text-red-700">
-            <CircleX />
+            <Ban />
             Blocked
           </Badge>
         ),
+      id: "blockedOnWhatsApp",
+      enableSorting: false,
     },
     {
-      header: () => "Other",
+      header: "Other",
       accessorKey: "other",
       cell: (info) => info.getValue() ?? "-",
+      id: "other",
+      enableSorting: false,
     },
     {
-      header: () => "Label",
+      header: "Label",
       accessorKey: "ContactLabelMap",
+      id: "ContactLabelMap",
       cell: (info) => {
         const labels =
           info.row.original.ContactLabelMap?.map(
@@ -180,7 +188,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
         return labels.length > 0 ? (
           <Box style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
             {labels.map((label, index) => (
-              <Badge key={label?.id} variant="secondary" color="blue">
+              <Badge key={index} variant="secondary" color="blue">
                 {label}
               </Badge>
             ))}
@@ -189,12 +197,13 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
           "-"
         );
       },
+      enableSorting: false,
     },
     ...(contactTags?.length > 0
       ? contactTags
           ?.filter((tag) => tag?.visibility)
           ?.map((data) => ({
-            header: () => data?.name,
+            header: data?.name,
             accessorFn: (row) =>
               row?.customFields?.find((f) => f?.fieldId === data?.id)?.value,
             id: data?.name,
@@ -203,15 +212,17 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
             enableSorting: false,
           }))
       : []),
-
     {
-      header: () => "Source",
+      header: "Source",
       accessorKey: "source",
+      id: "source",
       cell: (info) => getSourceBadge((info?.getValue() as string) || "MANUAL"),
+      enableSorting: false,
     },
     {
-      header: () => "Consent",
+      header: "Consent",
       accessorKey: "consent",
+      id: "consent",
       cell: (info) =>
         info.getValue() ? (
           <Badge variant="secondary" className="bg-green-100 text-green-700">
@@ -235,20 +246,25 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
           );
         },
       },
+      enableSorting: false,
     },
     {
-      header: () => "Date Added",
+      header: "Date Added",
       accessorKey: "createdAt",
+      id: "createdAt",
       cell: (info) =>
         dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+      enableSorting: true,
     },
     {
-      header: () => "Last Contact",
+      header: "Last Contact",
       accessorKey: "lastMessageWaCreatedAt",
+      id: "lastMessageWaCreatedAt",
       cell: (info) =>
         info.getValue()
           ? dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A")
           : "",
+      enableSorting: true,
     },
   ];
 };

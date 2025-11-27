@@ -11,6 +11,7 @@ import {
   showSuccessToast,
 } from "../../../utils/notifications";
 import {
+  assignContactLabelsToMultipleContacts,
   createContact,
   createContactLabel,
   createCustomField,
@@ -29,6 +30,7 @@ import {
   importCSVContacts,
   updateContactLabel,
   updateCustomField,
+  updateLifecycleofMultipleContacts,
 } from "./contacts.api";
 
 export const useContacts = (
@@ -403,6 +405,26 @@ export const useDeleteContactLabelMutation = () => {
         "label-delete",
         <IconX />,
       );
+    },
+  });
+};
+
+export const useAssignContactLabelsToMultipleContacts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: assignContactLabelsToMultipleContacts,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+  });
+};
+
+export const useUpdateLifecycleofMultipleContacts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateLifecycleofMultipleContacts,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
   });
 };

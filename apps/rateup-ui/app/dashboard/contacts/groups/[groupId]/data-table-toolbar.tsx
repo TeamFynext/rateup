@@ -56,7 +56,7 @@ export function DataTableToolbar<TData, TValue>({
   }
   return (
     <div className="flex-shrink-0 p-3 bg-gradient-to-r from-gray-50 to-white border-b shadow-sm">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg">Group Members</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -65,64 +65,66 @@ export function DataTableToolbar<TData, TValue>({
               : "Search and manage your group members"}
           </p>
         </div>
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {selectedMembers.length > 0 ? (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRemoveMembers}
-                className="gap-2 h-8 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span className="text-sm">
-                  Remove ({selectedMembers.length})
-                </span>
-              </Button>
-              {removeContactsMutation.isPending && <Spinner />}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.setRowSelection({})}
-                className="gap-2 h-8"
-              >
-                <span className="text-sm">Clear</span>
-              </Button>
-              <Separator orientation="vertical" className="h-6 mx-1" />
-            </>
-          ) : null}
-          <Button
-            size="sm"
-            onClick={() => setIsOpenedAddModal(true)}
-            className="gap-2 h-8 bg-gradient-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700 shadow-md"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="text-sm">Add Members</span>
-          </Button>
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search by name or phone..."
-              value={filter.searchTerm}
-              onChange={(e) => setFilter({ searchTerm: e.currentTarget.value })}
-              className="pl-10 h-8 border-gray-200 focus:ring-2 focus:ring-rateup-blue/20 placeholder:text-sm"
-            />
-            {filter.searchTerm && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-                onClick={() => setFilter({ searchTerm: "" })}
-              >
-                <X className="w-3.5 h-3.5" />
-              </Button>
-            )}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {selectedMembers.length > 0 ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveMembers}
+                  className="gap-2 h-8 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-400"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="text-sm">
+                    Remove ({selectedMembers.length})
+                  </span>
+                </Button>
+                {removeContactsMutation.isPending && <Spinner />}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.setRowSelection({})}
+                  className="gap-2 h-8"
+                >
+                  <span className="text-sm">Clear</span>
+                </Button>
+                <Separator orientation="vertical" className="h-6 mx-1" />
+              </>
+            ) : null}
+            <Button
+              size="sm"
+              onClick={() => setIsOpenedAddModal(true)}
+              className="gap-2 h-8 bg-gradient-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700 shadow-md"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="text-sm">Add Members</span>
+            </Button>
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by name or phone..."
+                value={filter.searchTerm}
+                onChange={(e) =>
+                  setFilter({ searchTerm: e.currentTarget.value })
+                }
+                className="pl-10 h-8 border-gray-200 focus:ring-2 focus:ring-rateup-blue/20 placeholder:text-sm"
+              />
+              {filter.searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                  onClick={() => setFilter({ searchTerm: "" })}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
           </div>
+          <DataTableViewOptions table={table} />
         </div>
-        <DataTableViewOptions table={table} />
       </div>
       <AddContactToGroupDialog
         opened={isOpenedAddModal}

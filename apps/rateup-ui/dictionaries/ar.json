@@ -2434,5 +2434,16 @@
   "Send Template Message": "إرسال رسالة قالب",
   "Select an approved template for messages sent after 24 hours of inactivity": "اختر قالبًا معتمدًا للرسائل المرسلة بعد 24 ساعة من عدم النشاط",
   "Send Template": "إرسال القالب",
-  "Sending": "جارٍ الإرسال"
+  "Sending": "جارٍ الإرسال",
+  "Send Message": "إرسال رسالة",
+  "Update contact information and preferences": "تحديث معلومات وجهات الاتصال والتفضيلات",
+  "Enter full name": "أدخل الاسم الكامل",
+  "email@example.com": "email@example.com",
+  "Group": "مجموعة",
+  "Assignee": "المسؤول",
+  "notes": "ملاحظات",
+  "contacts selected": "جهات اتصال محددة",
+  "Apply Labels to Contacts": "تطبيق التسميات على جهات الاتصال",
+  "Apply Label to contacts to identify and distinguish customers": "تطبيق تسمية على جهات الاتصال للتعرّف على العملاء وتمييزهم",
+  "Update Lifecycle Stage": "تحديث مرحلة دورة الحياة"
 }

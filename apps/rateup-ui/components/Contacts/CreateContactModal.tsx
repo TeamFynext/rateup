@@ -7,16 +7,12 @@ import {
   Box,
   Checkbox,
   Group,
+  Select as MantineSelect,
   NavLink,
-  NumberInput,
   Paper,
   Radio,
-  Select,
-  SimpleGrid,
   Stack,
   Switch,
-  Text,
-  TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { getHotkeyHandler } from "@mantine/hooks";
@@ -59,16 +55,31 @@ import { ChevronDownIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
+import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 
 import PhoneInputWithCountry from "../input/PhoneInputWithCountry";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
+import { Card } from "../ui/card";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { MultiSelect } from "../ui/multi-select";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Skeleton } from "../ui/skeleton";
+import { Textarea } from "../ui/textarea";
+import AssignUser from "../whatsapp/inbox/chatdisplay/chatdisplayHeader/AssignUser";
 import styles from "./contact.module.css";
+import ContactForm from "./ContactForm";
+import ContactGroupSelector from "./ContactGroupSelector";
+import { LifecycleSelector } from "./LifecycleSelector";
 
 export interface ImportContact {
   name: string;
@@ -389,207 +400,48 @@ const CreateContactModal = ({
 };
 export default CreateContactModal;
 
-export const ContactForm = ({ form, customFields, type }) => {
-  const translations = useTranslations();
-  const { data: labels = [], isPending } = useContactLabels();
-
-  const getCustomFieldValue = (fieldId) => {
-    const customField = form
-      .getValues()
-      .customFields.find((cf) => cf.slug === fieldId);
-    return customField?.value || "";
-  };
-
-  const updateCustomField = (fieldId, value, customFieldData) => {
-    const currentCustomFields = form.getValues().customFields;
-    const existingIndex = currentCustomFields.findIndex(
-      (cf) => cf.fieldId === fieldId,
+export const UserSelector = ({
+  value,
+  onChange,
+  className,
+  allowMultiSelect = false,
+}) => {
+  const { data: users, isLoading } = useTeamsMembersOfOrg();
+  if (isLoading) {
+    return (
+      <Card className="h-full w-fit p-1 rounded-md">
+        <Skeleton className="h-7 w-[150px]" />
+      </Card>
     );
-
-    if (existingIndex >= 0) {
-      currentCustomFields[existingIndex].value = value;
-    } else {
-      currentCustomFields.push({
-        id: customFieldData?.id,
-        fieldId: fieldId,
-        value: value,
-      });
-    }
-
-    form.setFieldValue("customFields", [...currentCustomFields]);
-  };
-
-  const renderCustomField = (fieldId) => {
-    if (fieldId === "phone") return null;
-
-    const customField = customFields.find((field) => field.slug === fieldId);
-
-    if (!customField) return null;
-
-    const fieldValue = getCustomFieldValue(fieldId);
-    const fieldError = form.errors[`customFields.${fieldId}`];
-
-    const commonProps = {
-      label: customField.name,
-      placeholder: `Enter ${customField.name}`,
-      radius: "md",
-      size: "md",
-      key: `customField-${fieldId}`,
-      required: customField.required,
-      error: fieldError,
-    };
-
-    switch (customField.type) {
-      case "email":
-        return (
-          <TextInput
-            {...commonProps}
-            type="email"
-            defaultValue={fieldValue}
-            onChange={(event) => {
-              updateCustomField(
-                fieldId,
-                event.currentTarget.value,
-                customField,
-              );
-            }}
-          />
-        );
-
-      case "number":
-        return (
-          <NumberInput
-            {...commonProps}
-            defaultValue={fieldValue ? Number(fieldValue) : ""}
-            onChange={(value) => {
-              updateCustomField(fieldId, value?.toString() || "", customField);
-            }}
-          />
-        );
-
-      case "multivalue":
-        const options =
-          customField?.listValues?.map((option) => ({
-            value: option,
-            label: option,
-          })) || [];
-
-        return (
-          <Select
-            {...commonProps}
-            data={options}
-            defaultValue={fieldValue}
-            onChange={(value) => {
-              updateCustomField(fieldId, value || "", customField);
-            }}
-            searchable
-            clearable
-          />
-        );
-
-      case "text":
-      default:
-        return (
-          <TextInput
-            {...commonProps}
-            defaultValue={fieldValue}
-            onChange={(event) => {
-              updateCustomField(
-                fieldId,
-                event.currentTarget.value,
-                customField,
-              );
-            }}
-          />
-        );
-    }
-  };
-  if (isPending) return <div>Loading...</div>;
-
+  }
+  if (allowMultiSelect) {
+    return (
+      <MultiSelect
+        onValueChange={onChange}
+        options={users?.data?.map((user) => ({
+          value: user.id,
+          label: user.name,
+        }))}
+        className={`${className}`}
+        placeholder="Select staff"
+        defaultValue={value}
+      />
+    );
+  }
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <Field className="col-span-2">
-        <FieldLabel>{translations("Name")}</FieldLabel>
-        <Input
-          placeholder={translations("Enter name")}
-          required
-          {...form.getInputProps("name")}
-        />
-      </Field>
-      <Field>
-        <FieldLabel>{translations("Phone Number")}</FieldLabel>
-        <PhoneInputWithCountrySelect
-          defaultCountry="IN"
-          international
-          countryCallingCodeEditable={false}
-          placeholder={translations("Enter phone number")}
-          value={form.values.phone ?? ""}
-          {...form.getInputProps("phone")}
-          className="border-2 border-gray-200 focus:border-gray-700 focus-within:ring-2 focus-within:ring-gray-200 rounded-md px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-white [&>input]:border-0 [&>input]:focus:ring-0 [&>input]:focus:outline-none [&>input]:w-full"
-        />
-        {form?.errors?.phone && <FieldError>*{form?.errors?.phone}</FieldError>}
-      </Field>
-      <Field>
-        <FieldLabel>{translations("Labels")}</FieldLabel>
-        <MultiSelect
-          onValueChange={(values) => form.setFieldValue("labels", values)}
-          options={labels?.map((label) => ({
-            value: label.id,
-            label: label.name,
-          }))}
-          defaultValue={form.values.labels}
-        />
-      </Field>
-      {type === ContactGroupType.LOYALTY && (
-        <>
-          <Field>
-            <FieldLabel>{translations("email")}</FieldLabel>
-            <Input
-              placeholder={translations("Enter the email")}
-              type="email"
-              {...form.getInputProps("email")}
-            />
-          </Field>
-          <Field>
-            <FieldLabel>{translations("dob")}</FieldLabel>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  id="date"
-                  className="w-48 justify-between font-normal"
-                >
-                  {form.values.dob || "Select date"}
-                  <ChevronDownIcon />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-auto overflow-hidden p-0"
-                align="start"
-              >
-                <Calendar
-                  mode="single"
-                  selected={form.values.dob}
-                  captionLayout="dropdown"
-                  onSelect={(date) => {
-                    form.setFieldValue("dob", date);
-                  }}
-                />
-              </PopoverContent>
-            </Popover>
-          </Field>
-          <Field>
-            <FieldLabel>{translations("External ID")}</FieldLabel>
-            <Input
-              placeholder={translations("Enter External ID")}
-              {...form.getInputProps("external_id")}
-            />
-          </Field>
-        </>
-      )}
-      {form
-        .getValues()
-        .contactType?.map((fieldId) => renderCustomField(fieldId))}
-    </div>
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className={`${className}`}>
+        <span className="text-sm ">
+          <SelectValue placeholder="Select staff" />
+        </span>
+      </SelectTrigger>
+      <SelectContent>
+        {users?.data?.map((user) => (
+          <SelectItem key={user.id} value={user.id}>
+            {user.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };
