@@ -84,7 +84,7 @@ export function TeamSelector({
       <SelectTrigger className={`${className || ""}`}>
         <SelectValue placeholder="Team" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="z-70">
         {teamOptions.map((team) => (
           <SelectItem key={team.value} value={team.value}>
             {team.label}

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { DialogTitle } from "@radix-ui/react-dialog";
 import {
   Clock,
   Download,
@@ -111,7 +113,24 @@ const ChatselectPanelHeader = ({
               />
             </DialogTrigger>
             <DialogContent>
-              <p>Add Contact</p>
+              <DialogTitle>
+                <div className="flex flex-col items-start justify-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <div className="bg-green-500 w-10 h-10 rounded-full flex items-center justify-center">
+                      <IconBrandWhatsapp color="white" size={26} />
+                    </div>
+                    <h1 className="font-semibold text-lg">
+                      {translations("Add New WhatsApp contact")}
+                    </h1>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {translations(
+                      "Add a contact to start WhatsApp conversation Enter their details below to begin messaging",
+                    )}
+                    .
+                  </p>
+                </div>
+              </DialogTitle>
               <AddUnknownContactForm
                 phone=""
                 triggerType="action_button"
