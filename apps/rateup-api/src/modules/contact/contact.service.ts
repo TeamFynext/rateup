@@ -12,11 +12,16 @@ import Papa from "papaparse";
 import { getContactTag } from "../whatsapp/settings/wa_settings.service";
 import xlsx from "node-xlsx";
 import { MultipartFile } from "@fastify/multipart";
-import { addNewContactsToGroup } from "./contactGroup/contactGroup.service";
+import {
+  addExistingContactsToGroup,
+  addNewContactsToGroup,
+  removeContactsFromGroup,
+} from "./contactGroup/contactGroup.service";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { BATCH_SIZE } from "../../utils/constants/constants";
 import { WaMessageAssignStatus } from "../../types/enums";
 import {
+  assignWaMessageToUser,
   deleteAssignedUsersforContact,
   getAssignedUserForContact,
 } from "../whatsapp/inbox/message/wamessage.service";
@@ -29,6 +34,7 @@ import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../integrations/external/zapier/zapier.service";
+import { addExistingContactsToMultipleGroups } from "../external/v1/contact/internal-copy/contact/contactGroup/contactGroup.service";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {
@@ -36,7 +42,8 @@ export async function createContact(contact: ContactCore & { orgId: string }) {
   }
   const chatbot = await getChatbotDetails(contact.orgId);
   if (chatbot?.enableAllWaChat) contact.aiWaChat = true;
-  const { customFields, labels, ...rest } = contact;
+  const { customFields, labels, contactGroupIds, assignedUserIds, ...rest } =
+    contact;
   const user = await prisma.contact.create({
     data: rest,
   });
@@ -58,6 +65,21 @@ export async function createContact(contact: ContactCore & { orgId: string }) {
       })),
       skipDuplicates: true,
     });
+  }
+  if (contactGroupIds?.length) {
+    addExistingContactsToMultipleGroups([user.id], contactGroupIds, user.orgId);
+  }
+  if (assignedUserIds?.length) {
+    const assignees: { teamId: string; userId: string }[] =
+      await prisma.$queryRaw`
+       SELECT DISTINCT ON (tm."userId") tm."userId", tm."teamId"
+        FROM "TeamMember" tm
+        JOIN "Team" t ON tm."teamId"= t.id
+        WHERE tm."userId" = ANY(${assignedUserIds}::uuid[])
+          AND t."orgId" = ${user.orgId}::uuid
+        ORDER BY tm."userId", tm.id ASC;
+      `;
+    assignWaMessageToUser({ assignees, contactId: user.id }, user.orgId);
   }
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_CREATE,
@@ -116,6 +138,9 @@ export async function createMultipleContacts(
     orgId,
     aiWaChat,
     customFields: undefined,
+    labels: undefined,
+    contactGroupIds: undefined,
+    assignedUserIds: undefined,
   }));
 
   // Batch size for DB operations
@@ -126,6 +151,46 @@ export async function createMultipleContacts(
     const batchCreated = await prisma.contact.createManyAndReturn({
       skipDuplicates: true,
       data: batch,
+    });
+    batchCreated.forEach(async (contact) => {
+      const inputData = contacts.find((c) => contact.phone === c.phone);
+      if (inputData.labels && inputData.labels.length > 0) {
+        await prisma.contactLabelMap.createMany({
+          data: inputData.labels.map((labelId) => ({
+            contactId: contact.id,
+            labelId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+      if (inputData.contactGroupIds && inputData.contactGroupIds.length > 0) {
+        await prisma.contactGroupMap.createMany({
+          data: inputData.contactGroupIds.map((contactGroupId) => ({
+            contactId: contact.id,
+            contactGroupId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+      if (inputData.assignedUserIds && inputData.assignedUserIds.length > 0) {
+        const assignees: { teamId: string; userId: string }[] =
+          await prisma.$queryRaw`
+        SELECT DISTINCT ON (tm."userId") tm."userId", tm."teamId"
+          FROM "TeamMember" tm
+          JOIN "Team" t ON tm."teamId"= t.id
+          WHERE tm."userId" = ANY(${inputData.assignedUserIds}::uuid[])
+            AND t."orgId" = ${orgId}::uuid
+          ORDER BY tm."userId", tm.id ASC;
+        `;
+        await prisma.waInboxAssign.createMany({
+          data: assignees.map((a) => ({
+            contactId: contact.id,
+            assignedUserId: a.userId,
+            teamId: a.teamId,
+          })),
+          skipDuplicates: true,
+        });
+      }
     });
     createdContacts = createdContacts.concat(batchCreated);
   }
@@ -227,44 +292,70 @@ export async function getContactsByOrgId(
   if (filter) {
     const params = new URLSearchParams(filter);
     for (const [key, value] of params.entries()) {
-      if (["name", "phone", "source"].includes(key)) {
-        filterData.push({
-          [key]: {
-            contains: value,
-            mode: "insensitive",
-          },
-        });
-      } else if ("consent" === key) {
-        filterData.push({
-          [key]: {
-            equals: value?.toLocaleLowerCase() === "true",
-          },
-        });
-      } else if ("createdAt" === key) {
-        filterData.push({
-          [key]: {
-            equal: value,
-            mode: "insensitive",
-          },
-        });
-      } else if ("filterGroupName" === key) {
-        let splitValue = [...new Set(value?.split(","))];
-        filterData.push({
-          contactGroups: {
-            some: {
-              contactGroupId: {
-                in: splitValue,
+      switch (key) {
+        case "name":
+        case "phone":
+        case "email":
+        case "createdAt": {
+          filterData.push({
+            [key]: {
+              contains: value,
+              mode: "insensitive",
+            },
+          });
+          break;
+        }
+        case "consent": {
+          filterData.push({
+            [key]: {
+              equals: value?.toLocaleLowerCase() === "true",
+            },
+          });
+          break;
+        }
+
+        case "filterGroupName": {
+          let splitValue = [...new Set(value?.split(","))];
+          filterData.push({
+            contactGroups: {
+              some: {
+                contactGroupId: {
+                  in: splitValue,
+                },
               },
             },
-          },
-        });
-      } else {
-        filterData.push({
-          tags: {
-            path: [key],
-            string_contains: value,
-          },
-        });
+          });
+          break;
+        }
+        case "source":
+        case "lifecycleId": {
+          if (value !== "all") {
+            filterData.push({
+              [key]: value,
+            });
+          }
+          break;
+        }
+        case "labelId": {
+          if (!["all", "active", "blocked"].includes(value)) {
+            filterData.push({
+              ContactLabelMap: {
+                some: {
+                  labelId: value,
+                },
+              },
+            });
+          }
+          if (value === "active") {
+            filterData.push({
+              blockedOnWhatsApp: false,
+            });
+          } else if (value === "blocked") {
+            filterData.push({
+              blockedOnWhatsApp: true,
+            });
+          }
+        }
       }
     }
   }
@@ -334,6 +425,11 @@ export async function getContactsByOrgId(
             id: true,
           },
         },
+      },
+    },
+    waInboxAssign: {
+      select: {
+        assignedUserId: true,
       },
     },
   };
@@ -427,6 +523,7 @@ export async function updateContactById(
       skipDuplicates: true,
     });
   }
+
   const updatedContact = await prisma.contact.update({
     where: {
       id: contactId,
@@ -445,8 +542,86 @@ export async function updateContactById(
             closedBy: userId,
           }
         : {}),
+      notes: contact.notes,
+      lifecycleId: contact.lifecycleId,
+    },
+    include: {
+      waInboxAssign: {
+        select: {
+          assignedUserId: true,
+        },
+      },
+      contactGroups: {
+        select: {
+          contactGroupId: true,
+        },
+      },
     },
   });
+  if (contact.contactGroupIds) {
+    const removedGroups = updatedContact.contactGroups.filter(
+      (g) => !contact.contactGroupIds.includes(g.contactGroupId),
+    );
+    const newGroupIds = contact.contactGroupIds.filter(
+      (contactGroupId) =>
+        !updatedContact.contactGroups.some(
+          (c) => c.contactGroupId === contactGroupId,
+        ),
+    );
+    await prisma.$transaction(async (t) => {
+      await prisma.contactGroupMap.deleteMany({
+        where: {
+          contactId: updatedContact.id,
+          contactGroupId: {
+            in: removedGroups.map((g) => g.contactGroupId),
+          },
+        },
+      });
+      await addExistingContactsToMultipleGroups(
+        [updatedContact.id],
+        newGroupIds,
+        updatedContact.orgId,
+      );
+    });
+  }
+
+  if (contact.assignedUserIds) {
+    const removedAssignees = updatedContact.waInboxAssign.filter(
+      (g) => !contact.assignedUserIds.includes(g.assignedUserId),
+    );
+    const newAssignees = contact.assignedUserIds.filter(
+      (assignedUserId) =>
+        !updatedContact.waInboxAssign.some(
+          (c) => c.assignedUserId === assignedUserId,
+        ),
+    );
+    await prisma.$transaction(async (t) => {
+      if (removedAssignees.length)
+        await t.waInboxAssign.deleteMany({
+          where: {
+            contactId: updatedContact.id,
+            assignedUserId: {
+              in: removedAssignees.map((g) => g.assignedUserId),
+            },
+          },
+        });
+      if (newAssignees.length) {
+        const assignees: { teamId: string; userId: string }[] =
+          await t.$queryRaw`
+        SELECT DISTINCT ON (tm."userId") tm."userId", tm."teamId"
+          FROM "TeamMember" tm
+          JOIN "Team" t ON tm."teamId"= t.id
+          WHERE tm."userId" = ANY(${newAssignees}::uuid[])
+            AND t."orgId" = ${updatedContact.orgId}::uuid
+          ORDER BY tm."userId", tm.id ASC;
+        `;
+        await assignWaMessageToUser(
+          { assignees, contactId: updatedContact.id },
+          updatedContact.orgId,
+        );
+      }
+    });
+  }
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_UPDATED,
     { [ZapierTriggers.CONTACT_UPDATED]: updatedContact },
@@ -1008,4 +1183,17 @@ export async function deleteCustomField(orgId: string, fieldId: string) {
     },
   });
   return field;
+}
+
+export async function updateLifecycleStageofContacts(lifecycleId, contactIds) {
+  await prisma.contact.updateMany({
+    where: {
+      id: {
+        in: contactIds,
+      },
+    },
+    data: {
+      lifecycleId,
+    },
+  });
 }

@@ -72,21 +72,28 @@ enum ContactGroupType {
   LOYALTY
 }
 
+enum UserPresenceMode {
+  automatic
+  manual
+}
+
 model User {
-  id                  String                    @id @default(uuid()) @db.Uuid
-  createdAt           DateTime                  @default(now())
-  email               String                    @unique
-  name                String?
-  profilePhoto        String?
-  phone               String?
-  active              Boolean                   @default(true)
-  gender              Gender?
-  recipeName          UserRecipes?
-  isPaused            Boolean?                  @default(false)
-  pausedBy            String?
-  prefLanguage        String?                   @default("English")
-  deletedAt           DateTime?
-  lastLoggedInAt      DateTime?
+  id             String           @id @default(uuid()) @db.Uuid
+  createdAt      DateTime         @default(now())
+  email          String           @unique
+  name           String?
+  profilePhoto   String?
+  phone          String?
+  active         Boolean          @default(true)
+  gender         Gender?
+  recipeName     UserRecipes?
+  isPaused       Boolean?         @default(false)
+  pausedBy       String?
+  prefLanguage   String?          @default("English")
+  deletedAt      DateTime?
+  lastLoggedInAt DateTime?
+  presenceMode   UserPresenceMode @default(automatic)
+
   org                 Org[]
   orgMember           OrgMember[]
   teamMember          TeamMember[]
@@ -107,7 +114,7 @@ model User {
   // Add relation for WaAutomatedReply many-to-many
   UserAssignedCount   UserAssignedCount[]
   AuditLog            AuditLog[]
-  ClosedContacts             Contact[]
+  ClosedContacts      Contact[]
 }
 
 model Org {
@@ -539,9 +546,9 @@ model Contact {
   Lifecycle                    Lifecycle?                @relation(fields: [lifecycleId], references: [id])
   lifecycleId                  String?                   @db.Uuid
   customFields                 ContactCustomFieldValue[]
-  closedAt                    DateTime?
-  closedBy                    String?   @db.Uuid
-  closedByUser                User?           @relation(fields: [closedBy], references: [id])
+  closedAt                     DateTime?
+  closedBy                     String?                   @db.Uuid
+  closedByUser                 User?                     @relation(fields: [closedBy], references: [id])
 
   lastMessageBody             Json?
   lastMessageWaCreatedAt      DateTime?
@@ -550,6 +557,7 @@ model Contact {
   lastMessageSourceIdentifier String?
   lastSentMessageTimeStamp    DateTime?
   ContactLabelMap             ContactLabelMap[]
+  notes                       String?
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")

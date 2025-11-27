@@ -5,6 +5,7 @@ import {
   UpdateContactLabelSchema,
   ByLabelIdSchema,
   AssignLabelsToContactSchema,
+  AssignLabelsToContactsSchema,
 } from "./contactLabel.schema";
 import {
   createContactLabel,
@@ -14,6 +15,7 @@ import {
   deleteContactLabel,
   assignLabelsToContact,
   getContactsWithLabels,
+  assignLabelsToContacts,
 } from "./contactLabel.service";
 import { ByContactIdParams } from "../contact.schema";
 import { Prisma } from "../../../../generated/prisma/client";
@@ -160,6 +162,24 @@ export async function getContactsWithLabelsHandler(
 
     const contacts = await getContactsWithLabels(orgId, labelIds);
     reply.code(200).send(contacts);
+  } catch (error) {
+    log.error(error);
+    reply.code(500).send({ error: "Something went wrong" });
+  }
+}
+
+export async function assignLabelsToContactsHandler(
+  request: FastifyRequest<{
+    Params: ByContactIdParams;
+    Body: AssignLabelsToContactsSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const { labelIds, contactIds } = request.body;
+    const contact = await assignLabelsToContacts(contactIds, labelIds, orgId);
+    reply.code(200).send(contact);
   } catch (error) {
     log.error(error);
     reply.code(500).send({ error: "Something went wrong" });

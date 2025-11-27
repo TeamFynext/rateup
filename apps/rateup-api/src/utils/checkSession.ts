@@ -20,10 +20,10 @@ export const checkSession = async (
       reply.code(401).send({ message: "Not authorized" });
     }
     // TODO: verify the below works as expected
-    (request as any).userId! = userId;
+    (request as any).userId = userId;
     const { role, orgId, email } = session.getAccessTokenPayload();
     const user = { userId, role, orgId, email };
-    (request as any).user! = user;
+    (request as any).user = user;
     // Log audit info
     await auditLogHook(request, reply);
   } catch (err) {

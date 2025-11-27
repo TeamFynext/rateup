@@ -34,9 +34,11 @@ const waTemplateInput = {
         flow_id: z.string().optional(),
         flow_action: z.string().optional(),
         navigate_screen: z.string().optional(),
+        otp_type: z.literal("copy_code").optional(),
       }),
     )
     .optional(),
+  code_expiration_minutes: z.string().optional(),
   example: z.array(z.string()).optional(),
   defaultValues: z
     .object({

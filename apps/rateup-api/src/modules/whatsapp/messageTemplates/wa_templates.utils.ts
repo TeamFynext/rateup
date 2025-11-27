@@ -27,12 +27,24 @@ export function generateTemplate(
   // TODO: remove 'any' type
   let components: any = [];
   if (parseStringWithVariables(input.body)?.length > 0) {
+    if (input?.category === WaTemplateCategory.AUTHENTICATION) {
+      components.push({
+        type: WaTemplateComponentType.BODY,
+        add_security_recommendation: true,
+      });
+    } else {
+      components.push({
+        type: WaTemplateComponentType.BODY,
+        text: input.body,
+        example: {
+          body_text: [input.example],
+        },
+      });
+    }
+  } else if (input?.category === WaTemplateCategory.AUTHENTICATION) {
     components.push({
       type: WaTemplateComponentType.BODY,
-      text: input.body,
-      example: {
-        body_text: [input.example],
-      },
+      add_security_recommendation: true,
     });
   } else {
     components.push({
@@ -134,11 +146,25 @@ export function generateTemplate(
         format: WaTemplateSupportedFormats.PRODUCT,
       });
     }
-    if (input.footer)
-      components.push({
-        type: WaTemplateComponentType.FOOTER,
-        text: input.footer,
-      });
+    if (input.footer) {
+      if (input?.category === WaTemplateCategory.AUTHENTICATION) {
+        if (input?.code_expiration_minutes) {
+          components.push({
+            type: WaTemplateComponentType.FOOTER,
+            code_expiration_minutes: input?.code_expiration_minutes,
+          });
+        } else {
+          components.push({
+            type: WaTemplateComponentType.FOOTER,
+          });
+        }
+      } else {
+        components.push({
+          type: WaTemplateComponentType.FOOTER,
+          text: input.footer,
+        });
+      }
+    }
   }
 
   return {

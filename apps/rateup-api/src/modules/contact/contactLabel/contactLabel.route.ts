@@ -9,6 +9,7 @@ import {
   deleteContactLabelHandler,
   assignLabelsToContactHandler,
   getContactsWithLabelsHandler,
+  assignLabelsToContactsHandler,
 } from "./contactLabel.controller";
 
 export async function contactLabelRoutes(server: FastifyInstance) {
@@ -111,5 +112,16 @@ export async function contactLabelRoutes(server: FastifyInstance) {
       },
     },
     assignLabelsToContactHandler,
+  );
+
+  // Assign labels to a contact
+  server.put(
+    "/assign",
+    {
+      schema: {
+        body: $contactLabelRef("assignLabelsToContactsSchema"),
+      },
+    },
+    assignLabelsToContactsHandler,
   );
 }

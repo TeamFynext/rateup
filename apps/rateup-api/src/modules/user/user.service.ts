@@ -29,6 +29,7 @@ import {
   createHubSpotContact,
 } from "../../utils/hubspot";
 import prisma from "../../utils/prisma";
+import { UserPresenceMode } from "../../../generated/prisma/enums";
 
 async function createUser({
   id,
@@ -73,7 +74,7 @@ export async function createUserSignup({
           id,
           email,
           name,
-          phone,
+          phone: phoneNumber,
           recipeName,
           prefLanguage,
         },
@@ -231,6 +232,7 @@ export async function getLoggedUserInfo(
       isPaused: true,
       pausedBy: true,
       prefLanguage: true,
+      presenceMode: true,
       orgMember: {
         where: {
           orgId,
@@ -297,6 +299,7 @@ export async function getLoggedUserInfo(
     hasWhatsAppSettings: !!orgData?.WhatsappSettings?.[0]?.appId,
     onboardingCompleted: orgData?.onboardingCompleted,
     onboarding: orgData?.onboarding,
+    presenceMode: profile?.presenceMode,
   };
 }
 
@@ -617,7 +620,19 @@ export async function updateUserAvailablityStatus(
   userId: string,
   orgId: string,
   status: UserAvailabilityStatus,
+  presenceMode?: UserPresenceMode,
 ) {
+  if (presenceMode) {
+    await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        presenceMode,
+      },
+    });
+  }
+
   await prisma.orgMember.update({
     where: {
       userId_orgId: {

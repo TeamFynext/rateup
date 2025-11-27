@@ -9,6 +9,7 @@ import {
   createLifecycle,
   deleteLifecycleById,
   getLifecycles,
+  getLifeCyclesWithContactCount,
   reorderLabels,
   updateLifecycle,
 } from "./lifecycle.service";
@@ -26,6 +27,21 @@ export async function getLifecyclesHandler(
     reply.code(500).send({ message: "Error getting lifecycle " });
   }
 }
+
+export async function getLifecyclesWithContatsCountHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId } = request.user;
+    const res = await getLifeCyclesWithContactCount(orgId);
+    reply.code(200).send(res);
+  } catch (e) {
+    log.error(e);
+    reply.code(500).send({ message: "Error getting lifecycle " });
+  }
+}
+
 export async function createLifecycleHandler(
   request: FastifyRequest<{
     Body: LifecycleBodySchema;
