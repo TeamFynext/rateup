@@ -151,7 +151,7 @@ export function generateTemplate(
         if (input?.code_expiration_minutes) {
           components.push({
             type: WaTemplateComponentType.FOOTER,
-            code_expiration_minutes: input?.code_expiration_minutes,
+            code_expiration_minutes: Number(input?.code_expiration_minutes),
           });
         } else {
           components.push({
