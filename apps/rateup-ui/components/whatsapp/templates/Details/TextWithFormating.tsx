@@ -1,6 +1,15 @@
 import React from "react";
 
-export default function TextWithFormatting(text, examples) {
+import { WaTemplateCategory } from "@/types/enums";
+
+export default function TextWithFormatting(text, examples, category) {
+  if (category === WaTemplateCategory.AUTHENTICATION) {
+    return (
+      <span>
+        {`*{{1}}* is your OTP (One-Time Password). Do not share this code with anyone.`}{" "}
+      </span>
+    );
+  }
   // Function to parse the text and apply formatting
   const parseText = (text) => {
     return text
