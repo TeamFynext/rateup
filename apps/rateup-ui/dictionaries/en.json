@@ -2417,5 +2417,17 @@
   "Save Hours": "Save Hours",
   "Import contacts from a CSV file to add them to your contact list": "Import contacts from a CSV file to add them to your contact list.",
   "Fill the details and click save": "Fill the details and click save.",
-  "View Details": "View Details"
+  "View Details": "View Details",
+  "Send Message": "Send Message",
+  "Update contact information and preferences": "Update contact information and preferences",
+  "Enter full name": "Enter full name",
+  "email@example.com": "email@example.com",
+  "Group": "Group",
+  "Assignee": "Assignee",
+  "Lifecycle Stage": "Lifecycle Stage",
+  "notes": "notes",
+  "contacts selected": "contacts selected",
+  "Apply Labels to Contacts": "Apply Labels to Contacts",
+  "Apply Label to contacts to identify and distinguish customers": "Apply Label to contacts to identify and distinguish customers",
+  "Update Lifecycle Stage": "Update Lifecycle Stage"
 }

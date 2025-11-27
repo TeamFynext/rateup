@@ -4,6 +4,7 @@ import React, {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -121,7 +122,7 @@ const ContactGroup = () => {
   const column: ColumnDef<any>[] = [
     ...contactColumn(customFields ?? []),
     {
-      header: () => "Action",
+      header: "Action",
       accessorFn: (row) => row,
       enableSorting: false,
       enableColumnFilter: false,
@@ -173,7 +174,27 @@ const ContactGroup = () => {
       },
     });
   }
-
+  const defaultColumnVisibility = useMemo(
+    () =>
+      Object.keys(groupDetails ? groupDetails.contacts?.[0] : {}).reduce(
+        (visibility, key) => {
+          if (
+            ![
+              "name",
+              "phone",
+              "ContactLabelMap",
+              "source",
+              "createdAt",
+            ].includes(key)
+          ) {
+            visibility[key] = false;
+          }
+          return visibility;
+        },
+        {},
+      ),
+    [groupDetails],
+  );
   useEffect(() => {
     const filterKeys = Object.keys(filter).filter((f) => f !== "searchTerm");
     setSearchTerm(filter.searchTerm);
@@ -185,175 +206,158 @@ const ContactGroup = () => {
   if (groupByIderror) return <ErrorComponent refetch={refetchgroupById} />;
 
   return (
-    <div className="flex flex-col w-full gap-5 h-full">
-      <ContactImportErrorModal
-        body={createNewContactsFromCSV?.error?.response?.data}
-        isError={createNewContactsFromCSV.isError}
-      />
-      <div className="flex-shrink-0">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            router.push("/dashboard/contacts/groups");
-            router.refresh();
-          }}
-          className="gap-2 hover:bg-gray-100 h-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back to Groups</span>
-        </Button>
-      </div>
-      <div className="flex flex-col gap-4 h-full">
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-white to-blue-50/30 flex-shrink-0">
-          <div className="p-4">
-            <div className="flex items-center justify-between gap-8">
-              <div className="flex items-center gap-5 flex-1">
-                <div className="flex-shrink-0 group">
-                  <div
-                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 cursor-pointer overflow-hidden relative transition-all hover:ring-rateup-blue"
-                    onClick={() => setShowEditIconDialog(true)}
-                  >
-                    {groupDetails?.icon ? (
-                      <Image
-                        src={getFileUrlFromKey(groupDetails?.icon)}
-                        alt={groupDetails.name}
-                        className="object-cover"
-                        fill
-                      />
-                    ) : (
-                      <Folder />
-                    )}
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Upload className="w-5 h-5 text-white" />
-                    </div>
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br from-rateup-blue to-blue-600 flex items-center justify-center shadow-md ring-4 ring-white">
-                    <Users className="w-3.5 h-3.5 text-white" />
-                  </div>
-                </div>
-
-                {/* Group Info with Inline Editing */}
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      {isEditingName ? (
-                        <div className="flex items-center gap-2">
-                          <Input
-                            value={groupName}
-                            onChange={(e) => setGroupName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveGroupName();
-                              if (e.key === "Escape") handleCancelEditName();
-                            }}
-                            className="h-9 text-xl border-2 border-rateup-blue focus:ring-1 focus:ring-rateup-blue/20 w-64"
-                            autoFocus
-                          />
-                          <Button
-                            size="sm"
-                            onClick={handleSaveGroupName}
-                            className="h-9 w-9 p-0 bg-gradient-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700"
-                          >
-                            {editContactGroupMutation.isPending ? (
-                              <Spinner className="w-4 h-4" />
-                            ) : (
-                              <Check className="w-4 h-4" />
-                            )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleCancelEditName}
-                            className="h-9 w-9 p-0 hover:bg-gray-100"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          <h1 className="text-2xl bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                            {groupDetails?.name}
-                          </h1>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setGroupName(groupDetails?.name);
-                              setIsEditingName(true);
-                            }}
-                            className="h-8 w-8 p-0 hover:bg-blue-50 text-rateup-blue"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                    {!isEditingName && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Manage group members and settings
-                        </p>
-                        <span className="text-xs text-muted-foreground">
-                          Team:{" "}
-                        </span>
-                        <Badge className="mt-1">
-                          {" "}
-                          {groupDetails?.team?.name}
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Member Count - Centered in Group Name Section */}
-                  {!isEditingName && (
-                    <div className="flex flex-col items-center justify-center px-5 py-2 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex-shrink-0 ml-auto">
-                      <div className="text-3xl bg-gradient-to-r from-rateup-blue to-indigo-600 bg-clip-text text-transparent">
-                        {groupDetails?._count?.contacts || 0}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        Total Members
-                      </div>
-                    </div>
-                  )}
+    <div className="flex flex-col gap-3 h-full">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-white to-blue-50/30 flex-shrink-0 p-4">
+        <div className="flex items-center justify-between gap-8">
+          <div className="relative flex items-center gap-5 flex-1">
+            <div className="relative flex-shrink-0 group">
+              <div
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rateup-orange via-orange-400 to-rateup-orange/80 flex items-center justify-center shadow-lg ring-4 ring-orange-100 cursor-pointer overflow-hidden relative transition-all hover:ring-rateup-blue"
+                onClick={() => setShowEditIconDialog(true)}
+              >
+                {groupDetails?.icon ? (
+                  <Image
+                    src={getFileUrlFromKey(groupDetails?.icon)}
+                    alt={groupDetails.name}
+                    className="object-cover"
+                    fill
+                  />
+                ) : (
+                  <Folder />
+                )}
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Upload className="w-5 h-5 text-white" />
                 </div>
               </div>
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br from-rateup-blue to-blue-600 flex items-center justify-center shadow-md ring-4 ring-white">
+                <Users className="w-3.5 h-3.5 text-white" />
+              </div>
+            </div>
 
-              {/* Right: Delete Group Button */}
+            {/* Group Info with Inline Editing */}
+            <div className="flex items-center gap-3 flex-1">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  {isEditingName ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveGroupName();
+                          if (e.key === "Escape") handleCancelEditName();
+                        }}
+                        className="h-9 text-xl border-2 border-rateup-blue focus:ring-1 focus:ring-rateup-blue/20 w-64"
+                        autoFocus
+                      />
+                      <Button
+                        size="sm"
+                        onClick={handleSaveGroupName}
+                        className="h-9 w-9 p-0 bg-gradient-to-r from-rateup-blue to-blue-600 hover:from-rateup-blue/90 hover:to-blue-700"
+                      >
+                        {editContactGroupMutation.isPending ? (
+                          <Spinner className="w-4 h-4" />
+                        ) : (
+                          <Check className="w-4 h-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancelEditName}
+                        className="h-9 w-9 p-0 hover:bg-gray-100"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <h1 className="text-2xl bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                        {groupDetails?.name}
+                      </h1>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setGroupName(groupDetails?.name);
+                          setIsEditingName(true);
+                        }}
+                        className="h-8 w-8 p-0 hover:bg-blue-50 text-rateup-blue"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+                {!isEditingName && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Manage group members and settings
+                    </p>
+                    <span className="text-xs text-muted-foreground">
+                      Team:{" "}
+                    </span>
+                    <Badge className="mt-1"> {groupDetails?.team?.name}</Badge>
+                  </div>
+                )}
+              </div>
+
               {!isEditingName && (
-                <div className="flex-shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowDeleteDialog(true)}
-                    className="h-9 gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-400 transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    Delete Group
-                  </Button>
+                <div className="flex flex-col items-center justify-center px-5 py-2 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex-shrink-0 ml-auto">
+                  <div className="text-3xl bg-gradient-to-r from-rateup-blue to-indigo-600 bg-clip-text text-transparent">
+                    {groupDetails?._count?.contacts || 0}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    Total Members
+                  </div>
                 </div>
               )}
             </div>
           </div>
-        </Card>
-        {/* <Card className="flex-1 flex flex-col border-0 shadow-lg bg-red-500 overflow-hidden min-h-0 h-full mb-16"> */}
-        <div className="h-[30rem] border-0 shadow-lg bg-card">
-          <DataTable
-            columns={column}
-            data={groupDetails?.contacts || []}
-            manualPagination={{
-              onPaginationChange: setPagination,
-              sorting,
-              onSortingChange: setSorting,
-              rowCount: groupDetails?.totalCount,
-              pagination: pagination,
-            }}
-            isPending={loadingState}
-            DataTableToolbar={DataTableToolbar}
-          />
-        </div>
 
-        {/* </Card> */}
+          {!isEditingName && (
+            <div className="flex gap-2 flex-shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  router.push("/dashboard/contacts/groups");
+                  router.refresh();
+                }}
+                className="gap-2 hover:bg-gray-100 h-9"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm">Back to Groups</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDeleteDialog(true)}
+                className="h-9 gap-2 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-400 transition-all"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete Group
+              </Button>
+            </div>
+          )}
+        </div>
+      </Card>
+      <div className="flex-grow min-h-0 overflow-auto border-0 shadow-lg bg-card">
+        <DataTable
+          columns={column}
+          data={groupDetails?.contacts || []}
+          manualPagination={{
+            onPaginationChange: setPagination,
+            sorting,
+            onSortingChange: setSorting,
+            rowCount: groupDetails?.totalCount,
+            pagination: pagination,
+          }}
+          isPending={loadingState}
+          DataTableToolbar={DataTableToolbar}
+          defaultColumnVisibility={defaultColumnVisibility}
+        />
       </div>
       <ContactGroupIconEditDialog
         opened={showEditIconDialog}
@@ -368,6 +372,10 @@ const ContactGroup = () => {
         setOpened={setShowDeleteDialog}
         buttonColor="bg-red-500"
         onAction={handleDeleteGroup}
+      />
+      <ContactImportErrorModal
+        body={createNewContactsFromCSV?.error?.response?.data}
+        isError={createNewContactsFromCSV.isError}
       />
     </div>
   );

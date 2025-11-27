@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 
 import { useContacts } from "@/backend/campaign/contacts/contacts.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
-import { ContactMenu } from "@/components/Card/ContactCard";
+import ContactMenu from "@/components/Contacts/ContactMenu";
 import { CONTACT_SORT, contactColumn } from "@/components/Contacts/utils/utils";
 import { ContainedMultiSelect } from "@/components/input/ContainedInput/ContainedInput";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
 import { PAGE_SIZE } from "@/utils/constants";
 
+import { columns } from "./components/columns";
 import { DataTableToolbar } from "./components/data-table-toolbar";
 import { useContactTableStore } from "./store/contact-table-store";
 
@@ -76,6 +77,20 @@ export default function Contacts() {
     () => contactData?.users ?? [],
     [contactData?.users],
   );
+  const defaultColumnVisibility = useMemo(
+    () =>
+      Object.keys(contactMemoData?.[0] || {}).reduce((visibility, key) => {
+        if (
+          !["name", "phone", "ContactLabelMap", "source", "createdAt"].includes(
+            key,
+          )
+        ) {
+          visibility[key] = false;
+        }
+        return visibility;
+      }, {}),
+    [contactMemoData],
+  );
   if (isError) return <ErrorComponent refetch={refetchContacts} />;
 
   return (
@@ -92,6 +107,7 @@ export default function Contacts() {
           onSortingChange: setSorting,
         }}
         isPending={isLoadingContacts}
+        defaultColumnVisibility={defaultColumnVisibility}
       />
     </div>
   );
