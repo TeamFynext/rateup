@@ -76,7 +76,8 @@ export default function WaInboxTemplateDisplayModal({
         opened,
         onClose,
         noCustomHeader: false,
-        withCloseButton: false,
+        withCloseButton: true,
+        zIndex: 60,
       }}
     >
       {/* Header */}
@@ -96,19 +97,12 @@ export default function WaInboxTemplateDisplayModal({
             </p>
           </div>
         </div>
-
-        <button
-          onClick={onClose}
-          className="self-end sm:self-auto p-1 rounded-full hover:bg-gray-100"
-        >
-          <IconX />
-        </button>
       </div>
 
       {/* Top controls */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between mb-4">
-        <div className="flex items-center gap-2 border rounded-xl w-full p-1.5">
-          <IconSearch className="shrink-0" />
+        <div className="flex items-center gap-2 border rounded-xl max-w-xl w-full p-1.5">
+          <IconSearch className="shrink-0 text-gray-500" />
           <input
             placeholder="Search template"
             value={searchTerm}
@@ -116,14 +110,11 @@ export default function WaInboxTemplateDisplayModal({
             className="w-full outline-none text-sm"
           />
         </div>
-
-        <div className="w-full sm:w-auto">
-          <TeamSelector
-            value={teamId}
-            onChange={setTeamId}
-            className={classes["team-selector-contained-input-field"]}
-          />
-        </div>
+        <TeamSelector
+          value={teamId}
+          onChange={setTeamId}
+          className="sm:max-w-xs w-full"
+        />
       </div>
 
       {/* Main content: list + divider + preview */}
