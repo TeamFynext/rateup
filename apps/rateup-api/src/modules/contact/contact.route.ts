@@ -15,6 +15,7 @@ import {
   updateContactByIdHandler,
   updateContactLabelsByIdHandler,
   updateCustomFieldHandler,
+  updateLifecycleStageofContactsHandler,
 } from "./contact.controller";
 import { contactGroupRoutes } from "./contactGroup/contactGroup.route";
 import { contactGroupSchemas } from "./contactGroup/contactGroup.schema";
@@ -25,6 +26,7 @@ import fastifyMultipart from "@fastify/multipart";
 import { getVerifySubscriptionHandler } from "../../utils/auth";
 import { verifyLCustomerMaxCountRestrictionHandler } from "../loyalty/customer/customer.controller";
 import { SubscriptionFeaturePathName } from "../../types/enums";
+import { $LifecycleRef } from "../lifecycle/lifecycle.schema";
 
 export async function contactRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -168,4 +170,15 @@ export async function contactRoutes(server: FastifyInstance) {
     deleteCustomFieldHandler,
   );
   server.post("/export", exportContactHandler);
+
+  server.put(
+    "/lifecycle-stage-update/:lifecycleId",
+    {
+      schema: {
+        params: $LifecycleRef("lifecycleIdParamSchema"),
+        body: $contactRef("deleteManyContactSchema"),
+      },
+    },
+    updateLifecycleStageofContactsHandler,
+  );
 }

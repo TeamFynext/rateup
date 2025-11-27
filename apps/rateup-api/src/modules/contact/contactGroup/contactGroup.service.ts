@@ -256,6 +256,16 @@ export async function getContactsByContactGroupIdWithPagination(
           contact: {
             include: {
               customFields: true,
+              ContactLabelMap: {
+                select: {
+                  label: {
+                    select: {
+                      id: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },

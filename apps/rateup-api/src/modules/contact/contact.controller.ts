@@ -25,6 +25,7 @@ import {
   updateContactById,
   updateContactLabelsById,
   updateCustomField,
+  updateLifecycleStageofContacts,
 } from "./contact.service";
 import { ContactGroupType, Prisma } from "../../../generated/prisma/client";
 import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema";
@@ -46,6 +47,7 @@ import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service";
 import prisma from "../../utils/prisma";
 import Papa from "papaparse";
 import xlsx from "node-xlsx";
+import { LifecycleIdParamSchema } from "../lifecycle/lifecycle.schema";
 //used in zapier
 export async function createContactHandler(
   request: FastifyRequest<{
@@ -454,4 +456,25 @@ export async function exportContactHandler(
   }
 
   reply.code(400).send({ error: 'Invalid export type. Use "csv" or "excel".' });
+}
+
+export async function updateLifecycleStageofContactsHandler(
+  request: FastifyRequest<{
+    Body: deleteManyContactsInput;
+    Params: LifecycleIdParamSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await updateLifecycleStageofContacts(
+      request.params.lifecycleId,
+      request.body.contactIds,
+    );
+    reply.send(res);
+  } catch (e) {
+    log.error(e);
+    reply
+      .code(500)
+      .send({ message: "Error updating lifecycle stage of contacts" });
+  }
 }

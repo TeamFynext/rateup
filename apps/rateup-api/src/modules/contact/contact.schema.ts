@@ -21,6 +21,10 @@ export const contactCoreSchema = z.object({
   aiWaChat: z.boolean().optional(),
   igsId: z.string().optional(),
   labels: z.array(z.string().uuid()).optional(),
+  contactGroupIds: z.array(z.string()).optional(),
+  assignedUserIds: z.array(z.string()).optional(),
+  lifecycleId: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 export const createMultipleContactSchema = z.array(contactCoreSchema);
@@ -52,6 +56,10 @@ const updateContactSchema = z.object({
   lastSentMessageTimeStamp: z.string().optional(),
   lastMessageSourceIdentifier: z.string().optional(),
   labels: z.array(z.string().uuid()).optional(),
+  contactGroupIds: z.array(z.string()).optional(),
+  assignedUserIds: z.array(z.string()).optional(),
+  lifecycleId: z.string().optional(),
+  notes: z.string().optional(),
 });
 const updateContactLabelsSchema = z.object({
   lifecycleId: z.string(),
