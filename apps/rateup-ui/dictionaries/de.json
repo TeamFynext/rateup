@@ -2439,5 +2439,9 @@
   "Send Template Message": "Vorlagen-Nachricht senden",
   "Select an approved template for messages sent after 24 hours of inactivity": "Wählen Sie eine genehmigte Vorlage für Nachrichten, die nach 24 Stunden Inaktivität gesendet werden",
   "Send Template": "Vorlage senden",
-  "Sending": "Wird gesendet"
+  "Sending": "Wird gesendet",
+  "Select Board": "Tafel auswählen",
+  "Select List": "Liste auswählen",
+  "Enter ticket title": "Tickettitel eingeben",
+  "Provide detailed information about the ticket": "Geben Sie detaillierte Informationen zum Ticket an"
 }

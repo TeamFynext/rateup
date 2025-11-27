@@ -2434,5 +2434,9 @@
   "Send Template Message": "إرسال رسالة قالب",
   "Select an approved template for messages sent after 24 hours of inactivity": "اختر قالبًا معتمدًا للرسائل المرسلة بعد 24 ساعة من عدم النشاط",
   "Send Template": "إرسال القالب",
-  "Sending": "جارٍ الإرسال"
+  "Sending": "جارٍ الإرسال",
+  "Select Board": "اختر اللوحة",
+  "Select List": "اختر القائمة",
+  "Enter ticket title": "أدخل عنوان التذكرة",
+  "Provide detailed information about the ticket": "قدّم معلومات مفصلة حول التذكرة"
 }

@@ -2421,5 +2421,9 @@
   "Send Template Message": "Send Template Message",
   "Select an approved template for messages sent after 24 hours of inactivity": "Select an approved template for messages sent after 24 hours of inactivity",
   "Send Template": "Send Template",
-  "Sending": "Sending"
+  "Sending": "Sending",
+  "Select Board": "Select Board",
+  "Select List": "Select List",
+  "Enter ticket title": "Enter ticket title",
+  "Provide detailed information about the ticket": "Provide detailed information about the ticket"
 }
