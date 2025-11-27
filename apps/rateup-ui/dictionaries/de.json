@@ -2443,5 +2443,7 @@
   "Select Board": "Tafel auswählen",
   "Select List": "Liste auswählen",
   "Enter ticket title": "Tickettitel eingeben",
-  "Provide detailed information about the ticket": "Geben Sie detaillierte Informationen zum Ticket an"
+  "Provide detailed information about the ticket": "Geben Sie detaillierte Informationen zum Ticket an",
+  "Tags, Groups, Campaigns": "Tags, Gruppen, Kampagnen",
+  "Select category (type in to search)": "Kategorie auswählen (zum Suchen tippen)"
 }
