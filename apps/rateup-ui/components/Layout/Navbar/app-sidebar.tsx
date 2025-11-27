@@ -204,7 +204,9 @@ export default function AppSidebar({
                   tooltip={userData?.data?.orgName}
                 >
                   <Link href="#" aria-label="Organization">
-                    <Avatar className="bg-sidebar-primary text-sidebar-primary-foreground size-8 w-10 rounded-lg">
+                    <Avatar
+                      className={`${userData?.data.orgLogo ? "bg-background" : "bg-sidebar-primary"} text-sidebar-primary-foreground size-8 w-10 rounded-lg`}
+                    >
                       <AvatarImage
                         src={getFileUrlFromKey(userData?.data.orgLogo)}
                         alt={userData?.data?.orgName}
@@ -239,7 +241,7 @@ export default function AppSidebar({
                         onClick={(e) => {
                           const allow = handleRouteGuard(item.url);
                           setActiveItem(item);
-                          setOpen(true);
+                          setOpen(false);
                           if (!allow) {
                             e.preventDefault();
                           }
@@ -276,20 +278,25 @@ export default function AppSidebar({
         {/* Sidebar: Icon + Text (Collapsible) */}
         {activeItem?.items && activeItem.items.length > 0 && (
           <Sidebar
-            className="w-64 border-r relative hidden md:flex"
+            className="w-52 border-r relative hidden md:flex"
             collapsible="icon"
           >
-            <SidebarHeader className="gap-3.5 border-b p-3">
+            <SidebarHeader className="gap-3.5 border-b p-3 bg-background">
               <div className="flex w-full items-center justify-between">
                 <h2
-                  className={`text-foreground text-base font-medium ${isCollapsed ? "hidden" : ""}`}
+                  className={`flex text-foreground text-lg gap-1 font-bold ${isCollapsed ? "hidden" : ""}`}
                 >
+                  {activeItem.icon && (
+                    <activeItem.icon
+                      className={`${isCollapsed ? "hidden" : "ml-1 size-5 m-auto"}`}
+                    />
+                  )}
                   {activeItem?.title}
                 </h2>
-                <SidebarTrigger className="-ml-1" />
+                <SidebarTrigger />
               </div>
             </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className="bg-background">
               <SidebarGroup>
                 <SidebarGroupContent>
                   <SidebarMenu>
@@ -306,11 +313,16 @@ export default function AppSidebar({
                               <SidebarMenuButton
                                 tooltip={item.title}
                                 variant="light"
+                                onClick={() => {
+                                  setOpen(true);
+                                }}
                               >
                                 {item.icon && (
                                   <item.icon {...sidebarIconProps} />
                                 )}
-                                <span>{item.title}</span>
+                                <span className="font-medium">
+                                  {item.title}
+                                </span>
                                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                               </SidebarMenuButton>
                             </CollapsibleTrigger>
@@ -345,7 +357,9 @@ export default function AppSidebar({
                                             color="var(--foreground)"
                                           />
                                         )}
-                                        <span>{subItem.title}</span>
+                                        <span className="font-medium">
+                                          {subItem.title}
+                                        </span>
                                       </Link>
                                     </SidebarMenuSubButton>
                                   </SidebarMenuSubItem>
@@ -371,7 +385,7 @@ export default function AppSidebar({
                           >
                             <Link href={item.url || "#"}>
                               {item.icon && <item.icon {...sidebarIconProps} />}
-                              <span>{item.title}</span>
+                              <span className="font-medium">{item.title}</span>
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>

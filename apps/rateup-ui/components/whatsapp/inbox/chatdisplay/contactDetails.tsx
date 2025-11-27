@@ -13,8 +13,10 @@ import {
 import { useForm } from "@mantine/form";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import dayjs from "dayjs";
 import {
   Bot,
+  CalendarRangeIcon,
   ChevronRight,
   Clock,
   Copy,
@@ -321,7 +323,7 @@ export default function WaInboxContactDetails({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
         >
-          <h3 className="text-sm text-center flex-1">Edit Contact</h3>
+          <h3 className="text-sm text-center flex-1">{t("Edit Contact")}</h3>
           <div className="flex items-center gap-2">
             <TooltipProvider>
               <Tooltip>
@@ -336,7 +338,7 @@ export default function WaInboxContactDetails({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  <p>Cancel</p>
+                  <p>{t("Cancel")}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -378,7 +380,7 @@ export default function WaInboxContactDetails({
                 transition={{ delay: 0.15, duration: 0.2 }}
               >
                 <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2.5">
-                  Contact Information
+                  {t("Contact Information")}
                 </h4>
                 <div className="space-y-2">
                   {/* Name Field */}
@@ -452,7 +454,7 @@ export default function WaInboxContactDetails({
                 transition={{ delay: 0.3, duration: 0.2 }}
               >
                 <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2.5">
-                  Additional Details
+                  {t("Additional Details")}
                 </h4>
                 <div className="space-y-2">
                   {/* Lifecycle Field */}
@@ -591,7 +593,7 @@ export default function WaInboxContactDetails({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <p>Collapse Panel</p>
+                <p>{t("Collapse Panel")}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -604,15 +606,20 @@ export default function WaInboxContactDetails({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
       >
-        <div className="mx-auto mb-2.5 inline-block">
+        <div className="mx-auto mb-2.5 inline-block relative">
           <CreativeAvatar
             src={contact?.profilePic}
             size="xl"
             name={contact?.name || contact?.phone}
             platform={platform}
           />
+          <div className="bg-green-600 w-6 h-6 rounded-full flex items-center justify-center absolute bottom-0 right-0">
+            <IconBrandWhatsapp color="white" size={16} />
+          </div>
         </div>
-        <h3 className="mb-1 text-sm">{contact?.name || contact?.phone}</h3>
+        <h3 className="mb-1 text-base font-bold">
+          {contact?.name || contact?.phone}
+        </h3>
         <div className="flex items-center justify-center space-x-2 mb-2.5">
           {contact?.lifecycleName && (
             <Badge variant="outline" className={`text-[11px]`}>
@@ -632,7 +639,7 @@ export default function WaInboxContactDetails({
             transition={{ delay: 0.15, duration: 0.2 }}
           >
             <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2.5">
-              Contact Information
+              {t("Contact Information")}
             </h4>
             <div className="space-y-1.5">
               {contact?.phone && (
@@ -643,7 +650,9 @@ export default function WaInboxContactDetails({
                 >
                   <Phone className="w-3.5 h-3.5 text-muted-foreground mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-muted-foreground">Phone</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t("Phone")}
+                    </p>
                     <div className="flex items-center justify-between">
                       <p className="text-xs">{contact.phone}</p>
                       <Button
@@ -668,7 +677,9 @@ export default function WaInboxContactDetails({
                 >
                   <Mail className="w-3.5 h-3.5 text-muted-foreground mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-muted-foreground">Email</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t("Email")}
+                    </p>
                     <div className="flex items-center justify-between">
                       <p className="text-xs truncate">{contact.email}</p>
                       <Button
@@ -694,7 +705,7 @@ export default function WaInboxContactDetails({
                   <IconBrandWhatsapp className="w-3.5 h-3.5 text-muted-foreground mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] text-muted-foreground">
-                      Whatsapp Username
+                      {t("Whatsapp Username")}
                     </p>
                     <div className="flex items-center justify-between">
                       <p className="text-xs truncate">
@@ -735,7 +746,7 @@ export default function WaInboxContactDetails({
             transition={{ delay: 0.18, duration: 0.2 }}
           >
             <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2.5">
-              Customer Stats
+              {t("Customer Stats")}
             </h4>
             <motion.div
               className="flex items-center justify-between p-1.5 rounded-lg bg-muted/50"
@@ -772,6 +783,20 @@ export default function WaInboxContactDetails({
               </div>
               <span className="text-xs font-medium">
                 {contact?.source || t("Unknown")}
+              </span>
+            </motion.div>
+
+            <motion.div
+              className="flex items-center justify-between p-1.5 rounded-lg bg-muted/50"
+              whileHover={{ scale: 1.01, backgroundColor: "rgba(0,0,0,0.06)" }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-center space-x-1.5">
+                <CalendarRangeIcon className="w-3.5 h-3.5 text-blue-600" />
+                <span className="text-xs">{t("Customer Since")}</span>
+              </div>
+              <span className="text-xs font-medium">
+                {dayjs(contact?.createdAt).format("MMM YYYY")}
               </span>
             </motion.div>
 
@@ -829,7 +854,7 @@ export default function WaInboxContactDetails({
             {contact?.assignedUsers && contact.assignedUsers.length > 0 ? (
               <div className="space-y-3">
                 <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2.5">
-                  Assigned Users
+                  {t("Assigned Users")}
                 </h4>
                 <div className="space-y-2">
                   {contact.assignedUsers.map((user, index) => (
@@ -869,7 +894,9 @@ export default function WaInboxContactDetails({
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] text-muted-foreground">Labels</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {t("Labels")}
+                </p>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {contact.contactLabels.map((label) => (
                     <Badge
@@ -898,7 +925,7 @@ export default function WaInboxContactDetails({
             transition={{ delay: 0.24, duration: 0.2 }}
           >
             <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2.5">
-              Quick Actions
+              {t("Quick Actions")}
             </h4>
             <div className="space-y-1.5">
               <motion.div
