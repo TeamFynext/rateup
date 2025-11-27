@@ -159,3 +159,42 @@ export async function getContactsWithLabels(
 
   return contacts;
 }
+
+export async function assignLabelsToContacts(
+  contactIds: string[],
+  labelIds: string[],
+  orgId: string,
+) {
+  // First, remove all existing labels for this contacts
+  await prisma.contactLabelMap.deleteMany({
+    where: {
+      contactId: {
+        in: contactIds,
+      },
+    },
+  });
+
+  // Then add the new labels
+  if (labelIds.length > 0) {
+    // Verify that all labels belong to the organization
+    const validLabels = await prisma.contactLabel.findMany({
+      where: {
+        id: { in: labelIds },
+        orgId,
+      },
+      select: { id: true },
+    });
+
+    const validLabelIds = validLabels.map((label) => label.id);
+
+    if (validLabelIds.length > 0) {
+      const data = contactIds.flatMap((contactId) =>
+        validLabelIds.map((labelId) => ({ contactId, labelId })),
+      );
+      await prisma.contactLabelMap.createMany({
+        data,
+        skipDuplicates: true,
+      });
+    }
+  }
+}

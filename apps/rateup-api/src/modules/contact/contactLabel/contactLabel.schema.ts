@@ -21,6 +21,10 @@ const assignLabelsToContactSchema = z.object({
   labelIds: z.array(z.string().uuid()),
 });
 
+const assignLabelsToContactsSchema = assignLabelsToContactSchema.extend({
+  contactIds: z.array(z.string().uuid()),
+});
+
 const contactLabelResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -43,6 +47,7 @@ export const { schemas: contactLabelSchemas, $ref: $contactLabelRef } =
       byLabelIdSchema,
       assignLabelsToContactSchema,
       contactLabelResponseSchema,
+      assignLabelsToContactsSchema,
     },
     {
       $id: "contactLabelSchema",
@@ -54,4 +59,7 @@ export type UpdateContactLabelSchema = z.infer<typeof updateContactLabelSchema>;
 export type ByLabelIdSchema = z.infer<typeof byLabelIdSchema>;
 export type AssignLabelsToContactSchema = z.infer<
   typeof assignLabelsToContactSchema
+>;
+export type AssignLabelsToContactsSchema = z.infer<
+  typeof assignLabelsToContactsSchema
 >;
