@@ -201,7 +201,7 @@ const ContactForm = ({ form, customFields, type }) => {
       <Field className="flex flex-col gap-1">
         <FieldLabel>{translations("email")}</FieldLabel>
         <Input
-          placeholder={translations("email@example.com")}
+          placeholder={translations("email@example")}
           type="email"
           {...form.getInputProps("email")}
           className="bg-accent border-none placeholder:text-sm"

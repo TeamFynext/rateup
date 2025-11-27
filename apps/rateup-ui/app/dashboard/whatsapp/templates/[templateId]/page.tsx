@@ -1112,7 +1112,12 @@ export default function WhatsappTemplateById() {
                               : "none"
                           }
                         >
-                          {form.values.footer}
+                          {form.values?.category ===
+                          WaTemplateCategory.AUTHENTICATION
+                            ? form.values?.code_expiration_minutes
+                              ? `Expires in ${form.values?.code_expiration_minutes} minutes.`
+                              : ""
+                            : form.values.footer}
                         </Text>
                       </ResponseMessageContainer>
                       {form.values?.buttons

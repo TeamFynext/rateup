@@ -257,7 +257,7 @@ const ButtonInput = ({
           />
 
           <ContainedTextField
-            label={translations("Button text)")}
+            label={translations("Button text")}
             {...form.getInputProps(`buttons.${index}.text`)}
             placeholder="Copy code"
           />

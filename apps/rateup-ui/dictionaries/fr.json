@@ -2441,12 +2441,18 @@
   "Send Message": "Envoyer un message",
   "Update contact information and preferences": "Mettre à jour les informations et préférences de contact",
   "Enter full name": "Entrez le nom complet",
-  "email@example.com": "email@example.com",
+  "email@example": "email@example.com",
   "Group": "Groupe",
   "Assignee": "Assigné",
   "notes": "notes",
   "contacts selected": "contacts sélectionnés",
   "Apply Labels to Contacts": "Appliquer des étiquettes aux contacts",
   "Apply Label to contacts to identify and distinguish customers": "Appliquer une étiquette aux contacts pour identifier et différencier les clients",
-  "Update Lifecycle Stage": "Mettre à jour l'étape du cycle de vie"
+  "Update Lifecycle Stage": "Mettre à jour l'étape du cycle de vie",
+  "Code Expiration (minutes)": "Expiration du code (minutes)",
+  "Expiration time": "Heure d'expiration",
+  "Only authentication buttons are allowed for this template": "Seuls les boutons d'authentification sont autorisés pour ce modèle",
+  "Authentication Buttons": "Boutons d'authentification",
+  "Only one authentication button allowed": "Un seul bouton d'authentification est autorisé",
+  "OTP (One-Time Password)": "Mot de passe à usage unique (OTP)"
 }

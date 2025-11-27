@@ -2442,12 +2442,18 @@
   "Send Message": "संदेश भेजें",
   "Update contact information and preferences": "संपर्क जानकारी और प्राथमिकताएँ अपडेट करें",
   "Enter full name": "पूरा नाम दर्ज करें",
-  "email@example.com": "email@example.com",
+  "email@example": "email@example.com",
   "Group": "समूह",
   "Assignee": "जिम्मेदार व्यक्ति",
   "notes": "नोट्स",
   "contacts selected": "संपर्क चुने गए",
   "Apply Labels to Contacts": "संपर्कों पर लेबल लागू करें",
   "Apply Label to contacts to identify and distinguish customers": "ग्राहकों की पहचान और भेद करने के लिए संपर्कों पर लेबल लागू करें",
-  "Update Lifecycle Stage": "लाइफसाइकल चरण अपडेट करें"
+  "Update Lifecycle Stage": "लाइफसाइकल चरण अपडेट करें",
+  "Code Expiration (minutes)": "कोड समाप्ति (मिनटों में)",
+  "Expiration time": "समाप्ति समय",
+  "Only authentication buttons are allowed for this template": "इस टेम्पलेट के लिए केवल प्रमाणीकरण बटन की अनुमति है",
+  "Authentication Buttons": "प्रमाणीकरण बटन",
+  "Only one authentication button allowed": "केवल एक प्रमाणीकरण बटन की अनुमति है",
+  "OTP (One-Time Password)": "ओटीपी (एक बार का पासवर्ड)"
 }
