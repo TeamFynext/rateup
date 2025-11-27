@@ -125,7 +125,6 @@ const CreateOrEditContactModal = ({
       lastReceivedMessageTimeStamp: undefined,
     };
     if (initialValues) {
-      console.log("contactData", contactData);
       editContactMutation.mutate(
         { data: contactData, contactId: initialValues.id },
         {
