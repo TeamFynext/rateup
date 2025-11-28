@@ -34,9 +34,7 @@ export const columns: ColumnDef<CustomFieldData>[] = [
   },
   {
     accessorKey: "name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
-    ),
+    header: "Name",
     cell: ({ row }) => (
       <Text size="sm" style={{ width: 80 }}>
         {String(row.getValue("name"))}
@@ -46,18 +44,14 @@ export const columns: ColumnDef<CustomFieldData>[] = [
   },
   {
     accessorKey: "slug",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Field ID" />
-    ),
+    header: "Field ID",
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("slug"))}</Text>;
     },
   },
   {
     accessorKey: "description",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Description" />
-    ),
+    header: "Description",
     cell: ({ row }) => {
       const description: string = row.getValue("description");
       return (
@@ -69,27 +63,21 @@ export const columns: ColumnDef<CustomFieldData>[] = [
   },
   {
     accessorKey: "visibility",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Visibility" />
-    ),
+    header: "Visibility",
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("visibility"))}</Text>;
     },
   },
   {
     accessorKey: "type",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Type" />
-    ),
+    header: "Type",
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("type"))}</Text>;
     },
   },
   {
     accessorKey: "createdAt",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Created At" />
-    ),
+    header: "Created At",
     cell: ({ row }) => {
       return (
         <Text size="sm">

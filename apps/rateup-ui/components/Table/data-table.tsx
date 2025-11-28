@@ -38,6 +38,7 @@ import {
   TableRow,
 } from "../ui/table";
 import { DataTableColumnHeader } from "./data-table-column-header";
+import DataTableColumnSorting from "./data-table-column-sorting";
 import { DataTablePagination } from "./data-table-pagination";
 
 export interface DataTableProps<TData, TValue> {
@@ -61,7 +62,7 @@ export interface DataTableProps<TData, TValue> {
     ) => void;
   };
   isPending?: boolean;
-  defaultColumnVisibility?: VisibilityState;
+  defaultColumnKeys?: string[];
 }
 
 interface DataTableToolbarProps<TData, TValue> {
@@ -75,20 +76,17 @@ export function DataTable<TData, TValue>({
   onRowClick,
   isPending,
   manualPagination = undefined,
-  defaultColumnVisibility,
+  defaultColumnKeys = [],
 }: Readonly<DataTableProps<TData, TValue>>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>(defaultColumnVisibility || {});
+    React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const isManualPagination = manualPagination !== undefined;
 
-  useEffect(() => {
-    setColumnVisibility(defaultColumnVisibility);
-  }, [defaultColumnVisibility]);
   const table = useReactTable({
     data,
     columns,
@@ -146,6 +144,23 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getRowId: (row: any) => row.id,
   });
+  useEffect(() => {
+    const accessorKeys = table
+      .getAllLeafColumns()
+      .flatMap(
+        (col) => (col.columnDef as any).accessorKey ?? col.columnDef.id ?? [],
+      );
+    if (defaultColumnKeys.length && !Object.keys(columnVisibility).length) {
+      setColumnVisibility(
+        accessorKeys.reduce((visibility, key) => {
+          if (!defaultColumnKeys.includes(key)) {
+            visibility[key] = false;
+          }
+          return visibility;
+        }, {}),
+      );
+    }
+  }, [table, defaultColumnKeys]);
 
   return (
     <div className="flex flex-col h-full">
@@ -163,24 +178,13 @@ export function DataTable<TData, TValue>({
                       return (
                         <TableHead key={header.id} colSpan={header.colSpan}>
                           {header.isPlaceholder ? null : (
-                            <>
+                            <div className="flex items-center gap-2">
                               {flexRender(
                                 header.column.columnDef.header,
                                 header.getContext(),
                               )}
-                              {header.column.getCanSort() && (
-                                <Button
-                                  variant="ghost"
-                                  onClick={() =>
-                                    header.column.toggleSorting(
-                                      header.column.getIsSorted() === "asc",
-                                    )
-                                  }
-                                >
-                                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                                </Button>
-                              )}
-                            </>
+                              <DataTableColumnSorting column={header.column} />
+                            </div>
                           )}
                         </TableHead>
                       );
@@ -229,7 +233,8 @@ export function DataTable<TData, TValue>({
 }
 
 export const createSortableHeader = (title: string) => {
-  return ({ column }: { column: any }) => {
-    return <DataTableColumnHeader column={column} title={title} />;
-  };
+  return title;
+  // return ({ column }: { column: any }) => {
+  //   return <DataTableColumnHeader column={column} title={title} />;
+  // };
 };

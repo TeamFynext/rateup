@@ -112,7 +112,6 @@ const ContactGroup = () => {
     sorting?.[0],
     columnFilters,
   );
-  console.log("searchTerm", searchTerm);
   const deleteGroupMutation = useDeleteGroupMutation();
 
   useEffect(() => {
@@ -174,27 +173,15 @@ const ContactGroup = () => {
       },
     });
   }
-  const defaultColumnVisibility = useMemo(
-    () =>
-      Object.keys(groupDetails ? groupDetails.contacts?.[0] : {}).reduce(
-        (visibility, key) => {
-          if (
-            ![
-              "name",
-              "phone",
-              "ContactLabelMap",
-              "source",
-              "createdAt",
-            ].includes(key)
-          ) {
-            visibility[key] = false;
-          }
-          return visibility;
-        },
-        {},
-      ),
-    [groupDetails],
-  );
+
+  const defaultColumns = [
+    "name",
+    "phone",
+    "ContactLabelMap",
+    "source",
+    "createdAt",
+    "action",
+  ];
   useEffect(() => {
     const filterKeys = Object.keys(filter).filter((f) => f !== "searchTerm");
     setSearchTerm(filter.searchTerm);
@@ -356,7 +343,7 @@ const ContactGroup = () => {
           }}
           isPending={loadingState}
           DataTableToolbar={DataTableToolbar}
-          defaultColumnVisibility={defaultColumnVisibility}
+          defaultColumnKeys={defaultColumns}
         />
       </div>
       <ContactGroupIconEditDialog

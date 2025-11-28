@@ -77,20 +77,14 @@ export default function Contacts() {
     () => contactData?.users ?? [],
     [contactData?.users],
   );
-  const defaultColumnVisibility = useMemo(
-    () =>
-      Object.keys(contactMemoData?.[0] || {}).reduce((visibility, key) => {
-        if (
-          !["name", "phone", "ContactLabelMap", "source", "createdAt"].includes(
-            key,
-          )
-        ) {
-          visibility[key] = false;
-        }
-        return visibility;
-      }, {}),
-    [contactMemoData],
-  );
+  const defaultColumns = [
+    "name",
+    "phone",
+    "ContactLabelMap",
+    "source",
+    "createdAt",
+    "action",
+  ];
   if (isError) return <ErrorComponent refetch={refetchContacts} />;
 
   return (
@@ -107,7 +101,7 @@ export default function Contacts() {
           onSortingChange: setSorting,
         }}
         isPending={isLoadingContacts}
-        defaultColumnVisibility={defaultColumnVisibility}
+        defaultColumnKeys={defaultColumns}
       />
     </div>
   );
