@@ -62,7 +62,7 @@ export interface DataTableProps<TData, TValue> {
     ) => void;
   };
   isPending?: boolean;
-  defaultColumnKeys?: string[];
+  defaultColumnVisibility?: VisibilityState;
 }
 
 interface DataTableToolbarProps<TData, TValue> {
@@ -76,11 +76,11 @@ export function DataTable<TData, TValue>({
   onRowClick,
   isPending,
   manualPagination = undefined,
-  defaultColumnKeys = [],
+  defaultColumnVisibility = {},
 }: Readonly<DataTableProps<TData, TValue>>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>(defaultColumnVisibility);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
@@ -111,6 +111,7 @@ export function DataTable<TData, TValue>({
       pagination: {
         pageSize: 25,
       },
+      columnVisibility: defaultColumnVisibility,
     },
     enableRowSelection: true,
     manualPagination: isManualPagination,
@@ -144,23 +145,6 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getRowId: (row: any) => row.id,
   });
-  useEffect(() => {
-    const accessorKeys = table
-      .getAllLeafColumns()
-      .flatMap(
-        (col) => (col.columnDef as any).accessorKey ?? col.columnDef.id ?? [],
-      );
-    if (defaultColumnKeys.length && !Object.keys(columnVisibility).length) {
-      setColumnVisibility(
-        accessorKeys.reduce((visibility, key) => {
-          if (!defaultColumnKeys.includes(key)) {
-            visibility[key] = false;
-          }
-          return visibility;
-        }, {}),
-      );
-    }
-  }, [table, defaultColumnKeys]);
 
   return (
     <div className="flex flex-col h-full">
@@ -177,15 +161,12 @@ export function DataTable<TData, TValue>({
                     {headerGroup.headers.map((header) => {
                       return (
                         <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder ? null : (
-                            <div className="flex items-center gap-2">
-                              {flexRender(
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
                                 header.column.columnDef.header,
                                 header.getContext(),
                               )}
-                              <DataTableColumnSorting column={header.column} />
-                            </div>
-                          )}
                         </TableHead>
                       );
                     })}
@@ -233,8 +214,7 @@ export function DataTable<TData, TValue>({
 }
 
 export const createSortableHeader = (title: string) => {
-  return title;
-  // return ({ column }: { column: any }) => {
-  //   return <DataTableColumnHeader column={column} title={title} />;
-  // };
+  return ({ column }: { column: any }) => {
+    return <DataTableColumnHeader column={column} title={title} />;
+  };
 };

@@ -45,6 +45,7 @@ const Shopify = () => {
           {row.getValue("id")}
         </div>
       ),
+      meta: { title: "ID" },
     },
     {
       accessorKey: "shop",
@@ -55,6 +56,7 @@ const Shopify = () => {
           <span className="font-medium">{row.getValue("shop")}</span>
         </div>
       ),
+      meta: { title: "Shop" },
     },
     {
       accessorKey: "orgId",
@@ -67,6 +69,7 @@ const Shopify = () => {
           </div>
         </div>
       ),
+      meta: { title: "Organization ID" },
     },
     {
       accessorKey: "status",
@@ -75,6 +78,7 @@ const Shopify = () => {
         const status = row.getValue("status") as boolean;
         return <ActiveStatusBadge active={status} />;
       },
+      meta: { title: "Status" },
     },
     {
       accessorKey: "createdAt",
@@ -85,6 +89,7 @@ const Shopify = () => {
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
+      meta: { title: "Created At" },
     },
     {
       id: "actions",
@@ -103,6 +108,7 @@ const Shopify = () => {
           <Trash2 className="h-4 w-4" />
         </Button>
       ),
+      meta: { title: "Actions" },
     },
   ];
 

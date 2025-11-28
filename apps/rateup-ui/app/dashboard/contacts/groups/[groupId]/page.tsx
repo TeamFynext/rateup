@@ -132,6 +132,7 @@ const ContactGroup = () => {
           groupId={groupDetails?.id}
         />
       ),
+      meta: { title: "Action" },
     },
   ];
   const loadingState = isLoading || isRefetching;
@@ -174,14 +175,26 @@ const ContactGroup = () => {
     });
   }
 
-  const defaultColumns = [
-    "name",
-    "phone",
-    "ContactLabelMap",
-    "source",
-    "createdAt",
-    "action",
-  ];
+  const defaultColumnVisibility = useMemo(
+    () =>
+      column.reduce((visibility, key) => {
+        if (
+          ![
+            "select",
+            "name",
+            "phone",
+            "ContactLabelMap",
+            "source",
+            "createdAt",
+            "action",
+          ].includes((key as any)?.accessorKey || key?.id)
+        ) {
+          visibility[(key as any)?.accessorKey || key?.id] = false;
+        }
+        return visibility;
+      }, {}),
+    [column],
+  );
   useEffect(() => {
     const filterKeys = Object.keys(filter).filter((f) => f !== "searchTerm");
     setSearchTerm(filter.searchTerm);
@@ -343,7 +356,7 @@ const ContactGroup = () => {
           }}
           isPending={loadingState}
           DataTableToolbar={DataTableToolbar}
-          defaultColumnKeys={defaultColumns}
+          defaultColumnVisibility={defaultColumnVisibility}
         />
       </div>
       <ContactGroupIconEditDialog

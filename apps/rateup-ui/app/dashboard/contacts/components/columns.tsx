@@ -34,20 +34,26 @@ export const columns: ColumnDef<CustomFieldData>[] = [
   },
   {
     accessorKey: "name",
-    header: "Name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
     cell: ({ row }) => (
       <Text size="sm" style={{ width: 80 }}>
         {String(row.getValue("name"))}
       </Text>
     ),
     enableHiding: false,
+    meta: { title: "Name" },
   },
   {
     accessorKey: "slug",
-    header: "Field ID",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Field ID" />
+    ),
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("slug"))}</Text>;
     },
+    meta: { title: "Field ID" },
   },
   {
     accessorKey: "description",
@@ -60,24 +66,33 @@ export const columns: ColumnDef<CustomFieldData>[] = [
         </Text>
       );
     },
+    meta: { title: "Description" },
   },
   {
     accessorKey: "visibility",
-    header: "Visibility",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Visibility" />
+    ),
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("visibility"))}</Text>;
     },
+    meta: { title: "Visibility" },
   },
   {
     accessorKey: "type",
-    header: "Type",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Type" />
+    ),
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("type"))}</Text>;
     },
+    meta: { title: "Type" },
   },
   {
     accessorKey: "createdAt",
-    header: "Created At",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Created At" />
+    ),
     cell: ({ row }) => {
       return (
         <Text size="sm">
@@ -85,9 +100,11 @@ export const columns: ColumnDef<CustomFieldData>[] = [
         </Text>
       );
     },
+    meta: { title: "Created At" },
   },
   {
     id: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,
+    meta: { title: "Actions" },
   },
 ];

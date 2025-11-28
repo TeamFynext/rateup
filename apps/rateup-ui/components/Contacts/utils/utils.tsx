@@ -23,6 +23,7 @@ import { rankItem } from "@tanstack/match-sorter-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import {
+  ArrowUpDown,
   Ban,
   CircleCheck,
   CircleX,
@@ -38,6 +39,7 @@ import {
 import { CustomFieldData } from "@/backend/campaign/contacts/contacts.api";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getInitials } from "@/components/ui/utils";
 
@@ -54,6 +56,7 @@ export const DETAIL_BTN = "detail_btn_link_123";
 export const selectCheckBox: ColumnDef<any>[] = [
   {
     id: "select",
+    accessorKey: "select",
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -76,9 +79,23 @@ export const selectCheckBox: ColumnDef<any>[] = [
   },
 ];
 
+const HeaderWithSort = ({ column, title }) => {
+  return (
+    <div className="flex gap-2 items-center">
+      <span>{title}</span>
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        <ArrowUpDown className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
 const contactDetailsColumn: ColumnDef<any>[] = [
   {
-    header: "Name",
+    header: ({ column }) => <HeaderWithSort column={column} title={"Name"} />,
     accessorKey: "name",
     cell: (info) => (
       <div className="flex gap-1 items-center">
@@ -91,6 +108,7 @@ const contactDetailsColumn: ColumnDef<any>[] = [
       </div>
     ),
     enableSorting: true,
+    meta: { title: "Name" },
   },
 ];
 
@@ -150,6 +168,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
       cell: (info) => info.getValue(),
       id: "phone",
       enableSorting: false,
+      meta: { title: "Phone/IGSID" },
     },
     {
       header: "Status",
@@ -168,6 +187,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
         ),
       id: "blockedOnWhatsApp",
       enableSorting: false,
+      meta: { title: "Status" },
     },
     {
       header: "Other",
@@ -175,6 +195,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
       cell: (info) => info.getValue() ?? "-",
       id: "other",
       enableSorting: false,
+      meta: { title: "Other" },
     },
     {
       header: "Label",
@@ -198,6 +219,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
         );
       },
       enableSorting: false,
+      meta: { title: "Label" },
     },
     ...(contactTags?.length > 0
       ? contactTags
@@ -210,6 +232,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
             cell: (info) => info.getValue()?.toString() ?? "-",
 
             enableSorting: false,
+            meta: { title: data?.name },
           }))
       : []),
     {
@@ -218,6 +241,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
       id: "source",
       cell: (info) => getSourceBadge((info?.getValue() as string) || "MANUAL"),
       enableSorting: false,
+      meta: { title: "Source" },
     },
     {
       header: "Consent",
@@ -245,19 +269,25 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
             />
           );
         },
+        title: "Consent",
       },
       enableSorting: false,
     },
     {
-      header: "Date Added",
+      header: ({ column }) => (
+        <HeaderWithSort column={column} title={"Date Added"} />
+      ),
       accessorKey: "createdAt",
       id: "createdAt",
       cell: (info) =>
         dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
       enableSorting: true,
+      meta: { title: "Date Added" },
     },
     {
-      header: "Last Contact",
+      header: ({ column }) => (
+        <HeaderWithSort column={column} title={"Last Contact"} />
+      ),
       accessorKey: "lastMessageWaCreatedAt",
       id: "lastMessageWaCreatedAt",
       cell: (info) =>
@@ -265,6 +295,7 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
           ? dayjs(info.getValue() as string).format("DD-MM-YYYY hh:mm A")
           : "",
       enableSorting: true,
+      meta: { title: "Last Contact" },
     },
   ];
 };
