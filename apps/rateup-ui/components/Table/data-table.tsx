@@ -38,7 +38,6 @@ import {
   TableRow,
 } from "../ui/table";
 import { DataTableColumnHeader } from "./data-table-column-header";
-import DataTableColumnSorting from "./data-table-column-sorting";
 import { DataTablePagination } from "./data-table-pagination";
 
 export interface DataTableProps<TData, TValue> {
