@@ -94,13 +94,14 @@ const NotificationBellIcon = (props) => {
         color="red"
         inline
         size={isLoadingCount ? 8 : 16}
+        className="mx-auto"
       >
         <Button
           size="icon-sm"
           style={{ color: "light-dark(black, white)" }}
           onClick={open}
           variant="secondary"
-          className="h-9 w-9"
+          className="h-8 w-8"
         >
           <IconBell
             className="size-5"

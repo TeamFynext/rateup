@@ -1,4 +1,9 @@
-import { WHATSAPP_TEMPLATE_BROADCAST_TYPE } from "../constants";
+import { WaTemplateCategory } from "@/types/enums";
+
+import {
+  WHATSAPP_BUTTON_TYPE,
+  WHATSAPP_TEMPLATE_BROADCAST_TYPE,
+} from "../constants";
 
 export function parseTemplate(template) {
   let parsedTemplate: any = {};
@@ -36,18 +41,30 @@ export function parseTemplate(template) {
       parsedTemplate["example"] = component.example?.body_text?.[0] ?? [];
     } else if ("footer" === component.type.toLowerCase()) {
       parsedTemplate[component.type.toLowerCase()] = component.text;
+      parsedTemplate.code_expiration_minutes =
+        component?.code_expiration_minutes;
     } else if (component.type.toLowerCase() === "buttons") {
-      component.buttons.map((data) => {
-        if (data?.example && Array.isArray(data.example)) {
-          data.example = data.example?.[0];
-        }
-      });
+      if (template?.data?.category !== WaTemplateCategory.AUTHENTICATION) {
+        component.buttons.map((data) => {
+          if (data?.example && Array.isArray(data.example)) {
+            data.example = data.example?.[0];
+          }
+        });
+      }
       const parsedButtons = component.buttons.map((button) => {
-        const parsedButton = { ...button };
-        if (button.flow_id) {
-          parsedButton.flow_id = String(button?.flow_id);
+        if (template?.data?.category === WaTemplateCategory.AUTHENTICATION) {
+          return {
+            type: WHATSAPP_BUTTON_TYPE.OTP,
+            otp_type: "copy_code",
+            text: button?.text,
+          };
+        } else {
+          const parsedButton = { ...button };
+          if (button.flow_id) {
+            parsedButton.flow_id = String(button?.flow_id);
+          }
+          return parsedButton;
         }
-        return parsedButton;
       });
       parsedTemplate["buttons"] = parsedButtons;
     } else if (component.type.toLowerCase() === "carousel") {

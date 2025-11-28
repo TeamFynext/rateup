@@ -174,11 +174,8 @@ export function NavUser({ user }: Readonly<NavUserProps>) {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-9 md:p-0 rounded-lg"
-            >
-              <Avatar className="h-9 w-9 rounded-lg text-accent-foreground">
+            <SidebarMenuButton className="w-8 mx-auto data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-8 md:p-0 rounded-lg">
+              <Avatar className="h-8 w-8 rounded-lg text-accent-foreground">
                 <AvatarImage
                   src={getFileUrlFromKey(user.profilePhoto)}
                   alt={user.userName}

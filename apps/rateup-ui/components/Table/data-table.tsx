@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import { ScrollAreaAutosize } from "@mantine/core";
 import {
@@ -19,6 +19,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
 
 import { PAGE_SIZE } from "@/utils/constants";
 
@@ -26,6 +27,7 @@ import {
   TableBodySkeleton,
   TableHeadSkeleton,
 } from "../animation/skeleton/Table.Skeleton";
+import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import {
   Table,
@@ -59,6 +61,7 @@ export interface DataTableProps<TData, TValue> {
     ) => void;
   };
   isPending?: boolean;
+  defaultColumnVisibility?: VisibilityState;
 }
 
 interface DataTableToolbarProps<TData, TValue> {
@@ -72,15 +75,20 @@ export function DataTable<TData, TValue>({
   onRowClick,
   isPending,
   manualPagination = undefined,
+  defaultColumnVisibility,
 }: Readonly<DataTableProps<TData, TValue>>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>(defaultColumnVisibility || {});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const isManualPagination = manualPagination !== undefined;
+
+  useEffect(() => {
+    setColumnVisibility(defaultColumnVisibility);
+  }, [defaultColumnVisibility]);
   const table = useReactTable({
     data,
     columns,
@@ -154,12 +162,26 @@ export function DataTable<TData, TValue>({
                     {headerGroup.headers.map((header) => {
                       return (
                         <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
+                          {header.isPlaceholder ? null : (
+                            <>
+                              {flexRender(
                                 header.column.columnDef.header,
                                 header.getContext(),
                               )}
+                              {header.column.getCanSort() && (
+                                <Button
+                                  variant="ghost"
+                                  onClick={() =>
+                                    header.column.toggleSorting(
+                                      header.column.getIsSorted() === "asc",
+                                    )
+                                  }
+                                >
+                                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                                </Button>
+                              )}
+                            </>
+                          )}
                         </TableHead>
                       );
                     })}

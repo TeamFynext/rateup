@@ -1,51 +1,43 @@
 "use client";
 
-import { forwardRef, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { useForm } from "@mantine/form";
-import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import {
-  IconBrandInstagram,
-  IconBrandWhatsapp,
-  IconX,
-} from "@tabler/icons-react";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Table } from "@tanstack/react-table";
 import {
-  CheckCircle2,
+  Activity,
+  Ban,
   Download,
+  Folder,
   Globe,
   Info,
   Instagram,
   Layers,
-  MessageCircle,
   Plus,
   Search,
+  Tag,
   Trash,
   Upload,
-  UserPlus,
   UserRoundPlus,
+  Users,
+  Zap,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { isValidPhoneNumber } from "react-phone-number-input";
 import { toast } from "sonner";
 
-import { ContactGroupType } from "@/types/enums";
 import {
-  useCreateContactMutation,
+  useContactLabels,
   useDeleteManyContactsMutation,
-  useEditContactMutation,
   useExportContactsMutation,
   useImportCSVContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
+import AddToGroupModal from "@/components/Contacts/AddToGroupModal";
+import ApplyLifecycletoContactsModal from "@/components/Contacts/ApplyLifecycletoContactsModal";
 import ContactImportErrorModal from "@/components/Contacts/ContactImportErrorModal";
-import { ContactForm } from "@/components/Contacts/CreateContactModal";
-import { CustomFieldForm } from "@/components/Contacts/label-form";
+import CreateOrEditContactModal from "@/components/Contacts/CreatOrEditContactModal";
+import LabelContactModal from "@/components/Contacts/LabelContactModal";
 import { LifecycleSelector } from "@/components/Contacts/LifecycleSelector";
-import { getSourceBadge } from "@/components/Contacts/utils/utils";
-import PhoneInputWithCountry from "@/components/input/PhoneInputWithCountry";
 import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -76,11 +68,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import { getInitials } from "@/components/ui/utils";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
-import { importMethod } from "@/utils/enums";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import { useContactTableStore } from "../store/contact-table-store";
@@ -88,6 +79,89 @@ import { useContactTableStore } from "../store/contact-table-store";
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
+
+const SourceSelector = ({ value, onChange }) => {
+  const ContactSources = [
+    { label: "All Sources", value: "all", icon: Layers },
+    { label: "WhatsApp", value: "whatsapp", icon: IconBrandWhatsapp },
+    { label: "Instagram", value: "instagram", icon: Instagram },
+    { label: "Web", value: "WEBCHAT", icon: Globe },
+    { label: "Manual", value: "manual", icon: UserRoundPlus },
+    { label: "Imported", value: "csv import", icon: Upload },
+  ];
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-[150px] bg-gray-100 border-none">
+        <span className="text-sm ">
+          <SelectValue placeholder="Select Source" />
+        </span>
+      </SelectTrigger>
+      <SelectContent>
+        {ContactSources.map((source) => (
+          <SelectItem key={source.value} value={source.value}>
+            <div className="flex items-center">
+              <source.icon className="mr-2" />
+              <span>{source.label}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+};
+
+const LabelSelector = ({
+  value,
+  onChange,
+  includeAll = false,
+  includeStatus = false,
+}) => {
+  const { data: contactLabels = [], isPending: isPendingContactLabels } =
+    useContactLabels();
+  const labels = contactLabels.map((label) => ({
+    id: label.id,
+    name: label.name,
+    icon: Tag,
+  }));
+  if (includeAll) {
+    labels.unshift({
+      id: "all",
+      name: "All Contacts",
+      icon: Users,
+    });
+  }
+  if (includeStatus) {
+    labels.push(
+      ...[
+        { id: "active", name: "Active", icon: Zap },
+        { id: "blocked", name: "Blocked", icon: Ban },
+      ],
+    );
+  }
+  if (isPendingContactLabels) {
+    return <Skeleton className="h-4 w-[150px]" />;
+  }
+
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-[150px] bg-gray-100 border-none">
+        <span className="text-sm ">
+          <SelectValue placeholder="Select Label" />
+        </span>
+      </SelectTrigger>
+      <SelectContent>
+        {labels.map((label) => (
+          <SelectItem key={label.id} value={label.id}>
+            <div className="flex items-center">
+              <label.icon className="mr-2" />
+              <span>{label.name}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+};
 
 export function DataTableToolbar<TData>({
   table,
@@ -98,40 +172,11 @@ export function DataTableToolbar<TData>({
 
   const [isOpenedAddContactModal, setIsOpenedAddContactModal] = useState(false);
 
-  const SourceSelector = () => {
-    const ContactSources = [
-      { label: "All Sources", value: "all", icon: Layers },
-      { label: "WhatsApp", value: "whatsapp", icon: IconBrandWhatsapp },
-      { label: "Instagram", value: "instagram", icon: Instagram },
-      { label: "Web", value: "WEBCHAT", icon: Globe },
-      { label: "Manual", value: "manual", icon: UserRoundPlus },
-      { label: "Imported", value: "csv import", icon: Upload },
-    ];
-    return (
-      <Select
-        value={filter.source}
-        onValueChange={(value) => setFilter({ ...filter, source: value })}
-      >
-        <SelectTrigger className="w-[150px] bg-gray-100 border-none">
-          <span className="text-sm ">
-            <SelectValue placeholder="Select Source" />
-          </span>
-        </SelectTrigger>
-        <SelectContent>
-          {ContactSources.map((source) => (
-            <SelectItem key={source.value} value={source.value}>
-              <div className="flex items-center">
-                <source.icon className="mr-2" />
-                <span>{source.label}</span>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    );
-  };
-
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openAddtoGroupModal, setOpenAddtoGroupModal] = useState(false);
+  const [openLabelContactModal, setOpenLabelContactModal] = useState(false);
+  const [openLifecycleContactModal, setOpenLifecycleContactModal] =
+    useState(false);
   const [openImportModal, setOpenImportModal] = useState(false);
   const deleteManyContactsMutation = useDeleteManyContactsMutation();
   function handleDeleteContacts() {
@@ -139,7 +184,7 @@ export function DataTableToolbar<TData>({
     deleteManyContactsMutation?.mutate(selectedIds, {
       onSuccess: () => {
         toast.success("contact deleted successfully");
-        table.setRowSelection({});
+        resetRowSelection();
       },
       onError: () => {
         toast.error("Error deleting contacts");
@@ -147,92 +192,159 @@ export function DataTableToolbar<TData>({
     });
   }
 
+  function resetRowSelection() {
+    table.setRowSelection({});
+  }
+
   return (
     <Card className="p-2 mb-4">
-      <div className="flex justify-between gap-2">
-        <div className="flex items-center gap-2 flex-1">
-          {table.getState().rowSelection.length && (
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, phone, or email..."
+                className="pl-10 placeholder:text-sm bg-gray-100 border-none"
+                value={filter.searchTerm}
+                onChange={(event) =>
+                  setFilter({
+                    ...filter,
+                    searchTerm: event.currentTarget.value,
+                  })
+                }
+              />
+            </div>
+            <LifecycleSelector
+              all={true}
+              className="bg-gray-100 border-none w-48"
+              value={filter?.lifecycleId}
+              onChange={(value, lifecycleObj) =>
+                setFilter({ ...filter, lifecycleId: value })
+              }
+            />
+            <LabelSelector
+              value={filter.labelId}
+              onChange={(value) => setFilter({ ...filter, labelId: value })}
+              includeAll
+              includeStatus
+            />
+            <SourceSelector
+              value={filter.source}
+              onChange={(value) => setFilter({ ...filter, source: value })}
+            />
+            <Button
+              variant="default"
+              className="bg-rateup-blue"
+              size="sm"
+              onClick={() => setIsOpenedAddContactModal(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              <span className="font-medium text-sm">Add Contact</span>
+            </Button>
+            <ExportContacts table={table} />
+
             <Button
               variant="outline"
-              size="icon-sm"
+              size="sm"
+              onClick={() => setOpenImportModal(true)}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              <span className="font-medium text-sm">{t("Import")}</span>
+            </Button>
+            <ImportContactModal
+              opened={openImportModal}
+              setOpened={setOpenImportModal}
+            />
+            {isFiltered && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => table.resetColumnFilters()}
+              >
+                Reset
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <DataTableViewOptions table={table} />
+          </div>
+        </div>
+        {Object.keys(table.getState().rowSelection).length > 0 && (
+          <div className="flex items-center gap-2 justify-center">
+            <span className="text-sm text-muted-foreground">
+              {Object.keys(table.getState().rowSelection).length} Selected
+            </span>
+            <Button
+              variant="outline"
+              className="hover:text-blue-500"
+              onClick={() => setOpenAddtoGroupModal(true)}
+            >
+              <Folder />
+              <span>{t("Add to Group")}</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="hover:text-blue-500"
+              onClick={() => setOpenLabelContactModal(true)}
+            >
+              <Tag />
+              <span>{t("Apply Label")}</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="hover:text-blue-500"
+              onClick={() => setOpenLifecycleContactModal(true)}
+            >
+              <Activity />
+              <span>{t("Update Lifecycle Stage")}</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="hover:text-red-500"
               onClick={() => setOpenDeleteModal(true)}
             >
               <Trash />
+              <span>{t("Delete")}</span>
             </Button>
-          )}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, phone, or email..."
-              className="pl-10 placeholder:text-sm bg-gray-100 border-none"
-              value={filter.searchTerm}
-              onChange={(event) =>
-                setFilter({ ...filter, searchTerm: event.currentTarget.value })
-              }
-            />
           </div>
-          <LifecycleSelector
-            all={true}
-            className="bg-gray-100 border-none w-48"
-            value={filter?.lifecycleId}
-            onChange={(value, lifecycleObj) =>
-              setFilter({ ...filter, lifecycleId: value })
-            }
-          />
-          <SourceSelector />
-          <Button
-            variant="default"
-            className="bg-rateup-blue"
-            size="sm"
-            onClick={() => setIsOpenedAddContactModal(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            <span className="font-medium text-sm">Add Contact</span>
-          </Button>
-          <ExportContacts table={table} />
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setOpenImportModal(true)}
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            <span className="font-medium text-sm">{t("Import")}</span>
-          </Button>
-          <ImportContactModal
-            opened={openImportModal}
-            setOpened={setOpenImportModal}
-          />
-          {isFiltered && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => table.resetColumnFilters()}
-            >
-              Reset
-            </Button>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <DataTableViewOptions table={table} />
-        </div>
-        <CreateOrEditContactModal
-          opened={isOpenedAddContactModal}
-          setOpened={setIsOpenedAddContactModal}
-        />
-        <CustomAlertDialog
-          buttonTitle="Delete"
-          title={"Delete contact"}
-          description="Are you sure to delete these selected contacts?"
-          onAction={handleDeleteContacts}
-          buttonColor="bg-red-500"
-          onCancel={() => {
-            table.setRowSelection({});
-          }}
-          opened={openDeleteModal}
-          setOpened={setOpenDeleteModal}
-        />
+        )}
       </div>
+
+      <CreateOrEditContactModal
+        opened={isOpenedAddContactModal}
+        setOpened={setIsOpenedAddContactModal}
+      />
+      <CustomAlertDialog
+        buttonTitle="Delete"
+        title={"Delete contact"}
+        description="Are you sure to delete these selected contacts?"
+        onAction={handleDeleteContacts}
+        buttonColor="bg-red-500"
+        onCancel={() => {
+          table.setRowSelection({});
+        }}
+        opened={openDeleteModal}
+        setOpened={setOpenDeleteModal}
+      />
+      <AddToGroupModal
+        opened={openAddtoGroupModal}
+        selectedContactIds={Object.keys(table.getState().rowSelection)}
+        setOpened={setOpenAddtoGroupModal}
+        onSuccess={resetRowSelection}
+      />
+      <LabelContactModal
+        contactIds={Object.keys(table.getState().rowSelection)}
+        opened={openLabelContactModal}
+        setOpened={setOpenLabelContactModal}
+        onSuccess={resetRowSelection}
+      />
+      <ApplyLifecycletoContactsModal
+        contactIds={Object.keys(table.getState().rowSelection)}
+        opened={openLifecycleContactModal}
+        setOpened={setOpenLifecycleContactModal}
+        onSuccess={resetRowSelection}
+      />
     </Card>
   );
 }
@@ -275,233 +387,6 @@ const ExportContacts = ({ table }) => {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-};
-
-export const CreateOrEditContactModal = ({
-  opened,
-  setOpened,
-  initialValues,
-  type = ContactGroupType.NORMAL,
-  createNewContactMutation,
-}: {
-  opened: boolean;
-  setOpened: (value) => void;
-  initialValues?: any;
-  type?: ContactGroupType;
-  createNewContactMutation?: any;
-}) => {
-  const t = useTranslations();
-  const { customFields } = useCustomFieldsContext();
-  const createContactMutation = useCreateContactMutation();
-  const editContactMutation = useEditContactMutation();
-  const form = useForm({
-    initialValues: initialValues ?? {
-      name: "",
-      phone: "",
-      email: "",
-      dob: null,
-      source: importMethod.MANUAL,
-      contactType: customFields?.map((field) => field.slug) || [],
-      countryCode: "91",
-      customFields: [],
-      updateExisting: false,
-      external_id: "",
-      labels: [],
-    },
-    validate: {
-      phone: (value, values) => {
-        if (values.source == importMethod.MANUAL)
-          return !value
-            ? t("Phone Number cannot be blank")
-            : !isValidPhoneNumber(value)
-              ? t("Invalid phone number")
-              : null;
-      },
-      name: (value, values) =>
-        values.source == importMethod.MANUAL &&
-        (value.length ? null : t("Name cannot be blank")),
-      customFields: {
-        "*": (value, values, path) => {
-          const fieldId = path.split(".")[1];
-          const customField = customFields.find(
-            (field) => field.slug === fieldId,
-          );
-
-          if (!customField) return null;
-
-          if (value && customField.type === "email") {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) {
-              return t("Invalid email format");
-            }
-          }
-
-          if (value && customField.type === "number") {
-            if (isNaN(Number(value))) {
-              return t("Must be a valid number");
-            }
-          }
-
-          return null;
-        },
-      },
-    },
-  });
-  const handleSubmit = async () => {
-    const validation = form.validate();
-    if (validation.hasErrors) {
-      return;
-    }
-    let contactData = {
-      ...form.getValues(),
-      dob: form.getValues()?.dob
-        ? new Date(form.getValues().dob).toISOString()
-        : null,
-      external_id: form.getValues()?.external_id || undefined,
-      phone: form.getValues()?.phone?.replace(/^\+/, "") || "",
-      source:
-        type === ContactGroupType.LOYALTY
-          ? ContactGroupType.LOYALTY
-          : form.getValues().source,
-      lastReceivedMessageTimeStamp: undefined,
-    };
-    if (initialValues) {
-      editContactMutation.mutate(
-        { data: contactData, contactId: initialValues.id },
-        {
-          onSuccess: () => {
-            setOpened(false);
-            form.reset();
-            toast.success("contact updated successfully");
-          },
-          onError: () => {
-            toast.error("Error in updating contact");
-          },
-        },
-      );
-    } else {
-      if (createNewContactMutation) {
-        createNewContactMutation.mutate([contactData], {
-          onSuccess: () => {
-            setOpened(false);
-            form.reset();
-            toast.success("contact added successfully");
-          },
-        });
-      } else {
-        createContactMutation.mutate(contactData, {
-          onSuccess: () => {
-            setOpened(false);
-            form.reset();
-            toast.success("contact added successfully");
-          },
-          onError: () => {
-            toast.error("Error in adding contact");
-          },
-        });
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (initialValues) {
-      form.setValues(initialValues);
-      form.setFieldValue("phone", "+" + initialValues.phone);
-    }
-  }, [initialValues]);
-  useEffect(() => {
-    form.setInitialValues({
-      ...form.values,
-      contactType: customFields?.map((field) => field.slug) || [],
-    });
-    form.setFieldValue(
-      "contactType",
-      customFields?.map((field) => field.slug) || [],
-    );
-  }, [customFields]);
-  return (
-    <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent className="min-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {!initialValues && (
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rateup-blue to-blue-600 flex items-center justify-center">
-                <UserPlus className="w-4 h-4 text-white" />
-              </div>
-            )}
-            {initialValues ? t("Edit Contact") : t("Add Contact")}
-          </DialogTitle>
-          <DialogDescription>
-            {initialValues
-              ? t("Update contact information and preferences")
-              : t("Fill the details and click save")}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          {initialValues && (
-            <div className="flex items-center gap-3 pb-3 border-b">
-              <Avatar className="w-16 h-16">
-                <AvatarImage src={initialValues.profilePic} />
-                <AvatarFallback className="bg-gradient-to-br from-rateup-blue to-blue-600 text-white">
-                  {getInitials(initialValues.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="font-medium">{initialValues.name}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  {getSourceBadge(initialValues.source)}
-                </div>
-              </div>
-            </div>
-          )}
-          {customFields?.length > 0 && (
-            <div className="border flex self-end gap-1 p-1 w-fit">
-              {customFields.map((field) => (
-                <div className="flex items-center gap-1 rounded-lg p-1 w-fit px-2">
-                  <Checkbox
-                    checked={form.values.contactType?.includes(field?.slug)}
-                    id={field.slug}
-                    className="rounded-xl"
-                    onCheckedChange={(checked) => {
-                      form.setFieldValue(
-                        "contactType",
-                        checked
-                          ? [...form.values.contactType, field.slug]
-                          : form.values.contactType.filter(
-                              (slug) => field.slug !== slug,
-                            ),
-                      );
-                    }}
-                  />
-                  <Label htmlFor={field.slug} className="text-sm font-normal">
-                    {field.name}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          )}
-          <ContactForm form={form} customFields={customFields} type={type} />
-          <DialogFooter>
-            <DialogClose>
-              <Button variant="secondary" onClick={() => form.reset()}>
-                <span className="text-sm font-normal">{t("Cancel")}</span>
-              </Button>
-            </DialogClose>
-            <Button onClick={handleSubmit}>
-              {createContactMutation.isPending ||
-              createNewContactMutation?.isPending ||
-              editContactMutation.isPending ? (
-                <Spinner />
-              ) : (
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-              )}
-              <span className="text-sm font-normal">{t("Save")}</span>
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
-import { Table } from "@tanstack/react-table";
+import { flexRender, Table } from "@tanstack/react-table";
 import { Settings2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,9 @@ export function DataTableViewOptions<TData>({
                 checked={column.getIsVisible()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                {column.id}
+                {typeof column.columnDef.header === "string"
+                  ? column.columnDef.header
+                  : ""}
               </DropdownMenuCheckboxItem>
             );
           })}

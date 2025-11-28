@@ -5,6 +5,7 @@ type ContactTableFilter = {
   searchTerm: string;
   lifecycleId: string;
   source: string;
+  labelId: string;
 };
 export const useContactTableStore = create<{
   filter: ContactTableFilter;
@@ -17,6 +18,7 @@ export const useContactTableStore = create<{
       searchTerm: "",
       lifecycleId: "all",
       source: "all",
+      labelId: "all",
     },
     selectedContact: null,
     setFilter: (filter: ContactTableFilter) => {

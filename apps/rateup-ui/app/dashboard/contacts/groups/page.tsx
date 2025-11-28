@@ -150,6 +150,7 @@ const GroupPage = () => {
                 group={group}
                 handleEdit={handleEditGroup}
                 handleDelete={handleDeleteGroup}
+                key={group?.id}
               />
             );
           })}
