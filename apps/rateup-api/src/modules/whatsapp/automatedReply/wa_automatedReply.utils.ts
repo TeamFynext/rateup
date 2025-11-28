@@ -79,10 +79,10 @@ export type automationProps = {
   sendOnceIn24Hours: boolean;
 };
 // Helper to check whole word match
-function includesWholeWord(text: string, word: string, caseSensitive: boolean) {
+function includesWholePhrase(text, phrase, caseSensitive) {
   const flags = caseSensitive ? "g" : "gi";
-  const escapedWord = word.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-  const regex = new RegExp(`\\b${escapedWord}\\b`, flags);
+  const escaped = phrase.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+  const regex = new RegExp(escaped, flags);
   return regex.test(text);
 }
 
@@ -126,7 +126,7 @@ export async function validateAutomationMatchCondition(
 
     const caseSensitive = !!matchData.caseSensitive;
     messageMatches = commands[comparator]((keyword) =>
-      includesWholeWord(message, keyword, caseSensitive),
+      includesWholePhrase(message, keyword, caseSensitive),
     );
   } else {
     throw new Error(`WaAutomation not implemented for: ${matchType}`);
@@ -234,7 +234,7 @@ export function generateOrderReferenceId() {
   referenceId = referenceId.substring(0, 32);
 
   // Replace invalid characters with allowed ones
-  referenceId = referenceId.replace(/[^a-zA-Z0-9_.-]/g, "");
+  referenceId = referenceId.replaceAll(/[^a-zA-Z0-9_.-]/g, "");
 
   return referenceId;
 }
@@ -413,18 +413,18 @@ async function validateContactFilters(
       const fieldValue = customFieldsMap.get(fieldSlug);
 
       // Check custom fields first
-      if (fieldValue && fieldValue.trim()) continue;
+      if (fieldValue?.trim()) continue;
 
       // Check built-in fields
       switch (fieldSlug.toLowerCase()) {
         case "email":
-          if (contact.email && contact.email.trim()) continue;
+          if (contact?.email?.trim()) continue;
           break;
         case "name":
-          if (contact.name && contact.name.trim()) continue;
+          if (contact?.name?.trim()) continue;
           break;
         case "phone":
-          if (contact.phone && contact.phone.trim()) continue;
+          if (contact?.phone?.trim()) continue;
           break;
         default:
           // Field doesn't have a value
