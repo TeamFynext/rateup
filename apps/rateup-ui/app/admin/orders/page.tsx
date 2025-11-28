@@ -65,6 +65,7 @@ const Orders = () => {
           {row.getValue("id")}
         </div>
       ),
+      meta: { title: "Razorpay Order ID" },
     },
     {
       accessorKey: "name",
@@ -75,6 +76,7 @@ const Orders = () => {
           <span className="font-medium">{row.getValue("name")}</span>
         </div>
       ),
+      meta: { title: "Name" },
     },
     {
       accessorKey: "orgname",
@@ -91,6 +93,7 @@ const Orders = () => {
           </div>
         );
       },
+      meta: { title: "Organization Name" },
     },
     {
       accessorKey: "subId",
@@ -103,6 +106,7 @@ const Orders = () => {
           </span>
         </div>
       ),
+      meta: { title: "Subscription ID" },
     },
     {
       accessorKey: "status",
@@ -128,6 +132,7 @@ const Orders = () => {
 
         return <Badge variant={getStatusColor()}>{status || "Unknown"}</Badge>;
       },
+      meta: { title: "Status" },
     },
     {
       accessorKey: "createdBy",
@@ -146,6 +151,7 @@ const Orders = () => {
           </div>
         );
       },
+      meta: { title: "Ordered By" },
     },
     {
       accessorKey: "createdAt",
@@ -156,6 +162,7 @@ const Orders = () => {
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
+      meta: { title: "Ordered At" },
     },
   ];
 

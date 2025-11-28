@@ -108,6 +108,7 @@ const RazorpayPlans = () => {
           {row.getValue("id")}
         </div>
       ),
+      meta: { title: "Razorpay Plan ID" },
     },
     {
       accessorKey: "name",
@@ -118,6 +119,7 @@ const RazorpayPlans = () => {
           <span className="font-medium">{row.getValue("name")}</span>
         </div>
       ),
+      meta: { title: "Name" },
     },
     {
       accessorKey: "createdAt",
@@ -128,6 +130,7 @@ const RazorpayPlans = () => {
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
+      meta: { title: "Created At" },
     },
     {
       accessorKey: "amount",
@@ -138,6 +141,7 @@ const RazorpayPlans = () => {
           <span className="font-mono">{row.getValue("amount")}</span>
         </div>
       ),
+      meta: { title: "Amount" },
     },
     {
       accessorKey: "currency",
@@ -147,6 +151,7 @@ const RazorpayPlans = () => {
           {row.getValue("currency")}
         </Badge>
       ),
+      meta: { title: "Currency" },
     },
     {
       accessorKey: "period",
@@ -154,6 +159,7 @@ const RazorpayPlans = () => {
       cell: ({ row }) => (
         <Badge variant="secondary">{row.getValue("period")}</Badge>
       ),
+      meta: { title: "Period" },
     },
     {
       accessorKey: "interval",
@@ -164,6 +170,7 @@ const RazorpayPlans = () => {
           <span className="font-mono">{row.getValue("interval")}</span>
         </div>
       ),
+      meta: { title: "Interval" },
     },
     {
       accessorKey: "status",
@@ -212,6 +219,7 @@ const RazorpayPlans = () => {
           </Select>
         );
       },
+      meta: { title: "Status" },
     },
     {
       accessorKey: "description",
@@ -221,6 +229,7 @@ const RazorpayPlans = () => {
           {row.getValue("description") || "N/A"}
         </span>
       ),
+      meta: { title: "Description" },
     },
     {
       id: "actions",
@@ -240,6 +249,7 @@ const RazorpayPlans = () => {
           <Trash2 className="h-4 w-4" />
         </Button>
       ),
+      meta: { title: "Actions" },
     },
   ];
 

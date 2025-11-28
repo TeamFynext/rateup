@@ -45,6 +45,7 @@ const StripeSubscription = () => {
           {row.getValue("id")}
         </div>
       ),
+      meta: { title: "Subscription ID" },
     },
     {
       accessorKey: "productName",
@@ -55,6 +56,7 @@ const StripeSubscription = () => {
           <span className="font-medium">{row.getValue("productName")}</span>
         </div>
       ),
+      meta: { title: "Product Name" },
     },
     {
       accessorKey: "amount",
@@ -65,6 +67,7 @@ const StripeSubscription = () => {
           <span className="font-mono">{row.getValue("amount")}</span>
         </div>
       ),
+      meta: { title: "Amount" },
     },
     {
       accessorKey: "currency",
@@ -74,6 +77,7 @@ const StripeSubscription = () => {
           {row.getValue("currency")}
         </Badge>
       ),
+      meta: { title: "Currency" },
     },
     {
       accessorKey: "status",
@@ -109,6 +113,7 @@ const StripeSubscription = () => {
           </Badge>
         );
       },
+      meta: { title: "Status" },
     },
     {
       accessorKey: "createdAt",
@@ -119,6 +124,7 @@ const StripeSubscription = () => {
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
+      meta: { title: "Created At" },
     },
     {
       accessorKey: "startsAt",
@@ -126,6 +132,7 @@ const StripeSubscription = () => {
       cell: ({ row }) => (
         <span className="text-sm">{row.getValue("startsAt")}</span>
       ),
+      meta: { title: "Starts At" },
     },
     {
       accessorKey: "endsAt",
@@ -133,6 +140,7 @@ const StripeSubscription = () => {
       cell: ({ row }) => (
         <span className="text-sm">{row.getValue("endsAt")}</span>
       ),
+      meta: { title: "Ends At" },
     },
   ];
 

@@ -90,6 +90,7 @@ const RateupPlan = () => {
           {row.getValue("id")}
         </div>
       ),
+      meta: { title: "ID" },
     },
     {
       accessorKey: "displayName",
@@ -100,6 +101,7 @@ const RateupPlan = () => {
           <span className="font-medium">{row.getValue("displayName")}</span>
         </div>
       ),
+      meta: { title: "Display Name" },
     },
     {
       accessorKey: "name",
@@ -110,6 +112,7 @@ const RateupPlan = () => {
           <span>{row.getValue("name")}</span>
         </div>
       ),
+      meta: { title: "Name" },
     },
     {
       accessorKey: "description",
@@ -139,6 +142,7 @@ const RateupPlan = () => {
           </div>
         );
       },
+      meta: { title: "Description" },
     },
     {
       accessorKey: "planType",
@@ -151,6 +155,7 @@ const RateupPlan = () => {
           </Badge>
         );
       },
+      meta: { title: "Plan Type" },
     },
     {
       accessorKey: "trialDays",
@@ -163,6 +168,7 @@ const RateupPlan = () => {
           </Badge>
         </div>
       ),
+      meta: { title: "Trial Days" },
     },
     {
       accessorKey: "displayWidgetId",
@@ -175,6 +181,7 @@ const RateupPlan = () => {
           </Badge>
         );
       },
+      meta: { title: "Widget ID" },
     },
     {
       accessorKey: "createdAt",
@@ -187,6 +194,7 @@ const RateupPlan = () => {
           </span>
         </div>
       ),
+      meta: { title: "Created At" },
     },
     {
       id: "actions",
@@ -222,6 +230,7 @@ const RateupPlan = () => {
           </Button>
         </div>
       ),
+      meta: { title: "Actions" },
     },
   ];
 

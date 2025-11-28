@@ -67,6 +67,7 @@ export default function OrgDisplay() {
           {row.getValue("id")}
         </div>
       ),
+      meta: { title: "ID" },
     },
     {
       accessorKey: "name",
@@ -77,6 +78,7 @@ export default function OrgDisplay() {
           <span className="font-medium">{row.getValue("name")}</span>
         </div>
       ),
+      meta: { title: "Name" },
     },
     {
       accessorKey: "createdAt",
@@ -87,6 +89,7 @@ export default function OrgDisplay() {
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
+      meta: { title: "Created At" },
     },
     {
       accessorKey: "owner",
@@ -97,6 +100,7 @@ export default function OrgDisplay() {
           <span>{row.getValue("owner")}</span>
         </div>
       ),
+      meta: { title: "Owner" },
     },
     {
       accessorKey: "ownerEmail",
@@ -107,6 +111,7 @@ export default function OrgDisplay() {
           <span className="text-sm">{row.getValue("ownerEmail")}</span>
         </div>
       ),
+      meta: { title: "Owner Email" },
     },
     {
       accessorKey: "teams",
@@ -116,6 +121,7 @@ export default function OrgDisplay() {
           {row.getValue("teams")}
         </Badge>
       ),
+      meta: { title: "Teams" },
     },
     {
       accessorKey: "members",
@@ -128,6 +134,7 @@ export default function OrgDisplay() {
           </Badge>
         </div>
       ),
+      meta: { title: "Staff" },
     },
     {
       accessorKey: "invitations",
@@ -147,6 +154,7 @@ export default function OrgDisplay() {
           </Badge>
         </div>
       ),
+      meta: { title: "Invitations" },
     },
     {
       id: "actions",
@@ -164,6 +172,7 @@ export default function OrgDisplay() {
           <ArrowRight className="h-4 w-4" />
         </Button>
       ),
+      meta: { title: "Actions" },
     },
   ];
 
