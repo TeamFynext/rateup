@@ -14,6 +14,7 @@ const lifecycleBodySchema = z.object({
   description: z.string().optional(),
   emoji: z.string().optional(),
   isWon: z.boolean().optional(),
+  color: z.string(),
 });
 
 const lifecycleReorderSchema = z.object({
@@ -45,5 +46,6 @@ export type LifecycleBodySchema = {
   isWon: boolean;
   description: string;
   category: StageCategory;
+  color: string;
 };
 export type LifecycleReorderSchema = z.infer<typeof lifecycleReorderSchema>;
