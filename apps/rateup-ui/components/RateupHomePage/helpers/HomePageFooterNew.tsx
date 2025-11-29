@@ -175,6 +175,61 @@ export default function HomePageFooter() {
           </div>
 
           <div className="flex flex-col items-center justify-center lg:min-w-[15vw] gap-8 lg:gap-20 mt-8 lg:mt-0">
+            <div className="bg-[linear-gradient(135deg,#FFF5F5,#F5EBFF,#E0EEFF,#F5FFFB)] flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl">
+              <div className="flex items-center justify-center gap-2">
+                <Image
+                  src={`${imagePath}/homepage/meta.svg`}
+                  alt="meta"
+                  width={50}
+                  height={50}
+                />
+                <span className="font-bold text-xl">Meta</span>
+              </div>
+              <div className="flex flex-col items-start justify-center">
+                <span className="text-sm text-grey-color-6">
+                  Business Partner
+                </span>
+              </div>
+            </div>
+            <div className="w-full">
+              <div className="text-left mb-2">Follow us</div>
+              <div className="flex items-center gap-4 justify-center flex-wrap">
+                <Link
+                  href={"https://www.instagram.com/rateupsoftware"}
+                  target="_blank"
+                >
+                  <IconBrandInstagram width={30} height={30} color="#D62976" />
+                </Link>
+                <Link
+                  href={"https://www.facebook.com/rateupsapp"}
+                  target="_blank"
+                >
+                  <IconBrandFacebook width={30} height={30} color="#1877F2" />
+                </Link>
+                <Link href={"https://x.com/rateup_app"} target="_blank">
+                  <IconBrandX width={30} height={30} color="#000000" />
+                </Link>
+                <Link
+                  href={"https://www.pinterest.com/rateupapp/"}
+                  target="_blank"
+                >
+                  <IconBrandPinterest width={30} height={30} color="#FF0000" />
+                </Link>
+                <Link
+                  href={"https://www.threads.com/@rateupsoftware"}
+                  target="_blank"
+                >
+                  <IconBrandThreads width={30} height={30} color="#000000" />
+                </Link>
+                <Link
+                  href={"https://www.youtube.com/@TeamRateup"}
+                  target="_blank"
+                >
+                  <IconBrandYoutube width={30} height={30} color="#FF0000" />
+                </Link>
+              </div>
+            </div>
+
             <div className="flex flex-col items-center justify-center gap-4 w-full">
               <Link
                 href={
@@ -213,62 +268,6 @@ export default function HomePageFooter() {
                   </span>
                   <span className="text-sm font-semibold">App Store</span>
                 </div>
-              </div>
-            </div>
-
-            <div className="w-full">
-              <div className="text-center mb-2">Follow Us</div>
-              <div className="flex items-center gap-4 justify-center flex-wrap">
-                <Link
-                  href={"https://www.instagram.com/rateupsoftware"}
-                  target="_blank"
-                >
-                  <IconBrandInstagram width={30} height={30} color="#D62976" />
-                </Link>
-                <Link
-                  href={"https://www.facebook.com/rateupsapp"}
-                  target="_blank"
-                >
-                  <IconBrandFacebook width={30} height={30} color="#1877F2" />
-                </Link>
-                <Link href={"https://x.com/rateup_app"} target="_blank">
-                  <IconBrandX width={30} height={30} color="#000000" />
-                </Link>
-                <Link
-                  href={"https://www.pinterest.com/rateupapp/"}
-                  target="_blank"
-                >
-                  <IconBrandPinterest width={30} height={30} color="#FF0000" />
-                </Link>
-                <Link
-                  href={"https://www.threads.com/@rateupsoftware"}
-                  target="_blank"
-                >
-                  <IconBrandThreads width={30} height={30} color="#000000" />
-                </Link>
-                <Link
-                  href={"https://www.youtube.com/@TeamRateup"}
-                  target="_blank"
-                >
-                  <IconBrandYoutube width={30} height={30} color="#FF0000" />
-                </Link>
-              </div>
-            </div>
-
-            <div className="bg-[linear-gradient(135deg,#FFF5F5,#F5EBFF,#E0EEFF,#F5FFFB)] flex items-center justify-center gap-1 py-1 px-3 rounded-xl">
-              <div>
-                <Image
-                  src={`${imagePath}/homepage/meta.svg`}
-                  alt="meta"
-                  width={60}
-                  height={60}
-                />
-              </div>
-              <div className="flex flex-col items-start justify-center">
-                <span className="font-semibold text-base">Meta</span>
-                <span className="text-sm text-grey-color-6">
-                  Business Partner
-                </span>
               </div>
             </div>
           </div>

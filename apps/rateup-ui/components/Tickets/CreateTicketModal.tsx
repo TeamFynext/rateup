@@ -7,6 +7,7 @@ import { Group, Stack } from "@mantine/core";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconPlus } from "@tabler/icons-react";
+import { List, NotebookTabs, Sparkles, Ticket, Type } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useTeamMembersFromInvitation } from "../../backend/team/team.query";
@@ -27,6 +28,18 @@ import {
 import { TeamSelector } from "../input/TeamSelector";
 import FormModalLayout from "../Modal/FormModalLayout";
 import Loading from "../Page/Loading";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Textarea } from "../ui/textarea";
 
 interface iProps {
   createTicketOpened: boolean;
@@ -242,10 +255,13 @@ const CreateTicketModal = ({
 };
 
 export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
+  const [submitting, setSubmitting] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState("");
   const { boards, isLoading: isBoardsLoading } =
     useBoardQueries(hasTicketFeature);
   const { createCard, board, isLoading } = useBoard(selectedBoardId);
+
+  const t = useTranslations();
 
   const form = useForm({
     initialValues: {
@@ -262,11 +278,14 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
 
   function handleSubmit() {
     if (form.validate().hasErrors) return;
+    setSubmitting(true);
     createCard(form.values, {
       onSuccess: () => {
+        setSubmitting(false);
         cancel();
       },
     });
+    setSubmitting(false);
   }
 
   function cancel() {
@@ -275,50 +294,151 @@ export const CreateTicketCard = ({ opened, close, type, hasTicketFeature }) => {
   }
 
   return (
-    <FormModalLayout
-      title="Create Ticket"
-      opened={opened}
-      onClose={close}
-      buttonTitle="create"
-      onSubmit={handleSubmit}
-      cancelOnClick={cancel}
-      includeCancelButton
-    >
-      {isBoardsLoading || isLoading ? (
-        <Loading />
-      ) : (
-        <Stack>
-          <ContainedSelection
-            data={
-              boards ? boards.map((b) => ({ value: b.id, label: b.title })) : []
-            }
-            onChange={setSelectedBoardId}
-            value={selectedBoardId}
-            label={"Select Board"}
-          />
-          <ContainedSelection
-            data={
-              board?.ticketColumns
-                ? board?.ticketColumns.map((column) => ({
-                    value: column.id,
-                    label: column.title,
-                  }))
-                : []
-            }
-            {...form.getInputProps("ticketColumnId")}
-            label={"Select List"}
-          />
-          <ContainedTextField
-            {...form.getInputProps("title")}
-            label={"title"}
-          />
-          <ContainedTextArea
-            {...form.getInputProps("description")}
-            label={"Description"}
-          />
-        </Stack>
-      )}
-    </FormModalLayout>
+    <Dialog open={opened} onOpenChange={close}>
+      <DialogContent className="p-0">
+        <DialogHeader className="p-0">
+          <DialogTitle className="p-0">
+            <div className="flex items-center justify-start gap-2 bg-primary rounded-t-lg py-6 px-4">
+              <div className="bg-white/40 p-2 rounded-md text-white">
+                <Ticket />
+              </div>
+              <h1 className="text-xl font-semibold text-white">
+                Create Ticket
+              </h1>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        {isBoardsLoading || isLoading ? (
+          <div className="min-h-[60vh] w-full">
+            <Loading />
+          </div>
+        ) : (
+          <form
+            onSubmit={form.onSubmit(handleSubmit)}
+            className="w-full p-4 flex flex-col gap-4 justify-center"
+          >
+            {/* Select Board */}
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <div className="bg-orange-100 text-orange-600 p-1 rounded-sm">
+                  <List size={14} />
+                </div>
+                <div>
+                  {t("Select Board")}
+                  <span className="text-red-500">*</span>
+                </div>
+              </Label>
+
+              <Select
+                value={selectedBoardId}
+                onValueChange={(val) => {
+                  setSelectedBoardId(val);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("Select Board")} />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {boards?.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Select List */}
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <div className="bg-blue-100 text-blue-600 p-1 rounded-sm">
+                  <Sparkles size={14} />
+                </div>
+                <div>
+                  {t("Select List")}
+                  <span className="text-red-500">*</span>
+                </div>
+              </Label>
+
+              <Select
+                value={form.values.ticketColumnId}
+                onValueChange={(val) =>
+                  form.setFieldValue("ticketColumnId", val)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("Select List")} />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {board?.ticketColumns?.map((column) => (
+                    <SelectItem key={column.id} value={column.id}>
+                      {column.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* validation error for ticketColumnId */}
+              {form.errors.ticketColumnId && (
+                <p className="text-xs text-red-500 mt-1">
+                  {form.errors.ticketColumnId}
+                </p>
+              )}
+            </div>
+
+            {/* Title */}
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <div className="bg-purple-100 text-purple-600 p-1 rounded-sm">
+                  <Type size={14} />
+                </div>
+                <div>
+                  {t("Title")} <span className="text-red-500">*</span>
+                </div>
+              </Label>
+
+              <Input
+                placeholder={t("Enter ticket title")}
+                {...form.getInputProps("title")}
+              />
+              {form.errors.title && (
+                <p className="text-xs text-red-500 mt-1">{form.errors.title}</p>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1">
+              <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <div className="bg-green-100 text-green-600 p-1 rounded-sm">
+                  <NotebookTabs size={14} />
+                </div>
+                <div>
+                  {t("Description")}
+                  <span className="text-red-500">*</span>
+                </div>
+              </Label>
+
+              <Textarea
+                placeholder={t("Provide detailed information about the ticket")}
+                {...form.getInputProps("description")}
+              />
+            </div>
+
+            <div className="w-full flex justify-end items-center gap-4">
+              <Button type="button" onClick={cancel} variant="outline">
+                {t("Cancel")}
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? t("Creating") : t("Create Ticket")}
+              </Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 
