@@ -2454,5 +2454,11 @@
   "Only authentication buttons are allowed for this template": "Seuls les boutons d'authentification sont autorisés pour ce modèle",
   "Authentication Buttons": "Boutons d'authentification",
   "Only one authentication button allowed": "Un seul bouton d'authentification est autorisé",
-  "OTP (One-Time Password)": "Mot de passe à usage unique (OTP)"
+  "OTP (One-Time Password)": "Mot de passe à usage unique (OTP)",
+  "Select Board": "Sélectionner le tableau",
+  "Select List": "Sélectionner la liste",
+  "Enter ticket title": "Saisir le titre du ticket",
+  "Provide detailed information about the ticket": "Fournissez des informations détaillées sur le ticket",
+  "Tags, Groups, Campaigns": "Tags, groupes, campagnes",
+  "Select category (type in to search)": "Sélectionner une catégorie (tapez pour rechercher)"
 }

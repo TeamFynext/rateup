@@ -2455,5 +2455,11 @@
   "Only authentication buttons are allowed for this template": "इस टेम्पलेट के लिए केवल प्रमाणीकरण बटन की अनुमति है",
   "Authentication Buttons": "प्रमाणीकरण बटन",
   "Only one authentication button allowed": "केवल एक प्रमाणीकरण बटन की अनुमति है",
-  "OTP (One-Time Password)": "ओटीपी (एक बार का पासवर्ड)"
+  "OTP (One-Time Password)": "ओटीपी (एक बार का पासवर्ड)",
+  "Select Board": "बोर्ड चुनें",
+  "Select List": "सूची चुनें",
+  "Enter ticket title": "टिकट का शीर्षक दर्ज करें",
+  "Provide detailed information about the ticket": "टिकट के बारे में विस्तृत जानकारी प्रदान करें",
+  "Tags, Groups, Campaigns": "टैग, समूह, अभियानों",
+  "Select category (type in to search)": "श्रेणी चुनें (खोजने के लिए टाइप करें)"
 }
