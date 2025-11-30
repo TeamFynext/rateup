@@ -2,13 +2,16 @@
 
 import { usePathname, useRouter } from "next/navigation";
 
-import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
-import { IconChartBar } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { useMutation } from "@tanstack/react-query";
+import dayjs from "dayjs";
+import { Calendar, Clock, FileText, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
-import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { updateSurvey } from "@/backend/surveys/survey.api";
+import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
+import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 
 import { SurveyMenu } from "./SurveyMenu";
 
@@ -24,6 +27,7 @@ interface SurveyCardProps {
 /**
  * The SurveyCard component used to display a survey in the surveys page (dashboard/surveys)
  */
+
 export function SurveyCard({
   survey,
   handleCheckBox,
@@ -36,10 +40,21 @@ export function SurveyCard({
   const translations = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
+  const surveyUpdateMutation = useMutation({
+    mutationFn: (data: any) => updateSurvey(survey.id, data),
+    onSuccess: () => {
+      notifications.show({
+        id: "survey",
+        message: translations("Survey status Updated!"),
+        autoClose: true,
+      });
+      refetchSurveys();
+    },
+  });
   return (
-    <PaperLayout
-      hoveractive
-      layoutAnimation
+    <Card
+      key={survey.id}
+      className="group hover:shadow-2xl transition-all duration-300 cursor-pointer bg-white border-slate-200 hover:border-[#2E5BFF]/30 overflow-hidden relative hover:-translate-y-1 flex flex-col"
       onClick={(e) => {
         e.stopPropagation();
         router.push(
@@ -50,70 +65,107 @@ export function SurveyCard({
         );
       }}
     >
-      <Stack justify="space-between" h={"100%"}>
-        <Group justify={"space-between"} align={"center"} wrap="nowrap">
-          <Tooltip label={survey?.title} withArrow>
-            <Text
-              style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}
-              truncate="end"
-              size="xl"
-            >
-              {survey?.title}
-            </Text>
-          </Tooltip>
-          <Group align={"center"} gap="xs">
-            <SurveyMenu
-              survey={survey}
-              selectedTeamId={selectedTeamId}
-              teamsData={teamsData}
-              refetchSurveys={refetchSurveys}
-            />
-          </Group>
-        </Group>
+      {/* Top accent bar with gradient */}
+      <div
+        className={`absolute top-0 left-0 right-0 h-1 ${
+          survey?.active
+            ? "bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500"
+            : "bg-gradient-to-r from-yellow-400 via-orange-400 to-amber-500"
+        }`}
+      />
 
-        <CreatedSinceText createdAt={survey?.createdAt} />
+      <CardContent className="flex flex-col h-full gap-4">
+        {/* Header Section with improved spacing */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0 pr-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md flex-shrink-0">
+                <FileText className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-base line-clamp-1 group-hover:text-primary transition-colors font-bold">
+                {survey?.title?.length > 18
+                  ? survey?.title?.slice(0, 18) + "..."
+                  : survey?.title}
+              </h3>
+            </div>
+          </div>
+          <SurveyMenu
+            survey={survey}
+            selectedTeamId={selectedTeamId}
+            teamsData={teamsData}
+            refetchSurveys={refetchSurveys}
+          />
+        </div>
 
-        <Group justify="space-between">
-          <Group>
-            <StatusBadge active={survey?.active} />
-            <Badge
-              variant="outline"
-              color={survey?.type == "web" ? "blue" : "#149a8a"}
-            >
-              {translations(survey?.type)}
-            </Badge>
-          </Group>
-          <Group justify={"space-between"} align={"center"}>
-            <PaperLayout
-              p={0}
-              radius={5}
+        {/* Status Toggle */}
+        <div className="flex items-center justify-end gap-2">
+          <Switch
+            checked={survey?.active}
+            className="scale-90"
+            onClick={(e) => {
+              e.stopPropagation();
+              surveyUpdateMutation.mutate({ active: !survey?.active });
+            }}
+          />
+          <span className="text-xs font-semibold">
+            {survey?.active ? (
+              <span className="text-green-600">Active</span>
+            ) : (
+              <span className="text-gray-500">Inactive</span>
+            )}
+          </span>
+        </div>
+
+        <div className="flex items-center">
+          <div className="flex items-center justify-between w-full">
+            <div
+              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-br from-blue-50 to-blue-100 border border-[#2E5BFF]/10 rounded-lg flex-1 mr-2 hover:from-blue-100 hover:to-blue-200 "
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`${pathname}/${survey?.id}?tab=Result`);
               }}
-              style={{ overflow: "hidden" }}
             >
-              <RateupButtonSecondary
-                leftIcon={<IconChartBar size={15} />}
-                title={translations("Responses")}
-                variant="subtle"
-                size="xs"
-                radius={5}
-                fullWidth
-              />
-            </PaperLayout>
-          </Group>
-        </Group>
-      </Stack>
-    </PaperLayout>
-  );
-}
+              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
+                <Users className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-xs text-muted-foreground font-semibold">
+                {translations("Responses")}
+              </span>
+            </div>
+            {/* survey type */}
+            <div
+              className={`flex items-center gap-1.5 px-3 py-2 bg-gradient-to-br rounded-lg border border-[#2E5BFF]/10 
+                 ${survey?.type === "web" ? "from-blue-50 to-blue-100" : "from-green-50 to-green-100"}`}
+            >
+              <span
+                className={`text-xs font-semibold ${survey?.type === "web" ? "text-blue-600" : "text-green-600"}`}
+              >
+                {survey?.type?.toUpperCase()}
+              </span>
+            </div>
+          </div>
+        </div>
 
-function StatusBadge({ active }) {
-  const translations = useTranslations();
-  return (
-    <Badge color={active ? "green" : "yellow"} variant="light">
-      {active ? translations("Active") : translations("Paused")}
-    </Badge>
+        {/* Footer with enhanced timestamps - Push to bottom */}
+        <div className="flex items-center justify-between border-t py-2">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="w-5 h-5 rounded-md bg-slate-100 flex items-center justify-center">
+              <Calendar className="w-3 h-3" />
+            </div>
+            <span className="font-semibold">
+              {dayjs(survey?.createdAt).format("DD MMMM YYYY")}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="w-5 h-5 rounded-md bg-blue-50 flex items-center justify-center">
+              <Clock className="w-3 h-3 text-blue-600" />
+            </div>
+            <span className="font-semibold">
+              {<TimeSinceText isoDateString={survey?.createdAt} />}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
