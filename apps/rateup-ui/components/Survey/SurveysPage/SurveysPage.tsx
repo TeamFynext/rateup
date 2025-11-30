@@ -55,6 +55,7 @@ export function SurveysPage({
   const [sortOption, setSortOption] = useState("latest");
   const [surveyidArray, setSurveyIdArray] = useState([]);
   const [filterParam, setFilterParam] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const translations = useTranslations();
 
   const [template, setTemplate] = useState(null);
@@ -114,6 +115,10 @@ export function SurveysPage({
     sortOption,
   );
 
+  const filteredSurvey = sortedSurveys.filter((s) =>
+    s.title.includes(searchQuery),
+  );
+
   return (
     <Stack h={"100%"}>
       <SurveyHeader
@@ -128,13 +133,15 @@ export function SurveysPage({
         surveyCount={surveyidArray.length}
         surveyType={surveyType}
         refetch={refetch}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
       />
 
       {surveys?.length > 0 ? (
         <Box
           className={`${styles["surveys-cards-container"]} cards-grid-global-class`}
         >
-          {sortedSurveys
+          {filteredSurvey
             .filter((s) => {
               if (filterParam === "active") {
                 return s.active === true;
