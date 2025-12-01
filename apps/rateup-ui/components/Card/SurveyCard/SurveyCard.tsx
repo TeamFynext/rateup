@@ -2,16 +2,12 @@
 
 import { usePathname, useRouter } from "next/navigation";
 
-import { notifications } from "@mantine/notifications";
-import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { Calendar, Clock, FileText, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { updateSurvey } from "@/backend/surveys/survey.api";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
 import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 
 import { SurveyMenu } from "./SurveyMenu";
 
@@ -40,17 +36,11 @@ export function SurveyCard({
   const translations = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
-  const surveyUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(survey.id, data),
-    onSuccess: () => {
-      notifications.show({
-        id: "survey",
-        message: translations("Survey status Updated!"),
-        autoClose: true,
-      });
-      refetchSurveys();
-    },
-  });
+  const totalResponses = survey?.teams?.reduce(
+    (sum, t) => sum + (t.responsesCount?.responses || 0),
+    0,
+  );
+  console.log(survey);
   return (
     <Card
       key={survey.id}
@@ -96,24 +86,35 @@ export function SurveyCard({
             refetchSurveys={refetchSurveys}
           />
         </div>
-
-        {/* Status Toggle */}
-        <div className="flex items-center justify-end gap-2">
-          <Switch
-            checked={survey?.active}
-            className="scale-90"
-            onClick={(e) => {
-              e.stopPropagation();
-              surveyUpdateMutation.mutate({ active: !survey?.active });
-            }}
-          />
-          <span className="text-xs font-semibold">
-            {survey?.active ? (
-              <span className="text-green-600">Active</span>
-            ) : (
-              <span className="text-gray-500">Inactive</span>
-            )}
-          </span>
+        <div>
+          <div className="flex items-center gap-8">
+            <div className="text-center flex items-center gap-2 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 rounded-md px-4 py-2 border border-slate-100 shadow-sm">
+              <div className="flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+                  <FileText className="w-3.5 h-3.5 text-white" />
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">
+                  Questions
+                </p>
+                <p className="text-sm">{survey?.questions?.length}</p>
+              </div>
+            </div>
+            <div className="text-center flex items-center gap-2 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 rounded-md px-4 py-2 border border-slate-100 shadow-sm">
+              <div className="flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+                  <Users className="w-3.5 h-3.5 text-white" />
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">
+                  Responses
+                </p>
+                <p className="text-sm">{totalResponses}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center">
@@ -128,7 +129,8 @@ export function SurveyCard({
               <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
                 <Users className="w-3 h-3 text-white" />
               </div>
-              <span className="text-xs text-muted-foreground font-semibold">
+              <span className="text-xs font-medium">{totalResponses}</span>
+              <span className="text-xs text-muted-foreground font-medium">
                 {translations("Responses")}
               </span>
             </div>
