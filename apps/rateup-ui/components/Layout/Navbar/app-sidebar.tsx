@@ -55,11 +55,15 @@ export default function AppSidebar({
   lifecycles,
   contactLabels,
   userData,
+  staff,
+  teams,
 }: Readonly<{
   subscription?: any;
   lifecycles?: any[];
   contactLabels?: any[];
   userData?: IUserInfoApiResponse;
+  staff: any[];
+  teams: any[];
 }>) {
   const hiddenModules =
     process.env.NEXT_PUBLIC_HIDDEN_MODULES?.split(",") || [];
@@ -119,6 +123,8 @@ export default function AppSidebar({
     subscription,
     lifecycles: user?.showLifecycle ? lifecycles : [],
     contactLabels,
+    staff,
+    teams,
     t,
     chatFilterStore,
     hiddenModules,

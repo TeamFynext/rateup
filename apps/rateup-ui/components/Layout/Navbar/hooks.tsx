@@ -54,11 +54,14 @@ export function useNavMain({
   subscription,
   lifecycles,
   contactLabels,
+  staff,
+  teams,
   t,
   chatFilterStore,
   hiddenModules,
   handleLabelsFilter,
   handleLifecycleFilter,
+  handleStaffFilter,
 }: any) {
   return useMemo(
     () => [
@@ -132,6 +135,25 @@ export function useNavMain({
                     isActive: chatFilterStore.filter.labels?.includes(lbl.id),
                   })),
                 },
+                ...(staff.length > 0
+                  ? [
+                      {
+                        title: "Staff",
+                        icon: IconActivity,
+                        items: staff.map((st) => ({
+                          title: st.name,
+                          url: "#",
+                          handleClick: () => {
+                            handleStaffFilter(st.id);
+                          },
+                          isActive:
+                            chatFilterStore.filter.assignedUserIds.includes(
+                              st.id,
+                            ),
+                        })),
+                      },
+                    ]
+                  : []),
                 {
                   title: "Analytics",
                   url: "/dashboard/inbox?tab=analytics",
