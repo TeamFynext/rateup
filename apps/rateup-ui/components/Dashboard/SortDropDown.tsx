@@ -2,10 +2,17 @@
 
 import { useState } from "react";
 
-import { Group, Text as MantineText, Select } from "@mantine/core";
-import { IconSelector } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
+
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
   const [sortOption, setSortOption] = useState(defaultSortOption);
@@ -16,26 +23,25 @@ const SortDropdown = ({ onSortChange, defaultSortOption = "latest" }) => {
   };
 
   return (
-    <Group style={{ alignItems: "center", gap: "3px" }}>
-      <MantineText>{translations("SORT BY")}:</MantineText>
-      <Select
-        placeholder={translations("sort by")}
-        value={sortOption}
-        onChange={handleSortChange}
-        data={[
-          { value: "latest", label: translations("Latest First") },
-          { value: "oldest", label: translations("Old First") },
-          { value: "a-z", label: translations("A - Z") },
-          { value: "z-a", label: translations("Z - A") },
-        ]}
-        styles={{
-          input: {
-            borderRadius: 25,
-            width: "130px",
-          },
-        }}
-      />
-    </Group>
+    <div className={"flex items-center w-full gap-1"}>
+      <p className="text-gray-600 text-xs w-14">{translations("SORT BY")}:</p>
+      <Select onValueChange={handleSortChange} defaultValue={sortOption}>
+        <SelectTrigger className="w-28 rounded-sm">
+          <SelectValue placeholder={translations("sort by")} />
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectGroup>
+            <SelectItem value="latest">
+              {translations("Latest First")}
+            </SelectItem>
+            <SelectItem value="oldest">{translations("Old First")}</SelectItem>
+            <SelectItem value="a-z">{translations("A - Z")}</SelectItem>
+            <SelectItem value="z-a">{translations("Z - A")}</SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </div>
   );
 };
 

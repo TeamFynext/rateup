@@ -46,6 +46,7 @@ const RazorpaySubscriptions = () => {
           {row.getValue("id")}
         </div>
       ),
+      meta: { title: "Razorpay Subscription ID" },
     },
     {
       accessorKey: "planName",
@@ -56,6 +57,7 @@ const RazorpaySubscriptions = () => {
           <span className="font-medium">{row.getValue("planName")}</span>
         </div>
       ),
+      meta: { title: "Plan Name" },
     },
     {
       accessorKey: "amount",
@@ -66,6 +68,7 @@ const RazorpaySubscriptions = () => {
           <span className="font-mono">{row.getValue("amount")}</span>
         </div>
       ),
+      meta: { title: "Amount" },
     },
     {
       accessorKey: "currency",
@@ -75,6 +78,7 @@ const RazorpaySubscriptions = () => {
           {row.getValue("currency")}
         </Badge>
       ),
+      meta: { title: "Currency" },
     },
     {
       accessorKey: "status",
@@ -112,6 +116,7 @@ const RazorpaySubscriptions = () => {
           </Badge>
         );
       },
+      meta: { title: "Status" },
     },
     {
       accessorKey: "createdAt",
@@ -122,6 +127,7 @@ const RazorpaySubscriptions = () => {
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
+      meta: { title: "Created At" },
     },
     {
       accessorKey: "start",
@@ -129,11 +135,13 @@ const RazorpaySubscriptions = () => {
       cell: ({ row }) => (
         <span className="text-sm">{row.getValue("start")}</span>
       ),
+      meta: { title: "Starts At" },
     },
     {
       accessorKey: "end",
       header: createSortableHeader("Ends At"),
       cell: ({ row }) => <span className="text-sm">{row.getValue("end")}</span>,
+      meta: { title: "Ends At" },
     },
   ];
 

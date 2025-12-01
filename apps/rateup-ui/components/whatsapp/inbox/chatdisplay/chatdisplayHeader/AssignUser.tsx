@@ -191,25 +191,44 @@ const AssignUser = ({
       <DropdownMenuTrigger asChild>
         <Button variant={variant} size="sm" className="h-8 px-2 gap-1.5">
           <div className="flex items-center gap-2">
-            <div className="flex -space-x-1 relative">
-              {assignedStaff.slice(0, 3).map((a) => {
-                const staff = staffMembers.find((s) => s.id === a.userId);
-                return (
-                  <div key={a.userId} className="relative">
-                    <CreativeAvatar
-                      name={staff?.name}
-                      showOnlineStatus
-                      isOnline={staff?.status === "online"}
-                      size="xs"
-                    />
+            <div className="flex items-center justify-center gap-1">
+              <div className="flex -space-x-1 relative">
+                {assignedStaff.slice(0, 3).map((a) => {
+                  const staff = staffMembers.find((s) => s.id === a.userId);
+                  return (
+                    <div key={a.userId} className="relative">
+                      <CreativeAvatar
+                        name={staff?.name}
+                        showOnlineStatus
+                        isOnline={staff?.status === "online"}
+                        size="xs"
+                      />
+                    </div>
+                  );
+                })}
+                {assignedStaff.length > 3 && (
+                  <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
+                    +{assignedStaff.length - 3}
                   </div>
-                );
-              })}
-              {assignedStaff.length > 3 && (
-                <div className="w-5 h-5 rounded-full bg-muted text-[10px] flex items-center justify-center border border-white">
-                  +{assignedStaff.length - 3}
-                </div>
-              )}
+                )}
+              </div>
+              <div className="flex items-center justify-center">
+                {assignedStaff.slice(0, 1).map((a) => {
+                  const staff = staffMembers.find((s) => s.id === a.userId);
+                  return (
+                    <div key={a.userId} className="relative">
+                      <p className="text-sm font-semibold">
+                        {staff?.name?.length > 10
+                          ? staff?.name?.slice(0, 10)
+                          : staff?.name}
+                      </p>
+                    </div>
+                  );
+                })}
+                {assignedStaff.length > 1 && (
+                  <p className="text-sm font-semibold">...</p>
+                )}
+              </div>
             </div>
 
             <CustomTooltip

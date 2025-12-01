@@ -77,6 +77,7 @@ export default function SubscriptionPage() {
           {row.getValue("orgId")}
         </div>
       ),
+      meta: { title: "Org ID" },
     },
     {
       accessorKey: "orgName",
@@ -87,6 +88,7 @@ export default function SubscriptionPage() {
           <span className="font-medium">{row.getValue("orgName")}</span>
         </div>
       ),
+      meta: { title: "Organization" },
     },
     {
       accessorKey: "planName",
@@ -124,6 +126,7 @@ export default function SubscriptionPage() {
           </Select>
         );
       },
+      meta: { title: "Plan" },
     },
     {
       accessorKey: "features",
@@ -167,6 +170,7 @@ export default function SubscriptionPage() {
           </>
         );
       },
+      meta: { title: "Features" },
     },
     {
       accessorKey: "createdAt",
@@ -177,6 +181,7 @@ export default function SubscriptionPage() {
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
+      meta: { title: "Created" },
     },
     {
       accessorKey: "renewedAt",
@@ -190,6 +195,7 @@ export default function SubscriptionPage() {
           </div>
         );
       },
+      meta: { title: "Renewed" },
     },
     {
       accessorKey: "expiresAt",
@@ -206,6 +212,7 @@ export default function SubscriptionPage() {
           </div>
         );
       },
+      meta: { title: "Expires" },
     },
   ];
 

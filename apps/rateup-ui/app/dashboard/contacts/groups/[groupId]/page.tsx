@@ -112,7 +112,6 @@ const ContactGroup = () => {
     sorting?.[0],
     columnFilters,
   );
-  console.log("searchTerm", searchTerm);
   const deleteGroupMutation = useDeleteGroupMutation();
 
   useEffect(() => {
@@ -133,6 +132,7 @@ const ContactGroup = () => {
           groupId={groupDetails?.id}
         />
       ),
+      meta: { title: "Action" },
     },
   ];
   const loadingState = isLoading || isRefetching;
@@ -174,26 +174,26 @@ const ContactGroup = () => {
       },
     });
   }
+
   const defaultColumnVisibility = useMemo(
     () =>
-      Object.keys(groupDetails ? groupDetails.contacts?.[0] : {}).reduce(
-        (visibility, key) => {
-          if (
-            ![
-              "name",
-              "phone",
-              "ContactLabelMap",
-              "source",
-              "createdAt",
-            ].includes(key)
-          ) {
-            visibility[key] = false;
-          }
-          return visibility;
-        },
-        {},
-      ),
-    [groupDetails],
+      column.reduce((visibility, key) => {
+        if (
+          ![
+            "select",
+            "name",
+            "phone",
+            "ContactLabelMap",
+            "source",
+            "createdAt",
+            "action",
+          ].includes((key as any)?.accessorKey || key?.id)
+        ) {
+          visibility[(key as any)?.accessorKey || key?.id] = false;
+        }
+        return visibility;
+      }, {}),
+    [column],
   );
   useEffect(() => {
     const filterKeys = Object.keys(filter).filter((f) => f !== "searchTerm");

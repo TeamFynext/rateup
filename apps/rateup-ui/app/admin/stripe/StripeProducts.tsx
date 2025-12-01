@@ -94,6 +94,7 @@ const StripeProducts = () => {
           {row.getValue("id")}
         </div>
       ),
+      meta: { title: "Product ID" },
     },
     {
       accessorKey: "name",
@@ -104,6 +105,7 @@ const StripeProducts = () => {
           <span className="font-medium">{row.getValue("name")}</span>
         </div>
       ),
+      meta: { title: "Name" },
     },
     {
       accessorKey: "description",
@@ -113,6 +115,7 @@ const StripeProducts = () => {
           {row.getValue("description") || "N/A"}
         </span>
       ),
+      meta: { title: "Description" },
     },
     {
       accessorKey: "type",
@@ -123,6 +126,7 @@ const StripeProducts = () => {
           <Badge variant="outline">{row.getValue("type")}</Badge>
         </div>
       ),
+      meta: { title: "Type" },
     },
     {
       accessorKey: "amount",
@@ -133,6 +137,7 @@ const StripeProducts = () => {
           <span className="font-mono">{row.getValue("amount")}</span>
         </div>
       ),
+      meta: { title: "Amount" },
     },
     {
       accessorKey: "currency",
@@ -142,6 +147,7 @@ const StripeProducts = () => {
           {row.getValue("currency")}
         </Badge>
       ),
+      meta: { title: "Currency" },
     },
     {
       accessorKey: "interval",
@@ -149,6 +155,7 @@ const StripeProducts = () => {
       cell: ({ row }) => (
         <Badge variant="secondary">{row.getValue("interval")}</Badge>
       ),
+      meta: { title: "Interval" },
     },
     {
       accessorKey: "intervalCount",
@@ -159,6 +166,7 @@ const StripeProducts = () => {
           <span className="font-mono">{row.getValue("intervalCount")}</span>
         </div>
       ),
+      meta: { title: "Interval Count" },
     },
     {
       accessorKey: "liveMode",
@@ -171,6 +179,7 @@ const StripeProducts = () => {
           </Badge>
         );
       },
+      meta: { title: "Live Mode" },
     },
     {
       accessorKey: "active",
@@ -183,6 +192,7 @@ const StripeProducts = () => {
           </Badge>
         );
       },
+      meta: { title: "Active" },
     },
     {
       accessorKey: "status",
@@ -226,6 +236,7 @@ const StripeProducts = () => {
           </Select>
         );
       },
+      meta: { title: "Status" },
     },
     {
       accessorKey: "createdAt",
@@ -236,6 +247,7 @@ const StripeProducts = () => {
           <span className="text-sm">{row.getValue("createdAt")}</span>
         </div>
       ),
+      meta: { title: "Created At" },
     },
     {
       id: "actions",
@@ -255,6 +267,7 @@ const StripeProducts = () => {
           <Trash2 className="h-4 w-4" />
         </Button>
       ),
+      meta: { title: "Actions" },
     },
   ];
 

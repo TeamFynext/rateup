@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 
 import {
@@ -18,6 +18,7 @@ import {
   GripVertical,
   Plus,
   Save,
+  Settings,
   Tag,
   Trash2,
   Trophy,
@@ -25,6 +26,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { z } from "zod/v4";
 
 import {
@@ -34,6 +37,7 @@ import {
   useReorderLifeCycleMutation,
   useUpdateLifeCycleMutation,
 } from "@/backend/lifecycle/lifecycle.query";
+import LifecycleSetup from "@/components/Contacts/LifecycleSetup";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -47,6 +51,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -76,11 +82,12 @@ const stageSchema = z.object({
   category: z.enum(["active", "won", "lost"]),
   emoji: z.string().min(1, "Emoji is required"),
   description: z.string().max(200, "Description too long").optional(),
+  color: z.string().min(1, "Color is required"), //hex value
 });
 
 type StageFormData = z.infer<typeof stageSchema>;
 
-interface LifecycleStage {
+export interface LifecycleStage {
   id?: string;
   name: string;
   ordering: number;
@@ -89,6 +96,7 @@ interface LifecycleStage {
   emoji: string;
   description: string;
   isWon: boolean;
+  color: string;
 }
 
 function getColorClasses(str: string) {
@@ -182,44 +190,21 @@ const getCategoryColor = (category: string) => {
   }
 };
 
-const LifecycleStageCard = ({
+const LifecycleStageAnalyticCard = ({
   stage,
   selectedStage,
   setSelectedStage,
   totalContacts,
   lifecycleStages,
+  handleDeleteStage,
+  canDeleteStage,
 }) => {
   const colors = getColorClasses(stage?.name);
-  const percentage = (stage._count.contacts / totalContacts) * 100;
+  const percentage = totalContacts
+    ? ((stage?._count.contacts ?? 0) / totalContacts) * 100
+    : 0;
   const [openedEdit, setOpenedEdit] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const deleteLifecycle = useDeleteLifeCycleMutation();
-  const handleDeleteStage = async () => {
-    if (stage?.isDefault) {
-      showErrorToast("Cannot delete default stage");
-      return;
-    }
-    // Don't allow deleting the last won stage in lifecycle
-    if (stage?.category === "won") {
-      const wonStages = lifecycleStages.filter((s) => s.category === "won");
-      if (wonStages.length === 1) {
-        showErrorToast(
-          "Cannot delete the last won stage. There must be at least one won stage.",
-        );
-        return;
-      }
-    }
-
-    deleteLifecycle.mutate(stage.id);
-  };
-  const canDeleteStage = (stage: LifecycleStage) => {
-    if (stage.isDefault) return false;
-    if (stage.category === "won") {
-      const wonStages = lifecycleStages.filter((s) => s.category === "won");
-      return wonStages.length > 1;
-    }
-    return true;
-  };
 
   return (
     <Card
@@ -228,11 +213,16 @@ const LifecycleStageCard = ({
       onClick={(e) => {
         e.stopPropagation();
         setSelectedStage(selectedStage === stage.id ? null : stage.id);
-        setOpenedEdit(true);
       }}
     >
       <div className="flex items-start justify-between mb-3">
-        <p className="text-lg">{stage.emoji}</p>
+        <div
+          style={{ backgroundColor: stage.color }}
+          className={`w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm`}
+        >
+          <p>{stage.emoji}</p>
+        </div>
+
         <div className="flex items-center gap-1">
           <Badge
             style={{
@@ -247,17 +237,6 @@ const LifecycleStageCard = ({
               Default
             </Badge>
           )}
-          {canDeleteStage(stage) && (
-            <Button
-              variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                setDeleteOpen(true);
-              }}
-            >
-              <Trash2 className="text-red-500" />
-            </Button>
-          )}
         </div>
       </div>
 
@@ -265,7 +244,7 @@ const LifecycleStageCard = ({
 
       <div className="space-y-2">
         <div className="flex items-end justify-between">
-          <span className="text-2xl">{stage.count}</span>
+          <span className="text-2xl">{stage._count.contacts}</span>
           <span className="text-sm text-muted-foreground">{percentage}%</span>
         </div>
 
@@ -286,7 +265,7 @@ const LifecycleStageCard = ({
       <CustomAlertDialog
         buttonTitle="Delete"
         description="Are you sure you want to delete this lifycycle stage?"
-        onAction={handleDeleteStage}
+        onAction={() => handleDeleteStage(stage)}
         opened={deleteOpen}
         setOpened={setDeleteOpen}
         title="Delete Lifecycle Stage"
@@ -312,9 +291,98 @@ const ContactSettings = () => {
     [],
   );
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
-
+  const [lifecycleSetup, setLifecycleSetup] = useState(false);
   const [isAddFormOpened, setIsOpenedAddForm] = useState(false);
-  const [isOpenedOrderModal, setIsOpenedOrderModal] = useState(false);
+  const reorderLifeCycle = useReorderLifeCycleMutation();
+  const onDragEnd = async (result: any) => {
+    if (!result.destination) return;
+
+    const sourceDroppableId = result.source.droppableId;
+    const destDroppableId = result.destination.droppableId;
+
+    // Get the appropriate stage array
+    const sourceStages =
+      sourceDroppableId === "lifecycle-stages" ? lifecycleStages : lostStages;
+
+    // Don't allow moving between different droppables
+    if (sourceDroppableId !== destDroppableId) return;
+
+    const draggedStage = sourceStages[result.source.index];
+
+    // Don't allow moving the last lifecycle stage if it's a won stage
+    if (sourceDroppableId === "lifecycle-stages") {
+      const isLastStage = result.source.index === lifecycleStages.length - 1;
+      const isWonStage = draggedStage.category === "won";
+      if (isLastStage && isWonStage) return;
+
+      // Don't allow moving to the last position if it would displace a won stage
+      const wouldDisplaceWonStage =
+        result.destination.index === lifecycleStages.length - 1 &&
+        lifecycleStages.at(-1)?.category === "won";
+      if (wouldDisplaceWonStage && draggedStage.category !== "won") return;
+    }
+
+    // No movement occurred
+    if (result.source.index === result.destination.index) return;
+
+    const items = Array.from(sourceStages);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Create new items with updated ordering values
+    const updatedItems = items.map((item: any, index) => ({
+      ...item,
+      ordering: index,
+    }));
+
+    // Pass only id and ordering to the mutation
+    const reorderData = updatedItems.map((item) => ({
+      id: item.id!,
+      ordering: item.ordering,
+      category: item.category,
+    }));
+
+    reorderLifeCycle.mutate(reorderData);
+  };
+
+  const canMoveStage = (
+    stage: LifecycleStage,
+    index: number,
+    stages: LifecycleStage[],
+  ) => {
+    if (stage.category === "won" && index === stages.length - 1) {
+      return false; // Last won stage cannot be moved
+    }
+    return true;
+  };
+
+  const deleteLifecycle = useDeleteLifeCycleMutation();
+  const handleDeleteStage = async (stage) => {
+    if (stage?.isDefault) {
+      showErrorToast("Cannot delete default stage");
+      return;
+    }
+    // Don't allow deleting the last won stage in lifecycle
+    if (stage?.category === "won") {
+      const wonStages = lifecycleStages.filter((s) => s.category === "won");
+      if (wonStages.length === 1) {
+        showErrorToast(
+          "Cannot delete the last won stage. There must be at least one won stage.",
+        );
+        return;
+      }
+    }
+
+    deleteLifecycle.mutate(stage.id);
+  };
+  const canDeleteStage = (stage: LifecycleStage) => {
+    if (stage.isDefault) return false;
+    if (stage.category === "won") {
+      const wonStages = lifecycleStages.filter((s) => s.category === "won");
+      return wonStages.length > 1;
+    }
+    return true;
+  };
 
   if (isLoading) return <Spinner />;
   if (lifecycles.length === 0) {
@@ -343,9 +411,23 @@ const ContactSettings = () => {
             lostStages={lostStages}
             opened={isAddFormOpened}
             setOpened={setIsOpenedAddForm}
+            activeStage={"lifecycle"}
           />
         </div>
       </div>
+    );
+  }
+  if (lifecycleSetup) {
+    return (
+      <LifecycleSetup
+        lifecycleStages={lifecycleStages}
+        lostStages={lostStages}
+        canMoveStage={canMoveStage}
+        onDragEnd={onDragEnd}
+        setLifecycleSetup={setLifecycleSetup}
+        canDeleteStage={canDeleteStage}
+        handleDeleteStage={handleDeleteStage}
+      />
     );
   }
 
@@ -362,31 +444,12 @@ const ContactSettings = () => {
           </div>
           <div className="flex items-center gap-3">
             <Button
-              onClick={() => setIsOpenedAddForm(true)}
+              onClick={() => setLifecycleSetup(true)}
               className="bg-rateup-blue"
             >
-              <Plus />
-              <span className="text-sm">Add Lifecycle Stage</span>
+              <Settings />
+              <span className="text-sm">Setup</span>
             </Button>
-            <Button
-              onClick={() => setIsOpenedOrderModal(true)}
-              className="bg-rateup-blue"
-            >
-              <ArrowUpDown />
-              <span className="text-sm">Manage Order</span>
-            </Button>
-            <AddLifeCycleStage
-              lifecycleStages={lifecycleStages}
-              lostStages={lostStages}
-              opened={isAddFormOpened}
-              setOpened={setIsOpenedAddForm}
-            />
-            <ReorderLifeCycleStage
-              lifecycleStages={lifecycleStages}
-              lostStages={lostStages}
-              opened={isOpenedOrderModal}
-              setOpened={setIsOpenedOrderModal}
-            />
           </div>
         </div>
       </Card>
@@ -401,13 +464,15 @@ const ContactSettings = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {lifecycleStages?.map((stage) => {
             return (
-              <LifecycleStageCard
+              <LifecycleStageAnalyticCard
                 key={stage.id}
                 lifecycleStages={lifecycleStages}
                 selectedStage={selectedStage}
                 setSelectedStage={setSelectedStage}
                 stage={stage}
                 totalContacts={totalContacts}
+                canDeleteStage={canDeleteStage}
+                handleDeleteStage={handleDeleteStage}
               />
             );
           })}
@@ -425,13 +490,15 @@ const ContactSettings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {lostStages?.map((stage) => {
               return (
-                <LifecycleStageCard
+                <LifecycleStageAnalyticCard
                   key={stage.id}
                   lifecycleStages={lifecycleStages}
                   selectedStage={selectedStage}
                   setSelectedStage={setSelectedStage}
                   stage={stage}
                   totalContacts={totalContacts}
+                  canDeleteStage={canDeleteStage}
+                  handleDeleteStage={handleDeleteStage}
                 />
               );
             })}
@@ -451,7 +518,9 @@ const ContactSettings = () => {
             {lifecycles.map((stage, index) => {
               const width = 100 - index * 12;
               const colors = getColorClasses(stage.name);
-              const percentage = (stage._count.contacts / totalContacts) * 100;
+              const percentage = totalContacts
+                ? ((stage?._count.contacts ?? 0) / totalContacts) * 100
+                : 0;
 
               return (
                 <div key={stage.id} className="flex items-center gap-4">
@@ -489,6 +558,7 @@ const renderAddStageForm = ({ lifecycleStages, lostStages, onSave }) => {
       category: "active" as const,
       emoji: "🆕",
       description: "",
+      color: "",
     },
   });
 
@@ -512,6 +582,7 @@ const renderAddStageForm = ({ lifecycleStages, lostStages, onSave }) => {
       emoji: values.emoji,
       description: values.description || "",
       isWon: category === "won",
+      color: "#008bd0ff",
     };
 
     createLifecycle.mutate(newStageData, {
@@ -616,11 +687,13 @@ const renderAddStageForm = ({ lifecycleStages, lostStages, onSave }) => {
   );
 };
 
-const AddLifeCycleStage = ({
+export const AddLifeCycleStage = ({
   lifecycleStages,
   lostStages,
   opened,
   setOpened,
+  activeStage,
+  stage = null,
 }) => {
   function onSave() {
     setOpened(false);
@@ -633,14 +706,219 @@ const AddLifeCycleStage = ({
         onInteractOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Add Lifecycle Stage</DialogTitle>
+          <DialogTitle>
+            {stage ? "Edit Lifecycle Stage" : "Add Lifecycle Stage"}{" "}
+          </DialogTitle>
           <DialogDescription>
-            Add lifecycle stage to track and manage customer journey
+            {!stage
+              ? "Add a new stage to your lifecycle process."
+              : "Edit and save changes."}
           </DialogDescription>
         </DialogHeader>
-        {renderAddStageForm({ lifecycleStages, lostStages, onSave })}
+        <LifecycleStageForm
+          lifecycleStages={lifecycleStages}
+          lostStages={lostStages}
+          activeStage={activeStage}
+          onSave={onSave}
+          onCancel={() => setOpened(false)}
+          stage={stage}
+        />
       </DialogContent>
     </Dialog>
+  );
+};
+
+const LifecycleStageForm = ({
+  activeStage,
+  lifecycleStages,
+  lostStages,
+  onSave = null,
+  onCancel = null,
+  stage = null,
+}) => {
+  const t = useTranslations();
+  const lifecycles = useLifecycleContext();
+  const createLifecycle = useCreateLifeCycleMutation();
+  const addStageForm = useForm<StageFormData>({
+    validate: zod4Resolver(stageSchema),
+    initialValues: stage || {
+      name: "",
+      category: "active" as const,
+      emoji: "🆕",
+      description: "",
+      color: "#00a2ffff", //save hex value
+    },
+  });
+
+  const handleAddStage = async (values: StageFormData) => {
+    if (addStageForm.validate().hasErrors) return;
+    const totalStages = lifecycles.length;
+
+    if (totalStages >= 10) {
+      showErrorToast("Maximum 10 stages allowed in total");
+      return;
+    }
+
+    const category = activeStage === "lifecycle" ? values.category : "lost";
+    const currentStages =
+      activeStage === "lifecycle" ? lifecycleStages : lostStages;
+
+    const newStageData: LifecycleStage = {
+      name: values.name,
+      ordering: currentStages.length - 1 <= 0 ? 1 : currentStages.length - 1,
+      isDefault: false,
+      category: category as "active" | "won" | "lost",
+      emoji: values.emoji,
+      description: values.description || "",
+      isWon: category === "won",
+      color: "#00a2ffff",
+    };
+
+    createLifecycle.mutate(newStageData, {
+      onSuccess: () => {
+        toast.success("stage added");
+        if (onSave) onSave();
+      },
+      onError: () => {
+        toast.error("error adding stage");
+      },
+      onSettled: () => {
+        addStageForm.reset();
+      },
+    });
+  };
+  const updateLifecycle = useUpdateLifeCycleMutation();
+
+  const handleUpdateStage = async (updates: Partial<LifecycleStage>) => {
+    updateLifecycle.mutate(
+      { id: stage.id, data: updates },
+      {
+        onSuccess: () => {
+          if (onSave) onSave();
+        },
+      },
+    );
+  };
+
+  const isLifecycleStage =
+    stage?.category === "active" || stage?.category === "won";
+
+  const handleSubmit = (values: StageFormData) => {
+    if (stage) handleUpdateStage(values);
+    else handleAddStage(values);
+  };
+
+  const lifecycleColors = [
+    "#5DADE2",
+    "#48C9B0",
+    "#52BE80",
+    "#28B463",
+    "#F4D03F",
+    "#F5B041",
+    "#EB984E",
+    "#E67E22",
+    "#E74C3C",
+  ];
+
+  return (
+    <form onSubmit={addStageForm.onSubmit(handleSubmit)}>
+      <div className="flex flex-col gap-2 max-h-[80vh] overflow-y-auto p-2">
+        <Field className="flex flex-col gap-1">
+          <FieldLabel>{t("Name")}</FieldLabel>
+          <Input
+            {...addStageForm.getInputProps("name")}
+            placeholder={t("Enter name. eg: New Lead")}
+          />
+          {addStageForm.errors.name && (
+            <FieldError>{addStageForm.errors.name}</FieldError>
+          )}
+        </Field>
+        <Field className="flex flex-col gap-1">
+          <FieldLabel>{t("Description")}</FieldLabel>
+          <Input
+            {...addStageForm.getInputProps("description")}
+            placeholder={t("Enter description")}
+          />
+          {addStageForm.errors.description && (
+            <FieldError>{addStageForm.errors.description}</FieldError>
+          )}
+        </Field>
+        {stage && isLifecycleStage && (
+          <Field>
+            <FieldLabel>{t("Category")}</FieldLabel>
+            <Select
+              value={addStageForm.values.category}
+              onValueChange={(value) =>
+                addStageForm.setFieldValue("category", value as any)
+              }
+              disabled={stage.isDefault}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="won">Won</SelectItem>
+              </SelectContent>
+            </Select>
+            {addStageForm.errors.category && (
+              <FieldError>{addStageForm.errors.category}</FieldError>
+            )}
+          </Field>
+        )}
+        <Field className="flex flex-col gap-1 w-full">
+          <FieldLabel>{t("Emoji Icon")}</FieldLabel>
+          <div className="flex gap-2 items-center">
+            <div
+              style={{ backgroundColor: addStageForm.values.color }}
+              className={`rounded-lg w-8 h-8 flex justify-center items-center p-2`}
+            >
+              <p>{addStageForm.values.emoji}</p>
+            </div>
+            <span className="text-muted-foreground text-sm">
+              {t("selected emoji")}
+            </span>
+          </div>
+          <EmojiPicker
+            onEmojiClick={(emojiData) =>
+              addStageForm.setFieldValue("emoji", emojiData.emoji)
+            }
+          />
+          {addStageForm.errors.emoji && (
+            <FieldError>{addStageForm.errors.emoji}</FieldError>
+          )}
+        </Field>
+        <Field className="flex flex-col gap-1">
+          <FieldLabel>{t("Color")}</FieldLabel>
+          <div className="grid grid-cols-3 gap-2 w-full">
+            {lifecycleColors.map((color) => (
+              <div
+                style={{ backgroundColor: color }}
+                key={color}
+                onClick={() => addStageForm.setFieldValue("color", color)}
+                className="w-30 h-10 rounded-md border-0 hover:border-4 hover:border-gray-300 transition-all duration-300"
+              ></div>
+            ))}
+          </div>
+          {addStageForm.errors.color && (
+            <FieldError>{addStageForm.errors.color}</FieldError>
+          )}
+        </Field>
+        <div className="flex gap-1 justify-end my-2">
+          <Button
+            type="reset"
+            variant="secondary"
+            onClick={() => {
+              addStageForm.reset();
+              onCancel();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button type="submit">Save</Button>
+        </div>
+      </div>
+    </form>
   );
 };
 
@@ -683,6 +961,7 @@ const EditStageForm = ({
       category: stage.category,
       emoji: stage.emoji,
       description: stage.description,
+      color: stage.color,
     },
   });
 
@@ -789,71 +1068,9 @@ const ReorderLifeCycleStage = ({
   lostStages,
   opened,
   setOpened,
+  canMoveStage,
+  onDragEnd,
 }) => {
-  const reorderLifeCycle = useReorderLifeCycleMutation();
-
-  const onDragEnd = async (result: any) => {
-    if (!result.destination) return;
-
-    const sourceDroppableId = result.source.droppableId;
-    const destDroppableId = result.destination.droppableId;
-
-    // Get the appropriate stage array
-    const sourceStages =
-      sourceDroppableId === "lifecycle-stages" ? lifecycleStages : lostStages;
-
-    // Don't allow moving between different droppables
-    if (sourceDroppableId !== destDroppableId) return;
-
-    const draggedStage = sourceStages[result.source.index];
-
-    // Don't allow moving the last lifecycle stage if it's a won stage
-    if (sourceDroppableId === "lifecycle-stages") {
-      const isLastStage = result.source.index === lifecycleStages.length - 1;
-      const isWonStage = draggedStage.category === "won";
-      if (isLastStage && isWonStage) return;
-
-      // Don't allow moving to the last position if it would displace a won stage
-      const wouldDisplaceWonStage =
-        result.destination.index === lifecycleStages.length - 1 &&
-        lifecycleStages.at(-1)?.category === "won";
-      if (wouldDisplaceWonStage && draggedStage.category !== "won") return;
-    }
-
-    // No movement occurred
-    if (result.source.index === result.destination.index) return;
-
-    const items = Array.from(sourceStages);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    // Create new items with updated ordering values
-    const updatedItems = items.map((item: any, index) => ({
-      ...item,
-      ordering: index,
-    }));
-
-    // Pass only id and ordering to the mutation
-    const reorderData = updatedItems.map((item) => ({
-      id: item.id!,
-      ordering: item.ordering,
-      category: item.category,
-    }));
-
-    reorderLifeCycle.mutate(reorderData);
-  };
-
-  const canMoveStage = (
-    stage: LifecycleStage,
-    index: number,
-    stages: LifecycleStage[],
-  ) => {
-    if (stage.category === "won" && index === stages.length - 1) {
-      return false; // Last won stage cannot be moved
-    }
-    return true;
-  };
-
   const renderStageCard = (
     stage: LifecycleStage,
     index: number,

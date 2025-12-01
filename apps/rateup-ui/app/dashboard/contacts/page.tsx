@@ -68,6 +68,7 @@ export default function Contacts() {
         enableColumnFilter: false,
         id: "action",
         cell: (info) => <ContactMenu contact={info.getValue()} groupId={""} />,
+        meta: { title: "Action" },
       },
     ],
     [customFields],
@@ -77,20 +78,28 @@ export default function Contacts() {
     () => contactData?.users ?? [],
     [contactData?.users],
   );
+
   const defaultColumnVisibility = useMemo(
     () =>
-      Object.keys(contactMemoData?.[0] || {}).reduce((visibility, key) => {
+      column.reduce((visibility, key) => {
         if (
-          !["name", "phone", "ContactLabelMap", "source", "createdAt"].includes(
-            key,
-          )
+          ![
+            "select",
+            "name",
+            "phone",
+            "ContactLabelMap",
+            "source",
+            "createdAt",
+            "action",
+          ].includes((key as any)?.accessorKey || key?.id)
         ) {
-          visibility[key] = false;
+          visibility[(key as any)?.accessorKey || key?.id] = false;
         }
         return visibility;
       }, {}),
-    [contactMemoData],
+    [column],
   );
+
   if (isError) return <ErrorComponent refetch={refetchContacts} />;
 
   return (
