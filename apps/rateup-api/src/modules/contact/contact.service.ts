@@ -432,6 +432,11 @@ export async function getContactsByOrgId(
         assignedUserId: true,
       },
     },
+    Lifecycle: {
+      select: {
+        name: true,
+      },
+    },
   };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / Number(limit)));
