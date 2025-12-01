@@ -58,6 +58,7 @@ export interface IUpdateOrgDetails {
   website: string;
   encryptionKeys: EncryptionKeys;
   waAssignedChatPermission: WaAssignedChatPermission;
+  showLifecycle: boolean;
 }
 export const updateOrgDetails = (data: Partial<IUpdateOrgDetails>) =>
   axiosClient.put("/org/update-details", data);

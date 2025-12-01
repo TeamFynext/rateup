@@ -37,6 +37,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useChatFilterStore } from "@/components/whatsapp/inbox/chatselect/chatFilter";
+import { useUser } from "@/context/UserContext";
 import { getFileUrlFromKey } from "@/utils/file-upload/upload";
 
 import { useNavMain } from "./hooks";
@@ -112,11 +113,11 @@ export default function AppSidebar({
     }
     return true;
   };
-
+  const { user } = useUser();
   // Memoize navMain for performance
   const navMain = useNavMain({
     subscription,
-    lifecycles,
+    lifecycles: user?.showLifecycle ? lifecycles : [],
     contactLabels,
     t,
     chatFilterStore,

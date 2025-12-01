@@ -95,18 +95,22 @@ export function useNavMain({
                   url: "/dashboard/inbox?tab=UnAssigned",
                   icon: IconUserX,
                 },
-                {
-                  title: "Lifecycle",
-                  icon: IconActivity,
-                  items: lifecycles.map((lbl) => ({
-                    title: `${lbl.emoji ? lbl.emoji + " " : ""}${lbl.name}`,
-                    url: "#",
-                    handleClick: () => {
-                      handleLifecycleFilter(lbl.id);
-                    },
-                    isActive: chatFilterStore.filter.lifecycle === lbl.id,
-                  })),
-                },
+                ...(lifecycles.length > 0
+                  ? [
+                      {
+                        title: "Lifecycle",
+                        icon: IconActivity,
+                        items: lifecycles.map((lbl) => ({
+                          title: `${lbl.emoji ? lbl.emoji + " " : ""}${lbl.name}`,
+                          url: "#",
+                          handleClick: () => {
+                            handleLifecycleFilter(lbl.id);
+                          },
+                          isActive: chatFilterStore.filter.lifecycle === lbl.id,
+                        })),
+                      },
+                    ]
+                  : []),
                 {
                   title: "Labels",
                   icon: IconLabel,

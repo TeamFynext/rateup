@@ -18,6 +18,7 @@ import ContactTable from "@/components/Table/ContactTable";
 import { DataTable } from "@/components/Table/data-table";
 import { Input } from "@/components/ui/input";
 import { useCustomFieldsContext } from "@/context/CustomFieldsContext";
+import { useUser } from "@/context/UserContext";
 import { PAGE_SIZE } from "@/utils/constants";
 
 import { columns } from "./components/columns";
@@ -57,10 +58,10 @@ export default function Contacts() {
 
   const { customFields } = useCustomFieldsContext();
   const translations = useTranslations();
-
+  const { user } = useUser();
   const column = useMemo(
     () => [
-      ...contactColumn(customFields || []),
+      ...contactColumn(customFields || [], user?.showLifecycle),
       {
         header: "Action",
         accessorFn: (row) => row,
