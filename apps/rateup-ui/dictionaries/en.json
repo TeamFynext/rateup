@@ -2439,5 +2439,12 @@
   "Only authentication buttons are allowed for this template": "Only authentication buttons are allowed for this template",
   "Authentication Buttons": "Authentication Buttons",
   "Only one authentication button allowed": "Only one authentication button allowed",
-  "OTP (One-Time Password)": "OTP (One-Time Password)"
+  "OTP (One-Time Password)": "OTP (One-Time Password)",
+  "Select Board": "Select Board",
+  "Select List": "Select List",
+  "Enter ticket title": "Enter ticket title",
+  "Provide detailed information about the ticket": "Provide detailed information about the ticket",
+  "Tags, Groups, Campaigns": "Tags, Groups, Campaigns",
+  "Select category (type in to search)": "Select category (type in to search)",
+  "Search Surveys": "Search Surveys"
 }

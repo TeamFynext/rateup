@@ -148,21 +148,25 @@ export const columns = [
     cell: ({ row }) => (
       <ActionCell action={row.original?.method} route={row.original?.route} />
     ),
+    meta: { title: "Action" },
   },
   {
     accessorKey: "user",
     header: createSortableHeader("User Name"),
     accessorFn: (row) => row.user?.name,
     cell: ({ row }) => <UserCell user={row.original?.user} />,
+    meta: { title: "User Name" },
   },
   {
     accessorKey: "body",
     header: "Request Body",
     cell: ({ row }) => <RequestBodyCell body={row.getValue("body")} />,
+    meta: { title: "Request Body" },
   },
   {
     accessorKey: "createdAt",
     header: createSortableHeader("Timestamp"),
     cell: ({ row }) => <TimestampCell timestamp={row.getValue("createdAt")} />,
+    meta: { title: "Timestamp" },
   },
 ] as ColumnDef<AuditLogData>[];

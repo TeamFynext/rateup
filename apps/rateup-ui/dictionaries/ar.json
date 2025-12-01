@@ -2451,5 +2451,12 @@
   "Only authentication buttons are allowed for this template": "يُسمح فقط بأزرار المصادقة لهذا النموذج",
   "Authentication Buttons": "أزرار المصادقة",
   "Only one authentication button allowed": "يُسمح بزر مصادقة واحد فقط",
-  "OTP (One-Time Password)": "كلمة مرور لمرة واحدة (OTP)"
+  "OTP (One-Time Password)": "كلمة مرور لمرة واحدة (OTP)",
+  "Select Board": "اختر اللوحة",
+  "Select List": "اختر القائمة",
+  "Enter ticket title": "أدخل عنوان التذكرة",
+  "Provide detailed information about the ticket": "قدّم معلومات مفصلة حول التذكرة",
+  "Tags, Groups, Campaigns": "الوسوم والمجموعات والحملات",
+  "Select category (type in to search)": "اختر الفئة (اكتب للبحث)",
+  "Search Surveys": "البحث في الاستبيانات"
 }

@@ -1,58 +1,46 @@
 "use client";
 
-import { Button, Menu, Tooltip } from "@mantine/core";
-import { IconChevronDown } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function StatusFilterMenu({ filterParam, setFilterParam }) {
   const translations = useTranslations();
   return (
-    <Menu shadow="md" width={120}>
-      <Menu.Target>
-        <Tooltip
-          label={translations("Status") ?? "Status"}
-          withArrow
-          position="top"
-        >
-          <Button
-            variant="outline"
-            color="#3F5BA9"
-            radius="xl"
-            rightSection={<IconChevronDown size="1rem" />}
-            tt={"capitalize"}
-            style={{ minWidth: 110 }}
-          >
-            {filterParam}
-          </Button>
-        </Tooltip>
-      </Menu.Target>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Select value={filterParam} onValueChange={setFilterParam}>
+          <SelectTrigger className="min-w-[110px] rounded-sm capitalize">
+            <SelectValue placeholder={translations("Status") ?? "Status"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className="capitalize">
+              {translations("All")}
+            </SelectItem>
+            <SelectItem value="active" className="capitalize">
+              {translations("Active")}
+            </SelectItem>
+            <SelectItem value="paused" className="capitalize">
+              {translations("Paused")}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </TooltipTrigger>
 
-      <Menu.Dropdown
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-      >
-        <Menu.Item
-          color={filterParam === "all" && "blue"}
-          onClick={() => setFilterParam("all")}
-        >
-          {translations("All")}
-        </Menu.Item>
-
-        <Menu.Item
-          color={filterParam === "active" && "green"}
-          onClick={() => setFilterParam("active")}
-        >
-          {translations("Active")}
-        </Menu.Item>
-
-        <Menu.Item
-          color={filterParam === "paused" && "yellow"}
-          onClick={() => setFilterParam("paused")}
-        >
-          {translations("Paused")}
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+      <TooltipContent side="top">
+        {translations("Status") ?? "Status"}
+      </TooltipContent>
+    </Tooltip>
   );
 }

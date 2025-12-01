@@ -2456,5 +2456,12 @@
   "Only authentication buttons are allowed for this template": "Für diese Vorlage sind nur Authentifizierungsschaltflächen erlaubt",
   "Authentication Buttons": "Authentifizierungsschaltflächen",
   "Only one authentication button allowed": "Nur eine Authentifizierungsschaltfläche erlaubt",
-  "OTP (One-Time Password)": "Einmalpasswort (OTP)"
+  "OTP (One-Time Password)": "Einmalpasswort (OTP)",
+  "Select Board": "Tafel auswählen",
+  "Select List": "Liste auswählen",
+  "Enter ticket title": "Tickettitel eingeben",
+  "Provide detailed information about the ticket": "Geben Sie detaillierte Informationen zum Ticket an",
+  "Tags, Groups, Campaigns": "Tags, Gruppen, Kampagnen",
+  "Select category (type in to search)": "Kategorie auswählen (zum Suchen tippen)",
+  "Search Surveys": "Umfragen durchsuchen"
 }

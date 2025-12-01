@@ -1,24 +1,15 @@
 "use client";
 
-import { Group } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { Plus, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
 import { useUser } from "../../../context/UserContext";
-import { docsPath } from "../../../utils/constants";
 import { UserRole } from "../../../utils/enums";
-import InfoButton from "../../Button/InfoButton";
-import {
-  RateupButtonBlue,
-  RateupButtonPrimary,
-} from "../../Button/RateupButtons";
-import RefreshButton from "../../Button/RefreshButton";
 import SortDropdown from "../../Dashboard/SortDropDown";
 import { TeamSelector } from "../../input/TeamSelector";
-import Heading from "../../styled/Heading/Heading";
-import styles from "../../WelcomeTour/components/Tour.module.css";
-import WebSurveyTourSteps from "../../WelcomeTour/components/WebSurveyTourSteps";
-import WelcomeTour from "../../WelcomeTour/WelcomeTour";
 import { StatusFilterMenu } from "../SurveysHome/StatusFilterMenu";
 
 export function SurveyHeader({
@@ -32,52 +23,65 @@ export function SurveyHeader({
   sortOption,
   surveyCount,
   surveyType,
+  setSearchQuery,
+  searchQuery,
   refetch,
 }) {
   const { user } = useUser();
   const translations = useTranslations();
-  const tourSteps = WebSurveyTourSteps({ styles });
 
   return (
-    <Group gap="sm" justify="space-between">
-      <Group gap="sm" justify="flex-start">
+    <div className="border-b px-4 sm:px-6 py-3">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* Left Section (Create button) */}
         {user?.role !== UserRole.MEMBER && (
-          <RateupButtonBlue
-            className={styles["create-survey-button"]}
-            rightIcon={<IconPlus />}
-            title={translations("Create Survey")}
+          <Button
             onClick={openCreateSurvey}
-          />
+            className="bg-primary shadow-sm h-9 w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {translations("Create Survey")}
+          </Button>
         )}
-        <InfoButton docUrl={`${docsPath}/webSurvey`} />
-        <WelcomeTour steps={tourSteps} />
-        <RefreshButton queryKeys={["surveys"]} />
-      </Group>
 
-      <Group gap="md" justify="flex-start">
-        {surveyCount > 0 && (
-          <RateupButtonPrimary
-            title={translations("Group survey")}
-            onClick={() => openMergeSurvey()}
+        {/* Right Section (Filters / Search) */}
+        <div className="flex flex-col sm:flex-row items-start justify-center gap-3">
+          {/* Team Selector */}
+          <TeamSelector
+            value={selectedTeamId}
+            onChange={(teamId) => setSelectedTeamId(teamId)}
+            enableAll={true}
+            className="w-full"
           />
-        )}
-        <TeamSelector
-          className={styles["team-select-option"]}
-          value={selectedTeamId}
-          onChange={(teamId) => setSelectedTeamId(teamId)}
-          enableAll={true}
-        />
-        <StatusFilterMenu
-          filterParam={filterParam}
-          setFilterParam={setFilterParam}
-        />
-        <Group className={styles["sort-dropdown"]}>
-          <SortDropdown
-            onSortChange={onSortChange}
-            defaultSortOption={sortOption}
-          />
-        </Group>
-      </Group>
-    </Group>
+
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Status Filter */}
+            <StatusFilterMenu
+              filterParam={filterParam}
+              setFilterParam={setFilterParam}
+            />
+
+            {/* Sorting */}
+            <SortDropdown
+              onSortChange={onSortChange}
+              defaultSortOption={sortOption}
+            />
+          </div>
+
+          {/* Search Input */}
+          <div className="flex w-full">
+            <Input
+              placeholder={translations("Search Surveys")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-9 flex-1"
+            />
+            <Button variant="outline" size="icon" className="h-9 w-9 ml-2">
+              <Search className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

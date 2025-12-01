@@ -44,10 +44,12 @@ const Logs = () => {
       cell: (info) =>
         info.getValue() &&
         dayjs.utc(info.getValue() as string).format("DD-MM-YYYY hh:mm A"),
+      meta: { title: "Timestamp" },
     },
     {
       header: () => "Phone Number",
       accessorKey: "phone",
+      meta: { title: "Phone Number" },
     },
     {
       header: () => "Error Messages",
@@ -70,6 +72,7 @@ const Logs = () => {
           </List>
         );
       },
+      meta: { title: "Error Messages" },
     },
     {
       header: () => "Error Details",
@@ -93,6 +96,7 @@ const Logs = () => {
           </List>
         );
       },
+      meta: { title: "Error Details" },
     },
   ];
   if (isPending)

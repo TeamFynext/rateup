@@ -92,6 +92,7 @@ const index = () => {
           <span className="text-sm font-medium">{row.getValue("id")}</span>
         </div>
       ),
+      meta: { title: "Email ID" },
     },
     {
       accessorKey: "name",
@@ -102,6 +103,7 @@ const index = () => {
           <span className="font-medium">{row.getValue("name")}</span>
         </div>
       ),
+      meta: { title: "Name" },
     },
     {
       accessorKey: "orgName",
@@ -112,6 +114,7 @@ const index = () => {
           <span className="text-sm">{row.getValue("orgName")}</span>
         </div>
       ),
+      meta: { title: "Organization" },
     },
     {
       accessorKey: "role",
@@ -130,6 +133,7 @@ const index = () => {
           </div>
         );
       },
+      meta: { title: "Role" },
     },
     {
       accessorKey: "signupDate",
@@ -140,6 +144,7 @@ const index = () => {
           <span className="text-sm">{row.getValue("signupDate")}</span>
         </div>
       ),
+      meta: { title: "SignUp Date" },
     },
     {
       accessorKey: "recipeName",
@@ -147,6 +152,7 @@ const index = () => {
       cell: ({ row }) => (
         <span className="text-sm">{row.getValue("recipeName") || "N/A"}</span>
       ),
+      meta: { title: "Recipe" },
     },
     {
       accessorKey: "isPaused",
@@ -159,6 +165,7 @@ const index = () => {
           </Badge>
         );
       },
+      meta: { title: "Is Paused" },
     },
     {
       accessorKey: "status",
@@ -171,6 +178,7 @@ const index = () => {
           </Badge>
         );
       },
+      meta: { title: "Status" },
     },
     {
       id: "actions",
@@ -199,6 +207,7 @@ const index = () => {
           </Button>
         );
       },
+      meta: { title: "Actions" },
     },
   ];
 

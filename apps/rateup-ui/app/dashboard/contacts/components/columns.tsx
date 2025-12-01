@@ -43,6 +43,7 @@ export const columns: ColumnDef<CustomFieldData>[] = [
       </Text>
     ),
     enableHiding: false,
+    meta: { title: "Name" },
   },
   {
     accessorKey: "slug",
@@ -52,12 +53,11 @@ export const columns: ColumnDef<CustomFieldData>[] = [
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("slug"))}</Text>;
     },
+    meta: { title: "Field ID" },
   },
   {
     accessorKey: "description",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Description" />
-    ),
+    header: "Description",
     cell: ({ row }) => {
       const description: string = row.getValue("description");
       return (
@@ -66,6 +66,7 @@ export const columns: ColumnDef<CustomFieldData>[] = [
         </Text>
       );
     },
+    meta: { title: "Description" },
   },
   {
     accessorKey: "visibility",
@@ -75,6 +76,7 @@ export const columns: ColumnDef<CustomFieldData>[] = [
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("visibility"))}</Text>;
     },
+    meta: { title: "Visibility" },
   },
   {
     accessorKey: "type",
@@ -84,6 +86,7 @@ export const columns: ColumnDef<CustomFieldData>[] = [
     cell: ({ row }) => {
       return <Text size="sm">{String(row.getValue("type"))}</Text>;
     },
+    meta: { title: "Type" },
   },
   {
     accessorKey: "createdAt",
@@ -97,9 +100,11 @@ export const columns: ColumnDef<CustomFieldData>[] = [
         </Text>
       );
     },
+    meta: { title: "Created At" },
   },
   {
     id: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,
+    meta: { title: "Actions" },
   },
 ];
