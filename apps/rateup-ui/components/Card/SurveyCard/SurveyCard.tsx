@@ -40,7 +40,6 @@ export function SurveyCard({
     (sum, t) => sum + (t.responsesCount?.responses || 0),
     0,
   );
-  console.log(survey);
   return (
     <Card
       key={survey.id}
