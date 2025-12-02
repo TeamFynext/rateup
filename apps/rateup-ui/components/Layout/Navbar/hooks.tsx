@@ -37,6 +37,7 @@ import {
 } from "@tabler/icons-react";
 import {
   Activity,
+  CircleCheckBig,
   FileChartColumn,
   FileSpreadsheet,
   Folder,
@@ -44,6 +45,8 @@ import {
   MessageSquareDot,
   Settings,
   Tag,
+  User,
+  UserCheck,
   Users,
 } from "lucide-react";
 
@@ -59,9 +62,7 @@ export function useNavMain({
   t,
   chatFilterStore,
   hiddenModules,
-  handleLabelsFilter,
-  handleLifecycleFilter,
-  handleStaffFilter,
+  handleFilter,
 }: any) {
   return useMemo(
     () => [
@@ -98,6 +99,11 @@ export function useNavMain({
                   url: "/dashboard/inbox?tab=UnAssigned",
                   icon: IconUserX,
                 },
+                {
+                  title: t("Closed"),
+                  url: "/dashboard/inbox?tab=Closed",
+                  icon: CircleCheckBig,
+                },
                 ...(lifecycles.length > 0
                   ? [
                       {
@@ -107,7 +113,7 @@ export function useNavMain({
                           title: `${lbl.emoji ? lbl.emoji + " " : ""}${lbl.name}`,
                           url: "#",
                           handleClick: () => {
-                            handleLifecycleFilter(lbl.id);
+                            handleFilter("lifecycle", lbl.id);
                           },
                           isActive: chatFilterStore.filter.lifecycle === lbl.id,
                         })),
@@ -130,7 +136,7 @@ export function useNavMain({
                       />
                     ),
                     handleClick: () => {
-                      handleLabelsFilter(lbl.id);
+                      handleFilter("label", lbl.id);
                     },
                     isActive: chatFilterStore.filter.labels?.includes(lbl.id),
                   })),
@@ -139,15 +145,34 @@ export function useNavMain({
                   ? [
                       {
                         title: "Staff",
-                        icon: IconActivity,
+                        icon: User,
                         items: staff.map((st) => ({
                           title: st.name,
                           url: "#",
                           handleClick: () => {
-                            handleStaffFilter(st.id);
+                            handleFilter("assignedStaff", st.id);
                           },
                           isActive:
-                            chatFilterStore.filter.assignedUserIds.includes(
+                            chatFilterStore.filter.assignedUserIds?.includes(
+                              st.id,
+                            ),
+                        })),
+                      },
+                    ]
+                  : []),
+                ...(teams.length > 0
+                  ? [
+                      {
+                        title: "Teams",
+                        icon: Users,
+                        items: teams.map((st) => ({
+                          title: st.name,
+                          url: "#",
+                          handleClick: () => {
+                            handleFilter("assignedTeams", st.id);
+                          },
+                          isActive:
+                            chatFilterStore.filter.assignedTeams.includes(
                               st.id,
                             ),
                         })),

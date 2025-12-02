@@ -79,23 +79,7 @@ export default function AppSidebar({
   const { setOpen, open } = useSidebar();
   const isCollapsed = !open;
   // Handlers for label/lifecycle filters
-  const handleLabelsFilter = (label: string) => {
-    let updatedLabels = chatFilterStore.filter.labels?.includes(label)
-      ? chatFilterStore.filter.labels?.filter((l) => l !== label)
-      : [...chatFilterStore.filter.labels, label];
-    chatFilterStore.setFilter({
-      ...chatFilterStore.filter,
-      labels: updatedLabels,
-    });
-  };
-  const handleLifecycleFilter = (lifecycle: string) => {
-    let updatedLifecycle =
-      chatFilterStore.filter.lifecycle === lifecycle ? "" : lifecycle;
-    chatFilterStore.setFilter({
-      ...chatFilterStore.filter,
-      lifecycle: updatedLifecycle,
-    });
-  };
+
   // Unified route guard function
   const handleRouteGuard = (route?: string) => {
     // Show offline toast, but do not block navigation
@@ -118,6 +102,56 @@ export default function AppSidebar({
     return true;
   };
   const { user } = useUser();
+  function handleFilter(label, value) {
+    switch (label) {
+      case "label":
+        let updatedLabels = chatFilterStore.filter.labels?.includes(value)
+          ? chatFilterStore.filter.labels?.filter((l) => l !== value)
+          : [...chatFilterStore.filter.labels, value];
+        chatFilterStore.setFilter({
+          ...chatFilterStore.filter,
+          labels: updatedLabels,
+        });
+        break;
+      case "lifecycle":
+        let updatedLifecycle =
+          chatFilterStore.filter.lifecycle === value ? "" : value;
+        chatFilterStore.setFilter({
+          ...chatFilterStore.filter,
+          lifecycle: updatedLifecycle,
+        });
+        break;
+      case "assignedStaff":
+        let updatedStaff = chatFilterStore.filter.assignedUserIds.includes(
+          value,
+        )
+          ? chatFilterStore.filter.assignedUserIds.filter((t) => t !== value)
+          : [...chatFilterStore.filter.assignedUserIds, value];
+        chatFilterStore.setFilter({
+          ...chatFilterStore.filter,
+          assignedUserIds: updatedStaff,
+        });
+        break;
+      case "assignedTeams":
+        let updatedTeams = chatFilterStore.filter.assignedTeams.includes(value)
+          ? chatFilterStore.filter.assignedTeams.filter((t) => t !== value)
+          : [...chatFilterStore.filter.assignedTeams, value];
+        chatFilterStore.setFilter({
+          ...chatFilterStore.filter,
+          assignedTeams: updatedTeams,
+        });
+        break;
+    }
+  }
+
+  useEffect(() => {
+    if (!chatFilterStore.filter.assignedUserIds) {
+      chatFilterStore.setFilter({
+        ...chatFilterStore.filter,
+        assignedUserIds: [],
+      });
+    }
+  }, [chatFilterStore.filter]);
   // Memoize navMain for performance
   const navMain = useNavMain({
     subscription,
@@ -128,8 +162,7 @@ export default function AppSidebar({
     t,
     chatFilterStore,
     hiddenModules,
-    handleLabelsFilter,
-    handleLifecycleFilter,
+    handleFilter,
   });
 
   // Find active item based on pathname and filters

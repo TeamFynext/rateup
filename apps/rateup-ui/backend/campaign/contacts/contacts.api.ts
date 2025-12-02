@@ -56,7 +56,7 @@ export async function getContactById(contactId: string) {
 }
 
 export const createContact = async (data: ICreateContact) => {
-  let res = await axiosClient.post(CONTACT_BASE_URL, data);
+  let res = await axiosClient.post(CONTACT_BASE_URL, data, { timeout: 60000 });
   return res as { data: ContactsData };
 };
 
