@@ -63,6 +63,7 @@ export function useNavMain({
   chatFilterStore,
   hiddenModules,
   handleFilter,
+  userId,
 }: any) {
   return useMemo(
     () => [
@@ -147,7 +148,7 @@ export function useNavMain({
                         title: "Staff",
                         icon: User,
                         items: staff.map((st) => ({
-                          title: st.name,
+                          title: `${st.name} ${userId === st.id ? "(You)" : ""}`,
                           url: "#",
                           handleClick: () => {
                             handleFilter("assignedStaff", st.id);

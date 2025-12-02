@@ -163,6 +163,7 @@ export default function AppSidebar({
     chatFilterStore,
     hiddenModules,
     handleFilter,
+    userId: user?.userId,
   });
 
   // Find active item based on pathname and filters
