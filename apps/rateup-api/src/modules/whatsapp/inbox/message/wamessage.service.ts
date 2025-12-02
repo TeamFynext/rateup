@@ -45,6 +45,9 @@ import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../../../integrations/external/zapier/zapier.service";
+import { faker } from "@faker-js/faker";
+import { v4 as uuidv4 } from "uuid";
+import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -1308,12 +1311,6 @@ export async function getChatByContactId(req, res) {
     res.status(500).send({ error: "Failed to retrieve chat" });
   }
 }
-import { faker } from "@faker-js/faker";
-import { v4 as uuidv4 } from "uuid";
-import { WaMessageBody } from "../../../../types/whatsapp.types";
-import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
-import { filter } from "lodash";
-
 /**
  * Generate a "send" text message
  */
