@@ -421,14 +421,6 @@ export async function filterChats(
         waAssignedChatPermission === WaAssignedChatPermission.Admins &&
         role === Role.MEMBER
       ) {
-        // if(bodyFilterProps.assignedUserIds?.length || bodyFilterProps.assignedTeams?.length){
-        //   params.push(userId);
-        //   filters.push(`EXISTS (
-        //     SELECT 1 FROM "WaInboxAssign" winb
-        //     WHERE winb."contactId" = c.id
-        //     AND winb."assignedUserId" = $${paramIndex++}::uuid
-        //   )`);
-        //  }
         let newQuery = `EXISTS (
           SELECT 1 FROM "WaInboxAssign" winb 
           WHERE winb."contactId" = c.id`;
