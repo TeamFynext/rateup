@@ -190,6 +190,7 @@ declare global {
     mapId: string;
     code: string;
     shortUrlId?: string;
+    responsesCount?: any;
   }
 
   interface STStats {
