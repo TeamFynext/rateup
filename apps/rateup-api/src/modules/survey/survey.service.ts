@@ -375,6 +375,7 @@ export async function getSurveyBylandingId(landingid: string) {
 export async function getSurveysByUserId(
   userId: string,
   includeQuestions: boolean = false,
+  includeResponse: boolean = false,
 ) {
   const teamIds: string[] = await getTeamIdsByUserId(userId);
 
@@ -406,6 +407,11 @@ export async function getSurveysByUserId(
               name: true,
             },
           },
+          _count: {
+            select: {
+              responses: includeResponse,
+            },
+          },
         },
       },
     },
@@ -418,6 +424,7 @@ export async function getSurveysByUserId(
         name: team.team.name,
         mapId: team.id,
         shortUrlId: team.shortUrlId,
+        responsesCount: team._count,
       };
     });
     return { ...survey, teams: optimizedTeams };
