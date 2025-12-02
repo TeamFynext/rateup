@@ -43,7 +43,7 @@ export function SurveyCard({
   return (
     <Card
       key={survey.id}
-      className="group hover:shadow-2xl transition-all duration-300 cursor-pointer border-slate-200 hover:border-[#2E5BFF]/30 overflow-hidden relative hover:-translate-y-1 flex flex-col"
+      className="cursor-pointer overflow-hidden relative hover:-translate-y-1 flex flex-col"
       onClick={(e) => {
         e.stopPropagation();
         router.push(
@@ -87,7 +87,7 @@ export function SurveyCard({
         </div>
         <div>
           <div className="flex items-center gap-8">
-            <div className="text-center flex items-center gap-2 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 rounded-md px-4 py-2 border border-slate-100 shadow-sm">
+            <div className="text-center flex items-center gap-2 rounded-md px-4 py-2 border shadow-sm">
               <div className="flex items-center justify-center">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
                   <FileText className="w-3.5 h-3.5 text-white" />
@@ -100,7 +100,7 @@ export function SurveyCard({
                 <p className="text-sm">{survey?.questions?.length}</p>
               </div>
             </div>
-            <div className="text-center flex items-center gap-2 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 rounded-md px-4 py-2 border border-slate-100 shadow-sm">
+            <div className="text-center flex items-center gap-2 rounded-md px-4 py-2 shadow-sm border">
               <div className="flex items-center justify-center">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
                   <Users className="w-3.5 h-3.5 text-white" />
@@ -119,7 +119,7 @@ export function SurveyCard({
         <div className="flex items-center">
           <div className="flex items-center justify-between w-full">
             <div
-              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-br from-blue-50 to-blue-100 border border-[#2E5BFF]/10 rounded-lg flex-1 mr-2 hover:from-blue-100 hover:to-blue-200 "
+              className="flex items-center gap-2 px-3 py-2 rounded-lg flex-1 mr-2 border"
               onClick={(e) => {
                 e.stopPropagation();
                 router.push(`${pathname}/${survey?.id}?tab=Result`);
@@ -135,8 +135,7 @@ export function SurveyCard({
             </div>
             {/* survey type */}
             <div
-              className={`flex items-center gap-1.5 px-3 py-2 bg-gradient-to-br rounded-lg border border-[#2E5BFF]/10 
-                 ${survey?.type === "web" ? "from-blue-50 to-blue-100" : "from-green-50 to-green-100"}`}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border`}
             >
               <span
                 className={`text-xs font-semibold ${survey?.type === "web" ? "text-blue-600" : "text-green-600"}`}
@@ -150,7 +149,7 @@ export function SurveyCard({
         {/* Footer with enhanced timestamps - Push to bottom */}
         <div className="flex items-center justify-between border-t py-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-5 h-5 rounded-md bg-slate-100 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-md flex items-center justify-center">
               <Calendar className="w-3 h-3" />
             </div>
             <span className="font-semibold">
@@ -158,7 +157,7 @@ export function SurveyCard({
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-5 h-5 rounded-md bg-blue-50 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-md flex items-center justify-center">
               <Clock className="w-3 h-3 text-blue-600" />
             </div>
             <span className="font-semibold">
