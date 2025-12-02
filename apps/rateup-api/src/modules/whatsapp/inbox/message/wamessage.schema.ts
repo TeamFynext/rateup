@@ -84,6 +84,7 @@ const WaChatFilterSchema = z.object({
   sortBy: z.string().optional(),
   category: z.string().optional(),
   lifecycle: z.string().optional(),
+  assignedUserIds: z.array(z.string()).optional(),
 });
 
 const waChatFilterQuerySchema = PaginateQuerySchema.extend({
