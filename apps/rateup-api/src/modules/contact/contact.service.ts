@@ -35,8 +35,18 @@ import {
   ZapierTriggers,
 } from "../integrations/external/zapier/zapier.service";
 import { addExistingContactsToMultipleGroups } from "../external/v1/contact/internal-copy/contact/contactGroup/contactGroup.service";
+import {
+  createConversation,
+  getLastCreatedConversationForContact,
+  updateClosedConversationStatus,
+  updateConversationAssignees,
+} from "./conversation/conversation.service";
+import { WaMessageClosedStatus } from "../whatsapp/constants";
 
-export async function createContact(contact: ContactCore & { orgId: string }) {
+export async function createContact(
+  contact: ContactCore & { orgId: string },
+  userId?: string,
+) {
   if (!contact.phone) {
     throw new Error("Phone must be provided");
   }
@@ -79,7 +89,11 @@ export async function createContact(contact: ContactCore & { orgId: string }) {
           AND t."orgId" = ${user.orgId}::uuid
         ORDER BY tm."userId", tm.id ASC;
       `;
-    assignWaMessageToUser({ assignees, contactId: user.id }, user.orgId);
+    assignWaMessageToUser(
+      { assignees, contactId: user.id },
+      user.orgId,
+      userId,
+    );
   }
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_CREATE,
@@ -618,6 +632,7 @@ export async function updateContactById(
         await assignWaMessageToUser(
           { assignees, contactId: updatedContact.id },
           updatedContact.orgId,
+          userId,
         );
       }
     });
@@ -627,7 +642,11 @@ export async function updateContactById(
     { [ZapierTriggers.CONTACT_UPDATED]: updatedContact },
     updatedContact.orgId,
   );
-  if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
+  if (
+    WaMessageClosedStatus.includes(
+      updatedContact.waMessageAssignStatus as WaMessageAssignStatus,
+    )
+  ) {
     await addZapierTriggerToQueue(
       ZapierTriggers.CONVERSATION_CLOSED,
       { [ZapierTriggers.CONVERSATION_CLOSED]: updatedContact },
@@ -653,6 +672,15 @@ export async function updateContactById(
         );
       }
     }
+    const conversation = await getLastCreatedConversationForContact(
+      updatedContact.id,
+    );
+    if (conversation)
+      await updateClosedConversationStatus(
+        conversation.id,
+        updatedContact.waMessageAssignStatus,
+        userId,
+      );
   }
   return updatedContact;
 }
@@ -696,9 +724,10 @@ export async function getOrCreateContactByPhone(
   orgId: string,
   additionalData?: Omit<updateContactSchema, "customFields">,
   source?: string,
+  addToConversation: boolean = false,
 ) {
   try {
-    const contact = await prisma.contact.findFirst({
+    let contact = await prisma.contact.findFirst({
       // TODO: findout why findUnique is giving error
       where: source
         ? {
@@ -723,14 +752,14 @@ export async function getOrCreateContactByPhone(
         },
       },
     });
-
+    let conversation;
     if (contact) {
       if (additionalData) {
         const updateData = { ...additionalData };
         if (!additionalData?.name) {
           delete updateData?.name;
         }
-        return await prisma.contact.update({
+        contact = await prisma.contact.update({
           where: {
             id: contact.id,
           },
@@ -749,11 +778,11 @@ export async function getOrCreateContactByPhone(
           },
         });
       }
-      return contact;
+      return { contact, conversation };
     } else {
       const chatbot = await getChatbotDetails(orgId);
       const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
-      const contact = await prisma.contact.create({
+      contact = await prisma.contact.create({
         data: {
           ...additionalData,
           aiWaChat,
@@ -773,12 +802,15 @@ export async function getOrCreateContactByPhone(
           },
         },
       });
+      if (addToConversation) {
+        conversation = await createConversation({ contactId: contact.id });
+      }
       await addZapierTriggerToQueue(
         ZapierTriggers.CONTACT_CREATE,
         { [ZapierTriggers.CONTACT_CREATE]: contact },
         orgId,
       );
-      return contact;
+      return { contact, conversation };
     }
   } catch (e) {
     log.error(e);
@@ -789,9 +821,10 @@ export async function getOrCreateContactByIgsId(
   igsId: string,
   orgId: string,
   additionalData?: Omit<updateContactSchema, "customFields">,
+  addToConversation: boolean = false,
 ) {
   try {
-    const contact = await prisma.contact.findUnique({
+    let contact = await prisma.contact.findUnique({
       where: {
         contact_igsid_org_id_unique: {
           igsId,
@@ -799,10 +832,10 @@ export async function getOrCreateContactByIgsId(
         },
       },
     });
-
+    let conversation;
     if (contact) {
-      if (!additionalData) return contact;
-      return await prisma.contact.update({
+      if (!additionalData) return { contact, conversation };
+      contact = await prisma.contact.update({
         where: {
           id: contact.id,
         },
@@ -810,10 +843,11 @@ export async function getOrCreateContactByIgsId(
           ...additionalData,
         },
       });
+      return { contact, conversation };
     } else {
       const chatbot = await getChatbotDetails(orgId);
       const aiWaChat = (chatbot && chatbot.enableAllWaChat) || false;
-      const contact = await prisma.contact.create({
+      contact = await prisma.contact.create({
         data: {
           ...additionalData,
           aiWaChat,
@@ -821,12 +855,15 @@ export async function getOrCreateContactByIgsId(
           orgId,
         },
       });
+      if (addToConversation) {
+        conversation = await createConversation({ contactId: contact.id });
+      }
       await addZapierTriggerToQueue(
         ZapierTriggers.CONTACT_CREATE,
         { [ZapierTriggers.CONTACT_CREATE]: contact },
         orgId,
       );
-      return contact;
+      return { contact, conversation };
     }
   } catch (e) {
     log.error(e);

@@ -1022,7 +1022,13 @@ export async function processNextNode(
         break;
       case "assignNode": {
         const assignData = node?.data as NodeTypeMap["assignNode"];
-        const contact = await getOrCreateContactByPhone(userPhone, orgId);
+        const { contact } = await getOrCreateContactByPhone(
+          userPhone,
+          orgId,
+          undefined,
+          undefined,
+          true,
+        );
         let assignedUserIds = assignData?.assign?.assignedUserIds || [];
         let teamId = assignData?.assign?.teamId || null;
         if (assignData?.assign?.assignType === "me") {

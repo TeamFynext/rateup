@@ -52,6 +52,7 @@ export async function addNewWaMessage(
   waCreatedAt: string,
   sourcePlatform: PlatformType,
   sourceIdentifier: string,
+  conversationId: string,
   componentParams?: any,
   messageId?: string,
   sendBy?: string,
@@ -86,6 +87,7 @@ export async function addNewWaMessage(
       sendBy,
       sourcePlatform,
       sourceIdentifier,
+      conversationId,
       ...statsData,
     },
     include: {
@@ -783,6 +785,7 @@ export async function exportWhatsapChats(
 export async function assignWaMessageToUser(
   data: WaMessageAssignBody,
   orgId: string,
+  userId?: string,
 ) {
   const existingUsers = await prisma.waInboxAssign.findMany({
     where: {
@@ -869,9 +872,27 @@ export async function assignWaMessageToUser(
       },
     },
   });
+
   const updatedContact = await updateContactById(data.contactId, {
     waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
   });
+  const conversation = await getLastCreatedConversationForContact(
+    updatedContact.id,
+  );
+  if (conversation) {
+    const updatedAssignees = [
+      ...newUsers,
+      ...data.assignees.filter(
+        (t) =>
+          !newUsers.find((n) => n.userId === t.userId && n.teamId === t.teamId),
+      ),
+    ];
+    await updateConversationAssignees(
+      conversation.id,
+      { assignees: updatedAssignees },
+      userId,
+    );
+  }
 
   for (const user of newUsers) {
     const notificationSetting = await getNotificationSettings(
@@ -1289,6 +1310,10 @@ import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
 import { WaMessageBody } from "../../../../types/whatsapp.types";
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
+import {
+  getLastCreatedConversationForContact,
+  updateConversationAssignees,
+} from "../../../contact/conversation/conversation.service";
 
 /**
  * Generate a "send" text message

@@ -716,7 +716,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
     }
   }
   // TODO: save name
-  const contact =
+  const { contact } =
     !anonymous &&
     (await getOrCreateContactByPhone(session.phone, session.orgId));
   const surveyResponse: CreateResponseInput = {

@@ -69,6 +69,13 @@ import {
   addZapierTriggerToQueue,
   ZapierTriggers,
 } from "../../../integrations/external/zapier/zapier.service";
+import {
+  checkIfFirstSendMessageInConversation,
+  createConversation,
+  getLastCreatedConversationForContact,
+  updateConversation,
+} from "../../../contact/conversation/conversation.service";
+import { WaMessageClosedStatus } from "../../constants";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",
@@ -147,20 +154,27 @@ export async function handleWaMessages(
     };
 
     // Get or create contact
-    let contact;
+    let res;
     if (sourcePlatform === PlatformType.INSTAGRAM) {
-      contact = await getOrCreateContactByIgsId(from, orgId, contactData);
+      res = await getOrCreateContactByIgsId(from, orgId, contactData, true);
     } else if (sourcePlatform === PlatformType.WEBCHAT) {
-      contact = await getOrCreateContactByPhone(
+      res = await getOrCreateContactByPhone(
         from,
         orgId,
         contactData,
         PlatformType.WEBCHAT,
+        true,
       );
     } else {
-      contact = await getOrCreateContactByPhone(from, orgId, contactData);
+      res = await getOrCreateContactByPhone(
+        from,
+        orgId,
+        contactData,
+        undefined,
+        true,
+      );
     }
-
+    let { contact, conversation } = res;
     // Prepare parameter data and handle specific cases
     let parameterData = {};
     if (type === "send" && messageBody?.type === "template") {
@@ -176,13 +190,18 @@ export async function handleWaMessages(
       if (sourcePlatform === PlatformType.WHATSAPP) {
         waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
       }
-      if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
+      if (WaMessageClosedStatus.includes(contact.waMessageAssignStatus)) {
         contact = await updateContactById(contact.id, {
           waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
         });
+        conversation = await createConversation({
+          contactId: contact.id,
+        });
       }
     }
-
+    if (!conversation) {
+      conversation = await getLastCreatedConversationForContact(contact.id);
+    }
     // Add new message to DB
     const waMessage = await addNewWaMessage(
       waMessageBody,
@@ -190,12 +209,23 @@ export async function handleWaMessages(
       waTimeStamp,
       sourcePlatform,
       sourceIdentifier,
+      conversation?.id,
       parameterData,
       messageId,
       userId,
       failed,
     );
-
+    if (type === "send" && conversation) {
+      const isFirstSendMessage = await checkIfFirstSendMessageInConversation(
+        conversation.id,
+        waMessage.id,
+      );
+      if (isFirstSendMessage) {
+        await updateConversation(conversation.id, {
+          firstRespondedAt: new Date(),
+        });
+      }
+    }
     if (type === "receive")
       await addZapierTriggerToQueue(
         ZapierTriggers.NEW_MESSAGE,
@@ -494,7 +524,11 @@ export async function assignWaMessageHandler(
   reply: FastifyReply,
 ) {
   try {
-    const res = await assignWaMessageToUser(request.body, request.user.orgId);
+    const res = await assignWaMessageToUser(
+      request.body,
+      request.user.orgId,
+      request.user.userId,
+    );
     reply.code(200).send(res);
   } catch (e) {
     log.error(e);
