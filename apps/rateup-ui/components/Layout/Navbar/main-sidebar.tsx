@@ -13,7 +13,9 @@ import {
   useCustomFields,
 } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
+import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useSubscription } from "@/backend/subscription/subscription.query";
+import { useTeamsByUser } from "@/backend/team/team.query";
 import { useGetInboxUserCount } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import { CustomFieldsProvider } from "@/context/CustomFieldsContext";
 import { LifecycleContext } from "@/context/LifecycleContext";
@@ -73,12 +75,16 @@ export default function MainSidebar({ children }) {
     useCustomFields();
   const { data: contactLabels = [], isPending: isPendingContactLabels } =
     useContactLabels();
+  const { data: userRes, isLoading: isStaffLoading } = useTeamsMembersOfOrg();
+  const { data: teamRes, isLoading: isTeamLoading } = useTeamsByUser();
   const isLoading =
     isPending ||
     isPendingLifecycles ||
     isLoadingUserInfo ||
     isCustomFieldPending ||
-    isPendingContactLabels;
+    isPendingContactLabels ||
+    isStaffLoading ||
+    isTeamLoading;
 
   if (query.msg === "welcome") {
     refetch();
@@ -197,6 +203,8 @@ export default function MainSidebar({ children }) {
                 ? userQueryData
                 : undefined
             }
+            staff={userRes?.data ?? []}
+            teams={teamRes?.data ?? []}
           />
         )}
 
