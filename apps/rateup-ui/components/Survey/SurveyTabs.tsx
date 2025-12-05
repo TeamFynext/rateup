@@ -2,9 +2,12 @@ import React from "react";
 
 import { BarChart3, Edit2, FileText } from "lucide-react";
 
+import { useSubscription } from "@/backend/subscription/subscription.query";
+
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { EditSurvey } from "./EditSurvey";
 
 export function SurveyQuestionTab({ questions }) {
   console.log(questions);
@@ -118,5 +121,27 @@ export function SurveyQuestionTab({ questions }) {
         Add New Question
       </Button>
     </div>
+  );
+}
+
+export function SurveyEditTab({
+  survey,
+  questions,
+  addQnTrigger,
+  setSelectedLanguage,
+  setFunToRunBeforeSurveyIdPageHeaderTabsChange,
+}) {
+  const { data: subscription } = useSubscription();
+  return (
+    <EditSurvey
+      questions={questions}
+      addQnTrigger={addQnTrigger}
+      surveyLanguages={survey?.languages}
+      setSelectedLanguage={setSelectedLanguage}
+      subscription={subscription}
+      setFunToRunBeforeSurveyIdPageHeaderTabsChange={
+        setFunToRunBeforeSurveyIdPageHeaderTabsChange
+      }
+    />
   );
 }

@@ -57,7 +57,7 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { SurveyQuestionTab } from "./SurveyTabs";
+import { SurveyEditTab, SurveyQuestionTab } from "./SurveyTabs";
 import TabPanelsComp from "./Tabs/TabPanels";
 import TabsListComp from "./Tabs/TabsList";
 
@@ -552,7 +552,11 @@ export default function SurveyID() {
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setActiveTab(TabEnum.Edit)}
+                >
                   <Edit2 className="w-4 h-4 mr-2" />
                   Edit
                 </Button>
@@ -627,7 +631,7 @@ export default function SurveyID() {
            
           </div> */}
 
-          <TabPanelsComp
+          {/* <TabPanelsComp
             value={activeTab}
             survey={survey}
             surveyId={surveyId}
@@ -642,57 +646,71 @@ export default function SurveyID() {
             setFunToRunBeforeSurveyIdPageHeaderTabsChange={
               setFunToRunBeforeSurveyIdPageHeaderTabsChange
             }
-          />
-
-          <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <TabsList className="border px-2 py-1 flex items-center gap-4">
-              <TabsTrigger
-                value={TabEnum.Overview}
-                className="data-[state=active]:bg-primary data-[state=active]:text-white"
-              >
-                <Activity className="w-4 h-4" />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger
-                value={TabEnum.Questions}
-                className="data-[state=active]:bg-primary data-[state=active]:text-white"
-              >
-                <FileText className="w-4 h-4" />
-                Questions
-              </TabsTrigger>
-              <TabsTrigger
-                value={TabEnum.Edit}
-                className="data-[state=active]:bg-primary data-[state=active]:text-white"
-              >
-                <FileText className="w-4 h-4" />
-                Edit
-              </TabsTrigger>
-              <TabsTrigger
-                value={TabEnum.Result}
-                className="data-[state=active]:bg-primary data-[state=active]:text-white"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Responses
-              </TabsTrigger>
-              {/* <TabsTrigger value="analytics" className="data-[state=active]:bg-[#2E5BFF] data-[state=active]:text-white">
+          /> */}
+          {user?.role !== UserRole.MEMBER && (
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
+              <TabsList className="border px-2 py-1 flex items-center gap-4">
+                <TabsTrigger
+                  value={TabEnum.Overview}
+                  className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                >
+                  <Activity className="w-4 h-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger
+                  value={TabEnum.Questions}
+                  className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                >
+                  <FileText className="w-4 h-4" />
+                  Questions
+                </TabsTrigger>
+                <TabsTrigger
+                  value={TabEnum.Edit}
+                  className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                >
+                  <FileText className="w-4 h-4" />
+                  Edit
+                </TabsTrigger>
+                <TabsTrigger
+                  value={TabEnum.Result}
+                  className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Responses
+                </TabsTrigger>
+                {/* <TabsTrigger value="analytics" className="data-[state=active]:bg-[#2E5BFF] data-[state=active]:text-white">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Analytics
               </TabsTrigger> */}
-              <TabsTrigger
-                value={TabEnum.Settings}
-                className="data-[state=active]:bg-primary data-[state=active]:text-white"
-              >
-                <Settings className="w-4 h-4" />
-                Settings
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+                <TabsTrigger
+                  value={TabEnum.Settings}
+                  className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
 
           {/* content */}
           <Tabs value={activeTab}>
-            <TabsContent value={TabEnum.Questions} className="mt-0">
-              <SurveyQuestionTab questions={survey?.questions} />
-            </TabsContent>
+            <div className="max-h-[90vh] overflow-auto border border-red-600">
+              <TabsContent value={TabEnum.Questions}>
+                <SurveyQuestionTab questions={survey?.questions} />
+              </TabsContent>
+              <TabsContent value={TabEnum.Edit}>
+                <SurveyEditTab
+                  survey={survey}
+                  questions={questions}
+                  addQnTrigger={addQnTrigger}
+                  setSelectedLanguage={setSelectedLanguage}
+                  setFunToRunBeforeSurveyIdPageHeaderTabsChange={
+                    setFunToRunBeforeSurveyIdPageHeaderTabsChange
+                  }
+                />
+              </TabsContent>
+            </div>
           </Tabs>
         </SurveyContext.Provider>
       </SelectedLanguageContext.Provider>
