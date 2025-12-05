@@ -37,6 +37,7 @@ import {
 } from "@tabler/icons-react";
 import {
   Activity,
+  CircleCheckBig,
   FileChartColumn,
   FileSpreadsheet,
   Folder,
@@ -44,6 +45,8 @@ import {
   MessageSquareDot,
   Settings,
   Tag,
+  User,
+  UserCheck,
   Users,
 } from "lucide-react";
 
@@ -54,11 +57,13 @@ export function useNavMain({
   subscription,
   lifecycles,
   contactLabels,
+  staff,
+  teams,
   t,
   chatFilterStore,
   hiddenModules,
-  handleLabelsFilter,
-  handleLifecycleFilter,
+  handleFilter,
+  userId,
 }: any) {
   return useMemo(
     () => [
@@ -96,17 +101,26 @@ export function useNavMain({
                   icon: IconUserX,
                 },
                 {
-                  title: "Lifecycle",
-                  icon: IconActivity,
-                  items: lifecycles.map((lbl) => ({
-                    title: `${lbl.emoji ? lbl.emoji + " " : ""}${lbl.name}`,
-                    url: "#",
-                    handleClick: () => {
-                      handleLifecycleFilter(lbl.id);
-                    },
-                    isActive: chatFilterStore.filter.lifecycle === lbl.id,
-                  })),
+                  title: t("Closed"),
+                  url: "/dashboard/inbox?tab=Closed",
+                  icon: CircleCheckBig,
                 },
+                ...(lifecycles.length > 0
+                  ? [
+                      {
+                        title: "Lifecycle",
+                        icon: IconActivity,
+                        items: lifecycles.map((lbl) => ({
+                          title: `${lbl.emoji ? lbl.emoji + " " : ""}${lbl.name}`,
+                          url: "#",
+                          handleClick: () => {
+                            handleFilter("lifecycle", lbl.id);
+                          },
+                          isActive: chatFilterStore.filter.lifecycle === lbl.id,
+                        })),
+                      },
+                    ]
+                  : []),
                 {
                   title: "Labels",
                   icon: IconLabel,
@@ -123,11 +137,49 @@ export function useNavMain({
                       />
                     ),
                     handleClick: () => {
-                      handleLabelsFilter(lbl.id);
+                      handleFilter("label", lbl.id);
                     },
                     isActive: chatFilterStore.filter.labels?.includes(lbl.id),
                   })),
                 },
+                ...(staff.length > 0
+                  ? [
+                      {
+                        title: "Staff",
+                        icon: User,
+                        items: staff.map((st) => ({
+                          title: `${st.name} ${userId === st.id ? "(You)" : ""}`,
+                          url: "#",
+                          handleClick: () => {
+                            handleFilter("assignedStaff", st.id);
+                          },
+                          isActive:
+                            chatFilterStore.filter.assignedUserIds?.includes(
+                              st.id,
+                            ),
+                        })),
+                      },
+                    ]
+                  : []),
+                ...(teams.length > 0
+                  ? [
+                      {
+                        title: "Teams",
+                        icon: Users,
+                        items: teams.map((st) => ({
+                          title: st.name,
+                          url: "#",
+                          handleClick: () => {
+                            handleFilter("assignedTeams", st.id);
+                          },
+                          isActive:
+                            chatFilterStore.filter.assignedTeams.includes(
+                              st.id,
+                            ),
+                        })),
+                      },
+                    ]
+                  : []),
                 {
                   title: "Analytics",
                   url: "/dashboard/inbox?tab=analytics",

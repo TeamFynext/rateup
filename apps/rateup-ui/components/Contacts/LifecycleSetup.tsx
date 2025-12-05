@@ -22,6 +22,8 @@ import {
   useDeleteLifeCycleMutation,
   useUpdateLifeCycleMutation,
 } from "@/backend/lifecycle/lifecycle.query";
+import { useUpdateOrgDetailsMutation } from "@/backend/org/org.query";
+import { useUser } from "@/context/UserContext";
 
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -33,6 +35,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { Field, FieldContent, FieldDescription, FieldLabel } from "../ui/field";
+import { Switch } from "../ui/switch";
 
 const LifecycleSetup = ({
   lifecycleStages,
@@ -49,6 +53,12 @@ const LifecycleSetup = ({
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(
     new Set(),
   );
+  const { user } = useUser();
+  const [enableLifecycle, setEnableLifecycle] = useState(
+    user?.showLifecycle || false,
+  );
+  const [showLifecycle] = useDebouncedValue(enableLifecycle, 100);
+  const updateOrg = useUpdateOrgDetailsMutation();
 
   const toggleDescription = (id: string) => {
     const newExpanded = new Set(expandedDescriptions);
@@ -59,6 +69,19 @@ const LifecycleSetup = ({
     }
     setExpandedDescriptions(newExpanded);
   };
+
+  useEffect(() => {
+    if (user.showLifecycle !== showLifecycle) {
+      updateOrg.mutate(
+        { showLifecycle },
+        {
+          onError: () => {
+            setLifecycleSetup(user.showLifecycle);
+          },
+        },
+      );
+    }
+  }, [showLifecycle]);
   return (
     <div className="flex flex-col h-full">
       <div className="border-b-1 pb-4">
@@ -76,10 +99,26 @@ const LifecycleSetup = ({
           </div>
         </div>
       </div>
-      <div className="flex-grow min-h-0 overflow-auto items-center justify-center p-8">
-        {/* <Card>
-
-            </Card> */}
+      <div className="flex-grow min-h-0 overflow-auto items-center p-8">
+        <Card className="p-4 my-2 mb-6">
+          <Field className="" orientation="horizontal">
+            <FieldContent>
+              <FieldLabel htmlFor="lifecycle-enable">
+                Show/Hide Lifecycle Stages
+              </FieldLabel>
+              <FieldDescription>
+                Display Lifecycle Stages in the Inbox and Contacts modules.
+                Disabling this only hides the Stages. Your Contact data remains
+                safe and unchanged.
+              </FieldDescription>
+            </FieldContent>
+            <Switch
+              id="lifecycle-enable"
+              checked={enableLifecycle}
+              onCheckedChange={setEnableLifecycle}
+            />
+          </Field>
+        </Card>
         <div className="border-1 rounded-xl">
           <div className="flex justify-between gap-2 border-b-1 p-4">
             <h3 className="text-base tracking-tight font-normal">

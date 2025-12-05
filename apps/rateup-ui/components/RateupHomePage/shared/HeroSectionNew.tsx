@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -15,6 +15,28 @@ import { BookDemoModal } from "../helpers/BookDemoModal";
 export default function HeroSection() {
   const router = useRouter();
   const [showDashboard, setShowDashboard] = useState(false); // default: first image visible
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Toggle showDashboard when section is at least 80% visible
+          if (entry.intersectionRatio >= 1) {
+            setShowDashboard(true);
+          } else {
+            setShowDashboard(false);
+          }
+        });
+      },
+      { root: null, threshold: [0, 0.2, 0.5, 1] },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [containerRef]);
 
   return (
     <section
@@ -98,24 +120,20 @@ export default function HeroSection() {
       </div>
 
       {/* Images Container with Stacking (mouseenter shows second image) */}
-      <div
-        className="relative w-full overflow-hidden"
-        onMouseEnter={() => setShowDashboard(true)}
-        onMouseLeave={() => setShowDashboard(false)}
-      >
+      <div ref={containerRef} className="relative w-full overflow-hidden">
         {/* First Image - Base Layer */}
         <motion.div
           animate={{
             opacity: showDashboard ? 0 : 1,
           }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
         >
           <Image
             src={`${imagePath}/homepage/coverimage.svg`}
             alt="image"
-            width={600}
-            height={600}
-            className="w-full h-auto object-contain"
+            width={480}
+            height={480}
+            className="w-full h-auto object-contain max-w-7xl mx-auto"
             fetchPriority="high"
             quality={60}
             priority
@@ -137,8 +155,8 @@ export default function HeroSection() {
           <Image
             src={`${imagesPath}/DASHBOARD%20(1).png`}
             alt="Smart QR Code Showcase"
-            width={900}
-            height={700}
+            width={700}
+            height={540}
             quality={60}
             className="w-full h-auto object-contain max-w-6xl mx-auto"
             fetchPriority="high"
@@ -146,6 +164,7 @@ export default function HeroSection() {
           />
         </motion.div>
       </div>
+      {/* Intersection Observer toggles showDashboard; no extra script required */}
     </section>
   );
 }

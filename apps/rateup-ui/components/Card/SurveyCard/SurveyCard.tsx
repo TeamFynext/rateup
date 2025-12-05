@@ -43,7 +43,7 @@ export function SurveyCard({
   return (
     <Card
       key={survey.id}
-      className="cursor-pointer overflow-hidden relative hover:-translate-y-1 flex flex-col"
+      className="transition-all duration-300 cursor-pointer overflow-hidden relative hover:-translate-y-1 flex flex-col"
       onClick={(e) => {
         e.stopPropagation();
         router.push(
@@ -68,7 +68,7 @@ export function SurveyCard({
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0 pr-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-primary dark:bg-rateup-darkblue flex items-center justify-center shadow-md flex-shrink-0">
                 <FileText className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-base line-clamp-1 group-hover:text-primary transition-colors font-bold">
@@ -89,59 +89,29 @@ export function SurveyCard({
           <div className="flex items-center gap-8">
             <div className="text-center flex items-center gap-2 rounded-md px-4 py-2 border shadow-sm">
               <div className="flex items-center justify-center">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+                <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center shadow-md dark:bg-green-950">
                   <FileText className="w-3.5 h-3.5 text-white" />
                 </div>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground mb-1">
-                  Questions
+                  {translations("Questions")}
                 </p>
                 <p className="text-sm">{survey?.questions?.length}</p>
               </div>
             </div>
-            <div className="text-center flex items-center gap-2 rounded-md px-4 py-2 shadow-sm border">
+            <div className="text-center flex items-center gap-2 rounded-md px-4 py-2 border shadow-sm">
               <div className="flex items-center justify-center">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+                <div className="w-8 h-8 rounded-lg bg-green-500 dark:bg-green-950 flex items-center justify-center shadow-md">
                   <Users className="w-3.5 h-3.5 text-white" />
                 </div>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground mb-1">
-                  Responses
+                  {translations("Responses")}
                 </p>
                 <p className="text-sm">{totalResponses}</p>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center">
-          <div className="flex items-center justify-between w-full">
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-lg flex-1 mr-2 border"
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`${pathname}/${survey?.id}?tab=Result`);
-              }}
-            >
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
-                <Users className="w-3 h-3 text-white" />
-              </div>
-              <span className="text-xs font-medium">{totalResponses}</span>
-              <span className="text-xs text-muted-foreground font-medium">
-                {translations("Responses")}
-              </span>
-            </div>
-            {/* survey type */}
-            <div
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border`}
-            >
-              <span
-                className={`text-xs font-semibold ${survey?.type === "web" ? "text-blue-600" : "text-green-600"}`}
-              >
-                {survey?.type?.toUpperCase()}
-              </span>
             </div>
           </div>
         </div>

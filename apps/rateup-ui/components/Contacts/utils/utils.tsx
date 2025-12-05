@@ -158,7 +158,10 @@ export const getSourceBadge = (source: string) => {
   );
 };
 
-export const contactColumn = (contactTags: CustomFieldData[] = []) => {
+export const contactColumn = (
+  contactTags: CustomFieldData[] = [],
+  showLifecycle = false,
+) => {
   return [
     ...selectCheckBox,
     ...contactDetailsColumn,
@@ -221,6 +224,17 @@ export const contactColumn = (contactTags: CustomFieldData[] = []) => {
       enableSorting: false,
       meta: { title: "Label" },
     },
+    ...(showLifecycle
+      ? [
+          {
+            header: "Lifecycle Stage",
+            accessorKey: "Lifecycle",
+            cell: (info) => info?.name,
+            enableSorting: false,
+            meta: { title: "Lifecycle Stage" },
+          },
+        ]
+      : []),
     ...(contactTags?.length > 0
       ? contactTags
           ?.filter((tag) => tag?.visibility)
