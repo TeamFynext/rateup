@@ -3,18 +3,17 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { Box, Button, Center, Group, Loader, Stack } from "@mantine/core";
+import { Box, Center, Group, Loader, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPlus } from "@tabler/icons-react";
 import { useGetAllGeneratedQrsQuery } from "backend/generateQr/generateQr.query";
+import { Plus, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import RefreshButton from "../Button/RefreshButton";
 import SortDropdown, { sortData } from "../Dashboard/SortDropDown";
 import NothingFound from "../NothingFound/NothingFound";
+import { Button } from "../ui/button";
 import CreateQrModal from "./CreateQrModal";
 import GeneratedQrCardsList from "./GeneratedQrCardsList";
-import styles from "./GenerateQr.module.css";
 
 function GenerateQr() {
   const searchParams = useSearchParams();
@@ -34,6 +33,8 @@ function GenerateQr() {
   const handleSortChange = (value) => {
     setSortOption(value);
   };
+
+  console.log(generatedQrs);
 
   const sortedGeneratedQrs = sortData(
     generatedQrs?.map((s) => ({ ...s, data: { name: s.name } })),
@@ -65,39 +66,47 @@ function GenerateQr() {
       <GeneratedQrCardsList generatedQrs={sortedGeneratedQrs} />
     );
   }
-
   return (
-    <Stack className={`${styles["generate-qr-dashboard-page-div"]}`}>
-      <Group justify="space-between">
-        <Group className={styles["heading-and-create-qr-btn-container"]}>
+    <div className="flex p-4 flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-1">
+          <h1 className="text-2xl">{translations("QR Studio")}</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {translations("Create, manage and track your QR codes")}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <SortDropdown
+            onSortChange={handleSortChange}
+            defaultSortOption={sortOption}
+          />
           <Button
-            className={styles["create-qr-btn"]}
-            rightSection={<IconPlus />}
+            className="flex items-center gap-2 px-6 shadow-sm bg-primary"
             onClick={createQrModalHandlers.open}
           >
-            {translations("Create QR")}
+            <Plus className="w-4 h-4" />
+            {translations("Create QR Code")}
           </Button>
-          <RefreshButton queryKeys={["generatedQrs"]} />
-        </Group>
-        <SortDropdown
-          onSortChange={handleSortChange}
-          defaultSortOption={sortOption}
-        />
-      </Group>
-      <Box className={`${styles["generated-qrs-list-container"]}`}>
-        {componentToBeRendered}
-      </Box>
-      {isCreateQrModalOpen && (
-        <CreateQrModal
-          opened={isCreateQrModalOpen}
-          onClose={createQrModalHandlers.close}
-          mode="create"
-          shortUrlId={""}
-          initialName={""}
-        />
-      )}
-    </Stack>
+          <Button variant="outline" size="icon" className="h-10 w-10">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div>{componentToBeRendered}</div>
+
+      <div>
+        {isCreateQrModalOpen && (
+          <CreateQrModal
+            opened={isCreateQrModalOpen}
+            onClose={createQrModalHandlers.close}
+            mode="create"
+            shortUrlId={""}
+            initialName={""}
+          />
+        )}
+      </div>
+    </div>
   );
 }
-
 export default GenerateQr;

@@ -1,23 +1,19 @@
 "use client";
 
-import { Box, Group } from "@mantine/core";
-import { IconClock } from "@tabler/icons-react";
+import { Clock } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import TimeSinceText from "../TimeSinceText";
-import styles from "./CreatedSinceText.module.css";
 
 function CreatedSinceText({ createdAt }) {
   const translations = useTranslations();
   return (
-    <Group className={styles["creation-time-text-and-icon-div"]}>
-      <Box className={styles["clock-icon-container"]}>
-        <IconClock />
-      </Box>
+    <div className="flex items-center justify-center gap-1">
+      <Clock className="w-4 h-4" />
       <p>
         {translations("Created")} {<TimeSinceText isoDateString={createdAt} />}
       </p>
-    </Group>
+    </div>
   );
 }
 
