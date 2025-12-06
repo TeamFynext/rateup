@@ -31,7 +31,7 @@ function GeneratedQrCard({
   const handleCopy = () => {
     navigator.clipboard.writeText(qrUrl);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000); // revert after 1.2s
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (

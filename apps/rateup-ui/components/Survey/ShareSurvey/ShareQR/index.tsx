@@ -3,6 +3,7 @@
 import { useCallback, useEffect } from "react";
 
 import { Group, Stack, Title } from "@mantine/core";
+import { Palette } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useImmerReducer } from "use-immer";
 
@@ -97,39 +98,116 @@ const ShareQR = ({
   }, [logoTabPanelState]);
 
   return (
-    <PaperLayout style={{ ...sx }}>
-      <>
-        <Title order={2} mb="sm" pb="md" className={styles["heading"]}>
-          {translations("Generate & Share QR Code")}
-        </Title>
-
-        <Group className={styles["options-preview-container"]}>
-          <LogoTabpanel
-            state={logoTabPanelState}
-            dispatch={logoTabPanelDispatch}
-          />
-
-          {/*..... QR Editor - Preview ........ */}
-
-          {url && (
-            <Stack align="center">
-              <Preview
-                logoTabPanelState={logoTabPanelState}
-                url={url}
-                surveyTitle={title}
-                isSurveyPublished={isPublished}
-              />
-              <RateupButtonBlue
-                loading={shareSettingsMutation?.isPending}
-                title={translations("Save Settings")}
-                onClick={handleSaveOfSurveyShareSettings}
-              />
-            </Stack>
-          )}
-        </Group>
-      </>
-    </PaperLayout>
+    <div>
+      <div className="flex items-center gap-1.5 py-1.5 mb-2">
+        <Palette className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-semibold">Customize & Generate QR Code</h2>
+      </div>
+      <div className="flex gap-4 w-full">
+        <LogoTabpanel
+          state={logoTabPanelState}
+          dispatch={logoTabPanelDispatch}
+        />
+        <Preview
+          logoTabPanelState={logoTabPanelState}
+          url={url}
+          surveyTitle={title}
+          isSurveyPublished={isPublished}
+        />
+      </div>
+    </div>
   );
 };
+// const ShareQR = ({
+//   url,
+//   sx,
+//   title,
+//   isPublished,
+//   id,
+//   queryKey,
+//   resourceName,
+// }: ShareQRProps) => {
+//   const [logoTabPanelState, logoTabPanelDispatch] = useImmerReducer(
+//     logoTabPanelReducer,
+//     initialLogoTabPanelState,
+//   );
+
+//   // currently we are using only two resources(first arg below) survey, menu.
+//   const shareSettings = useGetShareSettings(queryKey, resourceName, id);
+//   // useUpdateShareSettingsMutation can return null.
+//   const shareSettingsMutation = useUpdateShareSettingsMutation(
+//     queryKey,
+//     resourceName,
+//     id,
+//   );
+//   const translations = useTranslations();
+//   useEffect(() => {
+//     const qrSettingsFromApi = shareSettings?.data;
+//     if (qrSettingsFromApi) {
+//       logoTabPanelDispatch({
+//         type: "update-state-from-api",
+//         payload: qrSettingsFromApi,
+//       });
+//     }
+//   }, [shareSettings.data]);
+
+//   const handleSaveOfSurveyShareSettings = useCallback(async () => {
+//     if (shareSettingsMutation) {
+//       const formData = new FormData();
+//       for (const property in logoTabPanelState) {
+//         let value = logoTabPanelState[property];
+//         formData.append(property, value);
+//       }
+//       try {
+//         await shareSettingsMutation.mutateAsync({
+//           params: {
+//             resourceName,
+//             id,
+//           },
+//           body: formData,
+//         });
+//       } catch (err) {
+//         showErrorToast(
+//           translations("Unable to save settings, Please try again later"),
+//         );
+//       }
+//     }
+//   }, [logoTabPanelState]);
+
+//   return (
+//     <PaperLayout style={{ ...sx }}>
+//       <>
+//         <Title order={2} mb="sm" pb="md" className={styles["heading"]}>
+//           {translations("Generate & Share QR Code")}
+//         </Title>
+
+//         <Group className={styles["options-preview-container"]}>
+// <LogoTabpanel
+//   state={logoTabPanelState}
+//   dispatch={logoTabPanelDispatch}
+// />
+
+//           {/*..... QR Editor - Preview ........ */}
+
+//           {url && (
+//             <Stack align="center">
+//               <Preview
+//                 logoTabPanelState={logoTabPanelState}
+//                 url={url}
+//                 surveyTitle={title}
+//                 isSurveyPublished={isPublished}
+//               />
+//               <RateupButtonBlue
+//                 loading={shareSettingsMutation?.isPending}
+//                 title={translations("Save Settings")}
+//                 onClick={handleSaveOfSurveyShareSettings}
+//               />
+//             </Stack>
+//           )}
+//         </Group>
+//       </>
+//     </PaperLayout>
+//   );
+// };
 
 export default ShareQR;
