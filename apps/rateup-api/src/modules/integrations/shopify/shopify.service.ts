@@ -255,14 +255,19 @@ export async function sendShopifySurveyCronAction() {
     },
   })) as unknown as ShopifyIntegration[];
 
-  if (!integrations.length) return;
+  if (!integrations.length) {
+    log.trace("No shopify integration found");
+    return;
+  }
 
   for (const integration of integrations) {
+    log.trace("integration => %o", integration);
     const {
       credential: { shopifySurveys, session },
       orgId,
     } = integration;
 
+    log.trace("shopifySurveys => %o", shopifySurveys);
     if (!shopifySurveys || !shopifySurveys.length) {
       log.trace("No config found");
       return false;
@@ -291,6 +296,7 @@ export async function sendShopifySurveyCronAction() {
     for (const config of newShopifySurveys) {
       const { event, schedules, repeatInterval, waTemplateId, teamId, active } =
         config;
+      log.trace("schedules => %o", schedules);
       if (!schedules || !schedules.length || !active) {
         log.trace("No schedules found");
         return false;
@@ -338,6 +344,7 @@ export async function sendShopifySurveyCronAction() {
             }
           }
         }
+        console.log("tobeSent", tobeSent);
         if (tobeSent) {
           const subscription = await getSubscription(orgId);
           await verifyTemplateMessageLimit(subscription);
