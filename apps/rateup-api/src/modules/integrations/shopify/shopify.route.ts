@@ -7,6 +7,7 @@ import {
   getRegisteredWebhooksHandler,
   registerWebhookByTopicHandler,
   registerWebhookHandler,
+  testShopifyCronActionFnHandler,
   updateShopifyIntegrationByShopHandler,
 } from "./shopify.controller";
 import { ShopifyRef } from "./shopify.schema";
@@ -59,4 +60,5 @@ export async function shopifyRoutes(server: FastifyInstance) {
     },
     deleteIntegrationByShopHandler,
   );
+  server.get("/test", testShopifyCronActionFnHandler);
 }
