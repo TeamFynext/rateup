@@ -2464,5 +2464,17 @@
   "Create QR Code": "إنشاء رمز QR",
   "Click to Edit": "اضغط للتعديل",
   "copied": "تم النسخ",
-  "copy": "نسخ"
+  "copy": "نسخ",
+  "Enable Logo": "تفعيل الشعار",
+  "Radius": "نصف القطر",
+  "QR Code Color": "لون رمز الاستجابة السريعة",
+  "Live Preview": "معاينة مباشرة",
+  "Updates in real-time": "تحديثات في الوقت الحقيقي",
+  "Customize & Generate QR Code": "تخصيص وإنشاء رمز الاستجابة السريعة",
+  "Editor Mode": "وضع التحرير",
+  "Destination URL": "رابط الوجهة",
+  "QR URL": "رابط رمز الاستجابة السريعة",
+  "Copy URL": "نسخ الرابط",
+  "Statistics": "الإحصائيات",
+  "Total Scans": "إجمالي عمليات المسح"
 }

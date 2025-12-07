@@ -2468,5 +2468,17 @@
   "Create QR Code": "QR कोड बनाएँ",
   "Click to Edit": "संपादित करने के लिए क्लिक करें",
   "copied": "कॉपी किया गया",
-  "copy": "कॉपी"
+  "copy": "कॉपी",
+  "Enable Logo": "लोगो सक्षम करें",
+  "Radius": "त्रिज्या",
+  "QR Code Color": "क्यूआर कोड का रंग",
+  "Live Preview": "लाइव प्रीव्यू",
+  "Updates in real-time": "रीयल-टाइम में अपडेट",
+  "Customize & Generate QR Code": "क्यूआर कोड को कस्टमाइज़ और जनरेट करें",
+  "Editor Mode": "संपादक मोड",
+  "Destination URL": "लक्ष्य URL",
+  "QR URL": "क्यूआर URL",
+  "Copy URL": "URL कॉपी करें",
+  "Statistics": "सांख्यिकी",
+  "Total Scans": "कुल स्कैन"
 }

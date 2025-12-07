@@ -2467,5 +2467,17 @@
   "Create QR Code": "Créer un code QR",
   "Click to Edit": "Cliquez pour modifier",
   "copied": "copié",
-  "copy": "copier"
+  "copy": "copier",
+  "Enable Logo": "Activer le logo",
+  "Radius": "Rayon",
+  "QR Code Color": "Couleur du code QR",
+  "Live Preview": "Aperçu en direct",
+  "Updates in real-time": "Mises à jour en temps réel",
+  "Customize & Generate QR Code": "Personnaliser et générer le code QR",
+  "Editor Mode": "Mode éditeur",
+  "Destination URL": "URL de destination",
+  "QR URL": "URL du code QR",
+  "Copy URL": "Copier l’URL",
+  "Statistics": "Statistiques",
+  "Total Scans": "Total des scans"
 }
