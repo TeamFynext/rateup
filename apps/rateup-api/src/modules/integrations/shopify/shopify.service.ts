@@ -266,8 +266,6 @@ export async function sendShopifySurveyCronAction() {
       credential: { shopifySurveys, session },
       orgId,
     } = integration;
-
-    log.trace("shopifySurveys => %o", shopifySurveys);
     if (!shopifySurveys || !shopifySurveys.length) {
       log.trace("No config found");
       continue;
@@ -289,14 +287,18 @@ export async function sendShopifySurveyCronAction() {
     let allCheckouts;
 
     if (callShopifyApi) {
-      const client = new shopify.clients.Graphql({ session });
-      allCheckouts = await getAbandonedCheckouts(client);
+      try {
+        const client = new shopify.clients.Graphql({ session });
+        allCheckouts = await getAbandonedCheckouts(client);
+      } catch (e) {
+        log.error("Error getting abandoned checkouts => %o", e);
+        continue;
+      }
     }
 
     for (const config of newShopifySurveys) {
       const { event, schedules, repeatInterval, waTemplateId, teamId, active } =
         config;
-      log.trace("schedules => %o", schedules);
       if (!schedules || !schedules.length || !active) {
         log.trace("No schedules found");
         continue;
@@ -344,44 +346,57 @@ export async function sendShopifySurveyCronAction() {
             }
           }
         }
-        console.log("tobeSent", tobeSent);
         if (tobeSent) {
-          const subscription = await getSubscription(orgId);
-          await verifyTemplateMessageLimit(subscription);
-          const res = await sendTemplateToUserCore(
-            orgId,
-            waTemplateId,
-            sch.phone,
-            [],
-            teamId,
-          );
-          sch.status = res.status ? "SENT" : `FAILED: ${res.message}`;
-          let messageSentAt = null;
-          if (res.status) {
-            const message = await prisma.waMessage.findFirst({
-              where: {
-                messageId: res.message,
-              },
-            });
-            messageSentAt = message.waCreatedAt;
-          }
-          sch.sentAt = messageSentAt;
-          sch.history.forEach((h) => {
-            if (h.scheduledAt === sch.scheduledAt) {
-              h.status = sch.status;
-              h.sentAt = messageSentAt;
+          try {
+            const subscription = await getSubscription(orgId);
+            await verifyTemplateMessageLimit(subscription);
+            const res = await sendTemplateToUserCore(
+              orgId,
+              waTemplateId,
+              sch.phone,
+              [],
+              teamId,
+            );
+            sch.status = res.status ? "SENT" : `FAILED: ${res.message}`;
+            let messageSentAt = null;
+            if (res.status) {
+              const message = await prisma.waMessage.findFirst({
+                where: {
+                  messageId: res.message,
+                },
+              });
+              messageSentAt = message.waCreatedAt;
             }
-          });
+            sch.sentAt = messageSentAt;
+            sch.history.forEach((h) => {
+              if (h.scheduledAt === sch.scheduledAt) {
+                h.status = sch.status;
+                h.sentAt = messageSentAt;
+              }
+            });
+          } catch (e) {
+            log.error("error sending template => %o", e);
+            continue;
+          }
         }
       }
       config.schedules = newSchedules;
     }
-    await updateShopifyIntegrationByOrgId(orgId, {
-      credential: {
-        ...integration.credential,
-        shopifySurveys: newShopifySurveys,
-      },
-    });
+    try {
+      await updateShopifyIntegrationByOrgId(orgId, {
+        credential: {
+          ...integration.credential,
+          shopifySurveys: newShopifySurveys,
+        },
+      });
+    } catch (e) {
+      log.error(
+        "error updating shopify integration for orgId => %s, error => %o",
+        orgId,
+        e,
+      );
+      continue;
+    }
   }
 }
 
