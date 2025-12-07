@@ -270,7 +270,7 @@ export async function sendShopifySurveyCronAction() {
     log.trace("shopifySurveys => %o", shopifySurveys);
     if (!shopifySurveys || !shopifySurveys.length) {
       log.trace("No config found");
-      return false;
+      continue;
     }
     const newShopifySurveys = [...shopifySurveys];
     const callShopifyApi = newShopifySurveys.some(
@@ -299,7 +299,7 @@ export async function sendShopifySurveyCronAction() {
       log.trace("schedules => %o", schedules);
       if (!schedules || !schedules.length || !active) {
         log.trace("No schedules found");
-        return false;
+        continue;
       }
       const newSchedules = [...schedules];
       const isAbandonedEvent = event === ShopifyEvents.ABANDONED_CHECKOUTS;
