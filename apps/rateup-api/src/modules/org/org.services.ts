@@ -276,6 +276,7 @@ export async function updateOrgDetails(
     businessmail,
     encryptionKeys,
     waAssignedChatPermission,
+    showLifecycle,
   }: UpdateOrgDetailsInput,
   request: FastifyRequest,
   reply: FastifyReply,
@@ -304,6 +305,7 @@ export async function updateOrgDetails(
         location: location,
         businessmail: businessmail,
       },
+      showLifecycle,
     },
   });
   return org;
