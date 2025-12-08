@@ -50,6 +50,7 @@ export type ChatFilter = {
   sortBy: "newest" | "oldest";
   category: "conversation" | "campaign" | "automation";
   lifecycle?: string;
+  assignedUserIds: string[];
 };
 interface Props {
   setFilterCount: (value: number) => void;
@@ -58,7 +59,7 @@ interface Props {
 export default function WaInboxChatFilter({ setFilterCount }: Props) {
   const { data, isLoading, error } = useChatFilterData();
 
-  const { filter, setFilter } = useChatFilterStore();
+  const { filter, setFilter, clearFilter } = useChatFilterStore();
 
   const translations = useTranslations();
   const searchParams = useSearchParams();
@@ -143,25 +144,6 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
     }
     return count;
   }
-  function clearFilters() {
-    setFilter({
-      ...filter,
-      contactGroups: [],
-      campaigns: [],
-      tags: [],
-      strictFilter: false,
-      searchTerm: "",
-      status: [
-        WaMessageAssignStatus.UNASSIGNED,
-        WaMessageAssignStatus.ASSIGNED,
-        WaMessageAssignStatus.CLOSED,
-      ],
-      assignedTeams: [],
-      labels: [],
-      lifecycle: "",
-      category: null,
-    });
-  }
 
   const statusData = [
     {
@@ -192,7 +174,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
         </div>
 
         <Button
-          onClick={clearFilters}
+          onClick={() => clearFilter()}
           variant="outline"
           className="ml-auto !text-xs text-muted-foreground h-7 px-2 hover:text-blue-500 flex items-center gap-2"
         >
@@ -397,6 +379,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
 type ChatFilterStore = {
   filter: ChatFilter;
   setFilter: (value: ChatFilter) => void;
+  clearFilter: () => void;
 };
 
 export const useChatFilterStore = create<ChatFilterStore>()(
@@ -422,8 +405,33 @@ export const useChatFilterStore = create<ChatFilterStore>()(
         lifecycle: "",
         sortBy: "newest",
         category: null,
+        assignedUserIds: [],
       },
       setFilter: (value) => set({ filter: value }),
+      clearFilter: () => {
+        set({
+          filter: {
+            messageType: "usermessages",
+            strictFilter: false,
+            searchTerm: "",
+            contactGroups: [],
+            campaigns: [],
+            tags: [],
+            status: [
+              WaMessageAssignStatus.UNASSIGNED,
+              WaMessageAssignStatus.ASSIGNED,
+              WaMessageAssignStatus.CLOSED,
+            ],
+            assignedTeams: [],
+            labels: [],
+            lifecycle: "",
+            category: null,
+            assignedUserIds: [],
+            blockedUsers: false,
+            sortBy: "newest",
+          },
+        });
+      },
     }),
     {
       name: "chat-filter-storage", // name of the item in the storage (must be unique)

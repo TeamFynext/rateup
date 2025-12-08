@@ -2,16 +2,12 @@
 
 import { usePathname, useRouter } from "next/navigation";
 
-import { notifications } from "@mantine/notifications";
-import { useMutation } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { Calendar, Clock, FileText, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { updateSurvey } from "@/backend/surveys/survey.api";
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
 import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 
 import { SurveyMenu } from "./SurveyMenu";
 
@@ -40,21 +36,14 @@ export function SurveyCard({
   const translations = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
-  const surveyUpdateMutation = useMutation({
-    mutationFn: (data: any) => updateSurvey(survey.id, data),
-    onSuccess: () => {
-      notifications.show({
-        id: "survey",
-        message: translations("Survey status Updated!"),
-        autoClose: true,
-      });
-      refetchSurveys();
-    },
-  });
+  const totalResponses = survey?.teams?.reduce(
+    (sum, t) => sum + (t.responsesCount?.responses || 0),
+    0,
+  );
   return (
     <Card
       key={survey.id}
-      className="group hover:shadow-2xl transition-all duration-300 cursor-pointer bg-white border-slate-200 hover:border-[#2E5BFF]/30 overflow-hidden relative hover:-translate-y-1 flex flex-col"
+      className="transition-all duration-300 cursor-pointer overflow-hidden relative hover:-translate-y-1 flex flex-col"
       onClick={(e) => {
         e.stopPropagation();
         router.push(
@@ -79,7 +68,7 @@ export function SurveyCard({
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0 pr-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-primary dark:bg-rateup-darkblue flex items-center justify-center shadow-md flex-shrink-0">
                 <FileText className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-base line-clamp-1 group-hover:text-primary transition-colors font-bold">
@@ -96,52 +85,33 @@ export function SurveyCard({
             refetchSurveys={refetchSurveys}
           />
         </div>
-
-        {/* Status Toggle */}
-        <div className="flex items-center justify-end gap-2">
-          <Switch
-            checked={survey?.active}
-            className="scale-90"
-            onClick={(e) => {
-              e.stopPropagation();
-              surveyUpdateMutation.mutate({ active: !survey?.active });
-            }}
-          />
-          <span className="text-xs font-semibold">
-            {survey?.active ? (
-              <span className="text-green-600">Active</span>
-            ) : (
-              <span className="text-gray-500">Inactive</span>
-            )}
-          </span>
-        </div>
-
-        <div className="flex items-center">
-          <div className="flex items-center justify-between w-full">
-            <div
-              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-br from-blue-50 to-blue-100 border border-[#2E5BFF]/10 rounded-lg flex-1 mr-2 hover:from-blue-100 hover:to-blue-200 "
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`${pathname}/${survey?.id}?tab=Result`);
-              }}
-            >
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
-                <Users className="w-3 h-3 text-white" />
+        <div>
+          <div className="flex items-center gap-8">
+            <div className="text-center flex items-center gap-2 rounded-md px-4 py-2 border shadow-sm">
+              <div className="flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center shadow-md dark:bg-green-950">
+                  <FileText className="w-3.5 h-3.5 text-white" />
+                </div>
               </div>
-              <span className="text-xs text-muted-foreground font-semibold">
-                {translations("Responses")}
-              </span>
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">
+                  {translations("Questions")}
+                </p>
+                <p className="text-sm">{survey?.questions?.length}</p>
+              </div>
             </div>
-            {/* survey type */}
-            <div
-              className={`flex items-center gap-1.5 px-3 py-2 bg-gradient-to-br rounded-lg border border-[#2E5BFF]/10 
-                 ${survey?.type === "web" ? "from-blue-50 to-blue-100" : "from-green-50 to-green-100"}`}
-            >
-              <span
-                className={`text-xs font-semibold ${survey?.type === "web" ? "text-blue-600" : "text-green-600"}`}
-              >
-                {survey?.type?.toUpperCase()}
-              </span>
+            <div className="text-center flex items-center gap-2 rounded-md px-4 py-2 border shadow-sm">
+              <div className="flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-green-500 dark:bg-green-950 flex items-center justify-center shadow-md">
+                  <Users className="w-3.5 h-3.5 text-white" />
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">
+                  {translations("Responses")}
+                </p>
+                <p className="text-sm">{totalResponses}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -149,7 +119,7 @@ export function SurveyCard({
         {/* Footer with enhanced timestamps - Push to bottom */}
         <div className="flex items-center justify-between border-t py-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-5 h-5 rounded-md bg-slate-100 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-md flex items-center justify-center">
               <Calendar className="w-3 h-3" />
             </div>
             <span className="font-semibold">
@@ -157,7 +127,7 @@ export function SurveyCard({
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-5 h-5 rounded-md bg-blue-50 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-md flex items-center justify-center">
               <Clock className="w-3 h-3 text-blue-600" />
             </div>
             <span className="font-semibold">

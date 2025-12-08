@@ -190,6 +190,7 @@ declare global {
     mapId: string;
     code: string;
     shortUrlId?: string;
+    responsesCount?: any;
   }
 
   interface STStats {
@@ -369,6 +370,7 @@ declare global {
     hasWhatsAppSettings: boolean;
     onboardingCompleted?: boolean;
     presenceMode: UserPresenceMode;
+    showLifecycle: boolean;
   };
 
   interface UserInfoQueryData {

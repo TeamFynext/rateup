@@ -89,7 +89,7 @@ export default function Layout({ children, isBlog }: Readonly<LayoutProps>) {
   const router = useRouter();
 
   return (
-    <div className="relative w-full bg-rateup-darkblue">
+    <div className="relative w-full bg-rateup-darkblue py-8">
       <Navbar>
         {/* Desktop Navigation */}
         <NavBody>
