@@ -275,6 +275,7 @@ export async function getLoggedUserInfo(
           appId: true,
         },
       },
+      showLifecycle: true,
     },
   });
   return {
@@ -300,6 +301,7 @@ export async function getLoggedUserInfo(
     onboardingCompleted: orgData?.onboardingCompleted,
     onboarding: orgData?.onboarding,
     presenceMode: profile?.presenceMode,
+    showLifecycle: orgData?.showLifecycle,
   };
 }
 

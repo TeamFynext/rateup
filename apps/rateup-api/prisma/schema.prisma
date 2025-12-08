@@ -132,6 +132,8 @@ model Org {
 
   onboarding          Json?
   onboardingCompleted Boolean @default(false)
+  
+  showLifecycle            Boolean   @default(true)
 
   members                  OrgMember[]
   teams                    Team[]
