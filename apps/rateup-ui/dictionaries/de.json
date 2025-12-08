@@ -2481,5 +2481,9 @@
   "QR URL": "QR-Code-URL",
   "Copy URL": "URL kopieren",
   "Statistics": "Statistiken",
-  "Total Scans": "Gesamte Scans"
+  "Total Scans": "Gesamte Scans",
+  "Create and manage quick access links for surveys, landing pages, and QR codes": "Erstellen und verwalten Sie Schnellzugriffslinks für Umfragen, Landingpages und QR-Codes",
+  "Create Access Link": "Zugriffslink erstellen",
+  "Search access links": "Zugriffslinks durchsuchen",
+  "Views": "Aufrufe"
 }

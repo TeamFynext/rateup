@@ -2476,5 +2476,9 @@
   "QR URL": "رابط رمز الاستجابة السريعة",
   "Copy URL": "نسخ الرابط",
   "Statistics": "الإحصائيات",
-  "Total Scans": "إجمالي عمليات المسح"
+  "Total Scans": "إجمالي عمليات المسح",
+  "Create and manage quick access links for surveys, landing pages, and QR codes": "قم بإنشاء وإدارة روابط الوصول السريع للاستبيانات وصفحات الهبوط والرموز QR",
+  "Create Access Link": "إنشاء رابط وصول",
+  "Search access links": "البحث في روابط الوصول",
+  "Views": "المشاهدات"
 }

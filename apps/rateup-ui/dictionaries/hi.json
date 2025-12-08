@@ -2480,5 +2480,9 @@
   "QR URL": "क्यूआर URL",
   "Copy URL": "URL कॉपी करें",
   "Statistics": "सांख्यिकी",
-  "Total Scans": "कुल स्कैन"
+  "Total Scans": "कुल स्कैन",
+  "Create and manage quick access links for surveys, landing pages, and QR codes": "सर्वेक्षण, लैंडिंग पेज और QR कोड के लिए त्वरित एक्सेस लिंक बनाएँ और प्रबंधित करें",
+  "Create Access Link": "एक्सेस लिंक बनाएँ",
+  "Search access links": "एक्सेस लिंक खोजें",
+  "Views": "देखे गए"
 }
