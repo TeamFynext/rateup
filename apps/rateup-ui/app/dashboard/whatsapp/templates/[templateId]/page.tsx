@@ -519,7 +519,7 @@ export default function WhatsappTemplateById() {
       newObject = {
         type: WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE,
         text: "",
-        example: [],
+        example: [":"],
       };
     } else if (e === WHATSAPP_BUTTON_TYPE.OTP) {
       newObject = { type: e, text, otp_type: "copy_code" };
