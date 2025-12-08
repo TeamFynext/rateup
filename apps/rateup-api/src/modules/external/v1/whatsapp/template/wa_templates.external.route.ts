@@ -109,6 +109,9 @@ export async function extWaTemplateRoutes(server: FastifyInstance) {
                 },
               ],
             },
+            buttonVariable: {
+              type: "string",
+            },
             from: {
               type: "string",
               description:
