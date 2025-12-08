@@ -1,10 +1,10 @@
 import { log } from "../logger";
 
-const aws = require("@aws-sdk/client-ses");
 const nodemailer = require("nodemailer");
+const { SESv2Client, SendEmailCommand } = require("@aws-sdk/client-sesv2");
 
-const ses = new aws.SES({
-  apiVersion: "2010-12-01",
+// 1. Configure the AWS SDK client (uses default credential chain if omitted)
+const sesClient = new SESv2Client({
   region: process.env.AWS_REGION,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -12,8 +12,9 @@ const ses = new aws.SES({
   },
 });
 
+// 2. Create a Nodemailer transport that points at SES
 const transporter = nodemailer.createTransport({
-  SES: { ses, aws },
+  SES: { sesClient, SendEmailCommand },
 });
 
 interface EmailParams {

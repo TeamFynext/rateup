@@ -13,6 +13,7 @@ export function handleWhatsappError(
     });
   } else {
     log.error(error);
+    reply.send(error);
   }
 }
 export function getGraphApiErrorMessage(error: GraphApiError) {

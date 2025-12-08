@@ -171,6 +171,7 @@ model Org {
   AuditLog                 AuditLog[]
   ContactLabel             ContactLabel[]
   businessHours            BusinessHour[]
+  rules                    Rule[]
 }
 
 model UsageStats {
@@ -276,6 +277,96 @@ model WhatsappSettings {
   metaAssets       MetaAssets[]
   catalog          CatalogPhoneIdMap?
   assets           String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
+  rules            Rule[]
+}
+
+model Rule {
+  id    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org   Org    @relation(fields: [orgId], references: [id])
+  orgId String @db.Uuid
+
+  name                     String
+  operator                 RuleOperator @default(AND) // AND / OR
+  isActive                 Boolean      @default(true)
+  triggerEvent             TriggerEvent
+  whatsappSettingsPhoneIds String[]     @default([]) //for multiple whatsapp integration
+
+  groups  RuleConditionGroup[]
+  actions RuleAction[]
+
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  whatsappSettings   WhatsappSettings? @relation(fields: [whatsappSettingsId], references: [id])
+  whatsappSettingsId String?           @db.Uuid
+}
+
+enum RuleOperator {
+  AND
+  OR
+}
+
+model RuleConditionGroup {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rule   Rule   @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  ruleId String @db.Uuid
+
+  operator   RuleOperator    @default(AND)
+  conditions RuleCondition[]
+}
+
+model RuleCondition {
+  id      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  group   RuleConditionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId String             @db.Uuid
+
+  field    ConditionField
+  operator ConditionOperator
+  value    String? // 'order', '@gmail.com', 'yes', etc.
+}
+
+enum ConditionField {
+  MESSAGE_BODY
+  CONTACT_EMAIL
+  BUSINESS_HOURS
+  // ELAPSED_TIME
+  CONTACT_GROUP
+  CONTACT_LABEL
+  CONTACT_LIFECYCLE
+}
+
+enum ConditionOperator {
+  CONTAINS
+  EQUALS
+  STARTS_WITH
+  ENDS_WITH
+}
+
+enum TriggerEvent {
+  MESSAGE_RECEIVED
+  CHAT_CLOSED
+  CHAT_ASSIGNED
+  CONTACT_CREATED
+  LIFECYCLE_UPDATED
+}
+
+model RuleAction {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rule   Rule   @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  ruleId String @db.Uuid
+
+  type  ActionType
+  value Json? // userId, labelId, message text, templateId, etc.
+}
+
+enum ActionType {
+  CLOSE_TICKET
+  ATTACH_LABEL
+  ASSIGN_USER
+  ASSIGN_TEAM
+  ASSIGN_LIFECYCLE
+  SEND_MESSAGE
+  SEND_TEMPLATE
+  TRIGGER_CHATBOT
 }
 
 model WaAccountSettings {

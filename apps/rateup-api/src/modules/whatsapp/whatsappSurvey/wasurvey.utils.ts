@@ -1406,7 +1406,7 @@ export enum WA_SUBSCRIBE_STATUS {
 }
 
 function getHashForMembers(memberIds) {
-  return crypto.createHash("md5").update(memberIds.join(",")).digest("hex");
+  return crypto.createHash("SHA-256").update(memberIds.join(",")).digest("hex");
 }
 
 export const assignChat = async (
@@ -1418,7 +1418,7 @@ export const assignChat = async (
   const pointerKey = `round_robin_index:${teamId}:${automationId}:${memberHash}`;
   // Get current index from Redis, or start from 0
   let indexStr = await connection.get(pointerKey);
-  let index = indexStr ? parseInt(indexStr) : 0;
+  let index = indexStr ? Number.parseInt(indexStr) : 0;
 
   // Fallback safety check
   if (index >= memberIds.length) {
