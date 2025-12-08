@@ -377,6 +377,7 @@ export async function sendTemplateByNameToPhoneHandler(
       parameterData,
       tag,
       from,
+      buttonVariable,
     } = req.body;
     log.info("🚀 ~ req.body - external: %o", req.body);
     const orgId = req.user.orgId;
@@ -435,6 +436,7 @@ export async function sendTemplateByNameToPhoneHandler(
       true,
       tag,
       whatsappSettingsPhoneId,
+      buttonVariable,
     );
     rep
       .code(200)
@@ -476,6 +478,7 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
       filename,
       file,
       from,
+      buttonVariable,
     } = req.body;
     const orgId = req.user.orgId;
     if (!orgId)
@@ -588,6 +591,7 @@ export async function sendTemplateByNameToPhoneWithFileHandler(
       true,
       tag,
       whatsappSettingsPhoneId,
+      buttonVariable,
     );
     rep
       .code(200)
