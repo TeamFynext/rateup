@@ -8,20 +8,21 @@ import TimeSinceText from "../DateAndTime/TimeSinceText";
 import { Button } from "../ui/button";
 
 function LCard({ sortedValue, shareURL, Icon, baseURL, MoreOptions }) {
-  const [copied, setCopied] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
   const translations = useTranslations();
-  const handleCopy = (url) => {
+  const handleCopy = (id, url) => {
     navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
+
   const router = useRouter();
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
       {sortedValue?.map((v) => (
         <div
           key={v?.id}
-          className="rounded-xl border hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer relative transform hover:scale-[1.02] flex flex-col gap-2 sm:max-w-xs"
+          className="rounded-xl border hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer relative transform hover:scale-[1.02] flex flex-col gap-2"
           onClick={() => router.push(`${baseURL}/${v?.shortUrlId}`)}
         >
           {/* Dropdown Menu - Top Right Corner */}
@@ -80,23 +81,27 @@ function LCard({ sortedValue, shareURL, Icon, baseURL, MoreOptions }) {
               <div className="flex items-center gap-2">
                 <div className="flex-1 flex items-center gap-2 min-w-0 rounded-lg px-2.5 py-2 border">
                   <LinkIcon className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                  <span className="text-[10px] text-gray-500 truncate">
+                  <span
+                    className={`text-[10px] text-gray-500 truncate ${v?.isPublished ? "opacity-100" : "opacity-50 cursor-not-allowed"}`}
+                  >
                     {`${shareURL}/${v?.shortUrlId}`}
                   </span>
                 </div>
                 <Button
                   variant="ghost"
+                  disabled={!v?.isPublished}
                   size="icon"
-                  className="h-8 w-8 flex-shrink-0 hover:text-primary border rounded-lg transition-colors"
+                  className="h-8 w-8 flex-shrink-0 hover:text-primary border rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-auto"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleCopy(`${shareURL}/${v?.shortUrlId}`);
+                    !v?.isPublished && e.preventDefault();
+                    handleCopy(v?.id, `${shareURL}/${v?.shortUrlId}`);
                   }}
                 >
-                  {copied ? (
-                    <Check className="w-3.5 h-3.5 text-gray-400 transition-all duration-300" />
+                  {copiedId === v?.id ? (
+                    <Check className="w-3.5 h-3.5 text-gray-400" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5 text-gray-400 transition-all duration-300" />
+                    <Copy className="w-3.5 h-3.5 text-gray-400" />
                   )}
                 </Button>
               </div>

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Plus, RefreshCw, Search } from "lucide-react";
+import { Link, Plus, RefreshCw, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useLinktrees } from "../../backend/linktree/linktree.query";
@@ -52,6 +52,10 @@ function LinktreeDashboard() {
     sortOption,
   );
 
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["linktrees"] });
+  };
+
   let componentToBeRendered = null;
 
   if (isPending) {
@@ -77,20 +81,16 @@ function LinktreeDashboard() {
       <LCard
         sortedValue={sortedLinktrees}
         shareURL={shareUrl}
-        Icon={BookOpen}
+        Icon={Link}
         baseURL={baseURL}
         MoreOptions={MoreOptionsMenu}
       />
     );
   }
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["linktrees"] });
-  };
-
   return (
     <div className="w-full flex flex-col gap-4">
-      <div className="border-b px-6 py-2 flex-shrink-0">
+      <div className="border-b px-6 py-4 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold">
@@ -117,7 +117,7 @@ function LinktreeDashboard() {
         </div>
 
         {/* Search and Filter Bar */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full p-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
           <Button
             className="flex-none bg-primary"
             onClick={createLinktreeModalHandlers.open}

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { Box, Center, Group, Loader, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useGetAllGeneratedQrsQuery } from "backend/generateQr/generateQr.query";
 import { Plus, RefreshCw } from "lucide-react";
@@ -12,6 +11,7 @@ import { useTranslations } from "next-intl";
 import SortDropdown, { sortData } from "../Dashboard/SortDropDown";
 import NothingFound from "../NothingFound/NothingFound";
 import { Button } from "../ui/button";
+import { Loader } from "../ui/loader";
 import CreateQrModal from "./CreateQrModal";
 import GeneratedQrCardsList from "./GeneratedQrCardsList";
 
@@ -34,8 +34,6 @@ function GenerateQr() {
     setSortOption(value);
   };
 
-  console.log(generatedQrs);
-
   const sortedGeneratedQrs = sortData(
     generatedQrs?.map((s) => ({ ...s, data: { name: s.name } })),
     sortOption,
@@ -45,21 +43,21 @@ function GenerateQr() {
 
   if (isPending) {
     componentToBeRendered = (
-      <Center h={"100%"} w={"100%"}>
-        <Loader type="bars" />
-      </Center>
+      <div className="flex w-full h-screen items-center justify-center">
+        <Loader />
+      </div>
     );
   } else if (isError) {
     componentToBeRendered = (
-      <Center h={"100%"} w={"100%"}>
+      <div className="flex w-full h-screen items-center justify-center">
         <p>{translations("Unable to get data, please try again later")}</p>
-      </Center>
+      </div>
     );
   } else if (!isPending && !isError && !generatedQrs.length) {
     componentToBeRendered = (
-      <Center h={"100%"} w={"100%"}>
+      <div className="flex w-full h-screen items-center justify-center">
         <NothingFound text={translations("No QRs Found")} />
-      </Center>
+      </div>
     );
   } else {
     componentToBeRendered = (
