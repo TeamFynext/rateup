@@ -138,7 +138,7 @@ export const templateSchema = z
             .max(25)
             .refine(isValidPhoneNumber)
             .optional(),
-          url: z.url().trim().max(2000).optional(),
+          url: z.string().trim().max(2000).optional(),
           flow_id: z.string().optional(),
           flow_action: z.string().optional(),
           navigate_screen: z.string().optional(),
@@ -318,6 +318,56 @@ export const templateSchema = z
               message: "website url is required",
               input: data.url,
             });
+          } else {
+            // If URL contains template variable like {{1}}, require example and validate
+            if (
+              typeof data.url === "string" &&
+              /{{\s*\d+\s*}}/.test(data.url)
+            ) {
+              const example = data.example;
+              const hasExample = Array.isArray(example)
+                ? example.length > 0
+                : typeof example === "string" && example.trim().length > 0;
+              if (!hasExample) {
+                issues.push({
+                  path: ["buttons", index, "example"],
+                  code: "custom",
+                  message:
+                    "Example value is required when URL contains a variable",
+                  input: data.example,
+                });
+              }
+              // Try replacing placeholders with a simple value to validate URL structure
+              try {
+                const replaced = (data.url as string).replace(
+                  /{{\s*\d+\s*}}/g,
+                  "1",
+                );
+                // Use URL constructor to validate
+                // eslint-disable-next-line no-new
+                new URL(replaced);
+              } catch (e) {
+                issues.push({
+                  path: ["buttons", index, "url"],
+                  code: "custom",
+                  message: "Invalid website URL",
+                  input: data.url,
+                });
+              }
+            } else {
+              // When no template placeholders present, validate a normal URL
+              try {
+                // eslint-disable-next-line no-new
+                new URL(data.url as string);
+              } catch (e) {
+                issues.push({
+                  path: ["buttons", index, "url"],
+                  code: "custom",
+                  message: "Invalid website URL",
+                  input: data.url,
+                });
+              }
+            }
           }
           break;
         case WHATSAPP_BUTTON_TYPE.COPY_OFFER_CODE:

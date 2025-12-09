@@ -411,7 +411,7 @@ export default function AppSidebar({
                           <SidebarMenuButton
                             asChild
                             tooltip={item.title}
-                            isActive={fullPathname === item.url}
+                            isActive={fullPathname.startsWith(item.url)}
                             aria-label={item.title}
                             onClick={(e) => {
                               const allow = handleRouteGuard(item.url);
