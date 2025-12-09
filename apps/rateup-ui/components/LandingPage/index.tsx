@@ -15,10 +15,8 @@ import NothingFound from "../NothingFound/NothingFound";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Loader } from "../ui/loader";
-import LPTourSteps from "../WelcomeTour/components/LPTourSteps";
 import CreateLandingPageModal from "./CreateLandingPageModal";
 import MoreOptionsMenu from "./LandingPageCard/MoreOptionsMenu";
-import styles from "./landingPageDashboardPage.module.css";
 
 function LandingPageDashboard() {
   const searchParams = useSearchParams();
@@ -35,7 +33,6 @@ function LandingPageDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState("latest");
   const translations = useTranslations();
-  const tourSteps = LPTourSteps({ styles });
 
   useEffect(() => {
     if (data) {

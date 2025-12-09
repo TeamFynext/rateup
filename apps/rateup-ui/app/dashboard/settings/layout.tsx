@@ -57,7 +57,7 @@ const SettingsLayout = ({ children }) => {
           ? [
               {
                 id: "users" as SettingsSection,
-                label: "Users",
+                label: translations("Users"),
                 icon: UserCog,
                 description: translations("User accounts & access"),
                 href: "/dashboard/settings/users",
