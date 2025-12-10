@@ -78,62 +78,6 @@ function CreateLandingPageModal({
     form.reset();
   }, [form]);
 
-  // return (
-  //   <Modal
-  //     opened={opened}
-  //     onClose={onClose}
-  //     title={
-  //       mode === "create"
-  //         ? translations("Create LandingPage")
-  //         : translations("Rename Landing Page")
-  //     }
-  //     centered
-  //     classNames={{
-  //       header: modalStyles["modal-header"],
-  //       body: modalStyles["modal-body"],
-  //       content: modalStyles["modal-content"],
-  //     }}
-  //     onClick={(e) => e.stopPropagation()}
-  //   >
-  //     <Box className={modalStyles["modal-content-container"]}>
-  //       <form
-  //         className={styles["create-landingPage-form"]}
-  //         onSubmit={
-  //           mode === "create"
-  //             ? form.onSubmit(handleCreateLandingPageFormSubmit)
-  //             : form.onSubmit(handleUpdateLandingPageFormSubmit)
-  //         }
-  //       >
-  //         <TextInput
-  //           className={styles["name-text-input"]}
-  //           label={translations("Name")}
-  //           placeholder={translations("Enter name of Landing Page")}
-  //           onClick={(e) => e.stopPropagation()}
-  //           {...form.getInputProps("name")}
-  //         />
-  //         <Button
-  //           style={{ display: "none" }}
-  //           type="submit"
-  //           ref={formSubmitBtnRef}
-  //         />
-  //       </form>
-  //     </Box>
-  //     <Box className={modalStyles["cancel-save-btns-container"]}>
-  //       <Button
-  //         onClick={handleCancelBtnClick}
-  //         className={modalStyles["cancel-btn"]}
-  //       >
-  //         {translations("Cancel")}
-  //       </Button>
-  //       <Button onClick={handleCreateLinkBtnClick}>
-  //         {mode === "create"
-  //           ? translations("Create")
-  //           : translations("Save changes")}
-  //       </Button>
-  //     </Box>
-  //   </Modal>
-  // );
-
   return (
     <Dialog open={opened} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
