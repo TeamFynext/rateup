@@ -2463,5 +2463,7 @@
   "Tags, Groups, Campaigns": "टैग, समूह, अभियानों",
   "Select category (type in to search)": "श्रेणी चुनें (खोजने के लिए टाइप करें)",
   "Search Surveys": "सर्वे खोजें",
-  "Questions": "प्रश्न"
+  "Questions": "प्रश्न",
+  "Spaces are not allowed, try": "स्पेस की अनुमति नहीं है, कोशिश करें",
+  "Team Code can contain only alphabets, numbers, and hyphens": "टीम कोड में केवल अक्षर, संख्या और हाइफ़न ही हो सकते हैं"
 }

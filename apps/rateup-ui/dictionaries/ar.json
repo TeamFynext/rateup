@@ -2459,5 +2459,7 @@
   "Tags, Groups, Campaigns": "الوسوم والمجموعات والحملات",
   "Select category (type in to search)": "اختر الفئة (اكتب للبحث)",
   "Search Surveys": "البحث في الاستبيانات",
-  "Questions": "الأسئلة"
+  "Questions": "الأسئلة",
+  "Spaces are not allowed, try": "المسافات غير مسموح بها، جرّب",
+  "Team Code can contain only alphabets, numbers, and hyphens": "يمكن أن يحتوي رمز الفريق على أحرف وأرقام وشرطات فقط"
 }

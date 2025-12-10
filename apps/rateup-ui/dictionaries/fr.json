@@ -2462,5 +2462,7 @@
   "Tags, Groups, Campaigns": "Tags, groupes, campagnes",
   "Select category (type in to search)": "Sélectionner une catégorie (tapez pour rechercher)",
   "Search Surveys": "Rechercher des sondages",
-  "Questions": "Questions"
+  "Questions": "Questions",
+  "Spaces are not allowed, try": "Les espaces ne sont pas autorisés, essayez",
+  "Team Code can contain only alphabets, numbers, and hyphens": "Le code d’équipe ne peut contenir que des lettres, des chiffres et des tirets"
 }

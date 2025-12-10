@@ -2464,5 +2464,7 @@
   "Tags, Groups, Campaigns": "Tags, Gruppen, Kampagnen",
   "Select category (type in to search)": "Kategorie auswählen (zum Suchen tippen)",
   "Search Surveys": "Umfragen durchsuchen",
-  "Questions": "Fragen"
+  "Questions": "Fragen",
+  "Spaces are not allowed, try": "Leerzeichen sind nicht erlaubt, versuchen Sie",
+  "Team Code can contain only alphabets, numbers, and hyphens": "Der Teamcode darf nur Buchstaben, Zahlen und Bindestriche enthalten"
 }

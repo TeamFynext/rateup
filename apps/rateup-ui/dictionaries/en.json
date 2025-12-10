@@ -2447,5 +2447,7 @@
   "Tags, Groups, Campaigns": "Tags, Groups, Campaigns",
   "Select category (type in to search)": "Select category (type in to search)",
   "Search Surveys": "Search Surveys",
-  "Questions": "Questions"
+  "Questions": "Questions",
+  "Spaces are not allowed, try": "Spaces are not allowed, try",
+  "Team Code can contain only alphabets, numbers, and hyphens": "Team Code can contain only alphabets, numbers, and hyphens"
 }
