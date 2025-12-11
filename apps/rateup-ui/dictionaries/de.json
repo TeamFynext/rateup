@@ -2464,7 +2464,6 @@
   "Tags, Groups, Campaigns": "Tags, Gruppen, Kampagnen",
   "Select category (type in to search)": "Kategorie auswählen (zum Suchen tippen)",
   "Search Surveys": "Umfragen durchsuchen",
-  "Questions": "Fragen",
   "Create, manage and track your QR codes": "Erstelle, verwalte und verfolge deine QR-Codes",
   "Create QR Code": "QR-Code erstellen",
   "Click to Edit": "Zum Bearbeiten klicken",
@@ -2516,5 +2515,8 @@
   "Create Link": "Link erstellen",
   "Rename Link": "Link umbenennen",
   "No business hours set up yet": "Es wurden noch keine Öffnungszeiten eingerichtet",
-  "Click 'Manage' to add your first business hours": "Klicken Sie auf „Manage“, um Ihre ersten Öffnungszeiten hinzuzufügen"
+  "Click 'Manage' to add your first business hours": "Klicken Sie auf „Manage“, um Ihre ersten Öffnungszeiten hinzuzufügen",
+  "Questions": "Fragen",
+  "Spaces are not allowed, try": "Leerzeichen sind nicht erlaubt, versuchen Sie",
+  "Team Code can contain only alphabets, numbers, and hyphens": "Der Teamcode darf nur Buchstaben, Zahlen und Bindestriche enthalten"
 }

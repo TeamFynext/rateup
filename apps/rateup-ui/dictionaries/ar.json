@@ -2460,6 +2460,8 @@
   "Select category (type in to search)": "اختر الفئة (اكتب للبحث)",
   "Search Surveys": "البحث في الاستبيانات",
   "Questions": "الأسئلة",
+  "Spaces are not allowed, try": "المسافات غير مسموح بها، جرّب",
+  "Team Code can contain only alphabets, numbers, and hyphens": "يمكن أن يحتوي رمز الفريق على أحرف وأرقام وشرطات فقط",
   "Create, manage and track your QR codes": "أنشئ وأدر وتابع رموز QR الخاصة بك",
   "Create QR Code": "إنشاء رمز QR",
   "Click to Edit": "اضغط للتعديل",
