@@ -1,7 +1,13 @@
 import { FastifyInstance } from "fastify";
 import { $conversationRef } from "./conversation.schema";
 import {
+  getAverageConversationResponseTimeHandler,
+  getConversationOnAccountDistributionHandler,
   getConversationOverviewHandler,
+  getOverAllQuickStatsOfConversationsHandler,
+  getResolvedConversationStatsHandler,
+  getStaffConverSationMetricsHandler,
+  getStaffDetailedConversationAnalyticsHandler,
   updateConversationHandler,
 } from "./conversation.controller";
 import { get } from "axios";
@@ -18,5 +24,42 @@ export async function conversationRoutes(server: FastifyInstance) {
     updateConversationHandler,
   );
 
-  server.get("/overview", getConversationOverviewHandler);
+  server.get(
+    "/overview",
+    {
+      schema: {
+        querystring: $conversationRef("statsQuerySchema"),
+      },
+    },
+    getConversationOverviewHandler,
+  );
+  server.get(
+    "/conversation-resolved-stats",
+    {
+      schema: {
+        querystring: $conversationRef("statsQuerySchema"),
+      },
+    },
+    getResolvedConversationStatsHandler,
+  );
+  server.get(
+    "/conversation-response-stats",
+    getAverageConversationResponseTimeHandler,
+  );
+  server.get(
+    "/account-distribution",
+    getConversationOnAccountDistributionHandler,
+  );
+  server.get("/staff-metrics", getStaffConverSationMetricsHandler);
+  server.get("/quick-stats", getOverAllQuickStatsOfConversationsHandler);
+  server.get(
+    "/staff-detailed-analytics/:staffId",
+    {
+      schema: {
+        params: $conversationRef("staffIdParamsSchema"),
+        querystring: $conversationRef("statsQuerySchema"),
+      },
+    },
+    getStaffDetailedConversationAnalyticsHandler,
+  );
 }

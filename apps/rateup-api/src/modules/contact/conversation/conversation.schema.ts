@@ -34,13 +34,28 @@ const conversationParamsSchema = z.object({
   conversationId: z.string().uuid(),
 });
 
+const statsQuerySchema = z.object({
+  dateKey: z.string().optional(),
+  dateRange: z.string().optional(),
+  days: z.number().optional(),
+});
+
+const staffIdParamsSchema = z.object({
+  staffId: z.string(),
+});
+
 export const { schemas: conversationSchemas, $ref: $conversationRef } =
-  buildJsonSchemas({
-    conversationCoreSchema,
-    updateConversationSchema,
-    conversationParamsSchema,
-    conversationAssigneeUpdateSchema,
-  });
+  buildJsonSchemas(
+    {
+      conversationCoreSchema,
+      updateConversationSchema,
+      conversationParamsSchema,
+      conversationAssigneeUpdateSchema,
+      statsQuerySchema,
+      staffIdParamsSchema,
+    },
+    { $id: "ConversationSchemas" },
+  );
 
 export type ConversationCore = z.infer<typeof conversationCoreSchema>;
 export type UpdateConversationSchema = z.infer<typeof updateConversationSchema>;
@@ -48,3 +63,5 @@ export type ConversationParamsSchema = z.infer<typeof conversationParamsSchema>;
 export type ConversationAssigneeUpdateSchema = z.infer<
   typeof conversationAssigneeUpdateSchema
 >;
+export type StatsQuerySchema = z.infer<typeof statsQuerySchema>;
+export type StaffIdParamsSchema = z.infer<typeof staffIdParamsSchema>;
