@@ -2,24 +2,23 @@
 
 import { useCallback, useEffect } from "react";
 
-import { Group, Stack, Title } from "@mantine/core";
+import { Palette, Save } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useImmerReducer } from "use-immer";
+
+import { Button } from "@/components/ui/button";
 
 import {
   useGetShareSettings,
   useUpdateShareSettingsMutation,
 } from "../../../../backend/surveyShareSettings/surveyShareSettings.query";
 import { showErrorToast } from "../../../../utils/notifications";
-import { RateupButtonBlue } from "../../../Button/RateupButtons";
-import PaperLayout from "../../../styled/Layouts/PaperLayout";
 import Preview from "../Preview/Preview";
 import LogoTabpanel from "./LogoTabPanel";
 import {
   initialLogoTabPanelState,
   logoTabPanelReducer,
 } from "./LogoTabPanel/LogoTabPanelReducer";
-import styles from "./ShareQR.module.css";
 
 interface ShareQRProps {
   url: string;
@@ -30,15 +29,6 @@ interface ShareQRProps {
   queryKey?: string;
   resourceName?: string;
 }
-
-type ShareQRState = {
-  qrBgColor: string;
-  qrColor: string;
-  logoSize: number;
-  logoFillType: string;
-  logoBorderRadius: number;
-  logoFile: null | File;
-};
 
 const ShareQR = ({
   url,
@@ -97,38 +87,38 @@ const ShareQR = ({
   }, [logoTabPanelState]);
 
   return (
-    <PaperLayout style={{ ...sx }}>
-      <>
-        <Title order={2} mb="sm" pb="md" className={styles["heading"]}>
-          {translations("Generate & Share QR Code")}
-        </Title>
-
-        <Group className={styles["options-preview-container"]}>
-          <LogoTabpanel
-            state={logoTabPanelState}
-            dispatch={logoTabPanelDispatch}
-          />
-
-          {/*..... QR Editor - Preview ........ */}
-
-          {url && (
-            <Stack align="center">
-              <Preview
-                logoTabPanelState={logoTabPanelState}
-                url={url}
-                surveyTitle={title}
-                isSurveyPublished={isPublished}
-              />
-              <RateupButtonBlue
-                loading={shareSettingsMutation?.isPending}
-                title={translations("Save Settings")}
-                onClick={handleSaveOfSurveyShareSettings}
-              />
-            </Stack>
-          )}
-        </Group>
-      </>
-    </PaperLayout>
+    <div>
+      <div className="flex items-center gap-1.5 py-1.5 mb-2">
+        <Palette className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-semibold">
+          {translations("Customize & Generate QR Code")}
+        </h2>
+      </div>
+      <div className="flex gap-4">
+        <LogoTabpanel
+          state={logoTabPanelState}
+          dispatch={logoTabPanelDispatch}
+        />
+        <div className="p-2">
+          <div className="border p-3 rounded-lg flex flex-col gap-2 w-full">
+            <Preview
+              logoTabPanelState={logoTabPanelState}
+              url={url}
+              surveyTitle={title}
+              isSurveyPublished={isPublished}
+            />
+            <Button
+              onClick={handleSaveOfSurveyShareSettings}
+              className="disabled:opacity-50"
+              disabled={shareSettingsMutation?.isPending}
+            >
+              <Save />
+              {translations("Save Settings")}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
