@@ -1,0 +1,116 @@
+import { Skeleton } from "@mantine/core";
+import { Clock } from "lucide-react";
+import {
+  CartesianGrid,
+  LabelList,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import { useGetAverageConversationResponseTimeGraphData } from "@/backend/conversation/conversation.query";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+
+const ConversationResponseTimePatternGraph = () => {
+  const { data: chartData = [], isLoading } =
+    useGetAverageConversationResponseTimeGraphData();
+  const chartConfig = {
+    averageResponseTime: {
+      label: "Average Response Time",
+      color: "var(--chart-3)",
+    },
+  } satisfies ChartConfig;
+
+  if (isLoading) {
+    return <Skeleton className="w-full h-90" />;
+  }
+
+  return (
+    <Card className="border shadow-sm bg-gradient-to-br from-purple-50/30 to-white">
+      <CardHeader className="flex flex-col gap-0 w-full">
+        <div className="flex justify-between items-center gap-2 w-full">
+          <CardTitle className="flex gap-1 items-center">
+            <Clock className="w-5 h-5 text-blue-500 mr-1" />
+            Response Time Pattern
+          </CardTitle>
+          <Badge
+            variant="outline"
+            className="bg-orange-50 text-orange-700 border-orange-200"
+          >
+            Today
+          </Badge>
+        </div>
+        <CardDescription className="text-sm">
+          Average response time throughout the day
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!chartData.length ? (
+          <div className="grid place-content-center py-12 h-full">
+            <h3 className="text-lg font-medium text-gray-900">
+              No data found for analysis
+            </h3>
+            <p className="text-gray-600 mb-4">
+              No responsed conversation found
+            </p>
+          </div>
+        ) : (
+          <ChartContainer config={chartConfig}>
+            <LineChart
+              accessibilityLayer
+              data={chartData}
+              margin={{
+                top: 20,
+                left: 12,
+                right: 12,
+              }}
+            >
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="hour" tickLine={false} axisLine={false} />
+              <YAxis />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="line" />}
+              />
+              <Line
+                dataKey="averageResponseTime"
+                type="natural"
+                stroke="#FF9500"
+                strokeWidth={2}
+                dot={{
+                  fill: "#FF9500",
+                }}
+                activeDot={{
+                  r: 6,
+                }}
+              >
+                <LabelList
+                  position="top"
+                  offset={12}
+                  className="fill-foreground"
+                  fontSize={12}
+                />
+              </Line>
+            </LineChart>
+          </ChartContainer>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ConversationResponseTimePatternGraph;

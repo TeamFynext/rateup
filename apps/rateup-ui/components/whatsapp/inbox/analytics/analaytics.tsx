@@ -1,203 +1,107 @@
 "use client";
 
-import React from "react";
+import { useState } from "react";
 
+import { useIsFetching, useQueryClient } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import {
-  Avatar,
-  Card,
-  Container,
-  Group,
-  SimpleGrid,
-  Stack,
-  Table,
-  Text,
-  Title,
-} from "@mantine/core";
-import {
-  IconClock,
-  IconInbox,
-  IconMessage,
-  IconMessagePlus,
-  IconUserCheck,
-  IconUserExclamation,
-  IconUserOff,
-  IconUserPlus,
-  IconUserX,
-} from "@tabler/icons-react";
+  Award,
+  ChartNoAxesColumnIncreasing,
+  Filter,
+  RefreshCcw,
+} from "lucide-react";
 
-import { useGetInboxAnalytics } from "@/backend/whatsapp/inbox/message/wamessage.query";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import ConversationStatsAgentPerformance from "./ConversationStatsAgentPerformance";
+import ConversationStatsOverview from "./ConversationStatsOverview";
+import DateRangeSelector from "./DateRangeSelector";
 
 const Analytics = () => {
-  const { data, isLoading, error } = useGetInboxAnalytics();
-  if (isLoading) {
-    return <Text>Loading...</Text>;
+  const [dateRange, setDateRange] = useState({
+    key: "today",
+    range: [dayjs().startOf("day").toDate(), new Date()],
+  });
+  const queryClient = useQueryClient();
+  function refresh() {
+    queries.map((key) => queryClient.invalidateQueries({ queryKey: [key] }));
+    queryClient.invalidateQueries({ queryKey: ["conversationOverview"] });
+    queryClient.invalidateQueries({
+      queryKey: ["conversationAverageResponseTime"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["ConversationAccountDistribution"],
+    });
+    queryClient.invalidateQueries({ queryKey: ["ConversationQuickStats"] });
+    queryClient.invalidateQueries({
+      queryKey: ["StaffPerformanceonConversation"],
+    });
   }
-  if (error) {
-    return <Text>Error loading analytics</Text>;
-  }
+  const queries = [
+    ["conversationOverview"],
+    ["conversationAverageResponseTime"],
+    ["ConversationAccountDistribution"],
+    ["ConversationQuickStats"],
+    ["StaffPerformanceonConversation"],
+  ];
+
+  const fetchCounts = queries.map((key) => useIsFetching({ queryKey: key }));
+
+  const isFetching = fetchCounts.some((count) => count > 0);
+
   return (
-    <Container
-      w={"100%"}
-      h={"100%"}
-      p={"sm"}
-      className="flex flex-col"
-      size={"xl"}
-    >
-      <Stack justify="left">
-        <Title order={2}>Inbox Analytics</Title>
-        <Text>Monitor your customer support performance and trends</Text>
-        <SimpleGrid cols={3}>
-          <Card withBorder shadow="sm" p="md" radius={"md"}>
-            <div className="flex justify-between items-center">
-              <div>
-                <Text className="text-gray-600" size="sm" fw={500}>
-                  Total Messages
-                </Text>
-                <Title order={3} mt={5}>
-                  {data?.waMessageCount.toLocaleString() || 0}
-                </Title>
-              </div>
-              <IconMessage size={24} className="text-blue-500" />
-            </div>
-          </Card>
-
-          <Card withBorder shadow="sm" p="md" radius={"md"}>
-            <div className="flex justify-between items-center">
-              <div>
-                <Text className="text-gray-600" size="sm" fw={500}>
-                  New Chats
-                </Text>
-                <Title order={3} mt={5}>
-                  {data?.newChatCount.toLocaleString() || 0}
-                </Title>
-              </div>
-              <IconMessagePlus size={24} className="text-green-500" />
-            </div>
-          </Card>
-
-          <Card withBorder shadow="sm" p="md" radius={"md"}>
-            <div className="flex justify-between items-center">
-              <div>
-                <Text className="text-gray-600" size="sm" fw={500}>
-                  Unassigned Contacts
-                </Text>
-                <Title order={3} mt={5}>
-                  {data?.unassignedContactCount.toLocaleString() || 0}
-                </Title>
-              </div>
-              <IconUserOff size={24} className="text-gray-500" />
-            </div>
-          </Card>
-
-          <Card withBorder shadow="sm" p="md" radius={"md"}>
-            <div className="flex justify-between items-center">
-              <div>
-                <Text className="text-gray-600" size="sm" fw={500}>
-                  Assigned Contacts
-                </Text>
-                <Title order={3} mt={5}>
-                  {data?.assignedContactCount.toLocaleString() || 0}
-                </Title>
-              </div>
-              <IconUserCheck size={24} className="text-indigo-500" />
-            </div>
-          </Card>
-
-          <Card withBorder shadow="sm" p="md" radius={"md"}>
-            <div className="flex justify-between items-center">
-              <div>
-                <Text className="text-gray-600" size="sm" fw={500}>
-                  New Contacts
-                </Text>
-                <Title order={3} mt={5}>
-                  {data?.newContactCount.toLocaleString() || 0}
-                </Title>
-              </div>
-              <IconUserPlus size={24} className="text-teal-500" />
-            </div>
-          </Card>
-
-          <Card withBorder shadow="sm" p="md" radius={"md"}>
-            <div className="flex justify-between items-center">
-              <div>
-                <Text className="text-gray-600" size="sm" fw={500}>
-                  Closed Contacts
-                </Text>
-                <Title order={3} mt={5}>
-                  {data?.closedContactCount.toLocaleString() || 0}
-                </Title>
-              </div>
-              <IconUserX size={24} className="text-red-500" />
-            </div>
-          </Card>
-
-          <Card withBorder shadow="sm" p="md" radius={"md"}>
-            <div className="flex justify-between items-center">
-              <div>
-                <Text className="text-gray-600" size="sm" fw={500}>
-                  Blocked Contacts
-                </Text>
-                <Title order={3} mt={5}>
-                  {data?.blockedContactCount.toLocaleString() || 0}
-                </Title>
-              </div>
-              <IconUserExclamation size={24} className="text-yellow-500" />
-            </div>
-          </Card>
-
-          <Card withBorder shadow="sm" p="md" radius={"md"}>
-            <div className="flex justify-between items-center">
-              <div>
-                <Text className="text-gray-600" size="sm" fw={500}>
-                  Assigned Inboxes
-                </Text>
-                <Title order={3} mt={5}>
-                  {data?.waInboxAssignedCount.toLocaleString() || 0}
-                </Title>
-              </div>
-              <IconInbox size={24} className="text-purple-500" />
-            </div>
-          </Card>
-        </SimpleGrid>
-
-        {/* {data?.assignedUserCounts && data.assignedUserCounts.length > 0 && ( */}
-        <Card withBorder shadow="sm" w="100%" radius={"md"}>
-          <Title order={4} mb={10}>
-            Agent Performance
-          </Title>
-          <Table verticalSpacing={"sm"}>
-            <Table.Thead className="bg-gray-50">
-              <Table.Tr>
-                <Table.Th>Agent</Table.Th>
-                <Table.Th>Messages Handled</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {data.assignedUserCounts ? (
-                <Text p={"sm"}>no data</Text>
-              ) : (
-                data.assignedUserCounts.map((user) => (
-                  <Table.Tr key={user.userId}>
-                    <Table.Td>
-                      <Group>
-                        <Avatar
-                          key={user.userName}
-                          name={user.userName}
-                          color="initials"
-                        />
-                        {user.userName}
-                      </Group>
-                    </Table.Td>
-                    <Table.Td>{user.assignCount}</Table.Td>
-                  </Table.Tr>
-                ))
-              )}
-            </Table.Tbody>
-          </Table>
-        </Card>
-        {/* )} */}
-      </Stack>
-    </Container>
+    <div className="p-4 flex flex-col gap-4 w-full">
+      <Card className="flex flex-row p-4 justify-between items-center gap-4 w-full bg-gradient-to-r from-rateup-blue/10 via-rateup-orange/5 to-rateup-blue/10 rounded-lg p-3 border border-rateup-blue/20">
+        <div className="flex gap-2 items-center">
+          <div className="bg-gradient-to-br from-rateup-blue to-blue-600 items-center justify-center rounded-md p-2 text-white">
+            <ChartNoAxesColumnIncreasing />
+          </div>
+          <div className="flex flex-col">
+            <h2 className="text-lg">Inbox Analytics</h2>
+            <p className="text-muted-foreground text-sm">
+              Real-time overview of your staff performance and activities
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2 items-center">
+          <Button variant="outline" onClick={() => refresh()}>
+            <RefreshCcw className={`${isFetching ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <div className="flex gap-1">
+            <span className="text-sm text-muted-foreground flex gap-1 items-center">
+              <Filter className="w-3 h-3" /> Filter by:
+            </span>
+            <DateRangeSelector value={dateRange} onChange={setDateRange} />
+          </div>
+        </div>
+      </Card>
+      <Tabs defaultValue="overview">
+        <TabsList className="w-full rounded-2xl">
+          <TabsTrigger
+            className="data-[state=active]:bg-blue-100 data-[state=active]:border-0 data-[state=active]:text-blue-500 data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-xs rounded-l-lg"
+            value="overview"
+          >
+            <ChartNoAxesColumnIncreasing className="mr-1" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger
+            className="data-[state=active]:bg-blue-100 data-[state=active]:border-0  data-[state=active]:text-blue-500 data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-xs rounded-r-lg"
+            value="agent-performance"
+          >
+            <Award className="mr-1" /> Agent Performance
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview">
+          <ConversationStatsOverview dateRange={dateRange} />
+        </TabsContent>
+        <TabsContent value="agent-performance">
+          <ConversationStatsAgentPerformance />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

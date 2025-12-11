@@ -540,6 +540,9 @@ export enum WaMessageAssignStatus {
   ASSIGNED = "ASSIGNED",
   CLOSED = "CLOSED",
   UNASSIGNED = "UNASSIGNED",
+  SPAM = "SPAM",
+  RESOLVED = "RESOLVED",
+  UNRESOLVED = "UNRESOLVED",
 }
 
 export enum WaMessageAssignStatusTab {
