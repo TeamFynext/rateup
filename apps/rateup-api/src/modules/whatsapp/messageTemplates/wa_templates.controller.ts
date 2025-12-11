@@ -371,6 +371,7 @@ export async function sendTemplateToUserCore(
   isTemplateName = false,
   tag?: string,
   whatsappSettingsPhoneId?: string,
+  buttonVariable?: string,
 ): Promise<{ status: boolean; message: string; id?: string }> {
   let dbTemplate = null;
   const phone = parsePhoneforWa(phoneNumber);
@@ -590,7 +591,7 @@ export async function sendTemplateToUserCore(
                 parameters: [
                   {
                     type: "text",
-                    text: phone,
+                    text: buttonVariable || button?.example?.[0] || phone,
                   },
                 ],
               });

@@ -82,6 +82,7 @@ const sendTemplateByNameToPhone = scheduleTemplate.extend({
     )
     .optional(),
   from: z.number().optional(),
+  buttonVariable: z.string().optional(),
 });
 const sendTemplateWithFile = z.object({
   templateName: z.string(),
@@ -100,6 +101,7 @@ const sendTemplateWithFile = z.object({
     data: z.any(),
   }),
   from: z.number().optional(),
+  buttonVariable: z.string().optional(),
 });
 
 const sendTemplateToContactParams = z.object({

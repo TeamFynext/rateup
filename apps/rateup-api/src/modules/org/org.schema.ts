@@ -51,6 +51,7 @@ const updateOrgDetailsSchema = z.object({
     })
     .optional(),
   waAssignedChatPermission: z.nativeEnum(WaAssignedChatPermission).optional(),
+  showLifecycle: z.boolean().optional(),
 });
 export const byOrgIdParams = z.object({
   orgId: z.string(),

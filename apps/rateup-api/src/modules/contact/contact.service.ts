@@ -52,10 +52,19 @@ export async function createContact(
   }
   const chatbot = await getChatbotDetails(contact.orgId);
   if (chatbot?.enableAllWaChat) contact.aiWaChat = true;
-  const { customFields, labels, contactGroupIds, assignedUserIds, ...rest } =
-    contact;
+  const {
+    customFields,
+    labels,
+    contactGroupIds,
+    assignedUserIds,
+    lifecycleId,
+    ...rest
+  } = contact;
   const user = await prisma.contact.create({
-    data: rest,
+    data: {
+      ...rest,
+      lifecycleId: lifecycleId.length ? lifecycleId : undefined,
+    },
   });
   if (labels && labels.length > 0) {
     await prisma.contactLabelMap.createMany({
@@ -155,6 +164,7 @@ export async function createMultipleContacts(
     labels: undefined,
     contactGroupIds: undefined,
     assignedUserIds: undefined,
+    lifecycleId: contact.lifecycleId?.length ? contact.lifecycleId : undefined,
   }));
 
   // Batch size for DB operations
@@ -444,6 +454,11 @@ export async function getContactsByOrgId(
     waInboxAssign: {
       select: {
         assignedUserId: true,
+      },
+    },
+    Lifecycle: {
+      select: {
+        name: true,
       },
     },
   };

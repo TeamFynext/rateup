@@ -137,6 +137,8 @@ model Org {
 
   onboarding          Json?
   onboardingCompleted Boolean @default(false)
+  
+  showLifecycle            Boolean   @default(true)
 
   members                  OrgMember[]
   teams                    Team[]
@@ -242,6 +244,7 @@ model Lifecycle {
   emoji       String
   description String
   isWon       Boolean       @default(false)
+  color       String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

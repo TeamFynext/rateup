@@ -185,3 +185,29 @@ export async function hasFeature(
   console.log(getNestedProperty(subscription.features, featurePath));
   return getNestedProperty(subscription.features, featurePath).active;
 }
+
+export async function getMessageStatsByOrgId(orgId, filter) {
+  const { dateRange } = filter;
+  const filterArray = [
+    `c."orgId" = $1::uuid AND (wm."messageBody"::jsonb)->>'exchangeProcess' = 'send'
+        AND (wm."messageBody"::jsonb)->'send'->>'type' = 'template'`,
+  ];
+  const params = [orgId];
+  let paramIndex = 2;
+  if (dateRange?.length) {
+    const [startDate, endDate] = dateRange?.split(",");
+    if (startDate) {
+      params.push(dayjs(startDate).startOf("day").toISOString());
+      filterArray.push(`wm."waCreatedAt"::DATE >= $${paramIndex++}`);
+    }
+    if (endDate) {
+      params.push(dayjs(endDate).endOf("day").toISOString());
+      filterArray.push(`wm."waCreatedAt"::DATE <= $${paramIndex++}`);
+    }
+  }
+  const query = `SELECT COUNT(wm."waCreatedAt")::INTEGER FROM "WaMessage" wm
+   JOIN "Contact" c ON wm."contactId" = c.id
+   WHERE ${filterArray.join(" AND ")};`;
+  const res = await prisma.$queryRawUnsafe(query, ...params);
+  return res[0];
+}

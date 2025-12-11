@@ -258,7 +258,7 @@ export async function getSurveysHandler(
   reply: FastifyReply,
 ) {
   try {
-    const surveys = await getSurveysByUserId(request.userId);
+    const surveys = await getSurveysByUserId(request.userId, true, true);
     reply.send(surveys);
   } catch (e) {
     console.error(e);

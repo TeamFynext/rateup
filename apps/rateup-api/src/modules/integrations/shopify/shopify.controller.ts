@@ -10,6 +10,7 @@ import {
   handleShopifyAuthCallback,
   registerShopifyWebhook,
   registerWebhookByTopic,
+  sendShopifySurveyCronAction,
   updateShopifyIntegrationByOrgId,
   updateShopifyIntegrationByShop,
 } from "./shopify.service";
@@ -308,6 +309,19 @@ export async function deleteIntegrationByShopHandler(
     reply.code(200).send(res);
   } catch (e) {
     log.error("error deleting integration %o", e);
+    reply.code(500).send(e);
+  }
+}
+
+export async function testShopifyCronActionFnHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await sendShopifySurveyCronAction();
+    reply.send("success");
+  } catch (e) {
+    log.error(e);
     reply.code(500).send(e);
   }
 }
