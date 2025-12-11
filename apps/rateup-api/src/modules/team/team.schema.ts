@@ -3,7 +3,13 @@ import { z } from "zod";
 
 const teamCore = {
   name: z.string(),
-  code: z.string(),
+  code: z
+    .string()
+    .min(2, "Team Code should be at least 2 characters long")
+    .regex(/^[A-Za-z0-9-]+$/, {
+      message: "Team Code can contain only alphabets, numbers, and hyphens",
+    })
+    .optional(),
   orgId: z.string(),
   userId: z.string(),
   color: z.string().optional(),
@@ -72,7 +78,13 @@ const inviteCompleteRequestSchema = z.object({
 
 const editTeamSchema = z.object({
   name: z.string().min(4).optional(),
-  code: z.string().min(2).optional(),
+  code: z
+    .string()
+    .min(2, "Team Code should be at least 2 characters long")
+    .regex(/^[A-Za-z0-9-]+$/, {
+      message: "Team Code can contain only alphabets, numbers, and hyphens",
+    })
+    .optional(),
   googleLink: z.string().optional(),
   reviewPageLinks: z.any().optional(),
   tags: z.array(z.string()).optional(),
