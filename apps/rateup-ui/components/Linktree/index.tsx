@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, Plus, RefreshCw, Search } from "lucide-react";
+import { Plus, RefreshCw, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useLinktrees } from "../../backend/linktree/linktree.query";
@@ -81,7 +81,6 @@ function LinktreeDashboard() {
       <LCard
         sortedValue={sortedLinktrees}
         shareURL={shareUrl}
-        Icon={Link}
         baseURL={baseURL}
         MoreOptions={MoreOptionsMenu}
       />
