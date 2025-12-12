@@ -141,8 +141,8 @@ export const useCreateFlowMutation = () => {
       qc.invalidateQueries({ queryKey: ["surveys"] });
       showSuccessToast("Flow Created Successfully");
     },
-    onError: (error) => {
-      showErrorToast(error?.message ?? "Error creating flows");
+    onError: (error: any) => {
+      showErrorToast(error?.response?.data?.message ?? "Error creating flows");
     },
   });
 };
