@@ -4,17 +4,6 @@
 import { useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
-import {
-  ActionIcon,
-  Button,
-  Center,
-  Group,
-  Paper,
-  ScrollArea,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
 import { useListState } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconEdit, IconPlayerPlay, IconPlus } from "@tabler/icons-react";
@@ -31,9 +20,16 @@ import { uniquePages } from "@/utils/constants";
 import { showErrorToast } from "@/utils/notifications";
 import { reorder, reOrderPages } from "@/utils/questions";
 
+import { Button } from "../ui/button";
+import { ScrollArea } from "../ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 import { QuestionTabsEnum } from "./EditSurvey";
 import { DraggableQuestionCard } from "./Question/DraggableQuestionCard";
-import styles from "./QuestionsSideBar.module.css";
 import { getSurveyThemeTabValueFromPageType } from "./SurveyTheme/SurveyTheme.constants";
 import { ThemeTabEnum } from "./SurveyTheme/SurveyTheme.enums";
 
@@ -118,9 +114,9 @@ export function QuestionsSideBar({
     modals.openConfirmModal({
       title: "Discard unsaved changes?",
       children: (
-        <Text className={modalStyles["are-you-sure-text"]}>
+        <span className={modalStyles["are-you-sure-text"]}>
           {translations("Are you sure, you want to discard unsaved changes?")}
-        </Text>
+        </span>
       ),
       labels: {
         confirm: translations("Discard"),
@@ -214,103 +210,94 @@ export function QuestionsSideBar({
   });
 
   return (
-    <Stack className={styles["add-question-btn-questions-list-container"]}>
+    <div className="flex flex-col items-center justify-center gap-4">
       {questionsState?.length > 0 && (
-        <Group className={styles["add-question-btn-more-than-1-que"]}>
+        <div className="flex flex-col sm:flex-row items-center gap-2">
           <Button
-            className={styles["add-content-btn"]}
-            rightSection={<IconPlus size="1.125rem" />}
             onClick={handleAddQn}
-            fz={14}
-            fw={400}
+            className="flex items-center justify-center gap-1 bg-primary"
           >
-            {translations("Add Content")}
+            <IconPlus />
+            <span className="sm:block hidden">
+              {translations("Add Content")}
+            </span>
           </Button>
 
-          <Tooltip label={translations("Survey Preview")}>
-            <ActionIcon
-              className={styles["survey-preview-btn"]}
-              variant="light"
-              onClick={openSurveyPreviewModal}
-            >
-              <Group className={styles["icon-text-group"]}>
-                <Text className={styles["icon-text"]}>
-                  {translations("Preview")}
-                </Text>
-                <IconPlayerPlay />
-              </Group>
-            </ActionIcon>
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" onClick={openSurveyPreviewModal}>
+                  <div>
+                    <IconPlayerPlay />
+                  </div>
+                </Button>
+              </TooltipTrigger>
 
-          <Tooltip label={translations("Edit Theme")}>
-            <ActionIcon
-              className={styles["edit-theme-btn"]}
-              variant="light"
-              onClick={() => {
-                if (activeTab === QuestionTabsEnum.SurveyPreview) {
-                  return;
-                }
-                const haveUnsavedChanges = checkForUnsavedChanges();
-                if (
-                  haveUnsavedChanges &&
-                  uniquePages.includes(selectedQ?.type as PageType)
-                ) {
-                  openDiscardChangesModal(() => {
+              <TooltipContent side="top">
+                {translations("Survey Preview")}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (activeTab === QuestionTabsEnum.SurveyPreview) {
+                      return;
+                    }
+                    const haveUnsavedChanges = checkForUnsavedChanges();
+                    if (
+                      haveUnsavedChanges &&
+                      uniquePages.includes(selectedQ?.type as PageType)
+                    ) {
+                      openDiscardChangesModal(() => {
+                        openSurveyEditPreview();
+                      });
+                      return;
+                    } else if (
+                      haveUnsavedChanges &&
+                      Object.values(QuestionType).includes(
+                        selectedQ?.type as QuestionType,
+                      )
+                    ) {
+                      showErrorToast(
+                        translations(
+                          "Please Enter heading and choices for all languages",
+                        ),
+                        "missing-title-toast",
+                      );
+                      return;
+                    }
                     openSurveyEditPreview();
-                  });
-                  return;
-                } else if (
-                  haveUnsavedChanges &&
-                  Object.values(QuestionType).includes(
-                    selectedQ?.type as QuestionType,
-                  )
-                ) {
-                  showErrorToast(
-                    translations(
-                      "Please Enter heading and choices for all languages",
-                    ),
-                    "missing-title-toast",
-                  );
-                  return;
-                }
-                openSurveyEditPreview();
-              }}
-            >
-              <Group
-                className={styles["icon-text-group"]}
-                style={{ display: "flex", alignItems: "center", gap: "2px" }}
-              >
-                <Text className={styles["icon-text"]}>
-                  {translations("Theme")}
-                </Text>
-                <IconEdit />
-              </Group>
-            </ActionIcon>
-          </Tooltip>
-        </Group>
+                  }}
+                >
+                  <div>
+                    <IconEdit />
+                  </div>
+                </Button>
+              </TooltipTrigger>
+
+              <TooltipContent side="top">
+                {translations("Edit Theme")}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       )}
 
       {!questionsState?.length && (
-        <Paper
-          style={{ cursor: "pointer", height: "100%", maxHeight: "850px" }}
-          onClick={handleAddQn}
-        >
-          <Center h="100%">
-            <Stack align="center">
-              <IconPlus size={36} />
-              <Text size="xl" fw={500}>
-                {translations("Add Content")}
-              </Text>
-            </Stack>
-          </Center>
-        </Paper>
+        <div className="flex flex-col items-center justify-center">
+          <div className="flex items-center justify-center gap-1">
+            <IconPlus size={36} />
+            <span className="text-sm">{translations("Add Content")}</span>
+          </div>
+        </div>
       )}
 
-      <ScrollArea
-        className={styles["questions-list-container"]}
-        scrollbarSize={10}
-        scrollbars={"y"}
-      >
+      <ScrollArea className="h-[70vh]">
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="dnd-list" direction="vertical">
             {(provided) => (
@@ -322,6 +309,6 @@ export function QuestionsSideBar({
           </Droppable>
         </DragDropContext>
       </ScrollArea>
-    </Stack>
+    </div>
   );
 }

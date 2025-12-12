@@ -1,13 +1,12 @@
 "use client";
 
-import { Box, Stack, Tabs } from "@mantine/core";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 import LanguagePageThemeView from "./components/previewcomponents/languagePage";
 import SurveyThemeView from "./components/previewcomponents/surveytheme";
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage";
 import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
 import { PreviewTypeEnum, ThemeTabEnum } from "./SurveyTheme.enums";
-import styles from "./SurveyTheme.module.css";
 import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext";
 
 function SurveyThemePreviewLayout({
@@ -24,47 +23,35 @@ function SurveyThemePreviewLayout({
   }
 
   return (
-    <Stack
-      className={`${styles["survey-theme-preview-layout-div"]} survey-theme-preview-layout-div`}
-    >
-      <Box
-        style={{
-          display: "flex",
-          justifyContent: "center",
-        }}
-        h={"100%"}
-      >
-        <Box
-          h={"100%"}
-          w={selectedPreview === PreviewTypeEnum.MOBILE ? 380 : "100%"}
+    <div className="h-full w-full">
+      <div className="flex justify-center h-full">
+        <div
+          className={`${selectedPreview === PreviewTypeEnum.MOBILE ? "w-[380px]" : "w-[100%]"} h-full`}
         >
-          <Tabs
-            value={selectedPageTab}
-            classNames={{
-              root: styles["survey-theme-preview-tab-panels-root"],
-            }}
-            keepMounted={false}
-          >
-            <Tabs.Panel value={ThemeTabEnum.LANGUAGE}>
+          <Tabs value={selectedPageTab} className="h-full">
+            <TabsContent value={ThemeTabEnum.LANGUAGE}>
               <LanguagePageThemeView survey={survey} />
-            </Tabs.Panel>
-            <Tabs.Panel value={ThemeTabEnum.WELCOME}>
+            </TabsContent>
+
+            <TabsContent value={ThemeTabEnum.WELCOME}>
               <WelcomePageThemeView survey={survey} />
-            </Tabs.Panel>
-            <Tabs.Panel value={ThemeTabEnum.SURVEY}>
+            </TabsContent>
+
+            <TabsContent value={ThemeTabEnum.SURVEY}>
               <SurveyThemeView
                 previewId={previewId}
                 survey={survey}
                 isSurveyThemeEditView={isSurveyThemeEditView}
               />
-            </Tabs.Panel>
-            <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
+            </TabsContent>
+
+            <TabsContent value={ThemeTabEnum.THANKYOU}>
               <ThankyouPageThemeView survey={survey} />
-            </Tabs.Panel>
+            </TabsContent>
           </Tabs>
-        </Box>
-      </Box>
-    </Stack>
+        </div>
+      </div>
+    </div>
   );
 }
 

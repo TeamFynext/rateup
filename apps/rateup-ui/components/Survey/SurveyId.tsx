@@ -516,14 +516,15 @@ export default function SurveyID() {
             teams: teamOptions,
           }}
         >
-          <div className="p-6">
+          <div className="px-6 py-2">
             {/* Back Button & Title */}
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4 flex-1">
-                <div className="flex flex-col gap-2">
+                <div className="flex gap-1">
+                  <h1 className="text-2xl">{survey?.title}</h1>
                   <div className="flex items-center gap-2">
                     <Badge
-                      className={`text-[10px] ${!survey?.active && "bg-muted-foreground"}`}
+                      className={`text-[9px] ${!survey?.active && "bg-muted-foreground"}`}
                     >
                       {getStatusIcon(survey?.active)}
                       <span className="ml-1 capitalize">
@@ -532,14 +533,10 @@ export default function SurveyID() {
                           : translations("Paused")}
                       </span>
                     </Badge>
-                    <Badge className={`text-[10px]`}>
+                    <Badge className={`text-[9px]`}>
                       {survey.type.toUpperCase()}
                     </Badge>
                   </div>
-                  <h1 className="text-3xl">{survey?.title}</h1>
-                  <p className="text-sm text-muted-foreground max-w-2xl">
-                    {survey?.description}
-                  </p>
                 </div>
               </div>
 
@@ -566,16 +563,8 @@ export default function SurveyID() {
               </div>
             </div>
           </div>
-          {/* {user?.role !== UserRole.MEMBER && (
-            <Center mb={"xs"}>
-              <TabsListComp
-                value={activeTab}
-                onChange={handleTabChange}
-                tabs={Object.values(TabEnum)}
-              />
-            </Center>
-          )} */}
-          {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
+
+          {/* <SurveyIssueAlert questions={questions} survey={survey} /> */}
           {/* <div id="SurveyIssueAlert"> </div>
           {activeTab === TabEnum.Result && (
             <Group pos={"absolute"} right={30}>
@@ -593,44 +582,6 @@ export default function SurveyID() {
             </Group>
           )} */}
 
-          {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-             <Card className="border-slate-200 bg-white hover:shadow-md transition-all overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-slate-100 rounded-full -mr-10 -mt-10 opacity-50" />
-              <CardContent className="p-5 relative">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <FileText className="w-4 h-4 text-slate-600" />
-                      <p className="text-xs text-muted-foreground">Questions</p>
-                    </div>
-                    <p className="text-3xl">{survey?.questions?.length}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Total questions</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white hover:shadow-md transition-all overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200 rounded-full -mr-10 -mt-10 opacity-30" />
-              <CardContent className="p-5 relative">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Users className="w-4 h-4 text-blue-700" />
-                      <p className="text-xs text-blue-700">Responses</p>
-                    </div>
-                    <p className="text-3xl text-blue-700">{survey.responses.toLocaleString()}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="w-3 h-3 text-green-600" />
-                      <p className="text-xs text-green-600">+12% this week</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-           
-          </div> */}
-
           {/* <TabPanelsComp
             value={activeTab}
             survey={survey}
@@ -647,71 +598,73 @@ export default function SurveyID() {
               setFunToRunBeforeSurveyIdPageHeaderTabsChange
             }
           /> */}
-          {user?.role !== UserRole.MEMBER && (
-            <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <TabsList className="border px-2 py-1 flex items-center gap-4">
-                <TabsTrigger
-                  value={TabEnum.Overview}
-                  className="data-[state=active]:bg-primary data-[state=active]:text-white"
-                >
-                  <Activity className="w-4 h-4" />
-                  Overview
-                </TabsTrigger>
-                <TabsTrigger
-                  value={TabEnum.Questions}
-                  className="data-[state=active]:bg-primary data-[state=active]:text-white"
-                >
-                  <FileText className="w-4 h-4" />
-                  Questions
-                </TabsTrigger>
-                <TabsTrigger
-                  value={TabEnum.Edit}
-                  className="data-[state=active]:bg-primary data-[state=active]:text-white"
-                >
-                  <FileText className="w-4 h-4" />
-                  Edit
-                </TabsTrigger>
-                <TabsTrigger
-                  value={TabEnum.Result}
-                  className="data-[state=active]:bg-primary data-[state=active]:text-white"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Responses
-                </TabsTrigger>
-                {/* <TabsTrigger value="analytics" className="data-[state=active]:bg-[#2E5BFF] data-[state=active]:text-white">
+          <div className="flex flex-col gap-4 w-full">
+            {user?.role !== UserRole.MEMBER && (
+              <Tabs value={activeTab} onValueChange={handleTabChange}>
+                <TabsList className="border px-2 py-1 flex items-center gap-4">
+                  <TabsTrigger
+                    value={TabEnum.Overview}
+                    className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
+                    <Activity className="w-4 h-4" />
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value={TabEnum.Questions}
+                    className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Questions
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value={TabEnum.Edit}
+                    className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Edit
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value={TabEnum.Result}
+                    className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    Responses
+                  </TabsTrigger>
+                  {/* <TabsTrigger value="analytics" className="data-[state=active]:bg-[#2E5BFF] data-[state=active]:text-white">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Analytics
               </TabsTrigger> */}
-                <TabsTrigger
-                  value={TabEnum.Settings}
-                  className="data-[state=active]:bg-primary data-[state=active]:text-white"
-                >
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          )}
+                  <TabsTrigger
+                    value={TabEnum.Settings}
+                    className="data-[state=active]:bg-primary data-[state=active]:text-white"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
 
-          {/* content */}
-          <Tabs value={activeTab}>
-            <div className="max-h-[90vh] overflow-auto border border-red-600">
-              <TabsContent value={TabEnum.Questions}>
-                <SurveyQuestionTab questions={survey?.questions} />
-              </TabsContent>
-              <TabsContent value={TabEnum.Edit}>
-                <SurveyEditTab
-                  survey={survey}
-                  questions={questions}
-                  addQnTrigger={addQnTrigger}
-                  setSelectedLanguage={setSelectedLanguage}
-                  setFunToRunBeforeSurveyIdPageHeaderTabsChange={
-                    setFunToRunBeforeSurveyIdPageHeaderTabsChange
-                  }
-                />
-              </TabsContent>
-            </div>
-          </Tabs>
+            {/* content */}
+            <Tabs value={activeTab}>
+              <div className="max-h-[90vh] overflow-auto w-full">
+                <TabsContent value={TabEnum.Questions}>
+                  <SurveyQuestionTab questions={survey?.questions} />
+                </TabsContent>
+                <TabsContent value={TabEnum.Edit}>
+                  <SurveyEditTab
+                    survey={survey}
+                    questions={questions}
+                    addQnTrigger={addQnTrigger}
+                    setSelectedLanguage={setSelectedLanguage}
+                    setFunToRunBeforeSurveyIdPageHeaderTabsChange={
+                      setFunToRunBeforeSurveyIdPageHeaderTabsChange
+                    }
+                  />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
         </SurveyContext.Provider>
       </SelectedLanguageContext.Provider>
     </SurveyContextProvider>
