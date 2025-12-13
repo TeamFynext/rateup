@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 import { useDisclosure } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Plus, RefreshCw, Search } from "lucide-react";
+import { Plus, RefreshCw, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useLandingPages } from "../../backend/landingPage/landingPage.query";
@@ -82,7 +82,6 @@ function LandingPageDashboard() {
       <LCard
         sortedValue={sortedLandingPages}
         shareURL={shareUrl}
-        Icon={BookOpen}
         baseURL={baseURL}
         MoreOptions={MoreOptionsMenu}
       />

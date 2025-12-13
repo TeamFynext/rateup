@@ -43,7 +43,9 @@ function GeneratedQrCard({
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="text-base font-semibold truncate">{name}</h3>
+            <h3 className="text-sm font-semibold truncate">
+              {name.length > 20 ? name.slice(0, 20) + "…" : name}
+            </h3>
 
             <div className="flex items-center gap-2 mt-1 text-xs text-gray-500 dark:text-gray-300">
               <CreatedSinceText createdAt={createdAt} />
