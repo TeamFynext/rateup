@@ -52,7 +52,7 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
               <div className="flex flex-col items-center text-center py-2 px-4">
                 <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-100">
                   <MousePointerClick className="w-4 h-4" />
-                  <span>Clicks</span>
+                  <span>{translations("Clicks")}</span>
                 </div>
                 <span className="text-lg font-semibold">
                   {v?.visitorsCount || 0}
