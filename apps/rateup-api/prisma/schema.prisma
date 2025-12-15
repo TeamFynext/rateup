@@ -1904,6 +1904,8 @@ model BusinessHour {
   waAutomatedReplyCommands WaAutomatedReplyCommands[]
 }
 
+
+
 model ConversationAssignedUserTeamMap {
   userId  String @db.Uuid
   user    User @relation(fields: [userId], references: [id], onDelete: Cascade, name: "ConversationAssignedUser")
@@ -1911,14 +1913,15 @@ model ConversationAssignedUserTeamMap {
   Team    Team @relation(fields:[teamId], references: [id])
   conversationId  String @db.Uuid
   Conversation Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  assignedAt DateTime?
-  removedAt DateTime?
-  removedBy String? @db.Uuid
-  removedByUser User? @relation(fields: [removedBy], references: [id], name: "ConversationRemovedUser")
-  assignedBy String? @db.Uuid
-  assignedByUser User? @relation(fields: [assignedBy], references: [id], name: "ConversationAssignedByUser")
+  lastAssignedAt DateTime?
+  lastRemovedAt DateTime?
+  lastRemovedBy String? @db.Uuid
+  lastRemovedByUser User? @relation(fields: [lastRemovedBy], references: [id], name: "ConversationRemovedUser")
+  lastAssignedBy String? @db.Uuid
+  lastAssignedByUser User? @relation(fields: [lastAssignedBy], references: [id], name: "ConversationAssignedByUser")
   isAssignedByAutomation Boolean @default(false)
-  @@id([userId,teamId])
+  actionHistory  Json[]  @default([])
+  @@id([userId, conversationId])
 }
 
 model Conversation {

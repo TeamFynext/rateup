@@ -33,7 +33,10 @@ import {
   createContactMessage,
   createLocationMessage,
 } from "../../whatsappSurvey/wasurvey.utils";
-import { WaMessageAssignStatusTab } from "../../constants";
+import {
+  WaMessageAssignStatusTab,
+  WaMessageClosedStatus,
+} from "../../constants";
 import { Role } from "../../../org/org.services";
 import { getTeamIdsByUserId } from "../../../team/team.service";
 import { UserAvailabilityStatus } from "../../../user/user.schema";
@@ -356,9 +359,17 @@ export async function filterChats(
         } else {
           const assignedStatus =
             WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
-          params.push(assignedStatus);
-          filters.push(`c."waMessageAssignStatus" = $${paramIndex++}`);
-
+          if (assignedStatus === "ADDRESSED") {
+            if (bodyFilterProps.status.length) {
+              params.push(bodyFilterProps.status);
+            } else {
+              params.push(WaMessageClosedStatus);
+            }
+            filters.push(`c."waMessageAssignStatus" = ANY($${paramIndex++})`);
+          } else {
+            params.push(assignedStatus);
+            filters.push(`c."waMessageAssignStatus" = $${paramIndex++}`);
+          }
           if (isAssignedToMe) {
             params.push(userId);
             const assignedQuery = [

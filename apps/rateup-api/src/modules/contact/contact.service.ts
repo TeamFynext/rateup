@@ -565,7 +565,7 @@ export async function updateContactById(
       lastReceivedMessageTimeStamp:
         contact.lastReceivedMessageTimeStamp || undefined,
       ...(existing.waMessageAssignStatus !== contact.waMessageAssignStatus &&
-      contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED
+      WaMessageClosedStatus.includes(contact.waMessageAssignStatus)
         ? {
             closedAt: new Date(),
             closedBy: userId,

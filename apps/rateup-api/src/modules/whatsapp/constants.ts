@@ -10,6 +10,7 @@ export const WaMessageAssignStatusTab = {
   Assigned: "ASSIGNED",
   Closed: "CLOSED",
   mine: "ASSIGNED",
+  Addressed: "ADDRESSED", // implies group of status => WaMessageClosedStatus
 };
 
 export const WaMessageClosedStatus = [

@@ -66,9 +66,15 @@ export async function updateConversationAssignees(
         });
 
       const assigneesToRemove = existingAssignees.filter(
+        (ea) => !assignees.find((a) => a.userId === ea.userId),
+      );
+      const assigneesToUpdate = existingAssignees.filter(
         (ea) =>
           !assignees.find(
-            (a) => a.userId === ea.userId && a.teamId === ea.teamId,
+            (a) =>
+              a.userId === ea.userId &&
+              a.teamId === ea.teamId &&
+              !assigneesToRemove.find((as) => a.userId !== as.userId),
           ),
       );
       const assigneesToAdd = assignees.filter(
@@ -80,14 +86,46 @@ export async function updateConversationAssignees(
       for (const assignee of assigneesToRemove) {
         await tx.conversationAssignedUserTeamMap.update({
           where: {
-            userId_teamId: {
+            userId_conversationId: {
               userId: assignee.userId,
-              teamId: assignee.teamId,
+              conversationId,
             },
           },
           data: {
-            removedAt: removedAt || new Date(),
-            removedBy: removedBy || userId,
+            lastRemovedAt: removedAt || new Date(),
+            lastRemovedBy: removedBy || userId,
+            actionHistory: [
+              ...assignee.actionHistory,
+              {
+                action: "assignment-revoked",
+                date: removedAt || new Date(),
+                by: removedBy || userId,
+              },
+            ],
+          },
+        });
+      }
+      for (const assignee of assigneesToUpdate) {
+        const teamId = assignees.find(
+          (as) => as.userId === assignee.userId,
+        ).teamId;
+        await tx.conversationAssignedUserTeamMap.update({
+          where: {
+            userId_conversationId: {
+              userId: assignee.userId,
+              conversationId,
+            },
+          },
+          data: {
+            teamId,
+            actionHistory: [
+              ...assignee.actionHistory,
+              {
+                action: "updated-team",
+                date: new Date(),
+                by: userId,
+              },
+            ],
           },
         });
       }
@@ -97,9 +135,16 @@ export async function updateConversationAssignees(
             conversationId: conversationId,
             userId: assignee.userId,
             teamId: assignee.teamId,
-            assignedAt: assignedAt || new Date(),
-            assignedBy: assignedBy || userId,
+            lastAssignedAt: assignedAt || new Date(),
+            lastAssignedBy: assignedBy || userId,
             isAssignedByAutomation: !assignedBy && !userId,
+            actionHistory: [
+              {
+                action: "assigned",
+                date: assignedAt || new Date(),
+                by: assignedBy || userId,
+              },
+            ],
           },
         });
       }
@@ -108,7 +153,9 @@ export async function updateConversationAssignees(
           id: conversationId,
         },
         data: {
-          assignedAt: !existingAssignees.length ? assignedAt : undefined,
+          assignedAt: !existingAssignees.length
+            ? assignedAt || new Date()
+            : undefined,
           status: WaMessageAssignStatus.ASSIGNED,
         },
       });
@@ -178,21 +225,40 @@ export async function getConversationOverview(
       orgId: orgId,
     },
   };
+  const totalConversationWhereClause = {
+    ...whereClause,
+  };
+  const resolvedConversationWhere = {
+    ...whereClause,
+  };
+  const totalTilldate = {
+    ...whereClause,
+  };
   if (dateRange.length) {
     const [startDate, endDate] = dateRange;
-    whereClause.createdAt = {
+    totalConversationWhereClause.createdAt = {
       gte: new Date(startDate),
+      lte: new Date(endDate),
+    };
+    resolvedConversationWhere.closedAt = {
+      gte: new Date(startDate),
+      lte: new Date(endDate),
+    };
+    totalTilldate.createdAt = {
       lte: new Date(endDate),
     };
   }
 
   const totalConversations = await prisma.conversation.count({
-    where: whereClause,
+    where: totalConversationWhereClause,
   });
 
+  const totalConversationsTillTheday = await prisma.conversation.count({
+    where: totalTilldate,
+  });
   const respondedConversations = await prisma.conversation.findMany({
     where: {
-      ...whereClause,
+      ...totalConversationWhereClause,
       firstRespondedAt: {
         not: null,
       },
@@ -204,33 +270,35 @@ export async function getConversationOverview(
   });
 
   const totalRespondedConversation = respondedConversations.length;
-  let averageResponseTime = 0;
+  let averageResponseTime = null;
 
   if (totalRespondedConversation !== 0) {
-    averageResponseTime =
-      respondedConversations.reduce((acc, curr) => {
-        const diff = curr.firstRespondedAt.getTime() - curr.createdAt.getTime();
-        acc += diff;
-        return acc;
-      }, 0) / totalRespondedConversation;
+    const totalResponseTime = respondedConversations.reduce((acc, curr) => {
+      const diff =
+        new Date(curr.firstRespondedAt).getTime() -
+        new Date(curr.createdAt).getTime();
+      acc += diff;
+      return acc;
+    }, 0);
+    averageResponseTime = totalResponseTime / totalRespondedConversation / 1000;
   }
 
   const resolvedConversation = await prisma.conversation.count({
     where: {
-      ...whereClause,
+      ...resolvedConversationWhere,
       status: WaMessageAssignStatus.RESOLVED,
     },
   });
 
   const resolutionRate =
-    totalConversations > 0
-      ? (resolvedConversation / totalConversations) * 100
+    totalConversationsTillTheday > 0
+      ? (resolvedConversation / totalConversationsTillTheday) * 100
       : 0;
 
   return {
-    totalConversations,
+    totalConversations, // conversation created on range of given days
     averageResponseTime,
-    resolutionRate,
+    resolutionRate, // resolved conversation rate on the range of given day by total conversation till the date
   };
 }
 
@@ -275,27 +343,63 @@ WITH dates AS (
   SELECT generate_series(
     ${sinceDate}::date,
     NOW()::date,
-    '1 day'
-  ) AS day
+    INTERVAL '1 day'
+  )::date AS day
 ),
-conv AS (
-  SELECT 
+
+created_per_day AS (
+  SELECT
     DATE("createdAt") AS day,
-    (COUNT(*) FILTER (WHERE "status" = ${WaMessageAssignStatus.RESOLVED}))::INTEGER AS resolvedCount,
-    COUNT(*)::INTEGER AS totalCount
+    COUNT(*)::INTEGER AS createdCount
   FROM "Conversation"
-  WHERE 
-    "contactId" IN (SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid)
+  WHERE
+    "contactId" IN (
+      SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
+    )
     AND "createdAt" >= ${sinceDate}
   GROUP BY DATE("createdAt")
+),
+
+resolved_per_day AS (
+  SELECT
+    DATE("closedAt") AS day,
+    COUNT(*)::INTEGER AS resolvedCount
+  FROM "Conversation"
+  WHERE
+    "contactId" IN (
+      SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
+    )
+    AND "status" = ${WaMessageAssignStatus.RESOLVED}
+    AND "closedAt" IS NOT NULL
+    AND "closedAt" >= ${sinceDate}
+  GROUP BY DATE("closedAt")
+),
+
+merged AS (
+  SELECT
+    d.day,
+    COALESCE(c.createdCount, 0) AS createdCount,
+    COALESCE(r.resolvedCount, 0) AS "resolvedCount"
+  FROM dates d
+  LEFT JOIN created_per_day c ON d.day = c.day
+  LEFT JOIN resolved_per_day r ON d.day = r.day
 )
-SELECT 
-  d.day AS date,
-  COALESCE(c.resolvedCount, 0) AS "resolvedCount",
-  COALESCE(c.totalCount, 0) AS "totalCount"
-FROM dates d
-LEFT JOIN conv c ON d.day = c.day
-ORDER BY d.day;
+
+SELECT
+  day AS date,
+  "resolvedCount",
+  (
+    SUM(createdCount) OVER (ORDER BY day)
+    - COALESCE(
+        SUM("resolvedCount") OVER (
+          ORDER BY day
+          ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+        ),
+        0
+      )
+  )::INTEGER AS "totalCount"
+FROM merged
+ORDER BY day;
 `;
   return result;
 }
@@ -336,6 +440,7 @@ export async function getConversationOnAccountDistribution(orgId: string) {
     {
       phoneId: string;
       ibaId: string;
+      phone: string;
       conversationCount: number;
       sourcePlatform: string;
     }[]
@@ -349,11 +454,11 @@ export async function getConversationOnAccountDistribution(orgId: string) {
     FROM "WaMessage" wm
     JOIN "Contact" ct ON wm."contactId" = ct.id
     LEFT JOIN "WhatsappSettings" ws
-    ON wm."sourceIdentifier" = COALESCE(ws."phoneId", ws."ibaId")
+    ON REGEXP_REPLACE(wm."sourceIdentifier", '^\\+', '') = 
+       REGEXP_REPLACE(COALESCE(ws."phone", ws."ibaId"), '^\\+', '')
     WHERE ct."orgId" = ${orgId}::uuid
-    GROUP BY wm."sourceIdentifier", ws."phoneId", ws."ibaId", ws."phone", wm."sourcePlatform";
+    GROUP BY REGEXP_REPLACE(wm."sourceIdentifier", '^\\+', ''), ws."phoneId", ws."ibaId", ws."phone", wm."sourcePlatform";
   `;
-  console.log("result", result);
   return result;
 }
 
@@ -397,7 +502,7 @@ WHERE ct."orgId" = ${orgId}::uuid;
     : 0;
   const yesterdayResolvedRate = totalConversation
     ? Math.round(
-        ((resolvedYesterday / totalConversation - conversationCreatedToday) *
+        ((resolvedYesterday / (totalConversation - conversationCreatedToday)) *
           100 +
           Number.EPSILON) *
           100,
@@ -434,7 +539,7 @@ WITH valid_conversations AS (
 ),
 
 assignments AS (
-  SELECT ca."userId", ca."conversationId", ca."removedAt", ca."assignedAt"
+  SELECT ca."userId", ca."conversationId", ca."lastRemovedAt", ca."lastAssignedAt", vc."status"
   FROM "ConversationAssignedUserTeamMap" ca
   JOIN valid_conversations vc ON vc.id = ca."conversationId"
 )
@@ -451,10 +556,9 @@ SELECT
   (
     SELECT COUNT(*)::INTEGER
     FROM assignments a
-    JOIN valid_conversations vc ON vc.id = a."conversationId"
     WHERE a."userId" = om."userId"
-      AND a."removedAt" IS NOT NULL
-      AND vc."status" = ${WaMessageAssignStatus.ASSIGNED}
+      AND a."removedAt" IS NULL
+      AND a."status" = ${WaMessageAssignStatus.ASSIGNED}
   ) AS "totalAssignedConversations",
 
   -- Total closed conversations
@@ -576,7 +680,12 @@ assigned_conversations AS (
         cv.status,
         cv."createdAt",
         cv."closedBy",
-        cau."assignedAt",
+        cau."lastAssignedAt",
+        (   
+            SELECT MIN((ah->>'date')::timestamptz)
+            FROM jsonb_array_elements(cau."actionHistory") ah
+            WHERE ah->>'action' = 'assigned'
+        ) AS "firstAssignedAt",
         json_build_object(
             'name', c."name",
             'phone', c."phone"
@@ -593,13 +702,12 @@ user_message_times AS (
     SELECT 
         ac.id AS "conversationId",
         MIN(wm."waCreatedAt") FILTER (
-            WHERE wm."sendBy" = ${userId} 
-              AND wm."waCreatedAt" >= ac."assignedAt"
+            WHERE wm."sendBy" = ${userId}
         ) AS "firstResponded",
         MAX(wm."waCreatedAt") FILTER (WHERE wm."sendBy" = ${userId}) AS "lastResponded"
     FROM assigned_conversations ac
     JOIN "WaMessage" wm ON wm."conversationId" = ac.id
-    GROUP BY ac.id, ac."assignedAt"
+    GROUP BY ac.id
 ),
 
 recent_conv AS (
@@ -621,7 +729,7 @@ metrics AS (
         (
             SELECT 
                 (COUNT(*) FILTER (
-                    WHERE ac.status = 'resolved'
+                    WHERE ac.status = ${WaMessageAssignStatus.RESOLVED}
                     AND ac."closedBy" = ${userId}
                 )::DECIMAL
                 /
@@ -632,10 +740,10 @@ metrics AS (
         -- first response time (assignment-based)
         (
             SELECT 
-                AVG(EXTRACT(EPOCH FROM (t."firstResponded" - ac."assignedAt")))
+                AVG(EXTRACT(EPOCH FROM (t."firstResponded" - ac."firstAssignedAt")))
             FROM assigned_conversations ac
             JOIN user_message_times t ON t."conversationId" = ac.id
-            WHERE t."firstResponded" IS NOT NULL
+            WHERE t."firstResponded" IS NOT NULL AND ac."firstAssignedAt" IS NOT NULL
         ) AS "firstResponseTime",
 
         -- avg handling time
@@ -654,7 +762,7 @@ SELECT
         SELECT json_agg(
             json_build_object(
                 'date', d.day,
-                'messageCount', COALESCE(h.messageCount, 0)
+                'messageCount', COALESCE(h."messageCount", 0)
             )
         )
         FROM dates d
@@ -667,9 +775,8 @@ SELECT
             json_build_object(
                 'id', r.id,
                 'customer', r.customer,
-                'topic', r.topic,
                 'duration',
-                    EXTRACT(EPOCH FROM (r."lastResponded" - r."firstResponded"))::TEXT,
+                    EXTRACT(EPOCH FROM (r."lastResponded" - r."firstResponded")),
                 'lastRespondedAt', r."lastResponded",
                 'status', r.status
             )
@@ -681,12 +788,11 @@ SELECT
     (
         SELECT json_build_object(
             'resolutionRate', m."resolutionRate",
-            'firstResponseTime', m."firstResponseTime"::TEXT,
+            'firstResponseTime', m."firstResponseTime",
             'avgHandlingTime', m."avgHandlingTime"
         )
         FROM metrics m
     ) AS metrics;
   `;
-  console.log("result", result);
   return result[0];
 }

@@ -6,13 +6,14 @@ CREATE TABLE "ConversationAssignedUserTeamMap" (
     "userId" UUID NOT NULL,
     "teamId" UUID NOT NULL,
     "conversationId" UUID NOT NULL,
-    "assignedAt" TIMESTAMP(3),
-    "removedAt" TIMESTAMP(3),
-    "removedBy" UUID,
-    "assignedBy" UUID,
+    "lastAssignedAt" TIMESTAMP(3),
+    "lastRemovedAt" TIMESTAMP(3),
+    "lastRemovedBy" UUID,
+    "lastAssignedBy" UUID,
     "isAssignedByAutomation" BOOLEAN NOT NULL DEFAULT false,
+    "actionHistory" JSONB[] DEFAULT ARRAY[]::JSONB[],
 
-    CONSTRAINT "ConversationAssignedUserTeamMap_pkey" PRIMARY KEY ("userId","teamId")
+    CONSTRAINT "ConversationAssignedUserTeamMap_pkey" PRIMARY KEY ("userId","conversationId")
 );
 
 -- CreateTable
@@ -42,10 +43,10 @@ ALTER TABLE "ConversationAssignedUserTeamMap" ADD CONSTRAINT "ConversationAssign
 ALTER TABLE "ConversationAssignedUserTeamMap" ADD CONSTRAINT "ConversationAssignedUserTeamMap_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConversationAssignedUserTeamMap" ADD CONSTRAINT "ConversationAssignedUserTeamMap_removedBy_fkey" FOREIGN KEY ("removedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ConversationAssignedUserTeamMap" ADD CONSTRAINT "ConversationAssignedUserTeamMap_lastRemovedBy_fkey" FOREIGN KEY ("lastRemovedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConversationAssignedUserTeamMap" ADD CONSTRAINT "ConversationAssignedUserTeamMap_assignedBy_fkey" FOREIGN KEY ("assignedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ConversationAssignedUserTeamMap" ADD CONSTRAINT "ConversationAssignedUserTeamMap_lastAssignedBy_fkey" FOREIGN KEY ("lastAssignedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_contactId_fkey" FOREIGN KEY ("contactId") REFERENCES "Contact"("id") ON DELETE CASCADE ON UPDATE CASCADE;
