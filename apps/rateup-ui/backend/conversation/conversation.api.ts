@@ -9,7 +9,6 @@ export const getConversationOverView = async (
   const query = Object.entries(filter)
     .map(([key, value]) => `${key}=${value}`)
     .join("&");
-  console.log("query", query);
   const response = await axiosClient.get<ConversationOverviewStats>(
     `${baseUrl}/overview?${query}`,
   );

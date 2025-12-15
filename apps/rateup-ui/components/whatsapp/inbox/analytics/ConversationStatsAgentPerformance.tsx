@@ -55,7 +55,6 @@ export const StaffStatusBadge = ({ status }) => {
         };
     }
   };
-  console.log("status", status);
   const color = getStatusColor(status);
   return (
     <Badge
@@ -76,7 +75,6 @@ const ConversationStatsAgentPerformance = () => {
     return <RateupLoader />;
   }
 
-  console.log("data", data);
   return (
     <div className="space-y-6">
       <Card className="border">
@@ -119,7 +117,6 @@ const ConversationStatsAgentPerformance = () => {
               </thead>
               <tbody>
                 {data.map((staff) => {
-                  console.log("staff", staff);
                   const averageResponseTime =
                     formatTimeToNearestUnitFromSeconds(
                       staff.averageResponseTime,
