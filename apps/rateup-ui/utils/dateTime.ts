@@ -161,3 +161,21 @@ export function formatDateWithRelativeTime(date) {
     return d.format("DD/MM/YY hh:mm A");
   }
 }
+
+export function formatTimeToNearestUnitFromSeconds(seconds) {
+  if (seconds === 0) return { value: 0, suffix: "minute" };
+  if (!seconds) return;
+  let value = seconds;
+  let suffix = "second (s)";
+  if (seconds < 3600) {
+    value = Math.round(seconds / 60);
+    suffix = "minute(s)";
+  } else if (seconds < 86400) {
+    value = Math.round(seconds / 3600);
+    suffix = "hour(s)";
+  } else {
+    value = Math.round(seconds / 86400);
+    suffix = "day(s)";
+  }
+  return { value, suffix };
+}

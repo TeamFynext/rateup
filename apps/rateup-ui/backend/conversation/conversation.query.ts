@@ -59,7 +59,7 @@ export const useGetStaffDetailedConversationAnalytics = (
 ) => {
   return useQuery({
     queryFn: () => getStaffDetailedConversationAnalytics(staffId, filter),
-    queryKey: ["StaffDetailedConversationAnalytics", filter],
+    queryKey: ["StaffDetailedConversationAnalytics", staffId, filter],
     enabled: !!staffId,
   });
 };

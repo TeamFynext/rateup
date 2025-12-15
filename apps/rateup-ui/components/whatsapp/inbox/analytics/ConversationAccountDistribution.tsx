@@ -49,14 +49,14 @@ const ConversationAccountDistribution = () => {
               </p>
             </div>
           </div>
-          <Button
+          {/* <Button
             variant="ghost"
             size="sm"
             className="h-8 text-xs hover:bg-purple-100"
           >
             View All
             <ArrowRight className="w-3 h-3 ml-1" />
-          </Button>
+          </Button> */}
         </div>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
@@ -94,6 +94,9 @@ const ConversationAccountDistribution = () => {
                             : channel.phoneId
                               ? "WhatsApp"
                               : "")}
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ({channel.phone || channel.ibaId})
+                        </span>
                       </span>
                     </div>
                     <div className="flex items-center gap-3">

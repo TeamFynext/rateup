@@ -45,6 +45,7 @@ const Analytics = () => {
     ["ConversationAccountDistribution"],
     ["ConversationQuickStats"],
     ["StaffPerformanceonConversation"],
+    ["StaffDetailedConversationAnalytics"],
   ];
 
   const fetchCounts = queries.map((key) => useIsFetching({ queryKey: key }));

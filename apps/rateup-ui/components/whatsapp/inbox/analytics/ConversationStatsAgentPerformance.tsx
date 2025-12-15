@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
+import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime";
 
 import StaffStatsDetailDialog from "./StaffStatsDetailDialog";
 
@@ -17,6 +18,7 @@ export const StaffStatusBadge = ({ status }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "online":
+      case "available":
         return {
           bgDark: "bg-green-500",
           bgLight: "bg-green-50",
@@ -118,6 +120,10 @@ const ConversationStatsAgentPerformance = () => {
               <tbody>
                 {data.map((staff) => {
                   console.log("staff", staff);
+                  const averageResponseTime =
+                    formatTimeToNearestUnitFromSeconds(
+                      staff.averageResponseTime,
+                    );
                   return (
                     <tr
                       key={staff.staff.userId}
@@ -152,7 +158,9 @@ const ConversationStatsAgentPerformance = () => {
                       </td>
                       <td className="p-4 text-center">
                         <span className="text-sm">
-                          {staff.averageResponseTime ?? "No response found"}
+                          {averageResponseTime
+                            ? `${averageResponseTime.value} ${averageResponseTime.suffix}`
+                            : "No response found"}
                         </span>
                       </td>
                       <td className="p-4 text-center">

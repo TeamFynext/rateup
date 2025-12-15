@@ -26,6 +26,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -33,6 +34,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarSeparator,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -271,7 +273,7 @@ export default function AppSidebar({
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-3">
                   {navMain.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
@@ -337,96 +339,226 @@ export default function AppSidebar({
                 <SidebarTrigger />
               </div>
             </SidebarHeader>
-            <SidebarContent className="bg-background">
-              <SidebarGroup>
+            <SidebarContent className="bg-background py-2">
+              <SidebarGroup className="p-0">
                 <SidebarGroupContent>
-                  <SidebarMenu>
+                  <SidebarMenu className="gap-3">
                     {activeItem.items?.map((item) =>
-                      item.items && item.items.length > 0 ? (
-                        <Collapsible
-                          key={item.title}
-                          asChild
-                          defaultOpen={false}
-                          className="group/collapsible"
-                        >
-                          <SidebarMenuItem>
-                            <CollapsibleTrigger asChild>
-                              <SidebarMenuButton
-                                tooltip={item.title}
-                                variant="light"
-                              >
-                                {item.icon && (
-                                  <item.icon {...sidebarIconProps} />
-                                )}
-                                <span className="font-medium">
-                                  {item.title}
-                                </span>
-                                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                              </SidebarMenuButton>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <SidebarMenuSub>
-                                {item.items.map((subItem) => (
-                                  <SidebarMenuSubItem key={subItem.title}>
-                                    <SidebarMenuSubButton
+                      item.group ? (
+                        <SidebarGroup className="p-0">
+                          {!isCollapsed && <SidebarSeparator className="m-0" />}
+                          <SidebarGroupLabel>{item.group}</SidebarGroupLabel>
+                          {isCollapsed && <SidebarSeparator className="m-0" />}
+                          <SidebarGroupContent className="flex p-2">
+                            <SidebarMenu>
+                              {item.items.map((groupItem) =>
+                                groupItem.items &&
+                                groupItem.items.length > 0 ? (
+                                  <Collapsible
+                                    key={groupItem.title}
+                                    asChild
+                                    defaultOpen={false}
+                                    className="group/collapsible"
+                                  >
+                                    <SidebarMenuItem>
+                                      <CollapsibleTrigger asChild>
+                                        <SidebarMenuButton
+                                          tooltip={groupItem.title}
+                                          variant="light"
+                                          onClick={() => {
+                                            if (isCollapsed) {
+                                              setOpen(true);
+                                            }
+                                          }}
+                                        >
+                                          {groupItem.icon && (
+                                            <groupItem.icon
+                                              {...sidebarIconProps}
+                                            />
+                                          )}
+                                          <span className="font-medium">
+                                            {groupItem.title}
+                                          </span>
+                                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                        </SidebarMenuButton>
+                                      </CollapsibleTrigger>
+                                      <CollapsibleContent>
+                                        <SidebarMenuSub>
+                                          {groupItem.items.map((subItem) => (
+                                            <SidebarMenuSubItem
+                                              key={subItem.title}
+                                            >
+                                              <SidebarMenuSubButton
+                                                asChild
+                                                onClick={(e) => {
+                                                  const allow =
+                                                    handleRouteGuard(
+                                                      subItem.url,
+                                                    );
+                                                  if (subItem?.handleClick)
+                                                    subItem.handleClick();
+                                                  if (!allow) {
+                                                    e.preventDefault();
+                                                  }
+                                                }}
+                                                isActive={
+                                                  subItem?.isActive ??
+                                                  fullPathname === subItem.url
+                                                }
+                                                aria-label={subItem.title}
+                                                variant="light"
+                                              >
+                                                <Link href={subItem.url || "#"}>
+                                                  {subItem.icon && (
+                                                    <subItem.icon
+                                                      {...sidebarIconProps}
+                                                      className={`mr-2 ${sidebarIconProps.className}`}
+                                                      color="var(--foreground)"
+                                                    />
+                                                  )}
+                                                  <span className="font-medium">
+                                                    {subItem.title}
+                                                  </span>
+                                                </Link>
+                                              </SidebarMenuSubButton>
+                                            </SidebarMenuSubItem>
+                                          ))}
+                                        </SidebarMenuSub>
+                                      </CollapsibleContent>
+                                    </SidebarMenuItem>
+                                  </Collapsible>
+                                ) : (
+                                  <SidebarMenuItem key={groupItem.title}>
+                                    <SidebarMenuButton
                                       asChild
+                                      tooltip={groupItem.title}
+                                      isActive={fullPathname === groupItem.url}
+                                      aria-label={groupItem.title}
                                       onClick={(e) => {
                                         const allow = handleRouteGuard(
-                                          subItem.url,
+                                          groupItem.url,
                                         );
-                                        if (subItem?.handleClick)
-                                          subItem.handleClick();
                                         if (!allow) {
                                           e.preventDefault();
                                         }
                                       }}
-                                      isActive={
-                                        subItem?.isActive ??
-                                        fullPathname === subItem.url
-                                      }
-                                      aria-label={subItem.title}
                                       variant="light"
                                     >
-                                      <Link href={subItem.url || "#"}>
-                                        {subItem.icon && (
-                                          <subItem.icon
-                                            {...sidebarIconProps}
-                                            className={`mr-2 ${sidebarIconProps.className}`}
-                                            color="var(--foreground)"
-                                          />
+                                      <Link href={groupItem.url || "#"}>
+                                        {groupItem.icon && (
+                                          <item.icon {...sidebarIconProps} />
                                         )}
                                         <span className="font-medium">
-                                          {subItem.title}
+                                          {groupItem.title}
                                         </span>
                                       </Link>
-                                    </SidebarMenuSubButton>
-                                  </SidebarMenuSubItem>
-                                ))}
-                              </SidebarMenuSub>
-                            </CollapsibleContent>
-                          </SidebarMenuItem>
-                        </Collapsible>
+                                    </SidebarMenuButton>
+                                  </SidebarMenuItem>
+                                ),
+                              )}
+                            </SidebarMenu>
+                          </SidebarGroupContent>
+                          {<SidebarSeparator className="m-0" />}
+                        </SidebarGroup>
                       ) : (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton
-                            asChild
-                            tooltip={item.title}
-                            isActive={fullPathname === item.url}
-                            aria-label={item.title}
-                            onClick={(e) => {
-                              const allow = handleRouteGuard(item.url);
-                              if (!allow) {
-                                e.preventDefault();
-                              }
-                            }}
-                            variant="light"
-                          >
-                            <Link href={item.url || "#"}>
-                              {item.icon && <item.icon {...sidebarIconProps} />}
-                              <span className="font-medium">{item.title}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
+                        <SidebarGroup className="p-0">
+                          <SidebarGroupContent className="flex px-2">
+                            <SidebarMenu>
+                              {item.items && item.items.length > 0 ? (
+                                <Collapsible
+                                  key={item.title}
+                                  asChild
+                                  defaultOpen={false}
+                                  className="group/collapsible"
+                                >
+                                  <SidebarMenuItem>
+                                    <CollapsibleTrigger asChild>
+                                      <SidebarMenuButton
+                                        tooltip={item.title}
+                                        variant="light"
+                                      >
+                                        {item.icon && (
+                                          <item.icon {...sidebarIconProps} />
+                                        )}
+                                        <span className="font-medium">
+                                          {item.title}
+                                        </span>
+                                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                      </SidebarMenuButton>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent>
+                                      <SidebarMenuSub>
+                                        {item.items.map((subItem) => (
+                                          <SidebarMenuSubItem
+                                            key={subItem.title}
+                                          >
+                                            <SidebarMenuSubButton
+                                              asChild
+                                              onClick={(e) => {
+                                                const allow = handleRouteGuard(
+                                                  subItem.url,
+                                                );
+                                                if (subItem?.handleClick)
+                                                  subItem.handleClick();
+                                                if (!allow) {
+                                                  e.preventDefault();
+                                                }
+                                              }}
+                                              isActive={
+                                                subItem?.isActive ??
+                                                fullPathname === subItem.url
+                                              }
+                                              aria-label={subItem.title}
+                                              variant="light"
+                                            >
+                                              <Link href={subItem.url || "#"}>
+                                                {subItem.icon && (
+                                                  <subItem.icon
+                                                    {...sidebarIconProps}
+                                                    className={`mr-2 ${sidebarIconProps.className}`}
+                                                    color="var(--foreground)"
+                                                  />
+                                                )}
+                                                <span className="font-medium">
+                                                  {subItem.title}
+                                                </span>
+                                              </Link>
+                                            </SidebarMenuSubButton>
+                                          </SidebarMenuSubItem>
+                                        ))}
+                                      </SidebarMenuSub>
+                                    </CollapsibleContent>
+                                  </SidebarMenuItem>
+                                </Collapsible>
+                              ) : (
+                                <SidebarMenuItem key={item.title}>
+                                  <SidebarMenuButton
+                                    asChild
+                                    tooltip={item.title}
+                                    isActive={fullPathname === item.url}
+                                    aria-label={item.title}
+                                    onClick={(e) => {
+                                      const allow = handleRouteGuard(item.url);
+                                      if (!allow) {
+                                        e.preventDefault();
+                                      }
+                                    }}
+                                    variant="light"
+                                  >
+                                    <Link href={item.url || "#"}>
+                                      {item.icon && (
+                                        <item.icon {...sidebarIconProps} />
+                                      )}
+                                      <span className="font-medium">
+                                        {item.title}
+                                      </span>
+                                    </Link>
+                                  </SidebarMenuButton>
+                                </SidebarMenuItem>
+                              )}
+                            </SidebarMenu>
+                          </SidebarGroupContent>
+                        </SidebarGroup>
                       ),
                     )}
                   </SidebarMenu>

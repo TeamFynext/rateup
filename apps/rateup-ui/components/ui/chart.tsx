@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import * as RechartsPrimitive from "recharts";
+import { ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 import { cn } from "@/lib/utils";
 
@@ -119,6 +120,7 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
+  valueFormatter,
 }: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
   React.ComponentProps<"div"> & {
     hideLabel?: boolean;
@@ -126,6 +128,7 @@ function ChartTooltipContent({
     indicator?: "line" | "dot" | "dashed";
     nameKey?: string;
     labelKey?: string;
+    valueFormatter?: (value: ValueType, dataKey?: string) => ValueType;
   }) {
   const { config } = useChart();
 
@@ -186,7 +189,9 @@ function ChartTooltipContent({
             const key = `${nameKey || item.name || item.dataKey || "value"}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
             const indicatorColor = color || item.payload.fill || item.color;
-
+            const formattedValue = valueFormatter
+              ? valueFormatter(item.value, key)
+              : item.value.toLocaleString();
             return (
               <div
                 key={item.dataKey}
@@ -225,7 +230,7 @@ function ChartTooltipContent({
                     )}
                     <div
                       className={cn(
-                        "flex flex-1 justify-between leading-none",
+                        "flex flex-1 justify-between leading-none gap-1",
                         nestLabel ? "items-end" : "items-center",
                       )}
                     >
@@ -235,9 +240,9 @@ function ChartTooltipContent({
                           {itemConfig?.label || item.name}
                         </span>
                       </div>
-                      {item.value && (
+                      {formattedValue && (
                         <span className="text-foreground font-mono font-medium tabular-nums">
-                          {item.value.toLocaleString()}
+                          {formattedValue}
                         </span>
                       )}
                     </div>

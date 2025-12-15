@@ -50,18 +50,19 @@ const ConversationQuickStats = () => {
         key: "resolvedToday",
         label: "Resolved Today",
         icon: CheckCircle2,
-        rightSection: () => (
-          <div className="flex items-center gap-1 text-xs text-green-600">
-            {data?.reolvedRateDifference < 0 ? (
-              <TrendingDown className="w-3 h-3" />
-            ) : (
-              <TrendingUp className="w-3 h-3" />
-            )}
-            <span className="font-semibold">
-              {data?.reolvedRateDifference ?? "NA"}%
-            </span>
-          </div>
-        ),
+        rightSection: () =>
+          data?.reolvedRateDifference ? (
+            <div className="flex items-center gap-1 text-xs text-green-600">
+              {data?.reolvedRateDifference < 0 ? (
+                <TrendingDown className="w-3 h-3" />
+              ) : (
+                <TrendingUp className="w-3 h-3" />
+              )}
+              <span className="font-semibold">
+                {data?.reolvedRateDifference ?? "NA"}%
+              </span>
+            </div>
+          ) : null,
         count: data?.resolvedToday ?? "NA",
         color: {
           borderColor: "border-green-200",
@@ -122,14 +123,14 @@ const ConversationQuickStats = () => {
               </p>
             </div>
           </div>
-          <Button
+          {/* <Button
             variant="ghost"
             size="sm"
             className="h-8 text-xs hover:bg-blue-100"
           >
             View All
             <ArrowRight className="w-3 h-3 ml-1" />
-          </Button>
+          </Button> */}
         </div>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
@@ -156,61 +157,6 @@ const ConversationQuickStats = () => {
             {<stat.rightSection />}
           </div>
         ))}
-        {/* <div className="flex items-center justify-between p-3 rounded-lg border bg-white hover:shadow-md hover:border-blue-200 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Eye className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Active Now</p>
-              <p className="text-lg font-semibold">{}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between p-3 rounded-lg border bg-white hover:shadow-md hover:border-green-200 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Resolved Today</p>
-              <p className="text-lg font-semibold">156</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 text-xs text-green-600">
-            <TrendingUp className="w-3 h-3" />
-            <span className="font-semibold">+8%</span>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between p-3 rounded-lg border bg-white hover:shadow-md hover:border-orange-200 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-orange-100 rounded-lg flex items-center justify-center">
-              <MessageSquare className="w-4 h-4 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Pending</p>
-              <p className="text-lg font-semibold">12</p>
-            </div>
-          </div>
-          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[10px]">
-            URGENT
-          </Badge>
-        </div>
-
-        <div className="flex items-center justify-between p-3 rounded-lg border bg-white hover:shadow-md hover:border-purple-200 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Users className="w-4 h-4 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Agents Online</p>
-              <p className="text-lg font-semibold">5/5</p>
-            </div>
-          </div>
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-        </div> */}
       </CardContent>
     </Card>
   );

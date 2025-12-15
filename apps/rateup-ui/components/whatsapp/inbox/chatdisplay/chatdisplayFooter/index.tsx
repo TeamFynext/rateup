@@ -25,6 +25,7 @@ import WaTextEditor, {
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { User } from "@/context/UserContext";
+import { WaMessageClosedStatus } from "@/utils/constants";
 import { formatDateWithRelativeTime } from "@/utils/dateTime";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
 import { showErrorToast } from "@/utils/notifications";
@@ -359,7 +360,7 @@ export const WaInboxAssignUserFooter = ({
     <div className="flex flex-col gap-2 pb-2">
       <div className="bg-black flex justify-center items-center text-white gap-0.5 py-1">
         <IconExclamationCircle size={"1rem"} />
-        {waMessageAssignStatus === WaMessageAssignStatus.CLOSED && (
+        {WaMessageClosedStatus.includes(waMessageAssignStatus) && (
           <>
             <span className="text-xs">This chat has been closed</span>
             {closedAt && (

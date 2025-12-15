@@ -150,6 +150,7 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
       !messagesByKey?.get(selectedKey)?.messages?.length && isPending,
     );
   }, [selectedKey, isPending, messagesByKey, enable]);
+  console.log("allMessages", allMessages);
   if (isLoading) return <WhatsAppInboxLoader isLoading={isLoading} />;
 
   return (

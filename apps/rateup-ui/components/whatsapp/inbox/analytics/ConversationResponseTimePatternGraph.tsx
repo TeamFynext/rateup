@@ -1,3 +1,5 @@
+import { Space_Mono } from "next/font/google";
+
 import { Skeleton } from "@mantine/core";
 import { Clock } from "lucide-react";
 import {
@@ -26,7 +28,7 @@ import {
 } from "@/components/ui/chart";
 
 const ConversationResponseTimePatternGraph = () => {
-  const { data: chartData = [], isLoading } =
+  const { data = [], isLoading } =
     useGetAverageConversationResponseTimeGraphData();
   const chartConfig = {
     averageResponseTime: {
@@ -34,6 +36,11 @@ const ConversationResponseTimePatternGraph = () => {
       color: "var(--chart-3)",
     },
   } satisfies ChartConfig;
+
+  const chartData = data.map((d) => ({
+    ...d,
+    averageResponseTime: Math.round(d.averageResponseTime / 60),
+  }));
 
   if (isLoading) {
     return <Skeleton className="w-full h-90" />;
@@ -84,7 +91,14 @@ const ConversationResponseTimePatternGraph = () => {
               <YAxis />
               <ChartTooltip
                 cursor={false}
-                content={<ChartTooltipContent indicator="line" />}
+                content={
+                  <ChartTooltipContent
+                    indicator="line"
+                    valueFormatter={(value, key) =>
+                      key == "averageResponseTime" ? `${value} min(s)` : value
+                    }
+                  />
+                }
               />
               <Line
                 dataKey="averageResponseTime"

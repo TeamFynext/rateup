@@ -33,12 +33,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime";
 
 import { StaffStatusBadge } from "./ConversationStatsAgentPerformance";
 
 const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
   const { data: analytics, isLoading } =
-    useGetStaffDetailedConversationAnalytics(selectedStaff?.userId, {
+    useGetStaffDetailedConversationAnalytics(selectedStaff?.staff?.userId, {
       days: 7,
     });
   const graphdata = analytics
@@ -48,6 +49,9 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
       }))
     : [];
   if (!selectedStaff) return;
+  const averageResponseTime = formatTimeToNearestUnitFromSeconds(
+    selectedStaff.averageResponseTime,
+  );
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
       <DialogContent className="max-w-[1587px] max-h-[90vh] overflow-y-auto">
@@ -134,12 +138,25 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                     Avg Response Time
                   </p>
                   <p className="text-xl font-bold">
-                    {selectedStaff.averageResponseTime ?? "NA"}
+                    {averageResponseTime
+                      ? `${averageResponseTime.value} ${averageResponseTime.suffix}`
+                      : "NA"}
                   </p>
                   {selectedStaff.responseTimeRateByLastWeek && (
                     <p className="text-[11px] text-green-600 mt-1">
-                      {selectedStaff.responseTimeRateByLastWeek}%{" "}
-                      {selectedStaff.responseTimeRate > 0 ? "faster" : "slower"}{" "}
+                      {
+                        formatTimeToNearestUnitFromSeconds(
+                          selectedStaff.responseTimeRateByLastWeek,
+                        )?.value
+                      }{" "}
+                      {
+                        formatTimeToNearestUnitFromSeconds(
+                          selectedStaff.responseTimeRateByLastWeek,
+                        )?.suffix
+                      }{" "}
+                      {selectedStaff.responseTimeRateByLastWeek > 0
+                        ? "faster"
+                        : "slower"}{" "}
                       than last week
                     </p>
                   )}
@@ -161,7 +178,9 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                   First Response
                 </p>
                 <p className="text-lg font-bold text-blue-600">
-                  {analytics?.metrics?.firstResponseTime ?? "NA"}
+                  {analytics?.metrics?.firstResponseTime
+                    ? `${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.firstResponseTime)?.value} ${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.firstResponseTime)?.suffix}`
+                    : "NA"}
                 </p>
               </div>
               <div className="p-4 rounded-lg border bg-gradient-to-br from-orange-50/50 to-white">
@@ -169,7 +188,9 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                   Avg Handling
                 </p>
                 <p className="text-lg font-bold text-orange-600">
-                  {analytics?.metrics?.avgHandlingTime ?? "NA"}
+                  {analytics?.metrics?.avgHandlingTime !== null
+                    ? `${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.avgHandlingTime)?.value} ${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.avgHandlingTime)?.suffix}`
+                    : "NA"}
                 </p>
               </div>
               <div className="p-4 rounded-lg border bg-gradient-to-br from-purple-50/50 to-white">
@@ -195,7 +216,7 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                 <ResponsiveContainer width="100%" height={400}>
                   <BarChart data={graphdata} margin={{ top: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
+                    <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
                     <Bar
@@ -254,10 +275,12 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                             </div>
                           </td>
                           <td className="p-3 text-xs text-muted-foreground">
-                            {conv.duration}
+                            {conv.duration !== null
+                              ? `${formatTimeToNearestUnitFromSeconds(conv.duration).value} ${formatTimeToNearestUnitFromSeconds(conv.duration).suffix}`
+                              : "NA"}
                           </td>
                           <td className="p-3 text-xs text-muted-foreground">
-                            {conv.lastRespondedAt}
+                            {dayjs(conv.lastRespondedAt).fromNow()}
                           </td>
                           <td className="p-3">
                             <Badge

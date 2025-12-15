@@ -18,7 +18,7 @@ export const getConversationOverView = async (
 
 export interface ConversationOverviewStats {
   totalConversations: number;
-  averageResponseTime: string;
+  averageResponseTime: number;
   resolutionRate: number;
 }
 export interface ConversationResponseStats {

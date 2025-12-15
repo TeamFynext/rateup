@@ -37,6 +37,7 @@ import {
 } from "@tabler/icons-react";
 import {
   Activity,
+  ChartColumn,
   CircleCheckBig,
   FileChartColumn,
   FileSpreadsheet,
@@ -101,89 +102,102 @@ export function useNavMain({
                   icon: IconUserX,
                 },
                 {
-                  title: t("Closed"),
-                  url: "/dashboard/inbox?tab=Closed",
+                  title: t("Addressed"),
+                  url: "/dashboard/inbox?tab=Addressed",
                   icon: CircleCheckBig,
                 },
-                ...(lifecycles.length > 0
-                  ? [
-                      {
-                        title: "Lifecycle",
-                        icon: IconActivity,
-                        items: lifecycles.map((lbl) => ({
-                          title: `${lbl.emoji ? lbl.emoji + " " : ""}${lbl.name}`,
-                          url: "#",
-                          handleClick: () => {
-                            handleFilter("lifecycle", lbl.id);
-                          },
-                          isActive: chatFilterStore.filter.lifecycle === lbl.id,
-                        })),
-                      },
-                    ]
-                  : []),
                 {
-                  title: "Labels",
-                  icon: IconLabel,
-                  items: contactLabels.map((lbl) => ({
-                    title: lbl.name,
-                    url: "#",
-                    icon: (props: any) => (
-                      <div
-                        {...props}
-                        className={`rounded-full ${props?.className ?? ""}`}
-                        style={{
-                          background: lbl?.color,
-                        }}
-                      />
-                    ),
-                    handleClick: () => {
-                      handleFilter("label", lbl.id);
-                    },
-                    isActive: chatFilterStore.filter.labels?.includes(lbl.id),
-                  })),
+                  group: "Filter",
+                  items: [
+                    ...(lifecycles.length > 0
+                      ? [
+                          {
+                            title: "Lifecycle",
+                            icon: IconActivity,
+                            items: lifecycles.map((lbl) => ({
+                              title: `${lbl.emoji ? lbl.emoji + " " : ""}${lbl.name}`,
+                              url: "#",
+                              handleClick: () => {
+                                handleFilter("lifecycle", lbl.id);
+                              },
+                              isActive:
+                                chatFilterStore.filter.lifecycle === lbl.id,
+                            })),
+                            hasSepeartorOnTop: true,
+                          },
+                        ]
+                      : []),
+                    ...(contactLabels.length > 0
+                      ? [
+                          {
+                            title: "Labels",
+                            icon: IconLabel,
+                            items: contactLabels.map((lbl) => ({
+                              title: lbl.name,
+                              url: "#",
+                              icon: (props: any) => (
+                                <div
+                                  {...props}
+                                  className={`rounded-full ${props?.className ?? ""}`}
+                                  style={{
+                                    background: lbl?.color,
+                                  }}
+                                />
+                              ),
+                              handleClick: () => {
+                                handleFilter("label", lbl.id);
+                              },
+                              isActive: chatFilterStore.filter.labels?.includes(
+                                lbl.id,
+                              ),
+                            })),
+                          },
+                        ]
+                      : []),
+                    ...(staff.length > 0
+                      ? [
+                          {
+                            title: "Staff",
+                            icon: User,
+                            items: staff.map((st) => ({
+                              title: `${st.name} ${userId === st.id ? "(You)" : ""}`,
+                              url: "#",
+                              handleClick: () => {
+                                handleFilter("assignedStaff", st.id);
+                              },
+                              isActive:
+                                chatFilterStore.filter.assignedUserIds?.includes(
+                                  st.id,
+                                ),
+                            })),
+                          },
+                        ]
+                      : []),
+                    ...(teams.length > 0
+                      ? [
+                          {
+                            title: "Teams",
+                            icon: Users,
+                            items: teams.map((st) => ({
+                              title: st.name,
+                              url: "#",
+                              handleClick: () => {
+                                handleFilter("assignedTeams", st.id);
+                              },
+                              isActive:
+                                chatFilterStore.filter.assignedTeams.includes(
+                                  st.id,
+                                ),
+                            })),
+                          },
+                        ]
+                      : []),
+                  ],
                 },
-                ...(staff.length > 0
-                  ? [
-                      {
-                        title: "Staff",
-                        icon: User,
-                        items: staff.map((st) => ({
-                          title: `${st.name} ${userId === st.id ? "(You)" : ""}`,
-                          url: "#",
-                          handleClick: () => {
-                            handleFilter("assignedStaff", st.id);
-                          },
-                          isActive:
-                            chatFilterStore.filter.assignedUserIds?.includes(
-                              st.id,
-                            ),
-                        })),
-                      },
-                    ]
-                  : []),
-                ...(teams.length > 0
-                  ? [
-                      {
-                        title: "Teams",
-                        icon: Users,
-                        items: teams.map((st) => ({
-                          title: st.name,
-                          url: "#",
-                          handleClick: () => {
-                            handleFilter("assignedTeams", st.id);
-                          },
-                          isActive:
-                            chatFilterStore.filter.assignedTeams.includes(
-                              st.id,
-                            ),
-                        })),
-                      },
-                    ]
-                  : []),
                 {
                   title: "Analytics",
                   url: "/dashboard/inbox?tab=analytics",
-                  icon: FileChartColumn,
+                  icon: ChartColumn,
                 },
                 {
                   title: "Settings",

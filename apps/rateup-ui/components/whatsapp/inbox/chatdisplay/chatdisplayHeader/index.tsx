@@ -349,7 +349,7 @@ const ChatHeaderMenu = ({ contact }) => {
         >
           <CircleCheckBig className="w-4 h-4 mr-2" />
           <CustomTooltip
-            trigger={<p>Mark as unresolved</p>}
+            trigger={<p>Mark as Unresolved</p>}
             content={
               <p>
                 All the assignees will be removed as closed,resolved and spam

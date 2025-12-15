@@ -93,7 +93,7 @@ const ConversationTrendsGraph = () => {
             </defs>
             <Area
               dataKey="resolvedCount"
-              type="natural"
+              type="monotone"
               fill="url(#fillResolved)"
               fillOpacity={0.4}
               stroke="#10B981"
@@ -102,7 +102,7 @@ const ConversationTrendsGraph = () => {
             />
             <Area
               dataKey="totalCount"
-              type="natural"
+              type="monotone"
               fill="url(#fillTotal)"
               fillOpacity={0.4}
               stroke="#2E5BFF"

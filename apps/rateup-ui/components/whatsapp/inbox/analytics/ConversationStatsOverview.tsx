@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 
+import dayjs from "dayjs";
 import { Clock, MessageCircle, Target } from "lucide-react";
 
 import { useGetConversationOverView } from "@/backend/conversation/conversation.query";
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progressnew";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime";
 
 import ConversationAccountDistribution from "./ConversationAccountDistribution";
 import ConversationQuickStats from "./ConversationQuickStats";
@@ -24,47 +26,55 @@ const ConversationStatsOverview = ({ dateRange }) => {
       dateKey: dateRange.key,
       dateRange: dateRange.range,
     });
-  const overviewStats = [
-    {
-      key: "totalConversations",
-      label: "Conversations",
-      color: {
-        border: "border-blue-500",
-        cardBg: "bg-blue-50",
-        hoverShadow: "hover:shadow-blue-300/50",
-        text: "text-blue-500",
+  const overviewStats = useMemo(() => {
+    return [
+      {
+        key: "totalConversations",
+        label: "Conversations",
+        color: {
+          border: "border-blue-500",
+          cardBg: "bg-blue-50",
+          hoverShadow: "hover:shadow-blue-300/50",
+          text: "text-blue-500",
+        },
+        icon: MessageCircle,
+        suffix: "",
+        progressTotal: 1000,
+        value: data?.totalConversations,
       },
-      icon: MessageCircle,
-      suffix: "",
-      progressTotal: 1000,
-    },
-    {
-      key: "averageResponseTime",
-      label: "Response Time",
-      color: {
-        border: "border-green-500",
-        cardBg: "bg-green-50",
-        hoverShadow: "hover:shadow-green-300/50",
-        text: "text-green-500",
+      {
+        key: "averageResponseTime",
+        label: "Response Time",
+        color: {
+          border: "border-green-500",
+          cardBg: "bg-green-50",
+          hoverShadow: "hover:shadow-green-300/50",
+          text: "text-green-500",
+        },
+        icon: Clock,
+        suffix: formatTimeToNearestUnitFromSeconds(data?.averageResponseTime)
+          ?.suffix,
+        progressTotal: 60,
+        value:
+          formatTimeToNearestUnitFromSeconds(data?.averageResponseTime)
+            ?.value ?? "NA",
       },
-      icon: Clock,
-      suffix: "min",
-      progressTotal: 60,
-    },
-    {
-      key: "resolutionRate",
-      label: "Resolution Rate",
-      color: {
-        border: "border-purple-500",
-        cardBg: "bg-purple-50",
-        hoverShadow: "hover:shadow-purple-300/50",
-        text: "text-purple-500",
+      {
+        key: "resolutionRate",
+        label: "Resolution Rate",
+        color: {
+          border: "border-purple-500",
+          cardBg: "bg-purple-50",
+          hoverShadow: "hover:shadow-purple-300/50",
+          text: "text-purple-500",
+        },
+        icon: Target,
+        suffix: "%",
+        progressTotal: 100,
+        value: data?.resolutionRate,
       },
-      icon: Target,
-      suffix: "%",
-      progressTotal: 100,
-    },
-  ];
+    ];
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -82,7 +92,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
     <div className="flex flex-col gap-6 my-4">
       <div className="grid grid-cols-3 gap-4">
         {overviewStats.map((stat) => {
-          const progressValue = (data[stat.key] / stat.progressTotal) * 100;
+          const progressValue = (stat.value / stat.progressTotal) * 100;
           return (
             <Card
               key={stat.key}
@@ -100,8 +110,8 @@ const ConversationStatsOverview = ({ dateRange }) => {
                   {stat.label}
                 </span>
                 <span className={`text-3xl font-bold ${stat.color.text}`}>
-                  {data[stat.key]}
-                  <span className="text-sm text-muted-foreground">
+                  {stat.value}
+                  <span className="text-sm text-muted-foreground ml-1">
                     {stat.suffix}
                   </span>
                 </span>
