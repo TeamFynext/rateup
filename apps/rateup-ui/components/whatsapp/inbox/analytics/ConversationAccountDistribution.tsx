@@ -68,7 +68,7 @@ const ConversationAccountDistribution = () => {
             <p className="text-gray-600 mb-4 text-center">No messages found</p>
           </div>
         ) : (
-          <div>
+          <div className="flex flex-col gap-2">
             {channelDistribution.map((channel, index) => {
               const percentage = totalConversations
                 ? (channel.conversationCount / totalConversations) * 100
