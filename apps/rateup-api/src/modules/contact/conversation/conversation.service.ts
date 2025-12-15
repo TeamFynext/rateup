@@ -557,7 +557,7 @@ SELECT
     SELECT COUNT(*)::INTEGER
     FROM assignments a
     WHERE a."userId" = om."userId"
-      AND a."removedAt" IS NULL
+      AND a."lastRemovedAt" IS NULL
       AND a."status" = ${WaMessageAssignStatus.ASSIGNED}
   ) AS "totalAssignedConversations",
 
