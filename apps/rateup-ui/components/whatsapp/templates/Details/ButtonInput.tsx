@@ -1,11 +1,20 @@
 "use client";
 
-import { ActionIcon, Box, Divider, Group, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Divider,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import {
   IconChevronDown,
-  IconChevronUp,
   IconPlus,
   IconTrash,
+  IconVariable,
   IconX,
 } from "@tabler/icons-react";
 import PhoneInputWithCountrySelect from "react-phone-number-input";
@@ -22,16 +31,10 @@ import { LengthTracker } from "../../../input/LengthTracker";
 
 import "react-phone-number-input/style.css";
 
-import { useMemo } from "react";
-
 import { UseFormReturnType } from "@mantine/form";
 import { useTranslations } from "next-intl";
 import { z } from "zod/v4";
 
-import {
-  useConnectedWaCatalog,
-  useWaCatalog,
-} from "@/backend/whatsapp/catalog/catalog.query";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
 import { AccountSelector } from "@/components/input/AccountSelector";
 
@@ -40,6 +43,7 @@ import { FlowSelector } from "../../flows/FlowSelector/FlowSelector";
 import { WebsurveySelector } from "../../flows/WebsurveySelector/WebsurveySelector";
 import { templateSchema } from "../Schema/templateSchema";
 import styles from "./ButtonInput.module.css";
+import { useButtonState } from "./useButtonState";
 
 const ButtonInput = ({
   form,
@@ -53,6 +57,10 @@ const ButtonInput = ({
   let { data: flows } = useWaFlowsFromDb(
     data.type === WHATSAPP_BUTTON_TYPE.FLOW,
   );
+  const buttonState = useButtonState({
+    url: form.values?.buttons?.[index]?.url,
+    example: form.values?.buttons?.[index]?.example,
+  });
   if (data.type === WHATSAPP_BUTTON_TYPE.FLOW) {
     const screeenId = flows?.find(
       (data) => data.flowId === form?.values?.buttons?.[index]?.flow_id,
@@ -116,7 +124,7 @@ const ButtonInput = ({
       );
     case WHATSAPP_BUTTON_TYPE.VISIT_WEBSITE:
       return (
-        <>
+        <SimpleGrid cols={buttonState.totalFields}>
           <ContainedTextField
             label={
               <Text fz={14} fw={500}>
@@ -124,7 +132,7 @@ const ButtonInput = ({
               </Text>
             }
             value={
-              form?.values?.buttons?.[index]?.example
+              buttonState.isWebSurvey
                 ? translations("RateUp Web Survey")
                 : translations("Visit a Website")
             }
@@ -145,7 +153,7 @@ const ButtonInput = ({
             }
             {...form.getInputProps(`buttons.${index}.text`)}
           />
-          {form?.values?.buttons?.[index]?.example ? (
+          {buttonState.isWebSurvey ? (
             <WebsurveySelector
               onlyPublished
               searchable
@@ -159,24 +167,127 @@ const ButtonInput = ({
               index={index}
             />
           ) : (
-            <ContainedTextField
-              label={
-                <Text fz={14} fw={500}>
-                  {translations("Website Url")}
-                </Text>
-              }
-              rightSection={
-                <LengthTracker
-                  length={form.values?.buttons?.[index]?.text?.length}
-                  maxValue={2000}
-                  atStart
+            <>
+              <ContainedTextField
+                label={
+                  <Text fz={14} fw={500}>
+                    {translations("Website Url")}
+                  </Text>
+                }
+                rightSection={
+                  <Group gap="xs">
+                    {buttonState.showInsertIcon && (
+                      <Tooltip label={translations("Insert variable {{1}}")}>
+                        <ActionIcon
+                          size="sm"
+                          variant="subtle"
+                          onClick={() => {
+                            const currentUrl =
+                              form.values?.buttons?.[index]?.url || "";
+                            form.setFieldValue(
+                              `buttons.${index}.url`,
+                              currentUrl + "{{1}}",
+                            );
+                          }}
+                        >
+                          <IconVariable size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                    <LengthTracker
+                      length={buttonState.combinedLength}
+                      maxValue={2000}
+                      atStart
+                    />
+                  </Group>
+                }
+                flex={1}
+                {...form.getInputProps(`buttons.${index}.url`)}
+                type="url"
+              />
+              {buttonState.hasVariableInUrl && (
+                <ContainedTextField
+                  label={
+                    <Text fz={14} fw={500}>
+                      {translations("Example")}
+                    </Text>
+                  }
+                  placeholder={translations("Enter example for {{1}}")}
+                  rightSection={
+                    <LengthTracker
+                      length={buttonState.combinedLength}
+                      maxValue={2000}
+                      atStart
+                    />
+                  }
+                  flex={1}
+                  {...form.getInputProps(`buttons.${index}.example`)}
                 />
-              }
-              flex={1}
-              {...form.getInputProps(`buttons.${index}.url`)}
-              type="url"
-            />
+              )}
+            </>
           )}
+          <Box
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              paddingBottom: "8px",
+            }}
+          >
+            <ActionIcon
+              variant="transparent"
+              onClick={() => deleteButton(index)}
+            >
+              <IconX />
+            </ActionIcon>
+          </Box>
+        </SimpleGrid>
+      );
+    case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
+      return (
+        <>
+          <ContainedTextField
+            label={
+              <Text fz={14} fw={500}>
+                {translations("Type of action")}
+              </Text>
+            }
+            value={"Call phone number"}
+            readOnly
+          />
+          <ContainedTextField
+            label={
+              <Text fz={14} fw={500}>
+                {translations("Button text")}
+              </Text>
+            }
+            rightSection={
+              <LengthTracker
+                length={form.values?.buttons?.[index]?.text?.length}
+                maxValue={25}
+                atStart
+              />
+            }
+            {...form.getInputProps(`buttons.${index}.text`)}
+          />
+          <Box flex={1}>
+            <Text>{translations("Phone Number")}</Text>
+            <PhoneInputWithCountrySelect
+              defaultCountry="IN"
+              international
+              countryCallingCodeEditable={false}
+              placeholder={translations("Enter phone number")}
+              value={form?.values?.phone || null}
+              {...form.getInputProps(`buttons.${index}.phone_number`)}
+              className={
+                form?.errors?.[`buttons.${index}.phone_number`]
+                  ? styles.inputError
+                  : styles.inputPhone
+              }
+            />
+            <Text fz={"xs"} c={"var(--mantine-color-red-6)"}>
+              {form?.errors?.[`buttons.${index}.phone_number`]}
+            </Text>
+          </Box>
           <ActionIcon
             mt={24}
             variant="transparent"
@@ -184,63 +295,6 @@ const ButtonInput = ({
           >
             <IconX />
           </ActionIcon>
-        </>
-      );
-    case WHATSAPP_BUTTON_TYPE.CALL_PHONE_NUMBER:
-      return (
-        <>
-          <>
-            <ContainedTextField
-              label={
-                <Text fz={14} fw={500}>
-                  {translations("Type of action")}
-                </Text>
-              }
-              value={"Call phone number"}
-              readOnly
-            />
-            <ContainedTextField
-              label={
-                <Text fz={14} fw={500}>
-                  {translations("Button text")}
-                </Text>
-              }
-              rightSection={
-                <LengthTracker
-                  length={form.values?.buttons?.[index]?.text?.length}
-                  maxValue={25}
-                  atStart
-                />
-              }
-              {...form.getInputProps(`buttons.${index}.text`)}
-            />
-            <Box flex={1}>
-              <Text>{translations("Phone Number")}</Text>
-              <PhoneInputWithCountrySelect
-                defaultCountry="IN"
-                international
-                countryCallingCodeEditable={false}
-                placeholder={translations("Enter phone number")}
-                value={form?.values?.phone || null}
-                {...form.getInputProps(`buttons.${index}.phone_number`)}
-                className={
-                  form?.errors?.[`buttons.${index}.phone_number`]
-                    ? styles.inputError
-                    : styles.inputPhone
-                }
-              />
-              <Text fz={"xs"} c={"var(--mantine-color-red-6)"}>
-                {form?.errors?.[`buttons.${index}.phone_number`]}
-              </Text>
-            </Box>
-            <ActionIcon
-              mt={24}
-              variant="transparent"
-              onClick={() => deleteButton(index)}
-            >
-              <IconX />
-            </ActionIcon>
-          </>
         </>
       );
     case WHATSAPP_BUTTON_TYPE.OTP:

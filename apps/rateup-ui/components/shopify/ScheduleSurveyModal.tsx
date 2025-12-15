@@ -36,6 +36,7 @@ import { TeamSelector } from "../input/TeamSelector";
 import WaTemplateSelector from "../input/WaTemplateSelector";
 import { LASelector } from "../LoyaltyComponents/utils";
 import FormModalLayout from "../Modal/FormModalLayout";
+import { Field, FieldLabel } from "../ui/field";
 
 const ScheduleSurveyModal = ({
   opened,
@@ -158,7 +159,7 @@ const ScheduleSurveyModal = ({
         form.reset();
         close();
       }}
-      title=""
+      title="Add Message Schedule"
       centered
       onSubmit={handleScheduleSurvey}
       buttonTitle={translations("Create")}
@@ -188,18 +189,24 @@ const ScheduleSurveyModal = ({
           ) ||
             "Allow rateup to subscribe to your store events in th settings before scheduling survey"}
         </Alert>
-        <TeamSelector
-          placeholder={translations("Select Team")}
-          withAsterisk
-          allowDeselect={false}
-          disabled={false}
-          value={form?.getInputProps("teamId")?.value || ""}
-          {...form.getInputProps("teamId")}
-          styles={{
-            input: { outline: "1px solid #149A8A" },
-          }}
-          searchable
-        />
+        <Field className="felx flex-col gap-1">
+          <FieldLabel className="text-xs text-muted-foreground">
+            {translations("Team")}
+          </FieldLabel>
+          <TeamSelector
+            placeholder={translations("Select Team")}
+            withAsterisk
+            allowDeselect={false}
+            disabled={false}
+            value={form?.getInputProps("teamId")?.value || ""}
+            {...form.getInputProps("teamId")}
+            styles={{
+              input: { outline: "1px solid #149A8A" },
+            }}
+            searchable
+          />
+        </Field>
+
         <ContainedSelection
           label={translations("Event")}
           placeholder={translations("Select Shopify Event")}

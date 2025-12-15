@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { Box, Image, Stack } from "@mantine/core";
 import { IconDownload } from "@tabler/icons-react";
 import domtoimage from "dom-to-image-more";
+import { Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { Button } from "@/components/ui/button";
+
 import { showErrorToast } from "../../../../utils/notifications";
-import { RateupButtonBlue } from "../../../Button/RateupButtons";
 import CustomQRCode from "../components/CustomQrCode/CustomQrCode";
 import { getLogoSrc } from "../ShareQR/utils";
 import styles from "./Preview.module.css";
@@ -78,8 +79,17 @@ function Preview({
   };
 
   return (
-    <Stack className={styles["preview-download-btn-container"]}>
-      <Stack
+    <div className="flex flex-col items-center justify-center gap-4 w-full">
+      <div className="flex flex-col items-center justify-center">
+        <div className="flex items-center gap-1">
+          <Sparkles className="text-primary h-4 w-4" />
+          <h2 className="font-bold text-sm">{translations("Live Preview")}</h2>
+        </div>
+        <span className="text-[11px] opacity-85">
+          {translations("Updates in real-time")}
+        </span>
+      </div>
+      <div
         className={styles["preview-container"]}
         ref={previewContainerRef}
         data-tagname={customAttrForDownloadedQrFileName}
@@ -88,7 +98,7 @@ function Preview({
           backgroundColor: `${qrBgColor}`,
         }}
       >
-        <Box
+        <div
           className={styles["qr-svg-bg-img-container"]}
           style={{
             width: "100%",
@@ -96,10 +106,12 @@ function Preview({
           }}
         >
           {isLogoEnabled && (
-            <Image
+            <img
               className={styles["qr-bg-img"]}
               src={logoSrc}
               alt="bg-image"
+              width={500}
+              height={500}
               style={{
                 width: logoSize,
                 height: logoSize,
@@ -119,18 +131,17 @@ function Preview({
               qrColor={qrColor}
             />
           }
-        </Box>
-      </Stack>
-
-      <RateupButtonBlue
-        className={styles["qr-download-btn"]}
-        title={translations("Download QR Code")}
+        </div>
+      </div>
+      <Button
         onClick={downloadQrCode}
-        rightIcon={<IconDownload />}
-        loading={isLogoDownloadProcessing}
-        disabled={!isSurveyPublished}
-      />
-    </Stack>
+        disabled={!isSurveyPublished || isLogoDownloadProcessing}
+        className="disabled:opacity-50 w-full"
+      >
+        <IconDownload />
+        {translations("Download QR Code")}
+      </Button>
+    </div>
   );
 }
 
