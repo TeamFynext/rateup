@@ -53,8 +53,8 @@ export default function LoyaltyAd() {
   return (
     <motion.section
       className={`${sora.className} flex items-center p-4 justify-center w-full py-10 sm:py-16 bg-white`}
-      initial="hidden"
-      whileInView="visible"
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.18 }}
       variants={containerVariants}
     >

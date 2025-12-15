@@ -63,10 +63,27 @@ const Team = () => {
         }
         return null;
       },
+
       code: (value) => {
         if (value.length < 2) {
           return translations("Team Code should be at least 2 characters long");
         }
+
+        if (/\s/.test(value)) {
+          const suggested = value.trim().replace(/\s+/g, "-");
+          return (
+            <p className="flex gap-1">
+              {translations("Spaces are not allowed, try")} "{suggested}"
+            </p>
+          );
+        }
+
+        if (!/^[A-Za-z0-9-]+$/.test(value)) {
+          return translations(
+            "Team Code can contain only alphabets, numbers, and hyphens",
+          );
+        }
+
         return null;
       },
     },

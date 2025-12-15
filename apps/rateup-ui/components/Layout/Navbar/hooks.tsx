@@ -400,11 +400,11 @@ export function useNavMain({
             url: "/dashboard/quickAccessLinks",
             icon: IconLinkPlus,
           },
-          {
-            title: t("Landing Pages"),
-            url: "/dashboard/landingPages",
-            icon: IconWallpaper,
-          },
+          // {
+          //   title: t("Landing Pages"),
+          //   url: "/dashboard/landingPages",
+          //   icon: IconWallpaper,
+          // },
         ],
       },
       ...(hasFeature(subscription, sfpn.AI)
