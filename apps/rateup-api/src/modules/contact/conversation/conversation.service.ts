@@ -681,9 +681,9 @@ assigned_conversations AS (
         cv."createdAt",
         cv."closedBy",
         cau."lastAssignedAt",
-        (   
+        (
             SELECT MIN((ah->>'date')::timestamptz)
-            FROM jsonb_array_elements(cau."actionHistory") ah
+            FROM unnest(cau."actionHistory") AS ah
             WHERE ah->>'action' = 'assigned'
         ) AS "firstAssignedAt",
         json_build_object(
