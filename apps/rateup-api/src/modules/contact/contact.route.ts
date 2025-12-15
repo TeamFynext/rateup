@@ -27,6 +27,8 @@ import { getVerifySubscriptionHandler } from "../../utils/auth";
 import { verifyLCustomerMaxCountRestrictionHandler } from "../loyalty/customer/customer.controller";
 import { SubscriptionFeaturePathName } from "../../types/enums";
 import { $LifecycleRef } from "../lifecycle/lifecycle.schema";
+import { conversationRoutes } from "./conversation/conversation.route";
+import { conversationSchemas } from "./conversation/conversation.schema";
 
 export async function contactRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -36,6 +38,9 @@ export async function contactRoutes(server: FastifyInstance) {
 
   contactLabelSchemas.forEach((schema) => server.addSchema(schema));
   server.register(contactLabelRoutes, { prefix: "/labels" });
+
+  conversationSchemas.forEach((schema) => server.addSchema(schema));
+  server.register(conversationRoutes, { prefix: "/conversations" });
 
   server.register(fastifyMultipart, {
     limits: {

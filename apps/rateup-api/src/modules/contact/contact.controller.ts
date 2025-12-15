@@ -97,7 +97,10 @@ export async function createContactHandler(
       }
       await handlePostRegisterAction(orgId, contact.id);
     } else {
-      const contact = await createContact({ ...request.body, orgId });
+      const contact = await createContact(
+        { ...request.body, orgId },
+        request.userId,
+      );
       reply.code(201).send(contact);
     }
   } catch (error) {
