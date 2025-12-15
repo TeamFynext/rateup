@@ -614,15 +614,19 @@ const ShareSurvey = ({
           </Stack>
         </Group>
       </PaperLayout>
-      <ShareQR
-        url={shareUrl}
-        sx={{ borderRadius: "1rem" }}
-        title={survey?.title}
-        isPublished={!disableShare}
-        id={surveyId}
-        queryKey={"surveyShareSettings"}
-        resourceName={"survey"}
-      />
+      <PaperLayout>
+        {shareUrl && (
+          <ShareQR
+            url={shareUrl}
+            sx={{ borderRadius: "1rem" }}
+            title={survey?.title}
+            isPublished={!disableShare}
+            id={surveyId}
+            queryKey={"surveyShareSettings"}
+            resourceName={"survey"}
+          />
+        )}
+      </PaperLayout>
       <FormModalLayout
         title={translations("Generate IFrame")}
         opened={openedIframe}

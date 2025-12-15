@@ -48,11 +48,11 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
           </div>
 
           <div className="flex flex-col">
-            <div className="border-t bg-gray-50 dark:bg-transparent">
+            <div className="border-t">
               <div className="flex flex-col items-center text-center py-2 px-4">
                 <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-100">
                   <MousePointerClick className="w-4 h-4" />
-                  <span>Clicks</span>
+                  <span>{translations("Clicks")}</span>
                 </div>
                 <span className="text-lg font-semibold">
                   {v?.visitorsCount || 0}
@@ -60,7 +60,7 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-xl dark:bg-transparent">
+            <div className="rounded-xl">
               <div className="flex items-center gap-2 border-t p-2">
                 <div className="flex-1 flex items-center gap-2 min-w-0 px-2.5">
                   <LinkIcon className="w-3 h-3 text-gray-400 flex-shrink-0" />
@@ -82,9 +82,9 @@ function LCard({ sortedValue, shareURL, baseURL, MoreOptions }) {
                   }}
                 >
                   {copiedId === v?.id ? (
-                    <Check className="w-3.5 h-3.5 text-gray-400" />
+                    <Check className="w-3.5 h-3.5 text-gray-500" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5 text-gray-400" />
+                    <Copy className="w-3.5 h-3.5 text-gray-500" />
                   )}
                 </Button>
               </div>
