@@ -25,6 +25,7 @@ import { DETAIL_BTN } from "../Contacts/utils/utils";
 import { useVisibleColumnStore } from "../HomePage/pages/Pricing/store/RouteAndCartStore";
 import { fuzzyFilter } from "../Survey/Response/Filter";
 import { useResponseFilterStore } from "../Survey/Response/store";
+import { Button } from "../ui/button";
 import FilterToggles from "./Filter/FilterToggle";
 import TableLayout from "./TableContent";
 import styles from "./TanstackTable.module.css";
@@ -168,43 +169,100 @@ function TanstackTable({
   }, [sorting]);
 
   return (
-    <Box className={`${styles["tanstack-table-root-div"]} ${className}`}>
-      <Flex
-        className={styles["filter-and-other-btns-container"]}
-        gap={"md"}
-        justify={"space-between"}
-        px={"xs"}
-        direction={largeScreen ? "row" : "column"}
+    // <Box className={`${styles["tanstack-table-root-div"]} ${className}`}>
+    //   <Flex
+    //     className={styles["filter-and-other-btns-container"]}
+    //     gap={"md"}
+    //     justify={"space-between"}
+    //     px={"xs"}
+    //     direction={largeScreen ? "row" : "column"}
+    //   >
+    //     <Group mr={"auto"}>
+    //       {toggle ? (
+    //         <Flex gap={"sm"} align={"center"}>
+    //           <RateupButtonBlue
+    //             className={"create-btn"}
+    //             title={btnTitle}
+    //             rightIcon={<IconPlus />}
+    //             onClick={toggle}
+    //           />
+    //           <RefreshButton queryKeys={["campaigns"]} />
+    //           <InfoButton docUrl={`${docsPath}/whatsappSurvey/campaign`} />
+    //         </Flex>
+    //       ) : (
+    //         <Box
+    //           className={`${styles["empty-div-for-table-without-create-btn"]} empty-div-for-table-without-create-btn`}
+    //           w={!toggleOffContent ? 50 : "auto"}
+    //           h={!toggleOffContent ? 50 : "auto"}
+    //         >
+    //           {toggleOffContent}
+    //         </Box>
+    //       )}
+    //     </Group>
+    //     {filterVisibility && enableServerFilter && (
+    //       <RateupButtonBlue
+    //         title="search"
+    //         onClick={handleServerFilter}
+    //         rightIcon={<IconSearch size={"1rem"} />}
+    //         loading={isPending}
+    //       />
+    //     )}
+    //     <FilterToggles
+    //       enableFilter={enableFilter}
+    //       filterVisibility={filterVisibility}
+    //       table={table}
+    //       tempVisibleColumnArray={tempVisibleColumnArray}
+    //       enableColumnSelection={enableColumnSelection}
+    //       setFilterVisibility={setFilterVisibility}
+    //       enableExport={false}
+    //       onExport={() => {}}
+    //     />
+    //   </Flex>
+    //   <Divider />
+    //   <TableLayout
+    //     enableFilter={enableFilter}
+    //     enablePagination={enablePagination}
+    //     filterVisibility={filterVisibility}
+    //     table={table}
+    //     tempVisibleColumnArray={tempVisibleColumnArray}
+    //     detailBtn={detailBtn}
+    //     isPending={isPending}
+    //   />
+    // </Box>
+    <div className={`h-full min-h-[300px] ${className} flex flex-col gap-4`}>
+      <div
+        className={`flex justify-between gap-2 ${largeScreen ? "flex-row" : "flex-col"}`}
       >
-        <Group mr={"auto"}>
+        <div className="mr-auto">
           {toggle ? (
-            <Flex gap={"sm"} align={"center"}>
-              <RateupButtonBlue
-                className={"create-btn"}
-                title={btnTitle}
-                rightIcon={<IconPlus />}
+            <div className="flex items-center gap-1">
+              <Button
                 onClick={toggle}
-              />
+                className="flex items-center justify-center gap-1"
+              >
+                <span>{btnTitle}</span>
+                <IconPlus />
+              </Button>
               <RefreshButton queryKeys={["campaigns"]} />
               <InfoButton docUrl={`${docsPath}/whatsappSurvey/campaign`} />
-            </Flex>
+            </div>
           ) : (
-            <Box
-              className={`${styles["empty-div-for-table-without-create-btn"]} empty-div-for-table-without-create-btn`}
-              w={!toggleOffContent ? 50 : "auto"}
-              h={!toggleOffContent ? 50 : "auto"}
+            <div
+              className={`flex items-center justify-center ${!toggleOffContent ? "w-50 h-50" : "w-auto h-auto"}`}
             >
               {toggleOffContent}
-            </Box>
+            </div>
           )}
-        </Group>
+        </div>
         {filterVisibility && enableServerFilter && (
-          <RateupButtonBlue
-            title="search"
+          <Button
+            disabled={isPending}
             onClick={handleServerFilter}
-            rightIcon={<IconSearch size={"1rem"} />}
-            loading={isPending}
-          />
+            className="flex items-center justify-center gap-1"
+          >
+            <span>search</span>
+            <IconSearch />
+          </Button>
         )}
         <FilterToggles
           enableFilter={enableFilter}
@@ -216,7 +274,7 @@ function TanstackTable({
           enableExport={false}
           onExport={() => {}}
         />
-      </Flex>
+      </div>
       <Divider />
       <TableLayout
         enableFilter={enableFilter}
@@ -227,7 +285,7 @@ function TanstackTable({
         detailBtn={detailBtn}
         isPending={isPending}
       />
-    </Box>
+    </div>
   );
 }
 

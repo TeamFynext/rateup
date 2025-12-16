@@ -3,22 +3,12 @@
 
 import React from "react";
 
-import {
-  ActionIcon,
-  Box,
-  Checkbox,
-  Flex,
-  Group,
-  Popover,
-  rem,
-  ScrollArea,
-  Tooltip,
-} from "@mantine/core";
 import { IconChevronDown, IconDownload, IconFilter } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
 import { useResponseFilterStore } from "@/components/Survey/Response/store";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 // Add shadcn UI imports
 import {
   DropdownMenu,
@@ -26,6 +16,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { showErrorToast } from "@/utils/notifications";
 
 import { extractText } from "../../../utils";
@@ -65,18 +67,14 @@ const FilterToggles = ({
     });
   };
   return (
-    <Group>
+    <div className="flex flex-col sm:flex-row items-center gap-1">
       {enableExport && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
-              <IconDownload
-                style={{ width: rem(16), height: rem(16), marginRight: rem(8) }}
-              />
+              <IconDownload />
               Export
-              <IconChevronDown
-                style={{ width: rem(14), height: rem(14), marginLeft: rem(4) }}
-              />
+              <IconChevronDown />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -90,69 +88,86 @@ const FilterToggles = ({
         </DropdownMenu>
       )}
       {enableFilter && (
-        <ActionIcon
+        <Button
           onClick={() => setFilterVisibility((el) => !el)}
-          variant={filterVisibility ? "filled" : "outline"}
+          variant={filterVisibility ? "default" : "outline"}
         >
-          <IconFilter
-            style={{ width: rem(16), height: rem(16) }}
-            stroke={1.5}
-          />
-        </ActionIcon>
+          <IconFilter stroke={1.5} />
+        </Button>
       )}
       {enableColumnSelection && (
-        <Popover width={200} position="bottom" withArrow shadow="md" offset={2}>
-          <Popover.Target>
-            <Box>
-              <RateupButtonPrimary title="Select Fields" variant="outline" />
-            </Box>
-          </Popover.Target>
-          <Popover.Dropdown>
-            <ScrollArea.Autosize mah={"200px"}>
-              <Flex align={"center"}>
-                <Checkbox
-                  {...{
-                    type: "checkbox",
-                    checked: table.getIsAllColumnsVisible(),
-                    onChange: table.getToggleAllColumnsVisibilityHandler(),
-                  }}
-                  label={"Toggle All"}
-                />
-              </Flex>
-              {table.getAllLeafColumns().map((column, index) => {
-                if (column.getIsVisible())
-                  tempVisibleColumnArray.push(column?.id?.split("_,_")?.[0]);
-                return (
-                  <Flex key={index} mt={4} align={"center"}>
-                    <Checkbox
-                      {...{
-                        checked: column.getIsVisible(),
-                        onChange: column.getToggleVisibilityHandler(),
-                      }}
-                      label={extractText(column?.id?.split("_,_")?.[0])}
-                    />
-                  </Flex>
-                );
-              })}
-            </ScrollArea.Autosize>
-          </Popover.Dropdown>
+        <Popover>
+          <PopoverTrigger asChild>
+            <div>
+              <Button variant="outline">Select Fields</Button>
+            </div>
+          </PopoverTrigger>
+
+          <PopoverContent align="start" side="bottom" className="w-[200px] p-2">
+            <ScrollArea className="max-h-[200px] overflow-auto">
+              <div className="flex flex-col gap-2">
+                {/* Toggle all */}
+                <label className="flex items-center gap-2">
+                  <Checkbox
+                    checked={table.getIsAllColumnsVisible()}
+                    onCheckedChange={() =>
+                      table.toggleAllColumnsVisible(
+                        !table.getIsAllColumnsVisible(),
+                      )
+                    }
+                  />
+                  <span className="text-sm font-medium">Toggle All</span>
+                </label>
+
+                {/* Columns */}
+                {table.getAllLeafColumns().map((column, index) => {
+                  if (column.getIsVisible()) {
+                    tempVisibleColumnArray.push(column.id?.split("_,_")?.[0]);
+                  }
+
+                  return (
+                    <label key={index} className="flex items-center gap-2">
+                      <Checkbox
+                        checked={column.getIsVisible()}
+                        onCheckedChange={() =>
+                          column.toggleVisibility(!column.getIsVisible())
+                        }
+                      />
+                      <span className="text-sm">
+                        {extractText(column.id?.split("_,_")?.[0])}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </PopoverContent>
         </Popover>
       )}
       {enableFilter && (
-        <Tooltip label={translations("Clear the filtered values")}>
-          <Box>
-            <RateupButtonPrimary
-              onClick={() => {
-                table.resetColumnFilters();
-                setServerFilters(null);
-              }}
-              title="Reset"
-              variant="outline"
-            />
-          </Box>
-        </Tooltip>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <Button
+                  onClick={() => {
+                    table.resetColumnFilters();
+                    setServerFilters(null);
+                  }}
+                  variant="outline"
+                >
+                  Reset
+                </Button>
+              </div>
+            </TooltipTrigger>
+
+            <TooltipContent>
+              {translations("Clear the filtered values")}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
-    </Group>
+    </div>
   );
 };
 

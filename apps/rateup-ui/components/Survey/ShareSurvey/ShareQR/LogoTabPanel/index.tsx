@@ -45,6 +45,7 @@ function LogoTabpanel({ state, dispatch }) {
 
   return (
     <div className="rounded-lg p-2 flex flex-col gap-4 w-full max-w-xl">
+      {/* this div is causing the problem */}
       <div className="border flex flex-col p-2.5 rounded-lg gap-2">
         <div className="flex items-center gap-1.5">
           <ImageIcon className="w-4 h-4 text-primary" />
@@ -53,7 +54,6 @@ function LogoTabpanel({ state, dispatch }) {
           </h3>
         </div>
         <div className="space-y-2">
-          {/* Logo Toggle */}
           <div className="flex items-center justify-between rounded-lg px-2.5 py-1.5 border">
             <Label className="text-xs font-medium">
               {translations("Enable Logo")}
@@ -73,7 +73,7 @@ function LogoTabpanel({ state, dispatch }) {
                 ref={fileInputRef}
                 type="file"
                 accept="image/png,image/jpeg,image/svg+xml"
-                className="sr-only disabled:opacity-50"
+                className="sr-only disabled:opacity-50 w-0"
                 onChange={(ev) => {
                   const file = ev.target.files?.[0] ?? null;
                   dispatch({ type: "file-input", payload: file });
@@ -101,7 +101,6 @@ function LogoTabpanel({ state, dispatch }) {
             <div
               className={`grid grid-cols-2 gap-2 ${isLogoEnabled ? "opacity-100" : "opacity-50"}`}
             >
-              {/* Size Slider */}
               <div className="rounded-lg p-1.5 border flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <Label className="text-[11px] font-semibold">
@@ -124,7 +123,6 @@ function LogoTabpanel({ state, dispatch }) {
                 />
               </div>
 
-              {/* Border Radius Slider */}
               <div className="rounded-lg p-1.5 border flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <Label className="text-[11px] font-semibold">
@@ -253,7 +251,6 @@ function LogoTabpanel({ state, dispatch }) {
         </div>
       </div>
 
-      {/* Foreground Color */}
       <div className="rounded-lg p-2.5 border flex flex-col gap-4">
         <div className="flex items-center gap-1.5">
           <Palette className="w-4 h-4 text-primary" />

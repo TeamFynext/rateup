@@ -117,7 +117,7 @@ export const CalenderIconDateRangePicker = ({
     <>
       <Tooltip label={label}>
         <ActionIcon onClick={open} variant={variant}>
-          <IconCalendar />
+          <IconCalendar className="text-primary" />
         </ActionIcon>
       </Tooltip>
       <DateRangePickerModal

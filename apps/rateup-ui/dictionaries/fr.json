@@ -2517,5 +2517,7 @@
   "Click 'Manage' to add your first business hours": "Cliquez sur « Gérer » pour ajouter vos premiers horaires d’ouverture",
   "Spaces are not allowed, try": "Les espaces ne sont pas autorisés, essayez",
   "Team Code can contain only alphabets, numbers, and hyphens": "Le code d’équipe ne peut contenir que des lettres, des chiffres et des tirets",
-  "Clicks": "Clics"
+  "Clicks": "Clics",
+  "Not published": "Non publié",
+  "Result": "Résultat"
 }

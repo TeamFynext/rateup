@@ -65,6 +65,7 @@ export const Filter = ({
           step={1}
           defaultValue={[min, max]}
           onChange={column.setFilterValue}
+          color="var(--primary)"
         />
       </Stack>
     );
