@@ -22,9 +22,12 @@ function getMessageSourcePlatformColor(platform: MessagePlatform) {
   }
 }
 
-const ConversationAccountDistribution = () => {
+const ConversationAccountDistribution = ({ dateRange }) => {
   const { data: channelDistribution = [], isLoading } =
-    useGetConversationAccountDistribution();
+    useGetConversationAccountDistribution({
+      dateRange: dateRange.range,
+      dateKey: dateRange.key,
+    });
   const totalConversations = useMemo(
     () =>
       channelDistribution.reduce((sum, ch) => sum + ch.conversationCount, 0),

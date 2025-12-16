@@ -125,9 +125,9 @@ const ConversationStatsOverview = ({ dateRange }) => {
         })}
       </div>
       <div className="grid grid-cols-2 xs:grid-cols-1 gap-4">
-        <ConversationTrendsGraph />
-        <ConversationResponseTimePatternGraph />
-        <ConversationAccountDistribution />
+        <ConversationTrendsGraph dateRange={dateRange} />
+        <ConversationResponseTimePatternGraph dateRange={dateRange} />
+        <ConversationAccountDistribution dateRange={dateRange} />
         <ConversationQuickStats />
       </div>
     </div>

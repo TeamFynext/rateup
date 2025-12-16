@@ -65,6 +65,7 @@ import { TicketType } from "@/utils/enums/ticket";
 import { hasFeature } from "@/utils/subscription/subscription";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox";
 
+import { getContactClosedIcon } from "../../chatselect/chatselectCard";
 import { getSoucePlatformIconAndColor } from "../../util";
 import AssignUser from "./AssignUser";
 import WaInboxCountdownTimer from "./countDown";
@@ -317,7 +318,13 @@ const ChatHeaderMenu = ({ contact }) => {
             contact?.waMessageAssignStatus === WaMessageAssignStatus.CLOSED
           }
         >
-          <CircleCheckBig className="w-4 h-4 mr-2" />
+          {(() => {
+            const closedStatusIcon = getContactClosedIcon(
+              WaMessageAssignStatus.CLOSED,
+            );
+            const Icon = closedStatusIcon.icon;
+            return <Icon className={closedStatusIcon.color} />;
+          })()}
           Mark as Closed
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -327,7 +334,13 @@ const ChatHeaderMenu = ({ contact }) => {
             contact?.waMessageAssignStatus === WaMessageAssignStatus.RESOLVED
           }
         >
-          <CircleCheckBig className="w-4 h-4 mr-2" />
+          {(() => {
+            const closedStatusIcon = getContactClosedIcon(
+              WaMessageAssignStatus.RESOLVED,
+            );
+            const Icon = closedStatusIcon.icon;
+            return <Icon className={closedStatusIcon.color} />;
+          })()}
           Mark as Resolved
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -337,7 +350,13 @@ const ChatHeaderMenu = ({ contact }) => {
             contact?.waMessageAssignStatus === WaMessageAssignStatus.SPAM
           }
         >
-          <CircleCheckBig className="w-4 h-4 mr-2" />
+          {(() => {
+            const closedStatusIcon = getContactClosedIcon(
+              WaMessageAssignStatus.SPAM,
+            );
+            const Icon = closedStatusIcon.icon;
+            return <Icon className={closedStatusIcon.color} />;
+          })()}
           Mark as Spam
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -347,7 +366,13 @@ const ChatHeaderMenu = ({ contact }) => {
             contact?.waMessageAssignStatus === WaMessageAssignStatus.UNRESOLVED
           }
         >
-          <CircleCheckBig className="w-4 h-4 mr-2" />
+          {(() => {
+            const closedStatusIcon = getContactClosedIcon(
+              WaMessageAssignStatus.UNRESOLVED,
+            );
+            const Icon = closedStatusIcon.icon;
+            return <Icon className={closedStatusIcon.color} />;
+          })()}
           <CustomTooltip
             trigger={<p>Mark as Unresolved</p>}
             content={
