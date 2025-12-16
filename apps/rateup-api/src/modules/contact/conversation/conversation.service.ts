@@ -286,7 +286,9 @@ export async function getConversationOverview(
   const resolvedConversation = await prisma.conversation.count({
     where: {
       ...resolvedConversationWhere,
-      status: WaMessageAssignStatus.RESOLVED,
+      status: {
+        in: [WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED],
+      },
     },
   });
 
@@ -317,7 +319,7 @@ export async function getResolvedConversationWeeklyStats(orgId: string) {
       "contactId" IN (
         SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
       )
-      AND "status" = ${WaMessageAssignStatus.RESOLVED}
+      AND "status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
     GROUP BY "weekStart"
     ORDER BY "weekStart" DESC
     LIMIT 12;
@@ -328,10 +330,16 @@ export async function getResolvedConversationWeeklyStats(orgId: string) {
 export async function getResolvedCountandTotalCountofDailyInLastNDays(
   orgId: string,
   days: number,
+  dateRange,
 ) {
   const sinceDate = new Date();
   sinceDate.setDate(sinceDate.getDate() - days);
-
+  let startDate = sinceDate;
+  let endDate = new Date();
+  if (dateRange.length) {
+    startDate = new Date(dateRange[0]);
+    endDate = new Date(dateRange[1]);
+  }
   const result = await prisma.$queryRaw<
     {
       date: string;
@@ -341,8 +349,8 @@ export async function getResolvedCountandTotalCountofDailyInLastNDays(
   >`
 WITH dates AS (
   SELECT generate_series(
-    ${sinceDate}::date,
-    NOW()::date,
+    ${startDate}::date,
+    ${endDate}::date,
     INTERVAL '1 day'
   )::date AS day
 ),
@@ -356,7 +364,7 @@ created_per_day AS (
     "contactId" IN (
       SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
     )
-    AND "createdAt" >= ${sinceDate}
+    AND "createdAt"::date >= ${startDate}
   GROUP BY DATE("createdAt")
 ),
 
@@ -369,9 +377,9 @@ resolved_per_day AS (
     "contactId" IN (
       SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
     )
-    AND "status" = ${WaMessageAssignStatus.RESOLVED}
+    AND "status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
     AND "closedAt" IS NOT NULL
-    AND "closedAt" >= ${sinceDate}
+    AND "closedAt"::date >= ${startDate}
   GROUP BY DATE("closedAt")
 ),
 
@@ -404,38 +412,54 @@ ORDER BY day;
   return result;
 }
 
-export async function getAvargeResponseTimeofTodyaInEveryHour(orgId: string) {
+export async function getAvargeResponseTimeofTodyaInEveryHour(
+  orgId: string,
+  dateKey,
+  dateRange,
+) {
+  const startDate = new Date(dateRange[0]);
+  const endDate = new Date(dateRange[1]);
+
+  const groupByHour = dateKey === "today" || dateKey === "yesterday";
   const result = await prisma.$queryRaw<
     {
-      hour: string;
+      period: string;
       averageResponseTime: number;
     }[]
   >`
-WITH hours AS (
-  SELECT generate_series(
-    date_trunc('hour', now() - interval '23 hour'),  -- start 24 hours ago
-    date_trunc('hour', now()),                        -- up to current hour
-    interval '1 hour'
-  ) AS hour
+WITH convo AS (
+  SELECT
+    c."createdAt",
+    c."firstRespondedAt"
+  FROM "Conversation" c
+  WHERE c."contactId" IN (
+      SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
+    )
+    AND c."firstRespondedAt" IS NOT NULL
+    AND c."createdAt" >= ${startDate}
+    AND c."createdAt" < ${endDate}
 )
 SELECT
-  to_char(h.hour, 'HH12 AM') AS hour,
+  ${
+    groupByHour
+      ? `to_char(date_trunc('hour', c."createdAt"), 'HH12 AM')`
+      : `to_char(date_trunc('day', c."createdAt"), 'YYYY-MM-DD')`
+  } AS period,
   AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) AS "averageResponseTime"
-FROM hours h
-LEFT JOIN "Conversation" c
-  ON date_trunc('hour', c."createdAt") = h.hour
-  AND c."contactId" IN (
-    SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
-  )
-  AND c."firstRespondedAt" IS NOT NULL
-GROUP BY h.hour
-HAVING COUNT(c."firstRespondedAt") > 0
-ORDER BY h.hour;
+FROM convo c
+GROUP BY period
+HAVING COUNT(*) > 0
+ORDER BY period;
 `;
   return result;
 }
 
-export async function getConversationOnAccountDistribution(orgId: string) {
+export async function getConversationOnAccountDistribution(
+  orgId: string,
+  dateRange,
+) {
+  const startDate = new Date(dateRange[0]);
+  const endDate = new Date(dateRange[1]);
   const result = await prisma.$queryRaw<
     {
       phoneId: string;
@@ -446,17 +470,19 @@ export async function getConversationOnAccountDistribution(orgId: string) {
     }[]
   >`
    SELECT
+    COUNT(*)::INTEGER AS "conversationCount",
     ws."phoneId",
     ws."ibaId",
     ws."phone",
-    wm."sourcePlatform",
-    COUNT(DISTINCT wm."conversationId")::INTEGER AS "conversationCount"
-    FROM "WaMessage" wm
-    JOIN "Contact" ct ON wm."contactId" = ct.id
+    wm."sourcePlatform"
+    FROM "Conversation" c
+    JOIN "Contact" ct ON c."contactId" = ct.id
+    LEFT JOIN "WaMessage" wm ON wm."conversationId" = c.id
     LEFT JOIN "WhatsappSettings" ws
     ON REGEXP_REPLACE(wm."sourceIdentifier", '^\\+', '') = 
        REGEXP_REPLACE(COALESCE(ws."phone", ws."ibaId"), '^\\+', '')
-    WHERE ct."orgId" = ${orgId}::uuid
+    WHERE ct."orgId" = ${orgId}::uuid AND wm."sourceIdentifier" IS NOT NULL AND c."createdAt" >= ${startDate}
+    AND c."createdAt" < ${endDate}
     GROUP BY REGEXP_REPLACE(wm."sourceIdentifier", '^\\+', ''), ws."phoneId", ws."ibaId", ws."phone", wm."sourcePlatform";
   `;
   return result;
@@ -477,8 +503,8 @@ export async function getOverAllQuickStatsOfConversations(orgId: string) {
   >`
  SELECT
     COUNT(*) FILTER (WHERE c."status" = ${WaMessageAssignStatus.ASSIGNED})::INTEGER AS "activeConversations",
-    COUNT(*) FILTER (WHERE c."status" = ${WaMessageAssignStatus.RESOLVED} AND c."closedAt"::date = CURRENT_DATE)::INTEGER AS "resolvedToday",
-    COUNT(*) FILTER (WHERE c."status" = ${WaMessageAssignStatus.RESOLVED} AND c."closedAt"::date = CURRENT_DATE - INTERVAL '1 day')::INTEGER AS "resolvedYesterday",
+    COUNT(*) FILTER (WHERE c."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt"::date = CURRENT_DATE)::INTEGER AS "resolvedToday",
+    COUNT(*) FILTER (WHERE c."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt"::date = CURRENT_DATE - INTERVAL '1 day')::INTEGER AS "resolvedYesterday",
     COUNT(*) FILTER (WHERE c."createdAt"::date = CURRENT_DATE)::INTEGER AS "conversationCreatedToday",
     COUNT(*)::INTEGER AS "totalConversation",
     COUNT(*) FILTER (WHERE c."status" = ${WaMessageAssignStatus.UNASSIGNED})::INTEGER AS "pendingConversations",
@@ -512,9 +538,16 @@ WHERE ct."orgId" = ${orgId}::uuid;
   return { ...rest, resolvedToday, reolvedRateDifference };
 }
 
-export async function getStaffConverSationMetrics(orgId: string) {
+export async function getStaffConverSationMetrics(orgId: string, dateRange) {
   const sevenDaysAgo = new Date();
+  const fourteenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  let rangeStart, rangeEnd;
+  if (dateRange.length) {
+    rangeStart = new Date(dateRange[0]);
+    rangeEnd = new Date(dateRange[1]);
+  }
   const result = await prisma.$queryRaw<
     {
       staff: {
@@ -532,19 +565,132 @@ export async function getStaffConverSationMetrics(orgId: string) {
     }[]
   >`
 WITH valid_conversations AS (
-  SELECT c.*
+  SELECT
+    c.id,
+    c."status",
+    c."createdAt",
+    c."firstRespondedAt",
+    c."closedBy",
+    c."closedAt"
   FROM "Conversation" c
   JOIN "Contact" ct ON ct.id = c."contactId"
   WHERE ct."orgId" = ${orgId}
 ),
 
 assignments AS (
-  SELECT ca."userId", ca."conversationId", ca."lastRemovedAt", ca."lastAssignedAt", vc."status"
+  SELECT
+    ca."userId",
+    ca."conversationId",
+    ca."lastRemovedAt",
+    ca."lastAssignedAt"
   FROM "ConversationAssignedUserTeamMap" ca
-  JOIN valid_conversations vc ON vc.id = ca."conversationId"
+  JOIN valid_conversations vc
+    ON vc.id = ca."conversationId"
+),
+
+-- total active chats
+
+assigned_stats AS (
+  SELECT
+    ca."userId",
+    COUNT(DISTINCT ca."conversationId")::INT AS total_assigned
+  FROM assignments ca
+  JOIN valid_conversations vc
+    ON vc.id = ca."conversationId"
+  WHERE vc."status" = ${WaMessageAssignStatus.ASSIGNED}
+    AND ca."lastAssignedAt" <= COALESCE(${rangeEnd}, NOW())
+    AND (
+      ca."lastRemovedAt" IS NULL
+      OR ca."lastRemovedAt" >= COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
+    )
+  GROUP BY ca."userId"
+),
+
+-- resolved chats
+
+closed_stats AS (
+  SELECT
+    vc."closedBy" AS "userId",
+    COUNT(*)::INT AS total_closed
+  FROM valid_conversations vc
+  WHERE vc."status" = ANY (${[
+    WaMessageAssignStatus.RESOLVED,
+    WaMessageAssignStatus.CLOSED,
+  ]})
+    AND vc."closedAt" BETWEEN COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
+                             AND COALESCE(${rangeEnd}, NOW())
+  GROUP BY vc."closedBy"
+),
+
+
+-- Response time stats
+
+response_stats AS (
+  SELECT
+    a."userId",
+
+    -- Avg response time 
+    AVG(
+      EXTRACT(EPOCH FROM (vc."firstRespondedAt" - vc."createdAt"))
+    ) FILTER (
+      WHERE vc."firstRespondedAt"
+            BETWEEN COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
+                AND COALESCE(${rangeEnd}, NOW())
+    ) AS avg_response_time_range,
+
+    -- Avg response time last 7 days
+    AVG(
+      EXTRACT(EPOCH FROM (vc."firstRespondedAt" - vc."createdAt"))
+    ) FILTER (
+      WHERE vc."firstRespondedAt" >= ${sevenDaysAgo}
+    ) AS avg_response_time_last_7d,
+
+    -- Avg response time previous 7 days
+    AVG(
+      EXTRACT(EPOCH FROM (vc."firstRespondedAt" - vc."createdAt"))
+    ) FILTER (
+      WHERE vc."firstRespondedAt" >= ${fourteenDaysAgo}
+        AND vc."firstRespondedAt" < ${sevenDaysAgo}
+    ) AS avg_response_time_prev_7d
+
+  FROM assignments a
+  JOIN valid_conversations vc
+    ON vc.id = a."conversationId"
+  WHERE vc."firstRespondedAt" IS NOT NULL
+  GROUP BY a."userId"
+),
+
+
+-- Message stats
+
+message_stats AS (
+  SELECT
+    wm."sendBy" AS "userId",
+
+    -- Messages handled 
+    COUNT(*) FILTER (
+      WHERE wm."waCreatedAt" BETWEEN COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
+                                AND COALESCE(${rangeEnd}, NOW())
+    )::INT AS total_messages_range,
+
+    -- Messages handled last 7 days
+    COUNT(*) FILTER (
+      WHERE wm."waCreatedAt" >= ${sevenDaysAgo}
+    )::INT AS messages_last_7d,
+
+    -- Messages handled previous 7 days
+    COUNT(*) FILTER (
+      WHERE wm."waCreatedAt" >= ${fourteenDaysAgo}
+        AND wm."waCreatedAt" < ${sevenDaysAgo}
+    )::INT AS messages_prev_7d
+
+  FROM "WaMessage" wm
+  JOIN valid_conversations vc
+    ON vc.id = wm."conversationId"
+  GROUP BY wm."sendBy"
 )
 
-SELECT 
+SELECT
   json_build_object(
     'userId', om."userId",
     'name', u."name",
@@ -552,75 +698,45 @@ SELECT
     'email', u."email"
   ) AS staff,
 
-  -- Total assigned conversations
-  (
-    SELECT COUNT(*)::INTEGER
-    FROM assignments a
-    WHERE a."userId" = om."userId"
-      AND a."lastRemovedAt" IS NULL
-      AND a."status" = ${WaMessageAssignStatus.ASSIGNED}
-  ) AS "totalAssignedConversations",
+  -- Totals (optional DATE RANGE)
+  COALESCE(a.total_assigned, 0)        AS "totalAssignedConversations",
+  COALESCE(c.total_closed, 0)          AS "totalClosedConversations",
+  COALESCE(m.total_messages_range, 0)  AS "totalMessagesHandled",
+  r.avg_response_time_range            AS "averageResponseTime",
 
-  -- Total closed conversations
-  (
-    SELECT COUNT(*)::INTEGER
-    FROM valid_conversations vc
-    WHERE vc."closedBy" = om."userId"
-      AND vc."status" = ANY(${[
-        WaMessageAssignStatus.RESOLVED,
-        WaMessageAssignStatus.CLOSED,
-      ]})
-  ) AS "totalClosedConversations",
+  -- Messages last 7 days
+  COALESCE(m.messages_last_7d, 0) AS "messagesHandledLastWeek",
 
-  -- Total messages handled
-  (
-    SELECT COUNT(*)::INTEGER
-    FROM "WaMessage" wm
-    JOIN valid_conversations vc ON vc.id = wm."conversationId"
-    WHERE wm."sendBy" = om."userId"
-  ) AS "totalMessagesHandled",
+  -- % Messages handled
+  CASE
+    WHEN m.messages_prev_7d IS NULL
+         OR m.messages_prev_7d = 0
+    THEN 0
+    ELSE
+      (
+        (m.messages_last_7d - m.messages_prev_7d)::DECIMAL
+        / m.messages_prev_7d
+      ) * 100
+  END AS "messagesHandledRateByLastWeek",
 
-  -- Average response time (using firstRespondedAt - createdAt)
-  (
-    SELECT AVG(EXTRACT(EPOCH FROM (vc."firstRespondedAt" - vc."createdAt")))
-    FROM assignments a
-    JOIN valid_conversations vc ON vc.id = a."conversationId"
-    WHERE a."userId" = om."userId"
-      AND vc."firstRespondedAt" IS NOT NULL
-  ) AS "averageResponseTime",
-
-  -- Messages handled in last 7 days
-  (
-    SELECT COUNT(*)::INTEGER
-    FROM "WaMessage" wm
-    JOIN valid_conversations vc ON vc.id = wm."conversationId"
-    WHERE wm."sendBy" = om."userId"
-      AND wm."waCreatedAt" >= ${sevenDaysAgo.toISOString()}
-  ) AS "messagesHandledLastWeek",
-
-  -- Messages handled rate last week = handled / total messages in org last week
-  (
-    SELECT 
-      CASE WHEN COUNT(*) = 0 THEN 0
-      ELSE (COUNT(*) FILTER (WHERE wm."sendBy" = om."userId")::DECIMAL / COUNT(*)::DECIMAL) * 100
-      END
-    FROM "WaMessage" wm
-    JOIN valid_conversations vc ON vc.id = wm."conversationId"
-    WHERE wm."waCreatedAt" >= ${sevenDaysAgo.toISOString()}
-  ) AS "messagesHandledRateByLastWeek",
-
-  -- Response time for messages/conversations where user responded in last 7 days
-  (
-    SELECT AVG(EXTRACT(EPOCH FROM (vc."firstRespondedAt" - vc."createdAt")))
-    FROM assignments a
-    JOIN valid_conversations vc ON vc.id = a."conversationId"
-    WHERE a."userId" = om."userId"
-      AND vc."firstRespondedAt" IS NOT NULL
-      AND vc."firstRespondedAt" >= ${sevenDaysAgo.toISOString()}
-  ) AS "responseTimeRateByLastWeek"
+  -- % Response time
+  CASE
+    WHEN r.avg_response_time_prev_7d IS NULL
+         OR r.avg_response_time_prev_7d = 0
+    THEN 0
+    ELSE
+      (
+        (r.avg_response_time_last_7d - r.avg_response_time_prev_7d)
+        / r.avg_response_time_prev_7d
+      ) * 100
+  END AS "responseTimeRateByLastWeek"
 
 FROM "OrgMember" om
 LEFT JOIN "User" u ON u.id = om."userId"
+LEFT JOIN assigned_stats a ON a."userId" = om."userId"
+LEFT JOIN closed_stats c ON c."userId" = om."userId"
+LEFT JOIN message_stats m ON m."userId" = om."userId"
+LEFT JOIN response_stats r ON r."userId" = om."userId"
 WHERE om."orgId" = ${orgId};
   `;
   return result;
@@ -693,7 +809,7 @@ assigned_conversations AS (
     FROM "Conversation" cv
     JOIN "ConversationAssignedUserTeamMap" cau
         ON cau."conversationId" = cv.id
-        AND cau."userId" = ${userId}  -- include all assignments, even removed ones
+        AND cau."userId" = ${userId} 
     LEFT JOIN "Contact" c 
         ON c.id = cv."contactId" AND c."orgId" = ${orgId}
 ),
@@ -729,7 +845,7 @@ metrics AS (
         (
             SELECT 
                 (COUNT(*) FILTER (
-                    WHERE ac.status = ${WaMessageAssignStatus.RESOLVED}
+                    WHERE ac.status = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
                     AND ac."closedBy" = ${userId}
                 )::DECIMAL
                 /
