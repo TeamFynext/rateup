@@ -4,6 +4,7 @@ import {
   QuestionType,
   QuestionType2,
   ShopifyEvents,
+  WaMessageAssignStatus,
   WaFlowFormElementType as wft,
 } from "../types/enums";
 
@@ -396,3 +397,10 @@ export const CURRENCY_CODES = [
 ];
 
 export const rateupUrl = "https://rateup.app";
+
+export const WaMessageClosedStatus = [
+  WaMessageAssignStatus.CLOSED,
+  WaMessageAssignStatus.SPAM,
+  WaMessageAssignStatus.RESOLVED,
+  WaMessageAssignStatus.UNRESOLVED,
+];

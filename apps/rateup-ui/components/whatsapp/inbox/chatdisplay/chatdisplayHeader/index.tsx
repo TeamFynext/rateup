@@ -280,17 +280,17 @@ const ChatHeaderMenu = ({ contact }) => {
       },
     );
   }
-  function handleCloseChat() {
+  function handleCloseChat(status) {
     editContactMutation.mutate(
       {
         contactId: contact.id,
-        data: { waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
+        data: { waMessageAssignStatus: status },
       },
       {
         onSuccess: () => {
           updateContactById(contact.id, (existing) => ({
             ...existing,
-            waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+            waMessageAssignStatus: status,
             closedAt: new Date().toISOString(),
             closedUser: {
               name: user?.userName,
@@ -311,7 +311,7 @@ const ChatHeaderMenu = ({ contact }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={handleCloseChat}
+          onClick={() => handleCloseChat(WaMessageAssignStatus.CLOSED)}
           disabled={
             editContactMutation.isPending ||
             contact?.waMessageAssignStatus === WaMessageAssignStatus.CLOSED
@@ -320,7 +320,43 @@ const ChatHeaderMenu = ({ contact }) => {
           <CircleCheckBig className="w-4 h-4 mr-2" />
           Mark as Closed
         </DropdownMenuItem>
-
+        <DropdownMenuItem
+          onClick={() => handleCloseChat(WaMessageAssignStatus.RESOLVED)}
+          disabled={
+            editContactMutation.isPending ||
+            contact?.waMessageAssignStatus === WaMessageAssignStatus.RESOLVED
+          }
+        >
+          <CircleCheckBig className="w-4 h-4 mr-2" />
+          Mark as Resolved
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleCloseChat(WaMessageAssignStatus.SPAM)}
+          disabled={
+            editContactMutation.isPending ||
+            contact?.waMessageAssignStatus === WaMessageAssignStatus.SPAM
+          }
+        >
+          <CircleCheckBig className="w-4 h-4 mr-2" />
+          Mark as Spam
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleCloseChat(WaMessageAssignStatus.UNRESOLVED)}
+          disabled={
+            editContactMutation.isPending ||
+            contact?.waMessageAssignStatus === WaMessageAssignStatus.UNRESOLVED
+          }
+        >
+          <CircleCheckBig className="w-4 h-4 mr-2" />
+          <CustomTooltip
+            trigger={<p>Mark as Unresolved</p>}
+            content={
+              <p>
+                All the assignees will be removed as closed,resolved and spam
+              </p>
+            }
+          />
+        </DropdownMenuItem>
         {hasTicketFeature && (
           <DropdownMenuItem onClick={openCreateTicket}>
             <Ticket className="w-4 h-4 mr-2" />

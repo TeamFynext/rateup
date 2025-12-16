@@ -5,7 +5,14 @@ import { useSearchParams } from "next/navigation";
 
 import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { BadgeCheck, CircleCheckBig, UserX } from "lucide-react";
+import {
+  BadgeCheck,
+  CheckCircle2,
+  CircleCheckBig,
+  CircleHelp,
+  CircleSlash,
+  UserX,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
@@ -18,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { getStringColor } from "@/components/ui/utils";
+import { WaMessageClosedStatus } from "@/utils/constants";
 import {
   formatDateWithRelativeTime,
   formatToRelativeTime,
@@ -91,6 +99,8 @@ export default function WaInboxChatSelectCard({
     }
     return "";
   }
+  const closed = getContactClosedIcon(contact?.waMessageAssignStatus);
+  const Icon = closed?.icon;
 
   return (
     <div
@@ -193,19 +203,19 @@ export default function WaInboxChatSelectCard({
               )}
             </div>
 
-            {contact?.waMessageAssignStatus === WaMessageAssignStatus.CLOSED ? (
+            {WaMessageClosedStatus.includes(contact?.waMessageAssignStatus) ? (
               <div className="flex ">
                 <CustomTooltip
                   trigger={
-                    <CircleCheckBig
-                      className={`text-[10px] h-4 text-blue-500 dark:text-blue-600 rounded-2xl`}
-                    />
+                    <Icon className={`text-[10px] h-4 ${closed.color}`} />
                   }
                   content={
                     <span>
-                      {contact.closedAt
-                        ? `Closed by ${contact.closedUser?.name} at ${formatDateWithRelativeTime(contact.closedAt)}`
-                        : translations("Closed")}
+                      {contact.closedAt ? (
+                        <span>{`Marked as ${contact?.waMessageAssignStatus} by ${contact.closedUser?.name} at ${formatDateWithRelativeTime(contact.closedAt)}`}</span>
+                      ) : (
+                        translations("Closed")
+                      )}
                     </span>
                   }
                 />
@@ -269,3 +279,64 @@ export default function WaInboxChatSelectCard({
     </div>
   );
 }
+
+function getContactClosedIcon(status) {
+  switch (status) {
+    case WaMessageAssignStatus.CLOSED:
+      return {
+        icon: CircleCheckBig,
+        color: "text-blue-500 dark:text-blue-600",
+      };
+    case WaMessageAssignStatus.RESOLVED:
+      return {
+        icon: CheckCircle2,
+        color: "text-green-500 dark:text-green-600",
+      };
+      break;
+    case WaMessageAssignStatus.UNRESOLVED:
+      return {
+        icon: CircleHelp,
+        color: "text-orange-500 dark:text-orange-600",
+      };
+    case WaMessageAssignStatus.SPAM:
+      return {
+        icon: CircleSlash,
+        color: "text-red-500 dark:text-red-600",
+      };
+  }
+}
+
+const ContactClosedIcon = ({ status, className = "" }) => {
+  let closedIcon = null;
+  switch (status) {
+    case WaMessageAssignStatus.CLOSED:
+      closedIcon = (
+        <CircleCheckBig
+          className={`${className} text-blue-500 dark:text-blue-600`}
+        />
+      );
+      break;
+    case WaMessageAssignStatus.RESOLVED:
+      closedIcon = (
+        <CheckCircle2
+          className={`${className} text-green-500 dark:text-green-600`}
+        />
+      );
+      break;
+    case WaMessageAssignStatus.UNRESOLVED:
+      closedIcon = (
+        <CircleHelp
+          className={`${className} text-orange-500 dark:text-orange-600`}
+        />
+      );
+      break;
+    case WaMessageAssignStatus.SPAM:
+      closedIcon = (
+        <CircleSlash
+          className={`${className} text-red-500 dark:text-red-600`}
+        />
+      );
+      break;
+  }
+  return closedIcon;
+};

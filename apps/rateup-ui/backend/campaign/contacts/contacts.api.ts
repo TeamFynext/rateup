@@ -26,7 +26,7 @@ export interface IUpdateContactLabel {
   description?: string;
 }
 
-const CONTACT_BASE_URL = "/contact";
+export const CONTACT_BASE_URL = "/contact";
 
 export const getContactsList = async (
   pagination: {
