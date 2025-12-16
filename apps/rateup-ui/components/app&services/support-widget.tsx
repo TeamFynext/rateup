@@ -274,7 +274,7 @@ export default function SupportWidget({
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-50">
+    <div className="fixed right-1 bottom-8 sm:right-8 z-50">
       {isOpen ? (
         <div
           className="transition-all duration-500 ease-in-out transform scale-100 opacity-100 animate-fade-in"

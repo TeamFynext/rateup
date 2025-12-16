@@ -42,6 +42,7 @@ export interface IUserData {
   teams: Array<string>;
   encryptionKeys: EncryptionKeys | undefined;
   prefLanguage: string;
+  showLifecycle: boolean;
 }
 
 export interface IUserInfoApiResponse {

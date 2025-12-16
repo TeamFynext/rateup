@@ -56,7 +56,40 @@ export function EditTeam({
       code: "",
       color: "",
     },
+
+    validate: {
+      name: (value) => {
+        if (value.length < 3) {
+          return translations("Team Name should be at least 3 characters long");
+        }
+        return null;
+      },
+
+      code: (value) => {
+        if (value.length < 2) {
+          return translations("Team Code should be at least 2 characters long");
+        }
+
+        if (/\s/.test(value)) {
+          const suggested = value.trim().replace(/\s+/g, "-");
+          return (
+            <p className="flex gap-1">
+              {translations("Spaces are not allowed, try")} "{suggested}"
+            </p>
+          );
+        }
+
+        if (!/^[A-Za-z0-9-]+$/.test(value)) {
+          return translations(
+            "Team Code can contain only alphabets, numbers, and hyphens",
+          );
+        }
+
+        return null;
+      },
+    },
   });
+
   const id = selectedTeam.id;
   const [isLoading, setIsLoading] = useState(false);
   const editTeam = useEditTeamMutation(id, setIsLoading);
@@ -101,6 +134,9 @@ export function EditTeam({
             {...editTeamForm.getInputProps("name")}
             className="border-2 border-gray-200 focus:border-rateup-blue"
           />
+          {editTeamForm.errors.name && (
+            <p className="text-xs text-red-500">{editTeamForm.errors.name}</p>
+          )}
         </div>
 
         {/* Team Code */}
@@ -112,6 +148,9 @@ export function EditTeam({
             {...editTeamForm.getInputProps("code")}
             className="border-2 border-gray-200 focus:border-rateup-blue"
           />
+          {editTeamForm.errors.code && (
+            <p className="text-xs text-red-500">{editTeamForm.errors.code}</p>
+          )}
         </div>
 
         {/* Team Color */}
