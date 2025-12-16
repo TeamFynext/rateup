@@ -67,8 +67,11 @@ export const StaffStatusBadge = ({ status }) => {
   );
 };
 
-const ConversationStatsAgentPerformance = () => {
-  const { data = [], isLoading } = useGetStaffPerformanceonConversation();
+const ConversationStatsAgentPerformance = ({ dateRange }) => {
+  const { data = [], isLoading } = useGetStaffPerformanceonConversation({
+    dateKey: dateRange.key,
+    dateRange: dateRange.range,
+  });
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [showStaffDialog, setShowStaffDialog] = useState(false);
   if (isLoading) {
@@ -116,6 +119,11 @@ const ConversationStatsAgentPerformance = () => {
                 </tr>
               </thead>
               <tbody>
+                {data?.length === 0 && (
+                  <tr>
+                    <td colSpan={5}>No staff found</td>
+                  </tr>
+                )}
                 {data.map((staff) => {
                   const averageResponseTime =
                     formatTimeToNearestUnitFromSeconds(

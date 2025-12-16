@@ -280,7 +280,7 @@ export default function WaInboxChatSelectCard({
   );
 }
 
-function getContactClosedIcon(status) {
+export function getContactClosedIcon(status) {
   switch (status) {
     case WaMessageAssignStatus.CLOSED:
       return {

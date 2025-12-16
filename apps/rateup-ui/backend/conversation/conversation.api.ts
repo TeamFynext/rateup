@@ -21,7 +21,7 @@ export interface ConversationOverviewStats {
   resolutionRate: number;
 }
 export interface ConversationResponseStats {
-  hour: string;
+  period: string;
   averageResponseTime: number;
 }
 

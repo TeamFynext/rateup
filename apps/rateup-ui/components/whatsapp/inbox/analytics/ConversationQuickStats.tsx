@@ -17,12 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// activeConversations: number;
-// resolvedToday: number;
-// pendingConversations: number;
-// staffOnline: number;
-// totalStaff: number;
-
 const ConversationQuickStats = () => {
   const { data, isLoading } = useGetConversationQuickStats();
   const quickStats = useMemo(

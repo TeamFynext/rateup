@@ -54,7 +54,7 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
   );
   return (
     <Dialog open={opened} onOpenChange={setOpened}>
-      <DialogContent className="max-w-[1587px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="!max-w-[750px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-4">
             <CreativeAvatar
@@ -91,7 +91,7 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
             <Skeleton className="h-[120px] w-full" />
           </div>
         ) : (
-          <div className="space-y-6 mt-6">
+          <div className="space-y-6 mt-6 w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
                 <CardContent className="p-4">
@@ -100,7 +100,7 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                       <MessageCircle className="w-5 h-5 text-blue-600" />
                     </div>
                     {selectedStaff.messagesHandledRateByLastWeek &&
-                      (selectedStaff.messagesHandledRateByLastWeek > 0 ? (
+                      (selectedStaff.messagesHandledRateByLastWeek >= 0 ? (
                         <TrendingUp className="w-4 h-4 text-green-600" />
                       ) : (
                         <TrendingDown className="w-4 h-4 text-green-600" />
@@ -113,7 +113,9 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                     {selectedStaff.totalMessagesHandled}
                   </p>
                   {selectedStaff.messagesHandledRateByLastWeek && (
-                    <p className="text-[11px] text-green-600 mt-1">
+                    <p
+                      className={`text-[11px] ${selectedStaff.messagesHandledRateByLastWeek >= 0 ? "text-green-600" : "text-red-600"} mt-1`}
+                    >
                       {selectedStaff.messagesHandledRateByLastWeek}% vs last
                       week
                     </p>
@@ -128,7 +130,7 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                       <Clock className="w-5 h-5 text-purple-600" />
                     </div>
                     {selectedStaff.responseTimeRateByLastWeek &&
-                      (selectedStaff.responseTimeRateByLastWeek > 0 ? (
+                      (selectedStaff.responseTimeRateByLastWeek <= 0 ? (
                         <TrendingUp className="w-4 h-4 text-green-600" />
                       ) : (
                         <TrendingDown className="w-4 h-4 text-green-600" />
@@ -143,20 +145,13 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                       : "NA"}
                   </p>
                   {selectedStaff.responseTimeRateByLastWeek && (
-                    <p className="text-[11px] text-green-600 mt-1">
-                      {
-                        formatTimeToNearestUnitFromSeconds(
-                          selectedStaff.responseTimeRateByLastWeek,
-                        )?.value
-                      }{" "}
-                      {
-                        formatTimeToNearestUnitFromSeconds(
-                          selectedStaff.responseTimeRateByLastWeek,
-                        )?.suffix
-                      }{" "}
-                      {selectedStaff.responseTimeRateByLastWeek > 0
-                        ? "faster"
-                        : "slower"}{" "}
+                    <p
+                      className={`text-[11px] ${selectedStaff.responseTimeRateByLastWeek <= 0 ? "text-green-600" : "text-red-600"} mt-1`}
+                    >
+                      {selectedStaff.responseTimeRateByLastWeek}%
+                      {selectedStaff.responseTimeRateByLastWeek < 0
+                        ? " faster"
+                        : " slower"}{" "}
                       than last week
                     </p>
                   )}
@@ -164,7 +159,7 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
               </Card>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
               <div className="p-4 rounded-lg border bg-gradient-to-br from-green-50/50 to-white">
                 <p className="text-[11px] text-muted-foreground mb-1">
                   Resolution Rate
@@ -257,6 +252,13 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                       </tr>
                     </thead>
                     <tbody>
+                      {!analytics?.recentConversations?.length && (
+                        <tr>
+                          <td colSpan={4} className="text-center py-3">
+                            No conversation found
+                          </td>
+                        </tr>
+                      )}
                       {analytics?.recentConversations?.map((conv) => (
                         <tr
                           key={conv.id}
