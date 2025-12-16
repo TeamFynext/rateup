@@ -95,11 +95,15 @@ const Analytics = () => {
             <Award className="mr-1" /> Agent Performance
           </TabsTrigger>
         </TabsList>
+        <p className="text-xs text-blue-900">
+          Note*: Resolved count is calculated based on both resolved and closed
+          conversation
+        </p>
         <TabsContent value="overview">
           <ConversationStatsOverview dateRange={dateRange} />
         </TabsContent>
         <TabsContent value="agent-performance">
-          <ConversationStatsAgentPerformance />
+          <ConversationStatsAgentPerformance dateRange={dateRange} />
         </TabsContent>
       </Tabs>
     </div>

@@ -18,10 +18,13 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDate } from "@/utils/dateTime";
 
-const ConversationTrendsGraph = () => {
+const ConversationTrendsGraph = ({ dateRange }) => {
   const { data, isLoading } = useGetResolvedConversationStats({
     days: 7,
+    dateKey: dateRange.key,
+    dateRange: dateRange.range,
   });
   const chartConfig = {
     resolvedCount: {
@@ -33,9 +36,13 @@ const ConversationTrendsGraph = () => {
       color: "var(--chart-2)",
     },
   } satisfies ChartConfig;
-
   const chartData = data
-    ? data.map((d) => ({ ...d, date: dayjs(d.date).format("ddd") }))
+    ? data.map((d) => ({
+        ...d,
+        date: ["today", "yesterday", "last7days"].includes(dateRange.key)
+          ? dayjs(d.date).format("ddd")
+          : formatDate(d.date),
+      }))
     : [];
   if (isLoading) {
     return <Skeleton className="w-full h-90" />;
@@ -49,15 +56,9 @@ const ConversationTrendsGraph = () => {
             <TrendingUp className="w-5 h-5 text-blue-500 mr-1" />
             Conversation Trends
           </CardTitle>
-          <Badge
-            variant="outline"
-            className="bg-blue-50 text-blue-700 border-blue-200"
-          >
-            Last 7 days
-          </Badge>
         </div>
         <CardDescription className="text-sm">
-          Weekly conversation activity
+          Resolved conversarion stats
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -27,9 +27,12 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const ConversationResponseTimePatternGraph = () => {
+const ConversationResponseTimePatternGraph = ({ dateRange }) => {
   const { data = [], isLoading } =
-    useGetAverageConversationResponseTimeGraphData();
+    useGetAverageConversationResponseTimeGraphData({
+      dateKey: dateRange.key,
+      dateRange: dateRange.range,
+    });
   const chartConfig = {
     averageResponseTime: {
       label: "Average Response Time",
@@ -87,7 +90,7 @@ const ConversationResponseTimePatternGraph = () => {
               }}
             >
               <CartesianGrid vertical={false} />
-              <XAxis dataKey="hour" tickLine={false} axisLine={false} />
+              <XAxis dataKey="period" tickLine={false} axisLine={false} />
               <YAxis />
               <ChartTooltip
                 cursor={false}
