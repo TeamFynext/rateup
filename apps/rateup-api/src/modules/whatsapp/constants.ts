@@ -1,3 +1,5 @@
+import { WaMessageAssignStatus } from "../../types/enums";
+
 const whatsappApiBaseUrl = "https://graph.facebook.com/v21.0";
 
 export { whatsappApiBaseUrl };
@@ -8,4 +10,12 @@ export const WaMessageAssignStatusTab = {
   Assigned: "ASSIGNED",
   Closed: "CLOSED",
   mine: "ASSIGNED",
+  Addressed: "ADDRESSED", // implies group of status => WaMessageClosedStatus
 };
+
+export const WaMessageClosedStatus = [
+  WaMessageAssignStatus.CLOSED,
+  WaMessageAssignStatus.SPAM,
+  WaMessageAssignStatus.RESOLVED,
+  WaMessageAssignStatus.UNRESOLVED,
+];

@@ -397,6 +397,7 @@ export async function getSurveysByUserId(
       createdAt: true,
       questions: includeQuestions,
       isPublished: true,
+      webSurveyPagesTheme: true,
       teams: {
         select: {
           id: true,
