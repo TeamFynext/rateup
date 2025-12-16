@@ -174,6 +174,7 @@ model Org {
   ContactLabel             ContactLabel[]
   businessHours            BusinessHour[]
   rules                    Rule[]
+  ruleMessageBodyLocks     RuleMessageBodyLock[]
 }
 
 model UsageStats {
@@ -300,6 +301,7 @@ model Rule {
   updatedAt          DateTime          @updatedAt
   whatsappSettings   WhatsappSettings? @relation(fields: [whatsappSettingsId], references: [id])
   whatsappSettingsId String?           @db.Uuid
+  @@unique([name, orgId], name: "rule_name_org_id_unique")
 }
 
 enum RuleOperator {
@@ -324,6 +326,7 @@ model RuleCondition {
   field    ConditionField
   operator ConditionOperator
   value    String? // 'order', '@gmail.com', 'yes', etc.
+  messageBodyLock        RuleMessageBodyLock?
 }
 
 enum ConditionField {
@@ -334,6 +337,7 @@ enum ConditionField {
   CONTACT_GROUP
   CONTACT_LABEL
   CONTACT_LIFECYCLE
+  SEND_ONCE_PER_24H
 }
 
 enum ConditionOperator {
@@ -368,6 +372,7 @@ enum ActionType {
   ASSIGN_LIFECYCLE
   SEND_MESSAGE
   SEND_TEMPLATE
+  SEND_FLOW
   TRIGGER_CHATBOT
 }
 
@@ -1544,6 +1549,20 @@ model WaAutomatedReplyCommands {
   @@unique([command, orgId, businessHourId], name: "org_command_businessHour_unique")
 }
 
+model RuleMessageBodyLock {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime       @default(now())
+  messageBody     String
+  businessHourId  String?        @db.Uuid
+  businessHour    BusinessHour?  @relation(fields: [businessHourId], references: [id], onDelete: Cascade)
+  orgId           String         @db.Uuid
+  org             Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  ruleConditionId String         @unique @db.Uuid
+  ruleCondition   RuleCondition  @relation(fields: [ruleConditionId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, messageBody, businessHourId], name: "rule_message_body_org_businessHour_unique")
+}
+
 enum WaAutomationProgressStatus {
   inProgress
   paused
@@ -1804,6 +1823,7 @@ model LoyaltyWaCommand {
 model LoyaltyReferralCode {
   referralCode String          @unique
   customerId   String          @db.Uuid
+
   customer     LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   actionId     String          @db.Uuid
   action       LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
@@ -1985,4 +2005,5 @@ model BusinessHour {
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
   waAutomatedReplyCommands WaAutomatedReplyCommands[]
+  ruleMessageBodyLocks     RuleMessageBodyLock[]
 }

@@ -75,7 +75,7 @@ import {
   sendFlow,
 } from "../flows/flow.service";
 import {
-  checkIfMessageMatchesAnyAutomation,
+  checkAndExecuteRuleByTriggerEvent,
   selectAutomationByBusinessHours,
 } from "../automatedReply/wa_automatedReply.utils";
 import { handleWaMessages } from "../inbox/message/wamessage.controller";
@@ -527,11 +527,7 @@ async function whatsappMessageHandler(
     messageLowerCase === WA_SUBSCRIBE_STATUS.SUBSCRIBE
   ) {
     await handleSubscriptionStatus(orgId, from, messageLowerCase);
-  }
-  //  else if (chatbot?.enableWaChat && message.startsWith(chatbot?.waCommand)) {
-  //   await handleAiWaChat(chatbot, message, orgId, from);
-  // }
-  else {
+  } else {
     let session = await getSession(orgId, from);
     // deleting session after 24hrs
     if (!validateSession(session)) {
@@ -540,12 +536,8 @@ async function whatsappMessageHandler(
         session = undefined;
       }
     }
-    // handle automated reply
-    await handleAutomatedReply(orgId, waMessage, parsedMessage, from);
 
-    // if (session) {
-    //   await handleWaSurveySession(orgId, waMessage, session);
-    // }
+    await handleAutomatedReply(orgId, waMessage, parsedMessage, from, message);
   }
 }
 
@@ -724,6 +716,7 @@ async function handleInputReply({ phone, orgId, parsedMessage }) {
  * @param waMessage WhatsApp message body
  * @param parsedMessage Parsed message data
  * @param phone User's phone number
+ * @param message Original message text
  * @param automatedReplyId Optional ID of the automated reply to use
  */
 export async function handleAutomatedReply(
@@ -731,7 +724,7 @@ export async function handleAutomatedReply(
   waMessage: WaMessageBody,
   parsedMessage: WaParsedMessage,
   phone: string,
-  // chatbot: Chatbot,
+  message: string,
   automatedReplyId?: string,
 ) {
   if (!automatedReplyId) {
@@ -739,53 +732,51 @@ export async function handleAutomatedReply(
     if (!(await verifyAutomationTriggerLimit(orgId))) return;
   }
 
-  let phone_number_id = (
+  const phoneNumberId = (
     waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
   )?.metadata?.phone_number_id;
 
-  const inputHandled = await handleInputReply({ phone, orgId, parsedMessage });
-  if (inputHandled) return;
-
   try {
-    // Case 1: New message from user
-    let automation;
-    if (automatedReplyId)
-      automation = await getAutomatedReplyById(automatedReplyId);
-    // Check if message matches any automation rules
-    else {
-      automation = (await checkIfMessageMatchesAnyAutomation(
-        orgId,
-        waMessage,
-        phone,
-      )) as {
-        id: string;
-        matchData: { json: { nodes: any[]; edges: any[] } };
-      } | null;
-    }
-
-    if (automation) {
-      if (phone_number_id) {
-        automation.whatsappSettingsPhoneId = phone_number_id;
+    if (automatedReplyId) {
+      const automation = await getAutomatedReplyById(automatedReplyId);
+      if (automation) {
+        if (phoneNumberId) {
+          automation.whatsappSettingsPhoneId = phoneNumberId;
+        }
+        await startAutomationFlow(phone, automation, parsedMessage, orgId);
+        await updateMonthlyStat(
+          SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
+          orgId,
+        );
       }
-      await startAutomationFlow(phone, automation, parsedMessage, orgId);
-    }
-    // else if (chatbot?.enableWaChat && chatbot?.enableAllWaChat) {
-    //   // Handle AI chat if enabled
-    //   await handleAiWaChat(chatbot, parsedMessage.message, orgId, phone);
-    // }
-    // Case 3: No matching automation rules found
-    else {
-      await handleInitialInteraction(
-        orgId,
+    } else {
+      const inputHandled = await handleInputReply({
         phone,
-        parsedMessage.message,
-        phone_number_id,
+        orgId,
+        parsedMessage,
+      });
+      if (inputHandled) return;
+      // Check rule-based automation first
+      const ruleResult = await checkAndExecuteRuleByTriggerEvent(
+        "MESSAGE_RECEIVED",
+        {
+          orgId,
+          phoneNumberId,
+          message,
+          phone,
+          waMessage,
+        },
+      );
+
+      if (ruleResult) {
+        log.trace("Rule matched and actions executed: %o", ruleResult);
+        return;
+      }
+      await updateMonthlyStat(
+        SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
+        orgId,
       );
     }
-    await updateMonthlyStat(
-      SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
-      orgId,
-    );
   } catch (error) {
     log.error("Error handling automated reply: %o", error);
   }

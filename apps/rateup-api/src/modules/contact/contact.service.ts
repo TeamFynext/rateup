@@ -478,6 +478,7 @@ export async function getContactByPhoneNumberAndOrgId(
     include: {
       customFields: true,
       contactGroups: true,
+      ContactLabelMap: true,
     },
   });
   return contact;

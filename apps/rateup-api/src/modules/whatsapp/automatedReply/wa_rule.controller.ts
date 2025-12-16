@@ -1,6 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import * as RuleService from "./wa_rule.service";
 import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema";
+import prisma from "../../../utils/prisma";
+import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace";
 
 // Create Rule
 export async function createRuleHandler(
@@ -12,6 +14,15 @@ export async function createRuleHandler(
     const rule = await RuleService.createRule({ ...req.body, orgId });
     reply.send(rule);
   } catch (error) {
+    if (
+      error instanceof PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return reply.status(400).send({
+        error: "Failed to create rule",
+        message: "Rule with the same name already exists in the organization",
+      });
+    }
     req.log.error(error);
     reply.status(500).send({
       error: "Failed to create rule",

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { AssignType, WaAutomatedReplyMatchType } from "../../../types/enums";
 import { buildJsonSchemas } from "fastify-zod";
 
 const matchDataSchema = z.object({
@@ -8,13 +7,8 @@ const matchDataSchema = z.object({
 });
 const createAutomatedReplySchema = z.object({
   name: z.string().min(1),
-  matchType: z.nativeEnum(WaAutomatedReplyMatchType),
   matchData: matchDataSchema,
-  commands: z.array(z.string()),
-  whatsappSettingsPhoneIds: z.array(z.string()),
-  isEnabled: z.boolean().optional().default(true),
-  sendOnceIn24Hours: z.boolean().optional().default(true),
-  businessHourId: z.string().optional(),
+  whatsappSettingsPhoneId: z.string().optional(),
 });
 
 const byWaAutomatedReplyIdParams = z.object({
