@@ -33,7 +33,10 @@ import {
   createContactMessage,
   createLocationMessage,
 } from "../../whatsappSurvey/wasurvey.utils";
-import { WaMessageAssignStatusTab } from "../../constants";
+import {
+  WaMessageAssignStatusTab,
+  WaMessageClosedStatus,
+} from "../../constants";
 import { Role } from "../../../org/org.services";
 import { getTeamIdsByUserId } from "../../../team/team.service";
 import { UserAvailabilityStatus } from "../../../user/user.schema";
@@ -48,6 +51,10 @@ import {
 import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
 import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
+import {
+  getLastCreatedConversationForContact,
+  updateConversationAssignees,
+} from "../../../contact/conversation/conversation.service";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -55,6 +62,7 @@ export async function addNewWaMessage(
   waCreatedAt: string,
   sourcePlatform: PlatformType,
   sourceIdentifier: string,
+  conversationId: string,
   componentParams?: any,
   messageId?: string,
   sendBy?: string,
@@ -89,6 +97,7 @@ export async function addNewWaMessage(
       sendBy,
       sourcePlatform,
       sourceIdentifier,
+      conversationId,
       ...statsData,
     },
     include: {
@@ -350,9 +359,17 @@ export async function filterChats(
         } else {
           const assignedStatus =
             WaMessageAssignStatusTab[bodyFilterProps?.waMessageAssignStatus];
-          params.push(assignedStatus);
-          filters.push(`c."waMessageAssignStatus" = $${paramIndex++}`);
-
+          if (assignedStatus === "ADDRESSED") {
+            if (bodyFilterProps.status.length) {
+              params.push(bodyFilterProps.status);
+            } else {
+              params.push(WaMessageClosedStatus);
+            }
+            filters.push(`c."waMessageAssignStatus" = ANY($${paramIndex++})`);
+          } else {
+            params.push(assignedStatus);
+            filters.push(`c."waMessageAssignStatus" = $${paramIndex++}`);
+          }
           if (isAssignedToMe) {
             params.push(userId);
             const assignedQuery = [
@@ -809,6 +826,7 @@ export async function exportWhatsapChats(
 export async function assignWaMessageToUser(
   data: WaMessageAssignBody,
   orgId: string,
+  userId?: string,
 ) {
   const existingUsers = await prisma.waInboxAssign.findMany({
     where: {
@@ -895,9 +913,27 @@ export async function assignWaMessageToUser(
       },
     },
   });
+
   const updatedContact = await updateContactById(data.contactId, {
     waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
   });
+  const conversation = await getLastCreatedConversationForContact(
+    updatedContact.id,
+  );
+  if (conversation) {
+    const updatedAssignees = [
+      ...newUsers,
+      ...data.assignees.filter(
+        (t) =>
+          !newUsers.find((n) => n.userId === t.userId && n.teamId === t.teamId),
+      ),
+    ];
+    await updateConversationAssignees(
+      conversation.id,
+      { assignees: updatedAssignees },
+      userId,
+    );
+  }
 
   for (const user of newUsers) {
     const notificationSetting = await getNotificationSettings(

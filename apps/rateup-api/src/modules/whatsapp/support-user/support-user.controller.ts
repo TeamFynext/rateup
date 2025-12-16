@@ -34,11 +34,12 @@ export async function getOrCreateContactHandler(
     source: PlatformType.WEBCHAT,
     ...rest,
   };
-  const contact = await getOrCreateContactByPhone(
+  const { contact } = await getOrCreateContactByPhone(
     phone,
     request.user.orgId,
     body,
     PlatformType.WEBCHAT,
+    true,
   );
   reply.code(200).send(contact?.id);
 }

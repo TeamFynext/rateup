@@ -114,7 +114,12 @@ model User {
   // Add relation for WaAutomatedReply many-to-many
   UserAssignedCount   UserAssignedCount[]
   AuditLog            AuditLog[]
-  ClosedContacts      Contact[]
+  LastClosedContacts      Contact[]
+  ClosedConversations     Conversation[]
+  AssignedConversations   ConversationAssignedUserTeamMap[]  @relation("ConversationAssignedUser")
+  removedAssignees        ConversationAssignedUserTeamMap[]  @relation("ConversationRemovedUser")
+  assignedStafftoConversation  ConversationAssignedUserTeamMap[]  @relation("ConversationAssignedByUser")
+
 }
 
 model Org {
@@ -335,8 +340,8 @@ model Team {
   testimonialCollections TestimonialCollection[]
   Ticket                 Ticket[]
   waInboxAssign          WaInboxAssign[]
-
   ticketBoards TicketBoardTeam[]
+  assignedConversations  ConversationAssignedUserTeamMap[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -561,6 +566,7 @@ model Contact {
   lastSentMessageTimeStamp    DateTime?
   ContactLabelMap             ContactLabelMap[]
   notes                       String?
+  Conversations               Conversation[]
 
   @@unique([external_id, orgId], name: "external_id_org_id_unique")
   @@unique([phone, orgId], name: "contact_phone_org_id_unique")
@@ -1400,6 +1406,8 @@ model WaMessage {
   readUsers                       String[]                          @default([])
   sourcePlatform                  PlatformType?
   sourceIdentifier                String?
+  conversationId                  String?                            @db.Uuid
+  Conversation                     Conversation?                     @relation(fields: [conversationId], references: [id])
 
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
@@ -1894,4 +1902,39 @@ model BusinessHour {
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
   waAutomatedReplyCommands WaAutomatedReplyCommands[]
+}
+
+
+
+model ConversationAssignedUserTeamMap {
+  userId  String @db.Uuid
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade, name: "ConversationAssignedUser")
+  teamId  String @db.Uuid
+  Team    Team @relation(fields:[teamId], references: [id])
+  conversationId  String @db.Uuid
+  Conversation Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  lastAssignedAt DateTime?
+  lastRemovedAt DateTime?
+  lastRemovedBy String? @db.Uuid
+  lastRemovedByUser User? @relation(fields: [lastRemovedBy], references: [id], name: "ConversationRemovedUser")
+  lastAssignedBy String? @db.Uuid
+  lastAssignedByUser User? @relation(fields: [lastAssignedBy], references: [id], name: "ConversationAssignedByUser")
+  isAssignedByAutomation Boolean @default(false)
+  actionHistory  Json[]  @default([])
+  @@id([userId, conversationId])
+}
+
+model Conversation {
+  id  String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contactId   String @db.Uuid
+  contact     Contact  @relation(fields:[contactId], references: [id], onDelete: Cascade)
+  messages    WaMessage[]
+  status      String  @default("UNASSIGNED")
+  firstRespondedAt DateTime?
+  assignedUsers  ConversationAssignedUserTeamMap[]
+  assignedAt DateTime?
+  closedAt   DateTime?
+  closedBy   String? @db.Uuid
+  closedByUser User?    @relation(fields: [closedBy], references: [id])
+  createdAt  DateTime  @default(now())
 }
