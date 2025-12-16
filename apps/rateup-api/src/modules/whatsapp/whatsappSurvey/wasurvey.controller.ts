@@ -665,7 +665,10 @@ async function handleSubscriptionStatus(
 }
 
 async function handleInputReply({ phone, orgId, parsedMessage }) {
-  const progress = await findRecentAutomation(phone, orgId);
+  // Find the most recent automation progress for this phone/org in the last 4 hours
+  const progress = await findRecentAutomation(phone, orgId, {
+    timeWindow: 4 * 60 * 60 * 1000, // 4 hours
+  });
   const automation = progress?.waAutomatedReply;
   if (automation) {
     const matchData = automation.matchData as {
