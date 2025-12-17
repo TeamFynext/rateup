@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { ActionIcon, FloatingPosition, Menu } from "@mantine/core";
+import { IconDots } from "@tabler/icons-react";
 import { Clock, MessageSquare, Trash } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -69,6 +71,30 @@ function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+export function CardMenu({
+  children,
+  position,
+}: Readonly<{
+  children: ReactNode;
+  position?: FloatingPosition;
+}>) {
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
+    >
+      <Menu position={position ?? "bottom-start"}>
+        <Menu.Target>
+          <ActionIcon variant="subtle">
+            <IconDots color="gray" />
+          </ActionIcon>
+        </Menu.Target>
+        {children}
+      </Menu>
+    </div>
   );
 }
 
