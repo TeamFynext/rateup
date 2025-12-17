@@ -45,16 +45,12 @@ function FbLoginRedirect({
           onSuccess: () => {
             localStorage.removeItem("waSettingsId");
             localStorage.removeItem("automationId");
-            router.push(
-              `/dashboard/whatsapp/automated-replies/${automationId}`,
-            );
+            router.push(`/dashboard/whatsapp/flowbots/${automationId}`);
           },
           onError: () => {
             localStorage.removeItem("waSettingsId");
             localStorage.removeItem("automationId");
-            router.push(
-              `/dashboard/whatsapp/automated-replies/${automationId}`,
-            );
+            router.push(`/dashboard/whatsapp/flowbots/${automationId}`);
           },
         },
       );
@@ -63,7 +59,7 @@ function FbLoginRedirect({
       showErrorToast("Failed " + error);
       localStorage.removeItem("waSettingsId");
       localStorage.removeItem("automationId");
-      router.push(`/dashboard/whatsapp/automated-replies/${automationId}`);
+      router.push(`/dashboard/whatsapp/flowbots/${automationId}`);
     }
   }, [code, error]);
   if (update.isPending) return <RateupLoader />;

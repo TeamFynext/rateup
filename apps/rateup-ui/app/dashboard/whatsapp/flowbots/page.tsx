@@ -1,45 +1,49 @@
 "use client";
 
-import { Group, Stack, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useState } from "react";
+
 import { IconPlus } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { AutomatedReplyCardListSkeleton } from "@/components/animation/skeleton/wa/AutomatedReplyCardList.skeleton";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons";
-import SimpleModalLayout from "@/components/Modal/SimpleModalLayout";
 import NothingFound from "@/components/NothingFound/NothingFound";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { WaAutomationCards } from "@/components/whatsapp/automation/AutomationCards";
 
 import { AutomatedReplyForm } from "./create";
 
-export default function AutomatedRepliesPage() {
+export default function FlowbotsPage() {
   const translations = useTranslations();
-  const [opened, { open, close }] = useDisclosure(false);
+  const [opened, setOpened] = useState(false);
 
   return (
-    <Stack mih={"80dvh"}>
-      <Group justify={"space-between"}>
-        <Group ml={"md"}>
-          <RateupButtonBlue
-            title={translations("Create Automation")}
-            rightIcon={<IconPlus size={"1rem"} />}
-            onClick={open}
-          />
-        </Group>
-        <SimpleModalLayout
-          opened={opened}
-          onClose={close}
-          title={translations("Create Automation")}
-          size={"lg"}
-        >
-          <AutomatedReplyForm close={close} />
-        </SimpleModalLayout>
-      </Group>
+    <div className="flex flex-col min-h-[80dvh]">
+      <div className="flex items-center justify-between">
+        <div className="ml-4">
+          <Button onClick={() => setOpened(true)}>
+            {translations("Create Flowbot")}
+            <IconPlus size={"1rem"} className="ml-2" />
+          </Button>
+        </div>
+        <Dialog open={opened} onOpenChange={setOpened}>
+          <DialogContent className="sm:max-w-[700px]">
+            <DialogHeader>
+              <DialogTitle>{translations("Create Flowbot")}</DialogTitle>
+            </DialogHeader>
+            <AutomatedReplyForm close={() => setOpened(false)} />
+          </DialogContent>
+        </Dialog>
+      </div>
       <WaAutomationCardsList />
-    </Stack>
+    </div>
   );
 }
 

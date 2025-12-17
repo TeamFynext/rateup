@@ -118,7 +118,7 @@ export const ShareFlow = ({
   };
 
   return (
-    <Stack p={10} pr={16} h={"fit-content"}>
+    <Stack p={10} pr={16}>
       <PaperLayout
         p="30px"
         style={{
@@ -207,17 +207,15 @@ export const ShareFlow = ({
           teamSelectData.find((t) => t.value === surveyTeamMapId)?.label
         }
       />
-      {shareUrl && (
-        <ShareQR
-          url={shareUrl}
-          sx={{ borderRadius: "0.5rem" }}
-          title={survey.title}
-          isPublished={!disableShare}
-          id={surveyId}
-          queryKey={"surveyShareSettings"}
-          resourceName={"survey"}
-        />
-      )}
+      <ShareQR
+        url={shareUrl || process.env.NEXT_PUBLIC_FRONTEND_URL}
+        sx={{ borderRadius: "0.5rem" }}
+        title={survey.title}
+        isPublished={!disableShare}
+        id={surveyId}
+        queryKey={"surveyShareSettings"}
+        resourceName={"survey"}
+      />
     </Stack>
   );
 };

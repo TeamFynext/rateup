@@ -79,6 +79,7 @@ const ConversationAccountDistribution = ({ dateRange }) => {
               const color = getMessageSourcePlatformColor(
                 channel.sourcePlatform as MessagePlatform,
               );
+              const phone = channel.phone || channel.ibaId || channel.phoneId;
               return (
                 <div
                   key={index}
@@ -98,7 +99,7 @@ const ConversationAccountDistribution = ({ dateRange }) => {
                               ? "WhatsApp"
                               : "")}
                         <span className="text-xs text-muted-foreground ml-2">
-                          ({channel.phone || channel.ibaId})
+                          {phone ? `(${phone})` : ""}
                         </span>
                       </span>
                     </div>
