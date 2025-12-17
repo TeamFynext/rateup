@@ -168,6 +168,23 @@ function WhatsAppManualConfiguration({ waSettings }) {
             className="space-y-4"
           >
             <div className="space-y-2">
+              <Label htmlFor="phoneDisplayName">
+                Channel Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="phoneDisplayName"
+                placeholder={translations(
+                  "Enter a name to identify this WhatsApp channel",
+                )}
+                {...form.getInputProps("phoneDisplayName")}
+              />
+              {form.errors.phoneDisplayName && (
+                <p className="text-sm text-red-500">
+                  {form.errors.phoneDisplayName}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="wabaId">
                 WABA ID <span className="text-red-500">*</span>
               </Label>

@@ -10,24 +10,22 @@ import {
   Skeleton,
   Text,
 } from "@mantine/core";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import {
-  ContainedMultiSelect,
-  ContainedSelection,
-} from "./ContainedInput/ContainedInput";
+import { ContainedMultiSelect } from "./ContainedInput/ContainedInput";
 
 interface CommonAccountSelectorProps {
   onChange?: any;
@@ -38,6 +36,7 @@ interface CommonAccountSelectorProps {
   label?: string;
   value?: any;
   hideLabel?: boolean;
+  optional?: boolean;
 }
 
 type AccountSelectorProps =
@@ -54,6 +53,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     platform = MessagePlatform.WHATSAPP,
     multiple = false,
     hideLabel = false,
+    optional = false,
     ...restProps
   } = props;
   const { data, isPending, isError } = useWaSettings();
@@ -66,7 +66,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
         value: usePhoneNumber
           ? account?.phone?.replace("+", "")
           : account.phoneId,
-        label: account.phone,
+        label: account?.phoneDisplayName || account.phone,
       });
     if (platform === "all" || platform === MessagePlatform.INSTAGRAM)
       if (account.ibaId) {
@@ -83,10 +83,11 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
 
   useEffect(() => {
     if (value) return;
+    if (optional) return;
     if (accountOptions.length > 0) {
       onChange(accountOptions[0].value);
     }
-  }, [accountOptions, value]);
+  }, [accountOptions, value, optional]);
 
   if (isError) {
     return <Text>{translations("Something went wrong!")}</Text>;
@@ -119,16 +120,33 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
   }
   return (
     <div>
-      {!hideLabel && (
-        <p className="text-xs text-muted-foreground">
-          {label ?? translations("Account")}
-        </p>
-      )}
+      <div className="flex items-center justify-between mb-1">
+        {!hideLabel && (
+          <Label className="text-xs text-muted-foreground">
+            {label ?? translations("Account")}
+          </Label>
+        )}
+        {optional && value && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => onChange(undefined)}
+          >
+            <X className="h-3 w-3 mr-1" />
+            {translations("Clear")}
+          </Button>
+        )}
+      </div>
       <Select
         value={value}
-        defaultValue={accountOptions?.length && accountOptions[0]?.value}
+        defaultValue={
+          optional
+            ? undefined
+            : accountOptions?.length && accountOptions[0]?.value
+        }
         onValueChange={onChange}
-        required
+        required={!optional}
       >
         <SelectTrigger className="!text-xs text-muted-foreground cursor-pointer hover:bg-accent">
           <SelectValue placeholder={translations("Select Account")} />

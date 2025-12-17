@@ -58,9 +58,7 @@ export interface DocumentNodeData extends BaseNodeData {
 }
 
 // Start Node
-export interface StartNodeData extends BaseNodeData {
-  startMessage?: string;
-}
+export interface StartNodeData extends BaseNodeData {}
 
 // End Node
 export interface EndNodeData extends BaseNodeData {
