@@ -1,7 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import * as RuleService from "./wa_rule.service.js";
 import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema.js";
-import prisma from "../../../utils/prisma.js";
 import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace.js";
 
 // Create Rule
@@ -101,6 +100,25 @@ export async function deleteRuleHandler(
     req.log.error(error);
     reply.status(500).send({
       error: "Failed to delete rule",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
+
+// Get Rules by Automation ID
+export async function getRulesByAutomationIdHandler(
+  req: FastifyRequest<{ Params: { automationId: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { automationId } = req.params;
+    const orgId = req.user.orgId;
+    const rules = await RuleService.getRulesByAutomationId(automationId, orgId);
+    reply.send(rules);
+  } catch (error) {
+    req.log.error(error);
+    reply.status(500).send({
+      error: "Failed to fetch rules",
       message: error instanceof Error ? error.message : "Unknown error",
     });
   }

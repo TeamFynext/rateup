@@ -17,7 +17,6 @@ import { waCatalogRoutes } from "./catalog/catalog.route.js";
 import { catalogProductSchema } from "./catalog/products/product.schema.js";
 import { waCatalogSchemas } from "./catalog/catalog.schema.js";
 import { waCatalogOrderSchemas } from "./catalog/orders/catalogOrder.schema.js";
-import { waRuleSchemas } from "./automatedReply/wa_rule.schema.js";
 
 export async function whatsappRoutes(server: FastifyInstance) {
   const modules = [
@@ -28,7 +27,6 @@ export async function whatsappRoutes(server: FastifyInstance) {
     catalogProductSchema,
     waCatalogSchemas,
     waCatalogOrderSchemas,
-    waRuleSchemas,
   ];
   for (const module of modules) {
     for (const schema of module) {

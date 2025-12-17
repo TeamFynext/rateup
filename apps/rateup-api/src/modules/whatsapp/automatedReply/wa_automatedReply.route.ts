@@ -20,12 +20,14 @@ import {
   getRuleByIdHandler,
   updateRuleHandler,
   deleteRuleHandler,
+  getRulesByAutomationIdHandler,
 } from "./wa_rule.controller.js"; // You need to implement these controllers
 import {
   createRuleSchema,
   getRulesQuerySchema,
   ruleIdParamSchema,
   updateRuleSchema,
+  getRulesByAutomationIdQuerySchema,
 } from "./wa_rule.schema.js";
 import {
   serializerCompiler,
@@ -107,5 +109,14 @@ export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
       },
     },
     deleteRuleHandler,
+  );
+  fastify.get(
+    "/rule/automation/:automationId",
+    {
+      schema: {
+        params: getRulesByAutomationIdQuerySchema,
+      },
+    },
+    getRulesByAutomationIdHandler,
   );
 }

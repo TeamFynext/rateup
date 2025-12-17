@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { buildJsonSchemas } from "fastify-zod";
 import {
   ActionType,
   ConditionField,
@@ -51,14 +50,6 @@ export const getRulesQuerySchema = z.object({
   orgId: z.string().optional(),
 });
 
-export const { schemas: waRuleSchemas, $ref: $waRule } = buildJsonSchemas(
-  {
-    createRuleSchema,
-    updateRuleSchema,
-    ruleIdParamSchema,
-    getRulesQuerySchema,
-  },
-  {
-    $id: "waRule",
-  },
-);
+export const getRulesByAutomationIdQuerySchema = z.object({
+  automationId: z.string(),
+});

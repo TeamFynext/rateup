@@ -374,3 +374,24 @@ export async function deleteRule(id: string) {
     return tx.rule.delete({ where: { id } });
   });
 }
+
+// Get Rules by Automation ID (from action value)
+export async function getRulesByAutomationId(
+  automationId: string,
+  orgId: string,
+) {
+  const data = await prisma.ruleAction.findMany({
+    where: {
+      value: {
+        equals: automationId,
+      },
+      rule: {
+        orgId,
+      },
+    },
+    include: {
+      rule: true,
+    },
+  });
+  return data.map((item) => item.rule);
+}
