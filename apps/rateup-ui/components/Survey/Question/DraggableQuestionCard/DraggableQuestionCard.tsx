@@ -88,7 +88,7 @@ export function DraggableQuestionCard({
         {(provided, snapshot) => (
           <div ref={hoverRef} className="flex flex-col">
             <div
-              className={`${selected && "bg-primary"} flex flex-col sm:flex-row items-center justify-between gap-3 rounded-sm border p-4 cursor-pointer relative mb-2 transition-all duration-300 shadow-sm w-[20vw] sm:w-[50vh] lg:w-full`}
+              className={`${selected && "bg-gray-100"} flex flex-col sm:flex-row items-center justify-between gap-3 rounded-sm border p-4 cursor-pointer relative mb-2 transition-all duration-300 shadow-sm w-[20vw] sm:w-[50vh] lg:w-full`}
               ref={provided.innerRef}
               onClick={() => {
                 if (!nonClickableQuestionTypeStrs.includes(question.type)) {
@@ -104,36 +104,34 @@ export function DraggableQuestionCard({
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-2">
                 <div
                   {...provided.dragHandleProps}
-                  className={`${selected && "text-white"} flex items-center justify-center content-center h-full`}
+                  className={`flex items-center justify-center content-center h-full`}
                 >
                   <IconGripVertical size={20} stroke={1.5} />
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-3">
-                  <div className="relative">
+                  <div className="flex items-center gap-1 bg-primary px-2 py-1 rounded-xl">
+                    <p
+                      className={`text-xs flex items-center justify-center text-white`}
+                    >
+                      {index + 1}
+                    </p>
                     <div
-                      className={`p-1.5 flex items-center justify-center rounded-sm ${selected ? "bg-white/30 text-white" : "text-primary"}`}
+                      className={`flex items-center justify-center text-white`}
                     >
                       {pageIcons[question.type] &&
                         React.createElement(pageIcons[question.type], {
-                          size: 25,
+                          size: 15,
                           strokeWidth: 2,
                         })}
 
                       {questionIcons[question.type] &&
                         React.createElement(questionIcons[question.type], {
-                          size: 25,
+                          size: 15,
                           strokeWidth: 2,
                         })}
                     </div>
-                    <p
-                      className={`absolute -top-2 -right-2 z-10 text-xs w-5 h-5 p-1 flex items-center justify-center rounded-sm ${selected ? "bg-white text-primary" : "bg-primary text-white"}`}
-                    >
-                      {index + 1}
-                    </p>
                   </div>
-                  <p className={`${selected && "text-white"} flex-1`}>
-                    {extractText(questionTitle)}
-                  </p>
+                  <p className={`flex-1`}>{extractText(questionTitle)}</p>
                 </div>
               </div>
 
@@ -165,7 +163,7 @@ export function DraggableQuestionCard({
                     }}
                     variant="ghost"
                   >
-                    <IconTrash className={`${selected && "text-white"}`} />
+                    <IconTrash />
                   </Button>
                 )}
               </div>

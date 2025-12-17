@@ -262,18 +262,6 @@ export default function SurveyID() {
               <div className="flex items-start gap-4 flex-1">
                 <div className="flex gap-1">
                   <h1 className="text-base sm:text-2xl">{survey?.title}</h1>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      className={`text-[9px] ${!survey?.active && "bg-muted-foreground"}`}
-                    >
-                      {getStatusIcon(survey?.active)}
-                      <span className="ml-1 capitalize">
-                        {survey?.active
-                          ? translations("Active")
-                          : translations("Paused")}
-                      </span>
-                    </Badge>
-                  </div>
                 </div>
               </div>
 
