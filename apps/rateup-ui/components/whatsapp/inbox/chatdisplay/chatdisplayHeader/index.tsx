@@ -65,6 +65,7 @@ import { TicketType } from "@/utils/enums/ticket";
 import { hasFeature } from "@/utils/subscription/subscription";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox";
 
+import { getContactClosedIcon } from "../../chatselect/chatselectCard";
 import { getSoucePlatformIconAndColor } from "../../util";
 import AssignUser from "./AssignUser";
 import WaInboxCountdownTimer from "./countDown";
@@ -280,17 +281,17 @@ const ChatHeaderMenu = ({ contact }) => {
       },
     );
   }
-  function handleCloseChat() {
+  function handleCloseChat(status) {
     editContactMutation.mutate(
       {
         contactId: contact.id,
-        data: { waMessageAssignStatus: WaMessageAssignStatus.CLOSED },
+        data: { waMessageAssignStatus: status },
       },
       {
         onSuccess: () => {
           updateContactById(contact.id, (existing) => ({
             ...existing,
-            waMessageAssignStatus: WaMessageAssignStatus.CLOSED,
+            waMessageAssignStatus: status,
             closedAt: new Date().toISOString(),
             closedUser: {
               name: user?.userName,
@@ -311,16 +312,76 @@ const ChatHeaderMenu = ({ contact }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={handleCloseChat}
+          onClick={() => handleCloseChat(WaMessageAssignStatus.CLOSED)}
           disabled={
             editContactMutation.isPending ||
             contact?.waMessageAssignStatus === WaMessageAssignStatus.CLOSED
           }
         >
-          <CircleCheckBig className="w-4 h-4 mr-2" />
+          {(() => {
+            const closedStatusIcon = getContactClosedIcon(
+              WaMessageAssignStatus.CLOSED,
+            );
+            const Icon = closedStatusIcon.icon;
+            return <Icon className={closedStatusIcon.color} />;
+          })()}
           Mark as Closed
         </DropdownMenuItem>
-
+        <DropdownMenuItem
+          onClick={() => handleCloseChat(WaMessageAssignStatus.RESOLVED)}
+          disabled={
+            editContactMutation.isPending ||
+            contact?.waMessageAssignStatus === WaMessageAssignStatus.RESOLVED
+          }
+        >
+          {(() => {
+            const closedStatusIcon = getContactClosedIcon(
+              WaMessageAssignStatus.RESOLVED,
+            );
+            const Icon = closedStatusIcon.icon;
+            return <Icon className={closedStatusIcon.color} />;
+          })()}
+          Mark as Resolved
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleCloseChat(WaMessageAssignStatus.SPAM)}
+          disabled={
+            editContactMutation.isPending ||
+            contact?.waMessageAssignStatus === WaMessageAssignStatus.SPAM
+          }
+        >
+          {(() => {
+            const closedStatusIcon = getContactClosedIcon(
+              WaMessageAssignStatus.SPAM,
+            );
+            const Icon = closedStatusIcon.icon;
+            return <Icon className={closedStatusIcon.color} />;
+          })()}
+          Mark as Spam
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleCloseChat(WaMessageAssignStatus.UNRESOLVED)}
+          disabled={
+            editContactMutation.isPending ||
+            contact?.waMessageAssignStatus === WaMessageAssignStatus.UNRESOLVED
+          }
+        >
+          {(() => {
+            const closedStatusIcon = getContactClosedIcon(
+              WaMessageAssignStatus.UNRESOLVED,
+            );
+            const Icon = closedStatusIcon.icon;
+            return <Icon className={closedStatusIcon.color} />;
+          })()}
+          <CustomTooltip
+            trigger={<p>Mark as Unresolved</p>}
+            content={
+              <p>
+                All the assignees will be removed as closed,resolved and spam
+              </p>
+            }
+          />
+        </DropdownMenuItem>
         {hasTicketFeature && (
           <DropdownMenuItem onClick={openCreateTicket}>
             <Ticket className="w-4 h-4 mr-2" />

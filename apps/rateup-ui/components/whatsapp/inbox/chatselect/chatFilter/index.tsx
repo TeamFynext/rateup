@@ -23,6 +23,7 @@ import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { WaMessageClosedStatus } from "@/utils/constants";
 
 import { useChatFilterData } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
 import {
@@ -145,20 +146,16 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
     return count;
   }
 
-  const statusData = [
-    {
-      id: WaMessageAssignStatus.UNASSIGNED,
-      label: WaMessageAssignStatusTab[WaMessageAssignStatus.UNASSIGNED],
-    },
-    {
-      id: WaMessageAssignStatus.ASSIGNED,
-      label: WaMessageAssignStatusTab[WaMessageAssignStatus.ASSIGNED],
-    },
-    {
-      id: WaMessageAssignStatus.CLOSED,
-      label: WaMessageAssignStatusTab[WaMessageAssignStatus.CLOSED],
-    },
-  ];
+  const statusData = Object.values(WaMessageAssignStatus)
+    .filter(
+      (status) =>
+        status !== WaMessageAssignStatus.NEW &&
+        (tab === "Addressed" ? WaMessageClosedStatus.includes(status) : true),
+    )
+    .map((status) => ({
+      id: status,
+      label: WaMessageAssignStatusTab[status],
+    }));
 
   return (
     <div className="flex flex-col gap-4">
@@ -302,7 +299,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
         </div>
 
         {/* Status (only on All tab) */}
-        {tab === "All" && (
+        {(tab === "All" || tab === "Addressed") && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="bg-gray-100 text-gray-700 p-2 rounded-md">
@@ -382,54 +379,34 @@ type ChatFilterStore = {
   clearFilter: () => void;
 };
 
+const intialValues: ChatFilter = {
+  messageType: "usermessages",
+  strictFilter: false,
+  searchTerm: "",
+  contactGroups: [],
+  campaigns: [],
+  tags: [],
+  waMessageAssignStatus: null,
+  blockedUsers: false,
+  status: Object.values(WaMessageAssignStatus).filter(
+    (st) => st !== WaMessageAssignStatus.NEW,
+  ),
+  assignedTeams: [],
+  phone: "all",
+  labels: [],
+  lifecycle: "",
+  sortBy: "newest",
+  category: null,
+  assignedUserIds: [],
+};
 export const useChatFilterStore = create<ChatFilterStore>()(
   persist(
     (set) => ({
-      filter: {
-        messageType: "usermessages",
-        strictFilter: false,
-        searchTerm: "",
-        contactGroups: [],
-        campaigns: [],
-        tags: [],
-        waMessageAssignStatus: null,
-        blockedUsers: false,
-        status: [
-          WaMessageAssignStatus.UNASSIGNED,
-          WaMessageAssignStatus.ASSIGNED,
-          WaMessageAssignStatus.CLOSED,
-        ],
-        assignedTeams: [],
-        phone: "all",
-        labels: [],
-        lifecycle: "",
-        sortBy: "newest",
-        category: null,
-        assignedUserIds: [],
-      },
+      filter: intialValues,
       setFilter: (value) => set({ filter: value }),
       clearFilter: () => {
         set({
-          filter: {
-            messageType: "usermessages",
-            strictFilter: false,
-            searchTerm: "",
-            contactGroups: [],
-            campaigns: [],
-            tags: [],
-            status: [
-              WaMessageAssignStatus.UNASSIGNED,
-              WaMessageAssignStatus.ASSIGNED,
-              WaMessageAssignStatus.CLOSED,
-            ],
-            assignedTeams: [],
-            labels: [],
-            lifecycle: "",
-            category: null,
-            assignedUserIds: [],
-            blockedUsers: false,
-            sortBy: "newest",
-          },
+          filter: intialValues,
         });
       },
     }),

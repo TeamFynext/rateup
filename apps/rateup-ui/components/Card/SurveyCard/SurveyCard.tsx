@@ -2,8 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 
-import dayjs from "dayjs";
-import { Calendar, Clock, FileText, Users } from "lucide-react";
+import { Clock, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import TimeSinceText from "@/components/DateAndTime/TimeSinceText";
@@ -40,10 +39,17 @@ export function SurveyCard({
     (sum, t) => sum + (t.responsesCount?.responses || 0),
     0,
   );
+  const bg =
+    survey?.webSurveyPagesTheme?.welcomeTheme?.bg?.desktopBg?.bgColor ||
+    survey?.webSurveyPagesTheme?.welcomeTheme?.bg?.mobileBg?.bgColor;
+  const img =
+    survey?.webSurveyPagesTheme?.welcomeTheme?.bg?.desktopBg?.imageUrl ||
+    survey?.webSurveyPagesTheme?.welcomeTheme?.bg?.mobileBg?.imageUrl;
+
   return (
     <Card
       key={survey.id}
-      className="transition-all duration-300 cursor-pointer overflow-hidden relative hover:-translate-y-1 flex flex-col"
+      className="transition-all duration-300 cursor-pointer overflow-hidden relative hover:-translate-y-1 flex flex-col p-0"
       onClick={(e) => {
         e.stopPropagation();
         router.push(
@@ -54,24 +60,24 @@ export function SurveyCard({
         );
       }}
     >
-      {/* Top accent bar with gradient */}
-      <div
-        className={`absolute top-0 left-0 right-0 h-1 ${
-          survey?.active
-            ? "bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500"
-            : "bg-gradient-to-r from-yellow-400 via-orange-400 to-amber-500"
-        }`}
-      />
-
-      <CardContent className="flex flex-col h-full gap-4">
+      <CardContent className="flex flex-col h-full gap-1 p-0">
+        <div>
+          {img ? (
+            <img src={img} alt="img" className="w-full object-cover h-[16vh]" />
+          ) : (
+            <div
+              className="w-full h-[16vh] flex items-center justify-center"
+              style={{ backgroundColor: bg }}
+            >
+              <Star fill="yellow" color="yellow" />
+            </div>
+          )}
+        </div>
         {/* Header Section with improved spacing */}
-        <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0 pr-2">
+        <div className="flex items-start justify-between px-3">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary dark:bg-rateup-darkblue flex items-center justify-center shadow-md flex-shrink-0">
-                <FileText className="w-4 h-4 text-white" />
-              </div>
-              <h3 className="text-base line-clamp-1 group-hover:text-primary transition-colors font-bold">
+              <h3 className="text-sm line-clamp-1 group-hover:text-primary transition-colors font-semibold">
                 {survey?.title?.length > 18
                   ? survey?.title?.slice(0, 18) + "..."
                   : survey?.title}
@@ -85,52 +91,32 @@ export function SurveyCard({
             refetchSurveys={refetchSurveys}
           />
         </div>
-        <div>
-          <div className="flex items-center gap-8">
-            <div className="text-center flex items-center gap-2 rounded-md px-4 py-2 border shadow-sm">
-              <div className="flex items-center justify-center">
-                <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center shadow-md dark:bg-green-950">
-                  <FileText className="w-3.5 h-3.5 text-white" />
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground mb-1">
-                  {translations("Questions")}
-                </p>
-                <p className="text-sm">{survey?.questions?.length}</p>
-              </div>
-            </div>
-            <div className="text-center flex items-center gap-2 rounded-md px-4 py-2 border shadow-sm">
-              <div className="flex items-center justify-center">
-                <div className="w-8 h-8 rounded-lg bg-green-500 dark:bg-green-950 flex items-center justify-center shadow-md">
-                  <Users className="w-3.5 h-3.5 text-white" />
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground mb-1">
-                  {translations("Responses")}
-                </p>
-                <p className="text-sm">{totalResponses}</p>
-              </div>
-            </div>
-          </div>
+
+        <div className="flex items-baseline gap-1 text-gray-500 px-3">
+          <span className="text-xs">{totalResponses}</span>
+          <span className="text-xs">
+            {totalResponses === 0
+              ? translations("Response")
+              : translations("Responses")}
+          </span>
         </div>
 
         {/* Footer with enhanced timestamps - Push to bottom */}
-        <div className="flex items-center justify-between border-t py-2">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-5 h-5 rounded-md flex items-center justify-center">
-              <Calendar className="w-3 h-3" />
-            </div>
-            <span className="font-semibold">
-              {dayjs(survey?.createdAt).format("DD MMMM YYYY")}
+        <div className="flex items-center justify-between border-t py-2 px-3">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <span
+              className={`${survey?.active ? "bg-green-100 text-green-500" : "bg-red-100 text-red-500"} text-[10px] px-2 py-1 rounded-full`}
+            >
+              {survey?.active
+                ? translations("ACTIVE")
+                : translations("INACTIVE")}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center text-[11px] text-muted-foreground">
             <div className="w-5 h-5 rounded-md flex items-center justify-center">
               <Clock className="w-3 h-3 text-blue-600" />
             </div>
-            <span className="font-semibold">
+            <span className="font-semibold text-[11px]">
               {<TimeSinceText isoDateString={survey?.createdAt} />}
             </span>
           </div>

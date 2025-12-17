@@ -142,7 +142,7 @@
     "react-webcam": "^7.2.0",
     "react-window": "^1.8.11",
     "read-excel-file": "^5.8.0",
-    "recharts": "^2.15.0",
+    "recharts": "^2.15.4",
     "sharp": "^0.33.2",
     "sonner": "^2.0.7",
     "supertokens-auth-react": "^0.50.0",

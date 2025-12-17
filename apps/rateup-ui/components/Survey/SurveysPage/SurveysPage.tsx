@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { Box, Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useTranslations } from "next-intl";
 
@@ -14,7 +13,6 @@ import NothingFound from "@/components/NothingFound/NothingFound";
 
 import { CreateSurveyModal } from "../CreateSurveyModal";
 import SurveyTemplatesModal from "../SurveyTemplatesModal";
-import styles from "./SurveyPage.module.css";
 import { SurveyHeader } from "./SurveysPageHeader";
 
 // USED IN:
@@ -120,7 +118,7 @@ export function SurveysPage({
   );
 
   return (
-    <Stack h={"100%"}>
+    <div className="flex flex-col gap-2 h-full">
       <SurveyHeader
         selectedTeamId={selectedTeamId}
         setSelectedTeamId={setSelectedTeamId}
@@ -138,9 +136,7 @@ export function SurveysPage({
       />
 
       {surveys?.length > 0 ? (
-        <Box
-          className={`${styles["surveys-cards-container"]} cards-grid-global-class`}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
           {filteredSurvey
             .filter((s) => {
               if (filterParam === "active") {
@@ -162,7 +158,7 @@ export function SurveysPage({
                 refetchSurveys={refetch}
               />
             ))}
-        </Box>
+        </div>
       ) : (
         <NothingFound text={translations("No Surveys Found")} />
       )}
@@ -186,6 +182,6 @@ export function SurveysPage({
           surveyType={surveyType}
         />
       )}
-    </Stack>
+    </div>
   );
 }

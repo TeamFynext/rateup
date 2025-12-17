@@ -540,6 +540,9 @@ export enum WaMessageAssignStatus {
   ASSIGNED = "ASSIGNED",
   CLOSED = "CLOSED",
   UNASSIGNED = "UNASSIGNED",
+  SPAM = "SPAM",
+  RESOLVED = "RESOLVED",
+  UNRESOLVED = "UNRESOLVED",
 }
 
 export enum WaMessageAssignStatusTab {
@@ -548,6 +551,9 @@ export enum WaMessageAssignStatusTab {
   ASSIGNED = "Assigned",
   ASSIGNEDTOME = "Assigned To Me",
   CLOSED = "Closed",
+  RESOLVED = "Resolved",
+  UNRESOLVED = "Unresolved",
+  SPAM = "Spam",
 }
 
 export enum LoyaltyApiFeature {
