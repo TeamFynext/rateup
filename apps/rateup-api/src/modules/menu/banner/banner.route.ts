@@ -3,12 +3,12 @@ import {
   createMenuBannerHandler,
   deleteMenuBannerHandler,
   updateMenuBannerHandler,
-} from "./banner.controller";
-import { checkSession } from "../../../utils/checkSession";
+} from "./banner.controller.js";
+import { checkSession } from "../../../utils/checkSession.js";
 
-import { $MBref } from "./banner.schema";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
+import { $MBref } from "./banner.schema.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 
 export async function menuBannerRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

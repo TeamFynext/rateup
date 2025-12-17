@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { isBoardMember } from "./board.service";
+import { isBoardMember } from "./board.service.js";
 
 export async function verifyBoardAccess(
   request: FastifyRequest<{

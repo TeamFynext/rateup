@@ -1,7 +1,7 @@
 import axios from "axios";
-import prisma from "../../../utils/prisma";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { callWhatsappApi } from "../wa_axios";
+import prisma from "../../../utils/prisma.js";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { callWhatsappApi } from "../wa_axios.js";
 import {
   convertHeaderToNewQuestion,
   generateFlowMessageData,
@@ -17,17 +17,21 @@ import {
   removeIdFromFlowJson,
   sanitizeScreenData,
   transformFlowAndLogicJumps,
-} from "./flow.utils";
-import { WaFlow } from "../../../../generated/prisma/client";
-import { UpdateFlowInput } from "./flow.schema";
+} from "./flow.utils.js";
+import { WaFlow } from "../../../../generated/prisma/client.js";
+import { UpdateFlowInput } from "./flow.schema.js";
 import FormData from "form-data";
-import { log } from "../../../utils/logger";
-import { LogicAction, QuestionType, WaFlowStatus } from "../../../types/enums";
-import { FlowLogicJump } from "../../../types/global";
+import { log } from "../../../utils/logger.js";
+import {
+  LogicAction,
+  QuestionType,
+  WaFlowStatus,
+} from "../../../types/enums.js";
+import { FlowLogicJump } from "../../../types/global.js";
 import {
   getGoogleUrlBySurveyTeamMapId,
   getSurveyById,
-} from "../../survey/survey.service";
+} from "../../survey/survey.service.js";
 import {
   deleteSession,
   getSession,
@@ -36,30 +40,33 @@ import {
   shouldShowGoogleReview,
   shouldShowGoogleReviewV2,
   updateSession,
-} from "../whatsappSurvey/wasurvey.service";
-import { validateLogic, validateLogicV2 } from "../../question/question.utils";
+} from "../whatsappSurvey/wasurvey.service.js";
+import {
+  validateLogic,
+  validateLogicV2,
+} from "../../question/question.utils.js";
 import {
   createCTAButtonMessage,
   parseMessage,
-} from "../whatsappSurvey/wasurvey.utils";
+} from "../whatsappSurvey/wasurvey.utils.js";
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
-} from "../../../utils/commonUtils";
-import { WaMessageBody } from "../../../types/whatsapp.types";
+} from "../../../utils/commonUtils.js";
+import { WaMessageBody } from "../../../types/whatsapp.types.js";
 import {
   getIntegrationByName,
   getWaAmeliaTimeSlot,
-} from "../../integrations/integrations.service";
+} from "../../integrations/integrations.service.js";
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-import { getTeamIdsByUserId } from "../../team/team.service";
-import { processNextNode } from "../whatsappSurvey/wasurvey.controller";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+import { getTeamIdsByUserId } from "../../team/team.service.js";
+import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
 import {
   logFlowCompletion,
   findRecentAutomation,
-} from "../whatsappSurvey/automation-logger.utils";
+} from "../whatsappSurvey/automation-logger.utils.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

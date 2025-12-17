@@ -1,12 +1,12 @@
 import { FastifyInstance } from "fastify";
-import { $lCustomerRef } from "./customer.schema";
+import { $lCustomerRef } from "./customer.schema.js";
 import {
   createLCustomerHandler,
   customerActionHandler,
   verifyLCustomerMaxCountRestrictionHandler,
-} from "./customer.controller";
-import { getVerifySubscriptionForPublicHandler } from "../../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
+} from "./customer.controller.js";
+import { getVerifySubscriptionForPublicHandler } from "../../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 
 export async function loyaltyCustomerPublicRoutes(server: FastifyInstance) {
   server.post(

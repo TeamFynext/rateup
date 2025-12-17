@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../utils/logger";
+import { log } from "../../utils/logger.js";
 import {
   createAndApplyThemeToSurvey,
   deleteThemeInDB,
@@ -7,7 +7,7 @@ import {
   getSurveyThemeById,
   renameThemeInDB,
   updateSurveyThemeActiveSurveyThemeInDB,
-} from "./surveyTheme.service";
+} from "./surveyTheme.service.js";
 
 export async function getSurveyThemeByIdHandler(
   request: FastifyRequest<{ Params: { webSurveyThemeId: string } }>,

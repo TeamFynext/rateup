@@ -21,7 +21,7 @@ import {
   updateFlowIdAndStatusInDb,
   updateFlowInDb,
   updateFlowMetaDataInWa,
-} from "./flow.service";
+} from "./flow.service.js";
 import {
   ByDbFlowIdParams,
   ByWaFlowIdParams,
@@ -32,27 +32,27 @@ import {
   UpdateFlowInput,
   UpdateFlowMetaInput,
   WaFlowSourceQuery,
-} from "./flow.schema";
-import { createSurveyFromFlow } from "./flow.utils";
-import { log } from "../../../utils/logger";
+} from "./flow.schema.js";
+import { createSurveyFromFlow } from "./flow.utils.js";
+import { log } from "../../../utils/logger.js";
 import {
   QuestionType,
   SubscriptionFeaturePathName,
   SurveyType,
   WaFlowStatus,
-} from "../../../types/enums";
-import { createSurvey, deleteSurveyById } from "../../survey/survey.service";
-import { Survey } from "../../../../generated/prisma/client";
-import { GraphApiError, callWhatsappApi } from "../wa_axios";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { getGraphApiErrorMessage } from "../wa_error_handler";
-import { updateMonthlyStat } from "../../stats/stats.service";
+} from "../../../types/enums.js";
+import { createSurvey, deleteSurveyById } from "../../survey/survey.service.js";
+import { Survey } from "../../../../generated/prisma/client.js";
+import { GraphApiError, callWhatsappApi } from "../wa_axios.js";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { getGraphApiErrorMessage } from "../wa_error_handler.js";
+import { updateMonthlyStat } from "../../stats/stats.service.js";
 import {
   createSession,
   deleteSession,
   getSession,
-} from "../whatsappSurvey/wasurvey.service";
-import { validateSession } from "../whatsappSurvey/wasurvey.utils";
+} from "../whatsappSurvey/wasurvey.service.js";
+import { validateSession } from "../whatsappSurvey/wasurvey.utils.js";
 
 /**
  * Get flows from whatsapp api or our database.

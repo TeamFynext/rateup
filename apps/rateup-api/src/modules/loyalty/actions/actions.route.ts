@@ -8,11 +8,11 @@ import {
   referActionHandler,
   updateLoyaltyActionByIdHandler,
   verifyLActionMaxCountRestriction,
-} from "./actions.controller";
-import { $lActionRef } from "./actions.schema";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { $lCustomerRef } from "../customer/customer.schema";
+} from "./actions.controller.js";
+import { $lActionRef } from "./actions.schema.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { $lCustomerRef } from "../customer/customer.schema.js";
 
 export async function loyaltyActionsRoutes(server: FastifyInstance) {
   server.addHook(

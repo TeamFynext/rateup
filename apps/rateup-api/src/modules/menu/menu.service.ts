@@ -1,14 +1,14 @@
 import dayjs from "dayjs";
-import prisma from "../../utils/prisma";
-import { deleteFile } from "../../utils/upload/s3Upload";
-import { CreateMenuInput, UpdateMenuInput } from "./menu.schema";
-import { getShortUrlId } from "../../utils/commonUtils";
-import { updateMonthlyStat } from "../stats/stats.service";
-import { createMenuBanner } from "./banner/banner.service";
-import { createMenuCategory } from "./category/category.service";
-import { createMenuItem } from "./item/item.service";
-import { getTeamById } from "../team/team.service";
-import { SubscriptionFeaturePathName } from "../../types/enums";
+import prisma from "../../utils/prisma.js";
+import { deleteFile } from "../../utils/upload/s3Upload.js";
+import { CreateMenuInput, UpdateMenuInput } from "./menu.schema.js";
+import { getShortUrlId } from "../../utils/commonUtils.js";
+import { updateMonthlyStat } from "../stats/stats.service.js";
+import { createMenuBanner } from "./banner/banner.service.js";
+import { createMenuCategory } from "./category/category.service.js";
+import { createMenuItem } from "./item/item.service.js";
+import { getTeamById } from "../team/team.service.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
 
 export async function createMenu(data: CreateMenuInput) {
   if (data.teamId === undefined) return;

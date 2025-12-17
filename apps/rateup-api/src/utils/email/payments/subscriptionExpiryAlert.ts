@@ -1,9 +1,9 @@
 import dayjs from "dayjs";
-import prisma from "../../prisma";
-import { formatDateT1 } from "../../date";
-import { sendAWSEmail } from "../sendAWSEmail";
-import { billingPage, statsPage } from "../../constants/constants";
-import { log } from "../../logger";
+import prisma from "../../prisma.js";
+import { formatDateT1 } from "../../date.js";
+import { sendAWSEmail } from "../sendAWSEmail.js";
+import { billingPage, statsPage } from "../../constants/constants.js";
+import { log } from "../../logger.js";
 
 export async function subscriptionExpiryAlert() {
   try {

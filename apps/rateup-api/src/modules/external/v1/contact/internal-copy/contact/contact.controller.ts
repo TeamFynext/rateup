@@ -5,7 +5,7 @@ import {
   deleteManyContactsInput,
   updateContactSchema,
   ContactCore,
-} from "./contact.schema";
+} from "./contact.schema.js";
 import {
   createContact,
   createMultipleContacts,
@@ -14,9 +14,9 @@ import {
   getContactById,
   getContactsByOrgId,
   updateContactById,
-} from "./contact.service";
-import { Prisma } from "../../../../../../../generated/prisma/client";
-import { log } from "../../../../../../utils/logger";
+} from "./contact.service.js";
+import { Prisma } from "../../../../../../../generated/prisma/client.js";
+import { log } from "../../../../../../utils/logger.js";
 
 export async function createContactHandler(
   request: FastifyRequest<{ Body: ContactCore }>,

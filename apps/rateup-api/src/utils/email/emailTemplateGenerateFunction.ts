@@ -1,4 +1,4 @@
-import { QuestionType } from "../../types/enums";
+import { QuestionType } from "../../types/enums.js";
 
 const generateListHtml = (list) => {
   return list?.map((item) => `<li>${Object.values(item)[0]}</li>`).join(" ");

@@ -1,8 +1,8 @@
 import crypto, { randomUUID } from "node:crypto";
-import { getOrgById } from "../modules/org/org.services";
+import { getOrgById } from "../modules/org/org.services.js";
 import axios from "axios";
-import { log } from "./logger";
-import { wait } from "../modules/whatsapp/whatsappSurvey/wasurvey.controller";
+import { log } from "./logger.js";
+import { wait } from "../modules/whatsapp/whatsappSurvey/wasurvey.controller.js";
 
 export async function sendWebhook(endpoint: string, payload, orgId: string) {
   if (!endpoint.startsWith("https://")) return;

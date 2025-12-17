@@ -1,8 +1,6 @@
-import { billingPage } from "../../constants/constants";
+import { billingPage } from "../../constants/constants.js";
 
-export function paymentFailed(
-  isRenewal: boolean = false,
-) {
+export function paymentFailed(isRenewal: boolean = false) {
   return `
       <!DOCTYPE html>
       <html lang="en">

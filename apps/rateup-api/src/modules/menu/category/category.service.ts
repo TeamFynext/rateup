@@ -1,10 +1,10 @@
-import prisma from "../../../utils/prisma";
-import { deleteFile } from "../../../utils/upload/s3Upload";
+import prisma from "../../../utils/prisma.js";
+import { deleteFile } from "../../../utils/upload/s3Upload.js";
 import {
   CreateMenuCategoryInput,
   SortMenuCategoryInput,
   UpdateMenuCategoryInput,
-} from "./category.schema";
+} from "./category.schema.js";
 
 export async function createMenuCategory(data: CreateMenuCategoryInput) {
   const createData: any = {
@@ -26,7 +26,7 @@ export async function createMenuCategory(data: CreateMenuCategoryInput) {
   const category = await prisma.menuCategory.create({
     data: createData,
   });
-  
+
   return category;
 }
 
@@ -53,7 +53,7 @@ export async function getMenuCategory(categoryId: string) {
 
 export async function updateMenuCategory(
   categoryId: string,
-  data: UpdateMenuCategoryInput
+  data: UpdateMenuCategoryInput,
 ) {
   let { itemOrder, ...newData } = data;
 
@@ -68,7 +68,7 @@ export async function updateMenuCategory(
 
 export async function sortMenuCategory(
   menuId: string,
-  data: SortMenuCategoryInput
+  data: SortMenuCategoryInput,
 ) {
   let index = 0;
   let { itemOrder = [] } = data;
@@ -110,7 +110,7 @@ export async function deleteMenuCategory(categoryId: string) {
       },
     });
     let fileKeyArray = items?.flatMap((item) =>
-      item?.images?.map((image) => ({ Key: image }))
+      item?.images?.map((image) => ({ Key: image })),
     );
     if (categoryData?.image) fileKeyArray.push({ Key: categoryData?.image });
     const params = {

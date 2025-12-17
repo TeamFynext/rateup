@@ -1,11 +1,11 @@
-import { FastifyInstance } from "fastify/types/instance";
+import { FastifyInstance } from "fastify/types/instance.js";
 import {
   createApiAccessTokenHandler,
   deleteApiAccessTokenHandler,
   getApiAccessTokenCreatedAtHandler,
   regenerateApiAccessTokenHandler,
-} from "./apiAccessToken.controller";
-import { checkSession } from "../../utils/checkSession";
+} from "./apiAccessToken.controller.js";
+import { checkSession } from "../../utils/checkSession.js";
 
 export async function apiAccessTokenRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

@@ -4,7 +4,7 @@ import {
   CampaignType,
   CampaignStatus,
   CampaignParticipantStatus,
-} from "../../../../../../types/enums";
+} from "../../../../../../types/enums.js";
 
 const coreCampaignSchema = z.object({
   name: z.string(),

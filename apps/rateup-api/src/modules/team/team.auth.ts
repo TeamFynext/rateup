@@ -1,13 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { hasAccessOfTeamAdmin, hasAccessToTeam } from "../../utils/auth";
+import { hasAccessOfTeamAdmin, hasAccessToTeam } from "../../utils/auth.js";
 import {
   CreateTeamInput,
   EditTeamInput,
   IdParamInput,
   InviteMemberInput,
-} from "./team.schema";
-import prisma from "../../utils/prisma";
-import { SubscriptionFeaturePathName } from "../../types/enums";
+} from "./team.schema.js";
+import prisma from "../../utils/prisma.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
 
 export async function verifyTeamAdminAccess(
   request: FastifyRequest<{
@@ -70,12 +70,10 @@ export async function verifyTeamMaxCountRestriction(
     count >=
     request.subscription.features[SubscriptionFeaturePathName.Team].count.max
   ) {
-    reply
-      .code(403)
-      .send({
-        message: "You have reached the maximum limit of teams",
-        displayMessageInClient: true,
-      });
+    reply.code(403).send({
+      message: "You have reached the maximum limit of teams",
+      displayMessageInClient: true,
+    });
   }
 }
 
@@ -103,11 +101,9 @@ export async function verifyTeamMemberMaxCountRestriction(
     request.subscription.features[SubscriptionFeaturePathName.Team].teamMember
       .count.max
   ) {
-    reply
-      .code(403)
-      .send({
-        message: "You have reached the maximum limit of team-members",
-        displayMessageInClient: true,
-      });
+    reply.code(403).send({
+      message: "You have reached the maximum limit of team-members",
+      displayMessageInClient: true,
+    });
   }
 }

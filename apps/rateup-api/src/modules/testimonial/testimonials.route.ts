@@ -1,10 +1,10 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession";
-import { $Testimonialref } from "./testimonial.schema";
+import { checkSession } from "../../utils/checkSession.js";
+import { $Testimonialref } from "./testimonial.schema.js";
 import {
   getAllTestimonialByOrgHandler,
   getAllTestimonialBySurveyIdHandler,
-} from "./testimonial.controller";
+} from "./testimonial.controller.js";
 
 export async function testimonialRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

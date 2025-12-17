@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { log } from "../../utils/logger";
+import { log } from "../../utils/logger.js";
 
 export async function callWaAmeliaApi(
   url: string,

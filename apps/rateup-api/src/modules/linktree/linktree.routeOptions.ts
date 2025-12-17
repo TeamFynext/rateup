@@ -1,5 +1,5 @@
 import { RouteShorthandOptionsWithHandler } from "fastify";
-import { asyncErrHandler } from "../../utils/commonUtils";
+import { asyncErrHandler } from "../../utils/commonUtils.js";
 import {
   createLinktree,
   deleteLinktreeById,
@@ -9,9 +9,9 @@ import {
   getPublicLinktreeWithShortId,
   updateLinktreeWithShortId,
   updatePageVisitsOrLinkClicks,
-} from "./linktree.controllers";
-import { linktreeSchemaRef } from "./linktree.schema";
-import { CustomRouteShortHandOptionsWithHandler } from "../../types/global";
+} from "./linktree.controllers.js";
+import { linktreeSchemaRef } from "./linktree.schema.js";
+import { CustomRouteShortHandOptionsWithHandler } from "../../types/global.js";
 
 const getLinktreesRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {

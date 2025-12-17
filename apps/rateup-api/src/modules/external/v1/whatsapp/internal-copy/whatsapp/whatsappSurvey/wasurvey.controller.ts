@@ -11,7 +11,7 @@ import {
   parseResponse,
   parseStartMessage,
   validateSession,
-} from "./wasurvey.utils";
+} from "./wasurvey.utils.js";
 import {
   createSession,
   deleteSession,
@@ -23,22 +23,22 @@ import {
   sendQuestion,
   sendTextMessage,
   updateSession,
-} from "./wasurvey.service";
+} from "./wasurvey.service.js";
 
 import {
   getTemplateWithHSMId,
   updateTemplateInDb,
   getDbTemplate,
-} from "../messageTemplates/wa_templates.service";
-import { getWaSettingsByPhoneId } from "../settings/wa_settings.service";
-import { handleStaticFlowReply, sendFlow } from "../flows/flow.service";
+} from "../messageTemplates/wa_templates.service.js";
+import { getWaSettingsByPhoneId } from "../settings/wa_settings.service.js";
+import { handleStaticFlowReply, sendFlow } from "../flows/flow.service.js";
 
-import { handleWaMessages } from "../inbox/message/wamessage.controller";
+import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import {
   CampaignParticipant,
   Contact,
-} from "../../../../../../../../generated/prisma/client";
-import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
+} from "../../../../../../../../generated/prisma/client.js";
+import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils.js";
 import {
   WaEvent,
   WaTemplateStatus,
@@ -46,20 +46,20 @@ import {
   QuestionType,
   CampaignParticipantStatus,
   WaTemplateComponentType,
-} from "../../../../../../../types/enums";
-import { WaMessageBody } from "../../../../../../../types/whatsapp.types";
-import { log } from "../../../../../../../utils/logger";
-import prisma from "../../../../../../../utils/prisma";
-import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload";
+} from "../../../../../../../types/enums.js";
+import { WaMessageBody } from "../../../../../../../types/whatsapp.types.js";
+import { log } from "../../../../../../../utils/logger.js";
+import prisma from "../../../../../../../utils/prisma.js";
+import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload.js";
 import {
   updateStartedSurvey,
   updateVisitedSurvey,
-} from "../../../../../../survey/survey.service";
+} from "../../../../../../survey/survey.service.js";
 // import { handleRegisterMessage } from "../../../../../../loyalty/internal/campaign/campaign.service";
 import {
   addWaMessageCampaignParticipantMap,
   updateCampaignParticipant,
-} from "../../../../campaign/internal-copy/campaign/campaignParticipants/campaignParticipants.service";
+} from "../../../../campaign/internal-copy/campaign/campaignParticipants/campaignParticipants.service.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {

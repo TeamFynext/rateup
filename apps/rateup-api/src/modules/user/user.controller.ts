@@ -14,7 +14,7 @@ import {
   updateUserProfile,
   updateUserProfilePhoto,
   updateUserRecipe,
-} from "./user.service";
+} from "./user.service.js";
 import {
   ChangeUserPasswordSchema,
   CreateUserGoogleSchema,
@@ -24,18 +24,17 @@ import {
   updateUserLanguageSchema,
   userEmailCheckSchemaInput,
   UserStatusSchema,
-} from "./user.schema";
+} from "./user.schema.js";
 import supertokens from "supertokens-node";
-import PasswordLess from "supertokens-node/recipe/passwordless";
-import Session from "supertokens-node/recipe/session";
-import { Prisma } from "../../../generated/prisma/client";
-import { log } from "../../utils/logger";
-import EmailPassword from "supertokens-node/recipe/emailpassword";
-import { IdParamInput } from "../survey/survey.schema";
+import Session from "supertokens-node/recipe/session/index.js";
+import { Prisma } from "../../../generated/prisma/client.js";
+import { log } from "../../utils/logger.js";
+import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
+import { IdParamInput } from "../survey/survey.schema.js";
 import {
   deleteSuperTokenUserForId,
   getUserInfo,
-} from "../../utils/supertoken/supertoken";
+} from "../../utils/supertoken/supertoken.js";
 
 export async function getLoggedUserInfoHandler(
   request: FastifyRequest,

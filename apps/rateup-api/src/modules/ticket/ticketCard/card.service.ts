@@ -1,21 +1,21 @@
-import { TicketType } from "../../../../generated/prisma/client";
-import { getShortUrlId } from "../../../utils/commonUtils";
-import prisma from "../../../utils/prisma";
-import { UpdateCardRequest } from "./card.schema";
+import { TicketType } from "../../../../generated/prisma/client.js";
+import { getShortUrlId } from "../../../utils/commonUtils.js";
+import prisma from "../../../utils/prisma.js";
+import { UpdateCardRequest } from "./card.schema.js";
 import {
   sendTicketAssignedEmail,
   sendTicketAssignedWaMessage,
   sendTicketCreateEmail,
   sendTicketCreateWaMessage,
-} from "../ticket.service";
+} from "../ticket.service.js";
 import {
   createNotification,
   getNotificationSettings,
-} from "../../notification/notification.service";
+} from "../../notification/notification.service.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../../integrations/external/zapier/zapier.service";
+} from "../../integrations/external/zapier/zapier.service.js";
 
 export interface CardInput {
   title?: string;

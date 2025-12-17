@@ -1,13 +1,13 @@
 import { FastifyInstance } from "fastify";
-import { externalCampaignParticipantRoutes } from "./participants/campaign_participants.external.route";
-import { $campaignRef } from "./internal-copy/campaign/campaign.schema";
+import { externalCampaignParticipantRoutes } from "./participants/campaign_participants.external.route.js";
+import { $campaignRef } from "./internal-copy/campaign/campaign.schema.js";
 import {
   createCampaignHandler,
   deleteCampaignByIdHandler,
   getCampaignsHandler,
   sendCampaignHandler,
-} from "./internal-copy/campaign/campaign.controller";
-import { getResponseByCampaignByIdHandler } from "../../../campaign/campaign.controller";
+} from "./internal-copy/campaign/campaign.controller.js";
+import { getResponseByCampaignByIdHandler } from "../../../campaign/campaign.controller.js";
 
 export async function externalCampaignRoutes(server: FastifyInstance) {
   server.post(

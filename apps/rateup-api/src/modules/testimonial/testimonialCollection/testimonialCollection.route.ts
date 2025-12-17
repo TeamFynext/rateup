@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../../utils/checkSession";
-import { $TestimonialCollectionRef } from "./testimonialCollection.schema";
+import { checkSession } from "../../../utils/checkSession.js";
+import { $TestimonialCollectionRef } from "./testimonialCollection.schema.js";
 import {
   addMultipleTestimonialToCollectionHandler,
   createTestimonialCollectionHandler,
@@ -8,7 +8,7 @@ import {
   deleteMultipleTestimonialsFromCollectionHandler,
   getTestimonialCollections,
   updateTestimonialCollectionHandler,
-} from "./testimonialCollection.controller";
+} from "./testimonialCollection.controller.js";
 export async function testimonialCollectionRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 

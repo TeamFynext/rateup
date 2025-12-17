@@ -11,13 +11,13 @@ import {
   syncTemplatesHandler,
   updateTemplateHandler,
   uploadHandler,
-} from "./wa_templates.controller";
-import { $WTref } from "./wa_templates.schema";
-import { checkSession } from "../../../utils/checkSession";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
+} from "./wa_templates.controller.js";
+import { $WTref } from "./wa_templates.schema.js";
+import { checkSession } from "../../../utils/checkSession.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
 import fastifyMultipart from "@fastify/multipart";
-import { verifyMessageMonthlyLimitRestriction } from "./wa_templates.auth";
+import { verifyMessageMonthlyLimitRestriction } from "./wa_templates.auth.js";
 
 export async function waTemplatesRoutes(server: FastifyInstance) {
   server.register(fastifyMultipart, {

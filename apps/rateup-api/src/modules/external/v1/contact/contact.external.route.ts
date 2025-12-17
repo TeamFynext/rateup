@@ -1,13 +1,13 @@
 import { FastifyInstance } from "fastify";
-import { $extContactSchema } from "./contact.external.schema";
-import { extCreateMultipleContactsHandler } from "./contact.external.controller";
+import { $extContactSchema } from "./contact.external.schema.js";
+import { extCreateMultipleContactsHandler } from "./contact.external.controller.js";
 import {
   deleteContactByIdHandler,
   getAllContactsHandler,
   getContactByIdHandler,
   updateContactByIdHandler,
-} from "./internal-copy/contact/contact.controller";
-import { $contactRef } from "./internal-copy/contact/contact.schema";
+} from "./internal-copy/contact/contact.controller.js";
+import { $contactRef } from "./internal-copy/contact/contact.schema.js";
 
 export async function externalContactRoutes(server: FastifyInstance) {
   server.post(

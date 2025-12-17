@@ -17,7 +17,7 @@ import {
   parseStartMessage,
   parseToWhatsAppFormat,
   validateSession,
-} from "./wasurvey.utils";
+} from "./wasurvey.utils.js";
 import {
   aibotNodeCompletion,
   createSession,
@@ -33,7 +33,7 @@ import {
   sendTextMessage,
   setAiBotActiveStatus,
   updateSession,
-} from "./wasurvey.service";
+} from "./wasurvey.service.js";
 import {
   CampaignParticipantStatus,
   SurveyType,
@@ -44,96 +44,99 @@ import {
   SubscriptionFeaturePathName,
   WaTemplateSupportedFormats,
   CampaignStatus,
-} from "../../../types/enums";
-import { log } from "../../../utils/logger";
+} from "../../../types/enums.js";
+import { log } from "../../../utils/logger.js";
 import {
   getTemplateWithHSMId,
   updateTemplateInDb,
   getDbTemplate,
-} from "../messageTemplates/wa_templates.service";
+} from "../messageTemplates/wa_templates.service.js";
 import {
   getWaSettingsByPhoneId,
   MetaAsset,
-} from "../settings/wa_settings.service";
+} from "../settings/wa_settings.service.js";
 import {
   WaMessageBody,
   WaMessageTypes,
   WaReceiveMessageBody,
-} from "../../../types/whatsapp.types";
+} from "../../../types/whatsapp.types.js";
 import {
   addWaMessageCampaignParticipantMap,
   updateCampaignParticipant,
-} from "../../campaign/campaignParticipants/campaignParticipants.service";
-import prisma from "../../../utils/prisma";
+} from "../../campaign/campaignParticipants/campaignParticipants.service.js";
+import prisma from "../../../utils/prisma.js";
 import {
   updateStartedSurvey,
   updateVisitedSurvey,
-} from "../../survey/survey.service";
+} from "../../survey/survey.service.js";
 import {
   getFlowWithSurveyTeamMapIdsWithDbFlowId,
   handleStaticFlowReply,
   sendFlow,
-} from "../flows/flow.service";
+} from "../flows/flow.service.js";
 import {
-  checkIfMessageMatchesAnyAutomation,
+  checkAndExecuteRuleByTriggerEvent,
   selectAutomationByBusinessHours,
-} from "../automatedReply/wa_automatedReply.utils";
-import { handleWaMessages } from "../inbox/message/wamessage.controller";
+} from "../automatedReply/wa_automatedReply.utils.js";
+import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import {
   CampaignParticipant,
   Contact,
   PlatformType,
   WhatsappSettings,
-} from "../../../../generated/prisma/client";
-import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
-import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils";
+} from "../../../../generated/prisma/client.js";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
+import { getFlowIdFromTemplateComponents } from "../messageTemplates/wa_templates.utils.js";
 import {
   getContactByPhoneNumberAndOrgId,
   getOrCreateContactByPhone,
   handleContactConsent,
-} from "../../contact/contact.service";
-import { getOrgById } from "../../org/org.services";
-import { checkMessageLimitExceeded } from "./wasurvey.auth";
-import { updateMonthlyStat } from "../../stats/stats.service";
+} from "../../contact/contact.service.js";
+import { getOrgById } from "../../org/org.services.js";
+import { checkMessageLimitExceeded } from "./wasurvey.auth.js";
+import { updateMonthlyStat } from "../../stats/stats.service.js";
 import {
   getLatestStatus,
   updateCampaign,
-} from "../../campaign/campaign.service";
+} from "../../campaign/campaign.service.js";
 import {
   getLoyaltyWaCommandByRequestMessage,
   handleLoyaltyWaCommand,
-} from "../../loyalty/settings/settings.service";
-import { getSubscription, getUsageStats } from "../../campaign/campaign.auth";
-import { createJWT } from "../../../utils/jwt";
+} from "../../loyalty/settings/settings.service.js";
+import {
+  getSubscription,
+  getUsageStats,
+} from "../../campaign/campaign.auth.js";
+import { createJWT } from "../../../utils/jwt.js";
 import {
   getAIResponseForQuery,
   getChatbotDetails,
-} from "../../chatbot/chatbot.service";
-import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller";
-import { NodeTypeMap, TypedNode } from "./node-types";
+} from "../../chatbot/chatbot.service.js";
+import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
+import { NodeTypeMap, TypedNode } from "./node-types.js";
 import {
   logAutomationAction,
   findRecentAutomation,
-} from "./automation-logger.utils";
-import { autoGenerateTicket } from "../../ticket/ticketCard/card.service";
+} from "./automation-logger.utils.js";
+import { autoGenerateTicket } from "../../ticket/ticketCard/card.service.js";
 import {
   getAutomatedReplyById,
   getCommandByOrgIdAndCommand,
   verifyAutomationTriggerLimit,
-} from "../automatedReply/wa_automatedReply.service";
-import { handleWaOrderfromCatalog } from "../catalog/catalog.service";
+} from "../automatedReply/wa_automatedReply.service.js";
+import { handleWaOrderfromCatalog } from "../catalog/catalog.service.js";
 import {
   getTokensByOrgId,
   sendPushNotification,
-} from "../../mobileNotification/mobile.service";
+} from "../../mobileNotification/mobile.service.js";
 import {
   assignWaMessageToUser,
   getAssignedUsersCountForContactByTeam,
   getWaMessageByMessageId,
-} from "../inbox/message/wamessage.service";
-import { getUserIdsByTeamId } from "../../user/user.service";
-import { getTeamIdsByUserId } from "../../team/team.service";
-import { verifyTemplateMessageLimit } from "../messageTemplates/wa_templates.auth";
+} from "../inbox/message/wamessage.service.js";
+import { getUserIdsByTeamId } from "../../user/user.service.js";
+import { getTeamIdsByUserId } from "../../team/team.service.js";
+import { verifyTemplateMessageLimit } from "../messageTemplates/wa_templates.auth.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -527,11 +530,7 @@ async function whatsappMessageHandler(
     messageLowerCase === WA_SUBSCRIBE_STATUS.SUBSCRIBE
   ) {
     await handleSubscriptionStatus(orgId, from, messageLowerCase);
-  }
-  //  else if (chatbot?.enableWaChat && message.startsWith(chatbot?.waCommand)) {
-  //   await handleAiWaChat(chatbot, message, orgId, from);
-  // }
-  else {
+  } else {
     let session = await getSession(orgId, from);
     // deleting session after 24hrs
     if (!validateSession(session)) {
@@ -540,12 +539,8 @@ async function whatsappMessageHandler(
         session = undefined;
       }
     }
-    // handle automated reply
-    await handleAutomatedReply(orgId, waMessage, parsedMessage, from);
 
-    // if (session) {
-    //   await handleWaSurveySession(orgId, waMessage, session);
-    // }
+    await handleAutomatedReply(orgId, waMessage, parsedMessage, from, message);
   }
 }
 
@@ -673,7 +668,10 @@ async function handleSubscriptionStatus(
 }
 
 async function handleInputReply({ phone, orgId, parsedMessage }) {
-  const progress = await findRecentAutomation(phone, orgId);
+  // Find the most recent automation progress for this phone/org in the last 4 hours
+  const progress = await findRecentAutomation(phone, orgId, {
+    timeWindow: 4 * 60 * 60 * 1000, // 4 hours
+  });
   const automation = progress?.waAutomatedReply;
   if (automation) {
     const matchData = automation.matchData as {
@@ -724,6 +722,7 @@ async function handleInputReply({ phone, orgId, parsedMessage }) {
  * @param waMessage WhatsApp message body
  * @param parsedMessage Parsed message data
  * @param phone User's phone number
+ * @param message Original message text
  * @param automatedReplyId Optional ID of the automated reply to use
  */
 export async function handleAutomatedReply(
@@ -731,7 +730,7 @@ export async function handleAutomatedReply(
   waMessage: WaMessageBody,
   parsedMessage: WaParsedMessage,
   phone: string,
-  // chatbot: Chatbot,
+  message: string,
   automatedReplyId?: string,
 ) {
   if (!automatedReplyId) {
@@ -739,53 +738,51 @@ export async function handleAutomatedReply(
     if (!(await verifyAutomationTriggerLimit(orgId))) return;
   }
 
-  let phone_number_id = (
+  const phoneNumberId = (
     waMessage?.entry?.[0]?.changes?.[0]?.value as WaReceiveMessageBody
   )?.metadata?.phone_number_id;
 
-  const inputHandled = await handleInputReply({ phone, orgId, parsedMessage });
-  if (inputHandled) return;
-
   try {
-    // Case 1: New message from user
-    let automation;
-    if (automatedReplyId)
-      automation = await getAutomatedReplyById(automatedReplyId);
-    // Check if message matches any automation rules
-    else {
-      automation = (await checkIfMessageMatchesAnyAutomation(
-        orgId,
-        waMessage,
-        phone,
-      )) as {
-        id: string;
-        matchData: { json: { nodes: any[]; edges: any[] } };
-      } | null;
-    }
-
-    if (automation) {
-      if (phone_number_id) {
-        automation.whatsappSettingsPhoneId = phone_number_id;
+    if (automatedReplyId) {
+      const automation = await getAutomatedReplyById(automatedReplyId);
+      if (automation) {
+        if (phoneNumberId) {
+          automation.whatsappSettingsPhoneId = phoneNumberId;
+        }
+        await startAutomationFlow(phone, automation, parsedMessage, orgId);
+        await updateMonthlyStat(
+          SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
+          orgId,
+        );
       }
-      await startAutomationFlow(phone, automation, parsedMessage, orgId);
-    }
-    // else if (chatbot?.enableWaChat && chatbot?.enableAllWaChat) {
-    //   // Handle AI chat if enabled
-    //   await handleAiWaChat(chatbot, parsedMessage.message, orgId, phone);
-    // }
-    // Case 3: No matching automation rules found
-    else {
-      await handleInitialInteraction(
-        orgId,
+    } else {
+      const inputHandled = await handleInputReply({
         phone,
-        parsedMessage.message,
-        phone_number_id,
+        orgId,
+        parsedMessage,
+      });
+      if (inputHandled) return;
+      // Check rule-based automation first
+      const ruleResult = await checkAndExecuteRuleByTriggerEvent(
+        "MESSAGE_RECEIVED",
+        {
+          orgId,
+          phoneNumberId,
+          message,
+          phone,
+          waMessage,
+        },
+      );
+
+      if (ruleResult) {
+        log.trace("Rule matched and actions executed: %o", ruleResult);
+        return;
+      }
+      await updateMonthlyStat(
+        SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
+        orgId,
       );
     }
-    await updateMonthlyStat(
-      SubscriptionFeaturePathName.WhatsAppAutomationTrigger,
-      orgId,
-    );
   } catch (error) {
     log.error("Error handling automated reply: %o", error);
   }

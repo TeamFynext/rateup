@@ -1,5 +1,8 @@
-import { saveShareSettings, getShareSettings } from "./shareSettings.service";
-import { uploadFileToS3, deleteFileFromS3 } from "./utils";
+import {
+  saveShareSettings,
+  getShareSettings,
+} from "./shareSettings.service.js";
+import { uploadFileToS3, deleteFileFromS3 } from "./utils.js";
 
 const cloudFrontDomain = process.env.AWS_CLOUDFRONT_DOMAIN;
 

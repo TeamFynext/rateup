@@ -24,9 +24,16 @@ const isDevelopment = process.env.NODE_ENV === "development";
 // if NO_LOG is set to true, disable logging
 // if NODE_ENV is set to development, use pretty logging
 // else use default logging
-export const logOptions: any =
-  NO_LOG === "true" ? false : isDevelopment ? devLog : true;
-export const log = pino({
+let logOptionsValue: any;
+if (NO_LOG === "true") {
+  logOptionsValue = false;
+} else if (isDevelopment) {
+  logOptionsValue = devLog;
+} else {
+  logOptionsValue = true;
+}
+export const logOptions: any = logOptionsValue;
+export const log = pino.default({
   enabled: NO_LOG !== "true",
   // available levels: fatal, error, warn, info, debug, trace
   level: process.env.LOG_LEVEL || "info",

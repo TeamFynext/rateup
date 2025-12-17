@@ -1,5 +1,5 @@
-import { Survey, WaFlow } from "../../../../generated/prisma/client";
-import { WaSendMessageBody } from "../../../types/whatsapp.types";
+import { Survey, WaFlow } from "../../../../generated/prisma/client.js";
+import { WaSendMessageBody } from "../../../types/whatsapp.types.js";
 import {
   LDResponse,
   LogicCondition,
@@ -11,18 +11,18 @@ import {
   WaFlowStatus,
   WaQuestions,
   YNResponse,
-} from "../../../types/enums";
-import { CreateSurveyInput } from "../../survey/survey.schema";
-import { CreateQuestionInput } from "../../question/question.schema";
-import { ChoiceTypeQuestions } from "../../../utils/survey/question/question.utils";
-import { createSurvey } from "../../survey/survey.service";
-import { createQuestion } from "../../question/question.service";
-import { log } from "../../../utils/logger";
-import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
-import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
+} from "../../../types/enums.js";
+import { CreateSurveyInput } from "../../survey/survey.schema.js";
+import { CreateQuestionInput } from "../../question/question.schema.js";
+import { ChoiceTypeQuestions } from "../../../utils/survey/question/question.utils.js";
+import { createSurvey } from "../../survey/survey.service.js";
+import { createQuestion } from "../../question/question.service.js";
+import { log } from "../../../utils/logger.js";
+import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils.js";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import prisma from "../../../utils/prisma";
-import { getNestedProperty } from "../../../utils/misc/obj.utils";
+import prisma from "../../../utils/prisma.js";
+import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
 
 interface generateFlowMessageDataProps {
   to: string;

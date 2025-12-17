@@ -1,26 +1,26 @@
 import dayjs from "dayjs";
-import prisma from "../../utils/prisma";
-import { WaSendMessageBody } from "../../types/whatsapp.types";
+import prisma from "../../utils/prisma.js";
+import { WaSendMessageBody } from "../../types/whatsapp.types.js";
 import {
   CampaignParticipantStatus,
   SubscriptionFeaturePathName,
   waMessageScheduleSource,
   WaMessageScheduleStatus,
-} from "../../types/enums";
-import { log } from "../../utils/logger";
-import { sendMessage } from "./whatsappSurvey/wasurvey.service";
-import { getFlowIdFromTemplateComponents } from "../external/v1/whatsapp/internal-copy/whatsapp/messageTemplates/wa_templates.utils";
+} from "../../types/enums.js";
+import { log } from "../../utils/logger.js";
+import { sendMessage } from "./whatsappSurvey/wasurvey.service.js";
+import { getFlowIdFromTemplateComponents } from "../external/v1/whatsapp/internal-copy/whatsapp/messageTemplates/wa_templates.utils.js";
 import {
   createSession,
   deleteSession,
-} from "../external/v1/whatsapp/internal-copy/whatsapp/whatsappSurvey/wasurvey.service";
-import { getFlowWithSurveyTeamMapIds } from "../external/v1/whatsapp/internal-copy/whatsapp/flows/flow.service";
-import { getScheduleTime } from "../../utils/date";
-import { updateMonthlyStat } from "../stats/stats.service";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import { createMessageTemplate } from "../../utils/email/emailWeeklyStatsReport";
-import { FRONTEND_URL } from "../../utils/constants/constants";
-import { enqueueCampaignMessage } from "../campaign/campaign.service";
+} from "../external/v1/whatsapp/internal-copy/whatsapp/whatsappSurvey/wasurvey.service.js";
+import { getFlowWithSurveyTeamMapIds } from "../external/v1/whatsapp/internal-copy/whatsapp/flows/flow.service.js";
+import { getScheduleTime } from "../../utils/date.js";
+import { updateMonthlyStat } from "../stats/stats.service.js";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import { createMessageTemplate } from "../../utils/email/emailWeeklyStatsReport.js";
+import { FRONTEND_URL } from "../../utils/constants/constants.js";
+import { enqueueCampaignMessage } from "../campaign/campaign.service.js";
 
 interface waMessageScheduleProps {
   phone: string;

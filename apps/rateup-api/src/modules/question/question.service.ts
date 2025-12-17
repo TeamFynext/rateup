@@ -2,14 +2,14 @@ import { MultipartFile } from "@fastify/multipart";
 import { randomUUID } from "node:crypto";
 import xlsx from "node-xlsx";
 import Papa from "papaparse";
-import prisma from "../../utils/prisma";
-import { updateSurveyVariables } from "../survey/survey.service";
-import { createSurveyDefaultVariableForQuestion } from "../survey/survey.utils";
-import { CreateQuestionInput, UpdateQuestionInput } from "./question.schema";
+import prisma from "../../utils/prisma.js";
+import { updateSurveyVariables } from "../survey/survey.service.js";
+import { createSurveyDefaultVariableForQuestion } from "../survey/survey.utils.js";
+import { CreateQuestionInput, UpdateQuestionInput } from "./question.schema.js";
 import {
   emailPattern,
   getQuestionsArrUpdatedGRTypeQuestion,
-} from "./question.utils";
+} from "./question.utils.js";
 
 export async function createQuestion(
   surveyId: string,

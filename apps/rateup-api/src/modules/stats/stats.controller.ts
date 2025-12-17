@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getUsageStat } from "./stats.service";
-import Session from "supertokens-node/recipe/session";
-import { getOrgIdAndRole } from "../user/user.service";
+import { getUsageStat } from "./stats.service.js";
+import Session from "supertokens-node/recipe/session/index.js";
+import { getOrgIdAndRole } from "../user/user.service.js";
 
 export async function getUsageStatHandler(
   request: FastifyRequest,

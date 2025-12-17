@@ -2,7 +2,7 @@ import {
   PlatformType,
   ResponsePlatform,
   WhatsappSettings,
-} from "../../../../generated/prisma/client";
+} from "../../../../generated/prisma/client.js";
 import {
   CampaignParticipantStatus,
   LogicAction,
@@ -11,39 +11,39 @@ import {
   QuestionType2,
   SubscriptionFeaturePathName,
   WaQuestions,
-} from "../../../types/enums";
+} from "../../../types/enums.js";
 import {
   LeadGenBody,
   WaMessageBody,
   WaReceiveMessageBody,
   WaSendMessageBody,
-} from "../../../types/whatsapp.types";
-import { log } from "../../../utils/logger";
-import prisma from "../../../utils/prisma";
+} from "../../../types/whatsapp.types.js";
+import { log } from "../../../utils/logger.js";
+import prisma from "../../../utils/prisma.js";
 import {
   updateCampaignParticipant,
   updateDripCampaignParticipant,
-} from "../../campaign/campaignParticipants/campaignParticipants.service";
-import { getOrCreateContactByPhone } from "../../contact/contact.service";
-import { getQuestionsBySurveyId } from "../../question/question.service";
-import { parseLogicAction } from "../../question/question.utils";
-import { CreateResponseInput } from "../../response/response.schema";
+} from "../../campaign/campaignParticipants/campaignParticipants.service.js";
+import { getOrCreateContactByPhone } from "../../contact/contact.service.js";
+import { getQuestionsBySurveyId } from "../../question/question.service.js";
+import { parseLogicAction } from "../../question/question.utils.js";
+import { CreateResponseInput } from "../../response/response.schema.js";
 import {
   createResponse,
   saveResponseToGoogleSheet,
   sendResponseToWebhook,
   updateResponse,
-} from "../../response/response.service";
+} from "../../response/response.service.js";
 import {
   updateCompletedSurvey,
   updateVisitedSurvey,
-} from "../../survey/survey.service";
-import { handleWaMessages } from "../inbox/message/wamessage.controller";
+} from "../../survey/survey.service.js";
+import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 import {
   getWaSettings,
   getWaSettingsByIbaId,
-} from "../settings/wa_settings.service";
-import { GraphApiError, callWhatsappApi } from "../wa_axios";
+} from "../settings/wa_settings.service.js";
+import { GraphApiError, callWhatsappApi } from "../wa_axios.js";
 import {
   createCTAButtonMessage,
   createNativeListMessage,
@@ -55,25 +55,25 @@ import {
   getQuestionByIdFromSession,
   parseMessage,
   ratingEmoji,
-} from "./wasurvey.utils";
-import { getGraphApiErrorMessage } from "../wa_error_handler";
-import { uploadFile } from "../../../utils/upload/s3Upload";
+} from "./wasurvey.utils.js";
+import { getGraphApiErrorMessage } from "../wa_error_handler.js";
+import { uploadFile } from "../../../utils/upload/s3Upload.js";
 import axios from "axios";
-import { handleLoyaltyFeedback } from "../../loyalty/settings/settings.service";
+import { handleLoyaltyFeedback } from "../../loyalty/settings/settings.service.js";
 
 import {
   findRecentAutomation,
   logAutomationAction,
-} from "./automation-logger.utils";
-import { processNextNode } from "./wasurvey.controller";
-import { LeadgenNodeData } from "./node-types";
-import { LoyaltyActionType } from "../../loyalty/actions/actions.schema";
-import { hasFeature } from "../../subscription/subscription.service";
+} from "./automation-logger.utils.js";
+import { processNextNode } from "./wasurvey.controller.js";
+import { LeadgenNodeData } from "./node-types.js";
+import { LoyaltyActionType } from "../../loyalty/actions/actions.schema.js";
+import { hasFeature } from "../../subscription/subscription.service.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../../integrations/external/zapier/zapier.service";
-import { producer } from "../../..";
+} from "../../integrations/external/zapier/zapier.service.js";
+import { producer } from "../../../plugins/kafka.js";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {
@@ -705,7 +705,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
           if (response.type) {
             response.response[response.type] = obj["Key"] ? obj["Key"] : null;
           } else {
-            response.response = obj["Key"] ? obj["Key"] : null;
+            response.response = obj["Key"] ? obj["Key"] : (null as any);
           }
         } else {
           log.error("Failed to download media file from WhatsApp API.");

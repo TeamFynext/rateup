@@ -1,4 +1,4 @@
-import prisma from "../../utils/prisma";
+import prisma from "../../utils/prisma.js";
 import axios from "axios";
 
 export async function addToken(expoToken: any, userId: string, orgId: string) {

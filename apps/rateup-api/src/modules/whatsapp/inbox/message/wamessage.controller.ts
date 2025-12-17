@@ -9,7 +9,7 @@ import {
   WaMessageAssignBody,
   BlockUserBody,
   GenerateInboxResponseBody,
-} from "./wamessage.schema";
+} from "./wamessage.schema.js";
 import {
   addNewWaMessage,
   assignWaMessageToUser,
@@ -26,17 +26,17 @@ import {
   sendLocationMessage,
   generateChatAnalytics,
   generateInboxResponse,
-} from "./wamessage.service";
+} from "./wamessage.service.js";
 import {
   ByContactIdParams,
   ContactCore,
-} from "../../../contact/contact.schema";
+} from "../../../contact/contact.schema.js";
 import {
   createReactionMessage,
   createTextMessage,
   parseToWhatsAppFormat,
   validateSession,
-} from "../../whatsappSurvey/wasurvey.utils";
+} from "../../whatsappSurvey/wasurvey.utils.js";
 import {
   blockWhatsappUser,
   createSession,
@@ -44,38 +44,41 @@ import {
   getSession,
   sendMessage,
   unblockWhatsappUser,
-} from "../../whatsappSurvey/wasurvey.service";
+} from "../../whatsappSurvey/wasurvey.service.js";
 import {
   handleWaReceivedImages,
   isSessionExpired,
   returnAppropriateTimeStamp,
-} from "./wamessage.utils";
-import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service";
-import { log } from "../../../../utils/logger";
+} from "./wamessage.utils.js";
+import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service.js";
+import { log } from "../../../../utils/logger.js";
 import {
   getContactById,
   getOrCreateContactByIgsId,
   getOrCreateContactByPhone,
   updateContactById,
-} from "../../../contact/contact.service";
-import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
+} from "../../../contact/contact.service.js";
+import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller.js";
 import xlsx from "node-xlsx";
-import { WaMessageAssignStatus } from "../../../../types/enums";
-import { Contact, PlatformType } from "../../../../../generated/prisma/client";
-import { Role } from "../../../../utils/enums";
-import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service";
-import { WaSendMessageBody } from "../../../../types/whatsapp.types";
+import { WaMessageAssignStatus } from "../../../../types/enums.js";
+import {
+  Contact,
+  PlatformType,
+} from "../../../../../generated/prisma/client.js";
+import { Role } from "../../../../utils/enums/index.js";
+import { getIgUserDetailsFromMeta } from "../../instagram/instagram.service.js";
+import { WaSendMessageBody } from "../../../../types/whatsapp.types.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../../../integrations/external/zapier/zapier.service";
+} from "../../../integrations/external/zapier/zapier.service.js";
 import {
   checkIfFirstSendMessageInConversation,
   createConversation,
   getLastCreatedConversationForContact,
   updateConversation,
-} from "../../../contact/conversation/conversation.service";
-import { WaMessageClosedStatus } from "../../constants";
+} from "../../../contact/conversation/conversation.service.js";
+import { WaMessageClosedStatus } from "../../constants.js";
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(
   type: "send" | "receive",

@@ -5,7 +5,7 @@ import {
   CampaignStatus,
   CampaignType,
   SentCampaignEnum,
-} from "../../types/enums";
+} from "../../types/enums.js";
 
 const coreCampaignSchema = z
   .object({

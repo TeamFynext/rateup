@@ -9,10 +9,10 @@ import {
   syncStripeProductsHandler,
   updateStripeProductsHandler,
   webHookHandler,
-} from "./stripe.controller";
-import { $PSref } from "./stripe.schema";
-import { checkSession } from "../../../utils/checkSession";
-import { checkRoleHandler } from "../../../utils/checkRoleHandler";
+} from "./stripe.controller.js";
+import { $PSref } from "./stripe.schema.js";
+import { checkSession } from "../../../utils/checkSession.js";
+import { checkRoleHandler } from "../../../utils/checkRoleHandler.js";
 
 export async function paymentStripeRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

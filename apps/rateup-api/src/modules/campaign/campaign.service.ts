@@ -1,26 +1,26 @@
-import prisma from "../../utils/prisma";
-import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema";
-import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller";
+import prisma from "../../utils/prisma.js";
+import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema.js";
+import { sendCampaignToParticipants } from "../whatsapp/whatsappSurvey/wasurvey.controller.js";
 import {
   CampaignParticipantStatus,
   CampaignStatus,
   WaTemplateComponentType,
-} from "../../types/enums";
-import { log } from "../../utils/logger";
+} from "../../types/enums.js";
+import { log } from "../../utils/logger.js";
 import dayjs from "dayjs";
-import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
+import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
 import xlsx from "node-xlsx";
 
 import {
   WaTemplateComponent,
   WHATSAPP_BUTTON_TYPE,
-} from "../../types/whatsapp.types";
+} from "../../types/whatsapp.types.js";
 import {
   getCampaignCount,
   waCampaignDequeue,
   waCampaignEnqueue,
-} from "../../utils/redisConnection";
-import { Prisma } from "../../../generated/prisma/client";
+} from "../../utils/redisConnection.js";
+import { Prisma } from "../../../generated/prisma/client.js";
 
 export interface WaMessageStats {
   read?: boolean;

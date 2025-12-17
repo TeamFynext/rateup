@@ -2,8 +2,8 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   CreateGenerateQrRecordReqBody,
   updateGenerateQrRecordReqBodyType,
-} from "./generateQr.schema";
-import { shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils";
+} from "./generateQr.schema.js";
+import { shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils.js";
 import {
   createGenerateQrRecordInDB,
   deleteGenerateQrRecordInDB,
@@ -12,7 +12,7 @@ import {
   getPublicGenerateQrRecordWithShortIdFromDB,
   incrementNoOfScansInDB,
   updateGenerateQrRecordWithShortIdInDB,
-} from "./generateQr.service";
+} from "./generateQr.service.js";
 
 async function createGenerateQrRecord(
   req: FastifyRequest<{

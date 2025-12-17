@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession";
+import { checkSession } from "../../utils/checkSession.js";
 import {
   createLandingPageRouteOptions,
   deleteLandingPageByIdRouteOptions,
@@ -8,7 +8,7 @@ import {
   getPublicLandingPageWithShortIdRouteOptions,
   updateLandingPageWithShortIdRouteOptions,
   updatePageVisitsWithShortIdRouteOptions,
-} from "./landingPage.routeOptions";
+} from "./landingPage.routeOptions.js";
 
 export async function linkRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {

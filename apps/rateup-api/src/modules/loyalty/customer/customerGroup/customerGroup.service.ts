@@ -1,5 +1,5 @@
-import prisma from "../../../../utils/prisma";
-import { PaginationQuery } from "./customerGroup.schema";
+import prisma from "../../../../utils/prisma.js";
+import { PaginationQuery } from "./customerGroup.schema.js";
 
 export async function getCustomersByContactGroupIdWithPagination(
   contactGroupId: string,

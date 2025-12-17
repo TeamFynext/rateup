@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
-import { UserRecipes } from "../../types/enums";
-import { UserPresenceMode } from "../../../generated/prisma/enums";
+import { UserRecipes } from "../../types/enums.js";
+import { UserPresenceMode } from "../../../generated/prisma/enums.js";
 
 const userCore = {
   id: z.string().uuid(),

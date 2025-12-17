@@ -5,7 +5,7 @@ import {
   SmileyResponse,
   WaQuestions,
   YNResponse,
-} from "../types/enums";
+} from "../types/enums.js";
 
 export const LDResponseMap = { 1: LDResponse.Like, 2: LDResponse.Dislike };
 export const YNResponseMap = { 1: YNResponse.Yes, 2: YNResponse.No };

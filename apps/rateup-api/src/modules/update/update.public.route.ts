@@ -13,7 +13,8 @@ import {
   migrateTagsHandle,
   migratePhoneIdsHandle,
   backfillWithSQLHandler,
-} from "./update.controller";
+  migrateAutomationToRulesHandler,
+} from "./update.controller.js";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
   server.post("/usage-stats", updateUsageStatsTemplateMessageHandler);
@@ -26,4 +27,5 @@ export async function updatePublicRoutes(server: FastifyInstance) {
   server.put("/migrate-tags", migrateTagsHandle);
   server.put("/migrate-to-whatsapp-phone-ids", migratePhoneIdsHandle);
   server.put("/backfill", backfillWithSQLHandler);
+  server.put("/migrate-automation-to-rules", migrateAutomationToRulesHandler);
 }

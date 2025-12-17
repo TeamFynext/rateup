@@ -1,5 +1,5 @@
-import prisma from "../../../utils/prisma";
-import { log } from "../../../utils/logger";
+import prisma from "../../../utils/prisma.js";
+import { log } from "../../../utils/logger.js";
 
 /**
  * Finds the most recent active automation for a user

@@ -1,19 +1,19 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../utils/logger";
+import { log } from "../../../utils/logger.js";
 
 import {
   IdParamInput,
   LoyaltyTemplateInput,
   UpdateLoyaltyTemplateInput,
-} from "./settings.schema";
+} from "./settings.schema.js";
 import {
   createLoyaltyWaCommand,
   deleteLoyaltyWaCommandById,
   getAllLoyaltyWaCommands,
   getLoyaltyWaCommand,
   updateLoyaltyWaCommand,
-} from "./settings.service";
-import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service";
+} from "./settings.service.js";
+import { getAutomatedRepliesByKeyWeords } from "../../whatsapp/automatedReply/wa_automatedReply.service.js";
 
 export async function createLoyaltyTemplateHandler(
   request: FastifyRequest<{ Body: LoyaltyTemplateInput }>,

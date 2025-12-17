@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import { createBookDemo } from "./bookDemo.service";
-import { CreateBookDemoInput } from "./bookDemo.schema";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import { createBookDemo } from "./bookDemo.service.js";
+import { CreateBookDemoInput } from "./bookDemo.schema.js";
 
 export async function bookDemoHandler(
   request: FastifyRequest<{ Body: CreateBookDemoInput }>,

@@ -5,7 +5,7 @@ import {
   QuestionsRouteParams,
   UpdateQuestionInput,
   UpdateQuestionsOrderInput,
-} from "./question.schema";
+} from "./question.schema.js";
 import {
   createQuestion,
   deleteQuestionById,
@@ -16,9 +16,9 @@ import {
   updateLogicJump,
   updateQuestion,
   updateQuestionsOnSurvey,
-} from "./question.service";
-import { hasAccessToSurvey } from "../../utils/auth";
-import { getSurveyById } from "../survey/survey.service";
+} from "./question.service.js";
+import { hasAccessToSurvey } from "../../utils/auth.js";
+import { getSurveyById } from "../survey/survey.service.js";
 
 export async function createQuestionHandler(
   request: FastifyRequest<{

@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
-import { ShopifyEvents } from "../../../types/enums";
+import { ShopifyEvents } from "../../../types/enums.js";
 
 const byIdParamsSchema = z.object({
   id: z.string(),

@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession";
+import { checkSession } from "../../utils/checkSession.js";
 import {
   chatbotMessageHandler,
   createChatbotHanlder,
@@ -14,10 +14,10 @@ import {
   updateChatbotDetailsHanlder,
   uploadFileForAIEmbedHandler,
   uploadSourceForEmbedHandler,
-} from "./chatbot.controller";
-import { $chatbotRef } from "./chatbot.schema";
+} from "./chatbot.controller.js";
+import { $chatbotRef } from "./chatbot.schema.js";
 import FastifyMultipart from "@fastify/multipart";
-import { checkRoleHandler } from "../../utils/checkRoleHandler";
+import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import { Type } from "@sinclair/typebox";
 
 export async function chatbotRoutes(server: FastifyInstance) {

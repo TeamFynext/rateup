@@ -1,8 +1,8 @@
-import { handleWebhook } from "../modules/integrations/shopify/shopify.service";
-import { log } from "./logger";
-import prisma from "./prisma";
+import { handleWebhook } from "../modules/integrations/shopify/shopify.service.js";
+import { log } from "./logger.js";
+import prisma from "./prisma.js";
 
-const EventEmitter = require("events");
+import EventEmitter from "node:events";
 export const eventEmitter = new EventEmitter();
 
 eventEmitter.on("queue", async function () {
@@ -59,10 +59,8 @@ export async function processQueue() {
           status: "processing",
         },
       });
-      switch (job.type) {
-        case QueueType.webhookQueue:
-          await handleWebhook(job.data);
-          break;
+      if (job.type === QueueType.webhookQueue) {
+        await handleWebhook(job.data);
       }
       await prisma.jobQueue.delete({
         where: {
@@ -77,7 +75,7 @@ export async function processQueue() {
 }
 
 export async function deleteAllExpiredJobs() {
-  const res = await prisma.jobQueue.deleteMany({
+  await prisma.jobQueue.deleteMany({
     where: {
       createdAt: {
         lte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),

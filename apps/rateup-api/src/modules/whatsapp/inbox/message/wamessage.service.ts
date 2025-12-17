@@ -5,26 +5,26 @@ import {
   PlatformType,
   WaAccountSettings,
   WaMessage,
-} from "../../../../../generated/prisma/client";
-import prisma from "../../../../utils/prisma";
+} from "../../../../../generated/prisma/client.js";
+import prisma from "../../../../utils/prisma.js";
 import {
   DateType,
   GenerateInboxResponseBody,
   WaChatExportConstraints,
   WaChatFilterSchema,
   WaMessageAssignBody,
-} from "./wamessage.schema";
-import { log } from "../../../../utils/logger";
-import { callWhatsappApi } from "../../wa_axios";
-import { getWaSettings } from "../../settings/wa_settings.service";
+} from "./wamessage.schema.js";
+import { log } from "../../../../utils/logger.js";
+import { callWhatsappApi } from "../../wa_axios.js";
+import { getWaSettings } from "../../settings/wa_settings.service.js";
 import axios from "axios";
 import {
   WaAssignedChatPermission,
   WaMessageAssignStatus,
-} from "../../../../types/enums";
-import { updateContactById } from "../../../contact/contact.service";
-import { wait } from "../../whatsappSurvey/wasurvey.controller";
-import { sendMessage } from "../../whatsappSurvey/wasurvey.service";
+} from "../../../../types/enums.js";
+import { updateContactById } from "../../../contact/contact.service.js";
+import { wait } from "../../whatsappSurvey/wasurvey.controller.js";
+import { sendMessage } from "../../whatsappSurvey/wasurvey.service.js";
 import {
   createReplyImageMessage,
   createDocumentMessage,
@@ -32,29 +32,29 @@ import {
   createAudioMessage,
   createContactMessage,
   createLocationMessage,
-} from "../../whatsappSurvey/wasurvey.utils";
+} from "../../whatsappSurvey/wasurvey.utils.js";
 import {
   WaMessageAssignStatusTab,
   WaMessageClosedStatus,
-} from "../../constants";
-import { Role } from "../../../org/org.services";
-import { getTeamIdsByUserId } from "../../../team/team.service";
-import { UserAvailabilityStatus } from "../../../user/user.schema";
+} from "../../constants.js";
+import { Role } from "../../../org/org.services.js";
+import { getTeamIdsByUserId } from "../../../team/team.service.js";
+import { UserAvailabilityStatus } from "../../../user/user.schema.js";
 import {
   createNotification,
   getNotificationSettings,
-} from "../../../notification/notification.service";
+} from "../../../notification/notification.service.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../../../integrations/external/zapier/zapier.service";
+} from "../../../integrations/external/zapier/zapier.service.js";
 import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
-import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller";
+import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller.js";
 import {
   getLastCreatedConversationForContact,
   updateConversationAssignees,
-} from "../../../contact/conversation/conversation.service";
+} from "../../../contact/conversation/conversation.service.js";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,

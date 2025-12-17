@@ -3,7 +3,7 @@ import z from "zod";
 import {
   LoyaltyTemplateTypes,
   WaAutomatedReplyResponseType,
-} from "../../../types/enums";
+} from "../../../types/enums.js";
 
 const loyaltyTemplateSchema = z.object({
   waTemplateId: z.string(),

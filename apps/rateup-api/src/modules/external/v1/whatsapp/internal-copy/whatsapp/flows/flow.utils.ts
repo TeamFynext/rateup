@@ -1,7 +1,7 @@
 import {
   Survey,
   WaFlow,
-} from "../../../../../../../../generated/prisma/client";
+} from "../../../../../../../../generated/prisma/client.js";
 import {
   WaFlowStatus,
   WaFlowFormElementType,
@@ -12,14 +12,14 @@ import {
   SmileyResponse,
   LogicCondition,
   QuestionType as qt,
-} from "../../../../../../../types/enums";
-import { WaSendMessageBody } from "../../../../../../../types/whatsapp.types";
-import { log } from "../../../../../../../utils/logger";
-import { getUniqueRandomAlphaId } from "../../../../../../../utils/misc/random.utils";
-import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload";
-import { CreateQuestionInput } from "../../../../../../question/question.schema";
-import { createQuestion } from "../../../../../../question/question.service";
-import { createSurvey } from "../../../../../../survey/survey.service";
+} from "../../../../../../../types/enums.js";
+import { WaSendMessageBody } from "../../../../../../../types/whatsapp.types.js";
+import { log } from "../../../../../../../utils/logger.js";
+import { getUniqueRandomAlphaId } from "../../../../../../../utils/misc/random.utils.js";
+import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload.js";
+import { CreateQuestionInput } from "../../../../../../question/question.schema.js";
+import { createQuestion } from "../../../../../../question/question.service.js";
+import { createSurvey } from "../../../../../../survey/survey.service.js";
 
 interface generateFlowMessageDataProps {
   to: string;

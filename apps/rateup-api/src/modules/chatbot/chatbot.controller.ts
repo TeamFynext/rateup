@@ -8,7 +8,7 @@ import {
   publicMessageInput,
   updateChatbotInput,
   UserIdInput,
-} from "./chatbot.schema";
+} from "./chatbot.schema.js";
 import {
   AI_API_URL,
   createChatbot,
@@ -27,10 +27,10 @@ import {
   updateChatbotDetails,
   uploadFileForAIEmbed,
   uploadSourceForEmbed,
-} from "./chatbot.service";
-import { createJWT } from "../../utils/jwt";
+} from "./chatbot.service.js";
+import { createJWT } from "../../utils/jwt.js";
 import axios from "axios";
-import { log } from "../../utils/logger";
+import { log } from "../../utils/logger.js";
 
 export async function uploadSourceForEmbedHandler(
   request: FastifyRequest<{

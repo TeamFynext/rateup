@@ -1,8 +1,8 @@
-import prisma from "../../../utils/prisma";
+import prisma from "../../../utils/prisma.js";
 import {
   CreateTestimonialCollectionInput,
   UpdateTestimonialCollectionInput,
-} from "./testimonialCollection.schema";
+} from "./testimonialCollection.schema.js";
 
 export async function createTestimonialCollection(
   testimonialCollection: CreateTestimonialCollectionInput,

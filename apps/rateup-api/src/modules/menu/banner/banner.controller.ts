@@ -1,16 +1,19 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ByMenuBannerIdParams, CreateMenuBannerInput } from "./banner.schema";
+import {
+  ByMenuBannerIdParams,
+  CreateMenuBannerInput,
+} from "./banner.schema.js";
 import {
   createMenuBanner,
   deletemenuBanner,
   getMenuBanner,
   updateMenuBanner,
-} from "./banner.service";
-import { ByMenuIdParams } from "../menu.schema";
+} from "./banner.service.js";
+import { ByMenuIdParams } from "../menu.schema.js";
 
 export async function createMenuBannerHandler(
   request: FastifyRequest<{ Body: CreateMenuBannerInput }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const menu = await createMenuBanner(request.body);
@@ -22,7 +25,7 @@ export async function createMenuBannerHandler(
 //
 export async function getMenuBannerHandler(
   request: FastifyRequest<{ Params: ByMenuIdParams }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const menuBanner = await getMenuBanner(request.params?.menuId);
@@ -37,12 +40,12 @@ export async function updateMenuBannerHandler(
     Body: CreateMenuBannerInput;
     Params: ByMenuBannerIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const menuBanner = await updateMenuBanner(
       request.params.menuBannerId,
-      request.body
+      request.body,
     );
     reply.send(menuBanner);
   } catch (error) {
@@ -54,7 +57,7 @@ export async function deleteMenuBannerHandler(
   request: FastifyRequest<{
     Params: ByMenuBannerIdParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   try {
     const menuBanner = await deletemenuBanner(request.params.menuBannerId);

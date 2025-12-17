@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
-import prisma from "../../../utils/prisma";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import prisma from "../../../utils/prisma.js";
 
 export async function getWhatsappSurveyVerifySubscriptionHandler(
   request: FastifyRequest<{

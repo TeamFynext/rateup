@@ -7,7 +7,7 @@ import {
   generateXlsxBody,
   SummarizeInput,
   ResponseFilterQuery,
-} from "./response.schema";
+} from "./response.schema.js";
 import {
   createResponse,
   deleteResponse,
@@ -31,26 +31,26 @@ import {
   syncResponseToGoogleSheet,
   updateResponse,
   happyIndexResponsesBySurveyId,
-} from "./response.service";
-import { fetchLocation } from "../../utils/location";
-import { getIp } from "../../utils/http";
+} from "./response.service.js";
+import { fetchLocation } from "../../utils/location.js";
+import { getIp } from "../../utils/http.js";
 import {
   getTeamIdsBySurveyMapId,
   getTeamIdsByUserId,
-} from "../team/team.service";
-import { QuestionType } from "../../types/enums";
-import { createTestimonial } from "../testimonial/testimonial.service";
-import { getQuestionsBySurveyId } from "../question/question.service";
-import { log } from "../../utils/logger";
-import prisma from "../../utils/prisma";
-import { getSubscription } from "../subscription/subscription.service";
-import { getFlowFromDb } from "../whatsapp/flows/flow.service";
-import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema";
-import { PrismaClientKnownRequestError } from "../../../generated/prisma/internal/prismaNamespace";
+} from "../team/team.service.js";
+import { QuestionType } from "../../types/enums.js";
+import { createTestimonial } from "../testimonial/testimonial.service.js";
+import { getQuestionsBySurveyId } from "../question/question.service.js";
+import { log } from "../../utils/logger.js";
+import prisma from "../../utils/prisma.js";
+import { getSubscription } from "../subscription/subscription.service.js";
+import { getFlowFromDb } from "../whatsapp/flows/flow.service.js";
+import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema.js";
+import { PrismaClientKnownRequestError } from "../../../generated/prisma/internal/prismaNamespace.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../integrations/external/zapier/zapier.service";
+} from "../integrations/external/zapier/zapier.service.js";
 
 export async function getResponsesHandler(
   request: FastifyRequest<{

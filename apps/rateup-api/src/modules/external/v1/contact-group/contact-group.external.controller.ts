@@ -2,8 +2,8 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import {
   AddNewContactsToGroupInput,
   ByContactGroupIdParams,
-} from "../../../contact/contactGroup/contactGroup.schema";
-import { addNewContactsToGroupHandler } from "../contact/internal-copy/contact/contactGroup/contactGroup.controller";
+} from "../../../contact/contactGroup/contactGroup.schema.js";
+import { addNewContactsToGroupHandler } from "../contact/internal-copy/contact/contactGroup/contactGroup.controller.js";
 
 export async function extAddNewContactsToGroupHandler(
   request: FastifyRequest<{

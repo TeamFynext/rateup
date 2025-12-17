@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $contactRef } from "./contact.schema";
+import { $contactRef } from "./contact.schema.js";
 import {
   addCustomFieldHandler,
   createContactHandler,
@@ -16,19 +16,19 @@ import {
   updateContactLabelsByIdHandler,
   updateCustomFieldHandler,
   updateLifecycleStageofContactsHandler,
-} from "./contact.controller";
-import { contactGroupRoutes } from "./contactGroup/contactGroup.route";
-import { contactGroupSchemas } from "./contactGroup/contactGroup.schema";
-import { contactLabelRoutes } from "./contactLabel/contactLabel.route";
-import { contactLabelSchemas } from "./contactLabel/contactLabel.schema";
-import { checkSession } from "../../utils/checkSession";
+} from "./contact.controller.js";
+import { contactGroupRoutes } from "./contactGroup/contactGroup.route.js";
+import { contactGroupSchemas } from "./contactGroup/contactGroup.schema.js";
+import { contactLabelRoutes } from "./contactLabel/contactLabel.route.js";
+import { contactLabelSchemas } from "./contactLabel/contactLabel.schema.js";
+import { checkSession } from "../../utils/checkSession.js";
 import fastifyMultipart from "@fastify/multipart";
-import { getVerifySubscriptionHandler } from "../../utils/auth";
-import { verifyLCustomerMaxCountRestrictionHandler } from "../loyalty/customer/customer.controller";
-import { SubscriptionFeaturePathName } from "../../types/enums";
-import { $LifecycleRef } from "../lifecycle/lifecycle.schema";
-import { conversationRoutes } from "./conversation/conversation.route";
-import { conversationSchemas } from "./conversation/conversation.schema";
+import { getVerifySubscriptionHandler } from "../../utils/auth.js";
+import { verifyLCustomerMaxCountRestrictionHandler } from "../loyalty/customer/customer.controller.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { $LifecycleRef } from "../lifecycle/lifecycle.schema.js";
+import { conversationRoutes } from "./conversation/conversation.route.js";
+import { conversationSchemas } from "./conversation/conversation.schema.js";
 
 export async function contactRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

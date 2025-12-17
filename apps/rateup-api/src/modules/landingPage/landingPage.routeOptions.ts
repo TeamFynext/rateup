@@ -1,5 +1,5 @@
 import { RouteShorthandOptionsWithHandler } from "fastify";
-import { asyncErrHandler } from "../../utils/commonUtils";
+import { asyncErrHandler } from "../../utils/commonUtils.js";
 import {
   createLandingPage,
   deleteLandingPageById,
@@ -8,9 +8,9 @@ import {
   getPublicLandingPageWithShortId,
   updateLandingPageWithShortId,
   updatePageVisits,
-} from "./landingPage.controllers";
-import { landingPageSchemaRef } from "./landingPage.schema";
-import { CustomRouteShortHandOptionsWithHandler } from "../../types/global";
+} from "./landingPage.controllers.js";
+import { landingPageSchemaRef } from "./landingPage.schema.js";
+import { CustomRouteShortHandOptionsWithHandler } from "../../types/global.js";
 
 const getLandingPagesRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {

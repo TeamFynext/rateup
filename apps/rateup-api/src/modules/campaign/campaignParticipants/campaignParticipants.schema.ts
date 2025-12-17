@@ -3,8 +3,8 @@ import { z } from "zod";
 import {
   CampaignParticipantAddStatus,
   CampaignParticipantStatus,
-} from "../../../types/enums";
-import { paginationQuery } from "../../contact/contact.schema";
+} from "../../../types/enums.js";
+import { paginationQuery } from "../../contact/contact.schema.js";
 
 const byCampaignParticipantIdParamsSchema = z.object({
   campaignParticipantId: z.string().uuid(),

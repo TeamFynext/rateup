@@ -1,12 +1,12 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { log } from "../../../utils/logger";
+import { log } from "../../../utils/logger.js";
 import {
   ByCollectionIdParamsInput,
   CreateTestimonialCollectionInput,
   MultipleTestimonialToCollectionInput,
   TestimonialCollectionQuery,
   UpdateTestimonialCollectionInput,
-} from "./testimonialCollection.schema";
+} from "./testimonialCollection.schema.js";
 import {
   addMultipleTestimonialToCollection,
   createTestimonialCollection,
@@ -16,7 +16,7 @@ import {
   getTestimonialCollectionById,
   getTestimonialCollectionsByTeamId,
   updateTestimonialCollection,
-} from "./testimonialCollection.service";
+} from "./testimonialCollection.service.js";
 
 export async function createTestimonialCollectionHandler(
   request: FastifyRequest<{ Body: CreateTestimonialCollectionInput }>,

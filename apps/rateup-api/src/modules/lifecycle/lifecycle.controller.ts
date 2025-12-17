@@ -1,10 +1,10 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../utils/logger";
+import { log } from "../../utils/logger.js";
 import {
   LifecycleBodySchema,
   LifecycleIdParamSchema,
   LifecycleReorderSchema,
-} from "./lifecycle.schema";
+} from "./lifecycle.schema.js";
 import {
   createLifecycle,
   deleteLifecycleById,
@@ -12,7 +12,7 @@ import {
   getLifeCyclesWithContactCount,
   reorderLabels,
   updateLifecycle,
-} from "./lifecycle.service";
+} from "./lifecycle.service.js";
 
 export async function getLifecyclesHandler(
   request: FastifyRequest,

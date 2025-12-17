@@ -1,19 +1,19 @@
 import { FastifyReply } from "fastify";
-import { FastifyRequest } from "fastify/types/request";
-import { RegisterBusinessBody } from "./wa_auth.schema";
+import { FastifyRequest } from "fastify/types/request.js";
+import { RegisterBusinessBody } from "./wa_auth.schema.js";
 import {
   debug_token,
   getAccessTokenFromCode,
   getPhoneNumbersFromWABA,
   registerPhoneNumber,
   subscribeWABAToWebhook,
-} from "./wa_auth.service";
+} from "./wa_auth.service.js";
 import {
   createWaSettings,
   deleteWaSettings,
-} from "../settings/wa_settings.service";
-import { WaConfigType } from "../../../../../../../types/enums";
-import { log } from "../../../../../../../utils/logger";
+} from "../settings/wa_settings.service.js";
+import { WaConfigType } from "../../../../../../../types/enums.js";
+import { log } from "../../../../../../../utils/logger.js";
 
 export async function registerBusinessClientHandler(
   req: FastifyRequest<{

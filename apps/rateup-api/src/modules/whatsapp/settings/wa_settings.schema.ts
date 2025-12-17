@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { WaConfigType } from "../../../types/enums";
+import { WaConfigType } from "../../../types/enums.js";
 
 const createWaSettingsInput = {
   accessToken: z.string(),

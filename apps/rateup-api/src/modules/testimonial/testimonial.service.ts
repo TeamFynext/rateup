@@ -1,6 +1,6 @@
-import { QuestionType } from "../../types/enums";
-import prisma from "../../utils/prisma";
-import { CreateResponseInput } from "../response/response.schema";
+import { QuestionType } from "../../types/enums.js";
+import prisma from "../../utils/prisma.js";
+import { CreateResponseInput } from "../response/response.schema.js";
 
 export async function createTestimonial(
   responseData: CreateResponseInput,

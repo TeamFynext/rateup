@@ -1,5 +1,5 @@
-import prisma from "../../../../utils/prisma";
-import { OrderPaginateSchema } from "./catalogOrder.schema";
+import prisma from "../../../../utils/prisma.js";
+import { OrderPaginateSchema } from "./catalogOrder.schema.js";
 
 export async function getWaCatalogOrders(
   catalogId: string,

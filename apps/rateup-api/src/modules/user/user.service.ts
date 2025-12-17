@@ -7,29 +7,28 @@ import {
   UpdateProfileSchema,
   userInfoParams,
   UserAvailabilityStatus,
-} from "./user.schema";
+} from "./user.schema.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import Session from "supertokens-node/recipe/session";
-import { Role } from "../../utils/enums";
+import Session from "supertokens-node/recipe/session/index.js";
+import { Role } from "../../utils/enums/index.js";
 import supertokens from "supertokens-node";
-import { log } from "../../utils/logger";
-import { createFreePlanSubscription } from "../subscription/subscription.service";
-import PasswordLess from "supertokens-node/recipe/passwordless";
-import { cloneSurvey } from "../survey/survey.service";
-import { cloneMenu } from "../menu/menu.service";
-import { defaultTheme } from "../surveyTheme/defaultTheme";
+import { log } from "../../utils/logger.js";
+import { createFreePlanSubscription } from "../subscription/subscription.service.js";
+import { cloneSurvey } from "../survey/survey.service.js";
+import { cloneMenu } from "../menu/menu.service.js";
+import { defaultTheme } from "../surveyTheme/defaultTheme.js";
 import {
   deleteSuperTokenUserForId,
   getUserInfo,
-} from "../../utils/supertoken/supertoken";
-import { UserRecipes } from "../../types/enums";
+} from "../../utils/supertoken/supertoken.js";
+import { UserRecipes } from "../../types/enums.js";
 import dayjs from "dayjs";
 import {
   createHubSpotCompany,
   createHubSpotContact,
-} from "../../utils/hubspot";
-import prisma from "../../utils/prisma";
-import { UserPresenceMode } from "../../../generated/prisma/enums";
+} from "../../utils/hubspot.js";
+import prisma from "../../utils/prisma.js";
+import { UserPresenceMode } from "../../../generated/prisma/enums.js";
 
 async function createUser({
   id,

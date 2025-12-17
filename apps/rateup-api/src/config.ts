@@ -1,49 +1,56 @@
-import Session from "supertokens-node/recipe/session";
-import { TypeInput } from "supertokens-node/types";
-import EmailVerification from "supertokens-node/recipe/emailverification";
+import { TypeInput } from "supertokens-node/types/index.js";
+import Session from "supertokens-node/recipe/session/index.js";
+import EmailVerification from "supertokens-node/recipe/emailverification/index.js";
+import Dashboard from "supertokens-node/recipe/dashboard/index.js";
+import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
+import ThirdParty from "supertokens-node/recipe/thirdparty/index.js";
+import Passwordless from "supertokens-node/recipe/passwordless/index.js";
+import jwt from "supertokens-node/recipe/jwt/index.js";
+import { SupertokensService } from "supertokens-node/recipe/passwordless/smsdelivery/index.js";
+import { SwaggerOptions } from "@fastify/swagger";
+import supertokens from "supertokens-node";
 import {
   createUserSignup,
   getOrgIdAndRole,
   getUserByEmail,
   getUserRecipeName,
   updateLastLoggedInTime,
-} from "./modules/user/user.service";
-import Dashboard from "supertokens-node/recipe/dashboard";
-import { getValueByKey } from "./utils/signUp";
-import EmailPassword from "supertokens-node/recipe/emailpassword";
-import ThirdParty from "supertokens-node/recipe/thirdparty";
-import supertokens from "supertokens-node";
-import { sendResetPasswordMail } from "./utils/email/supertoken/passwordReset";
-import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail";
-import { log } from "./utils/logger";
-import Passwordless from "supertokens-node/recipe/passwordless";
-import { SupertokensService } from "supertokens-node/recipe/passwordless/smsdelivery";
-import { SwaggerOptions } from "@fastify/swagger";
-import jwt from "supertokens-node/recipe/jwt";
-import { getUserInfo } from "./utils/supertoken/supertoken";
-import util from "util";
+} from "./modules/user/user.service.js";
+import { getValueByKey } from "./utils/signUp/index.js";
+import { sendResetPasswordMail } from "./utils/email/supertoken/passwordReset.js";
+import { sendVerifyMail } from "./utils/email/supertoken/verifyEmail.js";
+import { log } from "./utils/logger.js";
+import { getUserInfo } from "./utils/supertoken/supertoken.js";
 
-const frontendUrl = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL
-  : "http://localhost:3000";
-const backendUrl = process.env.API_URL
-  ? process.env.API_URL
-  : "http://localhost:3001";
+// Environment configuration
+export const appConfig = {
+  frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
+  backendUrl: process.env.API_URL || "http://localhost:3001",
+  port: Number.parseInt(process.env.PORT || "3001", 10),
+  host: process.env.HOST || "::",
+  nodeEnv: process.env.NODE_ENV || "development",
+  kafkaUrl: process.env.KAFKA_URL,
+  supertokens: {
+    connectionURI: process.env.SUPERTOKEN_URI || "",
+    apiKey: process.env.SUPERTOKEN_KEY,
+    smsApiKey: process.env.SUPERTOKEN_SMS_API_KEY,
+    googleClientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
+    googleClientSecret: process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
+  },
+  cookieDomain: process.env.COOKIE_DOMAIN || "",
+};
 
+// SuperTokens configuration
 export const SuperTokensConfig: TypeInput = {
   framework: "fastify",
   supertokens: {
-    // These are the connection details of the app you created on supertokens.com
-    connectionURI: process.env.SUPERTOKEN_URI || "",
-    apiKey: process.env.SUPERTOKEN_KEY,
+    connectionURI: appConfig.supertokens.connectionURI,
+    apiKey: appConfig.supertokens.apiKey,
   },
   appInfo: {
-    // learn more about this on https://supertokens.com/docs/session/appinfo
     appName: "rateup",
-    apiDomain: process.env.API_URL
-      ? process.env.API_URL
-      : "http://localhost:3001",
-    websiteDomain: frontendUrl,
+    apiDomain: appConfig.backendUrl,
+    websiteDomain: appConfig.frontendUrl,
     apiBasePath: "/api/auth",
     websiteBasePath: "/login",
   },
@@ -51,167 +58,117 @@ export const SuperTokensConfig: TypeInput = {
     EmailPassword.init({
       signUpFeature: {
         formFields: [
-          {
-            id: "name",
-          },
-          {
-            id: "orgName",
-          },
-          {
-            id: "phoneNumber",
-            optional: true,
-          },
-          {
-            id: "planId",
-            optional: true,
-          },
-          {
-            id: "location",
-            optional: true,
-          },
-          {
-            id: "website",
-            optional: true,
-          },
-          {
-            id: "industry",
-            optional: true,
-          },
-          {
-            id: "goals",
-            optional: true,
-          },
-          {
-            id: "integrationsSelected",
-            optional: true,
-          },
+          { id: "name" },
+          { id: "orgName" },
+          { id: "phoneNumber", optional: true },
+          { id: "planId", optional: true },
+          { id: "location", optional: true },
+          { id: "website", optional: true },
+          { id: "industry", optional: true },
+          { id: "goals", optional: true },
+          { id: "integrationsSelected", optional: true },
         ],
       },
       override: {
-        functions: (originalImplementation) => {
-          return {
-            ...originalImplementation,
-            signUp: async function (input) {
-              // if (process.env.NODE_ENV === "development") {
-              //   if (!input.email.includes("999")) {
-              //     throw new Error("Not a RATEUP EMPLOYEE");
-              //   }
-              // }
-              let existingUsers = await supertokens.listUsersByAccountInfo(
-                input.tenantId,
-                {
-                  email: input.email,
-                },
-              );
-              if (existingUsers.length === 0) {
-                // this means this email is new so we allow sign up
-                // return originalImplementation.signUp(input);
+        functions: (originalImplementation) => ({
+          ...originalImplementation,
+          signUp: async function (input) {
+            const existingUsers = await supertokens.listUsersByAccountInfo(
+              input.tenantId,
+              { email: input.email },
+            );
 
-                let response = await originalImplementation.signUp(input);
+            if (existingUsers.length === 0) {
+              const response = await originalImplementation.signUp(input);
 
-                if (
-                  response.status === "OK" &&
-                  response.user.loginMethods.length === 1 &&
-                  input.session === undefined
-                ) {
-                  // TODO: some post sign up logic
-                }
-
-                return response;
-              }
-              return {
-                status: "EMAIL_ALREADY_EXISTS_ERROR",
-              };
-            },
-
-            signIn: async function (input) {
-              // TODO: some pre sign in logic
-
-              let response = await originalImplementation.signIn(input);
-
-              if (response.status === "OK" && input.session === undefined) {
-                // TODO: some post sign in logic
-                await updateLastLoggedInTime(response.user.id, new Date());
-              }
-
-              return response;
-            },
-          };
-        },
-        apis: (originalImplementation) => {
-          return {
-            ...originalImplementation,
-            signUpPOST: async function (input) {
-              let formFields = input.formFields;
-              // First we call the original implementation of signUpPOST.
-              let response = await originalImplementation.signUpPOST!(input);
-
-              // Post sign up response, we check if it was successful
               if (
                 response.status === "OK" &&
                 response.user.loginMethods.length === 1 &&
                 input.session === undefined
               ) {
-                //custom fields
-                const name = getValueByKey(formFields, "name");
-                const orgName = getValueByKey(formFields, "orgName");
-                const phoneNumber = getValueByKey(formFields, "phoneNumber");
-                const planId = getValueByKey(formFields, "planId");
-                const location = getValueByKey(formFields, "location");
-                const website = getValueByKey(formFields, "website");
-                const industry = getValueByKey(formFields, "industry");
-                const goals = getValueByKey(formFields, "goals");
-                const integrationsSelected = getValueByKey(
-                  formFields,
-                  "integrationsSelected",
-                );
-
-                let { id, emails, loginMethods } = response.user;
-
-                let email = emails[0]; // TODO: handle multiple emails
-
-                if (name && orgName) {
-                  const userSignup = await createUserSignup({
-                    id,
-                    email,
-                    name,
-                    orgName,
-                    phoneNumber,
-                    recipeName: getUserRecipeName(loginMethods[0].recipeId),
-                    planId,
-                    location,
-                    website,
-                    industry,
-                    goals: Array.isArray(goals) ? goals : goals ? [goals] : [],
-                    integrationsSelected: Array.isArray(integrationsSelected)
-                      ? integrationsSelected
-                      : integrationsSelected
-                        ? [integrationsSelected]
-                        : [],
-                  });
-                }
-
-                // Use name..
+                // Post sign up logic can be added here
               }
+
               return response;
-            },
-          };
-        },
+            }
+
+            return { status: "EMAIL_ALREADY_EXISTS_ERROR" };
+          },
+
+          signIn: async function (input) {
+            const response = await originalImplementation.signIn(input);
+
+            if (response.status === "OK" && input.session === undefined) {
+              await updateLastLoggedInTime(response.user.id, new Date());
+            }
+
+            return response;
+          },
+        }),
+        apis: (originalImplementation) => ({
+          ...originalImplementation,
+          signUpPOST: async function (input) {
+            const response = await originalImplementation.signUpPOST!(input);
+
+            if (
+              response.status === "OK" &&
+              response.user.loginMethods.length === 1 &&
+              input.session === undefined
+            ) {
+              const formFields = input.formFields;
+              const name = getValueByKey(formFields, "name");
+              const orgName = getValueByKey(formFields, "orgName");
+              const phoneNumber = getValueByKey(formFields, "phoneNumber");
+              const planId = getValueByKey(formFields, "planId");
+              const location = getValueByKey(formFields, "location");
+              const website = getValueByKey(formFields, "website");
+              const industry = getValueByKey(formFields, "industry");
+              const goals = getValueByKey(formFields, "goals");
+              const integrationsSelected = getValueByKey(
+                formFields,
+                "integrationsSelected",
+              );
+
+              const { id, emails, loginMethods } = response.user;
+              const email = emails[0];
+
+              if (name && orgName) {
+                await createUserSignup({
+                  id,
+                  email,
+                  name,
+                  orgName,
+                  phoneNumber,
+                  recipeName: getUserRecipeName(loginMethods[0].recipeId),
+                  planId,
+                  location,
+                  website,
+                  industry,
+                  goals: Array.isArray(goals) ? goals : goals ? [goals] : [],
+                  integrationsSelected: Array.isArray(integrationsSelected)
+                    ? integrationsSelected
+                    : integrationsSelected
+                      ? [integrationsSelected]
+                      : [],
+                });
+              }
+            }
+
+            return response;
+          },
+        }),
       },
       emailDelivery: {
-        override: (originalImplementation) => {
-          return {
-            ...originalImplementation,
-            sendEmail: async function (input) {
-              sendResetPasswordMail(input?.passwordResetLink, input.user.email);
-            },
-          };
-        },
+        override: (originalImplementation) => ({
+          ...originalImplementation,
+          sendEmail: async function (input) {
+            sendResetPasswordMail(input?.passwordResetLink, input.user.email);
+          },
+        }),
       },
     }),
+
     ThirdParty.init({
-      // We have provided you with development keys which you can use for testing.
-      // IMPORTANT: Please replace them with your own OAuth keys for production use.
       signInAndUpFeature: {
         providers: [
           {
@@ -219,9 +176,8 @@ export const SuperTokensConfig: TypeInput = {
               thirdPartyId: "google",
               clients: [
                 {
-                  clientId: process.env.SUPERTOKEN_GOOGLE_CLIENT_ID || "",
-                  clientSecret:
-                    process.env.SUPERTOKEN_GOOGLE_CLIENT_SECRET || "",
+                  clientId: appConfig.supertokens.googleClientId,
+                  clientSecret: appConfig.supertokens.googleClientSecret,
                 },
               ],
             },
@@ -229,66 +185,62 @@ export const SuperTokensConfig: TypeInput = {
         ],
       },
       override: {
-        functions: (originalImplementation) => {
-          return {
-            ...originalImplementation,
-            signInUp: async function (input) {
-              let existingUsers = await getUserInfo(
-                input.email,
-                input.tenantId,
-              );
-              if (existingUsers.length === 0) {
-                // this means this email is new so we allow sign up
-                return originalImplementation.signInUp(input);
+        functions: (originalImplementation) => ({
+          ...originalImplementation,
+          signInUp: async function (input) {
+            const existingUsers = await getUserInfo(
+              input.email,
+              input.tenantId,
+            );
+
+            if (existingUsers.length === 0) {
+              return originalImplementation.signInUp(input);
+            }
+
+            if (
+              existingUsers.find(
+                (u) =>
+                  u.loginMethods.find(
+                    (lM) =>
+                      lM.hasSameThirdPartyInfoAs({
+                        id: input.thirdPartyId,
+                        userId: input.thirdPartyUserId,
+                      }) && lM.recipeId === "thirdparty",
+                  ) !== undefined,
+              )
+            ) {
+              // this means we are trying to sign in with the same social login. So we allow it
+              return originalImplementation.signInUp(input);
+            }
+            // this means that the email already exists with another social or email password login method, so we throw an error.
+            throw new Error("Cannot sign up as email already exists");
+          },
+        }),
+        apis: (originalImplementation) => ({
+          ...originalImplementation,
+          signInUpPOST: async function (input) {
+            try {
+              return await originalImplementation.signInUpPOST!(input);
+            } catch (err: any) {
+              if (err.message === "Cannot sign up as email already exists") {
+                // this error was thrown from our function override above.
+                // so we send a useful message to the user
+                return {
+                  status: "GENERAL_ERROR",
+                  message:
+                    "Seems like you already have an account with another method. Please use that instead.",
+                };
               }
-              if (
-                existingUsers.find(
-                  (u) =>
-                    u.loginMethods.find(
-                      (lM) =>
-                        lM.hasSameThirdPartyInfoAs({
-                          id: input.thirdPartyId,
-                          userId: input.thirdPartyUserId,
-                        }) && lM.recipeId === "thirdparty",
-                    ) !== undefined,
-                )
-              ) {
-                // this means we are trying to sign in with the same social login. So we allow it
-                return originalImplementation.signInUp(input);
-              }
-              // this means that the email already exists with another social or email password login method, so we throw an error.
-              throw new Error("Cannot sign up as email already exists");
-            },
-          };
-        },
-        apis: (originalImplementation) => {
-          return {
-            ...originalImplementation,
-            signInUpPOST: async function (input) {
-              try {
-                return await originalImplementation.signInUpPOST!(input);
-              } catch (err: any) {
-                console.log(err);
-                if (err.message === "Cannot sign up as email already exists") {
-                  // this error was thrown from our function override above.
-                  // so we send a useful message to the user
-                  return {
-                    status: "GENERAL_ERROR",
-                    message:
-                      "Seems like you already have an account with another method. Please use that instead.",
-                  };
-                }
-                throw err;
-              }
-            },
-          };
-        },
+              throw err;
+            }
+          },
+        }),
       },
     }),
 
     Passwordless.init({
       smsDelivery: {
-        service: new SupertokensService(process.env.SUPERTOKEN_SMS_API_KEY),
+        service: new SupertokensService(appConfig.supertokens.smsApiKey),
       },
       contactMethod: "PHONE",
       flowType: "USER_INPUT_CODE",
@@ -296,77 +248,72 @@ export const SuperTokensConfig: TypeInput = {
 
     Session.init({
       // TODO: add this when app router pages is ssr
-      // cookieDomain: process.env.COOKIE_DOMAIN,
+      // cookieDomain: appConfig.cookieDomain,
       // olderCookieDomain: "",
       // cookieSecure: true,
       override: {
-        functions: (originalImplementation) => {
-          return {
-            ...originalImplementation,
-            createNewSession: async function (input) {
-              let userId = input.userId;
-              let userInfo = await supertokens.getUser(userId);
-              log.trace("Init session\nemail => %s", userInfo?.emails[0]);
-              const user = await getOrgIdAndRole({ id: userId });
-              // This goes in the access token, and is availble to read on the frontend.
-              input.accessTokenPayload = {
-                ...input.accessTokenPayload,
-                email: userInfo?.emails[0],
-                orgId: user?.orgId,
-                role: user?.role,
-              };
+        functions: (originalImplementation) => ({
+          ...originalImplementation,
+          createNewSession: async function (input) {
+            const userId = input.userId;
+            const userInfo = await supertokens.getUser(userId);
+            log.trace("Init session\nemail => %s", userInfo?.emails[0]);
 
-              return originalImplementation.createNewSession(input);
-            },
-          };
-        },
+            const user = await getOrgIdAndRole({ id: userId });
+
+            input.accessTokenPayload = {
+              ...input.accessTokenPayload,
+              email: userInfo?.emails[0],
+              orgId: user?.orgId,
+              role: user?.role,
+            };
+
+            return originalImplementation.createNewSession(input);
+          },
+        }),
       },
     }),
 
     EmailVerification.init({
       mode: "REQUIRED",
       emailDelivery: {
-        override: (originalImplementation) => {
-          return {
-            ...originalImplementation,
-
-            sendEmail: async function (input) {
-              const dbUser = await getUserByEmail(input.user.email);
-              const username = dbUser.name || "there";
-              sendVerifyMail(input.emailVerifyLink, input.user.email, username);
-            },
-          };
-        },
+        override: (originalImplementation) => ({
+          ...originalImplementation,
+          sendEmail: async function (input) {
+            const dbUser = await getUserByEmail(input.user.email);
+            const username = dbUser.name || "there";
+            sendVerifyMail(input.emailVerifyLink, input.user.email, username);
+          },
+        }),
       },
       override: {
-        apis: (originalImplementation) => {
-          return {
-            ...originalImplementation,
-            verifyEmailPOST: async function (input) {
-              if (originalImplementation.verifyEmailPOST === undefined) {
-                throw Error("Should never come here");
-              }
+        apis: (originalImplementation) => ({
+          ...originalImplementation,
+          verifyEmailPOST: async function (input) {
+            if (originalImplementation.verifyEmailPOST === undefined) {
+              throw Error("Should never come here");
+            }
+            // First we call the original implementation
 
-              // First we call the original implementation
-              let response =
-                await originalImplementation.verifyEmailPOST(input);
+            const response =
+              await originalImplementation.verifyEmailPOST(input);
 
-              // Then we check if it was successfully completed
-              if (response.status === "OK") {
-                log.trace("Verifying email\n%o", JSON.stringify(response.user));
-              }
-              console.log("email success res", response);
-              return response;
-            },
-          };
-        },
+            if (response.status === "OK") {
+              log.trace("Verifying email\n%o", JSON.stringify(response.user));
+            }
+
+            return response;
+          },
+        }),
       },
     }),
+
     Dashboard.init(),
     jwt.init(),
   ],
 };
 
+// Swagger tags
 const loyaltyTags = [
   {
     name: "Loyalty/Campaign",
@@ -395,22 +342,10 @@ const loyaltyTags = [
 ];
 
 const publicTags = [
-  {
-    name: "Contacts",
-    description: "Contact related endpoints",
-  },
-  {
-    name: "Contacts/Groups",
-    description: "Contact Group related endpoints",
-  },
-  {
-    name: "Team",
-    description: "Team related endpoints",
-  },
-  {
-    name: "Campaign",
-    description: "Campaign related endpoints",
-  },
+  { name: "Contacts", description: "Contact related endpoints" },
+  { name: "Contacts/Groups", description: "Contact Group related endpoints" },
+  { name: "Team", description: "Team related endpoints" },
+  { name: "Campaign", description: "Campaign related endpoints" },
   {
     name: "Campaign/Participants",
     description: "Campaign Participants related endpoints",
@@ -421,6 +356,7 @@ const publicTags = [
   },
 ];
 
+// Swagger configuration
 export const swaggerConfig: SwaggerOptions = {
   openapi: {
     openapi: "3.0.0",
@@ -430,7 +366,7 @@ export const swaggerConfig: SwaggerOptions = {
     },
     servers: [
       {
-        url: backendUrl,
+        url: appConfig.backendUrl,
         description: "server",
       },
     ],

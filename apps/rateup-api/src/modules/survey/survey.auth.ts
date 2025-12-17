@@ -1,12 +1,12 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { hasAccessToSurvey, hasAccessToTeam } from "../../utils/auth";
-import { CreateSurveyInput } from "./survey.schema";
-import { GetSurveyByIdParams } from "./survey.schema";
-import prisma from "../../utils/prisma";
-import { SubscriptionFeaturePathName, SurveyType } from "../../types/enums";
-import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert";
+import { hasAccessToSurvey, hasAccessToTeam } from "../../utils/auth.js";
+import { CreateSurveyInput } from "./survey.schema.js";
+import { GetSurveyByIdParams } from "./survey.schema.js";
+import prisma from "../../utils/prisma.js";
+import { SubscriptionFeaturePathName, SurveyType } from "../../types/enums.js";
+import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
 import dayjs from "dayjs";
-import { sendSubscriptionExpiryAlertEmail } from "../../utils/email/payments/subscriptionExpiryAlert";
+import { sendSubscriptionExpiryAlertEmail } from "../../utils/email/payments/subscriptionExpiryAlert.js";
 
 export async function verifySurveyAccess(
   request: FastifyRequest<{

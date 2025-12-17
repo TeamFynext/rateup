@@ -1,9 +1,9 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { ByMenuIdParams, CreateMenuInput } from "./menu.schema";
-import prisma from "../../utils/prisma";
-import { hasAccessToTeam } from "../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../types/enums";
-import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert";
+import { ByMenuIdParams, CreateMenuInput } from "./menu.schema.js";
+import prisma from "../../utils/prisma.js";
+import { hasAccessToTeam } from "../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { sendUsageLimitMailAlert } from "../../utils/email/payments/usageLimitAlert.js";
 
 export async function verifyMenuAccess(
   request: FastifyRequest<{
@@ -58,12 +58,10 @@ export async function verifyMenuMaxCountRestriction(
         id: request.body.teamId,
       },
     });
-    await sendUsageLimitMailAlert(team.orgId)
-    reply
-      .code(403)
-      .send({
-        message: "You have reached the maximum limit of menus",
-        displayMessageInClient: true,
-      });
+    await sendUsageLimitMailAlert(team.orgId);
+    reply.code(403).send({
+      message: "You have reached the maximum limit of menus",
+      displayMessageInClient: true,
+    });
   }
 }

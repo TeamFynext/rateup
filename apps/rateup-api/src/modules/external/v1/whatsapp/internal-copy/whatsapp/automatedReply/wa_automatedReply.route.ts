@@ -1,10 +1,10 @@
-import { FastifyInstance } from "fastify/types/instance";
+import { FastifyInstance } from "fastify/types/instance.js";
 import {
   createAutomatedReplyHandler,
   deleteAutomatedReplyHandler,
   getAutomatedRepliesByIdHandler,
   updateAutomatedReplyHandler,
-} from "../../../../../../whatsapp/automatedReply/wa_automatedReply.controller";
+} from "../../../../../../whatsapp/automatedReply/wa_automatedReply.controller.js";
 
 export async function waAutomatedReplyRoutes(fastify: FastifyInstance) {
   fastify.post("/", createAutomatedReplyHandler);

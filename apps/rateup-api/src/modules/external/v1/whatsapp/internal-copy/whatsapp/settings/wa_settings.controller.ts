@@ -3,7 +3,7 @@ import {
   ContactTagSchema,
   createWaSettingsInput,
   updateWaSettingsInput,
-} from "./wa_settings.schema";
+} from "./wa_settings.schema.js";
 import {
   createWaSettings,
   deleteWaSettings,
@@ -12,9 +12,9 @@ import {
   updateContactTag,
   updateWaSettings,
   upsertWaSettings,
-} from "./wa_settings.service";
-import { WaConfigType } from "../../../../../../../types/enums";
-import { log } from "../../../../../../../utils/logger";
+} from "./wa_settings.service.js";
+import { WaConfigType } from "../../../../../../../types/enums.js";
+import { log } from "../../../../../../../utils/logger.js";
 
 export async function createWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,

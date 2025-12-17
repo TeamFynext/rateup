@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import prisma from "../../../utils/prisma";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { getUsageStat } from "../../stats/stats.service";
+import prisma from "../../../utils/prisma.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { getUsageStat } from "../../stats/stats.service.js";
 
 export async function verifyMessageMonthlyLimitRestriction(
   request: FastifyRequest,
