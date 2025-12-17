@@ -193,17 +193,26 @@ export async function handleWaMessages(
       if (sourcePlatform === PlatformType.WHATSAPP) {
         waMessageBody = await handleWaReceivedImages(waMessageBody, orgId);
       }
-      if (WaMessageClosedStatus.includes(contact.waMessageAssignStatus)) {
+      if (
+        contact.waMessageAssignStatus !== WaMessageAssignStatus.SPAM &&
+        WaMessageClosedStatus.includes(contact.waMessageAssignStatus)
+      ) {
         contact = await updateContactById(contact.id, {
           waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
-        });
-        conversation = await createConversation({
-          contactId: contact.id,
         });
       }
     }
     if (!conversation) {
       conversation = await getLastCreatedConversationForContact(contact.id);
+      if (
+        !conversation &&
+        type === "receive" &&
+        contact.waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED
+      ) {
+        conversation = await createConversation({
+          contactId: contact.id,
+        });
+      }
     }
     // Add new message to DB
     const waMessage = await addNewWaMessage(

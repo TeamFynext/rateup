@@ -7,6 +7,7 @@ import {
   ConversationCore,
   UpdateConversationSchema,
 } from "./conversation.schema.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 
 export async function createConversation(input: ConversationCore) {
   const { contactId, ...rest } = input;
@@ -421,36 +422,39 @@ export async function getAvargeResponseTimeofTodyaInEveryHour(
   const endDate = new Date(dateRange[1]);
 
   const groupByHour = dateKey === "today" || dateKey === "yesterday";
-  const result = await prisma.$queryRaw<
-    {
-      period: string;
-      averageResponseTime: number;
-    }[]
-  >`
+  const periodColumn = groupByHour
+    ? `date_trunc('hour', c."createdAt")`
+    : `date_trunc('day', c."createdAt")`;
+
+  const query = `
 WITH convo AS (
   SELECT
     c."createdAt",
     c."firstRespondedAt"
   FROM "Conversation" c
   WHERE c."contactId" IN (
-      SELECT id FROM "Contact" WHERE "orgId" = ${orgId}::uuid
+      SELECT id FROM "Contact" WHERE "orgId" = $1::uuid
     )
     AND c."firstRespondedAt" IS NOT NULL
-    AND c."createdAt" >= ${startDate}
-    AND c."createdAt" < ${endDate}
+    AND c."createdAt" >= $2
+    AND c."createdAt" < $3
 )
 SELECT
-  ${
-    groupByHour
-      ? `to_char(date_trunc('hour', c."createdAt"), 'HH12 AM')`
-      : `to_char(date_trunc('day', c."createdAt"), 'YYYY-MM-DD')`
-  } AS period,
+  ${periodColumn} AS period,
   AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) AS "averageResponseTime"
 FROM convo c
 GROUP BY period
 HAVING COUNT(*) > 0
 ORDER BY period;
 `;
+
+  const result = await prisma.$queryRawUnsafe<
+    {
+      period: string;
+      averageResponseTime: number;
+    }[]
+  >(query, orgId, startDate, endDate);
+
   return result;
 }
 
@@ -469,21 +473,35 @@ export async function getConversationOnAccountDistribution(
       sourcePlatform: string;
     }[]
   >`
-   SELECT
-    COUNT(*)::INTEGER AS "conversationCount",
+ SELECT
+    COUNT(DISTINCT c.id)::INTEGER AS "conversationCount",
     ws."phoneId",
     ws."ibaId",
     ws."phone",
     wm."sourcePlatform"
-    FROM "Conversation" c
-    JOIN "Contact" ct ON c."contactId" = ct.id
-    LEFT JOIN "WaMessage" wm ON wm."conversationId" = c.id
-    LEFT JOIN "WhatsappSettings" ws
-    ON REGEXP_REPLACE(wm."sourceIdentifier", '^\\+', '') = 
-       REGEXP_REPLACE(COALESCE(ws."phone", ws."ibaId"), '^\\+', '')
-    WHERE ct."orgId" = ${orgId}::uuid AND wm."sourceIdentifier" IS NOT NULL AND c."createdAt" >= ${startDate}
-    AND c."createdAt" < ${endDate}
-    GROUP BY REGEXP_REPLACE(wm."sourceIdentifier", '^\\+', ''), ws."phoneId", ws."ibaId", ws."phone", wm."sourcePlatform";
+FROM "Conversation" c
+JOIN "Contact" ct
+    ON c."contactId" = ct.id
+LEFT JOIN "WaMessage" wm
+    ON wm."conversationId" = c.id
+LEFT JOIN "WhatsappSettings" ws
+    ON ltrim(wm."sourceIdentifier", '+') =
+       ltrim(COALESCE(ws."phone", ws."ibaId"), '+')
+WHERE ct."orgId" = ${orgId}::uuid
+  AND (
+        wm."sourceIdentifier" IS NOT NULL
+        OR (
+            wm."sourceIdentifier" IS NULL
+            AND wm."sourcePlatform" = ${PlatformType.WEBCHAT}
+        )
+      )
+  AND c."createdAt" >= ${startDate}
+  AND c."createdAt" < ${endDate}
+GROUP BY
+    ws."phoneId",
+    ws."ibaId",
+    ws."phone",
+    wm."sourcePlatform";
   `;
   return result;
 }
@@ -708,28 +726,36 @@ SELECT
   COALESCE(m.messages_last_7d, 0) AS "messagesHandledLastWeek",
 
   -- % Messages handled
-  CASE
-    WHEN m.messages_prev_7d IS NULL
-         OR m.messages_prev_7d = 0
-    THEN 0
-    ELSE
-      (
-        (m.messages_last_7d - m.messages_prev_7d)::DECIMAL
-        / m.messages_prev_7d
-      ) * 100
-  END AS "messagesHandledRateByLastWeek",
+CASE
+  WHEN m.messages_prev_7d IS NULL
+       OR m.messages_prev_7d = 0
+  THEN
+    CASE
+      WHEN m.messages_last_7d > 0 THEN 100
+      ELSE 0
+    END
+  ELSE
+    (
+      (m.messages_last_7d - m.messages_prev_7d)::DECIMAL
+      / m.messages_prev_7d
+    ) * 100
+END AS "messagesHandledRateByLastWeek",
 
   -- % Response time
   CASE
-    WHEN r.avg_response_time_prev_7d IS NULL
-         OR r.avg_response_time_prev_7d = 0
-    THEN 0
-    ELSE
-      (
-        (r.avg_response_time_last_7d - r.avg_response_time_prev_7d)
-        / r.avg_response_time_prev_7d
-      ) * 100
-  END AS "responseTimeRateByLastWeek"
+  WHEN r.avg_response_time_prev_7d IS NULL
+       OR r.avg_response_time_prev_7d = 0
+  THEN
+    CASE
+      WHEN r.avg_response_time_last_7d IS NOT NULL THEN 100
+      ELSE 0
+    END
+  ELSE
+    (
+      (r.avg_response_time_prev_7d - r.avg_response_time_last_7d)
+      / r.avg_response_time_prev_7d
+    ) * 100
+END AS "responseTimeRateByLastWeek"
 
 FROM "OrgMember" om
 LEFT JOIN "User" u ON u.id = om."userId"
@@ -771,7 +797,7 @@ export async function getStaffDetailedConversationAnalytics(
       avgHandlingTime: number;
     };
   }>`
- WITH dates AS (
+WITH dates AS (
     SELECT generate_series(
         ${sinceDate.toISOString()}::date,
         NOW()::date,
@@ -835,7 +861,7 @@ recent_conv AS (
         t."lastResponded"
     FROM assigned_conversations ac
     JOIN user_message_times t ON t."conversationId" = ac.id
-    ORDER BY t."lastResponded" DESC
+    ORDER BY t."lastResponded" DESC NULLS LAST
     LIMIT 4
 ),
 
@@ -845,7 +871,7 @@ metrics AS (
         (
             SELECT 
                 (COUNT(*) FILTER (
-                    WHERE ac.status = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
+                    WHERE ac.status = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]} )
                     AND ac."closedBy" = ${userId}
                 )::DECIMAL
                 /
@@ -862,13 +888,13 @@ metrics AS (
             WHERE t."firstResponded" IS NOT NULL AND ac."firstAssignedAt" IS NOT NULL
         ) AS "firstResponseTime",
 
-        -- avg handling time
+        -- avg handling time (firstAssignedAt → lastResponded)
         (
             SELECT 
-                AVG(EXTRACT(EPOCH FROM (t."lastResponded" - t."firstResponded")))
-            FROM user_message_times t
-            WHERE t."firstResponded" IS NOT NULL
-              AND t."lastResponded" IS NOT NULL
+                AVG(EXTRACT(EPOCH FROM (t."lastResponded" - ac."firstAssignedAt")))
+            FROM assigned_conversations ac
+            JOIN user_message_times t ON t."conversationId" = ac.id
+            WHERE t."lastResponded" IS NOT NULL AND ac."firstAssignedAt" IS NOT NULL
         ) AS "avgHandlingTime"
 )
 
