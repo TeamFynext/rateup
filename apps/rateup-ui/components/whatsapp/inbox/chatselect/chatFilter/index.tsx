@@ -60,26 +60,19 @@ interface Props {
 export default function WaInboxChatFilter({ setFilterCount }: Props) {
   const { data, isLoading, error } = useChatFilterData();
 
-  const { filter, setFilter, clearFilter } = useChatFilterStore();
+  const {
+    filter,
+    setFilter,
+    clearFilter,
+    setPreviousFilterForTab,
+    previousFilterForTab,
+  } = useChatFilterStore();
 
   const translations = useTranslations();
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as string) ?? "New";
   const { data: teamRes, isLoading: teamsLoading } = useTeamsByUser();
 
-  useEffect(() => {
-    setFilterCount(getFilterActiveCount());
-  }, [filter]);
-  if (isLoading || teamsLoading) {
-    return <Loader size={"xs"} />;
-  }
-  if (error) {
-    return (
-      <Text size="xs" c={"red"}>
-        {translations("Failed to fetch filter data")}
-      </Text>
-    );
-  }
   const allMultiSelectFilters = [
     ...filter?.contactGroups,
     ...filter?.campaigns,
@@ -120,31 +113,6 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
       });
     }
   }
-  function getFilterActiveCount() {
-    let count = 0;
-    if (filter.contactGroups.length > 0) {
-      count += filter.contactGroups.length;
-    }
-    if (filter.campaigns.length > 0) {
-      count += filter.campaigns.length;
-    }
-    if (filter.tags.length > 0) {
-      count += filter.tags.length;
-    }
-    if (filter.messageType !== "usermessages") {
-      count += 1;
-    }
-    if (filter.strictFilter !== false) {
-      count += 1;
-    }
-    if (tab === "All" && filter.status?.length) {
-      count += filter.status.length;
-    }
-    if (["Assigned", "AssignedToMe"].includes(tab) && filter.assignedTeams) {
-      count += filter.assignedTeams.length;
-    }
-    return count;
-  }
 
   const statusData = Object.values(WaMessageAssignStatus)
     .filter(
@@ -157,6 +125,16 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
       label: WaMessageAssignStatusTab[status],
     }));
 
+  if (isLoading || teamsLoading) {
+    return <Loader size={"xs"} />;
+  }
+  if (error) {
+    return (
+      <Text size="xs" c={"red"}>
+        {translations("Failed to fetch filter data")}
+      </Text>
+    );
+  }
   return (
     <div className="flex flex-col gap-4">
       {/* header */}
@@ -316,16 +294,28 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
                   <Checkbox
                     id={status.id}
                     checked={filter.status?.includes(status.id)}
-                    onCheckedChange={(checked) =>
-                      setFilter({
+                    onCheckedChange={(checked) => {
+                      const newFilter = {
                         ...filter,
                         status: checked
                           ? Array.from(
                               new Set([...(filter.status || []), status.id]),
                             )
                           : filter.status?.filter((s) => s !== status.id),
-                      })
-                    }
+                      };
+                      setFilter({
+                        ...newFilter,
+                      });
+                      const index = previousFilterForTab.findIndex(
+                        (p) => p.tab === tab,
+                      );
+                      if (index !== -1) {
+                        previousFilterForTab[index].filter = { ...newFilter };
+                      } else {
+                        previousFilterForTab.push({ tab, filter: newFilter });
+                      }
+                      setPreviousFilterForTab(previousFilterForTab);
+                    }}
                   />
                   <label
                     htmlFor={status.id}
@@ -377,6 +367,11 @@ type ChatFilterStore = {
   filter: ChatFilter;
   setFilter: (value: ChatFilter) => void;
   clearFilter: () => void;
+  previousFilterForTab: {
+    tab: string;
+    filter: ChatFilter;
+  }[];
+  setPreviousFilterForTab: (value) => void;
 };
 
 const intialValues: ChatFilter = {
@@ -404,6 +399,8 @@ export const useChatFilterStore = create<ChatFilterStore>()(
     (set) => ({
       filter: intialValues,
       setFilter: (value) => set({ filter: value }),
+      previousFilterForTab: [],
+      setPreviousFilterForTab: (value) => set({ previousFilterForTab: value }),
       clearFilter: () => {
         set({
           filter: intialValues,

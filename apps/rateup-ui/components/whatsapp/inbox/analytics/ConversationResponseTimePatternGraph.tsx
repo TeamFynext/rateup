@@ -26,6 +26,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { formatDate, formatToCustomTime } from "@/utils/dateTime";
 
 const ConversationResponseTimePatternGraph = ({ dateRange }) => {
   const { data = [], isLoading } =
@@ -41,7 +42,10 @@ const ConversationResponseTimePatternGraph = ({ dateRange }) => {
   } satisfies ChartConfig;
 
   const chartData = data.map((d) => ({
-    ...d,
+    period:
+      dateRange.key === "today" || dateRange.key === "yesterday"
+        ? formatToCustomTime(d.period)
+        : formatDate(d.period),
     averageResponseTime: Math.round(d.averageResponseTime / 60),
   }));
 
