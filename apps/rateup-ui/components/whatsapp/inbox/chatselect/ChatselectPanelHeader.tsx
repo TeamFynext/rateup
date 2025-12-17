@@ -44,6 +44,7 @@ const ChatselectPanelHeader = ({
   isRefetchingFilteredContacts,
   refetchFilteredContacts,
   onUnknownContactAddSuccess,
+  tab,
 }) => {
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [filterCount, setFilterCount] = useState(0);
@@ -68,7 +69,34 @@ const ChatselectPanelHeader = ({
   const { user } = useUser();
   useEffect(() => {
     if (filter.searchTerm.length && !showSearchBar) setShowSearchBar(true);
-  }, [filter]);
+    function getFilterActiveCount() {
+      let count = 0;
+      if (filter.contactGroups.length > 0) {
+        count += filter.contactGroups.length;
+      }
+      if (filter.campaigns.length > 0) {
+        count += filter.campaigns.length;
+      }
+      if (filter.tags.length > 0) {
+        count += filter.tags.length;
+      }
+      if (filter.messageType !== "usermessages") {
+        count += 1;
+      }
+      if (filter.strictFilter !== false) {
+        count += 1;
+      }
+      if ((tab === "All" || tab === "Addressed") && filter.status?.length) {
+        count += filter.status.length;
+      }
+      if (["Assigned", "AssignedToMe"].includes(tab) && filter.assignedTeams) {
+        count += filter.assignedTeams.length;
+      }
+      return count;
+    }
+    setFilterCount(getFilterActiveCount());
+  }, [filter, tab]);
+
   return (
     <div className="p-3 border-b space-y-3 flex-shrink-0 relative">
       {showSearchBar && (
@@ -156,8 +184,15 @@ const ChatselectPanelHeader = ({
             <PopoverTrigger>
               <CustomTooltip
                 trigger={
-                  <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 w-8 p-0 relative"
+                  >
                     <Filter className="w-3.5 h-3.5" />
+                    <div className="absolute -top-2 -right-1 bg-blue-500 rounded-xl w-4 h-4 text-xs text-white">
+                      {filterCount}
+                    </div>
                   </Button>
                 }
                 content={<p>Advanced Filters</p>}

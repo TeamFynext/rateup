@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import {
+  CircleQuestionMark,
   Clock,
   FileText,
   MessageCircle,
@@ -19,12 +20,13 @@ import {
   YAxis,
 } from "recharts";
 
-import { MessagePlatform } from "@/types/enums";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { useGetStaffDetailedConversationAnalytics } from "@/backend/conversation/conversation.query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +35,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime";
+import {
+  formatTimeToNearestUnitFromSeconds,
+  formatToRelativeTime,
+} from "@/utils/dateTime";
 
 import { StaffStatusBadge } from "./ConversationStatsAgentPerformance";
 
@@ -146,12 +151,12 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                   </p>
                   {selectedStaff.responseTimeRateByLastWeek && (
                     <p
-                      className={`text-[11px] ${selectedStaff.responseTimeRateByLastWeek <= 0 ? "text-green-600" : "text-red-600"} mt-1`}
+                      className={`text-[11px] ${selectedStaff.responseTimeRateByLastWeek >= 0 ? "text-green-600" : "text-red-600"} mt-1`}
                     >
                       {selectedStaff.responseTimeRateByLastWeek}%
                       {selectedStaff.responseTimeRateByLastWeek < 0
-                        ? " faster"
-                        : " slower"}{" "}
+                        ? " slower "
+                        : " faster "}
                       than last week
                     </p>
                   )}
@@ -169,9 +174,22 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                 </p>
               </div>
               <div className="p-4 rounded-lg border bg-gradient-to-br from-blue-50/50 to-white">
-                <p className="text-[11px] text-muted-foreground mb-1">
-                  First Response
-                </p>
+                <div className="flex gap-1">
+                  <p className="text-[11px] text-muted-foreground mb-1">
+                    First Response
+                  </p>
+                  <CustomTooltip
+                    trigger={
+                      <CircleQuestionMark className="w-3 h-3 text-muted-foreground" />
+                    }
+                    content={
+                      <span>
+                        Responded time compared to first assigned time
+                      </span>
+                    }
+                  />
+                </div>
+
                 <p className="text-lg font-bold text-blue-600">
                   {analytics?.metrics?.firstResponseTime
                     ? `${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.firstResponseTime)?.value} ${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.firstResponseTime)?.suffix}`
@@ -282,13 +300,16 @@ const StaffStatsDetailDialog = ({ selectedStaff, opened, setOpened }) => {
                               : "NA"}
                           </td>
                           <td className="p-3 text-xs text-muted-foreground">
-                            {dayjs(conv.lastRespondedAt).fromNow()}
+                            {conv.lastRespondedAt
+                              ? formatToRelativeTime(conv.lastRespondedAt, true)
+                              : "Not responded yet"}
                           </td>
                           <td className="p-3">
                             <Badge
                               variant="outline"
                               className={`text-xs ${
-                                conv.status === "resolved"
+                                conv.status === WaMessageAssignStatus.CLOSED ||
+                                conv.status === WaMessageAssignStatus.RESOLVED
                                   ? "bg-green-50 text-green-700 border-green-200"
                                   : "bg-orange-50 text-orange-700 border-orange-200"
                               }`}
