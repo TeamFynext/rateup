@@ -169,66 +169,6 @@ function TanstackTable({
   }, [sorting]);
 
   return (
-    // <Box className={`${styles["tanstack-table-root-div"]} ${className}`}>
-    //   <Flex
-    //     className={styles["filter-and-other-btns-container"]}
-    //     gap={"md"}
-    //     justify={"space-between"}
-    //     px={"xs"}
-    //     direction={largeScreen ? "row" : "column"}
-    //   >
-    //     <Group mr={"auto"}>
-    //       {toggle ? (
-    //         <Flex gap={"sm"} align={"center"}>
-    //           <RateupButtonBlue
-    //             className={"create-btn"}
-    //             title={btnTitle}
-    //             rightIcon={<IconPlus />}
-    //             onClick={toggle}
-    //           />
-    //           <RefreshButton queryKeys={["campaigns"]} />
-    //           <InfoButton docUrl={`${docsPath}/whatsappSurvey/campaign`} />
-    //         </Flex>
-    //       ) : (
-    //         <Box
-    //           className={`${styles["empty-div-for-table-without-create-btn"]} empty-div-for-table-without-create-btn`}
-    //           w={!toggleOffContent ? 50 : "auto"}
-    //           h={!toggleOffContent ? 50 : "auto"}
-    //         >
-    //           {toggleOffContent}
-    //         </Box>
-    //       )}
-    //     </Group>
-    //     {filterVisibility && enableServerFilter && (
-    //       <RateupButtonBlue
-    //         title="search"
-    //         onClick={handleServerFilter}
-    //         rightIcon={<IconSearch size={"1rem"} />}
-    //         loading={isPending}
-    //       />
-    //     )}
-    //     <FilterToggles
-    //       enableFilter={enableFilter}
-    //       filterVisibility={filterVisibility}
-    //       table={table}
-    //       tempVisibleColumnArray={tempVisibleColumnArray}
-    //       enableColumnSelection={enableColumnSelection}
-    //       setFilterVisibility={setFilterVisibility}
-    //       enableExport={false}
-    //       onExport={() => {}}
-    //     />
-    //   </Flex>
-    //   <Divider />
-    //   <TableLayout
-    //     enableFilter={enableFilter}
-    //     enablePagination={enablePagination}
-    //     filterVisibility={filterVisibility}
-    //     table={table}
-    //     tempVisibleColumnArray={tempVisibleColumnArray}
-    //     detailBtn={detailBtn}
-    //     isPending={isPending}
-    //   />
-    // </Box>
     <div className={`h-full min-h-[300px] ${className} flex flex-col gap-4`}>
       <div
         className={`flex justify-between gap-2 ${largeScreen ? "flex-row" : "flex-col"}`}

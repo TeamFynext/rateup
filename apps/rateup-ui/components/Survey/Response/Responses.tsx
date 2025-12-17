@@ -319,19 +319,26 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
         {isPending ? (
           <Skeleton className="h-[70px] w-full rounded-lg" />
         ) : (
-          <div className="flex items-center justify-between w-full p-4 border rounded-xl">
-            <div className="flex items-center gap-1">
-              <h1>
+          <div className="flex flex-col gap-4 w-full p-4 border rounded-xl lg:flex-row lg:items-center lg:justify-between">
+            {/* LEFT */}
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-sm sm:text-base font-medium">
                 {translations("Total Responses :")}{" "}
-                {responseData?.totalCount ?? 0}
+                <span className="font-semibold">
+                  {responseData?.totalCount ?? 0}
+                </span>
               </h1>
+
               <RefreshButton onClick={() => refetchResponse()} />
             </div>
-            <div className="flex items-center justify-center gap-2">
+
+            {/* RIHGT */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
               <CalenderIconDateRangePicker
                 ranges={ranges}
                 setRange={setRange}
               />
+
               {CFData && CFData.length > 0 && (
                 <ContainedMultiSelect
                   placeholder={translations("Filter By Campaign")}
@@ -341,12 +348,14 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
                     value: id,
                     label: name,
                   }))}
+                  className="w-full sm:w-[220px]"
                 />
               )}
+
               {!survey?.isEncrypted && (
                 <Popover open={openedExport} onOpenChange={toggle}>
                   <PopoverTrigger asChild>
-                    <Button onClick={toggle}>
+                    <Button className="w-full sm:w-auto">
                       <IconTableExport className="mr-2 h-4 w-4" />
                       {translations("Export")}
                     </Button>
@@ -369,7 +378,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
                             isSyncing ? styles.rotateInfinitely : undefined
                           }
                         />
-                        <span>
+                        <span className="ml-2">
                           {survey.spreadSheetId
                             ? translations("Resync with Google Sheet")
                             : translations("Sync with Google Sheet")}
@@ -377,27 +386,27 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
                       </Button>
 
                       <Button
-                        className="flex items-center justify-center gap-1"
                         onClick={() => {
                           handleExcelDownload();
                           toggle();
                         }}
+                        className="flex items-center gap-2"
                       >
                         <IconFileDownload stroke={1.5} />
-                        <span>{translations("Download Excel")}</span>
+                        {translations("Download Excel")}
                       </Button>
 
                       {hasContactQuestion && (
                         <Button
                           onClick={handleExportContacts}
-                          className="flex items-center justify-center gap-1"
+                          className="flex items-center gap-2"
                         >
                           <IconDatabaseImport stroke={1.5} />
-                          <span>{translations("Export Contacts")}</span>
+                          {translations("Export Contacts")}
                         </Button>
                       )}
 
-                      {/* Confirmation Modals */}
+                      {/* Modals */}
                       <ConfirmationModal
                         opened={alertModalOpened}
                         onClose={alertModalClose}

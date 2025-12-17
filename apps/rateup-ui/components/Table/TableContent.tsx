@@ -31,15 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
 import { Filter } from "./Filter/Filter";
 
 type TableLayoutProps = {
@@ -65,22 +56,29 @@ type ExtendedHeader = Header<any, unknown> & {
   };
 };
 const renderHeader = (header) => {
-  const headerText = flexRender(
+  const rendered = flexRender(
     header.column.columnDef.header,
     header.getContext(),
   );
-
-  if (String(headerText).length <= 50) {
+  if (typeof rendered !== "string") {
     return (
-      <span className="min-w-[200] max-w-[200] font-medium">{headerText}</span>
+      <span className="inline-block min-w-[200px] max-w-[200px] font-medium">
+        {rendered}
+      </span>
     );
   }
-
+  if (rendered.length <= 50) {
+    return (
+      <span className="inline-block min-w-[200px] max-w-[200px] font-medium">
+        {rendered}
+      </span>
+    );
+  }
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <span className="inline-block min-w-[200px] max-w-[200px] truncate font-bold">
-          {headerText}
+        <span className="inline-block min-w-[200px] max-w-[200px] truncate font-medium">
+          {rendered}
         </span>
       </HoverCardTrigger>
 
@@ -89,11 +87,12 @@ const renderHeader = (header) => {
         side="bottom"
         className="max-w-[400px] break-words"
       >
-        {headerText}
+        {rendered}
       </HoverCardContent>
     </HoverCard>
   );
 };
+
 const TableLayout = ({
   table,
   enableFilter,
@@ -107,19 +106,27 @@ const TableLayout = ({
   const translations = useTranslations();
   return (
     <div className="h-full">
-      <div className="overflow-auto">
-        <Table border={0}>
-          <TableHeader className="sticky top-0 z-10 bg-background">
+      <div className="relative h-[50vh] overflow-auto">
+        <table className="w-full border-separate border-spacing-0">
+          <thead className="bg-background">
             {isPending ? (
-              <TableHeadSkeleton />
+              <tr>
+                {Array.from({ length: tempVisibleColumnArray.length }).map(
+                  (_, i) => (
+                    <th key={i} className="p-2 sticky top-0 bg-background">
+                      <div className="h-8 w-full animate-pulse rounded bg-muted" />
+                    </th>
+                  ),
+                )}
+              </tr>
             ) : (
               table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
+                <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     const extendedHeader = header as ExtendedHeader;
 
                     return (
-                      <TableHead
+                      <th
                         key={header.id}
                         colSpan={header.colSpan}
                         style={
@@ -127,11 +134,11 @@ const TableLayout = ({
                             ? { maxWidth: "50px" }
                             : { width: `${header.getSize()}px` }
                         }
-                        className="p-2"
+                        className="sticky top-0 z-30 bg-background p-2 text-left"
                       >
                         {header.isPlaceholder ? null : (
                           <div className="flex flex-col gap-2">
-                            {/* Sorting button */}
+                            {/* Sorting */}
                             <Button
                               variant="outline"
                               onClick={header.column.getToggleSortingHandler()}
@@ -157,7 +164,7 @@ const TableLayout = ({
                             {enableFilter &&
                             filterVisibility &&
                             header.column.getCanFilter()
-                              ? (extendedHeader.column.columnDef?.meta?.filterComponent(
+                              ? (extendedHeader.column.columnDef?.meta?.filterComponent?.(
                                   header.column.setFilterValue,
                                 ) ?? (
                                   <Filter
@@ -168,32 +175,43 @@ const TableLayout = ({
                               : filterVisibility && <div className="h-9" />}
                           </div>
                         )}
-                      </TableHead>
+                      </th>
                     );
                   })}
-                </TableRow>
+                </tr>
               ))
             )}
-          </TableHeader>
+          </thead>
 
-          <TableBody className="">
+          <tbody>
             {isPending ? (
-              <TableBodySkeleton />
+              <tr>
+                {Array.from({ length: 5 }).map((_, rowIndex) => (
+                  <div key={rowIndex}>
+                    {Array.from({ length: tempVisibleColumnArray.length }).map(
+                      (_, colIndex) => (
+                        <td key={colIndex} className="p-2">
+                          <div className="h-6 w-full animate-pulse rounded bg-muted" />
+                        </td>
+                      ),
+                    )}
+                  </div>
+                ))}
+              </tr>
             ) : table.getRowModel().rows.length === 0 ? (
-              <TableRow>
-                <TableCell
+              <tr>
+                <td
                   colSpan={tempVisibleColumnArray.length}
-                  className="text-center"
+                  className="p-4 text-center"
                 >
                   Nothing found
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <TableRow
+                <tr
                   key={row.id}
-                  className={`${detailBtn ? "cursor-pointer" : ""} p-2 text-center`}
-                  data-state={row.getIsSelected() && "selected"}
+                  className={`${detailBtn ? "cursor-pointer" : ""} hover:bg-muted`}
                   onClick={() => {
                     let routeUrl: string | null =
                       detailBtn && row.getValue(DETAIL_BTN);
@@ -202,38 +220,38 @@ const TableLayout = ({
                     }
                   }}
                 >
-                  {row.getVisibleCells().map((cell, indexCell) => (
-                    <TableCell key={indexCell}>
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="p-2 text-center">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
                       )}
-                    </TableCell>
+                    </td>
                   ))}
-                </TableRow>
+                </tr>
               ))
             )}
-          </TableBody>
+          </tbody>
 
-          {/* ================= FOOTER ================= */}
-          <TableFooter>
-            {table.getFooterGroups().map((footerGroup, index) => (
-              <TableRow key={index}>
-                {footerGroup.headers.map((header, hIndex) => (
-                  <TableCell key={hIndex}>
+          <tfoot>
+            {table.getFooterGroups().map((footerGroup) => (
+              <tr key={footerGroup.id}>
+                {footerGroup.headers.map((header) => (
+                  <td key={header.id} className="p-2">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
                           header.column.columnDef.footer,
                           header.getContext(),
                         )}
-                  </TableCell>
+                  </td>
                 ))}
-              </TableRow>
+              </tr>
             ))}
-          </TableFooter>
-        </Table>
+          </tfoot>
+        </table>
       </div>
+
       <div className="flex flex-col sm:flex-row justify-start items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row items-center gap-4">
           {enablePagination && (

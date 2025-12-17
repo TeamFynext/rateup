@@ -207,15 +207,17 @@ export const ShareFlow = ({
           teamSelectData.find((t) => t.value === surveyTeamMapId)?.label
         }
       />
-      <ShareQR
-        url={shareUrl}
-        sx={{ borderRadius: "0.5rem" }}
-        title={survey.title}
-        isPublished={!disableShare}
-        id={surveyId}
-        queryKey={"surveyShareSettings"}
-        resourceName={"survey"}
-      />
+      {shareUrl && (
+        <ShareQR
+          url={shareUrl}
+          sx={{ borderRadius: "0.5rem" }}
+          title={survey.title}
+          isPublished={!disableShare}
+          id={surveyId}
+          queryKey={"surveyShareSettings"}
+          resourceName={"survey"}
+        />
+      )}
     </Stack>
   );
 };

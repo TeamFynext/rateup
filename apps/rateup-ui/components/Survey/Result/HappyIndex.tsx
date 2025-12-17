@@ -158,8 +158,8 @@ const HappyIndex = ({ surveyId, translations }) => {
           />
           <div className="flex flex-col gap-4 w-full">
             {moodList?.map(
-              ({ label, value, percentage, icon: Icon, color }) => (
-                <div key={label} className="flex items-center gap-2 w-full">
+              ({ label, value, percentage, icon: Icon, color }, index) => (
+                <div key={index} className="flex items-center gap-2 w-full">
                   <div className="bg-[#004F981F] rounded-full p-0.5">
                     <Icon color={"#004F98"} size={45} />
                   </div>
@@ -210,8 +210,8 @@ const HappyIndex = ({ surveyId, translations }) => {
           />
           <div className="flex justify-around w-full mt-4">
             {npsList?.map(
-              ({ label, percentage, value, color, icon: Icon, bg }) => (
-                <div key={label} className="flex flex-col items-center">
+              ({ label, percentage, value, color, icon: Icon, bg }, index) => (
+                <div key={index} className="flex flex-col items-center">
                   <div className="rounded-full" style={{ backgroundColor: bg }}>
                     <Icon color={color} width={25} height={25} />
                   </div>

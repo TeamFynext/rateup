@@ -93,9 +93,9 @@ const SurveyStatsWebForm = ({ translations, surveyId }) => {
 
   return (
     <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-      {stats.map(({ title, value, badge, icon }) => (
+      {stats.map(({ title, value, badge, icon }, index) => (
         <div
-          key={title}
+          key={index}
           className="flex justify-between items-center bg-[#FAFAFA] border border-[#E2E5ED] rounded-md p-2 shadow-sm"
         >
           <div>
