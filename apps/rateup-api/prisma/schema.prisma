@@ -1508,6 +1508,8 @@ model WaMessage {
   @@index([contactId])
   @@index([sourceIdentifier, contactId])
   @@index([contactId, sourceIdentifier])
+  @@index([sendBy, waCreatedAt])
+  @@index([conversationId])
 }
 
 model WaMessageCampaginParticipantMap {
@@ -2033,6 +2035,9 @@ model ConversationAssignedUserTeamMap {
   isAssignedByAutomation Boolean @default(false)
   actionHistory  Json[]  @default([])
   @@id([userId, conversationId])
+  @@index([userId, conversationId])
+  @@index([conversationId])
+  @@index([userId, lastAssignedAt, lastRemovedAt])
 }
 
 model Conversation {
@@ -2048,4 +2053,7 @@ model Conversation {
   closedBy   String? @db.Uuid
   closedByUser User?    @relation(fields: [closedBy], references: [id])
   createdAt  DateTime  @default(now())
+  @@index([contactId])
+  @@index([firstRespondedAt])
+  @@index([createdAt])
 }

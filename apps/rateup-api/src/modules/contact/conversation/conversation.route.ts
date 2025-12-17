@@ -43,13 +43,31 @@ export async function conversationRoutes(server: FastifyInstance) {
   );
   server.get(
     "/conversation-response-stats",
+    {
+      schema: {
+        querystring: $conversationRef("statsQuerySchema"),
+      },
+    },
     getAverageConversationResponseTimeHandler,
   );
   server.get(
     "/account-distribution",
+    {
+      schema: {
+        querystring: $conversationRef("statsQuerySchema"),
+      },
+    },
     getConversationOnAccountDistributionHandler,
   );
-  server.get("/staff-metrics", getStaffConverSationMetricsHandler);
+  server.get(
+    "/staff-metrics",
+    {
+      schema: {
+        querystring: $conversationRef("statsQuerySchema"),
+      },
+    },
+    getStaffConverSationMetricsHandler,
+  );
   server.get("/quick-stats", getOverAllQuickStatsOfConversationsHandler);
   server.get(
     "/staff-detailed-analytics/:staffId",

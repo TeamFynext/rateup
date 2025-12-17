@@ -61,9 +61,11 @@ export async function getResolvedConversationStatsHandler(
   reply: FastifyReply,
 ) {
   try {
+    const dateRange = request.query.dateRange?.split(",") || [];
     const response = await getResolvedCountandTotalCountofDailyInLastNDays(
       request.user.orgId,
       request.query.days,
+      dateRange,
     );
     reply.send(response);
   } catch (e) {
@@ -76,12 +78,16 @@ export async function getResolvedConversationStatsHandler(
 }
 
 export async function getAverageConversationResponseTimeHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: StatsQuerySchema }>,
   reply: FastifyReply,
 ) {
   try {
+    const dateRange = request.query.dateRange?.split(",") || [];
+    const dateKey = request.query.dateKey;
     const res = await getAvargeResponseTimeofTodyaInEveryHour(
       request.user.orgId,
+      dateKey,
+      dateRange,
     );
     reply.send(res);
   } catch (e) {
@@ -94,11 +100,15 @@ export async function getAverageConversationResponseTimeHandler(
 }
 
 export async function getConversationOnAccountDistributionHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: StatsQuerySchema }>,
   reply: FastifyReply,
 ) {
   try {
-    const res = await getConversationOnAccountDistribution(request.user.orgId);
+    const dateRange = request.query.dateRange?.split(",") || [];
+    const res = await getConversationOnAccountDistribution(
+      request.user.orgId,
+      dateRange,
+    );
     reply.send(res);
   } catch (e) {
     log.error(
@@ -129,11 +139,15 @@ export async function getOverAllQuickStatsOfConversationsHandler(
 }
 
 export async function getStaffConverSationMetricsHandler(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: StatsQuerySchema }>,
   reply: FastifyReply,
 ) {
   try {
-    const res = await getStaffConverSationMetrics(request.user.orgId);
+    const dateRange = request.query.dateRange?.split(",") || [];
+    const res = await getStaffConverSationMetrics(
+      request.user.orgId,
+      dateRange,
+    );
     reply.send(res);
   } catch (e) {
     log.error("Error fetching staff conversation metrics:%o", e);

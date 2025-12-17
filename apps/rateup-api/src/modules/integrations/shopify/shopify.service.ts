@@ -267,7 +267,6 @@ export async function sendShopifySurveyCronAction() {
       orgId,
     } = integration;
 
-    log.trace("shopifySurveys => %o", shopifySurveys);
     if (!shopifySurveys || !shopifySurveys.length) {
       log.trace("No config found");
       continue;
@@ -301,7 +300,6 @@ export async function sendShopifySurveyCronAction() {
     for (const config of newShopifySurveys) {
       const { event, schedules, repeatInterval, waTemplateId, teamId, active } =
         config;
-      log.trace("schedules => %o", schedules);
       if (!schedules || !schedules.length || !active) {
         log.trace("No schedules found");
         continue;
