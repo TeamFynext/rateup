@@ -312,22 +312,6 @@ const ChatHeaderMenu = ({ contact }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={() => handleCloseChat(WaMessageAssignStatus.CLOSED)}
-          disabled={
-            editContactMutation.isPending ||
-            contact?.waMessageAssignStatus === WaMessageAssignStatus.CLOSED
-          }
-        >
-          {(() => {
-            const closedStatusIcon = getContactClosedIcon(
-              WaMessageAssignStatus.CLOSED,
-            );
-            const Icon = closedStatusIcon.icon;
-            return <Icon className={closedStatusIcon.color} />;
-          })()}
-          Mark as Closed
-        </DropdownMenuItem>
-        <DropdownMenuItem
           onClick={() => handleCloseChat(WaMessageAssignStatus.RESOLVED)}
           disabled={
             editContactMutation.isPending ||
@@ -342,6 +326,22 @@ const ChatHeaderMenu = ({ contact }) => {
             return <Icon className={closedStatusIcon.color} />;
           })()}
           Mark as Resolved
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleCloseChat(WaMessageAssignStatus.CLOSED)}
+          disabled={
+            editContactMutation.isPending ||
+            contact?.waMessageAssignStatus === WaMessageAssignStatus.CLOSED
+          }
+        >
+          {(() => {
+            const closedStatusIcon = getContactClosedIcon(
+              WaMessageAssignStatus.CLOSED,
+            );
+            const Icon = closedStatusIcon.icon;
+            return <Icon className={closedStatusIcon.color} />;
+          })()}
+          Mark as Closed
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleCloseChat(WaMessageAssignStatus.SPAM)}

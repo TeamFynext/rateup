@@ -47,7 +47,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { MessagePlatform } from "@/types/enums";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { WaInboxMessage } from "@/types/global";
 import { saveContactsToDB } from "@/app/dashboard/inbox/idb";
 import useContactStore, {
@@ -80,7 +80,7 @@ import ChatselectPanelHeader from "./ChatselectPanelHeader";
 const WaInboxChatSelect = () => {
   const searchParams = useSearchParams();
   const tab = (searchParams.get("tab") as string) ?? "New";
-  const { filter, setFilter } = useChatFilterStore();
+  const { filter, setFilter, previousFilterForTab } = useChatFilterStore();
   const [processedFilter, setProcessedFilter] = useState<ChatFilter>(null);
   const {
     setSelectedContact,
@@ -271,6 +271,37 @@ const WaInboxChatSelect = () => {
     fetchNextPageFilteredContacts,
   ]);
 
+  useEffect(() => {
+    const openStatus = [
+      WaMessageAssignStatus.ASSIGNED,
+      WaMessageAssignStatus.UNASSIGNED,
+    ];
+    const hasOpenStatus = filter.status.some((s) =>
+      openStatus.includes(s as WaMessageAssignStatus),
+    );
+    if (tab === "Addressed" && hasOpenStatus) {
+      setFilter({
+        ...filter,
+        status: filter.status.filter(
+          (s) => !openStatus.includes(s as WaMessageAssignStatus),
+        ),
+      });
+    } else if (tab === "All" && !hasOpenStatus) {
+      const prFilter = previousFilterForTab.find((t) => t.tab === "All");
+      if (prFilter) {
+        const openStatusInPrFilter = prFilter.filter.status.filter((s) =>
+          openStatus.includes(s as WaMessageAssignStatus),
+        );
+        setFilter({
+          ...filter,
+          status: [...filter.status, ...openStatusInPrFilter],
+        });
+      } else {
+        setFilter({ ...filter, status: [...filter.status, ...openStatus] });
+      }
+    }
+  }, [tab]);
+
   const onUnknownContactAddSuccess = useCallback(
     (contact: ContactsData) => {
       setSelectedContact({
@@ -335,6 +366,7 @@ const WaInboxChatSelect = () => {
         refetchFilteredContacts={() => {
           refetchFilteredContacts();
         }}
+        tab={tab}
       />
       <div>
         {isStoreLoading ||
