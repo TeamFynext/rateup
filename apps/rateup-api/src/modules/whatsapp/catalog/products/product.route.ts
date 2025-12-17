@@ -5,9 +5,9 @@ import {
   getCatalogProductsHandler,
   syncCatalogProductsHandler,
   updateCatalogProductsHandler,
-} from "./product.controller";
-import { $wCp } from "./product.schema";
-import { $WC } from "../catalog.schema";
+} from "./product.controller.js";
+import { $wCp } from "./product.schema.js";
+import { $WC } from "../catalog.schema.js";
 
 export async function waCatalogProductRoutes(server: FastifyInstance) {
   server.post(

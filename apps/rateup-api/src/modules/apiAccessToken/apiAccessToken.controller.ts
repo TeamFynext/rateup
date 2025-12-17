@@ -1,11 +1,11 @@
 import { FastifyReply } from "fastify";
-import { FastifyRequest } from "fastify/types/request";
+import { FastifyRequest } from "fastify/types/request.js";
 import {
   createApiKey,
   deleteApiKey,
   getApiKeyCreatedAt,
   regenerateApiKey,
-} from "./apiAccessToken.service";
+} from "./apiAccessToken.service.js";
 
 export async function createApiAccessTokenHandler(
   req: FastifyRequest,

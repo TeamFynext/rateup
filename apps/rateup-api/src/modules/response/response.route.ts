@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $Rref } from "./response.schema";
+import { $Rref } from "./response.schema.js";
 import {
   deleteResponseHandler,
   downloadExcelResponseHandler,
@@ -15,11 +15,11 @@ import {
   summarizeResponseHandler,
   syncResponseToGoogleSheetHandler,
   getHappyIndexResponsesHandler,
-} from "./response.controller";
-import { verifyAccess } from "./response.auth";
-import { checkRoleHandler } from "../../utils/checkRoleHandler";
-import { checkSession } from "../../utils/checkSession";
-import { assertRootOrg } from "../../utils/auth";
+} from "./response.controller.js";
+import { verifyAccess } from "./response.auth.js";
+import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
+import { checkSession } from "../../utils/checkSession.js";
+import { assertRootOrg } from "../../utils/auth.js";
 
 export async function responseRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

@@ -6,8 +6,8 @@ import {
   getLoyaltyActionById,
   getLoyaltyActions,
   updateLoyaltyActionById,
-} from "./actions.service";
-import { log } from "../../../utils/logger";
+} from "./actions.service.js";
+import { log } from "../../../utils/logger.js";
 import {
   BulkActionInput,
   ByReferralCodeParamInput,
@@ -16,30 +16,30 @@ import {
   loyaltyActionInput,
   LoyaltyActionType,
   ReferralInput,
-} from "./actions.schema";
-import prisma from "../../../utils/prisma";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { getNestedProperty } from "../../../utils/misc/obj.utils";
+} from "./actions.schema.js";
+import prisma from "../../../utils/prisma.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
 import {
   decrementStatsCount,
   updateMonthlyStat,
-} from "../../stats/stats.service";
+} from "../../stats/stats.service.js";
 import {
   getLCustomerPhoneById,
   getLoyaltyCustomerOrActionByReferralCode,
   getLoyaltyCustomers,
   handleLCustomerAction,
   handleSendTemplate,
-} from "../customer/customer.service";
-import { isLReferralAction } from "../util";
-import { getReferralCodeByActionAndCustomer } from "../settings/settings.service";
+} from "../customer/customer.service.js";
+import { isLReferralAction } from "../util.js";
+import { getReferralCodeByActionAndCustomer } from "../settings/settings.service.js";
 import {
   getContactGroupById,
   getContactGroupsByOrgId,
   getLoyaltyCustomersFromGroup,
-} from "../../contact/contactGroup/contactGroup.service";
-import { ContactGroupType } from "../../contact/contactGroup/contactGroup.schema";
-import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace";
+} from "../../contact/contactGroup/contactGroup.service.js";
+import { ContactGroupType } from "../../contact/contactGroup/contactGroup.schema.js";
+import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace.js";
 
 export async function createLoyaltyActionHandler(
   request: FastifyRequest<{ Body: loyaltyActionInput }>,

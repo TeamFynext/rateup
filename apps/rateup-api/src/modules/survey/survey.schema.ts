@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { buildJsonSchemas } from "fastify-zod";
-import { questionSchema } from "../question/question.schema";
+import { questionSchema } from "../question/question.schema.js";
 
 const surveyCore = {
   title: z.string({

@@ -6,7 +6,7 @@ import {
   WaTemplateComponentTypeUpperCase,
   WaTemplateStatus,
   WaTemplateSupportedFormats,
-} from "./enums";
+} from "./enums.js";
 
 // TODO: find if there is an official type for this
 export type WaMessageBody = {

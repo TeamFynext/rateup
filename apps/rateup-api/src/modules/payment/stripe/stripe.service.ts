@@ -2,15 +2,17 @@ import {
   OrderStatus,
   PaymentStatus,
   SubscriptionStatus,
-} from "../../../../generated/prisma/client";
-import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
+} from "../../../../generated/prisma/client.js";
+import { sendAWSEmail } from "../../../utils/email/sendAWSEmail.js";
 import axios from "axios";
-import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated";
-import { paymentFailed } from "../../../utils/email/payments/paymentFailed";
-import prisma from "../../../utils/prisma";
+import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
+import { paymentFailed } from "../../../utils/email/payments/paymentFailed.js";
+import prisma from "../../../utils/prisma.js";
 
 const STRIPE_API = "https://api.stripe.com/v1";
-const stripe = require("stripe")(`${process.env.STRIPE_SECRET_KEY}`);
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function createOrder(data, userId) {
   const order = await prisma.order.create({

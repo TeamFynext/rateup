@@ -2,9 +2,9 @@ import {
   LoyaltyTemplateTypes,
   SubscriptionFeaturePathName,
   WaAutomatedReplyResponseType,
-} from "../../../types/enums";
-import prisma from "../../../utils/prisma";
-import { LoyaltyTemplateInput } from "./settings.schema";
+} from "../../../types/enums.js";
+import prisma from "../../../utils/prisma.js";
+import { LoyaltyTemplateInput } from "./settings.schema.js";
 import {
   createCustomerAction,
   createLoyaltyReferralCode,
@@ -14,17 +14,17 @@ import {
   handleSendTemplate,
   updateLCustomer,
   updateLCustomerPoint,
-} from "../customer/customer.service";
-import { getLoyaltyActionById } from "../actions/actions.service";
-import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
-import { updateMonthlyStat } from "../../stats/stats.service";
-import { log } from "../../../utils/logger";
-import { LoyaltyWaCommand } from "../../../../generated/prisma/client";
+} from "../customer/customer.service.js";
+import { getLoyaltyActionById } from "../actions/actions.service.js";
+import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
+import { updateMonthlyStat } from "../../stats/stats.service.js";
+import { log } from "../../../utils/logger.js";
+import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
 import {
   createRedeem,
   handleIssuedRewardsCommand,
   RedeemStatus,
-} from "../redeems/redeem.service";
+} from "../redeems/redeem.service.js";
 import dayjs from "dayjs";
 
 export async function createLoyaltyWaCommand(

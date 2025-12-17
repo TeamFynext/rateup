@@ -1,11 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../utils/logger";
+import { log } from "../../utils/logger.js";
 import {
   getActiveSurveyStats,
   getOverallStats,
   getTeamMemberStats,
-} from "./dashboard.service";
-import { ByTeamIdParams } from "../team/team.schema";
+} from "./dashboard.service.js";
+import { ByTeamIdParams } from "../team/team.schema.js";
 
 export async function getOverallStatsHandler(
   request: FastifyRequest,

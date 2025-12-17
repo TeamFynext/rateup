@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
-import { log } from "../../utils/logger";
+import { log } from "../../utils/logger.js";
 
 async function axiosWithRetry<T = any>(
   config: AxiosRequestConfig,

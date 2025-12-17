@@ -4,7 +4,7 @@ import {
   WaButtonType,
   WaTemplateCategory,
   WaTemplateComponentType,
-} from "../../../../../../../types/enums";
+} from "../../../../../../../types/enums.js";
 
 const waTemplateInput = {
   id: z.string().optional(),

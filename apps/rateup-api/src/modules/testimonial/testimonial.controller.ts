@@ -2,8 +2,8 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   getAllTestimonialByOrgId,
   getAllTestimonialBySurveyId,
-} from "./testimonial.service";
-import { BySurveyIdParamsInput } from "./testimonial.schema";
+} from "./testimonial.service.js";
+import { BySurveyIdParamsInput } from "./testimonial.schema.js";
 
 export async function getAllTestimonialBySurveyIdHandler(
   request: FastifyRequest<{

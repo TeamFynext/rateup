@@ -7,9 +7,9 @@ import {
   getCampaignParticipantByIdHandler,
   getCampaignParticipantsByCampaignIdHandler,
   multipleDeleteCampaignParticipantHandler,
-} from "./campaignParticipants.controller";
-import { $campaignParticipantsRef } from "./campaignParticipants.schema";
-import { $campaignRef } from "../campaign.schema";
+} from "./campaignParticipants.controller.js";
+import { $campaignParticipantsRef } from "./campaignParticipants.schema.js";
+import { $campaignRef } from "../campaign.schema.js";
 
 export async function campaignParticipantRoutes(server: FastifyInstance) {
   server.post(

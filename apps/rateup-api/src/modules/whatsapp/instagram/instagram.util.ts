@@ -1,4 +1,4 @@
-import { InstagramEvent } from "../../../types/enums";
+import { InstagramEvent } from "../../../types/enums.js";
 
 export function getInstagramWebhookEvent(
   data: InstagramWebhookBody["entry"][0]["messaging"][0],

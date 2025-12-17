@@ -1,7 +1,7 @@
-import prisma from "../../../../utils/prisma";
-import { getWaSettings } from "../../settings/wa_settings.service";
-import { callWhatsappApi } from "../../wa_axios";
-import { getWaCatalog } from "../catalog.service";
+import prisma from "../../../../utils/prisma.js";
+import { getWaSettings } from "../../settings/wa_settings.service.js";
+import { callWhatsappApi } from "../../wa_axios.js";
+import { getWaCatalog } from "../catalog.service.js";
 import {
   catalogHotel,
   catalogHotelRoom,
@@ -12,7 +12,7 @@ import {
   catalogProductResponseSchema,
   CatalogProductTypes,
   CatalogResponseInput,
-} from "./product.schema";
+} from "./product.schema.js";
 
 export async function createCatalogProductsBatch(
   orgId,

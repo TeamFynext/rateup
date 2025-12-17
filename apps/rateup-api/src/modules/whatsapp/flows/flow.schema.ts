@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { QuestionType2 } from "../../../types/enums";
+import { QuestionType2 } from "../../../types/enums.js";
 
 const sourceQuery = z.object({
   source: z.enum(["wa", "db"]).default("wa"),

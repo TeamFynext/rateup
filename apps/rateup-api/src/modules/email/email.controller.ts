@@ -1,12 +1,12 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../utils/logger";
-import { generateOTP } from "./email.util";
+import { log } from "../../utils/logger.js";
+import { generateOTP } from "./email.util.js";
 import {
   GenerateOtpInput,
   SendEmailInput,
   validateOtpInput,
-} from "./email.schema";
-import { sendEmailService, storeOtp, validateOtp } from "./email.service";
+} from "./email.schema.js";
+import { sendEmailService, storeOtp, validateOtp } from "./email.service.js";
 
 export async function sendEmailHandler(
   request: FastifyRequest<{ Body: SendEmailInput }>,

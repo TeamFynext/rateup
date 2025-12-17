@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import { SubscriptionFeaturePathName } from "../../types/enums";
-import prisma from "../../utils/prisma";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import prisma from "../../utils/prisma.js";
 
 export async function updateMonthlyStat(stat: string, orgId: string) {
   try {

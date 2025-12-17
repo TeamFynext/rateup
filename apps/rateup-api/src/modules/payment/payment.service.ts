@@ -3,7 +3,7 @@ import {
   PaymentPlanStatus,
   PaymentStatus,
   SubscriptionStatus,
-} from "../../../generated/prisma/client";
+} from "../../../generated/prisma/client.js";
 import axios from "axios";
 import {
   CreateCheckoutInput,
@@ -11,18 +11,18 @@ import {
   createRateUpPlanInput,
   rateupPlanParamInput,
   updateRateUpPlanInput,
-} from "./payment.schema";
+} from "./payment.schema.js";
 import dayjs from "dayjs";
 import {
   createEmailBodySubscriptionActivated,
   createEmailBodyTrialSubscriptionActivated,
-} from "../../utils/email/payments/subscriptionActivated";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
+} from "../../utils/email/payments/subscriptionActivated.js";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import {
   getRecurringCharge,
   getShopifyInfo,
-} from "../integrations/shopify/shopify.service";
-import prisma from "../../utils/prisma";
+} from "../integrations/shopify/shopify.service.js";
+import prisma from "../../utils/prisma.js";
 
 const credentials = Buffer.from(
   `${process.env.RAZORPAY_API_KEY}:${process.env.RAZORPAY_API_SECRET}`,

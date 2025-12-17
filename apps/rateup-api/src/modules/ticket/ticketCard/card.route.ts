@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $CardRef } from "./card.schema";
+import { $CardRef } from "./card.schema.js";
 import {
   createCardHandler,
   getAllCardsHandler,
@@ -10,12 +10,12 @@ import {
   getCardActivitiesHandler,
   reorderCardsHandler,
   getSingleCardTeamMembersHandler,
-} from "./card.controller";
-import { checkSession } from "../../../utils/checkSession";
-import { verifyColumnAccess } from "../ticketColumn/column.auth";
-import { verifyCardAccess } from "./card.auth";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
+} from "./card.controller.js";
+import { checkSession } from "../../../utils/checkSession.js";
+import { verifyColumnAccess } from "../ticketColumn/column.auth.js";
+import { verifyCardAccess } from "./card.auth.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 
 export async function cardRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

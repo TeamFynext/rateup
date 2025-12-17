@@ -4,7 +4,7 @@
 
 import nlp from "@google-cloud/language";
 import fs from "node:fs";
-import prisma from "../../../utils/prisma";
+import prisma from "../../../utils/prisma.js";
 
 fs.writeFileSync("./nlp_auth.json", process.env.NLP_AUTH || "");
 

@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $Sref } from "./survey.schema";
+import { $Sref } from "./survey.schema.js";
 import {
   completedSurveyHandler,
   fetchGoogleUrlBySurveyIdHandler,
@@ -10,9 +10,9 @@ import {
   startedSurveyHandler,
   verifySurveyPasswordHandler,
   visitedSurveyHandler,
-} from "./survey.controller";
-import { $Tref } from "../team/team.schema";
-import { verifySurveyMonthlyLimitRestriction } from "./survey.auth";
+} from "./survey.controller.js";
+import { $Tref } from "../team/team.schema.js";
+import { verifySurveyMonthlyLimitRestriction } from "./survey.auth.js";
 
 export async function surveyPublicRoutes(server: FastifyInstance) {
   server.get(

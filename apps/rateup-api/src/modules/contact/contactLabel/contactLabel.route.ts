@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { $contactLabelRef } from "./contactLabel.schema";
-import { $contactRef } from "../contact.schema";
+import { $contactLabelRef } from "./contactLabel.schema.js";
+import { $contactRef } from "../contact.schema.js";
 import {
   createContactLabelHandler,
   getAllContactLabelsHandler,
@@ -10,7 +10,7 @@ import {
   assignLabelsToContactHandler,
   getContactsWithLabelsHandler,
   assignLabelsToContactsHandler,
-} from "./contactLabel.controller";
+} from "./contactLabel.controller.js";
 
 export async function contactLabelRoutes(server: FastifyInstance) {
   // Create a new label

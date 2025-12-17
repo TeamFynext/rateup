@@ -3,7 +3,7 @@ import { buildJsonSchemas } from "fastify-zod";
 import {
   TicketPriority,
   TicketType,
-} from "../../../../generated/prisma/client";
+} from "../../../../generated/prisma/client.js";
 
 // Base schema for card
 const cardCore = {

@@ -1,10 +1,10 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../utils/logger";
+import { log } from "../../../utils/logger.js";
 import {
   CatalogIdParam,
   CatalogWhatsappSettingSchema,
   UpdateCatalogSchema,
-} from "./catalog.schema";
+} from "./catalog.schema.js";
 import {
   disconnectCatalogFromWaba,
   getConnectedWaCatalog,
@@ -13,9 +13,9 @@ import {
   syncWaCatalogs,
   updateConnectWaCatalog,
   updateWaCatalog,
-} from "./catalog.service";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { whatsappSettingsIdParamSchema } from "../settings/wa_settings.schema";
+} from "./catalog.service.js";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { whatsappSettingsIdParamSchema } from "../settings/wa_settings.schema.js";
 
 export async function updateCatalogHandler(
   request: FastifyRequest<{

@@ -3,8 +3,8 @@ import {
   addToken,
   deleteTokenByUserId,
   getTokensByOrgId,
-} from "./mobile.service";
-import { AddExpoTokenSchema, DeleteExpoTokenSchema } from "./mobile.schema";
+} from "./mobile.service.js";
+import { AddExpoTokenSchema, DeleteExpoTokenSchema } from "./mobile.schema.js";
 
 export async function addExpoToken(
   request: FastifyRequest<{ Body: AddExpoTokenSchema }>,

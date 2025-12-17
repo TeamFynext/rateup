@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { uploadFile, deleteFile } from "../../utils/upload/s3Upload";
+import { uploadFile, deleteFile } from "../../utils/upload/s3Upload.js";
 
 async function onFile(part) {
   const buff = await part.toBuffer();

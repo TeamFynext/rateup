@@ -1,8 +1,8 @@
-import prisma from "../../../utils/prisma";
+import prisma from "../../../utils/prisma.js";
 import {
   CreateBoardRequestSchema,
   UpdateBoardRequestSchema,
-} from "./board.schema";
+} from "./board.schema.js";
 
 export async function createBoard(
   data: CreateBoardRequestSchema & { userId: string },

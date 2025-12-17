@@ -1,4 +1,4 @@
-import { Role, TemplateType } from "../../../../generated/prisma/client";
+import { Role, TemplateType } from "../../../../generated/prisma/client.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   SubscriptionFeaturePathName,
@@ -6,15 +6,15 @@ import {
   WaTemplateComponentType,
   WaTemplateStatus,
   WaTemplateSupportedFormats,
-} from "../../../types/enums";
-import { log } from "../../../utils/logger";
-import { getOrgIdAndRole } from "../../user/user.service";
+} from "../../../types/enums.js";
+import { log } from "../../../utils/logger.js";
+import { getOrgIdAndRole } from "../../user/user.service.js";
 import {
   createSession,
   deleteSession,
   sendMessage,
-} from "../whatsappSurvey/wasurvey.service";
-import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
+} from "../whatsappSurvey/wasurvey.service.js";
+import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
 import {
   ByTemplateIdParamsSchema,
   CreateWaTemplateInput,
@@ -22,7 +22,7 @@ import {
   TemplateTypeParamsSchema,
   WaTemplateFormatted,
   WaUserSendTemplateBodySchema,
-} from "./wa_templates.schema";
+} from "./wa_templates.schema.js";
 import {
   createTemplate,
   deleteTemplate,
@@ -40,36 +40,36 @@ import {
   updateTemplate,
   updateTemplateInDb,
   uploadFileToWaTemplate,
-} from "./wa_templates.service";
+} from "./wa_templates.service.js";
 import {
   generateTemplate,
   getFlowIdFromTemplateComponents,
-} from "./wa_templates.utils";
-import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
-import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
-import prisma from "../../../utils/prisma";
+} from "./wa_templates.utils.js";
+import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
+import prisma from "../../../utils/prisma.js";
 import {
   SendTemplateToContacts,
   SendTemplateToContactGroups,
-} from "../../external/v1/whatsapp/template/wa_templates.external.schema";
-import { GraphApiError } from "../wa_axios";
+} from "../../external/v1/whatsapp/template/wa_templates.external.schema.js";
+import { GraphApiError } from "../wa_axios.js";
 import {
   getGraphApiErrorMessage,
   handleWhatsappError,
-} from "../wa_error_handler";
-import { updateMonthlyStat } from "../../stats/stats.service";
+} from "../wa_error_handler.js";
+import { updateMonthlyStat } from "../../stats/stats.service.js";
 import {
   generateOrderReferenceId,
   sendPaymentInitTemplate,
-} from "../automatedReply/wa_automatedReply.utils";
-import { wait } from "../whatsappSurvey/wasurvey.controller";
-import { createWaMessageSchedule } from "../wa_message_scheduler";
-import { parsePhoneforWa } from "../../loyalty/util";
-import { WHATSAPP_BUTTON_TYPE } from "../../../types/whatsapp.types";
-import { isEmptyString } from "../../../utils/commonUtils";
-import { getConnectedWaCatalog } from "../catalog/catalog.service";
+} from "../automatedReply/wa_automatedReply.utils.js";
+import { wait } from "../whatsappSurvey/wasurvey.controller.js";
+import { createWaMessageSchedule } from "../wa_message_scheduler.js";
+import { parsePhoneforWa } from "../../loyalty/util.js";
+import { WHATSAPP_BUTTON_TYPE } from "../../../types/whatsapp.types.js";
+import { isEmptyString } from "../../../utils/commonUtils.js";
+import { getConnectedWaCatalog } from "../catalog/catalog.service.js";
 import dayjs from "dayjs";
-import { validateFile } from "../../../utils/upload/validate";
+import { validateFile } from "../../../utils/upload/validate.js";
 
 export async function getTemplatesHandler(
   request: FastifyRequest<{

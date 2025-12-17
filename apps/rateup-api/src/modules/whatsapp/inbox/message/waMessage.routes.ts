@@ -14,10 +14,10 @@ import {
   markMessagesAsReadHandler,
   sendNewWaMessageHandler,
   unblockWhatsappUserHandler,
-} from "./wamessage.controller";
-import { checkSession } from "../../../../utils/checkSession";
-import { $contactRef } from "../../../contact/contact.schema";
-import { $waMessage } from "./wamessage.schema";
+} from "./wamessage.controller.js";
+import { checkSession } from "../../../../utils/checkSession.js";
+import { $contactRef } from "../../../contact/contact.schema.js";
+import { $waMessage } from "./wamessage.schema.js";
 
 export async function waMessageRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

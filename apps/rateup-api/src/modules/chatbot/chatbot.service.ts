@@ -1,11 +1,11 @@
 import axios from "axios";
-import { dataSourceUploadInput } from "./chatbot.schema";
-import { getShortUrlId } from "../../utils/commonUtils";
-import prisma from "../../utils/prisma";
+import { dataSourceUploadInput } from "./chatbot.schema.js";
+import { getShortUrlId } from "../../utils/commonUtils.js";
+import prisma from "../../utils/prisma.js";
 import { FastifyRequest } from "fastify";
-import { getAxiosAIClient } from "./chatbot.controller";
-import { log } from "../../utils/logger";
-import { getSubscription } from "../subscription/subscription.service";
+import { getAxiosAIClient } from "./chatbot.controller.js";
+import { log } from "../../utils/logger.js";
+import { getSubscription } from "../subscription/subscription.service.js";
 
 const CHATBOT_BASEURL = `${process.env.CHATBOT_API_URL}/api/chatbot`;
 const CHATBOT_PUBLIC_BASEURL = `${process.env.CHATBOT_API_URL}/api/public/chatbot`;

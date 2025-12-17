@@ -5,27 +5,30 @@ import {
   SmileyResponse,
   CampaignParticipantAddStatus,
   CampaignParticipantStatus,
-} from "../../../types/enums";
+} from "../../../types/enums.js";
 import {
   WaMessageBody,
   WaMessageTypes,
   WaReceiveMessageBody,
   WaSendMessageBody,
-} from "../../../types/whatsapp.types";
-import { log } from "../../../utils/logger";
-import { QuestionType as Q } from "../../../types/enums";
-import { callWhatsappApi } from "../wa_axios";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { getFileUrlFromKey, uploadFile } from "../../../utils/upload/s3Upload";
+} from "../../../types/whatsapp.types.js";
+import { log } from "../../../utils/logger.js";
+import { QuestionType as Q } from "../../../types/enums.js";
+import { callWhatsappApi } from "../wa_axios.js";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import {
+  getFileUrlFromKey,
+  uploadFile,
+} from "../../../utils/upload/s3Upload.js";
 import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
+import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import {
   Contact,
   TemplateType,
   WaSession,
-} from "../../../../generated/prisma/client";
-import { sendMessage } from "./wasurvey.service";
-import prisma from "../../../utils/prisma";
+} from "../../../../generated/prisma/client.js";
+import { sendMessage } from "./wasurvey.service.js";
+import prisma from "../../../utils/prisma.js";
 import {
   ButtonOption,
   ListItem,
@@ -33,12 +36,12 @@ import {
   NodeTypeMap,
   TypedNode,
   WhatsAppMessage,
-} from "./node-types";
-import { ContactCore } from "../../contact/contact.schema";
-import connection from "../../../utils/redisConnection";
+} from "./node-types.js";
+import { ContactCore } from "../../contact/contact.schema.js";
+import connection from "../../../utils/redisConnection.js";
 import crypto from "node:crypto";
-import { PlatformType } from "../../../../generated/prisma/enums";
-import { WaMedia } from "../inbox/message/wamessage.service";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { WaMedia } from "../inbox/message/wamessage.service.js";
 
 dayjs.extend(customParseFormat);
 
@@ -1406,7 +1409,7 @@ export enum WA_SUBSCRIBE_STATUS {
 }
 
 function getHashForMembers(memberIds) {
-  return crypto.createHash("md5").update(memberIds.join(",")).digest("hex");
+  return crypto.createHash("SHA-256").update(memberIds.join(",")).digest("hex");
 }
 
 export const assignChat = async (
@@ -1418,7 +1421,7 @@ export const assignChat = async (
   const pointerKey = `round_robin_index:${teamId}:${automationId}:${memberHash}`;
   // Get current index from Redis, or start from 0
   let indexStr = await connection.get(pointerKey);
-  let index = indexStr ? parseInt(indexStr) : 0;
+  let index = indexStr ? Number.parseInt(indexStr) : 0;
 
   // Fallback safety check
   if (index >= memberIds.length) {

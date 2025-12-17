@@ -1,19 +1,19 @@
 import { isValidPhoneNumber } from "libphonenumber-js";
-import { log } from "../../../utils/logger";
-import prisma from "../../../utils/prisma";
+import { log } from "../../../utils/logger.js";
+import prisma from "../../../utils/prisma.js";
 import {
   AddNewContactsToGroupInput,
   CreateContactGroupInput,
   PaginationQuery,
   RemoveGroupContactsSchema,
   UpdateContactGroupInput,
-} from "./contactGroup.schema";
-import { BATCH_SIZE } from "../../../utils/constants/constants";
-import { ContactGroupType } from "../../../../generated/prisma/client";
+} from "./contactGroup.schema.js";
+import { BATCH_SIZE } from "../../../utils/constants/constants.js";
+import { ContactGroupType } from "../../../../generated/prisma/client.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../../integrations/external/zapier/zapier.service";
+} from "../../integrations/external/zapier/zapier.service.js";
 
 export async function getContactGroupById(contactGroupId: string) {
   const contactGroup = await prisma.contactGroup.findUnique({

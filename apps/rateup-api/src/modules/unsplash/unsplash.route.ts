@@ -1,10 +1,10 @@
 import { FastifyInstance } from "fastify";
-import { $Uref } from "./unsplash.schema";
-import { checkSession } from "../../utils/checkSession";
+import { $Uref } from "./unsplash.schema.js";
+import { checkSession } from "../../utils/checkSession.js";
 import {
   getUnsplashImageListHandler,
   triggerDownloadUnsplashImageHandler,
-} from "./unsplash.controller";
+} from "./unsplash.controller.js";
 
 export async function unsplashRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

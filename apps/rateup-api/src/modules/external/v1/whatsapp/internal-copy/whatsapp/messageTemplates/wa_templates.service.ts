@@ -1,33 +1,33 @@
 import { MultipartFile } from "@fastify/multipart";
-import { TemplateType } from "../../../../../../../../generated/prisma/client";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { callWhatsappApi } from "../wa_axios";
-import { CreateWaTemplateInput } from "./wa_templates.schema";
+import { TemplateType } from "../../../../../../../../generated/prisma/client.js";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { callWhatsappApi } from "../wa_axios.js";
+import { CreateWaTemplateInput } from "./wa_templates.schema.js";
 import {
   generateTemplate,
   getFlowIdFromTemplateComponents,
-} from "./wa_templates.utils";
-import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
+} from "./wa_templates.utils.js";
+import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
 import {
   createSession,
   deleteSession,
   sendMessage,
-} from "../whatsappSurvey/wasurvey.service";
-import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
-import { log } from "../../../../../../../utils/logger";
-import prisma from "../../../../../../../utils/prisma";
-import { SendTemplateHeaderComponent } from "../../../template/wa_templates.external.schema";
+} from "../whatsappSurvey/wasurvey.service.js";
+import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
+import { log } from "../../../../../../../utils/logger.js";
+import prisma from "../../../../../../../utils/prisma.js";
+import { SendTemplateHeaderComponent } from "../../../template/wa_templates.external.schema.js";
 import {
   SubscriptionFeaturePathName,
   waMessageScheduleSource,
   WaTemplateComponentType,
   WaTemplateSupportedFormats,
-} from "../../../../../../../types/enums";
-import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload";
-import { createWaMessageSchedule } from "../../../../../../whatsapp/wa_message_scheduler";
-import { sendPaymentInitTemplate } from "../../../../../../whatsapp/automatedReply/wa_automatedReply.utils";
-import { templateData } from "../../../../../../whatsapp/messageTemplates/wa_templates.service";
-import { updateMonthlyStat } from "../../../../../../stats/stats.service";
+} from "../../../../../../../types/enums.js";
+import { getFileUrlFromKey } from "../../../../../../../utils/upload/s3Upload.js";
+import { createWaMessageSchedule } from "../../../../../../whatsapp/wa_message_scheduler.js";
+import { sendPaymentInitTemplate } from "../../../../../../whatsapp/automatedReply/wa_automatedReply.utils.js";
+import { templateData } from "../../../../../../whatsapp/messageTemplates/wa_templates.service.js";
+import { updateMonthlyStat } from "../../../../../../stats/stats.service.js";
 
 /**
  * fetches templates from WhatsApp Business API

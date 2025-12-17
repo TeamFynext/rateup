@@ -6,12 +6,12 @@ import {
   updateBoard,
   deleteBoard,
   getBoardTeamMembersById,
-} from "./board.service";
-import { createColumn } from "../ticketColumn/column.service";
+} from "./board.service.js";
+import { createColumn } from "../ticketColumn/column.service.js";
 import {
   CreateBoardRequestSchema,
   UpdateBoardRequestSchema,
-} from "./board.schema";
+} from "./board.schema.js";
 
 export async function createBoardHandler(
   request: FastifyRequest<{

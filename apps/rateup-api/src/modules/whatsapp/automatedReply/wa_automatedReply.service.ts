@@ -1,10 +1,10 @@
 import dayjs from "dayjs";
-import prisma from "../../../utils/prisma";
-import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema";
-import { getUsageStat } from "../../stats/stats.service";
-import { getSubscription } from "../../subscription/subscription.service";
-import { log } from "../../../utils/logger";
-import { selectAutomationByBusinessHours } from "./wa_automatedReply.utils";
+import prisma from "../../../utils/prisma.js";
+import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema.js";
+import { getUsageStat } from "../../stats/stats.service.js";
+import { getSubscription } from "../../subscription/subscription.service.js";
+import { log } from "../../../utils/logger.js";
+import { selectAutomationByBusinessHours } from "./wa_automatedReply.utils.js";
 
 export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
   const automatedReplies = await prisma.waAutomatedReplyMessage.findMany({
@@ -16,42 +16,24 @@ export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
   return automatedReplies;
 }
 
-export async function getAutomatedRepliesByOrgId(
-  orgId: string,
-  phone_number_id?: string,
-) {
+export async function getAutomatedRepliesByOrgId(orgId: string) {
   const automatedReplies = await prisma.waAutomatedReply.findMany({
     where: {
       orgId,
-      ...(phone_number_id
-        ? {
-            isEnabled: true,
-            whatsappSettingsPhoneIds: {
-              has: phone_number_id,
-            },
-          }
-        : {}),
-    },
-    include: {
-      WaAutomatedReplyCommands: {
-        select: {
-          command: true,
-          businessHour: true,
-        },
-      },
     },
     orderBy: {
       createdAt: "desc",
     },
+    select: {
+      id: true,
+      name: true,
+      createdAt: true,
+      matchData: true,
+      orgId: true,
+      whatsappSettingsPhoneId: true,
+    },
   });
-  return automatedReplies.map((ar) => {
-    const { WaAutomatedReplyCommands, ...rest } = ar;
-    return {
-      ...rest,
-      commands: WaAutomatedReplyCommands.map((c) => c.command),
-      businessHour: WaAutomatedReplyCommands?.[0]?.businessHour,
-    };
-  });
+  return automatedReplies;
 }
 
 export async function getAutomatedReplyById(id: string) {
@@ -131,30 +113,14 @@ export async function createAutomatedReply(
   data: CreateAutomatedReplySchema,
   orgId: string,
 ) {
-  const { commands = [], businessHourId, ...restData } = data;
-
-  // Validate unique commands before creating
-  await validateUniqueCommands(orgId, commands, businessHourId);
-
-  const automatedReply = await prisma.$transaction(async (prisma) => {
-    const createdAutomatedReply = await prisma.waAutomatedReply.create({
-      data: {
-        orgId,
-        matchData: restData.matchData,
-        matchType: restData.matchType,
-        name: restData.name,
-        ...restData,
-      },
-    });
-    await prisma.waAutomatedReplyCommands.createMany({
-      data: commands.map((c) => ({
-        orgId,
-        command: c === "lead" ? `${c}_${dayjs().unix()}` : c,
-        waAutomatedReplyId: createdAutomatedReply.id,
-        businessHourId,
-      })),
-    });
-    return createdAutomatedReply;
+  const automatedReply = await prisma.waAutomatedReply.create({
+    data: {
+      orgId,
+      name: data.name,
+      matchType: "",
+      matchData: data?.matchData,
+      whatsappSettingsPhoneId: data.whatsappSettingsPhoneId,
+    },
   });
   if (automatedReply)
     await prisma.usageStats.update({
@@ -170,36 +136,17 @@ export async function updateAutomatedReply(
   data: any,
   orgId: string,
 ) {
-  const { commands = [], businessHourId, ...restData } = data;
-
-  // Validate unique commands before updating, excluding current automated reply
-  await validateUniqueCommandsForUpdate(orgId, commands, businessHourId, id);
-
-  return prisma.$transaction(async (prisma) => {
-    const updatedAutomatedReply = await prisma.waAutomatedReply.update({
-      where: {
-        id,
-      },
-      data: {
-        orgId,
-        ...restData,
-      },
-    });
-    await prisma.waAutomatedReplyCommands.deleteMany({
-      where: {
-        waAutomatedReplyId: id,
-      },
-    });
-    await prisma.waAutomatedReplyCommands.createMany({
-      data: commands.map((c) => ({
-        orgId,
-        command: c,
-        waAutomatedReplyId: updatedAutomatedReply.id,
-        businessHourId,
-      })),
-    });
-    return updatedAutomatedReply;
+  const updatedAutomatedReply = await prisma.waAutomatedReply.update({
+    where: {
+      id,
+    },
+    data: {
+      name: data.name,
+      matchData: data?.matchData,
+      whatsappSettingsPhoneId: data?.whatsappSettingsPhoneId,
+    },
   });
+  return updatedAutomatedReply;
 }
 
 export async function deleteAutomatedReply(id: string) {

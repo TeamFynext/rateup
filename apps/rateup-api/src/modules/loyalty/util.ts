@@ -1,4 +1,4 @@
-import { LoyaltyActionType } from "./actions/actions.schema";
+import { LoyaltyActionType } from "./actions/actions.schema.js";
 
 export const isLReferralAction = (actionType) =>
   [LoyaltyActionType.ReferralPurchase].includes(actionType);

@@ -1,19 +1,19 @@
-import { WhatsappSettings } from "../../../../generated/prisma/client";
+import { WhatsappSettings } from "../../../../generated/prisma/client.js";
 import {
   aes_decrypt,
   aes_encrypt,
-} from "../../../../utils/encryption/encryption.utils";
-import prisma from "../../../utils/prisma";
-import { getPhoneDetails } from "../auth/wa_auth.service";
-import { WaConfigType } from "../../../types/enums";
-import { log } from "../../../utils/logger";
+} from "../../../../utils/encryption/encryption.utils.js";
+import prisma from "../../../utils/prisma.js";
+import { getPhoneDetails } from "../auth/wa_auth.service.js";
+import { WaConfigType } from "../../../types/enums.js";
+import { log } from "../../../utils/logger.js";
 import {
   ContactTagSchema,
   PaginationQuery,
   updateWaSettingsInput,
-} from "./wa_settings.schema";
-import { callWhatsappApi } from "../wa_axios";
-import { subscribePageToApp } from "./wa_settings.controller";
+} from "./wa_settings.schema.js";
+import { callWhatsappApi } from "../wa_axios.js";
+import { subscribePageToApp } from "./wa_settings.controller.js";
 
 export async function createWaSettings(
   orgId: string,

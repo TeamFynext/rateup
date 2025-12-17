@@ -1,12 +1,12 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { log } from "../../../utils/logger";
+import { log } from "../../../utils/logger.js";
 import {
   CreateContactLabelSchema,
   UpdateContactLabelSchema,
   ByLabelIdSchema,
   AssignLabelsToContactSchema,
   AssignLabelsToContactsSchema,
-} from "./contactLabel.schema";
+} from "./contactLabel.schema.js";
 import {
   createContactLabel,
   getContactLabelsByOrgId,
@@ -16,9 +16,9 @@ import {
   assignLabelsToContact,
   getContactsWithLabels,
   assignLabelsToContacts,
-} from "./contactLabel.service";
-import { ByContactIdParams } from "../contact.schema";
-import { Prisma } from "../../../../generated/prisma/client";
+} from "./contactLabel.service.js";
+import { ByContactIdParams } from "../contact.schema.js";
+import { Prisma } from "../../../../generated/prisma/client.js";
 
 export async function createContactLabelHandler(
   request: FastifyRequest<{

@@ -1,15 +1,15 @@
 import dayjs from "dayjs";
-import prisma from "../../../utils/prisma";
+import prisma from "../../../utils/prisma.js";
 import {
   getLCustomerByPhone,
   handleSendTemplate,
-} from "../customer/customer.service";
+} from "../customer/customer.service.js";
 
-import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
-import { LoyaltyWaCommand } from "../../../../generated/prisma/client";
-import { replacedContentByDynamicVariable } from "../settings/settings.service";
-import { WaAutomatedReplyResponseType } from "../../../types/enums";
-import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
+import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils.js";
+import { LoyaltyWaCommand } from "../../../../generated/prisma/client.js";
+import { replacedContentByDynamicVariable } from "../settings/settings.service.js";
+import { WaAutomatedReplyResponseType } from "../../../types/enums.js";
+import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 
 export enum RedeemStatus {
   PROCESSING = "PROCESSING",

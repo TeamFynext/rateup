@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getBoardIdByColumnId } from "./column.service";
-import { isBoardMember } from "../ticketBoard/board.service";
+import { getBoardIdByColumnId } from "./column.service.js";
+import { isBoardMember } from "../ticketBoard/board.service.js";
 
 export async function verifyColumnAccess(
   request: FastifyRequest<{

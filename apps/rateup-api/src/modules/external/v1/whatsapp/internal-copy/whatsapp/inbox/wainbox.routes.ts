@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { waMessageSchemas } from "./message/wamessage.schema";
-import { waMessageRoutes } from "./message/waMessage.routes";
+import { waMessageSchemas } from "./message/wamessage.schema.js";
+import { waMessageRoutes } from "./message/waMessage.routes.js";
 
 export async function waInboxRoutes(server: FastifyInstance) {
   const modules = [waMessageSchemas];

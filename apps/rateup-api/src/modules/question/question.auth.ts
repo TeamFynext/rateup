@@ -1,14 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { hasAccessToSurvey } from "../../utils/auth";
-import { QuestionsRouteParams } from "./question.schema";
-import Session from "supertokens-node/recipe/session";
+import { hasAccessToSurvey } from "../../utils/auth.js";
+import { QuestionsRouteParams } from "./question.schema.js";
 
 // TODO: fix this
 export async function verifySurveyAccess(
   request: FastifyRequest<{
     Params: QuestionsRouteParams;
   }>,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) {
   const surveyId = request.params.surveyId;
   const userId = request.userId;

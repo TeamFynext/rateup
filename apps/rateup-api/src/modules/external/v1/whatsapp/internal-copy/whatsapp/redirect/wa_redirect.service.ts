@@ -1,5 +1,5 @@
-import { log } from "../../../../../../../utils/logger";
-import prisma from "../../../../../../../utils/prisma";
+import { log } from "../../../../../../../utils/logger.js";
+import prisma from "../../../../../../../utils/prisma.js";
 
 export async function tokenizeIp(ip: string) {
   const tokenized = await prisma.temporary_Tokenization.create({

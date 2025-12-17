@@ -2,21 +2,21 @@ import {
   Contact,
   WaMessage,
   WhatsappSettings,
-} from "../../../../generated/prisma/client";
-import prisma from "../../../utils/prisma";
-import { callWhatsappApi } from "../wa_axios";
+} from "../../../../generated/prisma/client.js";
+import prisma from "../../../utils/prisma.js";
+import { callWhatsappApi } from "../wa_axios.js";
 import {
   CatalogWhatsappSettingSchema,
   UpdateCatalogSchema,
-} from "./catalog.schema";
-import { WaReceiveMessageBody } from "../../../types/whatsapp.types";
-import { log } from "../../../utils/logger";
+} from "./catalog.schema.js";
+import { WaReceiveMessageBody } from "../../../types/whatsapp.types.js";
+import { log } from "../../../utils/logger.js";
 import {
   getAllWaSettings,
   getWaSettingsById,
   getWaSettingsWithAccessTokenDecrypted,
-} from "../settings/wa_settings.service";
-import { MetaLoginAssets, WaConfigType } from "../../../types/enums";
+} from "../settings/wa_settings.service.js";
+import { MetaLoginAssets, WaConfigType } from "../../../types/enums.js";
 
 export async function updateWaCatalog(
   catalogId: string,

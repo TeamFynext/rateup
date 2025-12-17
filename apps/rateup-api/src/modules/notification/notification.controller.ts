@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../utils/logger";
+import { log } from "../../utils/logger.js";
 import {
   deleteAllNotificationsByUser,
   deleteNotificationById,
@@ -7,11 +7,11 @@ import {
   getNotificationsCount,
   getNotificationSettings,
   updateNotificationSettings,
-} from "./notification.service";
+} from "./notification.service.js";
 import {
   NotificationIdParamSchema,
   NotificationSettingSchema,
-} from "./notification.schema";
+} from "./notification.schema.js";
 
 export async function getNotificationsHandler(
   request: FastifyRequest,

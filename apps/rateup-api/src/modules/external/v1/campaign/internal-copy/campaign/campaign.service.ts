@@ -1,12 +1,12 @@
 import dayjs from "dayjs";
-import prisma from "../../../../../../utils/prisma";
+import prisma from "../../../../../../utils/prisma.js";
 import {
   CampaignParticipantStatus,
   CampaignStatus,
-} from "../../../../../../types/enums";
-import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema";
-import { log } from "../../../../../../utils/logger";
-import { sendCampaignToParticipants } from "../../../../../whatsapp/whatsappSurvey/wasurvey.controller";
+} from "../../../../../../types/enums.js";
+import { CreateCampaignInput, UpdateCampaignInput } from "./campaign.schema.js";
+import { log } from "../../../../../../utils/logger.js";
+import { sendCampaignToParticipants } from "../../../../../whatsapp/whatsappSurvey/wasurvey.controller.js";
 
 type campaginExtentend = {
   team: {

@@ -5,21 +5,21 @@ import {
   WaTemplateComponentType,
   WaTemplateComponentTypeUpperCase,
   WaTemplateSupportedFormats,
-} from "../../../types/enums";
+} from "../../../types/enums.js";
 import {
   WHATSAPP_BUTTON_TYPE,
   WaSendMessageBody,
   WaTemplateComponent,
   WaTemplateFetchComponents,
-} from "../../../types/whatsapp.types";
-import { parseStringWithVariables } from "../../../utils/template";
+} from "../../../types/whatsapp.types.js";
+import { parseStringWithVariables } from "../../../utils/template.js";
 import {
   CreateWaTemplateFormattedInput,
   CreateWaTemplateInput,
-} from "./wa_templates.schema";
-import { getTemplateByIdAndOrgId } from "./wa_templates.service";
-import { getNestedProperty } from "../../../utils/misc/obj.utils";
-import prisma from "../../../utils/prisma";
+} from "./wa_templates.schema.js";
+import { getTemplateByIdAndOrgId } from "./wa_templates.service.js";
+import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
+import prisma from "../../../utils/prisma.js";
 
 export function generateTemplate(
   input: CreateWaTemplateInput,

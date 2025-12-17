@@ -1,8 +1,8 @@
-import prisma from "../../utils/prisma";
+import prisma from "../../utils/prisma.js";
 import {
   LifecycleBodySchema,
   LifecycleReorderSchema,
-} from "./lifecycle.schema";
+} from "./lifecycle.schema.js";
 
 export async function getLifecycles(orgId: string) {
   return await prisma.lifecycle.findMany({

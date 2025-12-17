@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession";
+import { checkSession } from "../../utils/checkSession.js";
 import {
   createLinktreeRouteOptions,
   deleteLinktreeByIdRouteOptions,
@@ -9,7 +9,7 @@ import {
   getPublicLinktreeWithShortIdRouteOptions,
   updateLinktreeWithShortIdRouteOptions,
   updatePageVisitsOrLinkClicksOptions,
-} from "./linktree.routeOptions";
+} from "./linktree.routeOptions.js";
 
 export async function linkRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {

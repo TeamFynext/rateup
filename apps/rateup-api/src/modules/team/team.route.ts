@@ -14,19 +14,19 @@ import {
   deleteTeamMemberHandler,
   addMembertoTeamsHandler,
   getUsersNotInTeamHandler,
-} from "./team.controller";
-import { $Tref } from "./team.schema";
-import { checkRoleHandler } from "../../utils/checkRoleHandler";
+} from "./team.controller.js";
+import { $Tref } from "./team.schema.js";
+import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 import {
   verifyTeamAccess,
   verifyTeamAdminAccess,
   verifyTeamMaxCountRestriction,
   verifyTeamMemberMaxCountRestriction,
-} from "./team.auth";
-import { checkSession } from "../../utils/checkSession";
-import { getVerifySubscriptionHandler } from "../../utils/auth";
-import { SubscriptionFeaturePathName as sf } from "../../types/enums";
-import { getSurveyLanguagesByTeamIdHandler } from "../survey/survey.controller";
+} from "./team.auth.js";
+import { checkSession } from "../../utils/checkSession.js";
+import { getVerifySubscriptionHandler } from "../../utils/auth.js";
+import { SubscriptionFeaturePathName as sf } from "../../types/enums.js";
+import { getSurveyLanguagesByTeamIdHandler } from "../survey/survey.controller.js";
 
 // TODO: add checkSession as server.addHook instead of defining it in every route
 // move routes which doesn't need checkSession to another route (invitation)

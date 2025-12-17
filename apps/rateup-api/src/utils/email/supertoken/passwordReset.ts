@@ -1,4 +1,4 @@
-import { sendAWSEmail } from "../sendAWSEmail";
+import { sendAWSEmail } from "../sendAWSEmail.js";
 
 export function sendResetPasswordMail(reset_link: string, email_id: string) {
   if (reset_link && email_id) {

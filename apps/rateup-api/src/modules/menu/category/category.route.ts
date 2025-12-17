@@ -6,14 +6,14 @@ import {
   getMenuCategoryHandler,
   sortMenuCategoryHandler,
   updateMenuCategoryHandler,
-} from "./category.controller";
-import { $MCref } from "./category.schema";
-import { $Mref } from "../menu.schema";
-import { verifyMenuAccess } from "../menu.auth";
-import { verifyMenuCategoryAccess } from "./category.auth";
-import { checkSession } from "../../../utils/checkSession";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
+} from "./category.controller.js";
+import { $MCref } from "./category.schema.js";
+import { $Mref } from "../menu.schema.js";
+import { verifyMenuAccess } from "../menu.auth.js";
+import { verifyMenuCategoryAccess } from "./category.auth.js";
+import { checkSession } from "../../../utils/checkSession.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 
 export async function menuCategoryRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

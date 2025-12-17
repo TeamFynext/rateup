@@ -1,5 +1,5 @@
-import prisma from "../../../../utils/prisma";
-import { UpdateOrderBody, UpdateQuickReplyInput } from "./quickReply.schema";
+import prisma from "../../../../utils/prisma.js";
+import { UpdateOrderBody, UpdateQuickReplyInput } from "./quickReply.schema.js";
 
 export type QuickReply = {
   text: string;

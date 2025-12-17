@@ -3,7 +3,7 @@ import {
   getShopifyAuthCallbackHandler,
   getShopifyAuthHandler,
   shopifyWebhooksHandler,
-} from "./shopify.controller";
+} from "./shopify.controller.js";
 import fastifyRawBody from "fastify-raw-body";
 
 export async function shopifyPublicRoutes(server: FastifyInstance) {

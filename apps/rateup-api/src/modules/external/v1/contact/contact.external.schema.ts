@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { contactCoreSchema } from "../../../contact/contact.schema";
+import { contactCoreSchema } from "../../../contact/contact.schema.js";
 
 const createContactSchema = contactCoreSchema.omit({ source: true });
 const createMultipleContactSchema = z.array(createContactSchema);

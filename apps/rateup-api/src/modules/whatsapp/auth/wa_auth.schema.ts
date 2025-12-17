@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { MetaLoginAssets } from "../../../types/enums";
+import { MetaLoginAssets } from "../../../types/enums.js";
 
 const registerBusinessBodySchema = z.object({
   code: z.string(),

@@ -1,11 +1,11 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { log } from "../../../utils/logger";
+import { log } from "../../../utils/logger.js";
 import {
   AmountInput,
   CustomerActionParamInput,
   CustomerIdInput,
   LCustomerInput,
-} from "./customer.schema";
+} from "./customer.schema.js";
 import {
   createLCustomer,
   deleteLoyaltyCustomer,
@@ -18,19 +18,19 @@ import {
   importCSVContacts,
   updateLCustomer,
   verifyLCustomerMaxCountRestriction,
-} from "./customer.service";
+} from "./customer.service.js";
 import {
   LoyaltyTemplateTypes,
   WaAutomatedReplyResponseType,
-} from "../../../types/enums";
+} from "../../../types/enums.js";
 import {
   getLoyaltyWaCommandByType,
   replacedContentByDynamicVariable,
-} from "../settings/settings.service";
-import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
-import { ContactCore, PaginationQuery } from "../../contact/contact.schema";
-import { ContactGroupType } from "../../../../generated/prisma/client";
-import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
+} from "../settings/settings.service.js";
+import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema.js";
+import { ContactCore, PaginationQuery } from "../../contact/contact.schema.js";
+import { ContactGroupType } from "../../../../generated/prisma/client.js";
+import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 
 export async function createLCustomerHandler(
   request: FastifyRequest<{ Body: LCustomerInput }>,

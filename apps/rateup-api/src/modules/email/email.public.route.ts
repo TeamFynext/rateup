@@ -3,8 +3,8 @@ import {
   sendEmailHandler,
   sendOTPEmailHandler,
   validateOTPHandler,
-} from "./email.controller";
-import { $Eref } from "./email.schema";
+} from "./email.controller.js";
+import { $Eref } from "./email.schema.js";
 
 export async function emailPublicRoutes(server: FastifyInstance) {
   server.post(

@@ -1,6 +1,6 @@
 import axios from "axios";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { callWhatsappApi } from "../wa_axios";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { callWhatsappApi } from "../wa_axios.js";
 import {
   generateFlowMessageData,
   generateQuestionResponsesFromFlowResponse,
@@ -10,9 +10,9 @@ import {
   parseFlowResponse,
   parseResponseFromCurrentScreenResponse,
   removeIdFromFlowJson,
-} from "./flow.utils";
-import { WaFlow } from "../../../../../../../../generated/prisma/client";
-import { UpdateFlowInput } from "./flow.schema";
+} from "./flow.utils.js";
+import { WaFlow } from "../../../../../../../../generated/prisma/client.js";
+import { UpdateFlowInput } from "./flow.schema.js";
 import FormData from "form-data";
 import {
   deleteSession,
@@ -21,22 +21,22 @@ import {
   sendMessage,
   shouldShowGoogleReview,
   updateSession,
-} from "../whatsappSurvey/wasurvey.service";
+} from "../whatsappSurvey/wasurvey.service.js";
 import {
   createCTAButtonMessage,
   parseMessage,
-} from "../whatsappSurvey/wasurvey.utils";
-import { WaFlowStatus, LogicAction } from "../../../../../../../types/enums";
-import { FlowLogicJump } from "../../../../../../../types/global";
-import { WaMessageBody } from "../../../../../../../types/whatsapp.types";
+} from "../whatsappSurvey/wasurvey.utils.js";
+import { WaFlowStatus, LogicAction } from "../../../../../../../types/enums.js";
+import { FlowLogicJump } from "../../../../../../../types/global.js";
+import { WaMessageBody } from "../../../../../../../types/whatsapp.types.js";
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
-} from "../../../../../../../utils/commonUtils";
-import { log } from "../../../../../../../utils/logger";
-import prisma from "../../../../../../../utils/prisma";
-import { validateLogic } from "../../../../../../question/question.utils";
-import { getSurveyById } from "../../../../../../survey/survey.service";
+} from "../../../../../../../utils/commonUtils.js";
+import { log } from "../../../../../../../utils/logger.js";
+import prisma from "../../../../../../../utils/prisma.js";
+import { validateLogic } from "../../../../../../question/question.utils.js";
+import { getSurveyById } from "../../../../../../survey/survey.service.js";
 
 /**
  * Get flows from whatsapp

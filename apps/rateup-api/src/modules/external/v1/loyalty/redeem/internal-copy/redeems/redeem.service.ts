@@ -1,17 +1,17 @@
 import { parsePhoneNumber } from "libphonenumber-js";
-import { LoyaltyApiFeature } from "../../../../../../../types/enums";
-import { log } from "../../../../../../../utils/logger";
-import prisma from "../../../../../../../utils/prisma";
+import { LoyaltyApiFeature } from "../../../../../../../types/enums.js";
+import { log } from "../../../../../../../utils/logger.js";
+import prisma from "../../../../../../../utils/prisma.js";
 import {
   updateLCustomer,
   handleLCustomerAction,
   handleSendTemplate,
   updateLCustomerRedeemPoint,
-} from "../../../../../../loyalty/customer/customer.service";
+} from "../../../../../../loyalty/customer/customer.service.js";
 import {
   createRedeem,
   RedeemStatus,
-} from "../../../../../../loyalty/redeems/redeem.service";
+} from "../../../../../../loyalty/redeems/redeem.service.js";
 
 export async function processRedeemWebhook(data, orgId) {
   const apiSettings = (await prisma.loyaltyApiSettings.findMany({

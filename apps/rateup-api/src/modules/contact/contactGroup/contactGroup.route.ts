@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $contactGroupRef } from "./contactGroup.schema";
+import { $contactGroupRef } from "./contactGroup.schema.js";
 import {
   createContactGroupHandler,
   getContactGroupsHandler,
@@ -12,7 +12,7 @@ import {
   addExistingContactsToMultipleGroupsHandler,
   deleteManyContactGroupsHandler,
   addNewContactsfromCSVToGroupHandler,
-} from "./contactGroup.controller";
+} from "./contactGroup.controller.js";
 import fastifyMultipart from "@fastify/multipart";
 
 export async function contactGroupRoutes(server: FastifyInstance) {

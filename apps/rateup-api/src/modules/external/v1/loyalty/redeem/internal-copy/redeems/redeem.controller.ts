@@ -1,18 +1,18 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../../../../../utils/logger";
-import { customerRedeemQueryInput } from "../../../loyalty.external.schema";
+import { log } from "../../../../../../../utils/logger.js";
+import { customerRedeemQueryInput } from "../../../loyalty.external.schema.js";
 import {
   getLCustomerByPhone,
   handleSendTemplate,
   updateLCustomer,
   updateLCustomerRedeemPoint,
-} from "../../../../../../loyalty/customer/customer.service";
-import { getLoyaltyRewardByRewardId } from "../../../reward/internal-copy/rewards/reward.service";
+} from "../../../../../../loyalty/customer/customer.service.js";
+import { getLoyaltyRewardByRewardId } from "../../../reward/internal-copy/rewards/reward.service.js";
 import {
   createRedeem,
   RedeemStatus,
-} from "../../../../../../loyalty/redeems/redeem.service";
-import { processRedeemWebhook } from "./redeem.service";
+} from "../../../../../../loyalty/redeems/redeem.service.js";
+import { processRedeemWebhook } from "./redeem.service.js";
 
 //active check
 export async function redeemPointsHandler(

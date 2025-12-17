@@ -1,4 +1,7 @@
-import { registerWebhookbyTopicInput, ShopParamInput } from "./shopify.schema";
+import {
+  registerWebhookbyTopicInput,
+  ShopParamInput,
+} from "./shopify.schema.js";
 import {
   deleteAllWebhooks,
   deleteShopifyIntegrationByShop,
@@ -13,24 +16,24 @@ import {
   sendShopifySurveyCronAction,
   updateShopifyIntegrationByOrgId,
   updateShopifyIntegrationByShop,
-} from "./shopify.service";
+} from "./shopify.service.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import shopify from "./shopify.config";
+import shopify from "./shopify.config.js";
 
 import webhookHandlers, {
   defaultWebhookHandlers,
   mandatoryWebhookHandlers,
   WEBHOOK_API_ROUTE,
-} from "./shopify.handler";
-import { ShopifyOrderWebhookTopicEventMap } from "./shopify.util";
-import { API_URL, FRONTEND_URL } from "../../../utils/constants/constants";
-import { log } from "../../../utils/logger";
+} from "./shopify.handler.js";
+import { ShopifyOrderWebhookTopicEventMap } from "./shopify.util.js";
+import { API_URL, FRONTEND_URL } from "../../../utils/constants/constants.js";
+import { log } from "../../../utils/logger.js";
 import {
   createIntegration,
   deleteIntegrationByName,
   updateIntegrationByName,
-} from "../integrations.service";
-import { IntegratedApps } from "../../../types/enums";
+} from "../integrations.service.js";
+import { IntegratedApps } from "../../../types/enums.js";
 
 export async function getShopifyAuthHandler(
   request: FastifyRequest<{ Querystring: { shop: string } }>,

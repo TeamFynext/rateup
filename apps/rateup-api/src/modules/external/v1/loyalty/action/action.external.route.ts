@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $extLoyaltyRef } from "../loyalty.external.schema";
+import { $extLoyaltyRef } from "../loyalty.external.schema.js";
 import {
   createLoyaltyActionHandler,
   deleteLoyaltyActionByIdHandler,
@@ -7,9 +7,9 @@ import {
   getLoyaltyActionsHandler,
   referActionHandler,
   updateLoyaltyActionByIdHandler,
-} from "../../../../loyalty/actions/actions.controller";
-import { $lActionRef } from "../../../../loyalty/actions/actions.schema";
-import { actionWebhookHandler } from "./internal-copy/actions/actions.controller";
+} from "../../../../loyalty/actions/actions.controller.js";
+import { $lActionRef } from "../../../../loyalty/actions/actions.schema.js";
+import { actionWebhookHandler } from "./internal-copy/actions/actions.controller.js";
 
 export async function externalLoyaltyActionRoutes(server: FastifyInstance) {
   server.get(

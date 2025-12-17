@@ -5,7 +5,7 @@ import {
   NPSWeightage,
   PageType,
   QuestionType,
-} from "../../types/enums";
+} from "../../types/enums.js";
 
 export const logicConditionSchema = z.nativeEnum(LogicCondition);
 

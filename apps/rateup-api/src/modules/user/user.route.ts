@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { verifySession } from "supertokens-node/recipe/session/framework/fastify";
+import { verifySession } from "supertokens-node/recipe/session/framework/fastify/index.js";
 import {
   auditLogHandler,
   changeUserPasswordHandler,
@@ -14,11 +14,11 @@ import {
   updateUserActiveStatusHandler,
   updateUserAvailabilityStatusHandler,
   updateUserPrefLanguageHandler,
-} from "./user.controller";
-import { $UserRef } from "./user.schema";
-import { checkRoleHandler } from "../../utils/checkRoleHandler";
-import { $Sref } from "../survey/survey.schema";
-import { checkSession } from "../../utils/checkSession";
+} from "./user.controller.js";
+import { $UserRef } from "./user.schema.js";
+import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
+import { $Sref } from "../survey/survey.schema.js";
+import { checkSession } from "../../utils/checkSession.js";
 
 export async function userRoutes(server: FastifyInstance) {
   server.get(

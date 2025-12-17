@@ -1,16 +1,16 @@
-import prisma from "../../utils/prisma";
+import prisma from "../../utils/prisma.js";
 import {
   CreateOrgInput,
   IdParamInput,
   PauseOrgInput,
   UpdateLogoInput,
   UpdateOrgDetailsInput,
-} from "./org.schema";
+} from "./org.schema.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import Session from "supertokens-node/recipe/session";
-import { defaultTheme } from "../surveyTheme/defaultTheme";
-import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken";
-import { seedDefaultStages } from "../update/update.controller";
+import Session from "supertokens-node/recipe/session/index.js";
+import { defaultTheme } from "../surveyTheme/defaultTheme.js";
+import { deleteSuperTokenUserForId } from "../../utils/supertoken/supertoken.js";
+import { seedDefaultStages } from "../update/update.controller.js";
 
 export async function createOrg(input: CreateOrgInput) {
   const org = await prisma.org.create({

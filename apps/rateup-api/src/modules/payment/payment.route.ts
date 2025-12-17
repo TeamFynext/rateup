@@ -13,11 +13,11 @@ import {
   updatePaymentPlanHandler,
   updateRateUpPlanHandler,
   updateSubscriptionOrderHandler,
-} from "./payment.controller";
-import { $Pref } from "./payment.schema";
-import { assertRootOrg } from "../../utils/auth";
-import { checkSession } from "../../utils/checkSession";
-import { checkRoleHandler } from "../../utils/checkRoleHandler";
+} from "./payment.controller.js";
+import { $Pref } from "./payment.schema.js";
+import { assertRootOrg } from "../../utils/auth.js";
+import { checkSession } from "../../utils/checkSession.js";
+import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
 
 export async function paymentRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

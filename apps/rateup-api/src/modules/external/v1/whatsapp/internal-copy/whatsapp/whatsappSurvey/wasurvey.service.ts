@@ -1,7 +1,7 @@
-import { ResponsePlatform } from "../../../../../../../../generated/prisma/client";
-import { handleWaMessages } from "../inbox/message/wamessage.controller";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { callWhatsappApi } from "../wa_axios";
+import { ResponsePlatform } from "../../../../../../../../generated/prisma/client.js";
+import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { callWhatsappApi } from "../wa_axios.js";
 import {
   createCTAButtonMessage,
   createNativeListMessage,
@@ -13,39 +13,39 @@ import {
   getQuestionByIdFromSession,
   parseMessage,
   ratingEmoji,
-} from "./wasurvey.utils";
+} from "./wasurvey.utils.js";
 import {
   LogicAction,
   QuestionType,
   CampaignParticipantStatus,
   QuestionType as Q,
-} from "../../../../../../../types/enums";
+} from "../../../../../../../types/enums.js";
 import {
   WaSendMessageBody,
   WaMessageBody,
   WaReceiveMessageBody,
-} from "../../../../../../../types/whatsapp.types";
-import { log } from "../../../../../../../utils/logger";
-import prisma from "../../../../../../../utils/prisma";
-import { getQuestionsBySurveyId } from "../../../../../../question/question.service";
-import { parseLogicAction } from "../../../../../../question/question.utils";
-import { CreateResponseInput } from "../../../../../../response/response.schema";
+} from "../../../../../../../types/whatsapp.types.js";
+import { log } from "../../../../../../../utils/logger.js";
+import prisma from "../../../../../../../utils/prisma.js";
+import { getQuestionsBySurveyId } from "../../../../../../question/question.service.js";
+import { parseLogicAction } from "../../../../../../question/question.utils.js";
+import { CreateResponseInput } from "../../../../../../response/response.schema.js";
 import {
   createResponse,
   updateResponse,
   saveResponseToGoogleSheet,
   sendResponseToWebhook,
-} from "../../../../../../response/response.service";
+} from "../../../../../../response/response.service.js";
 import {
   updateCompletedSurvey,
   updateVisitedSurvey,
-} from "../../../../../../survey/survey.service";
-import { getOrCreateContactByPhone } from "../../../../contact/internal-copy/contact/contact.service";
-import { updateCampaignParticipant } from "../../../../campaign/internal-copy/campaign/campaignParticipants/campaignParticipants.service";
+} from "../../../../../../survey/survey.service.js";
+import { getOrCreateContactByPhone } from "../../../../contact/internal-copy/contact/contact.service.js";
+import { updateCampaignParticipant } from "../../../../campaign/internal-copy/campaign/campaignParticipants/campaignParticipants.service.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../../../../../../integrations/external/zapier/zapier.service";
+} from "../../../../../../integrations/external/zapier/zapier.service.js";
 
 export const toBeIncludedWaSessionRelations = {
   surveyTeamMap: {

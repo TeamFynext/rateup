@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $Mref } from "./menu.schema";
+import { $Mref } from "./menu.schema.js";
 import {
   createMenuHandler,
   deleteMenuHandler,
@@ -9,13 +9,16 @@ import {
   getMenuByIdHandler,
   getMenuLandingHandler,
   updateMenuHandler,
-} from "./menu.controller";
-import { $Tref } from "../team/team.schema";
-import { verifyTeamAccess } from "../team/team.auth";
-import { verifyMenuAccess, verifyMenuMaxCountRestriction } from "./menu.auth";
-import { checkSession } from "../../utils/checkSession";
-import { getVerifySubscriptionHandler } from "../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../types/enums";
+} from "./menu.controller.js";
+import { $Tref } from "../team/team.schema.js";
+import { verifyTeamAccess } from "../team/team.auth.js";
+import {
+  verifyMenuAccess,
+  verifyMenuMaxCountRestriction,
+} from "./menu.auth.js";
+import { checkSession } from "../../utils/checkSession.js";
+import { getVerifySubscriptionHandler } from "../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
 
 export async function menuRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

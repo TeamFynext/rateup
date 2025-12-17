@@ -1,28 +1,28 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { NewWaMessageBody, PaginateQuerySchema } from "./wamessage.schema";
+import { NewWaMessageBody, PaginateQuerySchema } from "./wamessage.schema.js";
 import {
   addNewWaMessage,
   getContactsWithLastMessage,
   getWaMessagesByContactId,
-} from "./wamessage.service";
-import { createTextMessage } from "../../whatsappSurvey/wasurvey.utils";
-import { sendMessage } from "../../whatsappSurvey/wasurvey.service";
+} from "./wamessage.service.js";
+import { createTextMessage } from "../../whatsappSurvey/wasurvey.utils.js";
+import { sendMessage } from "../../whatsappSurvey/wasurvey.service.js";
 import {
   handleWaReceivedImages,
   returnAppropriateTimeStamp,
-} from "./wamessage.utils";
-import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service";
-import { log } from "../../../../../../../../utils/logger";
-import { sendViaWstoOrgHandler } from "../../../../../../../org/ws/org.ws.controller";
+} from "./wamessage.utils.js";
+import { getTemplateByNameAndOrgId } from "../../messageTemplates/wa_templates.service.js";
+import { log } from "../../../../../../../../utils/logger.js";
+import { sendViaWstoOrgHandler } from "../../../../../../../org/ws/org.ws.controller.js";
 import {
   ByContactIdParams,
   ContactCore,
-} from "../../../../../contact/internal-copy/contact/contact.schema";
+} from "../../../../../contact/internal-copy/contact/contact.schema.js";
 import {
   getContactById,
   getOrCreateContactByPhone,
-} from "../../../../../contact/internal-copy/contact/contact.service";
-import { WaSendMessageBody } from "../../../../../../../../types/whatsapp.types";
+} from "../../../../../contact/internal-copy/contact/contact.service.js";
+import { WaSendMessageBody } from "../../../../../../../../types/whatsapp.types.js";
 
 //this function automates the process of adding wa contacts and the associated messages to db
 export async function handleWaMessages(

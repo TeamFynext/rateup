@@ -2,9 +2,9 @@ import { FastifyInstance } from "fastify";
 import {
   handleWebSocketConnection,
   orgWsAuthCheckHandler,
-} from "./org.ws.controller";
-import { checkSession } from "../../../utils/checkSession";
-import { $orgWsRef } from "./org.ws.schema";
+} from "./org.ws.controller.js";
+import { checkSession } from "../../../utils/checkSession.js";
+import { $orgWsRef } from "./org.ws.schema.js";
 
 export async function orgWsRoutes(server: FastifyInstance) {
   server.get(

@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
-import { getFlowsFromWa } from "./flow.service";
-import { checkSession } from "../../../utils/checkSession";
-import { $waFlow } from "./flow.schema";
+import { getFlowsFromWa } from "./flow.service.js";
+import { checkSession } from "../../../utils/checkSession.js";
+import { $waFlow } from "./flow.schema.js";
 import {
   cloneAndDeprecateFlowHandler,
   cloneFlowHandler,
@@ -20,12 +20,12 @@ import {
   sendFlowHandler,
   updateFlowHandler,
   updateFlowMetaDataHandler,
-} from "./flow.controller";
-import { log } from "../../../utils/logger";
-import { verifyMessageMonthlyLimitRestriction } from "../messageTemplates/wa_templates.auth";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { verifyFlowSubscriptionLimit } from "./flow.utils";
+} from "./flow.controller.js";
+import { log } from "../../../utils/logger.js";
+import { verifyMessageMonthlyLimitRestriction } from "../messageTemplates/wa_templates.auth.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { verifyFlowSubscriptionLimit } from "./flow.utils.js";
 
 export async function flowRoutes(server: FastifyInstance) {
   server.addHook("onError", (req, res, err, done) => {

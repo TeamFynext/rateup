@@ -14,19 +14,19 @@ import {
   updateLogoHandler,
   updateOrgDetailsHandler,
   updateRoleController,
-} from "./org.controller";
+} from "./org.controller.js";
 import {
   createBusinessHourHandler,
   deleteBusinessHourHandler,
   getAllBusinessHoursHandler,
   getBusinessHourHandler,
   updateBusinessHourHandler,
-} from "./businessHour.controller";
-import { $Sref } from "./org.schema";
-import { $BusinessHourRef } from "./businessHour.schema";
-import { checkRoleHandler } from "../../utils/checkRoleHandler";
-import { checkSession } from "../../utils/checkSession";
-import { assertRootOrg } from "../../utils/auth";
+} from "./businessHour.controller.js";
+import { $Sref } from "./org.schema.js";
+import { $BusinessHourRef } from "./businessHour.schema.js";
+import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
+import { checkSession } from "../../utils/checkSession.js";
+import { assertRootOrg } from "../../utils/auth.js";
 export async function orgRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
 

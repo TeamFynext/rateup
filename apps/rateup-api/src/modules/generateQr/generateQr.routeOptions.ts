@@ -1,6 +1,6 @@
 import { RouteShorthandOptionsWithHandler } from "fastify";
-import { CustomRouteShortHandOptionsWithHandler } from "../../types/global";
-import { asyncErrHandler } from "../../utils/commonUtils";
+import { CustomRouteShortHandOptionsWithHandler } from "../../types/global.js";
+import { asyncErrHandler } from "../../utils/commonUtils.js";
 import {
   createGenerateQrRecord,
   deleteGenerateQrRecordWithShortId,
@@ -9,8 +9,8 @@ import {
   getPublicGenerateQrRecordWithShortId,
   incrementGenerateQrNoOfScans,
   updateGenerateQrRecordWithShortId,
-} from "./generateQr.controllers";
-import { generateQrSchemaRef } from "./generateQr.schema";
+} from "./generateQr.controllers.js";
+import { generateQrSchemaRef } from "./generateQr.schema.js";
 
 const createGenerateQrRecordRouteOptions: RouteShorthandOptionsWithHandler = {
   schema: {

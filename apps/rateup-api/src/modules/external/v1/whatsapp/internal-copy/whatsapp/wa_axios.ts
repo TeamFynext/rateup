@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { log } from "../../../../../../utils/logger";
+import { log } from "../../../../../../utils/logger.js";
 
 const WA_API_VERSION = "v23.0";
 export async function callWhatsappApi(

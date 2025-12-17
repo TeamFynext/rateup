@@ -1,5 +1,5 @@
 import axios from "axios";
-import { log } from "./logger";
+import { log } from "./logger.js";
 const GEOAPIFY_API_KEY = process.env.GEOAPIFY_API_KEY;
 
 export async function fetchLocationFromCoordinates(

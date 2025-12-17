@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { WaAssignedChatPermission } from "../../types/enums";
+import { WaAssignedChatPermission } from "../../types/enums.js";
 
 const orgCore = {
   name: z

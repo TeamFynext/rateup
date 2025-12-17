@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   CampaignParticipantAddStatus,
   CampaignParticipantStatus,
-} from "../../../../../../../types/enums";
+} from "../../../../../../../types/enums.js";
 
 const byCampaignParticipantIdParamsSchema = z.object({
   campaignParticipantId: z.string().uuid(),

@@ -1,5 +1,5 @@
-import { SupportUserEvent } from "../../../types/enums";
-import { WaMessageBody } from "../../../types/whatsapp.types";
+import { SupportUserEvent } from "../../../types/enums.js";
+import { WaMessageBody } from "../../../types/whatsapp.types.js";
 
 export function getSupportUserWebhookEvent(
   data: WaMessageBody["entry"][0]["changes"][0],

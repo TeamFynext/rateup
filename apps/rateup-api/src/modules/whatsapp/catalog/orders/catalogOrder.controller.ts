@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../../utils/logger";
-import { CatalogIdParam } from "../catalog.schema";
-import { getWaCatalogOrders } from "./catalogOrder.service";
+import { log } from "../../../../utils/logger.js";
+import { CatalogIdParam } from "../catalog.schema.js";
+import { getWaCatalogOrders } from "./catalogOrder.service.js";
 
 export async function getWaCatalogOrdersHandler(
   request: FastifyRequest<{ Params: CatalogIdParam }>,

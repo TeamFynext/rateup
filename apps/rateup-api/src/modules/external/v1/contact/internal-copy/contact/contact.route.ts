@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $contactRef } from "./contact.schema";
+import { $contactRef } from "./contact.schema.js";
 import {
   createContactHandler,
   createMultipleContactsHandler,
@@ -8,10 +8,10 @@ import {
   getAllContactsHandler,
   getContactByIdHandler,
   updateContactByIdHandler,
-} from "./contact.controller";
-import { contactGroupRoutes } from "./contactGroup/contactGroup.route";
-import { contactGroupSchemas } from "./contactGroup/contactGroup.schema";
-import { checkSession } from "../../../../../../utils/checkSession";
+} from "./contact.controller.js";
+import { contactGroupRoutes } from "./contactGroup/contactGroup.route.js";
+import { contactGroupSchemas } from "./contactGroup/contactGroup.schema.js";
+import { checkSession } from "../../../../../../utils/checkSession.js";
 
 export async function contactRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

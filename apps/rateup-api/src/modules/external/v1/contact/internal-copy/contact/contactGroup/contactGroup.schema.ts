@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { contactCoreSchema } from "../contact.schema";
+import { contactCoreSchema } from "../contact.schema.js";
 
 const coreContactGroupSchema = z.object({
   name: z.string(),

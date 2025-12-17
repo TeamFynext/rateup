@@ -1,10 +1,10 @@
-import { log } from "../../../utils/logger";
-import { PlatformType } from "../../../../generated/prisma/enums";
-import { getSupportUserWebhookEvent } from "./support-user.util";
-import { SupportUserEvent } from "../../../types/enums";
-import { handleWaMessages } from "../inbox/message/wamessage.controller";
-import { getContactById } from "../../contact/contact.service";
-import { WaMessageBody } from "../../../types/whatsapp.types";
+import { log } from "../../../utils/logger.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { getSupportUserWebhookEvent } from "./support-user.util.js";
+import { SupportUserEvent } from "../../../types/enums.js";
+import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
+import { getContactById } from "../../contact/contact.service.js";
+import { WaMessageBody } from "../../../types/whatsapp.types.js";
 
 export async function handleSupportUserWebhook(data: WaMessageBody) {
   for (const entry of data.entry) {

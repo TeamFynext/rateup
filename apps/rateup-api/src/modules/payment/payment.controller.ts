@@ -18,7 +18,7 @@ import {
   updateSubscription,
   updateSubscriptionForTrial,
   verifyPayment,
-} from "./payment.service";
+} from "./payment.service.js";
 import {
   CreateCheckoutInput,
   createRateUpPlanInput,
@@ -27,15 +27,15 @@ import {
   rateupPlanParamInput,
   UpdatePlanInput,
   updateRateUpPlanInput,
-} from "./payment.schema";
-import Session from "supertokens-node/recipe/session";
-import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
-import { log } from "../../utils/logger";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import { sendEmailService } from "../email/email.service";
+} from "./payment.schema.js";
+import Session from "supertokens-node/recipe/session/index.js";
+import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js";
+import { log } from "../../utils/logger.js";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import { sendEmailService } from "../email/email.service.js";
 import { html } from "cheerio";
-import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected";
-import { Order } from "../../../generated/prisma/client";
+import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected.js";
+import { Order } from "../../../generated/prisma/client.js";
 
 export async function createCheckoutSessionHandler(
   request: FastifyRequest<{

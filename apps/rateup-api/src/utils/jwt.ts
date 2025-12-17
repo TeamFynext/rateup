@@ -1,4 +1,4 @@
-import jwt from "supertokens-node/recipe/jwt";
+import jwt from "supertokens-node/recipe/jwt/index.js";
 
 export async function createJWT(payload: any) {
   let jwtResponse = await jwt.createJWT({

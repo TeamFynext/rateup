@@ -1,11 +1,11 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import prisma from "../../utils/prisma";
+import prisma from "../../utils/prisma.js";
 import {
   CampaignParticipantStatus,
   SubscriptionFeaturePathName,
-} from "../../types/enums";
-import { ByCampaignIdParams, SendCampaignInput } from "./campaign.schema";
-import { log } from "../../utils/logger";
+} from "../../types/enums.js";
+import { ByCampaignIdParams, SendCampaignInput } from "./campaign.schema.js";
+import { log } from "../../utils/logger.js";
 
 export async function getUsageStats(orgId: string) {
   return prisma.usageStats.findUnique({

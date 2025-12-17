@@ -1,4 +1,4 @@
-import { QuestionType, WaQuestions } from "../../../types/enums";
+import { QuestionType, WaQuestions } from "../../../types/enums.js";
 
 export const ChoiceTypeQuestions = [
   QuestionType.MCQ,

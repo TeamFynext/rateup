@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
-import prisma from "../../utils/prisma";
-import { generateRandomAlphaId } from "../../utils/misc/random.utils";
+import prisma from "../../utils/prisma.js";
+import { generateRandomAlphaId } from "../../utils/misc/random.utils.js";
 
 export async function generateApiKey() {
   const randomKey = generateRandomAlphaId(128);

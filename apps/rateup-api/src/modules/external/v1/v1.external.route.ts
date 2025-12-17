@@ -1,17 +1,17 @@
 import { FastifyInstance } from "fastify";
-import { verifyApiAccessTokenHook } from "../../apiAccessToken/apiAccessToken.auth";
-import { externalCampaignRoutes } from "./campaign/campaign.external.route";
-import { extContactGroupRoutes } from "./contact-group/contact-group.external.route";
-import { externalTeamRoutes } from "./team/team.external.route";
-import { extWaTemplateRoutes } from "./whatsapp/template/wa_templates.external.route";
-import { waTemplateExternalSchemas } from "./whatsapp/template/wa_templates.external.schema";
-import { extContactSchemas } from "./contact/contact.external.schema";
-import { externalContactRoutes } from "./contact/contact.external.route";
-import { waTemplateSchemas } from "./whatsapp/internal-copy/whatsapp/messageTemplates/wa_templates.schema";
-import { contactGroupSchemas } from "./contact/internal-copy/contact/contactGroup/contactGroup.schema";
-import { extSurveyRoutes } from "./survey/survey.external.routes";
-import { externalLoyaltyRoutes } from "./loyalty/loyalty.external.routes";
-import { extLoyaltySchemas } from "./loyalty/loyalty.external.schema";
+import { verifyApiAccessTokenHook } from "../../apiAccessToken/apiAccessToken.auth.js";
+import { externalCampaignRoutes } from "./campaign/campaign.external.route.js";
+import { extContactGroupRoutes } from "./contact-group/contact-group.external.route.js";
+import { externalTeamRoutes } from "./team/team.external.route.js";
+import { extWaTemplateRoutes } from "./whatsapp/template/wa_templates.external.route.js";
+import { waTemplateExternalSchemas } from "./whatsapp/template/wa_templates.external.schema.js";
+import { extContactSchemas } from "./contact/contact.external.schema.js";
+import { externalContactRoutes } from "./contact/contact.external.route.js";
+import { waTemplateSchemas } from "./whatsapp/internal-copy/whatsapp/messageTemplates/wa_templates.schema.js";
+import { contactGroupSchemas } from "./contact/internal-copy/contact/contactGroup/contactGroup.schema.js";
+import { extSurveyRoutes } from "./survey/survey.external.routes.js";
+import { externalLoyaltyRoutes } from "./loyalty/loyalty.external.routes.js";
+import { extLoyaltySchemas } from "./loyalty/loyalty.external.schema.js";
 
 export async function v1ExternalRoutes(server: FastifyInstance) {
   server.addHook("onRequest", verifyApiAccessTokenHook);

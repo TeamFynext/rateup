@@ -1,11 +1,11 @@
 import { FastifyInstance } from "fastify";
-import { $lApiSettingRef } from "./apiSetting.schema";
+import { $lApiSettingRef } from "./apiSetting.schema.js";
 import {
   getLoyaltyApiSettingsHandler,
   getLoyaltyApiSettingByIdHandler,
   createLoyaltyApiSettingHandler,
   updateLoyaltyApiSettingHandler,
-} from "./apiSetting.controller";
+} from "./apiSetting.controller.js";
 
 export async function loyaltyApiSettingRoutes(server: FastifyInstance) {
   server.get("/", getLoyaltyApiSettingsHandler);

@@ -17,7 +17,7 @@ import {
   addMemberToTeams,
   getUsersNotInTeam,
   addMembersToTeamsMail,
-} from "./team.service";
+} from "./team.service.js";
 import {
   CreateTeamInput,
   DeleteTeamInput,
@@ -28,13 +28,13 @@ import {
   InviteCompleteInput,
   InviteMemberInput,
   tagQuerySchema,
-} from "./team.schema";
-import Session from "supertokens-node/recipe/session";
-import { log } from "../../utils/logger";
+} from "./team.schema.js";
+import Session from "supertokens-node/recipe/session/index.js";
+import { log } from "../../utils/logger.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../integrations/external/zapier/zapier.service";
+} from "../integrations/external/zapier/zapier.service.js";
 
 export async function createTeamHandler(
   request: FastifyRequest<{

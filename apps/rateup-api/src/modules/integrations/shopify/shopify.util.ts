@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import { ShopifyEvents, ShopifySendAfter } from "../../../types/enums";
-import { SubscriptionStatus } from "../../../../generated/prisma/client";
+import { ShopifyEvents, ShopifySendAfter } from "../../../types/enums.js";
+import { SubscriptionStatus } from "../../../../generated/prisma/client.js";
 
 export const ShopifyOrderWebhookTopicEventMap = [
   { key: ShopifyEvents.ORDERS_CREATE, value: "orders/create" },

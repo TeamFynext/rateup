@@ -1,12 +1,12 @@
 import { FastifyInstance } from "fastify";
-import { $extLoyaltyRef } from "../loyalty.external.schema";
-import { $lRewardRef } from "../../../../loyalty/rewards/rewards.schema";
+import { $extLoyaltyRef } from "../loyalty.external.schema.js";
+import { $lRewardRef } from "../../../../loyalty/rewards/rewards.schema.js";
 import {
   getLoyaltyRewardByIdHandler,
   getLoyaltyRewardsHandler,
   updateLoyaltyRewardByIdHandler,
-} from "../../../../loyalty/rewards/rewards.controller";
-import { redeemRewardWebhookHandler } from "../redeem/internal-copy/redeems/redeem.controller";
+} from "../../../../loyalty/rewards/rewards.controller.js";
+import { redeemRewardWebhookHandler } from "../redeem/internal-copy/redeems/redeem.controller.js";
 
 export async function externalLoyaltyRewardRoutes(server: FastifyInstance) {
   server.get(
