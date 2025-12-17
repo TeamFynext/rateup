@@ -229,14 +229,6 @@ export default function SurveyID() {
     );
   }
 
-  const getStatusIcon = (status: boolean) => {
-    if (status) {
-      return <PlayIcon className="w-3 h-3" />;
-    } else {
-      return <Pause className="w-3 h-3" />;
-    }
-  };
-
   return (
     <SurveyContextProvider survey={survey}>
       <SelectedLanguageContext.Provider
@@ -272,7 +264,7 @@ export default function SurveyID() {
                   onClick={() => setActiveTab(TabEnum.Share)}
                 >
                   <Share2 className="w-4 h-4 mr-2" />
-                  Share
+                  {translations("Share")}
                 </Button>
                 <Button
                   variant="outline"
@@ -280,7 +272,7 @@ export default function SurveyID() {
                   onClick={() => setActiveTab(TabEnum.Edit)}
                 >
                   <Edit2 className="w-4 h-4 mr-2" />
-                  Edit
+                  {translations("Edit")}
                 </Button>
               </div>
             </div>
@@ -296,17 +288,7 @@ export default function SurveyID() {
                   >
                     <FileText className="w-4 h-4" />
                     <span className="hidden sm:inline">
-                      {translations("Edit")}
-                    </span>
-                  </TabsTrigger>
-
-                  <TabsTrigger
-                    value={TabEnum.Result}
-                    className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-1 px-2"
-                  >
-                    <ClipboardList className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      {translations("Result")}
+                      {translations("Questions")}
                     </span>
                   </TabsTrigger>
 
@@ -327,6 +309,15 @@ export default function SurveyID() {
                     <Settings className="w-4 h-4" />
                     <span className="hidden sm:inline">
                       {translations("Settings")}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value={TabEnum.Result}
+                    className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-1 px-2"
+                  >
+                    <ClipboardList className="w-4 h-4" />
+                    <span className="hidden sm:inline">
+                      {translations("Result")}
                     </span>
                   </TabsTrigger>
                 </TabsList>

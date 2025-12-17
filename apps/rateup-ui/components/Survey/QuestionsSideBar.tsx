@@ -218,9 +218,7 @@ export function QuestionsSideBar({
             className="flex items-center justify-center gap-1 bg-primary"
           >
             <IconPlus />
-            <span className="sm:block hidden">
-              {translations("Add Content")}
-            </span>
+            <span className="sm:block hidden">{translations("Add")}</span>
           </Button>
 
           <TooltipProvider>
