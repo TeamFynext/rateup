@@ -1,18 +1,32 @@
 "use client";
 
-import { ActionIcon, Group, Loader, Menu, Text, Tooltip } from "@mantine/core";
 import {
-  IconArrowBackUp,
-  IconArrowForwardUp,
-  IconArrowLeft,
-  IconArrowUp,
-  IconCopyCheck,
-  IconDeviceFloppy,
-  IconReport,
-  IconSettings,
-  IconShare,
-  IconTable,
-} from "@tabler/icons-react";
+  ArrowLeft,
+  ArrowUp,
+  CheckCheck,
+  FileText,
+  Loader2,
+  Redo2,
+  Save,
+  Settings,
+  Share2,
+  Table,
+  Undo2,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import styles from "./toolbar.module.css";
 
@@ -46,120 +60,146 @@ export default function Toolbar({
   saveDisabled = false,
   refetch,
   isPending = false,
-}: ToolbarProps) {
+}: Readonly<ToolbarProps>) {
   return (
-    <div className={styles.toolbar}>
-      <Tooltip label="Save">
-        <ActionIcon
-          variant="outline"
-          className={styles.toolbarButton}
-          onClick={onSave}
-          disabled={saveDisabled}
-          size={"lg"}
-        >
-          {isPending ? <Loader size="xs" /> : <IconDeviceFloppy />}
-        </ActionIcon>
-      </Tooltip>
-
-      <Tooltip label="Validate">
-        <ActionIcon
-          variant="outline"
-          className={styles.toolbarButton}
-          onClick={() => validateFlow(false)}
-          size={"lg"}
-        >
-          <IconCopyCheck />
-        </ActionIcon>
-      </Tooltip>
-
-      <Menu position="bottom-start">
-        <Menu.Target>
-          <Tooltip label="Layout">
-            <ActionIcon
+    <TooltipProvider>
+      <div className={styles.toolbar}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
               variant="outline"
+              size="icon"
               className={styles.toolbarButton}
-              size={"lg"}
+              onClick={onSave}
+              disabled={saveDisabled}
             >
-              <IconTable />
-            </ActionIcon>
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Save</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={() => validateFlow(false)}
+            >
+              <CheckCheck className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Validate</TooltipContent>
+        </Tooltip>
+
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={styles.toolbarButton}
+                >
+                  <Table className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>Layout</TooltipContent>
           </Tooltip>
-        </Menu.Target>
 
-        <Menu.Dropdown>
-          <Menu.Item
-            leftSection={<IconArrowUp />}
-            onClick={() => onAutoLayout("TB")}
-          >
-            Vertical Layout
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconArrowLeft />}
-            onClick={() => onAutoLayout("LR")}
-          >
-            Horizontal Layout
-          </Menu.Item>
-        </Menu.Dropdown>
-      </Menu>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => onAutoLayout("TB")}>
+              <ArrowUp className="mr-2 h-4 w-4" />
+              Vertical Layout
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAutoLayout("LR")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Horizontal Layout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      <Tooltip label="Undo (Ctrl+Z)">
-        <ActionIcon
-          variant="outline"
-          className={styles.toolbarButton}
-          onClick={onUndo}
-          disabled={!canUndo}
-          size={"lg"}
-        >
-          <IconArrowBackUp />
-        </ActionIcon>
-      </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={onUndo}
+              disabled={!canUndo}
+            >
+              <Undo2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
+        </Tooltip>
 
-      <Tooltip label="Redo (Ctrl+Y or Ctrl+Shift+Z)">
-        <ActionIcon
-          variant="outline"
-          className={styles.toolbarButton}
-          onClick={onRedo}
-          disabled={!canRedo}
-          size={"lg"}
-        >
-          <IconArrowForwardUp />
-        </ActionIcon>
-      </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={onRedo}
+              disabled={!canRedo}
+            >
+              <Redo2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Redo (Ctrl+Y or Ctrl+Shift+Z)</TooltipContent>
+        </Tooltip>
 
-      <Tooltip label="Settings">
-        <ActionIcon
-          variant="outline"
-          className={styles.toolbarButton}
-          onClick={() => {
-            refetch?.();
-            handleTabSwitch("settings");
-          }}
-          size={"lg"}
-        >
-          <IconSettings />
-        </ActionIcon>
-      </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={() => {
+                refetch?.();
+                handleTabSwitch("settings");
+              }}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Settings</TooltipContent>
+        </Tooltip>
 
-      <Tooltip label="Share">
-        <ActionIcon
-          variant="outline"
-          className={styles.toolbarButton}
-          onClick={() => handleTabSwitch("share")}
-          size={"lg"}
-        >
-          <IconShare />
-        </ActionIcon>
-      </Tooltip>
+        {/* <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={() => handleTabSwitch("share")}
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Share</TooltipContent>
+        </Tooltip> */}
 
-      <Tooltip label="Response">
-        <ActionIcon
-          variant="outline"
-          className={styles.toolbarButton}
-          onClick={() => handleTabSwitch("response")}
-          size={"lg"}
-        >
-          <IconReport />
-        </ActionIcon>
-      </Tooltip>
-    </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className={styles.toolbarButton}
+              onClick={() => handleTabSwitch("response")}
+            >
+              <FileText className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Response</TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
   );
 }

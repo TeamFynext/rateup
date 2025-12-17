@@ -74,6 +74,9 @@ export default function ConfirmationModal({
           fontSize: 20,
           fontWeight: "500",
         },
+        overlay: {
+          backgroundColor: "rgba(0, 0, 0, 0.25)",
+        },
       }}
       withCloseButton={!excludeCancelButton}
       closeOnClickOutside={!excludeCancelButton}
