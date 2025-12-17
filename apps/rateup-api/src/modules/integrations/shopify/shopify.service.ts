@@ -1,31 +1,31 @@
-import prisma from "../../../utils/prisma";
-import shopify from "./shopify.config";
+import prisma from "../../../utils/prisma.js";
+import shopify from "./shopify.config.js";
 import { GraphqlClient, Session } from "@shopify/shopify-api";
-import { isEmpty } from "lodash";
-import { log } from "../../../utils/logger";
+import isEmpty from "lodash/isEmpty.js";
+import { log } from "../../../utils/logger.js";
 import {
   createSession,
   deleteSession,
   getSession,
   sendMessage,
-} from "../../whatsapp/whatsappSurvey/wasurvey.service";
+} from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import {
   convertComponentForSenting,
   updateButtonText,
   wait,
-} from "../../whatsapp/whatsappSurvey/wasurvey.controller";
-import { updateMonthlyStat } from "../../stats/stats.service";
+} from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
+import { updateMonthlyStat } from "../../stats/stats.service.js";
 import {
   IntegratedApps,
   ShopifyEvents,
   SubscriptionFeaturePathName,
-} from "../../../types/enums";
+} from "../../../types/enums.js";
 import {
   createTemplateMessage,
   validateSession,
-} from "../../whatsapp/whatsappSurvey/wasurvey.utils";
-import { getDbTemplate } from "../../whatsapp/messageTemplates/wa_templates.service";
-import { getFlowIdFromTemplateComponents } from "../../whatsapp/messageTemplates/wa_templates.utils";
+} from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { getDbTemplate } from "../../whatsapp/messageTemplates/wa_templates.service.js";
+import { getFlowIdFromTemplateComponents } from "../../whatsapp/messageTemplates/wa_templates.utils.js";
 import { parsePhoneNumber } from "libphonenumber-js";
 import {
   getScheduledTime,
@@ -34,36 +34,36 @@ import {
   ShopifyPlanMap,
   shopifyRecurringChargeStatus,
   shopifyRecurringChargeSubscriptionStatusMap,
-} from "./shopify.util";
+} from "./shopify.util.js";
 import {
   getIntegrationByName,
   updateIntegrationByName,
-} from "../integrations.service";
-import { UpdateIntgrationInput } from "../integrations.schema";
-import { API_URL } from "../../../utils/constants/constants";
+} from "../integrations.service.js";
+import { UpdateIntgrationInput } from "../integrations.schema.js";
+import { API_URL } from "../../../utils/constants/constants.js";
 import {
   OrderStatus,
   Org,
   PaymentStatus,
   SubscriptionStatus,
-} from "../../../../generated/prisma/client";
-import { getSubscription } from "../../subscription/subscription.service";
+} from "../../../../generated/prisma/client.js";
+import { getSubscription } from "../../subscription/subscription.service.js";
 import dayjs from "dayjs";
-import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated";
-import { sendAWSEmail } from "../../../utils/email/sendAWSEmail";
-import { pauseOrg } from "../../org/org.services";
-import { WEBHOOK_API_ROUTE } from "./shopify.handler";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
-import { getScheduleTime } from "../../../utils/date";
+import { createEmailBodySubscriptionActivated } from "../../../utils/email/payments/subscriptionActivated.js";
+import { sendAWSEmail } from "../../../utils/email/sendAWSEmail.js";
+import { pauseOrg } from "../../org/org.services.js";
+import { WEBHOOK_API_ROUTE } from "./shopify.handler.js";
+import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
+import { getScheduleTime } from "../../../utils/date.js";
 import {
   getLCustomerByPhone,
   handleLCustomerAction,
   updateLCustomer,
-} from "../../loyalty/customer/customer.service";
-import { processActionWebhook } from "../../external/v1/loyalty/action/internal-copy/actions/actions.service";
-import { processRedeemWebhook } from "../../external/v1/loyalty/redeem/internal-copy/redeems/redeem.service";
-import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth";
-import { PlatformType } from "../../../../generated/prisma/enums";
+} from "../../loyalty/customer/customer.service.js";
+import { processActionWebhook } from "../../external/v1/loyalty/action/internal-copy/actions/actions.service.js";
+import { processRedeemWebhook } from "../../external/v1/loyalty/redeem/internal-copy/redeems/redeem.service.js";
+import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({

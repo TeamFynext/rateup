@@ -4,16 +4,16 @@ import {
   PageType,
   QuestionType,
   WaQuestions,
-} from "../../types/enums";
-import { QuestionType as Q } from "../../types/enums";
-import { log } from "../../utils/logger";
-import prisma from "../../utils/prisma";
+} from "../../types/enums.js";
+import { QuestionType as Q } from "../../types/enums.js";
+import { log } from "../../utils/logger.js";
+import prisma from "../../utils/prisma.js";
 import {
   ChoiceTypeQuestions,
   ChoiceTypeQuestionsV2,
   getChoiceIndex,
-} from "../../utils/survey/question/question.utils";
-import { cloneDeep } from "lodash";
+} from "../../utils/survey/question/question.utils.js";
+import cloneDeep from "lodash/cloneDeep.js";
 
 // Copied from frontend. Update accordingly.
 export const logicSupportedTypes = Object.values(Q);

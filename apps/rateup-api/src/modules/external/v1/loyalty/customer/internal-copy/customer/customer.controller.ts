@@ -1,14 +1,14 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { log } from "../../../../../../../utils/logger";
+import { log } from "../../../../../../../utils/logger.js";
 import {
   getLCustomerByPhone,
   handleLCustomerAction,
   handleSendTemplate,
   updateLCustomer,
-} from "../../../../../../loyalty/customer/customer.service";
-import { getLoyaltyActionByActionId } from "../../../action/internal-copy/actions/actions.service";
-import { CustomerActionQueryInput } from "../../../loyalty.external.schema";
-import { AmountInput } from "../../../../../../loyalty/customer/customer.schema";
+} from "../../../../../../loyalty/customer/customer.service.js";
+import { getLoyaltyActionByActionId } from "../../../action/internal-copy/actions/actions.service.js";
+import { CustomerActionQueryInput } from "../../../loyalty.external.schema.js";
+import { AmountInput } from "../../../../../../loyalty/customer/customer.schema.js";
 
 export async function customerActionHandler(
   request: FastifyRequest<{

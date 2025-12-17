@@ -1,6 +1,6 @@
-import { Prisma } from "../../../../generated/prisma/client";
-import prisma from "../../../utils/prisma";
-import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema";
+import { Prisma } from "../../../../generated/prisma/client.js";
+import prisma from "../../../utils/prisma.js";
+import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema.js";
 
 const MESSAGE_BODY_FIELD = "MESSAGE_BODY";
 const BUSINESS_HOURS_FIELD = "BUSINESS_HOURS";

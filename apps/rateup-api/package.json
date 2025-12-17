@@ -1,11 +1,24 @@
 {
-  "name": "rateup-backend",
-  "version": "0.0.1",
-  "main": "src/index.ts",
-  "repository": "https://github.com/ThejasKiranPS/rateup-backend",
-  "author": "Fynext Innovations",
-  "license": "MIT",
+  "name": "rateup-api",
+  "version": "1.0.0",
   "private": true,
+  "description": "A scalable API backend for Rateup platform",
+  "main": "src/index.ts",
+  "repository": "https://github.com/TeamFynext/rateup-api",
+  "author": "Rateup Team",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/index.js",
+    "dev": "tsx watch src/index.ts",
+    "test": "jest --silent",
+    "prepare": "husky install",
+    "postinstall": "prisma generate"
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.943.0",
     "@aws-sdk/client-sesv2": "^3.943.0",
@@ -59,14 +72,6 @@
     "uuid": "^10.0.0",
     "zod": "^3.21.4"
   },
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "start": "sleep 3 && node dist/src/index.js",
-    "dev": "tsx watch src/index.ts",
-    "test": "jest --silent",
-    "prepare": "husky install",
-    "postinstall": "prisma generate"
-  },
   "devDependencies": {
     "@babel/core": "^7.23.6",
     "@babel/preset-env": "^7.23.6",
@@ -91,9 +96,6 @@
   },
   "lint-staged": {
     "*.{ts,js,md}": "prettier --write"
-  },
-  "engines": {
-    "node": "22.x"
   },
   "overrides": {
     "fastify-zod": {

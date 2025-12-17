@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getLoyaltyDashboardStats } from "./dashboard.service";
+import { getLoyaltyDashboardStats } from "./dashboard.service.js";
 
 export const getLoyaltyDashboardStatsHandler = async (
   req: FastifyRequest,

@@ -1,9 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { $customerGroupRef } from "./customerGroup.schema";
+import { $customerGroupRef } from "./customerGroup.schema.js";
 import {
   addNewCustomersfromCSVToGroupHandler,
   getCustomersByContactGroupIdHandler,
-} from "./customerGroup.controller";
+} from "./customerGroup.controller.js";
 import fastifyMultipart from "@fastify/multipart";
 
 export async function customerGroupRoutes(server: FastifyInstance) {

@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../../../../../utils/logger";
-import { processActionWebhook } from "./actions.service";
+import { log } from "../../../../../../../utils/logger.js";
+import { processActionWebhook } from "./actions.service.js";
 
 export async function actionWebhookHandler(
   request: FastifyRequest,

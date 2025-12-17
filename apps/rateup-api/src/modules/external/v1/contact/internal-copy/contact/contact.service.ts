@@ -1,15 +1,15 @@
-import { Contact } from "../../../../../../../generated/prisma/client";
+import { Contact } from "../../../../../../../generated/prisma/client.js";
 import {
   ContactCore,
   createMultipleContactInput,
   updateContactSchema,
-} from "./contact.schema";
-import { log } from "../../../../../../utils/logger";
-import prisma from "../../../../../../utils/prisma";
+} from "./contact.schema.js";
+import { log } from "../../../../../../utils/logger.js";
+import prisma from "../../../../../../utils/prisma.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../../../../../integrations/external/zapier/zapier.service";
+} from "../../../../../integrations/external/zapier/zapier.service.js";
 
 export async function createContact(contact: ContactCore & { orgId: string }) {
   if (!contact.phone) {

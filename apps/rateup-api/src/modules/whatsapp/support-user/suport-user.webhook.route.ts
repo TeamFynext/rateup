@@ -2,9 +2,9 @@ import { FastifyInstance } from "fastify";
 import {
   getOrCreateContactHandler,
   supportUserWebhookEventHandler,
-} from "./support-user.controller";
-import { getChatByContactId } from "../inbox/message/wamessage.service";
-import { verifyApiAccessTokenHook } from "../../apiAccessToken/apiAccessToken.auth";
+} from "./support-user.controller.js";
+import { getChatByContactId } from "../inbox/message/wamessage.service.js";
+import { verifyApiAccessTokenHook } from "../../apiAccessToken/apiAccessToken.auth.js";
 
 export async function supportUserWebhookRoutes(server: FastifyInstance) {
   // TODO: implement challanges for webhook

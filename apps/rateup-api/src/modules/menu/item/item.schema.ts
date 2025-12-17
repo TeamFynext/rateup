@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { MenuItemPriceType } from "../../../types/enums";
+import { MenuItemPriceType } from "../../../types/enums.js";
 
 const CreateMenuItemInput = {
   name: z.string(),

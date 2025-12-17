@@ -6,9 +6,9 @@ import {
   getWaSettingsHandler,
   updateContactTagHandler,
   upsertWaSettingsHandler,
-} from "./wa_settings.controller";
-import { $WASettingsref } from "./wa_settings.schema";
-import { checkSession } from "../../../../../../../utils/checkSession";
+} from "./wa_settings.controller.js";
+import { $WASettingsref } from "./wa_settings.schema.js";
+import { checkSession } from "../../../../../../../utils/checkSession.js";
 
 export async function waSettingsRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

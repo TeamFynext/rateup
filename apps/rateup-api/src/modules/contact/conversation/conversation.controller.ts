@@ -1,11 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../utils/logger";
+import { log } from "../../../utils/logger.js";
 import {
   ConversationParamsSchema,
   StaffIdParamsSchema,
   StatsQuerySchema,
   UpdateConversationSchema,
-} from "./conversation.schema";
+} from "./conversation.schema.js";
 import {
   getAvargeResponseTimeofTodyaInEveryHour,
   getConversationOnAccountDistribution,
@@ -15,7 +15,7 @@ import {
   getStaffConverSationMetrics,
   getStaffDetailedConversationAnalytics,
   updateConversation,
-} from "./conversation.service";
+} from "./conversation.service.js";
 
 export async function updateConversationHandler(
   request: FastifyRequest<{

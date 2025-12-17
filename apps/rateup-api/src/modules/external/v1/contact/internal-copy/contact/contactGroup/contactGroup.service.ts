@@ -1,15 +1,15 @@
-import { log } from "../../../../../../../utils/logger";
-import prisma from "../../../../../../../utils/prisma";
+import { log } from "../../../../../../../utils/logger.js";
+import prisma from "../../../../../../../utils/prisma.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../../../../../../integrations/external/zapier/zapier.service";
+} from "../../../../../../integrations/external/zapier/zapier.service.js";
 import {
   AddNewContactsToGroupInput,
   CreateContactGroupInput,
   RemoveGroupContactsSchema,
   UpdateContactGroupInput,
-} from "./contactGroup.schema";
+} from "./contactGroup.schema.js";
 
 export async function getContactGroupById(contactGroupId: string) {
   const contactGroup = await prisma.contactGroup.findUnique({

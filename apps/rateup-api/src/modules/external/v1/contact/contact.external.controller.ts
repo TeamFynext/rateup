@@ -1,9 +1,9 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { ExtCreateContactSchema } from "./contact.external.schema";
+import { ExtCreateContactSchema } from "./contact.external.schema.js";
 import {
   createContactHandler,
   createMultipleContactsHandler,
-} from "../../../contact/contact.controller";
+} from "../../../contact/contact.controller.js";
 
 export async function extCreateContactHandler(
   request: FastifyRequest<{ Body: ExtCreateContactSchema; Querystring: {} }>,

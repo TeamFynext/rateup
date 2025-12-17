@@ -2,9 +2,9 @@ import { FastifyInstance } from "fastify";
 import {
   getResponsesBySurveyIdHandler,
   getSurveyListHandler,
-} from "../../../response/response.controller";
-import { $Rref } from "../../../response/response.schema";
-import { $campaignRef } from "../../../campaign/campaign.schema";
+} from "../../../response/response.controller.js";
+import { $Rref } from "../../../response/response.schema.js";
+import { $campaignRef } from "../../../campaign/campaign.schema.js";
 
 export async function extSurveyRoutes(server: FastifyInstance) {
   server.get(

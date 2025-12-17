@@ -1,11 +1,11 @@
-import prisma from "../../../../../../../utils/prisma";
+import prisma from "../../../../../../../utils/prisma.js";
 import {
   handleLCustomerAction,
   handleSendTemplate,
   updateLCustomer,
-} from "../../../../../../loyalty/customer/customer.service";
-import { LoyaltyApiFeature } from "../../../../../../../types/enums";
-import { log } from "../../../../../../../utils/logger";
+} from "../../../../../../loyalty/customer/customer.service.js";
+import { LoyaltyApiFeature } from "../../../../../../../types/enums.js";
+import { log } from "../../../../../../../utils/logger.js";
 import { parsePhoneNumber } from "libphonenumber-js";
 
 export async function getLoyaltyActionByActionId(action_id, orgId) {

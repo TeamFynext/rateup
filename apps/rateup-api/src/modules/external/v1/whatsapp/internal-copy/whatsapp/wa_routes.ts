@@ -1,17 +1,17 @@
 import { FastifyInstance } from "fastify";
-import { waTemplatesRoutes } from "./messageTemplates/wa_templates.route";
-import { waSettingsRoutes } from "./settings/wa_settings.route";
-import { waSettingsSchema } from "./settings/wa_settings.schema";
-import { waTemplateSchemas } from "./messageTemplates/wa_templates.schema";
-import { waWebhookRoutes } from "./whatsappSurvey/wasurvey.route";
-import { waRedirectRoutes } from "./redirect/wa_redirect.route";
-import { flowRoutes } from "./flows/flow.route";
-import { waFlowSchemas } from "./flows/flow.schema";
-import { flowEnpointRoutes } from "./flows/flow.endpoint-routes";
-import { waAutomatedReplyRoutes } from "./automatedReply/wa_automatedReply.route";
-import { waInboxRoutes } from "./inbox/wainbox.routes";
-import { waAuthRoutes } from "./auth/wa_auth.route";
-import { waRuleSchemas } from "../../../../../whatsapp/automatedReply/wa_rule.schema";
+import { waTemplatesRoutes } from "./messageTemplates/wa_templates.route.js";
+import { waSettingsRoutes } from "./settings/wa_settings.route.js";
+import { waSettingsSchema } from "./settings/wa_settings.schema.js";
+import { waTemplateSchemas } from "./messageTemplates/wa_templates.schema.js";
+import { waWebhookRoutes } from "./whatsappSurvey/wasurvey.route.js";
+import { waRedirectRoutes } from "./redirect/wa_redirect.route.js";
+import { flowRoutes } from "./flows/flow.route.js";
+import { waFlowSchemas } from "./flows/flow.schema.js";
+import { flowEnpointRoutes } from "./flows/flow.endpoint-routes.js";
+import { waAutomatedReplyRoutes } from "./automatedReply/wa_automatedReply.route.js";
+import { waInboxRoutes } from "./inbox/wainbox.routes.js";
+import { waAuthRoutes } from "./auth/wa_auth.route.js";
+import { waRuleSchemas } from "../../../../../whatsapp/automatedReply/wa_rule.schema.js";
 
 export async function whatsappRoutes(server: FastifyInstance) {
   const modules = [

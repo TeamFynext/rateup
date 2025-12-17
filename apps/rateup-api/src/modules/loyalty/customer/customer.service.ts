@@ -3,56 +3,60 @@ import {
   LoyaltyTemplateTypes,
   SubscriptionFeaturePathName,
   WaAutomatedReplyResponseType,
-} from "../../../types/enums";
-import { verifySubscription } from "../../../utils/auth";
-import { log } from "../../../utils/logger";
-import { getNestedProperty } from "../../../utils/misc/obj.utils";
-import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils";
-import prisma from "../../../utils/prisma";
+} from "../../../types/enums.js";
+import { verifySubscription } from "../../../utils/auth.js";
+import { log } from "../../../utils/logger.js";
+import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
+import { getUniqueRandomAlphaId } from "../../../utils/misc/random.utils.js";
+import prisma from "../../../utils/prisma.js";
 import {
   decrementStatsCount,
   updateMonthlyStat,
-} from "../../stats/stats.service";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
-import { LoyaltyActionType } from "../actions/actions.schema";
+} from "../../stats/stats.service.js";
+import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
+import { LoyaltyActionType } from "../actions/actions.schema.js";
 import {
   getLoyaltyActionById,
   getLoyaltyActions,
   getReferralLoyaltyAction,
-} from "../actions/actions.service";
-import { createRedeem, RedeemStatus } from "../redeems/redeem.service";
+} from "../actions/actions.service.js";
+import { createRedeem, RedeemStatus } from "../redeems/redeem.service.js";
 import {
   getReferralCodeByActionAndCustomer,
   replacedContentByDynamicVariable,
-} from "../settings/settings.service";
-import { LCustomerInput } from "./customer.schema";
-import { isLReferralAction, isPurchaseAction, parsePhoneforWa } from "../util";
+} from "../settings/settings.service.js";
+import { LCustomerInput } from "./customer.schema.js";
+import {
+  isLReferralAction,
+  isPurchaseAction,
+  parsePhoneforWa,
+} from "../util.js";
 import {
   ContactGroupType,
   LoyaltyAction,
   LoyaltyCustomer,
   LoyaltyWaCommand,
-} from "../../../../generated/prisma/client";
+} from "../../../../generated/prisma/client.js";
 import {
   createContact,
   getOrcreateContact,
-} from "../../contact/contact.service";
+} from "../../contact/contact.service.js";
 import { MultipartFile } from "@fastify/multipart";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import Papa from "papaparse";
 import xlsx from "node-xlsx";
-import { BATCH_SIZE } from "../../../utils/constants/constants";
+import { BATCH_SIZE } from "../../../utils/constants/constants.js";
 import {
   createMultipleContactInput,
   PaginationQuery,
-} from "../../contact/contact.schema";
-import { getContactGroupById } from "../../contact/contactGroup/contactGroup.service";
-import { AddNewContactsToGroupInput } from "../../contact/contactGroup/contactGroup.schema";
-import { getContactTag } from "../../whatsapp/settings/wa_settings.service";
-import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service";
-import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace";
-import { getSubscription } from "../../subscription/subscription.service";
-import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth";
+} from "../../contact/contact.schema.js";
+import { getContactGroupById } from "../../contact/contactGroup/contactGroup.service.js";
+import { AddNewContactsToGroupInput } from "../../contact/contactGroup/contactGroup.schema.js";
+import { getContactTag } from "../../whatsapp/settings/wa_settings.service.js";
+import { sendTextMessage } from "../../whatsapp/whatsappSurvey/wasurvey.service.js";
+import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace.js";
+import { getSubscription } from "../../subscription/subscription.service.js";
+import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth.js";
 
 let includeContact = {
   Contact: {

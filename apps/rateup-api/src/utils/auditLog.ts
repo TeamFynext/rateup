@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import prisma from "./prisma";
+import prisma from "./prisma.js";
 
 const actionMap = {
   POST: "Create",

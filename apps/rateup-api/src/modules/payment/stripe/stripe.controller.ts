@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import Session from "supertokens-node/recipe/session";
+import Session from "supertokens-node/recipe/session/index.js";
 import {
   cancelStripeSubscription,
   createOrder,
@@ -12,14 +12,16 @@ import {
   syncStripeProducts,
   updateOrder,
   updateStripeProduct,
-} from "./stripe.service";
+} from "./stripe.service.js";
 import {
   productIdParamsInput,
   updateProductInput,
   GetSessionStatusQuery,
   CreateStripeCheckoutInput,
-} from "./stripe.schema";
-const stripe = require("stripe")(`${process.env.STRIPE_SECRET_KEY}`);
+} from "./stripe.schema.js";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 interface SessionRetrieveRequest {
   session_id: string;
@@ -98,11 +100,13 @@ export async function webHookHandler(
   let event;
 
   try {
-    event = await stripe.webhooks.constructEvent(
-      request?.body,
-      sig,
-      endpointSecret,
-    );
+    // Ensure request.body is a Buffer or string as required by Stripe
+    const rawBody =
+      typeof request.body === "string" || Buffer.isBuffer(request.body)
+        ? request.body
+        : Buffer.from(JSON.stringify(request.body));
+
+    event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
   } catch (err) {
     console.log(".....Event error");
     console.log(err.message);

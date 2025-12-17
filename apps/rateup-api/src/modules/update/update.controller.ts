@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../utils/logger";
+import { log } from "../../utils/logger.js";
 import {
   backfillWithSQL,
   updateFreePlanExpiry,
@@ -8,9 +8,9 @@ import {
   updateSubscriptionAutomation,
   updateUsageStatsAutomation,
   updateUsageStatsTemplateMessageCount,
-} from "./update.service";
-import prisma from "../../utils/prisma";
-import { StageCategory } from "../../../generated/prisma/enums";
+} from "./update.service.js";
+import prisma from "../../utils/prisma.js";
+import { StageCategory } from "../../../generated/prisma/enums.js";
 
 export async function updateUsageStatsTemplateMessageHandler(
   request: FastifyRequest,

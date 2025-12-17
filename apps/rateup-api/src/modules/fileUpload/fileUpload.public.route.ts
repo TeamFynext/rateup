@@ -3,8 +3,8 @@ import {
   deleteUploadedFileController,
   uploadController,
   uploadWithThumbnailsController,
-} from "./fileUpload.controller";
-import { $Iref } from "./fileUpload.schema";
+} from "./fileUpload.controller.js";
+import { $Iref } from "./fileUpload.schema.js";
 import FastifyMultipart from "@fastify/multipart";
 
 export async function fileUploadPublicRoutes(server: FastifyInstance) {

@@ -3,16 +3,16 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   getWaSettings,
   updateWaSettings,
-} from "../settings/wa_settings.service";
-import { setBusinessPublicKey } from "./wa_encryption.service";
-import { log } from "../../../utils/logger";
+} from "../settings/wa_settings.service.js";
+import { setBusinessPublicKey } from "./wa_encryption.service.js";
+import { log } from "../../../utils/logger.js";
 import {
   getFlowFromDb,
   handleDecryptedFlowRequest,
-} from "../flows/flow.service";
-import { WhatsappSettings } from "../../../../generated/prisma/client";
-import prisma from "../../../utils/prisma";
-import { handleLoyaltyPointsCommand } from "../../loyalty/settings/settings.service";
+} from "../flows/flow.service.js";
+import { WhatsappSettings } from "../../../../generated/prisma/client.js";
+import prisma from "../../../utils/prisma.js";
+import { handleLoyaltyPointsCommand } from "../../loyalty/settings/settings.service.js";
 
 export function generateKeyPairsForWaEncryption(
   passphrase: string,

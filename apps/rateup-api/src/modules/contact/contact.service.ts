@@ -1,47 +1,51 @@
-import { ContactGroupType } from "../../../generated/prisma/client";
-import { log } from "../../utils/logger";
-import prisma from "../../utils/prisma";
+import { ContactGroupType } from "../../../generated/prisma/client.js";
+import { log } from "../../utils/logger.js";
+import prisma from "../../utils/prisma.js";
 import {
   ContactCore,
   createMultipleContactInput,
   CustomFieldSchema,
   PaginationQuery,
   updateContactSchema,
-} from "./contact.schema";
+} from "./contact.schema.js";
 import Papa from "papaparse";
-import { getContactTag } from "../whatsapp/settings/wa_settings.service";
+import { getContactTag } from "../whatsapp/settings/wa_settings.service.js";
 import xlsx from "node-xlsx";
 import { MultipartFile } from "@fastify/multipart";
 import {
   addExistingContactsToGroup,
   addNewContactsToGroup,
   removeContactsFromGroup,
-} from "./contactGroup/contactGroup.service";
+} from "./contactGroup/contactGroup.service.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
-import { BATCH_SIZE } from "../../utils/constants/constants";
-import { WaMessageAssignStatus } from "../../types/enums";
+import { BATCH_SIZE } from "../../utils/constants/constants.js";
+import { WaMessageAssignStatus } from "../../types/enums.js";
 import {
   assignWaMessageToUser,
   deleteAssignedUsersforContact,
   getAssignedUserForContact,
-} from "../whatsapp/inbox/message/wamessage.service";
-import { getChatbotDetails } from "../chatbot/chatbot.service";
+} from "../whatsapp/inbox/message/wamessage.service.js";
+import { getChatbotDetails } from "../chatbot/chatbot.service.js";
 import {
   createNotification,
   getNotificationSettings,
-} from "../notification/notification.service";
+} from "../notification/notification.service.js";
 import {
   addZapierTriggerToQueue,
   ZapierTriggers,
-} from "../integrations/external/zapier/zapier.service";
-import { addExistingContactsToMultipleGroups } from "../external/v1/contact/internal-copy/contact/contactGroup/contactGroup.service";
+} from "../integrations/external/zapier/zapier.service.js";
+import { addExistingContactsToMultipleGroups } from "../external/v1/contact/internal-copy/contact/contactGroup/contactGroup.service.js";
 import {
   createConversation,
   getLastCreatedConversationForContact,
   updateClosedConversationStatus,
   updateConversationAssignees,
-} from "./conversation/conversation.service";
-import { WaMessageClosedStatus } from "../whatsapp/constants";
+} from "./conversation/conversation.service.js";
+import {
+  WaMessageAssignStatusTab,
+  WaMessageClosedStatus,
+} from "../whatsapp/constants.js";
+import { checkAndExecuteRuleByTriggerEvent } from "../whatsapp/automatedReply/wa_automatedReply.utils.js";
 
 export async function createContact(
   contact: ContactCore & { orgId: string },
@@ -104,6 +108,10 @@ export async function createContact(
       userId,
     );
   }
+  checkAndExecuteRuleByTriggerEvent("CONTACT_CREATED", {
+    orgId: user?.orgId,
+    phone: contact?.phone,
+  });
   await addZapierTriggerToQueue(
     ZapierTriggers.CONTACT_CREATE,
     { [ZapierTriggers.CONTACT_CREATE]: user },
@@ -588,6 +596,22 @@ export async function updateContactById(
       },
     },
   });
+  if (contact.waMessageAssignStatus === WaMessageAssignStatusTab.Closed) {
+    checkAndExecuteRuleByTriggerEvent("CHAT_CLOSED", {
+      orgId: updatedContact?.orgId,
+      phone: updatedContact.phone,
+    });
+  } else if (contact.waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED) {
+    checkAndExecuteRuleByTriggerEvent("CHAT_ASSIGNED", {
+      orgId: updatedContact?.orgId,
+      phone: updatedContact.phone,
+    });
+  } else if (contact.lifecycleId) {
+    checkAndExecuteRuleByTriggerEvent("LIFECYCLE_UPDATED", {
+      orgId: updatedContact?.orgId,
+      phone: updatedContact.phone,
+    });
+  }
   if (contact.contactGroupIds) {
     const removedGroups = updatedContact.contactGroups.filter(
       (g) => !contact.contactGroupIds.includes(g.contactGroupId),

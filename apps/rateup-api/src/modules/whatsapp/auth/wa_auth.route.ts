@@ -1,10 +1,10 @@
-import { FastifyInstance } from "fastify/types/instance";
-import { checkSession } from "../../../utils/checkSession";
+import { FastifyInstance } from "fastify/types/instance.js";
+import { checkSession } from "../../../utils/checkSession.js";
 import {
   deRegisterBusinessClientHandler,
   getUserAccessTokenHanlder,
   registerBusinessClientHandler,
-} from "./wa_auth.controller";
+} from "./wa_auth.controller.js";
 
 export async function waAuthRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

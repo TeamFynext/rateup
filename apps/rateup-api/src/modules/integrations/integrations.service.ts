@@ -1,19 +1,19 @@
 import { google } from "googleapis";
-import { IntegratedApps } from "../../types/enums";
-import prisma from "../../utils/prisma";
-import { callWaAmeliaApi } from "./integration_axios";
+import { IntegratedApps } from "../../types/enums.js";
+import prisma from "../../utils/prisma.js";
+import { callWaAmeliaApi } from "./integration_axios.js";
 import {
   IntegrationSchema,
   UpdateIntgrationInput,
   WaPaymentCreateSchema,
-} from "./integrations.schema";
-import { callWhatsappApi } from "../whatsapp/wa_axios";
-import { log } from "../../utils/logger";
-import { getWaSettings } from "../whatsapp/settings/wa_settings.service";
-import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service";
-import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils";
-import { getScheduleTime } from "../../utils/date";
-import { generateApiKey } from "../apiAccessToken/apiAccessToken.service";
+} from "./integrations.schema.js";
+import { callWhatsappApi } from "../whatsapp/wa_axios.js";
+import { log } from "../../utils/logger.js";
+import { getWaSettings } from "../whatsapp/settings/wa_settings.service.js";
+import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service.js";
+import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils.js";
+import { getScheduleTime } from "../../utils/date.js";
+import { generateApiKey } from "../apiAccessToken/apiAccessToken.service.js";
 import axios from "axios";
 
 export const getAllIntegrationsByOrgId = (orgId: string) => {

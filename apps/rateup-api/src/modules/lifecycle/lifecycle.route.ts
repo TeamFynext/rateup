@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession";
+import { checkSession } from "../../utils/checkSession.js";
 import {
   createLifecycleHandler,
   deleteLifecycleByIdHandler,
@@ -7,8 +7,8 @@ import {
   getLifecyclesWithContatsCountHandler,
   reorderLabelsHandler,
   updateLifecycleHandler,
-} from "./lifecycle.controller";
-import { $LifecycleRef } from "./lifecycle.schema";
+} from "./lifecycle.controller.js";
+import { $LifecycleRef } from "./lifecycle.schema.js";
 
 export async function lifecycleRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

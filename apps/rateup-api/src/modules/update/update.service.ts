@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import prisma from "../../utils/prisma";
-import { log } from "../../utils/logger";
+import prisma from "../../utils/prisma.js";
+import { log } from "../../utils/logger.js";
 
 export async function updateUsageStatsTemplateMessageCount() {
   const subscriptions = await prisma.subscription.findMany();

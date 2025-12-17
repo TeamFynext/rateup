@@ -6,7 +6,7 @@ import {
   ConditionOperator,
   RuleOperator,
   TriggerEvent,
-} from "../../../../generated/prisma/enums";
+} from "../../../../generated/prisma/enums.js";
 
 export const ruleConditionSchema = z.object({
   id: z.string().optional(),

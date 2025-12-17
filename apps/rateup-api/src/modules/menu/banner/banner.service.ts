@@ -1,7 +1,7 @@
-import prisma from "../../../utils/prisma";
-import { deleteFile } from "../../../utils/upload/s3Upload";
-import { CreateMenuCategoryInput } from "../category/category.schema";
-import { CreateMenuBannerInput } from "./banner.schema";
+import prisma from "../../../utils/prisma.js";
+import { deleteFile } from "../../../utils/upload/s3Upload.js";
+import { CreateMenuCategoryInput } from "../category/category.schema.js";
+import { CreateMenuBannerInput } from "./banner.schema.js";
 
 export async function createMenuBanner(data: CreateMenuBannerInput) {
   const menuBanner = await prisma.menuBanner.create({

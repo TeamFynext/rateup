@@ -1,7 +1,7 @@
 import { FastifyReply } from "fastify";
-import prisma from "../../utils/prisma";
-import { defaultTheme } from "./defaultTheme";
-import { verifyAndConvertSurveyThemeObj } from "./utils";
+import prisma from "../../utils/prisma.js";
+import { defaultTheme } from "./defaultTheme.js";
+import { verifyAndConvertSurveyThemeObj } from "./utils.js";
 
 export async function getSurveyThemeById(webSurveyThemeId: string) {
   return await prisma.webSurveyTheme.findUnique({

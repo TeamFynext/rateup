@@ -1,8 +1,8 @@
 // TODO
 
 import { FastifyRequest, FastifyReply } from "fastify";
-import { SubscriptionFeaturePathName } from "../../../../../../types/enums";
-import prisma from "../../../../../../utils/prisma";
+import { SubscriptionFeaturePathName } from "../../../../../../types/enums.js";
+import prisma from "../../../../../../utils/prisma.js";
 
 export async function verifyCampaignMaxCountRestriction(
   request: FastifyRequest,

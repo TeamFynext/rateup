@@ -1,15 +1,15 @@
-import prisma from "../../../utils/prisma";
+import prisma from "../../../utils/prisma.js";
 import {
   lActionUpdateInput,
   loyaltyActionInput,
   LoyaltyActionType,
-} from "./actions.schema";
+} from "./actions.schema.js";
 import { string } from "zod";
 import {
   decrementStatsCount,
   updateMonthlyStat,
-} from "../../stats/stats.service";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
+} from "../../stats/stats.service.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 
 export async function createLoyaltyAction(
   data: loyaltyActionInput,

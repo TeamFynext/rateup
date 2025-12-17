@@ -1,7 +1,7 @@
-import { log } from "../logger";
+import { log } from "../logger.js";
 
-const nodemailer = require("nodemailer");
-const { SESv2Client, SendEmailCommand } = require("@aws-sdk/client-sesv2");
+import nodemailer from "nodemailer";
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 
 // 1. Configure the AWS SDK client (uses default credential chain if omitted)
 const sesClient = new SESv2Client({

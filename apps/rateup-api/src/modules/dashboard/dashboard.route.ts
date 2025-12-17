@@ -3,9 +3,9 @@ import {
   getActiveSurveyStatsHandler,
   getOverallStatsHandler,
   getTeamMemberStatsHandler,
-} from "./dashboard.controller";
-import { checkSession } from "../../utils/checkSession";
-import { $Tref } from "../team/team.schema";
+} from "./dashboard.controller.js";
+import { checkSession } from "../../utils/checkSession.js";
+import { $Tref } from "../team/team.schema.js";
 
 export async function dashboardRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

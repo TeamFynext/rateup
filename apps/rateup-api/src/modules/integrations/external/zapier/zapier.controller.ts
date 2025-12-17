@@ -1,21 +1,24 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../../utils/logger";
+import { log } from "../../../../utils/logger.js";
 import {
   getIntegrationByName,
   updateIntegrationByName,
-} from "../../integrations.service";
-import { IntegratedApps, WaMessageAssignStatus } from "../../../../types/enums";
-import { ByOrgIdParams } from "../../../org/org.schema";
+} from "../../integrations.service.js";
+import {
+  IntegratedApps,
+  WaMessageAssignStatus,
+} from "../../../../types/enums.js";
+import { ByOrgIdParams } from "../../../org/org.schema.js";
 import bcrypt from "bcrypt";
-import { Role } from "../../../org/org.services";
-import { ContactCore } from "../../../contact/contact.schema";
+import { Role } from "../../../org/org.services.js";
+import { ContactCore } from "../../../contact/contact.schema.js";
 import {
   deleteContactById,
   getContactById,
   updateContactById,
   updateContactLabelsById,
-} from "../../../contact/contact.service";
-import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service";
+} from "../../../contact/contact.service.js";
+import { sendTextMessage } from "../../../whatsapp/whatsappSurvey/wasurvey.service.js";
 import {
   addZapierTriggerToQueue,
   deleteContactByPhoneNumberAndOrgId,
@@ -26,16 +29,22 @@ import {
   getTicketColumnsByBoardId,
   getUserIdByEmailAndOrgId,
   ZapierTriggers,
-} from "./zapier.service";
-import { TicketPriority } from "../../../../../generated/prisma/enums";
-import { CardInput, createCard } from "../../../ticket/ticketCard/card.service";
+} from "./zapier.service.js";
+import { TicketPriority } from "../../../../../generated/prisma/enums.js";
+import {
+  CardInput,
+  createCard,
+} from "../../../ticket/ticketCard/card.service.js";
 import {
   addNewContactsToGroup,
   getContactGroupsByOrgId,
   getContactGroupsByTeamId,
-} from "../../../contact/contactGroup/contactGroup.service";
-import { getTeamsByOrgId, inviteTeamMember } from "../../../team/team.service";
-import { InviteType } from "../../../team/team.schema";
+} from "../../../contact/contactGroup/contactGroup.service.js";
+import {
+  getTeamsByOrgId,
+  inviteTeamMember,
+} from "../../../team/team.service.js";
+import { InviteType } from "../../../team/team.schema.js";
 import {
   BoardQueryInput,
   ContactLabelSchema,
@@ -46,7 +55,7 @@ import {
   TicketCardSchema,
   TicketColumnQueryInput,
   TriggerSubscriptionBodySchema,
-} from "./zapier.schema";
+} from "./zapier.schema.js";
 
 export async function zapierAuthenticationHandler(
   request: FastifyRequest<{ Querystring: ByOrgIdParams }>,

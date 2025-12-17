@@ -1,14 +1,14 @@
-import prisma from "../../utils/prisma";
-import { CreateCommentInput } from "./ticket.schema";
+import prisma from "../../utils/prisma.js";
+import { CreateCommentInput } from "./ticket.schema.js";
 import {
   createEmailBodyTicketAssigned,
   createEmailBodyTicketCreated,
-} from "../../utils/email/tickets/ticketAssigned";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import { parsePhoneforWa } from "../loyalty/util";
-import { log } from "../../utils/logger";
-import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service";
-import { getContactByPhoneNumberAndOrgId } from "../contact/contact.service";
+} from "../../utils/email/tickets/ticketAssigned.js";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import { parsePhoneforWa } from "../loyalty/util.js";
+import { log } from "../../utils/logger.js";
+import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
+import { getContactByPhoneNumberAndOrgId } from "../contact/contact.service.js";
 import dayjs from "dayjs";
 
 export async function sendTicketAssignedWaMessage(data: {

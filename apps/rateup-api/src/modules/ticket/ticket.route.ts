@@ -1,15 +1,15 @@
 import { FastifyInstance } from "fastify";
-import { $TicketRef } from "./ticket.schema";
+import { $TicketRef } from "./ticket.schema.js";
 import {
   createCommentHandler,
   deleteCommentHandler,
-} from "./ticket.controller";
-import { checkSession } from "../../utils/checkSession";
-import { getVerifySubscriptionHandler } from "../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../types/enums";
-import { columnRoutes } from "./ticketColumn/column.route";
-import { cardRoutes } from "./ticketCard/card.route";
-import { boardRoutes } from "./ticketBoard/board.route";
+} from "./ticket.controller.js";
+import { checkSession } from "../../utils/checkSession.js";
+import { getVerifySubscriptionHandler } from "../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { columnRoutes } from "./ticketColumn/column.route.js";
+import { cardRoutes } from "./ticketCard/card.route.js";
+import { boardRoutes } from "./ticketBoard/board.route.js";
 
 export async function ticketRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

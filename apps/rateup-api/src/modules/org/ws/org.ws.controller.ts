@@ -1,14 +1,14 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { connectionManager } from "./org.ws.class";
-import { orgWsMessage } from "../../../types/global";
-import { log } from "../../../utils/logger";
-import baseRedis, { userStatusQueue } from "../../../utils/redisConnection";
+import { connectionManager } from "./org.ws.class.js";
+import { orgWsMessage } from "../../../types/global.js";
+import { log } from "../../../utils/logger.js";
+import baseRedis, { userStatusQueue } from "../../../utils/redisConnection.js";
 import { WebSocket } from "@fastify/websocket";
-import { updateUserAvailablityStatus } from "../../user/user.service";
-import { UserAvailabilityStatus } from "../../user/user.schema";
+import { updateUserAvailablityStatus } from "../../user/user.service.js";
+import { UserAvailabilityStatus } from "../../user/user.schema.js";
 import { Job, Worker } from "bullmq";
-import prisma from "../../../utils/prisma";
-import { UserPresenceMode } from "../../../../generated/prisma/enums";
+import prisma from "../../../utils/prisma.js";
+import { UserPresenceMode } from "../../../../generated/prisma/enums.js";
 
 // Constants for delays
 const ONLINE_DEBOUNCE_MS = 2000;

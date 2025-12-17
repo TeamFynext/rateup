@@ -4,8 +4,8 @@ import {
   getChatbotDetailsHandler,
   getChatbotPublicPageStatusHandler,
   publicChatbotMessageHandler,
-} from "./chatbot.controller";
-import { $chatbotRef } from "./chatbot.schema";
+} from "./chatbot.controller.js";
+import { $chatbotRef } from "./chatbot.schema.js";
 
 export async function chatbotPublicRoute(server: FastifyInstance) {
   server.post(

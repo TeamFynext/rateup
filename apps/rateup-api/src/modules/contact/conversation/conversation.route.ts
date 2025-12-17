@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $conversationRef } from "./conversation.schema";
+import { $conversationRef } from "./conversation.schema.js";
 import {
   getAverageConversationResponseTimeHandler,
   getConversationOnAccountDistributionHandler,
@@ -9,8 +9,7 @@ import {
   getStaffConverSationMetricsHandler,
   getStaffDetailedConversationAnalyticsHandler,
   updateConversationHandler,
-} from "./conversation.controller";
-import { get } from "axios";
+} from "./conversation.controller.js";
 
 export async function conversationRoutes(server: FastifyInstance) {
   server.put(

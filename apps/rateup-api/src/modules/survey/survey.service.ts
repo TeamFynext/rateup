@@ -1,4 +1,4 @@
-import prisma, { excludeFields } from "../../utils/prisma";
+import prisma, { excludeFields } from "../../utils/prisma.js";
 import {
   CreateSurveyInput,
   DeleteTeamSurveyInput,
@@ -6,8 +6,8 @@ import {
   UpdateGoogleLinkInput,
   UpdateSurveyInput,
   UpdateSurveyPassword,
-} from "./survey.schema";
-import { getTeamById, getTeamIdsByUserId } from "../team/team.service";
+} from "./survey.schema.js";
+import { getTeamById, getTeamIdsByUserId } from "../team/team.service.js";
 import {
   PageType,
   QuestionType,
@@ -15,33 +15,30 @@ import {
   SurveyType,
   SurveyVariableType,
   WaQuestions,
-} from "../../types/enums";
+} from "../../types/enums.js";
 import {
   getShortUrlId,
   shortIdUniqueConstraintErrHandler,
-} from "../../utils/commonUtils";
+} from "../../utils/commonUtils.js";
 import {
   createSurveyDefaultVariableForQuestion,
   getSurveysOrgId,
   isShortId,
-} from "./survey.utils";
-import { offerArrayWithRange } from "../../utils/survey/offer";
-import { cloneDeep } from "lodash";
-import util from "util";
+} from "./survey.utils.js";
+import cloneDeep from "lodash/cloneDeep.js";
 import {
   getInitialSurveyQuestions,
-  getPageQuestions,
   getQuestionsArrUpdatedWithLanguageTypeQuestion,
-} from "../question/question.utils";
-import { defaultWebSurveyPagesTheme } from "../surveyTheme/defaultTheme";
-import { hasFeature } from "../subscription/subscription.service";
-import { updateQuestionsOnSurvey } from "../question/question.service";
-import { createStats } from "../stats/stats.service";
+} from "../question/question.utils.js";
+import { defaultWebSurveyPagesTheme } from "../surveyTheme/defaultTheme.js";
+import { hasFeature } from "../subscription/subscription.service.js";
+import { updateQuestionsOnSurvey } from "../question/question.service.js";
+import { createStats } from "../stats/stats.service.js";
 import dayjs from "dayjs";
-import { Prisma } from "../../../generated/prisma/client";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
-import { barGraphQuestions, barGraphQuestions2 } from "../../utils/enumMap";
+import { Prisma } from "../../../generated/prisma/client.js";
+import timezone from "dayjs/plugin/timezone.js";
+import utc from "dayjs/plugin/utc.js";
+import { barGraphQuestions, barGraphQuestions2 } from "../../utils/enumMap.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

@@ -1,5 +1,5 @@
-import { API_URL } from "../../constants/constants";
-import { formatDateT1 } from "../../date";
+import { API_URL } from "../../constants/constants.js";
+import { formatDateT1 } from "../../date.js";
 
 export function createEmailBodySubscriptionActivated(
   plan: string,

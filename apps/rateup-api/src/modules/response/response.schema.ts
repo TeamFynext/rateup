@@ -4,8 +4,8 @@ import {
   QuestionType,
   ResponseSummaryType,
   SurveyType,
-} from "../../types/enums";
-import { ResponsePlatform } from "../../../generated/prisma/client";
+} from "../../types/enums.js";
+import { ResponsePlatform } from "../../../generated/prisma/client.js";
 
 // Individual question response
 const questionResponseSchema = z.object({

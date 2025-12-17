@@ -1,4 +1,4 @@
-import { FastifyInstance } from "fastify/types/instance";
+import { FastifyInstance } from "fastify/types/instance.js";
 import {
   createAutomatedReplyHandler,
   updateAutomatedReplyHandler,
@@ -8,11 +8,11 @@ import {
   getAutomatedRepliesMessagIdHandler,
   initiateAutomatedReplyByIdHandler,
   verifyAutomationTriggerLimitHandler,
-} from "./wa_automatedReply.controller";
-import { checkSession } from "../../../utils/checkSession";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { verifyAutomationLimit } from "./wa_automatedReply.utils";
+} from "./wa_automatedReply.controller.js";
+import { checkSession } from "../../../utils/checkSession.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { verifyAutomationLimit } from "./wa_automatedReply.utils.js";
 // --- Rule Controller Imports ---
 import {
   createRuleHandler,
@@ -20,13 +20,13 @@ import {
   getRuleByIdHandler,
   updateRuleHandler,
   deleteRuleHandler,
-} from "./wa_rule.controller"; // You need to implement these controllers
+} from "./wa_rule.controller.js"; // You need to implement these controllers
 import {
   createRuleSchema,
   getRulesQuerySchema,
   ruleIdParamSchema,
   updateRuleSchema,
-} from "./wa_rule.schema";
+} from "./wa_rule.schema.js";
 import {
   serializerCompiler,
   validatorCompiler,

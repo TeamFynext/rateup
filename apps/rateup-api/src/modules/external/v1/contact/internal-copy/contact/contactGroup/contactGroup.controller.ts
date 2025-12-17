@@ -9,7 +9,7 @@ import {
   GetContactGroupsQuery,
   RemoveGroupContactsSchema,
   UpdateContactGroupInput,
-} from "./contactGroup.schema";
+} from "./contactGroup.schema.js";
 import {
   createContactGroup,
   getContactGroupById,
@@ -23,10 +23,13 @@ import {
   removeContactsFromGroup,
   addExistingContactsToMultipleGroups,
   deleteManyContactGroups,
-} from "./contactGroup.service";
-import { Prisma, Role } from "../../../../../../../../generated/prisma/client";
-import { verifyRole } from "../../../../../../../utils/auth";
-import { log } from "../../../../../../../utils/logger";
+} from "./contactGroup.service.js";
+import {
+  Prisma,
+  Role,
+} from "../../../../../../../../generated/prisma/client.js";
+import { verifyRole } from "../../../../../../../utils/auth.js";
+import { log } from "../../../../../../../utils/logger.js";
 
 export async function getContactGroupsHandler(
   request: FastifyRequest<{

@@ -4,7 +4,6 @@
 generator client {
   provider     = "prisma-client"
   output       = "../generated/prisma"
-  moduleFormat = "cjs"
 }
 
 // for having typed Json fields

@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { log } from "../../../utils/logger";
+import { log } from "../../../utils/logger.js";
 import {
   AddExistingContactsToGroupInput,
   AddExistingContactsToMultipleGroupsInput,
@@ -11,7 +11,7 @@ import {
   GetContactGroupsQuery,
   RemoveGroupContactsSchema,
   UpdateContactGroupInput,
-} from "./contactGroup.schema";
+} from "./contactGroup.schema.js";
 import {
   createContactGroup,
   getContactGroupById,
@@ -26,16 +26,19 @@ import {
   addExistingContactsToMultipleGroups,
   deleteManyContactGroups,
   getContactsByContactGroupIdWithPagination,
-} from "./contactGroup.service";
-import { verifyRole } from "../../../utils/auth";
-import { Prisma, Role } from "../../../../generated/prisma/client";
-import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema";
-import { createMultipleContacts, importCSVContacts } from "../contact.service";
-import { PaginationQuery } from "../contact.schema";
+} from "./contactGroup.service.js";
+import { verifyRole } from "../../../utils/auth.js";
+import { Prisma, Role } from "../../../../generated/prisma/client.js";
+import { dataExtractFileMimeTypes } from "../../fileUpload/fileUpload.schema.js";
+import {
+  createMultipleContacts,
+  importCSVContacts,
+} from "../contact.service.js";
+import { PaginationQuery } from "../contact.schema.js";
 import {
   addNewCustomersToGroup,
   createMultipleCustomers,
-} from "../../loyalty/customer/customer.service";
+} from "../../loyalty/customer/customer.service.js";
 
 export async function getContactGroupsHandler(
   request: FastifyRequest<{

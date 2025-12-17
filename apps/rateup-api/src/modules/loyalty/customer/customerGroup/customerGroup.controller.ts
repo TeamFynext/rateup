@@ -1,12 +1,12 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { log } from "../../../../utils/logger";
-import { dataExtractFileMimeTypes } from "../../../fileUpload/fileUpload.schema";
-import { importCSVContacts } from "../customer.service";
+import { log } from "../../../../utils/logger.js";
+import { dataExtractFileMimeTypes } from "../../../fileUpload/fileUpload.schema.js";
+import { importCSVContacts } from "../customer.service.js";
 import {
   ByCustomerGroupIdParams,
   PaginationQuery,
-} from "./customerGroup.schema";
-import { getCustomersByContactGroupIdWithPagination } from "./customerGroup.service";
+} from "./customerGroup.schema.js";
+import { getCustomersByContactGroupIdWithPagination } from "./customerGroup.service.js";
 
 export async function addNewCustomersfromCSVToGroupHandler(
   request: FastifyRequest<{ Params: ByCustomerGroupIdParams }>,

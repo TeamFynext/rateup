@@ -6,7 +6,7 @@ import {
   CreateCampaignParticipantsInput,
   DeleteCampaignParticipantsInput,
   PaginateQueryInput,
-} from "./campaignParticipants.schema";
+} from "./campaignParticipants.schema.js";
 import {
   createCampaignParticipants,
   createCampaignParticipantsFromContacts,
@@ -15,8 +15,8 @@ import {
   getCampaignParticipantById,
   getCampaignParticipantsByCampaignIdPaginated,
   multipleDeleteCampaignParticipant,
-} from "./campaignParticipants.service";
-import { ByCampaignIdParams } from "../campaign.schema";
+} from "./campaignParticipants.service.js";
+import { ByCampaignIdParams } from "../campaign.schema.js";
 
 export async function createCampaignParticipantsFromContactsHandler(
   request: FastifyRequest<{

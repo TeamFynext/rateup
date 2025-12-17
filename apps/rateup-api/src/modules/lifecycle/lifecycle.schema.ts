@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
-import { StageCategory } from "../../../generated/prisma/enums";
+import { StageCategory } from "../../../generated/prisma/enums.js";
 
 const lifecycleIdParamSchema = z.object({
   lifecycleId: z.string(),

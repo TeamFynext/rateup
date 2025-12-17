@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession";
+import { checkSession } from "../../utils/checkSession.js";
 import {
   deleteAllNotificationsHandler,
   deleteNotificationByIdHandler,
@@ -7,8 +7,8 @@ import {
   getNotificationSettingHandler,
   getNotificationsHandler,
   updateNotificationSettingHandler,
-} from "./notification.controller";
-import { $NotifyRef } from "./notification.schema";
+} from "./notification.controller.js";
+import { $NotifyRef } from "./notification.schema.js";
 
 export async function notificationRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

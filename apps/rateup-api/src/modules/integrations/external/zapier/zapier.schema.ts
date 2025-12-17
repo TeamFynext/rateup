@@ -1,9 +1,9 @@
 import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
-import { ZapierTriggers } from "./zapier.service";
-import { WaMessageAssignStatus } from "../../../../types/enums";
-import { TicketPriority } from "../../../../../generated/prisma/enums";
-import { contactCoreSchema } from "../../../contact/contact.schema";
+import { ZapierTriggers } from "./zapier.service.js";
+import { WaMessageAssignStatus } from "../../../../types/enums.js";
+import { TicketPriority } from "../../../../../generated/prisma/enums.js";
+import { contactCoreSchema } from "../../../contact/contact.schema.js";
 
 //any changes to schema should affect in integration created in zapier
 

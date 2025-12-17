@@ -1,5 +1,5 @@
-import { log } from "../../../../../../../utils/logger";
-import { callWhatsappApi } from "../wa_axios";
+import { log } from "../../../../../../../utils/logger.js";
+import { callWhatsappApi } from "../wa_axios.js";
 import qs from "querystring";
 
 /**

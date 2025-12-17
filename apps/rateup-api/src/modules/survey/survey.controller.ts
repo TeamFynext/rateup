@@ -34,7 +34,7 @@ import {
   getSurveyStats,
   getNPSResponsesForGraph,
   updateReviewLinkVisitedOnSurvey,
-} from "./survey.service";
+} from "./survey.service.js";
 import {
   CloneSurveyInput,
   CreateSurveyInput,
@@ -49,23 +49,26 @@ import {
   UpdateGoogleLinkInput,
   UpdateSurveyInput,
   UpdateSurveyPassword,
-} from "./survey.schema";
-import Session from "supertokens-node/recipe/session";
-import { Prisma } from "../../../generated/prisma/client";
-import { BySurveyTeamMapIdParams, ByTeamIdParams } from "../team/team.schema";
-import { getTeamIdsByUserId } from "../team/team.service";
+} from "./survey.schema.js";
+import Session from "supertokens-node/recipe/session/index.js";
+import { Prisma } from "../../../generated/prisma/client.js";
+import {
+  BySurveyTeamMapIdParams,
+  ByTeamIdParams,
+} from "../team/team.schema.js";
+import { getTeamIdsByUserId } from "../team/team.service.js";
 // import { createDefaultSurveyTheme } from "../surveyTheme/surveyTheme.service";
-import { SurveyType, WaFlowStatus } from "../../types/enums";
+import { SurveyType, WaFlowStatus } from "../../types/enums.js";
 import {
   getFlowBySurveyId,
   publishFlowInWa,
   updateFlowInDb,
-} from "../whatsapp/flows/flow.service";
-import { log } from "../../utils/logger";
-import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema";
-import { ResponseFilterQuery } from "../response/response.schema";
-import { getIp } from "../../utils/http";
-import { getSurveyResponseByIp } from "../response/response.service";
+} from "../whatsapp/flows/flow.service.js";
+import { log } from "../../utils/logger.js";
+import { BySurveyIdParamsInput } from "../testimonial/testimonial.schema.js";
+import { ResponseFilterQuery } from "../response/response.schema.js";
+import { getIp } from "../../utils/http.js";
+import { getSurveyResponseByIp } from "../response/response.service.js";
 
 export async function createSurveyHandler(
   request: FastifyRequest<{

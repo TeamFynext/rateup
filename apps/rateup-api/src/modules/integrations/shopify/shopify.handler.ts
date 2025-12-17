@@ -1,7 +1,7 @@
 import "@shopify/shopify-api/adapters/node";
 import { DeliveryMethod, WebhookHandler } from "@shopify/shopify-api";
-import { log } from "../../../utils/logger";
-import { addToQueue, QueueType } from "../../../utils/jobQueue";
+import { log } from "../../../utils/logger.js";
+import { addToQueue, QueueType } from "../../../utils/jobQueue.js";
 
 //callbackhandlers only working if added in same file. find out why?
 async function draftOrderCreateHandler(

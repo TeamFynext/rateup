@@ -1,7 +1,7 @@
-import { CreateContactMessageInput } from "./contact.schema";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import { emailBodyContactForm } from "../../utils/email/emailBodyContactForm";
-import prisma from "../../utils/prisma";
+import { CreateContactMessageInput } from "./contact.schema.js";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import { emailBodyContactForm } from "../../utils/email/emailBodyContactForm.js";
+import prisma from "../../utils/prisma.js";
 
 export async function createMsg({
   name,

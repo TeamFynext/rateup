@@ -1,6 +1,6 @@
-import { onRouteHookHandler, preHandlerHook } from "./shareSettings.hooks";
-import { getSettings, updateSettings } from "./shareSettings.controller";
-import { onFile } from "./utils";
+import { onRouteHookHandler, preHandlerHook } from "./shareSettings.hooks.js";
+import { getSettings, updateSettings } from "./shareSettings.controller.js";
+import { onFile } from "./utils.js";
 import multipart from "@fastify/multipart";
 
 async function routes(fastify, options) {

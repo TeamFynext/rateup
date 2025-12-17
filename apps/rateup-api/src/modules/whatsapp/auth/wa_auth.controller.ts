@@ -1,6 +1,6 @@
 import { FastifyReply } from "fastify";
-import { FastifyRequest } from "fastify/types/request";
-import { RegisterBusinessBody } from "./wa_auth.schema";
+import { FastifyRequest } from "fastify/types/request.js";
+import { RegisterBusinessBody } from "./wa_auth.schema.js";
 import crypto from "node:crypto";
 import {
   debug_token,
@@ -8,24 +8,24 @@ import {
   getPhoneNumbersFromWABA,
   registerPhoneNumber,
   subscribeWABAToWebhook,
-} from "./wa_auth.service";
-import { log } from "../../../utils/logger";
+} from "./wa_auth.service.js";
+import { log } from "../../../utils/logger.js";
 import {
   createWaSettings,
   deleteWaSettings,
   getMetaAssets,
   syncMetaAssetstoDb,
   updateWaSettings,
-} from "../settings/wa_settings.service";
-import { WaConfigType } from "../../../types/enums";
-import { callWhatsappApi, GraphApiError } from "../wa_axios";
-import { handleWhatsappError } from "../wa_error_handler";
+} from "../settings/wa_settings.service.js";
+import { WaConfigType } from "../../../types/enums.js";
+import { callWhatsappApi, GraphApiError } from "../wa_axios.js";
+import { handleWhatsappError } from "../wa_error_handler.js";
 import {
   generateKeyPairsForWaEncryption,
   setNewEncryptionKeys,
-} from "../encryption/wa_encryption.utils";
-import { setBusinessPublicKey } from "../encryption/wa_encryption.service";
-import prisma from "../../../utils/prisma";
+} from "../encryption/wa_encryption.utils.js";
+import { setBusinessPublicKey } from "../encryption/wa_encryption.service.js";
+import prisma from "../../../utils/prisma.js";
 
 export async function registerBusinessClientHandler(
   req: FastifyRequest<{

@@ -11,13 +11,13 @@ import {
   syncTemplatesHandler,
   updateTemplateHandler,
   uploadHandler,
-} from "./wa_templates.controller";
-import { $WTref } from "./wa_templates.schema";
+} from "./wa_templates.controller.js";
+import { $WTref } from "./wa_templates.schema.js";
 import fastifyMultipart from "@fastify/multipart";
-import { SubscriptionFeaturePathName } from "../../../../../../../types/enums";
-import { getVerifySubscriptionHandler } from "../../../../../../../utils/auth";
-import { checkSession } from "../../../../../../../utils/checkSession";
-import { verifyMessageMonthlyLimitRestriction } from "../../../../../../whatsapp/messageTemplates/wa_templates.auth";
+import { SubscriptionFeaturePathName } from "../../../../../../../types/enums.js";
+import { getVerifySubscriptionHandler } from "../../../../../../../utils/auth.js";
+import { checkSession } from "../../../../../../../utils/checkSession.js";
+import { verifyMessageMonthlyLimitRestriction } from "../../../../../../whatsapp/messageTemplates/wa_templates.auth.js";
 
 export async function waTemplatesRoutes(server: FastifyInstance) {
   server.register(fastifyMultipart, {

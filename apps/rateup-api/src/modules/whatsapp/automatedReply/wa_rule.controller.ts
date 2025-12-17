@@ -1,8 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import * as RuleService from "./wa_rule.service";
-import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema";
-import prisma from "../../../utils/prisma";
-import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace";
+import * as RuleService from "./wa_rule.service.js";
+import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema.js";
+import prisma from "../../../utils/prisma.js";
+import { PrismaClientKnownRequestError } from "../../../../generated/prisma/internal/prismaNamespace.js";
 
 // Create Rule
 export async function createRuleHandler(

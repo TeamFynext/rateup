@@ -5,20 +5,20 @@ import {
   getMessageStatsByOrgId,
   getSubscription,
   updateSubscription,
-} from "./subscription.service";
-import { ByOrgIdParams } from "../org/org.schema";
+} from "./subscription.service.js";
+import { ByOrgIdParams } from "../org/org.schema.js";
 import {
   deleteSubscriptionsInput,
   updateSubscriptionInput,
-} from "./subscription.schema";
-import { getRateuplanById } from "../payment/payment.service";
-import { FreePlanSubscriptionFeatures } from "./subscription.data";
+} from "./subscription.schema.js";
+import { getRateuplanById } from "../payment/payment.service.js";
+import { FreePlanSubscriptionFeatures } from "./subscription.data.js";
 import dayjs from "dayjs";
 import {
   updateAnnualMessageCount,
   updateUsageStatsLastReset,
-} from "../stats/stats.service";
-import { log } from "../../utils/logger";
+} from "../stats/stats.service.js";
+import { log } from "../../utils/logger.js";
 
 export async function getUserSubscriptionHandler(req, res) {
   const { orgId } = req.user;

@@ -8,8 +8,8 @@ import {
   PaginationQuery,
   UpdateContactLabelsSchema,
   CustomFieldSchema,
-} from "./contact.schema";
-import { log } from "../../utils/logger";
+} from "./contact.schema.js";
+import { log } from "../../utils/logger.js";
 import {
   addCustomField,
   createContact,
@@ -26,28 +26,28 @@ import {
   updateContactLabelsById,
   updateCustomField,
   updateLifecycleStageofContacts,
-} from "./contact.service";
-import { ContactGroupType, Prisma } from "../../../generated/prisma/client";
-import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema";
+} from "./contact.service.js";
+import { ContactGroupType, Prisma } from "../../../generated/prisma/client.js";
+import { dataExtractFileMimeTypes } from "../fileUpload/fileUpload.schema.js";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import {
   createLCustomer,
   handlePostRegisterAction,
   handleSendTemplate,
-} from "../loyalty/customer/customer.service";
+} from "../loyalty/customer/customer.service.js";
 import {
   LoyaltyTemplateTypes,
   WaAutomatedReplyResponseType,
-} from "../../types/enums";
+} from "../../types/enums.js";
 import {
   getLoyaltyWaCommandByType,
   replacedContentByDynamicVariable,
-} from "../loyalty/settings/settings.service";
-import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service";
-import prisma from "../../utils/prisma";
+} from "../loyalty/settings/settings.service.js";
+import { sendTextMessage } from "../whatsapp/whatsappSurvey/wasurvey.service.js";
+import prisma from "../../utils/prisma.js";
 import Papa from "papaparse";
 import xlsx from "node-xlsx";
-import { LifecycleIdParamSchema } from "../lifecycle/lifecycle.schema";
+import { LifecycleIdParamSchema } from "../lifecycle/lifecycle.schema.js";
 //used in zapier
 export async function createContactHandler(
   request: FastifyRequest<{

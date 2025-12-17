@@ -1,5 +1,4 @@
 import { buildJsonSchemas } from "fastify-zod";
-import { first, remove } from "lodash";
 import z from "zod";
 
 const conversationCoreSchema = z.object({

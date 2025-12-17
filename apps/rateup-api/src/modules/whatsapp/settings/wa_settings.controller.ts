@@ -9,9 +9,9 @@ import {
   PaginationQuery,
   updateWaSettingsInput,
   whatsappSettingsIdParamSchema,
-} from "./wa_settings.schema";
-import { getOrgIdAndRole } from "../../user/user.service";
-import { Role } from "../../org/org.services";
+} from "./wa_settings.schema.js";
+import { getOrgIdAndRole } from "../../user/user.service.js";
+import { Role } from "../../org/org.services.js";
 import {
   createWaSettings,
   deleteWaSettings,
@@ -32,11 +32,11 @@ import {
   updateWaSettings,
   updateWaSettingsById,
   upsertWaSettings,
-} from "./wa_settings.service";
-import { getPhoneDetails } from "../auth/wa_auth.service";
-import { WaConfigType } from "../../../types/enums";
-import { log } from "../../../utils/logger";
-import { callWhatsappApi } from "../wa_axios";
+} from "./wa_settings.service.js";
+import { getPhoneDetails } from "../auth/wa_auth.service.js";
+import { WaConfigType } from "../../../types/enums.js";
+import { log } from "../../../utils/logger.js";
+import { callWhatsappApi } from "../wa_axios.js";
 
 export async function createWaSettingsHandler(
   req: FastifyRequest<{ Body: createWaSettingsInput }>,

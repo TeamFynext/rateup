@@ -1,12 +1,12 @@
 import { string } from "zod";
-import { WaMessageAssignStatus } from "../../../types/enums";
-import prisma from "../../../utils/prisma";
-import { WaMessageClosedStatus } from "../../whatsapp/constants";
+import { WaMessageAssignStatus } from "../../../types/enums.js";
+import prisma from "../../../utils/prisma.js";
+import { WaMessageClosedStatus } from "../../whatsapp/constants.js";
 import {
   ConversationAssigneeUpdateSchema,
   ConversationCore,
   UpdateConversationSchema,
-} from "./conversation.schema";
+} from "./conversation.schema.js";
 
 export async function createConversation(input: ConversationCore) {
   const { contactId, ...rest } = input;

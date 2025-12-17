@@ -1,10 +1,10 @@
 import dayjs from "dayjs";
-import prisma from "../../../utils/prisma";
-import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema";
-import { getUsageStat } from "../../stats/stats.service";
-import { getSubscription } from "../../subscription/subscription.service";
-import { log } from "../../../utils/logger";
-import { selectAutomationByBusinessHours } from "./wa_automatedReply.utils";
+import prisma from "../../../utils/prisma.js";
+import { CreateAutomatedReplySchema } from "./wa_automatedReply.schema.js";
+import { getUsageStat } from "../../stats/stats.service.js";
+import { getSubscription } from "../../subscription/subscription.service.js";
+import { log } from "../../../utils/logger.js";
+import { selectAutomationByBusinessHours } from "./wa_automatedReply.utils.js";
 
 export async function getAutomatedRepliesMessagId(id: string, orgId: string) {
   const automatedReplies = await prisma.waAutomatedReplyMessage.findMany({

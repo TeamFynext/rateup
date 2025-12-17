@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../utils/logger";
-import { handleInstagramWebhook } from "./instagram.service";
+import { log } from "../../../utils/logger.js";
+import { handleInstagramWebhook } from "./instagram.service.js";
 
 export async function instagramWebhookEventHandler(
   request: FastifyRequest,

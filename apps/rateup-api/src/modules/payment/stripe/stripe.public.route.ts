@@ -1,4 +1,4 @@
-import { webHookHandler } from "./stripe.controller";
+import { webHookHandler } from "./stripe.controller.js";
 import { FastifyInstance } from "fastify";
 
 export async function stripePublicRoutes(server: FastifyInstance) {

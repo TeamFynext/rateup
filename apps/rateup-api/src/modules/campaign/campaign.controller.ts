@@ -5,7 +5,7 @@ import {
   GetCampaignsQuery,
   SendCampaignInput,
   UpdateCampaignInput,
-} from "./campaign.schema";
+} from "./campaign.schema.js";
 import {
   createCampaign,
   deleteCampaign,
@@ -19,15 +19,15 @@ import {
   getResponseByCampaignById,
   getResponseExcelByCampaignById,
   updateCampaign,
-} from "./campaign.service";
-import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service";
-import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema";
+} from "./campaign.service.js";
+import { getDbTemplate } from "../whatsapp/messageTemplates/wa_templates.service.js";
+import { bySurveyIdSchema } from "../surveyTheme/surveyTheme.schema.js";
 import {
   CampaignStatus,
   CampaignType,
   SentCampaignEnum,
-} from "../../types/enums";
-import { log } from "../../utils/logger";
+} from "../../types/enums.js";
+import { log } from "../../utils/logger.js";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,

@@ -4,8 +4,8 @@ import {
   QuestionType,
   SmileyResponse,
   YNResponse,
-} from "../../types/enums";
-import { ResponsePlatform } from "../../../generated/prisma/client";
+} from "../../types/enums.js";
+import { ResponsePlatform } from "../../../generated/prisma/client.js";
 import { load } from "cheerio";
 
 export const generateResponseData = (surveyTeamMapId, survey) => {

@@ -16,8 +16,8 @@ import {
   removeSurveySpreadSheetSheetId,
   sendWaTemplateOnPetpoojaOrder,
   updateIntegrationByName,
-} from "./integrations.service";
-import { log } from "../../utils/logger";
+} from "./integrations.service.js";
+import { log } from "../../utils/logger.js";
 import { FastifyReply, FastifyRequest } from "fastify";
 import {
   ByIdParams,
@@ -25,12 +25,12 @@ import {
   IntegrationSchema,
   UpdateIntgrationInput,
   WaPaymentCreateSchema,
-} from "./integrations.schema";
-import { IntegratedApps } from "../../types/enums";
-import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service";
+} from "./integrations.schema.js";
+import { IntegratedApps } from "../../types/enums.js";
+import { sendWhatsAppTemplateToCustomer } from "./shopify/shopify.service.js";
 import { parsePhoneNumber } from "libphonenumber-js";
-import { getScheduledTime } from "./shopify/shopify.util";
-import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils";
+import { getScheduledTime } from "./shopify/shopify.util.js";
+import { getUniqueRandomAlphaId } from "../../utils/misc/random.utils.js";
 
 export const getAllIntegrationsByOrgHandler = async (
   request: FastifyRequest,

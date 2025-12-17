@@ -1,7 +1,7 @@
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import prisma from "../../utils/prisma";
-import { SendEmailInput } from "./email.schema";
-import { getEmailBodyTemplate } from "./email.util";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import prisma from "../../utils/prisma.js";
+import { SendEmailInput } from "./email.schema.js";
+import { getEmailBodyTemplate } from "./email.util.js";
 import crypto from "node:crypto";
 
 export async function sendEmailService(emailParams: SendEmailInput) {

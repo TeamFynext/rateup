@@ -13,7 +13,7 @@ import {
   migrateTagsHandle,
   migratePhoneIdsHandle,
   backfillWithSQLHandler,
-} from "./update.controller";
+} from "./update.controller.js";
 
 export async function updatePublicRoutes(server: FastifyInstance) {
   server.post("/usage-stats", updateUsageStatsTemplateMessageHandler);

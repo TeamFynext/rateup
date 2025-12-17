@@ -2,37 +2,34 @@ import {
   SubscriptionFeaturePathName,
   WaAutomatedReplyMatchType,
   WaTemplateComponentType,
-} from "../../../types/enums";
-import {
-  WaMessageBody,
-  WaReceiveMessageBody,
-} from "../../../types/whatsapp.types";
-import { assignChat, parseMessage } from "../whatsappSurvey/wasurvey.utils";
-import { getAutomatedRepliesByOrgId } from "./wa_automatedReply.service";
-import { log } from "../../../utils/logger";
-import prisma from "../../../utils/prisma";
-import { templateData } from "../messageTemplates/wa_templates.service";
+} from "../../../types/enums.js";
+import { WaMessageBody } from "../../../types/whatsapp.types.js";
+import { assignChat } from "../whatsappSurvey/wasurvey.utils.js";
+import { log } from "../../../utils/logger.js";
+import prisma from "../../../utils/prisma.js";
+import { templateData } from "../messageTemplates/wa_templates.service.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getNestedProperty } from "../../../utils/misc/obj.utils";
-import { findRecentAutomation } from "../whatsappSurvey/automation-logger.utils";
+import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
+import {
+  findRecentAutomation,
+  logAutomationAction,
+} from "../whatsappSurvey/automation-logger.utils.js";
 import {
   getContactByPhoneNumberAndOrgId,
   getOrCreateContactByPhone,
-} from "../../contact/contact.service";
+} from "../../contact/contact.service.js";
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
-import { getTeamIdsByUserId } from "../../team/team.service";
-import { assignWaMessageToUser } from "../inbox/message/wamessage.service";
-import { getUserIdsByTeamId } from "../../user/user.service";
-import {
-  sendTextMessage,
-  setAiBotActiveStatus,
-} from "../whatsappSurvey/wasurvey.service";
-import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller";
-import { sendFlow } from "../flows/flow.service";
-
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter.js";
+import { getTeamIdsByUserId } from "../../team/team.service.js";
+import { assignWaMessageToUser } from "../inbox/message/wamessage.service.js";
+import { getUserIdsByTeamId } from "../../user/user.service.js";
+import { sendTextMessage } from "../whatsappSurvey/wasurvey.service.js";
+import { sendTemplateToUserCore } from "../messageTemplates/wa_templates.controller.js";
+import { sendFlow } from "../flows/flow.service.js";
+import { processNextNode } from "../whatsappSurvey/wasurvey.controller.js";
+import { TriggerEvent } from "../../../../generated/prisma/enums.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrAfter);
@@ -641,6 +638,11 @@ export async function validateRuleConditions(
   phone: string,
 ): Promise<boolean> {
   if (!rule.isActive) return false;
+  if (
+    rule.triggerEvent !== TriggerEvent.MESSAGE_RECEIVED &&
+    rule.groups.length === 0
+  )
+    return true;
   if (rule.groups.length === 0) return false;
 
   const { operator, groups } = rule;
@@ -686,8 +688,6 @@ export async function checkAndExecuteRuleByTriggerEvent(
     phone?: string;
     waMessage?: WaMessageBody;
     contactId?: string;
-    oldLifecycleId?: string;
-    newLifecycleId?: string;
   },
 ): Promise<
   | {
@@ -700,14 +700,14 @@ export async function checkAndExecuteRuleByTriggerEvent(
     }
   | undefined
 > {
-  const { orgId, phoneNumberId, message, phone, waMessage } = context;
+  const { orgId, phoneNumberId, message, phone } = context;
 
   // Fetch all active rules for the given trigger event
   const rules = await prisma.rule.findMany({
     where: {
       orgId,
       isActive: true,
-      triggerEvent: triggerEvent as any,
+      triggerEvent: triggerEvent,
       ...(phoneNumberId && {
         whatsappSettingsPhoneIds: {
           has: phoneNumberId,
@@ -742,62 +742,12 @@ export async function checkAndExecuteRuleByTriggerEvent(
     let isMatch = false;
 
     // Validate based on trigger event type
-    switch (triggerEvent) {
-      case "MESSAGE_RECEIVED":
-        if (!message || !phone) {
-          log.warn("MESSAGE_RECEIVED trigger requires message and phone");
-          continue;
-        }
-        isMatch = await validateRuleConditions(
-          rule as RuleWithConditions,
-          message,
-          orgId,
-          phone,
-        );
-        break;
-
-      case "CHAT_CLOSED":
-      case "CHAT_ASSIGNED":
-        if (!context.contactId) {
-          log.warn(`${triggerEvent} trigger requires contactId`);
-          continue;
-        }
-        // For these events, we just check if the rule is active
-        // You can add specific condition validation if needed
-        isMatch = true;
-        break;
-
-      case "CONTACT_CREATED":
-        if (!phone) {
-          log.warn("CONTACT_CREATED trigger requires phone");
-          continue;
-        }
-        // Validate contact-based conditions
-        isMatch = await validateContactBasedRule(
-          rule as RuleWithConditions,
-          orgId,
-          phone,
-        );
-        break;
-
-      case "LIFECYCLE_UPDATED":
-        if (!context.contactId || !context.newLifecycleId) {
-          log.warn(
-            "LIFECYCLE_UPDATED trigger requires contactId and newLifecycleId",
-          );
-          continue;
-        }
-        isMatch = await validateLifecycleRule(
-          rule as RuleWithConditions,
-          context.contactId,
-          context.newLifecycleId,
-        );
-        break;
-
-      default:
-        log.warn(`Unsupported trigger event: ${triggerEvent}`);
-        continue;
-    }
+    isMatch = await validateRuleConditions(
+      rule as RuleWithConditions,
+      message,
+      orgId,
+      phone,
+    );
 
     if (isMatch) {
       log.trace("Rule matched! Executing actions for rule: %s", rule.name);
@@ -820,145 +770,6 @@ export async function checkAndExecuteRuleByTriggerEvent(
 }
 
 /**
- * Validates contact-based rules (for CONTACT_CREATED trigger)
- */
-async function validateContactBasedRule(
-  rule: RuleWithConditions,
-  orgId: string,
-  phone: string,
-): Promise<boolean> {
-  const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
-  if (!contact) return false;
-
-  // Validate all condition groups
-  for (const group of rule.groups) {
-    const isValid = await validateContactConditionGroup(group, contact, orgId);
-
-    if (rule.operator === "AND" && !isValid) {
-      return false;
-    } else if (rule.operator === "OR" && isValid) {
-      return true;
-    }
-  }
-
-  return rule.operator === "AND";
-}
-
-/**
- * Validates a condition group for contact-based rules
- */
-async function validateContactConditionGroup(
-  group: RuleWithConditions["groups"][0],
-  contact: any,
-  orgId: string,
-): Promise<boolean> {
-  for (const condition of group.conditions) {
-    let isValid = false;
-
-    switch (condition.field) {
-      case "CONTACT_EMAIL":
-        if (!contact.email || !condition.value) {
-          isValid = false;
-          break;
-        }
-        const email = contact.email.toLowerCase();
-        const valueToCheck = condition.value.toLowerCase();
-
-        switch (condition.operator) {
-          case "CONTAINS":
-            isValid = email.includes(valueToCheck);
-            break;
-          case "EQUALS":
-            isValid = email === valueToCheck;
-            break;
-          case "ENDS_WITH":
-            isValid = email.endsWith(valueToCheck);
-            break;
-        }
-        break;
-
-      case "SEND_ONCE_PER_24H":
-        if (condition.value !== "true") {
-          isValid = true;
-          break;
-        }
-        // For contact-based rules, check recent automation activity
-        const recentActivity = await findRecentAutomation(
-          contact.phone,
-          orgId,
-          {
-            timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-          },
-        );
-        isValid = !recentActivity;
-        break;
-
-      case "CONTACT_GROUP":
-        if (!condition.value) {
-          isValid = false;
-          break;
-        }
-        const contactGroups =
-          contact?.contactGroups?.map((g) => g.contactGroupId) || [];
-        isValid = contactGroups.includes(condition.value);
-        break;
-
-      case "CONTACT_LABEL":
-        if (!condition.value) {
-          isValid = false;
-          break;
-        }
-        const contactLabels =
-          contact?.ContactLabelMap?.map((l) => l.labelId) || [];
-        isValid = contactLabels.includes(condition.value);
-        break;
-
-      case "CONTACT_LIFECYCLE":
-        if (!condition.value) {
-          isValid = false;
-          break;
-        }
-        isValid = contact.lifecycleId === condition.value;
-        break;
-
-      default:
-        isValid = true;
-    }
-
-    if (group.operator === "AND" && !isValid) {
-      return false;
-    } else if (group.operator === "OR" && isValid) {
-      return true;
-    }
-  }
-
-  return group.operator === "AND";
-}
-
-/**
- * Validates lifecycle update rules
- */
-async function validateLifecycleRule(
-  rule: RuleWithConditions,
-  contactId: string,
-  newLifecycleId: string,
-): Promise<boolean> {
-  for (const group of rule.groups) {
-    for (const condition of group.conditions) {
-      if (condition.field === "CONTACT_LIFECYCLE") {
-        if (
-          condition.operator === "EQUALS" &&
-          condition.value === newLifecycleId
-        ) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
-/**
  * Executes all actions for a matched rule
  */
 async function executeRuleActions(
@@ -966,7 +777,6 @@ async function executeRuleActions(
   context: {
     orgId: string;
     phone?: string;
-    // contactId?: string;
     message?: string;
     waMessage?: WaMessageBody;
     phoneNumberId?: string;
@@ -974,7 +784,7 @@ async function executeRuleActions(
 ): Promise<Array<{ actionId: string; success: boolean; error?: string }>> {
   const results = [];
 
-  for await (const action of rule.actions) {
+  for (const action of rule.actions) {
     try {
       let success = false;
 
@@ -1067,10 +877,15 @@ async function executeRuleActions(
 
 // Action executor functions
 async function executeCloseTicketAction(context: any): Promise<boolean> {
-  if (!context.contactId) return false;
+  if (!context.orgId || !context.phone) return false;
 
   await prisma.contact.update({
-    where: { id: context.contactId },
+    where: {
+      contact_phone_org_id_unique: {
+        phone: context.phone,
+        orgId: context.orgId,
+      },
+    },
     data: {
       closedAt: new Date(),
       waMessageAssignStatus: "UNASSIGNED",
@@ -1098,12 +913,12 @@ async function executeAttachLabelAction(
   await prisma.contactLabelMap.upsert({
     where: {
       contactId_labelId: {
-        contactId: contactId?.id!,
+        contactId: contactId?.id,
         labelId: labelId,
       },
     },
     create: {
-      contactId: contactId?.id!,
+      contactId: contactId?.id,
       labelId: labelId,
     },
     update: {},
@@ -1127,7 +942,7 @@ async function executeAssignUserAction(
   await assignWaMessageToUser(
     {
       assignees: [{ userId, teamId: teams[0] }],
-      contactId: contact.id,
+      contactId: contact?.contact?.id,
       assignIfOnline: true,
     },
     context.orgId,
@@ -1153,7 +968,7 @@ async function executeAssignTeamAction(
   await assignWaMessageToUser(
     {
       assignees: [{ userId: assigned, teamId }],
-      contactId: contact.id,
+      contactId: contact?.contact?.id,
       assignIfOnline: true,
     },
     context.orgId,
@@ -1168,15 +983,8 @@ async function executeAssignLifecycleAction(
     orgId: string;
     phone?: string;
     message?: string;
-    waMessage?: WaMessageBody;
-    phoneNumberId?: string;
   },
 ): Promise<boolean> {
-  console.log(
-    "🚀 ~ executeAssignLifecycleAction ~ context.contactId:",
-    context.phone,
-  );
-  console.log("🚀 ~ executeAssignLifecycleAction ~ lifecycleId:", lifecycleId);
   if (!context.phone || !context.orgId || !lifecycleId) return false;
 
   await prisma.contact.update({
@@ -1245,11 +1053,6 @@ async function executeSendFlowAction(
   return true;
 }
 
-import { logAutomationAction } from "../whatsappSurvey/automation-logger.utils";
-import { processNextNode } from "../whatsappSurvey/wasurvey.controller";
-import { updateMonthlyStat } from "../../stats/stats.service";
-import { TriggerEvent } from "../../../../generated/prisma/enums";
-
 /**
  * Starts an automation flow from the beginning (start node)
  * This is used when a rule action triggers an automation
@@ -1308,19 +1111,6 @@ async function executeTriggerChatbotAction(
     where: {
       orgId: context.orgId,
       id: chatbotId,
-      // matchData: {
-      //   path: ["json", "nodes"],
-      //   array_contains: [
-      //     {
-      //       type: "aibotNode",
-      //       data: {
-      //         chatbot: {
-      //           id: chatbotId,
-      //         },
-      //       },
-      //     },
-      //   ],
-      // },
     },
   });
 
@@ -1334,7 +1124,5 @@ async function executeTriggerChatbotAction(
     return true;
   }
 
-  // // Fallback to just activating the AI bot
-  // await setAiBotActiveStatus(context.phone, context.orgId, true, chatbotId);
   return true;
 }

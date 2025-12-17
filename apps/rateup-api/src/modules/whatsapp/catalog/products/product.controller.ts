@@ -1,20 +1,20 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../../utils/logger";
+import { log } from "../../../../utils/logger.js";
 import {
   createCatalogProductsBatch,
   deleteCatalogProducts,
   getCatalogProducts,
   syncCatalogProducts,
   updateCatalogProducts,
-} from "./product.service";
+} from "./product.service.js";
 import {
   catalogItemBatchSchema,
   CatalogItemQueryFilter,
   catalogItemSchema,
   CatalogProductIdsSchema,
-} from "./product.schema";
-import { CatalogIdParam } from "../catalog.schema";
-import { getWaCatalog } from "../catalog.service";
+} from "./product.schema.js";
+import { CatalogIdParam } from "../catalog.schema.js";
+import { getWaCatalog } from "../catalog.service.js";
 
 export async function createCatalogProductsBatchHandler(
   request: FastifyRequest<{

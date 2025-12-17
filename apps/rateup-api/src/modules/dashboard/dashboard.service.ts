@@ -1,9 +1,9 @@
 import dayjs from "dayjs";
-import { CampaignStatus, SurveyType, WaFlowStatus } from "../../types/enums";
-import prisma from "../../utils/prisma";
-import Session from "supertokens-node/recipe/session";
-import { updateLastLoggedInTime } from "../user/user.service";
-import { UserAvailabilityStatus } from "../user/user.schema";
+import { CampaignStatus, SurveyType, WaFlowStatus } from "../../types/enums.js";
+import prisma from "../../utils/prisma.js";
+import Session from "supertokens-node/recipe/session/index.js";
+import { updateLastLoggedInTime } from "../user/user.service.js";
+import { UserAvailabilityStatus } from "../user/user.schema.js";
 
 interface OverallStats {
   newChatCount: number;

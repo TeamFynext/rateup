@@ -1,8 +1,6 @@
 import { FastifyInstance } from "fastify";
-import {
-  getMenuBannerHandler,
-} from "./banner.controller";
-import { $Mref } from "../menu.schema";
+import { getMenuBannerHandler } from "./banner.controller.js";
+import { $Mref } from "../menu.schema.js";
 
 export async function menuBannerPublicRoutes(server: FastifyInstance) {
   server.get(
@@ -12,6 +10,6 @@ export async function menuBannerPublicRoutes(server: FastifyInstance) {
         params: $Mref("ByMenuIdParamsSchema"),
       },
     },
-    getMenuBannerHandler
+    getMenuBannerHandler,
   );
 }

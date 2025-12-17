@@ -1,7 +1,7 @@
 import {
   getUnsplashImageQueryString,
   triggerDownloadUnsplashBody,
-} from "./unsplash.schema";
+} from "./unsplash.schema.js";
 
 export async function getUnsplashImageList({
   page = 1,

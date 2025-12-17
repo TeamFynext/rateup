@@ -9,15 +9,15 @@ import {
   getResponseExcelByCampaignByIdHandler,
   sendCampaignHandler,
   updateCampaignByIdHandler,
-} from "./campaign.controller";
-import { $campaignRef } from "./campaign.schema";
-import { campaignParticipantRoutes } from "./campaignParticipants/campaignParticipants.route";
-import { checkSession } from "../../utils/checkSession";
-import { getVerifySubscriptionHandler } from "../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../types/enums";
-import { verifyMessageMonthlyLimitRestrictionForCampaign } from "./campaign.auth";
-import { $surveyThemeRef } from "../surveyTheme/surveyTheme.schema";
-import { verifyCampaignMaxLimit } from "./campaign.util";
+} from "./campaign.controller.js";
+import { $campaignRef } from "./campaign.schema.js";
+import { campaignParticipantRoutes } from "./campaignParticipants/campaignParticipants.route.js";
+import { checkSession } from "../../utils/checkSession.js";
+import { getVerifySubscriptionHandler } from "../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { verifyMessageMonthlyLimitRestrictionForCampaign } from "./campaign.auth.js";
+import { $surveyThemeRef } from "../surveyTheme/surveyTheme.schema.js";
+import { verifyCampaignMaxLimit } from "./campaign.util.js";
 
 export async function campaignRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

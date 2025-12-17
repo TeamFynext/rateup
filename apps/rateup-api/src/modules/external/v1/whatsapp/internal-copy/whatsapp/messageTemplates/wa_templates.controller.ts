@@ -5,7 +5,7 @@ import {
   RegisterTemplatesInDbBodySchema,
   WaTemplateFormatted,
   WaUserSendTemplateBodySchema,
-} from "./wa_templates.schema";
+} from "./wa_templates.schema.js";
 import {
   createTemplate,
   deleteTemplate,
@@ -24,19 +24,19 @@ import {
   updateTemplate,
   updateTemplateInDb,
   uploadFileToWaTemplate,
-} from "./wa_templates.service";
+} from "./wa_templates.service.js";
 import {
   generateTemplate,
   templateFileUploadSchema,
   waAllowedMimeTypes,
-} from "./wa_templates.utils";
+} from "./wa_templates.utils.js";
 import {
   WaTemplateComponentType,
   WaTemplateStatus,
   WaTemplateSupportedFormats,
-} from "../../../../../../../types/enums";
-import { log } from "../../../../../../../utils/logger";
-import prisma from "../../../../../../../utils/prisma";
+} from "../../../../../../../types/enums.js";
+import { log } from "../../../../../../../utils/logger.js";
+import prisma from "../../../../../../../utils/prisma.js";
 import {
   SendTemplateToContacts,
   SendTemplateToContactGroups,
@@ -44,11 +44,11 @@ import {
   SendTemplateByNameToPhone,
   ErrorLogsQuery,
   SendTemplateWithFile,
-} from "../../../template/wa_templates.external.schema";
-import { ByContactIdParams } from "../../../../contact/internal-copy/contact/contact.schema";
+} from "../../../template/wa_templates.external.schema.js";
+import { ByContactIdParams } from "../../../../contact/internal-copy/contact/contact.schema.js";
 import { parsePhoneNumber } from "libphonenumber-js";
-import { sendTemplateToUserCore } from "../../../../../../whatsapp/messageTemplates/wa_templates.controller";
-import { callWhatsappApi } from "../wa_axios";
+import { sendTemplateToUserCore } from "../../../../../../whatsapp/messageTemplates/wa_templates.controller.js";
+import { callWhatsappApi } from "../wa_axios.js";
 
 export async function getTemplatesHandler(
   request: FastifyRequest,
@@ -457,8 +457,8 @@ export async function sendTemplateByNameToPhoneHandler(
   }
 }
 import FormData from "form-data";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { getWaSettingsByPhone } from "../../../../../../whatsapp/settings/wa_settings.service";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { getWaSettingsByPhone } from "../../../../../../whatsapp/settings/wa_settings.service.js";
 
 export async function sendTemplateByNameToPhoneWithFileHandler(
   req: FastifyRequest<{

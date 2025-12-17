@@ -17,12 +17,12 @@ import {
   updateContactHandler,
   updateContactLabelsByIdHandler,
   zapierAuthenticationHandler,
-} from "./zapier.controller";
-import { createContactHandler } from "../../../contact/contact.controller";
-import { $zapier } from "./zapier.schema";
-import { $contactRef } from "../../../contact/contact.schema";
-import { $Tref } from "../../../team/team.schema";
-import { $BoardRef } from "../../../ticket/ticketBoard/board.schema";
+} from "./zapier.controller.js";
+import { createContactHandler } from "../../../contact/contact.controller.js";
+import { $zapier } from "./zapier.schema.js";
+import { $contactRef } from "../../../contact/contact.schema.js";
+import { $Tref } from "../../../team/team.schema.js";
+import { $BoardRef } from "../../../ticket/ticketBoard/board.schema.js";
 
 export async function zapierRoutes(server: FastifyInstance) {
   //auth

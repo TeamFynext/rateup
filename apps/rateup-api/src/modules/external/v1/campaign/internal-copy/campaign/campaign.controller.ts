@@ -5,7 +5,7 @@ import {
   GetCampaignsQuery,
   SendCampaignInput,
   UpdateCampaignInput,
-} from "./campaign.schema";
+} from "./campaign.schema.js";
 import {
   createCampaign,
   deleteCampaign,
@@ -14,10 +14,10 @@ import {
   getCampaignsByTeamId,
   sendCampaign,
   updateCampaign,
-} from "./campaign.service";
-import { getDbTemplate } from "../../../whatsapp/internal-copy/whatsapp/messageTemplates/wa_templates.service";
-import { verifyRole } from "../../../../../../utils/auth";
-import { Role } from "../../../../../../../generated/prisma/client";
+} from "./campaign.service.js";
+import { getDbTemplate } from "../../../whatsapp/internal-copy/whatsapp/messageTemplates/wa_templates.service.js";
+import { verifyRole } from "../../../../../../utils/auth.js";
+import { Role } from "../../../../../../../generated/prisma/client.js";
 
 export async function createCampaignHandler(
   request: FastifyRequest<{ Body: CreateCampaignInput }>,

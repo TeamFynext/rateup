@@ -1,6 +1,6 @@
 import { describe, expect, test } from "@jest/globals";
 import crypto from "node:crypto";
-import { aes_decrypt, aes_encrypt } from "./encryption.utils";
+import { aes_decrypt, aes_encrypt } from "./encryption.utils.js";
 
 describe("Encryption Utils", () => {
   test("should encrypt and decrypt correctly", async () => {

@@ -3,8 +3,8 @@ import {
   getLoyaltyRedeemsHandler,
   redeemPointsHandler,
   updateRedeemHandler,
-} from "./redeem.controller";
-import { $lRedeemRef } from "./redeem.schema";
+} from "./redeem.controller.js";
+import { $lRedeemRef } from "./redeem.schema.js";
 
 export async function loyaltyRedeemRoutes(server: FastifyInstance) {
   server.get("/", getLoyaltyRedeemsHandler);
