@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Activity, useEffect, useState } from "react";
 
 import {
   Blockquote,
@@ -48,10 +48,7 @@ import {
 
 import "react-phone-number-input/style.css";
 
-import { error } from "console";
-
-import { DatePickerInput } from "@mantine/dates";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ContactGroupType } from "@/types/enums";
@@ -403,8 +400,9 @@ export default CreateContactModal;
 export const UserSelector = ({
   value,
   onChange,
-  className,
+  className = "",
   allowMultiSelect = false,
+  allowAll = false,
 }) => {
   const { data: users, isLoading } = useTeamsMembersOfOrg();
   if (isLoading) {
@@ -428,17 +426,38 @@ export const UserSelector = ({
       />
     );
   }
+  const userData = users?.data?.map((u) => ({
+    id: u.id,
+    name: u.name,
+    status: u.status,
+  }));
+  if (allowAll)
+    userData.unshift({ id: "all", name: "All Staff", status: "online" });
+  function onValueChange(value) {
+    onChange(
+      value === "all" ? users.data.map((u) => u.id) : value,
+      value === "all",
+    );
+  }
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className={`${className}`}>
+        <User className="w-4 h-4 mr-2 text-[#1873E8]" />
         <span className="text-sm ">
           <SelectValue placeholder="Select staff" />
         </span>
       </SelectTrigger>
       <SelectContent>
-        {users?.data?.map((user) => (
-          <SelectItem key={user.id} value={user.id}>
-            {user.name}
+        {userData?.map((user) => (
+          <SelectItem key={user.id} value={user.id} className="flex gap-1">
+            <span>{user.name}</span>
+            <Activity mode={user.id !== "all" ? "visible" : "hidden"}>
+              <span
+                className={`text-xs capitalize ${user.status === "online" ? "text-green-700" : "text-gray-400"}`}
+              >
+                ({user.status})
+              </span>
+            </Activity>
           </SelectItem>
         ))}
       </SelectContent>

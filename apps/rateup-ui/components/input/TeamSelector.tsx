@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import { Card, Group, SelectProps, Skeleton, Text } from "@mantine/core";
+import { Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useTeamsByUser } from "../../backend/team/team.query";
@@ -82,6 +83,7 @@ export function TeamSelector({
   return (
     <Select value={value} onValueChange={onChange} defaultValue={label}>
       <SelectTrigger className={`${className || ""}`}>
+        <Users className="w-4 h-4 mr-2 text-[#1873E8]" />
         <SelectValue placeholder="Team" />
       </SelectTrigger>
       <SelectContent className="z-[1050]">
