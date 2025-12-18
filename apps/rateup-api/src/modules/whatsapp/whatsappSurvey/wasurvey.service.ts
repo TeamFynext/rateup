@@ -705,7 +705,7 @@ export async function saveResponses(session: WaSessionWithRelations) {
           if (response.type) {
             response.response[response.type] = obj["Key"] ? obj["Key"] : null;
           } else {
-            response.response = obj["Key"] ? obj["Key"] : null;
+            response.response = obj["Key"] ? (obj["Key"] as any) : null;
           }
         } else {
           log.error("Failed to download media file from WhatsApp API.");
