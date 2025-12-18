@@ -1,6 +1,6 @@
 "use client";
 
-import { IconDatabasePlus } from "@tabler/icons-react";
+import { Tag } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -30,12 +30,12 @@ const GenerateTags = ({ tagSelectData, setTagSelectData, disabled }) => {
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            variant="ghost"
+            variant="default"
             onClick={handleGenerateTag}
             disabled={disabled}
             className="mt-6"
           >
-            <IconDatabasePlus />
+            <Tag />
           </Button>
         </TooltipTrigger>
 

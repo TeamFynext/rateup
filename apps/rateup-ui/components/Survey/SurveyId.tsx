@@ -4,15 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { modals } from "@mantine/modals";
-import {
-  ClipboardList,
-  Edit2,
-  FileText,
-  Pause,
-  PlayIcon,
-  Settings,
-  Share2,
-} from "lucide-react";
+import { ClipboardList, Edit2, FileText, Settings, Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
@@ -36,7 +28,6 @@ import { UserRole } from "../../utils/enums";
 import { getFromSessionStorage } from "../../utils/essential";
 import ErrorComponent from "../404/ErrorComponent";
 import RateupLoader from "../Loaders/RateupLoader";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { MultiSelect } from "../ui/multi-select";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";

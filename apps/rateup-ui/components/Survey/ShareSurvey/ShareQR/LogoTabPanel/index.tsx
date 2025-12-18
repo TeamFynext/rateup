@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-import { ImageIcon, Palette } from "lucide-react";
+import { ImageIcon, Palette, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -45,127 +45,117 @@ function LogoTabpanel({ state, dispatch }) {
 
   return (
     <div className="rounded-lg p-2 flex flex-col gap-4 w-full max-w-xl">
-      {/* this div is causing the problem */}
-      <div className="border flex flex-col p-2.5 rounded-lg gap-2">
-        <div className="flex items-center gap-1.5">
-          <ImageIcon className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-semibold">
-            {translations("Logo Options")}
-          </h3>
+      <div className="flex items-center justify-between rounded-lg p-2 border">
+        <div className="flex items-center gap-1">
+          <Label className="text-xs font-medium flex items-center gap-1">
+            <ImageIcon className="text-primary w-4 h-4" />
+            {translations("Enable Logo")}
+          </Label>
+          <Switch
+            checked={isLogoEnabled}
+            onCheckedChange={(checked) =>
+              dispatch({ type: "logo-image-switch", payload: checked })
+            }
+            className="data-[state=checked]:bg-primary scale-75"
+          />
         </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between rounded-lg px-2.5 py-1.5 border">
-            <Label className="text-xs font-medium">
-              {translations("Enable Logo")}
-            </Label>
-            <Switch
-              checked={isLogoEnabled}
-              onCheckedChange={(checked) =>
-                dispatch({ type: "logo-image-switch", payload: checked })
-              }
-              className="data-[state=checked]:bg-primary scale-75"
-            />
-          </div>
+        <div>
+          <Input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/svg+xml"
+            className="sr-only disabled:opacity-50 w-0"
+            onChange={(ev) => {
+              const file = ev.target.files?.[0] ?? null;
+              dispatch({ type: "file-input", payload: file });
+              if (fileInputRef.current) fileInputRef.current.value = "";
+            }}
+            disabled={!isLogoEnabled}
+          />
 
-          <div className="flex flex-col gap-4">
-            <div>
-              <Input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/svg+xml"
-                className="sr-only disabled:opacity-50 w-0"
-                onChange={(ev) => {
-                  const file = ev.target.files?.[0] ?? null;
-                  dispatch({ type: "file-input", payload: file });
-                  if (fileInputRef.current) fileInputRef.current.value = "";
-                }}
-                disabled={!isLogoEnabled}
-              />
-
-              <Button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full flex items-center justify-center bg-primary h-7 rounded-lg text-[11px] shadow-md diabled:opacity-50"
-                disabled={!isLogoEnabled}
-              >
-                <ImageIcon className="w-3 h-3 mr-1" />
-                <span className="text-xs">
-                  {logoFile instanceof File
-                    ? logoFile.name
-                    : getLogoFileValueForFileInput(logoFile) ||
-                      translations("Upload Logo")}
-                </span>
-              </Button>
-            </div>
-
-            <div
-              className={`grid grid-cols-2 gap-2 ${isLogoEnabled ? "opacity-100" : "opacity-50"}`}
-            >
-              <div className="rounded-lg p-1.5 border flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label className="text-[11px] font-semibold">
-                    {translations("Size")}
-                  </Label>
-                  <span className="text-[11px] font-medium text-primary">
-                    {displayLogoSize}%
-                  </span>
-                </div>
-
-                <SliderCompatible
-                  value={logoSize}
-                  onChange={(v) => {
-                    const newVal = Array.isArray(v) ? v[0] : v;
-                    dispatch({ type: "logo-size", payload: Number(newVal) });
-                  }}
-                  min={50}
-                  max={100}
-                  step={1}
-                />
-              </div>
-
-              <div className="rounded-lg p-1.5 border flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label className="text-[11px] font-semibold">
-                    {translations("Radius")}
-                  </Label>
-                  <span className="text-[11px] font-medium text-primary">
-                    {displayLogoRadius}%
-                  </span>
-                </div>
-
-                <SliderCompatible
-                  value={logoBorderRadius}
-                  onChange={(v) => {
-                    const newVal = Array.isArray(v) ? v[0] : v;
-                    dispatch({
-                      type: "logo-border-radius",
-                      payload: Number(newVal),
-                    });
-                  }}
-                  min={0}
-                  max={50}
-                  step={1}
-                />
-              </div>
-            </div>
-
-            <div
-              className={`flex items-center justify-center ${isLogoEnabled ? "opacity-100" : "opacity-50"}`}
-            >
-              <ChipGroup
-                multiple={false}
-                chipsData={logoFillTypes}
-                value={logoFillType}
-                handleChange={(value) => {
-                  dispatch({
-                    type: "logo-fill-type",
-                    payload: value,
-                  });
-                }}
-              />
-            </div>
-          </div>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full flex items-center justify-center text-[11px] diabled:opacity-50 border border-primary text-primary"
+            disabled={!isLogoEnabled}
+          >
+            <Upload className="w-3 h-3 mr-1" />
+            <span className="text-xs">
+              {logoFile instanceof File
+                ? logoFile.name
+                : getLogoFileValueForFileInput(logoFile) ||
+                  translations("Upload Logo")}
+            </span>
+          </Button>
         </div>
+      </div>
+
+      <div
+        className={` ${isLogoEnabled ? "opacity-100" : "opacity-50"} rounded-lg p-2 border flex flex-col gap-1`}
+      >
+        <div className="flex items-center justify-between">
+          <Label className="text-[11px] font-semibold">
+            {translations("Size")}
+          </Label>
+          <span className="text-[11px] font-medium text-primary">
+            {displayLogoSize}%
+          </span>
+        </div>
+
+        <SliderCompatible
+          value={logoSize}
+          onChange={(v) => {
+            const newVal = Array.isArray(v) ? v[0] : v;
+            dispatch({ type: "logo-size", payload: Number(newVal) });
+          }}
+          min={50}
+          max={100}
+          step={1}
+        />
+      </div>
+
+      <div
+        className={` ${isLogoEnabled ? "opacity-100" : "opacity-50"} rounded-lg p-1.5 border flex flex-col gap-1`}
+      >
+        <div className="flex items-center justify-between">
+          <Label className="text-[11px] font-semibold">
+            {translations("Radius")}
+          </Label>
+          <span className="text-[11px] font-medium text-primary">
+            {displayLogoRadius}%
+          </span>
+        </div>
+
+        <SliderCompatible
+          value={logoBorderRadius}
+          onChange={(v) => {
+            const newVal = Array.isArray(v) ? v[0] : v;
+            dispatch({
+              type: "logo-border-radius",
+              payload: Number(newVal),
+            });
+          }}
+          min={0}
+          max={50}
+          step={1}
+        />
+      </div>
+
+      <div
+        className={`flex items-center justify-center ${isLogoEnabled ? "opacity-100" : "opacity-50"}`}
+      >
+        <ChipGroup
+          multiple={false}
+          chipsData={logoFillTypes}
+          value={logoFillType}
+          handleChange={(value) => {
+            dispatch({
+              type: "logo-fill-type",
+              payload: value,
+            });
+          }}
+        />
       </div>
       <div className="rounded-lg p-2.5 border flex flex-col gap-2">
         <div className="flex items-center gap-1.5">

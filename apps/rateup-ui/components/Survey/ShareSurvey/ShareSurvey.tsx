@@ -6,20 +6,23 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
+  IconBrandFacebook,
+  IconBrandWhatsapp,
   IconCheck,
   IconChevronLeft,
   IconClockPlus,
+  IconCode,
   IconCopy,
+  IconMail,
   IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
+  IconShare,
   IconX,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import RateupSwitch from "@/components/Switch/RateupSwitch";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -42,23 +45,16 @@ import {
 } from "../../../utils/dateTime";
 import { showLoadingToast } from "../../../utils/notifications";
 import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import {
   ContainedDateTimePickerInput,
   ContainedSelection,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import NothingFound from "../../NothingFound/NothingFound";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { StatusBadge } from "../SurveyCardList";
 import { TabEnum } from "../SurveyId";
 import GenerateTags from "./GenerateTags";
 import IFrameModal from "./IFrameModal";
 import ShareQR from "./ShareQR";
-import TagManager from "./TagManager";
 
 enum PublishEnum {
   NOW = "NOW",
@@ -492,153 +488,138 @@ const ShareSurvey = ({
         </div>
       </FormModalLayout>
       <div
-        className={`${disableShare ? "opacity-50" : "opacity-100"} border p-4 rounded-xl`}
+        className={`${disableShare ? "opacity-50" : "opacity-100"} border rounded-xl`}
       >
         <div className="w-full">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             {/* LEFT: Share Survey */}
-            <div className="flex flex-col gap-4 w-full lg:max-w-2xl">
-              <h2 className="text-lg font-semibold">
-                {translations("Share Survey")}
-              </h2>
-
-              {/* Team + Tags */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <ContainedSelection
-                  style={{ flex: 1 }}
-                  disabled={disableShare}
-                  label={translations("Select Team")}
-                  allowDeselect={false}
-                  value={selectTeamDropdownState}
-                  miw={150}
-                  data={teamSelectData}
-                  onChange={handleContainedSelectionChange}
-                />
-
-                <div className="flex items-start">
-                  <GenerateTags
-                    disabled={disableShare}
-                    tagSelectData={tag}
-                    setTagSelectData={setTag}
-                  />
+            <div className="flex flex-col gap-4 w-full">
+              <div className="border-b">
+                <div className="flex items-center gap-1 p-4">
+                  <IconShare className="w-4 h-4 text-primary" />
+                  <h2 className="text-base font-semibold">
+                    {translations("Share Survey")}
+                  </h2>
                 </div>
               </div>
 
-              {/* Copy Link */}
-              <CopyLinkComponent value={shareUrl} disabled={disableShare} />
-            </div>
+              {/* Team + Tags */}
+              <div className="flex flex-col gap-4 w-full p-4 max-w-4xl">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <ContainedSelection
+                    style={{ flex: 1 }}
+                    disabled={disableShare}
+                    label={translations("Select Team")}
+                    allowDeselect={false}
+                    value={selectTeamDropdownState}
+                    miw={150}
+                    data={teamSelectData}
+                    onChange={handleContainedSelectionChange}
+                  />
 
-            {/* RIGHT: Share Methods */}
-            <div className="flex flex-col gap-3 w-full lg:w-auto">
-              <h2 className="font-semibold text-lg">
-                {translations("How would you like to survey people?")}
-              </h2>
-
-              <div className="flex flex-wrap justify-start sm:justify-center gap-6">
-                {/* Email */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
+                  <div className="flex items-start">
+                    <GenerateTags
                       disabled={disableShare}
-                      onClick={() => shareButtonAction("mail")}
-                      className="bg-transparent"
-                    >
-                      <img
-                        src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
-                        alt="mail icon"
-                        width={40}
-                        height={40}
-                        className={disableShare ? "opacity-50" : ""}
-                      />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {translations("Share via Email")}
-                  </TooltipContent>
-                </Tooltip>
+                      tagSelectData={tag}
+                      setTagSelectData={setTag}
+                    />
+                  </div>
+                </div>
 
-                {/* WhatsApp */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={disableShare}
-                      onClick={() => shareButtonAction("whatsapp")}
-                      className="bg-transparent"
-                    >
-                      <img
-                        src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
-                        alt="whatsapp icon"
-                        width={40}
-                        height={40}
-                        className={disableShare ? "opacity-50" : ""}
-                      />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {translations("Share via WhatsApp")}
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Facebook */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={disableShare}
-                      onClick={() => shareButtonAction("fb")}
-                      className="bg-transparent"
-                    >
-                      <img
-                        src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
-                        alt="facebook icon"
-                        width={40}
-                        height={40}
-                        className={disableShare ? "opacity-50" : ""}
-                      />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    {translations("Share via Facebook")}
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Iframe */}
-                {survey?.type === SurveyType.Web && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        disabled={disableShare}
-                        onClick={openIframe}
-                        className="bg-transparent"
-                      >
-                        <img
-                          src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/iframe-icon.png`}
-                          alt="iframe icon"
-                          width={40}
-                          height={40}
-                          className={disableShare ? "opacity-50" : ""}
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      {translations("Embed as iframe")}
-                    </TooltipContent>
-                  </Tooltip>
-                )}
+                {/* Copy Link */}
+                <CopyLinkComponent value={shareUrl} disabled={disableShare} />
               </div>
             </div>
           </div>
         </div>
       </div>
+      <div
+        className={`${disableShare ? "opacity-50" : "opacity-100"} border p-4 rounded-xl`}
+      >
+        <div className="flex items-center justify-between gap-3 w-full lg:w-auto">
+          <h2 className="text-sm">
+            {translations("How would you like to survey people?")}
+          </h2>
+
+          <div className="flex flex-wrap justify-start sm:justify-center gap-6">
+            {/* Email */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={disableShare}
+                  onClick={() => shareButtonAction("mail")}
+                  className="bg-transparent"
+                >
+                  <IconMail />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {translations("Share via Email")}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* WhatsApp */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={disableShare}
+                  onClick={() => shareButtonAction("whatsapp")}
+                  className="bg-transparent"
+                >
+                  <IconBrandWhatsapp />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {translations("Share via WhatsApp")}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Facebook */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={disableShare}
+                  onClick={() => shareButtonAction("fb")}
+                  className="bg-transparent"
+                >
+                  <IconBrandFacebook />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {translations("Share via Facebook")}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Iframe */}
+            {survey?.type === SurveyType.Web && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={disableShare}
+                    onClick={openIframe}
+                    className="bg-transparent"
+                  >
+                    <IconCode />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {translations("Embed as iframe")}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+      </div>
       {shareUrl && (
-        <div className="border rounded-xl p-4">
+        <div className="border rounded-xl">
           <ShareQR
             url={shareUrl}
             title={survey?.title}
@@ -689,7 +670,7 @@ export const CopyLinkComponent = ({
         pr="sm"
         disabled={disabled}
         style={{
-          maxWidth: "600px",
+          maxWidth: "900px",
           flexGrow: 1,
         }}
       />
