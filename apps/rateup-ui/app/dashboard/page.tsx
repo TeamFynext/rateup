@@ -84,7 +84,7 @@ export default function DashboardHome() {
               valueColor="#009987"
               icon={<IconAutomation width={30} height={30} color="#009987" />}
               iconBgColor="#00998733"
-              OnClickAction={"/dashboard/whatsapp/automated-replies"}
+              OnClickAction={"/dashboard/whatsapp/flowbots"}
             />
             <StatCards
               label="Loyalty Customers"

@@ -2,7 +2,6 @@ import { useMemo } from "react";
 
 import {
   IconActivity,
-  IconAddressBook,
   IconApi,
   IconApps,
   IconAward,
@@ -22,9 +21,9 @@ import {
   IconMessageBolt,
   IconMessageChatbot,
   IconQrcode,
-  IconRobot,
   IconRobotFace,
   IconSettings,
+  IconSitemap,
   IconSpeakerphone,
   IconTemplate,
   IconTerminal2,
@@ -47,8 +46,8 @@ import {
   Settings,
   Tag,
   User,
-  UserCheck,
   Users,
+  Zap,
 } from "lucide-react";
 
 import { SubscriptionFeaturePathName as sfpn } from "@/types/enums";
@@ -284,9 +283,9 @@ export function useNavMain({
                 ...(hasFeature(subscription, sfpn.WhatsAppAutomation)
                   ? [
                       {
-                        title: t("Automation"),
-                        url: "/dashboard/whatsapp/automated-replies",
-                        icon: IconRobot,
+                        title: t("Flowbots"),
+                        url: "/dashboard/whatsapp/flowbots",
+                        icon: IconSitemap,
                       },
                     ]
                   : []),
@@ -318,6 +317,11 @@ export function useNavMain({
             },
           ]
         : []),
+      {
+        title: t("Rules"),
+        url: "/dashboard/rules",
+        icon: Zap,
+      },
       ...(hasFeature(subscription, sfpn.Loyalty)
         ? [
             {
