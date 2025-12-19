@@ -19,6 +19,7 @@ export interface ConversationOverviewStats {
   totalConversations: number;
   averageResponseTime: number;
   resolutionRate: number;
+  averageResponseTimeByAgent: number;
 }
 export interface ConversationResponseStats {
   period: string;
