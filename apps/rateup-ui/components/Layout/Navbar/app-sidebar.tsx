@@ -473,7 +473,17 @@ export default function AppSidebar({
                                           sidebarComponentMap[
                                             groupItem.componentKey
                                           ];
-                                        return Component;
+                                        return (
+                                          <div className="flex flex-col gap-2">
+                                            {groupItem.hasSepeartorOnTop && (
+                                              <SidebarSeparator className="m-0" />
+                                            )}
+                                            {Component}
+                                            {groupItem.hasSeperatorOnBottom && (
+                                              <SidebarSeparator className="m-0" />
+                                            )}
+                                          </div>
+                                        );
                                       })()
                                     ) : (
                                       <SidebarMenuButton
