@@ -110,7 +110,7 @@ export function useNavMain({
                 },
 
                 {
-                  title: t("Addressed"),
+                  title: t("Closed"),
                   url: "/dashboard/inbox?tab=Addressed",
                   icon: CircleCheckBig,
                 },
@@ -131,7 +131,6 @@ export function useNavMain({
                               isActive:
                                 chatFilterStore.filter.lifecycle === lbl.id,
                             })),
-                            hasSepeartorOnTop: true,
                           },
                         ]
                       : []),
@@ -169,6 +168,7 @@ export function useNavMain({
                             icon: User,
                             type: "component",
                             componentKey: "staffSelector",
+                            hasSepeartorOnTop: true,
                           },
                         ]
                       : []),
