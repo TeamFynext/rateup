@@ -2047,6 +2047,7 @@ model Conversation {
   messages    WaMessage[]
   status      String  @default("UNASSIGNED")
   firstRespondedAt DateTime?
+  firstRespondedByUserAt  DateTime?
   assignedUsers  ConversationAssignedUserTeamMap[]
   assignedAt DateTime?
   closedAt   DateTime?
