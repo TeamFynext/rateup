@@ -2,14 +2,7 @@
 
 import React, { useState } from "react";
 
-import {
-  ActionIcon,
-  Divider,
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Divider, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconArrowLeft,
@@ -25,6 +18,13 @@ import {
 } from "@/app/dashboard/loyalty/customer/[customerId]/page";
 import { DateRangePickerModal } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const LCustomerActionView = ({ setActiveStats, actions }) => {
   return (
@@ -115,11 +115,17 @@ export const CalenderIconDateRangePicker = ({
   const [opened, { open, close }] = useDisclosure(false);
   return (
     <>
-      <Tooltip label={label}>
-        <ActionIcon onClick={open} variant={variant}>
-          <IconCalendar className="text-primary" />
-        </ActionIcon>
-      </Tooltip>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button variant="ghost" onClick={open}>
+              <IconCalendar />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{label}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
       <DateRangePickerModal
         opened={opened}
         ranges={ranges}

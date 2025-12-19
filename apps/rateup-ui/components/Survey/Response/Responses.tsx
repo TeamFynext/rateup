@@ -15,24 +15,36 @@ import {
   IconCheck,
   IconDatabaseImport,
   IconFileDownload,
+  IconFilter,
   IconRefresh,
   IconTableExport,
   IconX,
 } from "@tabler/icons-react";
-import { ColumnFiltersState } from "@tanstack/react-table";
+import { ColumnFiltersState, Table } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
+import { selectCheckBox } from "@/components/Contacts/utils/utils";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
+import { DataTable } from "@/components/Table/data-table";
+import { DataTableViewOptions } from "@/components/Table/data-table-view-option";
+import { Filter } from "@/components/Table/Filter/Filter";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
@@ -60,7 +72,6 @@ import {
   showSuccessToast,
 } from "../../../utils/notifications";
 import { hasFeature } from "../../../utils/subscription/subscription";
-import RefreshButton from "../../Button/RefreshButton";
 import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
 import {
   ContainedMultiSelect,
@@ -305,6 +316,25 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
     return (
       <ErrorComponent refetch={refetchResponse} isRefetching={isRefetching} />
     );
+  const column = [
+    ...selectCheckBox,
+    ...(responseData?.responses?.every((row) => !row.tag)
+      ? columns.filter((col: any) => col.accessorKey !== "tag")
+      : columns),
+  ];
+
+  const defaultVisibility = column.reduce(
+    (visibility, col) => {
+      const key = (col as any)?.accessorKey ?? col.id;
+
+      visibility[key] = true;
+      visibility["select"] = true;
+
+      return visibility;
+    },
+
+    {} as Record<string, boolean>,
+  );
 
   return (
     <div className="h-full flex flex-col gap-4">
@@ -319,7 +349,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
         {isPending ? (
           <Skeleton className="h-[70px] w-full rounded-lg" />
         ) : (
-          <div className="flex flex-col gap-4 w-full p-4 border rounded-xl lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4 w-full p-4 lg:flex-row lg:items-center lg:justify-between">
             {/* LEFT */}
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-sm sm:text-base font-medium">
@@ -329,7 +359,9 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
                 </span>
               </h1>
 
-              <RefreshButton onClick={() => refetchResponse()} />
+              <Button variant="ghost" onClick={() => refetchResponse()}>
+                <IconRefresh className="text-primary" />
+              </Button>
             </div>
 
             {/* RIHGT */}
@@ -436,22 +468,20 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
           </div>
         )}
       </div>
-      <div className="border p-4 rounded-xl">
-        <TanstackTable
+      <div className="">
+        <DataTable
+          columns={column}
           data={responseData ? responseData?.responses : []}
-          columns={
-            responseData?.responses?.every((row) => !row.tag)
-              ? columns?.filter((col: any) => col.accessorKey !== "tag")
-              : columns
-          }
-          columnFiltersE={columnFilters}
-          setColumnFiltersE={setColumnFilters}
-          pagination={pagination}
-          setPagination={setPagination}
-          totalCount={responseData?.totalCount}
+          DataTableToolbar={DataTableToolbar}
+          manualPagination={{
+            pagination,
+            onPaginationChange: setPagination,
+            rowCount: responseData?.totalCount || 0,
+          }}
           isPending={isPending}
-          enableServerFilter={enableServerFilter}
+          defaultColumnVisibility={defaultVisibility}
         />
+
         <DeleteModal
           confirmDelete={confirmDelete}
           translations={translations}
@@ -497,3 +527,73 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
     </FormModalLayout>
   );
 };
+
+function DataTableToolbar({ table, columnFilters }) {
+  const { setServerFilters } = useResponseFilterStore();
+
+  const filterableColumns = table
+    .getAllLeafColumns()
+    .filter((col) => col.getCanFilter() && col.id !== "action");
+
+  function handleApplyFilters() {
+    setServerFilters(
+      columnFilters.reduce((acc, c) => {
+        if (!c.value || c.value.length === 0) return acc;
+
+        const id = c.id.includes("_,_") ? c.id.split("_,_").pop() : c.id;
+
+        acc[id] = c.value;
+        return acc;
+      }, {}),
+    );
+  }
+
+  function handleClearFilters() {
+    table.resetColumnFilters();
+    setServerFilters({});
+  }
+
+  return (
+    <div className="flex items-center gap-2 justify-end p-2">
+      <DataTableViewOptions table={table} />
+      {/* FILTER DRAWER */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="sm" className="h-8">
+            <IconFilter className="mr-2 h-3 w-3" />
+            Filters
+          </Button>
+        </SheetTrigger>
+
+        <SheetContent side="right" className="w-[420px] rounded-xl p-4">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-1">
+              <IconFilter className="h-4 w-4" />
+              Filters
+            </SheetTitle>
+          </SheetHeader>
+
+          {/* FILTERS */}
+          <div className="flex flex-col gap-4">
+            {filterableColumns.map((col) => (
+              <div key={col.id}>
+                <label className="text-sm font-medium">
+                  {col.id?.split("_,_")?.[0]}
+                </label>
+                <Filter column={col} table={table} />
+              </div>
+            ))}
+          </div>
+
+          {/* ACTIONS */}
+          <div className="absolute bottom-4 left-4 right-4 flex justify-between">
+            <Button variant="ghost" onClick={handleClearFilters}>
+              Clear
+            </Button>
+            <Button onClick={handleApplyFilters}>Apply Filters</Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
