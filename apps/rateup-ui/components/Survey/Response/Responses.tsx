@@ -79,7 +79,6 @@ import {
 } from "../../input/ContainedInput/ContainedInput";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import TanstackTable from "../../Table/TanstackTable";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { useSurveyResponseColumns } from "./Columns";
 import styles from "./Responses.module.css";
@@ -164,12 +163,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
     [questions],
   );
 
-  const deleteResponse = useDeleteResponse(
-    surveyId,
-    surveyTeamMapId,
-    close,
-    setIsDeleting,
-  );
+  const deleteResponse = useDeleteResponse(surveyId, surveyTeamMapId);
   const translations = useTranslations();
   // TODO: find out why surveyId is an array
   if (Array.isArray(surveyId)) {
@@ -224,29 +218,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
     !createTicketOpened && setSelectedResponseId("");
   }, [createTicketOpened]);
 
-  const confirmDelete = (verifyEmail: string) => {
-    if (user?.email === verifyEmail) {
-      notifications.show({
-        id: "load-data",
-        loading: true,
-        title: translations("Deleting Response"),
-        message: translations("Hold on, response is getting deleted"),
-        autoClose: false,
-        withCloseButton: false,
-      });
-      setIsDeleting(true);
-      deleteResponse.mutate(selectedRowId);
-    } else {
-      notifications.show({
-        id: "load-data",
-        color: "red",
-        title: translations("Error"),
-        message: translations("Incorrect email"),
-        icon: <IconX size="1rem" />,
-        autoClose: 3000,
-      });
-    }
-  };
   const filteredQuestions = useMemo(
     () =>
       questions.filter(
@@ -329,11 +300,23 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
 
       visibility[key] = true;
       visibility["select"] = true;
+      visibility["action"] = false;
 
       return visibility;
     },
 
     {} as Record<string, boolean>,
+  );
+
+  const renderToolbar = useCallback(
+    (props) => (
+      <DataTableToolbar
+        {...props}
+        deleteResponse={deleteResponse}
+        refetchResponse={refetchResponse}
+      />
+    ),
+    [deleteResponse],
   );
 
   return (
@@ -472,7 +455,7 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
         <DataTable
           columns={column}
           data={responseData ? responseData?.responses : []}
-          DataTableToolbar={DataTableToolbar}
+          DataTableToolbar={renderToolbar}
           manualPagination={{
             pagination,
             onPaginationChange: setPagination,
@@ -481,13 +464,6 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
           isPending={isPending}
           defaultColumnVisibility={defaultVisibility}
         />
-
-        <DeleteModal
-          confirmDelete={confirmDelete}
-          translations={translations}
-          opened={opened}
-          close={close}
-        />
       </div>
     </div>
   );
@@ -495,41 +471,19 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
 
 export default React.memo(Responses);
 
-const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
-  const [verifyEmail, setVerifyEmail] = useState("");
-  return (
-    <FormModalLayout
-      opened={opened}
-      onClose={close}
-      title={translations("Delete Response")}
-      centered
-      buttonTitle={translations("Delete")}
-      includeCancelButton
-      onSubmit={() => {
-        confirmDelete(verifyEmail);
-        setVerifyEmail("");
-      }}
-    >
-      <div className="py-4">
-        <p>{translations("To proceed further, verify your email id")}</p>
-        <ContainedTextField
-          withAsterisk
-          label={translations("Verify email")}
-          placeholder={translations("Enter your login email")}
-          required
-          value={verifyEmail}
-          onChange={(e) => setVerifyEmail(e.target.value)}
-        />
-        <p className="text-red-500">
-          {translations("Once deleted, response entry data will be lost")}
-        </p>
-      </div>
-    </FormModalLayout>
-  );
-};
-
-function DataTableToolbar({ table, columnFilters }) {
+function DataTableToolbar({
+  table,
+  columnFilters,
+  refetchResponse,
+  deleteResponse,
+}) {
+  const { user } = useUser();
+  const translations = useTranslations();
   const { setServerFilters } = useResponseFilterStore();
+
+  const [opened, setOpened] = useState(false);
+  const [verifyEmail, setVerifyEmail] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filterableColumns = table
     .getAllLeafColumns()
@@ -541,7 +495,6 @@ function DataTableToolbar({ table, columnFilters }) {
         if (!c.value || c.value.length === 0) return acc;
 
         const id = c.id.includes("_,_") ? c.id.split("_,_").pop() : c.id;
-
         acc[id] = c.value;
         return acc;
       }, {}),
@@ -553,47 +506,141 @@ function DataTableToolbar({ table, columnFilters }) {
     setServerFilters({});
   }
 
+  function openDeleteModal() {
+    setVerifyEmail("");
+    setOpened(true);
+  }
+
+  function closeDeleteModal() {
+    setOpened(false);
+    setVerifyEmail("");
+  }
+
+  function confirmDelete() {
+    const selectedIds = Object.keys(table.getState().rowSelection);
+
+    if (user?.email !== verifyEmail) {
+      notifications.show({
+        color: "red",
+        title: translations("Error"),
+        message: translations("Incorrect email"),
+        icon: <IconX size="1rem" />,
+      });
+      return;
+    }
+
+    notifications.show({
+      id: "delete-response",
+      loading: true,
+      title: translations("Deleting Response"),
+      message: translations("Hold on, response is getting deleted"),
+      autoClose: false,
+      withCloseButton: false,
+    });
+
+    setIsDeleting(true);
+
+    deleteResponse.mutate(selectedIds, {
+      onSuccess: () => {
+        notifications.update({
+          id: "delete-response",
+          color: "green",
+          title: translations("Success"),
+          message: translations("Response deleted successfully"),
+          autoClose: 3000,
+        });
+        refetchResponse();
+        closeDeleteModal();
+      },
+      onError: () => {
+        notifications.update({
+          id: "delete-response",
+          color: "red",
+          title: translations("Error"),
+          message: translations("Failed to delete response"),
+          autoClose: 3000,
+        });
+      },
+      onSettled: () => {
+        setIsDeleting(false);
+      },
+    });
+  }
+
   return (
-    <div className="flex items-center gap-2 justify-end p-2">
-      <DataTableViewOptions table={table} />
-      {/* FILTER DRAWER */}
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8">
-            <IconFilter className="mr-2 h-3 w-3" />
-            Filters
-          </Button>
-        </SheetTrigger>
+    <>
+      <div className="flex items-center gap-2 justify-end p-2">
+        <DataTableViewOptions table={table} />
 
-        <SheetContent side="right" className="w-[420px] rounded-xl p-4">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-1">
-              <IconFilter className="h-4 w-4" />
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8">
+              <IconFilter className="mr-2 h-3 w-3" />
               Filters
-            </SheetTitle>
-          </SheetHeader>
-
-          {/* FILTERS */}
-          <div className="flex flex-col gap-4">
-            {filterableColumns.map((col) => (
-              <div key={col.id}>
-                <label className="text-sm font-medium">
-                  {col.id?.split("_,_")?.[0]}
-                </label>
-                <Filter column={col} table={table} />
-              </div>
-            ))}
-          </div>
-
-          {/* ACTIONS */}
-          <div className="absolute bottom-4 left-4 right-4 flex justify-between">
-            <Button variant="ghost" onClick={handleClearFilters}>
-              Clear
             </Button>
-            <Button onClick={handleApplyFilters}>Apply Filters</Button>
-          </div>
-        </SheetContent>
-      </Sheet>
-    </div>
+          </SheetTrigger>
+
+          <SheetContent side="right" className="w-[420px] rounded-xl p-4">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-1">
+                <IconFilter className="h-4 w-4" />
+                Filters
+              </SheetTitle>
+            </SheetHeader>
+
+            <div className="flex flex-col gap-4">
+              {filterableColumns.map((col) => (
+                <div key={col.id}>
+                  <label className="text-sm font-medium">
+                    {col.id?.split("_,_")?.[0]}
+                  </label>
+                  <Filter column={col} table={table} />
+                </div>
+              ))}
+            </div>
+
+            <div className="absolute bottom-4 left-4 right-4 flex justify-between">
+              <Button variant="ghost" onClick={handleClearFilters}>
+                Clear
+              </Button>
+              <Button onClick={handleApplyFilters}>Apply Filters</Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {Object.keys(table.getState().rowSelection).length > 0 && (
+          <Button color="red" onClick={openDeleteModal}>
+            Delete
+          </Button>
+        )}
+      </div>
+
+      <FormModalLayout
+        opened={opened}
+        onClose={closeDeleteModal}
+        title={translations("Delete Response")}
+        centered
+        buttonTitle={translations("Delete")}
+        includeCancelButton
+        onSubmit={confirmDelete}
+      >
+        <div className="py-4 space-y-3">
+          <p>{translations("To proceed further, verify your email id")}</p>
+
+          <ContainedTextField
+            withAsterisk
+            label={translations("Verify email")}
+            placeholder={translations("Enter your login email")}
+            required
+            value={verifyEmail}
+            onChange={(e) => setVerifyEmail(e.target.value)}
+          />
+
+          <p className="text-red-500 text-sm">
+            {translations("Once deleted, response entry data will be lost")}
+          </p>
+        </div>
+      </FormModalLayout>
+    </>
   );
 }

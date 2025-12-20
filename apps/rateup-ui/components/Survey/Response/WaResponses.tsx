@@ -117,7 +117,7 @@ const WaResponses = ({
   const surveyId = survey?.id;
   const { surveyTeamMapId, filterTeams, filterTags } =
     useContext(SurveyContext);
-  const [selectedRowId, setSelectedRowId] = useState("");
+  const [selectedRowId, setSelectedRowId] = useState([]);
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -184,12 +184,7 @@ const WaResponses = ({
     [subscription, survey],
   );
 
-  const deleteResponse = useDeleteResponse(
-    surveyId,
-    surveyTeamMapId,
-    close,
-    setIsDeleting,
-  );
+  const deleteResponse = useDeleteResponse(surveyId, surveyTeamMapId);
   const translations = useTranslations();
 
   useEffect(() => {
@@ -261,6 +256,8 @@ const WaResponses = ({
         });
         setIsDeleting(true);
         deleteResponse.mutate(selectedRowId);
+        setIsDeleting(false);
+        close();
       } else {
         notifications.show({
           id: "load-data",
@@ -270,6 +267,7 @@ const WaResponses = ({
           icon: <IconX size="1rem" />,
           autoClose: 3000,
         });
+        setIsDeleting(false);
       }
     },
     [deleteResponse, selectedRowId, translations, user?.email],
