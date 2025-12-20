@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 
 import dayjs from "dayjs";
-import { Clock, MessageCircle, Target } from "lucide-react";
+import { CircleQuestionMark, Clock, MessageCircle, Target } from "lucide-react";
 
 import { useGetConversationOverView } from "@/backend/conversation/conversation.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
@@ -11,6 +11,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { Progress } from "@/components/ui/progressnew";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime";
@@ -31,6 +32,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
       {
         key: "totalConversations",
         label: "Conversations",
+        info: "Conversation created on given range",
         color: {
           border: "border-blue-500",
           cardBg: "bg-blue-50",
@@ -45,6 +47,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
       {
         key: "averageResponseTime",
         label: "Response Time",
+        info: "Average response time by agent and automation",
         color: {
           border: "border-green-500",
           cardBg: "bg-green-50",
@@ -57,6 +60,24 @@ const ConversationStatsOverview = ({ dateRange }) => {
         progressTotal: 60,
         value:
           formatTimeToNearestUnitFromSeconds(data?.averageResponseTime)
+            ?.value ?? "NA",
+      },
+      {
+        key: "averageResponseTimeByAgent",
+        label: "Response Time by Agents",
+        color: {
+          border: "border-orange-500",
+          cardBg: "bg-orange-50",
+          hoverShadow: "hover:shadow-orange-300/50",
+          text: "text-orange-500",
+        },
+        icon: Clock,
+        suffix: formatTimeToNearestUnitFromSeconds(
+          data?.averageResponseTimeByAgent,
+        )?.suffix,
+        progressTotal: 60,
+        value:
+          formatTimeToNearestUnitFromSeconds(data?.averageResponseTimeByAgent)
             ?.value ?? "NA",
       },
       {
@@ -90,7 +111,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
   }
   return (
     <div className="flex flex-col gap-6 my-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {overviewStats.map((stat) => {
           const progressValue = (stat.value / stat.progressTotal) * 100;
           return (
@@ -98,12 +119,20 @@ const ConversationStatsOverview = ({ dateRange }) => {
               key={stat.key}
               className={`group relative overflow-hidden border ${stat.color.border} hover:shadow-xl ${stat.color.hoverShadow} transition-all duration-300 hover:-translate-y-1`}
             >
-              <CardHeader>
+              <CardHeader className="flex justify-between">
                 <div
                   className={`p-2 justify-center items-center ${stat.color.cardBg} rounded-md w-fit`}
                 >
                   <stat.icon className={`${stat.color.text}`} />
                 </div>
+                {stat.info && (
+                  <CustomTooltip
+                    trigger={
+                      <CircleQuestionMark className="w-3 h-3 text-muted-foreground" />
+                    }
+                    content={<span>{stat.info}</span>}
+                  />
+                )}
               </CardHeader>
               <CardContent className="flex flex-col">
                 <span className={`text-sm text-muted-foreground`}>

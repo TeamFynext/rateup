@@ -69,7 +69,7 @@ const ConversationResponseTimePatternGraph = ({ dateRange }) => {
           </Badge>
         </div>
         <CardDescription className="text-sm">
-          Average response time throughout the day
+          Average response time by agents
         </CardDescription>
       </CardHeader>
       <CardContent>
