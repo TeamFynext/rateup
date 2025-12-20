@@ -208,6 +208,7 @@ export async function checkIfFirstSendMessageInConversation(
     orderBy: {
       waCreatedAt: "asc",
     },
+    take: 1,
   });
   if (messages.length === 0) return true;
   return messages[0].id === messageId;
@@ -231,6 +232,7 @@ export async function checkIfFirstUserSendMessageInConversation(
     orderBy: {
       waCreatedAt: "asc",
     },
+    take: 1,
   });
   if (messages.length === 0) return true;
   return messages[0].id === messageId;
@@ -245,8 +247,11 @@ export async function getConversationOverview(
   averageResponseTimeByAgent: number;
   resolutionRate: number;
 }> {
-  const startDate = new Date(dateRange[0]);
-  const endDate = new Date(dateRange[1]);
+  let startDate, endDate;
+  if (dateRange.length) {
+    startDate = new Date(dateRange[0]);
+    endDate = new Date(dateRange[1]);
+  }
 
   const res = await prisma.$queryRaw<{
     totalConversations: number; // conversation created on range of given days
@@ -261,23 +266,30 @@ export async function getConversationOverview(
    GROUP BY wm."conversationId"
   )
   SELECT 
-   (COUNT(*) FILTER (WHERE c."createdAt" BETWEEN ${startDate} AND ${endDate}))::INTEGER AS "totalConversations",
+   (COUNT(*) FILTER (WHERE c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())))::INTEGER AS "totalConversations",
    AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) FILTER (WHERE c."firstRespondedAt" IS NOT NULL AND c."createdAt" BETWEEN ${startDate} AND ${endDate})
    AS "averageResponseTime",
    AVG(EXTRACT(EPOCH FROM (COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") - c."createdAt"))) FILTER (WHERE COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") IS NOT NULL AND c."createdAt" BETWEEN ${startDate} AND ${endDate})
    AS "averageResponseTimeByAgent",
-   CASE WHEN COUNT(*) FILTER (WHERE c."createdAt" <= ${endDate}) = 0 THEN 0
+   CASE WHEN COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) = 0 THEN 0
         ELSE ( 
          COUNT(*) FILTER (
-         WHERE c."status" IN (${(WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED)}) AND c."closedAt" BETWEEN 
-         ${startDate} AND ${endDate})
-        )::float / COUNT(*) FILTER (WHERE c."createdAt" <= ${endDate}) * 100
+         WHERE c."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt" BETWEEN 
+         COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())
+        )::float / COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) * 100
    END AS "resolutionRate"
   FROM "Conversation" c
   JOIN "Contact" ct ON ct.id = c."contactId"
   LEFT JOIN first_agent_message fam ON fam."conversationId" = c.id
   WHERE ct."orgId" = ${orgId}::uuid;`;
-  return res[0];
+  return res
+    ? res[0]
+    : {
+        totalConversations: null,
+        averageResponseTime: null,
+        averageResponseTimeByAgent: null,
+        resolutionRate: null,
+      };
 }
 
 export async function getResolvedConversationWeeklyStats(orgId: string) {
@@ -405,7 +417,7 @@ export async function getAvargeResponseTimeofTodyaInEveryHour(
 WITH first_agent_message AS (
   SELECT
     wm."conversationId",
-    MIN(wm."createdAt") AS "firstAgentMessageAt"
+    MIN(wm."waCreatedAt") AS "firstAgentMessageAt"
   FROM "WaMessage" wm
   WHERE wm."sendBy" IS NOT NULL
   GROUP BY wm."conversationId"
@@ -455,8 +467,11 @@ export async function getConversationOnAccountDistribution(
   orgId: string,
   dateRange,
 ) {
-  const startDate = new Date(dateRange[0]);
-  const endDate = new Date(dateRange[1]);
+  let startDate, endDate;
+  if (dateRange.length) {
+    startDate = new Date(dateRange[0]);
+    endDate = new Date(dateRange[1]);
+  }
   const result = await prisma.$queryRaw<
     {
       phoneId: string;
@@ -488,8 +503,8 @@ WHERE ct."orgId" = ${orgId}::uuid
             AND wm."sourcePlatform" = ${PlatformType.WEBCHAT}
         )
       )
-  AND c."createdAt" >= ${startDate}
-  AND c."createdAt" < ${endDate}
+  AND c."createdAt" >= COALESCE(${startDate}, '1970-01-01'::timestamptz)
+  AND c."createdAt" < COALESCE(${endDate}, NOW())
 GROUP BY
     ws."phoneId",
     ws."ibaId",
