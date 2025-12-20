@@ -12,6 +12,7 @@ const updateConversationSchema = z.object({
   assignedAt: z.date().optional(),
   closedAt: z.date().optional(),
   closedBy: z.string().uuid().optional(),
+  firstRespondedByUserAt: z.date().optional(),
 });
 
 const conversationAssigneeUpdateSchema = z.object({

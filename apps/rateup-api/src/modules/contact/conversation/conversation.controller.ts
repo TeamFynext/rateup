@@ -47,7 +47,7 @@ export async function getConversationOverviewHandler(
     const stats = await getConversationOverview(request.user.orgId, dateRange);
     reply.send(stats);
   } catch (e) {
-    log.error("Error fetching conversation overview:", e);
+    log.error("Error fetching conversation overview: %o", e);
     reply.status(500).send({
       error: "An error occurred while fetching the conversation overview.",
     });
