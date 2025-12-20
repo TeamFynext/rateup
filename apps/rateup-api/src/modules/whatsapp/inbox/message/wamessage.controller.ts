@@ -74,6 +74,7 @@ import {
 } from "../../../integrations/external/zapier/zapier.service.js";
 import {
   checkIfFirstSendMessageInConversation,
+  checkIfFirstUserSendMessageInConversation,
   createConversation,
   getLastCreatedConversationForContact,
   updateConversation,
@@ -235,7 +236,19 @@ export async function handleWaMessages(
       if (isFirstSendMessage) {
         await updateConversation(conversation.id, {
           firstRespondedAt: new Date(),
+          firstRespondedByUserAt: userId ? new Date() : undefined,
         });
+      } else {
+        const isFirstUserSendMessage =
+          await checkIfFirstUserSendMessageInConversation(
+            conversation.id,
+            waMessage.id,
+          );
+        if (isFirstUserSendMessage) {
+          await updateConversation(conversation.id, {
+            firstRespondedByUserAt: new Date(),
+          });
+        }
       }
     }
     if (type === "receive")
