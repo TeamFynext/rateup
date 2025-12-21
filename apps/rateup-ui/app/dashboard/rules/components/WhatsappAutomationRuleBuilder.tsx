@@ -2,8 +2,16 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusIcon, Save, Trash2Icon } from "lucide-react";
-import { useFieldArray, useForm } from "react-hook-form";
+import {
+  CheckCircle,
+  ClipboardList,
+  PlusIcon,
+  Save,
+  Settings,
+  Trash2Icon,
+  Zap,
+} from "lucide-react";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import { CreateRule } from "@/types/rule";
 import {
@@ -13,15 +21,14 @@ import {
 } from "@/backend/whatsapp/rule/rule.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -30,16 +37,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import ActionList from "./ActionList";
 import ConditionList from "./ConditionList";
-import {
-  CreateRuleInput,
-  createRuleSchema,
-  GROUP_OPERATORS,
-  TRIGGER_EVENTS,
-} from "./schema";
+import RuleOptions from "./RuleOptions";
+import { CreateRuleInput, createRuleSchema, TRIGGER_EVENTS } from "./schema";
 
 interface WhatsappAutomationRuleBuilderProps {
   ruleId?: string;
@@ -58,6 +61,13 @@ const defaultValues: Partial<CreateRuleInput> = {
     },
   ],
   actions: [{ type: "TRIGGER_CHATBOT", value: "" }],
+  options: {
+    sendOncePerDay: false,
+    businessHours: {
+      enabled: false,
+      businessHoursId: undefined,
+    },
+  },
 };
 
 const WhatsappAutomationRuleBuilder: React.FC<
@@ -115,292 +125,323 @@ const WhatsappAutomationRuleBuilder: React.FC<
     return <div>Loading...</div>;
   }
 
-  let buttonText = "Create Rule";
+  let buttonText = "Create Automation";
   if (isPending) {
     buttonText = "Saving...";
   } else if (isEditMode) {
-    buttonText = "Update Rule";
+    buttonText = "Update Automation";
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-8 space-y-6">
-      <Card>
-        <CardContent className="space-y-8">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              {/* Trigger & Rule Info */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1 h-6 bg-primary  rounded-full"></div>
-                    <h2 className="font-semibold text-lg">
-                      Trigger & Rule Info
-                    </h2>
-                  </div>
+    <div className="max-w-4xl mx-auto  relative h-full">
+      {/* Header Card */}
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <h1 className="text-2xl font-semibold text-foreground">
+            Automation Rule
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {ruleData
+              ? "Update automated rule for your channel"
+              : "Create automated responses for your channel"}
+          </p>
+        </CardHeader>
+      </Card>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Basic Information Card */}
+          <Card>
+            <CardContent>
+              <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
+
+              <FieldGroup>
+                <Controller
+                  control={form.control}
+                  name="whatsappSettingsPhoneIds"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Channel</FieldLabel>
+                      <AccountSelector
+                        multiple
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  control={form.control}
+                  name="name"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Rule Name</FieldLabel>
+                      <Input
+                        placeholder="e.g., Welcome message for new customers"
+                        {...field}
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+            </CardContent>
+          </Card>
+
+          {/* WHEN Card */}
+          <Card>
+            <CardContent>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">When</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Choose the trigger event
+                  </p>
+                </div>
+              </div>
+
+              <Controller
+                control={form.control}
+                name="triggerEvent"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <Select
+                      key={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        const currentGroups = form.getValues("groups");
+                        if (value !== "MESSAGE_RECEIVED") {
+                          form.setValue("groups", []);
+                        } else if (currentGroups.length === 0) {
+                          form.setValue("groups", [
+                            {
+                              operator: "AND",
+                              conditions: [
+                                {
+                                  field: "MESSAGE_BODY",
+                                  operator: "CONTAINS",
+                                  value: "",
+                                },
+                              ],
+                            },
+                          ]);
+                        }
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger
+                        className="w-full"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue placeholder="Select event" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TRIGGER_EVENTS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* IF Card - Condition Groups */}
+          <Card>
+            <CardContent>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                  <ClipboardList className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold">If</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Set conditions for the rule
+                  </p>
+                </div>
+
+                {groupFields.length > 1 && (
+                  <Tabs
+                    defaultValue="ALL"
+                    value={form.getValues("operator")}
+                    onValueChange={(e) => {
+                      form.setValue("operator", e as "AND" | "OR");
+                    }}
+                  >
+                    <TabsList>
+                      <TabsTrigger value="ALL">Match all</TabsTrigger>
+                      <TabsTrigger value="OR">Match any</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                {groupFields.map((group, groupIndex) => (
+                  <React.Fragment key={group.id}>
+                    {/* Condition Block */}
+                    <div className="border-2 border-purple-200 dark:border-purple-800 rounded-lg p-4 bg-purple-50/50 dark:bg-purple-950/20">
+                      <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-200 dark:border-purple-800">
+                        <span className="text-sm font-semibold text-purple-800 dark:text-purple-300">
+                          Condition Block {groupIndex + 1}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeGroup(groupIndex)}
+                          disabled={
+                            form.watch("triggerEvent") === "MESSAGE_RECEIVED" &&
+                            groupFields.length === 1
+                          }
+                          className="h-8 text-muted-foreground hover:text-red-500"
+                        >
+                          <Trash2Icon className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <ConditionList
+                        name={`groups.${groupIndex}.conditions`}
+                        groupOperator={
+                          (form.watch(`groups.${groupIndex}.operator`) as
+                            | "AND"
+                            | "OR") || "AND"
+                        }
+                        onOperatorChange={(operator) =>
+                          form.setValue(
+                            `groups.${groupIndex}.operator`,
+                            operator,
+                          )
+                        }
+                      />
+                    </div>
+                  </React.Fragment>
+                ))}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-2 border-dashed border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20 hover:bg-purple-100 dark:hover:bg-purple-900/30"
+                  onClick={() => {
+                    const triggerEvent = form.getValues("triggerEvent");
+                    const defaultField =
+                      triggerEvent === "MESSAGE_RECEIVED"
+                        ? "MESSAGE_BODY"
+                        : "CONTACT_EMAIL";
+                    appendGroup({
+                      operator: "AND",
+                      conditions: [
+                        {
+                          field: defaultField,
+                          operator: "CONTAINS",
+                          value: "",
+                        },
+                      ],
+                    });
+                  }}
+                >
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Add condition block
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Options Card */}
+          <Card>
+            <CardContent>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <Settings className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Options</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Additional settings
+                  </p>
+                </div>
+              </div>
+
+              <RuleOptions />
+            </CardContent>
+          </Card>
+
+          {/* THEN Card - Actions */}
+          <Card>
+            <CardContent>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Then</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Define actions to execute
+                  </p>
+                </div>
+              </div>
+
+              <Controller
+                control={form.control}
+                name="actions"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <ActionList />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Footer Card */}
+          <Card>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Rule will be active immediately after saving
+                </p>
+                <div className="flex gap-3">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="text-blue-600 bg-blue-50 hover:bg-blue-100"
+                    onClick={() => router.back()}
                   >
-                    <span className="mr-2">✨</span> Auto-Configuration
+                    Cancel
                   </Button>
-                </div>
-
-                <Card className="bg-secondary/10 p-4">
-                  <FormField
-                    control={form.control}
-                    name="whatsappSettingsPhoneIds"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-bold uppercase tracking-wider">
-                          Channel
-                        </FormLabel>
-                        <FormControl>
-                          <AccountSelector
-                            multiple
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-bold uppercase tracking-wider">
-                            Rule Name
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Rule name"
-                              {...field}
-                              className="bg-background"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="triggerEvent"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-bold uppercase tracking-wider">
-                            Trigger Event
-                          </FormLabel>
-                          <Select
-                            key={field.value}
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              // Clear or reset groups when trigger changes
-                              const currentGroups = form.getValues("groups");
-                              if (value !== "MESSAGE_RECEIVED") {
-                                // Clear groups for non-MESSAGE_RECEIVED triggers
-                                form.setValue("groups", []);
-                              } else if (currentGroups.length === 0) {
-                                // Add default group for MESSAGE_RECEIVED if empty
-                                form.setValue("groups", [
-                                  {
-                                    operator: "AND",
-                                    conditions: [
-                                      {
-                                        field: "MESSAGE_BODY",
-                                        operator: "CONTAINS",
-                                        value: "",
-                                      },
-                                    ],
-                                  },
-                                ]);
-                              }
-                            }}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="bg-white border-gray-200 w-full">
-                                <SelectValue placeholder="Select event" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {TRIGGER_EVENTS.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="operator"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-bold uppercase tracking-wider">
-                            Rule Operator
-                          </FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="bg-white border-gray-200 w-full">
-                                <SelectValue placeholder="Select operator" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {GROUP_OPERATORS.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </Card>
-              </div>
-
-              {/* Condition Groups */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1 h-6 bg-primary rounded-full"></div>
-                    <h3 className="font-semibold text-lg ">
-                      Condition Groups
-                      {form.watch("triggerEvent") !== "MESSAGE_RECEIVED" && (
-                        <span className="text-sm text-gray-500 ml-2">
-                          (Optional)
-                        </span>
-                      )}
-                    </h3>
-                  </div>
                   <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-medium"
-                    onClick={() => {
-                      const triggerEvent = form.getValues("triggerEvent");
-                      const defaultField =
-                        triggerEvent === "MESSAGE_RECEIVED"
-                          ? "MESSAGE_BODY"
-                          : "CONTACT_EMAIL";
-                      appendGroup({
-                        operator: "AND",
-                        conditions: [
-                          {
-                            field: defaultField,
-                            operator: "CONTAINS",
-                            value: "",
-                          },
-                        ],
-                      });
-                    }}
+                    type="submit"
+                    disabled={isPending}
+                    className="min-w-[140px]"
                   >
-                    <PlusIcon className="w-4 h-4 mr-2" /> Add Group
+                    <Save className="w-4 h-4 mr-2" />
+                    {buttonText}
                   </Button>
                 </div>
-
-                {groupFields.map((group, index) => (
-                  <Card key={group.id} className="bg-secondary/10 p-4 gap-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-medium text-gray-600 border border-gray-200">
-                          Group {index + 1}
-                        </div>
-                        <FormField
-                          control={form.control}
-                          name={`groups.${index}.operator`}
-                          render={({ field }) => (
-                            <FormItem className="space-y-0">
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                value={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="h-9  bg-white border-gray-200">
-                                    <SelectValue placeholder="Operator" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {GROUP_OPERATORS.map((opt) => (
-                                    <SelectItem
-                                      key={opt.value}
-                                      value={opt.value}
-                                    >
-                                      {opt.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeGroup(index)}
-                        disabled={
-                          form.watch("triggerEvent") === "MESSAGE_RECEIVED" &&
-                          groupFields.length === 1
-                        }
-                        className="text-gray-400 hover:text-red-500 hover:bg-red-50"
-                      >
-                        <Trash2Icon className="w-4 h-4" />
-                      </Button>
-                    </div>
-
-                    <ConditionList name={`groups.${index}.conditions`} />
-                  </Card>
-                ))}
               </div>
-
-              <FormField
-                control={form.control}
-                name="actions"
-                render={() => (
-                  <FormItem>
-                    <FormControl>
-                      <ActionList />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="pt-4">
-                <Separator className="my-4" />
-                <Button
-                  variant="default"
-                  className="w-full h-12 text-lg font-medium"
-                  type="submit"
-                  disabled={isPending}
-                >
-                  <Save /> {buttonText}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+          <div className="h-1" />
+        </form>
+      </Form>
     </div>
   );
 };

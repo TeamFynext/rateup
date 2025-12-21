@@ -1,7 +1,12 @@
 import React from "react";
 
-import { PlusIcon, Trash2Icon, TrashIcon } from "lucide-react";
-import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
+import { PlusIcon, Trash2Icon } from "lucide-react";
+import {
+  Controller,
+  useFieldArray,
+  useFormContext,
+  useWatch,
+} from "react-hook-form";
 
 import { useContactLabels } from "@/backend/campaign/contacts/contacts.query";
 import { useLifeCyclesQuery } from "@/backend/lifecycle/lifecycle.query";
@@ -9,15 +14,8 @@ import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useAllWaAutomatedReplies } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
-import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -42,12 +40,11 @@ const ActionValueInput = ({
   const { data: lifecyclesData } = useLifeCyclesQuery();
   const { data: teamMembers } = useTeamsMembersOfOrg();
   const { data: teamsData } = useTeamsByUser();
-  const { data: templatesData } = useWaTemplates();
   const { data: flowsData } = useWaFlowsFromDb();
-  const actionType = useWatch({
+  const actionType: ActionType = useWatch({
     control,
     name: `actions.${index}.type`,
-  }) as ActionType;
+  });
 
   if (actionType === "SEND_MESSAGE") {
     return (
@@ -116,25 +113,6 @@ const ActionValueInput = ({
       </Select>
     );
   }
-  // if (actionType === "SEND_TEMPLATE") {
-  //   return (
-  //     <Select
-  //       onValueChange={valueField.onChange}
-  //       value={valueField.value || ""}
-  //     >
-  //       <SelectTrigger className="w-full bg-background">
-  //         <SelectValue placeholder="Select template" />
-  //       </SelectTrigger>
-  //       <SelectContent>
-  //         {templatesData?.map((t) => (
-  //           <SelectItem key={t.id} value={t.id}>
-  //             {t?.data?.name}
-  //           </SelectItem>
-  //         ))}
-  //       </SelectContent>
-  //     </Select>
-  //   );
-  // }
   if (actionType === "SEND_FLOW") {
     return (
       <Select
@@ -209,86 +187,87 @@ const ActionList: React.FC = () => {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-1 h-6 bg-primary rounded-full"></div>
-          <h2 className="font-semibold text-lg ">Actions</h2>
+    <div className="space-y-3">
+      {fields.length === 0 && (
+        <div className="text-muted-foreground text-sm italic p-4 text-center bg-muted/50 rounded-lg border border-dashed">
+          No actions added.
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => append({ type: "TRIGGER_CHATBOT", value: "" })}
-          className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-medium"
+      )}
+
+      {fields.map((field, index) => (
+        <div
+          key={field.id}
+          className="flex gap-3 items-center p-4 bg-white dark:bg-card rounded-lg border border-border"
         >
-          <PlusIcon className="w-4 h-4" /> Add Action
-        </Button>
-      </div>
-
-      <Card className="bg-secondary/10 p-3">
-        {fields.length === 0 && (
-          <div className="text-gray-400 text-sm italic">No actions added.</div>
-        )}
-        {fields.map((field, index) => (
-          <div key={field.id} className="flex gap-3 items-center">
-            <FormField
-              control={control}
-              name={`actions.${index}.type`}
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <Select
-                    onValueChange={(val) => {
-                      field.onChange(val);
-                      setValue(`actions.${index}.value`, "");
-                    }}
-                    defaultValue={field.value}
-                    value={field.value}
+          <Controller
+            control={control}
+            name={`actions.${index}.type`}
+            render={({ field, fieldState }) => (
+              <Field className="flex-1" data-invalid={fieldState.invalid}>
+                <Select
+                  onValueChange={(val) => {
+                    field.onChange(val);
+                    setValue(`actions.${index}.value`, "");
+                  }}
+                  defaultValue={field.value}
+                  value={field.value}
+                >
+                  <SelectTrigger
+                    className="w-full"
+                    aria-invalid={fieldState.invalid}
                   >
-                    <FormControl>
-                      <SelectTrigger className="w-full bg-background">
-                        <SelectValue placeholder="Action Type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {ACTION_TYPES.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <SelectValue placeholder="Action Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACTION_TYPES.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
 
-            <FormField
-              control={control}
-              name={`actions.${index}.value`}
-              render={({ field: valueField }) => (
-                <FormItem className="w-full">
-                  <FormControl>
-                    <ActionValueInput index={index} valueField={valueField} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Controller
+            control={control}
+            name={`actions.${index}.value`}
+            render={({ field: valueField, fieldState }) => (
+              <Field className="flex-1" data-invalid={fieldState.invalid}>
+                <ActionValueInput index={index} valueField={valueField} />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => remove(index)}
-              title="Delete Action"
-              className="text-gray-400 hover:text-red-500 h-10 w-10"
-            >
-              <Trash2Icon className="w-4 h-4" />
-            </Button>
-          </div>
-        ))}
-      </Card>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => remove(index)}
+            title="Delete Action"
+            className="text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 h-10 w-10"
+          >
+            <Trash2Icon className="w-4 h-4" />
+          </Button>
+        </div>
+      ))}
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full border-2 border-dashed border-green-300 dark:border-green-700 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-900/30"
+        onClick={() => append({ type: "TRIGGER_CHATBOT", value: "" })}
+      >
+        <PlusIcon className="w-4 h-4 mr-2" /> Add action
+      </Button>
+
       {errors.actions?.root?.message && (
         <p className="text-sm font-medium text-destructive mt-2">
           {errors.actions?.root?.message}

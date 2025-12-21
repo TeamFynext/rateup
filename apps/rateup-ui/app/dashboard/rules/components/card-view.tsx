@@ -51,15 +51,15 @@ export function CardView({
               <EmptyMedia variant="icon">
                 <IconFolderCode />
               </EmptyMedia>
-              <EmptyTitle>No Rules Yet</EmptyTitle>
+              <EmptyTitle>No Automation Yet</EmptyTitle>
               <EmptyDescription>
-                You haven&apos;t created any rules yet. Get started by creating
-                your first rule.
+                You haven&apos;t created any automation yet. Get started by
+                creating your first automation.
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
               <Button asChild>
-                <Link href="/dashboard/rules/new">Create Rule</Link>
+                <Link href="/dashboard/rules/new">Create Automation</Link>
               </Button>
             </EmptyContent>
             {/* <Button

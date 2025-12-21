@@ -58,7 +58,7 @@ export default function Home() {
   return (
     <main className="container space-y-4">
       <ToolBar
-        title="Rules"
+        title="Automation"
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         searchTerm={searchTerm}

@@ -22,14 +22,13 @@ import {
   useUpdateWaAutomatedReplyMutation,
 } from "../../../../backend/whatsapp/automated-reply/automatedReply.query";
 import { ContainedTextField } from "../../../../components/input/ContainedInput/ContainedInput";
-import { WaAutomatedReplyMatchType } from "../../../../types/enums";
 import { WaAutomatedReply } from "../../../../types/global";
 
 export default function CreateAutomatedReplyPage() {
   return (
     <div className="space-y-6 p-6">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Create Flowbot</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Create Chatbot</h1>
         <p className="text-muted-foreground">
           Set up automated replies for your WhatsApp conversations
         </p>

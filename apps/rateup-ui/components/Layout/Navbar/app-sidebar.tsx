@@ -311,7 +311,7 @@ export default function AppSidebar({
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent>
-                <SidebarMenu className="gap-3">
+                <SidebarMenu className="gap-2">
                   {navMain.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
@@ -377,10 +377,10 @@ export default function AppSidebar({
                 <SidebarTrigger />
               </div>
             </SidebarHeader>
-            <SidebarContent className="bg-background py-2">
+            <SidebarContent className="bg-background pt-1">
               <SidebarGroup className="p-0">
                 <SidebarGroupContent>
-                  <SidebarMenu className="gap-3">
+                  <SidebarMenu className="gap-2">
                     {activeItem.items?.map((item) =>
                       item.group ? (
                         <SidebarGroup className="p-0">

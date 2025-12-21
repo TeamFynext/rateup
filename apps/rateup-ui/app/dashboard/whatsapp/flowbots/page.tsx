@@ -29,14 +29,14 @@ export default function FlowbotsPage() {
       <div className="flex items-center justify-between">
         <div className="ml-4">
           <Button onClick={() => setOpened(true)}>
-            {translations("Create Flowbot")}
+            {translations("Create Chatbot")}
             <IconPlus size={"1rem"} className="ml-2" />
           </Button>
         </div>
         <Dialog open={opened} onOpenChange={setOpened}>
           <DialogContent className="sm:max-w-[700px]">
             <DialogHeader>
-              <DialogTitle>{translations("Create Flowbot")}</DialogTitle>
+              <DialogTitle>{translations("Create Chatbot")}</DialogTitle>
             </DialogHeader>
             <AutomatedReplyForm close={() => setOpened(false)} />
           </DialogContent>

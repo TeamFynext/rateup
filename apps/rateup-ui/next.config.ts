@@ -1,14 +1,9 @@
 import type { NextConfig } from "next";
 
-import withBundleAnalyzer from "@next/bundle-analyzer";
 import { withSentryConfig } from "@sentry/nextjs";
 import createNextIntlPlugin from "next-intl/plugin";
 
-const bundleAnalyzer = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === "true",
-});
-
-const nextConfig: NextConfig = bundleAnalyzer({
+const nextConfig: NextConfig = {
   reactStrictMode: false,
   // typedRoutes: false,
   images: {
@@ -46,7 +41,6 @@ const nextConfig: NextConfig = bundleAnalyzer({
     config.resolve.conditionNames = ["require", "..."];
     return config;
   },
-  // transpilePackages: ["@mui/x-data-grid"],
   async redirects() {
     return [
       {
@@ -66,7 +60,7 @@ const nextConfig: NextConfig = bundleAnalyzer({
       },
     ];
   },
-});
+};
 
 const sentryConfig = {
   org: "rateup",
@@ -86,8 +80,25 @@ const sentryConfig = {
 };
 const withNextIntl = createNextIntlPlugin({
   experimental: {
-    // Provide the path to the messages that you're using in `AppConfig`
-    createMessagesDeclaration: "./dictionaries/en.json",
+    // Relative path(s) to source files
+    srcPath: "./",
+
+    // extract: {
+    //   // Defines which locale to extract to
+    //   sourceLocale: "en",
+    // },
+
+    messages: {
+      // Relative path to the directory
+      path: "./dictionaries",
+
+      // Either 'json', 'po', or a custom format (see below)
+      format: "json",
+
+      // Either 'infer' to automatically detect locales based on
+      // matching files in `path` or an explicit array of locales
+      locales: "infer",
+    },
   },
 });
 

@@ -274,7 +274,7 @@ export function useNavMain({
                 ...(hasFeature(subscription, sfpn.WhatsAppAutomation)
                   ? [
                       {
-                        title: t("Flowbots"),
+                        title: t("Chatbots"),
                         url: "/dashboard/whatsapp/flowbots",
                         icon: IconSitemap,
                       },
@@ -306,13 +306,18 @@ export function useNavMain({
                 },
               ],
             },
+            ...(hasFeature(subscription, sfpn.WhatsAppAutomation)
+              ? [
+                  {
+                    title: t("Automation"),
+                    url: "/dashboard/rules",
+                    icon: Zap,
+                  },
+                ]
+              : []),
           ]
         : []),
-      {
-        title: t("Rules"),
-        url: "/dashboard/rules",
-        icon: Zap,
-      },
+
       ...(hasFeature(subscription, sfpn.Loyalty)
         ? [
             {

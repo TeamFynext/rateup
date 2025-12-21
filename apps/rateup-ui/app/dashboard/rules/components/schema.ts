@@ -4,28 +4,14 @@ import { z } from "zod";
 export const CONDITION_FIELDS = [
   { label: "Message Body", value: "MESSAGE_BODY" },
   { label: "Contact Email", value: "CONTACT_EMAIL" },
-  { label: "Business Hours", value: "BUSINESS_HOURS" },
   { label: "Contact Group", value: "CONTACT_GROUP" },
   { label: "Contact Label", value: "CONTACT_LABEL" },
   { label: "Contact Lifecycle", value: "CONTACT_LIFECYCLE" },
-  { label: "Send Once in 24 Hours", value: "SEND_ONCE_PER_24H" },
   // TODO: Enable if needed in future existed in trengo
   // { label: "Message Direction", value: "MESSAGE_DIRECTION" },
   // { label: "Elapsed Time", value: "ELAPSED_TIME" },
   // { label: "Thread Subject", value: "THREAD_SUBJECT" },
 ] as const;
-
-// Helper function to get filtered condition fields based on trigger event
-export const getAvailableConditionFields = (triggerEvent: string) => {
-  if (triggerEvent === "MESSAGE_RECEIVED") {
-    return CONDITION_FIELDS;
-  }
-  // Exclude MESSAGE_BODY and SEND_ONCE_PER_24H for other trigger events
-  return CONDITION_FIELDS.filter(
-    (field) =>
-      field.value !== "MESSAGE_BODY" && field.value !== "SEND_ONCE_PER_24H",
-  );
-};
 
 // Single source of truth for condition operators
 export const CONDITION_OPERATORS = [
@@ -49,7 +35,7 @@ export const TRIGGER_EVENTS = [
 
 // Single source of truth for action types
 export const ACTION_TYPES = [
-  { label: "Trigger Flowbot", value: "TRIGGER_CHATBOT" },
+  { label: "Trigger Chatbot", value: "TRIGGER_CHATBOT" },
   { label: "Send Message", value: "SEND_MESSAGE" },
   { label: "Send Flow", value: "SEND_FLOW" },
   { label: "Assign Team", value: "ASSIGN_TEAM" },
@@ -98,6 +84,19 @@ export const ruleGroupSchema = z.object({
   ),
 });
 
+const ruleOptionsSchema = z.object({
+  sendOncePerDay: z.boolean().default(false),
+  businessHours: z
+    .object({
+      enabled: z.boolean().default(false),
+      businessHoursId: z.string().optional(),
+    })
+    .default({
+      enabled: false,
+      businessHoursId: undefined,
+    }),
+});
+
 const createRuleBaseSchema = z.object({
   whatsappSettingsPhoneIds: z
     .array(z.string())
@@ -126,6 +125,13 @@ const createRuleBaseSchema = z.object({
       },
       { message: "Duplicate actions are not allowed" },
     ),
+  options: ruleOptionsSchema.optional().default({
+    sendOncePerDay: false,
+    businessHours: {
+      enabled: false,
+      businessHoursId: undefined,
+    },
+  }),
 });
 
 export const createRuleSchema = createRuleBaseSchema.refine(
