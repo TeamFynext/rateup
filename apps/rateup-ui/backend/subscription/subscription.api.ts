@@ -22,3 +22,12 @@ export async function updateSubscription(
     : `${SUBSCRIPTION_URL}/${orgId}`;
   return (await axiosClient.put(url, updatedData)).data;
 }
+
+export async function getMessageStats(orgId, filter = "") {
+  return (
+    await axiosClient.get(
+      `${SUBSCRIPTION_URL}/message-stats/${orgId}?${filter}`,
+      { timeout: 0 },
+    )
+  ).data;
+}

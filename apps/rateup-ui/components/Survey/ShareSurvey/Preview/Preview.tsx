@@ -126,7 +126,7 @@ function Preview({
           {
             <CustomQRCode
               className={styles["qr-svg"]}
-              textToBeEmbedded={url}
+              textToBeEmbedded={url || process.env.NEXT_PUBLIC_FRONTEND_URL}
               errorCorrectionLevel={"H"}
               qrColor={qrColor}
             />
