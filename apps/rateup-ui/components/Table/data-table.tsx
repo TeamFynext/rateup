@@ -66,6 +66,7 @@ export interface DataTableProps<TData, TValue> {
 
 interface DataTableToolbarProps<TData, TValue> {
   table: ReturnType<typeof useReactTable<TData>>;
+  columnFilters?: any;
 }
 
 export function DataTable<TData, TValue>({
@@ -147,7 +148,9 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="flex flex-col h-full">
-      {DataTableToolbar && <DataTableToolbar table={table} />}
+      {DataTableToolbar && (
+        <DataTableToolbar table={table} columnFilters={columnFilters} />
+      )}
       <div className="overflow-auto rounded-md border h-full bg-card">
         <ScrollAreaAutosize mah={"100%"}>
           <Table>

@@ -2,40 +2,38 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Center,
-  CopyButton,
-  Group,
-  Image,
-  Paper,
-  Radio,
-  ScrollArea,
-  Stack,
-  Switch,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
+  IconBrandFacebook,
+  IconBrandWhatsapp,
   IconCheck,
   IconChevronLeft,
   IconClockPlus,
+  IconCode,
   IconCopy,
+  IconMail,
   IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
+  IconShare,
   IconX,
 } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
-import RateupSwitch from "@/components/Switch/RateupSwitch";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { updateSurvey } from "../../../backend/surveys/survey.api";
 import { useWaSettings } from "../../../backend/whatsapp/settings/waSettings.query";
@@ -47,23 +45,16 @@ import {
 } from "../../../utils/dateTime";
 import { showLoadingToast } from "../../../utils/notifications";
 import {
-  RateupButtonBlue,
-  RateupButtonSecondary,
-} from "../../Button/RateupButtons";
-import {
   ContainedDateTimePickerInput,
   ContainedSelection,
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import NothingFound from "../../NothingFound/NothingFound";
-import PaperLayout from "../../styled/Layouts/PaperLayout";
 import { StatusBadge } from "../SurveyCardList";
 import { TabEnum } from "../SurveyId";
 import GenerateTags from "./GenerateTags";
 import IFrameModal from "./IFrameModal";
 import ShareQR from "./ShareQR";
-import TagManager from "./TagManager";
 
 enum PublishEnum {
   NOW = "NOW",
@@ -254,142 +245,184 @@ const ShareSurvey = ({
   );
 
   return (
-    <Stack p={"0.3125rem"} pr={"0.625rem"} pb={"2rem"}>
-      <PaperLayout>
-        <Group justify="space-between">
-          {isScheduled ? (
-            <RateupSwitch
-              offMessage={translations("Click here to schedule the Survey")}
-              onMessage={translations("Click here to unschedule the survey")}
-              checked={isScheduled}
-              onChange={(event) => {
-                showLoadingToast(
-                  translations("Hold your survey is getting unpublished"),
-                  "load-data",
-                  true,
-                  "Unpublishing...",
-                );
-                surveyUpdateMutation.mutate({
-                  isPublished: event.currentTarget.checked,
-                  surveyPublishAt: null,
-                  surveyEndAt: null,
-                });
-              }}
-              label={
-                <Text fw={500} fz={"lg"}>
-                  {translations("Scheduled")}
-                </Text>
-              }
-            />
-          ) : (
-            <RateupSwitch
-              offMessage={translations("Click here to Publish the Survey")}
-              onMessage={translations("Click here to unpublish the survey")}
-              checked={isPublished}
-              onChange={(event) => {
-                if (!isPublished) {
-                  setEditPublish(null);
-                  openPublishSettings();
-                } else {
-                  showLoadingToast(
-                    translations("Hold your survey is getting UnPublished"),
-                    "load-data",
-                    true,
-                    "Unpublishing...",
-                  );
-                  surveyUpdateMutation.mutate({
-                    isPublished: event.currentTarget.checked,
-                    surveyPublishAt: null,
-                    surveyEndAt: null,
-                  });
-                }
-              }}
-              label={
-                <Text fw={700} fz={"lg"}>
-                  {isPublished
-                    ? translations("Published")
-                    : translations("Publish Survey")}
-                </Text>
-              }
-            />
-          )}
-          <Group>
-            <Text>{translations("Current Status: ")}</Text>
+    <div className="flex flex-col gap-4 w-full max-h-[80vh]">
+      <div className="border rounded-xl p-4 w-full">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          {/* LEFT: Publish / Schedule */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-1">
+            {isScheduled ? (
+              <div className="flex items-center justify-between gap-4 w-full">
+                <div className="flex flex-col gap-1">
+                  <Label className="text-base sm:text-lg font-medium">
+                    {translations("Scheduled")}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {translations("Click here to unschedule the survey")}
+                  </p>
+                </div>
+
+                <Switch
+                  checked={isScheduled}
+                  onCheckedChange={(checked) => {
+                    showLoadingToast(
+                      translations("Hold your survey is getting unpublished"),
+                      "load-data",
+                      true,
+                      "Unpublishing...",
+                    );
+
+                    surveyUpdateMutation.mutate({
+                      isPublished: checked,
+                      surveyPublishAt: null,
+                      surveyEndAt: null,
+                    });
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-4 w-full">
+                <div className="flex flex-col gap-1">
+                  <Label className="text-base sm:text-lg font-bold">
+                    {isPublished
+                      ? translations("Published")
+                      : translations("Publish Survey")}
+                  </Label>
+
+                  <p className="text-sm text-muted-foreground">
+                    {isPublished
+                      ? translations("Click here to unpublish the survey")
+                      : translations("Click here to Publish the Survey")}
+                  </p>
+                </div>
+
+                <Switch
+                  checked={isPublished}
+                  onCheckedChange={(checked) => {
+                    if (!isPublished) {
+                      openPublishSettings();
+                    } else {
+                      showLoadingToast(
+                        translations("Hold your survey is getting UnPublished"),
+                        "load-data",
+                        true,
+                        "Unpublishing...",
+                      );
+
+                      surveyUpdateMutation.mutate({
+                        isPublished: checked,
+                        surveyPublishAt: null,
+                        surveyEndAt: null,
+                      });
+                    }
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* STATUS */}
+          <div className="flex items-center gap-1 flex-wrap">
+            <p className="text-sm">{translations("Current Status:")}</p>
             {isPublished ? (
               <StatusBadge active={survey?.active} />
             ) : (
-              <Text c="dark.1">{translations("Not published! ")}</Text>
+              <p className="text-sm">{translations("Not published")}</p>
             )}
-          </Group>
+          </div>
 
-          <Stack>
+          {/* DATES */}
+          <div className="flex flex-col gap-2 text-sm">
             {(isPublished || survey?.surveyPublishAt) && (
-              <Group>
-                <Text w={150}>
+              <div className="flex items-center gap-1 flex-wrap">
+                <p>
                   {isScheduled
                     ? translations("To be Published On")
                     : translations("Published On")}
-                  :{" "}
-                </Text>
-                <Text c={isScheduled ? "orange.6" : "dark.1"}>
+                  :
+                </p>
+
+                <p className="bg-yellow-100 px-2 py-1 rounded-sm">
                   {survey?.surveyPublishAt
                     ? formatIsoDateStringWithTime(survey?.surveyPublishAt)
                     : "Nil"}
-                </Text>
+                </p>
+
                 {isScheduled && (
-                  <ActionIcon
-                    size={"sm"}
-                    variant="subtle"
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={() => {
                       setEditPublish("Publish");
                       openPublishSettings();
                     }}
                   >
                     <IconPencil />
-                  </ActionIcon>
+                  </Button>
                 )}
-              </Group>
+              </div>
             )}
 
             {survey?.surveyEndAt && (
-              <Group>
-                <Text w={150}>{translations("End At: ")}</Text>
-                {/* TODO : Highligh ended time */}
-                {/* <Text>{(survey?.surveyEndAt && !isPublished && !isScheduled) ? 'Ended at:' : 'End at' }</Text> */}
+              <div className="flex items-center gap-1 flex-wrap">
+                <p>{translations("End At:")}</p>
+                <p className="bg-red-100 px-2 py-1 rounded-sm">
+                  {formatIsoDateStringWithTime(survey?.surveyEndAt)}
+                </p>
 
-                <Text c="dark.1">
-                  {survey?.surveyEndAt
-                    ? formatIsoDateStringWithTime(survey?.surveyEndAt)
-                    : "Nil"}
-                </Text>
-                <ActionIcon
-                  size={"sm"}
-                  variant="subtle"
+                <Button
+                  size="sm"
+                  variant="outline"
                   onClick={() => {
                     setEditPublish("Expiry");
                     openPublishSettings();
                   }}
                 >
                   <IconPencil />
-                </ActionIcon>
-              </Group>
+                </Button>
+              </div>
             )}
-          </Stack>
+          </div>
+
+          {/* ADD EXPIRY */}
           {!survey.surveyEndAt &&
             (survey.isPublished || survey.surveyPublishAt) && (
-              <Tooltip label={translations("Schedule survey expiry")}>
-                <ActionIcon
-                  size={"sm"}
-                  variant="subtle"
-                  onClick={() => {
-                    setEditPublish("Expiry");
-                    openPublishSettings();
-                  }}
-                >
-                  <IconClockPlus />
-                </ActionIcon>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditPublish("Expiry");
+                        openPublishSettings();
+                      }}
+                    >
+                      <IconClockPlus />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{translations("Schedule survey expiry")}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
+
+          {/* PAUSE / RESUME */}
+          <Button
+            className="flex items-center justify-center gap-1 rounded-xl min-w-28 w-full sm:w-auto"
+            variant="outline"
+            disabled={disableShare}
+            onClick={() =>
+              surveyStatusUpdateMutation.mutate({ active: !survey?.active })
+            }
+          >
+            {survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />}
+            <span>
+              {survey?.active ? translations("Pause") : translations("Resume")}
+            </span>
+          </Button>
+
+          {/* MODAL */}
           <PubliShSettingsModal
             opened={publishSettings}
             close={closePublishSettings}
@@ -397,19 +430,8 @@ const ShareSurvey = ({
             surveyUpdateMutation={surveyUpdateMutation}
             survey={survey}
           />
-
-          <RateupButtonSecondary
-            disabled={disableShare}
-            title={
-              survey?.active ? translations("Pause") : translations("Resume")
-            }
-            leftIcon={survey?.active ? <IconPlayerPause /> : <IconPlayerPlay />}
-            onClick={() =>
-              surveyStatusUpdateMutation.mutate({ active: !survey?.active })
-            }
-          />
-        </Group>
-      </PaperLayout>
+        </div>
+      </div>
 
       <FormModalLayout
         centered
@@ -417,216 +439,197 @@ const ShareSurvey = ({
         opened={opened}
         title={translations("Survey contains errors")}
       >
-        <ScrollArea.Autosize mah={400} mb="xl">
-          <Box my="xl">
+        <ScrollArea className="max-h-[400px] mb-6">
+          <div className="my-6">
             {Array.isArray(errors) ? (
-              errors?.map((item, index) => (
-                <Paper
-                  radius="lg"
-                  shadow="md"
-                  key={item?.id}
-                  p="md"
-                  style={{ marginBottom: "10px" }}
-                >
-                  <Title order={4}>
-                    {
-                      getContent(
-                        Object.values(item?.title)?.[0]?.toString() ?? "",
-                      ) as React.ReactNode
-                    }
-                  </Title>
-                  <ul>
-                    {item?.errors?.map((error, index) => (
-                      <li key={index}>
-                        <Text c="#fa5252">{error}</Text>
-                      </li>
-                    ))}
-                  </ul>
-                </Paper>
+              errors.map((item) => (
+                <div key={item?.id} className="mb-3 rounded-xl shadow-md">
+                  <div className="p-4">
+                    <h4 className="text-lg font-semibold mb-2">
+                      {
+                        getContent(
+                          Object.values(item?.title)?.[0]?.toString() ?? "",
+                        ) as React.ReactNode
+                      }
+                    </h4>
+
+                    <ul className="list-disc pl-5 space-y-1">
+                      {item?.errors?.map((error: string, index: number) => (
+                        <li key={index} className="text-red-500 text-sm">
+                          {error}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               ))
             ) : (
-              <Box>
-                <Text c="red">
+              <div>
+                <p className="text-red-500">
                   {translations("Error: ")}
                   {errors?.error}
-                </Text>
-              </Box>
+                </p>
+              </div>
             )}
-          </Box>
-        </ScrollArea.Autosize>
+          </div>
+        </ScrollArea>
 
-        <Center>
-          <RateupButtonBlue
-            leftIcon={<IconChevronLeft />}
-            title={translations("Back to Edit Questions")}
+        <div className="flex items-center justify-center">
+          <Button
+            className="flex items-center justify-center gap-1"
             onClick={() => {
               close();
               setActiveTab(TabEnum.Edit);
             }}
-          />
-        </Center>
+          >
+            <IconChevronLeft />
+            <span>{translations("Back to Edit Questions")}</span>
+          </Button>
+        </div>
       </FormModalLayout>
-      <PaperLayout opacity={disableShare ? 0.5 : 1}>
-        <Group gap="lg">
-          <Stack style={{ minWidth: 300, flex: 1 }}>
-            <Title order={4}>{translations("Share Survey")}</Title>
-            <Group>
-              <ContainedSelection
-                style={{ flex: 1 }}
-                disabled={disableShare}
-                label={translations("Select Team")}
-                allowDeselect={false}
-                value={selectTeamDropdownState}
-                miw={150}
-                data={teamSelectData}
-                onChange={handleContainedSelectionChange}
-              />
+      <div
+        className={`${disableShare ? "opacity-50" : "opacity-100"} border rounded-xl`}
+      >
+        <div className="w-full">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+            {/* LEFT: Share Survey */}
+            <div className="flex flex-col gap-4 w-full">
+              <div className="border-b">
+                <div className="flex items-center gap-1 p-4">
+                  <IconShare className="w-4 h-4 text-primary" />
+                  <h2 className="text-base font-semibold">
+                    {translations("Share Survey")}
+                  </h2>
+                </div>
+              </div>
 
-              <Group gap={2} align="flex-start">
-                <GenerateTags
-                  disabled={disableShare}
-                  tagSelectData={tag}
-                  setTagSelectData={setTag}
-                />
-                {/* <Group gap={"xs"}>
-                  <TagManager
-                    isPublished={isPublished}
-                    selectTeamDropdownValue={selectTeamDropdownState}
-                    teamSelectData={teamSelectData}
-                    onSelectTeamDropdownChange={handleContainedSelectionChange}
-                    nothingFound={NothingFound}
-                    getSelectedRowsToExport={getSelectedRowsToExport}
-                    tagsToMap={tag}
-                    surveyTitle={survey?.title}
-                    surveyId={surveyId}
-                    shareUrl={shareUrl}
+              {/* Team + Tags */}
+              <div className="flex flex-col gap-4 w-full p-4 max-w-4xl">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <ContainedSelection
+                    style={{ flex: 1 }}
+                    disabled={disableShare}
+                    label={translations("Select Team")}
+                    allowDeselect={false}
+                    value={selectTeamDropdownState}
+                    miw={150}
+                    data={teamSelectData}
+                    onChange={handleContainedSelectionChange}
                   />
-                </Group> */}
-              </Group>
-            </Group>
-            <CopyLinkComponent value={shareUrl} disabled={disableShare} />
-          </Stack>
 
-          <Stack style={{ minWidth: 300, flex: 1 }}>
-            <Title order={4} style={{ textAlign: "center" }}>
-              {translations("How would you like to survey people?")}
-            </Title>
-            <Group justify="center" gap="xl">
-              <ActionIcon
-                disabled={disableShare}
-                size="xl"
-                variant="light"
-                onClick={() => shareButtonAction("mail")}
-                style={{ background: "none" }}
-              >
-                <Tooltip
-                  label="Share via Email"
-                  withArrow
-                  color="var(--light-grey-color)"
-                  position="bottom"
-                  styles={{ tooltip: { color: "grey" } }}
-                >
-                  <Image
-                    opacity={!disableShare ? 1 : 0.5}
-                    alt="mail icon"
-                    src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/mail.svg`}
-                    w={40}
-                    h={40}
-                    style={{ objectFit: "contain" }}
-                  />
-                </Tooltip>
-              </ActionIcon>
-              <ActionIcon
-                disabled={disableShare}
-                size="xl"
-                variant="light"
-                onClick={() => shareButtonAction("whatsapp")}
-                style={{ background: "none" }}
-              >
-                <Tooltip
-                  label={translations("Share via WhatsApp")}
-                  withArrow
-                  color="var(--light-grey-color)"
-                  position="bottom"
-                  styles={{ tooltip: { color: "grey" } }}
-                >
-                  <Image
-                    opacity={!disableShare ? 1 : 0.5}
-                    alt="whatsapp icon"
-                    src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/whatsapp.svg`}
-                    w={40}
-                    h={40}
-                    style={{ objectFit: "contain" }}
-                  />
-                </Tooltip>
-              </ActionIcon>
-              <ActionIcon
-                disabled={disableShare}
-                size="xl"
-                variant="light"
-                onClick={() => shareButtonAction("fb")}
-                style={{ background: "none" }}
-              >
-                <Tooltip
-                  label={translations("Share via Facebook")}
-                  withArrow
-                  color="var(--light-grey-color)"
-                  position="bottom"
-                  styles={{ tooltip: { color: "grey" } }}
-                >
-                  <Image
-                    opacity={!disableShare ? 1 : 0.5}
-                    alt="facebook icon"
-                    src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_WEB_IMAGES_URL}/images/social-media-icons/facebook.svg`}
-                    w={40}
-                    h={40}
-                    style={{ objectFit: "contain" }}
-                  />
-                </Tooltip>
-              </ActionIcon>
-              {survey?.type === SurveyType.Web && (
-                <ActionIcon
-                  disabled={disableShare}
-                  size="xl"
-                  variant="light"
-                  onClick={openIframe}
-                  style={{ background: "none" }}
-                >
-                  <Tooltip
-                    label={translations("Embed as iframe")}
-                    withArrow
-                    color="var(--light-grey-color)"
-                    position="bottom"
-                    styles={{ tooltip: { color: "grey" } }}
-                  >
-                    <Image
-                      opacity={!disableShare ? 1 : 0.5}
-                      alt="iframe icon"
-                      src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/iframe-icon.png`}
-                      w={40}
-                      h={40}
-                      style={{ objectFit: "contain" }}
+                  <div className="flex items-start">
+                    <GenerateTags
+                      disabled={disableShare}
+                      tagSelectData={tag}
+                      setTagSelectData={setTag}
                     />
-                  </Tooltip>
-                </ActionIcon>
-              )}
-            </Group>
-          </Stack>
-        </Group>
-      </PaperLayout>
-      <PaperLayout>
-        {shareUrl && (
+                  </div>
+                </div>
+
+                {/* Copy Link */}
+                <CopyLinkComponent value={shareUrl} disabled={disableShare} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        className={`${disableShare ? "opacity-50" : "opacity-100"} border p-4 rounded-xl`}
+      >
+        <div className="flex items-center justify-between gap-3 w-full lg:w-auto">
+          <h2 className="text-sm">
+            {translations("How would you like to survey people?")}
+          </h2>
+
+          <div className="flex flex-wrap justify-start sm:justify-center gap-6">
+            {/* Email */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={disableShare}
+                  onClick={() => shareButtonAction("mail")}
+                  className="bg-transparent"
+                >
+                  <IconMail />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {translations("Share via Email")}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* WhatsApp */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={disableShare}
+                  onClick={() => shareButtonAction("whatsapp")}
+                  className="bg-transparent"
+                >
+                  <IconBrandWhatsapp />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {translations("Share via WhatsApp")}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Facebook */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  disabled={disableShare}
+                  onClick={() => shareButtonAction("fb")}
+                  className="bg-transparent"
+                >
+                  <IconBrandFacebook />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {translations("Share via Facebook")}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Iframe */}
+            {survey?.type === SurveyType.Web && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={disableShare}
+                    onClick={openIframe}
+                    className="bg-transparent"
+                  >
+                    <IconCode />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {translations("Embed as iframe")}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+      </div>
+      {shareUrl && (
+        <div className="border rounded-xl">
           <ShareQR
             url={shareUrl}
-            sx={{ borderRadius: "1rem" }}
             title={survey?.title}
             isPublished={!disableShare}
             id={surveyId}
             queryKey={"surveyShareSettings"}
             resourceName={"survey"}
           />
-        )}
-      </PaperLayout>
+        </div>
+      )}
       <FormModalLayout
         title={translations("Generate IFrame")}
         opened={openedIframe}
@@ -636,7 +639,7 @@ const ShareSurvey = ({
       >
         <IFrameModal close={closeIframe} shareUrl={shareUrl} />
       </FormModalLayout>
-    </Stack>
+    </div>
   );
 };
 
@@ -652,8 +655,14 @@ export const CopyLinkComponent = ({
   label = "",
   buttonRadius = "md",
 }: CopyLinkComponentProps) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   return (
-    <Group gap={"0px"} align="center">
+    <div className="flex items-center">
       <ContainedTextField
         readOnly
         value={value}
@@ -661,25 +670,30 @@ export const CopyLinkComponent = ({
         pr="sm"
         disabled={disabled}
         style={{
-          maxWidth: "600px",
+          maxWidth: "900px",
           flexGrow: 1,
         }}
       />
-      <CopyButton value={value}>
-        {({ copied, copy }) => (
-          <Button
-            variant={copied ? "outline" : "filled"}
-            onClick={copy}
-            rightSection={<IconCopy />}
-            disabled={disabled}
-            radius={buttonRadius}
-            mt={label ? "md" : undefined}
-          >
-            {copied ? "Copied url" : "Copy url"}
-          </Button>
+
+      <Button
+        variant={copied ? "outline" : "default"}
+        onClick={handleCopy}
+        disabled={disabled}
+        className="flex items-center gap-2 w-28"
+      >
+        {copied ? (
+          <>
+            <IconCheck className="h-4 w-4" />
+            Copied url
+          </>
+        ) : (
+          <>
+            <IconCopy className="h-4 w-4" />
+            Copy url
+          </>
         )}
-      </CopyButton>
-    </Group>
+      </Button>
+    </div>
   );
 };
 
@@ -812,32 +826,44 @@ const PubliShSettingsModal = ({
       }
       includeCancelButton
     >
-      <Stack style={{ minHeight: "250px" }} mt="xl">
+      <div className="min-h-[250px] mt-6 space-y-6">
         {(!editPublish || editPublish === "Publish") && (
-          <Stack mb="xl">
-            <Radio.Group
-              value={publishChoice}
-              onChange={setPublishChoice}
-              name="selectPublish"
-              label={translations("Publish")}
-              withAsterisk
-            >
-              <Group mt="xs">
-                <Radio checked label="Now" value={PublishEnum.NOW} />
-                <Radio
-                  label={translations("Schedule Later")}
-                  value={PublishEnum.LATER}
-                />
-              </Group>
-            </Radio.Group>
+          <div className="space-y-4 mb-6">
+            <div className="space-y-2">
+              <Label className="font-medium">
+                {translations("Publish")}{" "}
+                <span className="text-red-500">*</span>
+              </Label>
+
+              <RadioGroup
+                value={publishChoice}
+                onValueChange={setPublishChoice}
+                className="flex gap-6"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value={PublishEnum.NOW} id="publish-now" />
+                  <Label htmlFor="publish-now">Now</Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem
+                    value={PublishEnum.LATER}
+                    id="publish-later"
+                  />
+                  <Label htmlFor="publish-later">
+                    {translations("Schedule Later")}
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
             {publishChoice === PublishEnum.LATER && (
-              <Stack>
+              <div className="space-y-2">
                 <ContainedDateTimePickerInput
                   valueFormat="DD MMM YYYY - hh mm A"
                   dropdownType="modal"
                   placeholder={translations("Date")}
                   label={translations("Publish Survey At")}
-                  withAsterisk
                   {...form.getInputProps("surveyPublishAt")}
                   minDate={
                     new Date(
@@ -845,42 +871,51 @@ const PubliShSettingsModal = ({
                     )
                   }
                 />
-                <Text c="red" size="xs">
+
+                <p className="text-xs text-red-500">
                   * {translations("*Time will be rounded to nearest hours ")}
                   <br />*{" "}
                   {translations(
                     "Publish time must be at least 1 hour ahead of current time",
                   )}
-                </Text>
-              </Stack>
+                </p>
+              </div>
             )}
-          </Stack>
+          </div>
         )}
 
         {(!editPublish || editPublish === "Expiry") && (
-          <Stack mb="xl">
-            <Radio.Group
-              value={surveyExpiry}
-              onChange={setSurveyExpiry}
-              name="selectExpiry"
-              label={translations("Expiry Date")}
-              withAsterisk
-            >
-              <Group mt="xs">
-                <Radio
-                  checked
-                  label={translations("No Expiry")}
-                  value={ExpiryEnum.NO_EXPIRY}
-                />
-                <Radio
-                  label={translations("Custom Date")}
-                  value={ExpiryEnum.CUSTOM_DATE}
-                />
-              </Group>
-            </Radio.Group>
+          <div className="space-y-4 mb-6">
+            <div className="space-y-2">
+              <Label className="font-medium">
+                {translations("Expiry Date")}{" "}
+                <span className="text-red-500">*</span>
+              </Label>
+
+              <RadioGroup
+                value={surveyExpiry}
+                onValueChange={setSurveyExpiry}
+                className="flex gap-6"
+              >
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value={ExpiryEnum.NO_EXPIRY} id="no-expiry" />
+                  <Label htmlFor="no-expiry">{translations("No Expiry")}</Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem
+                    value={ExpiryEnum.CUSTOM_DATE}
+                    id="custom-expiry"
+                  />
+                  <Label htmlFor="custom-expiry">
+                    {translations("Custom Date")}
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
 
             {surveyExpiry === ExpiryEnum.CUSTOM_DATE && (
-              <Stack>
+              <div className="space-y-2">
                 <ContainedDateTimePickerInput
                   dropdownType="modal"
                   valueFormat="DD MMM YYYY - hh mm A"
@@ -898,14 +933,15 @@ const PubliShSettingsModal = ({
                         )
                   }
                 />
-                <Text c="red" size="xs">
+
+                <p className="text-xs text-red-500">
                   * {translations("End date must be after the publish date")}
-                </Text>
-              </Stack>
+                </p>
+              </div>
             )}
-          </Stack>
+          </div>
         )}
-      </Stack>
+      </div>
     </FormModalLayout>
   );
 };

@@ -54,9 +54,10 @@ export async function resetResponsesStats(surveyTeamMapId: string) {
   return res.data;
 }
 
-export async function deleteResponse(id: string, surveyTeamMapId: string) {
+export async function deleteResponse(id: string[], surveyTeamMapId: string) {
   const res = await axiosClient.delete(
-    `${RESPONSE_URL}/${surveyTeamMapId}/delete/${id}`,
+    `${RESPONSE_URL}/${surveyTeamMapId}/delete`,
+    { data: { id } },
   );
   return res.data;
 }

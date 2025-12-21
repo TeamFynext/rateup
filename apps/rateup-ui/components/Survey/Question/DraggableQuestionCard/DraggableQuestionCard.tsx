@@ -1,28 +1,18 @@
 "use client";
 
 import React, { useContext } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 
-import {
-  ActionIcon,
-  Badge,
-  Box,
-  Flex,
-  Group,
-  Image,
-  Text,
-  useMantineTheme,
-} from "@mantine/core";
 import { useDisclosure, useHover } from "@mantine/hooks";
 import { IconGripVertical, IconTrash } from "@tabler/icons-react";
 import { Draggable } from "@hello-pangea/dnd";
-import cx from "clsx";
 import { useTranslations } from "next-intl";
 
 import { PageType } from "@/types/enums";
 import { useQuestionDeleteMutation } from "@/backend/surveys/questions/questions.query";
-import { GoogleIcon } from "@/components/Button/GoogleIcon";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import { Button } from "@/components/ui/button";
 import SelectedLanguageContext from "@/context/SelectedLanguage";
 import { extractText } from "@/utils";
 
@@ -30,7 +20,6 @@ import { pageIcons } from "../../Page/PageIcons";
 import { getReplacedTitleFromVariable } from "../../TakeSurvey/TakeSurveyComponent/util";
 import { reviewPageLogosObj } from "../QuestionReviewPageEditor/constants";
 import { questionIcons } from "../QuestionTypeSelection";
-import classes from "./DraggableQuestionCard.module.css";
 
 interface DraggableQuestionCardProps {
   question: Question;
@@ -55,7 +44,6 @@ export function DraggableQuestionCard({
   const surveyId = params.surveyId as string;
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [dialogOpened, { toggle, close: closeDialog }] = useDisclosure(false);
-  const theme = useMantineTheme();
   const questionTitle =
     getReplacedTitleFromVariable({
       title:
@@ -98,15 +86,9 @@ export function DraggableQuestionCard({
         //isDragDisabled={question.type in PageType}
       >
         {(provided, snapshot) => (
-          <div ref={hoverRef}>
-            <Box
-              className={cx(
-                classes.item,
-                {
-                  [classes.itemDragging]: snapshot.isDragging,
-                },
-                classes.transition,
-              )}
+          <div ref={hoverRef} className="flex flex-col">
+            <div
+              className={`${selected && "bg-gray-100"} flex flex-col sm:flex-row items-center justify-between gap-3 rounded-sm border p-4 cursor-pointer relative mb-2 transition-all duration-300 shadow-sm w-[20vw] sm:w-[50vh] lg:w-full`}
               ref={provided.innerRef}
               onClick={() => {
                 if (!nonClickableQuestionTypeStrs.includes(question.type)) {
@@ -119,36 +101,41 @@ export function DraggableQuestionCard({
                 ...provided.draggableProps.style,
               }}
             >
-              <div {...provided.dragHandleProps} className={classes.dragHandle}>
-                <IconGripVertical size={20} stroke={1.5} />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-2">
+                <div
+                  {...provided.dragHandleProps}
+                  className={`flex items-center justify-center content-center h-full`}
+                >
+                  <IconGripVertical size={20} stroke={1.5} />
+                </div>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-3">
+                  <div className="flex items-center gap-1 bg-primary px-2 py-1 rounded-xl">
+                    <p
+                      className={`text-xs flex items-center justify-center text-white`}
+                    >
+                      {index + 1}
+                    </p>
+                    <div
+                      className={`flex items-center justify-center text-white`}
+                    >
+                      {pageIcons[question.type] &&
+                        React.createElement(pageIcons[question.type], {
+                          size: 15,
+                          strokeWidth: 2,
+                        })}
+
+                      {questionIcons[question.type] &&
+                        React.createElement(questionIcons[question.type], {
+                          size: 15,
+                          strokeWidth: 2,
+                        })}
+                    </div>
+                  </div>
+                  <p className={`flex-1`}>{extractText(questionTitle)}</p>
+                </div>
               </div>
-              <Badge
-                style={{ minWidth: "30px" }}
-                c={"white"}
-                variant={selected ? "filled" : "filled"}
-              >
-                <Flex style={{ marginTop: "0.5rem", marginBottom: "0.5rem" }}>
-                  {pageIcons[question.type] &&
-                    React.createElement(pageIcons[question.type], {
-                      size: 15,
-                      strokeWidth: 2,
-                      style: { marginRight: "0.5rem" },
-                    })}
 
-                  {questionIcons[question.type] &&
-                    React.createElement(questionIcons[question.type], {
-                      size: 15,
-                      strokeWidth: 2,
-                      style: { marginRight: "0.5rem" },
-                    })}
-                  {index + 1}
-                </Flex>
-              </Badge>
-              <Text px="xs" fz={14} truncate style={{ flex: 1 }}>
-                {extractText(questionTitle)}
-              </Text>
-
-              <Group justify={"flex-end"} gap={4} ml={"auto"}>
+              <div className="flex gap-1">
                 {question?.logic?.length && (
                   <Image
                     src={
@@ -156,30 +143,31 @@ export function DraggableQuestionCard({
                         ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump-whatsapp.svg`
                         : `${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`
                     }
-                    w={30}
-                    h={30}
-                    fit="contain"
+                    width={30}
+                    height={30}
                     alt="image of logic jump"
+                    style={{
+                      filter: selected ? "brightness(0) invert(1)" : "none",
+                    }}
                   />
                 )}
                 {question.reviewPageOptions &&
                   reviewPageLogosObj[question.reviewPagePlatform]}
 
                 {!nonDeletablePagetypeStrs.includes(question.type) && (
-                  <ActionIcon
+                  <Button
                     onClick={(e) => {
                       e.stopPropagation();
                       closeDialog();
                       toggle();
                     }}
-                    variant="subtle"
-                    color="gray"
+                    variant="ghost"
                   >
                     <IconTrash />
-                  </ActionIcon>
+                  </Button>
                 )}
-              </Group>
-            </Box>
+              </div>
+            </div>
           </div>
         )}
       </Draggable>

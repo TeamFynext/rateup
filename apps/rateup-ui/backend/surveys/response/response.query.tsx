@@ -117,16 +117,11 @@ export function useResetResponsesStats(
   });
 }
 
-export function useDeleteResponse(
-  surveyId: string,
-  surveyTeamMapId: string,
-  close: () => void,
-  setIsDeleting: React.Dispatch<React.SetStateAction<boolean>>,
-) {
+export function useDeleteResponse(surveyId: string, surveyTeamMapId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => deleteResponse(id, surveyTeamMapId),
+    mutationFn: (id: string[]) => deleteResponse(id, surveyTeamMapId),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["responses"] });
       queryClient.invalidateQueries({ queryKey: ["survey", surveyId] });
@@ -147,8 +142,6 @@ export function useDeleteResponse(
         ),
         autoClose: 3000,
       });
-      response?.success && close();
-      setIsDeleting(false);
     },
     onError: (error: any) => {
       console.error("Error Deleting", error.message);
@@ -161,7 +154,6 @@ export function useDeleteResponse(
         icon: <IconX size="1rem" />,
         autoClose: 3000,
       });
-      setIsDeleting(false);
     },
   });
 }

@@ -2519,5 +2519,8 @@
   "Questions": "Fragen",
   "Spaces are not allowed, try": "Leerzeichen sind nicht erlaubt, versuchen Sie",
   "Team Code can contain only alphabets, numbers, and hyphens": "Der Teamcode darf nur Buchstaben, Zahlen und Bindestriche enthalten",
-  "Clicks": "Klicks"
+  "Clicks": "Klicks",
+  "Not published": "Nicht veröffentlicht",
+  "Result": "Ergebnis",
+  "Apply Filters": "Filter anwenden"
 }

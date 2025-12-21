@@ -2514,5 +2514,8 @@
   "Rename Link": "إعادة تسمية الرابط",
   "No business hours set up yet": "لم يتم إعداد ساعات العمل بعد",
   "Click 'Manage' to add your first business hours": "انقر على 'Manage' لإضافة أول ساعات عمل لك",
-  "Clicks": "النقرات"
+  "Clicks": "النقرات",
+  "Not published": "غير منشور",
+  "Result": "النتيجة",
+  "Apply Filters": "تطبيق عوامل التصفية"
 }

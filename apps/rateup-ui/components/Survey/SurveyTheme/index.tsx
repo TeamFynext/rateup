@@ -1,17 +1,13 @@
 "use client";
 
-import { Box, Button, Center } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
-import classNames from "classnames/bind";
 import { useTranslations } from "next-intl";
 
+import { Button } from "@/components/ui/button";
 import { useNavControlContext } from "@/context/NavControlContext";
 
 import PreviewDeviceButtons from "./components/PreviewDeviceButtons";
-import styles from "./SurveyTheme.module.css";
 import SurveyThemePreviewLayout from "./SurveyThemePreviewLayout";
-
-const cx = classNames.bind(styles);
 
 function SurveyTheme({
   survey,
@@ -28,43 +24,41 @@ function SurveyTheme({
 
   if (!surveyTheme)
     return (
-      <Center h={"100%"}>
+      <div className="flex justify-center items-center h-full">
         <p>{translations("Unable to get theme, please try again later")}</p>
-      </Center>
+      </div>
     );
 
   return (
-    <Box className={`${cx("survey-theme-root-div")} survey-theme-root-div`}>
-      <Box
-        className={`${cx("selected-page-tab-panels-and-styles-div-container")} selected-page-tab-panels-and-styles-div-container`}
-      >
-        <Box
-          className={`${cx("theme-preview-container")} theme-preview-container`}
+    <div className="h-full w-full">
+      <div className="h-full w-full relative">
+        <div
+          className={`flex items-center justify-between absolute z-50 w-full p-3`}
         >
           <PreviewDeviceButtons />
 
           {!isSurveyThemePreview && (
             <Button
-              className={`${cx("edit-page-theme-btn", { "edit-preview-edit-page-theme-btn": isSurveyThemeEditView })}`}
-              rightSection={<IconEdit size={16} />}
               onClick={() => {
                 onEditPageBtnClick?.();
                 setNavOpened(false);
               }}
+              className="flex items-center justify-center gap-1"
             >
+              <IconEdit size={16} />
               Edit
             </Button>
           )}
+        </div>
 
-          <SurveyThemePreviewLayout
-            survey={survey}
-            previewId={previewId}
-            isSurveyThemeEditView={isSurveyThemeEditView}
-            isSurveyThemePreview={isSurveyThemePreview}
-          />
-        </Box>
-      </Box>
-    </Box>
+        <SurveyThemePreviewLayout
+          survey={survey}
+          previewId={previewId}
+          isSurveyThemeEditView={isSurveyThemeEditView}
+          isSurveyThemePreview={isSurveyThemePreview}
+        />
+      </div>
+    </div>
   );
 }
 
