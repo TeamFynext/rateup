@@ -453,6 +453,13 @@ export type RuleWithConditions = {
   isActive: boolean;
   triggerEvent: string;
   whatsappSettingsPhoneIds: string[];
+  options?: {
+    sendOncePerDay?: boolean;
+    businessHours?: {
+      enabled: boolean;
+      businessHoursId: string;
+    };
+  } | null;
   groups: Array<{
     id: string;
     operator: "AND" | "OR";
@@ -538,26 +545,6 @@ async function validateRuleCondition(
       }
     }
 
-    case "BUSINESS_HOURS": {
-      // Business hours validation
-      if (condition.messageBodyLock?.businessHour) {
-        return validateTimeWindow(condition.messageBodyLock.businessHour);
-      }
-      return true;
-    }
-
-    case "SEND_ONCE_PER_24H": {
-      if (condition.value !== "true") return true;
-      // Check if there's a recent automation activity for this user
-      const recentActivity = await findRecentAutomation(phone, orgId, {
-        timeWindow: 24 * 60 * 60 * 1000, // 24 hours
-      });
-
-      // If there's recent activity, condition fails (don't send again)
-      // If no recent activity, condition passes (can send)
-      return !recentActivity;
-    }
-
     case "CONTACT_GROUP": {
       if (!value) return false;
       const contact = await getContactByPhoneNumberAndOrgId(phone, orgId);
@@ -638,6 +625,30 @@ export async function validateRuleConditions(
   phone: string,
 ): Promise<boolean> {
   if (!rule.isActive) return false;
+
+  // Check options before validating conditions
+  if (rule.options) {
+    // Check sendOncePerDay option
+    if (rule.options.sendOncePerDay) {
+      const recentActivity = await findRecentAutomation(phone, orgId, {
+        timeWindow: 24 * 60 * 60 * 1000, // 24 hours
+      });
+      // If there's recent activity, rule fails (don't send again)
+      if (recentActivity) return false;
+    }
+
+    // Check businessHours option
+    if (rule.options.businessHours?.enabled) {
+      const businessHour = await prisma.businessHour.findUnique({
+        where: { id: rule.options.businessHours.businessHoursId },
+      });
+      if (businessHour) {
+        const isWithinBusinessHours = validateTimeWindow(businessHour as any);
+        if (!isWithinBusinessHours) return false;
+      }
+    }
+  }
+
   if (
     rule.triggerEvent !== TriggerEvent.MESSAGE_RECEIVED &&
     rule.groups.length === 0

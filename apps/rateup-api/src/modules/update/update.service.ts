@@ -353,6 +353,20 @@ export async function migrateAutomationToRules() {
 
         const automation = command.waAutomatedReply;
 
+        // Prepare options object
+        const options: any = {};
+
+        if (automation.sendOnceIn24Hours) {
+          options.sendOncePerDay = true;
+        }
+
+        if (command.businessHourId) {
+          options.businessHours = {
+            enabled: true,
+            businessHoursId: command.businessHourId,
+          };
+        }
+
         // Create Rule
         const rule = await prisma.rule.create({
           data: {
@@ -362,6 +376,7 @@ export async function migrateAutomationToRules() {
             isActive: automation.isEnabled,
             triggerEvent: "MESSAGE_RECEIVED",
             whatsappSettingsPhoneIds: automation.whatsappSettingsPhoneIds,
+            options: Object.keys(options).length > 0 ? options : null,
           },
         });
 
@@ -392,30 +407,6 @@ export async function migrateAutomationToRules() {
             ruleConditionId: messageCondition.id,
           },
         });
-
-        // Add condition for send once in 24 hours if needed
-        if (automation.sendOnceIn24Hours) {
-          await prisma.ruleCondition.create({
-            data: {
-              groupId: conditionGroup.id,
-              field: "SEND_ONCE_PER_24H",
-              operator: "EQUALS",
-              value: "true",
-            },
-          });
-        }
-
-        // Add business hour condition if exists
-        if (command.businessHourId) {
-          await prisma.ruleCondition.create({
-            data: {
-              groupId: conditionGroup.id,
-              field: "BUSINESS_HOURS",
-              operator: "EQUALS",
-              value: command.businessHourId,
-            },
-          });
-        }
 
         // Create RuleAction to trigger the chatbot/automation
         await prisma.ruleAction.create({

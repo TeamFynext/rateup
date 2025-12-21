@@ -297,6 +297,7 @@ model Rule {
   isActive                 Boolean      @default(true)
   triggerEvent             TriggerEvent
   whatsappSettingsPhoneIds String[]     @default([]) //for multiple whatsapp integration
+  options                  Json?        // Stores sendOncePerDay and businessHours configuration
 
   groups  RuleConditionGroup[]
   actions RuleAction[]
@@ -336,12 +337,10 @@ model RuleCondition {
 enum ConditionField {
   MESSAGE_BODY
   CONTACT_EMAIL
-  BUSINESS_HOURS
   // ELAPSED_TIME
   CONTACT_GROUP
   CONTACT_LABEL
   CONTACT_LIFECYCLE
-  SEND_ONCE_PER_24H
 }
 
 enum ConditionOperator {

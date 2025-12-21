@@ -3,29 +3,27 @@ import prisma from "../../../utils/prisma.js";
 import { CreateRuleInput, UpdateRuleInput } from "./wa_rule.schema.js";
 
 const MESSAGE_BODY_FIELD = "MESSAGE_BODY";
-const BUSINESS_HOURS_FIELD = "BUSINESS_HOURS";
 
 type MessageBodyCandidate = {
   value: string;
   businessHourId: string | null;
 };
 
-function extractMessageBodyCandidates(groups?: CreateRuleInput["groups"]) {
+function extractMessageBodyCandidates(
+  groups?: CreateRuleInput["groups"],
+  options?: CreateRuleInput["options"],
+) {
   if (!groups?.length) return [];
 
   const candidates: MessageBodyCandidate[] = [];
 
-  for (const group of groups) {
-    const businessHourCondition = group.conditions.find(
-      (condition) =>
-        condition.field === BUSINESS_HOURS_FIELD &&
-        typeof condition.value === "string" &&
-        condition.value.trim().length > 0,
-    );
-    const businessHourId = businessHourCondition
-      ? businessHourCondition.value!.trim()
+  // Extract businessHourId from options instead of conditions
+  const businessHourId =
+    options?.businessHours?.enabled && options.businessHours.businessHoursId
+      ? options.businessHours.businessHoursId
       : null;
 
+  for (const group of groups) {
     for (const condition of group.conditions) {
       const rawValue = condition.value;
       if (
@@ -137,20 +135,25 @@ async function reserveMessageBodyCommands(
   ruleId: string,
   orgId: string,
 ) {
-  const groups = await tx.ruleConditionGroup.findMany({
-    where: {
-      ruleId,
-    },
+  const rule = await tx.rule.findUnique({
+    where: { id: ruleId },
     select: {
-      conditions: {
+      options: true,
+      groups: {
         select: {
-          id: true,
-          field: true,
-          value: true,
+          conditions: {
+            select: {
+              id: true,
+              field: true,
+              value: true,
+            },
+          },
         },
       },
     },
   });
+
+  if (!rule) return;
 
   const data: Array<{
     orgId: string;
@@ -159,17 +162,15 @@ async function reserveMessageBodyCommands(
     businessHourId?: string | null;
   }> = [];
 
-  for (const group of groups) {
-    const businessHourId =
-      group.conditions
-        .find(
-          (condition) =>
-            condition.field === BUSINESS_HOURS_FIELD &&
-            typeof condition.value === "string" &&
-            condition.value.trim().length > 0,
-        )
-        ?.value?.trim() ?? null;
+  // Extract businessHourId from rule options
+  const ruleOptions = rule.options as any;
+  const businessHourId =
+    ruleOptions?.businessHours?.enabled &&
+    ruleOptions.businessHours.businessHoursId
+      ? ruleOptions.businessHours.businessHoursId
+      : null;
 
+  for (const group of rule.groups) {
     for (const condition of group.conditions) {
       if (
         condition.field === MESSAGE_BODY_FIELD &&
@@ -202,9 +203,9 @@ async function reserveMessageBodyCommands(
 
 // Create Rule
 export async function createRule(data: CreateRuleInput & { orgId: string }) {
-  const { groups, actions, orgId } = data;
+  const { groups, actions, options, orgId } = data;
 
-  const messageBodyCandidates = extractMessageBodyCandidates(groups);
+  const messageBodyCandidates = extractMessageBodyCandidates(groups, options);
   ensureNoDuplicateMessageBodyCandidates(messageBodyCandidates);
   await ensureMessageBodyUniqueness(orgId, messageBodyCandidates);
 
@@ -215,6 +216,7 @@ export async function createRule(data: CreateRuleInput & { orgId: string }) {
       whatsappSettingsPhoneIds: data.whatsappSettingsPhoneIds,
       isActive: data.isActive ?? true,
       operator: data.operator ?? "AND",
+      options: options || null,
       org: {
         connect: { id: orgId },
       },
@@ -297,12 +299,12 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
     throw new Error("Rule not found");
   }
 
-  const { groups, actions, ...rest } = data;
+  const { groups, actions, options, ...rest } = data;
 
   let messageBodyCandidates: MessageBodyCandidate[] = [];
 
   if (groups) {
-    messageBodyCandidates = extractMessageBodyCandidates(groups);
+    messageBodyCandidates = extractMessageBodyCandidates(groups, options);
     ensureNoDuplicateMessageBodyCandidates(messageBodyCandidates);
     await ensureMessageBodyUniqueness(
       existingRule.orgId,
@@ -320,6 +322,8 @@ export async function updateRule(id: string, data: UpdateRuleInput) {
       where: { id },
       data: {
         ...rest,
+        // Only update options if they are explicitly provided in the update data
+        ...(options !== undefined && { options: options || null }),
         // Only update groups if they are explicitly provided in the update data
         ...(groups && {
           groups: {

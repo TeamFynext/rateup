@@ -26,6 +26,16 @@ export const ruleActionSchema = z.object({
   value: z.any().optional(),
 });
 
+export const ruleOptionsSchema = z.object({
+  sendOncePerDay: z.boolean().optional(),
+  businessHours: z
+    .object({
+      enabled: z.boolean(),
+      businessHoursId: z.string(),
+    })
+    .optional(),
+});
+
 export const createRuleSchema = z.object({
   whatsappSettingsPhoneIds: z.array(z.string()).min(1),
   name: z.string().min(1, "Rule name must be at least 1 characters long"),
@@ -34,6 +44,7 @@ export const createRuleSchema = z.object({
   triggerEvent: z.nativeEnum(TriggerEvent),
   groups: z.array(ruleConditionGroupSchema).optional(),
   actions: z.array(ruleActionSchema).optional(),
+  options: ruleOptionsSchema.optional(),
 });
 
 export type CreateRuleInput = z.infer<typeof createRuleSchema>;
