@@ -7,6 +7,7 @@ import {
   generateXlsxBody,
   SummarizeInput,
   ResponseFilterQuery,
+  DeleteResponseBodySchema,
 } from "./response.schema.js";
 import {
   createResponse,
@@ -197,12 +198,13 @@ export async function resetResponsesHandler(
 export async function deleteResponseHandler(
   request: FastifyRequest<{
     Params: DeleteResponseParamsSchema;
+    Body: DeleteResponseBodySchema;
   }>,
   reply: FastifyReply,
 ) {
   try {
-    const id = request.params.id;
-    const deleteRes = await deleteResponse(id);
+    const ids = request.body.id;
+    const deleteRes = await deleteResponse(ids);
     reply.code(201).send({ success: true, data: deleteRes });
   } catch (e) {
     console.error(e);

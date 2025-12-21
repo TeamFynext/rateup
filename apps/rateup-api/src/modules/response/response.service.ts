@@ -686,10 +686,12 @@ export async function resetResponsesStats(surveyTeamMapId: string) {
   return deletionMessage;
 }
 
-export async function deleteResponse(id: string) {
-  const deleteResponse = await prisma.surveyResponse.delete({
+export async function deleteResponse(ids: string[]) {
+  const deleteResponse = await prisma.surveyResponse.deleteMany({
     where: {
-      id,
+      id: {
+        in: ids,
+      },
     },
   });
 
