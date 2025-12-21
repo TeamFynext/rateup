@@ -78,24 +78,24 @@ const withNextIntl = createNextIntlPlugin({
     createMessagesDeclaration: "./dictionaries/en.json",
 
     // Relative path(s) to source files
-    srcPath: "./",
+    // srcPath: "./",
 
     // extract: {
     //   // Defines which locale to extract to
     //   sourceLocale: "en",
     // },
 
-    messages: {
-      // Relative path to the directory
-      path: "./dictionaries",
+    // messages: {
+    //   // Relative path to the directory
+    //   path: "./dictionaries",
 
-      // Either 'json', 'po', or a custom format (see below)
-      format: "json",
+    //   // Either 'json', 'po', or a custom format (see below)
+    //   format: "json",
 
-      // Either 'infer' to automatically detect locales based on
-      // matching files in `path` or an explicit array of locales
-      locales: "infer",
-    },
+    //   // Either 'infer' to automatically detect locales based on
+    //   // matching files in `path` or an explicit array of locales
+    //   locales: "infer",
+    // },
   },
 });
 
