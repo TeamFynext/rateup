@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-import { withSentryConfig } from "@sentry/nextjs";
+import { SentryBuildOptions, withSentryConfig } from "@sentry/nextjs";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
@@ -31,15 +31,9 @@ const nextConfig: NextConfig = {
           removeConsole: true,
         }
       : {},
-  turbopack: { resolveAlias: { html2canvas: "html2canvas-pro" } },
   experimental: {
     // optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
     // reactCompiler: true,
-  },
-  webpack: (config) => {
-    config.resolve.alias["html2canvas"] = "html2canvas-pro";
-    config.resolve.conditionNames = ["require", "..."];
-    return config;
   },
   async redirects() {
     return [
@@ -62,24 +56,27 @@ const nextConfig: NextConfig = {
   },
 };
 
-const sentryConfig = {
+const sentryConfig: SentryBuildOptions = {
   org: "rateup",
   project: "javascript-nextjs",
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  reactComponentAnnotation: {
-    enabled: true,
+  webpack: {
+    reactComponentAnnotation: {
+      enabled: true,
+    },
+    treeshake: {
+      removeDebugLogging: true,
+    },
   },
-  // tunnelRoute: "/monitoring",
-  hideSourceMaps: true,
-  disableLogger: true,
-  automaticVercelMonitors: true,
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
   },
 };
 const withNextIntl = createNextIntlPlugin({
   experimental: {
+    createMessagesDeclaration: "./dictionaries/en.json",
+
     // Relative path(s) to source files
     srcPath: "./",
 
