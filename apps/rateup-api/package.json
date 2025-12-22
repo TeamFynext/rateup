@@ -1,6 +1,6 @@
 {
   "name": "rateup-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "A scalable API backend for Rateup platform",
   "main": "src/index.ts",
