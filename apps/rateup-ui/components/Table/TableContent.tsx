@@ -5,11 +5,22 @@ import React from "react";
 import { useRouter } from "next/navigation";
 
 import {
+  Box,
+  Center,
+  Divider,
+  Flex,
+  Group,
+  HoverCard,
+  Pagination,
+  rem,
+  ScrollArea,
+  Stack,
+  Table,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
+import {
   IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconChevronsLeft,
-  IconChevronsRight,
   IconChevronUp,
   IconSelector,
 } from "@tabler/icons-react";
@@ -22,16 +33,9 @@ import {
   TableHeadSkeleton,
 } from "../animation/skeleton/Table.Skeleton";
 import { DETAIL_BTN } from "../Contacts/utils/utils";
-import { Button } from "../ui/button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "../ui/hovercard";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+import { ContainedSelection } from "../input/ContainedInput/ContainedInput";
 import { Filter } from "./Filter/Filter";
+import styles from "./TableContent.module.css";
 
 type TableLayoutProps = {
   table: TableType<any>;
@@ -56,43 +60,39 @@ type ExtendedHeader = Header<any, unknown> & {
   };
 };
 const renderHeader = (header) => {
-  const rendered = flexRender(
+  const headerText = flexRender(
     header.column.columnDef.header,
     header.getContext(),
   );
-  if (typeof rendered !== "string") {
-    return (
-      <span className="inline-block min-w-[200px] max-w-[200px] font-medium">
-        {rendered}
-      </span>
-    );
-  }
-  if (rendered.length <= 50) {
-    return (
-      <span className="inline-block min-w-[200px] max-w-[200px] font-medium">
-        {rendered}
-      </span>
-    );
-  }
-  return (
-    <HoverCard>
-      <HoverCardTrigger asChild>
-        <span className="inline-block min-w-[200px] max-w-[200px] truncate font-medium">
-          {rendered}
-        </span>
-      </HoverCardTrigger>
 
-      <HoverCardContent
-        align="start"
-        side="bottom"
-        className="max-w-[400px] break-words"
-      >
-        {rendered}
-      </HoverCardContent>
+  if (String(headerText).length <= 50) {
+    return (
+      <span className="min-w-[200] max-w-[200] font-medium">{headerText}</span>
+    );
+  }
+
+  return (
+    <HoverCard
+      width={"fit-content"}
+      shadow="md"
+      withArrow
+      styles={{ dropdown: { maxWidth: 400 } }}
+      position="bottom-start"
+    >
+      <HoverCard.Target>
+        {/* <span className="truncated-header">{headerText}</span> */}
+        <Text miw={200} maw={200} lineClamp={1} fw={"bold"}>
+          {headerText}
+        </Text>
+      </HoverCard.Target>
+      <HoverCard.Dropdown>
+        <div style={{ wordWrap: "break-word", maxWidth: "100%" }}>
+          {headerText}
+        </div>
+      </HoverCard.Dropdown>
     </HoverCard>
   );
 };
-
 const TableLayout = ({
   table,
   enableFilter,
@@ -105,227 +105,223 @@ const TableLayout = ({
   const router = useRouter();
   const translations = useTranslations();
   return (
-    <div className="h-full">
-      <div className="relative h-[50vh] overflow-auto">
-        <table className="w-full border-separate border-spacing-0">
-          <thead className="bg-background">
-            {isPending ? (
-              <tr>
-                {Array.from({ length: tempVisibleColumnArray.length }).map(
-                  (_, i) => (
-                    <th key={i} className="p-2 sticky top-0 bg-background">
-                      <div className="h-8 w-full animate-pulse rounded bg-muted" />
-                    </th>
-                  ),
-                )}
-              </tr>
-            ) : (
-              table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    const extendedHeader = header as ExtendedHeader;
-
-                    return (
-                      <th
-                        key={header.id}
-                        colSpan={header.colSpan}
-                        style={
-                          header.getSize() === 10
-                            ? { maxWidth: "50px" }
-                            : { width: `${header.getSize()}px` }
-                        }
-                        className="sticky top-0 z-30 bg-background p-2 text-left"
-                      >
-                        {header.isPlaceholder ? null : (
-                          <div className="flex flex-col gap-2">
-                            {/* Sorting */}
-                            <Button
-                              variant="outline"
-                              onClick={header.column.getToggleSortingHandler()}
-                              className="flex w-full items-center justify-between"
-                            >
-                              {renderHeader(header)}
-
-                              {header.column.getCanSort() && (
+    <Stack className={styles["table-and-pagination-container"]}>
+      <Stack justify="space-between" className={styles["table-container"]}>
+        <ScrollArea
+          w={"100%"}
+          h={"100%"}
+          classNames={{ scrollbar: styles["table-scrollbar"] }}
+        >
+          <Table stickyHeader striped highlightOnHover>
+            <Table.Thead bg={"light-dark(white,var(--mantine-color-dark-6))"}>
+              {isPending ? (
+                <TableHeadSkeleton />
+              ) : (
+                table.getHeaderGroups().map((headerGroup) => (
+                  <Table.Tr key={headerGroup.id} className="table-header">
+                    {headerGroup.headers.map((header) => {
+                      const extendedHeader = header as ExtendedHeader;
+                      return (
+                        <Table.Th
+                          key={header.id}
+                          colSpan={header.colSpan}
+                          style={
+                            header.getSize() === 10
+                              ? { maxWidth: `50px` }
+                              : { width: `${header.getSize()}px` }
+                          }
+                        >
+                          {header.isPlaceholder ? null : (
+                            <>
+                              <UnstyledButton
+                                className={styles["th-button"]}
+                                {...{
+                                  onClick:
+                                    header.column.getToggleSortingHandler(),
+                                }}
+                              >
+                                <Flex
+                                  justify="space-between"
+                                  gap={"md"}
+                                  w={"100%"}
+                                >
+                                  {renderHeader(header)}
+                                  {header.column.getCanSort() && (
+                                    <Center>
+                                      {{
+                                        asc: (
+                                          <IconChevronUp
+                                            style={{
+                                              width: rem(16),
+                                              height: rem(16),
+                                            }}
+                                            stroke={1.5}
+                                          />
+                                        ),
+                                        desc: (
+                                          <IconChevronDown
+                                            style={{
+                                              width: rem(16),
+                                              height: rem(16),
+                                            }}
+                                            stroke={1.5}
+                                          />
+                                        ),
+                                      }[
+                                        header.column.getIsSorted() as string
+                                      ] ?? (
+                                        <IconSelector
+                                          style={{
+                                            width: rem(16),
+                                            height: rem(16),
+                                          }}
+                                          stroke={1.5}
+                                        />
+                                      )}
+                                    </Center>
+                                  )}
+                                </Flex>
+                              </UnstyledButton>
+                              {enableFilter &&
+                              filterVisibility &&
+                              header.column.getCanFilter() ? (
                                 <>
-                                  {{
-                                    asc: <IconChevronUp className="h-4 w-4" />,
-                                    desc: (
-                                      <IconChevronDown className="h-4 w-4" />
-                                    ),
-                                  }[header.column.getIsSorted() as string] ?? (
-                                    <IconSelector className="h-4 w-4" />
+                                  {extendedHeader.column.columnDef?.meta?.filterComponent(
+                                    header.column.setFilterValue,
+                                  ) ?? (
+                                    <Filter
+                                      column={header.column}
+                                      table={table}
+                                    />
                                   )}
                                 </>
+                              ) : (
+                                filterVisibility && <Box h={"36px"} />
                               )}
-                            </Button>
+                            </>
+                          )}
+                        </Table.Th>
+                      );
+                    })}
+                  </Table.Tr>
+                ))
+              )}
+            </Table.Thead>
 
-                            {/* Filters */}
-                            {enableFilter &&
-                            filterVisibility &&
-                            header.column.getCanFilter()
-                              ? (extendedHeader.column.columnDef?.meta?.filterComponent?.(
-                                  header.column.setFilterValue,
-                                ) ?? (
-                                  <Filter
-                                    column={header.column}
-                                    table={table}
-                                  />
-                                ))
-                              : filterVisibility && <div className="h-9" />}
-                          </div>
+            <Table.Tbody className="table-body">
+              {isPending ? (
+                <TableBodySkeleton />
+              ) : table.getRowModel().rows.length === 0 ? (
+                <Table.Tr>
+                  <Table.Td colSpan={tempVisibleColumnArray?.length}>
+                    <Text ta="center">Nothing found</Text>
+                  </Table.Td>
+                </Table.Tr>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <Table.Tr
+                    key={row.id}
+                    className={detailBtn && styles["table-body-row"]}
+                    onClick={() => {
+                      let routeUrl: string | null =
+                        detailBtn && row.getValue(DETAIL_BTN);
+                      if (routeUrl) router.push(routeUrl);
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell, indexCell) => (
+                      <Table.Td
+                        className={styles["table-td"]}
+                        key={indexCell}
+                        bg={row.getIsSelected() ? "var(--shade-of-blue-7)" : ""}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
                         )}
-                      </th>
-                    );
-                  })}
-                </tr>
-              ))
-            )}
-          </thead>
-
-          <tbody>
-            {isPending ? (
-              <tr>
-                {Array.from({ length: 5 }).map((_, rowIndex) => (
-                  <div key={rowIndex}>
-                    {Array.from({ length: tempVisibleColumnArray.length }).map(
-                      (_, colIndex) => (
-                        <td key={colIndex} className="p-2">
-                          <div className="h-6 w-full animate-pulse rounded bg-muted" />
-                        </td>
-                      ),
-                    )}
-                  </div>
-                ))}
-              </tr>
-            ) : table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={tempVisibleColumnArray.length}
-                  className="p-4 text-center"
-                >
-                  Nothing found
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={`${detailBtn ? "cursor-pointer" : ""} hover:bg-muted`}
-                  onClick={() => {
-                    let routeUrl: string | null =
-                      detailBtn && row.getValue(DETAIL_BTN);
-                    if (routeUrl) {
-                      router.push(routeUrl);
-                    }
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="p-2 text-center">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
+                      </Table.Td>
+                    ))}
+                  </Table.Tr>
+                ))
+              )}
+            </Table.Tbody>
+            <Table.Tfoot>
+              {table.getFooterGroups().map((footerGroup, index) => (
+                <Table.Tr key={index}>
+                  {footerGroup.headers.map((header, HIndex) => (
+                    <Table.Th key={HIndex}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.footer,
+                            header.getContext(),
+                          )}
+                    </Table.Th>
                   ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-
-          <tfoot>
-            {table.getFooterGroups().map((footerGroup) => (
-              <tr key={footerGroup.id}>
-                {footerGroup.headers.map((header) => (
-                  <td key={header.id} className="p-2">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.footer,
-                          header.getContext(),
-                        )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tfoot>
-        </table>
-      </div>
-
-      <div className="flex flex-col sm:flex-row justify-start items-center sm:justify-between">
-        <div className="flex flex-col sm:flex-row items-center gap-4">
+                </Table.Tr>
+              ))}
+            </Table.Tfoot>
+          </Table>
+        </ScrollArea>
+      </Stack>
+      <Divider />
+      <Flex
+        className={styles["pagination-container"]}
+        gap={"xl"}
+        justify={"space-between"}
+        align={"center"}
+      >
+        <Group className={styles["pagination-rows-per-page-dd-container"]}>
           {enablePagination && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <IconChevronsLeft />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <IconChevronLeft />
-              </Button>
-
-              <span className="p-2 border rounded-sm w-7 h-7 flex justify-center items-center text-sm font-semibold bg-primary text-white">
-                {table.getState().pagination.pageIndex + 1}
-              </span>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={isPending || !table.getCanNextPage()}
-              >
-                <IconChevronRight />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={isPending || !table.getCanNextPage()}
-              >
-                <IconChevronsRight />
-              </Button>
-            </div>
-          )}
-
-          {/* Rows per page */}
-          <div className="flex items-center gap-2 font-semibold">
-            <p className="text-sm">{translations("Rows Per page")}</p>
-
-            <Select
-              value={String(table.getState().pagination.pageSize)}
-              onValueChange={(value) => table.setPageSize(Number(value))}
+            <Pagination.Root
+              className={styles["mantine-pagination-root-div"]}
+              style={{ overflow: "hidden" }}
+              size={"sm"}
+              total={isPending ? 0 : table.getPageCount()}
+              onChange={(e) => table.setPageIndex(e - 1)}
+              boundaries={1}
+              siblings={1}
             >
-              <SelectTrigger className="h-8 w-[80px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZE.map((size) => (
-                  <SelectItem key={size} value={String(size)}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <p className="flex items-center gap-2 font-semibold">
+              <ScrollArea w={"100%"} type="never">
+                <Group
+                  className={styles["pagination-next-prev-page-btns-container"]}
+                >
+                  <Pagination.First disabled={!table.getCanPreviousPage()} />
+                  <Pagination.Previous disabled={!table.getCanPreviousPage()} />
+                  <Pagination.Items />
+                  <Pagination.Next
+                    disabled={isPending ? true : !table.getCanNextPage()}
+                  />
+                  <Pagination.Last
+                    disabled={isPending ? true : !table.getCanNextPage()}
+                  />
+                </Group>
+              </ScrollArea>
+            </Pagination.Root>
+          )}
+          <Group className={styles["rows-per-page-text-dd-container"]}>
+            <Text fz="sm">{translations("Rows Per page")}</Text>
+            <ContainedSelection
+              onChange={(value) => {
+                table.setPageSize(Number(value));
+              }}
+              value={String(table.getState().pagination.pageSize)}
+              data={PAGE_SIZE}
+              allowDeselect={false}
+              styles={{
+                input: {
+                  height: 10,
+                  width: 80,
+                },
+              }}
+            />
+          </Group>
+        </Group>
+        <Text className="pagination-total-rows-text" pr={"xs"} fw={600}>
           {translations("Total Rows: ")}
           {(isPending ? 0 : table.getRowCount()) ?? 0}
-        </p>
-      </div>
-    </div>
+        </Text>
+      </Flex>
+    </Stack>
   );
 };
 

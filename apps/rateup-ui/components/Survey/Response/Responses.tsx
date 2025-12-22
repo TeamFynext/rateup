@@ -1,6 +1,7 @@
 "use client";
 
 import React, {
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -9,33 +10,39 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 
-import { useDebouncedState, useDisclosure } from "@mantine/hooks";
+import {
+  Box,
+  Button,
+  Flex,
+  Group,
+  Popover,
+  Skeleton,
+  Stack,
+  Text,
+} from "@mantine/core";
+import { range, useDebouncedState, useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
   IconDatabaseImport,
   IconFileDownload,
   IconRefresh,
   IconTableExport,
+  IconX,
 } from "@tabler/icons-react";
 import { ColumnFiltersState } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 
 import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
-import { selectCheckBox } from "@/components/Contacts/utils/utils";
+import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
-import { DataTable } from "@/components/Table/data-table";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import { useCampaignFilterForFlows } from "../../../backend/campaign/campaign.query";
+import { useQuestions } from "../../../backend/surveys/questions/questions.query";
 import {
   useDeleteResponse,
   useDownloadExcelResponse,
@@ -44,6 +51,7 @@ import {
   useSyncResponseToGoogleSheet,
 } from "../../../backend/surveys/response/response.query";
 import SurveyContext from "../../../context/SurveyContext";
+import { useUser } from "../../../context/UserContext";
 import {
   IntegratedApps,
   PageType,
@@ -59,12 +67,22 @@ import {
   showSuccessToast,
 } from "../../../utils/notifications";
 import { hasFeature } from "../../../utils/subscription/subscription";
+import InfoButton from "../../Button/InfoButton";
+import { RateupButtonSecondary } from "../../Button/RateupButtons";
+import RefreshButton from "../../Button/RefreshButton";
 import { useVisibleColumnStore } from "../../HomePage/pages/Pricing/store/RouteAndCartStore";
-import { ContainedMultiSelect } from "../../input/ContainedInput/ContainedInput";
+import {
+  ContainedMultiSelect,
+  ContainedTextField,
+} from "../../input/ContainedInput/ContainedInput";
+import RateupLoader from "../../Loaders/RateupLoader";
 import ConfirmationModal from "../../Modal/ConfirmationModal";
+import FormModalLayout from "../../Modal/FormModalLayout";
+import NothingFound from "../../NothingFound/NothingFound";
+import Heading from "../../styled/Heading/Heading";
+import TanstackTable from "../../Table/TanstackTable";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { useSurveyResponseColumns } from "./Columns";
-import DataTableToolbar from "./data-table-tool-bar";
 import styles from "./Responses.module.css";
 import { useResponseFilterStore } from "./store";
 
@@ -78,6 +96,8 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
     useContext(SurveyContext);
   const [selectedRowId, setSelectedRowId] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
+  const { user } = useUser();
+  const [isDeleting, setIsDeleting] = useState(false);
   const [
     createTicketOpened,
     { open: openTicketModal, close: closeTicketModal },
@@ -145,7 +165,12 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
     [questions],
   );
 
-  const deleteResponse = useDeleteResponse(surveyId, surveyTeamMapId);
+  const deleteResponse = useDeleteResponse(
+    surveyId,
+    surveyTeamMapId,
+    close,
+    setIsDeleting,
+  );
   const translations = useTranslations();
   // TODO: find out why surveyId is an array
   if (Array.isArray(surveyId)) {
@@ -200,6 +225,29 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
     !createTicketOpened && setSelectedResponseId("");
   }, [createTicketOpened]);
 
+  const confirmDelete = (verifyEmail: string) => {
+    if (user?.email === verifyEmail) {
+      notifications.show({
+        id: "load-data",
+        loading: true,
+        title: translations("Deleting Response"),
+        message: translations("Hold on, response is getting deleted"),
+        autoClose: false,
+        withCloseButton: false,
+      });
+      setIsDeleting(true);
+      deleteResponse.mutate(selectedRowId);
+    } else {
+      notifications.show({
+        id: "load-data",
+        color: "red",
+        title: translations("Error"),
+        message: translations("Incorrect email"),
+        icon: <IconX size="1rem" />,
+        autoClose: 3000,
+      });
+    }
+  };
   const filteredQuestions = useMemo(
     () =>
       questions.filter(
@@ -269,40 +317,9 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
     return (
       <ErrorComponent refetch={refetchResponse} isRefetching={isRefetching} />
     );
-  const column = [
-    ...selectCheckBox,
-    ...(responseData?.responses?.every((row) => !row.tag)
-      ? columns.filter((col: any) => col.accessorKey !== "tag")
-      : columns),
-  ];
-
-  const defaultVisibility = column.reduce(
-    (visibility, col) => {
-      const key = (col as any)?.accessorKey ?? col.id;
-
-      visibility[key] = true;
-      visibility["select"] = true;
-      visibility["action"] = false;
-
-      return visibility;
-    },
-
-    {} as Record<string, boolean>,
-  );
-
-  const renderToolbar = useCallback(
-    (props) => (
-      <DataTableToolbar
-        {...props}
-        deleteResponse={deleteResponse}
-        refetchResponse={refetchResponse}
-      />
-    ),
-    [deleteResponse],
-  );
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <Stack className={styles["responses-root-div"]}>
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         closeTicketModal={closeTicketModal}
@@ -310,145 +327,177 @@ const Responses = ({ survey, defaultLanguage, subscription, questions }) => {
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
       />
-      <div className="">
-        {isPending ? (
-          <Skeleton className="h-[70px] w-full rounded-lg" />
-        ) : (
-          <div className="flex flex-col gap-4 w-full p-4 lg:flex-row lg:items-center lg:justify-between">
-            {/* LEFT */}
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-sm sm:text-base font-medium">
-                {translations("Total Responses :")}{" "}
-                <span className="font-semibold">
-                  {responseData?.totalCount ?? 0}
-                </span>
-              </h1>
-
-              <Button variant="ghost" onClick={() => refetchResponse()}>
-                <IconRefresh className="text-primary" />
-              </Button>
-            </div>
-
-            {/* RIHGT */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-              <CalenderIconDateRangePicker
-                ranges={ranges}
-                setRange={setRange}
+      <Skeleton
+        visible={isPending}
+        h={isPending && 70}
+        className={isPending && styles["total-responses-export-btn-container"]}
+      >
+        <Group className={styles["total-responses-export-btn-container"]}>
+          <Flex align={"center"}>
+            <Heading
+              subtitle={`${translations("Total Responses :")} ${responseData?.totalCount ?? 0}`}
+            />
+            <RefreshButton onClick={() => refetchResponse()} />
+          </Flex>
+          <Group>
+            <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
+            {CFData && CFData.length > 0 && (
+              <ContainedMultiSelect
+                placeholder={translations("Filter By Campaign")}
+                value={campaignIds}
+                onChange={setSelectedCampaignIds}
+                data={CFData.map(({ name, id }) => ({
+                  value: id,
+                  label: name,
+                }))}
               />
-
-              {CFData && CFData.length > 0 && (
-                <ContainedMultiSelect
-                  placeholder={translations("Filter By Campaign")}
-                  value={campaignIds}
-                  onChange={setSelectedCampaignIds}
-                  data={CFData.map(({ name, id }) => ({
-                    value: id,
-                    label: name,
-                  }))}
-                  className="w-full sm:w-[220px]"
-                />
-              )}
-
-              {!survey?.isEncrypted && (
-                <Popover open={openedExport} onOpenChange={toggle}>
-                  <PopoverTrigger asChild>
-                    <Button className="w-full sm:w-auto">
-                      <IconTableExport className="mr-2 h-4 w-4" />
-                      {translations("Export")}
-                    </Button>
-                  </PopoverTrigger>
-
-                  <PopoverContent
-                    align="end"
-                    side="bottom"
-                    className={styles["filters-popover-dropdown-div"]}
+            )}
+            {!survey?.isEncrypted && (
+              <Popover
+                position="bottom-end"
+                withArrow
+                shadow="md"
+                classNames={{
+                  dropdown: styles["filters-popover-dropdown-div"],
+                }}
+                opened={openedExport}
+              >
+                <Popover.Target>
+                  <Button
+                    className={styles["export-btn"]}
+                    leftSection={<IconTableExport />}
+                    radius={"lg"}
+                    fw={400}
+                    onClick={toggle}
                   >
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        onClick={() => {
-                          if (survey.spreadSheetId) alertModalOpen();
-                          else handleSyncGoogleSheet();
-                        }}
-                      >
+                    {translations("Export")}
+                  </Button>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <Stack>
+                    <RateupButtonSecondary
+                      title={
+                        survey.spreadSheetId
+                          ? translations("Resync with Google Sheet")
+                          : translations("Sync with Google Sheet")
+                      }
+                      onClick={() => {
+                        if (survey.spreadSheetId) alertModalOpen();
+                        else handleSyncGoogleSheet();
+                      }}
+                      leftIcon={
                         <IconRefresh
                           className={
                             isSyncing ? styles.rotateInfinitely : undefined
                           }
+                          style={{ width: "90%", height: "90%" }}
+                          stroke={1.5}
                         />
-                        <span className="ml-2">
-                          {survey.spreadSheetId
-                            ? translations("Resync with Google Sheet")
-                            : translations("Sync with Google Sheet")}
-                        </span>
-                      </Button>
-
-                      <Button
-                        onClick={() => {
-                          handleExcelDownload();
-                          toggle();
-                        }}
-                        className="flex items-center gap-2"
-                      >
-                        <IconFileDownload stroke={1.5} />
-                        {translations("Download Excel")}
-                      </Button>
-
-                      {hasContactQuestion && (
-                        <Button
-                          onClick={handleExportContacts}
-                          className="flex items-center gap-2"
-                        >
-                          <IconDatabaseImport stroke={1.5} />
-                          {translations("Export Contacts")}
-                        </Button>
+                      }
+                    />
+                    <RateupButtonSecondary
+                      onClick={() => {
+                        handleExcelDownload();
+                        toggle();
+                      }}
+                      title={translations("Download Excel")}
+                      radius={"lg"}
+                      leftIcon={<IconFileDownload stroke={1.5} />}
+                    />
+                    {hasContactQuestion && (
+                      <RateupButtonSecondary
+                        onClick={handleExportContacts}
+                        title={translations("Export Contacts")}
+                        radius={"lg"}
+                        leftIcon={<IconDatabaseImport stroke={1.5} />}
+                      />
+                    )}
+                    <ConfirmationModal
+                      opened={alertModalOpened}
+                      onClose={alertModalClose}
+                      headerTitle={translations("Resync Google Sheet")}
+                      headerLabel={translations(
+                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost",
                       )}
-
-                      {/* Modals */}
-                      <ConfirmationModal
-                        opened={alertModalOpened}
-                        onClose={alertModalClose}
-                        headerTitle={translations("Resync Google Sheet")}
-                        headerLabel={translations(
-                          "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost",
-                        )}
-                        confirmLabel={translations("Yes")}
-                        onConfirm={handleSyncGoogleSheet}
-                      />
-
-                      <ConfirmationModal
-                        opened={redirectModalOpened}
-                        onClose={redirectModalClose}
-                        headerTitle={translations("Sync Google Sheet")}
-                        headerLabel={alertMsg}
-                        confirmLabel={translations("Continue")}
-                        onConfirm={() => {
-                          router.push("/dashboard/apps&services/googlesheet");
-                        }}
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="">
-        <DataTable
-          columns={column}
+                      confirmLabel={translations("Yes")}
+                      onConfirm={handleSyncGoogleSheet}
+                    />
+                    <ConfirmationModal
+                      opened={redirectModalOpened}
+                      onClose={redirectModalClose}
+                      headerTitle={translations("Sync Google Sheet")}
+                      headerLabel={alertMsg}
+                      confirmLabel={translations("Continue")}
+                      onConfirm={() => {
+                        router.push("/dashboard/apps&services/googlesheet");
+                      }}
+                    />
+                  </Stack>
+                </Popover.Dropdown>
+              </Popover>
+            )}
+            <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
+          </Group>
+        </Group>
+      </Skeleton>
+      <Box className={styles["responses-table-container"]}>
+        <TanstackTable
           data={responseData ? responseData?.responses : []}
-          DataTableToolbar={renderToolbar}
-          manualPagination={{
-            pagination,
-            onPaginationChange: setPagination,
-            rowCount: responseData?.totalCount || 0,
-          }}
+          columns={
+            responseData?.responses?.every((row) => !row.tag)
+              ? columns?.filter((col: any) => col.accessorKey !== "tag")
+              : columns
+          }
+          columnFiltersE={columnFilters}
+          setColumnFiltersE={setColumnFilters}
+          pagination={pagination}
+          setPagination={setPagination}
+          totalCount={responseData?.totalCount}
           isPending={isPending}
-          defaultColumnVisibility={defaultVisibility}
+          enableServerFilter={enableServerFilter}
         />
-      </div>
-    </div>
+        <DeleteModal
+          confirmDelete={confirmDelete}
+          translations={translations}
+          opened={opened}
+          close={close}
+        />
+      </Box>
+    </Stack>
   );
 };
 
 export default React.memo(Responses);
+
+const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
+  const [verifyEmail, setVerifyEmail] = useState("");
+  return (
+    <FormModalLayout
+      opened={opened}
+      onClose={close}
+      title={translations("Delete Response")}
+      centered
+      buttonTitle={translations("Delete")}
+      includeCancelButton
+      onSubmit={() => {
+        confirmDelete(verifyEmail);
+        setVerifyEmail("");
+      }}
+    >
+      <Stack py={"sm"}>
+        <Text>{translations("To proceed further, verify your email id")}</Text>
+        <ContainedTextField
+          withAsterisk
+          label={translations("Verify email")}
+          placeholder={translations("Enter your login email")}
+          required
+          value={verifyEmail}
+          onChange={(e) => setVerifyEmail(e.target.value)}
+        />
+        <Text c="red">
+          {translations("Once deleted, response entry data will be lost")}
+        </Text>
+      </Stack>
+    </FormModalLayout>
+  );
+};

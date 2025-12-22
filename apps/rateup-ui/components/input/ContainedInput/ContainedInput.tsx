@@ -263,6 +263,7 @@ export function ContainedTagInput(props: TagsInputProps) {
       styles={{
         input: {
           borderRadius: "12px",
+          minHeight: "45px",
         },
       }}
       {...props}

@@ -1,12 +1,13 @@
 "use client";
 
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Box, Stack, Tabs } from "@mantine/core";
 
 import LanguagePageThemeView from "./components/previewcomponents/languagePage";
 import SurveyThemeView from "./components/previewcomponents/surveytheme";
 import ThankyouPageThemeView from "./components/previewcomponents/thankyoupage";
 import WelcomePageThemeView from "./components/previewcomponents/welcomepage";
 import { PreviewTypeEnum, ThemeTabEnum } from "./SurveyTheme.enums";
+import styles from "./SurveyTheme.module.css";
 import { useSelectedPageTab, useSelectedPreview } from "./SurveyThemeContext";
 
 function SurveyThemePreviewLayout({
@@ -23,35 +24,47 @@ function SurveyThemePreviewLayout({
   }
 
   return (
-    <div className="h-full w-full">
-      <div className="flex justify-center h-full">
-        <div
-          className={`${selectedPreview === PreviewTypeEnum.MOBILE ? "w-[380px]" : "w-[100%]"} h-full`}
+    <Stack
+      className={`${styles["survey-theme-preview-layout-div"]} survey-theme-preview-layout-div`}
+    >
+      <Box
+        style={{
+          display: "flex",
+          justifyContent: "center",
+        }}
+        h={"100%"}
+      >
+        <Box
+          h={"100%"}
+          w={selectedPreview === PreviewTypeEnum.MOBILE ? 380 : "100%"}
         >
-          <Tabs value={selectedPageTab} className="h-full">
-            <TabsContent value={ThemeTabEnum.LANGUAGE}>
+          <Tabs
+            value={selectedPageTab}
+            classNames={{
+              root: styles["survey-theme-preview-tab-panels-root"],
+            }}
+            keepMounted={false}
+          >
+            <Tabs.Panel value={ThemeTabEnum.LANGUAGE}>
               <LanguagePageThemeView survey={survey} />
-            </TabsContent>
-
-            <TabsContent value={ThemeTabEnum.WELCOME}>
+            </Tabs.Panel>
+            <Tabs.Panel value={ThemeTabEnum.WELCOME}>
               <WelcomePageThemeView survey={survey} />
-            </TabsContent>
-
-            <TabsContent value={ThemeTabEnum.SURVEY}>
+            </Tabs.Panel>
+            <Tabs.Panel value={ThemeTabEnum.SURVEY}>
               <SurveyThemeView
                 previewId={previewId}
                 survey={survey}
                 isSurveyThemeEditView={isSurveyThemeEditView}
               />
-            </TabsContent>
-
-            <TabsContent value={ThemeTabEnum.THANKYOU}>
+            </Tabs.Panel>
+            <Tabs.Panel value={ThemeTabEnum.THANKYOU}>
               <ThankyouPageThemeView survey={survey} />
-            </TabsContent>
+            </Tabs.Panel>
           </Tabs>
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Stack>
   );
 }
 

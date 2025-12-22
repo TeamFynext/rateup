@@ -1,9 +1,18 @@
 "use client";
 
-import Image from "next/image";
-
+import {
+  Button,
+  Checkbox,
+  Group,
+  Image,
+  Menu,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import {
   IconAppWindow,
+  IconBrandGoogle,
   IconChevronDown,
   IconDeviceSdCard,
   IconEdit,
@@ -13,22 +22,12 @@ import {
 import { useTranslations } from "next-intl";
 
 import { PageType, QuestionType } from "@/types/enums";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import InfoButton from "@/components/Button/InfoButton";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuPortal,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { NPSQuestions } from "@/utils/constants";
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "@/components/Button/RateupButtons";
+import { docsPath, NPSQuestions } from "@/utils/constants";
 import {
   googleReviewSupportedTypes,
   logicSupportedTypes,
@@ -52,235 +51,212 @@ function QuestionDetailedViewFooter({
 }) {
   const translations = useTranslations();
   return (
-    <div className="flex justify-between items-center">
-      <div className="flex items-center gap-4">
-        <div
-          className="flex items-center"
-          style={{
-            marginRight: !NPSQuestions.includes(question?.type as QuestionType)
-              ? "100px"
-              : undefined,
+    <Group mt="sm" justify="space-between" gap="sm">
+      <Group justify="flex-start" gap="md">
+        <Checkbox
+          label={translations("Required")}
+          color="var(--tertiary-color)"
+          fw={600}
+          mr={!NPSQuestions.includes(question?.type as QuestionType) && "100px"}
+          checked={form.values.required}
+          onChange={(e) => {
+            const checked = e.currentTarget.checked;
+            form.setFieldValue("required", checked);
           }}
-        >
-          <Checkbox
-            id="required-checkbox"
-            checked={!!form.values.required}
-            onCheckedChange={(val) => {
-              const checked = Boolean(val);
-              form.setFieldValue("required", checked);
-            }}
-            disabled={
-              [QuestionType.InfoMessage, QuestionType.EmailOtp].includes(
-                question.type,
-              ) || question.type in PageType
-            }
-            className="mr-2" // small spacing between box and label
-          />
-
-          <label
-            htmlFor="required-checkbox"
-            className="select-none font-semibold"
-          >
-            {translations("Required")}
-          </label>
-        </div>
-
+          disabled={
+            [QuestionType.InfoMessage, QuestionType.EmailOtp].includes(
+              question.type,
+            ) || question.type in PageType
+          }
+        />
+        <InfoButton docUrl={`${docsPath}/advancedFt/overview`} />
         {NPSQuestions.includes(question?.type as QuestionType) && (
-          <div className="flex items-center">
-            <Checkbox
-              id="nps-analytics-checkbox"
-              checked={!!form.values.enableNpsAnalytics}
-              onCheckedChange={(val) => {
-                form.setFieldValue("enableNpsAnalytics", Boolean(val));
-              }}
-              className="mr-2"
-            />
-
-            <label
-              htmlFor="nps-analytics-checkbox"
-              className="select-none font-semibold"
-            >
-              {translations("NPS Analytics")}
-            </label>
-          </div>
+          <Checkbox
+            label={translations("NPS Analytics")}
+            color="var(--tertiary-color)"
+            fw={600}
+            checked={form.values.enableNpsAnalytics}
+            onChange={(e) => {
+              const checked = e.currentTarget.checked;
+              form.setFieldValue("enableNpsAnalytics", checked);
+            }}
+          />
         )}
 
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+        <Stack px="sm">
+          <Menu
+            position="bottom-end"
+            offset={4}
+            withArrow
+            arrowPosition="side"
+            transitionProps={{
+              transition: "rotate-right",
+              duration: 150,
+            }}
+          >
+            <Menu.Target>
               <Button
                 variant="outline"
-                size="lg"
-                className="inline-flex items-center gap-2 rounded-lg"
+                color="dark.2"
+                radius="lg"
+                size="sm"
+                rightSection={<IconChevronDown size="1rem" />}
               >
-                <span className="text-sm font-bold">
+                <Text size="sm" c={"var(--text-color-sp)"} fw="700">
                   {translations("Actions")}
-                </span>
-                <IconChevronDown size={16} />
+                </Text>
               </Button>
-            </DropdownMenuTrigger>
+            </Menu.Target>
 
-            <DropdownMenuPortal>
-              <DropdownMenuContent>
-                <DropdownMenuItem>
-                  <Button
-                    className="w-full flex items-center justify-center gap-1"
-                    variant="outline"
-                    onClick={() =>
-                      setActiveTab(QuestionTabsEnum.VariableEditor)
-                    }
-                  >
-                    <IconVariable />
-                    <span>{translations("Variables")}</span>
-                  </Button>
-                </DropdownMenuItem>
-
-                {logicSupportedTypes.includes(question?.type) && (
-                  <DropdownMenuItem>
-                    <Button
-                      className="w-full flex items-center justify-center gap-1"
-                      variant="outline"
-                      onClick={() => setActiveTab(QuestionTabsEnum.LogicEditor)}
-                    >
+            <Menu.Dropdown>
+              <Menu.Item>
+                <RateupButtonSecondary
+                  title={translations("Variables")}
+                  fullWidth
+                  size="sm"
+                  leftIcon={<IconVariable size={"1.5rem"} />}
+                  onClick={() => setActiveTab(QuestionTabsEnum.VariableEditor)}
+                />
+              </Menu.Item>
+              {logicSupportedTypes.includes(question?.type as QuestionType) && (
+                <Menu.Item>
+                  <RateupButtonSecondary
+                    title={translations("Logic Jump")}
+                    fullWidth
+                    leftIcon={
                       <Image
                         src={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/images/logic-jump.svg`}
-                        width={24}
-                        height={24}
-                        alt="logic jump"
+                        h={30}
+                        w={30}
+                        fit="contain"
+                        alt="icon of login jump"
                       />
-                      <span>{translations("Logic Jump")}</span>
-                    </Button>
-                  </DropdownMenuItem>
-                )}
+                    }
+                    size="sm"
+                    onClick={async () => {
+                      setActiveTab(QuestionTabsEnum.LogicEditor);
+                    }}
+                  />
+                </Menu.Item>
+              )}
 
-                {googleReviewSupportedTypes.includes(question?.type) && (
-                  <DropdownMenuItem className="p-0">
-                    {isGoogleReviewFeatureActive ? (
-                      <Button
-                        className="w-full flex items-center justify-center gap-1"
-                        variant="outline"
-                        onClick={async () => {
-                          const save = await handleSave();
-                          if (save === "saved") {
-                            setActiveTab(
-                              QuestionTabsEnum.QuestionReviewPageEditor,
-                            );
-                          }
-                        }}
-                      >
-                        <IconAppWindow />
-                        <span>{translations("Review Page")}</span>
-                      </Button>
-                    ) : (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              onClick={(e) => e.preventDefault()}
-                              className="w-full flex items-center justify-center gap-1 opacity-50 cursor-not-allowed"
-                            >
-                              <IconAppWindow />
-                              <span>{translations("Review Page")}</span>
-                            </Button>
-                          </TooltipTrigger>
-
-                          <TooltipContent side="top">
-                            {translations("Upgrade your Plan for this feature")}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </DropdownMenuItem>
-                )}
-
-                {validationSupportedTypes.includes(
-                  question?.type as QuestionType,
-                ) && (
-                  <DropdownMenuItem>
-                    <Button
-                      className="w-full flex items-center justify-center gap-1"
-                      variant="outline"
+              {googleReviewSupportedTypes.includes(
+                question?.type as QuestionType,
+              ) && (
+                <Menu.Item>
+                  {isGoogleReviewFeatureActive ? (
+                    <RateupButtonSecondary
+                      title={"Review Page"}
+                      leftIcon={<IconAppWindow />}
+                      size="sm"
+                      fullWidth
                       onClick={async () => {
                         let save = await handleSave();
                         save === "saved" &&
-                          setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
+                          setActiveTab(
+                            QuestionTabsEnum.QuestionReviewPageEditor,
+                          );
                       }}
+                    />
+                  ) : (
+                    <Tooltip
+                      label={translations("Upgrade your Plan for this feature")}
+                      disabled={isGoogleReviewFeatureActive}
+                      color="yellow"
                     >
-                      <IconEdit />
-                      <span>{translations("Custom Validation")}</span>
-                    </Button>
-                  </DropdownMenuItem>
-                )}
-
-                {ticketIssueSupportedTypes.includes(
-                  question?.type as QuestionType,
-                ) && (
-                  <DropdownMenuItem>
-                    {isTicketFeatureActive && !enableAutoGenerateTicket ? (
                       <Button
-                        className="w-full flex items-center justify-center gap-1"
-                        variant="outline"
-                        onClick={async () => {
-                          let save = await handleSave();
-                          save === "saved" &&
-                            setActiveTab(QuestionTabsEnum.TicketIssueEditor);
-                        }}
+                        data-disabled
+                        radius="lg"
+                        onClick={(event) => event.preventDefault()}
+                        leftSection={<IconAppWindow />}
                       >
-                        <IconTicket />
-                        <span>{translations("Create Tickets")}</span>
+                        Review Page
                       </Button>
-                    ) : (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              onClick={(event) => event.preventDefault()}
-                              className="w-full flex items-center justify-center gap-1 opacity-50 cursor-not-allowed"
-                            >
-                              <IconTicket />
-                              <span>{translations("Create Tickets")}</span>
-                            </Button>
-                          </TooltipTrigger>
+                    </Tooltip>
+                  )}
+                </Menu.Item>
+              )}
 
-                          <TooltipContent side="top">
-                            {isTicketFeatureActive
-                              ? translations(
-                                  "Upgrade your Plan for this feature",
-                                )
-                              : translations(
-                                  "Auto-Generate Ticket is enabled on this survey",
-                                )}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenuPortal>
-          </DropdownMenu>
-        </div>
-      </div>
+              {validationSupportedTypes.includes(
+                question?.type as QuestionType,
+              ) && (
+                <Menu.Item>
+                  <RateupButtonSecondary
+                    title={translations("Custom Validation")}
+                    leftIcon={<IconEdit />}
+                    size="sm"
+                    fullWidth
+                    onClick={async () => {
+                      let save = await handleSave();
+                      save === "saved" &&
+                        setActiveTab(QuestionTabsEnum.ValidationRulesEditor);
+                    }}
+                  />
+                </Menu.Item>
+              )}
+              {ticketIssueSupportedTypes.includes(
+                question?.type as QuestionType,
+              ) && (
+                <Menu.Item>
+                  {isTicketFeatureActive && !enableAutoGenerateTicket ? (
+                    <RateupButtonSecondary
+                      title={translations("Create Tickets")}
+                      leftIcon={<IconTicket stroke={4} size={"1rem"} />}
+                      size="sm"
+                      fullWidth
+                      onClick={async () => {
+                        let save = await handleSave();
+                        save === "saved" &&
+                          setActiveTab(QuestionTabsEnum.TicketIssueEditor);
+                      }}
+                    />
+                  ) : (
+                    <Tooltip
+                      label={
+                        isTicketFeatureActive
+                          ? translations("Upgrade your Plan for this feature")
+                          : translations(
+                              "Auto-Generate Ticket is enabled on this survey",
+                            )
+                      }
+                      disabled={
+                        isTicketFeatureActive || enableAutoGenerateTicket
+                      }
+                      color={enableAutoGenerateTicket ? "yellow" : "black"}
+                    >
+                      <Button
+                        data-disabled
+                        radius="lg"
+                        onClick={(event) => event.preventDefault()}
+                        leftSection={<IconTicket stroke={4} size={"1rem"} />}
+                      >
+                        {translations("Create Tickets")}
+                      </Button>
+                    </Tooltip>
+                  )}
+                </Menu.Item>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        </Stack>
+      </Group>
 
-      <div>
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="disabled:opacity-50"
-        >
-          <IconDeviceSdCard />
-          <span>
-            {getIncompleteLanguages().length > 1 ||
+      <Group>
+        <RateupButtonBlue
+          title={
+            getIncompleteLanguages().length > 1 ||
             (getIncompleteLanguages().length > 0 &&
               getIncompleteLanguages()[0] !== selectedLanguage)
               ? translations("Fill Next Language")
-              : translations("Save")}
-          </span>
-        </Button>
-      </div>
-    </div>
+              : translations("Save")
+          }
+          size="md"
+          onClick={handleSave}
+          leftIcon={<IconDeviceSdCard />}
+          loading={isSaving}
+        />
+      </Group>
+    </Group>
   );
 }
 

@@ -1,16 +1,11 @@
-import { Flex, RangeSlider } from "@mantine/core";
+import { Flex, RangeSlider, Stack } from "@mantine/core";
 import { Column } from "@tanstack/react-table";
 
-import { MultiSelect } from "@/components/ui/multi-select";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 import { QuestionType, SmileyResponse } from "../../../types/enums";
+import {
+  ContainedMultiSelect,
+  ContainedSelection,
+} from "../../input/ContainedInput/ContainedInput";
 import DebouncedInput from "./DebouncedInput";
 
 export const Filter = ({
@@ -44,36 +39,25 @@ export const Filter = ({
   let renderData;
   if ([QuestionType.Smiley].includes(responseType)) {
     renderData = (
-      <MultiSelect
-        options={selectValue}
-        onValueChange={(value) => column.setFilterValue(value)}
-        placeholder="select option"
+      <ContainedMultiSelect
+        data={selectValue}
+        onChange={(value) => column.setFilterValue(value)}
+        placeholder={"select option"}
       />
     );
   } else if ([QuestionType.LD].includes(responseType)) {
     renderData = (
-      <Select
-        value={typeof columnFilterValue === "string" ? columnFilterValue : ""}
-        onValueChange={(value) => column.setFilterValue(value)}
-      >
-        <SelectTrigger className="h-9 w-full">
-          <SelectValue placeholder="Select option" />
-        </SelectTrigger>
-
-        <SelectContent>
-          {selectValue.map((option: string) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <ContainedSelection
+        data={selectValue}
+        onChange={(value) => column.setFilterValue(value)}
+        placeholder={"select option"}
+      />
     );
   } else if (
     [QuestionType.Rating, QuestionType.Opinion].includes(responseType)
   ) {
     renderData = (
-      <div className="w-full border px-2 py-3 rounded-sm">
+      <Stack gap={"xs"} h={36} justify="center">
         <RangeSlider
           minRange={1}
           min={min}
@@ -81,9 +65,8 @@ export const Filter = ({
           step={1}
           defaultValue={[min, max]}
           onChange={column.setFilterValue}
-          color="var(--primary)"
         />
-      </div>
+      </Stack>
     );
   } else if (typeof firstValue === "number") {
     renderData = (

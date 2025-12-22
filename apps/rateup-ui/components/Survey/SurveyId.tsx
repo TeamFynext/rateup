@@ -3,38 +3,39 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
+import {
+  Center,
+  Group,
+  MantineProvider,
+  MultiSelect,
+  Portal,
+  Text,
+} from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { ClipboardList, Edit2, FileText, Settings, Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import modalStyles from "styles/commonCssModules/modal.module.css";
 
-import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useNavControlContext } from "@/context/NavControlContext";
 import { SurveyContextProvider } from "@/context/SurveyObjContext";
 import { showErrorToast } from "@/utils/notifications";
-import { hasFeature } from "@/utils/subscription/subscription";
 
 import { useQuestions } from "../../backend/surveys/questions/questions.query";
 import {
   useGetSurveyVariables,
   useSurvey,
 } from "../../backend/surveys/surveys.query";
+import { whatsappTheme } from "../../config/mantineTheme";
 import { useRouteParams } from "../../context/RouteParamsContext";
 import SelectedLanguageContext from "../../context/SelectedLanguage";
 import SurveyContext from "../../context/SurveyContext";
 import { useUser } from "../../context/UserContext";
-import { SubscriptionFeaturePathName, SurveyType } from "../../types/enums";
+import { SurveyType } from "../../types/enums";
 import { UserRole } from "../../utils/enums";
 import { getFromSessionStorage } from "../../utils/essential";
 import ErrorComponent from "../404/ErrorComponent";
 import RateupLoader from "../Loaders/RateupLoader";
-import { Button } from "../ui/button";
-import { MultiSelect } from "../ui/multi-select";
-import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
-import { EditSurvey } from "./EditSurvey";
-import Result from "./Result/Result";
-import SurveySettings from "./Settings";
-import ShareSurvey from "./ShareSurvey/ShareSurvey";
+import TabPanelsComp from "./Tabs/TabPanels";
+import TabsListComp from "./Tabs/TabsList";
 
 export enum TabEnum {
   Edit = "Edit",
@@ -85,9 +86,7 @@ export default function SurveyID() {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
   const [surveyTeamMapId, setSurveyTeamMapId] = useState("");
-  const [activeTab, setActiveTab] = useState<TabEnum | null | string>(
-    tab || TabEnum.Edit,
-  );
+  const [activeTab, setActiveTab] = useState<TabEnum | null>(TabEnum.Edit);
   const [addQnTrigger, setaddQnTrigger] = useState(0);
   const [teamOptions, setTeamOptions] = useState([]);
   const [filterTeams, setFilterTeams] = useState([]);
@@ -102,7 +101,6 @@ export default function SurveyID() {
   ] = useState(null);
 
   const { navOpened, setNavOpened } = useNavControlContext();
-  const { data: subscription } = useSubscription();
 
   const handleTabChange = useCallback(
     (value) => {
@@ -112,11 +110,11 @@ export default function SurveyID() {
         modals.openConfirmModal({
           title: translations("Discard unsaved changes?"),
           children: (
-            <p className={modalStyles["are-you-sure-text"]}>
+            <Text className={modalStyles["are-you-sure-text"]}>
               {translations(
                 "Are you sure, you want to discard unsaved changes?",
               )}
-            </p>
+            </Text>
           ),
           labels: {
             confirm: translations("Discard"),
@@ -221,187 +219,73 @@ export default function SurveyID() {
   }
 
   return (
-    <SurveyContextProvider survey={survey}>
-      <SelectedLanguageContext.Provider
-        value={{ selectedLanguage, defaultLanguage }}
-      >
-        <SurveyContext.Provider
-          value={{
-            selectedTeamId,
-            surveyTeamMapId,
-            selectedTeamName,
-            filterTeams,
-            setFilterTeams,
-            filterTags,
-            encryptionpassword,
-            surveyId,
-            variables,
-            teams: teamOptions,
-          }}
+    <MantineProvider
+      theme={survey?.type === SurveyType.WhatsApp ? whatsappTheme : undefined}
+    >
+      <SurveyContextProvider survey={survey}>
+        <SelectedLanguageContext.Provider
+          value={{ selectedLanguage, defaultLanguage }}
         >
-          <div className="px-6 py-2">
-            {/* Back Button & Title */}
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-4 flex-1">
-                <div className="flex gap-1">
-                  <h1 className="text-base sm:text-2xl">{survey?.title}</h1>
-                </div>
-              </div>
-
-              <div className="sm:flex sm:items-center sm:gap-2 hidden">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setActiveTab(TabEnum.Share)}
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  {translations("Share")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setActiveTab(TabEnum.Edit)}
-                >
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  {translations("Edit")}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4 w-full">
+          <SurveyContext.Provider
+            value={{
+              selectedTeamId,
+              surveyTeamMapId,
+              selectedTeamName,
+              filterTeams,
+              setFilterTeams,
+              filterTags,
+              encryptionpassword,
+              surveyId,
+              variables,
+              teams: teamOptions,
+            }}
+          >
             {user?.role !== UserRole.MEMBER && (
-              <Tabs value={activeTab} onValueChange={handleTabChange}>
-                <TabsList className="border px-2 py-1 flex items-center gap-1 sm:gap-4">
-                  <TabsTrigger
-                    value={TabEnum.Edit}
-                    className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-1 px-2"
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      {translations("Questions")}
-                    </span>
-                  </TabsTrigger>
-
-                  <TabsTrigger
-                    value={TabEnum.Share}
-                    className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-1 px-2"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      {translations("Share")}
-                    </span>
-                  </TabsTrigger>
-
-                  <TabsTrigger
-                    value={TabEnum.Settings}
-                    className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-1 px-2"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      {translations("Settings")}
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value={TabEnum.Result}
-                    className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-1 px-2"
-                  >
-                    <ClipboardList className="w-4 h-4" />
-                    <span className="hidden sm:inline">
-                      {translations("Result")}
-                    </span>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <Center mb={"xs"}>
+                <TabsListComp
+                  value={activeTab}
+                  onChange={handleTabChange}
+                  tabs={Object.values(TabEnum)}
+                />
+              </Center>
+            )}
+            {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
+            <div id="SurveyIssueAlert"> </div>
+            {activeTab === TabEnum.Result && (
+              <Group pos={"absolute"} right={30}>
+                <MultiSelect
+                  radius={"10px"}
+                  searchable
+                  clearable
+                  data={multiSelectOptions}
+                  value={filterTeams}
+                  onChange={setFilterTeams}
+                  placeholder={
+                    filterTeams.length > 0 ? "" : translations("All Teams")
+                  }
+                />
+              </Group>
             )}
 
-            {/* content */}
-            <Tabs value={activeTab}>
-              <div className="max-h-[90vh] overflow-auto w-full">
-                {activeTab === TabEnum.Edit && (
-                  <EditSurvey
-                    questions={questions}
-                    addQnTrigger={addQnTrigger}
-                    surveyLanguages={survey?.languages}
-                    setSelectedLanguage={setSelectedLanguage}
-                    subscription={subscription}
-                    setFunToRunBeforeSurveyIdPageHeaderTabsChange={
-                      setFunToRunBeforeSurveyIdPageHeaderTabsChange
-                    }
-                  />
-                )}
-                {activeTab === TabEnum.Result && (
-                  <div className="relative">
-                    <div className="max-w-sm min-w-sm mb-2 sm:absolute sm:right-0 sm:top-0 sm:mb-0">
-                      <MultiSelect
-                        options={multiSelectOptions}
-                        value={filterTeams}
-                        onValueChange={setFilterTeams}
-                        placeholder={
-                          filterTeams.length > 0
-                            ? ""
-                            : translations("All Teams")
-                        }
-                      />
-                    </div>
-                    <Result
-                      survey={survey}
-                      encryptionpassword={encryptionpassword}
-                      setEncryptionPassword={setEncryptionPassword}
-                      subscription={subscription}
-                      translations={translations}
-                    />
-                  </div>
-                )}
-
-                {activeTab === TabEnum.Share && (
-                  <ShareSurvey survey={survey} setActiveTab={setActiveTab} />
-                )}
-
-                {activeTab === TabEnum.Settings && (
-                  <SurveySettings
-                    surveyId={surveyId}
-                    survey={survey}
-                    setSelectedLanguage={setSelectedLanguage}
-                    enabledModules={
-                      survey?.type === SurveyType.WhatsApp
-                        ? ["name", "language", "teams", "location"]
-                        : [
-                            "name",
-                            "password",
-                            "language",
-                            "kiosk",
-                            "teams",
-                            "preview",
-                            "location",
-                            "notificationEmail",
-                            hasFeature(
-                              subscription,
-                              SubscriptionFeaturePathName.Encryption,
-                            ) && "endtoendencryption",
-                            "redirect",
-                            "uniqueDeviceResponse",
-                            hasFeature(
-                              subscription,
-                              SubscriptionFeaturePathName.Ticket,
-                            ) && "tickets",
-                            hasFeature(
-                              subscription,
-                              SubscriptionFeaturePathName.EmailNotification,
-                            ) && "enableNotificationEmail",
-                            hasFeature(
-                              subscription,
-                              SubscriptionFeaturePathName.Webhook,
-                            ) && "webhook",
-                          ]
-                    }
-                  />
-                )}
-              </div>
-            </Tabs>
-          </div>
-        </SurveyContext.Provider>
-      </SelectedLanguageContext.Provider>
-    </SurveyContextProvider>
+            <TabPanelsComp
+              value={activeTab}
+              survey={survey}
+              surveyId={surveyId}
+              questions={questions}
+              addQnTrigger={addQnTrigger}
+              setSelectedLanguage={setSelectedLanguage}
+              setFilterTags={setFilterTags}
+              encryptionpassword={encryptionpassword}
+              setEncryptionPassword={setEncryptionPassword}
+              translations={translations}
+              setActiveTab={setActiveTab}
+              setFunToRunBeforeSurveyIdPageHeaderTabsChange={
+                setFunToRunBeforeSurveyIdPageHeaderTabsChange
+              }
+            />
+          </SurveyContext.Provider>
+        </SelectedLanguageContext.Provider>
+      </SurveyContextProvider>
+    </MantineProvider>
   );
 }

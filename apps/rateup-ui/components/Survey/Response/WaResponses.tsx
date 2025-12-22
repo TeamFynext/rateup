@@ -8,9 +8,22 @@ import React, {
   useRef,
   useState,
 } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
+import {
+  Anchor,
+  Box,
+  Button,
+  Center,
+  Flex,
+  Group,
+  Popover,
+  rem,
+  Skeleton,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
@@ -33,19 +46,6 @@ import { useIntegrationByType } from "@/backend/appsIntegration/integration.quer
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
 import { hasFeature } from "@/utils/subscription/subscription";
 import {
@@ -117,7 +117,7 @@ const WaResponses = ({
   const surveyId = survey?.id;
   const { surveyTeamMapId, filterTeams, filterTags } =
     useContext(SurveyContext);
-  const [selectedRowId, setSelectedRowId] = useState([]);
+  const [selectedRowId, setSelectedRowId] = useState("");
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -184,7 +184,12 @@ const WaResponses = ({
     [subscription, survey],
   );
 
-  const deleteResponse = useDeleteResponse(surveyId, surveyTeamMapId);
+  const deleteResponse = useDeleteResponse(
+    surveyId,
+    surveyTeamMapId,
+    close,
+    setIsDeleting,
+  );
   const translations = useTranslations();
 
   useEffect(() => {
@@ -256,8 +261,6 @@ const WaResponses = ({
         });
         setIsDeleting(true);
         deleteResponse.mutate(selectedRowId);
-        setIsDeleting(false);
-        close();
       } else {
         notifications.show({
           id: "load-data",
@@ -267,7 +270,6 @@ const WaResponses = ({
           icon: <IconX size="1rem" />,
           autoClose: 3000,
         });
-        setIsDeleting(false);
       }
     },
     [deleteResponse, selectedRowId, translations, user?.email],
@@ -324,9 +326,9 @@ const WaResponses = ({
         ? [
             {
               header: () => (
-                <span className="truncate min-w-[70px] max-w-[70px] font-semibold text-lg">
+                <Text truncate="end" miw={70} maw={70} fw={600} fz={"lg"}>
                   {translations("Ticket")}
-                </span>
+                </Text>
               ),
               enableColumnFilter: false,
               enableSorting: false,
@@ -335,30 +337,31 @@ const WaResponses = ({
                 let ticketData = info.row.original.Ticket;
                 let ticketExist = ticketData?.length > 0;
                 return (
-                  <div
-                    className="flex items-center justify-center pr-[80px] cursor-pointer"
+                  <Center
+                    pr="80px"
+                    style={{ cursor: "pointer" }}
                     onClick={() => {
                       if (ticketExist) {
-                        const url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                        let url = `/dashboard/tickets/${ticketData[0]?.id}`;
                         window.open(url, "_blank");
                       }
                     }}
                   >
                     {ticketExist && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div>
-                              <IconTicket color="orange" />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" align="start">
-                            {translations("View Ticket")}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <Tooltip
+                        withArrow
+                        label={translations("View Ticket")}
+                        position="right-start"
+                      >
+                        <Stack>
+                          <IconTicket
+                            color="orange"
+                            style={{ width: rem(35), height: rem(35) }}
+                          />
+                        </Stack>
+                      </Tooltip>
                     )}
-                  </div>
+                  </Center>
                 );
               },
             },
@@ -474,7 +477,7 @@ const WaResponses = ({
 
   const responseCount = responseData?.totalCount;
   return (
-    <div className="h-full flex flex-col gap-4">
+    <Stack className={styles["responses-root-div"]}>
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         closeTicketModal={closeTicketModal}
@@ -482,108 +485,113 @@ const WaResponses = ({
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
       />
-      <div>
-        {isPending ? (
-          <Skeleton className="h-[70px] w-full rounded-lg" />
-        ) : (
-          <div className="flex items-center justify-between w-full p-4 border rounded-xl">
-            <div className="flex items-center gap-1">
-              <h1>
-                {translations("Total Responses :")} {responseCount}
-              </h1>
-              <RefreshButton onClick={() => refetchResponse()} />
-            </div>
+      <Skeleton
+        visible={isPending}
+        h={isPending && 70}
+        className={isPending && styles["total-responses-export-btn-container"]}
+      >
+        <Group className={styles["total-responses-export-btn-container"]}>
+          <Flex align={"center"}>
+            <Heading
+              subtitle={`${translations("Total Responses :")} ${responseCount}`}
+            />
+            <RefreshButton onClick={() => refetchResponse()} />
+          </Flex>
 
-            <div className="flex items-center justify-center gap-2">
-              <CalenderIconDateRangePicker
-                ranges={ranges}
-                setRange={setRange}
+          <Group>
+            <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
+            {CFData && CFData.length > 0 && (
+              <ContainedMultiSelect
+                placeholder={translations("Filter By Campaign")}
+                value={campaignIds}
+                onChange={setSelectedCampaignIds}
+                data={CFData.map(({ id, name }) => ({
+                  value: id,
+                  label: name,
+                }))}
               />
-              {CFData && CFData.length > 0 && (
-                <ContainedMultiSelect
-                  placeholder={translations("Filter By Campaign")}
-                  value={campaignIds}
-                  onChange={setSelectedCampaignIds}
-                  data={CFData.map(({ id, name }) => ({
-                    value: id,
-                    label: name,
-                  }))}
-                />
-              )}
-              {!survey?.isEncrypted && (
-                <Popover open={openedExport} onOpenChange={toggle}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={styles["export-btn"]}>
-                      <IconTableExport className="mr-2 h-4 w-4" />
-                      {translations("Export")}
-                    </Button>
-                  </PopoverTrigger>
-
-                  <PopoverContent
-                    align="end"
-                    className={`w-64 shadow-md ${styles["filters-popover-dropdown-div"]}`}
+            )}
+            {!survey?.isEncrypted && (
+              <Popover
+                position="bottom-end"
+                withArrow
+                shadow="md"
+                classNames={{
+                  dropdown: styles["filters-popover-dropdown-div"],
+                }}
+                opened={openedExport}
+              >
+                <Popover.Target>
+                  <Button
+                    className={styles["export-btn"]}
+                    leftSection={<IconTableExport />}
+                    radius={"lg"}
+                    fw={400}
+                    onClick={toggle}
                   >
-                    <div className="flex flex-col gap-2">
-                      <RateupButtonSecondary
-                        title={
-                          survey.spreadSheetId
-                            ? translations("Resync with Google Sheet")
-                            : translations("Sync with Google Sheet")
-                        }
-                        onClick={() => {
-                          if (survey.spreadSheetId) alertModalOpen();
-                          else handleSyncGoogleSheet();
-                        }}
-                        leftIcon={
-                          <IconRefresh
-                            className={isSyncing ? "animate-spin" : ""}
-                            strokeWidth={1.5}
-                          />
-                        }
-                      />
-
-                      <RateupButtonSecondary
-                        onClick={() => {
-                          handleExcelDownload();
-                          toggle();
-                        }}
-                        title={translations("Download Excel")}
-                        leftIcon={<IconFileDownload strokeWidth={1.5} />}
-                      />
-
-                      <ConfirmationModal
-                        opened={alertModalOpened}
-                        onClose={alertModalClose}
-                        headerTitle={translations("Resync Google Sheet")}
-                        headerLabel={translations(
-                          "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost",
-                        )}
-                        confirmLabel={translations("Yes")}
-                        onConfirm={handleSyncGoogleSheet}
-                      />
-
-                      <ConfirmationModal
-                        opened={redirectModalOpened}
-                        onClose={redirectModalClose}
-                        headerTitle={translations("Sync Google Sheet")}
-                        headerLabel={alertMsg}
-                        confirmLabel={translations("Continue")}
-                        onConfirm={() => {
-                          router.push("/dashboard/apps&services/googlesheet");
-                        }}
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
-
-              <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="border p-4 rounded-xl">
+                    {translations("Export")}
+                  </Button>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <Stack>
+                    <RateupButtonSecondary
+                      title={
+                        survey.spreadSheetId
+                          ? translations("Resync with Google Sheet")
+                          : translations("Sync with Google Sheet")
+                      }
+                      onClick={() => {
+                        if (survey.spreadSheetId) alertModalOpen();
+                        else handleSyncGoogleSheet();
+                      }}
+                      leftIcon={
+                        <IconRefresh
+                          className={
+                            isSyncing ? styles.rotateInfinitely : undefined
+                          }
+                          style={{ width: "90%", height: "90%" }}
+                          stroke={1.5}
+                        />
+                      }
+                    />
+                    <RateupButtonSecondary
+                      onClick={() => {
+                        handleExcelDownload();
+                        toggle();
+                      }}
+                      title={translations("Download Excel")}
+                      radius={"lg"}
+                      leftIcon={<IconFileDownload stroke={1.5} />}
+                    />
+                    <ConfirmationModal
+                      opened={alertModalOpened}
+                      onClose={alertModalClose}
+                      headerTitle={translations("Resync Google Sheet")}
+                      headerLabel={translations(
+                        "Are you sure you want to resync the response to sheet? All previous changes made to the sheet will be lost",
+                      )}
+                      confirmLabel={translations("Yes")}
+                      onConfirm={handleSyncGoogleSheet}
+                    />
+                    <ConfirmationModal
+                      opened={redirectModalOpened}
+                      onClose={redirectModalClose}
+                      headerTitle={translations("Sync Google Sheet")}
+                      headerLabel={alertMsg}
+                      confirmLabel={translations("Continue")}
+                      onConfirm={() => {
+                        router.push("/dashboard/apps&services/googlesheet");
+                      }}
+                    />
+                  </Stack>
+                </Popover.Dropdown>
+              </Popover>
+            )}
+            <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
+          </Group>
+        </Group>
+      </Skeleton>
+      <Box className={styles["responses-table-container"]}>
         <TanstackTable
           data={data ?? []}
           columns={
@@ -605,8 +613,8 @@ const WaResponses = ({
           opened={opened}
           close={close}
         />
-      </div>
-    </div>
+      </Box>
+    </Stack>
   );
 };
 
@@ -627,8 +635,8 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
         setVerifyEmail("");
       }}
     >
-      <div className="flex flex-col gap-2">
-        <p>{translations("To proceed further, verify your email id")}</p>
+      <Stack py={"sm"}>
+        <Text>{translations("To proceed further, verify your email id")}</Text>
         <ContainedTextField
           withAsterisk
           label={translations("Verify email")}
@@ -637,10 +645,10 @@ const DeleteModal = ({ translations, confirmDelete, opened, close }) => {
           value={verifyEmail}
           onChange={(e) => setVerifyEmail(e.target.value)}
         />
-        <p className="text-red-500">
+        <Text c="red">
           {translations("Once deleted, response entry data will be lost")}
-        </p>
-      </div>
+        </Text>
+      </Stack>
     </FormModalLayout>
   );
 };
@@ -673,14 +681,12 @@ export const getCellData = (info, question) => {
     case WaQuestions.DocumentPicker:
       return (
         info && (
-          <Link
-            target="_blank"
+          <Anchor
             href={`${process.env.NEXT_PUBLIC_AWS_CLOUDFRONT_URL}${info}`}
             download
-            className="text-primary underline underline-offset-4 hover:text-primary/80"
           >
             Download
-          </Link>
+          </Anchor>
         )
       );
     case WaQuestions.DatePicker:

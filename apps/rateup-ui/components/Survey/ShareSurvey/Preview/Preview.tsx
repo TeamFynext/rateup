@@ -90,7 +90,7 @@ function Preview({
         </span>
       </div>
       <div
-        className="w-[300px] h-[300px]"
+        className={styles["preview-container"]}
         ref={previewContainerRef}
         data-tagname={customAttrForDownloadedQrFileName}
         style={{
@@ -99,7 +99,7 @@ function Preview({
         }}
       >
         <div
-          className="relative"
+          className={styles["qr-svg-bg-img-container"]}
           style={{
             width: "100%",
             height: "100%",

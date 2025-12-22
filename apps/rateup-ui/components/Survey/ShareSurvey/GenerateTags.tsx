@@ -1,14 +1,10 @@
 "use client";
 
-import { Tag } from "lucide-react";
-import { useTranslations } from "next-intl";
+import React from "react";
 
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { ActionIcon, Group, Tooltip } from "@mantine/core";
+import { IconDatabasePlus } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 
 import { ContainedTagInput } from "../../input/ContainedInput/ContainedInput";
 
@@ -18,7 +14,7 @@ const GenerateTags = ({ tagSelectData, setTagSelectData, disabled }) => {
   };
   const translations = useTranslations();
   return (
-    <div className="flex items-center gap-1">
+    <Group gap={4}>
       <ContainedTagInput
         onChange={setTagSelectData}
         value={tagSelectData}
@@ -27,21 +23,12 @@ const GenerateTags = ({ tagSelectData, setTagSelectData, disabled }) => {
         maw={300}
         disabled={disabled}
       />
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="default"
-            onClick={handleGenerateTag}
-            disabled={disabled}
-            className="mt-6"
-          >
-            <Tag />
-          </Button>
-        </TooltipTrigger>
-
-        <TooltipContent>{translations("generate random tag")}</TooltipContent>
+      <Tooltip label={translations("generate random tag")}>
+        <ActionIcon onClick={handleGenerateTag} mt={"lg"} disabled={disabled}>
+          <IconDatabasePlus />
+        </ActionIcon>
       </Tooltip>
-    </div>
+    </Group>
   );
 };
 

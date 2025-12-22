@@ -87,16 +87,14 @@ const ShareQR = ({
   }, [logoTabPanelState]);
 
   return (
-    <div className="overflow-x-hidden">
-      <div className="border-b">
-        <div className="flex items-center gap-1.5 p-4 mb-2">
-          <Palette className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-semibold">
-            {translations("Customize & Generate QR Code")}
-          </h2>
-        </div>
+    <div>
+      <div className="flex items-center gap-1.5 py-1.5 mb-2">
+        <Palette className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-semibold">
+          {translations("Customize & Generate QR Code")}
+        </h2>
       </div>
-      <div className="flex flex-col sm:flex-row gap-4 w-full min-w-0 overflow-hidden p-4">
+      <div className="flex gap-4">
         <LogoTabpanel
           state={logoTabPanelState}
           dispatch={logoTabPanelDispatch}

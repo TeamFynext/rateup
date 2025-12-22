@@ -2,6 +2,7 @@
 
 import React, { useContext, useEffect, useMemo, useState } from "react";
 
+import { Flex } from "@mantine/core";
 import { IconTableExport } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -111,71 +112,65 @@ const ResultsOverviewWebForm = ({
         <RateupLoader />
       ) : isError ? (
         <ErrorComponent refetch={refetch} isRefetching={isRefetching} />
-      ) : !npsOverView.length && !choiceWiseOverView.length ? (
-        <NothingFound text={translations("No Data available for Analysis")} />
       ) : (
-        <div className="flex flex-col gap-6">
-          {!flowId && (
-            <SurveyStatsWebForm
-              translations={translations}
-              surveyId={surveyId}
-            />
-          )}
-          <HappyIndex translations={translations} surveyId={surveyId} />
-          <OverallResponseGraphWebForm
-            data={graphResponse}
-            timePeriod={timePeriod}
-            setTimePeriod={setTimePeriod}
-            isLoading={isrLoading || isrRefetching}
-            onRefresh={async () => {
-              await queryClient.invalidateQueries({
-                queryKey: [
-                  [
-                    "reponse-nps",
-                    "graph-nps",
-                    timePeriod,
-                    userTimeZone,
-                    surveyId,
-                    filterTeams,
-                  ],
-                ],
-              });
-            }}
-          />
-          <PaperLayout p={"md"}>
-            <div className="flex items-center justify-between">
-              <RateupButtonPrimary
-                onClick={() => toPDF()}
-                loading={isExporting}
-                leftIcon={<IconTableExport size={"1rem"} />}
-                title="Export to Pdf"
-              />
-              <CalenderIconDateRangePicker
-                ranges={ranges}
-                setRange={setRange}
-              />
-            </div>
-          </PaperLayout>
-          <div ref={targetRef}>
-            <SurveyQuestion
-              choiceWise={choiceWiseOverView}
-              NPS={npsOverView}
-              flowQuestions={flowQuestions}
-              questions={questions}
-              version={version}
-              surveyId={surveyId}
-              defaultLanguage={defaultLanguage}
-            />
-          </div>
-          <LargeTextResponseSummary
-            surveyId={surveyId}
-            questions={textAreaQuestions}
-            subscription={subscription}
-            currentSummary={aiResponseSummary}
-            version={version}
-          />
-        </div>
+        !npsOverView.length &&
+        !choiceWiseOverView.length && (
+          <NothingFound text={translations("No Data available for Analysis")} />
+        )
       )}
+      {!flowId && (
+        <SurveyStatsWebForm translations={translations} surveyId={surveyId} />
+      )}
+      <HappyIndex translations={translations} surveyId={surveyId} />
+      <OverallResponseGraphWebForm
+        data={graphResponse}
+        timePeriod={timePeriod}
+        setTimePeriod={setTimePeriod}
+        isLoading={isrLoading || isrRefetching}
+        onRefresh={async () => {
+          await queryClient.invalidateQueries({
+            queryKey: [
+              [
+                "reponse-nps",
+                "graph-nps",
+                timePeriod,
+                userTimeZone,
+                surveyId,
+                filterTeams,
+              ],
+            ],
+          });
+        }}
+      />
+      <PaperLayout p={"md"}>
+        <Flex justify={"space-between"}>
+          <RateupButtonPrimary
+            onClick={() => toPDF()}
+            loading={isExporting}
+            leftIcon={<IconTableExport size={"1rem"} />}
+            title="Export to Pdf"
+          />
+          <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
+        </Flex>
+      </PaperLayout>
+      <div ref={targetRef}>
+        <SurveyQuestion
+          choiceWise={choiceWiseOverView}
+          NPS={npsOverView}
+          flowQuestions={flowQuestions}
+          questions={questions}
+          version={version}
+          surveyId={surveyId}
+          defaultLanguage={defaultLanguage}
+        />
+      </div>
+      <LargeTextResponseSummary
+        surveyId={surveyId}
+        questions={textAreaQuestions}
+        subscription={subscription}
+        currentSummary={aiResponseSummary}
+        version={version}
+      />
     </div>
   );
 };

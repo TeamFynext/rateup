@@ -3,9 +3,9 @@
 import React, { useCallback, useContext, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { Box, Flex, ScrollArea, Stack, Tabs, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
-import { ChartNoAxesColumnIcon, GitCompare, MessageSquare } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { QuestionType2 } from "@/types/enums";
@@ -13,8 +13,6 @@ import { useQuestions } from "@/backend/surveys/questions/questions.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import SelectedLanguageContext from "../../../context/SelectedLanguage";
 import SurveyContext from "../../../context/SurveyContext";
@@ -22,12 +20,21 @@ import { useUser } from "../../../context/UserContext";
 import { decryptPrivateKey } from "../../../utils/encryption";
 import { pushToSessionStorage } from "../../../utils/essential";
 import { showErrorToast } from "../../../utils/notifications";
+import {
+  RateupButtonBlue,
+  RateupButtonSecondary,
+} from "../../Button/RateupButtons";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import SimpleModalLayout from "../../Modal/SimpleModalLayout";
+import StyledTabs from "../../styled/StyledTabs/StyledTabs";
 import Responses from "../Response/Responses";
 import WaResponses from "../Response/WaResponses";
+import styles from "./Result.module.css";
 import ResultComparison from "./ResultComparison";
+import ResultsOverview from "./ResultsOverview";
 import ResultsOverviewWebForm from "./ResultsOverviewWebForm";
+import SurveyStats from "./SurveyStats";
+import WaResultsOverviewV2 from "./WaResultsOverview";
 
 enum ResultTab {
   OverView = "overview",
@@ -97,46 +104,48 @@ const Result = ({
     return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
 
   return (
-    <div className="w-full">
-      {/* tabs */}
-      <Tabs
-        className="w-full"
-        defaultValue="responses"
-        value={activeTab}
-        onValueChange={(value) => setActiveTab(value as ResultTab)}
-      >
-        <TabsList className="flex items-center gap-1 sm:gap-2 p-1">
-          <TabsTrigger
-            value="responses"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-1 px-2"
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span className="hidden sm:inline">{translations("Response")}</span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="analytics"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-1 px-2"
-          >
-            <ChartNoAxesColumnIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {translations("Analytics")}
-            </span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="comparison"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white flex items-center gap-1 px-2"
-          >
-            <GitCompare className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {translations("Comparison")}
-            </span>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* content */}
-        <TabsContent value="responses" className="w-full">
+    <StyledTabs
+      defaultValue={ResultTab.Responses}
+      placement="left"
+      orientation="horizontal"
+      styles={{
+        root: {
+          flexDirection: "column",
+        },
+        list: {
+          position: "sticky",
+          display: "flex",
+          flexDirection: "row",
+          borderBottomLeftRadius: 10,
+          borderBottomRightRadius: 10,
+          height: "fit-content",
+          minWidth: 200,
+          border: "1px solid var(--mantine-color-gray-3)",
+          minHeight: "fit-content",
+        },
+        panel: {
+          minWidth: "300px",
+          padding: 5,
+          paddingRight: 10,
+          height: "100%",
+          width: "100%",
+          overflow: "auto",
+        },
+      }}
+      value={activeTab}
+      onChange={(value) => setActiveTab(value as ResultTab)}
+    >
+      <Box className={styles["result-page-tabs-container"]}>
+        <ScrollArea offsetScrollbars={true}>
+          <Tabs.List classNames={{ list: styles["result-page-tabs-list"] }}>
+            <Tabs.Tab value="responses">{translations("Response")}</Tabs.Tab>
+            <Tabs.Tab value="analytics">{translations("Analytics")}</Tabs.Tab>
+            <Tabs.Tab value="comparison">{translations("Comparison")}</Tabs.Tab>
+          </Tabs.List>
+        </ScrollArea>
+      </Box>
+      <Box className={styles["panels-container"]}>
+        <Tabs.Panel value="responses">
           {version === 1 ? (
             <Responses
               survey={survey}
@@ -153,8 +162,8 @@ const Result = ({
               questions={flowQuestions}
             />
           )}
-        </TabsContent>
-        <TabsContent value="analytics" className="w-full">
+        </Tabs.Panel>
+        <Tabs.Panel value="analytics">
           <ResultsOverviewWebForm
             surveyId={survey?.id}
             aiResponseSummary={survey?.aiResponseSummary}
@@ -164,23 +173,23 @@ const Result = ({
             flowQuestions={flowQuestions}
             questions={questions}
           />
-        </TabsContent>
-        <TabsContent value="comparison" className="w-full">
+        </Tabs.Panel>
+        <Tabs.Panel value="comparison">
           <ResultComparison
             surveyId={survey?.id}
             version={version}
             flowQuestions={flowQuestions}
             questions={questions}
           />
-        </TabsContent>
-      </Tabs>
+        </Tabs.Panel>
+      </Box>
       <EncryptionPasswordModal
         passwordModalOpened={passwordModalOpened}
         close={close}
         setPassword={setEncryptionPassword}
         surveyId={survey?.id}
       />
-    </div>
+    </StyledTabs>
   );
 };
 
@@ -238,22 +247,27 @@ function EncryptionPasswordModal({
       title={translations("Enter the password")}
       withCloseButton={false}
     >
-      <div className="flex flex-col gap-2 p-2">
-        <p>{translations("Enter the password to view the survey data")}</p>
+      <Stack>
+        <Text>
+          {translations("Enter the password to view the survey data")}
+        </Text>
         <ContainedPasswordInput
           label={translations("Password")}
           value={encryptionpassword}
           onChange={(e) => setEncryptionPassword(e.target.value)}
         />
-        <div className="flex items-center justify-center gap-10">
-          <Button variant="outline" onClick={handleGoback}>
-            <IconArrowLeft />
-            {translations("Go back")}
-          </Button>
-
-          <Button onClick={onSubmitPassword}>{translations("Submit")}</Button>
-        </div>
-      </div>
+        <Flex style={{ justifyContent: "center", gap: "40px" }}>
+          <RateupButtonSecondary
+            title={translations("Go back")}
+            leftIcon={<IconArrowLeft />}
+            onClick={handleGoback}
+          />
+          <RateupButtonBlue
+            title={translations("Submit")}
+            onClick={onSubmitPassword}
+          />
+        </Flex>
+      </Stack>
     </SimpleModalLayout>
   );
 }
