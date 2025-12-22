@@ -47,7 +47,7 @@ function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
       onClick={() => router.push(`flowbots/${automation.id}`)}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-2 truncate">
           <CardTitle className="text-xl truncate flex-1">
             {automation.name}
           </CardTitle>
