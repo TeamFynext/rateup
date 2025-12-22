@@ -31,7 +31,7 @@ export const ruleOptionsSchema = z.object({
   businessHours: z
     .object({
       enabled: z.boolean(),
-      businessHoursId: z.string(),
+      businessHoursId: z.string().optional(),
     })
     .optional(),
 });

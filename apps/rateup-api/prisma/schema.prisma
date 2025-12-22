@@ -2,8 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider     = "prisma-client"
-  output       = "../generated/prisma"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 // for having typed Json fields
@@ -93,32 +93,31 @@ model User {
   lastLoggedInAt DateTime?
   presenceMode   UserPresenceMode @default(automatic)
 
-  org                 Org[]
-  orgMember           OrgMember[]
-  teamMember          TeamMember[]
-  surveys             Survey[]
-  Order               Order[]
-  assignedTicket      Ticket[]                  @relation("AssignedTicket")
-  createdTicket       Ticket[]                  @relation("CreatedTicket")
-  TicketComment       TicketComment[]
-  linktree            Linktree[]
-  generateQr          GenerateQr[]
-  landingPage         LandingPage[]
-  WaMessage           WaMessage[]
-  waInboxAssign       WaInboxAssign[]
-  ticketActivity      TicketActivity[]
-  assignedTicketCards TicketCardAssignee[]
-  assignedBoards      TicketBoardNotification[]
-  expoPushTokens      ExpoPushToken[]
+  org                         Org[]
+  orgMember                   OrgMember[]
+  teamMember                  TeamMember[]
+  surveys                     Survey[]
+  Order                       Order[]
+  assignedTicket              Ticket[]                          @relation("AssignedTicket")
+  createdTicket               Ticket[]                          @relation("CreatedTicket")
+  TicketComment               TicketComment[]
+  linktree                    Linktree[]
+  generateQr                  GenerateQr[]
+  landingPage                 LandingPage[]
+  WaMessage                   WaMessage[]
+  waInboxAssign               WaInboxAssign[]
+  ticketActivity              TicketActivity[]
+  assignedTicketCards         TicketCardAssignee[]
+  assignedBoards              TicketBoardNotification[]
+  expoPushTokens              ExpoPushToken[]
   // Add relation for WaAutomatedReply many-to-many
-  UserAssignedCount   UserAssignedCount[]
-  AuditLog            AuditLog[]
-  LastClosedContacts      Contact[]
-  ClosedConversations     Conversation[]
-  AssignedConversations   ConversationAssignedUserTeamMap[]  @relation("ConversationAssignedUser")
-  removedAssignees        ConversationAssignedUserTeamMap[]  @relation("ConversationRemovedUser")
-  assignedStafftoConversation  ConversationAssignedUserTeamMap[]  @relation("ConversationAssignedByUser")
-
+  UserAssignedCount           UserAssignedCount[]
+  AuditLog                    AuditLog[]
+  LastClosedContacts          Contact[]
+  ClosedConversations         Conversation[]
+  AssignedConversations       ConversationAssignedUserTeamMap[] @relation("ConversationAssignedUser")
+  removedAssignees            ConversationAssignedUserTeamMap[] @relation("ConversationRemovedUser")
+  assignedStafftoConversation ConversationAssignedUserTeamMap[] @relation("ConversationAssignedByUser")
 }
 
 model Org {
@@ -136,8 +135,8 @@ model Org {
 
   onboarding          Json?
   onboardingCompleted Boolean @default(false)
-  
-  showLifecycle            Boolean   @default(true)
+
+  showLifecycle Boolean @default(true)
 
   members                  OrgMember[]
   teams                    Team[]
@@ -284,7 +283,6 @@ model WhatsappSettings {
   metaAssets       MetaAssets[]
   catalog          CatalogPhoneIdMap?
   assets           String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
-  rules            Rule[]
 }
 
 model Rule {
@@ -297,15 +295,14 @@ model Rule {
   isActive                 Boolean      @default(true)
   triggerEvent             TriggerEvent
   whatsappSettingsPhoneIds String[]     @default([]) //for multiple whatsapp integration
-  options                  Json?        // Stores sendOncePerDay and businessHours configuration
+  options                  Json? // Stores sendOncePerDay and businessHours configuration
 
   groups  RuleConditionGroup[]
   actions RuleAction[]
 
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  whatsappSettings   WhatsappSettings? @relation(fields: [whatsappSettingsId], references: [id])
-  whatsappSettingsId String?           @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([name, orgId], name: "rule_name_org_id_unique")
 }
 
@@ -328,10 +325,10 @@ model RuleCondition {
   group   RuleConditionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId String             @db.Uuid
 
-  field    ConditionField
-  operator ConditionOperator
-  value    String? // 'order', '@gmail.com', 'yes', etc.
-  messageBodyLock        RuleMessageBodyLock?
+  field           ConditionField
+  operator        ConditionOperator
+  value           String? // 'order', '@gmail.com', 'yes', etc.
+  messageBodyLock RuleMessageBodyLock?
 }
 
 enum ConditionField {
@@ -420,8 +417,8 @@ model Team {
   reviewPageLinks Json?
   tags            String[] @default([])
 
-  org                    Org                     @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  orgId                  String                  @db.Uuid
+  org                    Org                               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId                  String                            @db.Uuid
   members                TeamMember[]
   surveys                SurveyTeamMap[]
   invitations            Invitation[]
@@ -434,7 +431,7 @@ model Team {
   testimonialCollections TestimonialCollection[]
   Ticket                 Ticket[]
   waInboxAssign          WaInboxAssign[]
-  ticketBoards TicketBoardTeam[]
+  ticketBoards           TicketBoardTeam[]
   assignedConversations  ConversationAssignedUserTeamMap[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
@@ -1500,8 +1497,8 @@ model WaMessage {
   readUsers                       String[]                          @default([])
   sourcePlatform                  PlatformType?
   sourceIdentifier                String?
-  conversationId                  String?                            @db.Uuid
-  Conversation                     Conversation?                     @relation(fields: [conversationId], references: [id])
+  conversationId                  String?                           @db.Uuid
+  Conversation                    Conversation?                     @relation(fields: [conversationId], references: [id])
 
   @@index([contactId, waCreatedAt(sort: Desc)])
   @@index([contactId])
@@ -1558,15 +1555,15 @@ model WaAutomatedReplyCommands {
 }
 
 model RuleMessageBodyLock {
-  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt       DateTime       @default(now())
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime      @default(now())
   messageBody     String
-  businessHourId  String?        @db.Uuid
-  businessHour    BusinessHour?  @relation(fields: [businessHourId], references: [id], onDelete: Cascade)
-  orgId           String         @db.Uuid
-  org             Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  ruleConditionId String         @unique @db.Uuid
-  ruleCondition   RuleCondition  @relation(fields: [ruleConditionId], references: [id], onDelete: Cascade)
+  businessHourId  String?       @db.Uuid
+  businessHour    BusinessHour? @relation(fields: [businessHourId], references: [id], onDelete: Cascade)
+  orgId           String        @db.Uuid
+  org             Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  ruleConditionId String        @unique @db.Uuid
+  ruleCondition   RuleCondition @relation(fields: [ruleConditionId], references: [id], onDelete: Cascade)
 
   @@unique([orgId, messageBody, businessHourId], name: "rule_message_body_org_businessHour_unique")
 }
@@ -1829,12 +1826,12 @@ model LoyaltyWaCommand {
 }
 
 model LoyaltyReferralCode {
-  referralCode String          @unique
-  customerId   String          @db.Uuid
+  referralCode String @unique
+  customerId   String @db.Uuid
 
-  customer     LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  actionId     String          @db.Uuid
-  action       LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  customer LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  actionId String          @db.Uuid
+  action   LoyaltyAction   @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
   @@unique([customerId, actionId], name: "customer_action_unique")
 }
@@ -2016,23 +2013,22 @@ model BusinessHour {
   ruleMessageBodyLocks     RuleMessageBodyLock[]
 }
 
-
-
 model ConversationAssignedUserTeamMap {
-  userId  String @db.Uuid
-  user    User @relation(fields: [userId], references: [id], onDelete: Cascade, name: "ConversationAssignedUser")
-  teamId  String @db.Uuid
-  Team    Team @relation(fields:[teamId], references: [id])
-  conversationId  String @db.Uuid
-  Conversation Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  lastAssignedAt DateTime?
-  lastRemovedAt DateTime?
-  lastRemovedBy String? @db.Uuid
-  lastRemovedByUser User? @relation(fields: [lastRemovedBy], references: [id], name: "ConversationRemovedUser")
-  lastAssignedBy String? @db.Uuid
-  lastAssignedByUser User? @relation(fields: [lastAssignedBy], references: [id], name: "ConversationAssignedByUser")
-  isAssignedByAutomation Boolean @default(false)
-  actionHistory  Json[]  @default([])
+  userId                 String       @db.Uuid
+  user                   User         @relation(fields: [userId], references: [id], onDelete: Cascade, name: "ConversationAssignedUser")
+  teamId                 String       @db.Uuid
+  Team                   Team         @relation(fields: [teamId], references: [id])
+  conversationId         String       @db.Uuid
+  Conversation           Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  lastAssignedAt         DateTime?
+  lastRemovedAt          DateTime?
+  lastRemovedBy          String?      @db.Uuid
+  lastRemovedByUser      User?        @relation(fields: [lastRemovedBy], references: [id], name: "ConversationRemovedUser")
+  lastAssignedBy         String?      @db.Uuid
+  lastAssignedByUser     User?        @relation(fields: [lastAssignedBy], references: [id], name: "ConversationAssignedByUser")
+  isAssignedByAutomation Boolean      @default(false)
+  actionHistory          Json[]       @default([])
+
   @@id([userId, conversationId])
   @@index([userId, conversationId])
   @@index([conversationId])
@@ -2040,19 +2036,20 @@ model ConversationAssignedUserTeamMap {
 }
 
 model Conversation {
-  id  String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  contactId   String @db.Uuid
-  contact     Contact  @relation(fields:[contactId], references: [id], onDelete: Cascade)
-  messages    WaMessage[]
-  status      String  @default("UNASSIGNED")
-  firstRespondedAt DateTime?
-  firstRespondedByUserAt  DateTime?
-  assignedUsers  ConversationAssignedUserTeamMap[]
-  assignedAt DateTime?
-  closedAt   DateTime?
-  closedBy   String? @db.Uuid
-  closedByUser User?    @relation(fields: [closedBy], references: [id])
-  createdAt  DateTime  @default(now())
+  id                     String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  contactId              String                            @db.Uuid
+  contact                Contact                           @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  messages               WaMessage[]
+  status                 String                            @default("UNASSIGNED")
+  firstRespondedAt       DateTime?
+  firstRespondedByUserAt DateTime?
+  assignedUsers          ConversationAssignedUserTeamMap[]
+  assignedAt             DateTime?
+  closedAt               DateTime?
+  closedBy               String?                           @db.Uuid
+  closedByUser           User?                             @relation(fields: [closedBy], references: [id])
+  createdAt              DateTime                          @default(now())
+
   @@index([contactId])
   @@index([firstRespondedAt])
   @@index([createdAt])
