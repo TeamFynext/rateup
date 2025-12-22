@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { waCatalogProductRoutes } from "./products/product.route";
-import { checkSession } from "../../../utils/checkSession";
+import { waCatalogProductRoutes } from "./products/product.route.js";
+import { checkSession } from "../../../utils/checkSession.js";
 import {
   disconnectCatalogFromWabaHandler,
   getConnectedWaCatalogHandler,
@@ -8,9 +8,9 @@ import {
   getWaCatalogInfoHandler,
   syncCatalogsHandler,
   updateCatalogHandler,
-} from "./catalog.controller";
-import { $WC } from "./catalog.schema";
-import { waCatalogOrderRoutes } from "./orders/catalogOrder.route";
+} from "./catalog.controller.js";
+import { $WC } from "./catalog.schema.js";
+import { waCatalogOrderRoutes } from "./orders/catalogOrder.route.js";
 
 export async function waCatalogRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

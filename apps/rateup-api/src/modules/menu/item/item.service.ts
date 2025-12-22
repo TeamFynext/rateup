@@ -1,8 +1,8 @@
 import { MultipartFile } from "@fastify/multipart";
-import prisma from "../../../utils/prisma";
-import { deleteFile } from "../../../utils/upload/s3Upload";
-import { SortMenuCategoryInput } from "../category/category.schema";
-import { CreateMenuItemInput, UpdateMenuItemInput } from "./item.schema";
+import prisma from "../../../utils/prisma.js";
+import { deleteFile } from "../../../utils/upload/s3Upload.js";
+import { SortMenuCategoryInput } from "../category/category.schema.js";
+import { CreateMenuItemInput, UpdateMenuItemInput } from "./item.schema.js";
 import Papa from "papaparse";
 
 export async function createMenuItem(data: CreateMenuItemInput) {

@@ -1,10 +1,10 @@
 import { FastifyInstance } from "fastify";
-import { $campaignRef } from "../../../../campaign/campaign.schema";
+import { $campaignRef } from "../../../../campaign/campaign.schema.js";
 import {
   createCampaignParticipantsFromContactsHandler,
   getCampaignParticipantsByCampaignIdHandler,
-} from "../../../../campaign/campaignParticipants/campaignParticipants.controller";
-import { $campaignParticipantsRef } from "../../../../campaign/campaignParticipants/campaignParticipants.schema";
+} from "../../../../campaign/campaignParticipants/campaignParticipants.controller.js";
+import { $campaignParticipantsRef } from "../../../../campaign/campaignParticipants/campaignParticipants.schema.js";
 
 export async function externalCampaignParticipantRoutes(
   server: FastifyInstance,

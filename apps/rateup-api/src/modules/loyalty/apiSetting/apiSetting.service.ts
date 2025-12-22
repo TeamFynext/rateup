@@ -1,5 +1,5 @@
-import prisma from "../../../utils/prisma";
-import { LApiSettingInput } from "./apiSetting.schema";
+import prisma from "../../../utils/prisma.js";
+import { LApiSettingInput } from "./apiSetting.schema.js";
 
 export async function getLoyaltyApiSettings(orgId: string) {
   return await prisma.loyaltyApiSettings.findMany({

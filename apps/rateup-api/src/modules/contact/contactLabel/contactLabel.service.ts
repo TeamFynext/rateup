@@ -1,8 +1,8 @@
-import prisma from "../../../utils/prisma";
+import prisma from "../../../utils/prisma.js";
 import {
   CreateContactLabelSchema,
   UpdateContactLabelSchema,
-} from "./contactLabel.schema";
+} from "./contactLabel.schema.js";
 
 export async function createContactLabel(
   orgId: string,

@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { PlatformType } from "../../../../../generated/prisma/enums";
+import { PlatformType } from "../../../../../generated/prisma/enums.js";
 
 enum WaChatLastMessageTypes {
   "usermessages",

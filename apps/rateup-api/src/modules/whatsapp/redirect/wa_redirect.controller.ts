@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getIp } from "../../../utils/http";
-import { tokenizeIp } from "./wa_redirect.service";
-import prisma from "../../../utils/prisma";
+import { getIp } from "../../../utils/http.js";
+import { tokenizeIp } from "./wa_redirect.service.js";
+import prisma from "../../../utils/prisma.js";
 
 export async function tokenizeIpHandler(
   request: FastifyRequest,

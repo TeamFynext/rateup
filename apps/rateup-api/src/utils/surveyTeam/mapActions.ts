@@ -1,4 +1,4 @@
-import prisma from "../prisma";
+import prisma from "../prisma.js";
 
 export async function getSurveyTeamIdFromMap(surveyTeamMapId: string) {
   const surveyTeamMap = await prisma.surveyTeamMap.findUnique({

@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession";
+import { checkSession } from "../../utils/checkSession.js";
 import {
   createGoogleSheetAuthToken,
   createIntegrationHandler,
@@ -15,11 +15,11 @@ import {
   getWaPaymentConfigByNameHandler,
   getWaPaymentConfigurationsHandler,
   updateIntegrationByNameHandler,
-} from "./integrations.controller";
-import { $integrationRef } from "./integrations.schema";
-import { checkRoleHandler } from "../../utils/checkRoleHandler";
-import { shopifyRoutes } from "./shopify/shopify.route";
-import { shopifySchema } from "./shopify/shopify.schema";
+} from "./integrations.controller.js";
+import { $integrationRef } from "./integrations.schema.js";
+import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
+import { shopifyRoutes } from "./shopify/shopify.route.js";
+import { shopifySchema } from "./shopify/shopify.schema.js";
 
 export async function integrationsRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

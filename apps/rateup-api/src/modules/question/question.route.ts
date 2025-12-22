@@ -8,10 +8,10 @@ import {
   reorderQuestionsHandler,
   replaceQuestionsHandler,
   updateQuestionHandler,
-} from "./question.controller";
-import { $Qref } from "./question.schema";
-import { verifySurveyAccess } from "./question.auth";
-import { checkSession } from "../../utils/checkSession";
+} from "./question.controller.js";
+import { $Qref } from "./question.schema.js";
+import { verifySurveyAccess } from "./question.auth.js";
+import { checkSession } from "../../utils/checkSession.js";
 import fastifyMultipart from "@fastify/multipart";
 
 // Base route: /api/question/:surveyId

@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../utils/logger";
+import { log } from "../../utils/logger.js";
 import {
   backfillWithSQL,
   updateFreePlanExpiry,
@@ -8,9 +8,10 @@ import {
   updateSubscriptionAutomation,
   updateUsageStatsAutomation,
   updateUsageStatsTemplateMessageCount,
-} from "./update.service";
-import prisma from "../../utils/prisma";
-import { StageCategory } from "../../../generated/prisma/enums";
+  migrateAutomationToRules,
+} from "./update.service.js";
+import prisma from "../../utils/prisma.js";
+import { StageCategory } from "../../../generated/prisma/enums.js";
 
 export async function updateUsageStatsTemplateMessageHandler(
   request: FastifyRequest,
@@ -317,5 +318,35 @@ export async function backfillWithSQLHandler(
   } catch (error) {
     log.error(error);
     res.code(500).send("Error during backfill");
+  }
+}
+
+export async function migrateAutomationToRulesHandler(
+  req: FastifyRequest,
+  res: FastifyReply,
+) {
+  try {
+    const existingRules = await prisma.rule.count({
+      where: {
+        name: {
+          startsWith: "[Migrated]",
+        },
+      },
+    });
+
+    if (existingRules > 0) {
+      return res
+        .code(400)
+        .send("Automation to rules migration already completed");
+    }
+
+    const result = await migrateAutomationToRules();
+    res.code(200).send({
+      message: "Automation to rules migration completed successfully",
+      ...result,
+    });
+  } catch (error) {
+    log.error(error);
+    res.code(500).send("Error migrating automation to rules");
   }
 }

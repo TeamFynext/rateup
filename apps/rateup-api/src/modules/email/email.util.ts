@@ -1,4 +1,4 @@
-import { createEmailBodyOTPGeneration } from "./emailTemplates/emailTemplateOTPGeneration";
+import { createEmailBodyOTPGeneration } from "./emailTemplates/emailTemplateOTPGeneration.js";
 import crypto from "node:crypto";
 
 export function getEmailBodyTemplate(purpose, data) {

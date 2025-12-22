@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession";
+import { checkSession } from "../../utils/checkSession.js";
 import {
   createGenerateQrRecordRouteOptions,
   deleteGenerateQrRecordWithShortIdRouteOptions,
@@ -8,7 +8,7 @@ import {
   getPublicGenerateQrRecordWithShortIdRouteOptions,
   incrementGenerateQrNoOfScansRouteOptions,
   updateGenerateQrRecordWithShortIdRouteOptions,
-} from "./generateQr.routeOptions";
+} from "./generateQr.routeOptions.js";
 
 export async function linkRoutes(server: FastifyInstance) {
   server.addHook("onRoute", (routeOptions) => {

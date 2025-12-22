@@ -1,16 +1,16 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../utils/logger";
+import { log } from "../../../utils/logger.js";
 import {
   LApiSettingIdInput,
   LApiSettingInput,
   UpdateApiSettingInput,
-} from "./apiSetting.schema";
+} from "./apiSetting.schema.js";
 import {
   createLoyaltyApiSetting,
   getLoyaltyApiSettingById,
   getLoyaltyApiSettings,
   updateLoyaltyApiSetting,
-} from "./apiSetting.service";
+} from "./apiSetting.service.js";
 
 export async function getLoyaltyApiSettingsHandler(
   request: FastifyRequest,

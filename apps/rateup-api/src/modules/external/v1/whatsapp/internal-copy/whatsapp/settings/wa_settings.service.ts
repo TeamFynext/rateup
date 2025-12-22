@@ -1,12 +1,12 @@
-import { WhatsappSettings } from "../../../../../../../../generated/prisma/client";
-import { getPhoneDetails } from "../auth/wa_auth.service";
+import { WhatsappSettings } from "../../../../../../../../generated/prisma/client.js";
+import { getPhoneDetails } from "../auth/wa_auth.service.js";
 import {
   aes_decrypt,
   aes_encrypt,
-} from "../../../../../../../../utils/encryption/encryption.utils";
-import prisma from "../../../../../../../utils/prisma";
-import { WaConfigType } from "../../../../../../../types/enums";
-import { log } from "../../../../../../../utils/logger";
+} from "../../../../../../../../utils/encryption/encryption.utils.js";
+import prisma from "../../../../../../../utils/prisma.js";
+import { WaConfigType } from "../../../../../../../types/enums.js";
+import { log } from "../../../../../../../utils/logger.js";
 
 export async function createWaSettings(
   orgId: string,

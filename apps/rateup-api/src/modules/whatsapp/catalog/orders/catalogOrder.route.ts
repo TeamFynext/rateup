@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
-import { getWaCatalogOrdersHandler } from "./catalogOrder.controller";
-import { $WC } from "../catalog.schema";
-import { $WCOrder } from "./catalogOrder.schema";
+import { getWaCatalogOrdersHandler } from "./catalogOrder.controller.js";
+import { $WC } from "../catalog.schema.js";
+import { $WCOrder } from "./catalogOrder.schema.js";
 
 export async function waCatalogOrderRoutes(server: FastifyInstance) {
   server.get(

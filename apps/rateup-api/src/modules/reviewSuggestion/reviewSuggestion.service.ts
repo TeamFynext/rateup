@@ -1,8 +1,8 @@
-import prisma from "../../utils/prisma";
+import prisma from "../../utils/prisma.js";
 import {
   createReviewSuggestionsSchema,
   updateReviewSuggestionSchema,
-} from "./reviewSuggestion.schema";
+} from "./reviewSuggestion.schema.js";
 
 export async function getReviewsByTeamId(teamId: string) {
   return await prisma.reviewSuggestion.findMany({

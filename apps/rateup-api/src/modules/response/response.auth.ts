@@ -1,8 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { hasAccessToSurvey } from "../../utils/auth";
-import { GetResponsesParams, getResponsesBody } from "./response.schema";
-import Session from "supertokens-node/recipe/session";
-import { getSurveyIdfromMap } from "../../utils/surveyTeam/mapActions";
+import { hasAccessToSurvey } from "../../utils/auth.js";
+import { GetResponsesParams, getResponsesBody } from "./response.schema.js";
+import { getSurveyIdfromMap } from "../../utils/surveyTeam/mapActions.js";
 
 export async function verifyAccess(
   request: FastifyRequest<{

@@ -25,17 +25,17 @@ import {
   getSurveyResponseCountForGraphHandler,
   getSurveyStatsHandler,
   getNPSGraphHandler,
-} from "./survey.controller";
-import { $Sref } from "./survey.schema";
+} from "./survey.controller.js";
+import { $Sref } from "./survey.schema.js";
 import {
   verifySurveyMaxCountRestriction,
   verifySurveyAccess,
   verifySurveyCreateAccess,
-} from "./survey.auth";
-import { checkSession } from "../../utils/checkSession";
-import { $Rref } from "../response/response.schema";
-import { SubscriptionFeaturePathName } from "../../types/enums";
-import { getVerifySubscriptionHandler } from "../../utils/auth";
+} from "./survey.auth.js";
+import { checkSession } from "../../utils/checkSession.js";
+import { $Rref } from "../response/response.schema.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { getVerifySubscriptionHandler } from "../../utils/auth.js";
 
 export async function surveyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

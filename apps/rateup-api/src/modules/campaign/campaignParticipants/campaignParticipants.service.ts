@@ -1,16 +1,16 @@
 import {
   CampaignParticipantSource,
   CampaignParticipantStatus,
-} from "../../../types/enums";
-import prisma from "../../../utils/prisma";
+} from "../../../types/enums.js";
+import prisma from "../../../utils/prisma.js";
 import {
   CreateCampaignParticipantsFromContactsInput,
   CreateCampaignParticipantsFromGroupsInput,
   CreateCampaignParticipantsInput,
-} from "./campaignParticipants.schema";
-import { mapStatuses } from "../../whatsapp/whatsappSurvey/wasurvey.utils";
-import { PaginationQuery } from "../../contact/contact.schema";
-import { CampaignParticipant } from "../../../../generated/prisma/client";
+} from "./campaignParticipants.schema.js";
+import { mapStatuses } from "../../whatsapp/whatsappSurvey/wasurvey.utils.js";
+import { PaginationQuery } from "../../contact/contact.schema.js";
+import { CampaignParticipant } from "../../../../generated/prisma/client.js";
 
 export async function createCampaignParticipantsFromGroup(
   campaignId: string,

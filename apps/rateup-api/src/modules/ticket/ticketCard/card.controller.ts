@@ -9,9 +9,9 @@ import {
   getCardActivities,
   reorderCards,
   getCardTeamMembersById,
-} from "./card.service";
-import { TicketType } from "../../../../generated/prisma/client";
-import { UpdateCardRequest } from "./card.schema";
+} from "./card.service.js";
+import { TicketType } from "../../../../generated/prisma/client.js";
+import { UpdateCardRequest } from "./card.schema.js";
 
 export async function createCardHandler(
   request: FastifyRequest<{

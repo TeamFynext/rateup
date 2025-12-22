@@ -3,8 +3,8 @@ import {
   CreateBusinessHourInput,
   UpdateBusinessHourInput,
   BusinessHourParams,
-} from "./businessHour.schema";
-import prisma from "../../utils/prisma";
+} from "./businessHour.schema.js";
+import prisma from "../../utils/prisma.js";
 
 export async function createBusinessHourHandler(
   request: FastifyRequest<{

@@ -1,5 +1,5 @@
-import { log } from "../../../../../../../utils/logger";
-import { callWhatsappApi } from "../wa_axios";
+import { log } from "../../../../../../../utils/logger.js";
+import { callWhatsappApi } from "../wa_axios.js";
 
 /**
  * Get Business Integration System User Access Token from the code recieved from MetaLogin process

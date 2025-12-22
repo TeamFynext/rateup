@@ -1,5 +1,4 @@
 import { buildJsonSchemas } from "fastify-zod";
-import { first, remove } from "lodash";
 import z from "zod";
 
 const conversationCoreSchema = z.object({
@@ -13,6 +12,7 @@ const updateConversationSchema = z.object({
   assignedAt: z.date().optional(),
   closedAt: z.date().optional(),
   closedBy: z.string().uuid().optional(),
+  firstRespondedByUserAt: z.date().optional(),
 });
 
 const conversationAssigneeUpdateSchema = z.object({

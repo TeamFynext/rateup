@@ -8,8 +8,8 @@ import {
   getPublicLinktreeWithShortIdFromDB,
   updateLinktreeWithShortIdInDB,
   updatePageVisitOrLinkClickInDB,
-} from "./linktree.service";
-import { shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils";
+} from "./linktree.service.js";
+import { shortIdUniqueConstraintErrHandler } from "../../utils/commonUtils.js";
 
 async function getLinktrees(req: FastifyRequest, rep: FastifyReply) {
   const allLinktreesArray = await getAllLinktreesFromDB(req);

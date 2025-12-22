@@ -1,5 +1,5 @@
-import { WaReceiveMessageBody } from "../../../../../../../../types/whatsapp.types";
-import { downloadAndUpload } from "../../whatsappSurvey/wasurvey.utils";
+import { WaReceiveMessageBody } from "../../../../../../../../types/whatsapp.types.js";
+import { downloadAndUpload } from "../../whatsappSurvey/wasurvey.utils.js";
 import dayjs from "dayjs";
 
 export async function handleWaReceivedImages(

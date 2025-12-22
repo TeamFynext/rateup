@@ -5,9 +5,9 @@ import {
   getWaQuickReplyByIdHandler,
   deleteWaQuickReplyByIdHandler,
   updateWaQuickReplyByIdHandler,
-} from "./quickReply.controller";
-import { $quickReplyRef } from "./quickReply.schema";
-import { checkSession } from "../../../../utils/checkSession";
+} from "./quickReply.controller.js";
+import { $quickReplyRef } from "./quickReply.schema.js";
+import { checkSession } from "../../../../utils/checkSession.js";
 
 export async function waQuickReplyRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

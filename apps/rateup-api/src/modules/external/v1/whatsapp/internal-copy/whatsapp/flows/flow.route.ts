@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { getFlowsFromWa } from "./flow.service";
-import { $waFlow } from "./flow.schema";
+import { getFlowsFromWa } from "./flow.service.js";
+import { $waFlow } from "./flow.schema.js";
 import {
   cloneAndDeprecateFlowHandler,
   cloneFlowHandler,
@@ -19,9 +19,9 @@ import {
   sendFlowHandler,
   updateFlowHandler,
   updateFlowMetaDataHandler,
-} from "./flow.controller";
-import { checkSession } from "../../../../../../../utils/checkSession";
-import { log } from "../../../../../../../utils/logger";
+} from "./flow.controller.js";
+import { checkSession } from "../../../../../../../utils/checkSession.js";
+import { log } from "../../../../../../../utils/logger.js";
 
 export async function flowRoutes(server: FastifyInstance) {
   server.addHook("onError", (req, res, err, done) => {

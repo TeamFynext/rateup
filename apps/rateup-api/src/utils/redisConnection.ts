@@ -1,7 +1,7 @@
 import IORedis from "ioredis";
 import { Queue } from "bullmq";
 const redisURL = new URL(process.env.REDIS_URL);
-const connection = new IORedis({
+const connection = new IORedis.default({
   family: 0,
   host: redisURL.hostname,
   port: Number.parseInt(redisURL.port),

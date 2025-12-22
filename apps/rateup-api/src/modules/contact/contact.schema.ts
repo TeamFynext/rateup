@@ -1,7 +1,7 @@
-import { ContactGroupType } from "../../../generated/prisma/client";
+import { ContactGroupType } from "../../../generated/prisma/client.js";
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { WaMessageAssignStatus } from "../../types/enums";
+import { WaMessageAssignStatus } from "../../types/enums.js";
 
 export const contactCoreSchema = z.object({
   name: z.string(),

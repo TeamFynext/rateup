@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { GraphApiError } from "./wa_axios";
-import { log } from "../../utils/logger";
+import { GraphApiError } from "./wa_axios.js";
+import { log } from "../../utils/logger.js";
 
 export function handleWhatsappError(
   error: Error,
@@ -13,6 +13,7 @@ export function handleWhatsappError(
     });
   } else {
     log.error(error);
+    reply.send(error);
   }
 }
 export function getGraphApiErrorMessage(error: GraphApiError) {

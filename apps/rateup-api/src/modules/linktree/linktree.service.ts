@@ -1,7 +1,7 @@
 import { FastifyRequest } from "fastify";
-import prisma from "../../utils/prisma";
-import { getShortUrlId } from "../../utils/commonUtils";
-import { CreateLinktreeReqBody } from "./linktree.schema";
+import prisma from "../../utils/prisma.js";
+import { getShortUrlId } from "../../utils/commonUtils.js";
+import { CreateLinktreeReqBody } from "./linktree.schema.js";
 
 async function createLinktreeInDB(
   req: FastifyRequest<{ Body: CreateLinktreeReqBody }>,

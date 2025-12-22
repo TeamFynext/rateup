@@ -1,9 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { $UserRef } from "./user.schema";
+import { $UserRef } from "./user.schema.js";
 import {
   checkEmailExistHandler,
   deleteUserFromSuperTokenHandler,
-} from "./user.controller";
+} from "./user.controller.js";
 
 export async function userPublicRoutes(server: FastifyInstance) {
   server.post(

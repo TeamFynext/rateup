@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { getTeamsByOrgId } from "../../../team/team.service";
+import { getTeamsByOrgId } from "../../../team/team.service.js";
 
 export async function externalTeamRoutes(server: FastifyInstance) {
   server.get(

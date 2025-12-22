@@ -1,11 +1,11 @@
 import dayjs from "dayjs";
-import prisma from "../../utils/prisma";
-import { FreePlanSubscriptionFeatures } from "./subscription.data";
-import { updateSubscriptionInput } from "./subscription.schema";
-import { PaymentPlanType } from "../../../generated/prisma/client";
-import { createStats } from "../stats/stats.service";
-import { SubscriptionFeaturePathName } from "../../types/enums";
-import { getNestedProperty } from "../../utils/misc/obj.utils";
+import prisma from "../../utils/prisma.js";
+import { FreePlanSubscriptionFeatures } from "./subscription.data.js";
+import { updateSubscriptionInput } from "./subscription.schema.js";
+import { PaymentPlanType } from "../../../generated/prisma/client.js";
+import { createStats } from "../stats/stats.service.js";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { getNestedProperty } from "../../utils/misc/obj.utils.js";
 
 export async function createFreePlanSubscription(
   orgId: string,

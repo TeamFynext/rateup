@@ -1,10 +1,10 @@
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import prisma from "../../../utils/prisma";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import prisma from "../../../utils/prisma.js";
 import {
   decrementStatsCount,
   updateMonthlyStat,
-} from "../../stats/stats.service";
-import { loyaltyRewardInput, lRewardUpdateInput } from "./rewards.schema";
+} from "../../stats/stats.service.js";
+import { loyaltyRewardInput, lRewardUpdateInput } from "./rewards.schema.js";
 
 export async function createLoyaltyReward(
   reward: loyaltyRewardInput,

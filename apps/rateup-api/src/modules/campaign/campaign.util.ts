@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { SubscriptionFeaturePathName } from "../../types/enums";
-import { getNestedProperty } from "../../utils/misc/obj.utils";
-import prisma from "../../utils/prisma";
+import { SubscriptionFeaturePathName } from "../../types/enums.js";
+import { getNestedProperty } from "../../utils/misc/obj.utils.js";
+import prisma from "../../utils/prisma.js";
 
 export async function verifyCampaignMaxLimit(
   request: FastifyRequest,

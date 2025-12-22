@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { log } from "./logger";
-import Session from "supertokens-node/recipe/session";
-import { auditLogHook } from "./auditLog";
+import { log } from "./logger.js";
+import Session from "supertokens-node/recipe/session/index.js";
+import { auditLogHook } from "./auditLog.js";
 
 /**
  * Verifies that the session is valid and sets the userId on the request object.

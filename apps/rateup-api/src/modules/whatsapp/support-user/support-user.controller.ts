@@ -1,10 +1,10 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../utils/logger";
-import { handleSupportUserWebhook } from "./support-user.service";
-import { WaMessageBody } from "../../../types/whatsapp.types";
-import { ExtCreateContactSchema } from "../../external/v1/contact/contact.external.schema";
-import { PlatformType } from "../../../../generated/prisma/enums";
-import { getOrCreateContactByPhone } from "../../contact/contact.service";
+import { log } from "../../../utils/logger.js";
+import { handleSupportUserWebhook } from "./support-user.service.js";
+import { WaMessageBody } from "../../../types/whatsapp.types.js";
+import { ExtCreateContactSchema } from "../../external/v1/contact/contact.external.schema.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { getOrCreateContactByPhone } from "../../contact/contact.service.js";
 
 export async function supportUserWebhookEventHandler(
   request: FastifyRequest,

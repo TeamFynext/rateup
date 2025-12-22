@@ -3,15 +3,15 @@ import {
   createNewTestSession,
   createTestUser,
   initTestSupertokens,
-} from "../../utils/test/test.setup.utils";
-import prisma from "../../utils/prisma";
-import { deleteUser, getOrgIdAndRole } from "../user/user.service";
-import fastifyInstance from "../../index";
-import { getSubscription } from "./subscription.service";
+} from "../../utils/test/test.setup.utils.js";
+import prisma from "../../utils/prisma.js";
+import { deleteUser, getOrgIdAndRole } from "../user/user.service.js";
+import { getSubscription } from "./subscription.service.js";
 import dayjs from "dayjs";
 
 const timeout = 30 * 1000;
-
+// TODO:FIXME: workaround for fastify instance not being ready in time
+const fastifyInstance = undefined;
 beforeAll(() => {
   process.env.LOG_LEVEL = "fatal";
 });

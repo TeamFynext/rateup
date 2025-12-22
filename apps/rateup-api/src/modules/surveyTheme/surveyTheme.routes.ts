@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession";
+import { checkSession } from "../../utils/checkSession.js";
 import {
   createNewTheme,
   deleteTheme,
@@ -9,9 +9,9 @@ import {
   updateSurveyThemeHandler,
   renameTheme,
   updateAllWebSurveyThemesJson,
-} from "./surveyTheme.controller";
-import { CustomRouteShortHandOptions } from "../../types/global";
-import { assertRootOrg } from "../../utils/auth";
+} from "./surveyTheme.controller.js";
+import { CustomRouteShortHandOptions } from "../../types/global.js";
+import { assertRootOrg } from "../../utils/auth.js";
 
 const publicRouteOptions: CustomRouteShortHandOptions = {
   config: {

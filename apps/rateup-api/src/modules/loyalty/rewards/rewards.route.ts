@@ -6,10 +6,10 @@ import {
   updateLoyaltyRewardByIdHandler,
   deleteLoyaltyRewardByIdHandler,
   verifyLRewardctionMaxCountRestriction,
-} from "./rewards.controller";
-import { $lRewardRef } from "./rewards.schema";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
+} from "./rewards.controller.js";
+import { $lRewardRef } from "./rewards.schema.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 
 export async function loyaltyRewardsRoutes(server: FastifyInstance) {
   server.addHook(

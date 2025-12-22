@@ -1,15 +1,15 @@
-import prisma from "../../../utils/prisma";
-import { callWhatsappApi } from "../wa_axios";
+import prisma from "../../../utils/prisma.js";
+import { callWhatsappApi } from "../wa_axios.js";
 import {
   getWaSettingsByIbaId,
   getWaSettingsById,
-} from "../settings/wa_settings.service";
-import { log } from "../../../utils/logger";
-import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service";
-import { PlatformType } from "../../../../generated/prisma/enums";
-import { getInstagramWebhookEvent } from "./instagram.util";
-import { InstagramEvent } from "../../../types/enums";
-import { handleWaMessages } from "../inbox/message/wamessage.controller";
+} from "../settings/wa_settings.service.js";
+import { log } from "../../../utils/logger.js";
+import { updateWaMessageByMessageId } from "../inbox/message/wamessage.service.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { getInstagramWebhookEvent } from "./instagram.util.js";
+import { InstagramEvent } from "../../../types/enums.js";
+import { handleWaMessages } from "../inbox/message/wamessage.controller.js";
 
 export async function getIgUserDetailsFromMeta(igsId, ibaId) {
   const { pageAccessToken } = await getWaSettingsByIbaId(ibaId);

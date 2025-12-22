@@ -13,7 +13,7 @@ import {
   updateOrgDetails,
   updateOrgLogo,
   updateOrgUserRole,
-} from "./org.services";
+} from "./org.services.js";
 import {
   ByOrgIdParams,
   CreateOrgInput,
@@ -22,12 +22,12 @@ import {
   UpdateLogoInput,
   UpdateOrgDetailsInput,
   UpdateRoleInput,
-} from "./org.schema";
-import Session from "supertokens-node/recipe/session";
-import { log } from "../../utils/logger";
-import { getWebhookSecret } from "../../utils/webhook";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import { getUserByEmail } from "../user/user.service";
+} from "./org.schema.js";
+import Session from "supertokens-node/recipe/session/index.js";
+import { log } from "../../utils/logger.js";
+import { getWebhookSecret } from "../../utils/webhook.js";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import { getUserByEmail } from "../user/user.service.js";
 
 export async function createOrgHandler(
   request: FastifyRequest<{

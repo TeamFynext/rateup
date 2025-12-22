@@ -3,9 +3,9 @@ import z from "zod";
 import {
   lActionSchema,
   LoyaltyActionType,
-} from "../../../loyalty/actions/actions.schema";
-import { lRewardSchema } from "../../../loyalty/rewards/rewards.schema";
-import { RedeemStatus } from "../../../loyalty/redeems/redeem.service";
+} from "../../../loyalty/actions/actions.schema.js";
+import { lRewardSchema } from "../../../loyalty/rewards/rewards.schema.js";
+import { RedeemStatus } from "../../../loyalty/redeems/redeem.service.js";
 
 const lRewardResponseSchema = z
   .object({

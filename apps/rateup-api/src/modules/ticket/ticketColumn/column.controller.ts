@@ -6,7 +6,7 @@ import {
   updateColumn,
   deleteColumn,
   reorderColumns,
-} from "./column.service";
+} from "./column.service.js";
 
 export async function createColumnHandler(
   request: FastifyRequest<{

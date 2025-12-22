@@ -18,19 +18,19 @@ import {
   SubscriptionFeaturePathName as sfpn,
   WaFlowFormElementType,
   IntegratedApps,
-} from "./enums";
+} from "./enums.js";
 import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes";
-import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service";
-import prisma from "../utils/prisma";
+import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service.js";
+import prisma from "../utils/prisma.js";
 import {
   WaReceiveMessageBody,
   WaSendMessageBody,
   WaTemplateSendComponent,
-} from "./whatsapp.types";
+} from "./whatsapp.types.js";
 import { RouteShorthandOptionsWithHandler } from "fastify";
 import { Session } from "@shopify/shopify-api";
 import z from "zod";
-import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.service";
+import { ZapierTriggers } from "../modules/integrations/external/zapier/zapier.service.js";
 
 type GoogleReview = {
   minRating?: number;

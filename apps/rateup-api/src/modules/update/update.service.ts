@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import prisma from "../../utils/prisma";
-import { log } from "../../utils/logger";
+import prisma from "../../utils/prisma.js";
+import { log } from "../../utils/logger.js";
 
 export async function updateUsageStatsTemplateMessageCount() {
   const subscriptions = await prisma.subscription.findMany();
@@ -316,3 +316,139 @@ export async function backfillWithSQL() {
   }
 }
 // backfillWithSQL()
+
+export async function migrateAutomationToRules() {
+  console.log("\n🚀 Starting automation to rules migration...\n");
+  const stats = {
+    totalCommands: 0,
+    migratedRules: 0,
+    errors: 0,
+    skipped: 0,
+  };
+
+  try {
+    const startTime = Date.now();
+
+    // Fetch all WaAutomatedReplyCommands with their related data
+    const commands = await prisma.waAutomatedReplyCommands.findMany({
+      include: {
+        waAutomatedReply: true,
+        org: true,
+        businessHour: true,
+      },
+    });
+    stats.totalCommands = commands.length;
+    log.info(`Found ${commands.length} automation commands to migrate`);
+
+    for (const command of commands) {
+      try {
+        if (!command.waAutomatedReply) {
+          log.warn(
+            `Command ${command.id} has no associated automation, skipping`,
+          );
+          stats.skipped++;
+          continue;
+        }
+        const automation = command.waAutomatedReply;
+        const whatsappSettingsPhoneIds = automation.whatsappSettingsPhoneIds
+          ?.length
+          ? automation.whatsappSettingsPhoneIds
+          : (
+              await prisma.whatsappSettings.findMany({
+                where: {
+                  orgId: command.orgId,
+                },
+                select: {
+                  phoneId: true,
+                },
+              })
+            )?.map((s) => s?.phoneId);
+
+        // Prepare options object
+        const options: any = {};
+
+        if (automation.sendOnceIn24Hours) {
+          options.sendOncePerDay = true;
+        }
+
+        if (command.businessHourId) {
+          options.businessHours = {
+            enabled: true,
+            businessHoursId: command.businessHourId,
+          };
+        }
+
+        // Create Rule
+        const rule = await prisma.rule.create({
+          data: {
+            orgId: command.orgId,
+            name: `[Migrated] ${automation.name}`,
+            operator: "AND",
+            isActive: automation.isEnabled,
+            triggerEvent: "MESSAGE_RECEIVED",
+            whatsappSettingsPhoneIds: whatsappSettingsPhoneIds,
+            options: Object.keys(options).length > 0 ? options : null,
+          },
+        });
+
+        // Create RuleConditionGroup
+        const conditionGroup = await prisma.ruleConditionGroup.create({
+          data: {
+            ruleId: rule.id,
+            operator: "AND",
+          },
+        });
+
+        // Create RuleCondition for message body
+        const messageCondition = await prisma.ruleCondition.create({
+          data: {
+            groupId: conditionGroup.id,
+            field: "MESSAGE_BODY",
+            operator: "CONTAINS",
+            value: command.command,
+          },
+        });
+
+        // Create RuleMessageBodyLock
+        await prisma.ruleMessageBodyLock.create({
+          data: {
+            orgId: command.orgId,
+            messageBody: command.command,
+            businessHourId: command.businessHourId,
+            ruleConditionId: messageCondition.id,
+          },
+        });
+
+        // Create RuleAction to trigger the chatbot/automation
+        await prisma.ruleAction.create({
+          data: {
+            ruleId: rule.id,
+            type: "TRIGGER_CHATBOT",
+            value: automation.id,
+          },
+        });
+
+        stats.migratedRules++;
+        log.info(
+          `✓ Migrated command: ${command.command} for org: ${command.orgId}`,
+        );
+      } catch (error) {
+        stats.errors++;
+        log.error(`Error migrating command ${command.id}:`, error);
+      }
+    }
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`\n✅ Migration completed in ${duration}s`);
+    console.log(`   📊 Stats:`);
+    console.log(`      - Total commands: ${stats.totalCommands}`);
+    console.log(`      - Migrated rules: ${stats.migratedRules}`);
+    console.log(`      - Skipped: ${stats.skipped}`);
+    console.log(`      - Errors: ${stats.errors}\n`);
+
+    return stats;
+  } catch (error) {
+    console.error("❌ Error during automation to rules migration:", error);
+    throw error;
+  }
+}

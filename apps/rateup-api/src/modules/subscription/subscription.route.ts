@@ -1,15 +1,15 @@
 import { FastifyInstance } from "fastify";
-import { checkSession } from "../../utils/checkSession";
+import { checkSession } from "../../utils/checkSession.js";
 import {
   getAllSubscriptionsHandler,
   getMessageStatsHandler,
   getSubscriptionHandler,
   getUserSubscriptionHandler,
   updateSubscriptionHandler,
-} from "./subscription.controller";
-import { assertRootOrg } from "../../utils/auth";
-import { $subscriptionRef } from "./subscription.schema";
-import { $Sref } from "../org/org.schema";
+} from "./subscription.controller.js";
+import { assertRootOrg } from "../../utils/auth.js";
+import { $subscriptionRef } from "./subscription.schema.js";
+import { $Sref } from "../org/org.schema.js";
 
 export async function subscriptionRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

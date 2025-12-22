@@ -20,7 +20,7 @@ import {
   updateFlowIdAndStatusInDb,
   updateFlowInDb,
   updateFlowMetaDataInWa,
-} from "./flow.service";
+} from "./flow.service.js";
 import {
   ByDbFlowIdParams,
   ByWaFlowIdParams,
@@ -31,20 +31,20 @@ import {
   UpdateFlowInput,
   UpdateFlowMetaInput,
   WaFlowSourceQuery,
-} from "./flow.schema";
+} from "./flow.schema.js";
 import {
   createSurveyFromFlow,
   getFlowJsonWithTitleAndDescription,
-} from "./flow.utils";
-import { Survey } from "../../../../../../../../generated/prisma/client";
-import { callWhatsappApi } from "../wa_axios";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { SurveyType, WaFlowStatus } from "../../../../../../../types/enums";
-import { log } from "../../../../../../../utils/logger";
+} from "./flow.utils.js";
+import { Survey } from "../../../../../../../../generated/prisma/client.js";
+import { callWhatsappApi } from "../wa_axios.js";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { SurveyType, WaFlowStatus } from "../../../../../../../types/enums.js";
+import { log } from "../../../../../../../utils/logger.js";
 import {
   createSurvey,
   deleteSurveyById,
-} from "../../../../../../survey/survey.service";
+} from "../../../../../../survey/survey.service.js";
 
 /**
  * Get flows from whatsapp api or our database.

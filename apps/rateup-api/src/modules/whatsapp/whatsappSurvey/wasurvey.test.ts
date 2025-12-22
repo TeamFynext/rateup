@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { parseStartMessage } from "./wasurvey.utils";
+import { parseStartMessage } from "./wasurvey.utils.js";
 
 describe("wasurvey utils", () => {
   test("Should parse survey name with spaces from start message", () => {

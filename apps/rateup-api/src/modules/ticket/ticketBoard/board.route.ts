@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $BoardRef } from "./board.schema";
+import { $BoardRef } from "./board.schema.js";
 import {
   createBoardHandler,
   getAllBoardsHandler,
@@ -7,12 +7,12 @@ import {
   updateBoardHandler,
   deleteBoardHandler,
   getBoardTeamMembersHandler,
-} from "./board.controller";
-import { checkSession } from "../../../utils/checkSession";
-import { verifyTeamAccess } from "../../team/team.auth";
-import { verifyBoardAccess } from "./board.auth";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
+} from "./board.controller.js";
+import { checkSession } from "../../../utils/checkSession.js";
+import { verifyTeamAccess } from "../../team/team.auth.js";
+import { verifyBoardAccess } from "./board.auth.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
 
 export async function boardRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

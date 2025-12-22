@@ -1,5 +1,5 @@
 import axios from "axios";
-import { log } from "./logger";
+import { log } from "./logger.js";
 
 export const hubApiClient = axios.create({
   baseURL: "https://api.hubapi.com",

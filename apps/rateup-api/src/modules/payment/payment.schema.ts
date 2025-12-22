@@ -1,7 +1,7 @@
-import { PaymentPlanStatus } from "../../../generated/prisma/client";
+import { PaymentPlanStatus } from "../../../generated/prisma/client.js";
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { PaymentPlanType } from "./payment.service";
+import { PaymentPlanType } from "./payment.service.js";
 
 const createCheckoutRequestSchema = z.object({
   orgId: z.string({

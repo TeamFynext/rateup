@@ -1,4 +1,4 @@
-import prisma from "../../../../../../../utils/prisma";
+import prisma from "../../../../../../../utils/prisma.js";
 
 export async function getLoyaltyRewardByRewardId(reward_id, orgId) {
   return await prisma.loyaltyReward.findUnique({

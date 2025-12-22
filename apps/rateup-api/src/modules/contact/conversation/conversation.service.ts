@@ -1,13 +1,13 @@
 import { string } from "zod";
-import { WaMessageAssignStatus } from "../../../types/enums";
-import prisma from "../../../utils/prisma";
-import { WaMessageClosedStatus } from "../../whatsapp/constants";
+import { WaMessageAssignStatus } from "../../../types/enums.js";
+import prisma from "../../../utils/prisma.js";
+import { WaMessageClosedStatus } from "../../whatsapp/constants.js";
 import {
   ConversationAssigneeUpdateSchema,
   ConversationCore,
   UpdateConversationSchema,
-} from "./conversation.schema";
-import { PlatformType } from "../../../../generated/prisma/enums";
+} from "./conversation.schema.js";
+import { PlatformType } from "../../../../generated/prisma/enums.js";
 
 export async function createConversation(input: ConversationCore) {
   const { contactId, ...rest } = input;
@@ -208,6 +208,31 @@ export async function checkIfFirstSendMessageInConversation(
     orderBy: {
       waCreatedAt: "asc",
     },
+    take: 1,
+  });
+  if (messages.length === 0) return true;
+  return messages[0].id === messageId;
+}
+
+export async function checkIfFirstUserSendMessageInConversation(
+  conversationId: string,
+  messageId: string,
+): Promise<boolean> {
+  const messages = await prisma.waMessage.findMany({
+    where: {
+      conversationId: conversationId,
+      messageBody: {
+        path: ["exchangeProcess"],
+        equals: "send",
+      },
+      sendBy: {
+        not: null,
+      },
+    },
+    orderBy: {
+      waCreatedAt: "asc",
+    },
+    take: 1,
   });
   if (messages.length === 0) return true;
   return messages[0].id === messageId;
@@ -219,90 +244,52 @@ export async function getConversationOverview(
 ): Promise<{
   totalConversations: number;
   averageResponseTime: number;
+  averageResponseTimeByAgent: number;
   resolutionRate: number;
 }> {
-  const whereClause: any = {
-    contact: {
-      orgId: orgId,
-    },
-  };
-  const totalConversationWhereClause = {
-    ...whereClause,
-  };
-  const resolvedConversationWhere = {
-    ...whereClause,
-  };
-  const totalTilldate = {
-    ...whereClause,
-  };
+  let startDate, endDate;
   if (dateRange.length) {
-    const [startDate, endDate] = dateRange;
-    totalConversationWhereClause.createdAt = {
-      gte: new Date(startDate),
-      lte: new Date(endDate),
-    };
-    resolvedConversationWhere.closedAt = {
-      gte: new Date(startDate),
-      lte: new Date(endDate),
-    };
-    totalTilldate.createdAt = {
-      lte: new Date(endDate),
-    };
+    startDate = new Date(dateRange[0]);
+    endDate = new Date(dateRange[1]);
   }
 
-  const totalConversations = await prisma.conversation.count({
-    where: totalConversationWhereClause,
-  });
-
-  const totalConversationsTillTheday = await prisma.conversation.count({
-    where: totalTilldate,
-  });
-  const respondedConversations = await prisma.conversation.findMany({
-    where: {
-      ...totalConversationWhereClause,
-      firstRespondedAt: {
-        not: null,
-      },
-    },
-    select: {
-      firstRespondedAt: true,
-      createdAt: true,
-    },
-  });
-
-  const totalRespondedConversation = respondedConversations.length;
-  let averageResponseTime = null;
-
-  if (totalRespondedConversation !== 0) {
-    const totalResponseTime = respondedConversations.reduce((acc, curr) => {
-      const diff =
-        new Date(curr.firstRespondedAt).getTime() -
-        new Date(curr.createdAt).getTime();
-      acc += diff;
-      return acc;
-    }, 0);
-    averageResponseTime = totalResponseTime / totalRespondedConversation / 1000;
-  }
-
-  const resolvedConversation = await prisma.conversation.count({
-    where: {
-      ...resolvedConversationWhere,
-      status: {
-        in: [WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED],
-      },
-    },
-  });
-
-  const resolutionRate =
-    totalConversationsTillTheday > 0
-      ? (resolvedConversation / totalConversationsTillTheday) * 100
-      : 0;
-
-  return {
-    totalConversations, // conversation created on range of given days
-    averageResponseTime,
-    resolutionRate, // resolved conversation rate on the range of given day by total conversation till the date
-  };
+  const res = await prisma.$queryRaw<{
+    totalConversations: number; // conversation created on range of given days
+    averageResponseTime: number;
+    averageResponseTimeByAgent: number;
+    resolutionRate: number; // resolved conversation rate on the range of given day by total conversation till the date
+  }>`
+  WITH first_agent_message AS (
+   SELECT wm."conversationId", MIN(wm."waCreatedAt") AS "firstAgentMessageAt"
+   FROM "WaMessage" wm
+   WHERE wm."sendBy" IS NOT NULL
+   GROUP BY wm."conversationId"
+  )
+  SELECT 
+   (COUNT(*) FILTER (WHERE c."createdAt" BETWEEN COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())))::INTEGER AS "totalConversations",
+   AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) FILTER (WHERE c."firstRespondedAt" IS NOT NULL AND c."createdAt" BETWEEN ${startDate} AND ${endDate})
+   AS "averageResponseTime",
+   AVG(EXTRACT(EPOCH FROM (COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") - c."createdAt"))) FILTER (WHERE COALESCE(c."firstRespondedByUserAt", fam."firstAgentMessageAt") IS NOT NULL AND c."createdAt" BETWEEN ${startDate} AND ${endDate})
+   AS "averageResponseTimeByAgent",
+   CASE WHEN COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) = 0 THEN 0
+        ELSE ( 
+         COUNT(*) FILTER (
+         WHERE c."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt" BETWEEN 
+         COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())
+        )::float / COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) * 100
+   END AS "resolutionRate"
+  FROM "Conversation" c
+  JOIN "Contact" ct ON ct.id = c."contactId"
+  LEFT JOIN first_agent_message fam ON fam."conversationId" = c.id
+  WHERE ct."orgId" = ${orgId}::uuid;`;
+  return res
+    ? res[0]
+    : {
+        totalConversations: null,
+        averageResponseTime: null,
+        averageResponseTimeByAgent: null,
+        resolutionRate: null,
+      };
 }
 
 export async function getResolvedConversationWeeklyStats(orgId: string) {
@@ -427,21 +414,39 @@ export async function getAvargeResponseTimeofTodyaInEveryHour(
     : `date_trunc('day', c."createdAt")`;
 
   const query = `
-WITH convo AS (
+WITH first_agent_message AS (
+  SELECT
+    wm."conversationId",
+    MIN(wm."waCreatedAt") AS "firstAgentMessageAt"
+  FROM "WaMessage" wm
+  WHERE wm."sendBy" IS NOT NULL
+  GROUP BY wm."conversationId"
+),
+convo AS (
   SELECT
     c."createdAt",
-    c."firstRespondedAt"
+    COALESCE(
+      c."firstRespondedByUserAt",
+      fam."firstAgentMessageAt"
+    ) AS "respondedAt"
   FROM "Conversation" c
+  LEFT JOIN first_agent_message fam
+    ON fam."conversationId" = c.id
   WHERE c."contactId" IN (
       SELECT id FROM "Contact" WHERE "orgId" = $1::uuid
     )
-    AND c."firstRespondedAt" IS NOT NULL
+    AND COALESCE(
+      c."firstRespondedByUserAt",
+      fam."firstAgentMessageAt"
+    ) IS NOT NULL
     AND c."createdAt" >= $2
     AND c."createdAt" < $3
 )
 SELECT
   ${periodColumn} AS period,
-  AVG(EXTRACT(EPOCH FROM (c."firstRespondedAt" - c."createdAt"))) AS "averageResponseTime"
+  AVG(
+    EXTRACT(EPOCH FROM (c."respondedAt" - c."createdAt"))
+  ) AS "averageResponseTime"
 FROM convo c
 GROUP BY period
 HAVING COUNT(*) > 0
@@ -462,8 +467,11 @@ export async function getConversationOnAccountDistribution(
   orgId: string,
   dateRange,
 ) {
-  const startDate = new Date(dateRange[0]);
-  const endDate = new Date(dateRange[1]);
+  let startDate, endDate;
+  if (dateRange.length) {
+    startDate = new Date(dateRange[0]);
+    endDate = new Date(dateRange[1]);
+  }
   const result = await prisma.$queryRaw<
     {
       phoneId: string;
@@ -495,8 +503,8 @@ WHERE ct."orgId" = ${orgId}::uuid
             AND wm."sourcePlatform" = ${PlatformType.WEBCHAT}
         )
       )
-  AND c."createdAt" >= ${startDate}
-  AND c."createdAt" < ${endDate}
+  AND c."createdAt" >= COALESCE(${startDate}, '1970-01-01'::timestamptz)
+  AND c."createdAt" < COALESCE(${endDate}, NOW())
 GROUP BY
     ws."phoneId",
     ws."ibaId",

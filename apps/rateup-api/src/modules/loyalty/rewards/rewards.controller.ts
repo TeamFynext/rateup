@@ -1,21 +1,21 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../utils/logger";
+import { log } from "../../../utils/logger.js";
 import {
   createLoyaltyReward,
   deleteLoyaltyRewardById,
   getLoyaltyRewardById,
   getLoyaltyRewards,
   updateLoyaltyRewardById,
-} from "./rewards.service";
+} from "./rewards.service.js";
 import {
   loyaltyRewardInput,
   lRewardIdParamInput,
   lRewardUpdateInput,
-} from "./rewards.schema";
-import { loyaltyActionInput } from "../actions/actions.schema";
-import prisma from "../../../utils/prisma";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { getNestedProperty } from "../../../utils/misc/obj.utils";
+} from "./rewards.schema.js";
+import { loyaltyActionInput } from "../actions/actions.schema.js";
+import prisma from "../../../utils/prisma.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { getNestedProperty } from "../../../utils/misc/obj.utils.js";
 
 export async function createLoyaltyRewardHandler(
   request: FastifyRequest<{ Body: loyaltyRewardInput }>,

@@ -1,29 +1,29 @@
 import { MultipartFile } from "@fastify/multipart";
-import { log } from "../../../utils/logger";
-import prisma from "../../../utils/prisma";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { callWhatsappApi } from "../wa_axios";
-import { CreateWaTemplateInput } from "./wa_templates.schema";
+import { log } from "../../../utils/logger.js";
+import prisma from "../../../utils/prisma.js";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { callWhatsappApi } from "../wa_axios.js";
+import { CreateWaTemplateInput } from "./wa_templates.schema.js";
 import {
   generateTemplate,
   getFlowIdFromTemplateComponents,
-} from "./wa_templates.utils";
-import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service";
+} from "./wa_templates.utils.js";
+import { getFlowWithSurveyTeamMapIds } from "../flows/flow.service.js";
 import {
   createSession,
   deleteSession,
   sendMessage,
-} from "../whatsappSurvey/wasurvey.service";
+} from "../whatsappSurvey/wasurvey.service.js";
 import {
   WaTemplateComponentType,
   WaTemplateStatus,
   WaTemplateSupportedFormats,
-} from "../../../types/enums";
-import { getFileUrlFromKey } from "../../../utils/upload/s3Upload";
-import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils";
-import { SendTemplateHeaderComponent } from "../../external/v1/whatsapp/template/wa_templates.external.schema";
-import { WaTemplateComponent } from "../../../types/whatsapp.types";
-import { $Enums, TemplateType } from "../../../../generated/prisma/client";
+} from "../../../types/enums.js";
+import { getFileUrlFromKey } from "../../../utils/upload/s3Upload.js";
+import { createTemplateMessage } from "../whatsappSurvey/wasurvey.utils.js";
+import { SendTemplateHeaderComponent } from "../../external/v1/whatsapp/template/wa_templates.external.schema.js";
+import { WaTemplateComponent } from "../../../types/whatsapp.types.js";
+import { $Enums, TemplateType } from "../../../../generated/prisma/client.js";
 
 /**
  * fetches templates from WhatsApp Business API

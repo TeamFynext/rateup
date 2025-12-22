@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $waTemplateExternalRef } from "./wa_templates.external.schema";
+import { $waTemplateExternalRef } from "./wa_templates.external.schema.js";
 import {
   getTemplatesHandler,
   sendTemplateByNameToPhoneHandler,
@@ -9,7 +9,7 @@ import {
   getErrorLogsHandler,
   getMessageStatusByIdHandler,
   sendTemplateByNameToPhoneWithFileHandler,
-} from "../internal-copy/whatsapp/messageTemplates/wa_templates.controller";
+} from "../internal-copy/whatsapp/messageTemplates/wa_templates.controller.js";
 import fastifyMultipart from "@fastify/multipart";
 
 async function onFile(part) {

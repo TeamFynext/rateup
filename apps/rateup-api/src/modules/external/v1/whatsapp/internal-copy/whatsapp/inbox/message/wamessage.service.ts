@@ -1,8 +1,8 @@
 import {
   Contact,
   WaMessage,
-} from "../../../../../../../../../generated/prisma/client";
-import prisma from "../../../../../../../../utils/prisma";
+} from "../../../../../../../../../generated/prisma/client.js";
+import prisma from "../../../../../../../../utils/prisma.js";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,

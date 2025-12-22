@@ -5,13 +5,13 @@ import {
   getCampaignsHandler,
   sendCampaignHandler,
   updateCampaignByIdHandler,
-} from "./campaign.controller";
-import { $campaignRef } from "./campaign.schema";
-import { campaignParticipantRoutes } from "./campaignParticipants/campaignParticipants.route";
-import { verifyCampaignMaxCountRestriction } from "./campaign.auth";
-import { SubscriptionFeaturePathName } from "../../../../../../types/enums";
-import { getVerifySubscriptionHandler } from "../../../../../../utils/auth";
-import { checkSession } from "../../../../../../utils/checkSession";
+} from "./campaign.controller.js";
+import { $campaignRef } from "./campaign.schema.js";
+import { campaignParticipantRoutes } from "./campaignParticipants/campaignParticipants.route.js";
+import { verifyCampaignMaxCountRestriction } from "./campaign.auth.js";
+import { SubscriptionFeaturePathName } from "../../../../../../types/enums.js";
+import { getVerifySubscriptionHandler } from "../../../../../../utils/auth.js";
+import { checkSession } from "../../../../../../utils/checkSession.js";
 
 export async function campaignRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

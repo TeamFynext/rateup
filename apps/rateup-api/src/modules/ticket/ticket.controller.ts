@@ -1,6 +1,6 @@
-import { CreateCommentInput, IdParamsSchema } from "./ticket.schema";
+import { CreateCommentInput, IdParamsSchema } from "./ticket.schema.js";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createComment, deleteComment } from "./ticket.service";
+import { createComment, deleteComment } from "./ticket.service.js";
 
 export async function createCommentHandler(
   request: FastifyRequest<{

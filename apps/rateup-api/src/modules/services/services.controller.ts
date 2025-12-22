@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   endSurveyCronAction,
   publishSurveyCronAction,
-} from "../survey/survey.service";
+} from "../survey/survey.service.js";
 
 export async function testServiceRoute(
   request: FastifyRequest,

@@ -1,4 +1,4 @@
-import { WaMessageAssignStatus } from "../../types/enums";
+import { WaMessageAssignStatus } from "../../types/enums.js";
 
 const whatsappApiBaseUrl = "https://graph.facebook.com/v21.0";
 

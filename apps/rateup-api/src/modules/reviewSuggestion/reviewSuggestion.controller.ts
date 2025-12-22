@@ -1,5 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { BySurveyTeamMapIdParams, ByTeamIdParams } from "../team/team.schema";
+import {
+  BySurveyTeamMapIdParams,
+  ByTeamIdParams,
+} from "../team/team.schema.js";
 import {
   createReviewSuggestions,
   deleteReviewSuggestion,
@@ -7,15 +10,15 @@ import {
   getReviewsBySurveyTeamMapId,
   getReviewsByTeamId,
   updateReviewSuggestion,
-} from "./reviewSuggestion.service";
+} from "./reviewSuggestion.service.js";
 import {
   byReviewSuggestionIdSchema,
   createReviewSuggestionsSchema,
   updateReviewSuggestionSchema,
-} from "./reviewSuggestion.schema";
-import { log } from "../../utils/logger";
-import { hasAccessToReview } from "./reviewSuggestion.auth";
-import { getGoogleUrlBySurveyTeamMapId } from "../survey/survey.service";
+} from "./reviewSuggestion.schema.js";
+import { log } from "../../utils/logger.js";
+import { hasAccessToReview } from "./reviewSuggestion.auth.js";
+import { getGoogleUrlBySurveyTeamMapId } from "../survey/survey.service.js";
 
 export async function getReviewsByTeamIdHandler(
   request: FastifyRequest<{ Params: ByTeamIdParams }>,

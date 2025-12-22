@@ -3,21 +3,21 @@ import {
   CustomerRewardInput,
   RedeemIdParamInput,
   RedeemUpdateInput,
-} from "./redeem.schema";
+} from "./redeem.schema.js";
 import {
   createRedeem,
   getLoyaltyRedeems,
   RedeemStatus,
   updateLoyaltyRedeem,
-} from "./redeem.service";
+} from "./redeem.service.js";
 import {
   getLCustomerByPhone,
   handleSendTemplate,
   updateLCustomer,
   updateLCustomerRedeemPoint,
-} from "../customer/customer.service";
-import { log } from "../../../utils/logger";
-import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller";
+} from "../customer/customer.service.js";
+import { log } from "../../../utils/logger.js";
+import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 
 export async function redeemPointsHandler(
   request: FastifyRequest<{ Params: CustomerRewardInput }>,

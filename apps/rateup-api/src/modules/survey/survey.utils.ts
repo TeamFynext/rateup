@@ -2,10 +2,10 @@ import {
   QuestionType,
   SurveyType,
   SurveyVariableType,
-} from "../../types/enums";
-import { createEmailBodyOTPGeneration } from "../email/emailTemplates/emailTemplateOTPGeneration";
-import prisma from "../../utils/prisma";
-import { createSurveyVariable, getSurveyById } from "./survey.service";
+} from "../../types/enums.js";
+import { createEmailBodyOTPGeneration } from "../email/emailTemplates/emailTemplateOTPGeneration.js";
+import prisma from "../../utils/prisma.js";
+import { createSurveyVariable, getSurveyById } from "./survey.service.js";
 
 export function isShortId(id: string) {
   return id.length === 8;

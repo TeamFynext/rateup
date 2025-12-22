@@ -6,8 +6,8 @@ import {
   getAllLoyaltyTemplateHandler,
   getLoyaltyTemplateHandler,
   updateLoyaltyTemplateHandler,
-} from "./settings.controller";
-import { $lsRef } from "./settings.schema";
+} from "./settings.controller.js";
+import { $lsRef } from "./settings.schema.js";
 
 export async function LoyaltySettingsRoutes(server: FastifyInstance) {
   server.post(

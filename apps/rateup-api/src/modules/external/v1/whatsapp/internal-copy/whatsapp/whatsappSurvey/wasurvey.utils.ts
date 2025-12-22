@@ -1,6 +1,6 @@
-import { WaSession } from "../../../../../../../../generated/prisma/client";
+import { WaSession } from "../../../../../../../../generated/prisma/client.js";
 import dayjs from "dayjs";
-import customParseFormat from "dayjs/plugin/customParseFormat";
+import customParseFormat from "dayjs/plugin/customParseFormat.js";
 import {
   SmileyResponse,
   WaEvent,
@@ -9,17 +9,17 @@ import {
   CampaignParticipantAddStatus,
   CampaignParticipantStatus,
   QuestionType as Q,
-} from "../../../../../../../types/enums";
+} from "../../../../../../../types/enums.js";
 import {
   WaMessageBody,
   WaMessageTypes,
   WaReceiveMessageBody,
   WaSendMessageBody,
-} from "../../../../../../../types/whatsapp.types";
-import { log } from "../../../../../../../utils/logger";
-import { uploadFile } from "../../../../../../../utils/upload/s3Upload";
-import { getWaSettings } from "../settings/wa_settings.service";
-import { callWhatsappApi } from "../wa_axios";
+} from "../../../../../../../types/whatsapp.types.js";
+import { log } from "../../../../../../../utils/logger.js";
+import { uploadFile } from "../../../../../../../utils/upload/s3Upload.js";
+import { getWaSettings } from "../settings/wa_settings.service.js";
+import { callWhatsappApi } from "../wa_axios.js";
 
 dayjs.extend(customParseFormat);
 

@@ -3,8 +3,8 @@ import {
   getAllRateupPaymentPlansHandler,
   sendEmailPlanSelectionDetailsHandler,
   verificationHandler,
-} from "./payment.controller";
-import { $Pref } from "./payment.schema";
+} from "./payment.controller.js";
+import { $Pref } from "./payment.schema.js";
 
 export async function paymentPublicRoutes(server: FastifyInstance) {
   server.get("/rateup-plans", getAllRateupPaymentPlansHandler);

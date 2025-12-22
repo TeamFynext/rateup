@@ -1,6 +1,6 @@
-import Session from "supertokens-node/recipe/session";
-import prisma from "../../utils/prisma";
-import { createUser, getUserRecipeName } from "../user/user.service";
+import Session from "supertokens-node/recipe/session/index.js";
+import prisma from "../../utils/prisma.js";
+import { createUser, getUserRecipeName } from "../user/user.service.js";
 import {
   CreateTeamInput,
   EditTeamInput,
@@ -8,22 +8,22 @@ import {
   GetTeamsByOrgInput,
   IdParamInput,
   InviteMemberInput,
-} from "./team.schema";
-import EmailVerification from "supertokens-node/recipe/emailverification";
-import { createEmailBody } from "../../utils/email/supertoken/inviteEmail";
-import { Role } from "../../utils/enums";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
+} from "./team.schema.js";
+import EmailVerification from "supertokens-node/recipe/emailverification/index.js";
+import { createEmailBody } from "../../utils/email/supertoken/inviteEmail.js";
+import { Role } from "../../utils/enums/index.js";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 
-import EmailPassword from "supertokens-node/recipe/emailpassword";
+import EmailPassword from "supertokens-node/recipe/emailpassword/index.js";
 
 import { FastifyReply, FastifyRequest } from "fastify";
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../../generated/prisma/client.js";
 import {
   createHubSpotContact,
   getHubSpotCompanyByOwnerEmail,
-} from "../../utils/hubspot";
+} from "../../utils/hubspot.js";
 
-import { getEmailBodyTemplate } from "../email/email.util";
+import { getEmailBodyTemplate } from "../email/email.util.js";
 
 export async function createTeam(input: CreateTeamInput) {
   if (input.name.length < 3) {

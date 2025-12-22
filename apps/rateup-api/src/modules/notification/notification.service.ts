@@ -1,5 +1,5 @@
-import prisma from "../../utils/prisma";
-import { NotificationSettingSchema } from "./notification.schema";
+import prisma from "../../utils/prisma.js";
+import { NotificationSettingSchema } from "./notification.schema.js";
 
 export async function getNotifications(userId: string, orgId: string) {
   return await prisma.notification.findMany({

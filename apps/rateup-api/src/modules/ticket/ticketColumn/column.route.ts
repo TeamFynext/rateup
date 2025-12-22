@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { $ColumnRef } from "./column.schema";
+import { $ColumnRef } from "./column.schema.js";
 import {
   createColumnHandler,
   getAllColumnsHandler,
@@ -7,12 +7,12 @@ import {
   updateColumnHandler,
   deleteColumnHandler,
   reorderColumnsHandler,
-} from "./column.controller";
-import { checkSession } from "../../../utils/checkSession";
-import { getVerifySubscriptionHandler } from "../../../utils/auth";
-import { SubscriptionFeaturePathName } from "../../../types/enums";
-import { verifyColumnAccess } from "./column.auth";
-import { verifyBoardAccess } from "../ticketBoard/board.auth";
+} from "./column.controller.js";
+import { checkSession } from "../../../utils/checkSession.js";
+import { getVerifySubscriptionHandler } from "../../../utils/auth.js";
+import { SubscriptionFeaturePathName } from "../../../types/enums.js";
+import { verifyColumnAccess } from "./column.auth.js";
+import { verifyBoardAccess } from "../ticketBoard/board.auth.js";
 
 export async function columnRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

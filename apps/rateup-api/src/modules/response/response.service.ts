@@ -1,17 +1,17 @@
-import { generateAnswerHtml } from "../../utils/email/emailTemplateGenerateFunction";
-import { sendAWSEmail } from "../../utils/email/sendAWSEmail";
-import { createEmailBodySurveyResponse } from "../../utils/email/supertoken/surveyResponseEmail";
-import prisma from "../../utils/prisma";
+import { generateAnswerHtml } from "../../utils/email/emailTemplateGenerateFunction.js";
+import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
+import { createEmailBodySurveyResponse } from "../../utils/email/supertoken/surveyResponseEmail.js";
+import prisma from "../../utils/prisma.js";
 import {
   generateResponseData,
   getContent,
   getReplacedTitleFromVariable,
-} from "../../utils/survey/response.data";
+} from "../../utils/survey/response.data.js";
 import {
   CreateResponseInput,
   GenerateBodyInput,
   ResponseFilterQuery,
-} from "./response.schema";
+} from "./response.schema.js";
 import {
   ChoiceTypeQuestions,
   IntegratedApps,
@@ -26,38 +26,30 @@ import {
   SurveyType,
   WaQuestions,
   YNResponse,
-} from "../../types/enums";
+} from "../../types/enums.js";
 import dayjs from "dayjs";
-import { saveSheetIdToSurvey } from "../survey/survey.service";
+import { saveSheetIdToSurvey } from "../survey/survey.service.js";
 import { google } from "googleapis";
 import xlsx from "node-xlsx";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-import { updateMonthlyStat } from "../stats/stats.service";
-import { hasFeature } from "../subscription/subscription.service";
-import { log } from "../../utils/logger";
-import {
-  getQuestionsBySurveyId,
-  updateQuestion,
-} from "../question/question.service";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+import { updateMonthlyStat } from "../stats/stats.service.js";
+import { hasFeature } from "../subscription/subscription.service.js";
+import { log } from "../../utils/logger.js";
 import { FastifyRequest } from "fastify";
-import { getTextSummaryByAI } from "../chatbot/chatbot.service";
-import {
-  questionSchema,
-  UpdateQuestionInput,
-} from "../question/question.schema";
+import { getTextSummaryByAI } from "../chatbot/chatbot.service.js";
 import {
   getIntegrationByName,
   initializeAuthClient,
   updateIntegrationByName,
-} from "../integrations/integrations.service";
+} from "../integrations/integrations.service.js";
 import {
   addNewContactsToGroup,
   createContactGroup,
   getContactGroupByNameAndTeam,
-} from "../contact/contactGroup/contactGroup.service";
-import { sendWebhook } from "../../utils/webhook";
-import { getFileUrlFromKey } from "../../utils/upload/s3Upload";
+} from "../contact/contactGroup/contactGroup.service.js";
+import { sendWebhook } from "../../utils/webhook.js";
+import { getFileUrlFromKey } from "../../utils/upload/s3Upload.js";
 import {
   barGraphQuestions,
   barGraphQuestions2,
@@ -67,14 +59,10 @@ import {
   RatingScaleMap,
   SmileyResponseMap,
   YNResponseMap,
-} from "../../utils/enumMap";
-import { getFlowBySurveyId } from "../whatsapp/flows/flow.service";
-import _ from "lodash";
-import { autoGenerateTicket } from "../ticket/ticketCard/card.service";
-import { getCampaignParticipantsByCampaignId } from "../campaign/campaignParticipants/campaignParticipants.service";
-import { getTeamIdsByUserId } from "../team/team.service";
-import { BATCH_SIZE } from "../../utils/constants/constants";
-import { Prisma } from "../../../generated/prisma/client";
+} from "../../utils/enumMap.js";
+import { getFlowBySurveyId } from "../whatsapp/flows/flow.service.js";
+import { autoGenerateTicket } from "../ticket/ticketCard/card.service.js";
+import { Prisma } from "../../../generated/prisma/client.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

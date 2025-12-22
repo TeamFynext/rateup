@@ -1,15 +1,15 @@
-import { deleteUser, getUserByEmail } from "../../modules/user/user.service";
+import { deleteUser, getUserByEmail } from "../../modules/user/user.service.js";
 import supertokens from "supertokens-node";
-import { SuperTokensConfig } from "../../config";
+import { SuperTokensConfig } from "../../config.js";
 import { FastifyInstance } from "fastify";
-import { log } from "../logger";
+import { log } from "../logger.js";
 import {
   createEmailVerificationToken,
   verifyEmailUsingToken,
-} from "supertokens-node/recipe/emailverification";
-import Session from "supertokens-node/recipe/session";
+} from "supertokens-node/recipe/emailverification/index.js";
+import Session from "supertokens-node/recipe/session/index.js";
 import { randomUUID } from "node:crypto";
-import { getAsRecipeUserIdType } from "../supertoken/supertoken";
+import { getAsRecipeUserIdType } from "../supertoken/supertoken.js";
 
 export const test_user_password = "tester1!";
 export const test_tenantId = process.env.TEST_TENANT_ID || "public";

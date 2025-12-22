@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import { z } from "zod";
-import { byTemplateIdParamsSchema } from "../internal-copy/whatsapp/messageTemplates/wa_templates.schema";
+import { byTemplateIdParamsSchema } from "../internal-copy/whatsapp/messageTemplates/wa_templates.schema.js";
 import { from } from "form-data";
 
 const dbTemplateResponse = z.object({

@@ -1,4 +1,4 @@
-import { sendAWSEmail } from "../sendAWSEmail";
+import { sendAWSEmail } from "../sendAWSEmail.js";
 
 export function sendVerifyMail(
   verify_link: string,

@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
-import { $extContactSchema } from "../contact/contact.external.schema";
-import { extAddNewContactsToGroupHandler } from "./contact-group.external.controller";
-import { $contactGroupRef } from "../contact/internal-copy/contact/contactGroup/contactGroup.schema";
+import { $extContactSchema } from "../contact/contact.external.schema.js";
+import { extAddNewContactsToGroupHandler } from "./contact-group.external.controller.js";
+import { $contactGroupRef } from "../contact/internal-copy/contact/contactGroup/contactGroup.schema.js";
 import {
   addExistingContactsToGroupHandler,
   createContactGroupHandler,
@@ -10,7 +10,7 @@ import {
   getContactsByContactGroupIdHandler,
   removeContactsFromGroupHandler,
   updateContactGroupHandler,
-} from "../contact/internal-copy/contact/contactGroup/contactGroup.controller";
+} from "../contact/internal-copy/contact/contactGroup/contactGroup.controller.js";
 
 export async function extContactGroupRoutes(server: FastifyInstance) {
   server.post(

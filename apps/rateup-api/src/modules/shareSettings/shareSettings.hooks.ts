@@ -1,10 +1,10 @@
-import { checkSession } from "../../utils/checkSession";
-import { verifyMenuAccess } from "../menu/menu.auth";
-import { verifySurveyAccess } from "../survey/survey.auth";
+import { checkSession } from "../../utils/checkSession.js";
+import { verifyMenuAccess } from "../menu/menu.auth.js";
+import { verifySurveyAccess } from "../survey/survey.auth.js";
 import {
   getSettingsSchema,
   saveAndUpdateSettingsSchema,
-} from "./shareSettings.schema";
+} from "./shareSettings.schema.js";
 
 const onRouteHookHandler = (routeOptions) => {
   switch (routeOptions.method) {

@@ -1,11 +1,11 @@
 import { FastifyInstance } from "fastify";
-import { $extLoyaltyRef } from "../loyalty.external.schema";
+import { $extLoyaltyRef } from "../loyalty.external.schema.js";
 import {
   createLCustomerHandler,
   getLoyaltyCustomersHandler,
-} from "../../../../loyalty/customer/customer.controller";
-import { customerActionHandler } from "./internal-copy/customer/customer.controller";
-import { $lCustomerRef } from "../../../../loyalty/customer/customer.schema";
+} from "../../../../loyalty/customer/customer.controller.js";
+import { customerActionHandler } from "./internal-copy/customer/customer.controller.js";
+import { $lCustomerRef } from "../../../../loyalty/customer/customer.schema.js";
 
 export async function externalLoyaltyCustomerRoutes(server: FastifyInstance) {
   server.get(

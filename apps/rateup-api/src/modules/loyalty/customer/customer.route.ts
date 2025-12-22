@@ -6,10 +6,10 @@ import {
   getLCustomerByIdHanlder,
   getLoyaltyCustomersHandler,
   importCSVContactsHandler,
-} from "./customer.controller";
-import { $lCustomerRef } from "./customer.schema";
+} from "./customer.controller.js";
+import { $lCustomerRef } from "./customer.schema.js";
 import fastifyMultipart from "@fastify/multipart";
-import { $contactRef } from "../../contact/contact.schema";
+import { $contactRef } from "../../contact/contact.schema.js";
 
 export async function loyaltyCustomerRoutes(server: FastifyInstance) {
   server.register(fastifyMultipart, {

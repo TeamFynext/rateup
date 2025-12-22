@@ -1,11 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { log } from "../../../../utils/logger";
+import { log } from "../../../../utils/logger.js";
 import {
   ByQuickReplyIdParam,
   QuickReplyBody,
   UpdateOrderBody,
   UpdateQuickReplyInput,
-} from "./quickReply.schema";
+} from "./quickReply.schema.js";
 import {
   createWaQuickReply,
   deleteWaQuickReplyById,
@@ -13,7 +13,7 @@ import {
   getWaQuickReplyById,
   QuickReply,
   updateWaQuickReplyById,
-} from "./quickReply.service";
+} from "./quickReply.service.js";
 
 export async function createWaQuickReplyHandler(
   request: FastifyRequest<{ Body: QuickReplyBody }>,

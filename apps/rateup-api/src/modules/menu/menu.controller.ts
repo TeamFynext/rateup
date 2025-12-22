@@ -3,7 +3,7 @@ import {
   CreateMenuInput,
   ByMenuIdParams,
   UpdateMenuInput,
-} from "./menu.schema";
+} from "./menu.schema.js";
 import {
   createMenu,
   deleteMenu,
@@ -13,10 +13,10 @@ import {
   getMenus,
   updateMenu,
   updateVisitedMenuLanding,
-} from "./menu.service";
-import { ByTeamIdParams } from "../team/team.schema";
-import { hasAccessToTeam } from "../../utils/auth";
-import { getLoggedUserInfo } from "../user/user.service";
+} from "./menu.service.js";
+import { ByTeamIdParams } from "../team/team.schema.js";
+import { hasAccessToTeam } from "../../utils/auth.js";
+import { getLoggedUserInfo } from "../user/user.service.js";
 
 export async function createMenuHandler(
   request: FastifyRequest<{ Body: CreateMenuInput }>,

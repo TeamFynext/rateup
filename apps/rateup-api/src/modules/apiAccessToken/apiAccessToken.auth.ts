@@ -1,9 +1,9 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { log } from "../../utils/logger";
-import { ByOrgIdParams } from "../org/org.schema";
-import { verifyApiAccessToken } from "./apiAccessToken.service";
-import { getOrgById } from "../org/org.services";
-import { Role } from "../../../generated/prisma/client";
+import { log } from "../../utils/logger.js";
+import { ByOrgIdParams } from "../org/org.schema.js";
+import { verifyApiAccessToken } from "./apiAccessToken.service.js";
+import { getOrgById } from "../org/org.services.js";
+import { Role } from "../../../generated/prisma/client.js";
 
 /**
  * Verifies that the api-access-key is valid & sets orgId on the request.user object.

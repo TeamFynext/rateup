@@ -1,6 +1,6 @@
 import { buildJsonSchemas } from "fastify-zod";
 import z from "zod";
-import { RewardTypes } from "../util";
+import { RewardTypes } from "../util.js";
 
 export const lRewardSchema = z.object({
   name: z.string(),
