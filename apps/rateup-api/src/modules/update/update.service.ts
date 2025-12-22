@@ -337,7 +337,6 @@ export async function migrateAutomationToRules() {
         businessHour: true,
       },
     });
-
     stats.totalCommands = commands.length;
     log.info(`Found ${commands.length} automation commands to migrate`);
 
@@ -350,8 +349,20 @@ export async function migrateAutomationToRules() {
           stats.skipped++;
           continue;
         }
-
         const automation = command.waAutomatedReply;
+        const whatsappSettingsPhoneIds = automation.whatsappSettingsPhoneIds
+          ?.length
+          ? automation.whatsappSettingsPhoneIds
+          : (
+              await prisma.whatsappSettings.findMany({
+                where: {
+                  orgId: command.orgId,
+                },
+                select: {
+                  phoneId: true,
+                },
+              })
+            )?.map((s) => s?.phoneId);
 
         // Prepare options object
         const options: any = {};
@@ -375,7 +386,7 @@ export async function migrateAutomationToRules() {
             operator: "AND",
             isActive: automation.isEnabled,
             triggerEvent: "MESSAGE_RECEIVED",
-            whatsappSettingsPhoneIds: automation.whatsappSettingsPhoneIds,
+            whatsappSettingsPhoneIds: whatsappSettingsPhoneIds,
             options: Object.keys(options).length > 0 ? options : null,
           },
         });
