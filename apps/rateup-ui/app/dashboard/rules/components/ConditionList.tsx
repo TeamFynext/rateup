@@ -345,14 +345,14 @@ const ConditionList: React.FC<ConditionListProps> = ({
       {/* Match all/any toggle for this condition block */}
       {fields.length > 1 && (
         <Tabs
-          defaultValue="ALL"
+          defaultValue="AND"
           value={groupOperator}
           onValueChange={(e) => {
             onOperatorChange(e as "AND" | "OR");
           }}
         >
           <TabsList>
-            <TabsTrigger value="ALL">Match all</TabsTrigger>
+            <TabsTrigger value="AND">Match all</TabsTrigger>
             <TabsTrigger value="OR">Match any</TabsTrigger>
           </TabsList>
         </Tabs>

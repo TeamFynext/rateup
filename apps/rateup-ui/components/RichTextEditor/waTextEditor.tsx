@@ -296,8 +296,8 @@ function WaTextEditor({
   };
 
   return (
-    <div className={border ? "border-t" : "" + "bg-card flex-shrink-0"}>
-      <div className="flex gap-1">
+    <div className={`${border ? "border-t" : ""} bg-background shrink-0`}>
+      <div className="flex gap-1 ">
         {media.length > 0 &&
           media.map((me) => {
             return (
@@ -345,7 +345,7 @@ function WaTextEditor({
         <ShowMedia opened={opened} close={close} />
       </div>
       {showQuickReplies && (
-        <div className="p-2 flex-shrink-0">
+        <div className="p-2 shrink-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">Quick Replies</span>
             <Button
@@ -357,7 +357,7 @@ function WaTextEditor({
               <X className="w-3 h-3" />
             </Button>
           </div>
-          <div className="overflow-auto min-w-40 min-h-20 max-h-50">
+          <div className="overflow-auto min-w-40 min-h-20 max-h-50 ">
             <WaQuickReply
               handleSelectQuickReply={(value) => {
                 if (editor) {
@@ -412,23 +412,13 @@ function WaTextEditor({
               },
             }}
           >
-            <div
-              className="relative"
-              style={{
-                border: editor?.isFocused
-                  ? "3.5px solid var(--grey-color-4-5)"
-                  : "none",
-                borderRadius: "10px",
-              }}
-            >
+            <div className="relative">
               <RichTextEditor.Content
-                bg={"#f9f9f9ff"}
+                bg={"var(--accent)"}
                 style={{
-                  border: editor?.isFocused
-                    ? "1px solid var(--grey-color-4)"
-                    : "none",
                   borderRadius: "5px",
                 }}
+                className={`${editor?.isFocused ? "ring-1 ring-(--grey-color-4)" : ""}`}
               />
               <div className="absolute bottom-2 right-2 flex items-center space-x-1">
                 <WaTextCharacterCount editor={editor} max={max} />

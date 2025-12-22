@@ -17,6 +17,13 @@ export type Rule = {
   whatsappSettingsPhoneIds: string[];
   createdAt: Date;
   updatedAt: Date;
+  options?: {
+    sendOncePerDay?: boolean;
+    businessHours?: {
+      enabled: boolean;
+      businessHoursId: string | undefined;
+    };
+  };
 };
 
 export type RuleGroup = {

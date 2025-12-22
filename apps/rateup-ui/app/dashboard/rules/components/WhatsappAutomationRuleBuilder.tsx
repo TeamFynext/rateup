@@ -21,7 +21,7 @@ import {
 } from "@/backend/whatsapp/rule/rule.query";
 import { AccountSelector } from "@/components/input/AccountSelector";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Field,
   FieldError,
@@ -103,6 +103,7 @@ const WhatsappAutomationRuleBuilder: React.FC<
         whatsappSettingsPhoneIds: ruleData.whatsappSettingsPhoneIds || [],
         groups: ruleData.groups || [],
         actions: ruleData.actions || [],
+        options: ruleData.options || defaultValues.options,
       });
     }
   }, [ruleData, form]);
@@ -135,19 +136,6 @@ const WhatsappAutomationRuleBuilder: React.FC<
   return (
     <div className="max-w-4xl mx-auto  relative h-full">
       {/* Header Card */}
-      <Card className="mb-6">
-        <CardHeader className="pb-3">
-          <h1 className="text-2xl font-semibold text-foreground">
-            Automation Rule
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {ruleData
-              ? "Update automated rule for your channel"
-              : "Create automated responses for your channel"}
-          </p>
-        </CardHeader>
-      </Card>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Basic Information Card */}
@@ -275,17 +263,15 @@ const WhatsappAutomationRuleBuilder: React.FC<
                     Set conditions for the rule
                   </p>
                 </div>
-
                 {groupFields.length > 1 && (
                   <Tabs
-                    defaultValue="ALL"
-                    value={form.getValues("operator")}
+                    defaultValue={form.getValues("operator") ?? "AND"}
                     onValueChange={(e) => {
                       form.setValue("operator", e as "AND" | "OR");
                     }}
                   >
                     <TabsList>
-                      <TabsTrigger value="ALL">Match all</TabsTrigger>
+                      <TabsTrigger value="AND">Match all</TabsTrigger>
                       <TabsTrigger value="OR">Match any</TabsTrigger>
                     </TabsList>
                   </Tabs>
@@ -363,25 +349,6 @@ const WhatsappAutomationRuleBuilder: React.FC<
             </CardContent>
           </Card>
 
-          {/* Options Card */}
-          <Card>
-            <CardContent>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                  <Settings className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold">Options</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Additional settings
-                  </p>
-                </div>
-              </div>
-
-              <RuleOptions />
-            </CardContent>
-          </Card>
-
           {/* THEN Card - Actions */}
           <Card>
             <CardContent>
@@ -412,6 +379,24 @@ const WhatsappAutomationRuleBuilder: React.FC<
             </CardContent>
           </Card>
 
+          {/* Options Card */}
+          <Card>
+            <CardContent>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <Settings className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Options</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Additional settings
+                  </p>
+                </div>
+              </div>
+
+              <RuleOptions />
+            </CardContent>
+          </Card>
           {/* Footer Card */}
           <Card>
             <CardContent>

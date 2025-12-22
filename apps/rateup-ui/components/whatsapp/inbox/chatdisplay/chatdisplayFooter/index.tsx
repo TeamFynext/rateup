@@ -357,7 +357,7 @@ export const WaInboxAssignUserFooter = ({
   }
 
   return (
-    <div className="flex flex-col gap-2 pb-2">
+    <div className="flex flex-col gap-2 pb-2 bg-background">
       <div className="bg-black flex justify-center items-center text-white gap-0.5 py-1">
         <IconExclamationCircle size={"1rem"} />
         {WaMessageClosedStatus.includes(waMessageAssignStatus) && (
@@ -399,7 +399,7 @@ export const WaInboxBlockedContactFooter = ({ contact }) => {
     );
   }
   return (
-    <Stack gap={"xs"} pb={"xs"}>
+    <Stack gap={"xs"} pb={"xs"} className="bg-background">
       <Group
         bg={"black"}
         justify="center"
