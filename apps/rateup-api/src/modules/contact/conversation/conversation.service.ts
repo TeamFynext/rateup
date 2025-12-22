@@ -276,7 +276,7 @@ export async function getConversationOverview(
          COUNT(*) FILTER (
          WHERE c."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]}) AND c."closedAt" BETWEEN 
          COALESCE(${startDate}, '1970-01-01'::timestamptz) AND COALESCE(${endDate}, NOW())
-        )::float / COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) * 100
+        )::float / COUNT(*) FILTER (WHERE c."createdAt" <= COALESCE(${endDate}, NOW())) * 100)
    END AS "resolutionRate"
   FROM "Conversation" c
   JOIN "Contact" ct ON ct.id = c."contactId"
