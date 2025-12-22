@@ -82,14 +82,13 @@ export async function responseRoutes(server: FastifyInstance) {
     resetResponsesHandler,
   );
 
-  //to delete multiple responses
+  //to delete single response
   server.delete(
-    "/:surveyTeamMapId/delete",
+    "/:surveyTeamMapId/delete/:id",
     {
       preHandler: [checkRoleHandler(["SUPER_ADMIN", "ADMIN"])],
       schema: {
         params: $Rref("deleteResponseParamsSchema"),
-        body: $Rref("deleteResponseBodySchema"),
       },
     },
     deleteResponseHandler,
