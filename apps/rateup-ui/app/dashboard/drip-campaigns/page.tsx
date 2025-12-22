@@ -2,15 +2,7 @@
 
 import { useState } from "react";
 
-import {
-  Badge,
-  Center,
-  Flex,
-  MantineProvider,
-  Modal,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { Badge, Center, Flex, Modal, Stack, TextInput } from "@mantine/core";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
@@ -18,7 +10,6 @@ import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 
 import { CampaignType } from "@/types/enums";
-import { whatsappTheme } from "@/config/mantineTheme";
 import { useCampaignData } from "@/backend/campaign/campaign.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import UnauthorizedPage from "@/components/404/UnAuthorizedError";
@@ -131,48 +122,40 @@ export default function DripCampaignList() {
     return <ErrorComponent refetch={refetchAllkCampaign} />;
 
   return (
-    <MantineProvider theme={whatsappTheme}>
-      <Stack gap={"sm"} h={"100%"} mx={4}>
-        <Flex justify={"space-between"}>
-          <SearchInput
-            placeholder={"Search Drip Campaign"}
-            searchText={searchText}
-            setSearchText={setSearchText}
-          />
-          <TeamSelector
-            value={selectedTeam}
-            onChange={setSelectedTeam}
-            enableAll={true}
-          />
-        </Flex>
-        <Center></Center>
+    <Stack gap={"sm"} h={"100%"} mx={4}>
+      <Flex justify={"space-between"}>
+        <SearchInput
+          placeholder={"Search Drip Campaign"}
+          searchText={searchText}
+          setSearchText={setSearchText}
+        />
+        <TeamSelector
+          value={selectedTeam}
+          onChange={setSelectedTeam}
+          enableAll={true}
+        />
+      </Flex>
+      <Center></Center>
 
-        <PaperLayout p={0} h={"100%"} mah={"850px"}>
-          <TanstackTable
-            columns={column}
-            data={filteredCampaigns}
-            btnTitle={translations("Create")}
-            toggle={open}
-            disableFuzzyFnCustom={true}
-            detailBtn
-            isPending={isAllCampaignLoading || isRefetchingAllCampaign}
-          />
-        </PaperLayout>
-        <Modal
-          opened={opened}
-          onClose={close}
-          centered
-          size={"lg"}
-          radius={"md"}
-        >
-          <CreateCampaignModal
-            close={close}
-            isEdit={false}
-            campaignType={CampaignType.DRIP}
-          />
-        </Modal>
-      </Stack>
-    </MantineProvider>
+      <PaperLayout p={0} h={"100%"} mah={"850px"}>
+        <TanstackTable
+          columns={column}
+          data={filteredCampaigns}
+          btnTitle={translations("Create")}
+          toggle={open}
+          disableFuzzyFnCustom={true}
+          detailBtn
+          isPending={isAllCampaignLoading || isRefetchingAllCampaign}
+        />
+      </PaperLayout>
+      <Modal opened={opened} onClose={close} centered size={"lg"} radius={"md"}>
+        <CreateCampaignModal
+          close={close}
+          isEdit={false}
+          campaignType={CampaignType.DRIP}
+        />
+      </Modal>
+    </Stack>
   );
 }
 

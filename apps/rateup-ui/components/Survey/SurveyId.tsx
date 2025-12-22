@@ -1,16 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
-import {
-  Center,
-  Group,
-  MantineProvider,
-  MultiSelect,
-  Portal,
-  Text,
-} from "@mantine/core";
+import { Center, Group, MultiSelect, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useTranslations } from "next-intl";
 import modalStyles from "styles/commonCssModules/modal.module.css";
@@ -24,12 +17,10 @@ import {
   useGetSurveyVariables,
   useSurvey,
 } from "../../backend/surveys/surveys.query";
-import { whatsappTheme } from "../../config/mantineTheme";
 import { useRouteParams } from "../../context/RouteParamsContext";
 import SelectedLanguageContext from "../../context/SelectedLanguage";
 import SurveyContext from "../../context/SurveyContext";
 import { useUser } from "../../context/UserContext";
-import { SurveyType } from "../../types/enums";
 import { UserRole } from "../../utils/enums";
 import { getFromSessionStorage } from "../../utils/essential";
 import ErrorComponent from "../404/ErrorComponent";
@@ -219,73 +210,69 @@ export default function SurveyID() {
   }
 
   return (
-    <MantineProvider
-      theme={survey?.type === SurveyType.WhatsApp ? whatsappTheme : undefined}
-    >
-      <SurveyContextProvider survey={survey}>
-        <SelectedLanguageContext.Provider
-          value={{ selectedLanguage, defaultLanguage }}
+    <SurveyContextProvider survey={survey}>
+      <SelectedLanguageContext.Provider
+        value={{ selectedLanguage, defaultLanguage }}
+      >
+        <SurveyContext.Provider
+          value={{
+            selectedTeamId,
+            surveyTeamMapId,
+            selectedTeamName,
+            filterTeams,
+            setFilterTeams,
+            filterTags,
+            encryptionpassword,
+            surveyId,
+            variables,
+            teams: teamOptions,
+          }}
         >
-          <SurveyContext.Provider
-            value={{
-              selectedTeamId,
-              surveyTeamMapId,
-              selectedTeamName,
-              filterTeams,
-              setFilterTeams,
-              filterTags,
-              encryptionpassword,
-              surveyId,
-              variables,
-              teams: teamOptions,
-            }}
-          >
-            {user?.role !== UserRole.MEMBER && (
-              <Center mb={"xs"}>
-                <TabsListComp
-                  value={activeTab}
-                  onChange={handleTabChange}
-                  tabs={Object.values(TabEnum)}
-                />
-              </Center>
-            )}
-            {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
-            <div id="SurveyIssueAlert"> </div>
-            {activeTab === TabEnum.Result && (
-              <Group pos={"absolute"} right={30}>
-                <MultiSelect
-                  radius={"10px"}
-                  searchable
-                  clearable
-                  data={multiSelectOptions}
-                  value={filterTeams}
-                  onChange={setFilterTeams}
-                  placeholder={
-                    filterTeams.length > 0 ? "" : translations("All Teams")
-                  }
-                />
-              </Group>
-            )}
+          {user?.role !== UserRole.MEMBER && (
+            <Center mb={"xs"}>
+              <TabsListComp
+                value={activeTab}
+                onChange={handleTabChange}
+                tabs={Object.values(TabEnum)}
+              />
+            </Center>
+          )}
+          {/*  <SurveyIssueAlert questions={questions} survey={survey} /> */}
+          <div id="SurveyIssueAlert"> </div>
+          {activeTab === TabEnum.Result && (
+            <Group pos={"absolute"} right={30}>
+              <MultiSelect
+                radius={"10px"}
+                searchable
+                clearable
+                data={multiSelectOptions}
+                value={filterTeams}
+                onChange={setFilterTeams}
+                placeholder={
+                  filterTeams.length > 0 ? "" : translations("All Teams")
+                }
+              />
+            </Group>
+          )}
 
-            <TabPanelsComp
-              value={activeTab}
-              survey={survey}
-              surveyId={surveyId}
-              questions={questions}
-              addQnTrigger={addQnTrigger}
-              setSelectedLanguage={setSelectedLanguage}
-              setFilterTags={setFilterTags}
-              encryptionpassword={encryptionpassword}
-              setEncryptionPassword={setEncryptionPassword}
-              translations={translations}
-              setActiveTab={setActiveTab}
-              setFunToRunBeforeSurveyIdPageHeaderTabsChange={
-                setFunToRunBeforeSurveyIdPageHeaderTabsChange
-              }
-            />
-          </SurveyContext.Provider>
-        </SelectedLanguageContext.Provider>
-      </SurveyContextProvider>
-    </MantineProvider>
+          <TabPanelsComp
+            value={activeTab}
+            survey={survey}
+            surveyId={surveyId}
+            questions={questions}
+            addQnTrigger={addQnTrigger}
+            setSelectedLanguage={setSelectedLanguage}
+            setFilterTags={setFilterTags}
+            encryptionpassword={encryptionpassword}
+            setEncryptionPassword={setEncryptionPassword}
+            translations={translations}
+            setActiveTab={setActiveTab}
+            setFunToRunBeforeSurveyIdPageHeaderTabsChange={
+              setFunToRunBeforeSurveyIdPageHeaderTabsChange
+            }
+          />
+        </SurveyContext.Provider>
+      </SelectedLanguageContext.Provider>
+    </SurveyContextProvider>
   );
 }

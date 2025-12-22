@@ -7,51 +7,24 @@ import {
 import { inter, notoColorEmogi } from "../utils/fonts";
 
 const rateupBlue: MantineColorsTuple = [
-  "#eef4fc",
-  "#dbe6f2",
-  "#b3cae7",
-  "#87addc",
-  "#6495d4",
-  "#4f86cf",
-  "#437ece",
-  "#356cb6",
-  "#2c60a3",
-  "#1c518e",
+  "#e6f5ff",
+  "#d1e5ff",
+  "#a3c8f7",
+  "#72aaf1",
+  "#4a90eb",
+  "#3080e9",
+  "#1873e8",
+  "#0e66d0",
+  "#005abb",
+  "#004ea6",
 ];
-
-const whatsappGreen: MantineColorsTuple = [
-  "#edfdfb",
-  "#dcf8f5",
-  "#b3f1ea",
-  "#88ebdf",
-  "#69e6d6",
-  "#57e2d0",
-  "#4ce1cd",
-  "#3ec7b5",
-  "#30b1a1",
-  "#128c7e",
-];
-
-const instaPink: MantineColorsTuple = [
-  "#fcecf7",
-  "#f8d4ec",
-  "#f3b6de",
-  "#ed91cc",
-  "#e76bb9",
-  "#e148a7",
-  "#d52c97",
-  "#c91d8d",
-  "#c01a89",
-  "#bc1888",
-];
-
 const componentStyles: MantineThemeOverride = {
   components: {},
 };
 export const theme = createTheme({
   fontFamily: `${inter.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
   primaryColor: "rateup-blue",
-  primaryShade: 9,
+  primaryShade: 6,
   colors: { "rateup-blue": rateupBlue },
   breakpoints: {
     xs: "30em",
@@ -61,21 +34,5 @@ export const theme = createTheme({
     xl: "90em",
     "2xl": "120em",
   },
-  ...componentStyles,
-});
-
-export const whatsappTheme = createTheme({
-  primaryColor: "whatsapp-green",
-  fontFamily: `${inter.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
-  primaryShade: 9,
-  colors: { "whatsapp-green": whatsappGreen },
-  ...componentStyles,
-});
-
-export const instaTheme = createTheme({
-  primaryColor: "insta-pink",
-  fontFamily: `${inter.style.fontFamily}, ${notoColorEmogi.style.fontFamily}`,
-  primaryShade: 9,
-  colors: { "insta-pink": instaPink },
   ...componentStyles,
 });

@@ -11,7 +11,6 @@ import {
   Divider,
   Flex,
   Group,
-  MantineProvider,
   Overlay,
   ScrollArea,
   Stack,
@@ -21,7 +20,6 @@ import _ from "lodash";
 
 import { useSurveyUpdateMutation } from "@/backend/surveys/surveys.query";
 
-import { theme } from "../../../../../config/mantineTheme";
 import {
   getSurveyThemeKeyOf,
   supportedPageEditors,
@@ -32,7 +30,6 @@ import {
   useOpenEditors,
   useSelectedPageTab,
   useSetOpenEditors,
-  useSurveyThemeContextValue,
 } from "../../SurveyThemeContext";
 import PageThemeSaveBtn from "../PageThemeSaveButton/indext";
 import SaveButton from "../SaveButton";
@@ -84,135 +81,133 @@ function StylesComponent({
   );
 
   return (
-    <MantineProvider theme={theme}>
-      <Stack className={styles["styles-component-root-div"]}>
-        {shouldDisplayThemeSelector && (
-          <>
-            <ThemeSelector
-              className={styles["theme-selector-div"]}
-              allThemesArr={allThemesArr}
-              themeSelectorState={themeSelectorState}
-              setThemeSelectorState={setThemeSelectorState}
-              isAllThemesFetchPending={isAllThemesFetchPending}
-              survey={survey}
+    <Stack className={styles["styles-component-root-div"]}>
+      {shouldDisplayThemeSelector && (
+        <>
+          <ThemeSelector
+            className={styles["theme-selector-div"]}
+            allThemesArr={allThemesArr}
+            themeSelectorState={themeSelectorState}
+            setThemeSelectorState={setThemeSelectorState}
+            isAllThemesFetchPending={isAllThemesFetchPending}
+            survey={survey}
+          />
+          <Divider />
+        </>
+      )}
+
+      {!isSurveyPageTab && (
+        <>
+          <Box className={styles["use-survey-theme-checkbox-container"]}>
+            <Checkbox
+              className={styles["use-survey-theme-checkbox"]}
+              checked={selectedPageUseSurveyThemeValue}
+              label="Use Survey Theme"
+              size="1.25rem"
+              onChange={handleUseSurveyThemeCheckboxChange}
             />
-            <Divider />
-          </>
+          </Box>
+          <Divider />
+        </>
+      )}
+
+      <ScrollArea
+        type="hover"
+        className={`${styles["styles-component-div"]} styles-component-div`}
+        scrollbarSize={10}
+      >
+        {((isSurveyPageTab && isThemeObjBeingEditedDefaultTheme) ||
+          shouldUseSurveyTheme) && (
+          <Overlay className={surveyThemeStyles["overlay"]} zIndex={198}>
+            {isSurveyPageTab && isThemeObjBeingEditedDefaultTheme && (
+              <Center
+                className={
+                  styles[
+                    "default-theme-not-editable-overlay-message-container-root-div"
+                  ]
+                }
+              >
+                <Flex className={styles["overlay-message-container"]}>
+                  <p className={styles["overlay-message-p"]}>
+                    Default themes are not editable. Choose another theme or
+                    create a new one.
+                  </p>
+                </Flex>
+              </Center>
+            )}
+          </Overlay>
+        )}
+        <Accordion
+          className={styles["accordion-root-div"]}
+          multiple
+          onChange={(valuesArr) => {
+            if (
+              openEditors?.length ===
+              supportedPageEditors[selectedPageTab]?.length
+            ) {
+              const editorsObjArr = supportedPageEditors[selectedPageTab];
+              const allValues = editorsObjArr?.map(({ value }) => value);
+              const diff = _.difference(allValues, valuesArr);
+              setOpenEditors(diff);
+              return;
+            }
+            const lastEleIndex = valuesArr.length - 1;
+            if (lastEleIndex > 0) {
+              setOpenEditors(valuesArr.splice(lastEleIndex, 1));
+              return;
+            }
+            setOpenEditors(valuesArr);
+          }}
+          value={openEditors}
+        >
+          {editorComponents?.map(({ id, Component, value, label }) => {
+            if (Component) {
+              return (
+                <Accordion.Item key={selectedPageTab + id} value={value}>
+                  <Accordion.Control>{label}</Accordion.Control>
+                  <Accordion.Panel>
+                    <Component />
+                  </Accordion.Panel>
+                </Accordion.Item>
+              );
+            }
+          })}
+        </Accordion>
+      </ScrollArea>
+      <Divider />
+      <Group className={styles["close-save-btns-container"]}>
+        <Box className={styles["close-btn-div"]}>
+          <Button
+            className={styles["close-btn"]}
+            onClick={onClose}
+            variant="outline"
+          >
+            Close
+          </Button>
+        </Box>
+
+        {isSurveyPageTab && (
+          <SaveButton
+            className={styles["save-btn-div"]}
+            survey={survey}
+            isThemeObjBeingEditedDefaultTheme={
+              isThemeObjBeingEditedDefaultTheme
+            }
+            themeObjBeingEdited={themeObjBeingEdited}
+            onSave={onClose}
+          />
         )}
 
         {!isSurveyPageTab && (
-          <>
-            <Box className={styles["use-survey-theme-checkbox-container"]}>
-              <Checkbox
-                className={styles["use-survey-theme-checkbox"]}
-                checked={selectedPageUseSurveyThemeValue}
-                label="Use Survey Theme"
-                size="1.25rem"
-                onChange={handleUseSurveyThemeCheckboxChange}
-              />
-            </Box>
-            <Divider />
-          </>
+          <PageThemeSaveBtn
+            className={styles["page-theme-save-btn"]}
+            disabled={shouldUseSurveyTheme}
+            survey={survey}
+            selectedPageTab={selectedPageTab}
+          />
         )}
-
-        <ScrollArea
-          type="hover"
-          className={`${styles["styles-component-div"]} styles-component-div`}
-          scrollbarSize={10}
-        >
-          {((isSurveyPageTab && isThemeObjBeingEditedDefaultTheme) ||
-            shouldUseSurveyTheme) && (
-            <Overlay className={surveyThemeStyles["overlay"]} zIndex={198}>
-              {isSurveyPageTab && isThemeObjBeingEditedDefaultTheme && (
-                <Center
-                  className={
-                    styles[
-                      "default-theme-not-editable-overlay-message-container-root-div"
-                    ]
-                  }
-                >
-                  <Flex className={styles["overlay-message-container"]}>
-                    <p className={styles["overlay-message-p"]}>
-                      Default themes are not editable. Choose another theme or
-                      create a new one.
-                    </p>
-                  </Flex>
-                </Center>
-              )}
-            </Overlay>
-          )}
-          <Accordion
-            className={styles["accordion-root-div"]}
-            multiple
-            onChange={(valuesArr) => {
-              if (
-                openEditors?.length ===
-                supportedPageEditors[selectedPageTab]?.length
-              ) {
-                const editorsObjArr = supportedPageEditors[selectedPageTab];
-                const allValues = editorsObjArr?.map(({ value }) => value);
-                const diff = _.difference(allValues, valuesArr);
-                setOpenEditors(diff);
-                return;
-              }
-              const lastEleIndex = valuesArr.length - 1;
-              if (lastEleIndex > 0) {
-                setOpenEditors(valuesArr.splice(lastEleIndex, 1));
-                return;
-              }
-              setOpenEditors(valuesArr);
-            }}
-            value={openEditors}
-          >
-            {editorComponents?.map(({ id, Component, value, label }) => {
-              if (Component) {
-                return (
-                  <Accordion.Item key={selectedPageTab + id} value={value}>
-                    <Accordion.Control>{label}</Accordion.Control>
-                    <Accordion.Panel>
-                      <Component />
-                    </Accordion.Panel>
-                  </Accordion.Item>
-                );
-              }
-            })}
-          </Accordion>
-        </ScrollArea>
-        <Divider />
-        <Group className={styles["close-save-btns-container"]}>
-          <Box className={styles["close-btn-div"]}>
-            <Button
-              className={styles["close-btn"]}
-              onClick={onClose}
-              variant="outline"
-            >
-              Close
-            </Button>
-          </Box>
-
-          {isSurveyPageTab && (
-            <SaveButton
-              className={styles["save-btn-div"]}
-              survey={survey}
-              isThemeObjBeingEditedDefaultTheme={
-                isThemeObjBeingEditedDefaultTheme
-              }
-              themeObjBeingEdited={themeObjBeingEdited}
-              onSave={onClose}
-            />
-          )}
-
-          {!isSurveyPageTab && (
-            <PageThemeSaveBtn
-              className={styles["page-theme-save-btn"]}
-              disabled={shouldUseSurveyTheme}
-              survey={survey}
-              selectedPageTab={selectedPageTab}
-            />
-          )}
-        </Group>
-      </Stack>
-    </MantineProvider>
+      </Group>
+    </Stack>
   );
 }
 
