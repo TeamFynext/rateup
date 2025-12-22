@@ -3,8 +3,6 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { MantineProvider, Stack } from "@mantine/core";
-
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import {
@@ -17,7 +15,6 @@ import InboxSettings from "@/components/whatsapp/inbox/InboxSettings";
 
 import WaInboxChatDisplay from "../../../components/whatsapp/inbox/chatdisplay";
 import WaInboxChatSelect from "../../../components/whatsapp/inbox/chatselect";
-import { whatsappTheme } from "../../../config/mantineTheme";
 import ChatDisplayContext, { useIsChatDisplayOpen } from "./ChatDisplayContext";
 import styles from "./WhatsappInbox.module.css";
 
@@ -33,19 +30,17 @@ export default function WhatsAppInbox() {
   }, [router, tab]);
 
   return (
-    <MantineProvider theme={whatsappTheme}>
-      <ChatDisplayContext>
-        <div className={styles["whatsapp-inbox-root-div"]}>
-          {tab === "analytics" ? (
-            <Analytics />
-          ) : tab === "settings" ? (
-            <InboxSettings />
-          ) : (
-            <ResizeableChat />
-          )}
-        </div>
-      </ChatDisplayContext>
-    </MantineProvider>
+    <ChatDisplayContext>
+      <div className={styles["whatsapp-inbox-root-div"]}>
+        {tab === "analytics" ? (
+          <Analytics />
+        ) : tab === "settings" ? (
+          <InboxSettings />
+        ) : (
+          <ResizeableChat />
+        )}
+      </div>
+    </ChatDisplayContext>
   );
 }
 

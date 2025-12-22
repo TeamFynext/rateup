@@ -51,7 +51,6 @@ import {
   CampaignType,
 } from "@/types/enums";
 import { Campaign } from "@/types/global";
-import { whatsappTheme } from "@/config/mantineTheme";
 import {
   useCampaignById,
   useCampaignResponseDownloadById,
@@ -191,145 +190,140 @@ const CampaignById = () => {
   if (isError || isParticipantsError || isStatsError)
     return <ErrorComponent refetch={refetchCampaign} />;
   return (
-    <MantineProvider theme={whatsappTheme}>
-      <Stack className={styles["campaign-id-page-root-div"]}>
-        <Group mih={42}>
-          <SegmentedControl
-            data={Object.values(CampaignParticipantsTabs)}
-            value={activeTab}
-            onChange={(value) =>
-              router.push(`/dashboard/campaign/${campaignId}?tab=${value}`)
-            }
-            color={"var(--mantine-color-whatsapp-green-filled)"}
-            radius={"md"}
-            defaultValue={activeTab}
-            tt={"capitalize"}
-            miw={200}
-          />
-          <StartCampaignCard
-            campaign={campaignData}
-            participantCount={filteredParticipants?.totalCount}
-            sendMutation={sendMutation}
-            queueCount={campaignStats?.queueCount}
-            totalCount={filteredParticipants?.totalCount}
-          />
-          {activeTab === CampaignParticipantsTabs.PARTICIPANTS && (
-            <SearchInput
-              placeholder={translations("Search Participants")}
-              searchText={searchText}
-              setSearchText={setSearchText}
-            />
-          )}
-          <RateupButtonPrimary
-            title="Delivery Report"
-            onClick={() => {
-              mut.mutate({
-                campaignId,
-                selectedDripStage,
-              });
-              showLoadingToast("Generating report", "delivery-report");
-            }}
-          />
-          {dripStages?.length && (
-            <ContainedSelection
-              label={"Select drip stages"}
-              data={
-                activeTab === CampaignParticipantsTabs.INFO
-                  ? [{ value: "all", label: "All" }, ...dripStages]
-                  : dripStages
-              }
-              onChange={setSelectedDripStage}
-              value={selectedDripStage}
-              placeholder="select stage"
-              size="xs"
-              style={{ marginLeft: "auto" }}
-            />
-          )}
-        </Group>
-        <Alert
-          variant="filled"
-          color="red"
-          icon={<IconInfoCircle />}
-          display={
-            campaignData?.errorMessage || sendMutation.isError
-              ? "block"
-              : "none"
-          }
-        >
-          {getErrorMessage(
-            sendMutation.error?.response,
-            campaignData?.errorMessage ??
-              translations("Error Sending campaign"),
-          )}
-        </Alert>
-
-        <Tabs
+    <Stack className={styles["campaign-id-page-root-div"]}>
+      <Group mih={42}>
+        <SegmentedControl
+          data={Object.values(CampaignParticipantsTabs)}
           value={activeTab}
-          color="var(--tertiary-color)"
-          className={styles["tab-panels-container"]}
-        >
-          <Tabs.Panel value={CampaignParticipantsTabs.INFO}>
-            <StartCampaignCardRightSection
+          onChange={(value) =>
+            router.push(`/dashboard/campaign/${campaignId}?tab=${value}`)
+          }
+          color={"var(--mantine-color-whatsapp-green-filled)"}
+          radius={"md"}
+          defaultValue={activeTab}
+          tt={"capitalize"}
+          miw={200}
+        />
+        <StartCampaignCard
+          campaign={campaignData}
+          participantCount={filteredParticipants?.totalCount}
+          sendMutation={sendMutation}
+          queueCount={campaignStats?.queueCount}
+          totalCount={filteredParticipants?.totalCount}
+        />
+        {activeTab === CampaignParticipantsTabs.PARTICIPANTS && (
+          <SearchInput
+            placeholder={translations("Search Participants")}
+            searchText={searchText}
+            setSearchText={setSearchText}
+          />
+        )}
+        <RateupButtonPrimary
+          title="Delivery Report"
+          onClick={() => {
+            mut.mutate({
+              campaignId,
+              selectedDripStage,
+            });
+            showLoadingToast("Generating report", "delivery-report");
+          }}
+        />
+        {dripStages?.length && (
+          <ContainedSelection
+            label={"Select drip stages"}
+            data={
+              activeTab === CampaignParticipantsTabs.INFO
+                ? [{ value: "all", label: "All" }, ...dripStages]
+                : dripStages
+            }
+            onChange={setSelectedDripStage}
+            value={selectedDripStage}
+            placeholder="select stage"
+            size="xs"
+            style={{ marginLeft: "auto" }}
+          />
+        )}
+      </Group>
+      <Alert
+        variant="filled"
+        color="red"
+        icon={<IconInfoCircle />}
+        display={
+          campaignData?.errorMessage || sendMutation.isError ? "block" : "none"
+        }
+      >
+        {getErrorMessage(
+          sendMutation.error?.response,
+          campaignData?.errorMessage ?? translations("Error Sending campaign"),
+        )}
+      </Alert>
+
+      <Tabs
+        value={activeTab}
+        color="var(--tertiary-color)"
+        className={styles["tab-panels-container"]}
+      >
+        <Tabs.Panel value={CampaignParticipantsTabs.INFO}>
+          <StartCampaignCardRightSection
+            campaign={campaignData}
+            refetchCampaign={refetch}
+            campaignInfo={campaignInfo}
+            isPending={isPending}
+            dynamicVariables={dynamicVariables}
+          />
+          <CampaignInfoCard
+            participantCount={filteredParticipants?.totalCount}
+            stats={campaignStats}
+            flowId={campaignData?.flowId}
+            isPending={
+              isPendingParticipant ||
+              isRefetchingParticipants ||
+              isPendingStats ||
+              isRefetchingStats
+            }
+          />
+        </Tabs.Panel>
+        <Tabs.Panel value={CampaignParticipantsTabs.PARTICIPANTS} h={"100%"}>
+          <PaperLayout p={0} h={"100%"} mah={800}>
+            <ContactTable
+              columns={column}
+              data={filteredParticipants?.participants}
+              btnTitle="Add"
+              toggle={open}
+              tab={WhatsappTableType.PARTICIPANTS}
+              groupId={campaignData?.id}
+              refetch={refetchParticipants}
+              setSorting={setSorting}
+              sorting={sorting}
+              columnFilters={columnFilters}
+              setColumnFilters={setColumnFilters}
+              isPending={isPendingParticipant}
+              setPagination={setPagination}
+              pagination={pagination}
+              totalCount={filteredParticipants?.searchCount}
+            />
+          </PaperLayout>
+          <Modal
+            opened={opened}
+            onClose={close}
+            centered
+            size={"xl"}
+            radius={"lg"}
+            title={
+              <Title order={2} pl={"md"}>
+                {translations("Add Participants")}
+              </Title>
+            }
+          >
+            <AddParticipantModal
+              close={close}
               campaign={campaignData}
-              refetchCampaign={refetch}
-              campaignInfo={campaignInfo}
-              isPending={isPending}
-              dynamicVariables={dynamicVariables}
+              campaignType={CampaignType.WHATSAPP}
             />
-            <CampaignInfoCard
-              participantCount={filteredParticipants?.totalCount}
-              stats={campaignStats}
-              flowId={campaignData?.flowId}
-              isPending={
-                isPendingParticipant ||
-                isRefetchingParticipants ||
-                isPendingStats ||
-                isRefetchingStats
-              }
-            />
-          </Tabs.Panel>
-          <Tabs.Panel value={CampaignParticipantsTabs.PARTICIPANTS} h={"100%"}>
-            <PaperLayout p={0} h={"100%"} mah={800}>
-              <ContactTable
-                columns={column}
-                data={filteredParticipants?.participants}
-                btnTitle="Add"
-                toggle={open}
-                tab={WhatsappTableType.PARTICIPANTS}
-                groupId={campaignData?.id}
-                refetch={refetchParticipants}
-                setSorting={setSorting}
-                sorting={sorting}
-                columnFilters={columnFilters}
-                setColumnFilters={setColumnFilters}
-                isPending={isPendingParticipant}
-                setPagination={setPagination}
-                pagination={pagination}
-                totalCount={filteredParticipants?.searchCount}
-              />
-            </PaperLayout>
-            <Modal
-              opened={opened}
-              onClose={close}
-              centered
-              size={"xl"}
-              radius={"lg"}
-              title={
-                <Title order={2} pl={"md"}>
-                  {translations("Add Participants")}
-                </Title>
-              }
-            >
-              <AddParticipantModal
-                close={close}
-                campaign={campaignData}
-                campaignType={CampaignType.WHATSAPP}
-              />
-            </Modal>
-          </Tabs.Panel>
-        </Tabs>
-      </Stack>
-    </MantineProvider>
+          </Modal>
+        </Tabs.Panel>
+      </Tabs>
+    </Stack>
   );
 };
 export default CampaignById;

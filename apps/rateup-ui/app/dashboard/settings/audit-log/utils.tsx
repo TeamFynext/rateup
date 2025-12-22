@@ -1,14 +1,17 @@
 import { useMemo } from "react";
 
-import { Card } from "@mantine/core";
-import CardHeader from "@mui/material/CardHeader";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { AlertTriangle, Calendar, Code, Shield, User } from "lucide-react";
 
 import { AuditLogData } from "@/backend/user/user.api";
 import { createSortableHeader } from "@/components/Table/data-table";
-import { CardDescription, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 // Types
 interface ParsedRoute {

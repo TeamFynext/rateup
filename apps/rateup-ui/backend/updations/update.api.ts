@@ -66,3 +66,9 @@ export async function updateBackfillMessageData() {
     timeout: 60000,
   });
 }
+
+export async function migrateAutomationToRules() {
+  return await axiosClient.put(`${baseUrl}/migrate-automation-to-rules`, null, {
+    timeout: 60000,
+  });
+}

@@ -12,6 +12,8 @@ import {
   IUserInfoApiResponse,
   UserAvailabilityStatus,
 } from "@/backend/user/user.api";
+import { UserSelector } from "@/components/Contacts/CreateContactModal";
+import { TeamSelector } from "@/components/input/TeamSelector";
 import NotificationBellIcon from "@/components/Layout/Notification";
 import { ModeToggle } from "@/components/theme/ModeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -124,20 +126,24 @@ export default function AppSidebar({
         });
         break;
       case "assignedStaff":
-        let updatedStaff = chatFilterStore.filter.assignedUserIds.includes(
-          value,
-        )
-          ? chatFilterStore.filter.assignedUserIds.filter((t) => t !== value)
-          : [...chatFilterStore.filter.assignedUserIds, value];
+        let updatedStaff = [];
+        if (value !== "all") {
+          updatedStaff = chatFilterStore.filter.assignedUserIds.includes(value)
+            ? chatFilterStore.filter.assignedUserIds.filter((t) => t !== value)
+            : [...chatFilterStore.filter.assignedUserIds, value];
+        }
         chatFilterStore.setFilter({
           ...chatFilterStore.filter,
           assignedUserIds: updatedStaff,
         });
         break;
       case "assignedTeams":
-        let updatedTeams = chatFilterStore.filter.assignedTeams.includes(value)
-          ? chatFilterStore.filter.assignedTeams.filter((t) => t !== value)
-          : [...chatFilterStore.filter.assignedTeams, value];
+        let updatedTeams = [];
+        if (value !== "all") {
+          updatedTeams = chatFilterStore.filter.assignedTeams.includes(value)
+            ? chatFilterStore.filter.assignedTeams.filter((t) => t !== value)
+            : [...chatFilterStore.filter.assignedTeams, value];
+        }
         chatFilterStore.setFilter({
           ...chatFilterStore.filter,
           assignedTeams: updatedTeams,
@@ -205,7 +211,6 @@ export default function AppSidebar({
 
       return false;
     });
-
     // Update state if the active item has changed or any subItem isActive changed
     if (
       active &&
@@ -222,7 +227,40 @@ export default function AppSidebar({
     navMain,
     activeItem,
   ]);
-
+  console.log(
+    "chatFilterStore.filter.assignedUserIds",
+    chatFilterStore.filter.assignedUserIds,
+  );
+  const StaffSelector = (
+    <UserSelector
+      allowAll
+      value={
+        chatFilterStore.filter.assignedUserIds.length
+          ? chatFilterStore.filter.assignedUserIds[0]
+          : "all"
+      }
+      className="h-9 w-full border-[#1873E8]/20 hover:border-[#1873E8]/40 focus:ring-[#1873E8] focus:border-[#1873E8]"
+      onChange={(value, isAll) =>
+        handleFilter("assignedStaff", isAll ? "all" : value)
+      }
+    />
+  );
+  const TeamSelectorComp = (
+    <TeamSelector
+      enableAll
+      value={
+        chatFilterStore.filter.assignedTeams.length
+          ? chatFilterStore.filter.assignedTeams[0]
+          : "all"
+      }
+      onChange={(value) => handleFilter("assignedTeams", value)}
+      className="h-9 w-full border-[#1873E8]/20 hover:border-[#1873E8]/40 focus:ring-[#1873E8] focus:border-[#1873E8]"
+    />
+  );
+  const sidebarComponentMap = {
+    staffSelector: StaffSelector,
+    teamSelector: TeamSelectorComp,
+  };
   // Sidebar rendering
   return (
     <div>
@@ -273,7 +311,7 @@ export default function AppSidebar({
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent>
-                <SidebarMenu className="gap-3">
+                <SidebarMenu className="gap-2">
                   {navMain.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
@@ -339,10 +377,10 @@ export default function AppSidebar({
                 <SidebarTrigger />
               </div>
             </SidebarHeader>
-            <SidebarContent className="bg-background py-2">
+            <SidebarContent className="bg-background pt-1">
               <SidebarGroup className="p-0">
                 <SidebarGroupContent>
-                  <SidebarMenu className="gap-3">
+                  <SidebarMenu className="gap-2">
                     {activeItem.items?.map((item) =>
                       item.group ? (
                         <SidebarGroup className="p-0">
@@ -429,30 +467,52 @@ export default function AppSidebar({
                                   </Collapsible>
                                 ) : (
                                   <SidebarMenuItem key={groupItem.title}>
-                                    <SidebarMenuButton
-                                      asChild
-                                      tooltip={groupItem.title}
-                                      isActive={fullPathname === groupItem.url}
-                                      aria-label={groupItem.title}
-                                      onClick={(e) => {
-                                        const allow = handleRouteGuard(
-                                          groupItem.url,
+                                    {groupItem.type === "component" ? (
+                                      (() => {
+                                        const Component =
+                                          sidebarComponentMap[
+                                            groupItem.componentKey
+                                          ];
+                                        return (
+                                          <div className="flex flex-col gap-2">
+                                            {groupItem.hasSepeartorOnTop && (
+                                              <SidebarSeparator className="m-0" />
+                                            )}
+                                            {Component}
+                                            {groupItem.hasSeperatorOnBottom && (
+                                              <SidebarSeparator className="m-0" />
+                                            )}
+                                          </div>
                                         );
-                                        if (!allow) {
-                                          e.preventDefault();
+                                      })()
+                                    ) : (
+                                      <SidebarMenuButton
+                                        asChild
+                                        tooltip={groupItem.title}
+                                        isActive={
+                                          fullPathname === groupItem.url
                                         }
-                                      }}
-                                      variant="light"
-                                    >
-                                      <Link href={groupItem.url || "#"}>
-                                        {groupItem.icon && (
-                                          <item.icon {...sidebarIconProps} />
-                                        )}
-                                        <span className="font-medium">
-                                          {groupItem.title}
-                                        </span>
-                                      </Link>
-                                    </SidebarMenuButton>
+                                        aria-label={groupItem.title}
+                                        onClick={(e) => {
+                                          const allow = handleRouteGuard(
+                                            groupItem.url,
+                                          );
+                                          if (!allow) {
+                                            e.preventDefault();
+                                          }
+                                        }}
+                                        variant="light"
+                                      >
+                                        <Link href={groupItem.url || "#"}>
+                                          {groupItem.icon && (
+                                            <item.icon {...sidebarIconProps} />
+                                          )}
+                                          <span className="font-medium">
+                                            {groupItem.title}
+                                          </span>
+                                        </Link>
+                                      </SidebarMenuButton>
+                                    )}
                                   </SidebarMenuItem>
                                 ),
                               )}

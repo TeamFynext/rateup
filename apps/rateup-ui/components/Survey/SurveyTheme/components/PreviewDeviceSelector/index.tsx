@@ -1,5 +1,6 @@
 import { Group, Tabs } from "@mantine/core";
 import { IconDeviceDesktop, IconDeviceMobile } from "@tabler/icons-react";
+
 import { PreviewTypeEnum } from "../../SurveyTheme.enums";
 import styles from "./PreviewDeviceSelector.module.css";
 

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { showErrorToast, showSuccessToast } from "../../../utils/notifications";
 import {
   createWaAutomatedReply,
   deleteWaAutomatedReply,
@@ -45,11 +45,11 @@ export const useCreateWaAutomatedReplyMutation = () => {
     mutationFn: (data: any) => createWaAutomatedReply(data),
     onSuccess: (_, data) => {
       qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
-      showSuccessToast("Automated Reply Created Successfully");
+      toast.success("Automated Reply Created Successfully");
     },
     onError: (error: any) => {
       if (!(error?.response?.data?.displayMessageInClient ?? false))
-        showErrorToast(error?.response?.data, "Error Creating Automated Reply");
+        toast.error(error?.response?.data || "Error Creating Automated Reply");
     },
   });
 };
@@ -61,7 +61,7 @@ export const useDeleteWaAutomatedReplyMutation = () => {
       deleteWaAutomatedReply(waAutomatedReplyId),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["allWaAutomatedReplies"] });
-      showSuccessToast("Automated Reply Deleted Successfully");
+      toast.success("Automated Reply Deleted Successfully");
     },
   });
 };
@@ -70,7 +70,7 @@ export const useUpdateWaAutomatedReplyMutation = () => {
   return useMutation({
     mutationFn: ({ id, ...data }: any) => updateWaAutomatedReply(id, data),
     onError: (error: any) => {
-      showErrorToast(error?.response?.data ?? "Error Updating Automated Reply");
+      toast.error(error?.response?.data ?? "Error Updating Automated Reply");
     },
   });
 };
@@ -80,12 +80,10 @@ export const useInitiateWaAutomatedReplyMutation = (waAutomatedReplyId) => {
     mutationFn: ({ phone }: any) =>
       initiateWaAutomatedReply(waAutomatedReplyId, phone),
     onSuccess: (res) => {
-      showSuccessToast("Automation initiated Successfully");
+      toast.success("Automation initiated Successfully");
     },
     onError: (error: any) => {
-      showErrorToast(
-        error?.response?.data ?? "Error initiating Automated Reply",
-      );
+      toast.error(error?.response?.data ?? "Error initiating Automated Reply");
     },
   });
 };

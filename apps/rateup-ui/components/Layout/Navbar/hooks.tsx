@@ -2,7 +2,6 @@ import { useMemo } from "react";
 
 import {
   IconActivity,
-  IconAddressBook,
   IconApi,
   IconApps,
   IconAward,
@@ -22,9 +21,9 @@ import {
   IconMessageBolt,
   IconMessageChatbot,
   IconQrcode,
-  IconRobot,
   IconRobotFace,
   IconSettings,
+  IconSitemap,
   IconSpeakerphone,
   IconTemplate,
   IconTerminal2,
@@ -45,13 +44,16 @@ import {
   Inbox,
   MessageSquareDot,
   Settings,
+  Sparkles,
   Tag,
   User,
   UserCheck,
   Users,
+  Zap,
 } from "lucide-react";
 
 import { SubscriptionFeaturePathName as sfpn } from "@/types/enums";
+import { UserSelector } from "@/components/Contacts/CreateContactModal";
 import { hasFeature } from "@/utils/subscription/subscription";
 
 export function useNavMain({
@@ -83,26 +85,32 @@ export function useNavMain({
               items: [
                 {
                   title: t("New"),
-                  url: "/dashboard/inbox?tab=New",
-                  icon: MessageSquareDot,
+                  url: "/dashboard/inbox?tab=UnAssigned",
+                  icon: Sparkles,
                 },
+                // {
+                //   title: t("New"),
+                //   url: "/dashboard/inbox?tab=New",
+                //   icon: MessageSquareDot,
+                // },
+                // {
+                //   title: t("All"),
+                //   url: "/dashboard/inbox?tab=All",
+                //   icon: Inbox,
+                // },
                 {
-                  title: t("All"),
-                  url: "/dashboard/inbox?tab=All",
-                  icon: Inbox,
+                  title: t("Assigned"),
+                  url: "/dashboard/inbox?tab=Assigned",
+                  icon: UserCheck,
                 },
                 {
                   title: t("Mine"),
                   url: "/dashboard/inbox?tab=mine",
                   icon: IconUser,
                 },
+
                 {
-                  title: t("UnAssigned"),
-                  url: "/dashboard/inbox?tab=UnAssigned",
-                  icon: IconUserX,
-                },
-                {
-                  title: t("Addressed"),
+                  title: t("Closed"),
                   url: "/dashboard/inbox?tab=Addressed",
                   icon: CircleCheckBig,
                 },
@@ -123,7 +131,6 @@ export function useNavMain({
                               isActive:
                                 chatFilterStore.filter.lifecycle === lbl.id,
                             })),
-                            hasSepeartorOnTop: true,
                           },
                         ]
                       : []),
@@ -159,17 +166,9 @@ export function useNavMain({
                           {
                             title: "Staff",
                             icon: User,
-                            items: staff.map((st) => ({
-                              title: `${st.name} ${userId === st.id ? "(You)" : ""}`,
-                              url: "#",
-                              handleClick: () => {
-                                handleFilter("assignedStaff", st.id);
-                              },
-                              isActive:
-                                chatFilterStore.filter.assignedUserIds?.includes(
-                                  st.id,
-                                ),
-                            })),
+                            type: "component",
+                            componentKey: "staffSelector",
+                            hasSepeartorOnTop: true,
                           },
                         ]
                       : []),
@@ -178,17 +177,8 @@ export function useNavMain({
                           {
                             title: "Teams",
                             icon: Users,
-                            items: teams.map((st) => ({
-                              title: st.name,
-                              url: "#",
-                              handleClick: () => {
-                                handleFilter("assignedTeams", st.id);
-                              },
-                              isActive:
-                                chatFilterStore.filter.assignedTeams.includes(
-                                  st.id,
-                                ),
-                            })),
+                            type: "component",
+                            componentKey: "teamSelector",
                           },
                         ]
                       : []),
@@ -284,9 +274,9 @@ export function useNavMain({
                 ...(hasFeature(subscription, sfpn.WhatsAppAutomation)
                   ? [
                       {
-                        title: t("Automation"),
-                        url: "/dashboard/whatsapp/automated-replies",
-                        icon: IconRobot,
+                        title: t("Chatbots"),
+                        url: "/dashboard/whatsapp/flowbots",
+                        icon: IconSitemap,
                       },
                     ]
                   : []),
@@ -316,8 +306,18 @@ export function useNavMain({
                 },
               ],
             },
+            ...(hasFeature(subscription, sfpn.WhatsAppAutomation)
+              ? [
+                  {
+                    title: t("Automation"),
+                    url: "/dashboard/rules",
+                    icon: Zap,
+                  },
+                ]
+              : []),
           ]
         : []),
+
       ...(hasFeature(subscription, sfpn.Loyalty)
         ? [
             {

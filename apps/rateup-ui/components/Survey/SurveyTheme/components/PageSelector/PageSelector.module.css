@@ -1,26 +1,6 @@
-/* This file is being used in landingPage LandingPageEditor/index.tsx, SurveyId.tsx */
-
 .list {
   border: 1px solid var(--mantine-color-gray-3);
   border-radius: 0.625rem;
   overflow: hidden;
   max-width: max-content;
-}
-
-.list::before {
-  display: none;
-}
-
-.tab {
-  border-radius: 0.3125rem;
-  min-width: 5rem;
-}
-
-.tab:not([data-active]):hover {
-  background-color: var(--mantine-color-rateup-blue-light-hover);
-}
-
-.tab[data-active="true"] {
-  background-color: var(--tertiary-color);
-  color: white;
 }
