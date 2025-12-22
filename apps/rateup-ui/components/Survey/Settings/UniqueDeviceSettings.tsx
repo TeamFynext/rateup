@@ -27,7 +27,6 @@ const UniqueDeviceSettings = ({ survey, surveyId }) => {
         <TooltipTrigger>
           <Switch
             id="unique-device"
-            className="data-[state=checked]:bg-[#1c518e]"
             checked={enableUniqueDevice}
             onChange={() =>
               updateUniqueDevice(setEnableUniqueDevice, editSurvey)

@@ -42,7 +42,8 @@
   /* old colors */
   --primary-color: #ffffff;
   --secondary-color: #000000;
-  --tertiary-color: #1c518e;
+  /* legacy color */
+  --tertiary-color: var(--primary);
   --homepage-blue: #013553;
   --shade-of-blue-1: #d0d9ee;
   --shade-of-blue: #edf2ff;

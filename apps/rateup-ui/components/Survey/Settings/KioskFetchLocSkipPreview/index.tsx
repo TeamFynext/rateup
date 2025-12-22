@@ -91,7 +91,6 @@ function KioskFetchLocSkipPreview({
                 <TooltipTrigger>
                   <Switch
                     id="location"
-                    className="data-[state=checked]:bg-[#1c518e]"
                     onCheckedChange={(event) =>
                       updateGetLocation(setLocation, editSurvey)
                     }
@@ -126,7 +125,6 @@ function KioskFetchLocSkipPreview({
                 <TooltipTrigger>
                   <Switch
                     id="preview"
-                    className="data-[state=checked]:bg-[#1c518e]"
                     onChange={() => updateSkipPreview(setPreview, editSurvey)}
                     checked={preview}
                   />
@@ -161,7 +159,6 @@ function KioskFetchLocSkipPreview({
               <TooltipTrigger>
                 <Switch
                   id="webSurveyAutoTransitionToNextQues"
-                  className="data-[state=checked]:bg-[#1c518e]"
                   checked={webSurveyAutoTransitionToNextQues}
                   onChange={() =>
                     updatewebSurveyAutoTransitionToNextQues(
