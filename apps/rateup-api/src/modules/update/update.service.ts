@@ -342,7 +342,7 @@ export async function migrateAutomationToRules() {
 
     for (const command of commands) {
       try {
-        if (!command.waAutomatedReply) {
+        if (!command?.waAutomatedReply) {
           log.warn(
             `Command ${command.id} has no associated automation, skipping`,
           );
@@ -350,13 +350,13 @@ export async function migrateAutomationToRules() {
           continue;
         }
         const automation = command.waAutomatedReply;
-        const whatsappSettingsPhoneIds = automation.whatsappSettingsPhoneIds
+        const whatsappSettingsPhoneIds = automation?.whatsappSettingsPhoneIds
           ?.length
-          ? automation.whatsappSettingsPhoneIds
+          ? automation?.whatsappSettingsPhoneIds
           : (
               await prisma.whatsappSettings.findMany({
                 where: {
-                  orgId: command.orgId,
+                  orgId: command?.orgId,
                 },
                 select: {
                   phoneId: true,
@@ -367,11 +367,11 @@ export async function migrateAutomationToRules() {
         // Prepare options object
         const options: any = {};
 
-        if (automation.sendOnceIn24Hours) {
+        if (automation?.sendOnceIn24Hours) {
           options.sendOncePerDay = true;
         }
 
-        if (command.businessHourId) {
+        if (command?.businessHourId) {
           options.businessHours = {
             enabled: true,
             businessHoursId: command.businessHourId,
@@ -381,10 +381,10 @@ export async function migrateAutomationToRules() {
         // Create Rule
         const rule = await prisma.rule.create({
           data: {
-            orgId: command.orgId,
-            name: `[Migrated] ${automation.name}`,
+            orgId: command?.orgId,
+            name: `[Migrated] ${automation?.name}`,
             operator: "AND",
-            isActive: automation.isEnabled,
+            isActive: automation?.isEnabled,
             triggerEvent: "MESSAGE_RECEIVED",
             whatsappSettingsPhoneIds: whatsappSettingsPhoneIds,
             options: Object.keys(options).length > 0 ? options : null,
@@ -394,7 +394,7 @@ export async function migrateAutomationToRules() {
         // Create RuleConditionGroup
         const conditionGroup = await prisma.ruleConditionGroup.create({
           data: {
-            ruleId: rule.id,
+            ruleId: rule?.id,
             operator: "AND",
           },
         });
@@ -402,39 +402,39 @@ export async function migrateAutomationToRules() {
         // Create RuleCondition for message body
         const messageCondition = await prisma.ruleCondition.create({
           data: {
-            groupId: conditionGroup.id,
+            groupId: conditionGroup?.id,
             field: "MESSAGE_BODY",
             operator: "CONTAINS",
-            value: command.command,
+            value: command?.command,
           },
         });
 
         // Create RuleMessageBodyLock
         await prisma.ruleMessageBodyLock.create({
           data: {
-            orgId: command.orgId,
-            messageBody: command.command,
-            businessHourId: command.businessHourId,
-            ruleConditionId: messageCondition.id,
+            orgId: command?.orgId,
+            messageBody: command?.command,
+            businessHourId: command?.businessHourId,
+            ruleConditionId: messageCondition?.id,
           },
         });
 
         // Create RuleAction to trigger the chatbot/automation
         await prisma.ruleAction.create({
           data: {
-            ruleId: rule.id,
+            ruleId: rule?.id,
             type: "TRIGGER_CHATBOT",
-            value: automation.id,
+            value: automation?.id,
           },
         });
 
         stats.migratedRules++;
         log.info(
-          `✓ Migrated command: ${command.command} for org: ${command.orgId}`,
+          `✓ Migrated command: ${command?.command} for org: ${command?.orgId}`,
         );
       } catch (error) {
         stats.errors++;
-        log.error(`Error migrating command ${command.id}:`, error);
+        log.error(`Error migrating command ${command?.id}: %s`, error);
       }
     }
 

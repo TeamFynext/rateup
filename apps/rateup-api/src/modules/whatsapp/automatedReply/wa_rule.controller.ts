@@ -32,11 +32,11 @@ export async function createRuleHandler(
 
 // Get all Rules
 export async function getAllRulesHandler(
-  req: FastifyRequest<{ Querystring: { orgId?: string } }>, // FastifyRequest<{ Querystring: { orgId?: string } }>
+  req: FastifyRequest,
   reply: FastifyReply,
 ) {
   try {
-    const { orgId } = req.query;
+    const orgId = req.user.orgId;
     const rules = await RuleService.getAllRules(orgId);
     reply.send(rules);
   } catch (error) {
