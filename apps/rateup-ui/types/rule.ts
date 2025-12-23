@@ -3,7 +3,7 @@ import {
   ConditionField,
   ConditionOperator,
   TriggerEvent,
-} from "@/app/dashboard/rules/components/schema";
+} from "@/app/dashboard/automation/components/schema";
 
 export type Rule = {
   id: string;

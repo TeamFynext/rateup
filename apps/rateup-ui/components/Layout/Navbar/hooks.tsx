@@ -310,7 +310,7 @@ export function useNavMain({
               ? [
                   {
                     title: t("Automation"),
-                    url: "/dashboard/rules",
+                    url: "/dashboard/automation",
                     icon: Zap,
                   },
                 ]

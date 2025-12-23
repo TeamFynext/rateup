@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
-import timezones from "timezones-list";
 
+import TimeZoneSelector from "@/components/common/time-zone-selector";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 import {
@@ -50,6 +51,95 @@ type Props = {
   onSave: (values: BusinessHoursFormValues) => void;
   editing?: boolean;
 };
+
+type TimeSlotRowProps = {
+  slot: any;
+  slotIndex: number;
+  day: DayKey;
+  daySchedule: any;
+  slotError: any;
+  handleTimeSlotChange: (
+    day: DayKey,
+    slotIndex: number,
+    field: "openTime" | "closeTime",
+    value: string,
+  ) => void;
+  removeTimeSlot: (day: DayKey, slotIndex: number) => void;
+  t: ReturnType<typeof useTranslations>;
+};
+
+function TimeSlotRow({
+  slot,
+  slotIndex,
+  day,
+  daySchedule,
+  slotError,
+  handleTimeSlotChange,
+  removeTimeSlot,
+  t,
+}: Readonly<TimeSlotRowProps>) {
+  return (
+    <div key={slotIndex} className="flex flex-col gap-1">
+      <div className="flex items-center gap-3">
+        <Select
+          value={slot.openTime}
+          onValueChange={(val) =>
+            handleTimeSlotChange(day, slotIndex, "openTime", val)
+          }
+        >
+          <SelectTrigger className="w-24">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {timeOptions.map((time) => (
+              <SelectItem key={time} value={time}>
+                {time}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <span className="text-gray-500 text-sm">{t("To")}</span>
+
+        <Select
+          value={slot.closeTime}
+          onValueChange={(val) =>
+            handleTimeSlotChange(day, slotIndex, "closeTime", val)
+          }
+        >
+          <SelectTrigger className="w-24">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {timeOptions.map((time) => (
+              <SelectItem key={time} value={time}>
+                {time}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {daySchedule.timeSlots.length > 1 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => removeTimeSlot(day, slotIndex)}
+            className="p-1 h-8 w-8"
+          >
+            <Trash2 className="w-3 h-3 text-red-500" />
+          </Button>
+        )}
+      </div>
+      <Separator className="mt-3" />
+      {slotError && (
+        <p className="text-xs text-red-500">
+          {(slotError.openTime || slotError.closeTime)?.message}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function BusinessHoursEditorDialog({
   open,
@@ -144,7 +234,7 @@ export function BusinessHoursEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-200 max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {editing ? t("Edit Business Hours") : t("Add Business Hours")}
@@ -185,18 +275,10 @@ export function BusinessHoursEditorDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>{t("Timezone")} *</FieldLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("Select a timezone")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {timezones.map((tz) => (
-                        <SelectItem key={tz?.tzCode} value={tz?.tzCode}>
-                          {tz?.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <TimeZoneSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                   <FieldDescription>
                     {t("Select the timezone for your business hours.")}
                   </FieldDescription>
@@ -274,11 +356,11 @@ export function BusinessHoursEditorDialog({
                         <div key={day} className="space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <span className="font-medium capitalize min-w-[100px] text-gray-700">
+                              <span className="font-medium capitalize min-w-25 text-gray-700">
                                 {getDayName(day)}
                               </span>
                               <span
-                                className={`text-sm px-2 py-1 rounded ${
+                                className={`text-sm px-2 py-1 rounded-full ${
                                   daySchedule.isOpen
                                     ? "bg-green-100 text-green-700"
                                     : "bg-gray-100 text-gray-500"
@@ -286,28 +368,12 @@ export function BusinessHoursEditorDialog({
                               >
                                 {daySchedule.isOpen ? t("Open") : t("Closed")}
                               </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleBusinessHoursChange(
-                                    day,
-                                    !daySchedule.isOpen,
-                                  )
+                              <Switch
+                                checked={daySchedule.isOpen}
+                                onCheckedChange={(checked) =>
+                                  handleBusinessHoursChange(day, checked)
                                 }
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                  daySchedule.isOpen
-                                    ? "bg-teal-500"
-                                    : "bg-gray-300"
-                                }`}
-                              >
-                                <span
-                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                    daySchedule.isOpen
-                                      ? "translate-x-6"
-                                      : "translate-x-1"
-                                  }`}
-                                />
-                              </button>
+                              />
                             </div>
 
                             {daySchedule.isOpen && (
@@ -324,101 +390,25 @@ export function BusinessHoursEditorDialog({
                           </div>
 
                           {daySchedule.isOpen && (
-                            <div className="ml-4 space-y-2">
+                            <div className="ml-28 space-y-2">
                               {daySchedule.timeSlots.map(
-                                (slot: any, slotIndex: number) => {
-                                  const slotError =
-                                    dayErrors && dayErrors[slotIndex];
-                                  return (
-                                    <div
-                                      key={slotIndex}
-                                      className="flex flex-col gap-1"
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <Select
-                                          value={slot.openTime}
-                                          onValueChange={(val) =>
-                                            handleTimeSlotChange(
-                                              day,
-                                              slotIndex,
-                                              "openTime",
-                                              val,
-                                            )
-                                          }
-                                        >
-                                          <SelectTrigger className="w-24">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {timeOptions.map((time) => (
-                                              <SelectItem
-                                                key={time}
-                                                value={time}
-                                              >
-                                                {time}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-
-                                        <span className="text-gray-500 text-sm">
-                                          {t("To")}
-                                        </span>
-
-                                        <Select
-                                          value={slot.closeTime}
-                                          onValueChange={(val) =>
-                                            handleTimeSlotChange(
-                                              day,
-                                              slotIndex,
-                                              "closeTime",
-                                              val,
-                                            )
-                                          }
-                                        >
-                                          <SelectTrigger className="w-24">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {timeOptions.map((time) => (
-                                              <SelectItem
-                                                key={time}
-                                                value={time}
-                                              >
-                                                {time}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-
-                                        {daySchedule.timeSlots.length > 1 && (
-                                          <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                              removeTimeSlot(day, slotIndex)
-                                            }
-                                            className="p-1 h-8 w-8"
-                                          >
-                                            <Trash2 className="w-3 h-3 text-red-500" />
-                                          </Button>
-                                        )}
-                                      </div>
-
-                                      {slotError && (
-                                        <p className="text-xs text-red-500">
-                                          {
-                                            (
-                                              slotError.openTime ||
-                                              slotError.closeTime
-                                            )?.message
-                                          }
-                                        </p>
-                                      )}
-                                    </div>
-                                  );
-                                },
+                                (slot: any, slotIndex: number) => (
+                                  <TimeSlotRow
+                                    key={
+                                      slotIndex +
+                                      slot?.openTime +
+                                      slot?.closeTime
+                                    }
+                                    slot={slot}
+                                    slotIndex={slotIndex}
+                                    day={day}
+                                    daySchedule={daySchedule}
+                                    slotError={dayErrors?.[slotIndex]}
+                                    handleTimeSlotChange={handleTimeSlotChange}
+                                    removeTimeSlot={removeTimeSlot}
+                                    t={t}
+                                  />
+                                ),
                               )}
                             </div>
                           )}
@@ -444,7 +434,7 @@ export function BusinessHoursEditorDialog({
             </Button>
             <Button
               type="submit"
-              className="bg-gradient-to-r from-rateup-blue to-rateup-blue"
+              className="bg-linear-to-r from-rateup-blue to-rateup-blue"
             >
               {editing ? t("Update Hours") : t("Save Hours")}
             </Button>
