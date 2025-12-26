@@ -791,7 +791,7 @@ export async function getStaffDetailedConversationAnalytics(
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
   const result = await prisma.$queryRaw<{
-    userDetails: {
+    userPerformance: {
       name: string;
       status: string;
       email: string;
@@ -1092,7 +1092,8 @@ export async function getTeamOverview(orgId: string, dateRange) {
   const fourteenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  let rangeStart, rangeEnd;
+  let rangeStart: Date | null = null;
+  let rangeEnd: Date | null = null;
   if (dateRange.length) {
     rangeStart = new Date(dateRange[0]);
     rangeEnd = new Date(dateRange[1]);
@@ -1116,23 +1117,22 @@ export async function getTeamOverview(orgId: string, dateRange) {
     GROUP BY wm."conversationId"
   ),
      messages_per_team AS (
-    SELECT tm."teamId", COUNT(*)::INTEGER AS "messagesSent"
-    FROM "TeamMember" tm
-    JOIN "WaMessage" wm ON wm."sendBy" = tm."userId"
+     SELECT cau."teamId", COUNT(*)::INTEGER AS "messagesSent"
+    FROM "WaMessage" wm
     JOIN "Conversation" c ON c.id = wm."conversationId"
     JOIN "ConversationAssignedUserTeamMap" cau ON cau."conversationId" = c.id
     JOIN "Contact" ct ON ct.id = c."contactId"
     WHERE ct."orgId" = ${orgId}::uuid
-    AND cau."teamId" = tm."teamId"
-    AND wm."waCreatedAt" >= COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
+      AND wm."sendBy" IS NOT NULL
+      AND wm."waCreatedAt" >= COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
       AND wm."waCreatedAt" < COALESCE(${rangeEnd}, NOW())
-    GROUP BY tm."teamId"
+    GROUP BY cau."teamId"
   )
   SELECT
     t.id AS "teamId",
     t.name AS "teamName",
     t.color AS "teamColor",
-    (COUNT(DISTINCT c.id) FILTER(WHERE c."status" = ${WaMessageAssignStatus.UNASSIGNED}
+    (COUNT(DISTINCT c.id) FILTER(WHERE c."status" = ${WaMessageAssignStatus.ASSIGNED}
     AND c."createdAt" >= COALESCE(${rangeStart}, '1970-01-01'::timestamptz)
          AND c."createdAt" < COALESCE(${rangeEnd}, NOW())
     ))::INTEGER AS "assignedConversations",
@@ -1158,7 +1158,7 @@ export async function getTeamOverview(orgId: string, dateRange) {
   LEFT JOIN "OrgMember" om ON u."id" = om."userId"
   LEFT JOIN "messages_per_team" mpt ON mpt."teamId" = t.id
   WHERE t."orgId" = ${orgId}::uuid
-  GROUP BY t.id, t.name, mpt."messagesSent"
+  GROUP BY t.id, t.name,t."color", mpt."messagesSent"
   ORDER BY "assignedConversations" DESC;
   `;
   return result;
@@ -1228,7 +1228,7 @@ export async function getTeamDetailedMetrics(teamId: string, orgId: string) {
           om."status" AS "onlineStatus",
           AVG(EXTRACT(EPOCH FROM (vc."firstRespondedAt" - vc."createdAt"))) FILTER (WHERE vc."firstRespondedAt" IS NOT NULL) AS "avgResponseTime",
           COUNT(DISTINCT cau."conversationId") FILTER (WHERE NOT (vc."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})))::INT AS "staffActiveChats",
-          COUNT(*)::INT AS "messagesHandled"
+          COUNT(DISTINCT wm.id)::INT AS "messagesHandled"
         FROM "TeamMember" tm
         LEFT JOIN "User" u ON u.id = tm."userId"
         LEFT JOIN "OrgMember" om ON om."userId" = tm."userId" AND om."orgId" = ${orgId}::uuid
