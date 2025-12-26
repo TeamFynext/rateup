@@ -748,8 +748,29 @@ export async function checkAndExecuteRuleByTriggerEvent(
     return undefined;
   }
 
-  // Find the first matching rule
-  for (const rule of rules) {
+  // Helper function to check if a rule has any business hour configuration
+  const hasBusinessHours = (rule: any): boolean => {
+    // Check rule-level business hours
+    if (rule.options?.businessHours?.enabled === true) {
+      return true;
+    }
+    // Check condition-level business hours (messageBodyLock)
+    for (const group of rule.groups || []) {
+      for (const condition of group.conditions || []) {
+        if (condition.messageBodyLock?.businessHour) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  // Separate rules into business hour rules and non-business hour rules
+  const businessHourRules = rules.filter((rule) => hasBusinessHours(rule));
+  const nonBusinessHourRules = rules.filter((rule) => !hasBusinessHours(rule));
+
+  // First, try to match business hour rules
+  for (const rule of businessHourRules) {
     let isMatch = false;
 
     // Validate based on trigger event type
@@ -761,7 +782,41 @@ export async function checkAndExecuteRuleByTriggerEvent(
     );
 
     if (isMatch) {
-      log.trace("Rule matched! Executing actions for rule: %s", rule.name);
+      log.trace(
+        "Business hour rule matched! Executing actions for rule: %s",
+        rule.name,
+      );
+
+      // Execute all actions for the matched rule
+      const executedActions = await executeRuleActions(
+        rule as RuleWithConditions,
+        context,
+      );
+
+      return {
+        rule: rule as RuleWithConditions,
+        executedActions,
+      };
+    }
+  }
+
+  // Only if no business hour rules matched, try non-business hour rules
+  for (const rule of nonBusinessHourRules) {
+    let isMatch = false;
+
+    // Validate based on trigger event type
+    isMatch = await validateRuleConditions(
+      rule as RuleWithConditions,
+      message,
+      orgId,
+      phone,
+    );
+
+    if (isMatch) {
+      log.trace(
+        "Non-business hour rule matched! Executing actions for rule: %s",
+        rule.name,
+      );
 
       // Execute all actions for the matched rule
       const executedActions = await executeRuleActions(
