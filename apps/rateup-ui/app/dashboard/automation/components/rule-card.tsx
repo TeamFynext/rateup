@@ -164,7 +164,13 @@ export function RuleCard({
           <span>{new Date(item.createdAt).toLocaleDateString()}</span>
         </div>
 
-        <Switch checked={item.isActive} onCheckedChange={onToggleActive} />
+        <Switch
+          checked={item.isActive}
+          onClick={(e: any) => {
+            e.preventDefault();
+            onToggleActive(e?.target?.value === "on");
+          }}
+        />
       </CardFooter>
     </Card>
   );

@@ -82,8 +82,6 @@ export function CardView({
               item={item}
               viewMode={viewMode}
               onToggleActive={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
                 onToggleActive(item);
               }}
               onDelete={(e) => {
