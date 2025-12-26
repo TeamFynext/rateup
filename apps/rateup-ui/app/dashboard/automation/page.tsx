@@ -44,7 +44,7 @@ export default function Home() {
 
   const handleCreate = () => {
     // Navigate to create rule page
-    router.push("/dashboard/rules/new");
+    router.push("/dashboard/automation/new");
   };
 
   const handleToggleActive = (rule: Rule) => {

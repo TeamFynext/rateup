@@ -6,9 +6,9 @@ import WhatsappAutomationRuleBuilder from "../components/WhatsappAutomationRuleB
 
 const Page = () => {
   const params = useParams();
-  const ruleId = params.ruleId as string;
+  const automationId = params.automationId as string;
 
-  return <WhatsappAutomationRuleBuilder ruleId={ruleId} />;
+  return <WhatsappAutomationRuleBuilder ruleId={automationId} />;
 };
 
 export default Page;

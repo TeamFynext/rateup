@@ -114,7 +114,7 @@ const WhatsappAutomationRuleBuilder: React.FC<
     } else {
       createMutation.mutate(data, {
         onSuccess: (data) => {
-          router.replace(`/dashboard/rules/${data?.id}`);
+          router.replace(`/dashboard/automation/${data?.id}`);
         },
       });
     }

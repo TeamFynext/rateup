@@ -59,7 +59,7 @@ export function CardView({
             </EmptyHeader>
             <EmptyContent>
               <Button asChild>
-                <Link href="/dashboard/rules/new">Create Automation</Link>
+                <Link href="/dashboard/automation/new">Create Automation</Link>
               </Button>
             </EmptyContent>
             {/* <Button
@@ -69,7 +69,7 @@ export function CardView({
               size="sm"
               
             >
-              <Link href="https://docs.rateup.app/rules/overview" target="_blank">
+              <Link href="https://docs.rateup.app/automation/overview" target="_blank">
                 Learn More <ArrowUpRightIcon />
               </Link>
             </Button> */}
@@ -77,13 +77,11 @@ export function CardView({
         </div>
       ) : (
         data.map((item) => (
-          <Link href={`/dashboard/rules/${item.id}`} key={item.id}>
+          <Link href={`/dashboard/automation/${item.id}`} key={item.id}>
             <RuleCard
               item={item}
               viewMode={viewMode}
               onToggleActive={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
                 onToggleActive(item);
               }}
               onDelete={(e) => {
