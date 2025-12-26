@@ -8,6 +8,8 @@ import {
   getResolvedConversationStatsHandler,
   getStaffConverSationMetricsHandler,
   getStaffDetailedConversationAnalyticsHandler,
+  getTeamDetailedMetricsHandler,
+  getTeamOverviewHandler,
   updateConversationHandler,
 } from "./conversation.controller.js";
 
@@ -78,5 +80,23 @@ export async function conversationRoutes(server: FastifyInstance) {
       },
     },
     getStaffDetailedConversationAnalyticsHandler,
+  );
+  server.get(
+    "/team-overview",
+    {
+      schema: {
+        querystring: $conversationRef("statsQuerySchema"),
+      },
+    },
+    getTeamOverviewHandler,
+  );
+  server.get(
+    "/team-metrics/:teamId",
+    {
+      schema: {
+        params: $conversationRef("teamIdParamsSchema"),
+      },
+    },
+    getTeamDetailedMetricsHandler,
   );
 }
