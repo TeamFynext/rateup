@@ -195,7 +195,7 @@ export function useNavMain({
         : []),
       {
         title: t("Analytics"),
-        url: "/dashboard/analytics",
+        url: "/dashboard/analytics?tab=overview",
         icon: ChartColumnBig,
         items: [
           {
