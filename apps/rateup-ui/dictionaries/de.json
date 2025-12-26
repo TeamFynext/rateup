@@ -2548,11 +2548,11 @@
   "In Progress": "In Bearbeitung",
   "Agents Online": "Agenten online",
   "Conversation Trends": "Unterhaltungstrends",
-  "Resolved conversarion stats": "Statistiken zu gelösten Unterhaltungen",
+  "Resolved conversation stats": "Statistiken zu gelösten Konversationen",
   "Response Time Pattern": "Antwortzeitmuster",
   "Average response time throughout the day": "Durchschnittliche Antwortzeit im Tagesverlauf",
   "No data found for analysis": "Keine Daten für die Analyse gefunden",
-  "No responsed conversation found": "Keine beantworteten Unterhaltungen gefunden",
+  "No responded conversation found": "Keine beantworteten Konversationen gefunde",
   "Channel Distribution": "Kanalverteilung",
   "No messages found": "Keine Nachrichten gefunden",
   "Agent Performance Metrics": "Leistungskennzahlen der Agenten",
@@ -2562,5 +2562,5 @@
   "No staff found": "Keine Mitarbeiter gefunden",
   "Agent Performance": "Agentenleistung",
   "Real-time overview of your team performance and activities": "Echtzeit-Übersicht über die Leistung und Aktivitäten Ihres Teams",
-  "Filter By": "Filtern nach"
+  "Filter by": "Filtern nach"
 }

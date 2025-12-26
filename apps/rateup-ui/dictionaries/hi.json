@@ -2547,11 +2547,11 @@
   "In Progress": "प्रगति में",
   "Agents Online": "ऑनलाइन एजेंट्स",
   "Conversation Trends": "बातचीत के रुझान",
-  "Resolved conversarion stats": "सुलझाई गई बातचीत के आँकड़े",
+  "Resolved conversation stats": "सुलझाई गई बातचीत के आँकड़े",
   "Response Time Pattern": "प्रतिक्रिया समय पैटर्न",
   "Average response time throughout the day": "दिन भर का औसत प्रतिक्रिया समय",
   "No data found for analysis": "विश्लेषण के लिए कोई डेटा नहीं मिला",
-  "No responsed conversation found": "कोई प्रतिक्रिया दी गई बातचीत नहीं मिली",
+  "No responded conversation found": "कोई प्रतिक्रिया दी गई बातचीत नहीं मिली",
   "Channel Distribution": "चैनल वितरण",
   "No messages found": "कोई संदेश नहीं मिला",
   "Agent Performance Metrics": "एजेंट प्रदर्शन मेट्रिक्स",
@@ -2561,5 +2561,5 @@
   "No staff found": "कोई स्टाफ नहीं मिला",
   "Agent Performance": "एजेंट प्रदर्शन",
   "Real-time overview of your team performance and activities": "आपकी टीम के प्रदर्शन और गतिविधियों का रीयल-टाइम अवलोकन",
-  "Filter By": "इसके अनुसार फ़िल्टर करें"
+  "Filter by": "इसके अनुसार फ़िल्टर करें"
 }

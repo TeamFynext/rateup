@@ -72,24 +72,6 @@ const ConversationStatsOverview = ({ dateRange }) => {
             ?.value ?? "NA",
       },
       {
-        key: "averageResponseTimeByAgent",
-        label: "Response Time by Agents",
-        color: {
-          border: "border-orange-500",
-          cardBg: "bg-orange-50",
-          hoverShadow: "hover:shadow-orange-300/50",
-          text: "text-orange-500",
-        },
-        icon: Clock,
-        suffix: formatTimeToNearestUnitFromSeconds(
-          data?.averageResponseTimeByAgent,
-        )?.suffix,
-        progressTotal: 60,
-        value:
-          formatTimeToNearestUnitFromSeconds(data?.averageResponseTimeByAgent)
-            ?.value ?? "NA",
-      },
-      {
         key: "resolutionRate",
         label: t("Resolution Rate"),
         color: {

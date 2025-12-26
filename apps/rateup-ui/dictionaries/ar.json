@@ -2543,11 +2543,11 @@
   "In Progress": "قيد التنفيذ",
   "Agents Online": "الوكلاء المتصلون",
   "Conversation Trends": "اتجاهات المحادثات",
-  "Resolved conversarion stats": "إحصائيات المحادثات المحلولة",
+  "Resolved conversation stats": "إحصائيات المحادثات التي تم حلّها",
   "Response Time Pattern": "نمط وقت الاستجابة",
   "Average response time throughout the day": "متوسط وقت الاستجابة على مدار اليوم",
   "No data found for analysis": "لا توجد بيانات متاحة للتحليل",
-  "No responsed conversation found": "لم يتم العثور على محادثات تم الرد عليها",
+  "No responded conversation found": "لم يتم العثور على أي محادثات تم الرد عليها",
   "Channel Distribution": "توزيع القنوات",
   "No messages found": "لم يتم العثور على رسائل",
   "Agent Performance Metrics": "مؤشرات أداء الوكلاء",
@@ -2557,5 +2557,5 @@
   "No staff found": "لم يتم العثور على موظفين",
   "Agent Performance": "أداء الوكيل",
   "Real-time overview of your team performance and activities": "نظرة عامة في الوقت الفعلي على أداء فريقك وأنشطته",
-  "Filter By": "تصفية حسب"
+  "Filter by": "تصفية حسب"
 }

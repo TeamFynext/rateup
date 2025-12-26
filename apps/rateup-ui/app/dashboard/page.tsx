@@ -42,7 +42,7 @@ export default function DashboardHome() {
   // const translations = useTranslations();
   useEffect(() => {
     router.replace("/dashboard/inbox?tab=New");
-  }, []);
+  }, [router]);
 
   return (
     <Loader />

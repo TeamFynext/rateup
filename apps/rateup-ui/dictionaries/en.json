@@ -2533,11 +2533,11 @@
   "In Progress": "In Progress",
   "Agents Online": "Agents Online",
   "Conversation Trends": "Conversation Trends",
-  "Resolved conversarion stats": "Resolved conversarion stats",
+  "Resolved conversation stats": "Resolved conversation stats",
   "Response Time Pattern": "Response Time Pattern",
   "Average response time throughout the day": "Average response time throughout the day",
   "No data found for analysis": "No data found for analysis",
-  "No responsed conversation found": "No responsed conversation found",
+  "No responded conversation found": "No responded conversation found",
   "Channel Distribution": "Channel Distribution",
   "No messages found": "No messages found",
   "Agent Performance Metrics": "Agent Performance Metrics",
@@ -2547,5 +2547,5 @@
   "No staff found": "No staff found",
   "Agent Performance": "Agent Performance",
   "Real-time overview of your team performance and activities": "Real-time overview of your team performance and activities",
-  "Filter By": "Filter By"
+  "Filter by": "Filter by"
 }

@@ -21,7 +21,8 @@ import { Card } from "@/components/ui/card";
 import ConversationStatsAgentPerformance from "./ConversationStatsAgentPerformance";
 import ConversationStatsOverview from "./ConversationStatsOverview";
 import DateRangeSelector from "./DateRangeSelector";
-import TeamPerformance from "./TeamPerformance";
+
+// import TeamPerformance from "./TeamPerformance";
 
 const Analytics = () => {
   const searchParams = useSearchParams();
@@ -58,7 +59,7 @@ const Analytics = () => {
   ];
 
   useEffect(() => {
-    if (tab === "") {
+    if (!tab || tab === "") {
       router.push("/dashboard/analytics?tab=overview");
     }
   }, [router, tab]);
@@ -130,7 +131,9 @@ const Analytics = () => {
         {tab === "agent-performance" && (
           <ConversationStatsAgentPerformance dateRange={dateRange} />
         )}
-        {/* {tab === "team-performance" && <TeamPerformance dateRange={dateRange} />} */}
+        {/* {tab === "team-performance" && (
+          <TeamPerformance dateRange={dateRange} />
+        )} */}
       </div>
     </div>
   );

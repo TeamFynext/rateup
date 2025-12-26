@@ -90,19 +90,14 @@ export function useNavMain({
               items: [
                 {
                   title: t("New"),
-                  url: "/dashboard/inbox?tab=UnAssigned",
-                  icon: Sparkles,
+                  url: "/dashboard/inbox?tab=New",
+                  icon: MessageSquareDot,
                 },
-                // {
-                //   title: t("New"),
-                //   url: "/dashboard/inbox?tab=New",
-                //   icon: MessageSquareDot,
-                // },
-                // {
-                //   title: t("All"),
-                //   url: "/dashboard/inbox?tab=All",
-                //   icon: Inbox,
-                // },
+                {
+                  title: t("All"),
+                  url: "/dashboard/inbox?tab=All",
+                  icon: Inbox,
+                },
                 {
                   title: t("Assigned"),
                   url: "/dashboard/inbox?tab=Assigned",
@@ -189,11 +184,6 @@ export function useNavMain({
                       : []),
                   ],
                 },
-                // {
-                //   title: "Analytics",
-                //   url: "/dashboard/inbox?tab=analytics",
-                //   icon: ChartColumn,
-                // },
                 {
                   title: "Settings",
                   icon: Settings,
@@ -205,7 +195,7 @@ export function useNavMain({
         : []),
       {
         title: t("Analytics"),
-        url: "/dashboard/analytics?tab=overview",
+        url: "/dashboard/analytics",
         icon: ChartColumnBig,
         items: [
           {

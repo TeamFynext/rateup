@@ -81,7 +81,7 @@ const ConversationResponseTimePatternGraph = ({ dateRange }) => {
               {t("No data found for analysis")}
             </h3>
             <p className="text-gray-600 mb-4">
-              {t("No responsed conversation found")}
+              {t("No responded conversation found")}
             </p>
           </div>
         ) : (

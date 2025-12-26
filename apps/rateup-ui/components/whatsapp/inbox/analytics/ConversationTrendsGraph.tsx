@@ -60,7 +60,7 @@ const ConversationTrendsGraph = ({ dateRange }) => {
           </CardTitle>
         </div>
         <CardDescription className="text-sm">
-          {t("Resolved conversarion stats")}
+          {t("Resolved conversation stats")}
         </CardDescription>
       </CardHeader>
       <CardContent>
