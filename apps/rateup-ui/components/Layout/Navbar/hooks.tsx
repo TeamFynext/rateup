@@ -9,6 +9,7 @@ import {
   IconBrowser,
   IconBuildings,
   IconBuildingStore,
+  IconChartBar,
   IconCirclePlus,
   IconDashboard,
   IconFileAnalytics,
@@ -36,7 +37,10 @@ import {
 } from "@tabler/icons-react";
 import {
   Activity,
+  Award,
+  BarChart,
   ChartColumn,
+  ChartColumnBig,
   CircleCheckBig,
   FileChartColumn,
   FileSpreadsheet,
@@ -70,12 +74,13 @@ export function useNavMain({
 }: any) {
   return useMemo(
     () => [
-      {
-        title: t("Home"),
-        url: "/dashboard",
-        icon: IconHome2,
-        items: [],
-      },
+      // {
+      //   title: t("Home"),
+      //   url: "/dashboard",
+      //   icon: IconHome2,
+      //   items: [],
+      // },
+
       ...(hasFeature(subscription, sfpn.Whatsapp)
         ? [
             {
@@ -85,19 +90,14 @@ export function useNavMain({
               items: [
                 {
                   title: t("New"),
-                  url: "/dashboard/inbox?tab=UnAssigned",
-                  icon: Sparkles,
+                  url: "/dashboard/inbox?tab=New",
+                  icon: MessageSquareDot,
                 },
-                // {
-                //   title: t("New"),
-                //   url: "/dashboard/inbox?tab=New",
-                //   icon: MessageSquareDot,
-                // },
-                // {
-                //   title: t("All"),
-                //   url: "/dashboard/inbox?tab=All",
-                //   icon: Inbox,
-                // },
+                {
+                  title: t("All"),
+                  url: "/dashboard/inbox?tab=All",
+                  icon: Inbox,
+                },
                 {
                   title: t("Assigned"),
                   url: "/dashboard/inbox?tab=Assigned",
@@ -185,11 +185,6 @@ export function useNavMain({
                   ],
                 },
                 {
-                  title: "Analytics",
-                  url: "/dashboard/inbox?tab=analytics",
-                  icon: ChartColumn,
-                },
-                {
                   title: "Settings",
                   icon: Settings,
                   url: "/dashboard/inbox?tab=settings",
@@ -198,6 +193,28 @@ export function useNavMain({
             },
           ]
         : []),
+      {
+        title: t("Analytics"),
+        url: "/dashboard/analytics?tab=overview",
+        icon: ChartColumnBig,
+        items: [
+          {
+            title: t("Overview"),
+            url: "/dashboard/analytics?tab=overview",
+            icon: BarChart,
+          },
+          {
+            title: t("Agent Performance"),
+            url: "/dashboard/analytics?tab=agent-performance",
+            icon: Award,
+          },
+          // {
+          //   title: t("Team Performance"),
+          //   url: "/dashboard/analytics?tab=team-performance",
+          //   icon: Activity,
+          // },
+        ],
+      },
       ...(hasFeature(subscription, sfpn.WhatsAppCampaign)
         ? [
             {

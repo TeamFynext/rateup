@@ -1107,13 +1107,15 @@ export default function WhatsappTemplateById() {
                           : form.values.footer}
                       </Text>
                     </ResponseMessageContainer>
-                    {form.values?.buttons?.slice(0, 2).map((data) => (
-                      <QuickReplyButton
-                        text={data?.text}
-                        key={data?.text}
-                        type={data.type}
-                      />
-                    ))}
+                    {form.values?.buttons
+                      ?.slice(0, 2)
+                      .map((data) => (
+                        <QuickReplyButton
+                          text={data?.text}
+                          key={data?.text}
+                          type={data.type}
+                        />
+                      ))}
                     {form.values?.buttons?.length > 2 && (
                       <QuickReplyButton
                         text={translations("See all options")}

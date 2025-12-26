@@ -1,18 +1,15 @@
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { FileText, Star } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { useGetStaffPerformanceonConversation } from "@/backend/conversation/conversation.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime";
-
-import StaffStatsDetailDialog from "./StaffStatsDetailDialog";
 
 export const StaffStatusBadge = ({ status }) => {
   const getStatusColor = (status: string) => {
@@ -68,12 +65,13 @@ export const StaffStatusBadge = ({ status }) => {
 };
 
 const ConversationStatsAgentPerformance = ({ dateRange }) => {
+  const t = useTranslations();
   const { data = [], isLoading } = useGetStaffPerformanceonConversation({
     dateKey: dateRange.key,
     dateRange: dateRange.range,
   });
-  const [selectedStaff, setSelectedStaff] = useState(null);
-  const [showStaffDialog, setShowStaffDialog] = useState(false);
+
+  const router = useRouter();
   if (isLoading) {
     return <RateupLoader />;
   }
@@ -84,15 +82,11 @@ const ConversationStatsAgentPerformance = ({ dateRange }) => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Agent Performance Metrics</CardTitle>
+              <CardTitle>{t("Agent Performance Metrics")}</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Detailed performance breakdown for each team member
+                {t("Detailed performance breakdown for each team member")}
               </p>
             </div>
-            {/* <Button variant="outline" size="sm">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Export Report
-                </Button> */}
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -100,28 +94,31 @@ const ConversationStatsAgentPerformance = ({ dateRange }) => {
             <table className="w-full">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="p-4 text-left font-medium text-sm">Agent</th>
-                  <th className="p-4 text-center font-medium text-sm">
-                    Status
+                  <th className="p-4 text-left font-medium text-sm">
+                    {t("Agent")}
                   </th>
                   <th className="p-4 text-center font-medium text-sm">
-                    Messages
+                    {t("Status")}
                   </th>
                   <th className="p-4 text-center font-medium text-sm">
-                    Avg Response Time
+                    {t("Messages")}
                   </th>
                   <th className="p-4 text-center font-medium text-sm">
-                    Active Chats
+                    {t("Avg Response Time")}
                   </th>
                   <th className="p-4 text-center font-medium text-sm">
-                    Resolved Chats
+                    {t("Active Chats")}
                   </th>
+                  <th className="p-4 text-center font-medium text-sm">
+                    {t("Resolved")}
+                  </th>
+                  <th className="p-4 text-center font-medium text-sm"></th>
                 </tr>
               </thead>
               <tbody>
                 {data?.length === 0 && (
                   <tr>
-                    <td colSpan={5}>No staff found</td>
+                    <td colSpan={5}>{t("No staff found")}</td>
                   </tr>
                 )}
                 {data.map((staff) => {
@@ -134,8 +131,9 @@ const ConversationStatsAgentPerformance = ({ dateRange }) => {
                       key={staff.staff.userId}
                       className="border-b last:border-b-0 hover:bg-muted/30 transition-colors cursor-pointer"
                       onClick={() => {
-                        setSelectedStaff(staff);
-                        setShowStaffDialog(true);
+                        router.push(
+                          `/dashboard/analytics/${staff?.staff?.userId}`,
+                        );
                       }}
                     >
                       <td className="p-4">
@@ -184,6 +182,9 @@ const ConversationStatsAgentPerformance = ({ dateRange }) => {
                           {staff.totalClosedConversations}
                         </Badge>
                       </td>
+                      <td>
+                        <ArrowRight className="opacity-40" />
+                      </td>
                     </tr>
                   );
                 })}
@@ -192,11 +193,6 @@ const ConversationStatsAgentPerformance = ({ dateRange }) => {
           </div>
         </CardContent>
       </Card>
-      <StaffStatsDetailDialog
-        opened={showStaffDialog}
-        setOpened={setShowStaffDialog}
-        selectedStaff={selectedStaff}
-      />
     </div>
   );
 };

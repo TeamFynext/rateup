@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
-import { ArrowRight, BarChart3 } from "lucide-react";
+import { ArrowRight, BarChart3, MessageCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { MessagePlatform } from "@/types/enums";
 import { useGetConversationAccountDistribution } from "@/backend/conversation/conversation.query";
@@ -23,6 +24,7 @@ function getMessageSourcePlatformColor(platform: MessagePlatform) {
 }
 
 const ConversationAccountDistribution = ({ dateRange }) => {
+  const t = useTranslations();
   const { data: channelDistribution = [], isLoading } =
     useGetConversationAccountDistribution({
       dateRange: dateRange.range,
@@ -38,37 +40,22 @@ const ConversationAccountDistribution = ({ dateRange }) => {
   }
 
   return (
-    <Card className="border shadow-sm bg-gradient-to-br from-purple-50/30 to-white">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <BarChart3 className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-sm">Channel Distribution</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {totalConversations} total conversations
-              </p>
-            </div>
-          </div>
-          {/* <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-xs hover:bg-purple-100"
-          >
-            View All
-            <ArrowRight className="w-3 h-3 ml-1" />
-          </Button> */}
-        </div>
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <MessageCircle className="w-4 h-4 text-primary" />
+          {t("Channel Distribution")}
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         {channelDistribution.length === 0 ? (
           <div className="grid place-content-center py-12 h-full">
-            <h3 className="text-lg font-medium text-gray-900">
-              No data found for analysis
+            <h3 className="text-lg font-medium">
+              {t("No data found for analysis")}
             </h3>
-            <p className="text-gray-600 mb-4 text-center">No messages found</p>
+            <p className="text-muted-foreground mb-4 text-center">
+              {t("No messages found")}
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -83,9 +70,9 @@ const ConversationAccountDistribution = ({ dateRange }) => {
               return (
                 <div
                   key={index}
-                  className="p-3 rounded-lg border bg-white hover:shadow-md hover:border-purple-200 transition-all"
+                  className="p-3 rounded-lg border hover:shadow-md transition-all"
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col sm:flex-row items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
                       <div
                         className="w-3 h-3 rounded-full"
@@ -107,7 +94,7 @@ const ConversationAccountDistribution = ({ dateRange }) => {
                       <span className="text-xs font-medium text-muted-foreground">
                         {percentage}%
                       </span>
-                      <span className="font-semibold min-w-[2.5rem] text-right">
+                      <span className="font-semibold min-w-[2.5rem] text-right text-primary">
                         {channel.conversationCount}
                       </span>
                     </div>
@@ -115,7 +102,8 @@ const ConversationAccountDistribution = ({ dateRange }) => {
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <Progress
                       value={percentage}
-                      className="transition-all duration-500"
+                      className={`transition-all duration-500`}
+                      indicatorColor={color}
                     />
                   </div>
                 </div>
