@@ -74,12 +74,12 @@ export const getConversationAccountDistribution = async (
 };
 
 export interface ConversationQuickStats {
-  activeConversations: number;
-  resolvedToday: number;
-  pendingConversations: number;
+  newConversations: number;
+  resolved: number;
+  conversationInProgress: number;
   staffOnline: number;
   totalStaff: number;
-  reolvedRateDifference: number;
+  resolvedRateDifference: number;
 }
 
 export const getConversationQuickStats = async (
@@ -142,6 +142,17 @@ export interface StaffDetailedConversationAnalytics {
     firstResponseTime: string;
     avgHandlingTime: number;
   };
+  userPerformance: {
+    name: string;
+    email: string;
+    status: string;
+    totalAssignedConversations: number;
+    totalClosedConversations: number;
+    totalMessagesHandled: number;
+    averageResponseTime: number;
+    responseTimeRateByLastWeek: number;
+    messagesHandledRateByLastWeek: number;
+  };
 }
 export const getStaffDetailedConversationAnalytics = async (
   staffId,
@@ -153,5 +164,18 @@ export const getStaffDetailedConversationAnalytics = async (
   const response = await axiosClient.get<StaffDetailedConversationAnalytics>(
     `${baseUrl}/staff-detailed-analytics/${staffId}?${query}`,
   );
+  return response.data;
+};
+
+export const getTeamOverview = async (filter) => {
+  const query = Object.entries(filter || {})
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
+  const response = await axiosClient.get(`${baseUrl}/team-overview?${query}`);
+  return response.data;
+};
+
+export const getTeamDetailedMetrics = async (teamId) => {
+  const response = await axiosClient.get(`${baseUrl}/team-metrics/${teamId}`);
   return response.data;
 };

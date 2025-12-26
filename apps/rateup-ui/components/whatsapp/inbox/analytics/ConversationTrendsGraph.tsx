@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { TrendingUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { useGetResolvedConversationStats } from "@/backend/conversation/conversation.query";
@@ -21,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/utils/dateTime";
 
 const ConversationTrendsGraph = ({ dateRange }) => {
+  const t = useTranslations();
   const { data, isLoading } = useGetResolvedConversationStats({
     days: 7,
     dateKey: dateRange.key,
@@ -49,20 +51,20 @@ const ConversationTrendsGraph = ({ dateRange }) => {
   }
 
   return (
-    <Card className="border shadow-sm bg-gradient-to-br from-purple-50/30 to-white">
+    <Card className="border shadow-sm bg-gradient-to-br from-purple-50/30 to-white dark:from-transparent dark:to-transparent w-full">
       <CardHeader className="flex flex-col gap-0 w-full">
         <div className="flex justify-between items-center gap-2 w-full">
           <CardTitle className="flex gap-1 items-center">
-            <TrendingUp className="w-5 h-5 text-blue-500 mr-1" />
-            Conversation Trends
+            <TrendingUp className="w-5 h-5 text-primary mr-1" />
+            {t("Conversation Trends")}
           </CardTitle>
         </div>
         <CardDescription className="text-sm">
-          Resolved conversarion stats
+          {t("Resolved conversarion stats")}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className="h-60 w-full">
           <AreaChart
             accessibilityLayer
             data={chartData}
