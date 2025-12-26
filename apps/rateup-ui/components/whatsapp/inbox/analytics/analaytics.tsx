@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import {
-  Award,
-  BarChart,
-  ChartNoAxesColumnIncreasing,
-  FileText,
-  Filter,
-  RefreshCcw,
-} from "lucide-react";
+import { BarChart, Filter, RefreshCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -26,9 +19,8 @@ import DateRangeSelector from "./DateRangeSelector";
 
 const Analytics = () => {
   const searchParams = useSearchParams();
-  const tab = searchParams.get("tab");
+  const tab = searchParams.get("tab") ?? "overview";
   const t = useTranslations();
-  const router = useRouter();
   const [dateRange, setDateRange] = useState({
     key: "today",
     range: [dayjs().startOf("day").toDate(), new Date()],
@@ -57,12 +49,6 @@ const Analytics = () => {
     ["StaffPerformanceonConversation"],
     ["StaffDetailedConversationAnalytics"],
   ];
-
-  useEffect(() => {
-    if (!tab || tab === "") {
-      router.push("/dashboard/analytics?tab=overview");
-    }
-  }, [router, tab]);
 
   const fetchCounts = queries.map((key) => useIsFetching({ queryKey: key }));
 
