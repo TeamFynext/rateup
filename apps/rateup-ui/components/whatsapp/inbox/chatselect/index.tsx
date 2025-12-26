@@ -359,7 +359,7 @@ const WaInboxChatSelect = () => {
     return <WhatsAppInboxLoader isLoading={isContactLoading || isLoading} />;
 
   return (
-    <div className="h-full">
+    <div className="h-full bg-background">
       <ChatselectPanelHeader
         isRefetchingFilteredContacts={isRefetchingFilteredContacts}
         onUnknownContactAddSuccess={onUnknownContactAddSuccess}

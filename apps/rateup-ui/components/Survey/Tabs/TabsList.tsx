@@ -4,12 +4,7 @@ import styles from "../SurveyTheme/components/PageSelector/PageSelector.module.c
 
 function TabsListComp({ value, onChange, tabs }) {
   return (
-    <Tabs
-      value={value}
-      onChange={onChange}
-      classNames={styles}
-      className="tabs-list-comp-tabs"
-    >
+    <Tabs value={value} onChange={onChange} classNames={styles} variant="pills">
       <TabsList>
         {tabs.map((tab) => (
           <TabsTab value={tab} key={tab} tt={"capitalize"}>

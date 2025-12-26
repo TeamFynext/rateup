@@ -55,11 +55,11 @@ const defaultEdgeOptions = {
 
 // This component is wrapped with ReactFlowProvider in the parent component
 function FlowEditorContent({
-  waAutomatedReplyId,
+  flowbotId,
   waAutomationData,
   refetch,
 }: {
-  readonly waAutomatedReplyId: string;
+  readonly flowbotId: string;
   readonly waAutomationData: WaAutomatedReply;
   readonly refetch: () => void;
 }) {
@@ -327,9 +327,9 @@ function FlowEditorContent({
 
   const handleTabSwitch = useCallback(
     (tab: string) => {
-      router.push(`${waAutomatedReplyId}?tab=${tab}`);
+      router.push(`${flowbotId}?tab=${tab}`);
     },
-    [router, waAutomatedReplyId],
+    [router, flowbotId],
   );
 
   const validateFlow = useCallback(
@@ -608,15 +608,7 @@ function FlowEditorContent({
         >
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
           <Controls />
-          <MiniMap
-            nodeStrokeWidth={3}
-            zoomable
-            pannable
-            style={{
-              height: 120,
-              width: 200,
-            }}
-          />
+          <MiniMap nodeStrokeWidth={3} zoomable pannable />
           <Panel position="top-center" className={styles.toolbar}>
             <Toolbar
               onSave={saveFlow}
@@ -650,18 +642,18 @@ function FlowEditorContent({
 
 // Wrapper component that provides the ReactFlowProvider
 export default function FlowEditor({
-  waAutomatedReplyId,
+  flowbotId,
   data,
   refetch,
-}: {
-  waAutomatedReplyId: string;
+}: Readonly<{
+  flowbotId: string;
   data: WaAutomatedReply;
   refetch: () => void;
-}) {
+}>) {
   return (
     <ReactFlowProvider>
       <FlowEditorContent
-        waAutomatedReplyId={waAutomatedReplyId}
+        flowbotId={flowbotId}
         waAutomationData={data}
         refetch={refetch}
       />

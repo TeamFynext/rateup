@@ -459,7 +459,7 @@ const ValidationRulesEditor = ({
           <FormModalLayout
             opened={opened}
             onClose={close}
-            title={translations("Update Rule")}
+            title={translations("Update Automation")}
             centered
           >
             <Text>

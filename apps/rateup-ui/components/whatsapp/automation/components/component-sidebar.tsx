@@ -23,7 +23,7 @@ import {
   IconVideo,
 } from "@tabler/icons-react";
 
-import styles from "./component-sidebar.module.css";
+import { Card } from "@/components/ui/card";
 
 // Component categories and items
 const categories = [
@@ -119,20 +119,24 @@ export default function ComponentSidebar() {
   );
 
   return (
-    <div className={styles.sidebar}>
-      <div className={styles.sidebarHeader}>
-        <h2>Components</h2>
-        <p>Drag components to the canvas</p>
+    <Card className="w-[250px] overflow-y-auto p-4">
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">Components</h2>
+        <p className="text-sm text-muted-foreground">
+          Drag components to the canvas
+        </p>
       </div>
 
       {categories.map((category) => (
-        <div key={category.name} className={styles.category}>
-          <h3 className={styles.categoryTitle}>{category.name}</h3>
-          <div className={styles.itemsGrid}>
+        <div key={category.name} className="mb-6">
+          <h3 className="mb-2 text-sm font-medium text-muted-foreground">
+            {category.name}
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
             {category.items.map((item) => (
               <div
                 key={item.id}
-                className={styles.item}
+                className="flex flex-col items-center gap-1 rounded-md border bg-background p-3 cursor-move hover:bg-accent hover:text-accent-foreground transition-colors"
                 role="none"
                 draggable
                 onDragStart={(event) =>
@@ -142,13 +146,13 @@ export default function ComponentSidebar() {
                   })
                 }
               >
-                <div className={styles.itemIcon}>{item.icon}</div>
-                <span className={styles.itemLabel}>{item.label}</span>
+                <div className="text-muted-foreground">{item.icon}</div>
+                <span className="text-xs text-center">{item.label}</span>
               </div>
             ))}
           </div>
         </div>
       ))}
-    </div>
+    </Card>
   );
 }

@@ -692,12 +692,7 @@ const StartNodeEditor: React.FC<NodeComponentProps<"startNode">> = ({
   const typedData = nodeData;
   return (
     <div className={styles.editorSection}>
-      <ContainedTextField
-        value={typedData.startMessage || ""}
-        onChange={(e) => handleInputChange("startMessage", e.target.value)}
-        label="Start Message"
-        disabled
-      />
+      <ContainedTextField label="Start Message" disabled />
     </div>
   );
 };
@@ -1150,23 +1145,21 @@ const TemplateNodeEditor: React.FC<
   );
   const params = useParams();
 
-  let automatedId = params.waAutomatedReplyId as string;
+  let flowbotId = params.flowbotId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
-  const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
-  const isLeadAutomation = data && data?.commands[0]?.startsWith("lead");
+  const { data, isPending, refetch } = useWaAutomatedReplyById(flowbotId);
   const waSetting =
     waSettings &&
     (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ??
       waSettings[0]);
-  const waSettingsId =
-    data && isLeadAutomation && waSetting ? waSetting.id : null;
+  const waSettingsId = data && waSetting ? waSetting.id : null;
   const { data: metaAssets, isLoading } = useMetaAssets(waSettingsId);
   const leadgenData = useMemo(() => {
-    if (isLeadAutomation && metaAssets) {
+    if (waSettingsId && metaAssets) {
       const leadgenNode = data?.matchData?.json?.nodes.find(
         (node) => node.type === "leadgenNode",
       );
-      if (leadgenNode && leadgenNode.data.leadgenFormId.length) {
+      if (leadgenNode?.data?.leadgenFormId?.length) {
         const leadgenForm = metaAssets?.leadgenForms.find(
           (form) => form.id === leadgenNode?.data?.leadgenFormId,
         );
@@ -1176,7 +1169,7 @@ const TemplateNodeEditor: React.FC<
         };
       }
     }
-  }, [metaAssets, isLeadAutomation]);
+  }, [metaAssets, waSettingsId]);
   // Update template parameters when they change
   useEffect(() => {
     handleInputChange("parameters", parameterData);
@@ -2223,19 +2216,17 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
   nodeData,
   handleInputChange,
 }) => {
-  const typedData = nodeData as LeadgenNodeData;
+  const typedData = nodeData as unknown as LeadgenNodeData;
   const params = useParams();
   const router = useRouter();
-  let automatedId = params.waAutomatedReplyId as string;
+  let flowbotId = params.flowbotId as string;
   const { data: waSettings, isLoading: isSettingsLoading } = useWaSettings();
-  const { data, isPending, refetch } = useWaAutomatedReplyById(automatedId);
-  const isLeadAutomation = data && data?.commands[0]?.startsWith("lead");
+  const { data, isPending, refetch } = useWaAutomatedReplyById(flowbotId);
   const waSetting =
     waSettings &&
     (waSettings.find((w) => w.phoneId === data.whatsappSettingsPhoneId) ??
       waSettings[0]);
-  const waSettingsId =
-    data && isLeadAutomation && waSetting ? waSetting.id : null;
+  const waSettingsId = data && waSetting ? waSetting.id : null;
   const { data: metaAssets, isLoading } = useMetaAssets(waSettingsId);
   const subscribeFieldMut = useSubscribeFieldToPage(waSettingsId);
   const syncfbpageMut = useSyncFbPages(waSettingsId);
@@ -2330,7 +2321,7 @@ const LeadgenNodeEditor: React.FC<NodeComponentProps<"leadgenNode">> = ({
 
   async function handleFbLogin() {
     localStorage.setItem("waSettingsId", waSetting.id);
-    localStorage.setItem("automationId", automatedId);
+    localStorage.setItem("automationId", flowbotId);
 
     const url = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${process.env.NEXT_PUBLIC_META_APP_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/fb`)}&config_id=${process.env.NEXT_PUBLIC_META_USER_CONFIG_ID}`;
     if (url) {
@@ -2524,12 +2515,12 @@ const CatalogNodeEditor = ({
 }: NodeComponentProps<"catalogNode">) => {
   const typedData = nodeData as CatalogNodeData;
   const params = useParams();
-  let automatedId = params.waAutomatedReplyId as string;
+  let flowbotId = params.flowbotId as string;
   const {
     data: automation,
     isPending,
     refetch,
-  } = useWaAutomatedReplyById(automatedId);
+  } = useWaAutomatedReplyById(flowbotId);
   const { data, isLoading } = useConnectedWaCatalog(
     automation?.whatsappSettingsPhoneId,
   );

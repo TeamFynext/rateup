@@ -1,5 +1,5 @@
 .wrapper {
-  background-color: light-dark(#ebebeb, var(--mantine-color-dark-6));
+  background-color: var(--color-background);
   padding: var(--mantine-spacing-xs);
   display: flex;
   gap: var(--mantine-spacing-sm);

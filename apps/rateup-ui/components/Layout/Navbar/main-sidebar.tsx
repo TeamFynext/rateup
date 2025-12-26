@@ -209,7 +209,7 @@ export default function MainSidebar({ children }) {
         )}
 
         <div
-          className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-background`}
+          className={`h-dvh w-full ${paddingExclusion ? "" : "p-4"} overflow-hidden overflow-y-auto bg-[#f9fafc] dark:bg-[#121212]`}
         >
           <LifecycleContext value={lifecycles || []}>
             <CustomFieldsProvider initialFields={customFieldData || []}>

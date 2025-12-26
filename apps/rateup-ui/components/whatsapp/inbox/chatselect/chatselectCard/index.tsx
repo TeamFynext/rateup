@@ -193,9 +193,9 @@ export default function WaInboxChatSelectCard({
 
           <div className="flex items-center justify-between gap-1 h-5">
             <div className="flex items-center gap-1 flex-wrap">
-              {contact?.lastReceivedMessageTimeStamp &&
+              {/* {contact?.lastReceivedMessageTimeStamp &&
                 dayjs().diff(contact.lastReceivedMessageTimeStamp, "hour") <
-                  24 && <Badge className="h-3 text-[10px] p-2">New</Badge>}
+                  24 && <Badge className="h-3 text-[10px] p-2">New</Badge>} */}
               {lifecycleInfo && (
                 <Badge variant="secondary" className={`text-[10px] h-5 px-1.5`}>
                   {lifecycleInfo?.emoji + " " + lifecycleInfo?.name}

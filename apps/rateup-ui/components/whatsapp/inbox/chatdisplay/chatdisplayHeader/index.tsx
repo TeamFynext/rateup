@@ -149,10 +149,10 @@ export default function WaInboxChatDisplayHeader({
   const sourcePlatform = getSoucePlatformIconAndColor(platform);
   if (!contact) return null;
   return (
-    <div className="p-[10px] border-b-1 bg-card flex-shrink-0">
+    <div className="p-2.5 border-b shrink-0 bg-background">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0 flex-shrink">
-          <div className="relative flex-shrink-0">
+        <div className="flex items-center gap-2 min-w-0 shrink">
+          <div className="relative shrink-0">
             <CreativeAvatar
               name={contact?.name || contact?.whatsappUserName || ""}
               size="md"

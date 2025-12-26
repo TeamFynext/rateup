@@ -12,9 +12,8 @@ function StartNode(props: NodeProps & { data: StartNodeData }) {
     <BaseNode {...props} icon={<IconPlayerPlay size={16} />} color="#4caf50">
       <Group>
         <Text size="sm" fw={500} c="dimmed">
-          Start Message:
+          Start Node
         </Text>
-        <Text size="sm">{props.data.startMessage || "None"}</Text>
       </Group>
     </BaseNode>
   );

@@ -1,36 +1,19 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  ActionIcon,
-  Badge,
-  FloatingPosition,
-  Group,
-  Menu,
-  SimpleGrid,
-  Stack,
-  Switch,
-  Text,
-  Title,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconClock, IconDots, IconTrash } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { ActionIcon, FloatingPosition, Menu } from "@mantine/core";
+import { IconDots } from "@tabler/icons-react";
+import { Clock, MessageSquare, Trash } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { WaAutomatedReply } from "@/types/global";
 import { useTimeSince } from "@/hooks/timeSince";
-import {
-  useDeleteWaAutomatedReplyMutation,
-  useUpdateWaAutomatedReplyMutation,
-} from "@/backend/whatsapp/automated-reply/automatedReply.query";
+import { useDeleteWaAutomatedReplyMutation } from "@/backend/whatsapp/automated-reply/automatedReply.query";
 import ConfirmationModal from "@/components/Modal/ConfirmationModal";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
-import { showLoadingToast, showSuccessToast } from "@/utils/notifications";
-
-import classes from "./styles.module.css";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface WaAutomationCardsProps {
   data: any;
@@ -39,11 +22,11 @@ export function WaAutomationCards({ data }: Readonly<WaAutomationCardsProps>) {
   if (!data || !Array.isArray(data)) return null;
 
   return (
-    <SimpleGrid p={"0.875rem"} spacing={"lg"} cols={{ base: 1, xs: 2, sm: 3 }}>
+    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 p-3.5">
       {data.map((automation) => (
         <AutomationCard key={automation.id} automation={automation} />
       ))}
-    </SimpleGrid>
+    </div>
   );
 }
 
@@ -53,119 +36,43 @@ interface WaAutomationCardProps {
 function AutomationCard({ automation }: Readonly<WaAutomationCardProps>) {
   const timeSince = useTimeSince(automation.createdAt);
   const router = useRouter();
-  const qc = useQueryClient();
   const translations = useTranslations();
-  const updateMutation = useUpdateWaAutomatedReplyMutation();
 
-  const handleQuickUpdate = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    showLoadingToast(
-      `Updating Automated Reply ${automation.isEnabled ? "Disabling" : "Enabling"}...`,
-      "automated-reply-toggle",
-    );
-    updateMutation.mutate(
-      {
-        id: automation.id,
-        isEnabled: !automation.isEnabled,
-        commands: automation.commands,
-        businessHourId: automation?.businessHour?.id,
-      },
-      {
-        onSuccess: () => {
-          qc.invalidateQueries({
-            queryKey: ["allWaAutomatedReplies"],
-          });
-          showSuccessToast(
-            `Automated Reply ${automation.isEnabled ? "Disabled" : "Enabled"} Successfully`,
-            "automated-reply-toggle",
-            undefined,
-            true,
-          );
-        },
-      },
-    );
-  };
+  const matchData = automation.matchData?.json;
+  const nodeCount = matchData?.edges?.length || 0;
+
   return (
-    <PaperLayout
-      p="md"
-      shadow="lg"
-      radius="lg"
-      mih={"175px"}
-      hoveractive={true}
-      style={{
-        cursor: "pointer",
-      }}
-      onClick={() => router.push(`automated-replies/${automation.id}`)}
+    <Card
+      className="hover:shadow-lg dark:hover:shadow-primary-foreground transition-shadow cursor-pointer"
+      onClick={() => router.push(`flowbots/${automation.id}`)}
     >
-      <Stack className={classes.card_wrapper}>
-        <Group justify={"space-between"}>
-          <Text
-            style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}
-            truncate="end"
-            size="xl"
-          >
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2 truncate">
+          <CardTitle className="text-xl truncate flex-1">
             {automation.name}
-          </Text>
-          <CardMenu>
-            <LCampaignCardMenuItems campaignId={automation.id} />
-          </CardMenu>
-        </Group>
-        <Group justify="space-between">
-          <Text fz="sm" c="dimmed" className="flex gap-2 items-center">
-            <IconClock size={20} /> {` ${translations("Created")} ${timeSince}`}
-          </Text>
-          {automation?.commands?.includes("*") && (
-            <Badge size="xs" color="green">
-              Fallback
-            </Badge>
-          )}
-        </Group>
-        <Group className={classes.card_footer}>
-          <Group>
-            <Text fz={"xs"} fw={600}>
-              {translations("For")}
-            </Text>
-
-            {automation?.commands?.map((kw) => (
-              <Badge size="xs" variant="outline" key={kw}>
-                {kw}
-              </Badge>
-            )) ?? ""}
-          </Group>
-          <Group>
-            <Badge size={"xs"} variant="light">
-              {automation?.businessHour?.name ?? "All Hours"}
-            </Badge>
-          </Group>
-        </Group>
-        <Group justify="space-between">
-          <Badge
-            variant="light"
-            size="xs"
-          >{`Type: ${automation.matchType}`}</Badge>
-          <Stack p={"sm"} onClick={handleQuickUpdate}>
-            <Switch
-              checked={automation?.isEnabled}
-              label={
-                automation.isEnabled
-                  ? translations("Enabled")
-                  : translations("Disabled")
-              }
-              size="xs"
-              styles={{
-                label: {
-                  paddingLeft: 2,
-                },
-              }}
-            />
-          </Stack>
-        </Group>
-      </Stack>
-    </PaperLayout>
+          </CardTitle>
+          <LCampaignCardMenuItems campaignId={automation.id} />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {nodeCount > 0 && (
+          <div className="flex items-center gap-2 text-sm">
+            <MessageSquare className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground">
+              {nodeCount} {nodeCount === 1 ? "step" : "steps"}
+            </span>
+          </div>
+        )}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Clock className="w-4 h-4" />
+          <span>
+            {translations("Created")} {timeSince}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
-
 export function CardMenu({
   children,
   position,
@@ -192,26 +99,33 @@ export function CardMenu({
 }
 
 function LCampaignCardMenuItems({ campaignId }) {
-  const [deleteDialogOpened, { open, close }] = useDisclosure(false);
+  const [deleteDialogOpened, setDeleteDialogOpened] = useState(false);
   const deleteMutation = useDeleteWaAutomatedReplyMutation();
   const translations = useTranslations();
+
   function handleDelete() {
     deleteMutation.mutate(campaignId, {
-      onSuccess: close,
+      onSuccess: () => setDeleteDialogOpened(false),
     });
   }
 
   return (
     <>
-      <Menu.Dropdown>
-        <Menu.Item leftSection={<IconTrash />} onClick={open}>
-          {translations("Delete")}
-        </Menu.Item>
-      </Menu.Dropdown>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={(e) => {
+          e.stopPropagation();
+          setDeleteDialogOpened(true);
+        }}
+      >
+        <Trash className="h-4 w-4 text-destructive" />
+      </Button>
       <ConfirmationModal
         forDeleteFunctionality
         opened={deleteDialogOpened}
-        onClose={close}
+        onClose={() => setDeleteDialogOpened(false)}
         headerLabel={translations(
           "Are you sure you want to delete this Automated Reply?",
         )}

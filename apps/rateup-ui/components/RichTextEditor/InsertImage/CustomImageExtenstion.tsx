@@ -22,11 +22,11 @@ const CustomImageExtension = Image.extend({
       },
     };
   },
-  asyncaddCommands() {
+  addCommands() {
     return {
       setImage:
         (options) =>
-        async ({ commands }) => {
+        ({ commands }) => {
           return commands.insertContent({
             type: this.name,
             attrs: options,

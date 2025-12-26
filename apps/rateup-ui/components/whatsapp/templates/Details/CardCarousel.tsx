@@ -99,7 +99,7 @@ const CardCarousel = ({
             type: WHATSAPP_BUTTON_TYPE.SPM,
             text: "View",
           },
-      product_reatiler_id: "",
+      product_retailer_id: "",
     });
   }
   const translations = useTranslations();

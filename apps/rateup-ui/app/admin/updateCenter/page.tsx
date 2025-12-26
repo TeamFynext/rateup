@@ -12,6 +12,7 @@ import {
 
 import {
   useAutomationSubscription,
+  useMigrateAutomationToRules,
   useUpdateAutomationPhoneId,
   useUpdateAutomationTriggerSubscription,
   useUpdateAutomationUsageStats,
@@ -45,6 +46,7 @@ function UpdateAllThemes() {
   const updateCustom = useUpdateCustomField();
   const updatePhoneId = useUpdateAutomationPhoneId();
   const updateBackfill = useUpdateBackfillMessageData();
+  const migrateToRules = useMigrateAutomationToRules();
 
   const UpdateCard = ({
     title,
@@ -276,6 +278,15 @@ function UpdateAllThemes() {
             description="Backfills message data to contact records"
             onUpdate={() => updateBackfill.mutate()}
             loading={updateBackfill.isPending}
+            icon={Database}
+            variant="warning"
+          />
+
+          <UpdateCard
+            title="Migrate Automation to Rules"
+            description="Migrates automation to rules structure"
+            onUpdate={() => migrateToRules.mutate()}
+            loading={migrateToRules.isPending}
             icon={Database}
             variant="warning"
           />

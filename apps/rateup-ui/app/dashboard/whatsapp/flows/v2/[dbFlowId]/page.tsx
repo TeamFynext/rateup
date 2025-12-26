@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 
-import { Box, MantineProvider, Stack, Tabs } from "@mantine/core";
+import { Box, Stack, Tabs } from "@mantine/core";
 import { useTranslations } from "next-intl";
 
 import { SubscriptionFeaturePathName } from "@/types/enums";
-import { whatsappTheme } from "@/config/mantineTheme";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
@@ -87,90 +86,88 @@ const Flow = () => {
   if (isPending || isSurveyPending) return <RateupLoader />;
 
   return (
-    <MantineProvider theme={whatsappTheme}>
-      <Box className={styles["flow-page-container"]}>
-        <Stack className={styles["flow-page-content"]}>
-          <EditFlowContext.Provider
+    <Box className={styles["flow-page-container"]}>
+      <Stack className={styles["flow-page-content"]}>
+        <EditFlowContext.Provider
+          value={{
+            flowJson: null,
+            updateFlowJson: null,
+            map: null,
+            updateMap: null,
+            survey,
+            updateSurvey: null,
+            selectedLang: null,
+            selectedScreenId: null,
+            setSelectedScreenId: null,
+            setSelectedFormElementId: null,
+            selectedFormElementId: null,
+            screenNumber: null,
+            setScreenNumber: null,
+          }}
+        >
+          <SurveyContext.Provider
             value={{
-              flowJson: null,
-              updateFlowJson: null,
-              map: null,
-              updateMap: null,
-              survey,
-              updateSurvey: null,
-              selectedLang: null,
-              selectedScreenId: null,
-              setSelectedScreenId: null,
-              setSelectedFormElementId: null,
-              selectedFormElementId: null,
-              screenNumber: null,
-              setScreenNumber: null,
+              encryptionpassword: "",
+              selectedTeamId,
+              surveyTeamMapId,
+              selectedTeamName,
+              filterTeams,
+              setFilterTeams,
+              filterTags: null,
+              surveyId: survey?.id,
+              teams: teamOptions,
             }}
           >
-            <SurveyContext.Provider
-              value={{
-                encryptionpassword: "",
-                selectedTeamId,
-                surveyTeamMapId,
-                selectedTeamName,
-                filterTeams,
-                setFilterTeams,
-                filterTags: null,
-                surveyId: survey?.id,
-                teams: teamOptions,
-              }}
+            <FlowPageHeader name={flow.name} tab={tab} setTabState={setTab} />
+            <StyledTabs
+              className={styles["flow-page-panels-container"]}
+              keepMounted={false}
+              value={tab}
+              h={"100%"}
             >
-              <FlowPageHeader name={flow.name} tab={tab} setTabState={setTab} />
-              <StyledTabs
-                className={styles["flow-page-panels-container"]}
-                keepMounted={false}
-                value={tab}
-                h={"100%"}
-              >
-                <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
-                  <EditFlow />
-                </Tabs.Panel>
-                <Tabs.Panel value={FlowTabEnum.Settings}>
-                  <SurveySettings
-                    surveyId={survey.id}
-                    survey={survey}
-                    enabledModules={[
-                      "teams",
-                      "flow",
-                      hasFeature(
-                        subscription,
-                        SubscriptionFeaturePathName.Ticket,
-                      ) && "tickets",
-                      hasFeature(
-                        subscription,
-                        SubscriptionFeaturePathName.Webhook,
-                      ) && "webhook",
-                    ]}
-                    flowName={flow.name}
-                    flowDbId={flow.dbFlowId}
-                    anonymous={flow?.anonymous}
-                  />
-                </Tabs.Panel>
-                <Tabs.Panel value={FlowTabEnum.Result}>
-                  <Result
-                    encryptionpassword={""}
-                    setEncryptionPassword={() => {}}
-                    survey={survey}
-                    flowId={flow.flowId}
-                    translations={translations}
-                    version={flow.version}
-                    flow={flow}
-                  />
-                </Tabs.Panel>
-                <Tabs.Panel value={FlowTabEnum.Share}>
-                  <ShareFlow allowUnpublishedShare={true} />
-                </Tabs.Panel>
-              </StyledTabs>
-            </SurveyContext.Provider>
-          </EditFlowContext.Provider>
-        </Stack>
-      </Box>
-    </MantineProvider>
+              <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
+                <EditFlow />
+              </Tabs.Panel>
+              <Tabs.Panel value={FlowTabEnum.Settings}>
+                <SurveySettings
+                  surveyId={survey.id}
+                  survey={survey}
+                  enabledModules={[
+                    "teams",
+                    "flow",
+                    hasFeature(
+                      subscription,
+                      SubscriptionFeaturePathName.Ticket,
+                    ) && "tickets",
+                    hasFeature(
+                      subscription,
+                      SubscriptionFeaturePathName.Webhook,
+                    ) && "webhook",
+                  ]}
+                  flowName={flow.name}
+                  flowDbId={flow.dbFlowId}
+                  anonymous={flow?.anonymous}
+                />
+              </Tabs.Panel>
+              <Tabs.Panel value={FlowTabEnum.Result}>
+                <Result
+                  encryptionpassword={""}
+                  setEncryptionPassword={() => {}}
+                  survey={survey}
+                  flowId={flow.flowId}
+                  translations={translations}
+                  version={flow.version}
+                  flow={flow}
+                />
+              </Tabs.Panel>
+              <Tabs.Panel value={FlowTabEnum.Share}>
+                <ShareFlow allowUnpublishedShare={true} />
+              </Tabs.Panel>
+            </StyledTabs>
+          </SurveyContext.Provider>
+        </EditFlowContext.Provider>
+      </Stack>
+    </Box>
   );
 };
 
