@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 import { parseStartMessage } from "./wasurvey.utils.js";
 
 describe("wasurvey utils", () => {
