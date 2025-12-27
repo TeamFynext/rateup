@@ -24,4 +24,6 @@ export const zapierTriggerQueue = new Queue("zapierTriggerQueue", {
 });
 export const userStatusQueue = new Queue("user-availability", { connection });
 
+export const sendMessageQueue = new Queue("sendMessageQueue", { connection });
+
 export default connection;

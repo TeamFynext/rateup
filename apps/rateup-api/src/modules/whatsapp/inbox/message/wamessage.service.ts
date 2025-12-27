@@ -50,11 +50,11 @@ import {
 } from "../../../integrations/external/zapier/zapier.service.js";
 import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
-import { sendViaWstoOrgHandler } from "../../../org/ws/org.ws.controller.js";
 import {
   getLastCreatedConversationForContact,
   updateConversationAssignees,
 } from "../../../contact/conversation/conversation.service.js";
+import { sendMessageQueue } from "../../../../utils/redisConnection.js";
 
 export async function addNewWaMessage(
   messageBody: WaInboxMessageBody,
@@ -1423,102 +1423,23 @@ export async function generateInboxResponse(
     console.log(
       `Seeding chats for contact: ${contact.name} (${contact.phone})`,
     );
-    const messagesToCreate = [];
-    let lastReceivedTime: Date | null = null;
 
     for (let i = 0; i < (body.messagesPerContact || 1); i++) {
-      // const isSend = faker.datatype.boolean();
-      const isSend = false; // For testing, making all messages as receive messages
-      const messageBody = isSend
-        ? generateSendMessage(contact)
-        : generateReceiveMessage(contact, settings);
-
-      // Prepare message creation data
-      const now = new Date();
-      // const base = faker.date.recent({ days: 1, refDate: now });
-      const base = now; // For testing, making all messages as current time
-      let sent = base;
-      let delivered: Date | null = faker.date.between({ from: sent, to: now });
-      let read: Date | null = null;
-      let failed: Date | null = null;
-
-      const isFailed = faker.datatype.boolean();
-      if (isFailed) {
-        failed = faker.date.between({ from: sent, to: now });
-        delivered = null;
-        read = null;
-      } else if (faker.datatype.boolean()) {
-        read = faker.date.between({ from: delivered!, to: now });
-      }
-
-      messagesToCreate.push({
-        id: uuidv4(),
-        createdAt: new Date(),
-        waCreatedAt: base,
+      const isSend = faker.datatype.boolean();
+      sendMessageQueue.add("send-message", {
+        message: faker.lorem.sentence(),
         contactId: contact.id,
-        messageBody,
-        sendBy: isSend ? userId : null,
-        sourcePlatform: "WHATSAPP",
-        sourceIdentifier:
-          messageBody.send?.to ||
-          messageBody.receive?.contacts?.[0]?.wa_id ||
-          null,
-        stats: {
-          failed: failed ? failed.toISOString() : "",
-          sent: sent.toISOString(),
-          delivered: delivered ? delivered.toISOString() : "",
-          read: read ? read.toISOString() : "",
+        options: {
+          accessToken: settings.accessToken,
+          phoneId: settings.phoneId,
+          phone: settings.phone,
+          sourceIdentifier: settings.phone?.replace("+", "") || "",
+          orgId: orgId,
+          profileName: contact?.name,
+          to: contact.phone,
         },
-      });
-
-      if (!isSend) {
-        lastReceivedTime = base;
-      }
-    }
-
-    if (messagesToCreate.length > 0) {
-      await prisma.waMessage.createMany({
-        data: messagesToCreate,
-        skipDuplicates: true,
+        type: isSend ? "send" : "receive",
       });
     }
-
-    // Update lastReceivedMessageTimeStamp only once per contact
-    if (lastReceivedTime) {
-      const lastMessage = messagesToCreate?.at(-1);
-      await prisma.contact.update({
-        where: {
-          id: contact?.id,
-        },
-        data: {
-          lastReceivedMessageTimeStamp: lastReceivedTime.toISOString(),
-          lastMessageWaCreatedAt: lastReceivedTime.toISOString(),
-          lastMessageBody: lastMessage?.messageBody || null,
-          lastMessagePlatform: "WHATSAPP",
-          lastReceivedMetadata: lastMessage?.receive?.metadata || null,
-          lastMessageSourceIdentifier: lastMessage?.sourceIdentifier || null,
-        },
-      });
-    }
-    let updatedContact = { ...contact };
-    if (contact.waMessageAssignStatus === WaMessageAssignStatus.CLOSED) {
-      updatedContact = await updateContactById(contact.id, {
-        waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
-      });
-    }
-
-    await sendViaWstoOrgHandler(
-      orgId,
-      {
-        type: "inbox",
-        inbox: {
-          contact: updatedContact,
-          message: messagesToCreate?.at(-1),
-        },
-      },
-      messagesToCreate?.at(-1)?.sourcePlatform === PlatformType.WEBCHAT
-        ? "fab"
-        : "main",
-    );
   }
 }
