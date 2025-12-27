@@ -1,7 +1,7 @@
 import express from "express";
 import axios from "axios";
 import "dotenv/config";
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 const app = express();
 const PORT = process.env.PORT || 3004;
@@ -81,7 +81,7 @@ function createStatusPayload(messageId, recipientId, status) {
 }
 
 // Send status update to webhook
-async function sendStatusUpdate(webhookUrl, payload,phoneNumber) {
+async function sendStatusUpdate(webhookUrl, payload, phoneNumber) {
   try {
     console.log(
       `Sending ${payload.entry[0].changes[0].value.statuses[0].status} status to webhook... ,${phoneNumber}`
@@ -100,13 +100,18 @@ async function sendStatusUpdate(webhookUrl, payload,phoneNumber) {
 }
 
 // Simulate message status progression with sequential updates
-async function simulateStatusProgression(messageId, recipientId, webhookUrl,to) {
+async function simulateStatusProgression(
+  messageId,
+  recipientId,
+  webhookUrl,
+  to
+) {
   // First always send "sent" status
   const sentPayload = createStatusPayload(messageId, recipientId, "sent");
 
   try {
     // Send the "sent" status first
-    await sendStatusUpdate(webhookUrl, sentPayload,to);
+    await sendStatusUpdate(webhookUrl, sentPayload, to);
 
     // Small random chance of message failure (20%)
     const willFail = Math.random() < 0.2;
@@ -130,7 +135,7 @@ async function simulateStatusProgression(messageId, recipientId, webhookUrl,to) 
           },
         },
       ];
-      await sendStatusUpdate(webhookUrl, failedPayload,to);
+      await sendStatusUpdate(webhookUrl, failedPayload, to);
       // No further status updates after failure
       return;
     }
@@ -142,15 +147,61 @@ async function simulateStatusProgression(messageId, recipientId, webhookUrl,to) 
       recipientId,
       "delivered"
     );
-    await sendStatusUpdate(webhookUrl, deliveredPayload,to);
+    await sendStatusUpdate(webhookUrl, deliveredPayload, to);
 
     // Finally send read status after another delay
     await new Promise((resolve) => setTimeout(resolve, 3000));
     const readPayload = createStatusPayload(messageId, recipientId, "read");
-    await sendStatusUpdate(webhookUrl, readPayload,to);
+    await sendStatusUpdate(webhookUrl, readPayload, to);
   } catch (error) {
     console.error(`Error in status progression sequence: ${error.message}`);
   }
+}
+
+// Create webhook payload for incoming messages
+function createIncomingMessagePayload(from, messageText, profileName = "User") {
+  const timestamp = generateTimestamp();
+  const messageId = generateMessageId(from);
+
+  return {
+    object: "whatsapp_business_account",
+    entry: [
+      {
+        id: BUSINESS_ACCOUNT_ID,
+        changes: [
+          {
+            value: {
+              messaging_product: "whatsapp",
+              metadata: {
+                display_phone_number: DISPLAY_PHONE_NUMBER,
+                phone_number_id: PHONE_NUMBER_ID,
+              },
+              contacts: [
+                {
+                  profile: {
+                    name: profileName,
+                  },
+                  wa_id: from,
+                },
+              ],
+              messages: [
+                {
+                  from: from,
+                  id: messageId,
+                  timestamp: timestamp,
+                  type: "text",
+                  text: {
+                    body: messageText,
+                  },
+                },
+              ],
+            },
+            field: "messages",
+          },
+        ],
+      },
+    ],
+  };
 }
 
 // Routes
@@ -159,15 +210,21 @@ async function simulateStatusProgression(messageId, recipientId, webhookUrl,to) 
 app.get("/", (req, res) => {
   res.status(200).json({
     status: "ok",
-    message: "WhatsApp API mock server is running",
+    message: "Meta WhatsApp API Mock Server",
+    endpoints: {
+      send: "POST /v1/messages - Send a text message",
+      receive: "POST /webhook/message - Simulate receiving a message",
+      statuses:
+        "POST /webhook/statuses/:messageId - Trigger all status updates",
+    },
   });
 });
 
-// Send message endpoint
+// Send message endpoint (mimics WhatsApp Cloud API)
 app.post("/v1/messages", async (req, res) => {
   try {
     const { to } = req.body;
-    console.log("🚀 ~ app.post ~ to:", to)
+
     if (!to) {
       return res.status(400).json({
         error: {
@@ -185,7 +242,8 @@ app.post("/v1/messages", async (req, res) => {
     const messageId = generateMessageId(recipientId);
     const webhookUrl = DEFAULT_WEBHOOK_URL;
 
-    await simulateStatusProgression(messageId, recipientId, webhookUrl,to);
+    // Start status progression asynchronously
+    simulateStatusProgression(messageId, recipientId, webhookUrl, to);
 
     // Return immediate success response similar to actual WhatsApp API
     res.status(200).json({
@@ -216,8 +274,121 @@ app.post("/v1/messages", async (req, res) => {
   }
 });
 
+// Simulate receiving a message from a user (sends to webhook)
+app.post("/v1/webhook/message", async (req, res) => {
+  try {
+    const { from, text, profileName, webhookUrl } = req.body;
+
+    if (!from || !text) {
+      return res.status(400).json({
+        error:
+          "Both 'from' (phone number) and 'text' (message body) are required",
+      });
+    }
+
+    const targetWebhook = webhookUrl || DEFAULT_WEBHOOK_URL;
+    const cleanFrom = from.replace("+", "");
+
+    // Create incoming message payload
+    const payload = createIncomingMessagePayload(cleanFrom, text, profileName);
+
+    // Send to webhook
+    console.log(`Simulating incoming message from ${from}...`);
+    const response = await axios.post(targetWebhook, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log(
+      `Incoming message sent to webhook successfully: ${response.status}`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Incoming message sent to webhook",
+      messageId: payload.entry[0].changes[0].value.messages[0].id,
+      webhookResponse: response.status,
+    });
+  } catch (error) {
+    console.error(`Error sending incoming message: ${error.message}`);
+    res.status(500).json({
+      error: error.message,
+      details: error.response?.data || null,
+    });
+  }
+});
+
+// Trigger all status updates for a message ID
+app.post("/webhook/statuses/:messageId", async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { recipientId, webhookUrl, includeFailed } = req.body;
+
+    if (!recipientId) {
+      return res.status(400).json({
+        error:
+          "'recipientId' (phone number without +) is required in request body",
+      });
+    }
+
+    const targetWebhook = webhookUrl || DEFAULT_WEBHOOK_URL;
+
+    // Send all statuses
+    const statuses = ["sent", "delivered", "read"];
+    if (includeFailed) {
+      statuses.push("failed");
+    }
+
+    console.log(`Triggering status updates for message ${messageId}...`);
+
+    for (const status of statuses) {
+      const payload = createStatusPayload(messageId, recipientId, status);
+
+      // Add error field for failed status
+      if (status === "failed") {
+        payload.entry[0].changes[0].value.statuses[0].errors = [
+          {
+            code: 131026,
+            title: "Message undeliverable",
+            message: "Message undeliverable",
+            error_data: {
+              details: "Message Undeliverable.",
+            },
+          },
+        ];
+      }
+
+      await sendStatusUpdate(targetWebhook, payload, recipientId);
+
+      // Small delay between statuses
+      if (status !== statuses.at(-1)) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "All status updates sent to webhook",
+      messageId,
+      statuses,
+    });
+  } catch (error) {
+    console.error(`Error triggering statuses: ${error.message}`);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
 // Start server
-app.listen(PORT,"::", () => {
-  console.log(`WhatsApp API mock server running on port ${PORT}`);
-  console.log(`Default webhook URL: ${DEFAULT_WEBHOOK_URL}`);
+app.listen(PORT, "::", () => {
+  console.log(`\n🚀 Meta WhatsApp API Mock Server running on port ${PORT}`);
+  console.log(`📍 Default webhook URL: ${DEFAULT_WEBHOOK_URL}\n`);
+  console.log(`Available endpoints:`);
+  console.log(`  POST /v1/messages - Send a text message`);
+  console.log(`  POST /webhook/message - Simulate receiving a message`);
+  console.log(
+    `  POST /webhook/statuses/:messageId - Trigger all status updates\n`
+  );
 });
