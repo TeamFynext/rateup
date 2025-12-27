@@ -208,11 +208,11 @@ export function useNavMain({
             url: "/dashboard/analytics?tab=agent-performance",
             icon: Award,
           },
-          {
-            title: t("Team Performance"),
-            url: "/dashboard/analytics?tab=team-performance",
-            icon: Activity,
-          },
+          // {
+          //   title: t("Team Performance"),
+          //   url: "/dashboard/analytics?tab=team-performance",
+          //   icon: Activity,
+          // },
         ],
       },
       ...(hasFeature(subscription, sfpn.WhatsAppCampaign)
