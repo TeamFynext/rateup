@@ -120,25 +120,24 @@ export default function WaInboxChatSelectCard({
               contact?.igsId ||
               "Unknown"
             }
-            size="md"
-            showOnlineStatus={
-              !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)
-            }
+            size="lg"
+            showOnlineStatus={true}
             isOnline={
               !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)
             }
             onlineStatusPosition="topLeft"
             src={contact?.profilePic}
             showRing={true}
-            platform={platform}
+            bgClassName="bg-gradient-to-br from-blue-500 to-blue-600"
+            ringClassName="ring-gray-200"
           />
           <div
             className={`absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 ${
               platform === MessagePlatform.WHATSAPP
-                ? "bg-green-600"
+                ? "bg-green-600 border"
                 : platform === MessagePlatform.INSTAGRAM
-                  ? "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500"
-                  : "bg-blue-600"
+                  ? "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500 border"
+                  : "bg-blue-600 border"
             }`}
           >
             {getSoucePlatformIconAndColor(platform)?.icon}

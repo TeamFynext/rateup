@@ -14,6 +14,8 @@ interface CreativeAvatarProps {
   src?: string | null;
   showRing?: boolean;
   platform?: string;
+  bgClassName?: string;
+  ringClassName?: string;
 }
 
 // Generate a consistent color based on the name
@@ -125,7 +127,7 @@ const sizeClasses = {
   lg: {
     container: "w-12 h-12",
     text: "text-base",
-    ring: "ring-2",
+    ring: "ring-3",
     online: {
       bottomRight: "w-3 h-3 -bottom-1 -right-1 border-2",
       topLeft: "w-3 h-3 -top-1 -left-1 border-2",
@@ -134,7 +136,7 @@ const sizeClasses = {
   xl: {
     container: "w-16 h-16",
     text: "text-lg",
-    ring: "ring-2",
+    ring: "ring-3",
     online: {
       topLeft: "w-3.5 h-3.5 -top-1 -left-1 border-2",
       bottomRight: "w-3.5 h-3.5 -bottom-1 -right-1 border-2",
@@ -174,11 +176,20 @@ export function CreativeAvatar({
   src = null,
   showRing = false,
   platform,
+  bgClassName,
+  ringClassName,
 }: CreativeAvatarProps) {
   const initials = getInitials(name);
-  const colors = platform
-    ? getAvatarColorFromPlatform(platform)
-    : getAvatarColor(name);
+  const colors =
+    bgClassName || ringClassName
+      ? {
+          bg: bgClassName ?? "bg-gray-500",
+          ring: ringClassName ?? "ring-gray-200",
+        }
+      : platform
+        ? getAvatarColorFromPlatform(platform)
+        : getAvatarColor(name);
+
   const sizes = sizeClasses[size];
 
   return (

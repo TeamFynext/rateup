@@ -586,7 +586,7 @@ function WaTextEditor({
             </div>
           </RichTextEditor>
         </div>
-        {inbox && sendMessageButton}
+        <div className="mt-5">{inbox && sendMessageButton}</div>
       </div>
       <WaInboxTemplateDisplayModal
         sessionExpired={isSessionExpired}

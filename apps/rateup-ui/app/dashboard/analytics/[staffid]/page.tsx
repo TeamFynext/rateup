@@ -147,7 +147,7 @@ function page() {
         ) : (
           <div className="space-y-6 w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-transparent dark:to-transparent border p-0">
+              <Card className=" border p-0">
                 <CardContent className="p-4 flex flex-col gap-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">
@@ -189,7 +189,7 @@ function page() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-transparent dark:to-transparent border p-0">
+              <Card className=" border p-0">
                 <CardContent className="p-4 flex flex-col gap-1">
                   <div className="flex items-center justify-between mb-1">
                     <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">
@@ -241,7 +241,7 @@ function page() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-              <div className="p-4 rounded-lg border bg-gradient-to-br from-blue-50 to-white dark:from-transparent dark:to-transparent">
+              <div className="p-4 rounded-lg border bg-white dark:bg-transparent">
                 <p className="text-xs text-muted-foreground mb-1">
                   {t("Resolution Rate")}
                 </p>
@@ -249,7 +249,7 @@ function page() {
                   {analytics?.metrics?.resolutionRate}%
                 </p>
               </div>
-              <div className="p-4 rounded-lg border bg-gradient-to-br from-blue-50 to-white dark:from-transparent dark:to-transparent">
+              <div className="p-4 rounded-lg border bg-white dark:bg-transparent">
                 <div className="flex gap-1">
                   <p className="text-xs text-muted-foreground mb-1">
                     {t("First Response")}
@@ -272,7 +272,7 @@ function page() {
                     : "NA"}
                 </p>
               </div>
-              <div className="p-4 rounded-lg border bg-gradient-to-br from-blue-50 to-white dark:from-transparent dark:to-transparent">
+              <div className="p-4 rounded-lg border bg-white dark:bg-transparent">
                 <p className="text-xs text-muted-foreground mb-1">
                   {t("Avg Handling")}
                 </p>
@@ -282,7 +282,7 @@ function page() {
                     : "NA"}
                 </p>
               </div>
-              <div className="p-4 rounded-lg border bg-gradient-to-br from-blue-50 to-white dark:from-transparent dark:to-transparent">
+              <div className="p-4 rounded-lg border bg-white dark:bg-transparent">
                 <p className="text-xs text-muted-foreground mb-1">
                   {t("Active Chats")}
                 </p>

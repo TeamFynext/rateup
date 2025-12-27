@@ -1,5 +1,6 @@
 "use client";
 
+import { Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useGetWaQuickReplies } from "@/backend/whatsapp/inbox/quickReply/quickreply.query";
@@ -34,16 +35,26 @@ export const WaQuickReply = ({
 
   if (waQuickReplies.isPending) return <Spinner />;
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 max-h-32 overflow-auto">
       {filteredReplies.length > 0 ? (
-        filteredReplies.map((reply) => (
-          <QuickReplyItem
-            reply={reply}
-            onClick={handleSelectQuickReply}
-            key={reply?.id}
-            cursor={true}
-          />
-        ))
+        <div className="grid grid-cols-2 gap-2">
+          {filteredReplies.map((reply) => {
+            return (
+              <div
+                key={reply.id}
+                className="flex items-center gap-1 border p-2 rounded-sm bg-gray-100 dark:bg-transparent cursor-pointer"
+                onClick={() => handleSelectQuickReply(reply?.text)}
+              >
+                <Zap className="text-primary w-3 h-3" />
+                <span className="text-xs">
+                  {reply?.key && reply.key.length > 50
+                    ? `${reply.key.slice(0, 60)}...`
+                    : reply?.key}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <p>{t("No quick replies found")}</p>
       )}

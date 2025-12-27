@@ -165,10 +165,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
             htmlFor="accountselector"
             className="flex items-center gap-2 text-sm font-medium text-gray-700"
           >
-            <div className="bg-gray-100 text-gray-700 p-2 rounded-md">
-              <User className="w-4 h-4" />
-            </div>
-            <div className="leading-tight">{translations("Account")}</div>
+            <div className="leading-tight">{translations("Channel")}</div>
           </label>
 
           <div className="mt-2">
@@ -192,6 +189,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
                 },
               }}
               platform="all"
+              className={"w-full border-0 bg-gray-100"}
             />
           </div>
         </div>
@@ -199,9 +197,6 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
         {/* Tags, Groups, Campaigns */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            <div className="bg-gray-100 text-gray-700 p-2 rounded-md">
-              <Tag className="w-4 h-4" />
-            </div>
             <div className="leading-tight">
               {translations("Tags, Groups, Campaigns")}
             </div>
@@ -209,6 +204,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
 
           <div className="mt-2">
             <ContainedMultiSelect
+              variant="filled"
               maw={250}
               //TODO reimplement strict filter
 
@@ -248,9 +244,6 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
         {/* Category */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-            <div className="bg-gray-100 text-gray-700 p-2 rounded-md">
-              <Layers className="w-4 h-4" />
-            </div>
             <div className="leading-tight">{translations("Category")}</div>
           </label>
 
@@ -272,6 +265,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
                 { value: "automation", label: "Automation" },
               ]}
               searchable
+              variant="filled"
             />
           </div>
         </div>
@@ -333,9 +327,6 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
         {["Assigned", "mine"].includes(tab) && (
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <div className="bg-gray-100 text-gray-700 p-2 rounded-md">
-                <ClipboardList className="w-4 h-4" />
-              </div>
               <div className="leading-tight">
                 {translations("Assigned Teams")}
               </div>
@@ -343,6 +334,7 @@ export default function WaInboxChatFilter({ setFilterCount }: Props) {
 
             <div className="mt-2">
               <ContainedMultiSelect
+                variant="filled"
                 radius="md"
                 value={filter.assignedTeams || []}
                 onChange={(values) =>

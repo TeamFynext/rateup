@@ -91,13 +91,13 @@ export function useNavMain({
                 {
                   title: t("New"),
                   url: "/dashboard/inbox?tab=New",
-                  icon: MessageSquareDot,
+                  icon: Sparkles,
                 },
-                {
-                  title: t("All"),
-                  url: "/dashboard/inbox?tab=All",
-                  icon: Inbox,
-                },
+                // {
+                //   title: t("All"),
+                //   url: "/dashboard/inbox?tab=All",
+                //   icon: Inbox,
+                // },
                 {
                   title: t("Assigned"),
                   url: "/dashboard/inbox?tab=Assigned",
@@ -208,11 +208,11 @@ export function useNavMain({
             url: "/dashboard/analytics?tab=agent-performance",
             icon: Award,
           },
-          // {
-          //   title: t("Team Performance"),
-          //   url: "/dashboard/analytics?tab=team-performance",
-          //   icon: Activity,
-          // },
+          {
+            title: t("Team Performance"),
+            url: "/dashboard/analytics?tab=team-performance",
+            icon: Activity,
+          },
         ],
       },
       ...(hasFeature(subscription, sfpn.WhatsAppCampaign)

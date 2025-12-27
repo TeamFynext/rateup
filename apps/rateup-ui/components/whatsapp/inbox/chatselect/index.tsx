@@ -337,6 +337,13 @@ const WaInboxChatSelect = () => {
         waMessageAssignStatus: null,
         blockedUsers: false,
       });
+    } else if (tab === "New") {
+      prepareFilters({
+        ...filter,
+        messageType: "all",
+        waMessageAssignStatus: "UnAssigned",
+        blockedUsers: false,
+      });
     } else {
       prepareFilters({
         ...filter,
