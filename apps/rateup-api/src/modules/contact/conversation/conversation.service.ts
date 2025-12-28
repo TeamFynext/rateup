@@ -801,6 +801,9 @@ export async function getStaffDetailedConversationAnalytics(
       averageResponseTime: number;
       messagesHandledRateByLastWeek: number;
       responseTimeRateByLastWeek: number;
+      resolutionRateByLastWeek: number;
+      conversationsTransferred: number;
+      conversationsRecieved: number;
     };
     weeklyMessageStats: {
       date: string;
@@ -918,6 +921,33 @@ assigned_stats AS (
     JOIN valid_conversations vc
       ON vc.id = wm."conversationId"
     WHERE wm."sendBy" = ${userId}
+  ),
+   resolution_stats AS (
+    SELECT
+      COUNT(*) FILTER (
+        WHERE vc."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
+          AND vc."closedBy" = ${userId}
+          AND vc."closedAt" >= ${sevenDaysAgo}
+      )::INT AS resolved_last_7d,
+
+      COUNT(*) FILTER (
+        WHERE vc."closedBy" = ${userId}
+          AND vc."closedAt" >= ${sevenDaysAgo}
+      )::INT AS total_last_7d,
+
+      COUNT(*) FILTER (
+        WHERE vc."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
+          AND vc."closedBy" = ${userId}
+          AND vc."closedAt" >= ${fourteenDaysAgo}
+          AND vc."closedAt" < ${sevenDaysAgo}
+      )::INT AS resolved_prev_7d,
+
+      COUNT(*) FILTER (
+        WHERE vc."closedBy" = ${userId}
+          AND vc."closedAt" >= ${fourteenDaysAgo}
+          AND vc."closedAt" < ${sevenDaysAgo}
+      )::INT AS total_prev_7d
+    FROM valid_conversations vc
   ),
 
 dates AS (
@@ -1042,7 +1072,47 @@ SELECT
         WHEN (SELECT avg_response_time_prev_7d FROM response_stats) IS NULL OR (SELECT avg_response_time_prev_7d FROM response_stats) = 0
         THEN CASE WHEN (SELECT avg_response_time_last_7d FROM response_stats) IS NOT NULL THEN 100 ELSE 0 END
         ELSE (((SELECT avg_response_time_prev_7d FROM response_stats) - (SELECT avg_response_time_last_7d FROM response_stats)) / (SELECT avg_response_time_prev_7d FROM response_stats)) * 100
-      END
+      END,
+
+      'resolutionRateByLastWeek',
+      CASE
+        WHEN (SELECT total_last_7d FROM resolution_stats) = 0 OR (SELECT total_prev_7d FROM resolution_stats) = 0
+        THEN 0
+        ELSE (
+          (
+            ((SELECT resolved_last_7d FROM resolution_stats)::DECIMAL / (SELECT total_last_7d FROM resolution_stats)) * 100)
+            -
+            ((SELECT resolved_prev_7d FROM resolution_stats)::DECIMAL / (SELECT total_prev_7d FROM resolution_stats)) * 100)
+          )
+        )
+      END,
+      'conversationsTransferred',
+       COALESCE(
+        (
+          SELECT COUNT(DISTINCT cau2."conversationId")::INT
+          FROM "ConversationAssignedUserTeamMap" cau2
+          JOIN "Conversation" cv2 ON cv2.id = cau2."conversationId"
+          JOIN "Contact" ct2 ON ct2.id = cv2."contactId"
+          WHERE cau2."lastAssignedBy" = ${userId}
+            AND cau2."userId" <> ${userId}
+            AND cau2."lastAssignedAt" >= ${sinceDate}
+            AND ct2."orgId" = ${orgId}::uuid
+        ), 0
+      ),
+       'conversationsRecieved',
+          COALESCE(
+            (
+              SELECT COUNT(DISTINCT cau3."conversationId")::INT
+              FROM "ConversationAssignedUserTeamMap" cau3
+              JOIN "Conversation" cv3 ON cv3.id = cau3."conversationId"
+              JOIN "Contact" ct3 ON ct3.id = cv3."contactId"
+              WHERE cau3."userId" = ${userId}
+                AND cau3."lastAssignedBy" IS NOT NULL
+                AND cau3."lastAssignedBy" <> ${userId}
+                AND cau3."lastAssignedAt" >= ${sinceDate}
+                AND ct3."orgId" = ${orgId}::uuid
+            ), 0
+          )
   ) AS "userPerformance",
     -- weekly message stats
     (
