@@ -1075,17 +1075,22 @@ SELECT
       END,
 
       'resolutionRateByLastWeek',
-      CASE
-        WHEN (SELECT total_last_7d FROM resolution_stats) = 0 OR (SELECT total_prev_7d FROM resolution_stats) = 0
-        THEN 0
-        ELSE (
-          (
-            ((SELECT resolved_last_7d FROM resolution_stats)::DECIMAL / (SELECT total_last_7d FROM resolution_stats)) * 100)
-            -
-            ((SELECT resolved_prev_7d FROM resolution_stats)::DECIMAL / (SELECT total_prev_7d FROM resolution_stats)) * 100)
-          )
-        )
-      END,
+CASE
+  WHEN (SELECT total_last_7d FROM resolution_stats) = 0
+    OR (SELECT total_prev_7d FROM resolution_stats) = 0
+  THEN 0
+  ELSE
+    (
+      ((SELECT resolved_last_7d FROM resolution_stats)::DECIMAL
+        / (SELECT total_last_7d FROM resolution_stats)) * 100
+    )
+    -
+    (
+      ((SELECT resolved_prev_7d FROM resolution_stats)::DECIMAL
+        / (SELECT total_prev_7d FROM resolution_stats)) * 100
+    )
+END,
+
       'conversationsTransferred',
        COALESCE(
         (
