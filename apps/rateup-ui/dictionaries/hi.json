@@ -2562,5 +2562,16 @@
   "Agent Performance": "एजेंट प्रदर्शन",
   "Real-time overview of your team performance and activities": "आपकी टीम के प्रदर्शन और गतिविधियों का रीयल-टाइम अवलोकन",
   "Filter by": "इसके अनुसार फ़िल्टर करें",
-  "Channel": "चैनल"
+  "Channel": "चैनल",
+  "faster vs last week": "पिछले सप्ताह की तुलना में तेज़",
+  "slower vs last week": "पिछले सप्ताह की तुलना में धीमा",
+  "Average time to first reply": "पहली प्रतिक्रिया का औसत समय",
+  "Chats Transferred": "स्थानांतरित चैट्स",
+  "Transferred to other agents": "अन्य एजेंटों को स्थानांतरित किया गया",
+  "Chats Received": "प्राप्त चैट्स",
+  "Received from other agents": "अन्य एजेंटों से प्राप्त",
+  "Last 7 Days": "पिछले 7 दिन",
+  "Last 14 Days": "पिछले 14 दिन",
+  "Last 30 Days": "पिछले 30 दिन",
+  "Last 60 Days": "पिछले 60 दिन"
 }

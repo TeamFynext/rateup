@@ -1,15 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import {
   ArrowLeft,
-  CircleQuestionMark,
+  ArrowRight,
   Clock,
+  Clock2,
   MessageCircle,
-  TrendingDown,
-  TrendingUp,
+  RefreshCcw,
+  ThumbsUp,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
@@ -28,9 +31,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
-import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AnalyticsStatCard } from "@/components/whatsapp/inbox/analytics/AnalyticsStaticCard";
 import { StaffStatusBadge } from "@/components/whatsapp/inbox/analytics/ConversationStatsAgentPerformance";
+import { DateSelector } from "@/components/whatsapp/inbox/analytics/DateRangeSelector";
 import {
   formatTimeToNearestUnitFromSeconds,
   formatToRelativeTime,
@@ -38,12 +42,13 @@ import {
 
 function page() {
   const { staffid } = useParams();
+  const [day, setDay] = useState(7);
   const router = useRouter();
   const t = useTranslations();
-
+  const queryClient = useQueryClient();
   const { data: analytics, isLoading } =
     useGetStaffDetailedConversationAnalytics(staffid, {
-      days: 7,
+      days: day,
     });
   const graphdata = analytics
     ? analytics.weeklyMessageStats?.map((a) => ({
@@ -54,6 +59,13 @@ function page() {
   const averageResponseTime = formatTimeToNearestUnitFromSeconds(
     analytics?.userPerformance?.averageResponseTime,
   );
+
+  const refresh = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["StaffDetailedConversationAnalytics", staffid, { days: day }],
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {isLoading ? (
@@ -124,6 +136,17 @@ function page() {
                 {/* Status */}
                 <StaffStatusBadge status={analytics?.userPerformance?.status} />
               </div>
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={refresh}
+                  className="flex items-center justify-center gap-1"
+                >
+                  <RefreshCcw />
+                  <span>{t("Refresh")}</span>
+                </Button>
+                <DateSelector days={day} setDays={setDay} />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -146,152 +169,118 @@ function page() {
           </div>
         ) : (
           <div className="space-y-6 w-full">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className=" border p-0">
-                <CardContent className="p-4 flex flex-col gap-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">
-                      <MessageCircle className="w-6 h-6 text-primary" />
-                    </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <AnalyticsStatCard
+                icon={<MessageCircle className="w-6 h-6 text-primary" />}
+                label={t("Messages Handled")}
+                value={analytics?.userPerformance?.totalMessagesHandled}
+                trendValue={
+                  analytics?.userPerformance?.messagesHandledRateByLastWeek
+                }
+                trendSuffix={t("vs last week")}
+              />
 
-                    {analytics?.userPerformance
-                      ?.messagesHandledRateByLastWeek !== undefined &&
-                      (analytics.userPerformance
-                        .messagesHandledRateByLastWeek >= 0 ? (
-                        <TrendingUp className="w-6 h-6 text-green-600" />
-                      ) : (
-                        <TrendingDown className="w-6 h-6 text-red-600" />
-                      ))}
-                  </div>
+              <AnalyticsStatCard
+                icon={<Clock className="w-6 h-6 text-primary" />}
+                label={t("Avg Response Time")}
+                value={
+                  averageResponseTime
+                    ? `${averageResponseTime.value} ${averageResponseTime.suffix}`
+                    : "NA"
+                }
+                trendValue={
+                  analytics?.userPerformance?.responseTimeRateByLastWeek
+                }
+                trendPositiveWhen="decrease"
+                trendSuffix={
+                  analytics?.userPerformance?.responseTimeRateByLastWeek <= 0
+                    ? t("faster vs last week")
+                    : t("slower vs last week")
+                }
+              />
 
-                  <p className="text-xs text-muted-foreground leading-tight">
-                    {t("Messages Handled")}
-                  </p>
-
-                  <p className="text-2xl font-bold leading-none">
-                    {analytics?.userPerformance?.totalMessagesHandled}
-                  </p>
-
-                  {analytics?.userPerformance?.messagesHandledRateByLastWeek !==
-                    undefined && (
-                    <p
-                      className={`text-xs leading-tight ${
-                        analytics.userPerformance
-                          .messagesHandledRateByLastWeek >= 0
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {analytics.userPerformance.messagesHandledRateByLastWeek}%
-                      {t("vs last week")}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className=" border p-0">
-                <CardContent className="p-4 flex flex-col gap-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">
-                      <Clock className="w-6 h-6 text-primary" />
-                    </div>
-
-                    {analytics?.userPerformance?.responseTimeRateByLastWeek !==
-                      undefined &&
-                      (analytics.userPerformance.responseTimeRateByLastWeek <=
-                      0 ? (
-                        <TrendingUp className="w-6 h-6 text-green-600" />
-                      ) : (
-                        <TrendingDown className="w-6 h-6 text-red-600" />
-                      ))}
-                  </div>
-
-                  <p className="text-xs text-muted-foreground leading-tight">
-                    {t("Avg Response Time")}
-                  </p>
-
-                  <p className="text-2xl font-bold leading-none">
-                    {averageResponseTime
-                      ? `${averageResponseTime.value} ${averageResponseTime.suffix}`
-                      : "NA"}
-                  </p>
-
-                  {analytics?.userPerformance?.responseTimeRateByLastWeek !==
-                    undefined && (
-                    <p
-                      className={`text-xs leading-tight ${
-                        analytics.userPerformance.responseTimeRateByLastWeek <=
-                        0
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {Math.abs(
-                        analytics.userPerformance.responseTimeRateByLastWeek,
-                      )}
-                      %
-                      {analytics.userPerformance.responseTimeRateByLastWeek <= 0
-                        ? ` ${t("faster")}`
-                        : ` ${t("slower")}`}{" "}
-                      {t("vs last week")}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+              <AnalyticsStatCard
+                icon={<ThumbsUp className="w-6 h-6 text-primary" />}
+                label={t("Resolution Rate")}
+                value={`${analytics?.metrics?.resolutionRate ?? 0}%`}
+                trendValue={
+                  analytics?.userPerformance?.resolutionRateByLastWeek
+                }
+                trendPositiveWhen="decrease"
+                trendSuffix={t("vs last week")}
+              />
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-              <div className="p-4 rounded-lg border bg-white dark:bg-transparent">
-                <p className="text-xs text-muted-foreground mb-1">
-                  {t("Resolution Rate")}
-                </p>
-                <p className="text-lg font-bold text-primary">
-                  {analytics?.metrics?.resolutionRate}%
-                </p>
-              </div>
-              <div className="p-4 rounded-lg border bg-white dark:bg-transparent">
-                <div className="flex gap-1">
-                  <p className="text-xs text-muted-foreground mb-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card className=" border p-0">
+                <CardContent className="p-4 flex flex-col gap-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-transparent">
+                      <Clock2 className="w-6 h-6 text-primary" />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-tight">
                     {t("First Response")}
                   </p>
-                  <CustomTooltip
-                    trigger={
-                      <CircleQuestionMark className="w-3 h-3 text-muted-foreground" />
-                    }
-                    content={
-                      <span>
-                        {t("Responded time compared to first assigned time")}
-                      </span>
-                    }
-                  />
-                </div>
 
-                <p className="text-lg font-bold text-primary">
-                  {analytics?.metrics?.firstResponseTime
-                    ? `${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.firstResponseTime)?.value} ${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.firstResponseTime)?.suffix}`
-                    : "NA"}
-                </p>
-              </div>
-              <div className="p-4 rounded-lg border bg-white dark:bg-transparent">
-                <p className="text-xs text-muted-foreground mb-1">
-                  {t("Avg Handling")}
-                </p>
-                <p className="text-lg font-bold text-primary">
-                  {analytics?.metrics?.avgHandlingTime !== null
-                    ? `${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.avgHandlingTime)?.value} ${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.avgHandlingTime)?.suffix}`
-                    : "NA"}
-                </p>
-              </div>
-              <div className="p-4 rounded-lg border bg-white dark:bg-transparent">
-                <p className="text-xs text-muted-foreground mb-1">
-                  {t("Active Chats")}
-                </p>
-                <p className="text-lg font-bold text-primary">
-                  {analytics?.userPerformance?.totalAssignedConversations}
-                </p>
-              </div>
+                  <p className="text-2xl font-bold leading-none">
+                    {analytics?.metrics?.firstResponseTime
+                      ? `${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.firstResponseTime)?.value} ${formatTimeToNearestUnitFromSeconds(analytics?.metrics?.firstResponseTime)?.suffix}`
+                      : "NA"}
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-tight">
+                    {t("Average time to first reply")}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className=" border p-0">
+                <CardContent className="p-4 flex flex-col gap-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="p-2 rounded-lg bg-orange-100 dark:bg-transparent">
+                      <ArrowLeft className="w-6 h-6 text-orange-500" />
+                    </div>
+                    <div className="px-2 py-1 text-xs rounded-lg bg-orange-100 dark:bg-transparent text-orange-500 border border-orange-300">
+                      OUT
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-tight">
+                    {t("Chats Transferred")}
+                  </p>
+
+                  <p className="text-2xl font-bold leading-none text-orange-500">
+                    {analytics?.userPerformance?.conversationsTransferred}
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-tight">
+                    {t("Transferred to other agents")}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className=" border p-0">
+                <CardContent className="p-4 flex flex-col gap-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="p-2 rounded-lg bg-green-100 dark:bg-transparent">
+                      <ArrowRight className="w-6 h-6 text-green-500" />
+                    </div>
+                    <div className="px-2 py-1 text-xs border border-green-300 rounded-lg bg-green-100 dark:bg-transparent text-green-500">
+                      IN
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-tight">
+                    {t("Chats Received")}
+                  </p>
+
+                  <p className="text-2xl font-bold leading-none text-green-500">
+                    {analytics?.userPerformance?.conversationsRecieved}
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-tight">
+                    {t("Received from other agents")}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
-
             <Card>
               <CardHeader>
                 <CardTitle>

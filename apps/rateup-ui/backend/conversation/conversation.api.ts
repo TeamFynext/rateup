@@ -152,7 +152,10 @@ export interface StaffDetailedConversationAnalytics {
     totalMessagesHandled: number;
     averageResponseTime: number;
     responseTimeRateByLastWeek: number;
+    resolutionRateByLastWeek: number;
     messagesHandledRateByLastWeek: number;
+    conversationsTransferred: number;
+    conversationsRecieved: number;
   };
 }
 export const getStaffDetailedConversationAnalytics = async (
