@@ -14,7 +14,7 @@ interface CreativeAvatarProps {
   src?: string | null;
   showRing?: boolean;
   platform?: string;
-  bgClassName?: string;
+  variant?: "light-blue";
   ringClassName?: string;
 }
 
@@ -176,14 +176,14 @@ export function CreativeAvatar({
   src = null,
   showRing = false,
   platform,
-  bgClassName,
+  variant,
   ringClassName,
 }: CreativeAvatarProps) {
   const initials = getInitials(name);
   const colors =
-    bgClassName || ringClassName
+    variant || ringClassName
       ? {
-          bg: bgClassName ?? "bg-gray-500",
+          bg: "bg-gradient-to-br from-chat-light-blue-2 to-chat-light-blue-1",
           ring: ringClassName ?? "ring-gray-200",
         }
       : platform

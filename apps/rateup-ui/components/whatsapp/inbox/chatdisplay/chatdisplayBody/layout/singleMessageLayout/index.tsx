@@ -202,7 +202,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
               size="xs"
               src={selectedContact?.profilePic}
               showRing={true}
-              platform={platform}
+              variant="light-blue"
             />
           </div>
         )}

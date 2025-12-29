@@ -160,7 +160,7 @@ export default function WaInboxChatDisplayHeader({
               showOnlineStatus={!isSessionExpired}
               onlineStatusPosition="topLeft"
               showRing={true}
-              bgClassName="bg-gradient-to-br from-blue-500 to-blue-600"
+              variant="light-blue"
               ringClassName="ring-gray-200"
             />
             <div
