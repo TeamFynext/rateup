@@ -307,8 +307,12 @@ const ChatHeaderMenu = ({ contact }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <MoreVertical className="w-3.5 h-3.5" />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 hover:text-primary"
+        >
+          <CircleCheckBig className="w-3.5 h-3.5 " />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
