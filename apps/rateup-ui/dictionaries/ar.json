@@ -2558,5 +2558,16 @@
   "Agent Performance": "أداء الوكيل",
   "Real-time overview of your team performance and activities": "نظرة عامة في الوقت الفعلي على أداء فريقك وأنشطته",
   "Filter by": "تصفية حسب",
-  "Channel": "قناة"
+  "Channel": "قناة",
+  "faster vs last week": "أسرع مقارنة بالأسبوع الماضي",
+  "slower vs last week": "أبطأ مقارنة بالأسبوع الماضي",
+  "Average time to first reply": "متوسط وقت الرد الأول",
+  "Chats Transferred": "المحادثات المحوّلة",
+  "Transferred to other agents": "تم تحويلها إلى وكلاء آخرين",
+  "Chats Received": "المحادثات المستلمة",
+  "Received from other agents": "تم استلامها من وكلاء آخرين",
+  "Last 7 Days": "آخر 7 أيام",
+  "Last 14 Days": "آخر 14 يومًا",
+  "Last 30 Days": "آخر 30 يومًا",
+  "Last 60 Days": "آخر 60 يومًا"
 }

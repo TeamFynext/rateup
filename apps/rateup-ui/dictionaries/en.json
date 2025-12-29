@@ -2548,5 +2548,16 @@
   "Agent Performance": "Agent Performance",
   "Real-time overview of your team performance and activities": "Real-time overview of your team performance and activities",
   "Filter by": "Filter by",
-  "Channel": "Channel"
+  "Channel": "Channel",
+  "faster vs last week": "faster vs last week",
+  "slower vs last week": "slower vs last week",
+  "Average time to first reply": "Average time to first reply",
+  "Chats Transferred": "Chats Transferred",
+  "Transferred to other agents": "Transferred to other agents",
+  "Chats Received": "Chats Received",
+  "Received from other agents": "Received from other agents",
+  "Last 7 Days": "Last 7 Days",
+  "Last 14 Days": "Last 14 Days",
+  "Last 30 Days": "Last 30 Days",
+  "Last 60 Days": "Last 60 Days"
 }

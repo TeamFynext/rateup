@@ -2563,5 +2563,16 @@
   "Agent Performance": "Agentenleistung",
   "Real-time overview of your team performance and activities": "Echtzeit-Übersicht über die Leistung und Aktivitäten Ihres Teams",
   "Filter by": "Filtern nach",
-  "Channel": "Kanal"
+  "Channel": "Kanal",
+  "faster vs last week": "Schneller im Vergleich zur letzten Woche",
+  "slower vs last week": "Langsamer im Vergleich zur letzten Woche",
+  "Average time to first reply": "Durchschnittliche Zeit bis zur ersten Antwort",
+  "Chats Transferred": "Übertragene Chats",
+  "Transferred to other agents": "An andere Agenten weitergeleitet",
+  "Chats Received": "Empfangene Chats",
+  "Received from other agents": "Von anderen Agenten erhalten",
+  "Last 7 Days": "Letzte 7 Tage",
+  "Last 14 Days": "Letzte 14 Tage",
+  "Last 30 Days": "Letzte 30 Tage",
+  "Last 60 Days": "Letzte 60 Tage"
 }

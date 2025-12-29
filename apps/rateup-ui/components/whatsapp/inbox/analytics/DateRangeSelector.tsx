@@ -1,7 +1,8 @@
 import { Activity } from "react";
 
 import dayjs from "dayjs";
-import { CalendarIcon, ChevronDown } from "lucide-react";
+import { CalendarIcon, ChevronDown, Filter } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -98,3 +99,31 @@ const DateRangeSelector = ({ value, onChange }) => {
 };
 
 export default DateRangeSelector;
+
+export function DateSelector({ days, setDays }) {
+  const t = useTranslations();
+  return (
+    <div className="flex items-center gap-1 flex-col sm:flex-row">
+      <div className="flex items-center gap-1 ">
+        <Filter className="w-4 h-4" />
+        <span>{t("Filter by")}:</span>
+      </div>
+      <Select
+        value={String(days)}
+        onValueChange={(value) => setDays(Number(value))}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Select range" />
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectItem value="1">{t("Today")}</SelectItem>
+          <SelectItem value="7">{t("Last 7 Days")}</SelectItem>
+          <SelectItem value="14">{t("Last 14 Days")}</SelectItem>
+          <SelectItem value="30">{t("Last 30 Days")}</SelectItem>
+          <SelectItem value="60">{t("Last 60 Days")}</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
