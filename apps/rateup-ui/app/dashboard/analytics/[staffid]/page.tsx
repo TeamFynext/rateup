@@ -202,7 +202,7 @@ function page() {
               <AnalyticsStatCard
                 icon={<ThumbsUp className="w-6 h-6 text-primary" />}
                 label={t("Resolution Rate")}
-                value={`${analytics?.metrics?.resolutionRate ?? 0}%`}
+                value={`${analytics?.metrics?.resolutionRate.toFixed(1) ?? 0}%`}
                 trendValue={
                   analytics?.userPerformance?.resolutionRateByLastWeek
                 }
