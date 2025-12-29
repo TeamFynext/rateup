@@ -130,6 +130,8 @@
   --rateup-light-blue-2: #93c6f5;
   --rateup-light-blue-3: #bcd8ff;
   --rateup-blue-4: #1c518e;
+  --chat-light-blue-1: #3b82f6;
+  --chat-light-blue-2: #60a5fa;
   --rateup-blue-foreground: oklch(1 0 0);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
@@ -219,6 +221,8 @@
   --color-rateup-light-blue: var(--rateup-light-blue);
   --color-rateup-light-blue-2: var(--rateup-light-blue-2);
   --color-rateup-light-blue-3: var(--rateup-light-blue-3);
+  --color-chat-light-blue-2: var(--chat-light-blue-2);
+  --color-chat-light-blue-1: var(--chat-light-blue-1);
   --color-rateup-gold: var(--rateup-gold);
   --color-grey-color-5: var(--grey-color-5);
   --color-grey-color-6: var(--grey-color-6);

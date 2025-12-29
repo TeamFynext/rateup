@@ -202,7 +202,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
               size="xs"
               src={selectedContact?.profilePic}
               showRing={true}
-              bgClassName="bg-gradient-to-br from-[#60A5FA] to-[#3B82F6]"
+              variant="light-blue"
             />
           </div>
         )}

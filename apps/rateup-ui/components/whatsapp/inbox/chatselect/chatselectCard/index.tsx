@@ -68,19 +68,6 @@ export default function WaInboxChatSelectCard({
     return label;
   }, [contact?.lifecycleId, lifeCycleLabels]);
 
-  function getBorderColor() {
-    if (selectedContact?.id === contact?.id) {
-      return "bg-accent border-l-2 border-b-1 border-blue-600";
-    }
-    return "";
-  }
-
-  function getBackgroundColor() {
-    if (contact?.unReadMessageCount > 0) {
-      return "bg-blue-50/30";
-    }
-    return "";
-  }
   const closed = getContactClosedIcon(contact?.waMessageAssignStatus);
   const Icon = closed?.icon;
 
@@ -90,7 +77,7 @@ export default function WaInboxChatSelectCard({
       onClick={() => {
         setSelectedContact(contact);
       }}
-      className={`p-3 cursor-pointer transition-all hover:bg-accent/50 ${getBorderColor()} ${getBackgroundColor()}`}
+      className={`p-3 cursor-pointer transition-all hover:bg-accent/50 ${selectedContact?.id === contact?.id && "bg-accent border-l-2 border-b-1 border-blue-600"} ${contact?.unReadMessageCount > 0 && "bg-blue-50/30"}`}
     >
       <div className="flex items-start space-x-2">
         <div className="relative flex-shrink-0">
@@ -110,7 +97,7 @@ export default function WaInboxChatSelectCard({
             onlineStatusPosition="topLeft"
             src={contact?.profilePic}
             showRing={true}
-            bgClassName="bg-gradient-to-br from-[#60A5FA] to-[#3B82F6]"
+            variant="light-blue"
             ringClassName="ring-white"
           />
           <div
