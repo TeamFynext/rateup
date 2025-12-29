@@ -300,16 +300,3 @@ export function getMessageSourceName(sourceIdentifier, waSettings, platform) {
       : sourceIdentifier;
   return settings?.phoneDisplayName || settings?.phone || sourceIdentifier;
 }
-
-export function getSourceDiplayLabel(platform) {
-  switch (platform) {
-    case MessagePlatform.WHATSAPP:
-      return "WhatsApp Business";
-    case MessagePlatform.INSTAGRAM:
-      return "Instagram";
-    case MessagePlatform.WEBCHAT:
-      return "Web Chat";
-    default:
-      return "Unsupported";
-  }
-}

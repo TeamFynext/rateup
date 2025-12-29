@@ -116,6 +116,7 @@ export function useNavMain({
                 },
                 {
                   group: "Filter",
+                  showTitle: false,
                   items: [
                     ...(lifecycles.length > 0
                       ? [

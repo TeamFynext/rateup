@@ -47,7 +47,6 @@ import { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import {
   getMessageSourceName,
-  getSourceDiplayLabel,
   isInboxSessionExpired,
 } from "@/utils/whatsapp/inbox";
 
@@ -575,10 +574,7 @@ function WaTextEditor({
               {inbox && (
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-muted-foreground">
-                    {getSourceDiplayLabel(
-                      selectedContact.lastMessage?.sourcePlatform,
-                    )}{" "}
-                    - to:
+                    Channel - to:
                   </span>
                   <AccountSelectComponent />
                 </div>
