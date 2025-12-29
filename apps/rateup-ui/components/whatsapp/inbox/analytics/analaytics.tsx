@@ -22,8 +22,8 @@ const Analytics = () => {
   const tab = searchParams.get("tab") ?? "overview";
   const t = useTranslations();
   const [dateRange, setDateRange] = useState({
-    key: "today",
-    range: [dayjs().startOf("day").toDate(), new Date()],
+    key: "last7days",
+    range: [dayjs().subtract(7, "day").toDate(), new Date()],
   });
   const queryClient = useQueryClient();
   function refresh() {
