@@ -18,7 +18,6 @@ import {
 import { $chatbotRef } from "./chatbot.schema.js";
 import FastifyMultipart from "@fastify/multipart";
 import { checkRoleHandler } from "../../utils/checkRoleHandler.js";
-import { Type } from "@sinclair/typebox";
 
 export async function chatbotRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);

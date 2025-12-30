@@ -4,6 +4,7 @@ import {
   ConversationParamsSchema,
   StaffIdParamsSchema,
   StatsQuerySchema,
+  TeamIdParamsSchema,
   UpdateConversationSchema,
 } from "./conversation.schema.js";
 import {
@@ -14,6 +15,8 @@ import {
   getResolvedCountandTotalCountofDailyInLastNDays,
   getStaffConverSationMetrics,
   getStaffDetailedConversationAnalytics,
+  getTeamDetailedMetrics,
+  getTeamOverview,
   updateConversation,
 } from "./conversation.service.js";
 
@@ -175,6 +178,42 @@ export async function getStaffDetailedConversationAnalyticsHandler(
     log.error("Error fetching staff detailed analytics :%o", e);
     reply.status(500).send({
       error: "An error occurred while fetching the staff detailed analytics.",
+    });
+  }
+}
+
+export async function getTeamOverviewHandler(
+  request: FastifyRequest<{ Querystring: StatsQuerySchema }>,
+  reply: FastifyReply,
+) {
+  try {
+    const dateRange = request.query.dateRange?.split(",") || [];
+    const res = await getTeamOverview(request.user.orgId, dateRange);
+    reply.send(res);
+  } catch (e) {
+    log.error("Error fetching team overview :%o", e);
+    reply.status(500).send({
+      error: "An error occurred while fetching the team overview.",
+    });
+  }
+}
+
+export async function getTeamDetailedMetricsHandler(
+  request: FastifyRequest<{
+    Params: TeamIdParamsSchema;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const res = await getTeamDetailedMetrics(
+      request.params.teamId,
+      request.user.orgId,
+    );
+    reply.send(res);
+  } catch (e) {
+    log.error("Error fetching team metrics :%o", e);
+    reply.status(500).send({
+      error: "An error occurred while fetching the team metrics.",
     });
   }
 }

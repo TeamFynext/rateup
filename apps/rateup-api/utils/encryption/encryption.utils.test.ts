@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 import crypto from "node:crypto";
 import { aes_decrypt, aes_encrypt } from "./encryption.utils.js";
 

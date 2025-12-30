@@ -44,6 +44,10 @@ const staffIdParamsSchema = z.object({
   staffId: z.string(),
 });
 
+const teamIdParamsSchema = z.object({
+  teamId: z.string(),
+});
+
 export const { schemas: conversationSchemas, $ref: $conversationRef } =
   buildJsonSchemas(
     {
@@ -53,6 +57,7 @@ export const { schemas: conversationSchemas, $ref: $conversationRef } =
       conversationAssigneeUpdateSchema,
       statsQuerySchema,
       staffIdParamsSchema,
+      teamIdParamsSchema,
     },
     { $id: "ConversationSchemas" },
   );
@@ -65,3 +70,4 @@ export type ConversationAssigneeUpdateSchema = z.infer<
 >;
 export type StatsQuerySchema = z.infer<typeof statsQuerySchema>;
 export type StaffIdParamsSchema = z.infer<typeof staffIdParamsSchema>;
+export type TeamIdParamsSchema = z.infer<typeof teamIdParamsSchema>;

@@ -1,3 +1,4 @@
+import "dotenv/config";
 import IORedis from "ioredis";
 import { Queue } from "bullmq";
 const redisURL = new URL(process.env.REDIS_URL);
@@ -22,5 +23,7 @@ export const zapierTriggerQueue = new Queue("zapierTriggerQueue", {
   connection,
 });
 export const userStatusQueue = new Queue("user-availability", { connection });
+
+export const sendMessageQueue = new Queue("sendMessageQueue", { connection });
 
 export default connection;
