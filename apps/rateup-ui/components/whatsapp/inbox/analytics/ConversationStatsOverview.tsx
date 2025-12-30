@@ -83,7 +83,10 @@ const ConversationStatsOverview = ({ dateRange }) => {
         icon: Target,
         suffix: "%",
         progressTotal: 100,
-        value: data?.resolutionRate.toFixed(1) ?? 0,
+        value:
+          data?.resolutionRate != null
+            ? Number(data.resolutionRate.toFixed(1))
+            : 0,
       },
     ];
   }, [data, t]);

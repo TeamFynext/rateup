@@ -202,11 +202,14 @@ function page() {
               <AnalyticsStatCard
                 icon={<ThumbsUp className="w-6 h-6 text-primary" />}
                 label={t("Resolution Rate")}
-                value={`${analytics?.metrics?.resolutionRate.toFixed(1) ?? 0}%`}
+                value={
+                  analytics?.metrics?.resolutionRate != null
+                    ? `${analytics.metrics.resolutionRate.toFixed(1)}%`
+                    : "0%"
+                }
                 trendValue={
                   analytics?.userPerformance?.resolutionRateByLastWeek
                 }
-                trendPositiveWhen="decrease"
                 trendSuffix={t("vs last week")}
               />
             </div>
@@ -303,6 +306,7 @@ function page() {
                       dataKey="messageCount"
                       fill="#1873E8"
                       radius={[8, 8, 0, 0]}
+                      barSize={60}
                     />
                   </BarChart>
                 </ResponsiveContainer>
