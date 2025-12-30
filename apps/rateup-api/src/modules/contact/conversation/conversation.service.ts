@@ -922,33 +922,32 @@ assigned_stats AS (
       ON vc.id = wm."conversationId"
     WHERE wm."sendBy" = ${userId}
   ),
-   resolution_stats AS (
-    SELECT
-      COUNT(*) FILTER (
-        WHERE vc."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
-          AND vc."closedBy" = ${userId}
-          AND vc."closedAt" >= ${sevenDaysAgo}
-      )::INT AS resolved_last_7d,
+resolution_stats AS (
+  SELECT
+    COUNT(*) FILTER (
+      WHERE vc."closedAt" >= ${sevenDaysAgo}
+        AND vc."status" IN (${WaMessageAssignStatus.RESOLVED})
+    ) AS resolved_last_7d,
 
-      COUNT(*) FILTER (
-        WHERE vc."closedBy" = ${userId}
-          AND vc."closedAt" >= ${sevenDaysAgo}
-      )::INT AS total_last_7d,
+    COUNT(*) FILTER (
+      WHERE vc."closedAt" >= ${sevenDaysAgo}
+        AND vc."status" IN (${WaMessageAssignStatus.RESOLVED}, ${WaMessageAssignStatus.CLOSED})
+    ) AS total_last_7d,
 
-      COUNT(*) FILTER (
-        WHERE vc."status" = ANY(${[WaMessageAssignStatus.RESOLVED, WaMessageAssignStatus.CLOSED]})
-          AND vc."closedBy" = ${userId}
-          AND vc."closedAt" >= ${fourteenDaysAgo}
-          AND vc."closedAt" < ${sevenDaysAgo}
-      )::INT AS resolved_prev_7d,
+    COUNT(*) FILTER (
+      WHERE vc."closedAt" >= ${fourteenDaysAgo}
+        AND vc."closedAt" < ${sevenDaysAgo}
+        AND vc."status" IN (${WaMessageAssignStatus.RESOLVED})
+    ) AS resolved_prev_7d,
 
-      COUNT(*) FILTER (
-        WHERE vc."closedBy" = ${userId}
-          AND vc."closedAt" >= ${fourteenDaysAgo}
-          AND vc."closedAt" < ${sevenDaysAgo}
-      )::INT AS total_prev_7d
-    FROM valid_conversations vc
-  ),
+    COUNT(*) FILTER (
+      WHERE vc."closedAt" >= ${fourteenDaysAgo}
+        AND vc."closedAt" < ${sevenDaysAgo}
+        AND vc."status" IN (${WaMessageAssignStatus.RESOLVED}, ${WaMessageAssignStatus.CLOSED})
+    ) AS total_prev_7d
+  FROM valid_conversations vc
+  WHERE vc."closedBy" = ${userId}
+),
 
 dates AS (
     SELECT generate_series(
@@ -1073,23 +1072,19 @@ SELECT
         THEN CASE WHEN (SELECT avg_response_time_last_7d FROM response_stats) IS NOT NULL THEN 100 ELSE 0 END
         ELSE (((SELECT avg_response_time_prev_7d FROM response_stats) - (SELECT avg_response_time_last_7d FROM response_stats)) / (SELECT avg_response_time_prev_7d FROM response_stats)) * 100
       END,
+ 'resolutionRateByLastWeek',
+(
+  COALESCE(
+    (rs.resolved_last_7d::DECIMAL / NULLIF(rs.total_last_7d, 0)) * 100,
+    0
+  )
+  -
+  COALESCE(
+    (rs.resolved_prev_7d::DECIMAL / NULLIF(rs.total_prev_7d, 0)) * 100,
+    0
+  )
+),
 
-      'resolutionRateByLastWeek',
-CASE
-  WHEN (SELECT total_last_7d FROM resolution_stats) = 0
-    OR (SELECT total_prev_7d FROM resolution_stats) = 0
-  THEN 0
-  ELSE
-    (
-      ((SELECT resolved_last_7d FROM resolution_stats)::DECIMAL
-        / (SELECT total_last_7d FROM resolution_stats)) * 100
-    )
-    -
-    (
-      ((SELECT resolved_prev_7d FROM resolution_stats)::DECIMAL
-        / (SELECT total_prev_7d FROM resolution_stats)) * 100
-    )
-END,
 
       'conversationsTransferred',
        COALESCE(
@@ -1157,6 +1152,7 @@ END,
     ) AS metrics
      FROM "OrgMember" om 
      LEFT JOIN "User" u ON u.id = om."userId"
+     CROSS JOIN resolution_stats rs
      WHERE om."userId" = ${userId} AND om."orgId" = ${orgId};
   `;
   return result[0];
