@@ -33,7 +33,7 @@ export default function Page({ children }) {
     redirect("/dashboard");
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <AppSidebar data={data} />
       <SidebarInset className=" overflow-hidden">
         <NavHeader pathname={pathname} />

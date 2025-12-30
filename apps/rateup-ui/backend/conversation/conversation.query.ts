@@ -8,6 +8,8 @@ import {
   getResolvedConversationStats,
   getStaffDetailedConversationAnalytics,
   getStaffPerformanceonConversation,
+  getTeamDetailedMetrics,
+  getTeamOverview,
 } from "./conversation.api";
 
 export const useGetConversationOverView = (filter) => {
@@ -61,5 +63,19 @@ export const useGetStaffDetailedConversationAnalytics = (
     queryFn: () => getStaffDetailedConversationAnalytics(staffId, filter),
     queryKey: ["StaffDetailedConversationAnalytics", staffId, filter],
     enabled: !!staffId,
+  });
+};
+
+export const useGetTeamOverview = (filter = null) => {
+  return useQuery({
+    queryFn: () => getTeamOverview(filter),
+    queryKey: ["teamoverview", filter],
+  });
+};
+
+export const useGetTeamDetailedMetrics = (teamId) => {
+  return useQuery({
+    queryFn: () => getTeamDetailedMetrics(teamId),
+    queryKey: ["teamdetailedmetrics"],
   });
 };

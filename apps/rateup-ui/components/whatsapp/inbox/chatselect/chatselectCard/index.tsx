@@ -3,11 +3,13 @@
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
-import dayjs from "dayjs";
 import {
+  AlertCircle,
+  Archive,
   BadgeCheck,
+  CheckCircle,
   CheckCircle2,
+  Circle,
   CircleCheckBig,
   CircleHelp,
   CircleSlash,
@@ -20,11 +22,9 @@ import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContex
 import { useContactsStore } from "@/app/dashboard/inbox/store";
 import { ContactsWithLastMessage } from "@/backend/whatsapp/inbox/message/wamessage.api";
 import { WaSettings } from "@/backend/whatsapp/settings/waSettings.api";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { CreativeAvatar } from "@/components/ui/creative-avatar";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
-import { getStringColor } from "@/components/ui/utils";
 import { WaMessageClosedStatus } from "@/utils/constants";
 import {
   formatDateWithRelativeTime,
@@ -68,37 +68,6 @@ export default function WaInboxChatSelectCard({
     return label;
   }, [contact?.lifecycleId, lifeCycleLabels]);
 
-  function getBorderColor() {
-    if (selectedContact?.id === contact?.id) {
-      switch (platform) {
-        case MessagePlatform.WHATSAPP:
-          return "bg-accent border-l-2 border-b-1 border-green-600";
-        case MessagePlatform.INSTAGRAM:
-          return "bg-accent border-l-2 border-b-1 border-pink-500";
-        case MessagePlatform.WEBCHAT:
-          return "bg-accent border-l-2 border-b-1 border-blue-600";
-        default:
-          return "";
-      }
-    }
-    return "";
-  }
-
-  function getBackgroundColor() {
-    if (contact?.unReadMessageCount > 0) {
-      switch (platform) {
-        case MessagePlatform.WHATSAPP:
-          return "bg-green-50/30";
-        case MessagePlatform.INSTAGRAM:
-          return "bg-pink-50/30";
-        case MessagePlatform.WEBCHAT:
-          return "bg-blue-50/30";
-        default:
-          return "";
-      }
-    }
-    return "";
-  }
   const closed = getContactClosedIcon(contact?.waMessageAssignStatus);
   const Icon = closed?.icon;
 
@@ -108,7 +77,7 @@ export default function WaInboxChatSelectCard({
       onClick={() => {
         setSelectedContact(contact);
       }}
-      className={`p-3 cursor-pointer transition-all hover:bg-accent/50 ${getBorderColor()} ${getBackgroundColor()}`}
+      className={`p-3 cursor-pointer transition-all hover:bg-accent/50 ${selectedContact?.id === contact?.id && "bg-accent border-l-2 border-b-1 border-blue-600"} ${contact?.unReadMessageCount > 0 && "bg-blue-50/30"}`}
     >
       <div className="flex items-start space-x-2">
         <div className="relative flex-shrink-0">
@@ -120,25 +89,24 @@ export default function WaInboxChatSelectCard({
               contact?.igsId ||
               "Unknown"
             }
-            size="md"
-            showOnlineStatus={
-              !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)
-            }
+            size="lg"
+            showOnlineStatus={true}
             isOnline={
               !isInboxSessionExpired(contact?.lastReceivedMessageTimeStamp)
             }
             onlineStatusPosition="topLeft"
             src={contact?.profilePic}
             showRing={true}
-            platform={platform}
+            variant="light-blue"
+            ringClassName="ring-white"
           />
           <div
             className={`absolute -bottom-0.5 -right-0.5 rounded-full p-0.5 ${
               platform === MessagePlatform.WHATSAPP
-                ? "bg-green-600"
+                ? "bg-green-600 border"
                 : platform === MessagePlatform.INSTAGRAM
-                  ? "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500"
-                  : "bg-blue-600"
+                  ? "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500 border"
+                  : "bg-blue-600 border"
             }`}
           >
             {getSoucePlatformIconAndColor(platform)?.icon}
@@ -284,23 +252,23 @@ export function getContactClosedIcon(status) {
   switch (status) {
     case WaMessageAssignStatus.CLOSED:
       return {
-        icon: CircleCheckBig,
+        icon: Archive,
         color: "text-blue-500 dark:text-blue-600",
       };
     case WaMessageAssignStatus.RESOLVED:
       return {
-        icon: CheckCircle2,
+        icon: CheckCircle,
         color: "text-green-500 dark:text-green-600",
       };
       break;
     case WaMessageAssignStatus.UNRESOLVED:
       return {
-        icon: CircleHelp,
+        icon: Circle,
         color: "text-orange-500 dark:text-orange-600",
       };
     case WaMessageAssignStatus.SPAM:
       return {
-        icon: CircleSlash,
+        icon: AlertCircle,
         color: "text-red-500 dark:text-red-600",
       };
   }

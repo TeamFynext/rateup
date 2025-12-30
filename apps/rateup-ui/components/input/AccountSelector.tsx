@@ -37,6 +37,7 @@ interface CommonAccountSelectorProps {
   value?: any;
   hideLabel?: boolean;
   optional?: boolean;
+  className?: string;
 }
 
 type AccountSelectorProps =
@@ -54,6 +55,7 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
     multiple = false,
     hideLabel = false,
     optional = false,
+    className,
     ...restProps
   } = props;
   const { data, isPending, isError } = useWaSettings();
@@ -148,7 +150,9 @@ export function AccountSelector(props: Readonly<AccountSelectorProps>) {
         onValueChange={onChange}
         required={!optional}
       >
-        <SelectTrigger className="!text-xs text-muted-foreground cursor-pointer hover:bg-accent">
+        <SelectTrigger
+          className={`!text-xs text-muted-foreground cursor-pointer hover:bg-accent ${className}`}
+        >
           <SelectValue placeholder={translations("Select Account")} />
         </SelectTrigger>
         <SelectContent>

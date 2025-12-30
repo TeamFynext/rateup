@@ -385,7 +385,9 @@ export default function AppSidebar({
                       item.group ? (
                         <SidebarGroup className="p-0">
                           {!isCollapsed && <SidebarSeparator className="m-0" />}
-                          <SidebarGroupLabel>{item.group}</SidebarGroupLabel>
+                          {item.showTitle && (
+                            <SidebarGroupLabel>{item.group}</SidebarGroupLabel>
+                          )}
                           {isCollapsed && <SidebarSeparator className="m-0" />}
                           <SidebarGroupContent className="flex p-2">
                             <SidebarMenu>

@@ -1,38 +1,48 @@
 import React, { useMemo } from "react";
 
 import dayjs from "dayjs";
-import { CircleQuestionMark, Clock, MessageCircle, Target } from "lucide-react";
-
-import { useGetConversationOverView } from "@/backend/conversation/conversation.query";
-import ErrorComponent from "@/components/404/ErrorComponent";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import CustomTooltip from "@/components/ui/custom/CustomTooltip";
-import { Progress } from "@/components/ui/progressnew";
+  CheckCircle2,
+  Clock,
+  Eye,
+  MessageCircle,
+  MessageSquare,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+
+import {
+  useGetConversationOverView,
+  useGetConversationQuickStats,
+} from "@/backend/conversation/conversation.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatTimeToNearestUnitFromSeconds } from "@/utils/dateTime";
 
 import ConversationAccountDistribution from "./ConversationAccountDistribution";
-import ConversationQuickStats from "./ConversationQuickStats";
 import ConversationResponseTimePatternGraph from "./ConversationResponseTimePatternGraph";
 import ConversationTrendsGraph from "./ConversationTrendsGraph";
 
 const ConversationStatsOverview = ({ dateRange }) => {
+  const t = useTranslations();
   const { data, isLoading, error, refetch, isRefetching } =
     useGetConversationOverView({
       dateKey: dateRange.key,
       dateRange: dateRange.range,
     });
+  const { data: quickStats, isLoading: isLoadingStats } =
+    useGetConversationQuickStats();
   const overviewStats = useMemo(() => {
     return [
       {
         key: "totalConversations",
-        label: "Conversations",
-        info: "Conversation created on given range",
+        label: t("Conversations"),
         color: {
           border: "border-blue-500",
           cardBg: "bg-blue-50",
@@ -46,8 +56,7 @@ const ConversationStatsOverview = ({ dateRange }) => {
       },
       {
         key: "averageResponseTime",
-        label: "Response Time",
-        info: "Average response time by agent and automation",
+        label: t("Response Time"),
         color: {
           border: "border-green-500",
           cardBg: "bg-green-50",
@@ -63,26 +72,8 @@ const ConversationStatsOverview = ({ dateRange }) => {
             ?.value ?? "NA",
       },
       {
-        key: "averageResponseTimeByAgent",
-        label: "Response Time by Agents",
-        color: {
-          border: "border-orange-500",
-          cardBg: "bg-orange-50",
-          hoverShadow: "hover:shadow-orange-300/50",
-          text: "text-orange-500",
-        },
-        icon: Clock,
-        suffix: formatTimeToNearestUnitFromSeconds(
-          data?.averageResponseTimeByAgent,
-        )?.suffix,
-        progressTotal: 60,
-        value:
-          formatTimeToNearestUnitFromSeconds(data?.averageResponseTimeByAgent)
-            ?.value ?? "NA",
-      },
-      {
         key: "resolutionRate",
-        label: "Resolution Rate",
+        label: t("Resolution Rate"),
         color: {
           border: "border-purple-500",
           cardBg: "bg-purple-50",
@@ -92,10 +83,13 @@ const ConversationStatsOverview = ({ dateRange }) => {
         icon: Target,
         suffix: "%",
         progressTotal: 100,
-        value: data?.resolutionRate,
+        value:
+          data?.resolutionRate != null
+            ? Number(data.resolutionRate.toFixed(1))
+            : 0,
       },
     ];
-  }, [data]);
+  }, [data, t]);
 
   if (isLoading) {
     return (
@@ -110,54 +104,155 @@ const ConversationStatsOverview = ({ dateRange }) => {
     return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
   }
   return (
-    <div className="flex flex-col gap-6 my-4">
-      <div className="grid grid-cols-4 gap-4">
-        {overviewStats.map((stat) => {
-          const progressValue = (stat.value / stat.progressTotal) * 100;
-          return (
-            <Card
-              key={stat.key}
-              className={`group relative overflow-hidden border ${stat.color.border} hover:shadow-xl ${stat.color.hoverShadow} transition-all duration-300 hover:-translate-y-1`}
-            >
-              <CardHeader className="flex justify-between">
+    <div className="flex flex-col gap-6">
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Target className="w-4 h-4 text-primary" />
+            {t("Performance Metrics")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {overviewStats.map((metric, index) => {
+              return (
                 <div
-                  className={`p-2 justify-center items-center ${stat.color.cardBg} rounded-md w-fit`}
+                  key={index}
+                  className="p-3 sm:p-4 flex flex-col gap-2 rounded-lg border hover:shadow-md transition-all"
                 >
-                  <stat.icon className={`${stat.color.text}`} />
-                </div>
-                {stat.info && (
-                  <CustomTooltip
-                    trigger={
-                      <CircleQuestionMark className="w-3 h-3 text-muted-foreground" />
-                    }
-                    content={<span>{stat.info}</span>}
-                  />
-                )}
-              </CardHeader>
-              <CardContent className="flex flex-col">
-                <span className={`text-sm text-muted-foreground`}>
-                  {stat.label}
-                </span>
-                <span className={`text-3xl font-bold ${stat.color.text}`}>
-                  {stat.value}
-                  <span className="text-sm text-muted-foreground ml-1">
-                    {stat.suffix}
-                  </span>
-                </span>
-              </CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
+                        <metric.icon className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {metric.label}
+                      </p>
+                    </div>
+                  </div>
 
-              <CardFooter>
-                <Progress value={progressValue} className="w-full h-[4px]" />
-              </CardFooter>
-            </Card>
-          );
-        })}
-      </div>
-      <div className="grid grid-cols-2 xs:grid-cols-1 gap-4">
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-xl sm:text-2xl font-bold text-primary">
+                      {metric.value}
+                    </p>
+                    {metric.suffix && (
+                      <span className="text-xs text-muted-foreground">
+                        {metric.suffix}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Zap className="w-4 h-4 text-primary" />
+            {t("Quick Stats")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 pb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
+                  <Eye className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("New Conversations")}
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {quickStats?.newConversations ?? "NA"}
+                  </p>
+                </div>
+              </div>
+              <Badge
+                variant="outline"
+                className="bg-blue-50 text-primary border-blue-200 dark:bg-transparent text-[10px]"
+              >
+                {t("LIVE")}
+              </Badge>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-green-50 dark:bg-transparent rounded-lg flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Resolved")}
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {quickStats?.resolved ?? "NA"}
+                  </p>
+                </div>
+              </div>
+              {quickStats?.resolvedRateDifference ? (
+                <div className="flex items-center gap-1 text-xs">
+                  {quickStats?.resolvedRateDifference < 0 ? (
+                    <TrendingDown className="w-3 h-3 text-red-600" />
+                  ) : (
+                    <TrendingUp className="w-3 h-3 text-green-600" />
+                  )}
+                  <span
+                    className={`${quickStats?.resolvedRateDifference < 0 ? "text-red-600" : "text-green-600"}`}
+                  >
+                    {quickStats?.resolvedRateDifference ?? "NA"}%
+                  </span>
+                </div>
+              ) : (
+                ""
+              )}
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-orange-50 dark:bg-transparent rounded-lg flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("In Progress")}
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {quickStats?.conversationInProgress ?? "NA"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg border hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-blue-50 dark:bg-transparent rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Agents Online")}
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {quickStats?.totalStaff
+                      ? `${quickStats?.staffOnline}/${quickStats?.totalStaff}`
+                      : "NA"}
+                  </p>
+                </div>
+              </div>
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-col gap-4">
         <ConversationTrendsGraph dateRange={dateRange} />
         <ConversationResponseTimePatternGraph dateRange={dateRange} />
         <ConversationAccountDistribution dateRange={dateRange} />
-        <ConversationQuickStats />
       </div>
     </div>
   );

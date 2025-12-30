@@ -159,7 +159,7 @@ const CardCarousel = ({
   function handleButtonSelect(btn, index) {
     let newObject = { type: btn, text: "" };
     if (btn === WHATSAPP_BUTTON_TYPE.WEBSURVEY) {
-      ((newObject.type = "URL"), (newObject["example"] = []));
+      (newObject.type = "URL"), (newObject["example"] = []);
     }
     const existing = form.values.mediaCarousel[index].buttons.find(
       (b) => b.type === newObject.type,
