@@ -175,7 +175,13 @@ function page() {
                 label={t("Messages Handled")}
                 value={analytics?.userPerformance?.totalMessagesHandled}
                 trendValue={
-                  analytics?.userPerformance?.messagesHandledRateByLastWeek
+                  analytics?.userPerformance?.messagesHandledRateByLastWeek !=
+                  null
+                    ? Math.floor(
+                        analytics?.userPerformance
+                          ?.messagesHandledRateByLastWeek,
+                      )
+                    : 0
                 }
                 trendSuffix={t("vs last week")}
               />
@@ -189,7 +195,11 @@ function page() {
                     : "NA"
                 }
                 trendValue={
-                  analytics?.userPerformance?.responseTimeRateByLastWeek
+                  analytics?.userPerformance?.responseTimeRateByLastWeek != null
+                    ? Math.floor(
+                        analytics?.userPerformance?.responseTimeRateByLastWeek,
+                      )
+                    : 0
                 }
                 trendPositiveWhen="decrease"
                 trendSuffix={
@@ -208,7 +218,11 @@ function page() {
                     : "0%"
                 }
                 trendValue={
-                  analytics?.userPerformance?.resolutionRateByLastWeek
+                  analytics?.userPerformance?.resolutionRateByLastWeek != null
+                    ? Math.floor(
+                        analytics?.userPerformance?.resolutionRateByLastWeek,
+                      )
+                    : 0
                 }
                 trendSuffix={t("vs last week")}
               />
