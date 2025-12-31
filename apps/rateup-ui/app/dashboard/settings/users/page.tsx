@@ -7,19 +7,16 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  Check,
   CheckCircle,
-  Clock,
+  Copy,
   Mail,
-  MessageCircle,
   Pencil,
   Plus,
   Save,
   Search,
-  Shield,
   Trash2,
-  Upload,
   User,
-  UserCog,
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -84,6 +81,7 @@ type SelectedUser = {
 
 export default function UsersPage() {
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<SelectedUser>({});
   const translations = useTranslations();
@@ -261,6 +259,12 @@ export default function UsersPage() {
     );
   });
 
+  const handleCopy = async (id) => {
+    const link = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/invite?type=team&token=${id}`;
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
   return (
     <div className="flex flex-col items-start w-full gap-4">
       <div>
@@ -423,8 +427,8 @@ export default function UsersPage() {
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
                   {addResourceMutation.isPending
-                    ? translations("Creating")
-                    : translations("Create User")}
+                    ? translations("Inviting")
+                    : translations("Invite User")}
                 </Button>
               </DialogFooter>
             </form>
@@ -451,7 +455,7 @@ export default function UsersPage() {
             <h3 className="col-span-full text-sm font-semibold text-gray-500 uppercase">
               {translations("Active Members")}
             </h3>
-            <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4">
+            <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4 flex-wrap">
               {filteredMembers.map((user) => (
                 <Card
                   key={user.id}
@@ -553,12 +557,35 @@ export default function UsersPage() {
             <h3 className="col-span-full text-sm font-semibold text-gray-500 uppercase mt-6">
               {translations("Pending Invitations")}
             </h3>
-            <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4">
+            <div className="flex flex-col items-center gap-2 md:flex-row md:gap-4 p-4 flex-wrap w-full">
               {filteredInvitations.map((invite) => (
                 <Card
                   key={invite.id}
-                  className="p-3 max-w-[15vw] min-w-[15vw] border-dashed border-gray-300 hover:border-rateup-orange/40 hover:shadow-md transition-all group relative"
+                  className="p-3 lg:max-w-[15vw] min-w-[15vw] border-dashed border-gray-300 hover:border-rateup-orange/40 hover:shadow-md transition-all group relative"
                 >
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="absolute top-2 right-2 border rounded-sm p-1 hover:text-primary cursor-pointer"
+                          onClick={() => handleCopy(invite?.id)}
+                        >
+                          {copied ? (
+                            <Check className="w-4 h-4" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {copied
+                            ? translations("Copied")
+                            : translations("Copy")}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <div className="flex flex-col items-center text-center justify-center gap-1">
                     <Avatar className="w-16 h-16 border-2 border-gray-100 shadow-sm">
                       <AvatarFallback className="bg-yellow-500 text-white">
@@ -577,7 +604,6 @@ export default function UsersPage() {
                     <Badge className="text-[10px] h-5 px-2 mb-2 bg-yellow-100 text-yellow-800 border border-yellow-200">
                       {invite.status}
                     </Badge>
-
                     {/* Team info */}
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mb-2">
                       <Users className="w-3 h-3" />

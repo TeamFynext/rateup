@@ -2,17 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 
-import { IconPointFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { TimerIcon } from "lucide-react";
+import { Clock, TimerIcon } from "lucide-react";
 
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { Loader } from "@/components/ui/loader";
-import { Progress } from "@/components/ui/progressnew";
 
 import { isInboxSessionExpired } from "../../../../../../utils/whatsapp/inbox";
-import classes from "./styles.module.css";
 
 dayjs.extend(utc);
 
@@ -53,9 +50,9 @@ export default function WaInboxCountdownTimer({
   const Timer = () => {
     return (
       <div>
-        <div className="flex flex-col items-center">
-          <span className="text-primary text-xs font-medium">{`${hours ?? 0} : ${minutes ?? 0}`}</span>
-          <Progress value={percentageDifference} className="w-24" />
+        <div className="flex items-center gap-1">
+          <Clock className="w-4 h-4 text-primary" />
+          <span className="text-primary text-sm font-medium">{`${hours ?? 0} : ${minutes ?? 0}`}</span>
         </div>
       </div>
     );

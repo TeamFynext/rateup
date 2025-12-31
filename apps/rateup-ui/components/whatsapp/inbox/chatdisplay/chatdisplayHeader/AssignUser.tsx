@@ -236,11 +236,11 @@ const AssignUser = ({
                 !assignedStaff.length ? (
                   <div className="flex items-center gap-1">
                     <UserRoundCheck
-                      className={`w-4 h-4 ${isDefault ? "" : "text-muted-foreground"}`}
+                      className={`w-4 h-4 ${isDefault ? "" : "text-primary"}`}
                     />
-                    <ChevronDown
-                      className={`w-3 h-3 ${isDefault ? "" : "text-muted-foreground"}`}
-                    />
+                    <span className={`${isDefault ? "" : "text-primary"} pr-2`}>
+                      Assign
+                    </span>
                   </div>
                 ) : (
                   <ChevronDown

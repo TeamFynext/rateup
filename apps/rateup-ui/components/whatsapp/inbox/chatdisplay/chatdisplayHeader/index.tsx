@@ -242,10 +242,10 @@ export default function WaInboxChatDisplayHeader({
                 </PopoverContent>
               </Popover>
             )}
-          <AssignUser contactId={contact?.id} />
           <WaInboxCountdownTimer
             timeStamp={contact?.lastReceivedMessageTimeStamp}
           />
+          <AssignUser contactId={contact?.id} />
           <ChatHeaderMenu contact={contact} />
         </div>
       </div>
@@ -307,12 +307,9 @@ const ChatHeaderMenu = ({ contact }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 hover:text-primary"
-        >
-          <CircleCheckBig className="w-3.5 h-3.5 " />
+        <Button variant="ghost" size="sm" className="h-8 p-0">
+          <CircleCheckBig className="w-3.5 h-3.5 text-green-500" />
+          <span className="text-green-500">Close</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
