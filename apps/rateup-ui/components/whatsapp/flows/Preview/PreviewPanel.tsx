@@ -63,11 +63,10 @@ export function PreviewPanel({ previewOpened, version = 1 }: PreviewProps) {
                 maxHeight: "600px",
                 flex: 1,
                 borderRadius: "16px",
-                border: "2px solid",
-                borderColor: theme.colors["whatsapp-green"][6],
                 width: "300px",
                 position: "relative",
               }}
+              className="border border-primary"
             >
               <FlowChatPreview
                 currentScreen={currentScreen}

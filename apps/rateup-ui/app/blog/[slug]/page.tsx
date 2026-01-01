@@ -72,9 +72,10 @@ export default async function Page({ params }: Readonly<Props>) {
               className="h-full w-full object-cover opacity-80"
             />
             {post.feature_image_caption && (
-              <div className="absolute bottom-0 right-0 bg-slate-900 bg-opacity-75 p-2 text-xs text-white">
-                {post.feature_image_caption}
-              </div>
+              <div
+                className="absolute bottom-0 right-0 bg-slate-900 bg-opacity-75 p-2 text-xs text-white"
+                dangerouslySetInnerHTML={{ __html: post.feature_image_caption }}
+              />
             )}
           </div>
         )}

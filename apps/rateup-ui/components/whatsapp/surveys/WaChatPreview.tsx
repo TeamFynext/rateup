@@ -27,20 +27,11 @@ import { WaQuestionPreview } from "./WaQuestionPreview";
 export const WhatsappChatPreview = ({ selectedQ }) => {
   const [listOpened, { open, close }] = useDisclosure(false);
   const { selectedLanguage } = useContext(SelectedLanguageContext);
-  const theme = useMantineTheme();
   const sections = selectedQ?.sections?.[selectedLanguage];
   const translations = useTranslations();
   return (
     <>
-      <Title
-        p="sm"
-        style={{
-          backgroundColor: theme.colors["whatsapp-green"][7],
-          textAlign: "center",
-        }}
-        order={3}
-        c={"white"}
-      >
+      <Title p="sm" order={3} c={"white"} className="bg-primary text-center">
         {translations("Preview")}
       </Title>
       <ScrollArea h={"100%"}>
