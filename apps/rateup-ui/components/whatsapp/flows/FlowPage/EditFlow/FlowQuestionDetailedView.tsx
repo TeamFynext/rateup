@@ -593,7 +593,6 @@ function ElementEditor({
                   />
                 }
                 size="sm"
-                color={theme.colors["whatsapp-green"][6]}
                 onClick={() => {
                   let save = handleSave();
                   save === "saved" && setActiveTab(EditorType.LogicEditor);
@@ -608,7 +607,6 @@ function ElementEditor({
                 title={translations("Google Review")}
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
                 size="sm"
-                color={theme.colors["whatsapp-green"][6]}
                 onClick={() => {
                   let save = handleSave();
                   save === "saved" &&

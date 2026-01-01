@@ -36,13 +36,10 @@ export const FlowChatPreview = ({
     <>
       <Title
         p="sm"
-        style={{
-          backgroundColor: theme.colors["whatsapp-green"][7],
-          textAlign: "center",
-        }}
         order={3}
         c={"white"}
         lineClamp={2}
+        className="bg-primary text-center"
       >
         {currentScreen?.title ?? "Screeen Name"}
       </Title>

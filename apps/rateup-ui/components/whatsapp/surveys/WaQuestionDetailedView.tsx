@@ -297,7 +297,6 @@ export function WaQuestionDetailedView({
                   />
                 }
                 size="sm"
-                color={theme.colors["whatsapp-green"][6]}
                 onClick={() => {
                   let save = handleSave();
                   save === "saved" &&
@@ -313,7 +312,6 @@ export function WaQuestionDetailedView({
                 title={translations("Google Review")}
                 leftIcon={<IconBrandGoogle size={"1rem"} stroke={4} />}
                 size="sm"
-                color={theme.colors["whatsapp-green"][6]}
                 onClick={() => {
                   let save = handleSave();
                   save === "saved" &&
@@ -381,10 +379,9 @@ export function WaQuestionDetailedView({
               position: "relative",
               height: "600px",
               borderRadius: "16px",
-              border: "2px solid",
-              borderColor: theme.colors["whatsapp-green"][6],
               width: "300px",
             }}
+            className="border border-primary"
           >
             <WhatsappChatPreview selectedQ={question} />
           </Box>
