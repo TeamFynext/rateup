@@ -4,20 +4,17 @@ import { useMemo } from "react";
 
 import { Group, Radio, RadioGroup, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import {
-  IconBrandInstagram,
-  IconBrandWhatsappFilled,
-  IconWebhook,
-} from "@tabler/icons-react";
+import { IconBrandWhatsappFilled, IconWebhook } from "@tabler/icons-react";
 import {
   Ban,
   BellOff,
   Bot,
   CircleCheckBig,
   InstagramIcon,
-  MoreVertical,
+  Tag,
   Ticket,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   MessagePlatform,
@@ -30,7 +27,8 @@ import {
   useContactsStore,
 } from "@/app/dashboard/inbox/store";
 import {
-  useEditContactLabelsMutation,
+  useAssignContactLabelsToContactId,
+  useContactLabels,
   useEditContactMutation,
 } from "@/backend/campaign/contacts/contacts.query";
 import { useGetChatbotDetails } from "@/backend/chatbot/chatbot.query";
@@ -47,6 +45,7 @@ import { CreativeAvatar } from "@/components/ui/creative-avatar";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -82,6 +81,7 @@ export default function WaInboxChatDisplayHeader({
 }: WaInboxChatDisplayHeaderProps) {
   const setIsChatDisplayOpen = useSetIsChatDisplayOpen();
   const editContactMutation = useEditContactMutation(null);
+  const { data: contactLabels = [], isPending } = useContactLabels();
   const { setSelectedContact } = useContactsStore();
   const isMobile = useMediaQuery("(max-width: 1200px)");
   const { selectedChatbotId } = useChatbotStore();
@@ -246,6 +246,11 @@ export default function WaInboxChatDisplayHeader({
             timeStamp={contact?.lastReceivedMessageTimeStamp}
           />
           <AssignUser contactId={contact?.id} />
+          <ContactLabel
+            contactLabel={contactLabels}
+            contact={contact}
+            labelPending={isPending}
+          />
           <ChatHeaderMenu contact={contact} />
         </div>
       </div>
@@ -462,3 +467,76 @@ export const AssignInboxContent = ({
     </Stack>
   );
 };
+
+function ContactLabel({ contactLabel, labelPending, contact }) {
+  const activeLabels = contact?.contactLabels || [];
+  const { updateContactById, setSelectedContact } = useContactsStore();
+  const assign = useAssignContactLabelsToContactId();
+
+  const isActive = (labelId: string) =>
+    activeLabels.some((l) => l.id === labelId);
+
+  function handleToggleLabel(labelId: string, checked: boolean) {
+    if (!contact?.id) return;
+
+    const nextLabelIds = checked
+      ? [...new Set([...activeLabels.map((l) => l.id), labelId])]
+      : activeLabels.filter((l) => l.id !== labelId).map((l) => l.id);
+
+    const updatedLabels = contactLabel.filter((label) =>
+      nextLabelIds.includes(label.id),
+    );
+
+    assign.mutate(
+      {
+        contactId: contact.id,
+        labelIds: nextLabelIds,
+      },
+      {
+        onSuccess: () => {
+          updateContactById(contact.id, (c) => ({
+            ...c,
+            contactLabels: updatedLabels,
+          }));
+          toast.success("Labels updated");
+        },
+        onError: () => {
+          toast.error("Error updating labels");
+        },
+      },
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="ml-auto hidden h-8 lg:flex text-purple-600"
+        >
+          <Tag />
+          <span className="font-medium text-sm">Labels</span>
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" className="w-[150px]">
+        {contactLabel?.map((label) => (
+          <DropdownMenuCheckboxItem
+            key={label.id}
+            checked={isActive(label.id)}
+            onCheckedChange={(checked) => handleToggleLabel(label.id, checked)}
+            disabled={labelPending}
+            className="flex items-center gap-2"
+          >
+            <span
+              style={{ backgroundColor: label.color }}
+              className="h-3 w-3 rounded-full"
+            />
+            <span>{label.name}</span>
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
