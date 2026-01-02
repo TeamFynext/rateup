@@ -198,7 +198,6 @@ const CampaignById = () => {
           onChange={(value) =>
             router.push(`/dashboard/campaign/${campaignId}?tab=${value}`)
           }
-          color={"var(--mantine-color-whatsapp-green-filled)"}
           radius={"md"}
           defaultValue={activeTab}
           tt={"capitalize"}
