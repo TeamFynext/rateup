@@ -835,6 +835,17 @@ export async function assignWaMessageToUser(
   });
   const assignIfOnline = data.assignIfOnline ?? true;
   const newUsers = [];
+  const existingUserIds = existingUsers.map((u) => u.assignedUserId);
+
+  const incomingUserIds = data.assignees.map((a) => a.userId);
+
+  const addedUsers = data.assignees.filter(
+    (a) => !existingUserIds.includes(a.userId),
+  );
+
+  const revokedUsers = existingUsers.filter(
+    (u) => !incomingUserIds.includes(u.assignedUserId),
+  );
   for (const assignee of data.assignees) {
     let updateCount = false;
     const existingUser = existingUsers.find(
@@ -904,6 +915,27 @@ export async function assignWaMessageToUser(
     })),
     skipDuplicates: true,
   });
+
+  if (addedUsers.length) {
+    await createInternalWaMessage({
+      contactId: data.contactId,
+      waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+      assignedUsers: newUsers,
+      trigerredByUser: userId,
+    });
+  }
+
+  if (revokedUsers.length) {
+    await createInternalWaMessage({
+      contactId: data.contactId,
+      waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+      assignedUsers: revokedUsers.map((u) => ({
+        userId: u.assignedUserId,
+        teamId: u.teamId,
+      })),
+      trigerredByUser: userId,
+    });
+  }
 
   const contact = await prisma.waInboxAssign.deleteMany({
     where: {
@@ -1442,4 +1474,98 @@ export async function generateInboxResponse(
       });
     }
   }
+}
+
+export async function createInternalWaMessage({
+  contactId,
+  waMessageAssignStatus,
+  trigerredByUser,
+  assignedUsers,
+}: {
+  contactId: string;
+  waMessageAssignStatus: string;
+  trigerredByUser?: string;
+  assignedUsers?: { userId: string; teamId: string }[];
+}) {
+  let messageText: string;
+  let assignStatus: string;
+
+  let triggeredByUserDetails: { id: string; name: string } | null = null;
+
+  if (trigerredByUser) {
+    const user = await prisma.user.findUnique({
+      where: { id: trigerredByUser },
+      select: { id: true, name: true },
+    });
+
+    if (user?.name) {
+      triggeredByUserDetails = { id: user.id, name: user.name };
+    }
+  }
+
+  let assignedUserDetails: { id: string; name: string }[] = [];
+
+  if (
+    (waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED ||
+      waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED) &&
+    assignedUsers?.length
+  ) {
+    const userIds = assignedUsers.map((u) => u.userId);
+
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, name: true },
+    });
+
+    assignedUserDetails = users
+      .filter((u) => u.name)
+      .map((u) => ({ id: u.id, name: u.name! }));
+  }
+
+  switch (waMessageAssignStatus) {
+    case WaMessageAssignStatus.ASSIGNED:
+      messageText = assignedUserDetails.length
+        ? `assigned this chat to ${assignedUserDetails
+            .map((u) => u.name)
+            .join(", ")}`
+        : "assigned this chat";
+      assignStatus = WaMessageAssignStatus.ASSIGNED;
+      break;
+
+    case WaMessageAssignStatus.UNASSIGNED:
+      messageText = assignedUserDetails.length
+        ? `revoked ${assignedUserDetails
+            .map((u) => u.name)
+            .join(", ")} from this chat`
+        : "unassigned this chat";
+      assignStatus = WaMessageAssignStatus.UNASSIGNED;
+      break;
+
+    default:
+      messageText = `marked this chat as ${waMessageAssignStatus}`;
+      assignStatus = waMessageAssignStatus;
+  }
+
+  const conversation = await getLastCreatedConversationForContact(contactId);
+
+  return prisma.waMessage.create({
+    data: {
+      contactId,
+      conversationId: conversation?.id,
+      sourcePlatform: PlatformType.INTERNAL,
+      sendBy: triggeredByUserDetails?.id,
+      waCreatedAt: new Date(),
+      messageBody: {
+        exchangeProcess: "internal",
+        send: null,
+        receive: null,
+        internal: {
+          text: { body: messageText },
+          triggeredByUser: triggeredByUserDetails,
+          assignStatus,
+          assignedUsers: assignedUserDetails,
+        },
+      },
+    },
+  });
 }

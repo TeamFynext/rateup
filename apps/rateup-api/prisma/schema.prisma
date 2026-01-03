@@ -1476,6 +1476,7 @@ enum PlatformType {
   WHATSAPP
   INSTAGRAM
   WEBCHAT
+  INTERNAL
 }
 
 model WaMessage {
