@@ -172,6 +172,10 @@ export function parseWaMessage(
           break;
       }
     }
+    if (messageBody?.exchangeProcess === "internal") {
+      const { internal } = messageBody;
+      messageContent = `${internal?.triggeredByUser?.name} ${internal.text.body}`;
+    }
   }
 
   return {
