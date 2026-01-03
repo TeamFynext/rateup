@@ -11,6 +11,7 @@ import {
   showSuccessToast,
 } from "../../../utils/notifications";
 import {
+  assignContactLabelsToContactId,
   assignContactLabelsToMultipleContacts,
   createContact,
   createContactLabel,
@@ -126,14 +127,14 @@ export const useContactDeleteMutation = (groupId: string) => {
     mutationFn: deleteContact,
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      queryClient.invalidateQueries({
+      (queryClient.invalidateQueries({
         queryKey: ["contactGroupById", groupId],
       }),
         showSuccessToast(
           "Contact Deleted successfully",
           "contact-delete",
           <IconCheck />,
-        );
+        ));
       deleteContactsByIds([variables]);
     },
     onError: (error: any) => {
@@ -414,6 +415,23 @@ export const useAssignContactLabelsToMultipleContacts = () => {
   return useMutation({
     mutationFn: assignContactLabelsToMultipleContacts,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+  });
+};
+
+export const useAssignContactLabelsToContactId = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      contactId,
+      labelIds,
+    }: {
+      contactId: string;
+      labelIds: string[];
+    }) => assignContactLabelsToContactId(contactId, { labelIds }),
+
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
     },
   });

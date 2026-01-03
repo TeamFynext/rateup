@@ -131,6 +131,19 @@ export const assignContactLabelsToMultipleContacts = async (data: {
   return res.data;
 };
 
+export const assignContactLabelsToContactId = async (
+  contactId: string,
+  data: {
+    labelIds: string[];
+  },
+) => {
+  let res = await axiosClient.put(
+    `${CONTACT_BASE_URL}/labels/assign/${contactId}`,
+    data,
+  );
+  return res.data;
+};
+
 export const updateLifecycleofMultipleContacts = async (data: {
   lifecycleId;
   contactIds: string[];
