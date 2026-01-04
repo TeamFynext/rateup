@@ -6,6 +6,7 @@ import { Flex, Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { Send } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -323,6 +324,7 @@ export const WaInboxAssignUserFooter = ({
   const { filterData } = useContactStore();
   const assignMut = useAssignInboxToUer(contactId, filterData);
   const { updateContactById } = useContactsStore();
+  const qc = useQueryClient();
 
   function handleAssignToMe() {
     if (!user) {
@@ -351,6 +353,7 @@ export const WaInboxAssignUserFooter = ({
               },
             ],
           }));
+          qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
         },
       },
     );

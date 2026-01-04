@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import lodash from "lodash";
 import {
   Check,
@@ -67,6 +68,7 @@ const AssignUser = ({
   const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<any[]>(
     [],
   );
+  const qc = useQueryClient();
 
   const { updateContactById } = useContactsStore();
   const isDefault = variant === "default";
@@ -126,6 +128,7 @@ const AssignUser = ({
                 return { id: user?.id, name: user?.name };
               }),
             }));
+            qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
           },
         },
       );
