@@ -1481,14 +1481,21 @@ export async function createInternalWaMessage({
   waMessageAssignStatus,
   trigerredByUser,
   assignedUsers,
+  mentionedUsers,
+  exchangeProcess = "internal",
+  orgId,
+  privateMessageText,
 }: {
   contactId: string;
-  waMessageAssignStatus: string;
+  waMessageAssignStatus?: string;
   trigerredByUser?: string;
   assignedUsers?: { userId: string; teamId: string }[];
+  mentionedUsers?: { userId: string }[];
+  exchangeProcess?: "internal" | "privateNote";
+  orgId?: string;
+  privateMessageText?: string;
 }) {
-  let messageText: string;
-  let assignStatus: string;
+  const conversation = await getLastCreatedConversationForContact(contactId);
 
   let triggeredByUserDetails: { id: string; name: string } | null = null;
 
@@ -1503,69 +1510,140 @@ export async function createInternalWaMessage({
     }
   }
 
-  let assignedUserDetails: { id: string; name: string }[] = [];
+  if (exchangeProcess === "internal") {
+    let messageText: string;
+    let assignStatus: string;
+    let assignedUserDetails: { id: string; name: string }[] = [];
 
-  if (
-    (waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED ||
-      waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED) &&
-    assignedUsers?.length
-  ) {
-    const userIds = assignedUsers.map((u) => u.userId);
+    if (
+      (waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED ||
+        waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED) &&
+      assignedUsers?.length
+    ) {
+      const userIds = assignedUsers.map((u) => u.userId);
 
-    const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true, name: true },
-    });
+      const users = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true },
+      });
 
-    assignedUserDetails = users
-      .filter((u) => u.name)
-      .map((u) => ({ id: u.id, name: u.name! }));
-  }
+      assignedUserDetails = users
+        .filter((u) => u.name)
+        .map((u) => ({ id: u.id, name: u.name! }));
+    }
 
-  switch (waMessageAssignStatus) {
-    case WaMessageAssignStatus.ASSIGNED:
-      messageText = assignedUserDetails.length
-        ? `assigned this chat to ${assignedUserDetails
-            .map((u) => u.name)
-            .join(", ")}`
-        : "assigned this chat";
-      assignStatus = WaMessageAssignStatus.ASSIGNED;
-      break;
+    switch (waMessageAssignStatus) {
+      case WaMessageAssignStatus.ASSIGNED:
+        messageText = assignedUserDetails.length
+          ? `assigned this chat to ${assignedUserDetails
+              .map((u) => u.name)
+              .join(", ")}`
+          : "assigned this chat";
+        assignStatus = WaMessageAssignStatus.ASSIGNED;
+        break;
 
-    case WaMessageAssignStatus.UNASSIGNED:
-      messageText = assignedUserDetails.length
-        ? `revoked ${assignedUserDetails
-            .map((u) => u.name)
-            .join(", ")} from this chat`
-        : "unassigned this chat";
-      assignStatus = WaMessageAssignStatus.UNASSIGNED;
-      break;
+      case WaMessageAssignStatus.UNASSIGNED:
+        messageText = assignedUserDetails.length
+          ? `revoked ${assignedUserDetails
+              .map((u) => u.name)
+              .join(", ")} from this chat`
+          : "unassigned this chat";
+        assignStatus = WaMessageAssignStatus.UNASSIGNED;
+        break;
 
-    default:
-      messageText = `marked this chat as ${waMessageAssignStatus}`;
-      assignStatus = waMessageAssignStatus;
-  }
+      default:
+        messageText = `marked this chat as ${waMessageAssignStatus}`;
+        assignStatus = waMessageAssignStatus;
+    }
 
-  const conversation = await getLastCreatedConversationForContact(contactId);
-
-  return prisma.waMessage.create({
-    data: {
-      contactId,
-      conversationId: conversation?.id,
-      sourcePlatform: PlatformType.INTERNAL,
-      sendBy: triggeredByUserDetails?.id,
-      waCreatedAt: new Date(),
-      messageBody: {
-        exchangeProcess: "internal",
-        send: null,
-        receive: null,
-        internal: {
-          text: { body: messageText },
-          triggeredByUser: triggeredByUserDetails,
-          assignStatus,
-          assignedUsers: assignedUserDetails,
+    const wamessage = await prisma.waMessage.create({
+      data: {
+        contactId,
+        conversationId: conversation?.id,
+        sourcePlatform: PlatformType.INTERNAL,
+        sendBy: triggeredByUserDetails?.id,
+        waCreatedAt: new Date(),
+        messageBody: {
+          exchangeProcess: "internal",
+          send: null,
+          receive: null,
+          internal: {
+            text: { body: messageText },
+            triggeredByUser: triggeredByUserDetails,
+            assignStatus,
+            assignedUsers: assignedUserDetails,
+          },
         },
       },
-    },
-  });
+    });
+    return wamessage;
+  } else {
+    let mentionedUserDetails: { id: string; name: string }[] = [];
+    if (!orgId) {
+      throw new Error("orgId is required to create notifications");
+    }
+    const contact = await prisma.contact.findUnique({
+      where: { id: contactId },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    if (!contact) {
+      throw new Error("Contact not found");
+    }
+
+    if (mentionedUsers?.length > 0) {
+      const userIds = mentionedUsers.map((u) => u.userId);
+
+      const users = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true },
+      });
+
+      mentionedUserDetails = users
+        .filter((u) => u.name)
+        .map((u) => ({ id: u.id, name: u.name! }));
+    }
+    const wamessage = await prisma.waMessage.create({
+      data: {
+        contactId,
+        conversationId: conversation?.id,
+        sourcePlatform: PlatformType.INTERNAL,
+        sendBy: triggeredByUserDetails?.id,
+        waCreatedAt: new Date(),
+        messageBody: {
+          exchangeProcess: "privateNote",
+          send: null,
+          receive: null,
+          privateNote: {
+            text: { body: privateMessageText },
+            triggeredByUser: triggeredByUserDetails,
+            mentionedUser: mentionedUserDetails,
+          },
+        },
+      },
+    });
+
+    if (mentionedUserDetails.length > 0) {
+      const notificationData = {
+        contactId: contact.id,
+        contactName: contact.name,
+      };
+
+      await Promise.all(
+        mentionedUserDetails.map((user) =>
+          createNotification(
+            user.id,
+            orgId,
+            "whatsapp",
+            "mentioned",
+            notificationData,
+          ),
+        ),
+      );
+    }
+    return wamessage;
+  }
 }
