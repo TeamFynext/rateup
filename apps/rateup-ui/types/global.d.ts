@@ -1362,6 +1362,23 @@ export interface WaInternalMessageBody {
   }[];
 }
 
+export interface WaPrivateMessageBody {
+  messaging_product?: "whatsapp";
+  recipient_type?: "individual";
+  type?: "text";
+  text: {
+    body: string;
+  };
+  triggeredByUser: {
+    id: string;
+    name: string;
+  };
+  mentionedUser?: {
+    id: string;
+    name: string;
+  }[];
+}
+
 export type WaSendMessageBody = {
   messaging_product: "whatsapp";
   recipient_type: "individual";
@@ -1609,10 +1626,11 @@ export type IgReceiveMessageBody =
 //---instagram
 
 export type WaInboxMessage = {
-  exchangeProcess: "send" | "receive" | "internal";
+  exchangeProcess: "send" | "receive" | "internal" | "privateNote";
   send?: WaSendMessageBody | IgSendMessageBody;
   receive?: WaReceiveMessageBody | IgReceiveMessageBody;
   internal?: WaInternalMessageBody;
+  privateNote?: WaPrivateMessageBody;
 };
 
 export type WaTemplateFetchBody = {

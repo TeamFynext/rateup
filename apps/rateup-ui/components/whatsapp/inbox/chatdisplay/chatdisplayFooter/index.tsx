@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Flex, Group, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -8,7 +8,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { Send } from "lucide-react";
+import { MessageSquare, Send, StickyNote } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { create } from "zustand";
 
@@ -25,6 +25,7 @@ import WaTextEditor, {
 } from "@/components/RichTextEditor/waTextEditor";
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User } from "@/context/UserContext";
 import { WaMessageClosedStatus } from "@/utils/constants";
 import { formatDateWithRelativeTime } from "@/utils/dateTime";
@@ -33,6 +34,7 @@ import { showErrorToast } from "@/utils/notifications";
 
 import {
   useAssignInboxToUer,
+  useCreatePrivateMessage,
   useSendNewWaMessage,
   useUnBlockWhatsAppUser,
 } from "../../../../../backend/whatsapp/inbox/message/wamessage.query";
@@ -51,6 +53,7 @@ export default function WaInboxChatDisplayFooter({
 }: Readonly<{
   contact: ContactWithUpdatedAt;
 }>) {
+  const [activeTab, setActiveTab] = useState<"message" | "private">("message");
   const inputRef = useRef(null);
   const submiRef = useRef(null);
   const translations = useTranslations();
@@ -62,6 +65,7 @@ export default function WaInboxChatDisplayFooter({
     whatsappSettingsPhoneId,
     platform as MessagePlatform,
   );
+  const createPrivateMessage = useCreatePrivateMessage();
   const { addMessage, removeMessage } = useTemperoryMessageStore();
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
@@ -227,6 +231,46 @@ export default function WaInboxChatDisplayFooter({
       },
     }));
   }
+  function handleSendPrivateMessage() {
+    if (form.validate().hasErrors) return;
+    if (!whatsappSettingsPhoneId && platform !== MessagePlatform.WEBCHAT) {
+      showErrorToast("Select a account to send the message");
+      return;
+    }
+    const values = { ...form.values };
+    form.reset();
+    resetBody();
+    addMessage(contact.id, {
+      body: {
+        text: values.text.body,
+        ...(values.media.length
+          ? {
+              url: values.media[0].url,
+              urlType: values.media[0].type,
+              filename: values.media[0].name,
+            }
+          : {}),
+      },
+      type: "text",
+    });
+    resetMedia();
+    setAudioUrl(null);
+
+    createPrivateMessage.mutate(
+      {
+        contactId: contact.id,
+        data: {
+          ...values,
+        },
+      },
+      {
+        onSuccess: () => {
+          removeMessage(contact.id);
+        },
+      },
+    );
+  }
+
   function insertEmoji(value: string) {
     const { selectionStart, selectionEnd } = inputRef.current;
     const text = form.values.text.body;
@@ -276,6 +320,27 @@ export default function WaInboxChatDisplayFooter({
       />
     );
   };
+  const SendPrivateMessageComponent = () => {
+    return (
+      <CustomTooltip
+        trigger={
+          <Button
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 h-[60px] px-6"
+            onClick={handleSendPrivateMessage}
+            disabled={
+              isSessionExpired ||
+              isRecording ||
+              (!media.length && !form.isValid("text"))
+            }
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        }
+        content={<span>{translations("Send")}</span>}
+      />
+    );
+  };
 
   if (isSessionExpired) {
     if (platform === MessagePlatform.INSTAGRAM) return null;
@@ -289,22 +354,81 @@ export default function WaInboxChatDisplayFooter({
     );
   }
   return (
-    <WaTextEditor
-      handleInputChange={(value) => {
-        setBody({ ...body, text: { ...body.text, body: value } });
-      }}
-      content={body.text.body}
-      mih={100}
-      flex={1}
-      inbox={true}
-      customEnter={() => submiRef.current()}
-      editable={
-        !isSessionExpired && !isRecording && !audioUrl && body.type === "text"
-      }
-      placeholder="Type a message...Type / for quick replies"
-      sendMessageButton={<SendMessageComponent />}
-      border={true}
-    />
+    <div>
+      <div className="flex flex-col gap-2">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as any)}
+          className="p-2 bg-white dark:bg-transparent"
+        >
+          <TabsList>
+            <TabsList className="bg-muted p-1 rounded-lg">
+              <TabsTrigger
+                value="message"
+                className="
+      flex items-center
+      data-[state=active]:bg-primary
+      data-[state=active]:text-white
+    "
+              >
+                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                Message
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="private"
+                className="
+      flex items-center
+      data-[state=active]:bg-amber-600
+      data-[state=active]:text-white
+    "
+              >
+                <StickyNote className="w-3.5 h-3.5 mr-1.5" />
+                Private Note
+              </TabsTrigger>
+            </TabsList>
+          </TabsList>
+
+          <TabsContent value="message">
+            <WaTextEditor
+              handleInputChange={(value) => {
+                setBody({ ...body, text: { ...body.text, body: value } });
+              }}
+              content={body.text.body}
+              mih={100}
+              flex={1}
+              inbox={true}
+              customEnter={() => submiRef.current()}
+              editable={
+                !isSessionExpired &&
+                !isRecording &&
+                !audioUrl &&
+                body.type === "text"
+              }
+              placeholder="Type a message...Type / for quick replies"
+              sendMessageButton={<SendMessageComponent />}
+              border={true}
+            />
+          </TabsContent>
+
+          <TabsContent value="private">
+            <WaTextEditor
+              handleInputChange={(value) => {
+                setBody({ ...body, text: { ...body.text, body: value } });
+              }}
+              content={body.text.body}
+              mih={100}
+              flex={1}
+              privateMessage={true}
+              editable={true}
+              placeholder="Add a private note"
+              sendMessageButton={<SendPrivateMessageComponent />}
+              border={true}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
   );
 }
 

@@ -28,6 +28,7 @@ import {
   CheckCheck,
   CircleAlertIcon,
   Clock,
+  Lock,
   UserCog,
 } from "lucide-react";
 
@@ -56,7 +57,7 @@ import {
 import classes from "./styles.module.css";
 
 interface Props {
-  exchangeProcess: "send" | "receive" | "internal";
+  exchangeProcess: "send" | "receive" | "internal" | "privateNote";
   messageObject: WaGetMessagesBody;
   children: any;
   forPreview?: boolean;
@@ -182,7 +183,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
       className={`flex ${
         exchangeProcess === "internal"
           ? "justify-center"
-          : exchangeProcess === "send"
+          : exchangeProcess === "send" || exchangeProcess === "privateNote"
             ? "justify-end"
             : "justify-start"
       }`}
@@ -220,6 +221,11 @@ export default function WaInboxSingleMessageLayout(props: Props) {
         )}
         <div className="flex gap-2">
           <div>
+            {exchangeProcess === "privateNote" && (
+              <span className="flex items-center gap-1 text-amber-600 text-xs">
+                <Lock className="w-3 h-3" /> Private Note
+              </span>
+            )}
             <div
               className={`px-4 py-2.5 rounded-2xl shadow-sm ${
                 exchangeProcess === "send"
@@ -230,13 +236,17 @@ export default function WaInboxSingleMessageLayout(props: Props) {
                       : "bg-cyan-300"
                   : exchangeProcess === "internal"
                     ? "bg-indigo-50"
-                    : "bg-white dark:bg-gray-900"
+                    : exchangeProcess === "privateNote"
+                      ? "bg-amber-50"
+                      : "bg-white dark:bg-gray-900"
               } ${
                 exchangeProcess === "send"
                   ? "rounded-br-sm"
                   : exchangeProcess === "internal"
                     ? "border border-indigo-200"
-                    : "border border-border rounded-bl-sm"
+                    : exchangeProcess === "privateNote"
+                      ? "border border-amber-200 rounded-br-sm"
+                      : "border border-border rounded-bl-sm"
               } relative`}
             >
               {exchangeProcess === "send" && (
@@ -253,6 +263,21 @@ export default function WaInboxSingleMessageLayout(props: Props) {
                     : messageObject?.sender?.name}
                 </span>
               )}
+              {exchangeProcess === "privateNote" && (
+                <span
+                  style={{
+                    color: !messageObject?.sender
+                      ? "#3B82F6"
+                      : getColorForUser(messageObject?.sender?.name),
+                  }}
+                  className={`text-sm flex items-center gap-1`}
+                >
+                  {!messageObject?.sender
+                    ? "Automation"
+                    : messageObject?.sender?.name}
+                </span>
+              )}
+
               {exchangeProcess === "internal" && (
                 <span className={`text-sm`}>
                   {messageObject?.messageBody?.internal?.assignStatus ===
