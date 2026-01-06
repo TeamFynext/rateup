@@ -305,10 +305,14 @@ export default function WaInboxSingleMessageLayout(props: Props) {
             </div>
             <div
               className={`flex items-center space-x-2 mt-1 px-2 ${
-                exchangeProcess === "send" ? "justify-end" : "justify-start"
+                exchangeProcess === "send" || exchangeProcess === "privateNote"
+                  ? "justify-end"
+                  : "justify-start"
               }`}
             >
-              {!messageObject?.stats?.failed && exchangeProcess === "send" ? (
+              {!messageObject?.stats?.failed &&
+              (exchangeProcess === "send" ||
+                exchangeProcess === "privateNote") ? (
                 <CustomTooltip
                   trigger={
                     <span className="text-xs text-muted-foreground">

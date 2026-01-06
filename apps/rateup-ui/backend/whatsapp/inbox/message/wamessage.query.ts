@@ -267,21 +267,21 @@ export function useGenerateInboxResponse() {
 }
 
 type CreatePrivateMessageVariables = {
-  contactId: string;
   data: any;
 };
 
-export function useCreatePrivateMessage() {
-  const queryClient = useQueryClient();
+export function useCreatePrivateMessage(contactId) {
+  const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ contactId, data }: CreatePrivateMessageVariables) =>
+    mutationFn: ({ data }: CreatePrivateMessageVariables) =>
       createPrivateMessage(contactId, data),
 
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["wa-messages", variables.contactId],
-      });
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
     },
   });
 }

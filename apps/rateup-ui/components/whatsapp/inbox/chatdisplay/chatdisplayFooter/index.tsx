@@ -65,7 +65,7 @@ export default function WaInboxChatDisplayFooter({
     whatsappSettingsPhoneId,
     platform as MessagePlatform,
   );
-  const createPrivateMessage = useCreatePrivateMessage();
+  const createPrivateMessage = useCreatePrivateMessage(contact.id);
   const { addMessage, removeMessage } = useTemperoryMessageStore();
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
@@ -258,7 +258,6 @@ export default function WaInboxChatDisplayFooter({
 
     createPrivateMessage.mutate(
       {
-        contactId: contact.id,
         data: {
           ...values,
         },
@@ -326,7 +325,7 @@ export default function WaInboxChatDisplayFooter({
         trigger={
           <Button
             size="sm"
-            className="bg-green-600 hover:bg-green-700 h-[60px] px-6"
+            className="bg-amber-600 hover:bg-amber-700 h-[60px] px-6"
             onClick={handleSendPrivateMessage}
             disabled={
               isSessionExpired ||
