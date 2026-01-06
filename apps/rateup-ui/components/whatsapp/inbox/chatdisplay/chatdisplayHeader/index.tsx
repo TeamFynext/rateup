@@ -208,6 +208,11 @@ export default function WaInboxChatDisplayHeader({
                 onChange={handleLifecycleChange}
                 placeholder="Lifecycle"
               />
+              <ContactLabel
+                contactLabel={contactLabels}
+                contact={contact}
+                labelPending={isPending}
+              />
             </div>
           </div>
         </div>
@@ -246,11 +251,6 @@ export default function WaInboxChatDisplayHeader({
             timeStamp={contact?.lastReceivedMessageTimeStamp}
           />
           <AssignUser contactId={contact?.id} />
-          <ContactLabel
-            contactLabel={contactLabels}
-            contact={contact}
-            labelPending={isPending}
-          />
           <ChatHeaderMenu contact={contact} />
         </div>
       </div>
@@ -521,21 +521,29 @@ function ContactLabel({ contactLabel, labelPending, contact }) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-[150px]">
-        {contactLabel?.map((label) => (
-          <DropdownMenuCheckboxItem
-            key={label.id}
-            checked={isActive(label.id)}
-            onCheckedChange={(checked) => handleToggleLabel(label.id, checked)}
-            disabled={labelPending}
-            className="flex items-center gap-2"
-          >
-            <span
-              style={{ backgroundColor: label.color }}
-              className="h-3 w-3 rounded-full"
-            />
-            <span>{label.name}</span>
-          </DropdownMenuCheckboxItem>
-        ))}
+        {contactLabel?.length ? (
+          contactLabel?.map((label) => (
+            <DropdownMenuCheckboxItem
+              key={label.id}
+              checked={isActive(label.id)}
+              onCheckedChange={(checked) =>
+                handleToggleLabel(label.id, checked)
+              }
+              disabled={labelPending}
+              className="flex items-center gap-2"
+            >
+              <span
+                style={{ backgroundColor: label.color }}
+                className="h-3 w-3 rounded-full"
+              />
+              <span>{label.name}</span>
+            </DropdownMenuCheckboxItem>
+          ))
+        ) : (
+          <span className="flex items-center justify-center text-muted-foreground">
+            No labels found
+          </span>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
