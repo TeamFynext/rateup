@@ -172,6 +172,14 @@ export function parseWaMessage(
           break;
       }
     }
+    if (messageBody?.exchangeProcess === "internal") {
+      const { internal } = messageBody;
+      messageContent = `${internal?.triggeredByUser?.name} ${internal.text.body}`;
+    }
+    if (messageBody?.exchangeProcess === "privateNote") {
+      const { privateNote } = messageBody;
+      messageContent = `${privateNote.text.body}`;
+    }
   }
 
   return {
@@ -185,7 +193,7 @@ export function parseWaMessage(
 
 export function returnMessageContentBasedOnParsedMessage(
   parsedMessage: ParsedWaMessageReturn,
-  exchangeProcess: "send" | "receive",
+  exchangeProcess: "send" | "receive" | "internal" | "privateNote",
 ) {
   if (parsedMessage.messageType === "text") {
     return parsedMessage.messageContent;

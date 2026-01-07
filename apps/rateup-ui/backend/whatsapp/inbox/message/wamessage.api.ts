@@ -212,3 +212,12 @@ export async function generateInboxResponse(data) {
     await axiosClient.post(`${WA_CONTACT_BASE_PATH}/generate-response`, data)
   ).data;
 }
+
+export async function createPrivateMessage(contactId, data) {
+  return (
+    await axiosClient.post(
+      `${WA_CONTACT_BASE_PATH}/privatemessage/${contactId}`,
+      data,
+    )
+  ).data;
+}

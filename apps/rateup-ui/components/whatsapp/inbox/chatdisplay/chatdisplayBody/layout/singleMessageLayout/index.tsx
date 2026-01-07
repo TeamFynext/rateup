@@ -23,9 +23,16 @@ import {
   IconRobot,
 } from "@tabler/icons-react";
 import { EmojiClickData } from "emoji-picker-react";
-import { Check, CheckCheck, CircleAlertIcon, Clock } from "lucide-react";
+import {
+  Check,
+  CheckCheck,
+  CircleAlertIcon,
+  Clock,
+  Lock,
+  UserCog,
+} from "lucide-react";
 
-import { MessagePlatform } from "@/types/enums";
+import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import { WaReceiveMessageBody, WaSendMessageBody } from "@/types/global";
 import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
 import { useSendNewWaMessage } from "@/backend/whatsapp/inbox/message/wamessage.query";
@@ -50,7 +57,7 @@ import {
 import classes from "./styles.module.css";
 
 interface Props {
-  exchangeProcess: "send" | "receive";
+  exchangeProcess: "send" | "receive" | "internal" | "privateNote";
   messageObject: WaGetMessagesBody;
   children: any;
   forPreview?: boolean;
@@ -168,12 +175,45 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     );
   };
 
+  const getBackgroundClass = () => {
+    if (exchangeProcess === "send") {
+      switch (messageObject.sourcePlatform) {
+        case MessagePlatform.INSTAGRAM:
+          return "bg-pink-300/10";
+        case MessagePlatform.WHATSAPP:
+          return "bg-green-500/10 dark:bg-green-950";
+        default:
+          return "bg-cyan-300";
+      }
+    }
+
+    if (exchangeProcess === "internal") return "bg-indigo-50";
+    if (exchangeProcess === "privateNote") return "bg-amber-50";
+
+    return "bg-white dark:bg-gray-900";
+  };
+
+  const getBorderClass = () => {
+    if (exchangeProcess === "send") return "rounded-br-sm";
+    if (exchangeProcess === "internal") return "border border-indigo-200";
+    if (exchangeProcess === "privateNote")
+      return "border border-amber-200 rounded-br-sm";
+
+    return "border border-border rounded-bl-sm";
+  };
+
   return (
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       key={messageObject.id}
-      className={`flex ${exchangeProcess === "send" ? "justify-end" : "justify-start"}`}
+      className={`flex ${
+        exchangeProcess === "internal"
+          ? "justify-center"
+          : exchangeProcess === "send" || exchangeProcess === "privateNote"
+            ? "justify-end"
+            : "justify-start"
+      }`}
     >
       {exchangeProcess === "send" && isHovered && (
         <CopyButton value={messageContentRef?.current?.innerText ?? ""}>
@@ -208,20 +248,13 @@ export default function WaInboxSingleMessageLayout(props: Props) {
         )}
         <div className="flex gap-2">
           <div>
+            {exchangeProcess === "privateNote" && (
+              <span className="flex items-center gap-1 text-amber-600 text-xs">
+                <Lock className="w-3 h-3" /> Private Note
+              </span>
+            )}
             <div
-              className={`px-4 py-2.5 rounded-2xl shadow-sm ${
-                exchangeProcess === "send"
-                  ? messageObject.sourcePlatform === MessagePlatform.INSTAGRAM
-                    ? "bg-pink-300/10"
-                    : messageObject.sourcePlatform === MessagePlatform.WHATSAPP
-                      ? "bg-green-500/10 dark:bg-green-950"
-                      : "bg-cyan-300"
-                  : "bg-white dark:bg-gray-900"
-              } ${
-                exchangeProcess === "send"
-                  ? "rounded-br-sm"
-                  : "border border-border rounded-bl-sm"
-              } relative`}
+              className={`px-4 py-2.5 rounded-2xl shadow-sm relative ${getBackgroundClass()} ${getBorderClass()}`}
             >
               {exchangeProcess === "send" && (
                 <span
@@ -237,6 +270,39 @@ export default function WaInboxSingleMessageLayout(props: Props) {
                     : messageObject?.sender?.name}
                 </span>
               )}
+              {exchangeProcess === "privateNote" && (
+                <span
+                  style={{
+                    color: !messageObject?.sender
+                      ? "#3B82F6"
+                      : getColorForUser(messageObject?.sender?.name),
+                  }}
+                  className={`text-sm flex items-center gap-1`}
+                >
+                  {!messageObject?.sender
+                    ? "Automation"
+                    : messageObject?.sender?.name}
+                </span>
+              )}
+
+              {exchangeProcess === "internal" && (
+                <span className={`text-sm`}>
+                  {messageObject?.messageBody?.internal?.assignStatus ===
+                    WaMessageAssignStatus.ASSIGNED && (
+                    <div className="flex items-center gap-1 text-indigo-600">
+                      <UserCog className="w-4 h-4" />
+                      <span>ASSIGNED</span>
+                    </div>
+                  )}
+                  {messageObject?.messageBody?.internal?.assignStatus ===
+                    WaMessageAssignStatus.UNASSIGNED && (
+                    <div className="flex items-center gap-1 text-indigo-600">
+                      <UserCog className="w-4 h-4" />
+                      <span>UNASSIGNED</span>
+                    </div>
+                  )}
+                </span>
+              )}
               <div ref={messageContentRef}>{props?.children}</div>
               <div
                 className={`absolute ${exchangeProcess === "send" ? "-bottom-1.5 right-0" : "-bottom-3 right-2"}`}
@@ -246,10 +312,14 @@ export default function WaInboxSingleMessageLayout(props: Props) {
             </div>
             <div
               className={`flex items-center space-x-2 mt-1 px-2 ${
-                exchangeProcess === "send" ? "justify-end" : "justify-start"
+                exchangeProcess === "send" || exchangeProcess === "privateNote"
+                  ? "justify-end"
+                  : "justify-start"
               }`}
             >
-              {!messageObject?.stats?.failed && exchangeProcess === "send" ? (
+              {!messageObject?.stats?.failed &&
+              (exchangeProcess === "send" ||
+                exchangeProcess === "privateNote") ? (
                 <CustomTooltip
                   trigger={
                     <span className="text-xs text-muted-foreground">
@@ -259,10 +329,13 @@ export default function WaInboxSingleMessageLayout(props: Props) {
                   content={<MessageStats status={messageObject?.stats} />}
                   side="bottom"
                 />
-              ) : (
+              ) : !messageObject?.stats?.failed &&
+                exchangeProcess === "receive" ? (
                 <span className="text-xs text-muted-foreground">
                   {formatToCustomTime(messageObject?.waCreatedAt)}
                 </span>
+              ) : (
+                ""
               )}
               {exchangeProcess === "send" && messageObject.stats && (
                 <div>{getLatestStatus(messageObject?.stats)}</div>

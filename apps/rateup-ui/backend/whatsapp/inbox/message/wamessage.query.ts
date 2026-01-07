@@ -22,6 +22,7 @@ import {
 import {
   assignInboxToUser,
   blockWhatsAppUser,
+  createPrivateMessage,
   exportWaChats,
   generateInboxResponse,
   getAssignedUserForContact,
@@ -261,6 +262,26 @@ export function useGenerateInboxResponse() {
         message: error?.response?.data?.message ?? error?.response?.data,
         autoClose: 3000,
       });
+    },
+  });
+}
+
+type CreatePrivateMessageVariables = {
+  data: any;
+};
+
+export function useCreatePrivateMessage(contactId) {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ data }: CreatePrivateMessageVariables) =>
+      createPrivateMessage(contactId, data),
+
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
     },
   });
 }
