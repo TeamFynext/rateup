@@ -107,6 +107,28 @@ const CatalogOrders = ({ catalogId }) => {
       id: "transactionId",
       cell: (info) => info.getValue(),
     },
+    {
+      header: () => "Shopify Link",
+      accessorKey: "shopifyInvoiceUrl",
+      id: "shopifyInvoiceUrl",
+      cell: (info) => {
+        const url = info.getValue() as string;
+        if (!url) return "-";
+        return (
+          <Text
+            component="a"
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            c="blue"
+            td="underline"
+            size="sm"
+          >
+            Checkout Link
+          </Text>
+        );
+      },
+    },
   ];
 
   const { totalPrice, productItems } = useMemo(() => {
@@ -159,6 +181,23 @@ const CatalogOrders = ({ catalogId }) => {
             </Text>
             {selectedOrder?.id}
           </Text>
+          {selectedOrder?.shopifyInvoiceUrl && (
+            <Text size="sm" c="dimmed">
+              <Text component="span" c="black">
+                Shopify Checkout:{" "}
+              </Text>
+              <Text
+                component="a"
+                href={selectedOrder.shopifyInvoiceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                c="blue"
+                td="underline"
+              >
+                Open Link
+              </Text>
+            </Text>
+          )}
           <Divider />
           <Text fw={500}>Items Ordered</Text>
           <TableLayoutSecondary
