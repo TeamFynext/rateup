@@ -1182,6 +1182,77 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
   }
 }
 
+export async function createShopifyDraftOrder(orgId: string, products: any[]) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    throw new Error("Shopify integration not active");
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+
+  const lineItems = [];
+  for (const product of products) {
+    // Find variant by SKU (retailerId)
+    const variantData = await client.request(
+      `query getVariantBySku($query: String!) {
+          productVariants(first: 1, query: $query) {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }`,
+      { variables: { query: `sku:${product.retailerId}` } },
+    );
+
+    const variantId = variantData.data.productVariants.edges[0]?.node?.id;
+    if (variantId) {
+      lineItems.push({
+        variantId,
+        quantity: product.quantity,
+      });
+    } else {
+      log.warn(`Product SKU ${product.retailerId} not found in Shopify`);
+    }
+  }
+
+  if (lineItems.length === 0) {
+    throw new Error("No products matched in Shopify");
+  }
+
+  const draftOrderData = await client.request(
+    `mutation draftOrderCreate($input: DraftOrderInput!) {
+      draftOrderCreate(input: $input) {
+        draftOrder {
+          id
+          invoiceUrl
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }`,
+    {
+      variables: {
+        input: {
+          lineItems,
+        },
+      },
+    },
+  );
+
+  const userErrors = draftOrderData.data.draftOrderCreate.userErrors;
+  if (userErrors.length > 0) {
+    throw new Error(`Shopify Error: ${userErrors?.[0]?.message}`);
+  }
+
+  return draftOrderData.data.draftOrderCreate.draftOrder;
+}
+
 function validateAndParseCheckoutPhone(checkout) {
   const phoneNumber =
     checkout.phone ||

@@ -1892,6 +1892,9 @@ model WhatsappCatalog {
   orders              WaCatalogOrder[]
   connectedWaPhoneIds CatalogPhoneIdMap[]
 
+  autoCheckoutEnabled Boolean @default(false)
+  checkoutMessage     String?
+
   @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
 }
 
@@ -1935,6 +1938,9 @@ model WaCatalogOrder {
   status        String          @default("PENDING")
   transactionId String?
   createdAt     DateTime        @default(now())
+
+  shopifyDraftOrderId String?
+  shopifyInvoiceUrl   String?
 }
 
 model MetaAssets {
