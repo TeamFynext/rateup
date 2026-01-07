@@ -175,6 +175,33 @@ export default function WaInboxSingleMessageLayout(props: Props) {
     );
   };
 
+  const getBackgroundClass = () => {
+    if (exchangeProcess === "send") {
+      switch (messageObject.sourcePlatform) {
+        case MessagePlatform.INSTAGRAM:
+          return "bg-pink-300/10";
+        case MessagePlatform.WHATSAPP:
+          return "bg-green-500/10 dark:bg-green-950";
+        default:
+          return "bg-cyan-300";
+      }
+    }
+
+    if (exchangeProcess === "internal") return "bg-indigo-50";
+    if (exchangeProcess === "privateNote") return "bg-amber-50";
+
+    return "bg-white dark:bg-gray-900";
+  };
+
+  const getBorderClass = () => {
+    if (exchangeProcess === "send") return "rounded-br-sm";
+    if (exchangeProcess === "internal") return "border border-indigo-200";
+    if (exchangeProcess === "privateNote")
+      return "border border-amber-200 rounded-br-sm";
+
+    return "border border-border rounded-bl-sm";
+  };
+
   return (
     <div
       onMouseEnter={() => setIsHovered(true)}
@@ -227,27 +254,7 @@ export default function WaInboxSingleMessageLayout(props: Props) {
               </span>
             )}
             <div
-              className={`px-4 py-2.5 rounded-2xl shadow-sm ${
-                exchangeProcess === "send"
-                  ? messageObject.sourcePlatform === MessagePlatform.INSTAGRAM
-                    ? "bg-pink-300/10"
-                    : messageObject.sourcePlatform === MessagePlatform.WHATSAPP
-                      ? "bg-green-500/10 dark:bg-green-950"
-                      : "bg-cyan-300"
-                  : exchangeProcess === "internal"
-                    ? "bg-indigo-50"
-                    : exchangeProcess === "privateNote"
-                      ? "bg-amber-50"
-                      : "bg-white dark:bg-gray-900"
-              } ${
-                exchangeProcess === "send"
-                  ? "rounded-br-sm"
-                  : exchangeProcess === "internal"
-                    ? "border border-indigo-200"
-                    : exchangeProcess === "privateNote"
-                      ? "border border-amber-200 rounded-br-sm"
-                      : "border border-border rounded-bl-sm"
-              } relative`}
+              className={`px-4 py-2.5 rounded-2xl shadow-sm relative ${getBackgroundClass()} ${getBorderClass()}`}
             >
               {exchangeProcess === "send" && (
                 <span
