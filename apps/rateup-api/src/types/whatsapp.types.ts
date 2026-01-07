@@ -110,6 +110,42 @@ export interface LeadGenBody {
   ad_id: string;
   created_time: string;
 }
+
+export interface WaInternalMessageBody {
+  messaging_product?: "whatsapp";
+  recipient_type?: "individual";
+  type?: "text";
+  text: {
+    body: string;
+  };
+  triggeredByUser: {
+    id: string;
+    name: string;
+  };
+  assignStatus?: string;
+  assignedUsers?: {
+    id: string;
+    name: string;
+  }[];
+}
+
+export interface WaPrivateMessageBody {
+  messaging_product?: "whatsapp";
+  recipient_type?: "individual";
+  type?: "text";
+  text: {
+    body: string;
+  };
+  triggeredByUser: {
+    id: string;
+    name: string;
+  };
+  mentionedUser?: {
+    id: string;
+    name: string;
+  }[];
+}
+
 export interface WaSendMessageBody {
   messaging_product: "whatsapp";
   recipient_type?: "individual";
