@@ -24,8 +24,12 @@ import {
 } from "@tabler/icons-react";
 import { EmojiClickData } from "emoji-picker-react";
 import {
+  AlertCircle,
+  Archive,
   Check,
   CheckCheck,
+  CheckCircle2,
+  Circle,
   CircleAlertIcon,
   Clock,
   Lock,
@@ -187,7 +191,20 @@ export default function WaInboxSingleMessageLayout(props: Props) {
       }
     }
 
-    if (exchangeProcess === "internal") return "bg-indigo-50";
+    if (exchangeProcess === "internal") {
+      switch (messageObject?.messageBody?.internal?.assignStatus) {
+        case WaMessageAssignStatus.RESOLVED:
+          return "bg-green-50";
+        case WaMessageAssignStatus.UNRESOLVED:
+          return "bg-orange-50";
+        case WaMessageAssignStatus.CLOSED:
+          return "bg-blue-50";
+        case WaMessageAssignStatus.SPAM:
+          return "bg-red-50";
+        default:
+          return "bg-indigo-50";
+      }
+    }
     if (exchangeProcess === "privateNote") return "bg-amber-50";
 
     return "bg-white dark:bg-gray-900";
@@ -195,7 +212,20 @@ export default function WaInboxSingleMessageLayout(props: Props) {
 
   const getBorderClass = () => {
     if (exchangeProcess === "send") return "rounded-br-sm";
-    if (exchangeProcess === "internal") return "border border-indigo-200";
+    if (exchangeProcess === "internal") {
+      switch (messageObject?.messageBody?.internal?.assignStatus) {
+        case WaMessageAssignStatus.RESOLVED:
+          return "border border-green-200";
+        case WaMessageAssignStatus.UNRESOLVED:
+          return "border border-orange-200";
+        case WaMessageAssignStatus.CLOSED:
+          return "border border-blue-200";
+        case WaMessageAssignStatus.SPAM:
+          return "border border-red-200";
+        default:
+          return "border border-indigo-200";
+      }
+    }
     if (exchangeProcess === "privateNote")
       return "border border-amber-200 rounded-br-sm";
 
@@ -292,6 +322,34 @@ export default function WaInboxSingleMessageLayout(props: Props) {
                     <div className="flex items-center gap-1 text-indigo-600">
                       <UserCog className="w-4 h-4" />
                       <span>ASSIGNED</span>
+                    </div>
+                  )}
+                  {messageObject?.messageBody?.internal?.assignStatus ===
+                    WaMessageAssignStatus.RESOLVED && (
+                    <div className="flex items-center gap-1 text-green-600">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>RESOLVED</span>
+                    </div>
+                  )}
+                  {messageObject?.messageBody?.internal?.assignStatus ===
+                    WaMessageAssignStatus.CLOSED && (
+                    <div className="flex items-center gap-1 text-blue-600">
+                      <Archive className="w-4 h-4" />
+                      <span>CLOSED</span>
+                    </div>
+                  )}
+                  {messageObject?.messageBody?.internal?.assignStatus ===
+                    WaMessageAssignStatus.UNRESOLVED && (
+                    <div className="flex items-center gap-1 text-orange-600">
+                      <Circle className="w-4 h-4" />
+                      <span>UNRESOLVED</span>
+                    </div>
+                  )}
+                  {messageObject?.messageBody?.internal?.assignStatus ===
+                    WaMessageAssignStatus.SPAM && (
+                    <div className="flex items-center gap-1 text-red-600">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>SPAM</span>
                     </div>
                   )}
                   {messageObject?.messageBody?.internal?.assignStatus ===

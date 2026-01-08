@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { Group, Radio, RadioGroup, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconBrandWhatsappFilled, IconWebhook } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Ban,
   BellOff,
@@ -260,6 +261,7 @@ export default function WaInboxChatDisplayHeader({
 
 const ChatHeaderMenu = ({ contact }) => {
   const editContactMutation = useEditContactMutation(null);
+  const qc = useQueryClient();
   const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
   const [
@@ -305,6 +307,7 @@ const ChatHeaderMenu = ({ contact }) => {
             },
             assignedUsers: [],
           }));
+          qc.invalidateQueries({ queryKey: ["wa-messages", contact.id] });
         },
       },
     );
