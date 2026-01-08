@@ -231,6 +231,7 @@
   --color-active-green-2: var(--active-green-2);
   --color-active-green-3: var(--active-green-3);
   --color-rateup-blue-4: var(--rateup-blue-4);
+  --color-shade-of-blue: var(--shade-of-blue);
 }
 
 @layer base {
