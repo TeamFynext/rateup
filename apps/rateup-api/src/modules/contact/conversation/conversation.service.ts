@@ -69,85 +69,86 @@ export async function updateConversationAssignees(
       const assigneesToRemove = existingAssignees.filter(
         (ea) => !assignees.find((a) => a.userId === ea.userId),
       );
-      const assigneesToUpdate = existingAssignees.filter(
-        (ea) =>
-          !assignees.find(
-            (a) =>
-              a.userId === ea.userId &&
-              a.teamId === ea.teamId &&
-              !assigneesToRemove.find((as) => a.userId !== as.userId),
-          ),
+      const assigneesToUpdate = existingAssignees.filter((ea) =>
+        assignees.some((a) => a.userId === ea.userId && a.teamId !== ea.teamId),
       );
+
       const assigneesToAdd = assignees.filter(
         (a) =>
           !existingAssignees.find(
             (ea) => ea.userId === a.userId && ea.teamId === a.teamId,
           ),
       );
-      for (const assignee of assigneesToRemove) {
-        await tx.conversationAssignedUserTeamMap.update({
-          where: {
-            userId_conversationId: {
-              userId: assignee.userId,
-              conversationId,
+      if (assigneesToRemove.length > 0) {
+        for (const assignee of assigneesToRemove) {
+          await tx.conversationAssignedUserTeamMap.update({
+            where: {
+              userId_conversationId: {
+                userId: assignee.userId,
+                conversationId,
+              },
             },
-          },
-          data: {
-            lastRemovedAt: removedAt || new Date(),
-            lastRemovedBy: removedBy || userId,
-            actionHistory: [
-              ...assignee.actionHistory,
-              {
-                action: "assignment-revoked",
-                date: removedAt || new Date(),
-                by: removedBy || userId,
-              },
-            ],
-          },
-        });
-      }
-      for (const assignee of assigneesToUpdate) {
-        const teamId = assignees.find(
-          (as) => as.userId === assignee.userId,
-        ).teamId;
-        await tx.conversationAssignedUserTeamMap.update({
-          where: {
-            userId_conversationId: {
-              userId: assignee.userId,
-              conversationId,
+            data: {
+              lastRemovedAt: removedAt || new Date(),
+              lastRemovedBy: removedBy || userId,
+              actionHistory: [
+                ...assignee.actionHistory,
+                {
+                  action: "assignment-revoked",
+                  date: removedAt || new Date(),
+                  by: removedBy || userId,
+                },
+              ],
             },
-          },
-          data: {
-            teamId,
-            actionHistory: [
-              ...assignee.actionHistory,
-              {
-                action: "updated-team",
-                date: new Date(),
-                by: userId,
-              },
-            ],
-          },
-        });
+          });
+        }
       }
-      for (const assignee of assigneesToAdd) {
-        await tx.conversationAssignedUserTeamMap.create({
-          data: {
-            conversationId: conversationId,
-            userId: assignee.userId,
-            teamId: assignee.teamId,
-            lastAssignedAt: assignedAt || new Date(),
-            lastAssignedBy: assignedBy || userId,
-            isAssignedByAutomation: !assignedBy && !userId,
-            actionHistory: [
-              {
-                action: "assigned",
-                date: assignedAt || new Date(),
-                by: assignedBy || userId,
+      if (assigneesToUpdate.length > 0) {
+        for (const assignee of assigneesToUpdate) {
+          const teamId = assignees.find(
+            (as) => as.userId === assignee.userId,
+          ).teamId;
+          await tx.conversationAssignedUserTeamMap.update({
+            where: {
+              userId_conversationId: {
+                userId: assignee.userId,
+                conversationId,
               },
-            ],
-          },
-        });
+            },
+            data: {
+              teamId,
+              actionHistory: [
+                ...assignee.actionHistory,
+                {
+                  action: "updated-team",
+                  date: new Date(),
+                  by: userId,
+                },
+              ],
+            },
+          });
+        }
+      }
+      if (assigneesToAdd.length > 0) {
+        for (const assignee of assigneesToAdd) {
+          await tx.conversationAssignedUserTeamMap.create({
+            data: {
+              conversationId: conversationId,
+              userId: assignee.userId,
+              teamId: assignee.teamId,
+              lastAssignedAt: assignedAt || new Date(),
+              lastAssignedBy: assignedBy || userId,
+              isAssignedByAutomation: !assignedBy && !userId,
+              actionHistory: [
+                {
+                  action: "assigned",
+                  date: assignedAt || new Date(),
+                  by: assignedBy || userId,
+                },
+              ],
+            },
+          });
+        }
       }
       await tx.conversation.update({
         where: {
