@@ -47,6 +47,7 @@ import {
   unblockWhatsappUser,
 } from "../../whatsappSurvey/wasurvey.service.js";
 import {
+  extractMentions,
   handleWaReceivedImages,
   isSessionExpired,
   returnAppropriateTimeStamp,
@@ -668,12 +669,14 @@ export async function createPrivateMessageHandler(
     const { contactId } = request.params;
     const body = request.body;
     const text = parseToWhatsAppFormat(body.text.body);
+    const mentionedUsers = extractMentions(text);
     const res = await createInternalWaMessage({
       contactId: contactId,
       privateMessageText: text,
       trigerredByUser: userId,
       orgId: orgId,
       exchangeProcess: "privateNote",
+      mentionedUsers: mentionedUsers,
     });
     reply.code(200).send(res);
   } catch (error) {

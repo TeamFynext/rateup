@@ -1490,7 +1490,7 @@ export async function createInternalWaMessage({
   waMessageAssignStatus?: string;
   trigerredByUser?: string;
   assignedUsers?: { userId: string; teamId: string }[];
-  mentionedUsers?: { userId: string }[];
+  mentionedUsers?: string[];
   exchangeProcess?: "internal" | "privateNote";
   orgId?: string;
   privateMessageText?: string;
@@ -1595,10 +1595,8 @@ export async function createInternalWaMessage({
     }
 
     if (mentionedUsers?.length > 0) {
-      const userIds = mentionedUsers.map((u) => u.userId);
-
       const users = await prisma.user.findMany({
-        where: { id: { in: userIds } },
+        where: { name: { in: mentionedUsers } },
         select: { id: true, name: true },
       });
 
