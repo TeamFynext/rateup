@@ -23,6 +23,8 @@ import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes
 import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service.js";
 import prisma from "../utils/prisma.js";
 import {
+  WaInternalMessageBody,
+  WaPrivateMessageBody,
   WaReceiveMessageBody,
   WaSendMessageBody,
   WaTemplateSendComponent,
@@ -614,9 +616,11 @@ declare global {
   //---instagram
 
   type WaInboxMessageBody = {
-    exchangeProcess: "send" | "receive";
+    exchangeProcess: "send" | "receive" | "internal" | "privateNote";
     send?: WaSendMessageBody | IgSendMessageBody;
     receive?: WaReceiveMessageBody | IgReceiveMessageBody;
+    internal?: WaInternalMessageBody;
+    privateNote?: WaPrivateMessageBody;
   };
   type WaTemplateDefaultValues = {
     image?: {

@@ -69,15 +69,10 @@ export async function updateConversationAssignees(
       const assigneesToRemove = existingAssignees.filter(
         (ea) => !assignees.find((a) => a.userId === ea.userId),
       );
-      const assigneesToUpdate = existingAssignees.filter(
-        (ea) =>
-          !assignees.find(
-            (a) =>
-              a.userId === ea.userId &&
-              a.teamId === ea.teamId &&
-              !assigneesToRemove.find((as) => a.userId !== as.userId),
-          ),
+      const assigneesToUpdate = existingAssignees.filter((ea) =>
+        assignees.some((a) => a.userId === ea.userId && a.teamId !== ea.teamId),
       );
+
       const assigneesToAdd = assignees.filter(
         (a) =>
           !existingAssignees.find(

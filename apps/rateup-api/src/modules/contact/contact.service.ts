@@ -22,6 +22,7 @@ import { BATCH_SIZE } from "../../utils/constants/constants.js";
 import { WaMessageAssignStatus } from "../../types/enums.js";
 import {
   assignWaMessageToUser,
+  createInternalWaMessage,
   deleteAssignedUsersforContact,
   getAssignedUserForContact,
 } from "../whatsapp/inbox/message/wamessage.service.js";
@@ -711,6 +712,13 @@ export async function updateContactById(
           },
         );
       }
+    }
+    if (contact?.waMessageAssignStatus) {
+      await createInternalWaMessage({
+        trigerredByUser: userId,
+        contactId: updatedContact.id,
+        waMessageAssignStatus: updatedContact.waMessageAssignStatus,
+      });
     }
     const conversation = await getLastCreatedConversationForContact(
       updatedContact.id,

@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   assignWaMessageHandler,
   blockWhatsappUserHandler,
+  createPrivateMessageHandler,
   exportWhatsappChatsHandler,
   generateChatAnalyticsHandler,
   generateChatFilterDataHandler,
@@ -81,6 +82,16 @@ export async function waMessageRoutes(server: FastifyInstance) {
       },
     },
     assignWaMessageHandler,
+  );
+
+  server.post(
+    "/privatemessage/:contactId",
+    {
+      schema: {
+        params: $contactRef("byContactIdSchema"),
+      },
+    },
+    createPrivateMessageHandler,
   );
 
   server.get(

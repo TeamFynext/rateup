@@ -26,6 +26,7 @@ import {
   sendLocationMessage,
   generateChatAnalytics,
   generateInboxResponse,
+  createInternalWaMessage,
 } from "./wamessage.service.js";
 import {
   ByContactIdParams,
@@ -46,6 +47,7 @@ import {
   unblockWhatsappUser,
 } from "../../whatsappSurvey/wasurvey.service.js";
 import {
+  extractMentions,
   handleWaReceivedImages,
   isSessionExpired,
   returnAppropriateTimeStamp,
@@ -651,6 +653,34 @@ export async function generateInboxResponseHandler(
     // Generate response logic here
   } catch (error) {
     log.error("Error in generateInboxResponseHandler: %o", error);
+    reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function createPrivateMessageHandler(
+  request: FastifyRequest<{
+    Body: NewWaMessageBody;
+    Params: ByContactIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId, userId } = request.user;
+    const { contactId } = request.params;
+    const body = request.body;
+    const text = parseToWhatsAppFormat(body.text.body);
+    const mentionedUsers = extractMentions(text);
+    const res = await createInternalWaMessage({
+      contactId: contactId,
+      privateMessageText: text,
+      trigerredByUser: userId,
+      orgId: orgId,
+      exchangeProcess: "privateNote",
+      mentionedUsers: mentionedUsers,
+    });
+    reply.code(200).send(res);
+  } catch (error) {
+    log.error("Error in creating private note: %o", error);
     reply.status(500).send("Internal Server Error");
   }
 }
