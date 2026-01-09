@@ -84,6 +84,7 @@ interface WaTextEditorProps extends BoxComponentProps {
   mih?: number;
   required?: boolean;
   inbox?: boolean;
+  privateMessage?: boolean;
   customEnter?: () => void;
   editable?: boolean;
   sendMessageButton?: React.ReactNode;
@@ -122,6 +123,7 @@ function WaTextEditor({
   required = false,
   mih = 120,
   inbox = false,
+  privateMessage = false,
   customEnter,
   editable = true,
   sendMessageButton = null,
@@ -582,7 +584,9 @@ function WaTextEditor({
             </div>
           </RichTextEditor>
         </div>
-        <div className="mt-5">{inbox && sendMessageButton}</div>
+        <div className="mt-5">
+          {(inbox || privateMessage) && sendMessageButton}
+        </div>
       </div>
       <WaInboxTemplateDisplayModal
         sessionExpired={isSessionExpired}

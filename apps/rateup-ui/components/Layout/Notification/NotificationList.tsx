@@ -2,23 +2,9 @@
 
 import React, { useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import {
-  ActionIcon,
-  Anchor,
-  Badge,
-  Button,
-  Flex,
-  Group,
-  ScrollArea,
-  ScrollAreaAutosize,
-  Stack,
-  Text,
-} from "@mantine/core";
-import {
   IconBrandWhatsappFilled,
-  IconExternalLink,
   IconTicket,
   IconX,
 } from "@tabler/icons-react";
@@ -28,13 +14,10 @@ import {
   useDeleteNotification,
   useNotifications,
 } from "@/backend/notification/notification.query";
-import {
-  RateupButtonBlue,
-  RateupButtonPrimary,
-} from "@/components/Button/RateupButtons";
 import RateupLoader from "@/components/Loaders/RateupLoader";
 import NothingFound from "@/components/NothingFound/NothingFound";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatToRelativeTime } from "@/utils/dateTime";
 
 const NotificationList = ({ close, data, isLoading }) => {
@@ -54,98 +37,127 @@ const NotificationList = ({ close, data, isLoading }) => {
     switch (subSource) {
       case "chat-assigned":
         return (
-          <Stack gap={2}>
-            <Text size="sm" w={280}>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm w-[280px] text-muted-foreground">
               A chat from{" "}
-              <Text component="span" fw={500}>
+              <span className="font-medium text-foreground">
                 {data?.contactName}
-              </Text>{" "}
+              </span>{" "}
               has been assigned to you.
-              <Anchor
-                component={Link}
-                onClick={() => close()}
+              <Link
                 href={`/dashboard/inbox?tab=mine&contactId=${data?.contactId}`}
+                onClick={close}
+                className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
               >
-                {" "}
                 Show chat
-              </Anchor>
-            </Text>
-          </Stack>
+              </Link>
+            </p>
+          </div>
         );
       case "chat-closed":
         return (
-          <Stack gap={2}>
-            <Text size="sm" w={280}>
-              Chat from {data?.contactName} has been closed.
-              <Anchor
-                component={Link}
-                onClick={() => close()}
+          <div className="flex flex-col gap-2">
+            <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+              Chat from{" "}
+              <span className="font-medium text-foreground">
+                {data?.contactName}
+              </span>{" "}
+              has been closed.
+              <Link
                 href={`/dashboard/inbox?tab=closed&contactId=${data?.contactId}`}
+                onClick={close}
+                className="ml-1 inline font-medium text-primary hover:underline"
               >
-                {" "}
                 Show chat
-              </Anchor>
-            </Text>
-          </Stack>
+              </Link>
+            </p>
+          </div>
         );
       case "ticket-assigned":
         return (
-          <Stack gap={2}>
-            <Text size="sm" w={280}>
-              A ticket from board {data?.board_name} has been assigned to you.
-              <Anchor
-                component={Link}
-                onClick={() => close()}
+          <div className="flex flex-col gap-2">
+            <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+              A ticket from board{" "}
+              <span className="font-medium text-foreground">
+                {data?.board_name}
+              </span>{" "}
+              has been assigned to you.
+              <Link
                 href={`/dashboard/tickets/${data?.cardId}`}
+                onClick={close}
+                className="ml-1 inline font-medium text-primary hover:underline"
               >
-                {" "}
                 Show ticket
-              </Anchor>
-            </Text>
-          </Stack>
+              </Link>
+            </p>
+          </div>
+        );
+      case "mentioned":
+        return (
+          <div className="flex flex-col gap-2">
+            <p className="max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+              You were mentioned in a chat from{" "}
+              <span className="font-medium text-foreground">
+                {data?.contactName}
+              </span>{" "}
+              <Link
+                href={`/dashboard/inbox?tab=mine&contactId=${data?.contactId}`}
+                onClick={close}
+                className="ml-1 text-primary underline underline-offset-4 hover:opacity-80"
+              >
+                Show chat
+              </Link>
+            </p>
+          </div>
         );
     }
   }, []);
   if (isLoading) return <RateupLoader />;
   if (data?.length === 0) return <NothingFound text="No notifications found" />;
   return (
-    <Stack h={"100%"} gap={"xs"}>
-      <Flex justify={"flex-end"}>
-        <RateupButtonPrimary
-          variant="light"
-          title="clear"
-          onClick={() => deleteAll.mutate()}
-        />
-      </Flex>
-      <ScrollArea offsetScrollbars scrollbarSize={6} h={"calc(100vh - 180px)"}>
-        <Stack p={"xs"} gap={"xs"}>
+    <div className="h-full flex flex-col gap-4">
+      <div className="flex justify-end">
+        <Button variant="outline" onClick={() => deleteAll.mutate()}>
+          clear
+        </Button>
+      </div>
+      <ScrollArea className="h-[calc(100vh-180px)]">
+        <div className="flex flex-col gap-1">
           {data?.map((notification) => (
-            <PaperLayout key={notification?.id} bg={"var(--shade-of-blue)"}>
-              <Flex justify={"space-between"}>
-                <Flex gap={"xs"}>
+            <div
+              key={notification?.id}
+              className="bg-shade-of-blue p-2 rounded-lg shadow-xs"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2">
                   {getNotificationIcon(notification?.source)}
-                  <Stack gap={2}>
-                    <Group justify="space-between">
+
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
                       {getNotificationMessageComp(notification)}
-                    </Group>
-                    <Text size="xs" c={"dimmed"}>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
                       {formatToRelativeTime(notification?.createdAt)}
-                    </Text>
-                  </Stack>
-                </Flex>
-                <ActionIcon
-                  variant="subtle"
-                  size={"xs"}
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="ghost"
                   onClick={() => deleteNotificationMut.mutate(notification?.id)}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Dismiss notification"
                 >
-                  <IconX />
-                </ActionIcon>
-              </Flex>
-            </PaperLayout>
+                  <IconX className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
           ))}
-        </Stack>
+        </div>
       </ScrollArea>
-    </Stack>
+    </div>
   );
 };
 

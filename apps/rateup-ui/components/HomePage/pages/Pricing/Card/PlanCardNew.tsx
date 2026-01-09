@@ -32,7 +32,7 @@ const PlanCardNew = ({ plan, currencySymbol, onButtonClick }) => {
           )}
         </h3>
 
-        <p className="text-4xl font-bold text-[#1c518e]">
+        {/* <p className="text-4xl font-bold text-[#1c518e]">
           {getCurrenySymbol(plan.paymentPlan?.currency) ?? currencySymbol}
           {plan?.paymentPlan?.amount
             ? plan.paymentPlan.period === "yearly"
@@ -46,7 +46,7 @@ const PlanCardNew = ({ plan, currencySymbol, onButtonClick }) => {
             *{getCurrenySymbol(plan.paymentPlan?.currency) ?? currencySymbol}{" "}
             {plan?.paymentPlan?.amount} Billed yearly
           </p>
-        )}
+        )} */}
         {plan.useCase && (
           <p className="text-gray-600 mt-3 mb-5 text-sm">{plan.useCase}</p>
         )}
