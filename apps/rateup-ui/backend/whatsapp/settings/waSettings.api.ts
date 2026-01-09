@@ -22,6 +22,7 @@ export type WaSettings = {
   phoneDisplayName: string;
   igDisplayName: string;
   assets: MetaLoginAssets[];
+  teams: { id: string; name: string }[];
 }[];
 export const getWaSettings = async () => {
   const res = await axiosClient.get(SettingsUrl);
