@@ -619,8 +619,8 @@ export async function filterChats(
       LEFT JOIN "Lifecycle" l ON l.id = fc."lifecycleId"
       ORDER BY ${allOrderBy} ${sortBy} NULLS LAST;
     `;
-    console.log("🚀 ~ filterChats ~ query:", query);
-    console.log("🚀 ~ filterChats ~ params:", params);
+    log.info("🚀 ~ filterChats ~ query: %o", query);
+    log.info("🚀 ~ filterChats ~ params: %o", params);
 
     const contacts: any[] = await prisma.$queryRawUnsafe(query, ...params);
     if (contacts.length === 0) return [];
