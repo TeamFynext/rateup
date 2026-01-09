@@ -787,6 +787,8 @@ interface MessagesStore {
     messages: WaGetMessagesBody[],
     evictInactive?: boolean,
   ) => void;
+  addMessage: (key: string, message: WaGetMessagesBody) => void;
+  removeMessage: (key: string, messageId: string) => void;
   getMessages: (key: string) => WaGetMessagesBody[];
   isLoading: boolean;
   setIsLoading: (valu: boolean) => void;
@@ -873,6 +875,41 @@ export const useMessagesStore = create<MessagesStore>()(
         if (changedOrNew.length) {
           saveMessagesToIDB(key, changedOrNew);
         }
+      },
+
+      addMessage: (key, message) => {
+        const state = get();
+        const m = new Map(state.messagesByKey);
+        const entry = m.get(key) ?? { messages: [] };
+
+        // Add new message and sort
+        const updatedMessages = [...entry.messages, message].sort(
+          (a, b) =>
+            new Date(b.waCreatedAt).getTime() -
+            new Date(a.waCreatedAt).getTime(),
+        );
+
+        entry.messages = updatedMessages;
+        m.set(key, entry);
+        set({ messagesByKey: m });
+
+        saveMessagesToIDB(key, [message]);
+      },
+
+      removeMessage: (key, messageId) => {
+        const state = get();
+        const entry = state.messagesByKey.get(key);
+        if (!entry?.messages?.length) return;
+
+        const filteredMessages = entry.messages.filter(
+          (msg) => (msg.messageId ?? msg.id) !== messageId,
+        );
+
+        const m = new Map(state.messagesByKey);
+        m.set(key, { messages: filteredMessages });
+        set({ messagesByKey: m });
+
+        saveMessagesToIDB(key, filteredMessages);
       },
 
       updateMessageByMessageId: (key, messageId, data) =>

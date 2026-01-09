@@ -16,6 +16,7 @@ import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import useContactStore, {
   ContactWithUpdatedAt,
   useContactsStore,
+  useMessagesStore,
 } from "@/app/dashboard/inbox/store";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder";
@@ -26,7 +27,7 @@ import WaTextEditor, {
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User } from "@/context/UserContext";
+import { User, useUser } from "@/context/UserContext";
 import { WaMessageClosedStatus } from "@/utils/constants";
 import { formatDateWithRelativeTime } from "@/utils/dateTime";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
@@ -70,8 +71,10 @@ export default function WaInboxChatDisplayFooter({
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
-  const { data: waSettings } = useWaSettings();
   const { updateContactById } = useContactsStore();
+  const messagesStore = useMessagesStore();
+  const { user } = useUser();
+
   const form = useForm({
     initialValues: {
       type: "text",
@@ -240,21 +243,44 @@ export default function WaInboxChatDisplayFooter({
     const values = { ...form.values };
     form.reset();
     resetBody();
-    addMessage(contact.id, {
-      body: {
-        text: values.text.body,
-        ...(values.media.length
-          ? {
-              url: values.media[0].url,
-              urlType: values.media[0].type,
-              filename: values.media[0].name,
-            }
-          : {}),
-      },
-      type: "text",
-    });
     resetMedia();
     setAudioUrl(null);
+    const id = crypto.randomUUID();
+    const newMessage = {
+      id: id,
+      contactId: contact.id,
+      waCreatedAt: new Date().toISOString(),
+      messageBody: {
+        send: null,
+        receive: null,
+        privateNote: {
+          text: {
+            body: parseToWhatsAppFormat(values.text.body),
+          },
+          mentionedUser: [],
+          triggeredByUser: {
+            id: user.userId,
+            name: user.userName,
+          },
+        },
+        exchangeProcess: "privateNote",
+      },
+      sourcePlatform: "INTERNAL",
+      sourceIdentifier: null,
+      sendBy: user.userId,
+      sender: {
+        name: user.userName,
+        profilePhoto: user?.profilePhoto,
+      },
+      stats: {
+        read: "",
+        sent: "",
+        failed: "",
+        delivered: "",
+      },
+      messageId: id,
+    };
+    messagesStore.addMessage(`${contact.id}_all`, newMessage as any);
 
     createPrivateMessage.mutate(
       {
@@ -263,8 +289,8 @@ export default function WaInboxChatDisplayFooter({
         },
       },
       {
-        onSuccess: () => {
-          removeMessage(contact.id);
+        onError: () => {
+          messagesStore.removeMessage(`${contact.id}_all`, id);
         },
       },
     );
