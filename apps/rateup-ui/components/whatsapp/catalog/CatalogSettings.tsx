@@ -2,9 +2,14 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import { ActionIcon, Group, Loader, Stack } from "@mantine/core";
+import { ActionIcon, Badge, Group, Loader, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconLinkPlus, IconLogin2 } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconLinkPlus,
+  IconLogin2,
+  IconRefresh,
+} from "@tabler/icons-react";
 
 import { MetaLoginAssets, WaConfigType } from "@/types/enums";
 import {
@@ -12,6 +17,10 @@ import {
   useUpateCatalog,
   useWaCatalog,
 } from "@/backend/whatsapp/catalog/catalog.query";
+import {
+  useProductSetsByCatalog,
+  useSyncProductSets,
+} from "@/backend/whatsapp/catalog/productSet.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import {
@@ -160,6 +169,68 @@ const CatalogSettings = ({ catalogData }) => {
         loading={update.isPending}
         closeAfterOnConfirm={false}
       />
+
+      <ProductSetsSection catalogId={catalogData?.catalogId} />
+    </Stack>
+  );
+};
+
+const ProductSetsSection = ({ catalogId }) => {
+  const syncProductSetsMut = useSyncProductSets();
+  const { data: productSets, isLoading } = useProductSetsByCatalog(catalogId);
+
+  return (
+    <Stack gap="xs" mt="md">
+      <Group justify="space-between">
+        <Stack gap={0}>
+          <Text fw={600}>Product Sets</Text>
+          <Text size="sm" c="dimmed">
+            Curated collections synced from your Meta Catalog
+          </Text>
+        </Stack>
+        <RateupButtonBlue
+          leftIcon={<IconRefresh size={16} />}
+          onClick={() => syncProductSetsMut.mutate(catalogId)}
+          loading={syncProductSetsMut.isPending}
+          title="Sync from Meta"
+          w="fit-content"
+        />
+      </Group>
+
+      {isLoading ? (
+        <Loader size="sm" />
+      ) : productSets && productSets.length > 0 ? (
+        <Stack gap="xs" mt="xs">
+          {productSets.map((set: any) => (
+            <Group
+              key={set.productSetId}
+              justify="space-between"
+              p="sm"
+              style={{
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+                backgroundColor: "#f9f9f9",
+              }}
+            >
+              <Stack gap={2}>
+                <Text fw={500} size="sm">
+                  {set.name}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  ID: {set.productSetId}
+                </Text>
+              </Stack>
+              <Badge color="blue" variant="light">
+                {set.productIds?.length || 0} Products
+              </Badge>
+            </Group>
+          ))}
+        </Stack>
+      ) : (
+        <Text size="sm" c="dimmed" fs="italic">
+          No product sets synced yet.
+        </Text>
+      )}
     </Stack>
   );
 };

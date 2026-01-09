@@ -48,6 +48,10 @@ import {
   useConnectedWaCatalog,
   useWaCatalog,
 } from "@/backend/whatsapp/catalog/catalog.query";
+import {
+  useProductSetsByCatalog,
+  useSyncProductSets,
+} from "@/backend/whatsapp/catalog/productSet.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useMarkWaMessagesAsRead } from "@/backend/whatsapp/inbox/message/wamessage.query";
 import {
@@ -96,6 +100,7 @@ import {
   NodeTypeMap,
   TypedNode,
   validateNodeData,
+  WhatsappProductSet,
 } from "../types/node-types";
 import styles from "./node-editor.module.css";
 
@@ -2525,6 +2530,10 @@ const CatalogNodeEditor = ({
     automation?.whatsappSettingsPhoneId,
   );
 
+  const syncProductSetsMut = useSyncProductSets();
+  const { data: productSets, isLoading: isLoadingProductSets } =
+    useProductSetsByCatalog(typedData.catalogId);
+
   useEffect(() => {
     if (
       data &&
@@ -2532,6 +2541,15 @@ const CatalogNodeEditor = ({
     )
       handleInputChange("catalogId", data.catalogId);
   }, [data]);
+
+  const productSetOptions = useMemo(
+    () =>
+      productSets?.map((ps: WhatsappProductSet) => ({
+        value: ps.productSetId,
+        label: ps.name,
+      })) || [],
+    [productSets],
+  );
 
   const products = useMemo(
     () =>
@@ -2544,7 +2562,26 @@ const CatalogNodeEditor = ({
     [data],
   );
 
-  if (isLoading || isPending) return <RateupLoader />;
+  const filteredProducts = useMemo(() => {
+    if (!typedData.useProductSet || !typedData.productSetId) {
+      return products;
+    }
+
+    const selectedProductSet = productSets?.find(
+      (ps: WhatsappProductSet) => ps.productSetId === typedData.productSetId,
+    );
+
+    if (!selectedProductSet) {
+      return products;
+    }
+
+    // Filter products to only show those in the selected product set
+    return products.filter((p) =>
+      selectedProductSet.productIds.includes(p.value),
+    );
+  }, [products, typedData.useProductSet, typedData.productSetId, productSets]);
+
+  if (isLoading || isPending || isLoadingProductSets) return <RateupLoader />;
   return (
     <Stack>
       <ContainedSelection
@@ -2555,6 +2592,42 @@ const CatalogNodeEditor = ({
         data={Object.values(CatalogMessages)}
         allowDeselect={false}
       />
+      <Group gap={3}>
+        <Switch
+          label="Use Product Set"
+          description="Show a curated collection instead of the full catalog"
+          checked={typedData.useProductSet || false}
+          onChange={(event) => {
+            handleInputChange("useProductSet", event.currentTarget.checked);
+            if (!event.currentTarget.checked) {
+              // Clear product set selection when disabled
+              handleInputChange("productSetId", undefined);
+            }
+          }}
+        />
+        {typedData.useProductSet && (
+          <ActionIcon
+            onClick={() => syncProductSetsMut.mutate(typedData.catalogId)}
+            variant="light"
+            loading={syncProductSetsMut.isPending}
+            title="Sync product sets from Meta"
+          >
+            <IconRefresh />
+          </ActionIcon>
+        )}
+      </Group>
+
+      {typedData.useProductSet && (
+        <ContainedSelection
+          label="Select Product Set"
+          placeholder="Choose a product set"
+          data={productSetOptions}
+          value={typedData.productSetId || ""}
+          onChange={(value) => handleInputChange("productSetId", value)}
+          withAsterisk
+          description="Product sets are curated collections within your catalog"
+        />
+      )}
       {typedData?.type === CatalogMessages.MultiProduct && (
         <WaTextEditor
           handleInputChange={(e) => handleInputChange("header", e)}
@@ -2582,7 +2655,7 @@ const CatalogNodeEditor = ({
       {typedData.type === CatalogMessages.Catalog && (
         <ContainedSelection
           label={"Thumbnail Product (optional)"}
-          data={products}
+          data={filteredProducts}
           value={typedData?.thumbnailProductId || ""}
           onChange={(value) => handleInputChange("thumbnailProductId", value)}
           placeholder="Select"
@@ -2592,7 +2665,7 @@ const CatalogNodeEditor = ({
         <ContainedSelection
           label={"Product Retailer ID"}
           withAsterisk
-          data={products}
+          data={filteredProducts}
           value={typedData?.productRetailerId || ""}
           onChange={(value) => handleInputChange("productRetailerId", value)}
           placeholder="Select"
@@ -2643,7 +2716,7 @@ const CatalogNodeEditor = ({
             <ContainedMultiSelect
               label={"Products"}
               value={section.productItems || []}
-              data={products}
+              data={filteredProducts}
               onChange={(values) => {
                 const newSections = [...(typedData.sections || [])];
                 newSections[sectionIndex] = {
