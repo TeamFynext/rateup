@@ -87,6 +87,14 @@ export async function getAllWaSettings(orgId: string) {
     where: {
       orgId: orgId,
     },
+    include: {
+      teams: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
     orderBy: {
       createdAt: "asc",
     },
@@ -130,12 +138,7 @@ export async function getAccessibleWaSettings(
     new Set(userTeams.flatMap((t) => t.whatsappChannels.map((c) => c.id))),
   );
 
-  // Fallback: If no teams have any channels assigned, show all channels (Backward Compatibility)
-  if (assignedChannelIds.length === 0) {
-    return await getAllWaSettings(orgId);
-  }
-
-  // Otherwise, return only the assigned channels
+  // Return only the assigned channels (no assigned channels = no access)
   const res = await prisma.whatsappSettings.findMany({
     where: {
       orgId: orgId,
@@ -237,12 +240,18 @@ export async function updateWaSettingsById(
   whatsappSettingsId: string,
   data: updateWaSettingsInput,
 ) {
+  const { teams, ...rest } = data;
   return await prisma.whatsappSettings.update({
     where: {
       id: whatsappSettingsId,
     },
     data: {
-      ...(data as any),
+      ...(rest as any),
+      teams: teams
+        ? {
+            set: teams.map((id) => ({ id })),
+          }
+        : undefined,
     },
   });
 }
