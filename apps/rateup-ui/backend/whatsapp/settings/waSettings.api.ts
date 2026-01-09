@@ -24,6 +24,11 @@ export type WaSettings = {
   assets: MetaLoginAssets[];
   teams: { id: string; name: string }[];
 }[];
+
+export type UpdateWaSettingsInput = Partial<
+  Omit<WaSettings[0], "teams"> & { teams: string[] }
+>;
+
 export const getWaSettings = async () => {
   const res = await axiosClient.get(SettingsUrl);
   return res.data as WaSettings;
