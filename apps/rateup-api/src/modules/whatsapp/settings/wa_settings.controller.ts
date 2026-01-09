@@ -18,6 +18,7 @@ import {
   getAdAccountsFromWa,
   getAdsFromWa,
   getAllWaSettings,
+  getAccessibleWaSettings,
   getContactTag,
   getFbPagesFromWa,
   getLeadgenFormQuestionsFromWa,
@@ -63,8 +64,9 @@ export async function getWaSettingsHandler(
   req: FastifyRequest,
   res: FastifyReply,
 ) {
-  const { orgId } = req.user;
-  const waSettings = await getAllWaSettings(orgId);
+  const { orgId, role } = req.user;
+  const userId = req.user.id;
+  const waSettings = await getAccessibleWaSettings(orgId, userId, role);
   if (!waSettings?.length) {
     return res.status(204).send();
   }
