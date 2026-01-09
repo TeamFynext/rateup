@@ -42,8 +42,7 @@ const PricingSection = ({ onPlanSelect = null, plans }) => {
               plan.name === "FREE PLAN" ||
               (plan.paymentPlan &&
                 plan?.paymentPlan?.currency === currency &&
-                plan.paymentPlan.period === period &&
-                !["Basic", "Pro"].includes(plan.displayName)),
+                plan.paymentPlan.period === period),
           )
         : [],
     [plans, currency, period],

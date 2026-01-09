@@ -19,12 +19,9 @@ export default function Page() {
 
 async function Pricing() {
   const plans = await getAllRateupPaymentPlans();
-  const filteredPlans = plans?.filter(
-    (plan: any) => !["Basic", "Pro"].includes(plan.displayName),
-  );
   return (
     <Layout>
-      <PricingSection plans={filteredPlans} />
+      <PricingSection plans={plans} />
       <ClientLogoSectionNew />
 
       <div
