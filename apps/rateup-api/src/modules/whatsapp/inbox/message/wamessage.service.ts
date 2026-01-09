@@ -420,7 +420,6 @@ export async function filterChats(
           filters.push(newQuery);
         else {
           const teamIds = await getTeamIdsLazy();
-          params.push(teamIds);
           let newQuery = `EXISTS (  
               SELECT 1 FROM "WaInboxAssign" winb
               WHERE winb."contactId" = c.id
@@ -434,8 +433,10 @@ export async function filterChats(
             (!bodyFilterProps.waMessageAssignStatus &&
               bodyFilterProps.status.includes("ASSIGNED")) ||
             bodyFilterProps.assignedUserIds?.length
-          )
+          ) {
+            params.push(teamIds);
             filters.push(newQuery);
+          }
         }
       } else if (
         waAssignedChatPermission === WaAssignedChatPermission.Admins &&
@@ -619,6 +620,7 @@ export async function filterChats(
       LEFT JOIN "Lifecycle" l ON l.id = fc."lifecycleId"
       ORDER BY ${allOrderBy} ${sortBy} NULLS LAST;
     `;
+    log.info("🚀 ~ filterChats ~ params: %o", params);
 
     const contacts: any[] = await prisma.$queryRawUnsafe(query, ...params);
     if (contacts.length === 0) return [];
