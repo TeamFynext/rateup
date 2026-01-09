@@ -80,6 +80,10 @@ export default async function RootLayout({
       <head>
         <ColorSchemeScript />
         <link rel="shortcut icon" href="/favicon.png" />
+        <meta
+          name="facebook-domain-verification"
+          content="f2o3kii5sp01a6xx6axifkbk7aegai"
+        />
         {isProduction && <FacebookPixel />}
         <GoogleTagManager gtmId="GTM-NDC3D7DP" />
       </head>
