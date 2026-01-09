@@ -9,6 +9,7 @@ import {
   CatalogWhatsappSettingSchema,
   UpdateCatalogSchema,
 } from "./catalog.schema.js";
+import { syncProductSetsForCatalog } from "./productSet.service.js";
 import { WaReceiveMessageBody } from "../../../types/whatsapp.types.js";
 import { log } from "../../../utils/logger.js";
 import {
@@ -137,6 +138,27 @@ export async function syncWaCatalogs(orgId: string) {
         `/${wabaId}/product_catalogs?access_token=${accessToken}`,
         "GET",
       );
+
+      // Sync product sets for each catalog
+      const allCatalogs = await prisma.whatsappCatalog.findMany({
+        where: { orgId },
+      });
+      for (const catalog of allCatalogs) {
+        try {
+          await syncProductSetsForCatalog(
+            catalog.catalogId,
+            orgId,
+            accessToken,
+          );
+        } catch (e) {
+          log.error(
+            "Error syncing product sets for catalog %s: %o",
+            catalog.catalogId,
+            e,
+          );
+        }
+      }
+
       console.log("connectedCatalog", connectedCatalog.data);
       if (!connectedCatalog.data.data.length) {
         await prisma.catalogPhoneIdMap.deleteMany({

@@ -15,11 +15,21 @@ const updateCatalogSchema = z.object({
   name: z.string().optional(),
 });
 
+const productSetIdParamSchema = z.object({
+  productSetId: z.string(),
+});
+
+const syncProductSetsSchema = z.object({
+  catalogId: z.string(),
+});
+
 export const { schemas: waCatalogSchemas, $ref: $WC } = buildJsonSchemas(
   {
     catalogIdParams,
     catalogWhatsappSettingSchema,
     updateCatalogSchema,
+    productSetIdParamSchema,
+    syncProductSetsSchema,
   },
   { $id: "waCatalogSchemas" },
 );
@@ -29,3 +39,5 @@ export type CatalogWhatsappSettingSchema = z.infer<
   typeof catalogWhatsappSettingSchema
 >;
 export type UpdateCatalogSchema = z.infer<typeof updateCatalogSchema>;
+export type ProductSetIdParam = z.infer<typeof productSetIdParamSchema>;
+export type SyncProductSetsSchema = z.infer<typeof syncProductSetsSchema>;
