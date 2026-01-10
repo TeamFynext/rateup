@@ -2,25 +2,22 @@
 
 import { useMemo, useState } from "react";
 
-import {
-  Card,
-  CardSection,
-  Divider,
-  Modal,
-  SimpleGrid,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+import { ExternalLink, ShoppingBag } from "lucide-react";
 
 import { useWaCatalogOrders } from "@/backend/whatsapp/catalog/orders/catalogOrders.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { RateupButtonSecondary } from "@/components/Button/RateupButtons";
-import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 import TableLayoutSecondary from "@/components/styled/Table/TableLayoutSecondary";
 import TanstackTable from "@/components/Table/TanstackTable";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { PAGE_SIZE } from "@/utils/constants";
 
 const CatalogOrders = ({ catalogId }) => {
@@ -35,8 +32,9 @@ const CatalogOrders = ({ catalogId }) => {
     refetch,
     isRefetching,
   } = useWaCatalogOrders(catalogId, pagination);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [opened, { open, close }] = useDisclosure(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const data = useMemo(() => {
     return orders
       ? orders?.data?.map((order) => ({
@@ -46,6 +44,7 @@ const CatalogOrders = ({ catalogId }) => {
         }))
       : [];
   }, [orders]);
+
   const columns: ColumnDef<any>[] = [
     {
       header: () => "Created At",
@@ -77,7 +76,7 @@ const CatalogOrders = ({ catalogId }) => {
             title="Details"
             onClick={() => {
               setSelectedOrder(info.getValue());
-              open();
+              setIsModalOpen(true);
             }}
           />
         );
@@ -115,17 +114,14 @@ const CatalogOrders = ({ catalogId }) => {
         const url = info.getValue() as string;
         if (!url) return "-";
         return (
-          <Text
-            component="a"
+          <a
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            c="blue"
-            td="underline"
-            size="sm"
+            className="text-blue-600 hover:underline text-sm flex items-center gap-1"
           >
-            Checkout Link
-          </Text>
+            Checkout Link <ExternalLink className="w-3 h-3" />
+          </a>
         );
       },
     },
@@ -147,6 +143,7 @@ const CatalogOrders = ({ catalogId }) => {
     }
     return { productItems, totalPrice };
   }, [selectedOrder]);
+
   const productItemsColumns = [
     { key: "retailerId", value: "Retailer ID" },
     { key: "quantity", value: "Quantity" },
@@ -158,7 +155,7 @@ const CatalogOrders = ({ catalogId }) => {
     return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
 
   return (
-    <Stack>
+    <div className="flex flex-col gap-4">
       <TanstackTable
         data={data}
         columns={columns}
@@ -167,49 +164,56 @@ const CatalogOrders = ({ catalogId }) => {
         pagination={pagination}
         setPagination={setPagination}
       />
-      <Modal opened={opened} onClose={close} centered>
-        <Stack>
-          <Text size="sm" c="dimmed">
-            <Text component="span" c="black">
-              Order placed:{" "}
-            </Text>
-            {dayjs(selectedOrder?.createdAt).format("DD/MM/YYYY hh:mm A")}
-          </Text>
-          <Text size="sm" c="dimmed">
-            <Text component="span" c="black">
-              Order ID:{" "}
-            </Text>
-            {selectedOrder?.id}
-          </Text>
-          {selectedOrder?.shopifyInvoiceUrl && (
-            <Text size="sm" c="dimmed">
-              <Text component="span" c="black">
-                Shopify Checkout:{" "}
-              </Text>
-              <Text
-                component="a"
-                href={selectedOrder.shopifyInvoiceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                c="blue"
-                td="underline"
-              >
-                Open Link
-              </Text>
-            </Text>
-          )}
-          <Divider />
-          <Text fw={500}>Items Ordered</Text>
-          <TableLayoutSecondary
-            columns={productItemsColumns}
-            rows={productItems}
-          />
-          <Text fw={600}>
-            Grand Total: {selectedOrder?.products?.[0]?.currency} {totalPrice}
-          </Text>
-        </Stack>
-      </Modal>
-    </Stack>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5" />
+              Order Details
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="space-y-1">
+              <p className="text-sm text-gray-500">
+                <span className="font-semibold text-gray-900">
+                  Order placed:{" "}
+                </span>
+                {dayjs(selectedOrder?.createdAt).format("DD/MM/YYYY hh:mm A")}
+              </p>
+              <p className="text-sm text-gray-500">
+                <span className="font-semibold text-gray-900">Order ID: </span>
+                {selectedOrder?.id}
+              </p>
+              {selectedOrder?.shopifyInvoiceUrl && (
+                <p className="text-sm text-gray-500">
+                  <span className="font-semibold text-gray-900">
+                    Shopify Checkout:{" "}
+                  </span>
+                  <a
+                    href={selectedOrder.shopifyInvoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Open Link
+                  </a>
+                </p>
+              )}
+            </div>
+            <Separator />
+            <p className="font-medium">Items Ordered</p>
+            <TableLayoutSecondary
+              columns={productItemsColumns}
+              rows={productItems}
+            />
+            <p className="font-semibold text-lg mt-2">
+              Grand Total: {selectedOrder?.products?.[0]?.currency}{" "}
+              {totalPrice.toFixed(2)}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

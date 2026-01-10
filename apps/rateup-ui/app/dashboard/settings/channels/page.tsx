@@ -2,7 +2,6 @@
 
 import React from "react";
 
-import { Box, Group, MultiSelect, Stack, Text } from "@mantine/core";
 import { Info, Shield, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -14,6 +13,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ChannelRow = ({ channel, teamOptions, translations: t }: any) => {
@@ -61,27 +61,14 @@ const ChannelRow = ({ channel, teamOptions, translations: t }: any) => {
             </div>
             <MultiSelect
               placeholder={t("Select teams that can access this channel...")}
-              data={teamOptions}
+              options={teamOptions}
               defaultValue={channel.teams?.map((team: any) => team.id) || []}
-              onChange={handleUpdateTeams}
+              onValueChange={handleUpdateTeams}
               searchable
-              clearable
-              nothingFoundMessage={t("No teams found")}
+              emptyIndicator={
+                <p className="text-center text-sm">{t("No teams found")}</p>
+              }
               className="w-full"
-              styles={{
-                input: {
-                  borderRadius: "8px",
-                  border: "1px solid #e5e7eb",
-                  minHeight: "42px",
-                  padding: "6px 12px",
-                },
-                pill: {
-                  backgroundColor: "#f3f4f6",
-                  border: "1px solid #e5e7eb",
-                  fontWeight: 500,
-                  fontSize: "12px",
-                },
-              }}
             />
           </div>
         </div>
