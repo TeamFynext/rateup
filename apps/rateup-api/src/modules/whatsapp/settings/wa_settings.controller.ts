@@ -65,7 +65,8 @@ export async function getWaSettingsHandler(
   res: FastifyReply,
 ) {
   const { orgId, role } = req.user;
-  const userId = req.user.id;
+  // const userId = req.user.id;
+  const userId = req.user.userId;
   const waSettings = await getAccessibleWaSettings(orgId, userId, role);
   if (!waSettings?.length) {
     return res.status(204).send();
