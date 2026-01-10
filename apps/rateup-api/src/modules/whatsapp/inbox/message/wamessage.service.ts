@@ -928,7 +928,10 @@ export async function assignWaMessageToUser(
           userId: u.assignedUserId,
           teamId: u.teamId,
         })),
-        added: newUsers,
+        added: addedUsers.map((u) => ({
+          userId: u.userId,
+          teamId: u.teamId,
+        })),
       },
       trigerredByUser: userId,
       messageId: data.messageId,
@@ -1554,8 +1557,9 @@ export async function createInternalWaMessage({
 
     if (
       (waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED ||
-        waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED) &&
-      addedUsers?.length
+        waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED ||
+        waMessageAssignStatus === "REASSIGNED") &&
+      (addedUsers.length || removedUsers.length)
     ) {
       const userIds = [
         ...addedUsers.map((u) => u.userId),
