@@ -1,3 +1,11 @@
+-- AlterTable
+ALTER TABLE "WaCatalogOrder" ADD COLUMN "shopifyDraftOrderId" TEXT,
+ADD COLUMN "shopifyInvoiceUrl" TEXT;
+
+-- AlterTable
+ALTER TABLE "WhatsappCatalog" ADD COLUMN "autoCheckoutEnabled" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "checkoutMessage" TEXT;
+
 -- CreateTable
 CREATE TABLE "_TeamToWhatsappSettings" (
     "A" UUID NOT NULL,

@@ -1192,23 +1192,33 @@ export async function createShopifyDraftOrder(orgId: string, products: any[]) {
     session: shopifyInfo.credential.session,
   });
 
-  const lineItems = [];
-  for (const product of products) {
-    // Find variant by SKU (retailerId)
-    const variantData = await client.request(
-      `query getVariantBySku($query: String!) {
-          productVariants(first: 1, query: $query) {
+  const skus = products.map((p) => p.retailerId).filter(Boolean);
+  const variantMap = new Map<string, string>();
+
+  if (skus.length > 0) {
+    const skuQuery = skus.map((sku) => `sku:${sku}`).join(" OR ");
+    const variantsData = await client.request(
+      `query getVariantsBySkus($query: String!) {
+          productVariants(first: 250, query: $query) {
             edges {
               node {
                 id
+                sku
               }
             }
           }
         }`,
-      { variables: { query: `sku:${product.retailerId}` } },
+      { variables: { query: skuQuery } },
     );
 
-    const variantId = variantData.data.productVariants.edges[0]?.node?.id;
+    variantsData.data.productVariants.edges.forEach((edge: any) => {
+      variantMap.set(edge.node.sku, edge.node.id);
+    });
+  }
+
+  const lineItems = [];
+  for (const product of products) {
+    const variantId = variantMap.get(product.retailerId);
     if (variantId) {
       lineItems.push({
         variantId,
