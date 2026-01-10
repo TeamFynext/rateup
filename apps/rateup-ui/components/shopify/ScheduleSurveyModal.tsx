@@ -1,20 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
-  ActionIcon,
-  Alert,
-  Checkbox,
-  Group,
-  Input,
-  Stack,
-  Text,
-  TooltipFloating,
-} from "@mantine/core";
-import { isNotEmpty, useForm } from "@mantine/form";
-import { IconAlertCircle, IconRefresh } from "@tabler/icons-react";
+  IconAlertCircle,
+  IconPlus,
+  IconRefresh,
+  IconSettings,
+} from "@tabler/icons-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 import {
   IntegratedApps,
@@ -25,18 +23,66 @@ import { ShopifyIntegration } from "@/types/global";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
 
-import useTemplatesAvailableForTeam from "../../hooks/team";
 import { shopifyEventData } from "../../utils/constants";
 import { showLoadingToast } from "../../utils/notifications";
-import {
-  ContainedNumberInput,
-  ContainedSelection,
-} from "../input/ContainedInput/ContainedInput";
 import { TeamSelector } from "../input/TeamSelector";
 import WaTemplateSelector from "../input/WaTemplateSelector";
-import { LASelector } from "../LoyaltyComponents/utils";
-import FormModalLayout from "../Modal/FormModalLayout";
-import { Field, FieldLabel } from "../ui/field";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { Input } from "../ui/input";
+import { ScrollArea } from "../ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import VariableMapping from "./VariableMapping";
+
+const formSchema = z.object({
+  waTemplateId: z.string().min(1, "WhatsApp Template is required"),
+  event: z.string().min(1, "Event is required"),
+  isProductSpecific: z.boolean().default(false),
+  productId: z.string().optional(),
+  teamId: z.string().min(1, "Team is required"),
+  timeDelay: z.coerce.number().min(0, "Delay must be positive"),
+  repeatInterval: z.object({
+    value: z.coerce.number().min(0),
+    unit: z.enum(["hour", "day"]).default("hour"),
+  }),
+  variableMapping: z
+    .array(
+      z.object({
+        templateParamIndex: z.number(),
+        shopifyPath: z.string(),
+      }),
+    )
+    .default([]),
+  // Fields to be hidden but kept in schema for compatibility
+  actionId: z.string().optional(),
+  loyaltyApiFeature: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const ScheduleSurveyModal = ({
   opened,
@@ -49,12 +95,20 @@ const ScheduleSurveyModal = ({
   shopifyInfo: ShopifyIntegration;
   setShopifyProducts: React.Dispatch<React.SetStateAction<any[]>>;
 }) => {
-  const [productData, setProductData] = useState([]);
+  const [productData, setProductData] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const translations = useTranslations();
+  const updateIntegration = useUpdateIntegrationMutation(
+    IntegratedApps.shopify,
+  );
 
-  const form = useForm({
-    initialValues: {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
       waTemplateId: "",
-      event: null,
+      event: "",
       isProductSpecific: false,
       productId: "",
       teamId: "",
@@ -63,59 +117,55 @@ const ScheduleSurveyModal = ({
         value: 0,
         unit: "hour",
       },
+      variableMapping: [],
       actionId: "",
       loyaltyApiFeature: "",
     },
-    validate: {
-      event: isNotEmpty("Event is required"),
-      teamId: isNotEmpty("Team is required"),
-      productId: (value, values) =>
-        values.isProductSpecific && !value ? "Product is required" : null,
-      timeDelay: (value) =>
-        value < 60 && value !== 0
-          ? "Minimum time delay should be 60 minutes. You can set to 0 if not needed"
-          : null,
-    },
   });
-  const translations = useTranslations();
-  const updateIntegration = useUpdateIntegrationMutation(
-    IntegratedApps.shopify,
-  );
 
-  const handleScheduleSurvey = () => {
-    if (form.validate().hasErrors) return;
-    if (
-      !form.values.waTemplateId &&
-      !form.values.actionId &&
-      !form.values.loyaltyApiFeature
-    ) {
-      form.setErrors({
-        actionId: translations(
-          "Choose Loyalty API/Action or Whatsapp Template",
-        ),
-        waTemplateId: translations(
-          "Choose Loyalty API/Action or Whatsapp Template",
-        ),
-        loyaltyApiFeature: translations(
-          "Choose Loyalty API/Action or Whatsapp Template",
-        ),
+  const { watch, setValue } = form;
+  const selectedEvent = watch("event");
+  const isProductSpecific = watch("isProductSpecific");
+  const waTemplateId = watch("waTemplateId");
+
+  const handleScheduleSurvey = (values: FormValues) => {
+    const newShopifySurveys = [
+      ...(shopifyInfo.credential.shopifySurveys || []),
+    ];
+    const isEventExist = newShopifySurveys.find(
+      (s) => s.event === values.event,
+    );
+
+    if (isEventExist) {
+      form.setError("event", {
+        message: "You already have a schedule for this event",
       });
       return;
     }
-    const newShopifySurveys = [...shopifyInfo.credential.shopifySurveys];
-    const isEventExist = newShopifySurveys.find(
-      (s) => s.event === form.values.event,
-    );
-    if (isEventExist) {
-      form.setFieldError("event", "You have a schedule in this event");
-      return;
-    }
+
     newShopifySurveys.push({
-      ...form.values,
+      waTemplateId: values.waTemplateId ?? "",
+      event: values.event as ShopifyEvents,
+      isProductSpecific: values.isProductSpecific ?? false,
+      productId: values.productId,
+      teamId: values.teamId ?? "",
+      timeDelay: values.timeDelay ?? 0,
+      repeatInterval: {
+        value: values.repeatInterval?.value ?? 0,
+        unit: values.repeatInterval?.unit ?? "hour",
+      },
+      variableMapping:
+        values.variableMapping?.map((m) => ({
+          templateParamIndex: m.templateParamIndex ?? 0,
+          shopifyPath: m.shopifyPath ?? "",
+        })) ?? [],
+      actionId: values.actionId,
+      loyaltyApiFeature: values.loyaltyApiFeature,
       active: true,
       schedules: [],
       createdAt: new Date(),
     });
+
     showLoadingToast(
       translations("Creating Survey Schedule"),
       "integration-update",
@@ -124,6 +174,7 @@ const ScheduleSurveyModal = ({
       "",
       false,
     );
+
     updateIntegration.mutate(
       {
         credential: {
@@ -141,154 +192,375 @@ const ScheduleSurveyModal = ({
   };
 
   const loadShopifyProducts = async () => {
-    const products = await getProductsFromShopify();
-    setShopifyProducts(products ?? []);
-    setProductData(
-      products
-        ? products?.map((product) => ({
-            label: product.title,
-            value: product.id.toString(),
-          }))
-        : [],
-    );
+    setLoadingProducts(true);
+    try {
+      const products = await getProductsFromShopify();
+      setShopifyProducts(products ?? []);
+      setProductData(
+        products
+          ? products?.map((product: any) => ({
+              label: product.title,
+              value: product.id.toString(),
+            }))
+          : [],
+      );
+    } finally {
+      setLoadingProducts(false);
+    }
   };
+
+  const isWebhookMissing =
+    selectedEvent &&
+    selectedEvent !== ShopifyEvents.ABANDONED_CHECKOUTS &&
+    !shopifyInfo.credential.isWebhookRegistered;
+
   return (
-    <FormModalLayout
-      opened={opened}
-      onClose={() => {
-        form.reset();
-        close();
-      }}
-      title="Add Message Schedule"
-      centered
-      onSubmit={handleScheduleSurvey}
-      buttonTitle={translations("Create")}
-      includeCancelButton
-      size="lg"
-      submitButtonDisabled={
-        form.values.event &&
-        form.values.event !== ShopifyEvents.ABANDONED_CHECKOUTS &&
-        !shopifyInfo.credential.isWebhookRegistered
-      }
-    >
-      <Stack>
-        <Alert
-          title={translations("Important")}
-          display={
-            form.values.event &&
-            form.values.event !== ShopifyEvents.ABANDONED_CHECKOUTS &&
-            !shopifyInfo.credential.isWebhookRegistered
-              ? "block"
-              : "none"
-          }
-          icon={<IconAlertCircle color="red" />}
-          color="red"
-        >
-          {translations(
-            "Allow rateup to subscribe to your store events in th settings before scheduling survey",
-          ) ||
-            "Allow rateup to subscribe to your store events in th settings before scheduling survey"}
-        </Alert>
-        <Field className="felx flex-col gap-1">
-          <FieldLabel className="text-xs text-muted-foreground">
-            {translations("Team")}
-          </FieldLabel>
-          <TeamSelector
-            placeholder={translations("Select Team")}
-            withAsterisk
-            allowDeselect={false}
-            disabled={false}
-            value={form?.getInputProps("teamId")?.value || ""}
-            {...form.getInputProps("teamId")}
-            styles={{
-              input: { outline: "1px solid #149A8A" },
-            }}
-            searchable
-          />
-        </Field>
+    <Dialog open={opened} onOpenChange={(open) => !open && close()}>
+      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden rounded-xl border-none shadow-2xl">
+        <div className="bg-gradient-to-r from-primary/10 via-background to-background p-6 border-b">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-2 bg-primary/20 rounded-lg text-primary">
+                <IconPlus size={20} />
+              </div>
+              <DialogTitle className="text-xl font-bold">
+                Add Message Schedule
+              </DialogTitle>
+            </div>
+            <DialogDescription>
+              Configure automated WhatsApp messages triggered by Shopify events.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <ContainedSelection
-          label={translations("Event")}
-          placeholder={translations("Select Shopify Event")}
-          data={shopifyEventData}
-          {...form.getInputProps("event")}
-        />
-        <WaTemplateSelector
-          label={translations("whatsApp Template")}
-          placeholder={translations("Select a template")}
-          {...form.getInputProps("waTemplateId")}
-        />
-        <ContainedNumberInput
-          label={translations("Time Delay (in minutes)")}
-          {...form.getInputProps("timeDelay")}
-          allowDecimal={false}
-          allowNegative={false}
-          display={form.values.waTemplateId ? "block" : "none"}
-        />
-        <LASelector
-          label={translations("Loyalty Action")}
-          placeholder={translations("Select action")}
-          {...form.getInputProps("actionId")}
-          display={
-            form.values.event === ShopifyEvents.ABANDONED_CHECKOUTS
-              ? "none"
-              : "block"
-          }
-        />
-        <ContainedSelection
-          label={"Loyalty API"}
-          {...form.getInputProps("loyaltyApiFeature")}
-          placeholder="Select an API Feature"
-          data={Object.values(LoyaltyApiFeature)}
-        />
-
-        {form.values.event === ShopifyEvents.ABANDONED_CHECKOUTS ? (
-          <Input.Wrapper>
-            <Input.Label>
-              <Text size="xs">Repeat interval</Text>
-            </Input.Label>
-            <Group>
-              <ContainedNumberInput
-                {...form.getInputProps("repeatInterval.value")}
-                allowDecimal={false}
-                allowNegative={false}
-              />
-              <ContainedSelection
-                data={["hour", "day"]}
-                {...form.getInputProps("repeatInterval.unit")}
-              />
-            </Group>
-          </Input.Wrapper>
-        ) : (
-          <Stack>
-            <Checkbox
-              label={translations("Product Specific")}
-              {...form.getInputProps("isProductSpecific")}
-            />
-            {form.values.isProductSpecific && (
-              <Group>
-                <ContainedSelection
-                  label={translations("Product")}
-                  data={productData}
-                  placeholder={translations("Select a product")}
-                  flex={1}
-                  {...form.getInputProps("productId")}
-                />
-                <TooltipFloating label={translations("Load products")}>
-                  <ActionIcon
-                    onClick={loadShopifyProducts}
-                    variant="subtle"
-                    mt={"lg"}
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleScheduleSurvey)}
+            className="space-y-6"
+          >
+            <ScrollArea className="max-h-[60vh] px-6 py-4">
+              <div className="space-y-6">
+                {isWebhookMissing && (
+                  <Alert
+                    variant="destructive"
+                    className="bg-destructive/10 text-destructive border-destructive/20"
                   >
-                    <IconRefresh />
-                  </ActionIcon>
-                </TooltipFloating>
-              </Group>
-            )}
-          </Stack>
-        )}
-      </Stack>
-    </FormModalLayout>
+                    <IconAlertCircle className="h-4 w-4" />
+                    <AlertTitle>Webhook Required</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      Allow Rateup to subscribe to your store events in settings
+                      before scheduling.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="teamId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Team
+                        </FormLabel>
+                        <FormControl>
+                          <TeamSelector
+                            {...field}
+                            styles={{
+                              input: {
+                                borderRadius: "0.5rem",
+                                border: "1px solid hsl(var(--input))",
+                                height: "2.5rem",
+                              },
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="event"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Shopify Event
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="rounded-lg h-10">
+                              <SelectValue placeholder="Select Event" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {shopifyEventData.map((event) => (
+                              <SelectItem key={event.value} value={event.value}>
+                                {event.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="waTemplateId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        WhatsApp Template
+                      </FormLabel>
+                      <FormControl>
+                        <WaTemplateSelector
+                          {...field}
+                          styles={{
+                            input: {
+                              borderRadius: "0.5rem",
+                              border: "1px solid hsl(var(--input))",
+                              height: "2.5rem",
+                            },
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {waTemplateId && (
+                  <VariableMapping
+                    waTemplateId={waTemplateId}
+                    value={
+                      watch("variableMapping") as {
+                        templateParamIndex: number;
+                        shopifyPath: string;
+                      }[]
+                    }
+                    onChange={(val) => setValue("variableMapping", val)}
+                  />
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="timeDelay"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Time Delay (Minutes)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            className="rounded-lg"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-[10px]">
+                          Wait time after event before sending.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {selectedEvent === ShopifyEvents.ABANDONED_CHECKOUTS && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="repeatInterval.value"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[10px] uppercase text-muted-foreground">
+                              Repeat Every
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                className="rounded-lg"
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="repeatInterval.unit"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[10px] uppercase text-muted-foreground">
+                              Unit
+                            </FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="rounded-lg">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="hour">Hours</SelectItem>
+                                <SelectItem value="day">Days</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Loyalty fields commented out per requirement */}
+                {/* 
+                <FormField
+                  control={form.control}
+                  name="actionId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Loyalty Action</FormLabel>
+                      <LASelector {...field} />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="loyaltyApiFeature"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Loyalty API</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select API Feature" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.values(LoyaltyApiFeature).map((feat) => (
+                            <SelectItem key={feat} value={feat}>{feat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                */}
+
+                {selectedEvent !== ShopifyEvents.ABANDONED_CHECKOUTS && (
+                  <div className="space-y-4 rounded-lg border p-4">
+                    <FormField
+                      control={form.control}
+                      name="isProductSpecific"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="text-sm font-medium">
+                              Product Specific
+                            </FormLabel>
+                            <FormDescription className="text-xs">
+                              Trigger only if certain products are in the order.
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+
+                    {isProductSpecific && (
+                      <div className="flex items-end gap-2">
+                        <FormField
+                          control={form.control}
+                          name="productId"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel className="text-[10px] uppercase text-muted-foreground">
+                                Product
+                              </FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="rounded-lg">
+                                    <SelectValue placeholder="Select Product" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {productData.map((prod) => (
+                                    <SelectItem
+                                      key={prod.value}
+                                      value={prod.value}
+                                    >
+                                      {prod.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={loadShopifyProducts}
+                          disabled={loadingProducts}
+                          className="rounded-lg"
+                        >
+                          {loadingProducts ? (
+                            <Loader2 className="animate-spin h-4 w-4" />
+                          ) : (
+                            <IconRefresh size={18} />
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            <DialogFooter className="p-6 bg-muted/30 border-t">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={close}
+                className="rounded-lg"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="rounded-lg px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                disabled={isWebhookMissing || updateIntegration.isPending}
+              >
+                {updateIntegration.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {translations("Create")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

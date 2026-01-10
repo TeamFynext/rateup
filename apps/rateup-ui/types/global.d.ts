@@ -1834,6 +1834,7 @@ export type ShopifySurvey = {
   };
   actionId?: string;
   loyaltyApiFeature?: string;
+  variableMapping: { templateParamIndex: number; shopifyPath: string }[];
 };
 
 type ScheduleObj = {
@@ -1850,6 +1851,7 @@ export type ShopifySchedule = ScheduleObj & {
   actionStatus?: "success" | "failed";
   history: ScheduleObj[];
   apiStatus?: string;
+  body?: any;
 };
 
 export type ZapierIntegration = Integration & {
