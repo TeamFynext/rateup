@@ -42,6 +42,7 @@ const updateContactSchema = z.object({
     .optional(),
   aiWaChat: z.boolean().optional(),
   waMessageAssignStatus: z.nativeEnum(WaMessageAssignStatus).optional(),
+  messageId: z.string().optional(), // for internal messages
   lastReceivedMessageTimeStamp: z.string().optional(),
   whatsappUserName: z.string().optional(),
   followerCount: z.number().optional(),
