@@ -2,6 +2,7 @@ import prisma from "../../../utils/prisma.js";
 import shopify from "./shopify.config.js";
 import { GraphqlClient, Session } from "@shopify/shopify-api";
 import isEmpty from "lodash/isEmpty.js";
+import _get from "lodash/get.js";
 import { log } from "../../../utils/logger.js";
 import {
   createSession,
@@ -228,6 +229,7 @@ export async function createScheduleOnShopifyEvent({
     actionStatus,
     history: [scheduleObj],
     apiStatus,
+    body,
   };
   schedules.push(data);
   shopifySurvey.schedules = schedules;
@@ -352,11 +354,42 @@ export async function sendShopifySurveyCronAction() {
           try {
             const subscription = await getSubscription(orgId);
             await verifyTemplateMessageLimit(subscription);
+            let parameterData = [];
+            if (config.variableMapping && sch.body) {
+              const bodyParameters = [];
+              const sortedMappings = [...config.variableMapping].sort(
+                (a, b) => a.templateParamIndex - b.templateParamIndex,
+              );
+              const maxIndex = Math.max(
+                ...sortedMappings.map((m) => m.templateParamIndex),
+                -1,
+              );
+
+              if (maxIndex !== -1) {
+                for (let i = 0; i <= maxIndex; i++) {
+                  const mapping = sortedMappings.find(
+                    (m) => m.templateParamIndex === i,
+                  );
+                  const value = mapping
+                    ? _get(sch.body, mapping.shopifyPath)
+                    : "";
+                  bodyParameters.push({
+                    type: "text",
+                    text: String(value ?? ""),
+                  });
+                }
+                parameterData.push({
+                  type: "body",
+                  parameters: bodyParameters,
+                });
+              }
+            }
+
             const res = await sendTemplateToUserCore(
               orgId,
               waTemplateId,
               sch.phone,
-              [],
+              parameterData,
               teamId,
             );
             sch.status = res.status ? "SENT" : `FAILED: ${res.message}`;

@@ -208,6 +208,7 @@ declare global {
     schedules: ShopifySchedules[];
     actionId?: string;
     loyaltyApiFeature?: string;
+    variableMapping: { templateParamIndex: number; shopifyPath: string }[];
   };
 
   type ScheduleObj = {
@@ -224,6 +225,7 @@ declare global {
     actionStatus?: "success" | "failed";
     history: ScheduleObj[];
     apiStatus?: string;
+    body?: any;
   };
 
   type ZapierIntegration = Integration & {
@@ -831,12 +833,16 @@ declare module "fastify" {
   }
 }
 
-export interface CustomRouteShortHandOptions
-  extends Omit<RouteShorthandOptions, "config"> {
+export interface CustomRouteShortHandOptions extends Omit<
+  RouteShorthandOptions,
+  "config"
+> {
   config: any;
 }
 
-export interface CustomRouteShortHandOptionsWithHandler
-  extends Omit<RouteShorthandOptionsWithHandler, "config"> {
+export interface CustomRouteShortHandOptionsWithHandler extends Omit<
+  RouteShorthandOptionsWithHandler,
+  "config"
+> {
   config: any;
 }
