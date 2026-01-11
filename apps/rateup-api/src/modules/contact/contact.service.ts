@@ -718,6 +718,7 @@ export async function updateContactById(
         trigerredByUser: userId,
         contactId: updatedContact.id,
         waMessageAssignStatus: updatedContact.waMessageAssignStatus,
+        messageId: contact.messageId,
       });
     }
     const conversation = await getLastCreatedConversationForContact(

@@ -848,6 +848,9 @@ export async function assignWaMessageToUser(
   const revokedUsers = existingUsers.filter(
     (u) => !incomingUserIds.includes(u.assignedUserId),
   );
+
+  const isReassignment = revokedUsers.length > 0 && addedUsers.length > 0;
+
   for (const assignee of data.assignees) {
     let updateCount = false;
     const existingUser = existingUsers.find(
@@ -918,25 +921,46 @@ export async function assignWaMessageToUser(
     skipDuplicates: true,
   });
 
-  if (addedUsers.length) {
+  if (isReassignment) {
     await createInternalWaMessage({
       contactId: data.contactId,
-      waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
-      assignedUsers: newUsers,
+      waMessageAssignStatus: "REASSIGNED",
+      assignedUsers: {
+        removed: revokedUsers.map((u) => ({
+          userId: u.assignedUserId,
+          teamId: u.teamId,
+        })),
+        added: addedUsers.map((u) => ({
+          userId: u.userId,
+          teamId: u.teamId,
+        })),
+      },
       trigerredByUser: userId,
+      messageId: data.messageId,
     });
-  }
+  } else {
+    if (newUsers.length) {
+      await createInternalWaMessage({
+        contactId: data.contactId,
+        waMessageAssignStatus: WaMessageAssignStatus.ASSIGNED,
+        assignedUsers: newUsers,
+        trigerredByUser: userId,
+        messageId: data.messageId,
+      });
+    }
 
-  if (revokedUsers.length) {
-    await createInternalWaMessage({
-      contactId: data.contactId,
-      waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
-      assignedUsers: revokedUsers.map((u) => ({
-        userId: u.assignedUserId,
-        teamId: u.teamId,
-      })),
-      trigerredByUser: userId,
-    });
+    if (revokedUsers.length) {
+      await createInternalWaMessage({
+        contactId: data.contactId,
+        waMessageAssignStatus: WaMessageAssignStatus.UNASSIGNED,
+        assignedUsers: revokedUsers.map((u) => ({
+          userId: u.assignedUserId,
+          teamId: u.teamId,
+        })),
+        trigerredByUser: userId,
+        messageId: data.messageId,
+      });
+    }
   }
 
   const contact = await prisma.waInboxAssign.deleteMany({
@@ -1487,15 +1511,22 @@ export async function createInternalWaMessage({
   exchangeProcess = "internal",
   orgId,
   privateMessageText,
+  messageId,
 }: {
   contactId: string;
   waMessageAssignStatus?: string;
   trigerredByUser?: string;
-  assignedUsers?: { userId: string; teamId: string }[];
+  assignedUsers?:
+    | { userId: string; teamId: string }[]
+    | {
+        added: { userId: string; teamId: string }[];
+        removed: { userId: string; teamId: string }[];
+      };
   mentionedUsers?: string[];
   exchangeProcess?: "internal" | "privateNote";
   orgId?: string;
   privateMessageText?: string;
+  messageId: string;
 }) {
   const conversation = await getLastCreatedConversationForContact(contactId);
 
@@ -1511,6 +1542,15 @@ export async function createInternalWaMessage({
       triggeredByUserDetails = { id: user.id, name: user.name };
     }
   }
+  let addedUsers: { userId: string; teamId: string }[] = [];
+  let removedUsers: { userId: string; teamId: string }[] = [];
+
+  if (Array.isArray(assignedUsers)) {
+    addedUsers = assignedUsers;
+  } else if (assignedUsers) {
+    addedUsers = assignedUsers.added || [];
+    removedUsers = assignedUsers.removed || [];
+  }
 
   if (exchangeProcess === "internal") {
     let messageText: string;
@@ -1519,38 +1559,59 @@ export async function createInternalWaMessage({
 
     if (
       (waMessageAssignStatus === WaMessageAssignStatus.ASSIGNED ||
-        waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED) &&
-      assignedUsers?.length
+        waMessageAssignStatus === WaMessageAssignStatus.UNASSIGNED ||
+        waMessageAssignStatus === "REASSIGNED") &&
+      (addedUsers.length || removedUsers.length)
     ) {
-      const userIds = assignedUsers.map((u) => u.userId);
+      const userIds = [
+        ...addedUsers.map((u) => u.userId),
+        ...removedUsers.map((u) => u.userId),
+      ];
 
-      const users = await prisma.user.findMany({
-        where: { id: { in: userIds } },
-        select: { id: true, name: true },
-      });
+      if (userIds.length) {
+        const users = await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, name: true },
+        });
 
-      assignedUserDetails = users
-        .filter((u) => u.name)
-        .map((u) => ({ id: u.id, name: u.name! }));
+        assignedUserDetails = users
+          .filter((u) => u.name)
+          .map((u) => ({ id: u.id, name: u.name! }));
+      }
     }
 
     switch (waMessageAssignStatus) {
       case WaMessageAssignStatus.ASSIGNED:
         messageText = assignedUserDetails.length
-          ? `assigned this chat to ${assignedUserDetails
+          ? `Chat assigned to ${assignedUserDetails
               .map((u) => u.name)
               .join(", ")}`
-          : "assigned this chat";
+          : "Assigned this chat";
         assignStatus = WaMessageAssignStatus.ASSIGNED;
         break;
 
       case WaMessageAssignStatus.UNASSIGNED:
         messageText = assignedUserDetails.length
-          ? `revoked ${assignedUserDetails
+          ? `Chat revoked from ${assignedUserDetails
               .map((u) => u.name)
-              .join(", ")} from this chat`
-          : "unassigned this chat";
+              .join(", ")}`
+          : "Unassigned this chat";
         assignStatus = WaMessageAssignStatus.UNASSIGNED;
+        break;
+
+      case "REASSIGNED":
+        const addedNames = assignedUserDetails
+          .filter((u) => addedUsers.find((a) => a.userId === u.id))
+          .map((u) => u.name);
+
+        const removedNames = assignedUserDetails
+          .filter((u) => removedUsers.find((r) => r.userId === u.id))
+          .map((u) => u.name);
+
+        messageText = `Chat reassigned${
+          removedNames.length ? ` from ${removedNames.join(", ")}` : ""
+        }${addedNames.length ? ` to ${addedNames.join(", ")}` : ""}`;
+        assignStatus = "REASSIGNED";
         break;
 
       default:
@@ -1561,6 +1622,7 @@ export async function createInternalWaMessage({
     const wamessage = await prisma.waMessage.create({
       data: {
         contactId,
+        messageId: messageId,
         conversationId: conversation?.id,
         sourcePlatform: PlatformType.INTERNAL,
         sendBy: triggeredByUserDetails?.id,
@@ -1613,6 +1675,7 @@ export async function createInternalWaMessage({
         sourcePlatform: PlatformType.INTERNAL,
         sendBy: triggeredByUserDetails?.id,
         waCreatedAt: new Date(),
+        messageId: messageId,
         messageBody: {
           exchangeProcess: "privateNote",
           send: null,
