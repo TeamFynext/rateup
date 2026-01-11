@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { Group, Radio, RadioGroup, Skeleton, Stack } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconBrandWhatsappFilled, IconWebhook } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Ban,
   BellOff,
@@ -26,6 +25,7 @@ import { useSetIsChatDisplayOpen } from "@/app/dashboard/inbox/ChatDisplayContex
 import {
   ContactWithUpdatedAt,
   useContactsStore,
+  useMessagesStore,
 } from "@/app/dashboard/inbox/store";
 import {
   useAssignContactLabelsToContactId,
@@ -66,7 +66,10 @@ import { hasFeature } from "@/utils/subscription/subscription";
 import { isInboxSessionExpired } from "@/utils/whatsapp/inbox";
 
 import { getContactClosedIcon } from "../../chatselect/chatselectCard";
-import { getSoucePlatformIconAndColor } from "../../util";
+import {
+  generateInternalMessageId,
+  getSoucePlatformIconAndColor,
+} from "../../util";
 import AssignUser from "./AssignUser";
 import WaInboxCountdownTimer from "./countDown";
 
@@ -261,7 +264,7 @@ export default function WaInboxChatDisplayHeader({
 
 const ChatHeaderMenu = ({ contact }) => {
   const editContactMutation = useEditContactMutation(null);
-  const qc = useQueryClient();
+  const messagesStore = useMessagesStore();
   const { user } = useUser();
   const { updateContactById, setSelectedContact } = useContactsStore();
   const [
@@ -290,10 +293,48 @@ const ChatHeaderMenu = ({ contact }) => {
     );
   }
   function handleCloseChat(status) {
+    let message = `marked this chat as ${status}`;
+    const id = generateInternalMessageId();
+    const newMessage = {
+      id: id,
+      contactId: contact.id,
+      waCreatedAt: new Date().toISOString(),
+      messageBody: {
+        send: null,
+        receive: null,
+        internal: {
+          text: {
+            body: message,
+          },
+          assignedUsers: [],
+          assignStatus: status,
+          triggeredByUser: {
+            id: user.userId,
+            name: user.userName,
+          },
+        },
+        exchangeProcess: "internal",
+      },
+      sourcePlatform: "INTERNAL",
+      sourceIdentifier: null,
+      sendBy: user.userId,
+      sender: {
+        name: user.userName,
+        profilePhoto: user?.profilePhoto,
+      },
+      stats: {
+        read: "",
+        sent: "",
+        failed: "",
+        delivered: "",
+      },
+      messageId: id,
+    };
+    messagesStore.addMessage(`${contact.id}_all`, newMessage as any);
     editContactMutation.mutate(
       {
         contactId: contact.id,
-        data: { waMessageAssignStatus: status },
+        data: { waMessageAssignStatus: status, messageId: id },
       },
       {
         onSuccess: () => {
@@ -307,7 +348,9 @@ const ChatHeaderMenu = ({ contact }) => {
             },
             assignedUsers: [],
           }));
-          qc.invalidateQueries({ queryKey: ["wa-messages", contact.id] });
+        },
+        onError: () => {
+          messagesStore.removeMessage(`${contact.id}_all`, id);
         },
       },
     );

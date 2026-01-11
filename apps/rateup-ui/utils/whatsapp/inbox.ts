@@ -4,6 +4,7 @@ import utc from "dayjs/plugin/utc";
 
 import {
   MessagePlatform,
+  WaMessageAssignStatus,
   WaTemplateComponentTypeUpperCase,
 } from "@/types/enums";
 import { WaGetMessagesBody } from "@/backend/whatsapp/inbox/message/wamessage.api";
@@ -19,6 +20,7 @@ import {
   WaTemplateFetchBody,
   WaTemplateFetchBodyComponent,
 } from "../../types/global";
+import { WaMessageClosedStatus } from "../constants";
 
 dayjs.extend(utc);
 
@@ -174,7 +176,14 @@ export function parseWaMessage(
     }
     if (messageBody?.exchangeProcess === "internal") {
       const { internal } = messageBody;
-      messageContent = `${internal?.triggeredByUser?.name} ${internal.text.body}`;
+      const isClosedType = WaMessageClosedStatus.includes(
+        internal?.assignStatus as WaMessageAssignStatus,
+      );
+      if (isClosedType) {
+        messageContent = `${internal?.triggeredByUser?.name} ${internal.text.body} `;
+      } else {
+        messageContent = `${internal.text.body} by ${internal?.triggeredByUser?.name}`;
+      }
     }
     if (messageBody?.exchangeProcess === "privateNote") {
       const { privateNote } = messageBody;

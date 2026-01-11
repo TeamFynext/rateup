@@ -275,11 +275,6 @@ const MessageItem = ({ message, selectedContact, nextMessage }) => {
         reaction={reaction}
       >
         {singleMessage({ message, translations })}
-        {message?.messageBody?.exchangeProcess === "internal" && (
-          <div className="text-xs text-indigo-600 text-center pt-1">
-            {formatToCustomTime(message?.waCreatedAt)}
-          </div>
-        )}
       </WaInboxSingleMessageLayout>
     </React.Fragment>
   );

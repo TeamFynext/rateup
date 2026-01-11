@@ -16,6 +16,7 @@ import { MessagePlatform, WaMessageAssignStatus } from "@/types/enums";
 import useContactStore, {
   ContactWithUpdatedAt,
   useContactsStore,
+  useMessagesStore,
 } from "@/app/dashboard/inbox/store";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { useVoiceRecordStore } from "@/components/input/VoiceRecorder";
@@ -26,7 +27,7 @@ import WaTextEditor, {
 import { Button } from "@/components/ui/button";
 import CustomTooltip from "@/components/ui/custom/CustomTooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User } from "@/context/UserContext";
+import { User, useUser } from "@/context/UserContext";
 import { WaMessageClosedStatus } from "@/utils/constants";
 import { formatDateWithRelativeTime } from "@/utils/dateTime";
 import { deleteUploadedFiles } from "@/utils/file-upload/upload";
@@ -44,6 +45,7 @@ import {
 } from "../../../../../utils/whatsapp/inbox";
 import { RateupButtonPrimary } from "../../../../Button/RateupButtons";
 import { usePhoneIdStore } from "../../chatselect/accountSelectorStore";
+import { generateInternalMessageId } from "../../util";
 import AssignUser from "../chatdisplayHeader/AssignUser";
 import WaInboxFooterMenu from "./footerMenu";
 import classes from "./styles.module.css";
@@ -70,8 +72,10 @@ export default function WaInboxChatDisplayFooter({
   const { media, resetMedia } = useMediaStore();
   const { isRecording, audioUrl, setAudioUrl } = useVoiceRecordStore();
   const { body, setBody, resetBody } = useMessageBodyStore();
-  const { data: waSettings } = useWaSettings();
   const { updateContactById } = useContactsStore();
+  const messagesStore = useMessagesStore();
+  const { user } = useUser();
+
   const form = useForm({
     initialValues: {
       type: "text",
@@ -240,31 +244,55 @@ export default function WaInboxChatDisplayFooter({
     const values = { ...form.values };
     form.reset();
     resetBody();
-    addMessage(contact.id, {
-      body: {
-        text: values.text.body,
-        ...(values.media.length
-          ? {
-              url: values.media[0].url,
-              urlType: values.media[0].type,
-              filename: values.media[0].name,
-            }
-          : {}),
-      },
-      type: "text",
-    });
     resetMedia();
     setAudioUrl(null);
+    const id = generateInternalMessageId();
+    const newMessage = {
+      id: id,
+      contactId: contact.id,
+      waCreatedAt: new Date().toISOString(),
+      messageBody: {
+        send: null,
+        receive: null,
+        privateNote: {
+          text: {
+            body: parseToWhatsAppFormat(values.text.body),
+          },
+          mentionedUser: [],
+          triggeredByUser: {
+            id: user.userId,
+            name: user.userName,
+          },
+        },
+        exchangeProcess: "privateNote",
+      },
+      sourcePlatform: "INTERNAL",
+      sourceIdentifier: null,
+      sendBy: user.userId,
+      sender: {
+        name: user.userName,
+        profilePhoto: user?.profilePhoto,
+      },
+      stats: {
+        read: "",
+        sent: "",
+        failed: "",
+        delivered: "",
+      },
+      messageId: id,
+    };
+    messagesStore.addMessage(`${contact.id}_all`, newMessage as any);
 
     createPrivateMessage.mutate(
       {
         data: {
           ...values,
+          messageId: id,
         },
       },
       {
-        onSuccess: () => {
-          removeMessage(contact.id);
+        onError: () => {
+          messagesStore.removeMessage(`${contact.id}_all`, id);
         },
       },
     );
@@ -445,6 +473,7 @@ export const WaInboxAssignUserFooter = ({
     closedUser,
   } = contact ?? {};
   const { filterData } = useContactStore();
+  const messagesStore = useMessagesStore();
   const assignMut = useAssignInboxToUer(contactId, filterData);
   const { updateContactById } = useContactsStore();
   const qc = useQueryClient();
@@ -453,9 +482,47 @@ export const WaInboxAssignUserFooter = ({
     if (!user) {
       return showErrorToast("failed!try again");
     }
-
+    let message = `Chat assigned to ${user.userName}`;
+    const id = generateInternalMessageId();
+    const newMessage = {
+      id: id,
+      contactId: contactId,
+      waCreatedAt: new Date().toISOString(),
+      messageBody: {
+        send: null,
+        receive: null,
+        internal: {
+          text: {
+            body: message,
+          },
+          assignedUsers: [],
+          assignStatus: WaMessageAssignStatus.ASSIGNED,
+          triggeredByUser: {
+            id: user.userId,
+            name: user.userName,
+          },
+        },
+        exchangeProcess: "internal",
+      },
+      sourcePlatform: "INTERNAL",
+      sourceIdentifier: null,
+      sendBy: user.userId,
+      sender: {
+        name: user.userName,
+        profilePhoto: user?.profilePhoto,
+      },
+      stats: {
+        read: "",
+        sent: "",
+        failed: "",
+        delivered: "",
+      },
+      messageId: id,
+    };
+    messagesStore.addMessage(`${contactId}_all`, newMessage as any);
     assignMut.mutate(
       {
+        messageId: id,
         contactId,
         assignees: [
           {
@@ -477,6 +544,9 @@ export const WaInboxAssignUserFooter = ({
             ],
           }));
           qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+        },
+        onError: () => {
+          messagesStore.removeMessage(`${contactId}_all`, id);
         },
       },
     );
