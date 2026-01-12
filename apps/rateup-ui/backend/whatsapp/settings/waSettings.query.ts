@@ -19,6 +19,7 @@ import {
   syncMetaLeadgenForms,
   updateUserAccessToken,
   updateWaSettingsById,
+  UpdateWaSettingsInput,
   upsertWaSettings,
   WaSettings,
 } from "./waSettings.api";
@@ -85,7 +86,7 @@ export const useUpdateUserAccessToken = () => {
 export const useUpdateWaSettingsMutation = (settingId) => {
   const queryClient = useQueryClient();
   const updateMutation = useMutation({
-    mutationFn: (data: Partial<WaSettings[0]>) =>
+    mutationFn: (data: UpdateWaSettingsInput) =>
       updateWaSettingsById(settingId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["waSettings"] });

@@ -13,9 +13,11 @@ import {
   useRemoveUserFromTeam,
   useTeamMembersFromInvitation,
 } from "@/backend/team/team.query";
+import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -628,5 +630,94 @@ export function DeleteTeam({
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+export function TeamChannelPermissions({ selectedTeam, translations }) {
+  const { data: waSettings, isLoading: isLoadingSettings } = useWaSettings();
+  const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const editTeamMutation = useEditTeamMutation(
+    selectedTeam.id,
+    setIsUpdating,
+    undefined,
+    true, // use this to avoid triggering full team update if possible, although our backend handles it
+  );
+
+  useEffect(() => {
+    if (selectedTeam?.whatsappChannels) {
+      setSelectedChannels(selectedTeam.whatsappChannels.map((c: any) => c.id));
+    }
+  }, [selectedTeam]);
+
+  const handleToggleChannel = (channelId: string) => {
+    setSelectedChannels((prev) =>
+      prev.includes(channelId)
+        ? prev.filter((id) => id !== channelId)
+        : [...prev, channelId],
+    );
+  };
+
+  const handleSave = () => {
+    setIsUpdating(true);
+    editTeamMutation.mutate({
+      whatsappChannels: selectedChannels.map((id) => ({ id })),
+    });
+  };
+
+  if (isLoadingSettings) return <Skeleton className="h-20 w-full" />;
+
+  return (
+    <div className="space-y-4 pt-2">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-medium">
+          {translations("Inbox Channels Visibility")}
+        </h4>
+        <Button size="sm" onClick={handleSave} disabled={isUpdating}>
+          {isUpdating ? translations("Saving") : translations("Save")}
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {translations(
+          "Select the WhatsApp and Instagram channels this team can access. If none are selected, the team will have access to all channels by default.",
+        )}
+      </p>
+      <ScrollArea className="h-[250px] border rounded-md p-3">
+        <div className="space-y-3">
+          {waSettings?.map((setting: any) => (
+            <div
+              key={setting.id}
+              className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors"
+            >
+              <Checkbox
+                id={`channel-${setting.id}`}
+                checked={selectedChannels.includes(setting.id)}
+                onCheckedChange={() => handleToggleChannel(setting.id)}
+              />
+              <div className="grid gap-1 leading-none">
+                <Label
+                  htmlFor={`channel-${setting.id}`}
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  {setting.phone || setting.phoneId}
+                </Label>
+                {setting.igUserName && (
+                  <p className="text-xs text-muted-foreground">
+                    Instagram: {setting.igUserName}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+          {(!waSettings || waSettings.length === 0) && (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">
+                {translations("No channels found")}
+              </p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
   );
 }

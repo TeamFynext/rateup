@@ -19,6 +19,7 @@ import {
   colorArray,
   DeleteTeam,
   EditTeam,
+  TeamChannelPermissions,
 } from "@/components/settings/team";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -409,6 +410,9 @@ const Team = () => {
                   <TabsTrigger value="members">
                     {translations("Members")}
                   </TabsTrigger>
+                  <TabsTrigger value="channels">
+                    {translations("Channels")}
+                  </TabsTrigger>
                   <TabsTrigger value="settings">
                     {translations("Settings")}
                   </TabsTrigger>
@@ -428,6 +432,13 @@ const Team = () => {
                     <AddMembers
                       selectedTeam={selectedTeam}
                       refetchTeams={refetchTeams}
+                      translations={translations}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="channels">
+                    <TeamChannelPermissions
+                      selectedTeam={selectedTeam}
                       translations={translations}
                     />
                   </TabsContent>
