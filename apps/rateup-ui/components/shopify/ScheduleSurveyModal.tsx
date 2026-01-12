@@ -147,7 +147,7 @@ const ScheduleSurveyModal = ({
       availableTemplates?.map((t) => ({
         value: String(t?.id),
         label: t?.data?.name,
-      })),
+      })) ?? [],
     [availableTemplates],
   );
 
