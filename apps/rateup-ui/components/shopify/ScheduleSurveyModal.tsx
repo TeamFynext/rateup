@@ -26,7 +26,6 @@ import { ShopifyIntegration } from "@/types/global";
 import useTemplatesAvailableForTeam from "@/hooks/team";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
-/* 1. Add necessary imports for local template selector */
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 
 import { shopifyEventData } from "../../utils/constants";
@@ -92,8 +91,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-/* 2. Update FormValues to match types if needed (already fine) */
-
 const ScheduleSurveyModal = ({
   opened,
   close,
@@ -105,7 +102,6 @@ const ScheduleSurveyModal = ({
   shopifyInfo: ShopifyIntegration;
   setShopifyProducts: React.Dispatch<React.SetStateAction<any[]>>;
 }) => {
-  /* ... keep existing state ... */
   const [productData, setProductData] = useState<
     { label: string; value: string }[]
   >([]);
@@ -140,7 +136,6 @@ const ScheduleSurveyModal = ({
   const waTemplateId = watch("waTemplateId");
   const teamId = watch("teamId"); // Watch teamId for template filtering
 
-  /* 3. Logic for Inline Template Selector */
   const { data: allTemplates, isLoading: isTemplatesLoading } =
     useWaTemplates();
   const availableTemplates = teamId
@@ -157,7 +152,6 @@ const ScheduleSurveyModal = ({
   );
 
   const handleScheduleSurvey = (values: FormValues) => {
-    /* ... existing logic ... */
     const newShopifySurveys = [
       ...(shopifyInfo.credential.shopifySurveys || []),
     ];
@@ -221,7 +215,6 @@ const ScheduleSurveyModal = ({
   };
 
   const loadShopifyProducts = async () => {
-    /* ... existing logic ... */
     setLoadingProducts(true);
     try {
       const products = await getProductsFromShopify();
