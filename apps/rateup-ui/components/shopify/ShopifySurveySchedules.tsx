@@ -103,7 +103,7 @@ const ShopifySurveySchedules = ({
   return (
     <Stack p={"sm"}>
       <Group>
-        <Title order={3}>{translations("WhatsApp Message scheduling")}</Title>
+        <Title order={3}>{translations("Shopify Automations")}</Title>
         <RefreshButton queryKeys={["shopifySurveySchedules"]} />
         <RateupButtonBlue
           title={translations("Schedule")}

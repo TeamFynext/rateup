@@ -66,26 +66,26 @@ const ShopifySchedules = ({
     { key: "scheduleTime", value: translations("Scheduled At") },
     { key: "sentAt", value: translations("Sent At") },
     { key: "status", value: translations("Status") },
-    {
-      key: "actionStatus",
-      value: translations("Loyalty Action Status"),
-      renderCell: (value) =>
-        !value ? (
-          <Text>----</Text>
-        ) : (
-          <Badge
-            color={value === "success" ? "var(--sucess-green)" : "red"}
-            variant="light"
-            radius={"xs"}
-          >
-            {value}
-          </Badge>
-        ),
-    },
-    {
-      key: "apiStatus",
-      value: "Loyalty API Status",
-    },
+    // {
+    //   key: "actionStatus",
+    //   value: translations("Loyalty Action Status"),
+    //   renderCell: (value) =>
+    //     !value ? (
+    //       <Text>----</Text>
+    //     ) : (
+    //       <Badge
+    //         color={value === "success" ? "var(--sucess-green)" : "red"}
+    //         variant="light"
+    //         radius={"xs"}
+    //       >
+    //         {value}
+    //       </Badge>
+    //     ),
+    // },
+    // {
+    //   key: "apiStatus",
+    //   value: "Loyalty API Status",
+    // },
     {
       key: "event_details",
       value: "Event Details",
