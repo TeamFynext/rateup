@@ -283,6 +283,7 @@ model WhatsappSettings {
   metaAssets       MetaAssets[]
   catalog          CatalogPhoneIdMap?
   assets           String[]           @default([]) //enum.ts MetaLoginAssets (assets selected on login)
+  teams            Team[]
 }
 
 model Rule {
@@ -433,6 +434,7 @@ model Team {
   waInboxAssign          WaInboxAssign[]
   ticketBoards           TicketBoardTeam[]
   assignedConversations  ConversationAssignedUserTeamMap[]
+  whatsappChannels       WhatsappSettings[]
 
   @@unique([name, orgId], name: "team_name_org_id_unique")
   @@unique([code, orgId], name: "team_code_org_id_unique")
@@ -1892,6 +1894,9 @@ model WhatsappCatalog {
   orders              WaCatalogOrder[]
   connectedWaPhoneIds CatalogPhoneIdMap[]
 
+  autoCheckoutEnabled Boolean @default(false)
+  checkoutMessage     String?
+
   @@unique([orgId, catalogId], name: "org_id_catalog_id_unique")
 }
 
@@ -1935,6 +1940,9 @@ model WaCatalogOrder {
   status        String          @default("PENDING")
   transactionId String?
   createdAt     DateTime        @default(now())
+
+  shopifyDraftOrderId String?
+  shopifyInvoiceUrl   String?
 }
 
 model MetaAssets {

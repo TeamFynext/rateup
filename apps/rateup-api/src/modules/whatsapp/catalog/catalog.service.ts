@@ -17,6 +17,8 @@ import {
   getWaSettingsWithAccessTokenDecrypted,
 } from "../settings/wa_settings.service.js";
 import { MetaLoginAssets, WaConfigType } from "../../../types/enums.js";
+import { createShopifyDraftOrder } from "../../integrations/shopify/shopify.service.js";
+import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 
 export async function updateWaCatalog(
   catalogId: string,
@@ -189,6 +191,7 @@ export async function getConnectedWaCatalog(whatsappSettingsPhoneId) {
 export async function handleWaOrderfromCatalog(
   data: WaReceiveMessageBody,
   messageObj: WaMessage,
+  waSettings: Omit<WhatsappSettings, "accessToken_iv">,
 ) {
   const order = data.messages[0].order;
   const catalog = await prisma.whatsappCatalog.findUnique({
@@ -200,20 +203,58 @@ export async function handleWaOrderfromCatalog(
     log.trace("catalog not synced yet => %s", order.catalog_id);
     return;
   }
+  const products = order.product_items.map((p) => ({
+    retailerId: p.product_retailer_id,
+    currency: p.currency,
+    price: p.item_price,
+    quantity: p.quantity,
+  }));
   const newOrder = await prisma.waCatalogOrder.create({
     data: {
       catalogId: order.catalog_id,
       contactId: messageObj.contactId,
-      products: order.product_items.map((p) => ({
-        retailerId: p.product_retailer_id,
-        currency: p.currency,
-        price: p.item_price,
-        quantity: p.quantity,
-      })),
+      products: products as any,
       createdAt: messageObj.waCreatedAt,
     },
   });
   log.info("Order placed => %o", newOrder);
+
+  //auto checkout
+  if (catalog.autoCheckoutEnabled) {
+    try {
+      const draftOrder = await createShopifyDraftOrder(catalog.orgId, products);
+      if (draftOrder && draftOrder.invoiceUrl) {
+        await prisma.waCatalogOrder.update({
+          where: { id: newOrder.id },
+          data: {
+            shopifyDraftOrderId: draftOrder.id,
+            shopifyInvoiceUrl: draftOrder.invoiceUrl,
+          },
+        });
+
+        const message =
+          catalog.checkoutMessage ||
+          "Thanks for your order! You can complete your purchase here: {{link}}";
+        const finalMessage = message.replace("{{link}}", draftOrder.invoiceUrl);
+
+        await sendMessage(
+          catalog.orgId,
+          {
+            to:
+              (data.messages[0] as any).from || (data.messages[0] as any).phone,
+            type: "text",
+            text: { body: finalMessage },
+            messaging_product: "whatsapp",
+          },
+          "System",
+          undefined,
+          waSettings.phoneId,
+        );
+      }
+    } catch (error) {
+      log.error("Failed to create Shopify Draft Order: %o", error);
+    }
+  }
 }
 
 export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {

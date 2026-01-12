@@ -16,7 +16,11 @@ import {
 } from "./wamessage.schema.js";
 import { log } from "../../../../utils/logger.js";
 import { callWhatsappApi } from "../../wa_axios.js";
-import { getWaSettings } from "../../settings/wa_settings.service.js";
+import {
+  getAllWaSettings,
+  getAccessibleWaSettings,
+  getWaSettings,
+} from "../../settings/wa_settings.service.js";
 import axios from "axios";
 import {
   WaAssignedChatPermission,
@@ -277,6 +281,28 @@ export async function filterChats(
     }
 
     const isSearchMode = bodyFilterProps?.searchTerm?.length > 0;
+    if (role !== Role.SUPER_ADMIN) {
+      const accessibleSettings = await getAccessibleWaSettings(
+        orgId,
+        userId,
+        role,
+      );
+      const allSettings = await getAllWaSettings(orgId);
+
+      if (accessibleSettings.length < allSettings.length) {
+        const allowedIdentifiers = accessibleSettings
+          .flatMap((s) => [s.phone, s.ibaId])
+          .filter(Boolean);
+        if (allowedIdentifiers.length > 0) {
+          params.push(allowedIdentifiers);
+          filters.push(
+            `c."lastMessageSourceIdentifier" = ANY($${paramIndex++}::TEXT[])`,
+          );
+        } else {
+          filters.push(`1=0`);
+        }
+      }
+    }
 
     if (!isSearchMode) {
       // Message type filters

@@ -133,3 +133,6 @@ dist
 .idea
 nlp_auth.json
 *.temp.test.ts
+
+# docker
+docker-compose.yaml
