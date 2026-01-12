@@ -282,7 +282,7 @@ export default function WaInboxChatDisplayFooter({
       messageId: id,
     };
     messagesStore.addMessage(`${contact.id}_all`, newMessage as any);
-    messagesStore.addMessage(`${contact.id}_privateNote`, newMessage as any);
+    messagesStore.addMessage(`${contact.id}_internal`, newMessage as any);
 
     createPrivateMessage.mutate(
       {
@@ -294,7 +294,7 @@ export default function WaInboxChatDisplayFooter({
       {
         onError: () => {
           messagesStore.removeMessage(`${contact.id}_all`, id);
-          messagesStore.removeMessage(`${contact.id}_privateNote`, id);
+          messagesStore.removeMessage(`${contact.id}_internal`, id);
         },
       },
     );
