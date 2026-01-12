@@ -442,7 +442,11 @@ async function whatsappMessageHandler(
       ?.id,
   );
   if (type === WaMessageTypes.order) {
-    await handleWaOrderfromCatalog(completeMessageObject, messageObj);
+    await handleWaOrderfromCatalog(
+      completeMessageObject,
+      messageObj,
+      waSettings,
+    );
   }
   const expoToken = await getTokensByOrgId(orgId);
   await sendPushNotification(

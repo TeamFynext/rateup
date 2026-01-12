@@ -134,6 +134,5 @@ dist
 nlp_auth.json
 *.temp.test.ts
 
-# Docker
-*.dockerignore
-docker-compose.yml
+# docker
+docker-compose.yaml

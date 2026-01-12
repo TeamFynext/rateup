@@ -677,6 +677,7 @@ export async function createPrivateMessageHandler(
       orgId: orgId,
       exchangeProcess: "privateNote",
       mentionedUsers: mentionedUsers,
+      messageId: body.messageId,
     });
     reply.code(200).send(res);
   } catch (error) {

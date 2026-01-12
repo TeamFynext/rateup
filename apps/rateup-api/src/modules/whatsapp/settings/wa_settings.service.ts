@@ -87,6 +87,14 @@ export async function getAllWaSettings(orgId: string) {
     where: {
       orgId: orgId,
     },
+    include: {
+      teams: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
     orderBy: {
       createdAt: "asc",
     },
@@ -102,6 +110,50 @@ export async function getAllWaSettings(orgId: string) {
   );
 
   return decryptedSettings;
+}
+export async function getAccessibleWaSettings(
+  orgId: string,
+  userId: string,
+  role: string,
+) {
+  // Super admins see everything
+  if (role === "SUPER_ADMIN") {
+    return await getAllWaSettings(orgId);
+  }
+
+  // Get teams the user is in and their assigned channels
+  const userTeams = await prisma.team.findMany({
+    where: {
+      members: { some: { userId } },
+      orgId,
+    },
+    select: {
+      whatsappChannels: {
+        select: { id: true },
+      },
+    },
+  });
+
+  const assignedChannelIds = Array.from(
+    new Set(userTeams.flatMap((t) => t.whatsappChannels.map((c) => c.id))),
+  );
+
+  // Return only the assigned channels (no assigned channels = no access)
+  const res = await prisma.whatsappSettings.findMany({
+    where: {
+      orgId: orgId,
+      id: { in: assignedChannelIds },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  if (!res || res.length === 0) {
+    return [];
+  }
+
+  return res.map((setting) => getWaSettingsWithAccessTokenDecrypted(setting));
 }
 
 export async function getWaSettingsByWaBaId(wabaId: string) {
@@ -188,12 +240,18 @@ export async function updateWaSettingsById(
   whatsappSettingsId: string,
   data: updateWaSettingsInput,
 ) {
+  const { teams, ...rest } = data;
   return await prisma.whatsappSettings.update({
     where: {
       id: whatsappSettingsId,
     },
     data: {
-      ...(data as any),
+      ...(rest as any),
+      teams: teams
+        ? {
+            set: teams.map((id) => ({ id })),
+          }
+        : undefined,
     },
   });
 }

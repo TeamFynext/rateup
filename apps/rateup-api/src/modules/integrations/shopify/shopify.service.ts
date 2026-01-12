@@ -1228,6 +1228,87 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
   }
 }
 
+export async function createShopifyDraftOrder(orgId: string, products: any[]) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    throw new Error("Shopify integration not active");
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+
+  const skus = products.map((p) => p.retailerId).filter(Boolean);
+  const variantMap = new Map<string, string>();
+
+  if (skus.length > 0) {
+    const skuQuery = skus.map((sku) => `sku:${sku}`).join(" OR ");
+    const variantsData = await client.request(
+      `query getVariantsBySkus($query: String!) {
+          productVariants(first: 250, query: $query) {
+            edges {
+              node {
+                id
+                sku
+              }
+            }
+          }
+        }`,
+      { variables: { query: skuQuery } },
+    );
+
+    variantsData.data.productVariants.edges.forEach((edge: any) => {
+      variantMap.set(edge.node.sku, edge.node.id);
+    });
+  }
+
+  const lineItems = [];
+  for (const product of products) {
+    const variantId = variantMap.get(product.retailerId);
+    if (variantId) {
+      lineItems.push({
+        variantId,
+        quantity: product.quantity,
+      });
+    } else {
+      log.warn(`Product SKU ${product.retailerId} not found in Shopify`);
+    }
+  }
+
+  if (lineItems.length === 0) {
+    throw new Error("No products matched in Shopify");
+  }
+
+  const draftOrderData = await client.request(
+    `mutation draftOrderCreate($input: DraftOrderInput!) {
+      draftOrderCreate(input: $input) {
+        draftOrder {
+          id
+          invoiceUrl
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }`,
+    {
+      variables: {
+        input: {
+          lineItems,
+        },
+      },
+    },
+  );
+
+  const userErrors = draftOrderData.data.draftOrderCreate.userErrors;
+  if (userErrors.length > 0) {
+    throw new Error(`Shopify Error: ${userErrors?.[0]?.message}`);
+  }
+
+  return draftOrderData.data.draftOrderCreate.draftOrder;
+}
+
 function validateAndParseCheckoutPhone(checkout) {
   const phoneNumber =
     checkout.phone ||
