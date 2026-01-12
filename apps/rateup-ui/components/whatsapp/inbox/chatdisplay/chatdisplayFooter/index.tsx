@@ -282,6 +282,7 @@ export default function WaInboxChatDisplayFooter({
       messageId: id,
     };
     messagesStore.addMessage(`${contact.id}_all`, newMessage as any);
+    messagesStore.addMessage(`${contact.id}_privateNote`, newMessage as any);
 
     createPrivateMessage.mutate(
       {
@@ -293,6 +294,7 @@ export default function WaInboxChatDisplayFooter({
       {
         onError: () => {
           messagesStore.removeMessage(`${contact.id}_all`, id);
+          messagesStore.removeMessage(`${contact.id}_privateNote`, id);
         },
       },
     );
@@ -520,6 +522,7 @@ export const WaInboxAssignUserFooter = ({
       messageId: id,
     };
     messagesStore.addMessage(`${contactId}_all`, newMessage as any);
+    messagesStore.addMessage(`${contactId}_internal`, newMessage as any);
     assignMut.mutate(
       {
         messageId: id,
@@ -547,6 +550,7 @@ export const WaInboxAssignUserFooter = ({
         },
         onError: () => {
           messagesStore.removeMessage(`${contactId}_all`, id);
+          messagesStore.removeMessage(`${contactId}_internal`, id);
         },
       },
     );

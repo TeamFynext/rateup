@@ -58,10 +58,33 @@ const WaInboxChatDisplayBody = ({ isContactDetailsOpened, smallScreen }) => {
     messagesByKey,
     isLoading,
   } = useMessagesStore();
-  const allMessages = useMemo(
-    () => messagesByKey.get(selectedKey)?.messages || [],
-    [selectedKey, messagesByKey],
-  );
+
+  const allMessages = useMemo(() => {
+    if (!selectedKey) return [];
+    const [contactId, source] = selectedKey.split("_");
+    if (source === "all") {
+      const key1 = `${contactId}_${source}`;
+      return [...(messagesByKey.get(key1)?.messages ?? [])].sort(
+        (a, b) =>
+          new Date(b.waCreatedAt).getTime() - new Date(a.waCreatedAt).getTime(),
+      );
+    } else {
+      const key1 = `${contactId}_${source}`;
+      const key2 = `${contactId}_+${source}`;
+      const key3 = `${contactId}_internal`;
+      const key4 = `${contactId}_privateNote`;
+      return [
+        ...(messagesByKey.get(key1)?.messages ?? []),
+        ...(messagesByKey.get(key2)?.messages ?? []),
+        ...(messagesByKey.get(key3)?.messages ?? []),
+        ...(messagesByKey.get(key4)?.messages ?? []),
+      ].sort(
+        (a, b) =>
+          new Date(b.waCreatedAt).getTime() - new Date(a.waCreatedAt).getTime(),
+      );
+    }
+  }, [selectedKey, messagesByKey]);
+
   const { messages: tempMessages } = useTemperoryMessageStore();
 
   useEffect(() => {
