@@ -126,7 +126,6 @@ export async function getWaMessagesByContactId(
             { sourceIdentifier: phone },
             { sourceIdentifier: `+${phone}` },
             { sourceIdentifier: "internal" },
-            { sourceIdentifier: "privateNote" },
           ],
         }
       : {};
@@ -1679,7 +1678,7 @@ export async function createInternalWaMessage({
         sourcePlatform: PlatformType.INTERNAL,
         sendBy: triggeredByUserDetails?.id,
         waCreatedAt: new Date(),
-        sourceIdentifier: "privateNote",
+        sourceIdentifier: "internal",
         messageId: messageId,
         messageBody: {
           exchangeProcess: "privateNote",
