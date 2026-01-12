@@ -37,8 +37,8 @@ const VariableMapping = ({
       (c: any) => c.type === "BODY" || c.type === "body",
     );
     // WhatsApp templates use example.body_text[0] to store examples for parameters {{1}}, {{2}}...
-    const bodyExamples = bodyComponent?.example?.body_text?.[0] || [];
-    return bodyExamples as string[];
+    const bodyExamples = bodyComponent?.example?.body_text?.[0];
+    return Array.isArray(bodyExamples) ? bodyExamples : [];
   }, [template]);
 
   const handleMappingChange = (index: number, shopifyPath: string) => {
