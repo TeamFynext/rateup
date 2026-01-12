@@ -160,7 +160,11 @@ export async function createScheduleOnShopifyEvent({
   amount?: number;
   body: any;
 }) {
-  log.info(`checking survey for shopify event ${event}`);
+  log.info("Checking survey for shopify event %o", {
+    event,
+    webhookId,
+    customerPhone,
+  });
   const phone = parsePhoneNumber(customerPhone, "IN");
   if (phone.isValid() === false) {
     log.trace("Invalid phone number");
@@ -926,6 +930,7 @@ export async function getRecurringCharge(chargeId, integration) {
 
 export async function handleShopifyOrderEvents(webhook) {
   const { webhookId, body, shop, topic } = webhook;
+  log.info("Handling Shopify Order Event: %o", { shop, topic, webhookId });
   const shopifyInfo = await getShopifyIntegrationByShop(shop);
   if (!shopifyInfo) {
     log.trace(`No shopify session found`);
