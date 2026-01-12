@@ -175,6 +175,14 @@ export async function createScheduleOnShopifyEvent({
   }
 
   if (
+    webhookId &&
+    shopifySurvey.schedules?.some((s) => s.webhookId === webhookId)
+  ) {
+    log.trace(`Duplicate webhook event for ${webhookId}. Skipping...`);
+    return;
+  }
+
+  if (
     shopifySurvey.isProductSpecific &&
     !productIds.includes(shopifySurvey.productId)
   ) {

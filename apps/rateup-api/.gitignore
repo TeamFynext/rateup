@@ -133,3 +133,7 @@ dist
 .idea
 nlp_auth.json
 *.temp.test.ts
+
+# Docker
+*.dockerignore
+docker-compose.yml
