@@ -122,7 +122,12 @@ export async function getWaMessagesByContactId(
   const sourceIdentifierCondition =
     phone && phone !== "all"
       ? {
-          OR: [{ sourceIdentifier: phone }, { sourceIdentifier: `+${phone}` }],
+          OR: [
+            { sourceIdentifier: phone },
+            { sourceIdentifier: `+${phone}` },
+            { sourceIdentifier: "internal" },
+            { sourceIdentifier: "privateNote" },
+          ],
         }
       : {};
   if (cursor) {
@@ -1623,6 +1628,7 @@ export async function createInternalWaMessage({
         messageId: messageId,
         conversationId: conversation?.id,
         sourcePlatform: PlatformType.INTERNAL,
+        sourceIdentifier: "internal",
         sendBy: triggeredByUserDetails?.id,
         waCreatedAt: new Date(),
         messageBody: {
@@ -1673,6 +1679,7 @@ export async function createInternalWaMessage({
         sourcePlatform: PlatformType.INTERNAL,
         sendBy: triggeredByUserDetails?.id,
         waCreatedAt: new Date(),
+        sourceIdentifier: "privateNote",
         messageId: messageId,
         messageBody: {
           exchangeProcess: "privateNote",
