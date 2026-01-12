@@ -11,7 +11,6 @@ import { IntegratedApps } from "@/types/enums";
 import { ShopifyIntegration, ShopifySurvey } from "@/types/global";
 import { ActiveStatusBadge } from "@/app/dashboard/apps&services/shopify/page";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
-import { useGetLoyaltyActions } from "@/backend/loyalty/actions/actions.query";
 import { WaTemplate } from "@/backend/whatsapp/whatsapp.api";
 
 import { shopifyEventData } from "../../utils/constants";
@@ -42,8 +41,6 @@ const ShopifySurveySchedules = ({
   const columns = [
     { key: "event", value: "Event" },
     { key: "whatsapp_template", value: translations("WhatsApp Template") },
-    { key: "loyaltyAction", value: translations("Loyalty Action") },
-    { key: "loyaltyApiFeature", value: "Loyalty API" },
     { key: "isProductSpecific", value: translations("Product Specific") },
     { key: "product", value: translations("Product") },
     { key: "timeDelay", value: translations("Time Delay (in minutes)") },
@@ -69,7 +66,6 @@ const ShopifySurveySchedules = ({
   ];
   const [opened, { open, close }] = useDisclosure(false);
   const shopifySurveys = shopifyInfo?.credential?.shopifySurveys;
-  const { data: loyaltyActions } = useGetLoyaltyActions();
 
   const rows = shopifySurveys
     ? shopifySurveys?.map((row) => {
@@ -92,10 +88,7 @@ const ShopifySurveySchedules = ({
           status: row.active,
           team: team?.name,
           createdAt: formatIsoDateStringWithTime(row.createdAt),
-          loyaltyAction:
-            loyaltyActions?.find((a) => a.id === row.actionId)?.name ?? "----",
           action: row,
-          loyaltyApiFeature: row.loyaltyApiFeature ?? "----",
         };
       })
     : [];
