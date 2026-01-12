@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   IconAlertCircle,
+  IconBolt,
+  IconClock,
+  IconMessage,
   IconPlus,
   IconRefresh,
   IconSettings,
@@ -20,15 +23,19 @@ import {
   ShopifyEvents,
 } from "@/types/enums";
 import { ShopifyIntegration } from "@/types/global";
+import useTemplatesAvailableForTeam from "@/hooks/team";
 import { useUpdateIntegrationMutation } from "@/backend/appsIntegration/integration.query";
 import { getProductsFromShopify } from "@/backend/appsIntegration/shopify/shopify.api";
+import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 
 import { shopifyEventData } from "../../utils/constants";
 import { showLoadingToast } from "../../utils/notifications";
 import { TeamSelector } from "../input/TeamSelector";
 import WaTemplateSelector from "../input/WaTemplateSelector";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
 import { Checkbox } from "../ui/checkbox";
 import {
   Dialog,
@@ -127,6 +134,22 @@ const ScheduleSurveyModal = ({
   const selectedEvent = watch("event");
   const isProductSpecific = watch("isProductSpecific");
   const waTemplateId = watch("waTemplateId");
+  const teamId = watch("teamId"); // Watch teamId for template filtering
+
+  const { data: allTemplates, isLoading: isTemplatesLoading } =
+    useWaTemplates();
+  const availableTemplates = teamId
+    ? useTemplatesAvailableForTeam(teamId)
+    : allTemplates;
+
+  const templatesData = useMemo(
+    () =>
+      availableTemplates?.map((t) => ({
+        value: String(t?.id),
+        label: t?.data?.name,
+      })),
+    [availableTemplates],
+  );
 
   const handleScheduleSurvey = (values: FormValues) => {
     const newShopifySurveys = [
@@ -216,15 +239,15 @@ const ScheduleSurveyModal = ({
 
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && close()}>
-      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden rounded-xl border-none shadow-2xl">
+      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden rounded-xl border-none shadow-2xl">
         <div className="bg-gradient-to-r from-primary/10 via-background to-background p-6 border-b">
           <DialogHeader>
             <div className="flex items-center gap-2 mb-2">
               <div className="p-2 bg-primary/20 rounded-lg text-primary">
-                <IconPlus size={20} />
+                <IconSettings size={20} />
               </div>
               <DialogTitle className="text-xl font-bold">
-                Add Message Schedule
+                Shopify Automations
               </DialogTitle>
             </div>
             <DialogDescription>
@@ -234,11 +257,8 @@ const ScheduleSurveyModal = ({
         </div>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleScheduleSurvey)}
-            className="space-y-6"
-          >
-            <ScrollArea className="max-h-[60vh] px-6 py-4">
+          <form onSubmit={form.handleSubmit(handleScheduleSurvey)}>
+            <ScrollArea className="max-h-[65vh] px-6 py-6 bg-muted/5">
               <div className="space-y-6">
                 {isWebhookMissing && (
                   <Alert
@@ -254,175 +274,314 @@ const ScheduleSurveyModal = ({
                   </Alert>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="teamId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Team
-                        </FormLabel>
-                        <FormControl>
-                          <TeamSelector
-                            {...field}
-                            styles={{
-                              input: {
-                                borderRadius: "0.5rem",
-                                border: "1px solid hsl(var(--input))",
-                                height: "2.5rem",
-                              },
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Trigger Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <IconBolt size={16} />
+                    <span>Trigger Conditions</span>
+                  </div>
+                  <Card>
+                    <CardContent className="p-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="teamId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                Team
+                              </FormLabel>
+                              <FormControl>
+                                <TeamSelector
+                                  {...field}
+                                  styles={{
+                                    input: {
+                                      borderRadius: "0.5rem",
+                                      border: "1px solid hsl(var(--input))",
+                                      height: "2.5rem",
+                                    },
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                  <FormField
-                    control={form.control}
-                    name="event"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Shopify Event
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="rounded-lg h-10">
-                              <SelectValue placeholder="Select Event" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {shopifyEventData.map((event) => (
-                              <SelectItem key={event.value} value={event.value}>
-                                {event.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        <FormField
+                          control={form.control}
+                          name="event"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                Shopify Event
+                              </FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="rounded-lg h-10">
+                                    <SelectValue placeholder="Select Event" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {shopifyEventData.map((event) => (
+                                    <SelectItem
+                                      key={event.value}
+                                      value={event.value}
+                                    >
+                                      {event.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {selectedEvent !== ShopifyEvents.ABANDONED_CHECKOUTS && (
+                        <div className="pt-2 border-t">
+                          <FormField
+                            control={form.control}
+                            name="isProductSpecific"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card">
+                                <div className="space-y-0.5">
+                                  <FormLabel className="text-base">
+                                    Product Specific
+                                  </FormLabel>
+                                  <FormDescription>
+                                    Trigger only if certain products are in the
+                                    order.
+                                  </FormDescription>
+                                </div>
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+
+                          {isProductSpecific && (
+                            <div className="mt-4 flex items-end gap-2">
+                              <FormField
+                                control={form.control}
+                                name="productId"
+                                render={({ field }) => (
+                                  <FormItem className="flex-1">
+                                    <FormLabel className="text-[10px] uppercase text-muted-foreground">
+                                      Product
+                                    </FormLabel>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      defaultValue={field.value}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger className="rounded-lg">
+                                          <SelectValue placeholder="Select Product" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {productData.map((prod) => (
+                                          <SelectItem
+                                            key={prod.value}
+                                            value={prod.value}
+                                          >
+                                            {prod.label}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={loadShopifyProducts}
+                                disabled={loadingProducts}
+                                className="rounded-lg mb-[2px]"
+                              >
+                                {loadingProducts ? (
+                                  <Loader2 className="animate-spin h-4 w-4" />
+                                ) : (
+                                  <IconRefresh size={18} />
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="waTemplateId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        WhatsApp Template
-                      </FormLabel>
-                      <FormControl>
-                        <WaTemplateSelector
-                          {...field}
-                          styles={{
-                            input: {
-                              borderRadius: "0.5rem",
-                              border: "1px solid hsl(var(--input))",
-                              height: "2.5rem",
-                            },
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {waTemplateId && (
-                  <VariableMapping
-                    waTemplateId={waTemplateId}
-                    value={
-                      watch("variableMapping") as {
-                        templateParamIndex: number;
-                        shopifyPath: string;
-                      }[]
-                    }
-                    onChange={(val) => setValue("variableMapping", val)}
-                  />
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="timeDelay"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Time Delay (Minutes)
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            className="rounded-lg"
-                          />
-                        </FormControl>
-                        <FormDescription className="text-[10px]">
-                          Wait time after event before sending.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {selectedEvent === ShopifyEvents.ABANDONED_CHECKOUTS && (
-                    <div className="grid grid-cols-2 gap-2">
+                {/* Action Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <IconMessage size={16} />
+                    <span>Action & Content</span>
+                  </div>
+                  <Card>
+                    <CardContent className="p-4 space-y-4">
                       <FormField
                         control={form.control}
-                        name="repeatInterval.value"
+                        name="waTemplateId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] uppercase text-muted-foreground">
-                              Repeat Every
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                {...field}
-                                className="rounded-lg"
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="repeatInterval.unit"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] uppercase text-muted-foreground">
-                              Unit
+                            <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              WhatsApp Template
                             </FormLabel>
                             <Select
                               onValueChange={field.onChange}
-                              defaultValue={field.value}
+                              value={field.value} // Controlled value
+                              disabled={isTemplatesLoading}
                             >
                               <FormControl>
-                                <SelectTrigger className="rounded-lg">
-                                  <SelectValue />
+                                <SelectTrigger className="rounded-lg h-10">
+                                  <SelectValue
+                                    placeholder={
+                                      isTemplatesLoading
+                                        ? "Loading templates..."
+                                        : "Select a template"
+                                    }
+                                  />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="hour">Hours</SelectItem>
-                                <SelectItem value="day">Days</SelectItem>
+                                {templatesData?.length ? (
+                                  templatesData.map((template) => (
+                                    <SelectItem
+                                      key={template.value}
+                                      value={template.value}
+                                    >
+                                      {template.label}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <div className="p-2 text-sm text-muted-foreground text-center">
+                                    No templates found
+                                  </div>
+                                )}
                               </SelectContent>
                             </Select>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
-                  )}
+
+                      {waTemplateId && (
+                        <VariableMapping
+                          waTemplateId={waTemplateId}
+                          value={
+                            watch("variableMapping") as {
+                              templateParamIndex: number;
+                              shopifyPath: string;
+                            }[]
+                          }
+                          onChange={(val) => setValue("variableMapping", val)}
+                        />
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
 
-                {/* Loyalty fields commented out per requirement */}
+                {/* Timing Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <IconClock size={16} />
+                    <span>Timing & Frequency</span>
+                  </div>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="timeDelay"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                Time Delay (Minutes)
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  {...field}
+                                  className="rounded-lg"
+                                />
+                              </FormControl>
+                              <FormDescription className="text-[10px]">
+                                Wait time after event before sending.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {selectedEvent ===
+                          ShopifyEvents.ABANDONED_CHECKOUTS && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <FormField
+                              control={form.control}
+                              name="repeatInterval.value"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-[10px] uppercase text-muted-foreground">
+                                    Repeat Every
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      {...field}
+                                      className="rounded-lg"
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="repeatInterval.unit"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-[10px] uppercase text-muted-foreground">
+                                    Unit
+                                  </FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger className="rounded-lg">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="hour">
+                                        Hours
+                                      </SelectItem>
+                                      <SelectItem value="day">Days</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Loyalty fields preserved as comments */}
                 {/* 
                 <FormField
                   control={form.control}
@@ -542,13 +701,13 @@ const ScheduleSurveyModal = ({
                 type="button"
                 variant="ghost"
                 onClick={close}
-                className="rounded-lg"
+                className="rounded-lg hover:bg-muted"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="rounded-lg px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                className="rounded-lg px-8 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all font-semibold"
                 disabled={isWebhookMissing || updateIntegration.isPending}
               >
                 {updateIntegration.isPending && (
