@@ -138,9 +138,10 @@ const ScheduleSurveyModal = ({
 
   const { data: allTemplates, isLoading: isTemplatesLoading } =
     useWaTemplates();
-  const availableTemplates = teamId
-    ? useTemplatesAvailableForTeam(teamId)
-    : allTemplates;
+
+  const teamTemplates = useTemplatesAvailableForTeam(teamId || "");
+
+  const availableTemplates = teamId ? teamTemplates : allTemplates;
 
   const templatesData = useMemo(
     () =>
