@@ -240,8 +240,8 @@ const ScheduleSurveyModal = ({
 
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && close()}>
-      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden rounded-xl border-none shadow-2xl">
-        <div className="bg-gradient-to-r from-primary/10 via-background to-background p-6 border-b">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0 overflow-hidden rounded-xl border-none shadow-2xl flex flex-col bg-[#f5f6fa]">
+        <div className="bg-gradient-to-r from-primary/10 via-background to-background p-6 border-b shrink-0">
           <DialogHeader>
             <div className="flex items-center gap-2 mb-2">
               <div className="p-2 bg-primary/20 rounded-lg text-primary">
@@ -258,8 +258,11 @@ const ScheduleSurveyModal = ({
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleScheduleSurvey)}>
-            <ScrollArea className="max-h-[65vh] px-6 py-6 bg-muted/5">
+          <form
+            onSubmit={form.handleSubmit(handleScheduleSurvey)}
+            className="flex flex-col flex-1 overflow-hidden"
+          >
+            <div className="flex-1 overflow-y-auto px-6 py-6 bg-muted/5">
               <div className="space-y-6">
                 {isWebhookMissing && (
                   <Alert
@@ -695,9 +698,9 @@ const ScheduleSurveyModal = ({
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
-            <DialogFooter className="p-6 bg-muted/30 border-t">
+            <DialogFooter className="p-6 bg-muted/30 border-t shrink-0">
               <Button
                 type="button"
                 variant="ghost"
