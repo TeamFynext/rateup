@@ -220,6 +220,7 @@ const AssignUser = ({
       };
       prevAssignedRef.current = assignees;
       messagesStore.addMessage(`${contactId}_all`, newMessage as any);
+      messagesStore.addMessage(`${contactId}_internal`, newMessage as any);
       assignMut.mutate(
         { contactId, assignees, messageId: id },
         {
@@ -235,6 +236,7 @@ const AssignUser = ({
           },
           onError: () => {
             messagesStore.removeMessage(`${contactId}_all`, id);
+            messagesStore.removeMessage(`${contactId}_internal`, id);
           },
         },
       );

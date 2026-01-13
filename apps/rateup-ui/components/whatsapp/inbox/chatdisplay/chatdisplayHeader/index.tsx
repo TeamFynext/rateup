@@ -331,6 +331,7 @@ const ChatHeaderMenu = ({ contact }) => {
       messageId: id,
     };
     messagesStore.addMessage(`${contact.id}_all`, newMessage as any);
+    messagesStore.addMessage(`${contact.id}_internal`, newMessage as any);
     editContactMutation.mutate(
       {
         contactId: contact.id,
@@ -351,6 +352,7 @@ const ChatHeaderMenu = ({ contact }) => {
         },
         onError: () => {
           messagesStore.removeMessage(`${contact.id}_all`, id);
+          messagesStore.removeMessage(`${contact.id}_internal`, id);
         },
       },
     );
