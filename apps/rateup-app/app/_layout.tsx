@@ -1,7 +1,10 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import React from "react";
 
-export default function RootLayout() {
+export const queryClient = new QueryClient();
+
+function RootLayout() {
   return (
     <Stack
       screenOptions={{
@@ -11,5 +14,13 @@ export default function RootLayout() {
       <Stack.Screen name="protected" />
       <Stack.Screen name="auth" />
     </Stack>
+  );
+}
+
+export default function LayoutWrapper() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RootLayout />
+    </QueryClientProvider>
   );
 }

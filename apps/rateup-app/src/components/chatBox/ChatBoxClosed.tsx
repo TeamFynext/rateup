@@ -16,17 +16,13 @@ const ChatBoxClosed: React.FC<
   return (
     <TouchableOpacity onPress={onPress}>
       <View className="flex-row items-center p-4">
-        {/* Profile initials */}
         <View className="w-16 h-16 rounded-full mr-4 bg-[#00998733] flex items-center justify-center">
           <Text className="text-rateUpGreen font-bold text-[30px]">
             {namePreview(name)}
           </Text>
         </View>
-
-        {/* Main Content */}
         <View className="flex-1 flex-row items-center justify-between">
           <View className="gap-1">
-            {/* Name */}
             <Text
               className="text-lg font-semibold text-[#343A40]"
               numberOfLines={1}
@@ -35,8 +31,6 @@ const ChatBoxClosed: React.FC<
                 ? (name || phone).slice(0, 17) + "..."
                 : name || phone}
             </Text>
-
-            {/* Last Message */}
             <Text
               className="text-sm text-black min-w-[40vw] max-w-[60vw]"
               numberOfLines={1}
@@ -44,8 +38,6 @@ const ChatBoxClosed: React.FC<
               {lastMessage}
             </Text>
           </View>
-
-          {/* Time and Unread */}
           <View className="flex items-center justify-center gap-1">
             <Text className="text-xs text-[#7A8289] ml-2">
               {lastMessageTimeStamp}

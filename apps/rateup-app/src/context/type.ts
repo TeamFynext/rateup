@@ -11,6 +11,7 @@ export type WaGetMessagesBody = {
   waContctId: string;
   createdAt: string;
   waCreatedAt: string;
+  sendBy?:string;
   messageBody: any;
   templateComponentParams: any;
   stats?: { read: string; delivered: string; sent: string; error: string };
@@ -35,6 +36,7 @@ export type WaGetMessagesBody = {
     waMessageAssignStatus:any;
     whatsappUserName?: string;
     blockedOnWhatsApp: boolean;
+    lastReceivedMessageTimeStamp?:string;
     loyaltyCustomer?: {
       id: string;
       email?: string;

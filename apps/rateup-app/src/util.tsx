@@ -1,7 +1,12 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { StarIcon } from "lucide-react-native";
+import { MessageCircle, StarIcon } from "lucide-react-native";
 import { QuestionType2, WaQuestions } from "./components/flow/enum";
+import {
+  IconBrandWhatsapp,
+  IconBrandInstagram,
+} from "@tabler/icons-react-native";
+import { MessagePlatform } from "./constants/enums";
 
 interface StarRowProps {
   count: number;
@@ -155,3 +160,25 @@ export const renderChoiceItem = (
       );
   }
 };
+
+export function getSoucePlatformIconAndColor(
+  sourcePlatform: string | undefined
+) {
+  switch (sourcePlatform) {
+    case MessagePlatform.WHATSAPP:
+      return {
+        icon: <IconBrandWhatsapp color={"white"} size={20}/>,
+        bgColor: "bg-green-600",
+      };
+    case MessagePlatform.INSTAGRAM:
+      return {
+        icon: <IconBrandInstagram color={"white"} size={20}/>,
+        bgColor: "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500",
+      };
+    case MessagePlatform.WEBCHAT:
+      return {
+        icon: <MessageCircle color={"white"} size={20} />,
+        bgColor: "bg-blue-600",
+      };
+  }
+}

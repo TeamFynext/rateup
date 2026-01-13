@@ -1,4 +1,4 @@
-import { View, Text, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
 import { useFilteredContacts } from "@/src/api/inbox/contacts/contacts.query";
 import ChatBoxNew from "../chatBox/ChatBoxNew";
@@ -16,6 +16,8 @@ import { useWsData } from "@/src/context/UserContext";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
+import { WaMessageClosedStatus } from "@/src/constants/constants";
+import { useLifecycleContext } from "@/src/context/LifecycleContext";
 
 type InboxProps = {
   messageType: string;
@@ -24,8 +26,8 @@ type InboxProps = {
     | "New"
     | "Assigned"
     | "UnAssigned"
-    | "Closed"
-    | "AssignedToMe"
+    | "Addressed"
+    | "mine"
     | undefined;
 };
 
@@ -34,7 +36,7 @@ export default function Inbox({
   searchTerm,
   waMessageAssignStatus,
 }: InboxProps) {
-  const filterFromStore = useChatFilterStore((state) => state.filter);
+  const { filter } = useChatFilterStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [updatedContacts, setUpdatedContacts] = useState<
@@ -42,7 +44,7 @@ export default function Inbox({
   >([]);
 
   const mergedFilter = {
-    ...filterFromStore,
+    ...filter,
     messageType,
     searchTerm,
     waMessageAssignStatus,
@@ -74,16 +76,16 @@ export default function Inbox({
         if (!baseContact) return prev; // not in current contacts list
 
         const isUnread =
-          Array.isArray(wsData.inbox.message.readUsers) &&
+          Array.isArray(wsData.inbox?.message.readUsers) &&
           wsData.inbox.message.readUsers.length === 0 &&
           wsData.inbox.message.sendBy === null;
 
         const updatedContact: ContactsWithLastMessage = {
           ...baseContact,
-          ...wsData.inbox.contact,
-          lastMessage: wsData.inbox.message,
+          ...wsData.inbox?.contact,
+          lastMessage: wsData.inbox?.message,
           lastReceivedMessageTimeStamp:
-            wsData.inbox.contact.lastReceivedMessageTimeStamp,
+            wsData.inbox?.contact.lastReceivedMessageTimeStamp,
           unReadMessageCount: isUnread
             ? (baseContact.unReadMessageCount ?? 0) + 1
             : baseContact.unReadMessageCount ?? 0,
@@ -100,19 +102,25 @@ export default function Inbox({
     return updated || contact;
   });
 
-  const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
+  const finalContacts =
+    waMessageAssignStatus === "Addressed"
+      ? displayedContacts.filter((c) =>
+          WaMessageClosedStatus.includes(c.waMessageAssignStatus)
+        )
+      : displayedContacts;
 
+  const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
     let ChatBoxComponent;
 
     switch (waMessageAssignStatus) {
       case "Assigned":
-      case "AssignedToMe":
+      case "mine":
         ChatBoxComponent = ChatBoxAssigned;
         break;
       case "UnAssigned":
         ChatBoxComponent = ChatBoxNew;
         break;
-      case "Closed":
+      case "Addressed":
         ChatBoxComponent = ChatBoxClosed;
         break;
       default:
@@ -134,15 +142,20 @@ export default function Inbox({
     const now = dayjs();
     const diffInMinutes = sessionExpiry.diff(now, "minute");
     const isSessionActive = diffInMinutes > 0;
+    const platform = item?.lastMessage?.sourcePlatform;
+    const name =
+      item.name || item?.whatsappUserName || item.igsId || item.phone;
 
     return (
       <ChatBoxComponent
         id={item.id}
         phone={item.phone}
-        name={item.name ? item.name : item.whatsappUserName}
+        name={name}
+        platform={platform}
         lastMessage={messagePreview}
         waMessageAssignStatus={item.waMessageAssignStatus}
         assignedUsers={item.assignedUsers}
+        lifecycleId={item.lifecycleId}
         onPress={() =>
           router.push({
             //@ts-ignore
@@ -152,7 +165,7 @@ export default function Inbox({
               phone: item.phone,
               waAssignStatus: item.waMessageAssignStatus,
               lastReceivedMessageTimeStamp: item.lastReceivedMessageTimeStamp,
-              //@ts-ignore
+              // @ts-ignore
               sessionActive: isSessionActive,
             },
           })
@@ -187,7 +200,7 @@ export default function Inbox({
 
   return (
     <FlashList
-      data={displayedContacts}
+      data={finalContacts}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
       ListEmptyComponent={

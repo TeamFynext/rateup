@@ -6,8 +6,8 @@ import { useFonts } from "expo-font";
 import { ToastProvider } from "react-native-toast-notifications";
 import { CustomToast } from "@/src/components/CustomToast";
 import { UserProvider } from "@/src/context/UserContext";
-
-export const queryClient = new QueryClient();
+import { useLifeCyclesQuery } from "@/src/api/lifecycle/lifecycle.query";
+import { LifecycleContext } from "@/src/context/LifecycleContext";
 
 function ProtectedLayout() {
   useFonts({
@@ -49,10 +49,12 @@ function ProtectedLayout() {
 }
 
 export default function LayoutWrapper() {
+  const { data: lifecycles, isPending: isPendingLifecycles } =
+    useLifeCyclesQuery();
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClient}>
         <UserProvider>
+          <LifecycleContext value={lifecycles || []}>
           <ToastProvider
             placement="top"
             duration={3000}
@@ -69,8 +71,8 @@ export default function LayoutWrapper() {
           >
             <ProtectedLayout />
           </ToastProvider>
+          </LifecycleContext>
         </UserProvider>
-      </QueryClientProvider>
     </AuthProvider>
   );
 }

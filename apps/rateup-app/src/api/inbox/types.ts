@@ -5,7 +5,7 @@ export type ContactsWithLastMessageResponse = {
 
 export type ContactsWithLastMessage = {
   id: string;
-  name: string;
+  name: string ;
   phone: string;
   unReadMessageCount: number;
   lastReceivedMessageTimeStamp: any;
@@ -15,30 +15,26 @@ export type ContactsWithLastMessage = {
   assignedUsers: any;
   isSessionActive: boolean;
   whatsappUserName?: string,
+  igsId?:string,
+  platform?:string;
+  lifecycleId?:string;
 };
 
 export enum WaMessageAssignStatus {
-  NEW = "New",
-  ASSIGNED = "Assigned",
-  CLOSED = "Closed",
-  UNASSIGNED = "UnAssigned",
+  NEW = "NEW",
+  ASSIGNED = "ASSIGNED",
+  CLOSED = "CLOSED",
+  UNASSIGNED = "UNASSIGNED",
+  SPAM = "SPAM",
+  RESOLVED = "RESOLVED",
+  UNRESOLVED = "UNRESOLVED",
 }
 
 export type MultiGV = {
   group: string;
   value: string;
 };
-export type ChatFilter = {
-  messageType: "all" | "replied" | "unread" | "usermessages";
-  strictFilter: boolean;
-  searchTerm?: string;
-  contactGroups: Array<MultiGV>;
-  campaigns: Array<MultiGV>;
-  tags: Array<MultiGV>;
-  waMessageAssignStatus?: string;
-  blockedUsers: boolean;
-  newStatuses: string[];
-};
+
 
 export interface ICreateContact {
   name: string;

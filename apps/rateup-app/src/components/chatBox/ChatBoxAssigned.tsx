@@ -1,7 +1,10 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
 import { namePreview } from "../../utils/chatbox_utils";
+import { MessagePlatform } from "@/src/constants/enums";
+import { getSoucePlatformIconAndColor } from "@/src/util";
+import { useLifecycleContext } from "@/src/context/LifecycleContext";
 
 const ChatBoxAssigned: React.FC<
   ContactsWithLastMessage & { onPress?: () => void }
@@ -9,38 +12,55 @@ const ChatBoxAssigned: React.FC<
   id,
   name,
   phone,
+  platform,
   lastMessage,
   lastMessageTimeStamp,
   unReadMessageCount,
   waMessageAssignStatus,
   isSessionActive,
+  lifecycleId,
   onPress,
 }) => {
+  const lifeCycleLabels = useLifecycleContext();
+  const lifecycleInfo = useMemo(() => {
+    const label = lifeCycleLabels?.find(
+      (label: any) => label.id === lifecycleId
+    );
+    return label;
+  }, [lifecycleId, lifeCycleLabels]);
   return (
-    <TouchableOpacity onPress={onPress}>
+    <TouchableOpacity
+      onPress={onPress}
+      className={`${unReadMessageCount > 0 && "bg-blue-50"}`}
+    >
       <View className="flex-row items-center p-4">
         {/* Profile initials */}
         <View className="relative w-16 h-16 mr-4">
           {/* Profile initials circle */}
-          <View className="w-full h-full rounded-full bg-[#00998733] flex items-center justify-center">
-            <Text className="text-rateUpGreen font-bold text-[30px]">
+          <View className="w-full h-full rounded-full bg-chatAvatarBlue flex items-center justify-center">
+            <Text className="text-white font-bold text-[24px]">
               {namePreview(name)}
             </Text>
           </View>
-
-          {/* Pulse indicator dot */}
-          <View className="absolute top-0 right-0">
-            {isSessionActive ? (
-              <>
-                <View className="absolute w-3 h-3 rounded-full bg-green-400 opacity-75" />
-                <View className="w-3 h-3 rounded-full bg-green-500" />
-              </>
-            ) : (
-              <View className="w-3 h-3 rounded-full bg-red-500" />
-            )}
+          {unReadMessageCount > 0 && (
+            <View className="absolute top-0 right-0">
+              <View className="bg-indicatorBlue w-5 h-5 rounded-full flex items-center justify-center">
+                <Text className="text-white text-sm">{unReadMessageCount}</Text>
+              </View>
+            </View>
+          )}
+          <View
+            className={`absolute -bottom-1 -right-1 rounded-full p-0.5 ${
+              platform === MessagePlatform.WHATSAPP
+                ? "bg-green-600 border border-white"
+                : platform === MessagePlatform.INSTAGRAM
+                ? "bg-pink-500 border border-white"
+                : "bg-blue-600 border border-white"
+            }`}
+          >
+            {getSoucePlatformIconAndColor(platform)?.icon}
           </View>
         </View>
-
         {/* Main Content */}
         <View className="flex-1 flex-row items-center justify-between">
           <View className="gap-1">
@@ -54,9 +74,9 @@ const ChatBoxAssigned: React.FC<
                   ? (name || phone).slice(0, 17) + "..."
                   : name || phone}
               </Text>
-              <Text className="bg-[#F5F5F5] px-2 rounded-full">
+              {/* <Text className="bg-[#F5F5F5] px-2 rounded-full">
                 {waMessageAssignStatus}
-              </Text>
+              </Text> */}
             </View>
 
             {/* Last Message Preview */}
@@ -66,18 +86,22 @@ const ChatBoxAssigned: React.FC<
             >
               {lastMessage}
             </Text>
-          </View>
 
-          {/* Time and Unread */}
+            <View>
+              <View>
+                {lifecycleInfo && (
+                  <View className={`text-[10px] h-5 px-1.5`}>
+                    {lifecycleInfo?.emoji + " " + lifecycleInfo?.name}
+                  </View>
+                )}
+              </View>
+              {/* assignststus here */}
+            </View>
+          </View>
           <View className="flex items-center justify-center gap-1">
             <Text className="text-xs text-[#7A8289] ml-2">
               {lastMessageTimeStamp}
             </Text>
-            {unReadMessageCount > 0 && (
-              <View className="bg-[#69F0AE] rounded-full h-6 w-6 flex items-center justify-center">
-                <Text className="text-rateUpGreen">{unReadMessageCount}</Text>
-              </View>
-            )}
           </View>
         </View>
       </View>

@@ -55,10 +55,10 @@ const ChatBody = ({ id }: { id: string }) => {
   React.useEffect(() => {
     if (
       wsData?.type === "inbox" &&
-      wsData.inbox.contact.id === id // only for current chat
+      wsData.inbox?.contact.id === id // only for current chat
     ) {
       const isDuplicate = messageList.some(
-        (msg) => msg.id === wsData.inbox.message.id
+        (msg) => msg.id === wsData.inbox?.message.id
       );
       if (!isDuplicate) {
         queryClient.setQueryData(["wa-messages", id], (oldData: any) => {
@@ -67,7 +67,7 @@ const ChatBody = ({ id }: { id: string }) => {
           const newPages = [...oldData.pages];
           newPages[0] = {
             ...newPages[0],
-            messages: [wsData.inbox.message, ...newPages[0].messages],
+            messages: [wsData.inbox?.message, ...newPages[0].messages],
           };
 
           return {

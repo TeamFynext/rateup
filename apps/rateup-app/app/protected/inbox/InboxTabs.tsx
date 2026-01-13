@@ -9,20 +9,14 @@ import {
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { useIsFocused } from "@react-navigation/native";
 
-import {
-  MessageSquareText,
-  UserX,
-  UserCheck,
-  CircleUser,
-  MessageSquareOff,
-  MessageSquareMore,
-} from "lucide-react-native";
+import { UserCheck, Sparkles, User, CircleCheckBig } from "lucide-react-native";
 
 import { useContactCounts } from "@/src/api/inbox/contacts/contacts.query";
 import InboxButtons from "@/src/components/inbox/InboxButtons";
 import { useChatFilterStore, useSelectedTabStore } from "@/src/utils/store";
 import Inbox from "@/src/components/inbox/inbox";
 import SearchBar from "@/src/components/inbox/inboxSearchBar";
+import { colors } from "@/src/constants/constants";
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -31,29 +25,31 @@ function TabIcon({
   color,
   focused,
   count,
+  label,
 }: {
   Icon: any;
   color: string;
   focused: boolean;
-  count: number;
+  count?: number;
+  label: string;
 }) {
   return (
     <View
-      className="relative p-1.5 rounded-full"
-      style={{ backgroundColor: focused ? "#00993333" : "transparent" }}
+      className="relative px-4 py-1.5 rounded-full flex flex-row items-center gap-1"
+      style={{ backgroundColor: focused ? colors["primary-blue"] : colors["gray-100"] }}
     >
-      <Icon color={color} size={25} />
-      {count > 0 && (
-        <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-[18px] h-[18px] justify-center items-center px-1">
-          <Text
-            className={`text-white font-bold ${
-              focused ? "text-[12px]" : "text-[10px]"
-            }`}
-          >
-            {count}
-          </Text>
-        </View>
-      )}
+      <Icon color={focused? "white" : colors["gray-700"] } size={18} />
+      <View className="flex flex-row items-center gap-1">
+        <Text
+          style={{ color: focused ? "white" : colors["gray-700"] }}
+          className="font-semibold text-lg"
+        >
+          {label}
+        </Text>
+        {count && count > 0 && (
+          <Text style={{ color: focused ? "white" : colors["gray-700"] }} className="font-semibold text-lg">({count})</Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -64,8 +60,8 @@ function createTabScreen(
     | "New"
     | "Assigned"
     | "UnAssigned"
-    | "Closed"
-    | "AssignedToMe",
+    | "Addressed"
+    | "mine",
   searchTerm?: string
 ) {
   return function Screen() {
@@ -108,8 +104,7 @@ export default function InboxLayout() {
   const activeFilterCount =
     (filterFromStore.campaigns.length > 0 ? 1 : 0) +
     (filterFromStore.contactGroups.length > 0 ? 1 : 0) +
-    (filterFromStore.tags.length > 0 ? 1 : 0) +
-    (filterFromStore.newStatuses.length > 0 ? 1 : 0);
+    (filterFromStore.tags.length > 0 ? 1 : 0);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -121,7 +116,6 @@ export default function InboxLayout() {
           <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
           <InboxButtons activeFilterCount={activeFilterCount} />
         </View>
-
         <Tab.Navigator
           tabBarPosition="top"
           screenOptions={{
@@ -130,11 +124,10 @@ export default function InboxLayout() {
             tabBarPressColor: "transparent",
             tabBarScrollEnabled: true,
             swipeEnabled: true,
-            tabBarActiveTintColor: "#009987",
-            tabBarInactiveTintColor: "#000",
             tabBarItemStyle: {
               width: "auto",
             },
+            tabBarShowLabel: false,
             tabBarIndicatorStyle: { backgroundColor: "transparent" },
             tabBarLabelStyle: {
               fontWeight: "medium",
@@ -142,23 +135,25 @@ export default function InboxLayout() {
               marginTop: -2,
               textAlign: "center",
             },
-            tabBarStyle: {
-              backgroundColor: "#EBF7F5",
-            },
             tabBarShowIcon: true,
             tabBarBounces: false,
           }}
         >
           <Tab.Screen
             name="New"
-            component={createTabScreen("usermessages", "New", searchTerm)}
+            component={createTabScreen(
+              "usermessages",
+              "UnAssigned",
+              searchTerm
+            )}
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <TabIcon
-                  Icon={MessageSquareText}
+                  Icon={Sparkles}
                   color={color}
                   focused={focused}
                   count={contactCounts.new}
+                  label="New"
                 />
               ),
             }}
@@ -173,70 +168,36 @@ export default function InboxLayout() {
                   color={color}
                   focused={focused}
                   count={contactCounts.assigned}
-                />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="UnAssigned"
-            component={createTabScreen(
-              "usermessages",
-              "UnAssigned",
-              searchTerm
-            )}
-            options={{
-              tabBarIcon: ({ color, focused }) => (
-                <TabIcon
-                  Icon={UserX}
-                  color={color}
-                  focused={focused}
-                  count={contactCounts.unassigned}
-                />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Closed"
-            component={createTabScreen("usermessages", "Closed", searchTerm)}
-            options={{
-              tabBarIcon: ({ color, focused }) => (
-                <TabIcon
-                  Icon={MessageSquareOff}
-                  color={color}
-                  focused={focused}
-                  count={contactCounts.closed}
+                  label="Assigned"
                 />
               ),
             }}
           />
           <Tab.Screen
             name="Assigned To Me"
-            component={createTabScreen(
-              "usermessages",
-              "AssignedToMe",
-              searchTerm
-            )}
+            component={createTabScreen("all", "mine", searchTerm)}
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <TabIcon
-                  Icon={CircleUser}
+                  Icon={User}
                   color={color}
                   focused={focused}
                   count={contactCounts.assignedToMe}
+                  label="Mine"
                 />
               ),
             }}
           />
           <Tab.Screen
-            name="All"
-            component={createTabScreen("all", undefined, searchTerm)}
+            name="Closed"
+            component={createTabScreen("usermessages", "Addressed", searchTerm)}
             options={{
               tabBarIcon: ({ color, focused }) => (
                 <TabIcon
-                  Icon={MessageSquareMore}
+                  Icon={CircleCheckBig}
                   color={color}
                   focused={focused}
-                  count={contactCounts.all}
+                  label="Closed"
                 />
               ),
             }}
