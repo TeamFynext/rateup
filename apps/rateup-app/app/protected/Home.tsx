@@ -133,7 +133,7 @@ export default function Home() {
   const { email, orgName, role, profilePhoto, orgPhone, userName } = userData;
   return (
     <View
-      className="items-center relative flex-grow bg-rateUpLightGreen"
+      className="items-center relative flex-grow bg-white dark:bg-black"
       style={{ paddingTop: insets.top }}
     >
       {renderedInterface}
@@ -192,7 +192,7 @@ export default function Home() {
 
       {/* Bottom bar */}
       <View
-        className="flex-row justify-center gap-4 items-center border-t border-gray-300 bg-white py-4 w-full z-30"
+        className="flex-row justify-center gap-4 items-center border-t border-gray-300 dark:border-gray-700 bg-white dark:bg-black py-4 w-full z-30"
         style={{ paddingBottom: insets.bottom }}
       >
         {/* Menu Button */}

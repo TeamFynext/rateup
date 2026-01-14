@@ -17,7 +17,6 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/src/constants/constants";
-import { useLifecycleContext } from "@/src/context/LifecycleContext";
 
 type InboxProps = {
   messageType: string;
@@ -182,7 +181,7 @@ export default function Inbox({
 
   if (isLoading) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 justify-center items-center bg-white dark:bg-black">
         <ActivityIndicator size="large" />
       </View>
     );
@@ -190,7 +189,7 @@ export default function Inbox({
 
   if (isError) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="flex-1 justify-center items-center bg-white dark:bg-black">
         <Text className="text-red-500 text-center">
           Failed to load contacts.
         </Text>
@@ -219,7 +218,7 @@ export default function Inbox({
         isFetchingNextPage ? (
           <ActivityIndicator size="small" className="py-4" />
         ) : (
-          <View className="items-center py-4"></View>
+          <View className="items-center py-4 bg-white dark:bg-black"></View>
         )
       }
     />
