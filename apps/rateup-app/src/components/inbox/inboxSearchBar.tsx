@@ -1,6 +1,7 @@
 import { View, TextInput, Pressable, useColorScheme } from "react-native";
 import { SearchIcon } from "@/src/constants/imageExports";
 import { IconArrowLeft } from "@tabler/icons-react-native";
+import { colors } from "@/src/constants/constants";
 
 type SearchBarProps = {
   searchTerm: string;
@@ -13,7 +14,7 @@ export default function SearchBar({
 }: SearchBarProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const textColor = isDark ? "white" : "black";
+  const textColor = isDark ? "white" : colors["slate-950"];
   return (
     <View className="flex-1">
       {/* Search Input */}

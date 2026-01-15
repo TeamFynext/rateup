@@ -1,3 +1,4 @@
+import { colors } from "@/src/constants/constants";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import React from "react";
@@ -13,14 +14,14 @@ function RootLayout() {
     <>
       <StatusBar
         barStyle={isDark ? "light-content" : "dark-content"}
-        backgroundColor={isDark ? "black" : "white"}
+        backgroundColor={isDark ? colors["slate-950"] : "white"}
         translucent
       />
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: {
-            backgroundColor: isDark ? "black" : "white",
+            backgroundColor: isDark ? colors["slate-950"] : "white",
           },
         }}
       >

@@ -13,7 +13,7 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
   const { messageBody, waCreatedAt } = message;
   let timeStamp: string = waCreatedAt ?? new Date().toLocaleTimeString();
   let messageType: string = "text";
-  let messageContent: string = "No messages yet";
+  let messageContent: any = "No messages yet";
   let template: WaTemplateFetchBody = {} as WaTemplateFetchBody;
   let interactive: WaSendMessageBody["interactive"] =
     {} as WaSendMessageBody["interactive"];
@@ -43,7 +43,7 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
       if (receive.message) {
         if (receive.message.attachments) {
           messageContent = {
-            attachments: receive.message.attachments.map((r) => ({
+            attachments: receive.message.attachments.map((r:any) => ({
               content: r.payload ? r.payload.url : "",
               type: r.type,
             })),
@@ -155,6 +155,14 @@ export function parseWaMessage_(message: any): ParsedWaMessageReturn {
       default:
         messageContent = "Not Supported Yet";
     }
+  }
+  if(messageBody?.exchangeProcess === "privateNote"){
+    const {privateNote} = messageBody;
+    messageContent = privateNote.text.body.trim();
+  }
+  if(messageBody?.exchangeProcess === "internal"){
+    const {internal} = messageBody;
+    messageContent = internal.text.body.trim();
   }
   }
   return { timeStamp, messageType, messageContent, interactive, template };

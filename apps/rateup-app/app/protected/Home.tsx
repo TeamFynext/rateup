@@ -9,6 +9,7 @@ import {
   Easing,
   Dimensions,
   ActivityIndicator,
+  useColorScheme,
 } from "react-native";
 import { MenuIcon } from "lucide-react-native";
 import InboxLayoutComponent from "./inbox/InboxTabs";
@@ -21,6 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Flow from "./flows/Flow";
 import WebForm from "./webForms/WebForm";
+import { colors } from "@/src/constants/constants";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -46,6 +48,9 @@ export default function Home() {
 
   const open = selectedItem !== null;
   const queryClient = useQueryClient();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const bgColor = isDark ? colors["gray-900"] : "white";
 
   const {
     data: userData,
@@ -59,9 +64,9 @@ export default function Home() {
       case "inbox":
         return <InboxLayout />;
       case "flow":
-        return <Flow />
+        return <Flow />;
       case "webform":
-        return <WebForm/>
+        return <WebForm />;
     }
   }, [selectedInterface]);
 
@@ -133,7 +138,7 @@ export default function Home() {
   const { email, orgName, role, profilePhoto, orgPhone, userName } = userData;
   return (
     <View
-      className="items-center relative flex-grow bg-white dark:bg-black"
+      className="items-center relative flex-grow bg-white dark:bg-slate-950"
       style={{ paddingTop: insets.top }}
     >
       {renderedInterface}
@@ -164,7 +169,7 @@ export default function Home() {
             left: 0,
             right: 0,
             height: PANEL_HEIGHT,
-            backgroundColor: "#fff",
+            backgroundColor: bgColor,
             zIndex: 20,
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
@@ -192,7 +197,7 @@ export default function Home() {
 
       {/* Bottom bar */}
       <View
-        className="flex-row justify-center gap-4 items-center border-t border-gray-300 dark:border-gray-700 bg-white dark:bg-black py-4 w-full z-30"
+        className="flex-row justify-center gap-4 items-center border-t border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950 py-4 w-full z-30"
         style={{ paddingBottom: insets.bottom }}
       >
         {/* Menu Button */}
@@ -206,10 +211,10 @@ export default function Home() {
         >
           <View
             className={`flex-row justify-center items-center p-2 min-w-12 h-12 rounded-full ${
-              selectedItem === "menu" ? "bg-[#004F98]" : "bg-[#C4D7F5]"
+              selectedItem === "menu" ? "bg-primaryBlue" : "bg-primaryBlue/40"
             }`}
           >
-            <MenuIcon color={selectedItem === "menu" ? "white" : "#004F98"} />
+            <MenuIcon color={selectedItem === "menu" ? "white" : colors["primary-blue"]} />
             {selectedItem === "menu" && (
               <Text className="text-white font-semibold px-2">Menu</Text>
             )}
@@ -220,13 +225,13 @@ export default function Home() {
         <TouchableOpacity activeOpacity={0.8} onPress={handleAccountPress}>
           <View
             className={`flex-row justify-center items-center min-w-12 h-12 rounded-full ${
-              selectedItem === "account" ? "bg-[#004F98] pl-2" : "bg-[#C4D7F5]"
+              selectedItem === "account" ? "bg-primaryBlue pl-2" : "bg-primaryBlue/40"
             }`}
           >
             {selectedItem === "account" && (
               <Text className="text-white font-semibold px-2">Account</Text>
             )}
-            <View className="min-w-12 h-12 bg-[#00998733] rounded-full flex justify-center items-center">
+            <View className="min-w-12 h-12 bg-chatAvatarBlue rounded-full flex justify-center items-center">
               {profilePhoto ? (
                 <Image
                   source={{
@@ -237,9 +242,7 @@ export default function Home() {
                 />
               ) : (
                 <Text
-                  className={`font-bold text-[20px] ${
-                    selectedItem === "account" ? "text-white" : "text-[#009987]"
-                  }`}
+                  className={`font-bold text-[20px] text-white`}
                 >
                   {namePreview(userName)}
                 </Text>

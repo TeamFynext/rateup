@@ -105,10 +105,6 @@ const InboxButtons = ({
   const rotation = useRef(new Animated.Value(0)).current;
   const [isRotating, setIsRotating] = useState(false);
   const [open, setOpen] = useState(false);
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const textColor = isDark ? "white" : "black";
-
   const handleRefresh = () => {
     if (isRotating) return;
     setIsRotating(true);
@@ -135,7 +131,7 @@ const InboxButtons = ({
   return (
     <View className="relative ml-2">
       <TouchableOpacity onPress={() => setOpen((v) => !v)}>
-        <EllipsisVertical color={textColor} />
+        <EllipsisVertical color={"white"} />
       </TouchableOpacity>
 
       {/* MENU */}

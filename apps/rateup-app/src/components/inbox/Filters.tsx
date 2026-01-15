@@ -24,6 +24,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WaMessageAssignStatus } from "@/src/api/inbox/types";
 import { IconArrowLeft } from "@tabler/icons-react-native";
 import { useTeamsByUser } from "@/src/api/teams/teams.query";
+import { colors } from "@/src/constants/constants";
 
 const FiltersScreen = () => {
   const colorScheme = useColorScheme();
@@ -153,11 +154,11 @@ const FiltersScreen = () => {
     { value: "automation", label: "Automation" },
   ];
 
-  const textColor = isDark ? "white" : "black";
-  const bgColor = isDark ? "black" : "white";
+  const textColor = isDark ? "white" : colors["slate-950"];
+  const bgColor = isDark ? colors["slate-950"] : "white";
 
   return (
-    <SafeAreaView className="bg-white dark:bg-black flex-1">
+    <SafeAreaView className="bg-white dark:bg-slate-950 flex-1">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}

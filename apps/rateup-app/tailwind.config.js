@@ -17,6 +17,7 @@ module.exports = {
         primaryBlue: "#1873E8",
         lightBlue: "#E3F2FD",
         lightgray: "#E2E5ED",
+        "chat-bubble-green":"#d2f8d2",
       },
     },
   },

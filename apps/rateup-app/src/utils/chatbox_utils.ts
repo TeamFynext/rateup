@@ -5,7 +5,7 @@ import utc from "dayjs/plugin/utc";
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 
-export const namePreview = (name_: string) => {
+export const namePreview = (name_: any) => {
   if (name_) {
     const name1 = name_.trim();
     const nameArray = name1.split(" ");

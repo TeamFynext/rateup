@@ -1,10 +1,6 @@
 import { View, Text, ActivityIndicator } from "react-native";
 import { ContactsWithLastMessage } from "@/src/api/inbox/types";
 import { useFilteredContacts } from "@/src/api/inbox/contacts/contacts.query";
-import ChatBoxNew from "../chatBox/ChatBoxNew";
-import ChatBoxAssigned from "../chatBox/ChatBoxAssigned";
-import ChatBoxAll from "../chatBox/ChatBoxAll";
-import ChatBoxClosed from "../chatBox/ChatBoxClosed";
 import { useRouter } from "expo-router";
 import dayjs from "dayjs";
 import { useChatFilterStore } from "@/src/utils/store";
@@ -17,6 +13,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FlashList } from "@shopify/flash-list";
 import { WaMessageClosedStatus } from "@/src/constants/constants";
+import ChatBox from "../chatBox/ChatBox";
 
 type InboxProps = {
   messageType: string;
@@ -109,23 +106,7 @@ export default function Inbox({
       : displayedContacts;
 
   const renderItem = ({ item }: { item: ContactsWithLastMessage }) => {
-    let ChatBoxComponent;
-
-    switch (waMessageAssignStatus) {
-      case "Assigned":
-      case "mine":
-        ChatBoxComponent = ChatBoxAssigned;
-        break;
-      case "UnAssigned":
-        ChatBoxComponent = ChatBoxNew;
-        break;
-      case "Addressed":
-        ChatBoxComponent = ChatBoxClosed;
-        break;
-      default:
-        ChatBoxComponent = ChatBoxAll;
-        break;
-    }
+    let ChatBoxComponent = ChatBox;
 
     if (!ChatBoxComponent) return null;
     const parsedMessage = parseWaMessage_(item.lastMessage);
@@ -181,7 +162,7 @@ export default function Inbox({
 
   if (isLoading) {
     return (
-      <View className="flex-1 justify-center items-center bg-white dark:bg-black">
+      <View className="flex-1 justify-center items-center bg-white dark:bg-slate-950">
         <ActivityIndicator size="large" />
       </View>
     );
@@ -189,7 +170,7 @@ export default function Inbox({
 
   if (isError) {
     return (
-      <View className="flex-1 justify-center items-center bg-white dark:bg-black">
+      <View className="flex-1 justify-center items-center bg-white dark:bg-slate-950">
         <Text className="text-red-500 text-center">
           Failed to load contacts.
         </Text>
@@ -218,7 +199,7 @@ export default function Inbox({
         isFetchingNextPage ? (
           <ActivityIndicator size="small" className="py-4" />
         ) : (
-          <View className="items-center py-4 bg-white dark:bg-black"></View>
+          <View className="items-center py-4 bg-white dark:bg-slate-950"></View>
         )
       }
     />

@@ -6,7 +6,7 @@ import { MessagePlatform } from "@/src/constants/enums";
 import { getSoucePlatformIconAndColor } from "@/src/util";
 import { useLifecycleContext } from "@/src/context/LifecycleContext";
 
-const ChatBoxAssigned: React.FC<
+const ChatBox: React.FC<
   ContactsWithLastMessage & { onPress?: () => void }
 > = ({
   id,
@@ -109,4 +109,4 @@ const ChatBoxAssigned: React.FC<
   );
 };
 
-export default memo(ChatBoxAssigned);
+export default memo(ChatBox);

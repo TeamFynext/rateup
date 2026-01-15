@@ -112,9 +112,8 @@ const ChatBody = ({ id }: { id: string }) => {
         : null;
 
       const shouldShowDate = currentDate !== nextDate;
-
       return (
-        <>
+        <View className="bg-slate-950">
           {shouldShowDate && (
             <DateSeparator
               label={dayjs(item.createdAt).format("DD MMM YYYY")}
@@ -124,13 +123,14 @@ const ChatBody = ({ id }: { id: string }) => {
             messageContent={parsed.messageContent}
             interactive={parsed.interactive} //if it is interactive
             timestamp={time}
-            isSent={item.messageBody.exchangeProcess === "send"}
+            assignStatus={item.messageBody?.internal?.assignStatus || ""} // for internal
+            exchangeProcess={item.messageBody.exchangeProcess}
             senderName={item.sender?.name || ""}
             messageType={parsed.messageType}
             template={parsed.template} //if it is template
             templateComponentParams={item.templateComponentParams}
           />
-        </>
+        </View>
       );
     },
     [messageList]
@@ -140,7 +140,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   if (isPending) {
     return (
-      <View className="flex-1 justify-center items-center bg-rateUpGreen20">
+      <View className="flex-1 justify-center items-center bg-blue-50 dark:bg-gray-950">
         <ActivityIndicator size="large" color="#009987" />
       </View>
     );
@@ -148,7 +148,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   if (isError) {
     return (
-      <View className="flex-1 justify-center items-center bg-rateUpGreen20">
+      <View className="flex-1 justify-center items-center bg-blue-50 dark:bg-gray-950">
         <Text className="text-red-500">
           {error?.message || "Something went wrong"}
         </Text>
@@ -157,7 +157,7 @@ const ChatBody = ({ id }: { id: string }) => {
   }
 
   return (
-    <View className="flex-1 bg-rateUpGreen20">
+    <View className="flex-1 bg-blue-50 dark:bg-gray-950">
       <FlashList
         inverted
         data={messageList}

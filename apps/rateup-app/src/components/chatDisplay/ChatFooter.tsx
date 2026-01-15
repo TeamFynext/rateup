@@ -8,7 +8,7 @@ import {
   Keyboard,
   Platform,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { IIcon } from "@/src/constants/imageExports";
 import { useAssignedContact } from "@/src/api/inbox/contacts/contacts.query";
 import NotAssigned from "./chatFooter/NotAssigned";

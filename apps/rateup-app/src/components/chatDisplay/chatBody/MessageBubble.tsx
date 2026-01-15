@@ -10,28 +10,92 @@ import WaInboxText, {
 } from "./messageBubbleTypes";
 import { namePreview } from "@/src/utils/chatbox_utils";
 import { WaTemplateComponent } from "@/src/context/type";
+import {
+  AlertCircle,
+  Archive,
+  CheckCircle2,
+  Circle,
+  Lock,
+  UserCog,
+} from "lucide-react-native";
+import { colors } from "@/src/constants/constants";
+import { WaMessageAssignStatus } from "@/src/api/inbox/types";
 
 type MessageBubbleProps = {
   messageContent: any;
   interactive?: any;
   timestamp: string;
-  isSent: boolean;
+  exchangeProcess: string;
   messageType?: string;
   senderName?: string;
   template: any;
   templateComponentParams?: WaTemplateComponent[];
+  assignStatus?: string;
 };
 
 const MessageBubble = ({
   messageContent,
   timestamp,
-  isSent,
+  exchangeProcess,
   messageType,
   senderName,
   interactive,
   template,
   templateComponentParams,
+  assignStatus,
 }: MessageBubbleProps) => {
+  const getBgColor = () => {
+    if (exchangeProcess === "internal") {
+      switch (assignStatus) {
+        case WaMessageAssignStatus.RESOLVED:
+          return "bg-green-50";
+        case WaMessageAssignStatus.UNRESOLVED:
+          return "bg-orange-50";
+        case WaMessageAssignStatus.CLOSED:
+          return "bg-blue-50";
+        case WaMessageAssignStatus.SPAM:
+          return "bg-red-50";
+        default:
+          return "bg-indigo-50";
+      }
+    } else if (exchangeProcess === "privateNote") {
+      return "bg-amber-50";
+    } else if (exchangeProcess === "send") {
+      return "bg-chat-bubble-green";
+    } else {
+      return "bg-white";
+    }
+  };
+  const getTextColor = () => {
+    switch (assignStatus) {
+      case WaMessageAssignStatus.RESOLVED:
+        return "text-green-600";
+      case WaMessageAssignStatus.UNRESOLVED:
+        return "text-orange-600";
+      case WaMessageAssignStatus.CLOSED:
+        return "text-blue-600";
+      case WaMessageAssignStatus.SPAM:
+        return "text-red-600";
+      default:
+        return "text-indigo-600";
+    }
+  };
+
+  const getIcon = (status: any) => {
+    switch (status) {
+      case WaMessageAssignStatus.RESOLVED:
+        return <CheckCircle2 size={16} color={colors["status-resolved"]} />;
+      case WaMessageAssignStatus.UNRESOLVED:
+        return <Circle size={16} color={colors["status-unresolved"]} />;
+      case WaMessageAssignStatus.CLOSED:
+        return <Archive size={16} color={colors["status-closed"]} />;
+      case WaMessageAssignStatus.SPAM:
+        return <AlertCircle size={16} color={colors["status-spam"]} />;
+      default:
+        return <UserCog size={16} color={colors["status-default"]} />;
+    }
+  };
+
   const renderContent = useCallback(() => {
     switch (messageType) {
       case "text":
@@ -56,7 +120,6 @@ const MessageBubble = ({
             templateBody={template}
             parameters={templateComponentParams}
           />
-          // <Text>template</Text>
         );
       case "interactive":
         return (
@@ -70,8 +133,8 @@ const MessageBubble = ({
     }
   }, [messageContent, messageType, timestamp]);
 
-  // ⛔️ SPECIAL CASE: Received audio message — no bubble
-  if (messageType === "audio" && !isSent) {
+  // SPECIAL CASE: Received audio message — no bubble
+  if (messageType === "audio" && exchangeProcess !== "send") {
     return (
       <View className="flex-row px-2 w-full mb-2 items-center gap-1 justify-start">
         {renderContent()}
@@ -81,19 +144,33 @@ const MessageBubble = ({
 
   return (
     <View
-      className={`flex-row px-2 w-full mb-2 items-center gap-1 ${
-        isSent ? "justify-end" : "justify-start"
+      className={`relative flex-row px-2 w-full mb-2 items-center gap-1 ${
+        exchangeProcess === "send" || exchangeProcess === "privateNote"
+          ? "justify-end"
+          : exchangeProcess === "internal"
+          ? "justify-center"
+          : "justify-start"
       }`}
     >
       <View
-        className={`flex-col max-w-[75%] px-3 py-2 rounded-xl ${
-          isSent ? "bg-[#d2f8d2]" : "bg-white"
-        }`}
+        className={`flex-col max-w-[75%] px-3 py-2 rounded-xl ${getBgColor()}`}
       >
-        {isSent && (
-          <Text className="text-blue-500 italic opacity-70 p-1">
-            {senderName}
-          </Text>
+        {exchangeProcess === "privateNote" && (
+          <View className="flex-row items-center justify-start gap-1">
+            <Lock color={colors["amber-500"]} size={10} />
+            <Text className="text-xs text-amber-500">Private note</Text>
+          </View>
+        )}
+        {(exchangeProcess === "send" || exchangeProcess === "privateNote") && (
+          <Text className="text-primaryBlue opacity-70 p-1">{senderName}</Text>
+        )}
+        {exchangeProcess === "internal" && (
+          <View className="flex-row items-center gap-1">
+            {getIcon(assignStatus)}
+            <Text className={`${getTextColor()} opacity-70 p-1`}>
+              {assignStatus}
+            </Text>
+          </View>
         )}
         {renderContent()}
         {messageType !== "audio" && (
@@ -103,10 +180,16 @@ const MessageBubble = ({
         )}
       </View>
 
-      {isSent && (
-        <View className="w-8 h-8 rounded-full bg-[#00998733] flex items-center justify-center">
-          <Text className="text-rateUpGreen font-bold text-md">
-            {/* @ts-ignore */}
+      {exchangeProcess === "send" && (
+        <View className="w-8 h-8 rounded-full bg-chatAvatarBlue flex items-center justify-center">
+          <Text className="text-white font-bold text-md">
+            {namePreview(senderName)}
+          </Text>
+        </View>
+      )}
+      {exchangeProcess === "privateNote" && (
+        <View className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center">
+          <Text className="text-primaryBlue opacity-70 font-bold text-md">
             {namePreview(senderName)}
           </Text>
         </View>
