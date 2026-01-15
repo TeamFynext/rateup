@@ -11,6 +11,11 @@ import {
 } from "./catalog.controller.js";
 import { $WC } from "./catalog.schema.js";
 import { waCatalogOrderRoutes } from "./orders/catalogOrder.route.js";
+import {
+  syncProductSetsHandler,
+  getProductSetsByCatalogHandler,
+  getProductSetByIdHandler,
+} from "./productSet.controller.js";
 
 export async function waCatalogRoutes(server: FastifyInstance) {
   server.addHook("preHandler", checkSession);
@@ -43,5 +48,30 @@ export async function waCatalogRoutes(server: FastifyInstance) {
       },
     },
     disconnectCatalogFromWabaHandler,
+  );
+
+  server.post(
+    "/product-sets/sync",
+    {
+      schema: {
+        body: $WC("syncProductSetsSchema"),
+      },
+    },
+    syncProductSetsHandler,
+  );
+
+  server.get(
+    "/product-sets/catalog/:catalogId",
+    getProductSetsByCatalogHandler,
+  );
+
+  server.get(
+    "/product-sets/:productSetId",
+    {
+      schema: {
+        params: $WC("productSetIdParamSchema"),
+      },
+    },
+    getProductSetByIdHandler,
   );
 }

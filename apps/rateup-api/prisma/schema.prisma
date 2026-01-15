@@ -170,6 +170,7 @@ model Org {
   expoPushTokens           ExpoPushToken[]
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
+  productSets              WhatsappProductSet[]
   UserAssignedCount        UserAssignedCount[]
   Lifecycle                Lifecycle[]
   ContactCustomField       ContactCustomField[]
@@ -1893,6 +1894,7 @@ model WhatsappCatalog {
   products            WaCatalogProduct[]
   orders              WaCatalogOrder[]
   connectedWaPhoneIds CatalogPhoneIdMap[]
+  productSets         WhatsappProductSet[]
 
   autoCheckoutEnabled Boolean @default(false)
   checkoutMessage     String?
@@ -1908,6 +1910,23 @@ model CatalogPhoneIdMap {
 
   @@index([catalogId])
 }
+
+model WhatsappProductSet {
+  productSetId String          @unique
+  catalogId    String
+  catalog      WhatsappCatalog @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
+  name         String
+  orgId        String          @db.Uuid
+  org          Org             @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  filter       Json? // Stores filter criteria if dynamically generated
+  productIds   String[] // Array of product retailer IDs in this set
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@unique([orgId, productSetId], name: "org_id_product_set_id_unique")
+  @@index([catalogId])
+}
+
 
 model WaCatalogProduct {
   productDbId       String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
