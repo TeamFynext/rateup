@@ -33,7 +33,7 @@ import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils.js"
 import { log } from "../../utils/logger.js";
 import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { sendEmailService } from "../email/email.service.js";
-import { html } from "cheerio";
+// import { html } from "cheerio";
 import { createEmailBodyPricingPlanSelected } from "../../utils/email/payments/pricingPlanSelected.js";
 import { Order } from "../../../generated/prisma/client.js";
 
