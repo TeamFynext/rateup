@@ -1,4 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import prisma from "../../../utils/prisma.js";
 import { log } from "../../../utils/logger.js";
 import {
   syncProductSetsForCatalog,

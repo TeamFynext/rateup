@@ -170,6 +170,7 @@ model Org {
   expoPushTokens           ExpoPushToken[]
   WhatsappSettings         WhatsappSettings[]
   WaCatalog                WhatsappCatalog[]
+  productSets              WhatsappProductSet[]
   UserAssignedCount        UserAssignedCount[]
   Lifecycle                Lifecycle[]
   ContactCustomField       ContactCustomField[]
