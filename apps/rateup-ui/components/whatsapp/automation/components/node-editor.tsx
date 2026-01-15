@@ -68,6 +68,7 @@ import {
 } from "@/backend/whatsapp/settings/waSettings.query";
 import { useWaTemplates } from "@/backend/whatsapp/whatsapp.query";
 import { RateupButtonBlue } from "@/components/Button/RateupButtons";
+import { AccountSelector } from "@/components/input/AccountSelector";
 import {
   ContainedDatePickerInput,
   ContainedMultiSelect,
@@ -147,17 +148,18 @@ export default function NodeEditor({
     setNodeData(node.data);
   }, [node]);
 
-  // Handle input changes with proper type checking
   const handleInputChange = <T extends NodeType>(
     key: keyof NodeTypeMap[T],
     value: any,
   ) => {
-    const updatedData = {
-      ...nodeData,
-      [key]: value,
-    };
-    setNodeData(updatedData);
-    onChange(node.id, updatedData);
+    setNodeData((prevData) => {
+      const updatedData = {
+        ...prevData,
+        [key]: value,
+      };
+      onChange(node.id, updatedData);
+      return updatedData;
+    });
   };
 
   // Handle done button with validation
@@ -2527,7 +2529,7 @@ const CatalogNodeEditor = ({
     refetch,
   } = useWaAutomatedReplyById(flowbotId);
   const { data, isLoading } = useConnectedWaCatalog(
-    automation?.whatsappSettingsPhoneId,
+    typedData.whatsappSettingsPhoneId || automation?.whatsappSettingsPhoneId,
   );
 
   const syncProductSetsMut = useSyncProductSets();
@@ -2538,8 +2540,9 @@ const CatalogNodeEditor = ({
     if (
       data &&
       (!typedData.catalogId || typedData.catalogId !== data.catalogId)
-    )
+    ) {
       handleInputChange("catalogId", data.catalogId);
+    }
   }, [data]);
 
   const productSetOptions = useMemo(
@@ -2583,7 +2586,19 @@ const CatalogNodeEditor = ({
 
   if (isLoading || isPending || isLoadingProductSets) return <RateupLoader />;
   return (
-    <Stack>
+    <Stack gap="xs">
+      <AccountSelector
+        label="Select WhatsApp Account"
+        description="Choose the account linked to your Meta catalog"
+        value={
+          typedData.whatsappSettingsPhoneId ||
+          automation?.whatsappSettingsPhoneId ||
+          ""
+        }
+        onChange={(value) =>
+          handleInputChange("whatsappSettingsPhoneId", value)
+        }
+      />
       <ContainedSelection
         label={"Catalog Message type"}
         placeholder="Select"
@@ -2592,42 +2607,60 @@ const CatalogNodeEditor = ({
         data={Object.values(CatalogMessages)}
         allowDeselect={false}
       />
-      <Group gap={3}>
-        <Switch
-          label="Use Product Set"
-          description="Show a curated collection instead of the full catalog"
-          checked={typedData.useProductSet || false}
-          onChange={(event) => {
-            handleInputChange("useProductSet", event.currentTarget.checked);
-            if (!event.currentTarget.checked) {
-              // Clear product set selection when disabled
-              handleInputChange("productSetId", undefined);
-            }
-          }}
-        />
-        {typedData.useProductSet && (
-          <ActionIcon
-            onClick={() => syncProductSetsMut.mutate(typedData.catalogId)}
-            variant="light"
-            loading={syncProductSetsMut.isPending}
-            title="Sync product sets from Meta"
-          >
-            <IconRefresh />
-          </ActionIcon>
-        )}
-      </Group>
+      <Stack
+        gap="xs"
+        p="xs"
+        style={{ border: "1px solid #eee", borderRadius: "8px" }}
+      >
+        <Group justify="space-between" align="center">
+          <div>
+            <Text size="sm" fw={500}>
+              Use Product Set
+            </Text>
+            <Text size="xs" c="dimmed">
+              Show curated collections
+            </Text>
+          </div>
+          <Switch
+            size="sm"
+            checked={typedData.useProductSet || false}
+            onChange={(event) => {
+              handleInputChange("useProductSet", event.currentTarget.checked);
+              if (!event.currentTarget.checked) {
+                // Clear product set selection when disabled
+                handleInputChange("productSetId", undefined);
+              }
+            }}
+          />
+        </Group>
 
-      {typedData.useProductSet && (
-        <ContainedSelection
-          label="Select Product Set"
-          placeholder="Choose a product set"
-          data={productSetOptions}
-          value={typedData.productSetId || ""}
-          onChange={(value) => handleInputChange("productSetId", value)}
-          withAsterisk
-          description="Product sets are curated collections within your catalog"
-        />
-      )}
+        {typedData.useProductSet && (
+          <ContainedSelection
+            label="Selected Collection"
+            placeholder="Choose product set"
+            data={productSetOptions}
+            value={typedData.productSetId || ""}
+            onChange={(value) => handleInputChange("productSetId", value)}
+            withAsterisk
+            rightSectionPointerEvents="all"
+            rightSection={
+              <ActionIcon
+                onClick={() =>
+                  typedData.catalogId &&
+                  syncProductSetsMut.mutate(typedData.catalogId)
+                }
+                variant="subtle"
+                color="blue"
+                loading={syncProductSetsMut.isPending}
+                disabled={!typedData.catalogId}
+                title="Sync from Meta"
+              >
+                <IconRefresh size={16} />
+              </ActionIcon>
+            }
+          />
+        )}
+      </Stack>
       {typedData?.type === CatalogMessages.MultiProduct && (
         <WaTextEditor
           handleInputChange={(e) => handleInputChange("header", e)}
