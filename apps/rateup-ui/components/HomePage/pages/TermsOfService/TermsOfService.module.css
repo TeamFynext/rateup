@@ -1,5 +1,5 @@
 .terms-of-service-container {
-  color: var(--grey-color);
+  color: var(--grey-color-5);
   margin-bottom: 6.25rem;
   margin-top: 4.375rem;
   margin-left: 4rem;
@@ -8,7 +8,7 @@
 
 .terms-of-service-container > h1 {
   text-align: center;
-  color: var(--grey-color-2);
+  color: white;
   text-transform: uppercase;
   font-size: 1.625rem;
   margin: 1rem 0;

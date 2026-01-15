@@ -71,6 +71,17 @@ const SettingsLayout = ({ children }) => {
           description: translations("Team members & roles"),
           href: "/dashboard/settings/team",
         },
+        ...(user?.role === UserRole.SUPADM
+          ? [
+              {
+                id: "channels" as SettingsSection,
+                label: translations("Channel Permissions"),
+                icon: Shield,
+                description: translations("Manage team channel access"),
+                href: "/dashboard/settings/channels",
+              },
+            ]
+          : []),
       ],
     },
     {

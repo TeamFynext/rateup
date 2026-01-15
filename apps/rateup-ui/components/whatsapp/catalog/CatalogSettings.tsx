@@ -128,10 +128,6 @@ const CatalogSettings = ({ catalogData }) => {
               openConnect();
             }}
           />
-          {/* <ActionIcon variant="filled" radius={"xl"}>
-          <IconCheck size={16} stroke={4}/>
-        </ActionIcon> */}
-          {/* <RateupButtonBlue onClick={handleConnect} title="Connect" loading={update.isPending} /> */}
         </Group>
         <RateupButtonBlue
           leftIcon={<IconLogin2 />}
@@ -142,6 +138,31 @@ const CatalogSettings = ({ catalogData }) => {
           loading={disconnect.isPending}
         />
       </Group>
+
+      <Text fw={600} mt="md">
+        Shopify Checkout Automation
+      </Text>
+      <ContainedSwitchInput
+        label="Auto-generate Shopify Checkout Link"
+        description="Automatically send a Shopify checkout link when a customer sends a cart."
+        checked={catalogData.autoCheckoutEnabled}
+        onChange={(event) => {
+          update.mutate({ autoCheckoutEnabled: event.currentTarget.checked });
+        }}
+      />
+      {catalogData.autoCheckoutEnabled && (
+        <ContainedTextField
+          label="Checkout Message"
+          placeholder="Thanks for your order! Complete your purchase here: {{link}}"
+          value={catalogData.checkoutMessage || ""}
+          description="Use {{link}} where you want the Shopify URL to appear."
+          onBlur={(event) => {
+            if (event.target.value !== catalogData.checkoutMessage) {
+              update.mutate({ checkoutMessage: event.target.value });
+            }
+          }}
+        />
+      )}
 
       <ConfirmationModal
         forDeleteFunctionality

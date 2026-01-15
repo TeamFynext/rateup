@@ -171,6 +171,7 @@ export async function getWaChatMediaFile(mediaId: string) {
 export async function assignInboxToUser(data: {
   contactId: string;
   assignees: { userId: string; teamId: string }[];
+  messageId: string; // for internal message
 }): Promise<{ id: string; name: string }[]> {
   return (await axiosClient.post(`${WA_CONTACT_BASE_PATH}/assign`, data)).data;
 }

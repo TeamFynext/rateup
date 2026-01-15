@@ -271,17 +271,8 @@ type CreatePrivateMessageVariables = {
 };
 
 export function useCreatePrivateMessage(contactId) {
-  const qc = useQueryClient();
-
   return useMutation({
     mutationFn: ({ data }: CreatePrivateMessageVariables) =>
       createPrivateMessage(contactId, data),
-
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
-    },
   });
 }

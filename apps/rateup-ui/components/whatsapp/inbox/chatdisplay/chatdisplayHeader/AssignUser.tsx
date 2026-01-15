@@ -1,10 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 
-import { useQueryClient } from "@tanstack/react-query";
 import lodash from "lodash";
 import {
   Check,
-  CheckCheck,
   ChevronDown,
   ChevronRight,
   ChevronUp,
@@ -15,7 +13,10 @@ import {
 import { useTranslations } from "next-intl";
 
 import { WaMessageAssignStatus } from "@/types/enums";
-import useContactStore, { useContactsStore } from "@/app/dashboard/inbox/store";
+import useContactStore, {
+  useContactsStore,
+  useMessagesStore,
+} from "@/app/dashboard/inbox/store";
 import { useTeamsMembersOfOrg } from "@/backend/org/org.query";
 import { useTeamsByUser } from "@/backend/team/team.query";
 import {
@@ -34,6 +35,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Loader } from "@/components/ui/loader";
 import { useUser } from "@/context/UserContext";
+
+import { generateInternalMessageId } from "../../util";
 
 const AssignUser = ({
   contactId,
@@ -57,19 +60,18 @@ const AssignUser = ({
   } = useTeamsByUser();
   const { filterData } = useContactStore();
   const translations = useTranslations();
+  const prevAssignedRef = useRef<{ userId: string; teamId: string }[]>([]);
   const { user } = useUser();
   const { data: assignedUsers, isLoading: isAssignedLoading } =
     useGetAssignedUserForContact(contactId);
   const assignMut = useAssignInboxToUer(contactId, filterData);
-
+  const messagesStore = useMessagesStore();
   const [assignedStaff, setAssignedStaff] = useState<
     { userId: string; teamId: string; contactId: string }[]
   >([]);
   const [debouncedAssignedStaff, setDebouncedAssignedStaff] = useState<any[]>(
     [],
   );
-  const qc = useQueryClient();
-
   const { updateContactById } = useContactsStore();
   const isDefault = variant === "default";
 
@@ -91,9 +93,14 @@ const AssignUser = ({
           userId: a.assignedUserId,
           teamId: a.teamId,
           contactId: a.contactId,
+          name: a.assignedUser.name,
         }))
       : [];
     setAssignedStaff(assignees);
+    prevAssignedRef.current = assignees.map((a) => ({
+      userId: a.userId,
+      teamId: a.teamId,
+    }));
   }, [assignedUsers, contactId]);
 
   useEffect(() => {
@@ -116,8 +123,106 @@ const AssignUser = ({
         })),
       )
     ) {
+      const prevAssigned = prevAssignedRef.current;
+      const nextAssigned = debouncedAssignedStaff.map((a) => ({
+        userId: a.userId,
+        teamId: a.teamId,
+      }));
+
+      const newlyAssigned = nextAssigned.filter(
+        (next) =>
+          !prevAssigned.some(
+            (prev) =>
+              prev.userId === next.userId && prev.teamId === next.teamId,
+          ),
+      );
+      const unassigned = prevAssigned.filter(
+        (prev) =>
+          !nextAssigned.some(
+            (next) =>
+              next.userId === prev.userId && next.teamId === prev.teamId,
+          ),
+      );
+
+      if (!newlyAssigned.length && !unassigned.length) {
+        return;
+      }
+
+      let assignStatus: WaMessageAssignStatus | "REASSIGNED";
+
+      if (newlyAssigned.length && unassigned.length) {
+        assignStatus = "REASSIGNED";
+      } else if (newlyAssigned.length) {
+        assignStatus = WaMessageAssignStatus.ASSIGNED;
+      } else if (unassigned.length) {
+        assignStatus = WaMessageAssignStatus.UNASSIGNED;
+      } else {
+        return;
+      }
+
+      const assignedNames = newlyAssigned
+        .map((a) => staffMembers.find((s) => s.id === a.userId)?.name)
+        .filter(Boolean)
+        .join(", ");
+
+      const unassignedNames = unassigned
+        .map((a) => staffMembers.find((s) => s.id === a.userId)?.name)
+        .filter(Boolean)
+        .join(", ");
+
+      let message = "";
+
+      if (assignStatus === "REASSIGNED") {
+        message = `Chat reassigned${
+          unassignedNames ? ` from ${unassignedNames}` : ""
+        }${assignedNames ? ` to ${assignedNames}` : ""}`;
+      } else if (assignStatus === WaMessageAssignStatus.ASSIGNED) {
+        message = `Chat assigned to ${assignedNames}`;
+      } else if (assignStatus === WaMessageAssignStatus.UNASSIGNED) {
+        message = `Chat revoked from ${unassignedNames}`;
+      }
+
+      const id = generateInternalMessageId();
+      const newMessage = {
+        id: id,
+        contactId: contactId,
+        waCreatedAt: new Date().toISOString(),
+        messageBody: {
+          send: null,
+          receive: null,
+          internal: {
+            text: {
+              body: message,
+            },
+            assignedUsers: [],
+            assignStatus: assignStatus,
+            triggeredByUser: {
+              id: user.userId,
+              name: user.userName,
+            },
+          },
+          exchangeProcess: "internal",
+        },
+        sourcePlatform: "INTERNAL",
+        sourceIdentifier: null,
+        sendBy: user.userId,
+        sender: {
+          name: user.userName,
+          profilePhoto: user?.profilePhoto,
+        },
+        stats: {
+          read: "",
+          sent: "",
+          failed: "",
+          delivered: "",
+        },
+        messageId: id,
+      };
+      prevAssignedRef.current = assignees;
+      messagesStore.addMessage(`${contactId}_all`, newMessage as any);
+      messagesStore.addMessage(`${contactId}_internal`, newMessage as any);
       assignMut.mutate(
-        { contactId, assignees },
+        { contactId, assignees, messageId: id },
         {
           onSuccess: () => {
             updateContactById(contactId, (contact) => ({
@@ -128,7 +233,10 @@ const AssignUser = ({
                 return { id: user?.id, name: user?.name };
               }),
             }));
-            qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+          },
+          onError: () => {
+            messagesStore.removeMessage(`${contactId}_all`, id);
+            messagesStore.removeMessage(`${contactId}_internal`, id);
           },
         },
       );

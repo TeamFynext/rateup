@@ -325,6 +325,13 @@ export default function WaInboxSingleMessageLayout(props: Props) {
                     </div>
                   )}
                   {messageObject?.messageBody?.internal?.assignStatus ===
+                    "REASSIGNED" && (
+                    <div className="flex items-center gap-1 text-indigo-600">
+                      <UserCog className="w-4 h-4" />
+                      <span>REASSIGNED</span>
+                    </div>
+                  )}
+                  {messageObject?.messageBody?.internal?.assignStatus ===
                     WaMessageAssignStatus.RESOLVED && (
                     <div className="flex items-center gap-1 text-green-600">
                       <CheckCircle2 className="w-4 h-4" />
@@ -372,7 +379,9 @@ export default function WaInboxSingleMessageLayout(props: Props) {
               className={`flex items-center space-x-2 mt-1 px-2 ${
                 exchangeProcess === "send" || exchangeProcess === "privateNote"
                   ? "justify-end"
-                  : "justify-start"
+                  : exchangeProcess === "internal"
+                    ? "justify-center"
+                    : "justify-start"
               }`}
             >
               {!messageObject?.stats?.failed &&
@@ -393,7 +402,9 @@ export default function WaInboxSingleMessageLayout(props: Props) {
                   {formatToCustomTime(messageObject?.waCreatedAt)}
                 </span>
               ) : (
-                ""
+                <span className="text-xs text-muted-foreground">
+                  {formatToCustomTime(messageObject?.waCreatedAt)}
+                </span>
               )}
               {exchangeProcess === "send" && messageObject.stats && (
                 <div>{getLatestStatus(messageObject?.stats)}</div>

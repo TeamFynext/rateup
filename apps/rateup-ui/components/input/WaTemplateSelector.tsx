@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import { SelectProps } from "@mantine/core";
 import { useTranslations } from "next-intl";
@@ -36,10 +36,14 @@ const WaTemplateSelector = ({
     ? useTemplatesAvailableForTeam(teamId)
     : allTemplates;
 
-  const templatesData = templates?.map((t) => ({
-    value: t?.id,
-    label: t?.data?.name,
-  }));
+  const templatesData = useMemo(
+    () =>
+      templates?.map((t) => ({
+        value: String(t?.id),
+        label: t?.data?.name,
+      })),
+    [templates],
+  );
 
   useEffect(() => {
     if (
@@ -49,7 +53,7 @@ const WaTemplateSelector = ({
     ) {
       onChange(null);
     }
-  }, [value, templatesData]);
+  }, [value, templatesData, onChange]);
 
   if (isLoading) return <SelectSkeleton />;
 

@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 import { ThemeIcon } from "@mantine/core";
 import { IconBrandInstagram, IconBrandWhatsapp } from "@tabler/icons-react";
 import { MessageCircle } from "lucide-react";
@@ -43,3 +45,12 @@ export const InstagramIcon = ({ size = "xs" }: { size?: string | number }) => {
     </ThemeIcon>
   );
 };
+
+export function generateInternalMessageId() {
+  return (
+    "wamid." +
+    Date.now().toString(36) +
+    "-" +
+    crypto.randomBytes(16).toString("hex")
+  );
+}
