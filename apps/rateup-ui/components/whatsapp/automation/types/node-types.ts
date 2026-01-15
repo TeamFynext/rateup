@@ -263,6 +263,17 @@ export interface CatalogNodeData extends BaseNodeData {
     productItems: string[];
   }[];
   catalogId: string;
+  whatsappSettingsPhoneId?: string;
+  useProductSet?: boolean;
+  productSetId?: string;
+}
+
+export interface WhatsappProductSet {
+  productSetId: string;
+  catalogId: string;
+  name: string;
+  orgId: string;
+  productIds: string[];
 }
 
 // Map of node types to their data types
