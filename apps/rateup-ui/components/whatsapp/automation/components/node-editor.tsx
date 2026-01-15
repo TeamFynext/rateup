@@ -2587,18 +2587,6 @@ const CatalogNodeEditor = ({
   if (isLoading || isPending || isLoadingProductSets) return <RateupLoader />;
   return (
     <Stack gap="xs">
-      <AccountSelector
-        label="Select WhatsApp Account"
-        description="Choose the account linked to your Meta catalog"
-        value={
-          typedData.whatsappSettingsPhoneId ||
-          automation?.whatsappSettingsPhoneId ||
-          ""
-        }
-        onChange={(value) =>
-          handleInputChange("whatsappSettingsPhoneId", value)
-        }
-      />
       <ContainedSelection
         label={"Catalog Message type"}
         placeholder="Select"
