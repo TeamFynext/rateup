@@ -162,3 +162,24 @@ type Image = {
 type Document = {
   link: string;
 };
+
+
+export interface MembersResponse {
+    message: string;
+    data: TeamMembersData[];
+  }
+
+  type Team = {
+    team_id: string;
+    team_name: string;
+    team_code: string;
+  };
+  export interface TeamMembersData {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    teams: Team[];
+    isPaused?: boolean;
+    status: "online" | "offline";
+  }

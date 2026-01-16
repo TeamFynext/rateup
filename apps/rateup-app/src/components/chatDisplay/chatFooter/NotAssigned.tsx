@@ -1,73 +1,70 @@
 import { useLoggedInUser } from "@/src/api/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { UserCheck, CircleUser } from "lucide-react-native";
-import { assignInboxToUser } from "@/src/api/inbox/contacts/contacts.api";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { CircleUser } from "lucide-react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  useColorScheme,
+} from "react-native";
 import { useChatAssignStatusStore } from "@/src/utils/store";
-
+import { useAssignInboxToUser } from "@/src/api/inbox/messages/message.query";
+import AssignToUser from "./AssignToUser";
+import { generateInternalMessageId } from "@/src/utils/chatbox_utils";
 const NotAssigned = ({ contactId }: { contactId: string }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const queryClient = useQueryClient();
-  const router = useRouter();
   const { data: userData, isLoading: loadingUser } = useLoggedInUser();
   const setWaAssignStatus = useChatAssignStatusStore(
     (state) => state.setWaAssignStatus
   );
-
-  const { mutate, isPending: assigning } = useMutation({
-    mutationFn: async () => {
-      const { teams, userId } = userData;
-      return assignInboxToUser({
+  const assignMut = useAssignInboxToUser(contactId);
+  const handleAssignToMe = async () => {
+    const { teams, userId } = userData;
+    const id = generateInternalMessageId();
+    assignMut.mutate(
+      {
+        messageId: id,
         contactId,
-        assignedUserIds: [userId],
-        teamId: teams[0],
-      });
-    },
-    onSuccess: () => {
-      setWaAssignStatus("ASSIGNED");
-      queryClient.invalidateQueries({
-        queryKey: ["assigned-contact", contactId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
-    },
-  });
-
-  const handleAssignToMe = () => {
-    if (!userData) return;
-    mutate();
+        assignees: [
+          {
+            userId: userId,
+            teamId: teams[0],
+          },
+        ],
+      },
+      {
+        onSuccess: () => {
+          setWaAssignStatus("ASSIGNED");
+          queryClient.invalidateQueries({
+            queryKey: ["assigned-contact", contactId],
+          });
+          queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
+          queryClient.invalidateQueries({
+            queryKey: ["assignedInboxUser", contactId],
+          });
+        },
+      }
+    );
   };
 
   return (
-    <View className="bg-white flex-row p-3 justify-around">
-      <TouchableOpacity
-        onPress={handleAssignToMe}
-        disabled={assigning || loadingUser}
-      >
-        <View className="bg-[#00998733] rounded-full w-[40vw] flex-row p-2 justify-around items-center">
-          {assigning || loadingUser ? (
+    <View className="bg-white dark:bg-gray-900 flex-row p-3 justify-center gap-4">
+      <TouchableOpacity onPress={handleAssignToMe} disabled={loadingUser}>
+        <View className="rounded-xl flex-row justify-center items-center gap-1 border dark:border-white px-4 py-2">
+          {loadingUser ? (
             <ActivityIndicator size="small" color="#009987" />
           ) : (
             <>
-              <CircleUser color={"#009987"} />
-              <Text className="text-rateUpGreen">Assign To Me</Text>
+              <CircleUser color={isDark ? "white" : "black"} size={18} />
+              <Text className="dark:text-white">Assign To Me</Text>
             </>
           )}
         </View>
       </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() =>
-          router.push({
-            pathname: "/protected/inbox/contact/AssignToUser",
-            params: { contactId: contactId },
-          })
-        }
-      >
-        <View className="bg-[#FFFFFF] border border-rateUpGreen rounded-full w-[40vw] flex-row p-2 justify-around items-center">
-          <UserCheck color={"#009987"} />
-          <Text className="text-rateUpGreen">Assign To Member</Text>
-        </View>
-      </TouchableOpacity>
+      <AssignToUser contactId={contactId} />
     </View>
   );
 };

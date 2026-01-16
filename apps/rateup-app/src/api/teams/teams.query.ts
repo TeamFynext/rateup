@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getMembersByTeam, getTeamsByUser } from "./teams.api";
+import { getMembersByTeam, getTeamsByUser, getTeamsMembersOfOrg } from "./teams.api";
 
 export function useTeamsByUser() {
   return useQuery({
@@ -15,3 +15,10 @@ export function useUserByTeam(teamId: string) {
     enabled: !!teamId,
   });
 }
+
+export const useTeamsMembersOfOrg = () => {
+  return useQuery({
+    queryKey: ["orgTeamsDataQuery"],
+    queryFn: () => getTeamsMembersOfOrg(),
+  });
+};

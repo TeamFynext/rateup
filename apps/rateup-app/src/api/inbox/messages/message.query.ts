@@ -5,6 +5,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  assignInboxToUser,
+  getAssignedUserForContact,
   getMessagesByContactId,
   getWaChatMediaFile,
   orgWsAuthCheck,
@@ -52,5 +54,28 @@ export const useOrgWsAuthCheck = (enabled: boolean) => {
     queryKey: ["org_auth_check_for_ws"],
     queryFn: orgWsAuthCheck,
     enabled,
+  });
+};
+
+
+export const useAssignInboxToUser = (contactId:any) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: assignInboxToUser,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["assignedInboxUser"] });
+      qc.invalidateQueries({ queryKey: ["contacts"] });
+      qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
+      qc.invalidateQueries({ queryKey: ["notification"] });
+      qc.invalidateQueries({ queryKey: ["notificationCount"] });
+    }
+  });
+};
+
+export const useGetAssignedUserForContact = (contactId:any) => {
+  return useQuery({
+    queryKey: ["assignedInboxUser", contactId],
+    queryFn: () => getAssignedUserForContact(contactId),
+    enabled: !!contactId,
   });
 };

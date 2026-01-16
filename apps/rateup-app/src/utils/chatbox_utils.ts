@@ -25,3 +25,13 @@ export function isInboxSessionExpired(timeStamp: string) {
   const diffInHours = currentTime.diff(givenTime, "hours");
   return diffInHours >= 24;
 }
+
+export function generateInternalMessageId() {
+  return (
+    "wamid." +
+    Date.now().toString(36) +
+    "-" +
+    Math.random().toString(36).slice(2, 10)
+  );
+}
+

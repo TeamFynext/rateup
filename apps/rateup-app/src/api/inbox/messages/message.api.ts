@@ -30,3 +30,16 @@ export async function orgWsAuthCheck() {
     afterAuthId: string;
   };
 }
+
+export async function assignInboxToUser(data: {
+  contactId: string;
+  assignees: { userId: string; teamId: string }[];
+  messageId: string; // for internal message
+}): Promise<{ id: string; name: string }[]> {
+  return (await axios.post(`/api/wa/inbox/message/assign`, data)).data;
+}
+
+export async function getAssignedUserForContact(contactId:any) {
+  return (await axios.get(`/api/wa/inbox/message/assign/${contactId}`))
+    .data;
+}
