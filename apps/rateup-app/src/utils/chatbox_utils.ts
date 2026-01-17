@@ -34,4 +34,3 @@ export function generateInternalMessageId() {
     Math.random().toString(36).slice(2, 10)
   );
 }
-

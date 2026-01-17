@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   useColorScheme,
 } from "react-native";
-import { useChatAssignStatusStore } from "@/src/utils/store";
 import { useAssignInboxToUser } from "@/src/api/inbox/messages/message.query";
 import AssignToUser from "./AssignToUser";
 import { generateInternalMessageId } from "@/src/utils/chatbox_utils";
@@ -17,9 +16,6 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
   const isDark = colorScheme === "dark";
   const queryClient = useQueryClient();
   const { data: userData, isLoading: loadingUser } = useLoggedInUser();
-  const setWaAssignStatus = useChatAssignStatusStore(
-    (state) => state.setWaAssignStatus
-  );
   const assignMut = useAssignInboxToUser(contactId);
   const handleAssignToMe = async () => {
     const { teams, userId } = userData;
@@ -37,9 +33,11 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
       },
       {
         onSuccess: () => {
-          setWaAssignStatus("ASSIGNED");
           queryClient.invalidateQueries({
             queryKey: ["assigned-contact", contactId],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["wa-messages", contactId]
           });
           queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
           queryClient.invalidateQueries({
@@ -64,7 +62,7 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
           )}
         </View>
       </TouchableOpacity>
-      <AssignToUser contactId={contactId} />
+      <AssignToUser contactId={contactId} color />
     </View>
   );
 };

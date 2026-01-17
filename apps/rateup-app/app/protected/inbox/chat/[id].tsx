@@ -49,7 +49,7 @@ const ChatDisplay = () => {
   }, [id]);
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-gray-950">
+    <SafeAreaView className="flex-1 bg-white dark:bg-slate-950">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}

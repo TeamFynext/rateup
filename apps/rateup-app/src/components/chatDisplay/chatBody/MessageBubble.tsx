@@ -20,6 +20,7 @@ import {
 } from "lucide-react-native";
 import { colors } from "@/src/constants/constants";
 import { WaMessageAssignStatus } from "@/src/api/inbox/types";
+import { getClosedIcon } from "@/src/util";
 
 type MessageBubbleProps = {
   messageContent: any;
@@ -81,20 +82,17 @@ const MessageBubble = ({
     }
   };
 
-  const getIcon = (status: any) => {
-    switch (status) {
-      case WaMessageAssignStatus.RESOLVED:
-        return <CheckCircle2 size={16} color={colors["status-resolved"]} />;
-      case WaMessageAssignStatus.UNRESOLVED:
-        return <Circle size={16} color={colors["status-unresolved"]} />;
-      case WaMessageAssignStatus.CLOSED:
-        return <Archive size={16} color={colors["status-closed"]} />;
-      case WaMessageAssignStatus.SPAM:
-        return <AlertCircle size={16} color={colors["status-spam"]} />;
+  const getBorder = () =>{
+    switch (exchangeProcess){
+      case "send":
+      case "privateNote":
+        return "rounded-br-md rounded-3xl";
+      case "internal":
+        return "rounded-xl";
       default:
-        return <UserCog size={16} color={colors["status-default"]} />;
+        return "rounded-bl-md rounded-3xl";
     }
-  };
+  }
 
   const renderContent = useCallback(() => {
     switch (messageType) {
@@ -144,7 +142,8 @@ const MessageBubble = ({
 
   return (
     <View
-      className={`relative flex-row px-2 w-full mb-2 items-center gap-1 ${
+      className={`relative flex-row px-2 w-full mb-2 items-center gap-1
+         ${
         exchangeProcess === "send" || exchangeProcess === "privateNote"
           ? "justify-end"
           : exchangeProcess === "internal"
@@ -153,7 +152,7 @@ const MessageBubble = ({
       }`}
     >
       <View
-        className={`flex-col max-w-[75%] px-3 py-2 rounded-xl ${getBgColor()}`}
+        className={`flex-col max-w-[75%] px-3 py-2 shadow-md ${getBorder()} ${getBgColor()}`}
       >
         {exchangeProcess === "privateNote" && (
           <View className="flex-row items-center justify-start gap-1">
@@ -166,7 +165,7 @@ const MessageBubble = ({
         )}
         {exchangeProcess === "internal" && (
           <View className="flex-row items-center gap-1">
-            {getIcon(assignStatus)}
+            {getClosedIcon(assignStatus)}
             <Text className={`${getTextColor()} opacity-70 p-1`}>
               {assignStatus}
             </Text>

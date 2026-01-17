@@ -113,7 +113,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
       const shouldShowDate = currentDate !== nextDate;
       return (
-        <View className="bg-slate-950">
+        <View className="bg-gray-50 dark:bg-slate-800">
           {shouldShowDate && (
             <DateSeparator
               label={dayjs(item.createdAt).format("DD MMM YYYY")}
@@ -140,7 +140,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   if (isPending) {
     return (
-      <View className="flex-1 justify-center items-center bg-blue-50 dark:bg-gray-950">
+      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-slate-800">
         <ActivityIndicator size="large" color="#009987" />
       </View>
     );
@@ -148,7 +148,7 @@ const ChatBody = ({ id }: { id: string }) => {
 
   if (isError) {
     return (
-      <View className="flex-1 justify-center items-center bg-blue-50 dark:bg-gray-950">
+      <View className="flex-1 justify-center items-center bg-gray-50 dark:bg-slate-800">
         <Text className="text-red-500">
           {error?.message || "Something went wrong"}
         </Text>
@@ -157,7 +157,7 @@ const ChatBody = ({ id }: { id: string }) => {
   }
 
   return (
-    <View className="flex-1 bg-blue-50 dark:bg-gray-950">
+    <View className="flex-1 bg-gray-50 dark:bg-slate-800">
       <FlashList
         inverted
         data={messageList}

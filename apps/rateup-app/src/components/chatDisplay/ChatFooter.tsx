@@ -6,7 +6,7 @@ import {
   Pressable,
   FlatList,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IIcon } from "@/src/constants/imageExports";
 import NotAssigned from "./chatFooter/NotAssigned";
 import MessageSendPanel from "./chatFooter/MessageSendPanel";
@@ -24,13 +24,13 @@ const ChatFooter = ({ id }: { id: string }) => {
   const { data: assignedUsers } = useGetAssignedUserForContact(id);
   const { userId } = useAuth();
   const [isModalVisible, setModalVisible] = useState(false);
-
   let currentUserAssignment = assignedUsers?.find(
-    (entry: any) => entry.assignedUserId === userId
+    (entry: any) => entry.assignedUserId == userId
   );
-
+  const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
+  console.log("assignedUsers:",assignedUsers);
+  console.log("currentUser:",currentUserAssignment);
   const toggleModal = () => setModalVisible(!isModalVisible);
-
   const AssignedUsersModal = () => (
     <Modal
       animationType="fade"
@@ -72,6 +72,7 @@ const ChatFooter = ({ id }: { id: string }) => {
   );
 
   if (
+    (!currentUserAssignment) ||
     waAssignStatus === "UNASSIGNED" ||
     waAssignStatus === "NEW" ||
     WaMessageClosedStatus.includes(waAssignStatus as WaMessageAssignStatus)
@@ -89,7 +90,7 @@ const ChatFooter = ({ id }: { id: string }) => {
 
   return (
     <View>
-      {!currentUserAssignment && (
+      {!currentUserAssignment && hasAssignedUsers && (
         <View className="bg-black flex-row py-3 px-1 items-center justify-center gap-1 flex-wrap">
           <IIcon />
           <Text className="text-white">This chat is not assigned to you.</Text>

@@ -24,23 +24,24 @@ import {
   generateInternalMessageId,
   namePreview,
 } from "@/src/utils/chatbox_utils";
-import { Check, User, UserCheck, Users } from "lucide-react-native";
+import { Check, UserCheck, Users } from "lucide-react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { useChatAssignStatusStore } from "@/src/utils/store";
 import { useToast } from "react-native-toast-notifications";
+import { colors } from "@/src/constants/constants";
 
 export default function AssignToUser({
   contactId,
-  color = "white",
+  color,
+  iconSize=16,
+  fontSize=14
 }: {
   contactId: string;
-  color?: string;
+  iconSize?:number;
+  color?: boolean;
+  fontSize?:number;
 }) {
   const [visible, setVisible] = useState(false);
   const assignMut = useAssignInboxToUser(contactId);
-  const setWaAssignStatus = useChatAssignStatusStore(
-    (state) => state.setWaAssignStatus
-  );
   const { data: teamRes, isPending: teamsLoading } = useTeamsByUser();
   const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
   const { data: assignedUsers, isLoading: isAssignedLoading } =
@@ -48,6 +49,8 @@ export default function AssignToUser({
   const queryClient = useQueryClient();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const buttonBgColor = color? colors["primary-blue"] :isDark? colors["gray-900"]:"white";
+  const textColor = color? "white" : isDark? "white":"black"
   const toast = useToast();
 
   const membersByTeam = useMemo(() => {
@@ -91,9 +94,11 @@ export default function AssignToUser({
             type: "success",
             duration: 2000,
           });
-          setWaAssignStatus("ASSIGNED");
           queryClient.invalidateQueries({
             queryKey: ["assigned-contact", contactId],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["wa-messages", contactId]
           });
           queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
           queryClient.invalidateQueries({
@@ -108,10 +113,15 @@ export default function AssignToUser({
     <>
       <TouchableOpacity
         onPress={() => setVisible(true)}
-        className="py-1 px-4 bg-primaryBlue rounded-xl flex-row items-center justify-center gap-1"
+        style={{
+          backgroundColor: buttonBgColor
+        }}
+        className="py-1 px-4 rounded-xl flex-row items-center justify-center gap-1"
       >
-        <UserCheck color={color} size={16} />
-        <Text className="text-white font-semibold">Assign</Text>
+        <UserCheck color={textColor} size={iconSize}  />
+        <Text style={{color:textColor, fontSize:fontSize}} className={`font-semibold`}>
+          Assign
+        </Text>
       </TouchableOpacity>
 
       <Modal

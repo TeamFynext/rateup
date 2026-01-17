@@ -1,12 +1,14 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { MessageCircle, StarIcon } from "lucide-react-native";
+import { AlertCircle, Archive, CheckCircle2, MessageCircle, StarIcon, UserCog ,Circle} from "lucide-react-native";
 import { QuestionType2, WaQuestions } from "./components/flow/enum";
 import {
   IconBrandWhatsapp,
   IconBrandInstagram,
 } from "@tabler/icons-react-native";
 import { MessagePlatform } from "./constants/enums";
+import { WaMessageAssignStatus } from "./api/inbox/types";
+import { colors } from "./constants/constants";
 
 interface StarRowProps {
   count: number;
@@ -182,3 +184,19 @@ export function getSoucePlatformIconAndColor(
       };
   }
 }
+
+export const getClosedIcon = (status: any) => {
+    switch (status) {
+      case WaMessageAssignStatus.RESOLVED:
+        return <CheckCircle2 size={16} color={colors["status-resolved"]} />;
+      case WaMessageAssignStatus.UNRESOLVED:
+        return <Circle size={16} color={colors["status-unresolved"]} />;
+      case WaMessageAssignStatus.CLOSED:
+        return <Archive size={16} color={colors["status-closed"]} />;
+      case WaMessageAssignStatus.SPAM:
+        return <AlertCircle size={16} color={colors["status-spam"]} />;
+      default:
+        return <UserCog size={16} color={colors["status-default"]} />;
+    }
+  };
+
