@@ -943,7 +943,7 @@ export function validateNodeData(node: TypedNode): {
             valid: false,
             message: `${data.label}: Header Text required.`,
           };
-        if (!data.sections.length)
+        if (!data.sections?.length)
           return {
             valid: false,
             message: `${data.label}: At least one section required`,
@@ -959,7 +959,7 @@ export function validateNodeData(node: TypedNode): {
           };
         }
         for (const section of data.sections) {
-          if (!section.productItems.length) {
+          if (!section.productItems?.length) {
             return {
               valid: false,
               message: `${data.label}: At least one product per section is required`,
@@ -971,6 +971,14 @@ export function validateNodeData(node: TypedNode): {
           return {
             valid: false,
             message: `${data.label}: maximum of 30 products can be selected across all sections`,
+          };
+        }
+      }
+      if (data.type === CatalogMessages.ProductSet) {
+        if (!data.productSetId) {
+          return {
+            valid: false,
+            message: `${data.label}: Please select a product set.`,
           };
         }
       }
