@@ -1099,7 +1099,10 @@ export async function processNextNode(
       }
       default:
         // For text, buttons, and other message types
-        const waMessage: any = convertNodeToWhatsAppMessage(node, userPhone);
+        const waMessage: any = await convertNodeToWhatsAppMessage(
+          node,
+          userPhone,
+        );
         await sendMessage(
           orgId,
           waMessage,
