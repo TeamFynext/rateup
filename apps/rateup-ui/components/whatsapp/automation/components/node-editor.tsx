@@ -2514,6 +2514,7 @@ export enum CatalogMessages {
   Catalog = "Catalog",
   SingleProduct = "Single-Product",
   MultiProduct = "Multi-Product",
+  ProductSet = "Product-Set",
 }
 
 const CatalogNodeEditor = ({
@@ -2591,65 +2592,54 @@ const CatalogNodeEditor = ({
         label={"Catalog Message type"}
         placeholder="Select"
         value={typedData?.type || ""}
-        onChange={(value) => handleInputChange("type", value)}
+        onChange={(value) => {
+          handleInputChange("type", value);
+          // Clear product set when changing away from ProductSet type
+          if (value !== CatalogMessages.ProductSet) {
+            handleInputChange("useProductSet", false);
+            handleInputChange("productSetId", undefined);
+          } else {
+            // Set useProductSet to true when ProductSet is selected
+            handleInputChange("useProductSet", true);
+          }
+          // Initialize sections array for Multi-Product if not already present
+          if (value === CatalogMessages.MultiProduct && !typedData.sections) {
+            handleInputChange("sections", []);
+          }
+        }}
         data={Object.values(CatalogMessages)}
         allowDeselect={false}
       />
-      <Stack
-        gap="xs"
-        p="xs"
-        style={{ border: "1px solid #eee", borderRadius: "8px" }}
-      >
-        <Group justify="space-between" align="center">
-          <div>
-            <Text size="sm" fw={500}>
-              Use Product Set
-            </Text>
-            <Text size="xs" c="dimmed">
-              Show curated collections
-            </Text>
-          </div>
-          <Switch
-            size="sm"
-            checked={typedData.useProductSet || false}
-            onChange={(event) => {
-              handleInputChange("useProductSet", event.currentTarget.checked);
-              if (!event.currentTarget.checked) {
-                // Clear product set selection when disabled
-                handleInputChange("productSetId", undefined);
-              }
-            }}
-          />
-        </Group>
 
-        {typedData.useProductSet && (
-          <ContainedSelection
-            label="Selected Collection"
-            placeholder="Choose product set"
-            data={productSetOptions}
-            value={typedData.productSetId || ""}
-            onChange={(value) => handleInputChange("productSetId", value)}
-            withAsterisk
-            rightSectionPointerEvents="all"
-            rightSection={
-              <ActionIcon
-                onClick={() =>
-                  typedData.catalogId &&
-                  syncProductSetsMut.mutate(typedData.catalogId)
-                }
-                variant="subtle"
-                color="blue"
-                loading={syncProductSetsMut.isPending}
-                disabled={!typedData.catalogId}
-                title="Sync from Meta"
-              >
-                <IconRefresh size={16} />
-              </ActionIcon>
-            }
-          />
-        )}
-      </Stack>
-      {typedData?.type === CatalogMessages.MultiProduct && (
+      {typedData?.type === CatalogMessages.ProductSet && (
+        <ContainedSelection
+          label="Product Set"
+          placeholder="Choose product set"
+          data={productSetOptions}
+          value={typedData.productSetId || ""}
+          onChange={(value) => handleInputChange("productSetId", value)}
+          withAsterisk
+          description="Products from this set will be displayed"
+          rightSectionPointerEvents="all"
+          rightSection={
+            <ActionIcon
+              onClick={() =>
+                typedData.catalogId &&
+                syncProductSetsMut.mutate(typedData.catalogId)
+              }
+              variant="subtle"
+              color="blue"
+              loading={syncProductSetsMut.isPending}
+              disabled={!typedData.catalogId}
+              title="Sync from Meta"
+            >
+              <IconRefresh size={16} />
+            </ActionIcon>
+          }
+        />
+      )}
+      {(typedData?.type === CatalogMessages.MultiProduct ||
+        typedData?.type === CatalogMessages.ProductSet) && (
         <WaTextEditor
           handleInputChange={(e) => handleInputChange("header", e)}
           content={typedData.header || ""}
