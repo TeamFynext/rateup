@@ -1906,7 +1906,7 @@ model CatalogPhoneIdMap {
 }
 
 model WhatsappProductSet {
-  productSetId String          @unique
+  productSetId String          @id
   catalogId    String
   catalog      WhatsappCatalog @relation(fields: [catalogId], references: [catalogId], onDelete: Cascade)
   name         String
