@@ -96,12 +96,13 @@ enum CatalogMessages {
   Catalog = "Catalog",
   SingleProduct = "Single-Product",
   MultiProduct = "Multi-Product",
+  ProductSet = "Product-Set",
 }
 
-export function convertNodeToWhatsAppMessage(
+export async function convertNodeToWhatsAppMessage(
   node: TypedNode,
   recipient: string,
-): WhatsAppMessage | null {
+): Promise<WhatsAppMessage | null> {
   const baseMessage = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -367,7 +368,16 @@ export function convertNodeToWhatsAppMessage(
 
     case "catalogNode": {
       const typedData = node?.data as NodeTypeMap["catalogNode"];
-      if (typedData.type === CatalogMessages.Catalog)
+      log.trace({ catalogNodeData: typedData }, "Processing catalog node");
+
+      if (typedData.type === CatalogMessages.Catalog) {
+        const parameters: any = {};
+        if (typedData.thumbnailProductId?.length) {
+          parameters.thumbnail_product_retailer_id =
+            typedData.thumbnailProductId;
+        }
+
+        log.trace({ parameters }, "Catalog message parameters");
         return {
           ...baseMessage,
           type: "interactive",
@@ -378,12 +388,8 @@ export function convertNodeToWhatsAppMessage(
             },
             action: {
               name: "catalog_message",
-              parameters: typedData?.thumbnailProductId?.length
-                ? {
-                    thumbnail_product_retailer_id:
-                      typedData?.thumbnailProductId,
-                  }
-                : undefined,
+              parameters:
+                Object.keys(parameters).length > 0 ? parameters : undefined,
             },
             footer: typedData.footer
               ? {
@@ -392,7 +398,11 @@ export function convertNodeToWhatsAppMessage(
               : undefined,
           },
         };
-      else if (typedData.type === CatalogMessages.SingleProduct) {
+      } else if (typedData.type === CatalogMessages.SingleProduct) {
+        log.trace(
+          { productRetailerId: typedData.productRetailerId },
+          "Single product message",
+        );
         return {
           ...baseMessage,
           type: "interactive",
@@ -414,7 +424,113 @@ export function convertNodeToWhatsAppMessage(
             },
           },
         };
+      } else if (typedData.type === CatalogMessages.ProductSet) {
+        log.trace(
+          {
+            useProductSet: typedData.useProductSet,
+            productSetId: typedData.productSetId,
+          },
+          "Product set message data",
+        );
+
+        // Check if product set is selected
+        if (!typedData.productSetId) {
+          log.error(
+            { typedData },
+            "Product set ID is required for Product-Set type",
+          );
+          throw new Error(
+            "Product set selection is required. Please select a product set in the node editor.",
+          );
+        }
+
+        // Fetch product set from database to get product IDs
+        const productSet = await prisma.whatsappProductSet.findUnique({
+          where: { productSetId: typedData.productSetId },
+        });
+
+        if (
+          !productSet ||
+          !productSet.productIds ||
+          productSet.productIds.length === 0
+        ) {
+          log.error(
+            { productSetId: typedData.productSetId },
+            "Product set not found or has no products",
+          );
+          throw new Error(
+            "Selected product set has no products. Please sync product sets or select a different set.",
+          );
+        }
+
+        log.trace(
+          {
+            productSetName: productSet.name,
+            productCount: productSet.productIds.length,
+          },
+          "Found product set with products",
+        );
+
+        // Create a multi-product message with all products from the set
+        return {
+          ...baseMessage,
+          type: "interactive",
+          interactive: {
+            type: "product_list",
+            header: {
+              type: "text",
+              text: parseToWhatsAppFormat(typedData.header) || productSet.name,
+            },
+            body: {
+              text:
+                parseToWhatsAppFormat(typedData.body) || "Browse our products",
+            },
+            footer: typedData.footer
+              ? {
+                  text: parseToWhatsAppFormat(typedData.footer),
+                }
+              : undefined,
+            action: {
+              catalog_id: typedData.catalogId,
+              sections: [
+                {
+                  title: productSet.name,
+                  product_items: productSet.productIds
+                    .slice(0, 30)
+                    .map((productId) => ({
+                      product_retailer_id: productId,
+                    })),
+                },
+              ],
+            },
+          },
+        };
       } else if (typedData.type === CatalogMessages.MultiProduct) {
+        log.trace(
+          {
+            sections: typedData.sections,
+            sectionsLength: typedData.sections?.length,
+            useProductSet: typedData.useProductSet,
+            productSetId: typedData.productSetId,
+          },
+          "Multi-product message data",
+        );
+
+        // Check if sections exist and are valid
+        if (
+          !typedData.sections ||
+          !Array.isArray(typedData.sections) ||
+          typedData.sections.length === 0
+        ) {
+          log.error(
+            { typedData },
+            "Multi-product message requires at least one section with products",
+          );
+          throw new Error(
+            "Multi-product message requires at least one section with products. Please add sections in the node editor.",
+          );
+        }
+
         return {
           ...baseMessage,
           type: "interactive",
