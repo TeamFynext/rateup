@@ -195,18 +195,10 @@ export const LoyaltyWaTemplateConfig = ({
     form.setValues(initialValues);
   }, [config]);
 
-  const typeData = Object.values(LoyaltyTemplateTypes)
-    .map((t) => ({
-      value: t,
-      label: getLoyaltyTemplateLabel(t, translations).label,
-    }))
-    .filter((type) =>
-      [
-        LoyaltyTemplateTypes.CustomerRemoval,
-        LoyaltyTemplateTypes.PointInformation,
-      ].includes(type.value),
-    );
-
+  const typeData = Object.values(LoyaltyTemplateTypes).map((t) => ({
+    value: t,
+    label: getLoyaltyTemplateLabel(t, translations).label,
+  }));
   return (
     <FormModalLayout
       opened={opened}
