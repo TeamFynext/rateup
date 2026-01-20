@@ -4,6 +4,7 @@ description: Learn how to reply to customers, use quick actions, and manage mess
 ---
 
 import ScreenShot from "../../../components/Screenshot";
+import { CDN } from '../../../lib/cdn';
 
 # Responding to Conversations
 
@@ -16,7 +17,7 @@ Responding to conversations is possible from multiple Inbox views such as **New*
 ## Opening a Conversation
 
 <ScreenShot
-  src={"/screenshots/inbox/chat-window.png"}
+  src={`/screenshots/inbox/chat-window.png`}
   alt="Open conversation in the Inbox"
   width={"70%"}
 />
@@ -42,9 +43,8 @@ Your message is delivered instantly to the customer.
 ---
 
 ## Automation vs Manual Replies
-
 <ScreenShot
-  src={"/screenshots/inbox/automation-message.png"}
+  src={`${CDN}/docs/screenshots/inbox/add-quick-reply.png`}
   alt="Automation and manual messages in a conversation"
   width={700}
 />

@@ -4,6 +4,9 @@ This guide explains how to reset your password if you forget it or are unable to
 
 ---
 
+import ScreenShot from "../../../components/Screenshot";
+import { CDN } from '../../../lib/cdn';
+
 ## When to Use Password Reset
 
 Use the **Reset Password** option if:
@@ -24,6 +27,7 @@ Follow the steps below to reset your RateUp password.
 1. Visit [https://rateup.app](https://rateup.app)
 2. Click the **Login** button on the landing page
 
+<ScreenShot src={`${CDN}/docs/screenshots/authentication/home.png`} alt="RateUp home page" />
 ---
 
 ### Step 2: Click "Forgot Password"
@@ -33,14 +37,18 @@ On the Login page:
 
 This will redirect you to the password recovery screen.
 
+<ScreenShot src={`${CDN}/docs/screenshots/authentication/forgot.png`} alt="Login page" width="350px"/>
+
 ---
 
 ### Step 3: Enter Your Email Address
 
 1. Enter the **email address** associated with your RateUp account
-2. Click **Send reset link**
+2. Click **Reset Password**
 
 > 📧 A password reset email will be sent to your inbox.
+
+<ScreenShot src={`${CDN}/docs/screenshots/authentication/reset.png`} alt="Login page" width="350px"/>
 
 ---
 
@@ -64,13 +72,8 @@ Once successful, your password will be updated immediately.
 
 ---
 
-## Logging In After Password Reset
-
-After resetting your password:
-
-1. Go to [https://rateup.app](https://rateup.app)
-2. Click **Login**
-3. Sign in using your **new password**
+After resetting your password, continue to the  
+👉 **[Login to RateUp](/gettingStarted/login)** documentation.
 
 ---
 
