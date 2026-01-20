@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import {
   assignInboxToUser,
+  createPrivateMessage,
   getAssignedUserForContact,
   getMessagesByContactId,
   getWaChatMediaFile,
@@ -57,8 +58,7 @@ export const useOrgWsAuthCheck = (enabled: boolean) => {
   });
 };
 
-
-export const useAssignInboxToUser = (contactId:any) => {
+export const useAssignInboxToUser = (contactId: any) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: assignInboxToUser,
@@ -68,14 +68,27 @@ export const useAssignInboxToUser = (contactId:any) => {
       qc.invalidateQueries({ queryKey: ["contactInboxCount"] });
       qc.invalidateQueries({ queryKey: ["notification"] });
       qc.invalidateQueries({ queryKey: ["notificationCount"] });
-    }
+    },
   });
 };
 
-export const useGetAssignedUserForContact = (contactId:any) => {
+export const useGetAssignedUserForContact = (contactId: any) => {
   return useQuery({
     queryKey: ["assignedInboxUser", contactId],
     queryFn: () => getAssignedUserForContact(contactId),
     enabled: !!contactId,
   });
 };
+
+export function useCreatePrivateMessage(contactId: any) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => createPrivateMessage(contactId, data),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["wa-messages", contactId] });
+    },
+    onError: (error) => {
+      console.error("Error sending message", error);
+    },
+  });
+}

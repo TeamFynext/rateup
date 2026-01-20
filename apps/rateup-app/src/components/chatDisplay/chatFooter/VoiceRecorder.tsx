@@ -65,7 +65,10 @@ const VoiceVisualizer = () => {
 
 const VoiceRecorder = ({
   onRecordingUpload,
+  iconColor
+  
 }: {
+  iconColor?:string;
   onRecordingUpload?: (file: {
     key: string;
     url: string;
@@ -117,9 +120,9 @@ const VoiceRecorder = ({
           onPress={isRecording ? stopRecording : startRecording}
         >
           {isRecording ? (
-            <CircleStop size={30} color="black" strokeWidth={1.5} />
+            <CircleStop size={30} color={iconColor} strokeWidth={1.5} />
           ) : (
-            <Mic size={30} color="black" strokeWidth={1.5} />
+            <Mic size={30} color={iconColor} strokeWidth={1.5} />
           )}
         </TouchableOpacity>
       )}

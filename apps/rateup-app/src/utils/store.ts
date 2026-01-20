@@ -176,35 +176,6 @@ export const useWebFormFilterStore = create<any>((set) => ({
     }),
 }));
 
-type WaMedia = {
-  type: string;
-  url: string;
-  name: string;
-  key: string;
-};
-
-interface MediaStore {
-  media: WaMedia[];
-  addMedia: (value: WaMedia) => void;
-  resetMedia: () => void;
-  removeMedia: (key: string) => Promise<void>;
-}
-
-export const useMediaStore = create<MediaStore>((set, get) => ({
-  media: [],
-  addMedia: (value) => set((state) => ({ media: [...state.media, value] })),
-  resetMedia: () => set(() => ({ media: [] })),
-  removeMedia: async (key) => {
-    try {
-      await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] }); // ☁️ Delete from cloud
-      set((state) => ({
-        media: state.media.filter((m) => m.key !== key), // 🧹 Remove from store
-      }));
-    } catch (err) {
-      console.error("Failed to delete media:", err);
-    }
-  },
-}));
 
 interface Message {
   id?: string;
@@ -365,3 +336,35 @@ export const useWebFormResponseDataStore = create<WebFormResponseDataStore>(
     setData: (newData) => set({ data: newData }),
   })
 );
+
+
+type WaMedia = {
+  type: string;
+  url: string;
+  name: string;
+  key: string;
+};
+
+interface MediaStore {
+  media: WaMedia[];
+  addMedia: (value: WaMedia) => void;
+  removeMedia: (key) => void;
+  resetMedia: () => void;
+  selectedMedia: WaMedia;
+  setSelectedMedia: (value) => void;
+}
+
+export const useMediaStore = create<MediaStore>((set) => ({
+  media: [],
+  addMedia: (value) => set((state) => ({ media: [...state.media, value] })),
+  selectedMedia: null,
+  setSelectedMedia: (value) => set(() => ({ selectedMedia: value })),
+  removeMedia: async (key) => {
+    await deleteUploadedFiles({ fileKeyArray: [{ Key: key }] });
+    set((state) => {
+      const medias = state.media.filter((m) => m.key !== key);
+      return { media: medias };
+    });
+  },
+  resetMedia: () => set(() => ({ media: [] })),
+}));

@@ -39,7 +39,11 @@ export async function assignInboxToUser(data: {
   return (await axios.post(`/api/wa/inbox/message/assign`, data)).data;
 }
 
-export async function getAssignedUserForContact(contactId:any) {
-  return (await axios.get(`/api/wa/inbox/message/assign/${contactId}`))
+export async function getAssignedUserForContact(contactId: any) {
+  return (await axios.get(`/api/wa/inbox/message/assign/${contactId}`)).data;
+}
+
+export async function createPrivateMessage(contactId: string, data: any) {
+  return (await axios.post(`/api/wa/inbox/message/privatemessage/${contactId}`, data))
     .data;
 }

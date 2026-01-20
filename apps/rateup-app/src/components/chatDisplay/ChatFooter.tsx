@@ -28,8 +28,6 @@ const ChatFooter = ({ id }: { id: string }) => {
     (entry: any) => entry.assignedUserId == userId
   );
   const hasAssignedUsers = (assignedUsers?.length ?? 0) > 0;
-  console.log("assignedUsers:",assignedUsers);
-  console.log("currentUser:",currentUserAssignment);
   const toggleModal = () => setModalVisible(!isModalVisible);
   const AssignedUsersModal = () => (
     <Modal

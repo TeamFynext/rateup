@@ -6,8 +6,6 @@ import {
   Pressable,
   FlatList,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   useWindowDimensions,
 } from "react-native";
@@ -24,7 +22,7 @@ import { convertFullPhoneNumToCoutryCodeAndNationalNum } from "@/src/utils/phone
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EditContacts() {
-  const { userId }: { userId: string } = useLocalSearchParams();
+  const { contactId }: { contactId: string } = useLocalSearchParams();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [fullPhoneNumber, setFullPhoneNumber] = useState("");
@@ -53,7 +51,7 @@ export default function EditContacts() {
   const handleEdit = async () => {
     try {
       setLoading(true);
-      await editContactById(userId, {
+      await editContactById(contactId, {
         name,
         aiWaChat: isAiChatActive,
         phone: fullPhoneNumber,
@@ -71,7 +69,7 @@ export default function EditContacts() {
   const getContactDetails = async () => {
     setLoading(true);
     try {
-      const res = await getContactById(userId);
+      const res = await getContactById(contactId);
       setIsAiChatActive(res.aiWaChat);
 
       const numbers = convertFullPhoneNumToCoutryCodeAndNationalNum(
@@ -102,7 +100,7 @@ export default function EditContacts() {
   useEffect(() => {
     setLoading(true);
     getContactDetails();
-  }, [userId]);
+  }, [contactId]);
 
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
