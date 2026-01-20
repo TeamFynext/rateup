@@ -58,7 +58,7 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
   // Step 1: Basic Info
   const [programName, setProgramName] = useState("");
   const [pointsCurrency, setPointsCurrency] = useState("Points");
-  const [moneyCurrency, setMoneyCurrency] = useState("AED - UAE Dirham");
+  const [moneyCurrency, setMoneyCurrency] = useState("INR - Indian Rupee");
 
   // Step 2: Earning Rules - Updated to individual states
   const [standardEarningRate, setStandardEarningRate] = useState("10");
@@ -624,6 +624,9 @@ export function LoyaltyOnboarding({ onComplete }: LoyaltyOnboardingProps) {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="INR - Indian Rupee">
+                              INR - Indian Rupee
+                            </SelectItem>
                             <SelectItem value="AED - UAE Dirham">
                               AED - UAE Dirham
                             </SelectItem>
