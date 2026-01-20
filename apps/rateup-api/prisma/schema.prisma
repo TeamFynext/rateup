@@ -1006,6 +1006,7 @@ model WaTemplate {
   waMessageSchedule WaMessageSchedule[]
   loyaltyTemplates  LoyaltyWaCommand[]
   CampaignDripStage CampaignDripStage[]
+  loyaltyRewards    LoyaltyReward[]
 }
 
 model MenuLanding {
@@ -1847,6 +1848,9 @@ model LoyaltyReward {
   stockQuantity Int? // NULL = unlimited
   stockRedeemed Int  @default(0)
 
+  waTemplateId String?     @db.Uuid
+  waTemplate   WaTemplate? @relation(fields: [waTemplateId], references: [id])
+
   // Redemption Rules (flexible JSONB)
   /// [LoyaltyRedemptionRules]
   redemptionRules Json @default("{}")
@@ -2174,9 +2178,9 @@ model ExpoPushToken {
 }
 
 model WhatsappCatalog {
-  catalogId           String              @unique
-  orgId               String              @db.Uuid
-  org                 Org                 @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  catalogId           String               @unique
+  orgId               String               @db.Uuid
+  org                 Org                  @relation(fields: [orgId], references: [id], onDelete: Cascade)
   vertical            String
   name                String?
   products            WaCatalogProduct[]
@@ -2214,7 +2218,6 @@ model WhatsappProductSet {
   @@unique([orgId, productSetId], name: "org_id_product_set_id_unique")
   @@index([catalogId])
 }
-
 
 model WaCatalogProduct {
   productDbId       String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

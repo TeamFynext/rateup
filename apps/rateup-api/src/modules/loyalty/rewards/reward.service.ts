@@ -21,6 +21,7 @@ export async function createLoyaltyReward(
       stockRedeemed: data.stockRedeemed,
       availableForTiers: data.availableForTiers,
       redemptionRules: data.redemptionRules || {},
+      waTemplateId: data.waTemplateId,
     },
   });
 }

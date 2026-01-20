@@ -7,6 +7,7 @@ import {
   ApplyRedemptionInput,
   RedeemRewardInput,
 } from "../accounts/account.schema.js";
+import { handleSendTemplate } from "../../contact/contact.utils.js";
 
 export async function redeemReward(programId: string, data: RedeemRewardInput) {
   // Get customer
@@ -121,6 +122,15 @@ export async function redeemReward(programId: string, data: RedeemRewardInput) {
         },
       },
     });
+
+    if (reward.waTemplateId && customer.contact?.phone) {
+      await handleSendTemplate(
+        reward.waTemplateId,
+        "orgId" in reward ? (reward as any).orgId : customer.contact.orgId,
+        customer.contact.phone,
+        [customer.contact.name || "Customer", reward.pointsCost?.toString()],
+      );
+    }
   }
 
   return {

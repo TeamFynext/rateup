@@ -105,6 +105,7 @@ export const loyaltyRewardSchema = z.object({
   stockQuantity: z.number().optional().nullable(),
   availableForTiers: z.array(z.string()).optional(),
   stockRedeemed: z.number().default(0),
+  waTemplateId: z.string().optional().nullable(),
 });
 
 export const loyaltyRewardUpdateSchema = loyaltyRewardSchema.partial();
