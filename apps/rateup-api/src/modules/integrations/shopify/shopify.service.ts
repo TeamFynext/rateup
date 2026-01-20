@@ -56,15 +56,11 @@ import { pauseOrg } from "../../org/org.services.js";
 import { WEBHOOK_API_ROUTE } from "./shopify.handler.js";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 import { getScheduleTime } from "../../../utils/date.js";
-import {
-  getLCustomerByPhone,
-  handleLCustomerAction,
-  updateLCustomer,
-} from "../../loyalty/customer/customer.service.js";
 import { processActionWebhook } from "../../external/v1/loyalty/action/internal-copy/actions/actions.service.js";
 import { processRedeemWebhook } from "../../external/v1/loyalty/redeem/internal-copy/redeems/redeem.service.js";
 import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { getLCustomerByPhone } from "../../loyalty/accounts/account.service.js";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -206,18 +202,18 @@ export async function createScheduleOnShopifyEvent({
       phoneWithoutPlus,
       shopifyInfo.orgId,
     );
-    if (customer) {
-      const { success } = await handleLCustomerAction({
-        actionId: shopifySurvey.actionId,
-        customerId: customer.id,
-        amount,
-      });
-      actionStatus = success ? "success" : "failed";
-      if (!customer.active)
-        await updateLCustomer(phoneWithoutPlus, shopifyInfo.orgId, {
-          active: true,
-        });
-    }
+    // if (customer) {
+    //   const { success } = await handleLCustomerAction({
+    //     actionId: shopifySurvey.actionId,
+    //     customerId: customer.id,
+    //     amount,
+    //   });
+    //   actionStatus = success ? "success" : "failed";
+    //   if (customer.status !== "active")
+    //     await updateLCustomer(phoneWithoutPlus, shopifyInfo.orgId, {
+    //       active: true,
+    //     });
+    // }
   }
   let apiStatus = null;
   if (shopifySurvey.loyaltyApiFeature) {

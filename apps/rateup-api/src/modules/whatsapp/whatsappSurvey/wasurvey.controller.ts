@@ -16,6 +16,7 @@ import {
   parseResponse,
   parseStartMessage,
   parseToWhatsAppFormat,
+  parseWaJoinMessage,
   validateSession,
 } from "./wasurvey.utils.js";
 import {
@@ -137,6 +138,11 @@ import {
 import { getUserIdsByTeamId } from "../../user/user.service.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
 import { verifyTemplateMessageLimit } from "../messageTemplates/wa_templates.auth.js";
+import {
+  createCustomerAccount,
+  getCustomerAccountByPhone,
+} from "../../loyalty/accounts/account.service.js";
+import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -468,6 +474,19 @@ async function whatsappMessageHandler(
     return;
   }
 
+  const joinPayload = parseWaJoinMessage(message);
+
+  if (joinPayload?.isJoin) {
+    await handleWaJoinRegistration({
+      orgId,
+      from,
+      userName,
+      joinPayload,
+      sourceIdentifier,
+    });
+    return;
+  }
+
   const { isAiBotActive, chatbotId } = await getAiBotActiveStatus(from, orgId);
   if (isAiBotActive) {
     try {
@@ -546,6 +565,55 @@ async function whatsappMessageHandler(
 
     await handleAutomatedReply(orgId, waMessage, parsedMessage, from, message);
   }
+}
+
+async function handleWaJoinRegistration({
+  orgId,
+  from,
+  userName,
+  joinPayload,
+  sourceIdentifier,
+}: {
+  orgId: string;
+  from: string;
+  userName?: string;
+  joinPayload: { source?: string; referralCode?: string };
+  sourceIdentifier: string;
+}) {
+  console.log("🚀 ~ handleWaJoinRegistration ~ joinPayload:", joinPayload);
+  // 1. Check if already registered
+  const existingCustomer = await getCustomerAccountByPhone(orgId, from);
+
+  if (existingCustomer) {
+    await sendTextMessage(
+      { phone: from, orgId },
+      null,
+      "✅ You are already registered in our loyalty program.",
+    );
+    return;
+  }
+  const program = await getLoyaltyProgramByOrg(orgId);
+  if (!program) {
+    log.error("Loyalty program not found for orgId: %s", orgId);
+    await sendTextMessage(
+      { phone: from, orgId },
+      null,
+      "Sorry, our loyalty program is currently unavailable.",
+    );
+    return;
+  }
+  // 2. Create customer
+  await createCustomerAccount(
+    {
+      phone: from,
+      name: userName,
+      referCode: joinPayload.referralCode,
+      source: joinPayload.source || "WHATSAPP",
+    },
+    program.id,
+    orgId,
+    sourceIdentifier,
+  );
 }
 
 const pendingConfirmationMap = new Map<string, boolean>();
