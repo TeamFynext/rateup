@@ -1,7 +1,7 @@
 import { axiosClient } from "../../apiClient";
 import { LOYALTY_BASE } from "../base";
 
-const base = LOYALTY_BASE + "/reward";
+const base = LOYALTY_BASE + "/rewards";
 
 export async function getLoyaltyRewards() {
   return (await axiosClient.get(base)).data;

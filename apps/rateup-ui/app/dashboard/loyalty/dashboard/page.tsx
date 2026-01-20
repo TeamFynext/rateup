@@ -102,6 +102,7 @@ export default function LoyaltyPrograms() {
     phoneNumber: "",
     pointRule: "1",
     purchaseAmount: "",
+    isDefault: false,
   });
 
   const [rewardsForm, setRewardsForm] = useState({
@@ -124,15 +125,27 @@ export default function LoyaltyPrograms() {
         id: rule.id || "unknown",
         name: rule.name,
         multiplier: rule.pointsPerUnit || rule.bonusPoints || 0,
+        isDefault: rule.isDefault || false,
       }))
     : [
         {
           id: "1",
           name: "Purchase Points (1 AED = 10 Points)",
           multiplier: 10,
+          isDefault: true,
         },
-        { id: "2", name: "Birthday Bonus (500 Points)", multiplier: 500 },
-        { id: "3", name: "Referral Bonus (200 Points)", multiplier: 200 },
+        {
+          id: "2",
+          name: "Birthday Bonus (500 Points)",
+          multiplier: 500,
+          isDefault: false,
+        },
+        {
+          id: "3",
+          name: "Referral Bonus (200 Points)",
+          multiplier: 200,
+          isDefault: false,
+        },
       ];
 
   // All transactions for the transactions page
@@ -185,7 +198,7 @@ export default function LoyaltyPrograms() {
     // For purchase rule, use the purchase amount directly
     // For other rules, calculate the fixed points
     const selectedRule = pointRules.find((r) => r.id === pointsForm.pointRule);
-    const purchaseAmount = selectedRule?.name.includes("Purchase")
+    const purchaseAmount = selectedRule?.isDefault
       ? parseFloat(pointsForm.purchaseAmount || "0")
       : selectedRule?.multiplier || 0;
 
@@ -203,6 +216,7 @@ export default function LoyaltyPrograms() {
         phoneNumber: "",
         pointRule: "1",
         purchaseAmount: "",
+        isDefault: false,
       });
       setLookupPhone("");
     } catch (error) {
@@ -840,9 +854,18 @@ export default function LoyaltyPrograms() {
                   <Label htmlFor="point-rule">Point Rule</Label>
                   <Select
                     value={pointsForm.pointRule}
-                    onValueChange={(value) =>
-                      setPointsForm({ ...pointsForm, pointRule: value })
-                    }
+                    onValueChange={(value) => {
+                      const selectedRule = pointRules.find(
+                        (r) => r.id === value,
+                      );
+                      if (selectedRule) {
+                        setPointsForm({
+                          ...pointsForm,
+                          pointRule: value,
+                          isDefault: selectedRule.isDefault || false,
+                        });
+                      }
+                    }}
                   >
                     <SelectTrigger id="point-rule">
                       <SelectValue placeholder="Select a point rule" />
@@ -857,10 +880,10 @@ export default function LoyaltyPrograms() {
                   </Select>
                 </div>
 
-                {pointsForm.pointRule === "1" && (
+                {pointsForm.isDefault && (
                   <div className="space-y-2">
                     <Label htmlFor="purchase-amount">
-                      Purchase Amount (AED)
+                      Purchase Amount (UNIT)
                     </Label>
                     <Input
                       id="purchase-amount"
@@ -889,6 +912,7 @@ export default function LoyaltyPrograms() {
                   phoneNumber: "",
                   pointRule: "1",
                   purchaseAmount: "",
+                  isDefault: false,
                 });
                 setLookupPhone("");
               }}
@@ -1198,6 +1222,7 @@ export default function LoyaltyPrograms() {
                   phoneNumber: "",
                   pointRule: "",
                   purchaseAmount: "",
+                  isDefault: false,
                 });
               }}
             >
