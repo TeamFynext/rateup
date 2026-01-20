@@ -228,7 +228,7 @@ const TeamResponseActivitySection = ({
               cx="50%"
               cy="50%"
               fill="#52ba66"
-              label={(entry) => entry.teamCode}
+              label={({ index }) => data?.[index]?.teamCode}
             />
             <Tooltip />
           </PieChart>

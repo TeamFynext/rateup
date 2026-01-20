@@ -1,16 +1,20 @@
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { CONTACT_SORT } from "@/components/Contacts/utils/utils";
 import { showErrorToast, showSuccessToast } from "@/utils/notifications";
 
 import {
+  awardPoints,
   createLCAction,
   createLoyaltyCustomer,
   deleteLoyaltyCustomer,
+  exportCustomers,
   getAllCustomers,
+  getLoyaltyCustomerByContactId,
   getLoyaltyCustomerById,
   importCustomers,
+  updateLoyaltyCustomer,
 } from "./customer.api";
 
 export const useCreateLoyaltyCustomerMutation = () => {
@@ -21,6 +25,9 @@ export const useCreateLoyaltyCustomerMutation = () => {
       qc.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
       qc.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
     },
+    onError: (e: any) => {
+      toast.error(e?.response?.data?.error || "Error creating customer");
+    },
   });
 };
 
@@ -29,6 +36,14 @@ export const useGetLoyaltyCustomerById = (customerId) => {
     queryFn: () => getLoyaltyCustomerById(customerId),
     queryKey: ["loyaltyCustomer", customerId],
     enabled: !!customerId,
+  });
+};
+
+export const useGetLoyaltyCustomerByContactId = (contactId: string) => {
+  return useQuery({
+    queryFn: () => getLoyaltyCustomerByContactId(contactId),
+    queryKey: ["loyaltyCustomerByContact", contactId],
+    enabled: !!contactId,
   });
 };
 
@@ -95,6 +110,85 @@ export const useImportCSVCustomerMutation = () => {
         `Error creating the Customer: ${error?.response?.data?.error}`,
         "contact-create",
         // <IconX />,
+      );
+    },
+  });
+};
+
+export const useExportCustomersMutation = () => {
+  return useMutation({
+    mutationFn: (format: "csv" | "excel" = "excel") => exportCustomers(format),
+    onSuccess: (data, variables = "excel") => {
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      const extension = variables === "csv" ? "csv" : "xlsx";
+      link.setAttribute(
+        "download",
+        `customers-${new Date().toISOString()}.${extension}`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      showSuccessToast("Exported successfully");
+    },
+    onError: () => {
+      showErrorToast("Error exporting");
+    },
+  });
+};
+
+export const useUpdateLoyaltyCustomerMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      customerId,
+      data,
+    }: {
+      customerId: string;
+      data: { status?: "active" | "suspended" | "closed" };
+    }) => updateLoyaltyCustomer(customerId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      queryClient.invalidateQueries({
+        queryKey: ["loyaltyCustomer", variables.customerId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
+      showSuccessToast("Customer updated successfully");
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error updating customer: ${error?.response?.data?.error || error.message}`,
+      );
+    },
+  });
+};
+
+export const useAwardPointsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      contactId: string;
+      purchaseAmount: number;
+      locationId?: string;
+      productCategories?: string[];
+      productSkus?: string[];
+      paymentMethod?: string;
+      channel?: string;
+      orderId?: string;
+      notes?: string;
+    }) => awardPoints(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["loyaltyCustomers"] });
+      queryClient.invalidateQueries({
+        queryKey: ["loyaltyCustomerByContact", variables.contactId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["loyaltyDashboardData"] });
+      showSuccessToast("Points awarded successfully");
+    },
+    onError: (error: any) => {
+      showErrorToast(
+        `Error awarding points: ${error?.response?.data?.error || error.message}`,
       );
     },
   });

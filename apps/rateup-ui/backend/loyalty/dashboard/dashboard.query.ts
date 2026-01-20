@@ -2,47 +2,38 @@ import { axiosClient } from "@/backend/apiClient";
 
 const BASE_PATH = "/loyalty/dashboard/";
 
-interface SummaryData {
-  title: string;
-  id: number;
-  value: number;
-}
-
-interface OverallActionsData {
-  name: string;
-  totalActions: number;
-  type: string;
-}
-
-interface ActionName {
-  title: string;
-  type: string;
-}
-
-interface TopActionsData {
-  name: ActionName;
-  participants: number;
-  points: number;
-}
-
-interface TopPerformersData {
-  name: string;
-  total_actions: number;
-  recent_actions: number;
-}
-
-interface TopRedeemedRewardsData {
-  name: string;
-  times_redeemed: number;
-  required_points: number;
-}
-
 interface LoyaltyDashboardStats {
-  summaryData: SummaryData[];
-  overallActionsData: OverallActionsData[];
-  topActionsData: TopActionsData[];
-  topPerformersData: TopPerformersData[];
-  topRedeemedRewardsData: TopRedeemedRewardsData[];
+  programExists: boolean;
+  programId: string;
+  currencySymbol: string;
+  summary: {
+    totalCustomers: number;
+    pointsIssued: number;
+    pointsRedeemed: number;
+  };
+  analytics: {
+    pointsEarnedVsRedeemed: {
+      date: string;
+      earned: number;
+      redeemed: number;
+    }[];
+    customerGrowthOverTime: {
+      date: string;
+      newCustomers: number;
+      totalCustomers: number;
+    }[];
+  };
+  tierBreakdown: {
+    tierId: string;
+    name: string;
+    count: number;
+  }[];
+  popularRewards: {
+    id: string;
+    name: string;
+    pointsCost: number;
+    count: number;
+  }[];
 }
 
 export const getLoyaltyDashboardData =

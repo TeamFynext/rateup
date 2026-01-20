@@ -2580,5 +2580,267 @@
   "Checkout Link": "Checkout Link",
   "Items Ordered": "Items Ordered",
   "Grand Total": "Grand Total",
-  "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it).": "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it)."
+  "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it).": "Configure which teams have access to specific communication channels. By default, if no teams are assigned, the channel will be restricted (no one except super admins can access it).",
+  "loyaltyOnboarding": {
+    "header": {
+      "subtitle": "Loyalty Program Setup",
+      "title": "Build Your Rewards Program",
+      "description": "Set up your loyalty program in just 5 simple steps"
+    },
+    "progress": {
+      "step": "Step {current} of {total}",
+      "complete": "{percentage}% Complete"
+    },
+    "steps": {
+      "1": { "name": "Basic Info" },
+      "2": { "name": "Additional Info" },
+      "3": { "name": "Earning Rules" },
+      "4": { "name": "Tiers" },
+      "5": { "name": "Rewards" },
+      "6": { "name": "Review" }
+    },
+    "step1": {
+      "title": "Basic Program Information",
+      "description": "Let's start with the basics of your loyalty program",
+      "programName": {
+        "label": "Program Name",
+        "placeholder": "e.g., VIP Rewards, Coffee Club, Customer Rewards",
+        "hint": "This is what your customers will see"
+      },
+      "pointsCurrency": {
+        "label": "Points Currency Name",
+        "placeholder": "Points",
+        "hint": "What you call your loyalty currency"
+      },
+      "moneyCurrency": {
+        "label": "Money Currency",
+        "hint": "Your business currency"
+      },
+      "info": {
+        "title": "Example:",
+        "message": "Customers earn \"{pointsCurrency}\" when they spend {currency}. You can set the conversion rate in the next step."
+      }
+    },
+    "step2": {
+      "title": "Additional Info",
+      "description": "Provide more details about your loyalty program",
+      "standardRate": {
+        "title": "Standard Earning Rate",
+        "description": "Points earned for every purchase",
+        "label": "Points per {currency}"
+      },
+      "signupBonus": {
+        "title": "Signup Bonus",
+        "description": "One-time bonus for joining the program",
+        "label": "Points Awarded"
+      },
+      "referralBonus": {
+        "title": "Referral Bonus",
+        "description": "Points for referring friends to join",
+        "label": "Points Awarded"
+      },
+      "newCustomerBonus": {
+        "title": "New Customer Bonus",
+        "description": "Bonus points for first-time purchases",
+        "label": "Points Awarded"
+      },
+      "summary": {
+        "title": "Your Current Earning Structure",
+        "spending": "Every {currency} spent",
+        "signup": "Sign up bonus",
+        "referral": "Refer a friend",
+        "firstPurchase": "First purchase"
+      },
+      "tip": {
+        "title": "Tip:",
+        "message": "A well-balanced earning structure keeps customers engaged. Consider offering bonuses for special events like birthdays or anniversaries."
+      }
+    },
+    "step3": {
+      "title": "Earning Rules",
+      "description": "Define how customers earn points in your program",
+      "standardRate": {
+        "title": "Standard Earning Rate",
+        "description": "Points earned for every purchase",
+        "label": "Points per {currency}"
+      },
+      "signupBonus": {
+        "title": "Signup Bonus",
+        "description": "One-time bonus for joining the program",
+        "label": "Points Awarded"
+      },
+      "referralBonus": {
+        "title": "Referral Bonus",
+        "description": "Points for referring friends to join",
+        "label": "Points Awarded"
+      },
+      "newCustomerBonus": {
+        "title": "New Customer Bonus",
+        "description": "Bonus points for first-time purchases",
+        "label": "Points Awarded"
+      },
+      "summary": {
+        "title": "Your Current Earning Structure",
+        "spending": "Every {currency} spent",
+        "signup": "Sign up bonus",
+        "referral": "Refer a friend",
+        "firstPurchase": "First purchase"
+      },
+      "tip": {
+        "title": "Tip:",
+        "message": "A well-balanced earning structure keeps customers engaged. Consider offering bonuses for special events like birthdays or anniversaries."
+      },
+      "addRule": "Add Rule"
+    },
+    "step4": {
+      "title": "Customer Tiers",
+      "description": "Set up tier levels to reward your most loyal customers",
+      "tier": {
+        "title": "Tier {number}",
+        "subtitle": "Configure tier details",
+        "name": {
+          "label": "Tier Name",
+          "placeholder": "e.g., Bronze, Silver, Gold"
+        },
+        "color": {
+          "label": "Tier Color"
+        },
+        "minPoints": {
+          "label": "Minimum Points Required"
+        },
+        "benefits": {
+          "label": "Benefits Description",
+          "placeholder": "e.g., Standard rewards, 10% bonus"
+        }
+      },
+      "addTier": "Add New Tier",
+      "tip": {
+        "title": "Tip:",
+        "message": "Create meaningful tier names and colors that resonate with your brand. Higher tiers should offer progressively better benefits to encourage customer loyalty."
+      }
+    },
+    "step5": {
+      "title": "Rewards Catalog",
+      "description": "Create rewards that customers can redeem with their points",
+      "reward": {
+        "title": "Reward {number}",
+        "name": {
+          "label": "Reward Name",
+          "placeholder": "e.g., Free Delivery"
+        },
+        "points": {
+          "label": "Points Required"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Describe what customers get with this reward"
+        }
+      },
+      "addReward": "Add Another Reward",
+      "tip": {
+        "title": "Tip:",
+        "message": "Offer a variety of rewards at different point levels to keep customers engaged and coming back."
+      }
+    },
+    "step6": {
+      "title": "Review & Launch",
+      "description": "Review your loyalty program settings before launching",
+      "notSet": "Not set",
+      "basicInfo": {
+        "title": "Basic Information",
+        "programName": "Program Name:",
+        "pointsCurrency": "Points Currency:",
+        "moneyCurrency": "Money Currency:"
+      },
+      "earningRules": {
+        "title": "Earning Rules ({count})",
+        "standardRate": "Standard Earning Rate:",
+        "signupBonus": "Signup Bonus:",
+        "referralBonus": "Referral Bonus:",
+        "newCustomerBonus": "New Customer Bonus:",
+        "pointsPerCurrency": "{points} points per {currency}",
+        "pointsValue": "{points} points"
+      },
+      "tiers": {
+        "title": "Customer Tiers ({count})",
+        "minPoints": "{points}+ points"
+      },
+      "rewards": {
+        "title": "Rewards ({count})",
+        "rewardNumber": "Reward {number}:",
+        "pointsValue": "{points} points"
+      },
+      "ready": {
+        "title": "Ready to launch!",
+        "message": "Your loyalty program is configured and ready to go. You can always modify these settings later from the program dashboard."
+      }
+    },
+    "navigation": {
+      "previous": "Previous",
+      "next": "Next Step",
+      "launch": "Launch Program"
+    }
+  },
+  "loyalty": {
+    "earningRules": {
+      "title": "Point Earning Rules",
+      "description": "Define how customers earn points through purchases and activities",
+      "addRule": "Add Rule",
+      "tierBasedRates": "Tier-Based Earning Rates",
+      "tiers": "tiers",
+      "newTier": "New Tier",
+      "tierAdded": "New tier added",
+      "addTier": "Add Tier",
+      "tierName": "Tier Name",
+      "color": "Color",
+      "earningRate": "Earning Rate",
+      "minLifetimePoints": "Min Lifetime Points",
+      "tierSaved": "{name} tier settings saved",
+      "tierDeleted": "{name} tier deleted",
+      "baseTierInfo": "Base tier - All new customers start here. Cannot be deleted.",
+      "tierReachInfo": "Customers reach this tier after earning {points} lifetime points",
+      "additionalRules": "Additional Earning Rules",
+      "rules": "rules",
+      "multiplier": "Multiplier",
+      "bonus": "Bonus",
+      "noDescription": "No description provided",
+      "noRulesYet": "No additional rules yet",
+      "noRulesDescription": "Create bonus rules like happy hour multipliers, birthday bonuses, or weekend specials",
+      "createFirstRule": "Create Your First Rule",
+      "back": "Back",
+      "editRule": "Edit Earning Rule",
+      "createRule": "Create Earning Rule",
+      "createRuleDescription": "Add bonus earning opportunities like happy hour multipliers, birthday bonuses, or weekend specials",
+      "ruleName": "Rule Name",
+      "ruleNamePlaceholder": "e.g., Happy Hour Bonus, Weekend Multiplier, Birthday Bonus",
+      "descriptionPlaceholder": "Describe when and how this rule applies...",
+      "priority": "Priority",
+      "status": "Status",
+      "selectStatus": "Select status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "scheduled": "Scheduled",
+      "expired": "Expired",
+      "multiplierHint": "e.g., 2.0 = Double points, 1.5 = 50% more",
+      "bonusPoints": "Bonus Points",
+      "bonusPointsHint": "Additional points on top of standard rate",
+      "minPurchaseAmount": "Min Purchase Amount",
+      "maxPurchaseAmount": "Max Purchase Amount",
+      "optional": "Optional",
+      "cancel": "Cancel",
+      "updateRule": "Update Rule",
+      "updating": "Updating...",
+      "creating": "Creating...",
+      "createSuccess": "Earning rule created successfully",
+      "updateSuccess": "Earning rule updated successfully",
+      "deleteSuccess": "Earning rule deleted successfully",
+      "deleteConfirm": "Are you sure you want to delete this earning rule?",
+      "nameRequired": "Rule name is required",
+      "statusUpdated": "Rule status updated",
+      "loadError": "Error loading earning rules",
+      "start": "Start",
+      "end": "End",
+      "threshold": "Threshold"
+    }
+  }
 }
