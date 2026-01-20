@@ -47,7 +47,7 @@
     "lodash": "^4.17.21",
     "lucide-react-native": "^0.535.0",
     "mime": "^4.0.7",
-    "nativewind": "^4.1.23",
+    "nativewind": "^4.2.1",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-hook-form": "^7.71.1",
