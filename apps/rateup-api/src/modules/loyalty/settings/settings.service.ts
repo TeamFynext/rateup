@@ -12,6 +12,7 @@ import {
   updateCustomerAccount,
 } from "../accounts/account.service.js";
 import { handleSendTemplate } from "../../contact/contact.utils.js";
+import { handleWaJoinRegistration } from "../../whatsapp/whatsappSurvey/wasurvey.controller.js";
 
 export async function createLoyaltyWaCommand(
   data: LoyaltyTemplateInput & { orgId: string },
@@ -78,11 +79,18 @@ export async function handleLoyaltyWaCommand(
   phone,
   name,
   loyaltyWaCommand: LoyaltyWaCommand,
+  orgId,
 ) {
   switch (loyaltyWaCommand.type) {
-    // case LoyaltyTemplateTypes.CustomerRegistration:
-    //   await handleLoyaltyRegister(phone, name, loyaltyWaCommand);
-    //   break;
+    case LoyaltyTemplateTypes.CustomerRegistration:
+      await handleWaJoinRegistration({
+        orgId,
+        from: phone,
+        userName: name,
+        joinPayload: {},
+        sourceIdentifier: "loyalty",
+      });
+      break;
     case LoyaltyTemplateTypes.PointInformation:
       await handleLoyaltyPointsCommand(phone, loyaltyWaCommand);
       break;

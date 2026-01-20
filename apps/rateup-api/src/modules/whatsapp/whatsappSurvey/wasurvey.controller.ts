@@ -467,9 +467,12 @@ async function whatsappMessageHandler(
     type === "text" || type === "interactive"
       ? message?.trim()?.toLocaleLowerCase()
       : "";
-
+  const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(
+    orgId,
+    message,
+  );
   // Handle button click interactions first
-  if (parsedMessage?.buttonId) {
+  if (parsedMessage?.buttonId && !loyaltyWaCommand) {
     await handleButtonClickInteraction(from, parsedMessage, orgId);
     return;
   }
@@ -538,12 +541,9 @@ async function whatsappMessageHandler(
       );
     }
   }
-  const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(
-    orgId,
-    message,
-  );
+
   if (loyaltyWaCommand) {
-    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand);
+    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand, orgId);
   } else if (!!parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {
@@ -567,7 +567,7 @@ async function whatsappMessageHandler(
   }
 }
 
-async function handleWaJoinRegistration({
+export async function handleWaJoinRegistration({
   orgId,
   from,
   userName,
