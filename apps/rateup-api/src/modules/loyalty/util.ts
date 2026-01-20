@@ -1,5 +1,9 @@
-import { LoyaltyActionType } from "./actions/actions.schema.js";
-
+export enum LoyaltyActionType {
+  ReferralPurchase = "Referral Purchase",
+  DirectPurchase = "Direct Purchase",
+  CustomerRegistration = "Customer Registration",
+  FeedBack = "FeedBack",
+}
 export const isLReferralAction = (actionType) =>
   [LoyaltyActionType.ReferralPurchase].includes(actionType);
 
@@ -10,7 +14,7 @@ export const isPurchaseAction = (actionType) =>
   ].includes(actionType);
 
 export const parsePhoneforWa = (phone: string) =>
-  phone && phone.startsWith("+") ? phone.slice(1) : phone;
+  phone?.startsWith("+") ? phone.slice(1) : phone;
 
 export enum RewardTypes {
   FixedAmountDiscount = "Fixed Amount Discount",

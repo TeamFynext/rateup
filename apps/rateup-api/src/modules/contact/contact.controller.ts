@@ -34,7 +34,7 @@ import {
   createLCustomer,
   handlePostRegisterAction,
   handleSendTemplate,
-} from "../loyalty/customer/customer.service.js";
+} from "./contact.utils.js";
 import {
   LoyaltyTemplateTypes,
   WaAutomatedReplyResponseType,
