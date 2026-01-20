@@ -580,18 +580,6 @@ export async function handleWaJoinRegistration({
   joinPayload: { source?: string; referralCode?: string };
   sourceIdentifier: string;
 }) {
-  console.log("🚀 ~ handleWaJoinRegistration ~ joinPayload:", joinPayload);
-  // 1. Check if already registered
-  const existingCustomer = await getCustomerAccountByPhone(orgId, from);
-
-  if (existingCustomer) {
-    await sendTextMessage(
-      { phone: from, orgId },
-      null,
-      "✅ You are already registered in our loyalty program.",
-    );
-    return;
-  }
   const program = await getLoyaltyProgramByOrg(orgId);
   if (!program) {
     log.error("Loyalty program not found for orgId: %s", orgId);
@@ -602,7 +590,27 @@ export async function handleWaJoinRegistration({
     );
     return;
   }
-  // 2. Create customer
+  // 1. Check if already registered
+  const existingCustomer = await prisma.customerLoyaltyAccount.findFirst({
+    where: {
+      contact: {
+        phone: from,
+        orgId,
+      },
+      programId: program.id,
+      status: "active",
+    },
+  });
+
+  if (existingCustomer) {
+    await sendTextMessage(
+      { phone: from, orgId },
+      null,
+      "✅ You are already registered in our loyalty program.",
+    );
+    return;
+  }
+  // 2. Create or update customer
   await createCustomerAccount(
     {
       phone: from,

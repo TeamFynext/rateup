@@ -59,14 +59,25 @@ export async function createCustomerAccount(
   if (existing) {
     if (existing.status === "inactive") {
       // Reactivate the account
-      return await prisma.customerLoyaltyAccount.update({
+      const account = await prisma.customerLoyaltyAccount.update({
         where: {
           id: existing.id,
         },
         data: {
           status: "active",
         },
+        include: {
+          contact: true,
+        },
       });
+      if (account && sourceIdentifier) {
+        await sendTextMessage(
+          { phone, orgId },
+          null,
+          `🎉 Welcome back ${account.contact?.name || ""}!`,
+        );
+      }
+      return account;
     } else {
       throw new Error("Customer account already exists");
     }
