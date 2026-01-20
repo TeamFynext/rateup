@@ -433,7 +433,7 @@ export async function getContactsByOrgId(
     where: searchCondition,
   });
   const includeCondition = {
-    loyaltyCustomer: true,
+    // loyaltyCustomer: true,
     customFields: true,
     contactGroups: {
       select: {

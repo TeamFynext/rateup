@@ -67,7 +67,6 @@ import {
 } from "./automation-logger.utils.js";
 import { processNextNode } from "./wasurvey.controller.js";
 import { LeadgenNodeData } from "./node-types.js";
-import { LoyaltyActionType } from "../../loyalty/actions/actions.schema.js";
 import { hasFeature } from "../../subscription/subscription.service.js";
 import {
   addZapierTriggerToQueue,
@@ -744,15 +743,16 @@ export async function saveResponses(session: WaSessionWithRelations) {
     columnId,
   );
   await updateResponse(res.id, { ip: session.ip, location: undefined });
-  const loyalty = await prisma.loyaltyAction.findFirst({
-    where: {
-      flowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
-      type: LoyaltyActionType.FeedBack,
-    },
-  });
-  if (loyalty) {
-    await handleLoyaltyFeedback(session.phone, loyalty);
-  }
+  // TODO: CHECK LOYALTY FEATURE
+  // const loyalty = await prisma.loyaltyAction.findFirst({
+  //   where: {
+  //     flowId: session.surveyTeamMap.survey.WaFlow.dbFlowId,
+  //     type: LoyaltyActionType.FeedBack,
+  //   },
+  // });
+  // if (loyalty) {
+  //   await handleLoyaltyFeedback(session.phone, loyalty);
+  // }
   log.info("Responses saved \n%o\n", surveyResponse);
   const { surveyTeamMapId, responses, language, createdAt, Contact, tag } = res;
   await saveResponseToGoogleSheet({

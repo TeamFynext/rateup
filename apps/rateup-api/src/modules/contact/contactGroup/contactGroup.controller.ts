@@ -35,10 +35,6 @@ import {
   importCSVContacts,
 } from "../contact.service.js";
 import { PaginationQuery } from "../contact.schema.js";
-import {
-  addNewCustomersToGroup,
-  createMultipleCustomers,
-} from "../../loyalty/customer/customer.service.js";
 
 export async function getContactGroupsHandler(
   request: FastifyRequest<{
@@ -142,21 +138,12 @@ export async function addNewContactsToGroupHandler(
   try {
     const { orgId } = request.user;
     let contactGroup;
-    if (request.body.find((c) => c.source === ContactGroupType.LOYALTY)) {
-      await createMultipleCustomers(request.body, orgId);
-      contactGroup = await addNewCustomersToGroup(
-        request.params.contactGroupId,
-        request.body,
-        orgId,
-      );
-    } else {
-      await createMultipleContacts(request.body, orgId);
-      contactGroup = await addNewContactsToGroup(
-        request.params.contactGroupId,
-        request.body,
-        orgId,
-      );
-    }
+    await createMultipleContacts(request.body, orgId);
+    contactGroup = await addNewContactsToGroup(
+      request.params.contactGroupId,
+      request.body,
+      orgId,
+    );
     reply.code(200).send(contactGroup);
   } catch (error) {
     log.error(error);
