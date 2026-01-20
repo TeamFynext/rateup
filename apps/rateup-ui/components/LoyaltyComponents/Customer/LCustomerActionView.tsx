@@ -22,7 +22,7 @@ import { LoyaltyActionType } from "@/types/enums";
 import {
   getLCustomerStatsIcon,
   LCustomerStats,
-} from "@/app/dashboard/loyalty/customer/[customerId]/page";
+} from "@/app/dashboard/loyalty/customers/[customerId]/page";
 import { DateRangePickerModal } from "@/components/DateAndTime/DatePicker/DateRangePicker";
 import PaperLayout from "@/components/styled/Layouts/PaperLayout";
 

@@ -37,6 +37,7 @@ import ConfirmationModal from "../Modal/ConfirmationModal";
 import FormModalLayout from "../Modal/FormModalLayout";
 import WaTextEditor from "../RichTextEditor/waTextEditor";
 import PaperLayout from "../styled/Layouts/PaperLayout";
+import { DataTable } from "../Table/data-table";
 import TanstackTable from "../Table/TanstackTable";
 import { LReferralSelector } from "./utils";
 
@@ -68,13 +69,11 @@ const LoyaltySettings = () => {
           onClick={open}
         />
       </Group>
-      <PaperLayout h={"60vh"}>
-        <TanstackTable
-          columns={columns}
-          data={templateConfigs}
-          isPending={isPending}
-        />
-      </PaperLayout>
+      <DataTable
+        columns={columns}
+        data={templateConfigs || []}
+        isPending={isPending}
+      />
       <LoyaltyWaTemplateConfig
         config={selectedConfig}
         opened={opened}
@@ -129,7 +128,7 @@ export const LoyaltyWaTemplateConfig = ({
   const translations = useTranslations();
 
   let initialValues = {
-    type: LoyaltyTemplateTypes.CustomerRegistration,
+    type: LoyaltyTemplateTypes.PointInformation,
     waTemplateId: "",
     requestMessage: "",
     content: null,
@@ -196,10 +195,17 @@ export const LoyaltyWaTemplateConfig = ({
     form.setValues(initialValues);
   }, [config]);
 
-  const typeData = Object.values(LoyaltyTemplateTypes).map((t) => ({
-    value: t,
-    label: getLoyaltyTemplateLabel(t, translations).label,
-  }));
+  const typeData = Object.values(LoyaltyTemplateTypes)
+    .map((t) => ({
+      value: t,
+      label: getLoyaltyTemplateLabel(t, translations).label,
+    }))
+    .filter((type) =>
+      [
+        LoyaltyTemplateTypes.CustomerRemoval,
+        LoyaltyTemplateTypes.PointInformation,
+      ].includes(type.value),
+    );
 
   return (
     <FormModalLayout

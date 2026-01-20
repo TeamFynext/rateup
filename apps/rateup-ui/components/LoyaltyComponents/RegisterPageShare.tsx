@@ -19,9 +19,7 @@ const RegisterPageShare = () => {
   return (
     <Stack>
       <Title order={4}>{translations("Customer Registration page link")}</Title>
-      <CopyLinkComponent
-        value={`${FRONTEND_URL}/public/loyalty/${orgId}/register`}
-      />
+      <CopyLinkComponent value={`${FRONTEND_URL}/loyalty/${orgId}/register`} />
     </Stack>
   );
 };

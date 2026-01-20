@@ -1,6 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
-
-import { showErrorToast } from "../utils/notifications";
+import { toast } from "sonner";
 
 const axiosClient = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api`,
@@ -9,29 +8,36 @@ const axiosClient = axios.create({
     Accept: "application/json",
   },
 });
+const interceptorErrorHandler = (error) => {
+  const { response, request } = error;
 
-function subscriptionErrorHandler(error: AxiosError) {
-  const response = error.response as AxiosResponse;
-  if (response?.status === 403) {
-    if (response.data.displayMessageInClient) {
-      showErrorToast(response.data.message || "Forbidden");
-    }
+  /* ----------------------------------
+       Subscription / 403 side effects
+    -----------------------------------*/
+  if (response?.status === 403 && response.data?.displayMessageInClient) {
+    toast.error(response.data.message ?? "Forbidden");
   }
-  return Promise.reject(error);
-}
-axiosClient.interceptors.response.use((_) => _, subscriptionErrorHandler);
-// TODO: Enable this generic error handler after testing
-// axiosClient.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     if (error.response?.data?.message) {
-//       error.message = error.response.data.message;
-//     } else if (error.response?.data?.error) {
-//       error.message = error.response.data.error;
-//     }
-//     return Promise.reject(error);
-//   }
-// );
+  let message = "Something went wrong";
+
+  if (response?.data) {
+    message = response.data.message || response.data.error || message;
+  } else if (request) {
+    message = "Network error. Please try again.";
+  } else if (error.message) {
+    message = error.message;
+  }
+
+  // Normalize error message without losing original error
+  return Promise.reject({
+    ...error,
+    message,
+  });
+};
+
+axiosClient.interceptors.response.use(
+  (response) => response,
+  interceptorErrorHandler,
+);
 
 const axiosClientIP = axios.create({
   baseURL: `${process.env.NEXT_PUBLIC_API_IP}/api`,
@@ -40,7 +46,8 @@ const axiosClientIP = axios.create({
     Accept: "application/json",
   },
 });
-axiosClientIP.interceptors.response.use((_) => _, subscriptionErrorHandler);
+
+axiosClientIP.interceptors.response.use((_) => _, interceptorErrorHandler);
 
 const razorpayClient = axios.create({
   baseURL: `https://api.razorpay.com/v1`,

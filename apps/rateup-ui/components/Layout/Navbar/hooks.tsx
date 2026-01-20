@@ -31,8 +31,6 @@ import {
   IconTicket,
   IconUser,
   IconUsers,
-  IconUserX,
-  IconWallpaper,
   IconWaveSine,
 } from "@tabler/icons-react";
 import {
@@ -42,11 +40,11 @@ import {
   ChartColumn,
   ChartColumnBig,
   CircleCheckBig,
-  FileChartColumn,
+  Clock,
+  Code,
   FileSpreadsheet,
   Folder,
   Inbox,
-  MessageSquareDot,
   Settings,
   Sparkles,
   Tag,
@@ -57,7 +55,6 @@ import {
 } from "lucide-react";
 
 import { SubscriptionFeaturePathName as sfpn } from "@/types/enums";
-import { UserSelector } from "@/components/Contacts/CreateContactModal";
 import { hasFeature } from "@/utils/subscription/subscription";
 
 export function useNavMain({
@@ -344,18 +341,18 @@ export function useNavMain({
               icon: IconGift,
               items: [
                 {
-                  title: t("Dashboard"),
+                  title: t("Overview"),
                   url: "/dashboard/loyalty/dashboard",
                   icon: IconDashboard,
                 },
                 {
                   title: t("Customers"),
-                  url: "/dashboard/loyalty/customer",
+                  url: "/dashboard/loyalty/customers",
                   icon: IconUsers,
                 },
                 {
-                  title: t("Actions"),
-                  url: "/dashboard/loyalty/actions",
+                  title: t("Earning Rules"),
+                  url: "/dashboard/loyalty/earning-rules",
                   icon: IconActivity,
                 },
                 {
@@ -364,14 +361,29 @@ export function useNavMain({
                   icon: IconAward,
                 },
                 {
+                  title: t("Transactions"),
+                  url: "/dashboard/loyalty/transactions",
+                  icon: Clock,
+                },
+                {
+                  title: t("Approvals"),
+                  url: "/dashboard/loyalty/approvals",
+                  icon: UserCheck,
+                },
+                {
+                  title: t("API & Integration"),
+                  url: "/dashboard/loyalty/api",
+                  icon: Code,
+                },
+                {
+                  title: t("commands"),
+                  url: "/dashboard/loyalty/command",
+                  icon: IconTerminal2,
+                },
+                {
                   title: t("Settings"),
                   url: "/dashboard/loyalty/settings",
                   icon: IconSettings,
-                },
-                {
-                  title: "API Settings",
-                  url: "/dashboard/loyalty/api",
-                  icon: IconApi,
                 },
               ],
             },
