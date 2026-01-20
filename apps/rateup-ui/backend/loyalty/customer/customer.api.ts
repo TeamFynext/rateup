@@ -1,12 +1,15 @@
 import { axiosClient } from "../../apiClient";
 import { LOYALTY_BASE, PUBLIC_LOYALTY_BASE } from "../base";
 
-const base = `${LOYALTY_BASE}/customer`;
-const publicbase = `${PUBLIC_LOYALTY_BASE}/customer`;
+const base = `${LOYALTY_BASE}/accounts`;
+const publicbase = `${PUBLIC_LOYALTY_BASE}/accounts`;
 
 type CreateLoyaltyCustomerInput = Partial<Omit<LoyaltyCustomer, "id">>;
-export async function createLoyaltyCustomer(lc: CreateLoyaltyCustomerInput) {
-  return await axiosClient.post(`${publicbase}`, lc);
+export async function createLoyaltyCustomer(
+  lc: CreateLoyaltyCustomerInput & { isPublic?: boolean },
+) {
+  const url = lc.isPublic ? publicbase : base;
+  return await axiosClient.post(`${url}`, lc);
 }
 
 export async function getAllCustomers(
@@ -49,6 +52,39 @@ export const importCustomers = async (data) => {
   return res;
 };
 
+export const exportCustomers = async (format: "csv" | "excel" = "excel") => {
+  return (
+    await axiosClient.get(`${base}/export?format=${format}`, {
+      responseType: "blob",
+    })
+  ).data;
+};
+
 export async function getLoyaltyCustomerById(customerId) {
   return (await axiosClient.get(`${base}/${customerId}`)).data;
+}
+
+export async function getLoyaltyCustomerByContactId(contactId: string) {
+  return (await axiosClient.get(`${base}/contact/${contactId}`)).data;
+}
+
+export async function updateLoyaltyCustomer(
+  customerId: string,
+  data: { status?: "active" | "suspended" | "closed" },
+) {
+  return (await axiosClient.put(`${base}/${customerId}`, data)).data;
+}
+
+export async function awardPoints(data: {
+  contactId: string;
+  purchaseAmount: number;
+  locationId?: string;
+  productCategories?: string[];
+  productSkus?: string[];
+  paymentMethod?: string;
+  channel?: string;
+  orderId?: string;
+  notes?: string;
+}) {
+  return (await axiosClient.post(`${base}/award-points`, data)).data;
 }

@@ -20,6 +20,7 @@ const ManualRedeemModal = ({ opened, close }) => {
     initialValues: {
       rewardId: "",
       phone: "",
+      customerId: "",
     },
     validate: {
       phone: (value) =>

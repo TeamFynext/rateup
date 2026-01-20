@@ -13,7 +13,7 @@ import {
 } from "recharts";
 
 import { LoyaltyActionType } from "@/types/enums";
-import { LCustomerStats } from "@/app/dashboard/loyalty/customer/[customerId]/page";
+import { LCustomerStats } from "@/app/dashboard/loyalty/customers/[customerId]/page";
 import { CustomTooltip } from "@/components/Survey/Result/Charts/QuestionBarChart";
 import { stringToColour } from "@/utils/essential";
 

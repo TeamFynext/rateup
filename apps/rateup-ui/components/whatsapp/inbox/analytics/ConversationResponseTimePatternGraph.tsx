@@ -103,7 +103,7 @@ const ConversationResponseTimePatternGraph = ({ dateRange }) => {
                 content={
                   <ChartTooltipContent
                     indicator="line"
-                    valueFormatter={(value, key) =>
+                    formatter={(value, key) =>
                       key == "averageResponseTime" ? `${value} min(s)` : value
                     }
                   />
