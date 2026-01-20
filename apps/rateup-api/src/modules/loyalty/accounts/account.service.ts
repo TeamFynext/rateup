@@ -265,11 +265,13 @@ export async function getCustomerAccountByContact(
 export async function getCustomerAccountByPhone(
   programId: string,
   phoneNumber: string,
+  orgId: string,
 ) {
   // First find the contact by phone number
   const contact = await prisma.contact.findFirst({
     where: {
       phone: phoneNumber,
+      orgId,
     },
   });
 

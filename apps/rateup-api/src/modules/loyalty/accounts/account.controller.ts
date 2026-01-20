@@ -110,6 +110,7 @@ export async function getCustomerAccountByPhoneHandler(
     const account = await getCustomerAccountByPhone(
       program.id,
       request.params.phoneNumber,
+      request.user.orgId,
     );
     if (!account) {
       return reply.code(404).send({ error: "Customer account not found" });
