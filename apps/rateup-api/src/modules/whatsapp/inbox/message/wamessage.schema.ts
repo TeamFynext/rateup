@@ -58,6 +58,13 @@ const NewWaMessageBody = z.object({
   platform: z.string(),
 });
 
+const PrivateWaMessageBody = z.object({
+  type: z.enum(["text"]),
+  text: z.any(),
+  messageId: string().optional(),
+  platform: z.string(),
+});
+
 const PaginateQuerySchema = z.object({
   cursor: z.string().optional(),
   page: z.string().optional(),
@@ -125,6 +132,7 @@ const blockUserSchema = z.object({
 export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
   {
     NewWaMessageBody,
+    PrivateWaMessageBody,
     PaginateQuerySchema,
     WaChatFilterSchema,
     waChatFilterQuerySchema,
@@ -139,6 +147,7 @@ export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
 );
 
 export type NewWaMessageBody = z.infer<typeof NewWaMessageBody>;
+export type PrivateWaMessageBody = z.infer<typeof PrivateWaMessageBody>;
 export type PaginateQuerySchema = z.infer<typeof PaginateQuerySchema>;
 export type WaChatFilterSchema = z.infer<typeof WaChatFilterSchema>;
 export type WaChatFilterQuerySchema = z.infer<typeof waChatFilterQuerySchema>;

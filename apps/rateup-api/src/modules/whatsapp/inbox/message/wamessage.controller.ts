@@ -9,6 +9,7 @@ import {
   WaMessageAssignBody,
   BlockUserBody,
   GenerateInboxResponseBody,
+  PrivateWaMessageBody,
 } from "./wamessage.schema.js";
 import {
   addNewWaMessage,
@@ -659,7 +660,7 @@ export async function generateInboxResponseHandler(
 
 export async function createPrivateMessageHandler(
   request: FastifyRequest<{
-    Body: NewWaMessageBody;
+    Body: PrivateWaMessageBody;
     Params: ByContactIdParams;
   }>,
   reply: FastifyReply,
@@ -668,7 +669,14 @@ export async function createPrivateMessageHandler(
     const { orgId, userId } = request.user;
     const { contactId } = request.params;
     const body = request.body;
-    const text = parseToWhatsAppFormat(body.text.body);
+    let text = "";
+    if (typeof body.text?.body === "string") {
+      text = body.text.body;
+    } else if (body.text?.body?.type === "doc") {
+      text = parseToWhatsAppFormat(body.text.body);
+    } else {
+      throw new Error("Invalid text.body format");
+    }
     const mentionedUsers = extractMentions(text);
     const res = await createInternalWaMessage({
       contactId: contactId,
