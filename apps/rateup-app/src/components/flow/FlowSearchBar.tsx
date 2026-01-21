@@ -1,16 +1,25 @@
-import { View, TextInput, TouchableOpacity, Text } from "react-native";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  useColorScheme,
+} from "react-native";
 import React from "react";
-import { SearchIcon } from "@/src/constants/imageExports";
-import { SlidersHorizontal } from "lucide-react-native";
+import { Search, SlidersHorizontal } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useSearchFlowStore, useFlowFilterStore } from "@/src/utils/store";
+import { colors } from "@/src/constants/constants";
 
 const FlowSearchBar = () => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const textColor = isDark ? "white" : colors["slate-950"];
+  const bgColor = isDark ? "#0f172a" : "#f8fafc";
   const router = useRouter();
   const { search, setSearch } = useSearchFlowStore();
   const { teamId, status, sortByDate, alphabetical } = useFlowFilterStore();
 
-  // ✅ Count active filters
   const activeFilterCount = [
     teamId !== "all",
     status !== "all",
@@ -20,11 +29,14 @@ const FlowSearchBar = () => {
 
   return (
     <View className="px-4 py-4 flex-row items-center justify-between">
-      {/* Search Box */}
-      <View className="flex-row items-center flex-1 bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm">
-        <SearchIcon width={16} height={16} color="#9CA3AF" />
+      <View
+        className="flex-row items-center flex-1 rounded-full px-4 py-0.5 shadow-sm"
+        style={{ backgroundColor: bgColor }}
+      >
+        <Search size={16} color={textColor} />
         <TextInput
-          className="ml-2 flex-1 text-sm text-gray-800"
+          className="ml-2 flex-1 text-sm"
+          style={{ color: textColor }}
           placeholder="Search Flow"
           placeholderTextColor="#9CA3AF"
           value={search}
@@ -38,9 +50,9 @@ const FlowSearchBar = () => {
           onPress={() => {
             router.push("/protected/flows/FlowFilter");
           }}
-          className="w-full h-full rounded-full bg-[#00998733] flex items-center justify-center"
+          className="w-full h-full rounded-full flex items-center justify-center"
         >
-          <SlidersHorizontal size={18} color="#009987" />
+          <SlidersHorizontal size={18} color={textColor} />
         </TouchableOpacity>
 
         {/* Badge */}

@@ -113,7 +113,7 @@ export default function Inbox({
 
     const messagePreview = returnMessageContentBasedOnParsedMessage(
       parsedMessage,
-      item.lastMessage.messageBody.exchangeProcess
+      item?.lastMessage?.messageBody?.exchangeProcess
     );
     const sessionExpiry = dayjs(item.lastReceivedMessageTimeStamp).add(
       24,

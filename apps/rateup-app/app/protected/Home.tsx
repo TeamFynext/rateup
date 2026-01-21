@@ -125,8 +125,8 @@ export default function Home() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#004F98" />
+      <View className="flex-1 justify-center items-center dark:bg-slate-950">
+        <ActivityIndicator size="large" color={colors["primary-blue"]} />
       </View>
     );
   }

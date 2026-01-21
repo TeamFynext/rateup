@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, useColorScheme } from "react-native";
 import React, { useState } from "react";
 import {
   MessageCircleMore,
@@ -14,18 +14,18 @@ const MENU_ITEMS = [
     Icon: MessageCircleMore,
     iconColor: colors["primary-blue"],
   },
-  // {
-  //   key: "flow",
-  //   label: "Flow",
-  //   Icon: Activity,
-  //   iconColor: "#004F98",
-  // },
-  // {
-  //   key: "webform",
-  //   label: "Web Forms",
-  //   Icon: PanelsTopLeft,
-  //   iconColor: "#004F98",
-  // },
+  {
+    key: "flow",
+    label: "Flow",
+    Icon: Activity,
+    iconColor: "#004F98",
+  },
+  {
+    key: "webform",
+    label: "Web Forms",
+    Icon: PanelsTopLeft,
+    iconColor: "#004F98",
+  },
 ];
 
 const MenuBar = ({
@@ -35,6 +35,8 @@ const MenuBar = ({
   onSendValue: (val: any) => void;
   selected: string;
 }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [selectedInterface, setSelectedInterface] = useState(selected);
 
   const handlePress = (val: string) => {
@@ -48,6 +50,11 @@ const MenuBar = ({
 
       {MENU_ITEMS.map(({ key, label, Icon, iconColor }) => {
         const isSelected = selectedInterface === key;
+        const textColor = isSelected
+          ? colors["primary-blue"]
+          : isDark
+          ? colors["light-blue"]
+          : colors["gray-700"];
 
         return (
           <Pressable
@@ -57,16 +64,8 @@ const MenuBar = ({
             }`}
             onPress={() => handlePress(key)}
           >
-            <Icon
-              color={isSelected ? iconColor : colors["light-blue"]}
-              width={24}
-              height={24}
-            />
-            <Text
-              className={`text-base ${
-                isSelected ? "text-primaryBlue" : "text-lightBlue"
-              }`}
-            >
+            <Icon color={textColor} width={24} height={24} />
+            <Text className={`text-base`} style={{ color: textColor }}>
               {label}
             </Text>
           </Pressable>

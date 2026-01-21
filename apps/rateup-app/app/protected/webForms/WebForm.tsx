@@ -13,6 +13,7 @@ import { useSurvey, useSurveys } from "@/src/api/survey/survey.query";
 import { useResponsesBySurvey } from "@/src/api/response/response.query";
 import { useRouter } from "expo-router";
 import { MoveRight } from "lucide-react-native";
+import { colors } from "@/src/constants/constants";
 
 dayjs.extend(relativeTime);
 dayjs.extend(isToday);
@@ -68,9 +69,9 @@ const WebForm = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-white px-4 pt-4 w-screen justify-center items-center">
+      <View className="flex-1 bg-white dark:bg-slate-950 px-4 pt-4 w-screen justify-center items-center">
         <ActivityIndicator size="large" />
-        <Text className="text-rateUpGreen font-semibold mt-2">
+        <Text className="text-primaryBlue font-semibold mt-2">
           Loading web forms...
         </Text>
       </View>
@@ -80,7 +81,7 @@ const WebForm = () => {
   const renderItem = ({ item }: { item: any }) => {
     return (
       <TouchableOpacity
-        className="bg-white p-4 rounded-xl shadow-md flex flex-col space-y-2 mb-2"
+        className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-md flex flex-col space-y-2 mb-2"
         onPress={() =>
           router.push({
             pathname: `/protected/webForms/${item.id}`,
@@ -90,7 +91,7 @@ const WebForm = () => {
       >
         <View className="flex-row justify-between items-start">
           <Text
-            className="text-base font-semibold text-gray-900 w-[65%]"
+            className="text-base font-semibold dark:text-white w-[65%]"
             numberOfLines={2}
           >
             {item.title}
@@ -120,12 +121,16 @@ const WebForm = () => {
             </Text>
           </View>
 
-          <View className="px-2 py-1 rounded-full bg-rateUpLightGreen">
+          <View className="px-2 py-1 rounded-full bg-primaryBlue/20">
             <View className="flex-row justify-center items-center gap-1">
-              <Text className="text-xs font-semibold text-rateUpGreen">
+              <Text className="text-xs font-semibold text-primaryBlue">
                 Response
               </Text>
-              <MoveRight width={15} height={15} color={"black"} />
+              <MoveRight
+                width={15}
+                height={15}
+                color={colors["primary-blue"]}
+              />
             </View>
           </View>
         </View>
@@ -134,8 +139,8 @@ const WebForm = () => {
   };
 
   return (
-    <View className="flex-1 bg-white w-screen">
-      <View className="bg-rateUpGreen20 px-4 pt-4 pb-2">
+    <View className="flex-1 bg-white dark:bg-slate-950 w-screen">
+      <View className="px-4 pt-4 pb-2">
         <WebFormSearchBar />
       </View>
       <View className="flex-1 px-4 pt-2">

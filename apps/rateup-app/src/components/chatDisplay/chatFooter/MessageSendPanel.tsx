@@ -14,12 +14,10 @@ import {
   Switch,
 } from "react-native";
 import { useForm } from "react-hook-form";
-// import DocumentPicker from "react-native-document-picker";
 import * as DocumentPicker from "expo-document-picker";
 import {
   useContactIdStore,
   useMediaStore,
-  useMessageStore,
   useSessionActiveStore,
   useVoiceRecordStore,
 } from "@/src/utils/store";
@@ -38,12 +36,9 @@ import {
   Plus,
   Send,
 } from "lucide-react-native"; // Import Lucide icons
-import { SendIcon, PlusIcon } from "@/src/constants/imageExports";
 import TemplateSending from "./TemplateSending";
 import { generateInternalMessageId } from "@/src/utils/chatbox_utils";
-import { useQueryClient } from "@tanstack/react-query";
 import { create } from "zustand";
-import { parseToWhatsAppFormat } from "@/src/util";
 import { colors } from "@/src/constants/constants";
 
 type FormValues = {
@@ -551,7 +546,9 @@ const MessageSendPanel = () => {
             </View>
 
             <TouchableOpacity className="ml-2 w-10 h-10 items-center justify-center opacity-50">
-              <SendIcon />
+              <View className="p-2 bg-primaryBlue rounded-full h-10 w-10 flex items-center justify-center">
+                <Send color={"white"} size={16} />
+              </View>
             </TouchableOpacity>
           </View>
         </View>

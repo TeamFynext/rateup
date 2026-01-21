@@ -122,7 +122,7 @@ export default function InboxLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const tabBg = isDark ? colors["slate-950"] : "white";
-  
+
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-slate-950">
       <KeyboardAvoidingView
@@ -134,11 +134,15 @@ export default function InboxLayout() {
             <Menu color="white" strokeWidth={2} size={25} />
             <View>
               <Text className="text-white text-xl font-bold">Inbox</Text>
-              <Text className="text-white text-sm">You may have messages.</Text>
+              <Text className="text-white text-sm">
+                You have {contactCounts.new} new chats.
+              </Text>
             </View>
           </View>
-          {/* <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} /> */}
-          <InboxButtons activeFilterCount={activeFilterCount} />
+          <View className="flex-row items-center gap-2">
+            <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+            <InboxButtons activeFilterCount={activeFilterCount} />
+          </View>
         </View>
         <Tab.Navigator
           tabBarPosition="top"

@@ -9,7 +9,6 @@ import {
   useColorScheme,
 } from "react-native";
 import React, { useState } from "react";
-import { BackIcon, DotsIcon } from "@/src/constants/imageExports";
 import { useRouter } from "expo-router";
 import {
   generateInternalMessageId,
