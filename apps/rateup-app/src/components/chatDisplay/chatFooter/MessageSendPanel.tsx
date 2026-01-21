@@ -72,7 +72,7 @@ const MessageSendPanel = () => {
   const createPrivateMessage = useCreatePrivateMessage(selectedContactId);
   let { isSessionActive } = useSessionActiveStore();
   //@ts-ignore
-  isSessionActive = isSessionActive === "false";
+  isSessionActive = isSessionActive === "true";
   const form = useForm<FormValues>({
     defaultValues: {
       type: "text",
