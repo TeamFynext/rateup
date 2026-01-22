@@ -983,6 +983,80 @@ export function createListMessage(
   };
 }
 
+export function createNativePaymentMessage(
+  to: string,
+  referenceId: string,
+  configName: string,
+  products: { name: string; amount: number; quantity: number }[],
+  currency: string = "INR",
+  providerType: string,
+  bodyText: string = "Confirm your order and pay",
+  footerText?: string,
+): WaSendMessageBody {
+  const totalAmount = products.reduce(
+    (acc, p) => acc + p.amount * p.quantity,
+    0,
+  );
+
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "order_details",
+      body: {
+        text: bodyText,
+      },
+      ...(footerText && {
+        footer: {
+          text: footerText,
+        },
+      }),
+      action: {
+        name: "review_and_pay",
+        parameters: {
+          reference_id: referenceId,
+          type: "physical-goods",
+          payment_settings: [
+            {
+              type: "payment_gateway",
+              payment_gateway: {
+                type: providerType,
+                configuration_name: configName,
+                [providerType]: {
+                  receipt: referenceId,
+                },
+              },
+            },
+          ],
+          currency: currency,
+          total_amount: {
+            value: totalAmount,
+            offset: 100,
+          },
+          order: {
+            status: "pending",
+            type: "quick_pay",
+            items: products.map((p) => ({
+              name: p.name,
+              amount: {
+                value: p.amount,
+                offset: 100,
+              },
+              quantity: p.quantity,
+            })),
+            subtotal: {
+              value: totalAmount,
+              offset: 100,
+            },
+          },
+        },
+      } as any,
+    },
+  } as any;
+}
+
 export function createNativeListMessage(
   to: string,
   header: string,

@@ -443,6 +443,7 @@ async function whatsappMessageHandler(
   );
   if (type === WaMessageTypes.order) {
     await handleWaOrderfromCatalog(completeMessageObject, messageObj);
+    return;
   }
   const expoToken = await getTokensByOrgId(orgId);
   await sendPushNotification(

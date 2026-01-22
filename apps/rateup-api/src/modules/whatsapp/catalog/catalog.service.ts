@@ -14,10 +14,14 @@ import { WaReceiveMessageBody } from "../../../types/whatsapp.types.js";
 import { log } from "../../../utils/logger.js";
 import {
   getAllWaSettings,
+  getWaSettings,
   getWaSettingsById,
   getWaSettingsWithAccessTokenDecrypted,
 } from "../settings/wa_settings.service.js";
 import { MetaLoginAssets, WaConfigType } from "../../../types/enums.js";
+import { createNativePaymentMessage } from "../whatsappSurvey/wasurvey.utils.js";
+import { generateOrderReferenceId } from "../automatedReply/wa_automatedReply.utils.js";
+import { sendMessage } from "../whatsappSurvey/wasurvey.service.js";
 
 export async function updateWaCatalog(
   catalogId: string,
@@ -190,6 +194,9 @@ export async function getWaCatalogsByOrg(orgId) {
     where: {
       orgId,
     },
+    include: {
+      connectedWaPhoneIds: true,
+    },
   });
 }
 
@@ -236,6 +243,115 @@ export async function handleWaOrderfromCatalog(
     },
   });
   log.info("Order placed => %o", newOrder);
+
+  // Trigger Native Payment if configured
+  try {
+    const contact = await prisma.contact.findUnique({
+      where: { id: messageObj.contactId },
+    });
+
+    if (contact && contact.phone) {
+      await handleWaOrderNativePayment(
+        catalog.orgId,
+        contact.phone,
+        order.catalog_id,
+        newOrder.products as any,
+      );
+    }
+  } catch (e) {
+    log.error("Error triggering native payment => %o", e);
+  }
+}
+
+export async function handleWaOrderNativePayment(
+  orgId: string,
+  contactPhone: string,
+  catalogId: string,
+  productItems: {
+    retailerId: string;
+    quantity: number;
+    price: number;
+    currency: string;
+  }[],
+) {
+  try {
+    const waSetting = await getWaSettings(orgId);
+
+    if (!waSetting || !waSetting.wabaId) {
+      log.trace(
+        "WhatsApp settings or WABA ID not found for orgId => %s",
+        orgId,
+      );
+      return;
+    }
+
+    // Fetch payment configurations from Meta
+    const paymentConfigsResponse = await callWhatsappApi(
+      `/${waSetting.wabaId}/payment_configurations`,
+      "GET",
+      waSetting.accessToken,
+    );
+
+    const paymentConfigs = paymentConfigsResponse?.data?.data || [];
+
+    let activeConfig = null;
+
+    for (const item of paymentConfigs) {
+      activeConfig = item.payment_configurations?.find(
+        (config: any) => config.status?.toLowerCase() === "active",
+      );
+      if (activeConfig) break;
+    }
+
+    if (!activeConfig) {
+      log.trace(
+        "No active payment configuration found on Meta for wabaId => %s",
+        waSetting.wabaId,
+      );
+      return;
+    }
+
+    const providerType = activeConfig.provider_name?.toLowerCase();
+    const configName = activeConfig.configuration_name;
+
+    const retailerIds = productItems.map((p) => p.retailerId);
+    const dbProducts = await prisma.waCatalogProduct.findMany({
+      where: {
+        retailer_id: { in: retailerIds },
+        catalogId: catalogId,
+      },
+    });
+
+    const paymentProducts = productItems.map((p) => {
+      const dbP = dbProducts.find((dp) => dp.retailer_id === p.retailerId);
+      return {
+        name: (dbP?.productProps as any)?.title || `Product ${p.retailerId}`,
+        amount: p.price * 100, // multiplying by 100 to account for the 2 decimal offset
+        quantity: p.quantity,
+      };
+    });
+
+    const referenceId = generateOrderReferenceId();
+
+    const message = createNativePaymentMessage(
+      contactPhone,
+      referenceId,
+      configName,
+      paymentProducts,
+      productItems[0].currency || "INR",
+      providerType,
+      "Thank you for your order! Please complete the payment below.",
+    );
+
+    await sendMessage(orgId, message);
+    log.info(
+      "Sent native payment request to %s for order %s",
+      contactPhone,
+      referenceId,
+    );
+  } catch (e) {
+    log.error("Error in handleWaOrderNativePayment => %o", e);
+  }
 }
 
 export async function updateConnectWaCatalog(wabaId, orgId, catalogId) {
