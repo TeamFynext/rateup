@@ -218,6 +218,7 @@ export async function getConnectedWaCatalog(whatsappSettingsPhoneId) {
 export async function handleWaOrderfromCatalog(
   data: WaReceiveMessageBody,
   messageObj: WaMessage,
+  waSettings: Omit<WhatsappSettings, "accessToken_iv">,
 ) {
   const order = data.messages[0].order;
   const catalog = await prisma.whatsappCatalog.findUnique({
@@ -229,16 +230,17 @@ export async function handleWaOrderfromCatalog(
     log.trace("catalog not synced yet => %s", order.catalog_id);
     return;
   }
+  const products = order.product_items.map((p) => ({
+    retailerId: p.product_retailer_id,
+    currency: p.currency,
+    price: p.item_price,
+    quantity: p.quantity,
+  }));
   const newOrder = await prisma.waCatalogOrder.create({
     data: {
       catalogId: order.catalog_id,
       contactId: messageObj.contactId,
-      products: order.product_items.map((p) => ({
-        retailerId: p.product_retailer_id,
-        currency: p.currency,
-        price: p.item_price,
-        quantity: p.quantity,
-      })),
+      products: products as any,
       createdAt: messageObj.waCreatedAt,
     },
   });

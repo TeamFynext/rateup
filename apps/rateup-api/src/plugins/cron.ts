@@ -18,7 +18,6 @@ import {
   processDripCampaigns,
   sendSchedulesWaMessages,
 } from "../modules/whatsapp/wa_message_scheduler.js";
-import { deactivateExpiredActions } from "../modules/loyalty/actions/actions.service.js";
 
 export async function registerCronJobs(
   server,
@@ -54,16 +53,6 @@ export async function registerCronJobs(
         },
         start: true,
         timeZone: "Etc/UTC",
-      },
-      {
-        name: "dailyJobs",
-        cronTime: "0 9 * * *",
-        onTick: async () => {
-          server.log.info("Running Daily Jobs");
-          await subscriptionExpiryAlert();
-          await deactivateExpiredActions();
-        },
-        start: true,
       },
       {
         name: "hourlyJobs",

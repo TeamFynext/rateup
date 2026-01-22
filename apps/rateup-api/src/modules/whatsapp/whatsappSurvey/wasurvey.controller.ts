@@ -16,6 +16,7 @@ import {
   parseResponse,
   parseStartMessage,
   parseToWhatsAppFormat,
+  parseWaJoinMessage,
   validateSession,
 } from "./wasurvey.utils.js";
 import {
@@ -137,6 +138,11 @@ import {
 import { getUserIdsByTeamId } from "../../user/user.service.js";
 import { getTeamIdsByUserId } from "../../team/team.service.js";
 import { verifyTemplateMessageLimit } from "../messageTemplates/wa_templates.auth.js";
+import {
+  createCustomerAccount,
+  getCustomerAccountByPhone,
+} from "../../loyalty/accounts/account.service.js";
+import { getLoyaltyProgramByOrg } from "../../loyalty/program/program.service.js";
 
 // TODO: add as fastify schema
 interface subscribeQuery {
@@ -458,10 +464,26 @@ async function whatsappMessageHandler(
     type === "text" || type === "interactive"
       ? message?.trim()?.toLocaleLowerCase()
       : "";
-
+  const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(
+    orgId,
+    message,
+  );
   // Handle button click interactions first
-  if (parsedMessage?.buttonId) {
+  if (parsedMessage?.buttonId && !loyaltyWaCommand) {
     await handleButtonClickInteraction(from, parsedMessage, orgId);
+    return;
+  }
+
+  const joinPayload = parseWaJoinMessage(message);
+
+  if (joinPayload?.isJoin) {
+    await handleWaJoinRegistration({
+      orgId,
+      from,
+      userName,
+      joinPayload,
+      sourceIdentifier,
+    });
     return;
   }
 
@@ -516,12 +538,9 @@ async function whatsappMessageHandler(
       );
     }
   }
-  const loyaltyWaCommand = await getLoyaltyWaCommandByRequestMessage(
-    orgId,
-    message,
-  );
+
   if (loyaltyWaCommand) {
-    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand);
+    await handleLoyaltyWaCommand(from, userName, loyaltyWaCommand, orgId);
   } else if (!!parseStartMessage(message)) {
     await handleStartMessage(orgId, waMessage);
   } else if (parsedMessage.type === "nfm_reply") {
@@ -543,6 +562,63 @@ async function whatsappMessageHandler(
 
     await handleAutomatedReply(orgId, waMessage, parsedMessage, from, message);
   }
+}
+
+export async function handleWaJoinRegistration({
+  orgId,
+  from,
+  userName,
+  joinPayload,
+  sourceIdentifier,
+}: {
+  orgId: string;
+  from: string;
+  userName?: string;
+  joinPayload: { source?: string; referralCode?: string };
+  sourceIdentifier: string;
+}) {
+  const program = await getLoyaltyProgramByOrg(orgId);
+  if (!program) {
+    log.error("Loyalty program not found for orgId: %s", orgId);
+    await sendTextMessage(
+      { phone: from, orgId },
+      null,
+      "Sorry, our loyalty program is currently unavailable.",
+    );
+    return;
+  }
+  // 1. Check if already registered
+  const existingCustomer = await prisma.customerLoyaltyAccount.findFirst({
+    where: {
+      contact: {
+        phone: from,
+        orgId,
+      },
+      programId: program.id,
+      status: "active",
+    },
+  });
+
+  if (existingCustomer) {
+    await sendTextMessage(
+      { phone: from, orgId },
+      null,
+      "✅ You are already registered in our loyalty program.",
+    );
+    return;
+  }
+  // 2. Create or update customer
+  await createCustomerAccount(
+    {
+      phone: from,
+      name: userName,
+      referCode: joinPayload.referralCode,
+      source: joinPayload.source || "WHATSAPP",
+    },
+    program.id,
+    orgId,
+    sourceIdentifier,
+  );
 }
 
 const pendingConfirmationMap = new Map<string, boolean>();
