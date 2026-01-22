@@ -13,6 +13,7 @@ export async function getWaCatalogs() {
     catalogId: string;
     name: string;
     vertical: string;
+    connectedWaPhoneIds?: any[];
   }[];
 }
 
