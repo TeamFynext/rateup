@@ -59,7 +59,15 @@ const WaCatalogList = () => {
           }
         >
           <Stack>
-            <Text>{catalog.name}</Text>
+            <Group justify="space-between" align="flex-start">
+              <Text fw={500}>{catalog.name}</Text>
+              {catalog.connectedWaPhoneIds &&
+                catalog.connectedWaPhoneIds.length > 0 && (
+                  <Badge color="green" variant="filled" size="xs">
+                    Linked to WhatsApp
+                  </Badge>
+                )}
+            </Group>
             <Group justify="space-between">
               <Text c={"dimmed"} size="sm">
                 ID: {catalog.catalogId}
