@@ -9,6 +9,7 @@ import {
   WaMessageAssignBody,
   BlockUserBody,
   GenerateInboxResponseBody,
+  PrivateWaMessageBody,
 } from "./wamessage.schema.js";
 import {
   addNewWaMessage,
@@ -26,6 +27,7 @@ import {
   sendLocationMessage,
   generateChatAnalytics,
   generateInboxResponse,
+  createInternalWaMessage,
 } from "./wamessage.service.js";
 import {
   ByContactIdParams,
@@ -46,6 +48,7 @@ import {
   unblockWhatsappUser,
 } from "../../whatsappSurvey/wasurvey.service.js";
 import {
+  extractMentions,
   handleWaReceivedImages,
   isSessionExpired,
   returnAppropriateTimeStamp,
@@ -651,6 +654,42 @@ export async function generateInboxResponseHandler(
     // Generate response logic here
   } catch (error) {
     log.error("Error in generateInboxResponseHandler: %o", error);
+    reply.status(500).send("Internal Server Error");
+  }
+}
+
+export async function createPrivateMessageHandler(
+  request: FastifyRequest<{
+    Body: PrivateWaMessageBody;
+    Params: ByContactIdParams;
+  }>,
+  reply: FastifyReply,
+) {
+  try {
+    const { orgId, userId } = request.user;
+    const { contactId } = request.params;
+    const body = request.body;
+    let text = "";
+    if (typeof body.text?.body === "string") {
+      text = body.text.body;
+    } else if (body.text?.body?.type === "doc") {
+      text = parseToWhatsAppFormat(body.text.body);
+    } else {
+      throw new Error("Invalid text.body format");
+    }
+    const mentionedUsers = extractMentions(text);
+    const res = await createInternalWaMessage({
+      contactId: contactId,
+      privateMessageText: text,
+      trigerredByUser: userId,
+      orgId: orgId,
+      exchangeProcess: "privateNote",
+      mentionedUsers: mentionedUsers,
+      messageId: body.messageId,
+    });
+    reply.code(200).send(res);
+  } catch (error) {
+    log.error("Error in creating private note: %o", error);
     reply.status(500).send("Internal Server Error");
   }
 }

@@ -23,6 +23,8 @@ import { PipeSourceManagedStreamingKafkaParameters } from "aws-sdk/clients/pipes
 import { getSession } from "../modules/whatsapp/whatsappSurvey/wasurvey.service.js";
 import prisma from "../utils/prisma.js";
 import {
+  WaInternalMessageBody,
+  WaPrivateMessageBody,
   WaReceiveMessageBody,
   WaSendMessageBody,
   WaTemplateSendComponent,
@@ -206,6 +208,7 @@ declare global {
     schedules: ShopifySchedules[];
     actionId?: string;
     loyaltyApiFeature?: string;
+    variableMapping: { templateParamIndex: number; shopifyPath: string }[];
   };
 
   type ScheduleObj = {
@@ -222,6 +225,7 @@ declare global {
     actionStatus?: "success" | "failed";
     history: ScheduleObj[];
     apiStatus?: string;
+    body?: any;
   };
 
   type ZapierIntegration = Integration & {
@@ -614,9 +618,11 @@ declare global {
   //---instagram
 
   type WaInboxMessageBody = {
-    exchangeProcess: "send" | "receive";
+    exchangeProcess: "send" | "receive" | "internal" | "privateNote";
     send?: WaSendMessageBody | IgSendMessageBody;
     receive?: WaReceiveMessageBody | IgReceiveMessageBody;
+    internal?: WaInternalMessageBody;
+    privateNote?: WaPrivateMessageBody;
   };
   type WaTemplateDefaultValues = {
     image?: {
@@ -827,12 +833,16 @@ declare module "fastify" {
   }
 }
 
-export interface CustomRouteShortHandOptions
-  extends Omit<RouteShorthandOptions, "config"> {
+export interface CustomRouteShortHandOptions extends Omit<
+  RouteShorthandOptions,
+  "config"
+> {
   config: any;
 }
 
-export interface CustomRouteShortHandOptionsWithHandler
-  extends Omit<RouteShorthandOptionsWithHandler, "config"> {
+export interface CustomRouteShortHandOptionsWithHandler extends Omit<
+  RouteShorthandOptionsWithHandler,
+  "config"
+> {
   config: any;
 }
