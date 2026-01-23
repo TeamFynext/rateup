@@ -179,7 +179,8 @@ export interface WaSendMessageBody {
       | "flow"
       | "catalog_message"
       | "product"
-      | "product_list";
+      | "product_list"
+      | "order_details";
     action?: WaInteractiveMessageAction;
     body?: {
       text: string; // max 1024 chars
