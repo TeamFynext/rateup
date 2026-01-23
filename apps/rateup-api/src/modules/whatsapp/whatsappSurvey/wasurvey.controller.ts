@@ -453,6 +453,7 @@ async function whatsappMessageHandler(
       messageObj,
       waSettings,
     );
+    return;
   }
   const expoToken = await getTokensByOrgId(orgId);
   await sendPushNotification(
