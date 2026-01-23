@@ -218,6 +218,7 @@ export async function getConnectedWaCatalog(whatsappSettingsPhoneId) {
 export async function handleWaOrderfromCatalog(
   data: WaReceiveMessageBody,
   messageObj: WaMessage,
+  waSettings: Omit<WhatsappSettings, "accessToken_iv">,
 ) {
   const order = data.messages[0].order;
   const catalog = await prisma.whatsappCatalog.findUnique({
@@ -257,6 +258,7 @@ export async function handleWaOrderfromCatalog(
         contact.phone,
         order.catalog_id,
         newOrder.products as any,
+        waSettings,
       );
     }
   } catch (e) {
@@ -274,9 +276,10 @@ export async function handleWaOrderNativePayment(
     price: number;
     currency: string;
   }[],
+  waSettings: Omit<WhatsappSettings, "accessToken_iv">,
 ) {
   try {
-    const waSetting = await getWaSettings(orgId);
+    const waSetting = waSettings;
 
     if (!waSetting || !waSetting.wabaId) {
       log.trace(
