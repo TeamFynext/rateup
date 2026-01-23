@@ -218,7 +218,6 @@ export async function getConnectedWaCatalog(whatsappSettingsPhoneId) {
 export async function handleWaOrderfromCatalog(
   data: WaReceiveMessageBody,
   messageObj: WaMessage,
-  orgId: string,
 ) {
   const order = data.messages[0].order;
   const catalog = await prisma.whatsappCatalog.findUnique({
