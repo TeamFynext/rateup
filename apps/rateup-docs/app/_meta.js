@@ -6,6 +6,7 @@ export default {
   inbox:"Inbox",
   analytics:"Analytics",
   contacts:"Contacts",
+  whatsapp:"Whatsapp",
   automation:"Automation",
   profilesettings: "Profile",
   teams: "Teams and User Roles",

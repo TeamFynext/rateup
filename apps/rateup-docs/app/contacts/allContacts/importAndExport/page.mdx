@@ -3,7 +3,7 @@
 The **Import and Export** feature allows you to add contacts in bulk and download contact data for reporting, backups, or external use. These options are available from the top bar of the **All Contacts** page.
 
 import ScreenShot from "../../../../components/Screenshot";
-import { CDN } from '../../../../lib/cdn';
+import { CDN } from "../../../../lib/cdn";
 
 ---
 
@@ -53,9 +53,14 @@ If these fields are missing, the import will fail.
   width={450}
 />
 
-- Enable **Update the existing data while importing** to update existing contacts.
-- Matching is typically done using the phone number.
-- When enabled, existing contact data will be overwritten with imported values.
+To update existing contacts:
+
+1. Enable **Update the existing data while importing**
+2. Upload the import file
+3. Matching is done using the contact’s phone number
+4. Existing contact values are replaced with imported values
+
+Use this carefully, as existing data will be overwritten..
 
 ---
 
@@ -68,10 +73,10 @@ If these fields are missing, the import will fail.
 
 ### Completing the Import
 
-1. Choose the file to upload  
-2. Review selected options  
-3. Click **Import** to start the process  
-4. Click **Cancel** to exit without importing  
+1. Choose the file to upload
+2. Review selected options
+3. Click **Import** to start the process
+4. Click **Cancel** to exit without importing
 
 ---
 
@@ -89,10 +94,15 @@ Export allows you to download contact data from RateUp for offline use or report
 
 ### Export Formats
 
-You can export contacts in the following formats:
+To export contacts:
 
-- **CSV**
-- **Excel**
+1. Open the export options
+2. Select the required format:
+   - **CSV**
+   - **Excel**
+3. Start the export process
+
+The file is downloaded to your device.
 
 ---
 
@@ -106,18 +116,18 @@ You can export contacts in the following formats:
 
 ### Common Use Cases
 
-- Creating backups  
-- Sharing contact data with external tools  
-- Offline analysis and reporting  
+- Creating backups
+- Sharing contact data with external tools
+- Offline analysis and reporting
 
 ---
 
 ## Best Practices
 
-- Always validate files before importing  
-- Use the demo CSV to avoid formatting issues  
-- Apply filters before exporting to limit data  
-- Handle exported files securely  
+- Always validate files before importing
+- Use the demo CSV to avoid formatting issues
+- Apply filters before exporting to limit data
+- Handle exported files securely
 
 ---
 
@@ -125,8 +135,8 @@ You can export contacts in the following formats:
 
 Import and Export help teams:
 
-- Save time when adding large contact lists  
-- Maintain clean and up-to-date contact data  
-- Perform analysis outside the platform  
+- Save time when adding large contact lists
+- Maintain clean and up-to-date contact data
+- Perform analysis outside the platform
 
 ---

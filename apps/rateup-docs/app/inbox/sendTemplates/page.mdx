@@ -3,6 +3,7 @@ title: Sending Templates
 description: Learn how to send WhatsApp templates before and after the 24-hour messaging window.
 ---
 
+import { CDN } from "../../../lib/cdn";
 import ScreenShot from "../../../components/Screenshot";
 
 # Sending Templates
@@ -56,7 +57,7 @@ When the 24-hour window has expired:
 - Only **approved WhatsApp templates** can be sent
 
 <ScreenShot
-  src={"/screenshots/templates/send-template-after-24h.png"}
+  src={`${CDN}/docs/screenshots/inbox/send-template-after-24h.png`}
   alt="Sending a template after the 24-hour window"
   width={650}
 />
@@ -77,7 +78,7 @@ Use templates within the window when:
 - You prefer predefined content
 
 <ScreenShot
-  src={"/screenshots/templates/send-template-within-24h.png"}
+  src={`${CDN}/docs/screenshots/inbox/send-template-within-24h.png`}
   alt="Sending a template within the 24-hour window"
   width={650}
 />

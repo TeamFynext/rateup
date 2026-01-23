@@ -3,6 +3,7 @@ title: Assigned Conversations
 description: Learn how assigned conversations work in the RateUp Inbox and how teams manage ownership and reassignment.
 ---
 
+import { CDN } from "../../../../lib/cdn";
 import ScreenShot from "../../../../components/Screenshot";
 
 # Assigned Conversations
@@ -28,7 +29,7 @@ Assigned conversations help teams:
 ## Assigned View Overview
 
 <ScreenShot
-  src={"/screenshots/inbox/assigned.png"}
+  src={`${CDN}/docs/screenshots/inbox/assigned.png`}
   alt="Assigned conversations view in Inbox"
   width={"80%"}
 />
@@ -85,6 +86,11 @@ When a conversation is assigned, the assigned user is clearly shown in multiple 
 
 To open an assigned conversation:
 
+<ScreenShot
+  src={`${CDN}/docs/screenshots/inbox/assign.png`}
+  alt="open an assigned conversation"
+/>
+
 1. Click a conversation from the **Assigned** tab
 2. The chat opens in the conversation panel
 3. You can view:
@@ -99,9 +105,9 @@ Your ability to respond depends on your role permissions.
 ## Reassigning an Assigned Conversation
 
 <ScreenShot
-  src={"/screenshots/inbox/reassign.png"}
+  src={`${CDN}/docs/screenshots/inbox/reassign.png`}
   alt="Reassign conversation to another team or individual"
-  width={350}
+  width={300}
 />
 
 Assigned conversations can be reassigned at any time.

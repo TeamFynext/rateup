@@ -1,10 +1,9 @@
-import nextra from 'nextra'
+import nextra from "nextra";
 
-const withNextra = nextra({})
+const withNextra = nextra({});
 
 export default withNextra({
-    htmlLimitedBots: /.*/,
-      // typedRoutes: false,
+  htmlLimitedBots: /.*/,
   images: {
     remotePatterns: [
       {
@@ -13,10 +12,9 @@ export default withNextra({
         port: "",
       },
       {
-        protocol: "http",
+        protocol: "https",
         hostname: "d2uj946b0i8y27.cloudfront.net",
-        // pathname: "/**",
       },
     ],
   },
-})
+});

@@ -1,17 +1,25 @@
 # Group Details
 
-The **Group Details** page allows you to view and manage a specific contact group. From here, you can see group information, manage members, and perform group-level actions.
+The **Group Details** page is used to view and manage a specific contact group. From this page, you can review group information, manage members, and perform group-level actions.
 
 import ScreenShot from "../../../../components/Screenshot";
-import { CDN } from '../../../../lib/cdn';
+import { CDN } from "../../../../lib/cdn";
 
 ---
 
 ## Opening a Group
 
-Click on any group card from the **Groups List** to open its Group Details page.
+<ScreenShot
+  src={`${CDN}/docs/screenshots/contacts/groups-overview.png`}
+  alt="Opening a Group"
+/>
 
-This page focuses on managing members and monitoring the group at a deeper level.
+To open a group:
+
+1. Navigate to the **Groups List**
+2. Click on the required group card
+
+The Group Details page opens for the selected group.
 
 ---
 
@@ -22,50 +30,54 @@ This page focuses on managing members and monitoring the group at a deeper level
   alt="Group details header showing group name and total members"
 />
 
-The group header displays:
+At the top of the page, the group header displays:
 
 - **Group Name**
-- **Team** the group belongs to
+- **Team** associated with the group
 - **Total Members** count
 - **Back to Groups** button
 - **Delete Group** action
 
-The header provides a quick summary and navigation controls.
+Use the header to quickly understand the group context or navigate back.
 
 ---
 
-## Group Members Section
+## Viewing Group Members
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/contacts/group-members-list.png`}
   alt="Group members list"
 />
 
-The **Group Members** section lists all contacts that belong to the selected group.
+To view contacts in the group:
 
-Each row represents a contact in the group and shows:
+- Scroll through the **Group Members** list
+- Each row represents one contact in the group
+
+For each contact, the list shows:
 
 - Contact name and avatar
 - Phone / IGSID
-- Label (if any)
+- Label (if assigned)
 - Source (Manual, Imported, WhatsApp, etc.)
 - Date added to the group
-- Action options
+- Available actions
 
 ---
 
-## Search Group Members
+## Searching Group Members
 
-You can search for members within the group using the search input.
+To find a specific member within the group:
 
-- Search by **name** or **phone number**
-- Results update as you type
+1. Use the search input above the members list
+2. Enter a contact **name** or **phone number**
+3. Review the filtered results as they update in real time
 
-This is useful for groups with a large number of members.
+This is especially useful for groups with many members.
 
 ---
 
-## Add Members
+## Adding Members to a Group
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/contacts/add-members-modal.png`}
@@ -73,24 +85,26 @@ This is useful for groups with a large number of members.
   width={450}
 />
 
-Click **Add Members** to include new contacts in the group.
+To add members:
 
-You can add members by:
+1. Click **Add Members**
+2. Choose one of the following options:
+   - Add a **new contact**
+   - Select **existing contacts**
+   - Import contacts using **CSV / XLSX**
+3. Fill in any optional fields if required:
+   - Labels
+   - Lifecycle stage
+   - Assignee
+   - Custom fields (for example, coupon)
+   - Notes
+4. Save to add contacts to the group
 
-- Adding a **new contact**
-- Selecting **existing contacts**
-- Importing contacts using **CSV / XLSX**
-
-Additional fields may include:
-- Labels
-- Lifecycle stage
-- Assignee
-- Custom fields (for example, coupon)
-- Notes
+New members appear immediately in the group list.
 
 ---
 
-## View Settings (Toggle Columns)
+## Customizing the Members List View
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/contacts/group-view-settings.png`}
@@ -98,50 +112,55 @@ Additional fields may include:
   width={200}
 />
 
-Use **View Settings** to control which columns are visible in the Group Members list.
+To customize visible columns:
 
-Available columns may include:
+1. Click **View Settings**
+2. Enable or disable required columns
 
-- Name  
-- Phone / IGSID  
-- Label  
-- Source  
-- Date Added  
-- Last Contact  
-- Action  
+Available columns include:
 
-Changes apply instantly and help customize the list view.
+- Name
+- Phone / IGSID
+- Label
+- Source
+- Date Added
+- Last Contact
+- Action
 
----
-
-## Remove Members
-
-Each contact row includes a **Remove member** action.
-
-- Click **Remove member** to remove the contact from the group
-- Removing a member does **not delete the contact** from the system
+Changes apply instantly and affect only your current view.
 
 ---
 
-## Group Actions
+## Removing Members from a Group
 
-Group-level actions include:
+To remove a contact from the group:
 
-- **Delete Group** – Permanently removes the group  
-- **Back to Groups** – Returns to the Groups List  
+1. Locate the contact in the members list
+2. Click **Remove member**
 
-> Deleting a group does not remove contacts from your contact list.
+The contact is removed from the group but remains available in the Contacts List.
+
+---
+
+## Group-Level Actions
+
+You can perform the following actions from the Group Details page:
+
+- **Delete Group** – Permanently deletes the group
+- **Back to Groups** – Returns to the Groups List
+
+> Deleting a group does not delete the contacts inside it.
 
 ---
 
 ## Why Group Details Matter
 
-The Group Details page helps teams:
+The Group Details page allows teams to:
 
-- Manage group membership efficiently  
-- Add or remove contacts easily  
-- Search within large groups  
-- Customize member views  
-- Maintain clean and organized contact groups  
+- Manage group membership effectively
+- Add or remove contacts as needed
+- Search within large groups
+- Customize member list views
+- Keep contact groups organized
 
 ---

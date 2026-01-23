@@ -3,6 +3,7 @@ title: Conversation Lifecycle
 description: Understand how conversation status works in the RateUp Inbox.
 ---
 
+import { CDN } from "../../../lib/cdn";
 import ScreenShot from "../../../components/Screenshot";
 
 # Conversation Lifecycle
@@ -23,7 +24,7 @@ The lifecycle control is available **in every Inbox view** and can be updated at
 ## Lifecycle Control Location
 
 <ScreenShot
-  src={"/screenshots/inbox/lifecycle-overview.png"}
+  src={`${CDN}/docs/screenshots/inbox/lifecycle-overview.png`}
   alt="Conversation view with lifecycle control"
 />
 
@@ -35,7 +36,7 @@ It is visible in all Inbox views including **New**, **Assigned**, **Mine**, and 
 ## Lifecycle Options
 
 <ScreenShot
-  src={"/screenshots/inbox/lifecycle-dropdown.png"}
+  src={`${CDN}/docs/screenshots/inbox/lifecycle-dropdown.png`}
   alt="Conversation lifecycle dropdown options"
    width={350}
 />
@@ -98,7 +99,7 @@ The issue requires long-term tracking or escalation.
 ## Closed Conversations
 
 <ScreenShot
-  src={"/screenshots/inbox/closed-conversation.png"}
+  src={`${CDN}/docs/screenshots/inbox/closed-conversation.png`}
   alt="Closed conversation view"
 />
 

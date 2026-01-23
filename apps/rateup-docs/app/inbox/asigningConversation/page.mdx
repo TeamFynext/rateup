@@ -3,6 +3,7 @@ title: Assignment & Reassignment
 description: Learn how to assign and reassign conversations to team members or teams in the RateUp Inbox.
 ---
 
+import { CDN } from "../../../lib/cdn";
 import ScreenShot from "../../../components/Screenshot";
 
 # Assignment & Reassignment
@@ -32,7 +33,7 @@ You should assign a conversation when:
 ### Step-by-Step: Assigning a Conversation
 
 <ScreenShot
-  src={"/screenshots/inbox/assign-new-chat.png"}
+  src={`${CDN}/docs/screenshots/inbox/assignDropdown.png`}
   alt="Assigning a new conversation from the New tab"
   width={650}
 />
@@ -77,7 +78,7 @@ This is useful when:
 ### Step-by-Step: Reassigning a Conversation
 
 <ScreenShot
-  src={"/screenshots/inbox/reassign.png"}
+  src={`${CDN}/docs/screenshots/inbox/reassign.png`}
   alt="Reassigning a conversation to another team or user"
   width={450}
 />
@@ -99,7 +100,7 @@ The new assignee becomes responsible for responding and closing the conversation
 Closed conversations can also be reassigned if follow-up is required.
 
 <ScreenShot
-  src={"/screenshots/inbox/closed-reassign.png"}
+  src={`${CDN}/docs/screenshots/inbox/closed-reassign.png`}
   alt="Reassigning a closed conversation"
   width={600}
 />

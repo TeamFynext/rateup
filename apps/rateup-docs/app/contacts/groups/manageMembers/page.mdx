@@ -1,15 +1,18 @@
 # Manage Group Members
 
-The **Manage Members** section explains how to add, remove, and control contacts inside a group. It focuses specifically on member-level actions within a group.
+The **Manage Members** section is used to add, view, and remove contacts within a group. All actions described here are performed from the Group Details page.
 
 import ScreenShot from "../../../../components/Screenshot";
-import { CDN } from '../../../../lib/cdn';
+import { CDN } from "../../../../lib/cdn";
 
 ---
 
 ## Adding Members to a Group
 
-You can add contacts to a group at any time using the **Add Members** option available in Group Details.
+To add contacts to a group:
+
+1. Open the required group from the **Groups List**
+2. Click **Add Members**
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/contacts/add-members-modal.png`}
@@ -17,54 +20,65 @@ You can add contacts to a group at any time using the **Add Members** option ava
   width={400}
 />
 
-### Ways to Add Members
-
-You can add members by:
-
-- **Adding a new contact**  
-  Create a new contact and directly add it to the group.
-
-- **Selecting existing contacts**  
-  Choose from contacts already available in your contact list.
-
-- **Importing contacts**  
-  Upload contacts using **CSV** or **Excel** files.
+The Add Members modal opens.
 
 ---
 
-## Member Information During Add
+### Ways to Add Members
 
-While adding members, you may be able to set additional information such as:
+Choose one of the following methods to add contacts:
 
-- Labels  
-- Lifecycle stage  
-- Assignee  
-- Custom fields (for example, coupon)  
-- Internal notes  
+- **Add a new contact**  
+  Create a new contact and add it directly to the group.
 
-This helps ensure contacts are fully enriched when added to the group.
+- **Select existing contacts**  
+  Choose one or more contacts from your existing contact list.
+
+- **Import contacts**  
+  Upload contacts using **CSV** or **Excel** files.
+
+Each method adds contacts directly to the selected group.
+
+---
+
+## Setting Member Information During Add
+
+While adding members, you can optionally configure additional information:
+
+- Labels
+- Lifecycle stage
+- Assignee
+- Custom fields (for example, coupon)
+- Internal notes
+
+This ensures contacts are enriched at the time of addition.
 
 ---
 
 ## Viewing Group Members
 
-Once added, members appear in the **Group Members List**.
+After members are added:
 
-Each member row displays contact details such as:
+1. Scroll to the **Group Members List**
+2. Review the listed contacts
 
-- Name and avatar  
-- Phone / IGSID  
-- Labels (if any)  
-- Source  
-- Date added to the group  
+Each member row displays:
 
-This list helps track who belongs to the group.
+- Name and avatar
+- Phone / IGSID
+- Assigned labels (if any)
+- Source
+- Date added to the group
+
+This list confirms successful member addition.
 
 ---
 
-## Customizing Member View
+## Customizing the Members List View
 
-Use **View Settings** to customize which columns are visible in the Group Members list.
+To customize visible columns:
+
+1. Click **View Settings** in the Group Members section
 
 <ScreenShot
   src={`${CDN}/docs/screenshots/contacts/group-view-settings.png`}
@@ -72,43 +86,40 @@ Use **View Settings** to customize which columns are visible in the Group Member
   width={200}
 />
 
-This allows you to:
+2. Enable or disable required columns
 
-- Show or hide specific columns  
-- Focus on relevant member information  
-- Reduce clutter when managing large groups  
-
-Changes apply instantly and affect only your view.
+This helps focus on relevant member information when managing large groups.  
+Changes apply instantly and affect only your current view.
 
 ---
 
 ## Removing Members from a Group
 
-Each member row includes a **Remove member** action.
+To remove a contact from a group:
 
-- Click **Remove member** to take the contact out of the group
-- Removing a member does **not delete** the contact from the system
+1. Locate the contact in the Group Members List
+2. Click **Remove member**
 
-This ensures contacts remain available for use in other groups or conversations.
+The contact is removed from the group but remains available in the Contacts List.
 
 ---
 
 ## Best Practices for Managing Members
 
-- Keep group membership up to date  
-- Use labels and lifecycle stages for better segmentation  
-- Avoid adding unnecessary contacts to large groups  
-- Review group members periodically  
+- Keep group membership updated regularly
+- Use labels and lifecycle stages for better segmentation
+- Avoid adding unnecessary contacts to large groups
+- Review group members periodically
 
 ---
 
 ## Why Managing Members Matters
 
-Proper member management helps teams:
+Managing group members correctly helps teams:
 
-- Maintain clean and accurate groups  
-- Improve targeting and segmentation  
-- Avoid duplicate or outdated group members  
-- Work more efficiently with large contact sets  
+- Maintain clean and accurate groups
+- Improve targeting and segmentation
+- Avoid outdated or irrelevant members
+- Work efficiently with large contact sets
 
 ---
