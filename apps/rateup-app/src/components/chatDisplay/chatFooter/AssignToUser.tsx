@@ -28,20 +28,24 @@ import { Check, UserCheck, Users } from "lucide-react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "react-native-toast-notifications";
 import { colors } from "@/src/constants/constants";
+import { useChatAssignStatusStore } from "@/src/utils/store";
 
 export default function AssignToUser({
   contactId,
   color,
-  iconSize=16,
-  fontSize=14
+  iconSize = 16,
+  fontSize = 14,
 }: {
   contactId: string;
-  iconSize?:number;
+  iconSize?: number;
   color?: boolean;
-  fontSize?:number;
+  fontSize?: number;
 }) {
   const [visible, setVisible] = useState(false);
   const assignMut = useAssignInboxToUser(contactId);
+  const setWaAssignStatus = useChatAssignStatusStore(
+    (state) => state.setWaAssignStatus
+  );
   const { data: teamRes, isPending: teamsLoading } = useTeamsByUser();
   const { data: teamMembers, isLoading } = useTeamsMembersOfOrg();
   const { data: assignedUsers, isLoading: isAssignedLoading } =
@@ -49,8 +53,12 @@ export default function AssignToUser({
   const queryClient = useQueryClient();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const buttonBgColor = color? colors["primary-blue"] :isDark? colors["gray-900"]:"white";
-  const textColor = color? "white" : isDark? "white":"black"
+  const buttonBgColor = color
+    ? colors["primary-blue"]
+    : isDark
+    ? colors["gray-900"]
+    : "white";
+  const textColor = color ? "white" : isDark ? "white" : "black";
   const toast = useToast();
 
   const membersByTeam = useMemo(() => {
@@ -90,15 +98,17 @@ export default function AssignToUser({
       },
       {
         onSuccess: () => {
+          setWaAssignStatus("ASSIGNED")
           toast.show("Assigned Successfully", {
             type: "success",
             duration: 2000,
           });
+
           queryClient.invalidateQueries({
             queryKey: ["assigned-contact", contactId],
           });
           queryClient.invalidateQueries({
-            queryKey: ["wa-messages", contactId]
+            queryKey: ["wa-messages", contactId],
           });
           queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
           queryClient.invalidateQueries({
@@ -114,12 +124,15 @@ export default function AssignToUser({
       <TouchableOpacity
         onPress={() => setVisible(true)}
         style={{
-          backgroundColor: buttonBgColor
+          backgroundColor: buttonBgColor,
         }}
         className="py-1 px-4 rounded-xl flex-row items-center justify-center gap-1"
       >
-        <UserCheck color={textColor} size={iconSize}  />
-        <Text style={{color:textColor, fontSize:fontSize}} className={`font-semibold`}>
+        <UserCheck color={textColor} size={iconSize} />
+        <Text
+          style={{ color: textColor, fontSize: fontSize }}
+          className={`font-semibold`}
+        >
           Assign
         </Text>
       </TouchableOpacity>

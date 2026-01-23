@@ -11,9 +11,13 @@ import {
 import { useAssignInboxToUser } from "@/src/api/inbox/messages/message.query";
 import AssignToUser from "./AssignToUser";
 import { generateInternalMessageId } from "@/src/utils/chatbox_utils";
+import { useChatAssignStatusStore } from "@/src/utils/store";
 const NotAssigned = ({ contactId }: { contactId: string }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const setWaAssignStatus = useChatAssignStatusStore(
+    (state) => state.setWaAssignStatus
+  );
   const queryClient = useQueryClient();
   const { data: userData, isLoading: loadingUser } = useLoggedInUser();
   const assignMut = useAssignInboxToUser(contactId);
@@ -33,11 +37,12 @@ const NotAssigned = ({ contactId }: { contactId: string }) => {
       },
       {
         onSuccess: () => {
+          setWaAssignStatus("ASSIGNED")
           queryClient.invalidateQueries({
             queryKey: ["assigned-contact", contactId],
           });
           queryClient.invalidateQueries({
-            queryKey: ["wa-messages", contactId]
+            queryKey: ["wa-messages", contactId],
           });
           queryClient.invalidateQueries({ queryKey: ["contactCounts"] });
           queryClient.invalidateQueries({
