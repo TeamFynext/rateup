@@ -89,6 +89,7 @@ const editTeamSchema = z.object({
   reviewPageLinks: z.any().optional(),
   tags: z.array(z.string()).optional(),
   color: z.string().optional(),
+  whatsappChannels: z.array(z.object({ id: z.string() })).optional(),
 });
 
 const idParamRequestSchema = z.object({

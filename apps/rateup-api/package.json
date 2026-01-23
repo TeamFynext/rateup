@@ -43,6 +43,7 @@
     "cheerio": "^1.0.0-rc.12",
     "dayjs": "^1.11.19",
     "dotenv": "^16.0.3",
+    "exceljs": "^4.4.0",
     "fastify": "^5.6.2",
     "fastify-cron": "^1.4.0",
     "fastify-raw-body": "^5.0.0",

@@ -1,5 +1,5 @@
 import { buildJsonSchemas } from "fastify-zod";
-import { z } from "zod";
+import { string, z } from "zod";
 import { PlatformType } from "../../../../../generated/prisma/enums.js";
 
 enum WaChatLastMessageTypes {
@@ -39,6 +39,7 @@ const NewWaMessageBody = z.object({
   text: WaMessageText.optional(),
   reaction: WaReaction.optional(),
   media: WaMedia.optional(),
+  messageId: string().optional(), // for internal messages
   contacts: z
     .object({
       contactIds: z.array(z.string()).optional(),
@@ -54,6 +55,13 @@ const NewWaMessageBody = z.object({
     })
     .optional(),
   whatsappSettingsPhoneId: z.string(),
+  platform: z.string(),
+});
+
+const PrivateWaMessageBody = z.object({
+  type: z.enum(["text"]),
+  text: z.any(),
+  messageId: string().optional(),
   platform: z.string(),
 });
 
@@ -114,6 +122,7 @@ const waMessageAssignBody = z.object({
   contactId: z.string(),
   assignees: z.array(z.object({ userId: z.string(), teamId: z.string() })),
   assignIfOnline: z.boolean().default(true),
+  messageId: z.string().optional(), // for internal message
 });
 
 const blockUserSchema = z.object({
@@ -123,6 +132,7 @@ const blockUserSchema = z.object({
 export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
   {
     NewWaMessageBody,
+    PrivateWaMessageBody,
     PaginateQuerySchema,
     WaChatFilterSchema,
     waChatFilterQuerySchema,
@@ -137,6 +147,7 @@ export const { schemas: waMessageSchemas, $ref: $waMessage } = buildJsonSchemas(
 );
 
 export type NewWaMessageBody = z.infer<typeof NewWaMessageBody>;
+export type PrivateWaMessageBody = z.infer<typeof PrivateWaMessageBody>;
 export type PaginateQuerySchema = z.infer<typeof PaginateQuerySchema>;
 export type WaChatFilterSchema = z.infer<typeof WaChatFilterSchema>;
 export type WaChatFilterQuerySchema = z.infer<typeof waChatFilterQuerySchema>;

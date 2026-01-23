@@ -13,6 +13,8 @@ const catalogWhatsappSettingSchema = z.object({
 const updateCatalogSchema = z.object({
   wabaId: z.string().optional(),
   name: z.string().optional(),
+  autoCheckoutEnabled: z.boolean().optional(),
+  checkoutMessage: z.string().optional(),
 });
 
 const productSetIdParamSchema = z.object({

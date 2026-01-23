@@ -2,6 +2,7 @@ import prisma from "../../../utils/prisma.js";
 import shopify from "./shopify.config.js";
 import { GraphqlClient, Session } from "@shopify/shopify-api";
 import isEmpty from "lodash/isEmpty.js";
+import _get from "lodash/get.js";
 import { log } from "../../../utils/logger.js";
 import {
   createSession,
@@ -55,15 +56,11 @@ import { pauseOrg } from "../../org/org.services.js";
 import { WEBHOOK_API_ROUTE } from "./shopify.handler.js";
 import { sendTemplateToUserCore } from "../../whatsapp/messageTemplates/wa_templates.controller.js";
 import { getScheduleTime } from "../../../utils/date.js";
-import {
-  getLCustomerByPhone,
-  handleLCustomerAction,
-  updateLCustomer,
-} from "../../loyalty/customer/customer.service.js";
 import { processActionWebhook } from "../../external/v1/loyalty/action/internal-copy/actions/actions.service.js";
 import { processRedeemWebhook } from "../../external/v1/loyalty/redeem/internal-copy/redeems/redeem.service.js";
 import { verifyTemplateMessageLimit } from "../../whatsapp/messageTemplates/wa_templates.auth.js";
 import { PlatformType } from "../../../../generated/prisma/enums.js";
+import { getLCustomerByPhone } from "../../loyalty/accounts/account.service.js";
 
 export async function getShopifyAuthUrl(rawRequest, rawResponse, shop) {
   return await shopify.auth.begin({
@@ -159,7 +156,11 @@ export async function createScheduleOnShopifyEvent({
   amount?: number;
   body: any;
 }) {
-  log.info(`checking survey for shopify event ${event}`);
+  log.info("Checking survey for shopify event %o", {
+    event,
+    webhookId,
+    customerPhone,
+  });
   const phone = parsePhoneNumber(customerPhone, "IN");
   if (phone.isValid() === false) {
     log.trace("Invalid phone number");
@@ -170,6 +171,14 @@ export async function createScheduleOnShopifyEvent({
   );
   if (!shopifySurvey || !shopifySurvey.active) {
     log.trace(`No Survey schedule found`);
+    return;
+  }
+
+  if (
+    webhookId &&
+    shopifySurvey.schedules?.some((s) => s.webhookId === webhookId)
+  ) {
+    log.trace(`Duplicate webhook event for ${webhookId}. Skipping...`);
     return;
   }
 
@@ -193,18 +202,18 @@ export async function createScheduleOnShopifyEvent({
       phoneWithoutPlus,
       shopifyInfo.orgId,
     );
-    if (customer) {
-      const { success } = await handleLCustomerAction({
-        actionId: shopifySurvey.actionId,
-        customerId: customer.id,
-        amount,
-      });
-      actionStatus = success ? "success" : "failed";
-      if (!customer.active)
-        await updateLCustomer(phoneWithoutPlus, shopifyInfo.orgId, {
-          active: true,
-        });
-    }
+    // if (customer) {
+    //   const { success } = await handleLCustomerAction({
+    //     actionId: shopifySurvey.actionId,
+    //     customerId: customer.id,
+    //     amount,
+    //   });
+    //   actionStatus = success ? "success" : "failed";
+    //   if (customer.status !== "active")
+    //     await updateLCustomer(phoneWithoutPlus, shopifyInfo.orgId, {
+    //       active: true,
+    //     });
+    // }
   }
   let apiStatus = null;
   if (shopifySurvey.loyaltyApiFeature) {
@@ -228,6 +237,7 @@ export async function createScheduleOnShopifyEvent({
     actionStatus,
     history: [scheduleObj],
     apiStatus,
+    body,
   };
   schedules.push(data);
   shopifySurvey.schedules = schedules;
@@ -352,11 +362,42 @@ export async function sendShopifySurveyCronAction() {
           try {
             const subscription = await getSubscription(orgId);
             await verifyTemplateMessageLimit(subscription);
+            let parameterData = [];
+            if (config.variableMapping && sch.body) {
+              const bodyParameters = [];
+              const sortedMappings = [...config.variableMapping].sort(
+                (a, b) => a.templateParamIndex - b.templateParamIndex,
+              );
+              const maxIndex = Math.max(
+                ...sortedMappings.map((m) => m.templateParamIndex),
+                -1,
+              );
+
+              if (maxIndex !== -1) {
+                for (let i = 0; i <= maxIndex; i++) {
+                  const mapping = sortedMappings.find(
+                    (m) => m.templateParamIndex === i,
+                  );
+                  const value = mapping
+                    ? _get(sch.body, mapping.shopifyPath)
+                    : "";
+                  bodyParameters.push({
+                    type: "text",
+                    text: String(value ?? ""),
+                  });
+                }
+                parameterData.push({
+                  type: "body",
+                  parameters: bodyParameters,
+                });
+              }
+            }
+
             const res = await sendTemplateToUserCore(
               orgId,
               waTemplateId,
               sch.phone,
-              [],
+              parameterData,
               teamId,
             );
             sch.status = res.status ? "SENT" : `FAILED: ${res.message}`;
@@ -885,6 +926,7 @@ export async function getRecurringCharge(chargeId, integration) {
 
 export async function handleShopifyOrderEvents(webhook) {
   const { webhookId, body, shop, topic } = webhook;
+  log.info("Handling Shopify Order Event: %o", { shop, topic, webhookId });
   const shopifyInfo = await getShopifyIntegrationByShop(shop);
   if (!shopifyInfo) {
     log.trace(`No shopify session found`);
@@ -1180,6 +1222,87 @@ export async function sendTemplateForShopifyAbandonedCheckouts() {
   } catch (e) {
     log.error(e);
   }
+}
+
+export async function createShopifyDraftOrder(orgId: string, products: any[]) {
+  const shopifyInfo = await getShopifyInfo(orgId);
+  if (!shopifyInfo || !shopifyInfo.active) {
+    throw new Error("Shopify integration not active");
+  }
+
+  const client = new shopify.clients.Graphql({
+    session: shopifyInfo.credential.session,
+  });
+
+  const skus = products.map((p) => p.retailerId).filter(Boolean);
+  const variantMap = new Map<string, string>();
+
+  if (skus.length > 0) {
+    const skuQuery = skus.map((sku) => `sku:${sku}`).join(" OR ");
+    const variantsData = await client.request(
+      `query getVariantsBySkus($query: String!) {
+          productVariants(first: 250, query: $query) {
+            edges {
+              node {
+                id
+                sku
+              }
+            }
+          }
+        }`,
+      { variables: { query: skuQuery } },
+    );
+
+    variantsData.data.productVariants.edges.forEach((edge: any) => {
+      variantMap.set(edge.node.sku, edge.node.id);
+    });
+  }
+
+  const lineItems = [];
+  for (const product of products) {
+    const variantId = variantMap.get(product.retailerId);
+    if (variantId) {
+      lineItems.push({
+        variantId,
+        quantity: product.quantity,
+      });
+    } else {
+      log.warn(`Product SKU ${product.retailerId} not found in Shopify`);
+    }
+  }
+
+  if (lineItems.length === 0) {
+    throw new Error("No products matched in Shopify");
+  }
+
+  const draftOrderData = await client.request(
+    `mutation draftOrderCreate($input: DraftOrderInput!) {
+      draftOrderCreate(input: $input) {
+        draftOrder {
+          id
+          invoiceUrl
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }`,
+    {
+      variables: {
+        input: {
+          lineItems,
+        },
+      },
+    },
+  );
+
+  const userErrors = draftOrderData.data.draftOrderCreate.userErrors;
+  if (userErrors.length > 0) {
+    throw new Error(`Shopify Error: ${userErrors?.[0]?.message}`);
+  }
+
+  return draftOrderData.data.draftOrderCreate.draftOrder;
 }
 
 function validateAndParseCheckoutPhone(checkout) {
