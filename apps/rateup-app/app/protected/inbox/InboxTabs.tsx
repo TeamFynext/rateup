@@ -190,7 +190,7 @@ export default function InboxLayout() {
                   Icon={Sparkles}
                   color={color}
                   focused={focused}
-                  count={contactCounts.new}
+                  count={contactCounts.unassigned}
                   label="New"
                 />
               ),
