@@ -87,13 +87,13 @@ const ChatBox: React.FC<
             <View className="flex flex-row items-center gap-1.5">
               <View>
                 {lifecycleInfo && (
-                  <Text className="text-sm px-2 py-0.5 bg-lightBlue dark:bg-transparent dark:border dark:border-primaryBlue text-primaryBlue rounded-full">
+                  <Text className="text-[9px] px-2 py-0.5 bg-lightBlue dark:bg-transparent dark:border dark:border-primaryBlue text-primaryBlue rounded-full">
                     {lifecycleInfo?.emoji + " " + lifecycleInfo?.name}
                   </Text>
                 )}
               </View>
               {/* assignststus here */}
-              <Text className="bg-gray-100 dark:border text-sm dark:border-white dark:bg-transparent dark:text-white py-0.5 px-2 rounded-full">
+              <Text className="bg-gray-100 dark:border text-[9px] dark:border-white dark:bg-transparent dark:text-white py-0.5 px-2 rounded-full">
                 {waMessageAssignStatus}
               </Text>
             </View>

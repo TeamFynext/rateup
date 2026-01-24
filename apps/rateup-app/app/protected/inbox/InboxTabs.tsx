@@ -52,13 +52,13 @@ function TabIcon({
       className="relative px-4 py-1.5 rounded-full flex flex-row items-center gap-1"
       style={{ backgroundColor }}
     >
-      <Icon color={textColor} size={18} />
+      <Icon color={textColor} size={16} />
       <View className="flex flex-row items-center gap-1">
-        <Text style={{ color: textColor }} className="font-semibold text-lg">
+        <Text style={{ color: textColor }} className="font-semibold text-sm">
           {label}
         </Text>
         {count && count > 0 && (
-          <Text style={{ color: textColor }} className="font-semibold text-lg">
+          <Text style={{ color: textColor }} className="font-semibold text-sm">
             ({count})
           </Text>
         )}
@@ -161,6 +161,7 @@ export default function InboxLayout() {
             tabBarItemStyle: {
               backgroundColor: tabBg,
               width: "auto",
+              maxWidth:115
             },
             tabBarShowLabel: false,
             tabBarIndicatorStyle: { backgroundColor: "transparent" },

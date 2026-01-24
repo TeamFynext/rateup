@@ -11,12 +11,7 @@ import WaInboxText, {
 import { namePreview } from "@/src/utils/chatbox_utils";
 import { WaTemplateComponent } from "@/src/context/type";
 import {
-  AlertCircle,
-  Archive,
-  CheckCircle2,
-  Circle,
   Lock,
-  UserCog,
 } from "lucide-react-native";
 import { colors } from "@/src/constants/constants";
 import { WaMessageAssignStatus } from "@/src/api/inbox/types";
@@ -161,7 +156,7 @@ const MessageBubble = ({
           </View>
         )}
         {(exchangeProcess === "send" || exchangeProcess === "privateNote") && (
-          <Text className="text-primaryBlue opacity-70 p-1">{senderName}</Text>
+          <Text className="text-primaryBlue opacity-70 p-1 text-sm">{senderName}</Text>
         )}
         {exchangeProcess === "internal" && (
           <View className="flex-row items-center gap-1">

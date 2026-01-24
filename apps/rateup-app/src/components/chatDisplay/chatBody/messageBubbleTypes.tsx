@@ -46,10 +46,10 @@ export default function WaInboxText({
       {parts?.map((text, index) =>
         urlRegex.test(text) ? (
           <Pressable key={index} onPress={() => Linking.openURL(text)}>
-            <Text className="underline text-blue-600 text-lg">{text}</Text>
+            <Text className="underline text-blue-600 text-base">{text}</Text>
           </Pressable>
         ) : (
-          <Text className="text-lg" key={index}>
+          <Text className="text-base" key={index}>
             {text}
           </Text>
         )
