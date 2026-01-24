@@ -219,7 +219,7 @@ export function DropDownPreview({
       variant="unstyled"
       placeholder={label}
       value={""}
-      onChange={() => {}}
+      onChange={() => { }}
       classNames={{
         input: styles.textInput,
       }}
@@ -279,8 +279,6 @@ export function FlowImageCarouselPreview({
   label?: string;
   fe: any;
 }) {
-  console.log(fe, "fe");
-
   return (
     <Box>
       <Text>{label}</Text>
@@ -318,7 +316,7 @@ export function FlowPreviewContainer({ children, footerLabel }) {
       }}
       gap={0}
     >
-      {FlowContainerHeader(() => {})}
+      {FlowContainerHeader(() => { })}
       <Divider />
       <Stack
         style={{

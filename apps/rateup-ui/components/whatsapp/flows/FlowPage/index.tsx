@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
-import { Box, Stack, Tabs } from "@mantine/core";
+import { Tabs } from "@mantine/core";
 import { useTranslations } from "next-intl";
 import { useImmer } from "use-immer";
 
@@ -37,7 +37,7 @@ import SurveySettings from "../../../Survey/Settings";
 import { ShareFlow } from "../../../Survey/ShareSurvey/ShareFlow";
 import EditFlow from "./EditFlow/EditFlow";
 import { EditFlowContext } from "./EditFlow/EditFlowContext";
-import styles from "./FlowPage.module.css";
+import ResultComparison from "../../../Survey/Result/ResultComparison";
 import FlowPageHeader, { FlowTabEnum } from "./FlowPageHeader";
 
 function FlowPage() {
@@ -59,7 +59,8 @@ function FlowPage() {
     useState<string>(undefined); // if no question is selected, then show question types list in the right side
   const [selectedScreenId, setSelectedScreenId] = useState<string>(undefined); // if no screen is selected, then show screens list in the left side
   const [selectedLang, setSelectedLang] = useState("en");
-  const [tab, setTab] = useState(FlowTabEnum.Edit);
+  const [tab, setTab] = useState(FlowTabEnum.Questions);
+  const [previewOpened, setPreviewOpened] = useState(true);
   const { update } = useRouteParams();
   const translations = useTranslations();
 
@@ -173,7 +174,7 @@ function FlowPage() {
   const [screenNumber, setScreenNumber] = useState(0);
   useEffect(() => {
     if (user?.role === UserRole.MEMBER) {
-      setTab(FlowTabEnum.Result);
+      setTab(FlowTabEnum.Responses);
     }
   }, [survey]);
 
@@ -188,7 +189,7 @@ function FlowPage() {
   }, [teamOptions]);
   useEffect(() => {
     if (survey) {
-      if (tab !== FlowTabEnum.Result) {
+      if (tab !== FlowTabEnum.Responses) {
         setSelectedLanguage(
           selectedLanguage ? selectedLanguage : survey?.languages?.[0],
         );
@@ -240,8 +241,8 @@ function FlowPage() {
       <SelectedLanguageContext.Provider
         value={{ selectedLanguage: "en", defaultLanguage: "en" }}
       >
-        <Box className={styles["flow-page-container"]}>
-          <Stack className={styles["flow-page-content"]}>
+        <div className="relative h-full">
+          <div className="flex flex-col h-full">
             <SurveyContext.Provider
               value={{
                 encryptionpassword: "",
@@ -255,15 +256,24 @@ function FlowPage() {
                 teams: teamOptions,
               }}
             >
-              <FlowPageHeader name={flow.name} tab={tab} setTabState={setTab} />
+              <FlowPageHeader
+                name={flow.name}
+                tab={tab}
+                setTabState={setTab}
+                previewOpened={previewOpened}
+                setPreviewOpened={setPreviewOpened}
+              />
               <StyledTabs
-                className={styles["flow-page-panels-container"]}
+                className="flex-1 overflow-hidden"
                 keepMounted={false}
                 value={tab}
                 h={"100%"}
               >
-                <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
-                  <EditFlow />
+                <Tabs.Panel value={FlowTabEnum.Questions} h={"100%"}>
+                  <EditFlow
+                    previewOpened={previewOpened}
+                    setPreviewOpened={setPreviewOpened}
+                  />
                 </Tabs.Panel>
                 <Tabs.Panel value={FlowTabEnum.Settings}>
                   <SurveySettings
@@ -275,10 +285,10 @@ function FlowPage() {
                     anonymous={flow?.anonymous}
                   />
                 </Tabs.Panel>
-                <Tabs.Panel value={FlowTabEnum.Result}>
+                <Tabs.Panel value={FlowTabEnum.Responses}>
                   <Result
                     encryptionpassword={""}
-                    setEncryptionPassword={() => {}}
+                    setEncryptionPassword={() => { }}
                     survey={survey}
                     flowId={flow.flowId}
                     translations={translations}
@@ -287,10 +297,23 @@ function FlowPage() {
                 <Tabs.Panel value={FlowTabEnum.Share}>
                   <ShareFlow allowUnpublishedShare={true} />
                 </Tabs.Panel>
+                <Tabs.Panel value={FlowTabEnum.Analytics}>
+                  <div className="p-6 text-center text-gray-500">
+                    Analytics content coming soon...
+                  </div>
+                </Tabs.Panel>
+                <Tabs.Panel value={FlowTabEnum.TeamAnalytics}>
+                  <ResultComparison
+                    surveyId={survey.id}
+                    version={2}
+                    flowQuestions={survey.questions}
+                    questions={survey.questions}
+                  />
+                </Tabs.Panel>
               </StyledTabs>
             </SurveyContext.Provider>
-          </Stack>
-        </Box>
+          </div>
+        </div>
       </SelectedLanguageContext.Provider>
     </EditFlowContext.Provider>
   );

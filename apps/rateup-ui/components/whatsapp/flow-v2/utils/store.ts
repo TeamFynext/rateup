@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
 import { QuestionType2, WaQuestions } from "@/types/enums";
+import { FlowLogicJump } from "@/types/global";
 
 export interface Screen {
   id: string;
@@ -44,10 +45,7 @@ export interface FormElement {
     payload: Record<string, unknown>;
   };
 }
-export enum EditFlowRightPanel {
-  ElementEditor = "element-editor",
-  TypeSelection = "type-selection",
-}
+
 export enum EditorType {
   LogicEditor = "logic-editor",
   GoogleReviewEditor = "google-review-editor",
@@ -59,13 +57,14 @@ interface StoreState {
   screens: Screen[];
   currentScreenId: string | null;
   currentElementId: string | null;
+  expandedElementId: string | null; // For inline editing in column 2
   currentElementType: QuestionType2 | null;
-  activeEditor: EditFlowRightPanel | null;
   detailActiveEditor: EditorType;
+  logicJumps: { [screenId: string]: FlowLogicJump[] };
   getScreens: () => Screen[];
   addScreens: (screens: Screen[]) => void;
   addScreenWithTitle: (title: string) => void;
-  deleteScreen: () => void;
+  deleteScreen: (screenId: string) => void;
   updateComponentInScreen: (
     id: string,
     updatedComponent: Partial<FormElement>,
@@ -74,27 +73,31 @@ interface StoreState {
   getComponent: (componentName: string) => FormElement | undefined;
   setCurrentScreenId: (screenId: string) => void;
   setCurrentElement: (elementId?: string, type?: QuestionType2) => void;
-  setActiveEditor: (editor: EditFlowRightPanel) => void;
+  setExpandedElementId: (elementId: string | null) => void;
   setDetailActiveEditor: (editor: EditorType) => void;
   getCurrentScreen: () => Screen | undefined;
   getCurrentElement: () => FormElement | undefined;
-  updateScreen: (updatedScreen: Partial<Screen>) => void;
-  updateComponentsInScreen: (updatedComponents: FormElement[]) => void;
-  addComponentToScreen: (omponent: FormElement) => void;
+  updateScreen: (screenId: string, updatedScreen: Partial<Screen>) => void;
+  updateComponentsInScreen: (screenId: string, updatedComponents: FormElement[]) => void;
+  addComponentToScreen: (component: FormElement) => void;
   deleteComponentFromScreen: (feId: string) => void;
-  ticketIssued: FlowTicket[];
-  setTicketIssued: (ticketIssued: FlowTicket[]) => void;
+  ticketIssued: any[];
+  setTicketIssued: (ticketIssued: any[]) => void;
+  getLogicJumps: (screenId: string) => FlowLogicJump[];
+  updateLogicJumps: (screenId: string, jumps: FlowLogicJump[]) => void;
+  setAllLogicJumps: (jumps: { [screenId: string]: FlowLogicJump[] }) => void;
 }
 
-const useFlowStore = create<StoreState>()(
+const useFlowStoreV3 = create<StoreState>()(
   immer((set, get) => ({
     screens: [],
     currentScreenId: null,
     currentElementId: null,
+    expandedElementId: null,
     currentElementType: null,
-    activeEditor: null,
     detailActiveEditor: EditorType.ElementEditor,
     googleReview: null,
+    logicJumps: {},
     getScreens: () => {
       return get().screens;
     },
@@ -113,7 +116,7 @@ const useFlowStore = create<StoreState>()(
             type: "SingleColumnLayout",
             children: [
               {
-                id: "slfkdj",
+                id: "footer_" + crypto.randomUUID().replace(/[^a-zA-Z_]/g, ""),
                 type: QuestionType2.Footer,
                 label: "Continue",
                 "on-click-action": {
@@ -146,18 +149,19 @@ const useFlowStore = create<StoreState>()(
           }
         });
         state.currentScreenId = newScreenId;
-        state.activeEditor = null;
       }),
     setCurrentElement: (elementId, type) =>
       set((state) => {
         state.currentElementId = elementId;
         state.currentElementType = type;
         state.detailActiveEditor = EditorType.ElementEditor;
-        state.activeEditor = EditFlowRightPanel.ElementEditor;
       }),
-    setActiveEditor: (editor) =>
+    setExpandedElementId: (elementId) =>
       set((state) => {
-        state.activeEditor = editor;
+        state.expandedElementId = elementId;
+        if (elementId) {
+          state.currentElementId = elementId;
+        }
       }),
     setDetailActiveEditor: (editor) =>
       set((state) => {
@@ -166,6 +170,7 @@ const useFlowStore = create<StoreState>()(
     setCurrentScreenId: (screenId) =>
       set((state) => {
         state.currentScreenId = screenId;
+        state.expandedElementId = null; // Collapse all when switching screens
       }),
     getCurrentScreen: () => {
       const state = get();
@@ -179,9 +184,8 @@ const useFlowStore = create<StoreState>()(
         .getCurrentScreen()
         ?.layout.children.find((el) => el.id === state.currentElementId);
     },
-    deleteScreen: () =>
+    deleteScreen: (screenId) =>
       set((state) => {
-        const screenId = state.currentScreenId;
         const screenIndex = state.screens.findIndex(
           (screen) => screen.id === screenId,
         );
@@ -222,12 +226,20 @@ const useFlowStore = create<StoreState>()(
         state.screens.forEach((s, index) => {
           s.terminal = index === state.screens.length - 1;
         });
+
+        // Select previous screen or first screen
+        if (state.currentScreenId === screenId) {
+          if (screenIndex > 0) {
+            state.currentScreenId = state.screens[screenIndex - 1]?.id;
+          } else {
+            state.currentScreenId = state.screens[0]?.id;
+          }
+        }
       }),
-    updateScreen: (updatedScreen) =>
+    updateScreen: (screenId, updatedScreen) =>
       set((state) => {
-        let { currentScreenId } = state;
         const screen = state.screens.find(
-          (screen) => screen.id === currentScreenId,
+          (screen) => screen.id === screenId,
         );
         if (screen) {
           Object.assign(screen, updatedScreen);
@@ -236,11 +248,10 @@ const useFlowStore = create<StoreState>()(
           s.terminal = index === state.screens.length - 1;
         });
       }),
-    updateComponentsInScreen: (updatedComponents) =>
+    updateComponentsInScreen: (screenId, updatedComponents) =>
       set((state) => {
-        let { currentScreenId } = state;
         const screen = state.screens.find(
-          (screen) => screen.id === currentScreenId,
+          (screen) => screen.id === screenId,
         );
         if (screen) {
           screen.layout.children = updatedComponents;
@@ -257,8 +268,17 @@ const useFlowStore = create<StoreState>()(
           (screen) => screen.id === currentScreenId,
         );
         if (screen) {
-          screen.layout.children.push(component);
+          // Insert before footer
+          const footerIndex = screen.layout.children.findIndex(
+            (el) => el.type === QuestionType2.Footer
+          );
+          if (footerIndex !== -1) {
+            screen.layout.children.splice(footerIndex, 0, component);
+          } else {
+            screen.layout.children.push(component);
+          }
           state.currentElementId = component.id;
+          state.expandedElementId = component.id; // Auto-expand new element
         }
       }),
 
@@ -275,6 +295,7 @@ const useFlowStore = create<StoreState>()(
           if (state.currentElementId === id) {
             state.currentElementId = null;
             state.currentElementType = null;
+            state.expandedElementId = null;
           }
         }
       }),
@@ -305,8 +326,19 @@ const useFlowStore = create<StoreState>()(
       return undefined;
     },
     ticketIssued: [],
+    getLogicJumps: (screenId) => {
+      return get().logicJumps[screenId] || [];
+    },
+    updateLogicJumps: (screenId, jumps) =>
+      set((state) => {
+        state.logicJumps[screenId] = jumps;
+      }),
+    setAllLogicJumps: (jumps) =>
+      set((state) => {
+        state.logicJumps = jumps;
+      }),
     setTicketIssued: (ticketIssued) => set({ ticketIssued }),
   })),
 );
 
-export default useFlowStore;
+export default useFlowStoreV3;
