@@ -3,18 +3,23 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { Box, Group, Title, Tooltip } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconPlus } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { IconPlus, IconSearch, IconBook } from "@tabler/icons-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { useTeamsByUser } from "@/backend/team/team.query";
 import { useWaFlowsFromDb } from "@/backend/whatsapp/flow/flow.query";
 import { useWaSettings } from "@/backend/whatsapp/settings/waSettings.query";
 import ErrorComponent from "@/components/404/ErrorComponent";
 import { FlowCardListSkeleton } from "@/components/animation/skeleton/wa/FlowCardList.skeleton";
-import InfoButton from "@/components/Button/InfoButton";
-import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 import RefreshButton from "@/components/Button/RefreshButton";
 import { TeamSelector } from "@/components/input/TeamSelector";
 import NothingFound from "@/components/NothingFound/NothingFound";
@@ -29,91 +34,149 @@ import styles from "./flows.module.css";
 
 function Flows() {
   const searchParams = useSearchParams();
-  const action = searchParams.get("action") as string;
-
-  const [
-    isCreateFlowModalOpened,
-    { open: handleCreateFlowModalOpen, close: handleCreateFlowModalClose },
-  ] = useDisclosure(action === "create");
-  let { data: flows, isPending, isError, refetch } = useWaFlowsFromDb();
-  const { data, isPending: waSettingsPending } = useWaSettings();
-  const [selectedTeamId, setSelectedTeamId] = useState("");
-  const { isPending: isPendingTeamsUser, data: teamsDataUser } =
-    useTeamsByUser();
   const translations = useTranslations();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [isCreateFlowModalOpened, setIsCreateFlowModalOpened] = useState(
+    searchParams.get("action") === "create"
+  );
+
+  const { data: flows, isPending, isError, refetch } = useWaFlowsFromDb();
+  const { data: waSettings, isPending: waSettingsPending } = useWaSettings();
+  const { isPending: isPendingTeamsUser, data: teamsDataUser } = useTeamsByUser();
+
+  const teamsData = teamsDataUser?.data;
   const tourSteps = WaFlowTourSteps({ styles });
-  let teamsData = teamsDataUser?.data;
+  const isLoading = isPending || isPendingTeamsUser || waSettingsPending;
+
+  const handleCreateFlowModalOpen = () => setIsCreateFlowModalOpened(true);
+  const handleCreateFlowModalClose = () => setIsCreateFlowModalOpened(false);
 
   const ComponentToBeRendered = () => {
-    if (isPending || isPendingTeamsUser || waSettingsPending)
-      return <FlowCardListSkeleton />;
+    if (isLoading) return <FlowCardListSkeleton />;
     if (isError)
       return <ErrorComponent refetch={refetch} isRefetching={isPending} />;
-    if (!flows?.length)
-      return <NothingFound text={translations("No Flows Available")} />;
+
+    // Filter by Team
     let filteredMenus =
-      selectedTeamId === "all"
+      selectedTeamId === "all" || !selectedTeamId
         ? flows
         : flows?.filter((flow) =>
-            flow.survey.teams.some((team) => team.teamId === selectedTeamId),
-          );
+          flow.survey.teams.some((team) => team.teamId === selectedTeamId),
+        );
+
+    // Filter by Search Query
+    if (searchQuery) {
+      filteredMenus = filteredMenus?.filter((flow) =>
+        flow.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (!filteredMenus?.length && !searchQuery)
+      return <NothingFound text={translations("No Flows Available")} />;
+    if (!filteredMenus?.length && searchQuery)
+      return <NothingFound text={translations("No results found")} />;
+
     filteredMenus = filteredMenus.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
     return (
-      <Box className={styles["flows-list-div"]}>
+      <div className={styles["flows-list-div"]}>
         <FlowCardsList flows={filteredMenus} teamsData={teamsData} />
-      </Box>
+      </div>
     );
   };
   return (
-    <Box className={styles["flows-list-page-container"]}>
-      <Group justify="space-between">
-        <Group>
-          <Tooltip
-            label={translations(
-              "Connect a WhatsApp number in settings to create a Flow",
+    <div className={styles["flows-list-page-container"]}>
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-lg font-medium">{translations("WhatsApp Flow Builder")}</h2>
+            <p className="text-sm text-muted-foreground">{translations("Create and manage WhatsApp conversation flows")}</p>
+          </div>
+          {!waSettings ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button
+                      className={styles["create-button"]}
+                      onClick={handleCreateFlowModalOpen}
+                      disabled={isLoading || !waSettings}
+                    >
+                      <IconPlus size={16} className="mr-2" />
+                      {translations("Create Flow")}
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{translations("Connect a WhatsApp number in settings to create a Flow")}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <Button
+              className={styles["create-button"]}
+              onClick={handleCreateFlowModalOpen}
+              disabled={isLoading}
+            >
+              <IconPlus size={16} className="mr-2" />
+              {translations("Create Flow")}
+            </Button>
+          )}
+        </div>
+
+        <div className="flex justify-between items-center">
+          <div className="relative" style={{ width: '650px' }}>
+            <IconSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={translations("Search flows...")}
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="pl-10 bg-[#eaecefff] border-none rounded-sm"
+            />
+          </div>
+          <div className="flex gap-2">
+            <TeamSelector
+              className={styles["team-select-option"]}
+              value={selectedTeamId}
+              onChange={(teamId) => setSelectedTeamId(teamId)}
+              enableAll={true}
+              allowDeselect={false}
+              placeholder={translations("Filter by Teams")}
+            />
+            <Button
+              variant="outline"
+              onClick={() => window.open(`${docsPath}/whatsappSurvey/flows`, "_blank")}
+            >
+              <IconBook size={16} className="mr-2" />
+              {translations("Documentation")}
+            </Button>
+            <WelcomeTour steps={tourSteps} />
+            <RefreshButton queryKeys={["flow", "db"]} />
+
+            {!waSettings ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <SyncFlowsButton disabled={!waSettings} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{translations("Connect a WhatsApp number in settings to sync a Flow")}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <SyncFlowsButton disabled={false} />
             )}
-            disabled={!!data}
-          >
-            <Box>
-              <RateupButtonBlue
-                className={styles["create-button"]}
-                title={translations("Create flow")}
-                rightIcon={<IconPlus size={"1rem"} />}
-                onClick={handleCreateFlowModalOpen}
-                disabled={
-                  isPending || isPendingTeamsUser || waSettingsPending || !data
-                }
-              />
-            </Box>
-          </Tooltip>
-          <InfoButton docUrl={`${docsPath}/whatsappSurvey/flows`} />
-          <WelcomeTour steps={tourSteps} />
-          <RefreshButton queryKeys={["flow", "db"]} />
-        </Group>
-        <Group>
-          <TeamSelector
-            className={styles["team-select-option"]}
-            value={selectedTeamId}
-            onChange={(teamId) => setSelectedTeamId(teamId)}
-            enableAll={true}
-            allowDeselect={false}
-          />
-          <Tooltip
-            label={translations(
-              "Connect a WhatsApp number in settings to sync a Flow",
-            )}
-            disabled={!!data}
-          >
-            <Box>
-              <SyncFlowsButton disabled={!data} />
-            </Box>
-          </Tooltip>
-        </Group>
-      </Group>
+          </div>
+        </div>
+      </div>
 
       <ComponentToBeRendered />
 
@@ -121,7 +184,7 @@ function Flows() {
         opened={isCreateFlowModalOpened}
         onClose={handleCreateFlowModalClose}
       />
-    </Box>
+    </div>
   );
 }
 

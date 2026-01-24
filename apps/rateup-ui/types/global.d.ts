@@ -79,7 +79,7 @@ export type Wop = {
   segColors: string[];
 };
 
-export {};
+export { };
 declare global {
   interface Question {
     title: Zod.RecordType<string, string>;
@@ -281,13 +281,13 @@ declare global {
   };
   type Choice = {
     value:
-      | string
-      | {
-          image?: string;
-          title: string;
-          description?: string;
-          metadata?: string;
-        };
+    | string
+    | {
+      image?: string;
+      title: string;
+      description?: string;
+      metadata?: string;
+    };
     weightage?: NPSWeightage;
   };
   type QuestionResponse = {
@@ -701,26 +701,26 @@ declare global {
   interface SubscriptionFeatures {
     // [subscriptionFeatureName] : {subfeatures & activeField & countRestriction}
     [sfpn.Menu]: subscriptionCountRestriction &
-      subscriptionActiveField & {
-        count: {
-          monthlyViewLimit: number;
-        };
+    subscriptionActiveField & {
+      count: {
+        monthlyViewLimit: number;
       };
+    };
     [sfpn.Team]: {
       teamMember: subscriptionCountRestriction & subscriptionActiveField;
     } & subscriptionActiveField &
-      subscriptionCountRestriction;
+    subscriptionCountRestriction;
     [sfpn.WebSurvey]: subscriptionActiveField &
-      subscriptionCountRestriction & {
-        encryption: subscriptionActiveField;
-        googleReview: subscriptionActiveField;
-        emailNotification: subscriptionActiveField;
-        htmlCodePage: subscriptionActiveField;
-        webhook: subscriptionActiveField;
-        count: {
-          monthlyResponseLimit: number;
-        };
+    subscriptionCountRestriction & {
+      encryption: subscriptionActiveField;
+      googleReview: subscriptionActiveField;
+      emailNotification: subscriptionActiveField;
+      htmlCodePage: subscriptionActiveField;
+      webhook: subscriptionActiveField;
+      count: {
+        monthlyResponseLimit: number;
       };
+    };
     [sfpn.Whatsapp]: subscriptionWithActiveAndCount & {
       survey: subscriptionWithActiveAndCount;
       campaign: subscriptionWithActiveAndCount;
@@ -738,7 +738,7 @@ declare global {
       };
     };
     [sfpn.ReputationManagement]: subscriptionActiveField &
-      subscriptionCountRestriction;
+    subscriptionCountRestriction;
     [sfpn.Ticket]: subscriptionActiveField & subscriptionCountRestriction;
     [sfpn.AI]: subscriptionActiveField & {
       count: {
@@ -1384,16 +1384,16 @@ export type WaSendMessageBody = {
   recipient_type: "individual";
   to: string; // PHONE_NUMBER type
   type:
-    | "text"
-    | "image"
-    | "interactive"
-    | "audio"
-    | "document"
-    | "contacts"
-    | "sticker"
-    | "location"
-    | "template"
-    | "reaction";
+  | "text"
+  | "image"
+  | "interactive"
+  | "audio"
+  | "document"
+  | "contacts"
+  | "sticker"
+  | "location"
+  | "template"
+  | "reaction";
   text?: {
     preview_url?: boolean;
     body: string;
@@ -1405,13 +1405,13 @@ export type WaSendMessageBody = {
   };
   interactive?: {
     type:
-      | "button"
-      | "list"
-      | "cta_url"
-      | "flow"
-      | "catalog_message"
-      | "product"
-      | "product_list";
+    | "button"
+    | "list"
+    | "cta_url"
+    | "flow"
+    | "catalog_message"
+    | "product"
+    | "product_list";
     action?: WaInteractiveMessageAction;
     body?: {
       text: string; // max 1024 chars
@@ -1532,14 +1532,14 @@ export type InstagramWebhookBody = {
               // Included when a customer sends multiple media attachments or a URL for a story mention or share
               {
                 type:
-                  | "image"
-                  | "video"
-                  | "audio"
-                  | "file"
-                  | "reel"
-                  | "ig_reel"
-                  | "share"
-                  | "story_mention";
+                | "image"
+                | "video"
+                | "audio"
+                | "file"
+                | "reel"
+                | "ig_reel"
+                | "share"
+                | "story_mention";
                 payload: { url: string };
               },
             ];

@@ -3,8 +3,6 @@
 import React, { useCallback, useContext, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Box, Flex, ScrollArea, Stack, Tabs, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 
@@ -26,22 +24,12 @@ import {
 } from "../../Button/RateupButtons";
 import { ContainedPasswordInput } from "../../input/ContainedInput/ContainedInput";
 import SimpleModalLayout from "../../Modal/SimpleModalLayout";
-import StyledTabs from "../../styled/StyledTabs/StyledTabs";
 import Responses from "../Response/Responses";
 import WaResponses from "../Response/WaResponses";
-import styles from "./Result.module.css";
-import ResultComparison from "./ResultComparison";
 import ResultsOverview from "./ResultsOverview";
 import ResultsOverviewWebForm from "./ResultsOverviewWebForm";
 import SurveyStats from "./SurveyStats";
 import WaResultsOverviewV2 from "./WaResultsOverview";
-
-enum ResultTab {
-  OverView = "overview",
-  Analytics = "analytics",
-  Responses = "responses",
-  Comparison = "comparison",
-}
 
 const Result = ({
   survey,
@@ -57,13 +45,13 @@ const Result = ({
   const { selectedLanguage, defaultLanguage } = useContext(
     SelectedLanguageContext,
   );
-  const [activeTab, setActiveTab] = useState(ResultTab.Responses);
   //end to end encryption logic for result page begins here
   const passwordModalOpenedCondition =
     (survey?.isEncrypted || !!survey?.publicKey) && !encryptionpassword;
-  const [passwordModalOpened, { close, open }] = useDisclosure(
+  const [passwordModalOpened, setPasswordModalOpened] = useState(
     passwordModalOpenedCondition,
   );
+  const close = () => setPasswordModalOpened(false);
   const {
     isLoading: isQLoading,
     error: QError,
@@ -104,92 +92,30 @@ const Result = ({
     return <ErrorComponent refetch={refetch} isRefetching={isRefetching} />;
 
   return (
-    <StyledTabs
-      defaultValue={ResultTab.Responses}
-      placement="left"
-      orientation="horizontal"
-      styles={{
-        root: {
-          flexDirection: "column",
-        },
-        list: {
-          position: "sticky",
-          display: "flex",
-          flexDirection: "row",
-          borderBottomLeftRadius: 10,
-          borderBottomRightRadius: 10,
-          height: "fit-content",
-          minWidth: 200,
-          border: "1px solid var(--mantine-color-gray-3)",
-          minHeight: "fit-content",
-        },
-        panel: {
-          minWidth: "300px",
-          padding: 5,
-          paddingRight: 10,
-          height: "100%",
-          width: "100%",
-          overflow: "auto",
-        },
-      }}
-      value={activeTab}
-      onChange={(value) => setActiveTab(value as ResultTab)}
-    >
-      <Box className={styles["result-page-tabs-container"]}>
-        <ScrollArea offsetScrollbars={true}>
-          <Tabs.List classNames={{ list: styles["result-page-tabs-list"] }}>
-            <Tabs.Tab value="responses">{translations("Response")}</Tabs.Tab>
-            <Tabs.Tab value="analytics">{translations("Analytics")}</Tabs.Tab>
-            <Tabs.Tab value="comparison">{translations("Comparison")}</Tabs.Tab>
-          </Tabs.List>
-        </ScrollArea>
-      </Box>
-      <Box className={styles["panels-container"]}>
-        <Tabs.Panel value="responses">
-          {version === 1 ? (
-            <Responses
-              survey={survey}
-              defaultLanguage={defaultLanguage}
-              subscription={subscription}
-              questions={questions}
-            />
-          ) : (
-            <WaResponses
-              survey={survey}
-              defaultLanguage={defaultLanguage}
-              selectedTeamId={selectedTeamId}
-              subscription={subscription}
-              questions={flowQuestions}
-            />
-          )}
-        </Tabs.Panel>
-        <Tabs.Panel value="analytics">
-          <ResultsOverviewWebForm
-            surveyId={survey?.id}
-            aiResponseSummary={survey?.aiResponseSummary}
-            survey={survey}
-            flowId={flowId}
-            version={version}
-            flowQuestions={flowQuestions}
-            questions={questions}
-          />
-        </Tabs.Panel>
-        <Tabs.Panel value="comparison">
-          <ResultComparison
-            surveyId={survey?.id}
-            version={version}
-            flowQuestions={flowQuestions}
-            questions={questions}
-          />
-        </Tabs.Panel>
-      </Box>
+    <>
+      {version === 1 ? (
+        <Responses
+          survey={survey}
+          defaultLanguage={defaultLanguage}
+          subscription={subscription}
+          questions={questions}
+        />
+      ) : (
+        <WaResponses
+          survey={survey}
+          defaultLanguage={defaultLanguage}
+          selectedTeamId={selectedTeamId}
+          subscription={subscription}
+          questions={flowQuestions}
+        />
+      )}
       <EncryptionPasswordModal
         passwordModalOpened={passwordModalOpened}
         close={close}
         setPassword={setEncryptionPassword}
         surveyId={survey?.id}
       />
-    </StyledTabs>
+    </>
   );
 };
 
@@ -247,16 +173,16 @@ function EncryptionPasswordModal({
       title={translations("Enter the password")}
       withCloseButton={false}
     >
-      <Stack>
-        <Text>
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           {translations("Enter the password to view the survey data")}
-        </Text>
+        </p>
         <ContainedPasswordInput
           label={translations("Password")}
           value={encryptionpassword}
           onChange={(e) => setEncryptionPassword(e.target.value)}
         />
-        <Flex style={{ justifyContent: "center", gap: "40px" }}>
+        <div className="flex justify-center gap-10">
           <RateupButtonSecondary
             title={translations("Go back")}
             leftIcon={<IconArrowLeft />}
@@ -266,8 +192,8 @@ function EncryptionPasswordModal({
             title={translations("Submit")}
             onClick={onSubmitPassword}
           />
-        </Flex>
-      </Stack>
+        </div>
+      </div>
     </SimpleModalLayout>
   );
 }

@@ -87,34 +87,21 @@ const ShareQR = ({
   }, [logoTabPanelState]);
 
   return (
-    <div>
-      <div className="flex items-center gap-1.5 py-1.5 mb-2">
-        <Palette className="w-4 h-4 text-primary" />
-        <h2 className="text-sm font-semibold">
-          {translations("Customize & Generate QR Code")}
-        </h2>
-      </div>
-      <div className="flex gap-4">
+    <div className="bg-white dark:bg-[#121212] rounded-lg border dark:border-gray-700 p-6">
+      <h2 className="text-base font-semibold mb-6 dark:text-white">QR Code</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <LogoTabpanel
           state={logoTabPanelState}
           dispatch={logoTabPanelDispatch}
         />
-        <div className="p-2">
-          <div className="border p-3 rounded-lg flex flex-col gap-2 w-full">
+        <div className="flex flex-col gap-4">
+          <div className="border dark:border-gray-700 rounded-lg flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-[#1a1a1a]">
             <Preview
               logoTabPanelState={logoTabPanelState}
               url={url}
               surveyTitle={title}
               isSurveyPublished={isPublished}
             />
-            <Button
-              onClick={handleSaveOfSurveyShareSettings}
-              className="disabled:opacity-50"
-              disabled={shareSettingsMutation?.isPending}
-            >
-              <Save />
-              {translations("Save Settings")}
-            </Button>
           </div>
         </div>
       </div>

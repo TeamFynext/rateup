@@ -3,7 +3,7 @@
 import { useContext, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import { ActionIcon, Box, Tooltip } from "@mantine/core";
+import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconEye, IconEyeClosed } from "@tabler/icons-react";
 
 import { showErrorToast } from "@/utils/notifications";
@@ -36,7 +36,6 @@ import {
 import { QuestionTypeSelection } from "../../../../Survey/Question/QuestionTypeSelection";
 import { PreviewPanel } from "../../Preview/PreviewPanel";
 import FlowScreensList from "../FlowScreensList";
-import styles from "./EditFlow.module.css";
 import { EditFlowContext } from "./EditFlowContext";
 import { FlowNonQuestionDetailedView } from "./FlowNonQuestionDetailedView";
 import { FlowQuestionDetailedView } from "./FlowQuestionDetailedView";
@@ -45,8 +44,11 @@ enum EditFlowRightPanel {
   ElementEditor = "element-editor",
   TypeSelection = "type-selection",
 }
-function EditFlow() {
-  const [previewOpened, setPreviewOpened] = useState(false);
+interface EditFlowProps {
+  previewOpened: boolean;
+  setPreviewOpened: (opened: boolean) => void;
+}
+function EditFlow({ previewOpened, setPreviewOpened }: EditFlowProps) {
   const { selectedLanguage } = useContext(SelectedLanguageContext);
   const [blankQuestion, setBlankQuestion] = useState<Question>(null);
   const [activeEditor, setActiveEditor] = useState<EditFlowRightPanel>(null);
@@ -253,28 +255,26 @@ function EditFlow() {
   }
 
   return (
-    <Box
-      className={styles["edit-flow-root-div"]}
+    <div
+      className="h-full flex gap-2 p-2.5 overflow-hidden [&>div]:min-w-[200px] [&>div]:h-full [&>div]:rounded-2xl [&>div]:shadow-[rgba(0,0,0,0.05)_0px_1px_0px,rgba(0,0,0,0.11)_0px_0px_8px] [&>div]:p-4 [&>div]:bg-white dark:[&>div]:bg-gray-800"
       style={{
         position: "relative",
       }}
     >
-      {/* Left sidebar containing list of screens */}
-      <Box
+      <div
         style={{
           flex: 3,
           minWidth: "300px",
         }}
-        p="0"
+        className="p-0"
       >
         <FlowScreensList
           onDeleteElement={handleDeleteElement}
           onAddElementClick={handleAddElementClick}
           onElementClick={handleFormElementClick}
         />
-      </Box>
-      {/* Center panel containing type-selection & questionEditor */}
-      <Box
+      </div>
+      <div
         style={{
           flex: 6,
           minWidth: "300px",
@@ -288,13 +288,13 @@ function EditFlow() {
           />
         )}
         {activeEditor === EditFlowRightPanel.ElementEditor &&
-        selectedQuestion &&
-        survey.id ? (
+          selectedQuestion &&
+          survey.id ? (
           <FlowQuestionDetailedView
             key={selectedQuestion.id}
             question={selectedQuestion}
             surveyId={survey.id}
-            setSelectedLanguage={() => {}}
+            setSelectedLanguage={() => { }}
             surveyLanguages={["en"]}
             onCreated={handleNewQuestionCreated}
           />
@@ -303,9 +303,9 @@ function EditFlow() {
             <FlowNonQuestionDetailedView key={selectedFormElementId} />
           )
         )}
-      </Box>
+      </div>
       {/* Right sidebar containing preview */}
-      <PreviewPanel previewOpened={previewOpened} />
+      {previewOpened && <PreviewPanel previewOpened={previewOpened} />}
       <Tooltip label={"Open Preview"}>
         <ActionIcon
           style={{
@@ -317,7 +317,7 @@ function EditFlow() {
             width: "50px",
             zIndex: 2,
           }}
-          onClick={() => setPreviewOpened((prev) => !prev)}
+          onClick={() => setPreviewOpened(!previewOpened)}
         >
           {!previewOpened ? (
             <IconEyeClosed style={{ width: "60%", height: "60%" }} stroke={2} />
@@ -326,7 +326,7 @@ function EditFlow() {
           )}
         </ActionIcon>
       </Tooltip>
-    </Box>
+    </div>
   );
 }
 

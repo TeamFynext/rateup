@@ -1,21 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
-import { Box, Stack, Tabs } from "@mantine/core";
 import { useTranslations } from "next-intl";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { SubscriptionFeaturePathName } from "@/types/enums";
 import { useSubscription } from "@/backend/subscription/subscription.query";
 import { useSurvey } from "@/backend/surveys/surveys.query";
 import { useWaFlowFromDb } from "@/backend/whatsapp/flow/flow.query";
 import RateupLoader from "@/components/Loaders/RateupLoader";
-import StyledTabs from "@/components/styled/StyledTabs/StyledTabs";
 import Result from "@/components/Survey/Result/Result";
-import SurveySettings from "@/components/Survey/Settings";
-import { ShareFlow } from "@/components/Survey/ShareSurvey/ShareFlow";
+import ResultComparison from "@/components/Survey/Result/ResultComparison";
+import ResultsOverviewWebForm from "@/components/Survey/Result/ResultsOverviewWebForm";
 import EditFlow from "@/components/whatsapp/flow-v2/EditFlow";
+import FlowSettings from "@/components/whatsapp/flows/FlowSettings";
+import FlowShare from "@/components/whatsapp/flows/FlowShare";
 import { EditFlowContext } from "@/components/whatsapp/flows/FlowPage/EditFlow/EditFlowContext";
 import FlowPageHeader, {
   FlowTabEnum,
@@ -27,7 +29,8 @@ import { hasFeature } from "@/utils/subscription/subscription";
 import styles from "../FlowPage.module.css";
 
 const Flow = () => {
-  const [tab, setTab] = useState(FlowTabEnum.Edit);
+  const [tab, setTab] = useState(FlowTabEnum.Questions);
+  const [previewOpened, setPreviewOpened] = useState(false);
 
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [selectedTeamName, setSelectedTeamName] = useState("");
@@ -45,6 +48,32 @@ const Flow = () => {
     flow?.surveyId,
   );
   const { data: subscription } = useSubscription();
+
+  const flowQuestions = useMemo(() => {
+    if (!flow?.json?.screens) return [];
+    return flow.json.screens.flatMap((screen: any) =>
+      screen.layout.children
+        .filter((child: any) => child.type !== "Footer")
+        .map(
+          ({
+            id,
+            label,
+            metaType,
+            name,
+            "data-source": dataSource,
+            header,
+          }: any) => ({
+            id,
+            label,
+            metaType,
+            dataSource,
+            name,
+            header,
+          }),
+        )
+        .filter(({ name }: any) => name),
+    );
+  }, [flow]);
 
   const { update } = useRouteParams();
   const translations = useTranslations();
@@ -86,8 +115,8 @@ const Flow = () => {
   if (isPending || isSurveyPending) return <RateupLoader />;
 
   return (
-    <Box className={styles["flow-page-container"]}>
-      <Stack className={styles["flow-page-content"]}>
+    <div className={styles["flow-page-container"]}>
+      <div className={styles["flow-page-content"]}>
         <EditFlowContext.Provider
           value={{
             flowJson: null,
@@ -118,56 +147,73 @@ const Flow = () => {
               teams: teamOptions,
             }}
           >
-            <FlowPageHeader name={flow.name} tab={tab} setTabState={setTab} />
-            <StyledTabs
-              className={styles["flow-page-panels-container"]}
-              keepMounted={false}
+            <FlowPageHeader
+              name={flow.name}
+              tab={tab}
+              setTabState={setTab}
+              previewOpened={previewOpened}
+              setPreviewOpened={setPreviewOpened}
+            />
+            <Tabs
               value={tab}
-              h={"100%"}
+              onValueChange={(value) => setTab(value as FlowTabEnum)}
+              className={styles["flow-page-panels-container"]}
             >
-              <Tabs.Panel value={FlowTabEnum.Edit} h={"100%"}>
-                <EditFlow />
-              </Tabs.Panel>
-              <Tabs.Panel value={FlowTabEnum.Settings}>
-                <SurveySettings
-                  surveyId={survey.id}
-                  survey={survey}
-                  enabledModules={[
-                    "teams",
-                    "flow",
-                    hasFeature(
-                      subscription,
-                      SubscriptionFeaturePathName.Ticket,
-                    ) && "tickets",
-                    hasFeature(
-                      subscription,
-                      SubscriptionFeaturePathName.Webhook,
-                    ) && "webhook",
-                  ]}
+              <TabsContent value={FlowTabEnum.Questions} className="h-full mt-0">
+                <EditFlow previewOpened={previewOpened} setPreviewOpened={setPreviewOpened} />
+              </TabsContent>
+              <TabsContent value={FlowTabEnum.Settings} className="h-full overflow-y-auto mt-0">
+                <FlowSettings
                   flowName={flow.name}
                   flowDbId={flow.dbFlowId}
                   anonymous={flow?.anonymous}
+                  survey={survey}
+                  surveyId={survey.id}
                 />
-              </Tabs.Panel>
-              <Tabs.Panel value={FlowTabEnum.Result}>
+              </TabsContent>
+              <TabsContent value={FlowTabEnum.Responses} className="mt-0">
                 <Result
                   encryptionpassword={""}
-                  setEncryptionPassword={() => {}}
+                  setEncryptionPassword={() => { }}
                   survey={survey}
                   flowId={flow.flowId}
                   translations={translations}
                   version={flow.version}
                   flow={flow}
                 />
-              </Tabs.Panel>
-              <Tabs.Panel value={FlowTabEnum.Share}>
-                <ShareFlow allowUnpublishedShare={true} />
-              </Tabs.Panel>
-            </StyledTabs>
+              </TabsContent>
+              <TabsContent value={FlowTabEnum.Share} className="h-full overflow-y-auto mt-0">
+                <FlowShare
+                  flowName={flow.name}
+                  flowDbId={flow.dbFlowId}
+                  survey={survey}
+                  surveyId={survey.id}
+                />
+              </TabsContent>
+              <TabsContent value={FlowTabEnum.Analytics} className="h-full overflow-y-auto mt-0">
+                <ResultsOverviewWebForm
+                  surveyId={survey?.id}
+                  aiResponseSummary={(survey as any)?.aiResponseSummary}
+                  survey={survey}
+                  flowId={flow?.flowId}
+                  version={flow?.version}
+                  flowQuestions={flowQuestions}
+                  questions={[]}
+                />
+              </TabsContent>
+              <TabsContent value={FlowTabEnum.TeamAnalytics} className="mt-0">
+                <ResultComparison
+                  surveyId={survey.id}
+                  version={flow.version}
+                  flowQuestions={flowQuestions}
+                  questions={flowQuestions}
+                />
+              </TabsContent>
+            </Tabs>
           </SurveyContext.Provider>
         </EditFlowContext.Provider>
-      </Stack>
-    </Box>
+      </div>
+    </div>
   );
 };
 
