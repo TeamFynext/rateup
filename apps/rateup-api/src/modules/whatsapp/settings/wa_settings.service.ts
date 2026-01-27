@@ -138,11 +138,11 @@ export async function getAccessibleWaSettings(
     new Set(userTeams.flatMap((t) => t.whatsappChannels.map((c) => c.id))),
   );
 
-  // Return only the assigned channels (no assigned channels = no access)
+  // Return assigned channels + public channels (channels with no teams assigned)
   const res = await prisma.whatsappSettings.findMany({
     where: {
       orgId: orgId,
-      id: { in: assignedChannelIds },
+      OR: [{ id: { in: assignedChannelIds } }, { teams: { none: {} } }],
     },
     orderBy: {
       createdAt: "asc",
