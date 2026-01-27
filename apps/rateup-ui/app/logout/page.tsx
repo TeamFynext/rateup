@@ -21,19 +21,18 @@ export default function Logout() {
     async function handleLogout() {
       if (typeof window !== "undefined") {
         try {
-          localStorage.clear();
+          await signOut();
           queryClient.clear();
+          clearFilter();
           await clearMessages();
           await clearAllContacts();
-          clearFilter();
-          await signOut();
+          localStorage.clear();
           router.push("/login");
         } catch (error) {
           // Optionally handle error (e.g., show notification)
         }
       }
     }
-
     handleLogout();
   }, [router, queryClient]);
 
