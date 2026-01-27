@@ -101,7 +101,7 @@ function FlowCard({
 
   return (
     <Card
-      className="h-full cursor-pointer hover:border-blue-400 dark:hover:border-blue-600 transition-colors border dark:border-gray-700 dark:bg-[#121212]"
+      className="h-full cursor-pointer hover:border-blue-400 dark:hover:border-blue-600 transition-colors border dark:border-gray-700"
       onClick={() =>
         router.push(
           `/dashboard/whatsapp/flows/v${version}/${dbFlowId}${status === WaFlowStatus.PUBLISHED ? "?tab=Result" : ""}`,
