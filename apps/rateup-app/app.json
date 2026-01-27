@@ -12,6 +12,12 @@
       "supportsTablet": true
     },
     "android": {
+       "permissions": [
+          "RECORD_AUDIO",
+          "READ_MEDIA_AUDIO",
+          "READ_MEDIA_VIDEO",
+          "READ_MEDIA_IMAGES"
+        ],
       "statusBar": {
         "translucent": true,
         "backgroundColor": "transparent"

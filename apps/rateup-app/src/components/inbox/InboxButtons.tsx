@@ -78,7 +78,7 @@ const InboxButtons = ({
       {open && (
         <View className="absolute right-0 top-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg py-2 w-48 z-50">
           {/* ADD CONTACT */}
-          <Pressable
+          {/* <Pressable
             className="flex-row items-center gap-3 px-4 py-3"
             onPress={() => {
               setOpen(false);
@@ -87,7 +87,7 @@ const InboxButtons = ({
           >
             <UserPlus2 color={textColor} size={18} />
             <Text className="dark:text-white text-sm">Add contact</Text>
-          </Pressable>
+          </Pressable> */}
 
           {/* FILTERS */}
           <Pressable

@@ -131,7 +131,7 @@ export default function InboxLayout() {
       >
         <View className="flex-row px-4 bg-primaryBlue py-6 justify-between">
           <View className="flex-row items-start justify-center gap-2">
-            <Menu color="white" strokeWidth={2} size={25} />
+            {/* <Menu color="white" strokeWidth={2} size={25} /> */}
             <View>
               <Text className="text-white text-xl font-bold">Inbox</Text>
               <Text className="text-white text-sm">
