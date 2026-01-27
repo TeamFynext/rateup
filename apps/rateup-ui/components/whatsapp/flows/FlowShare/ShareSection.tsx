@@ -18,13 +18,13 @@ export function ShareSection({
   rightTitle,
 }: ShareSectionProps) {
   return (
-    <Card className="bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-700 mb-2 shadow-sm">
+    <Card className="mb-2">
       <CardContent className="p-3">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
             {title && (
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+                <span className="text-sm font-semibold text-foreground">
                   {title}
                 </span>
                 {badge}
@@ -34,7 +34,7 @@ export function ShareSection({
           </div>
           <div>
             {rightTitle && (
-              <span className="text-sm font-semibold text-gray-900 dark:text-gray-50 block mb-1">
+              <span className="text-sm font-semibold text-foreground block mb-1">
                 {rightTitle}
               </span>
             )}

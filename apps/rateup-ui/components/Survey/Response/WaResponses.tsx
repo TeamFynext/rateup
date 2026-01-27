@@ -88,11 +88,10 @@ import {
   ContainedTextField,
 } from "../../input/ContainedInput/ContainedInput";
 import FormModalLayout from "../../Modal/FormModalLayout";
-import TanstackTable from "../../Table/TanstackTable";
+import { DataTable } from "../../Table/data-table";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { WaHoverCardComponent } from "../HoverCard/WaHoverCard";
 import { ActionMenu } from "./Columns";
-import styles from "./Responses.module.css";
 import { useResponseFilterStore } from "./store";
 
 dayjs.extend(utc);
@@ -541,7 +540,7 @@ const WaResponses = ({
                       >
                         <IconRefresh
                           className={`mr-2 h-4 w-4 ${
-                            isSyncing ? styles.rotateInfinitely : ""
+                            isSyncing ? "animate-spin" : ""
                           }`}
                         />
                         {survey.spreadSheetId
@@ -570,21 +569,21 @@ const WaResponses = ({
       </div>
 
       <div className="flex-1 overflow-hidden px-6 pb-2">
-        <TanstackTable
-          className={styles.compactTable}
+        <DataTable
           data={data ?? []}
           columns={
             disableTags.current
               ? columns?.filter((col) => col.accessorKey !== "tag")
               : columns
           }
-          pagination={pagination}
-          setPagination={setPagination}
-          totalCount={responseCount}
+          manualPagination={{
+            pagination,
+            onPaginationChange: setPagination,
+            rowCount: responseCount,
+            columnFilters,
+            onColumnFiltersChange: setColumnFilters,
+          }}
           isPending={isPending}
-          columnFiltersE={columnFilters}
-          setColumnFiltersE={setColumnFilters}
-          enableServerFilter={enableServerFilter}
         />
       </div>
 
