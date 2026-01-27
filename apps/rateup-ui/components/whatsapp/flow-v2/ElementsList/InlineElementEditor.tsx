@@ -247,7 +247,7 @@ function InlineElementEditor({ element }: InlineElementEditorProps) {
     <>
       <form onSubmit={onSubmit}>
         <div className="space-y-4">
-          <div className="grid grid-cols-12 gap-4">
+          <div className="grid grid-cols-12 gap-2">
             {Object.keys(initialValues).map(renderField)}
           </div>
 

@@ -50,7 +50,9 @@ function WhatsAppPreview() {
     );
   }
 
-  const elements = screen.layout.children || [];
+  const elements = (screen.layout.children || []).filter(
+    (el: any) => el.visible !== false
+  );
 
   const renderElement = (element: any, index: number) => {
     const key = element.id || index;
@@ -350,7 +352,7 @@ function WhatsAppPreview() {
               <div className="text-white font-semibold text-sm">
                 {translations("Business Name")}
               </div>
-              <div className="text-white/80" style={{fontSize: '10px'}}>
+              <div className="text-white/80" style={{ fontSize: '10px' }}>
                 {translations("Online")}
               </div>
             </div>
