@@ -10,7 +10,6 @@ import React, {
 } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-
 import { useDebouncedState } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
@@ -29,6 +28,10 @@ import utc from "dayjs/plugin/utc";
 import { useTranslations } from "next-intl";
 import { Range } from "react-date-range";
 
+import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
+import ErrorComponent from "@/components/404/ErrorComponent";
+import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
+import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -37,18 +40,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Skeleton } from "@/components/ui/skeleton";
-
-import { useIntegrationByType } from "@/backend/appsIntegration/integration.query";
-import ErrorComponent from "@/components/404/ErrorComponent";
-import { DateRangePickerButton } from "@/components/DateAndTime/DatePicker/DateRangePicker";
-import { CalenderIconDateRangePicker } from "@/components/LoyaltyComponents/Customer/LCustomerActionView";
 import { markdownToPlainText } from "@/components/whatsapp/flow-v2/FlowScreensList/ScreenListItem";
 import { hasFeature } from "@/utils/subscription/subscription";
 import {
@@ -175,9 +173,9 @@ const WaResponses = ({
       !ranges.length || !ranges[0].startDate || !ranges[0].endDate
         ? []
         : [
-          ranges[0]?.startDate.toISOString(),
-          ranges[0]?.endDate.toISOString(),
-        ],
+            ranges[0]?.startDate.toISOString(),
+            ranges[0]?.endDate.toISOString(),
+          ],
     ...serverFilters,
   });
 
@@ -328,50 +326,47 @@ const WaResponses = ({
       },
       ...(enableTicket
         ? [
-          {
-            header: () => (
-              <span className="text-lg font-semibold min-w-[70px] max-w-[70px] truncate block">
-                {translations("Ticket")}
-              </span>
-            ),
-            enableColumnFilter: false,
-            enableSorting: false,
-            accessorKey: "ticket",
-            cell: (info) => {
-              let ticketData = info.row.original.Ticket;
-              let ticketExist = ticketData?.length > 0;
-              return (
-                <div
-                  className="flex items-center justify-center pr-20 cursor-pointer"
-                  onClick={() => {
-                    if (ticketExist) {
-                      let url = `/dashboard/tickets/${ticketData[0]?.id}`;
-                      window.open(url, "_blank");
-                    }
-                  }}
-                >
-                  {ticketExist && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div>
-                            <IconTicket
-                              color="orange"
-                              className="w-9 h-9"
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          {translations("View Ticket")}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
-              );
+            {
+              header: () => (
+                <span className="text-lg font-semibold min-w-[70px] max-w-[70px] truncate block">
+                  {translations("Ticket")}
+                </span>
+              ),
+              enableColumnFilter: false,
+              enableSorting: false,
+              accessorKey: "ticket",
+              cell: (info) => {
+                let ticketData = info.row.original.Ticket;
+                let ticketExist = ticketData?.length > 0;
+                return (
+                  <div
+                    className="flex items-center justify-center pr-20 cursor-pointer"
+                    onClick={() => {
+                      if (ticketExist) {
+                        let url = `/dashboard/tickets/${ticketData[0]?.id}`;
+                        window.open(url, "_blank");
+                      }
+                    }}
+                  >
+                    {ticketExist && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <IconTicket color="orange" className="w-9 h-9" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            {translations("View Ticket")}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                );
+              },
             },
-          },
-        ]
+          ]
         : []),
       {
         accessorKey: "action",
@@ -483,7 +478,7 @@ const WaResponses = ({
 
   const responseCount = responseData?.totalCount;
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
       <CreateTicketModal
         createTicketOpened={createTicketOpened}
         closeTicketModal={closeTicketModal}
@@ -491,112 +486,115 @@ const WaResponses = ({
         type={TicketType.SURVEY_RESPONSE}
         surveyResponseId={selectedResponseId}
       />
-      <Card>
-        <CardContent className="p-6">
-          {isPending ? (
-            <Skeleton className="h-[70px] w-full" />
-          ) : (
-            <div className="flex flex-col gap-4">
-              {/* Top Row: Title & Main Actions */}
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-medium text-gray-900 dark:text-gray-100">
-                    {translations("Total Responses :")} {responseCount}
-                  </h2>
-                  <RefreshButton onClick={() => refetchResponse()} />
-                </div>
 
-                <div className="flex items-center gap-3">
-                  {CFData && CFData.length > 0 && (
-                    <ContainedMultiSelect
-                      placeholder={translations("Filter By Campaign")}
-                      value={campaignIds}
-                      onChange={setSelectedCampaignIds}
-                      data={CFData.map(({ id, name }) => ({
-                        value: id,
-                        label: name,
-                      }))}
-                    />
-                  )}
-                  <CalenderIconDateRangePicker ranges={ranges} setRange={setRange} />
-                  {!survey?.isEncrypted && (
-                    <DropdownMenu open={openedExport} onOpenChange={setOpenedExport}>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="default" size="default" className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-                          <IconTableExport className="h-4 w-4" />
-                          {translations("Export")}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            if (survey.spreadSheetId) alertModalOpen();
-                            else handleSyncGoogleSheet();
-                          }}
-                        >
-                          <IconRefresh
-                            className={`mr-2 h-4 w-4 ${isSyncing ? styles.rotateInfinitely : ""
-                              }`}
-                          />
-                          {survey.spreadSheetId
-                            ? translations("Resync with Google Sheet")
-                            : translations("Sync with Google Sheet")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            handleExcelDownload();
-                            toggle();
-                          }}
-                        >
-                          <IconFileDownload className="mr-2 h-4 w-4" />
-                          {translations("Download Excel")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+      <div className="px-6 py-4 flex flex-col gap-4">
+        {isPending ? (
+          <Skeleton className="h-[70px] w-full" />
+        ) : (
+          <>
+            {/* Header Top Row */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-medium text-gray-900 dark:text-gray-100">
+                  {translations("Total Responses :")} {responseCount}
+                </h2>
+                <RefreshButton onClick={() => refetchResponse()} />
+              </div>
+
+              <div className="flex items-center gap-2">
+                {CFData && CFData.length > 0 && (
+                  <ContainedMultiSelect
+                    placeholder={translations("Filter By Campaign")}
+                    value={campaignIds}
+                    onChange={setSelectedCampaignIds}
+                    data={CFData.map(({ id, name }) => ({
+                      value: id,
+                      label: name,
+                    }))}
+                  />
+                )}
+                <CalenderIconDateRangePicker
+                  ranges={ranges}
+                  setRange={setRange}
+                />
+                {!survey?.isEncrypted && (
+                  <DropdownMenu
+                    open={openedExport}
+                    onOpenChange={setOpenedExport}
+                  >
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white gap-2 h-8 text-xs px-3 rounded-md"
+                      >
+                        <IconTableExport className="h-3.5 w-3.5" />
+                        {translations("Export")}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (survey.spreadSheetId) alertModalOpen();
+                          else handleSyncGoogleSheet();
+                        }}
+                      >
+                        <IconRefresh
+                          className={`mr-2 h-4 w-4 ${
+                            isSyncing ? styles.rotateInfinitely : ""
+                          }`}
+                        />
+                        {survey.spreadSheetId
+                          ? translations("Resync with Google Sheet")
+                          : translations("Sync with Google Sheet")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          handleExcelDownload();
+                          toggle();
+                        }}
+                      >
+                        <IconFileDownload className="mr-2 h-4 w-4" />
+                        {translations("Download Excel")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+                <div className="text-gray-500 hover:bg-gray-100 rounded p-1 cursor-pointer">
                   <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
                 </div>
               </div>
-
-              {/* Secondary Row: Filters & Fields */}
-              <div className="flex items-center gap-3">
-                <Button variant="outline" size="icon" className="h-9 w-9 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700">
-                  <IconFilter className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" className="h-9 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-full px-4">
-                  {translations("Select Fields")}
-                </Button>
-              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-6">
-          <TanstackTable
-            data={data ?? []}
-            columns={
-              disableTags.current
-                ? columns?.filter((col) => col.accessorKey !== "tag")
-                : columns
-            }
-            pagination={pagination}
-            setPagination={setPagination}
-            totalCount={responseCount}
-            isPending={isPending}
-            columnFiltersE={columnFilters}
-            setColumnFiltersE={setColumnFilters}
-            enableServerFilter={enableServerFilter}
-          />
-        </CardContent>
-      </Card>
+          </>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-hidden px-6 pb-2">
+        <TanstackTable
+          className={styles.compactTable}
+          data={data ?? []}
+          columns={
+            disableTags.current
+              ? columns?.filter((col) => col.accessorKey !== "tag")
+              : columns
+          }
+          pagination={pagination}
+          setPagination={setPagination}
+          totalCount={responseCount}
+          isPending={isPending}
+          columnFiltersE={columnFilters}
+          setColumnFiltersE={setColumnFilters}
+          enableServerFilter={enableServerFilter}
+        />
+      </div>
+
       <DeleteModal
         confirmDelete={confirmDelete}
         translations={translations}
         opened={opened}
         close={close}
       />
-    </div >
+    </div>
   );
 };
 
@@ -682,5 +680,4 @@ export const getCellData = (info, question) => {
     default:
       return info.toString() || "";
   }
-
 };

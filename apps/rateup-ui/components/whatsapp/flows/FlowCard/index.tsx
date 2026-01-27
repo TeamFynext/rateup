@@ -3,9 +3,26 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  IconCalendar,
+  IconCopy,
+  IconDots,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
-import { IconCalendar, IconCopy, IconDots, IconTrash } from "@tabler/icons-react";
+import { toast } from "sonner";
 
+import { WaFlowStatus } from "@/types/enums";
+import {
+  useCloneAndDeprecateFlowsMutation,
+  useCloneFlowsMutation,
+  useDeleteFlowMutation,
+  useDeprecateFlowMutation,
+} from "@/backend/whatsapp/flow/flow.query";
+import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
+import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
+import ConfirmationModal from "@/components/Modal/ConfirmationModal";
+import FormModalLayout from "@/components/Modal/FormModalLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,19 +39,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { toast } from "sonner";
-
-import { WaFlowStatus } from "@/types/enums";
-import {
-  useCloneAndDeprecateFlowsMutation,
-  useCloneFlowsMutation,
-  useDeleteFlowMutation,
-  useDeprecateFlowMutation,
-} from "@/backend/whatsapp/flow/flow.query";
-import CreatedSinceText from "@/components/DateAndTime/CreatedSinceText";
-import { ContainedSelection } from "@/components/input/ContainedInput/ContainedInput";
-import ConfirmationModal from "@/components/Modal/ConfirmationModal";
-import FormModalLayout from "@/components/Modal/FormModalLayout";
 
 import styles from "./FlowCard.module.css";
 
@@ -97,7 +101,7 @@ function FlowCard({
 
   return (
     <Card
-      className="h-full cursor-pointer hover:border-gray-400 dark:hover:border-gray-600 transition-colors border dark:border-gray-700 dark:bg-[#121212]"
+      className="h-full cursor-pointer hover:border-blue-400 dark:hover:border-blue-600 transition-colors border dark:border-gray-700 dark:bg-[#121212]"
       onClick={() =>
         router.push(
           `/dashboard/whatsapp/flows/v${version}/${dbFlowId}${status === WaFlowStatus.PUBLISHED ? "?tab=Result" : ""}`,
@@ -158,8 +162,8 @@ function FlowCard({
                       <p>
                         {status !== WaFlowStatus.DRAFT
                           ? translations(
-                            "It will be deprecated and will be removed from the system",
-                          )
+                              "It will be deprecated and will be removed from the system",
+                            )
                           : translations("Delete Flow")}
                       </p>
                     </TooltipContent>
@@ -206,8 +210,8 @@ function FlowCard({
                       <p>
                         {status !== WaFlowStatus.PUBLISHED
                           ? translations(
-                            "You can only Copy & Renew Flow in PUBLISHED state",
-                          )
+                              "You can only Copy & Renew Flow in PUBLISHED state",
+                            )
                           : translations("Copy & Renew Flow")}
                       </p>
                     </TooltipContent>
