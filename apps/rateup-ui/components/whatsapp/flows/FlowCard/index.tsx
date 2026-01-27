@@ -57,7 +57,7 @@ function FlowCard({
   teamsData,
   version,
   category = "Customer Engagement",
-  responseCount = 5,
+  responseCount = 0,
 }: Readonly<FlowCardProps>) {
   const router = useRouter();
   const [dialogOpened, setDialogOpened] = useState(false);
@@ -78,7 +78,7 @@ function FlowCard({
     label: team?.name,
   }));
   const translations = useTranslations();
-  
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!teamId) {

@@ -96,13 +96,13 @@ export default function FlowShare({
     };
 
     return (
-        <div className="p-6 max-w-[1400px] mx-auto">
-            <div className="flex flex-col gap-6">
+        <div className="p-4 max-w-[1400px] mx-auto">
+            <div className="flex flex-col gap-4">
                 {/* Section 1: Share Survey */}
                 <ShareSection
                     title="Share Survey"
                     leftContent={
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-3">
                             <div className="flex flex-col gap-2">
                                 <Label>Select Team</Label>
                                 <Select value={selectedTeam} onValueChange={(value) => setSelectedTeam(value)}>
@@ -174,14 +174,14 @@ export default function FlowShare({
                     title="Edit Start Message"
                     badge={<div className="bg-green-100 dark:bg-emerald-900 text-green-700 dark:text-green-300 px-3 py-1 rounded text-xs font-medium">Saved</div>}
                     leftContent={
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-3">
                             <div className="relative">
                                 <Label>Body</Label>
                                 <Textarea
                                     value={startMessageBody}
                                     onChange={(e) => setStartMessageBody(e.currentTarget.value)}
                                     rows={3}
-                                    className="mt-2"
+                                    className="mt-1"
                                 />
                                 <span className="absolute bottom-2 right-3 text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                                     {startMessageBody.length} / 1024
@@ -193,7 +193,7 @@ export default function FlowShare({
                                     value={startMessageSuffix}
                                     onChange={(e) => setStartMessageSuffix(e.currentTarget.value)}
                                     rows={3}
-                                    className="mt-2"
+                                    className="mt-1"
                                 />
                                 <span className="absolute bottom-2 right-3 text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                                     {startMessageSuffix.length} / 1024
@@ -232,7 +232,7 @@ export default function FlowShare({
                     title="Edit Template Message"
                     badge={<div className="bg-green-100 dark:bg-emerald-900 text-green-700 dark:text-green-300 px-3 py-1 rounded text-xs font-medium">Saved</div>}
                     leftContent={
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-3">
                             <div className="flex gap-2">
                                 <Button>
                                     <IconUpload size={16} className="mr-2" />
@@ -249,7 +249,7 @@ export default function FlowShare({
                                     value={templateBody}
                                     onChange={(e) => setTemplateBody(e.currentTarget.value)}
                                     rows={5}
-                                    className="mt-2"
+                                    className="mt-1"
                                 />
                                 <span className="absolute bottom-2 right-3 text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                                     {templateBody.length} / 1024
@@ -262,7 +262,7 @@ export default function FlowShare({
                                     value={templateFooter}
                                     onChange={(e) => setTemplateFooter(e.currentTarget.value)}
                                     rows={2}
-                                    className="mt-2"
+                                    className="mt-1"
                                 />
                                 <span className="absolute bottom-2 right-3 text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                                     {templateFooter.length} / 60
@@ -274,7 +274,7 @@ export default function FlowShare({
                                 <Input
                                     value={templateCTA}
                                     onChange={(e) => setTemplateCTA(e.currentTarget.value)}
-                                    className="mt-2"
+                                    className="mt-1"
                                 />
                                 <span className="absolute bottom-2 right-3 text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-950 px-1 py-0.5 rounded pointer-events-none">
                                     {templateCTA.length} / 20

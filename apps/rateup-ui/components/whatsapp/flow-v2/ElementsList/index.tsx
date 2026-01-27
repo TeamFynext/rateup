@@ -25,6 +25,7 @@ import AddElementModal from "./AddElementModal"; // Modal for element type selec
 import InlineElementEditor from "./InlineElementEditor"; // Inline element editor
 import { ScreenLogicEditor } from "./ScreenLogicEditor";
 import styles from "./ElementsList.module.css";
+import { RateupButtonBlue } from "@/components/Button/RateupButtons";
 
 
 const cx = classNames.bind(styles);
@@ -72,14 +73,14 @@ function ElementsList() {
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
-    
+
     const items = screen.layout.children;
     const reorderedItems = reorder(
       items,
       result.source.index,
       result.destination.index,
     );
-    
+
     updateComponentsInScreen(currentScreenId, reorderedItems);
   };
 
@@ -155,28 +156,15 @@ function ElementsList() {
         </Droppable>
       </DragDropContext>
 
-      {/* Logic Jump Button */}
-      <div className="px-4 mt-4">
-        <Button
-          onClick={() => setDetailActiveEditor(EditorType.LogicEditor)}
-          className="w-full"
-          variant="outline"
-        >
-          <IconPlus size={16} className="mr-2" />
-          {translations("Screen Logic Jumps")}
-        </Button>
-      </div>
-
       {/* Add Element Button */}
       <div className="px-4 mt-2">
-        <Button
+        <RateupButtonBlue
           onClick={() => setAddModalOpened(true)}
-          className="w-full"
-          variant="outline"
-        >
-          <IconPlus size={16} className="mr-2" />
-          {translations("Add Element")}
-        </Button>
+          title={translations("Add Element")}
+          radius="md"
+          fullWidth
+          rightIcon={<IconPlus size={16} />}
+        />
       </div>
 
       <AddElementModal
