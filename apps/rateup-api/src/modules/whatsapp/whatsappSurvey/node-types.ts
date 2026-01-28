@@ -38,6 +38,12 @@ export interface DelayNodeData extends BaseNodeData {
   delayTime: number;
 }
 
+// Pause Node
+export interface PauseNodeData extends BaseNodeData {
+  duration: number;
+  unit: "seconds" | "minutes" | "hours";
+}
+
 // Media Nodes
 export interface MediaNodeData extends BaseNodeData {
   link: string;
@@ -280,7 +286,9 @@ export type NodeTypeMap = {
   phoneInputNode: InputNodeData;
   dateInputNode: InputNodeData;
   delayNode: DelayNodeData;
+  pauseNode: PauseNodeData;
   videoNode: MediaNodeData;
+
   audioNode: MediaNodeData;
   documentNode: DocumentNodeData;
   startNode: StartNodeData;
@@ -314,6 +322,7 @@ export type NodeData =
   | ConditionalNodeData
   | InputNodeData
   | DelayNodeData
+  | PauseNodeData
   | MediaNodeData
   | DocumentNodeData
   | StartNodeData

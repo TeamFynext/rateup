@@ -1576,7 +1576,9 @@ model WaAutomatedReplyMessage {
   currentNode        String?
   response           Json?
   status             WaAutomationProgressStatus @default(inProgress)
+  resumeAt           DateTime?
   createdAt          DateTime                   @default(now())
+
   waAutomatedReplyId String?                    @db.Uuid
   waAutomatedReply   WaAutomatedReply?          @relation(fields: [waAutomatedReplyId], references: [id], onDelete: Cascade)
   orgId              String                     @db.Uuid

@@ -1098,6 +1098,28 @@ export async function processNextNode(
       case "delayNode":
         await wait((node?.data as NodeTypeMap["delayNode"])?.delayTime * 1000);
         break;
+      case "pauseNode": {
+        const pauseData = node.data as NodeTypeMap["pauseNode"];
+        let ms = 0;
+        const duration = pauseData.duration || 0;
+        const unit = pauseData.unit || "seconds";
+
+        if (unit === "seconds") ms = duration * 1000;
+        else if (unit === "minutes") ms = duration * 60 * 1000;
+        else if (unit === "hours") ms = duration * 60 * 60 * 1000;
+
+        const resumeAt = new Date(Date.now() + ms);
+
+        await prisma.waAutomatedReplyMessage.update({
+          where: { id: automationMessageId },
+          data: {
+            status: "paused" as any,
+            resumeAt,
+          },
+        });
+        return;
+      }
+
       case "assignNode": {
         const assignData = node?.data as NodeTypeMap["assignNode"];
         const { contact } = await getOrCreateContactByPhone(

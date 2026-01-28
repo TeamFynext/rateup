@@ -21,6 +21,7 @@ import { sendAWSEmail } from "../../utils/email/sendAWSEmail.js";
 import { createMessageTemplate } from "../../utils/email/emailWeeklyStatsReport.js";
 import { FRONTEND_URL } from "../../utils/constants/constants.js";
 import { enqueueCampaignMessage } from "../campaign/campaign.service.js";
+import { processNextNode } from "./whatsappSurvey/wasurvey.controller.js";
 
 interface waMessageScheduleProps {
   phone: string;
@@ -217,5 +218,62 @@ export async function processDripCampaigns() {
         dripStageId,
       );
     }
+  }
+}
+
+export async function processPausedAutomations() {
+  try {
+    const now = new Date();
+    const pausedMessages = await prisma.waAutomatedReplyMessage.findMany({
+      where: {
+        status: "paused" as any,
+        resumeAt: {
+          lte: now,
+        },
+      },
+      include: {
+        waAutomatedReply: true,
+      },
+    });
+
+    if (!pausedMessages.length) return;
+
+    for (const msg of pausedMessages) {
+      // Mark as in-progress immediately to prevent double processing
+      await prisma.waAutomatedReplyMessage.update({
+        where: { id: msg.id },
+        data: {
+          status: "inProgress" as any,
+          resumeAt: null,
+        },
+      });
+
+      const automation = msg.waAutomatedReply;
+      if (!automation || !msg.currentNode) continue;
+
+      const nextEdges = (automation.matchData as any)?.json?.edges?.filter(
+        (edge: any) => edge.source === msg.currentNode,
+      );
+
+      if (nextEdges && nextEdges.length > 0) {
+        for (const nextEdge of nextEdges) {
+          await processNextNode(
+            msg.phone,
+            automation,
+            nextEdge.target,
+            msg.orgId,
+            msg.id,
+          );
+        }
+      } else {
+        // No next node, mark as completed
+        await prisma.waAutomatedReplyMessage.update({
+          where: { id: msg.id },
+          data: { status: "completed" as any },
+        });
+      }
+    }
+  } catch (error) {
+    log.error(`Error in processPausedAutomations: ${error.message}`);
   }
 }
