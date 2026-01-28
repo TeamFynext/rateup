@@ -92,6 +92,7 @@ import { DataTable } from "../../Table/data-table";
 import CreateTicketModal from "../../Tickets/CreateTicketModal";
 import { WaHoverCardComponent } from "../HoverCard/WaHoverCard";
 import { ActionMenu } from "./Columns";
+import { ResponseTableToolbar } from "./ResponseTableToolbar";
 import { useResponseFilterStore } from "./store";
 
 dayjs.extend(utc);
@@ -486,88 +487,6 @@ const WaResponses = ({
         surveyResponseId={selectedResponseId}
       />
 
-      <div className="px-6 py-4 flex flex-col gap-4">
-        {isPending ? (
-          <Skeleton className="h-[70px] w-full" />
-        ) : (
-          <>
-            {/* Header Top Row */}
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-medium text-gray-900 dark:text-gray-100">
-                  {translations("Total Responses :")} {responseCount}
-                </h2>
-                <RefreshButton onClick={() => refetchResponse()} />
-              </div>
-
-              <div className="flex items-center gap-2">
-                {CFData && CFData.length > 0 && (
-                  <ContainedMultiSelect
-                    placeholder={translations("Filter By Campaign")}
-                    value={campaignIds}
-                    onChange={setSelectedCampaignIds}
-                    data={CFData.map(({ id, name }) => ({
-                      value: id,
-                      label: name,
-                    }))}
-                  />
-                )}
-                <CalenderIconDateRangePicker
-                  ranges={ranges}
-                  setRange={setRange}
-                />
-                {!survey?.isEncrypted && (
-                  <DropdownMenu
-                    open={openedExport}
-                    onOpenChange={setOpenedExport}
-                  >
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white gap-2 h-8 text-xs px-3 rounded-md"
-                      >
-                        <IconTableExport className="h-3.5 w-3.5" />
-                        {translations("Export")}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          if (survey.spreadSheetId) alertModalOpen();
-                          else handleSyncGoogleSheet();
-                        }}
-                      >
-                        <IconRefresh
-                          className={`mr-2 h-4 w-4 ${
-                            isSyncing ? "animate-spin" : ""
-                          }`}
-                        />
-                        {survey.spreadSheetId
-                          ? translations("Resync with Google Sheet")
-                          : translations("Sync with Google Sheet")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          handleExcelDownload();
-                          toggle();
-                        }}
-                      >
-                        <IconFileDownload className="mr-2 h-4 w-4" />
-                        {translations("Download Excel")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-                <div className="text-gray-500 hover:bg-gray-100 rounded p-1 cursor-pointer">
-                  <InfoButton docUrl={`${docsPath}/advancedFt/resultexport`} />
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
       <div className="flex-1 overflow-hidden px-6 pb-2">
         <DataTable
           data={data ?? []}
@@ -584,6 +503,23 @@ const WaResponses = ({
             onColumnFiltersChange: setColumnFilters,
           }}
           isPending={isPending}
+          DataTableToolbar={(props) => (
+            <ResponseTableToolbar
+              {...props}
+              CFData={CFData}
+              campaignIds={campaignIds}
+              setCampaignIds={setSelectedCampaignIds}
+              ranges={ranges}
+              setRange={setRange}
+              survey={survey}
+              isSyncing={isSyncing}
+              refetchResponse={refetchResponse}
+              handleSyncGoogleSheet={handleSyncGoogleSheet}
+              handleExcelDownload={handleExcelDownload}
+              alertModalOpen={alertModalOpen}
+              responseCount={responseCount}
+            />
+          )}
         />
       </div>
 
